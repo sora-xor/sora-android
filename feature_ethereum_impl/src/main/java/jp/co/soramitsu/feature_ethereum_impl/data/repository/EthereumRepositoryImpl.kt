@@ -51,8 +51,8 @@ import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiC
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
-import jp.co.soramitsu.shared_utils.extensions.fromHex
-import jp.co.soramitsu.shared_utils.extensions.toHexString
+import jp.co.soramitsu.xcrypto.util.fromHex
+import jp.co.soramitsu.xcrypto.util.toHexString
 import org.web3j.crypto.Sign
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.utils.Numeric

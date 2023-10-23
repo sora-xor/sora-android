@@ -35,18 +35,18 @@ package jp.co.soramitsu.sora.substrate.runtime
 import java.math.BigInteger
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.util.ext.addHexPrefix
-import jp.co.soramitsu.shared_utils.encrypt.EncryptionType
-import jp.co.soramitsu.shared_utils.extensions.fromHex
-import jp.co.soramitsu.shared_utils.extensions.toHexString
-import jp.co.soramitsu.shared_utils.runtime.RuntimeSnapshot
-import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
-import jp.co.soramitsu.shared_utils.runtime.metadata.module
-import jp.co.soramitsu.shared_utils.runtime.metadata.storage
-import jp.co.soramitsu.shared_utils.runtime.metadata.storageKey
-import jp.co.soramitsu.shared_utils.scale.dataType.uint32
-import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider.syntheticTokenRegex
 import jp.co.soramitsu.sora.substrate.substrate.fromHex
+import jp.co.soramitsu.xcrypto.util.fromHex
+import jp.co.soramitsu.xcrypto.util.toHexString
+import jp.co.soramitsu.xsubstrate.encrypt.EncryptionType
+import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
+import jp.co.soramitsu.xsubstrate.runtime.metadata.module
+import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
+import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
+import jp.co.soramitsu.xsubstrate.scale.datatype.uint32
+import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 
 object SubstrateOptionsProvider {
     const val mortalEraLength = 64

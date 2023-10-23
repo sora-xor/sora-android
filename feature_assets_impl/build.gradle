@@ -75,7 +75,8 @@ dependencies {
     implementation project(":feature_main_api")
     implementation project(":feature_blockexplorer_api")
 
-    implementation sharedUtilsDep
+    implementation xsubstrateDep
+    implementation xcryptoDep
 
     implementation androidDep
     implementation materialDep
@@ -99,7 +100,6 @@ dependencies {
     implementation runtimeKtxDep
     implementation fragmentKtxDep
 
-    implementation permissionsAccompanistDep
     implementation permissionsRuntimeDep
 
     implementation daggerDep
@@ -118,7 +118,6 @@ dependencies {
     implementation uiCoreDep
 
     implementation composeUiDep
-    implementation composeThemeAdapterDep
     implementation composeFoundationDep
     implementation composeMaterialDep
     implementation composeAnimationDep

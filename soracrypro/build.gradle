@@ -52,6 +52,6 @@ dependencies {
 
     api ed25519Dep
     api spongycastleDep
-    api sharedUtilsDep
+//    api sharedUtilsDep
 
 }

@@ -32,12 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate
 
-import jp.co.soramitsu.shared_utils.extensions.fromHex
-import jp.co.soramitsu.shared_utils.runtime.RuntimeSnapshot
-import jp.co.soramitsu.shared_utils.wsrpc.SocketService
+import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
+import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApiImpl
 import jp.co.soramitsu.test_shared.RealRuntimeProvider
+import jp.co.soramitsu.xcrypto.util.fromHex
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before

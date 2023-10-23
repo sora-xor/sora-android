@@ -82,7 +82,6 @@ dependencies {
 
     implementation composeConstraintLayoutDep
     implementation composeUiDep
-    implementation composeThemeAdapterDep
     implementation composeFoundationDep
     implementation composeMaterialDep
     implementation composeAnimationDep
@@ -92,13 +91,12 @@ dependencies {
     implementation composeLiveDataDep
     debugImplementation composeToolingDep
 
-    //implementation accompanistNavAnimationDep
+    implementation kotlinxSerializationJsonDep
 
     implementation roomDep
     implementation roomKtxDep
 
     implementation timberDep
-    implementation sharedUtilsDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep
@@ -110,4 +108,8 @@ dependencies {
     kapt daggerKaptDep
 
     testImplementation project(":test_shared")
+}
+
+kapt {
+    correctErrorTypes true
 }

@@ -45,12 +45,6 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.shared_utils.runtime.definitions.types.fromHex
-import jp.co.soramitsu.shared_utils.runtime.metadata.module
-import jp.co.soramitsu.shared_utils.runtime.metadata.storage
-import jp.co.soramitsu.shared_utils.runtime.metadata.storageKey
-import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
@@ -60,6 +54,12 @@ import jp.co.soramitsu.sora.substrate.substrate.referralBond
 import jp.co.soramitsu.sora.substrate.substrate.referralUnbond
 import jp.co.soramitsu.sora.substrate.substrate.setReferrer
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
+import jp.co.soramitsu.xsubstrate.runtime.metadata.module
+import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
+import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
+import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -206,9 +206,10 @@ class ReferralRepositoryImpl @Inject constructor(
         emitAll(resultFlow)
     }
 
-    override fun observeReferrerBalance(from: String, feeToken: Token): Flow<BigDecimal?> = substrateCalls.observeReferrerBalance(from).map { b ->
-        b?.let { mapBalance(it, feeToken.precision) }
-    }
+    override fun observeReferrerBalance(from: String, feeToken: Token): Flow<BigDecimal?> =
+        substrateCalls.observeReferrerBalance(from).map { b ->
+            b?.let { mapBalance(it, feeToken.precision) }
+        }
 
     override suspend fun getSetReferrerFee(from: String, feeToken: Token): BigDecimal? {
         val fee = extrinsicManager.calcFee(

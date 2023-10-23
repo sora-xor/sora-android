@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.pooldetails
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -91,7 +90,6 @@ class PoolDetailsFragment : SoraBaseFragment<PoolDetailsViewModel>() {
 
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController

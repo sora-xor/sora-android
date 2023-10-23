@@ -36,22 +36,6 @@ import java.math.BigInteger
 import javax.inject.Inject
 import jp.co.soramitsu.common.data.network.dto.PoolDataDto
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.shared_utils.extensions.fromHex
-import jp.co.soramitsu.shared_utils.extensions.toHexString
-import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
-import jp.co.soramitsu.shared_utils.runtime.definitions.types.fromHex
-import jp.co.soramitsu.shared_utils.runtime.metadata.module
-import jp.co.soramitsu.shared_utils.runtime.metadata.storage
-import jp.co.soramitsu.shared_utils.runtime.metadata.storageKey
-import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
-import jp.co.soramitsu.shared_utils.wsrpc.SocketService
-import jp.co.soramitsu.shared_utils.wsrpc.executeAsync
-import jp.co.soramitsu.shared_utils.wsrpc.mappers.nonNull
-import jp.co.soramitsu.shared_utils.wsrpc.mappers.pojo
-import jp.co.soramitsu.shared_utils.wsrpc.mappers.pojoList
-import jp.co.soramitsu.shared_utils.wsrpc.mappers.scale
-import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.RuntimeRequest
-import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.storage.GetStorageRequest
 import jp.co.soramitsu.sora.substrate.request.IsPairEnabledRequest
 import jp.co.soramitsu.sora.substrate.request.StateKeys
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
@@ -62,6 +46,22 @@ import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.getTokenId
 import jp.co.soramitsu.sora.substrate.runtime.mapCodeToken
 import jp.co.soramitsu.sora.substrate.runtime.reservesKey
+import jp.co.soramitsu.xcrypto.util.fromHex
+import jp.co.soramitsu.xcrypto.util.toHexString
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
+import jp.co.soramitsu.xsubstrate.runtime.metadata.module
+import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
+import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
+import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
+import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
+import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
+import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
+import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
+import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojoList
+import jp.co.soramitsu.xsubstrate.wsrpc.mappers.scale
+import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
+import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.GetStorageRequest
 
 // todo refactor it after migrate to substrate 4
 class SubstrateApiImpl @Inject constructor(

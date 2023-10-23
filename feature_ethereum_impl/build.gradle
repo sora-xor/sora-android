@@ -59,6 +59,8 @@ dependencies {
     implementation daggerDep
     kapt daggerKaptDep
 
+    implementation xcryptoDep
+
     implementation coroutineAndroidDep
     implementation coroutineDep
     implementation web3jDep

@@ -51,6 +51,8 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.DebounceClickHandler
 
+const val PACKAGE_ID = "jp.co.soramitsu.sora.develop"
+
 @OptIn(ExperimentalComposeUiApi::class)
 @SuppressLint("ModifierFactoryUnreferencedReceiver")
 fun Modifier.testTagAsId(tag: String): Modifier {
@@ -61,7 +63,7 @@ fun Modifier.testTagAsId(tag: String): Modifier {
             .semantics {
                 testTagsAsResourceId = true
             }
-            .testTag("jp.co.soramitsu.sora.develop:id/$tag")
+            .testTag("$PACKAGE_ID:id/$tag")
     }
 }
 
@@ -78,7 +80,7 @@ fun Modifier.shake(enabled: Boolean, onAnimationEnd: () -> Unit = {}) = composed
                 animation = tween(durationMillis = 50, easing = LinearEasing),
                 repeatMode = RepeatMode.Reverse
             ),
-            finishedListener = { onAnimationEnd() }
+            finishedListener = { onAnimationEnd() }, label = ""
         )
 
         Modifier.graphicsLayer {
