@@ -58,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.core.view.WindowCompat
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.AlertDialogData
@@ -78,6 +79,7 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val isDarkModeOn: State<Boolean> =
                 darkThemeManager.darkModeStatusFlow.collectAsState()

@@ -32,6 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.request
 
-import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.RuntimeRequest
+import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
 
 class FinalizedHeadRequest : RuntimeRequest("chain_getFinalizedHead", listOf())

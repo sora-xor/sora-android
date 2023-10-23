@@ -37,15 +37,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.shared_utils.runtime.extrinsic.ExtrinsicBuilder
-import jp.co.soramitsu.shared_utils.runtime.metadata.event
-import jp.co.soramitsu.shared_utils.runtime.metadata.module
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicStatusResponse
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.Events
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.xsubstrate.runtime.extrinsic.ExtrinsicBuilder
+import jp.co.soramitsu.xsubstrate.runtime.metadata.event
+import jp.co.soramitsu.xsubstrate.runtime.metadata.module
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -185,6 +185,7 @@ class ExtrinsicManager @Inject constructor(
                 val isSuccess = isTxSuccessful(extrinsicId, blockHash, txHash)
                 isSuccess to blockHash
             }
+
             is ExtrinsicStatusResponse.ExtrinsicStatusPending -> null to null
         }
 
@@ -216,9 +217,11 @@ class ExtrinsicManager @Inject constructor(
             successEvent != null -> {
                 true
             }
+
             failedEvent != null -> {
                 false
             }
+
             else -> {
                 FirebaseWrapper.recordException(Throwable("No success or failed event in blockhash $blockHash via extrinsicId $extrinsicId and txHash $txHash"))
                 false

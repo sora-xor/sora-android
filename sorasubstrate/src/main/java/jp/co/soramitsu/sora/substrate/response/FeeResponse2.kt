@@ -34,9 +34,9 @@ package jp.co.soramitsu.sora.substrate.response
 
 import java.math.BigInteger
 import jp.co.soramitsu.common.util.ParseModel
-import jp.co.soramitsu.shared_utils.extensions.fromHex
-import jp.co.soramitsu.shared_utils.extensions.fromUnsignedBytes
-import jp.co.soramitsu.shared_utils.extensions.requireHexPrefix
+import jp.co.soramitsu.xcrypto.util.fromHex
+import jp.co.soramitsu.xcrypto.util.requireHexPrefix
+import jp.co.soramitsu.xsubstrate.extensions.fromUnsignedBytes
 
 class FeeResponse2(
     val inclusionFee: InclusionFee
@@ -48,7 +48,9 @@ class InclusionFee(
     private val adjustedWeightFee: String?
 ) : ParseModel() {
     val sum: BigInteger
-        get() = BrokenSubstrateHex(baseFee).decodeBigInt() + BrokenSubstrateHex(lenFee).decodeBigInt() + BrokenSubstrateHex(adjustedWeightFee).decodeBigInt()
+        get() = BrokenSubstrateHex(baseFee).decodeBigInt() + BrokenSubstrateHex(lenFee).decodeBigInt() + BrokenSubstrateHex(
+            adjustedWeightFee
+        ).decodeBigInt()
 }
 
 @JvmInline

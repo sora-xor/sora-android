@@ -84,7 +84,6 @@ dependencies {
 
     implementation composeConstraintLayoutDep
     implementation composeUiDep
-    implementation composeThemeAdapterDep
     implementation composeFoundationDep
     implementation composeMaterialDep
     implementation composeAnimationDep
@@ -95,13 +94,12 @@ dependencies {
     implementation composeLiveDataDep
     debugImplementation composeToolingDep
 
-    //implementation accompanistNavAnimationDep
-
     implementation roomDep
     implementation roomKtxDep
 
     implementation timberDep
-    implementation sharedUtilsDep
+
+    implementation xsubstrateDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep

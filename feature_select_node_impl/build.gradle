@@ -83,13 +83,15 @@ dependencies {
     implementation navigationFragmentDep
     implementation navigationUiDep
 
+    implementation xNetworkingDep
+    implementation xsubstrateDep
+
     implementation roomDep
     implementation roomKtxDep
 
     implementation uiCoreDep
 
     implementation composeUiDep
-    implementation composeThemeAdapterDep
     implementation composeFoundationDep
     implementation composeMaterialDep
     implementation composeAnimationDep
@@ -101,7 +103,6 @@ dependencies {
     implementation composeLifecycleDep
     debugImplementation composeToolingDep
     implementation navigationComposeDep
-    //implementation accompanistNavAnimationDep
 
     implementation daggerDep
     kapt daggerKaptDep

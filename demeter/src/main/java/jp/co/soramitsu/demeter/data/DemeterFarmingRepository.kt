@@ -40,17 +40,17 @@ import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
-import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
-import jp.co.soramitsu.shared_utils.runtime.definitions.types.fromHex
-import jp.co.soramitsu.shared_utils.runtime.metadata.module
-import jp.co.soramitsu.shared_utils.runtime.metadata.storage
-import jp.co.soramitsu.shared_utils.runtime.metadata.storageKey
-import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.mapToToken
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
+import jp.co.soramitsu.xsubstrate.runtime.metadata.module
+import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
+import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
+import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 
 interface DemeterFarmingRepository {
     suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>?

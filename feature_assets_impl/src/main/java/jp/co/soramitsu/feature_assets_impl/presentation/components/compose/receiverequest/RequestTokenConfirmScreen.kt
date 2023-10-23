@@ -50,6 +50,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
@@ -163,6 +164,7 @@ fun RequestTokenConfirmScreen(
             innerPadding = PaddingValues(
                 all = Dimens.x1_5
             ),
+            backgroundColor = Color.White,
             cornerRadius = Dimens.x4,
             state = state.screenStatus,
             contentWhenLoaded = {

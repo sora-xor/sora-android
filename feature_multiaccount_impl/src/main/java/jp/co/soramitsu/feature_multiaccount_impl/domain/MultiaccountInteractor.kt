@@ -41,8 +41,8 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsReposito
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
-import jp.co.soramitsu.shared_utils.encrypt.keypair.Keypair
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.xcrypto.encryption.Keypair
 import kotlinx.coroutines.flow.Flow
 
 class MultiaccountInteractor @Inject constructor(
@@ -72,7 +72,8 @@ class MultiaccountInteractor @Inject constructor(
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
     }
 
-    suspend fun recoverSoraAccountFromMnemonic(input: String, accountName: String) = credentialsRepository.restoreUserCredentialsFromMnemonic(input, accountName)
+    suspend fun recoverSoraAccountFromMnemonic(input: String, accountName: String) =
+        credentialsRepository.restoreUserCredentialsFromMnemonic(input, accountName)
 
     suspend fun recoverSoraAccountFromRawSeed(input: String, accountName: String): SoraAccount {
         val soraAccount = credentialsRepository.restoreUserCredentialsFromRawSeed(input, accountName)
@@ -125,7 +126,10 @@ class MultiaccountInteractor @Inject constructor(
 
         val filename = if (addresses.size == 1) addresses.first() else "batch_exported_sora_accounts"
 
-        return fileManager.writeExternalCacheText("$filename.json", credentialsRepository.generateJson(accounts, password))
+        return fileManager.writeExternalCacheText(
+            "$filename.json",
+            credentialsRepository.generateJson(accounts, password)
+        )
     }
 
     suspend fun generateSubstrateJsonString(accounts: List<SoraAccount>, password: String) =

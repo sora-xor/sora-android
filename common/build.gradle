@@ -150,7 +150,8 @@ dependencies {
     implementation navigationUiDep
 
     implementation xbackupDep
-    implementation sharedUtilsDep
+    implementation xsubstrateDep
+    implementation xcryptoDep
 
     implementation gsonDep
 

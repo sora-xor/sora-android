@@ -62,6 +62,7 @@ import jp.co.soramitsu.ui_core.theme.customColors
 @Composable
 fun LoadableContentCard(
     modifier: Modifier,
+    backgroundColor: Color = MaterialTheme.customColors.bgSurface,
     innerPadding: PaddingValues,
     cornerRadius: Dp,
     state: ScreenStatus,
@@ -71,6 +72,7 @@ fun LoadableContentCard(
     ContentCard(
         modifier = modifier,
         innerPadding = innerPadding,
+        backgroundColor = backgroundColor,
         cornerRadius = cornerRadius
     ) {
         when (state) {

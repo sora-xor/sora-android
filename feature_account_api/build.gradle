@@ -51,7 +51,9 @@ dependencies {
 
     implementation project(":common")
     implementation project(":sorasubstrate")
-    implementation sharedUtilsDep
+//    implementation sharedUtilsDep
+
+    implementation xsubstrateDep
 
     implementation coroutineAndroidDep
     implementation coroutineDep

@@ -52,7 +52,7 @@ val migration_addBackupCardHub_72_73 = object : Migration(72, 73) {
             val values = ContentValues().apply {
                 put("cardId", type.hubName)
                 put("accountAddress", address)
-                put("visibility", true)
+                put("visibility", false)
                 put("collapsed", false)
                 put("sortOrder", type.order)
             }

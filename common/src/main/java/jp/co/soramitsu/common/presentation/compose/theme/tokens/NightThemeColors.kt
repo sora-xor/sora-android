@@ -32,67 +32,49 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown30
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Green40
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Green5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey50
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey60
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey70
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey80
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey90
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Polkaswap40
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Polkaswap5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Red40
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Red5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Yellow30
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Yellow5
+import androidx.compose.ui.graphics.Color
 
 object NightThemeColors {
 
-    val AccentPrimary = Red40
+    val AccentPrimary = Color(0xfff754a3)
 
-    val AccentPrimaryContainer = Red5
+    val AccentPrimaryContainer = Color(0xffffe8eb)
 
-    val AccentSecondary = Grey5
+    val AccentSecondary = Color(0xfffcfcfc)
 
-    val AccentSecondaryContainer = Grey70
+    val AccentSecondaryContainer = Color(0xff313131)
 
-    val AccentTertiary = Grey50
+    val AccentTertiary = Color(0xff9b6fa5)
 
-    val AccentTertiaryContainer = Grey70
+    val AccentTertiaryContainer = Color(0xff313131)
 
-    val BgPage = Grey90
+    val BgPage = Color(0xff45245f)
 
-    val BgSurface = Grey80
+    val BgSurface = Color(0xFF592d71)
 
-    val BgSurfaceVariant = Grey70
+    val BgSurfaceVariant = Color(0xff492067)
 
-    val BgSurfaceInverted = Grey5
+    val BgSurfaceInverted = Color(0xfffcfcfc)
 
-    val FgPrimary = Grey5
+    val FgPrimary = Color(0xfffcfcfc)
 
-    val FgSecondary = Grey50
+    val FgSecondary = Color(0xffc29ab7)
 
-    val FgTertiary = Brown30
+    val FgTertiary = Color(0xff9b6fa5)
 
-    val FgInverted = Grey90
+    val FgInverted = Color(0xff45245f)
 
-    val FgOutline = Grey60
+    val FgOutline = Color(0xFF744594)
 
-    val StatusSuccess = Green40
+    val StatusSuccess = Color(0xFF44e5b2)
 
-    val StatusSuccessContainer = Green5
+    val StatusSuccessContainer = Color(0xFFd3f6ec)
 
-    val StatusWarning = Yellow30
+    val StatusWarning = Color(0xFFff9900)
 
-    val StatusWarningContainer = Yellow5
+    val StatusWarningContainer = Color(0xFFfff1d2)
 
-    val StatusError = Red40
+    val StatusError = Color(0xFFf24197)
 
-    val StatusErrorContainer = Red5
-
-    val AdditionalPolkaswap = Polkaswap40
-
-    val AdditionalPolkaswapContainer = Polkaswap5
+    val StatusErrorContainer = Color(0xFFffe8eb)
 }

@@ -25,8 +25,8 @@
         <item name="contentSecondary">@color/grey_700</item>
         <item name="contentTertiary">@color/grey_500</item>
         <item name="contentQuaternary">@color/grey_400</item>
-        <item name="baseBackground">#FF070707</item>
-        <item name="baseBackgroundSecond">#FF171717</item>
+        <item name="baseBackground">#ff45245f</item>
+        <item name="baseBackgroundSecond">#FF592d71</item>
         <item name="baseBackgroundDark">@color/backgroundDarkColor</item>
         <item name="baseBorderPrimary">@color/grey_300</item>
         <item name="baseBorderSecondary">@color/grey_200</item>
@@ -48,7 +48,7 @@
         <item name="secondaryPressed">@color/pressedSecondaryColor</item>
         <item name="secondaryFocused">@color/focusedSecondaryColor</item>
 
-        <item name="polkaswapBackground">#FF070707</item>
+        <item name="polkaswapBackground">#ff45245f</item>
         <item name="polkaswapMainColor">@color/neu_brand_polkaswap</item>
         <item name="dividerColor">@color/neu_divider_color</item>
         <item name="balanceColorDefault">@color/neu_black_default</item>
@@ -70,7 +70,7 @@
         <item name="statusColor">@color/neu_status</item>
         <item name="statusWarningColor">@color/neu_status_warning_day</item>
         <item name="pureBlackOnDay">@color/neu_color_black</item>
-        <item name="pureWhiteOnDay">@color/neu_color_black</item>
+        <item name="pureWhiteOnDay">#ff45245f</item>
         <item name="pureRedOnDay">@color/neu_color_red</item>
         <item name="statusPinkWarning">@color/neu_status_pink_warning_day</item>
         <item name="colorOnGrey">@color/neu_color_grey_100</item>
@@ -89,11 +89,11 @@
     </style>
 
     <style name="AppTheme.Onboarding">
-        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="baseBackground">#FF070707</item>
+        <item name="baseBackground">#ff45245f</item>
     </style>
 
 </resources>

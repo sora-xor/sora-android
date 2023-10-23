@@ -101,6 +101,7 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
             val dm = remember {
                 activity?.getSize()
             }
+
             val pushState = NewHistoryEventsWorker.getInfo(requireContext()).observeAsState().value
             val pushEnabled =
                 (pushState != null) && (pushState.size > 0) && ((pushState[0].state == WorkInfo.State.RUNNING) || (pushState[0].state == WorkInfo.State.ENQUEUED))
