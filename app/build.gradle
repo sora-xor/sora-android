@@ -15,7 +15,7 @@ kotlin {
 }
 
 android {
-    compileSdkVersion compileVersion
+    compileSdk compileVersion
     flavorDimensions "default"
     defaultConfig {
         applicationId "jp.co.soramitsu.sora"
@@ -65,8 +65,10 @@ android {
                 firebaseGroup = System.env.CI_FIREBASE_GROUP
             }
             firebaseAppDistribution {
+                artifactType="APK"
                 releaseNotes = firebaseReleaseNotes
                 groups = firebaseGroup
+
             }
 
         }
