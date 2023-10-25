@@ -178,6 +178,7 @@ class CardsHubViewModel @Inject constructor(
                                             loading = false,
                                             success = mapped.second,
                                             ibanBalance = if (mapped.second) soraCardInteractor.fetchIbanBalance().getOrNull() else null,
+                                            needUpdate = soraCardInteractor.needInstallUpdate(),
                                         )
                                     }
                                     .onStart {
@@ -187,6 +188,7 @@ class CardsHubViewModel @Inject constructor(
                                                 kycStatus = null,
                                                 loading = true,
                                                 ibanBalance = null,
+                                                needUpdate = false,
                                             )
                                         )
                                     }

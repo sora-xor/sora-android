@@ -58,6 +58,8 @@ internal class SoraCardClientProxy @Inject constructor(
 
     suspend fun getApplicationFee() = clientsFacade.getApplicationFee()
 
+    suspend fun getVersion() = clientsFacade.getSoraSupportVersion()
+
     suspend fun getIBAN() = clientsFacade.getIBAN()
 
     suspend fun logout() = clientsFacade.logout()

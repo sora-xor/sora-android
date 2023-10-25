@@ -43,6 +43,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BuyCryptoRepository
@@ -122,10 +123,11 @@ class BuyCryptoViewModel @AssistedInject constructor(
         val payload = UUID.randomUUID().toString()
         viewModelScope.launch {
             val address = userRepository.getCurSoraAccount().substrateAddress
-
+            val ticker = if (BuildUtils.isProdPlayMarket()) "XOR" else "TXOR"
             val unEncodedHtml = "<html><body>" +
                 "<div id=\"${BuildConfigWrapper.getX1WidgetId()}\" data-address=\"${address}\" " +
                 "data-from-currency=\"EUR\" data-from-amount=\"100\" data-hide-buy-more-button=\"true\" " +
+                "data-to-blockchain=\"$ticker\" data-disable-to-blockchain=\"true\"" +
                 "data-hide-try-again-button=\"true\" data-locale=\"en\" data-payload=\"${payload}\"></div>" +
                 "<script async src=\"${BuildConfigWrapper.getX1EndpointUrl()}\"></script>" +
                 "</body></html>"

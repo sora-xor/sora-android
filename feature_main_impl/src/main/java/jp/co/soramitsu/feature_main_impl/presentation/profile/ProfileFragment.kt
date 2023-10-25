@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -46,10 +45,12 @@ import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.androidfoundation.intent.openGooglePlay
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
@@ -77,7 +78,6 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -93,22 +93,29 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
                     .padding(start = Dimens.x2, end = Dimens.x2, bottom = Dimens.x5)
             ) {
                 Text(
-                    modifier = Modifier.padding(start = Dimens.x2, end = Dimens.x2, top = Dimens.x3),
+                    modifier = Modifier.padding(
+                        start = Dimens.x2,
+                        end = Dimens.x2,
+                        top = Dimens.x3,
+                    ),
                     text = stringResource(id = R.string.common_more),
                     style = MaterialTheme.customTypography.headline1,
                     color = MaterialTheme.customColors.fgPrimary,
                 )
+                val state = viewModel.state.collectAsStateWithLifecycle().value
                 ProfileItems(
-                    state = viewModel.state,
+                    state = state,
                     onAccountsClick = viewModel::showAccountList,
-                    onSoraCardClick = viewModel::showSoraCard,
+                    onSoraCardClick = {
+                        if (state.soraCardNeedUpdate) this@ProfileFragment.context?.openGooglePlay() else viewModel.showSoraCard()
+                    },
                     onBuyCrypto = viewModel::showBuyCrypto,
                     onNodeClick = viewModel::showSelectNode,
                     onAppSettingsClick = viewModel::showAppSettings,
                     onLoginClick = viewModel::showLogin,
                     onReferralClick = viewModel::showReferral,
                     onAboutClick = viewModel::showAbout,
-                    onDebugMenuClick = viewModel::showDebugMenu
+                    onDebugMenuClick = viewModel::showDebugMenu,
                 )
             }
         }

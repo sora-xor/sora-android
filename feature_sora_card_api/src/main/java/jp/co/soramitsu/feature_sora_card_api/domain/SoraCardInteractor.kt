@@ -44,6 +44,8 @@ interface SoraCardInteractor {
 
     suspend fun checkSoraCardPending()
 
+    suspend fun needInstallUpdate(): Boolean
+
     fun setStatus(status: SoraCardCommonVerification)
     fun setLogout()
 
