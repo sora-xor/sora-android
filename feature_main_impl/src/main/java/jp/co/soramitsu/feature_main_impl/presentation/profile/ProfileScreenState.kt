@@ -37,6 +37,7 @@ internal data class ProfileScreenState(
     val nodeConnected: Boolean,
     val isDebugMenuAvailable: Boolean,
     val soraCardEnabled: Boolean,
+    val soraCardNeedUpdate: Boolean,
     val soraCardStatusStringRes: Int,
     val soraCardStatusIconDrawableRes: Int?
 )

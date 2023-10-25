@@ -35,7 +35,6 @@ package jp.co.soramitsu.common.util.ext
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.style.RelativeSizeSpan
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -67,6 +66,8 @@ fun String.getInitials(): String {
         "${names.first().first().uppercaseChar()}${names.last().first().uppercaseChar()}"
     }
 }
+
+fun String.splitVersions() = split(".").map { it.toInt() }
 
 fun String.isErc20Address(): Boolean {
     return this.split(" ").size == 1 && this.startsWith(OptionsProvider.hexPrefix)
@@ -161,7 +162,23 @@ fun String.highlightWords(
     return builder
 }
 
-@Composable
+fun underlineSubstring(
+    main: String,
+    sub: String,
+): AnnotatedString = buildAnnotatedString {
+    val pos = main.indexOf(sub)
+    this.append(main)
+    if (pos != -1) {
+        addStyle(
+            style = SpanStyle(
+                textDecoration = TextDecoration.Underline
+            ),
+            start = pos,
+            end = pos + sub.length,
+        )
+    }
+}
+
 fun String.highlightWordsCompose(
     colors: List<Int>,
     clickableAnnotation: List<String>,

@@ -192,6 +192,7 @@ class CardsHubViewModelTest {
             SoraCardAvailabilityInfo()
         )
         coEvery { soraCardInteractor.checkSoraCardPending() } just runs
+        coEvery { soraCardInteractor.needInstallUpdate() } returns false
         every { assetsRouter.showBuyCrypto(any()) } returns Unit
         every { mainRouter.showGetSoraCard(any()) } just Runs
         every { mainRouter.showSoraCardDetails() } just Runs

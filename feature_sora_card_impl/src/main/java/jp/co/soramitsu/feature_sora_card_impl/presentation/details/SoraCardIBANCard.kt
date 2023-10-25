@@ -55,6 +55,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.util.ext.underlineSubstring
+import jp.co.soramitsu.oauth.clients.ClientsFacade
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -109,24 +111,46 @@ fun SoraCardIBANCard(
                         tint = MaterialTheme.customColors.fgSecondary
                     )
             }
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = Dimens.x1),
-                text = soraCardIBANCardState.iban,
-                style = MaterialTheme.customTypography.textM,
-                color = MaterialTheme.customColors.fgPrimary,
-            )
+            if (soraCardIBANCardState.iban.isNotEmpty()) {
+                Text(
+                    modifier = Modifier
+                        .testTagAsId("IbanValueText")
+                        .fillMaxWidth()
+                        .padding(all = Dimens.x1),
+                    text = soraCardIBANCardState.iban,
+                    style = MaterialTheme.customTypography.textM,
+                    color = MaterialTheme.customColors.fgPrimary,
+                )
+            } else {
+                Text(
+                    modifier = Modifier.fillMaxWidth().padding(all = Dimens.x1),
+                    text = underlineSubstring(stringResource(id = jp.co.soramitsu.oauth.R.string.iban_pending_description), ClientsFacade.techSupport),
+                    style = MaterialTheme.customTypography.textS,
+                    color = MaterialTheme.customColors.fgSecondary,
+                )
+            }
         }
     }
 }
 
 @Preview
 @Composable
-private fun PreviewSoraCardIBANCard() {
+private fun PreviewSoraCardIBANCard01() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
             iban = "LT61 3250 0467 7252 5583",
+        ),
+        onShareClick = {},
+        onCardClick = {},
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewSoraCardIBANCard02() {
+    SoraCardIBANCard(
+        soraCardIBANCardState = SoraCardIBANCardState(
+            iban = "",
         ),
         onShareClick = {},
         onCardClick = {},

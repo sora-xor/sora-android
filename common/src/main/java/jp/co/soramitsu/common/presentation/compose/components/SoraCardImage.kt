@@ -49,6 +49,7 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 @Composable
 fun SoraCardImage(
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Box(
         modifier = modifier,
@@ -58,6 +59,7 @@ fun SoraCardImage(
             painter = painterResource(id = R.drawable.sora_card),
             contentDescription = "",
             contentScale = ContentScale.FillWidth,
+            alpha = if (enabled) 1.0f else 0.4f,
         )
         Image(
             modifier = Modifier
@@ -74,7 +76,10 @@ fun SoraCardImage(
 @Preview(locale = "en")
 private fun PreviewSoraCardImage1() {
     SoraCardImage(
-        modifier = Modifier.fillMaxWidth().wrapContentHeight()
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        enabled = false,
     )
 }
 
@@ -82,7 +87,9 @@ private fun PreviewSoraCardImage1() {
 @Preview(locale = "ar")
 private fun PreviewSoraCardImage2() {
     SoraCardImage(
-        modifier = Modifier.fillMaxWidth().wrapContentHeight()
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
     )
 }
 
@@ -90,6 +97,8 @@ private fun PreviewSoraCardImage2() {
 @Preview(locale = "he")
 private fun PreviewSoraCardImage3() {
     SoraCardImage(
-        modifier = Modifier.fillMaxWidth().wrapContentHeight()
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
     )
 }

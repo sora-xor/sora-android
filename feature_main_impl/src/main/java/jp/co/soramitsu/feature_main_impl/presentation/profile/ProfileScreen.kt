@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -44,6 +45,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.item.CategoryItem
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
 internal fun ProfileItems(
@@ -75,8 +77,11 @@ internal fun ProfileItems(
                 .testTagAsId("SoraCard")
                 .padding(top = Dimens.x2),
             title = stringResource(id = R.string.more_menu_sora_card_title),
-            subtitle = stringResource(id = state.soraCardStatusStringRes),
-            subtitleIcon = state.soraCardStatusIconDrawableRes,
+            subtitle = if (state.soraCardNeedUpdate)
+                stringResource(id = jp.co.soramitsu.oauth.R.string.card_update_title) else
+                stringResource(id = state.soraCardStatusStringRes),
+            subtitleIcon = if (state.soraCardNeedUpdate) null else state.soraCardStatusIconDrawableRes,
+            subtitleColor = if (state.soraCardNeedUpdate) MaterialTheme.customColors.statusError else MaterialTheme.customColors.fgSecondary,
             icon = R.drawable.ic_buy_crypto,
             onClick = onSoraCardClick,
         )
@@ -170,6 +175,7 @@ private fun PreviewProfile() {
                 nodeConnected = true,
                 isDebugMenuAvailable = true,
                 soraCardEnabled = true,
+                soraCardNeedUpdate = false,
                 soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
                 soraCardStatusIconDrawableRes = R.drawable.ic_connection_indicator_green
             ),

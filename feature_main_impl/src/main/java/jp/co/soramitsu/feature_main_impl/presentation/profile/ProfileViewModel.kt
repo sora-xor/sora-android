@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
@@ -59,6 +58,8 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -79,17 +80,18 @@ class ProfileViewModel @Inject constructor(
     nodeManager: NodeManager,
 ) : BaseViewModel() {
 
-    internal var state by mutableStateOf(
+    private val _state = MutableStateFlow(
         ProfileScreenState(
             nodeName = "",
             nodeConnected = false,
             isDebugMenuAvailable = BuildUtils.isPlayMarket().not(),
             soraCardEnabled = false,
             soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
-            soraCardStatusIconDrawableRes = null
+            soraCardStatusIconDrawableRes = null,
+            soraCardNeedUpdate = false,
         )
     )
-        private set
+    internal val state = _state.asStateFlow()
 
     private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
     val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
@@ -113,7 +115,7 @@ class ProfileViewModel @Inject constructor(
                     else -> null
                 }
 
-            state = state.copy(
+            _state.value = _state.value.copy(
                 soraCardStatusStringRes = soraCardStatusStringRes,
                 soraCardStatusIconDrawableRes = soraCardStatusIconDrawableRes
             )
@@ -125,7 +127,7 @@ class ProfileViewModel @Inject constructor(
             .catch { onError(it) }
             .distinctUntilChanged()
             .onEach { node ->
-                state = state.copy(nodeName = node?.name.orEmpty())
+                _state.value = _state.value.copy(nodeName = node?.name.orEmpty())
             }
             .launchIn(viewModelScope)
 
@@ -133,13 +135,14 @@ class ProfileViewModel @Inject constructor(
             .catch { onError(it) }
             .distinctUntilChanged()
             .onEach { connected ->
-                state = state.copy(nodeConnected = connected)
+                _state.value = _state.value.copy(nodeConnected = connected)
             }
             .launchIn(viewModelScope)
 
         viewModelScope.launch {
-            state = state.copy(
-                soraCardEnabled = soraConfigManager.getSoraCard()
+            _state.value = _state.value.copy(
+                soraCardEnabled = soraConfigManager.getSoraCard(),
+                soraCardNeedUpdate = soraCardInteractor.needInstallUpdate(),
             )
         }
 

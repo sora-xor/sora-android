@@ -133,6 +133,7 @@ class ProfileViewModelTest {
                         enoughXor = true,
                     )
                 )
+        coEvery { soraCardInteractor.needInstallUpdate() } returns false
         every { interactor.flowSelectedNode() } returns
                 flowOf(
                     ChainNode(
@@ -154,7 +155,7 @@ class ProfileViewModelTest {
         every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         advanceUntilIdle()
-        profileViewModel.state.let {
+        profileViewModel.state.value.let {
             assertEquals("node", it.nodeName)
             assertEquals(true, it.nodeConnected)
         }
