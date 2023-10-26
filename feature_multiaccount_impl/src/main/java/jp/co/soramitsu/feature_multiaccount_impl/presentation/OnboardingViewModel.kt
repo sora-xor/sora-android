@@ -45,6 +45,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.net.SocketException
+import java.net.SocketTimeoutException
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -370,6 +371,9 @@ class OnboardingViewModel @Inject constructor(
                 } catch (e: SocketException) {
                     _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
                     onError(SoraException.networkError(resourceManager, e))
+                } catch (e: SocketTimeoutException) {
+                    _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
+                    onError(SoraException.networkError(resourceManager, e))
                 }
             }
         }
@@ -579,6 +583,8 @@ class OnboardingViewModel @Inject constructor(
                 onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
+            } catch (e: SocketTimeoutException) {
+                onError(SoraException.networkError(resourceManager, e))
             } catch (e: AuthConsentException) {
                 _tutorialScreenState.value =
                     _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
@@ -635,6 +641,11 @@ class OnboardingViewModel @Inject constructor(
                         }
                     }
                 } catch (e: SocketException) {
+                    withContext(coroutineManager.main) {
+                        _createBackupPasswordState.value =
+                            createBackupPasswordState.copy(isLoading = false)
+                    }
+                } catch (e: SocketTimeoutException) {
                     withContext(coroutineManager.main) {
                         _createBackupPasswordState.value =
                             createBackupPasswordState.copy(isLoading = false)
@@ -749,6 +760,8 @@ class OnboardingViewModel @Inject constructor(
                         onError(e)
                     } catch (e: SocketException) {
                         onError(SoraException.networkError(resourceManager, e))
+                    } catch (e: SocketTimeoutException) {
+                        onError(SoraException.networkError(resourceManager, e))
                     } catch (e: AuthConsentException) {
                         _consentExceptionHandler.value = e.intent
                     }
@@ -811,6 +824,8 @@ class OnboardingViewModel @Inject constructor(
                 resetBackupLiveData()
                 navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
             } catch (e: SocketException) {
+                onError(SoraException.networkError(resourceManager, e))
+            } catch (e: SocketTimeoutException) {
                 onError(SoraException.networkError(resourceManager, e))
             }
         }

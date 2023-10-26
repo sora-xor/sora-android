@@ -42,6 +42,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.net.SocketException
+import java.net.SocketTimeoutException
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
@@ -326,6 +327,10 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     withContext(coroutineManager.main) {
                         onError(SoraException.networkError(resourceManager, e))
                     }
+                } catch (e: SocketTimeoutException) {
+                    withContext(coroutineManager.main) {
+                        onError(SoraException.networkError(resourceManager, e))
+                    }
                 } catch (e: AuthConsentException) {
                     withContext(coroutineManager.main) {
                         _consentExceptionHandler.value = e.intent
@@ -367,6 +372,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 }
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
+            } catch (e: SocketTimeoutException) {
+                onError(SoraException.networkError(resourceManager, e))
             } catch (e: AuthConsentException) {
                 isFromAuthorization = true
                 _consentExceptionHandler.value = e.intent
@@ -388,6 +395,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     isBackupAvailable = false
                 )
             } catch (e: SocketException) {
+                onError(SoraException.networkError(resourceManager, e))
+            } catch (e: SocketTimeoutException) {
                 onError(SoraException.networkError(resourceManager, e))
             } catch (e: AuthConsentException) {
                 _consentExceptionHandler.value = e.intent
@@ -434,6 +443,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     }
                 }
             } catch (e: SocketException) {
+                onError(SoraException.networkError(resourceManager, e))
+            } catch (e: SocketTimeoutException) {
                 onError(SoraException.networkError(resourceManager, e))
             } catch (e: AuthConsentException) {
                 _consentExceptionHandler.value = e.intent
