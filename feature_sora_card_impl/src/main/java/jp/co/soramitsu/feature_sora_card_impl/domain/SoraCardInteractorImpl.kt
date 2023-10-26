@@ -197,7 +197,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
         soraCardClientProxy.getIBAN().mapCatching { wrapper ->
             val sorted = wrapper.ibans?.sortedByDescending { it.createdDate }
             sorted?.firstOrNull()?.availableBalance?.let {
-                "%s%.2f".format(euroSign, it / 100)
+                "%s%.2f".format(euroSign, it / 100.0)
             } ?: ""
         }
 
