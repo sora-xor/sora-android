@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -64,7 +63,6 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -72,10 +70,6 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         composable(
             route = ExploreRoutes.START,
         ) {
-//            DiscoverScreen(
-//                onAddLiquidityClicked = viewModel::onPoolPlus,
-//                scrollState = scrollState,
-//            )
             StartScreen(
                 scrollState = scrollState,
                 onCurrencyShowMore = { navController.navigate(ExploreRoutes.ALL_CURRENCIES) },

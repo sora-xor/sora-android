@@ -68,16 +68,16 @@ internal fun AppSettingsScreen(
                 icon = null,
                 label = stringResource(id = R.string.system_appearance),
                 bottomDivider = false,
-                available = true,
-                checked = checkedSystem,
+                available = false,
+                checked = false,
                 onClick = onSystemToggle,
             )
             OptionSwitch(
                 icon = null,
                 label = stringResource(id = R.string.dark_mode),
                 bottomDivider = false,
-                available = true,
-                checked = checkedDark,
+                available = false,
+                checked = false,
                 onClick = onDarkToggle,
             )
         }

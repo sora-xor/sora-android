@@ -129,7 +129,7 @@ class ExploreViewModel @Inject constructor(
         polkaswapRouter.showPoolDetails(pool)
     }
 
-    private fun onPoolPlus() {
+    fun onPoolPlus() {
         polkaswapRouter.showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
     }
 }
