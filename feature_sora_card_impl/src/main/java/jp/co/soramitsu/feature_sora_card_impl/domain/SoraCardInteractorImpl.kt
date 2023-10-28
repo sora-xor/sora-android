@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 import java.math.BigDecimal
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.OptionsProvider.euroSign
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -42,6 +43,7 @@ import jp.co.soramitsu.common.util.ext.Big100
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.greaterThan
 import jp.co.soramitsu.common.util.ext.safeDivide
+import jp.co.soramitsu.common.util.ext.splitVersions
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
@@ -50,6 +52,7 @@ import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import kotlin.math.min
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -86,6 +89,24 @@ internal class SoraCardInteractorImpl @Inject constructor(
                 delay(POLLING_PERIOD_IN_MILLIS)
             }
         }
+    }
+
+    private var needUpdateCache: Boolean? = null
+
+    override suspend fun needInstallUpdate(): Boolean =
+        needUpdateCache ?: needInstallUpdateInternal().also {
+            needUpdateCache = it
+        }
+
+    private suspend fun needInstallUpdateInternal(): Boolean {
+        val remote = soraCardClientProxy.getVersion().getOrNull() ?: return false
+        val currentArray = OptionsProvider.soracard.splitVersions()
+        val remoteArray = remote.splitVersions()
+        if (currentArray.isEmpty() || remoteArray.isEmpty()) return false
+        for (i in 0..min(currentArray.lastIndex, remoteArray.lastIndex)) {
+            if (remoteArray[i] > currentArray[i]) return true
+        }
+        return false
     }
 
     override fun setStatus(status: SoraCardCommonVerification) {
@@ -168,15 +189,16 @@ internal class SoraCardInteractorImpl @Inject constructor(
 
     override suspend fun fetchUserIbanAccount(): Result<String> =
         soraCardClientProxy.getIBAN().mapCatching { wrapper ->
-            val sorted = wrapper.ibans.sortedByDescending { it.createdDate }
-            sorted.first().iban
+            val sorted = wrapper.ibans?.sortedByDescending { it.createdDate }
+            sorted?.firstOrNull()?.iban.orEmpty()
         }
 
     override suspend fun fetchIbanBalance(): Result<String> =
         soraCardClientProxy.getIBAN().mapCatching { wrapper ->
-            val sorted = wrapper.ibans.sortedByDescending { it.createdDate }
-            val euroValue = (sorted.first().availableBalance / 100.0)
-            "%s%.2f".format(euroSign, euroValue)
+            val sorted = wrapper.ibans?.sortedByDescending { it.createdDate }
+            sorted?.firstOrNull()?.availableBalance?.let {
+                "%s%.2f".format(euroSign, it / 100.0)
+            } ?: ""
         }
 
     override suspend fun fetchApplicationFee(): String = soraCardClientProxy.getApplicationFee()

@@ -126,6 +126,7 @@ fun mapAssetsToCardState(
 
 data class SoraCardState(
     val success: Boolean,
+    val needUpdate: Boolean,
     val ibanBalance: String?,
     val kycStatus: String?,
     override val loading: Boolean,

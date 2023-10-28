@@ -140,14 +140,16 @@ class SoraCardDetailsViewModel @Inject constructor(
 
     fun onIbanCardShareClick() {
         ibanCache?.let {
-            _shareLinkEvent.value = it
+            if (it.isNotEmpty()) _shareLinkEvent.value = it
         }
     }
 
     fun onIbanCardClick() {
         ibanCache?.let {
-            clipboardManager.addToClipboard(it)
-            copiedToast.trigger()
+            if (it.isNotEmpty()) {
+                clipboardManager.addToClipboard(it)
+                copiedToast.trigger()
+            }
         }
     }
 

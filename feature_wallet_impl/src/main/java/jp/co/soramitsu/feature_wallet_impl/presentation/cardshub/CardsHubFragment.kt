@@ -60,6 +60,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.androidfoundation.intent.openGooglePlay
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
@@ -102,7 +103,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
 
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
-        navController: NavHostController
+        navController: NavHostController,
     ) {
         composable(
             route = theOnlyRoute,
@@ -128,6 +129,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     onPoolClick = viewModel::onPoolClick,
                     onOpenFullCardClick = viewModel::onOpenFullCard,
                     onSoraCardClick = viewModel::onCardStateClicked,
+                    onSoraCardNeedUpdateClick = { this@CardsHubFragment.context?.openGooglePlay() },
                     onSoraCardClose = viewModel::onRemoveSoraCard,
                     onBuyXorClick = viewModel::onBuyCrypto,
                     onBuyXorClose = viewModel::onRemoveBuyXorToken,
@@ -151,6 +153,7 @@ private fun CardsMainScreen(
     onPoolClick: (StringPair) -> Unit,
     onOpenFullCardClick: (AssetCardState) -> Unit,
     onSoraCardClick: () -> Unit,
+    onSoraCardNeedUpdateClick: () -> Unit,
     onSoraCardClose: () -> Unit,
     onBuyXorClick: () -> Unit,
     onBuyXorClose: () -> Unit,
@@ -224,6 +227,7 @@ private fun CardsMainScreen(
                                 state = cardState,
                                 onCardStateClicked = onSoraCardClick,
                                 onCloseClicked = onSoraCardClose,
+                                onNeedUpdate = onSoraCardNeedUpdateClick,
                             )
                         }
                     }
@@ -259,7 +263,7 @@ private fun PreviewCardsMainScreen() {
                     BuyXorState, ReferralState, BackupWalletState,
                 ),
             ),
-            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
         )
     }
 }

@@ -39,6 +39,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.config.BuildConfigWrapper
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BuyCryptoRepository
@@ -66,6 +67,7 @@ class BuyCryptoViewModelTest {
         val unencodedHtml = "<html><body>" +
                 "<div id=\"somewidgetid\" data-address=\"${address}\" " +
                 "data-from-currency=\"EUR\" data-from-amount=\"100\" data-hide-buy-more-button=\"true\" " +
+                "data-to-blockchain=\"TXOR\" data-disable-to-blockchain=\"true\"" +
                 "data-hide-try-again-button=\"true\" data-locale=\"en\" data-payload=\"%s\"></div>" +
                 "<script async src=\"https://some.domain.url\"></script>" +
                 "</body></html>"
@@ -94,6 +96,8 @@ class BuyCryptoViewModelTest {
         whenever(userRepository.getCurSoraAccount())
             .thenReturn(SoraAccount(substrateAddress = address, accountName = "substrateAddress"))
 
+        mockkObject(BuildUtils)
+        every { BuildUtils.isProdPlayMarket() } returns false
         mockkStatic(UUID::class)
         every { UUID.randomUUID().toString() } returns "payload"
 

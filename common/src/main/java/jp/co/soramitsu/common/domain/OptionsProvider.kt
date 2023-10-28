@@ -52,6 +52,7 @@ object OptionsProvider {
     const val fiatSymbol = "$"
     const val nbspace = ' '
     const val euroSign = '€'
+    const val soracard = "2.2.0"
 
     const val website = "https://sora.org"
     const val sourceLink = "https://github.com/sora-xor/Sora-Android"

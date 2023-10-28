@@ -35,7 +35,6 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.contacts
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -64,7 +63,6 @@ class ContactsFragment : SoraBaseFragment<ContactsViewModel>() {
 
     override val viewModel: ContactsViewModel by viewModels()
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
