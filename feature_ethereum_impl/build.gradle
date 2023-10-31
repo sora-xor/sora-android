@@ -64,7 +64,6 @@ dependencies {
     implementation coroutineAndroidDep
     implementation coroutineDep
     implementation web3jDep
-    implementation gsonDep
 
     //implementation irohaDep
 

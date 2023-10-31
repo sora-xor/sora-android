@@ -99,8 +99,6 @@ dependencies {
     implementation hiltNavComposeDep
     kapt hiltWorkManagerKaptDep
 
-    implementation gsonDep
-
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep
 
