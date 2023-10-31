@@ -134,6 +134,7 @@ class CardsHubViewModel @Inject constructor(
                 soraCardInteractor.checkSoraCardPending()
             }
         }
+
         viewModelScope.launch {
             cardsHubInteractorImpl
                 .subscribeVisibleCardsHubList()
@@ -177,7 +178,8 @@ class CardsHubViewModel @Inject constructor(
                                             kycStatus = mapped.first,
                                             loading = false,
                                             success = mapped.second,
-                                            ibanBalance = if (mapped.second) soraCardInteractor.fetchIbanBalance().getOrNull() else null,
+                                            ibanBalance = if (mapped.second) soraCardInteractor.fetchIbanBalance()
+                                                .getOrNull() else null,
                                             needUpdate = soraCardInteractor.needInstallUpdate(),
                                         )
                                     }
@@ -359,6 +361,7 @@ class CardsHubViewModel @Inject constructor(
             is FavoriteAssetsCardState -> {
                 router.showAssetSettings()
             }
+
             is FavoritePoolsCardState -> {
                 polkaswapRouter.showPoolSettings()
             }
