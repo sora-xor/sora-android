@@ -51,9 +51,9 @@ fun AlertDialogContent(openAlertDialog: MutableState<AlertDialogData>) {
         val message = openAlertDialog.value.message.message()
         if (title != null && message != null) {
             AlertDialog(
-                backgroundColor = MaterialTheme.customColors.bgPage,
-                title = { Text(text = title) },
-                text = { Text(text = message) },
+                backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
+                title = { Text(color = MaterialTheme.customColors.fgPrimary, text = title) },
+                text = { Text(color = MaterialTheme.customColors.fgPrimary, text = message) },
                 onDismissRequest = {
                     openAlertDialog.value = AlertDialogData()
                 },
