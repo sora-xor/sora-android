@@ -46,7 +46,8 @@ class PoolsListState(
 data class PoolsListItemState(
     val token1Icon: String,
     val token2Icon: String,
-    val poolName: String,
+    val poolToken1Symbol: String,
+    val poolToken2Symbol: String,
     val poolAmounts: String,
     val fiat: String,
     val fiatChange: String,
@@ -62,11 +63,8 @@ fun mapPoolsData(
     val state = PoolsListState(
         poolsData.mapIndexed { i, poolData ->
             PoolsListItemState(
-                poolName = String.format(
-                    "%s - %s",
-                    poolData.basic.baseToken.symbol,
-                    poolData.basic.targetToken.symbol,
-                ),
+                poolToken1Symbol = poolData.basic.baseToken.symbol,
+                poolToken2Symbol = poolData.basic.targetToken.symbol,
                 poolAmounts = String.format(
                     "%s - %s",
                     poolData.basic.baseToken.printBalance(

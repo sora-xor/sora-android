@@ -123,15 +123,35 @@ internal fun EventSwap(
                 overflow = TextOverflow.Ellipsis,
             )
 
-            Text(
-                modifier = Modifier
-                    .wrapContentSize(),
-                text = eventUiModel.tickers,
-                style = MaterialTheme.customTypography.textXSBold,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.customColors.fgSecondary,
-                maxLines = 1,
-            )
+            Row {
+                Text(
+                    modifier = Modifier
+                        .wrapContentSize(),
+                    text = eventUiModel.tickerFrom,
+                    style = MaterialTheme.customTypography.textXSBold,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    maxLines = 1,
+                )
+                Text(
+                    modifier = Modifier
+                        .wrapContentSize(),
+                    text = "->",
+                    style = MaterialTheme.customTypography.textXSBold,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    maxLines = 1,
+                )
+                Text(
+                    modifier = Modifier
+                        .wrapContentSize(),
+                    text = eventUiModel.tickerTo,
+                    style = MaterialTheme.customTypography.textXSBold,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    maxLines = 1,
+                )
+            }
         }
         Column(
             modifier = Modifier.weight(1f),
@@ -207,7 +227,8 @@ private val eventPreview = EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel
     iconTo = DEFAULT_ICON_URI,
     amountFrom = "12133123 XOR -> ",
     amountTo = "34879.987 DAI",
-    tickers = "XOR -> DAI",
+    tickerFrom = "XOR ",
+    tickerTo = "DAI",
     fiatTo = "$123.4",
     dateTime = "09.03.2001",
     timestamp = 1313123132,

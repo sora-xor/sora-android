@@ -65,12 +65,17 @@ class TransactionMappersImpl @Inject constructor(
                     tokenUri = tx.token.iconUri(),
                     ethTokenUri = tx.ethToken.iconUri(),
                     dateTime = dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
-                    amountFormatted = tx.token.printBalance(tx.amount, numbersFormatter, AssetHolder.ACTIVITY_LIST_ROUNDING),
+                    amountFormatted = tx.token.printBalance(
+                        tx.amount,
+                        numbersFormatter,
+                        AssetHolder.ACTIVITY_LIST_ROUNDING
+                    ),
                     fiatFormatted = "~%s".format(tx.token.printFiat(tx.amount, numbersFormatter)),
                     requestHash = tx.requestHash,
                     sidechainAddress = tx.sidechainAddress,
                 )
             }
+
             is Transaction.Transfer -> {
                 if (tx.transferType == TransactionTransferType.INCOMING)
                     EventUiModel.EventTxUiModel.EventTransferInUiModel(
@@ -104,6 +109,7 @@ class TransactionMappersImpl @Inject constructor(
                         tx.base.status,
                     )
             }
+
             is Transaction.Swap -> {
                 EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel(
                     tx.base.txHash,
@@ -121,16 +127,15 @@ class TransactionMappersImpl @Inject constructor(
                         numbersFormatter,
                         AssetHolder.ACTIVITY_LIST_ROUNDING
                     ),
-                    "%s -> %s".format(
-                        tx.tokenFrom.symbol,
-                        tx.tokenTo.symbol
-                    ),
+                    tx.tokenFrom.symbol,
+                    tx.tokenTo.symbol,
                     "",
                     dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
                     tx.base.timestamp,
                     tx.base.status,
                 )
             }
+
             is Transaction.Liquidity -> {
                 val add = tx.type == TransactionLiquidityType.ADD
                 EventUiModel.EventTxUiModel.EventLiquidityAddUiModel(
@@ -163,6 +168,7 @@ class TransactionMappersImpl @Inject constructor(
                     add
                 )
             }
+
             is Transaction.ReferralSetReferrer -> {
                 EventUiModel.EventTxUiModel.EventReferralProgramUiModel(
                     hash = tx.base.txHash,
@@ -173,9 +179,15 @@ class TransactionMappersImpl @Inject constructor(
                     plusAmount = false,
                     tokenIcon = tx.token.iconUri(),
                     dateTime = dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
-                    amountFormatted = if (tx.myReferrer) "--" else "-1 ${resourceManager.getQuantityString(R.plurals.referral_invitations, 1)}",
+                    amountFormatted = if (tx.myReferrer) "--" else "-1 ${
+                        resourceManager.getQuantityString(
+                            R.plurals.referral_invitations,
+                            1
+                        )
+                    }",
                 )
             }
+
             is Transaction.ReferralUnbond -> {
                 EventUiModel.EventTxUiModel.EventReferralProgramUiModel(
                     hash = tx.base.txHash,
@@ -195,6 +207,7 @@ class TransactionMappersImpl @Inject constructor(
                     ),
                 )
             }
+
             is Transaction.ReferralBond -> {
                 EventUiModel.EventTxUiModel.EventReferralProgramUiModel(
                     hash = tx.base.txHash,
