@@ -28,7 +28,6 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     api coroutineTestDep
-    api gsonDep
     api xsubstrateDep
 
     api jUnitDep

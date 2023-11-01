@@ -45,14 +45,11 @@ import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
 import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
 import jp.co.soramitsu.feature_ethereum_api.domain.model.GasEstimation
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthereumCredentialsMapper
-import jp.co.soramitsu.feature_ethereum_impl.data.network.model.EthPublicKeyWithProof
-import jp.co.soramitsu.feature_ethereum_impl.data.network.model.KeccakProof
 import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiConverter
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
 import jp.co.soramitsu.xcrypto.util.fromHex
-import jp.co.soramitsu.xcrypto.util.toHexString
 import org.web3j.crypto.Sign
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.utils.Numeric
@@ -209,16 +206,7 @@ class EthereumRepositoryImpl @Inject constructor(
         val dataToSign = prepareDataToSign(address)
         val signature = sign(dataToSign, privateKey)
 
-        val proof = EthPublicKeyWithProof(
-            publicKey.toString(),
-            KeccakProof(
-                signature.v.toString(charset("UTF-16")),
-                signature.r.toHexString(),
-                signature.s.toHexString()
-            )
-        )
-
-        return proof.toString()
+        return ""
     }
 
     private fun sign(message: ByteArray, privateKey: BigInteger): Sign.SignatureData {
