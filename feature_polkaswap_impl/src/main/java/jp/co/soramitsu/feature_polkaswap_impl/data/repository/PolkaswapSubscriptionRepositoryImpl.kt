@@ -82,6 +82,7 @@ import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.GetStorageRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -515,6 +516,14 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                     }
             }
         }
+    }
+
+    override fun subscribeEachBlock(): Flow<String> = flow {
+        val key = runtimeManager.getRuntimeSnapshot().metadata
+            .module(Pallete.SYSTEM.palletName)
+            .storage(Storage.PARENT_HASH.storageName)
+            .storageKey()
+        emitAll(substrateCalls.observeStorage(key).debounce(5000))
     }
 
     private suspend fun getReserveAccountOfPool(

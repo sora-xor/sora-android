@@ -55,6 +55,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -196,14 +197,14 @@ private fun PreviewEditCardsHubScreen() {
                 HubCardState(
                     "a",
                     HubCardVisibility.VISIBLE_AND_ENABLED,
-                    R.string.common_buy_xor,
+                    CardHubType.BUY_XOR_TOKEN.userName,
                 )
             ),
             disabledCards = listOf(
                 HubCardState(
                     "b",
                     HubCardVisibility.NOT_VISIBLE_ENABLED,
-                    R.string.liquid_assets,
+                    CardHubType.ASSETS.userName,
                 )
             ),
         ),

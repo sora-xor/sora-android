@@ -146,6 +146,7 @@ enum class Storage(val storageName: String) {
     ASSET_INFOS("AssetInfos"),
     ACCOUNT("Account"),
     ACCOUNTS("Accounts"),
+    PARENT_HASH("ParentHash"),
     RESERVES("Reserves"),
     RESERVES_COLLATERAL("CollateralReserves"),
     LEDGER("Ledger"),
