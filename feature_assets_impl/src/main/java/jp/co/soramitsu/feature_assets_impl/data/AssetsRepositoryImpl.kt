@@ -150,7 +150,7 @@ class AssetsRepositoryImpl @Inject constructor(
     override suspend fun getAssetsActive(address: String): List<Asset> {
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
         return db.assetDao().getAssetsActive(address, selectedCurrency.code)
-            .map {
+            .mapNotNull {
                 assetLocalToAssetMapper.map(it)
             }
     }
@@ -160,7 +160,7 @@ class AssetsRepositoryImpl @Inject constructor(
         val assetsLocal =
             db.assetDao().getAssetsWhitelist(address, selectedCurrency.code)
         insertAssetsInternal(address, assetsLocal, false)
-        return assetsLocal.map {
+        return assetsLocal.mapNotNull {
             assetLocalToAssetMapper.map(it)
         }
     }
@@ -222,7 +222,7 @@ class AssetsRepositoryImpl @Inject constructor(
     override fun subscribeAssetsActive(address: String): Flow<List<Asset>> = flow {
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
         val f = db.assetDao().subscribeAssetsActive(address, selectedCurrency.code).map {
-            it.map { l -> assetLocalToAssetMapper.map(l) }
+            it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
         }
         emitAll(f)
     }
@@ -230,7 +230,7 @@ class AssetsRepositoryImpl @Inject constructor(
     override fun subscribeAssetsFavorite(address: String): Flow<List<Asset>> = flow {
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
         val f = db.assetDao().subscribeAssetsFavorite(address, selectedCurrency.code).map {
-            it.map { l -> assetLocalToAssetMapper.map(l) }
+            it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
         }
         emitAll(f)
     }
@@ -238,7 +238,7 @@ class AssetsRepositoryImpl @Inject constructor(
     override fun subscribeAssetsVisible(address: String): Flow<List<Asset>> = flow {
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
         val f = db.assetDao().subscribeAssetsVisible(address, selectedCurrency.code).map {
-            it.map { l -> assetLocalToAssetMapper.map(l) }
+            it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
         }
         emitAll(f)
     }
