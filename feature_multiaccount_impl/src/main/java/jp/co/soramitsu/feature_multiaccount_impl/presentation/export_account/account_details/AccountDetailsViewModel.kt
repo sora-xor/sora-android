@@ -428,8 +428,12 @@ class AccountDetailsViewModel @AssistedInject constructor(
         viewModelScope.launch {
             try {
                 _accountDetailsScreenState.value?.let {
+                    if (it.isBackupAvailable == false) {
+                        backupService.getBackupAccounts()
+                    }
+
                     if (backupService.isAccountBackedUp(address)) {
-                        backupService.deleteBackupAccount(address)
+                        _accountDetailsScreenState.value = it.copy(isBackupAvailable = true)
                     } else {
                         _createBackupPasswordState.value = CreateBackupPasswordState(
                             password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),

@@ -32,10 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.data.repository
 
-import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.core_db.AppDatabase
@@ -55,7 +53,6 @@ import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.TestRuntimeProvider
 import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -70,7 +67,6 @@ import org.mockito.BDDMockito.anyBoolean
 import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
@@ -109,13 +105,12 @@ class WalletRepositoryTest {
 
     private val mockedUri = DEFAULT_ICON_URI
 
-    private lateinit var runtime: RuntimeSnapshot
+    //private lateinit var runtime: RuntimeSnapshot
 
     private lateinit var walletRepository: WalletRepository
 
     @Before
     fun setUp() = runTest {
-        runtime = TestRuntimeProvider.buildRuntime("sora2")
         given(db.globalCardsHubDao()).willReturn(globalCardsHubDao)
         walletRepository = WalletRepositoryImpl(
             datasource,

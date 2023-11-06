@@ -60,6 +60,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
+import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.presentation.view.WrappedRecyclerView
 import jp.co.soramitsu.common.view.CustomItemTouchHelperCallback
 import jp.co.soramitsu.common_wallet.R as polkaswapR
@@ -109,7 +110,7 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
                 ) {
                     Text(
                         modifier = Modifier,
-                        text = stringResource(id = R.string.liquid_assets),
+                        text = stringResource(id = CardHubType.ASSETS.userName),
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary,
                     )

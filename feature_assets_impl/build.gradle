@@ -107,8 +107,6 @@ dependencies {
     implementation hiltWorkManagerDep
     kapt hiltWorkManagerKaptDep
 
-    implementation gsonDep
-
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep
 
