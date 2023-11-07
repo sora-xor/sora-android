@@ -115,6 +115,9 @@ dependencies {
     implementation project(":soracrypro")
     implementation project(":network")
 
+    implementation googleInAppUpdateDep
+    implementation googleInAppUpdateKtxDep
+
     implementation activityKtxDep
     implementation coreKtxDep
     implementation androidDep
@@ -129,7 +132,6 @@ dependencies {
 
     implementation kotlinxSerializationJsonDep
 
-    implementation googlePlayCoreDep
     implementation coilSvgDep
 
     implementation webSocketLibDep
