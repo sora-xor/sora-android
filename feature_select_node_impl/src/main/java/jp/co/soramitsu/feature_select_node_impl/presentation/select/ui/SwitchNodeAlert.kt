@@ -47,12 +47,18 @@ fun SwitchNodeAlert(
     onSwitchConfirmed: () -> Unit
 ) {
     AlertDialog(
-        backgroundColor = MaterialTheme.customColors.bgPage,
+        backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
         title = {
-            Text(text = stringResource(R.string.select_node_switch_alert_title))
+            Text(
+                color = MaterialTheme.customColors.fgPrimary,
+                text = stringResource(R.string.select_node_switch_alert_title)
+            )
         },
         text = {
-            Text(text = stringResource(R.string.select_node_switch_alert_description))
+            Text(
+                color = MaterialTheme.customColors.fgPrimary,
+                text = stringResource(R.string.select_node_switch_alert_description)
+            )
         },
         confirmButton = {
             TextButton(
