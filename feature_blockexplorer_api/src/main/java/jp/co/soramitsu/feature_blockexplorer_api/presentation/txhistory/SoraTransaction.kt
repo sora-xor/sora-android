@@ -114,7 +114,8 @@ sealed class EventUiModel {
             val icon2: String,
             val amounts: String,
             val type: String,
-            val tickers: String,
+            val ticker1: String,
+            val ticker2: String,
             val fiat: String,
             val add: Boolean,
         ) : EventTxUiModel(hash, timestamp, status)

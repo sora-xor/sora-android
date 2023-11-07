@@ -123,15 +123,35 @@ internal fun EventLiquidity(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                modifier = Modifier
-                    .wrapContentSize(),
-                text = eventUiModel.tickers,
-                style = MaterialTheme.customTypography.textXSBold,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.customColors.fgSecondary,
-                maxLines = 1,
-            )
+            Row {
+                Text(
+                    modifier = Modifier
+                        .wrapContentSize(),
+                    text = eventUiModel.ticker1,
+                    style = MaterialTheme.customTypography.textXSBold,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    maxLines = 1,
+                )
+                Text(
+                    modifier = Modifier
+                        .wrapContentSize(),
+                    text = " / ",
+                    style = MaterialTheme.customTypography.textXSBold,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    maxLines = 1,
+                )
+                Text(
+                    modifier = Modifier
+                        .wrapContentSize(),
+                    text = eventUiModel.ticker2,
+                    style = MaterialTheme.customTypography.textXSBold,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    maxLines = 1,
+                )
+            }
         }
         Column(
             modifier = Modifier.weight(1f),
@@ -199,7 +219,8 @@ private val eventPreview = EventUiModel.EventTxUiModel.EventLiquidityAddUiModel(
     icon2 = DEFAULT_ICON_URI,
     amounts = "199994857.134536 XOR / 12332453.2345345 DAI",
     type = "Pool add",
-    tickers = "XOR / DAI",
+    ticker1 = "XOR",
+    ticker2 = "XOR",
     fiat = "$125235235235236",
     add = false,
 )

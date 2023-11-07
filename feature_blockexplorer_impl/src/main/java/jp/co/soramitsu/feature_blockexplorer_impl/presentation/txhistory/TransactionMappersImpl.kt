@@ -138,6 +138,17 @@ class TransactionMappersImpl @Inject constructor(
 
             is Transaction.Liquidity -> {
                 val add = tx.type == TransactionLiquidityType.ADD
+                val sign = if (add) "" else "+"
+                val amount1 =
+                    "$sign${
+                        tx.token1.printBalance(
+                            tx.amount1,
+                            numbersFormatter,
+                            AssetHolder.ACTIVITY_LIST_ROUNDING
+                        )
+                    }"
+                val amount2 =
+                    "$sign${tx.token2.printBalance(tx.amount2, numbersFormatter, AssetHolder.ACTIVITY_LIST_ROUNDING)}"
                 EventUiModel.EventTxUiModel.EventLiquidityAddUiModel(
                     tx.base.txHash,
                     tx.base.timestamp,
@@ -145,25 +156,10 @@ class TransactionMappersImpl @Inject constructor(
                     dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
                     tx.token1.iconUri(),
                     tx.token2.iconUri(),
-                    "%s%s / %s%s".format(
-                        if (add) "" else "+",
-                        tx.token1.printBalance(
-                            tx.amount1,
-                            numbersFormatter,
-                            AssetHolder.ACTIVITY_LIST_ROUNDING
-                        ),
-                        if (add) "" else "+",
-                        tx.token2.printBalance(
-                            tx.amount2,
-                            numbersFormatter,
-                            AssetHolder.ACTIVITY_LIST_ROUNDING
-                        )
-                    ),
+                    "$amount1 / $amount2",
                     resourceManager.getString(R.string.activity_pool_title),
-                    "%s / %s".format(
-                        tx.token1.symbol,
-                        tx.token2.symbol,
-                    ),
+                    tx.token1.symbol,
+                    tx.token2.symbol,
                     "",
                     add
                 )
