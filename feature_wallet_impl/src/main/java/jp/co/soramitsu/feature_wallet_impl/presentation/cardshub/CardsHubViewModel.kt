@@ -325,7 +325,7 @@ class CardsHubViewModel @Inject constructor(
     private fun mapAssetsCard(collapsed: Boolean, assets: List<Asset>): CardState {
         return TitledAmountCardState(
             amount = formatFiatAmount(assets.fiatSum(), assets.fiatSymbol(), numbersFormatter),
-            title = R.string.liquid_assets,
+            title = CardHubType.ASSETS.userName,
             state = FavoriteAssetsCardState(mapAssetsToCardState(assets, numbersFormatter)),
             collapsedState = collapsed,
             onCollapseClick = { collapseCardToggle(CardHubType.ASSETS.hubName, !collapsed) },
@@ -337,7 +337,7 @@ class CardsHubViewModel @Inject constructor(
         val data = mapPoolsData(pools, numbersFormatter)
         return TitledAmountCardState(
             amount = formatFiatAmount(data.second, pools.fiatSymbol, numbersFormatter),
-            title = R.string.pooled_assets,
+            title = CardHubType.POOLS.userName,
             state = FavoritePoolsCardState(
                 state = data.first
             ),

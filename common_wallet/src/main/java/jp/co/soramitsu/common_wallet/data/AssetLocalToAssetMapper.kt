@@ -70,9 +70,8 @@ class AssetLocalToAssetMapper @Inject constructor(
     }
 
     @Throws(IllegalArgumentException::class)
-    suspend fun map(asset: AssetTokenWithFiatLocal): Asset {
-        val assetLocal = asset.assetLocal
-        requireNotNull(assetLocal)
+    suspend fun map(asset: AssetTokenWithFiatLocal): Asset? {
+        val assetLocal = asset.assetLocal ?: return null
         return Asset(
             token = map(TokenWithFiatLocal(asset.token, asset.price)),
             balance = BalanceWrapper.mapLocalBalance(assetLocal),

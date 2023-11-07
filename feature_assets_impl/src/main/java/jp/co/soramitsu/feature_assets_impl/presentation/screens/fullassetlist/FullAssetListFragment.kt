@@ -71,6 +71,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetslist.CommonAssetsList
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -120,7 +121,7 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                 ) {
                     Text(
                         modifier = Modifier.wrapContentSize(),
-                        text = stringResource(id = R.string.liquid_assets),
+                        text = stringResource(id = CardHubType.ASSETS.userName),
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary,
                     )
