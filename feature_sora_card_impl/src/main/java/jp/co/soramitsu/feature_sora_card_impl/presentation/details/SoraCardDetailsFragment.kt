@@ -128,8 +128,18 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
                             )
                         }
                     },
-                    title = { Text(text = stringResource(id = R.string.sora_card_option_logout)) },
-                    text = { Text(text = stringResource(id = R.string.sora_card_option_logout_description)) },
+                    title = {
+                        Text(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            text = stringResource(id = R.string.sora_card_option_logout)
+                        )
+                    },
+                    text = {
+                        Text(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            text = stringResource(id = R.string.sora_card_option_logout_description)
+                        )
+                    },
                 )
             }
         }
