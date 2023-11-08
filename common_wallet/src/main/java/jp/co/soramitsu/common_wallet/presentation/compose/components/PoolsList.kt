@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.components.TextWithDelimiter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
@@ -101,29 +102,14 @@ fun PoolsList(
                     .weight(1f)
                     .padding(start = Dimens.x1, end = Dimens.x1)
             ) {
-                Row {
-                    Text(
-                        color = MaterialTheme.customColors.fgPrimary,
-                        style = MaterialTheme.customTypography.textM,
-                        text = poolState.poolToken1Symbol,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        color = MaterialTheme.customColors.fgPrimary,
-                        style = MaterialTheme.customTypography.textM,
-                        text = " - ",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        color = MaterialTheme.customColors.fgPrimary,
-                        style = MaterialTheme.customTypography.textM,
-                        text = poolState.poolToken2Symbol,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                TextWithDelimiter(
+                    text1 = poolState.poolToken1Symbol,
+                    text2 = poolState.poolToken2Symbol,
+                    delimiter = " - ",
+                    color = MaterialTheme.customColors.fgPrimary,
+                    style = MaterialTheme.customTypography.textM
+                )
+
                 Text(
                     color = MaterialTheme.customColors.fgSecondary,
                     style = MaterialTheme.customTypography.textXSBold,

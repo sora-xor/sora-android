@@ -59,6 +59,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.components.TextWithDelimiter
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -123,42 +124,22 @@ internal fun EventSwap(
                 overflow = TextOverflow.Ellipsis,
             )
 
-            Row {
-                Text(
-                    modifier = Modifier
-                        .wrapContentSize(),
-                    text = eventUiModel.tickerFrom,
-                    style = MaterialTheme.customTypography.textXSBold,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.customColors.fgSecondary,
-                    maxLines = 1,
-                )
-                Text(
-                    modifier = Modifier
-                        .wrapContentSize(),
-                    text = "->",
-                    style = MaterialTheme.customTypography.textXSBold,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.customColors.fgSecondary,
-                    maxLines = 1,
-                )
-                Text(
-                    modifier = Modifier
-                        .wrapContentSize(),
-                    text = eventUiModel.tickerTo,
-                    style = MaterialTheme.customTypography.textXSBold,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.customColors.fgSecondary,
-                    maxLines = 1,
-                )
-            }
+            TextWithDelimiter(
+                text1 = eventUiModel.tickerFrom,
+                text2 = eventUiModel.tickerTo,
+                delimiter = " -> ",
+                color = MaterialTheme.customColors.fgSecondary,
+                style = MaterialTheme.customTypography.textXSBold
+            )
         }
         Column(
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.End,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End,
             ) {
@@ -217,7 +198,9 @@ internal fun EventSwap(
 private fun PreviewEventSwap() {
     EventSwap(
         eventUiModel = eventPreview,
-        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
     )
 }
 

@@ -58,6 +58,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.components.TextWithDelimiter
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -123,35 +124,13 @@ internal fun EventLiquidity(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Row {
-                Text(
-                    modifier = Modifier
-                        .wrapContentSize(),
-                    text = eventUiModel.ticker1,
-                    style = MaterialTheme.customTypography.textXSBold,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.customColors.fgSecondary,
-                    maxLines = 1,
-                )
-                Text(
-                    modifier = Modifier
-                        .wrapContentSize(),
-                    text = " / ",
-                    style = MaterialTheme.customTypography.textXSBold,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.customColors.fgSecondary,
-                    maxLines = 1,
-                )
-                Text(
-                    modifier = Modifier
-                        .wrapContentSize(),
-                    text = eventUiModel.ticker2,
-                    style = MaterialTheme.customTypography.textXSBold,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.customColors.fgSecondary,
-                    maxLines = 1,
-                )
-            }
+            TextWithDelimiter(
+                text1 = eventUiModel.ticker1,
+                text2 = eventUiModel.ticker2,
+                delimiter = " / ",
+                color = MaterialTheme.customColors.fgSecondary,
+                style = MaterialTheme.customTypography.textXSBold
+            )
         }
         Column(
             modifier = Modifier.weight(1f),
@@ -163,7 +142,25 @@ internal fun EventLiquidity(
             ) {
                 Text(
                     modifier = Modifier.wrapContentSize(),
-                    text = eventUiModel.amounts,
+                    text = eventUiModel.amount1,
+                    textAlign = TextAlign.End,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.customTypography.textM,
+                    color = if (eventUiModel.add) MaterialTheme.customColors.fgPrimary else MaterialTheme.customColors.statusSuccess,
+                    maxLines = 1,
+                )
+                Text(
+                    modifier = Modifier.wrapContentSize(),
+                    text = " / ",
+                    textAlign = TextAlign.End,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.customTypography.textM,
+                    color = if (eventUiModel.add) MaterialTheme.customColors.fgPrimary else MaterialTheme.customColors.statusSuccess,
+                    maxLines = 1,
+                )
+                Text(
+                    modifier = Modifier.wrapContentSize(),
+                    text = eventUiModel.amount2,
                     textAlign = TextAlign.End,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.customTypography.textM,
@@ -217,7 +214,8 @@ private val eventPreview = EventUiModel.EventTxUiModel.EventLiquidityAddUiModel(
     dateTime = "12.03.1998",
     icon1 = DEFAULT_ICON_URI,
     icon2 = DEFAULT_ICON_URI,
-    amounts = "199994857.134536 XOR / 12332453.2345345 DAI",
+    amount1 = "199994857.134536 XOR",
+    amount2 = "12332453.2345345 DAI",
     type = "Pool add",
     ticker1 = "XOR",
     ticker2 = "XOR",
