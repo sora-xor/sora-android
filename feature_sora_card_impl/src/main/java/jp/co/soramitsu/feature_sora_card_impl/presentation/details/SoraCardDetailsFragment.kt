@@ -102,11 +102,14 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
             )
             if (state.value.logoutDialog) {
                 AlertDialog(
-                    backgroundColor = MaterialTheme.customColors.bgPage,
+                    backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
                     onDismissRequest = viewModel::onLogoutDismiss,
                     buttons = {
                         Row(
-                            Modifier.fillMaxWidth().wrapContentHeight().padding(Dimens.x1),
+                            Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(Dimens.x1),
                             horizontalArrangement = Arrangement.spacedBy(Dimens.x2),
                         ) {
                             TextButton(
