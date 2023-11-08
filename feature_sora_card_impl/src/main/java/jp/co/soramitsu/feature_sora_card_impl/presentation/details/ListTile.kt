@@ -69,8 +69,8 @@ enum class ListTileFlag {
 
 data class ListTileState(
     val testTagId: String? = null,
-    private val variant: ListTileVariant,
-    private val flag: ListTileFlag,
+    val variant: ListTileVariant,
+    val flag: ListTileFlag,
     private val title: Text,
     private val subtitle: Text? = null,
     private val body: Text? = null,
@@ -78,9 +78,6 @@ data class ListTileState(
 ) {
 
     val titleText: Text = title
-
-    val paletteColor: Long = if (variant === ListTileVariant.TITLE_NAVIGATION_HINT && flag === ListTileFlag.WARNING)
-        0xFFCB0F1F else 0xFF281818
 
     val isSubtitleVisible = variant === ListTileVariant.TITLE_SUBTITLE_BODY
 
@@ -108,9 +105,12 @@ fun ListTileView(
 ) {
     // TODO Extract to UI lib
 
-    val colorInUse = remember(listTileState) {
-        Color(listTileState.paletteColor)
-    }
+    val colorInUse = if (listTileState.variant === ListTileVariant.TITLE_NAVIGATION_HINT && listTileState.flag === ListTileFlag.WARNING) {
+            MaterialTheme.customColors.statusError
+        } else {
+            MaterialTheme.customColors.fgPrimary
+        }
+
 
     Row(
         modifier = Modifier
