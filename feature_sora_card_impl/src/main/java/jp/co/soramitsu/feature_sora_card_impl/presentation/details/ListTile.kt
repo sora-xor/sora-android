@@ -42,10 +42,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
@@ -69,8 +67,8 @@ enum class ListTileFlag {
 
 data class ListTileState(
     val testTagId: String? = null,
-    private val variant: ListTileVariant,
-    private val flag: ListTileFlag,
+    val variant: ListTileVariant,
+    val flag: ListTileFlag,
     private val title: Text,
     private val subtitle: Text? = null,
     private val body: Text? = null,
@@ -78,9 +76,6 @@ data class ListTileState(
 ) {
 
     val titleText: Text = title
-
-    val paletteColor: Long = if (variant === ListTileVariant.TITLE_NAVIGATION_HINT && flag === ListTileFlag.WARNING)
-        0xFFCB0F1F else 0xFF281818
 
     val isSubtitleVisible = variant === ListTileVariant.TITLE_SUBTITLE_BODY
 
@@ -108,8 +103,10 @@ fun ListTileView(
 ) {
     // TODO Extract to UI lib
 
-    val colorInUse = remember(listTileState) {
-        Color(listTileState.paletteColor)
+    val colorInUse = if (listTileState.variant === ListTileVariant.TITLE_NAVIGATION_HINT && listTileState.flag === ListTileFlag.WARNING) {
+        MaterialTheme.customColors.statusError
+    } else {
+        MaterialTheme.customColors.fgPrimary
     }
 
     Row(
