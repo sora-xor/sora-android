@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common_wallet.presentation.compose.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,17 +43,16 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.components.TextWithDelimiter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
@@ -76,41 +76,40 @@ fun PoolsList(
                 .padding(horizontal = Dimens.x3)
                 .clickable { onPoolClick?.invoke(poolState.tokenIds) }
         ) {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                ConstraintLayout(
-                    modifier = Modifier.wrapContentSize()
-                ) {
-                    val (token1, token2) = createRefs()
-                    TokenIcon(
-                        uri = poolState.token1Icon, size = Size.Small,
-                        modifier = Modifier
-                            .constrainAs(token1) {
-                                top.linkTo(parent.top)
-                                start.linkTo(parent.start)
-                            }
-                    )
-                    TokenIcon(
-                        uri = poolState.token2Icon, size = Size.Small,
-                        modifier = Modifier
-                            .constrainAs(token2) {
-                                top.linkTo(parent.top)
-                                start.linkTo(token1.start, margin = 24.dp)
-                            }
-                    )
-                }
+            ConstraintLayout(
+                modifier = Modifier.wrapContentSize()
+            ) {
+                val (token1, token2) = createRefs()
+                TokenIcon(
+                    uri = poolState.token1Icon, size = Size.Small,
+                    modifier = Modifier
+                        .constrainAs(token1) {
+                            top.linkTo(parent.top)
+                            start.linkTo(parent.start)
+                        }
+                )
+                TokenIcon(
+                    uri = poolState.token2Icon, size = Size.Small,
+                    modifier = Modifier
+                        .constrainAs(token2) {
+                            top.linkTo(parent.top)
+                            start.linkTo(token1.start, margin = 24.dp)
+                        }
+                )
             }
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = Dimens.x1, end = Dimens.x1)
             ) {
-                Text(
+                TextWithDelimiter(
+                    text1 = poolState.poolToken1Symbol,
+                    text2 = poolState.poolToken2Symbol,
+                    delimiter = " - ",
                     color = MaterialTheme.customColors.fgPrimary,
-                    style = MaterialTheme.customTypography.textM,
-                    text = poolState.poolName,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.customTypography.textM
                 )
+
                 Text(
                     color = MaterialTheme.customColors.fgSecondary,
                     style = MaterialTheme.customTypography.textXSBold,
@@ -144,7 +143,7 @@ fun PoolsList(
 @Composable
 @Preview
 private fun PreviewPoolsList() {
-    Column {
+    Column(Modifier.background(Color.White)) {
         PoolsList(
             onPoolClick = {},
             cardState = PoolsListState(
@@ -153,7 +152,8 @@ private fun PreviewPoolsList() {
                         token1Icon = DEFAULT_ICON_URI,
                         token2Icon = DEFAULT_ICON_URI,
                         poolAmounts = "123.456",
-                        poolName = "XOR - VAL",
+                        poolToken1Symbol = "XOR",
+                        poolToken2Symbol = "VAL",
                         fiat = "$7908",
                         fiatChange = "+23.1 %",
                         tokenIds = "" to "",
@@ -162,7 +162,8 @@ private fun PreviewPoolsList() {
                         token1Icon = DEFAULT_ICON_URI,
                         token2Icon = DEFAULT_ICON_URI,
                         poolAmounts = "98.76",
-                        poolName = "DAI - PSWAP",
+                        poolToken1Symbol = "DAI",
+                        poolToken2Symbol = "PSWAP",
                         fiat = "$ 0.00123",
                         fiatChange = "-9.88 %",
                         tokenIds = "" to "",

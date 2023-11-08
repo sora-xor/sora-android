@@ -59,6 +59,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.components.TextWithDelimiter
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -123,14 +124,12 @@ internal fun EventSwap(
                 overflow = TextOverflow.Ellipsis,
             )
 
-            Text(
-                modifier = Modifier
-                    .wrapContentSize(),
-                text = eventUiModel.tickers,
-                style = MaterialTheme.customTypography.textXSBold,
-                overflow = TextOverflow.Ellipsis,
+            TextWithDelimiter(
+                text1 = eventUiModel.tickerFrom,
+                text2 = eventUiModel.tickerTo,
+                delimiter = " -> ",
                 color = MaterialTheme.customColors.fgSecondary,
-                maxLines = 1,
+                style = MaterialTheme.customTypography.textXSBold
             )
         }
         Column(
@@ -138,7 +137,9 @@ internal fun EventSwap(
             horizontalAlignment = Alignment.End,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End,
             ) {
@@ -197,7 +198,9 @@ internal fun EventSwap(
 private fun PreviewEventSwap() {
     EventSwap(
         eventUiModel = eventPreview,
-        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
     )
 }
 
@@ -207,7 +210,8 @@ private val eventPreview = EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel
     iconTo = DEFAULT_ICON_URI,
     amountFrom = "12133123 XOR -> ",
     amountTo = "34879.987 DAI",
-    tickers = "XOR -> DAI",
+    tickerFrom = "XOR ",
+    tickerTo = "DAI",
     fiatTo = "$123.4",
     dateTime = "09.03.2001",
     timestamp = 1313123132,
