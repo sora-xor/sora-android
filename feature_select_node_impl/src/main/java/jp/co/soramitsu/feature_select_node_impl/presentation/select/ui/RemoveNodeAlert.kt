@@ -48,9 +48,12 @@ fun RemoveNodeAlertDialog(
     onRemoveConfirmed: () -> Unit
 ) {
     AlertDialog(
-        backgroundColor = MaterialTheme.customColors.bgPage,
+        backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
         title = {
-            Text(text = stringResource(R.string.remove_node_title))
+            Text(
+                color = MaterialTheme.customColors.fgPrimary,
+                text = stringResource(R.string.remove_node_title)
+            )
         },
         confirmButton = {
             TextButton(

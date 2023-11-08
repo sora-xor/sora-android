@@ -213,8 +213,6 @@ dependencies {
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
 
-    implementation gsonDep
-
     // Tests
     testImplementation project(":test_shared")
 }

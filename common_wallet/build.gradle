@@ -73,7 +73,6 @@ dependencies {
 
     implementation uiCoreDep
 
-    implementation googlePlayCoreDep
     implementation coilSvgDep
 
     implementation webSocketLibDep
@@ -90,8 +89,6 @@ dependencies {
     kapt daggerKaptDep
 
     implementation datastoreDep
-
-    implementation gsonDep
 
     implementation platform(googleFirebaseBomDep)
     implementation googleCrashlyticsDep

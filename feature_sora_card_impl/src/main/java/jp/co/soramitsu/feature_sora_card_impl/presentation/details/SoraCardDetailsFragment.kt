@@ -102,7 +102,7 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
             )
             if (state.value.logoutDialog) {
                 AlertDialog(
-                    backgroundColor = MaterialTheme.customColors.bgPage,
+                    backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
                     onDismissRequest = viewModel::onLogoutDismiss,
                     buttons = {
                         Row(

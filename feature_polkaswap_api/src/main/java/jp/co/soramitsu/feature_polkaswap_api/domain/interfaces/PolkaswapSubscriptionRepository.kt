@@ -42,6 +42,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface PolkaswapSubscriptionRepository {
 
+    fun subscribeEachBlock(): Flow<String>
+
     suspend fun getRemotePoolReserves(
         tokenFrom: Token,
         tokenTo: Token,
