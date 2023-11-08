@@ -42,10 +42,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
@@ -106,11 +104,10 @@ fun ListTileView(
     // TODO Extract to UI lib
 
     val colorInUse = if (listTileState.variant === ListTileVariant.TITLE_NAVIGATION_HINT && listTileState.flag === ListTileFlag.WARNING) {
-            MaterialTheme.customColors.statusError
-        } else {
-            MaterialTheme.customColors.fgPrimary
-        }
-
+        MaterialTheme.customColors.statusError
+    } else {
+        MaterialTheme.customColors.fgPrimary
+    }
 
     Row(
         modifier = Modifier
