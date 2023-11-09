@@ -138,23 +138,21 @@ class DarkThemeManager @Inject constructor(
         }.flowOn(coroutineManager.main.immediate).stateIn(
             scope = coroutineManager.applicationScope,
             started = SharingStarted.Eagerly, // Eager mode is used to apply changes as soon as possible
-            initialValue = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_NO
+            initialValue = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
         )
 
     fun updateUiModeFromCache() {
         coroutineManager.applicationScope.launch {
             mutableDarkThemeSharedFlow.emit(
                 value = DarkModeSettings(
-//                    isSystemDrivenUiEnabled = soraPreferences.getBoolean(
-//                        field = KEY_SYSTEM_DRIVEN_UI_ENABLED,
-//                        defaultValue = false
-//                    ),
-                    isSystemDrivenUiEnabled = false,
-//                    isDarkModeEnabled = soraPreferences.getBoolean(
-//                        field = KEY_DARK_THEME_ENABLED,
-//                        defaultValue = false
-//                    )
-                    isDarkModeEnabled = false,
+                    isSystemDrivenUiEnabled = soraPreferences.getBoolean(
+                        field = KEY_SYSTEM_DRIVEN_UI_ENABLED,
+                        defaultValue = false
+                    ),
+                    isDarkModeEnabled = soraPreferences.getBoolean(
+                        field = KEY_DARK_THEME_ENABLED,
+                        defaultValue = false
+                    )
                 )
             )
         }
