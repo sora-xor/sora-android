@@ -47,7 +47,6 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
@@ -61,7 +60,6 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.DarkThemeManager
-import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.attrColor
@@ -72,20 +70,17 @@ import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.ActivityMainBinding
-import jp.co.soramitsu.feature_main_impl.presentation.inappupdate.FlexibleUpdateDialog
 import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
 import jp.co.soramitsu.feature_multiaccount_api.OnboardingNavigator
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity :
     ToolbarActivity<MainViewModel, ActivityMainBinding>(),
     BottomBarController,
     BarsColorHandler,
-    OnboardingNavigator,
-    InAppUpdateManager.UpdateManagerListener {
+    OnboardingNavigator {
 
     companion object {
         private const val ACTION_INVITE = "jp.co.soramitsu.feature_main_impl.ACTION_INVITE"
@@ -145,8 +140,8 @@ class MainActivity :
     @Inject
     lateinit var mainRouter: MainRouter
 
-    @Inject
-    lateinit var inAppUpdateManager: InAppUpdateManager
+//    @Inject
+//    lateinit var inAppUpdateManager: InAppUpdateManager
 
     @Inject
     lateinit var polkaswapRouter: PolkaswapRouter
@@ -170,30 +165,30 @@ class MainActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        lifecycleScope.launch {
-            inAppUpdateManager.start(this@MainActivity)
-        }
+//        lifecycleScope.launch {
+//            inAppUpdateManager.start(this@MainActivity)
+//        }
     }
 
-    override fun askUserToInstall() {
-        findNavController(R.id.fragmentNavHostMain)
-            .currentBackStackEntry?.savedStateHandle
-            ?.getLiveData<Boolean?>(FlexibleUpdateDialog.UPDATE_REPLY)?.observe(this) {
-                if (it == true) inAppUpdateManager.startUpdateFlexible()
-            }
-        mainRouter.showFlexibleUpdateScreen()
-    }
+//    override fun askUserToInstall() {
+//        findNavController(R.id.fragmentNavHostMain)
+//            .currentBackStackEntry?.savedStateHandle
+//            ?.getLiveData<Boolean?>(FlexibleUpdateDialog.UPDATE_REPLY)?.observe(this) {
+//                if (it == true) inAppUpdateManager.startUpdateFlexible()
+//            }
+//        mainRouter.showFlexibleUpdateScreen()
+//    }
 
-    override fun readyToShowFlexible(): Int? {
-        return REQUEST_CODE_UPDATE
-    }
+//    override fun readyToShowFlexible(): Int? {
+//        return REQUEST_CODE_UPDATE
+//    }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_UPDATE) {
-            inAppUpdateManager.flexibleDesire(resultCode)
-        }
-    }
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//        if (requestCode == REQUEST_CODE_UPDATE) {
+//            inAppUpdateManager.flexibleDesire(resultCode)
+//        }
+//    }
 
     override fun initViews() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigationView) { _, insets ->

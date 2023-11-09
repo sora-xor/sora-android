@@ -105,9 +105,7 @@ dependencies {
     implementation composeLifecycleDep
     debugImplementation composeToolingDep
     implementation navigationComposeDep
-    //implementation accompanistNavAnimationDep
 
-    implementation gsonDep
     implementation webSocketLibDep
     implementation timberDep
 

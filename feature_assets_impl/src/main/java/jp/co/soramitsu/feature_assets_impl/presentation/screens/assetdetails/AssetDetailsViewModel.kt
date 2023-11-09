@@ -168,7 +168,8 @@ class AssetDetailsViewModel @AssistedInject constructor(
                         frozenBalance = if (assetId == SubstrateOptionsProvider.feeAssetId) { asset.token.printBalance(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter, AssetHolder.ROUNDING) } else { null },
                         frozenBalanceFiat = if (assetId == SubstrateOptionsProvider.feeAssetId) { asset.token.printFiat(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter) } else { null },
                         isTransferableBalanceAvailable = asset.balance.transferable > BigDecimal.ZERO,
-                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId)
+                        buyCryptoAvailable = false,
+//                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId),
                     )
                 )
             }

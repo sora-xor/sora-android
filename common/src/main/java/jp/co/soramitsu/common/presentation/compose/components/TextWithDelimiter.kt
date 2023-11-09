@@ -30,21 +30,46 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ethereum_impl.data.network.response
+package jp.co.soramitsu.common.presentation.compose.components
 
-import com.google.gson.annotations.SerializedName
-import jp.co.soramitsu.sora.substrate.response.StatusDto
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 
-data class EthRegisterStateResponse(
-    @SerializedName("status") val status: StatusDto,
-    @SerializedName("address") val address: String?,
-    @SerializedName("state") val state: State,
-    @SerializedName("reason") val reason: String?
-) {
-
-    enum class State {
-        INPROGRESS,
-        COMPLETED,
-        FAILED
+@Composable
+fun TextWithDelimiter(text1: String, text2: String, delimiter: String, color: Color, style: TextStyle) {
+    Row {
+        Text(
+            modifier = Modifier
+                .wrapContentSize(),
+            text = text1,
+            style = style,
+            overflow = TextOverflow.Ellipsis,
+            color = color,
+            maxLines = 1,
+        )
+        Text(
+            modifier = Modifier
+                .wrapContentSize(),
+            text = delimiter,
+            style = style,
+            overflow = TextOverflow.Ellipsis,
+            color = color,
+            maxLines = 1,
+        )
+        Text(
+            modifier = Modifier
+                .wrapContentSize(),
+            text = text2,
+            style = style,
+            overflow = TextOverflow.Ellipsis,
+            color = color,
+            maxLines = 1,
+        )
     }
 }

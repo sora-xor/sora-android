@@ -132,18 +132,20 @@ class GetSoraCardViewModel @AssistedInject constructor(
 
             is SoraCardResult.Success -> {
                 soraCardInteractor.setStatus(soraCardResult.status)
+                mainRouter.popBackStack()
             }
 
             is SoraCardResult.Failure -> {
                 soraCardInteractor.setStatus(soraCardResult.status)
+                mainRouter.popBackStack()
             }
 
             is SoraCardResult.Canceled -> {}
             is SoraCardResult.Logout -> {
                 soraCardInteractor.setLogout()
+                mainRouter.popBackStack()
             }
         }
-        mainRouter.popBackStack()
     }
 
     fun onEnableCard() {

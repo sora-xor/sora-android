@@ -54,11 +54,9 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
 import kotlin.math.max
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
 
 @ExperimentalCoroutinesApi
 class SwapInteractorImpl(
@@ -184,12 +182,7 @@ class SwapInteractorImpl(
     override fun observeSwap(): Flow<Boolean> =
         swapResult.observe()
 
-    override fun observePoolReserves(): Flow<String> = flow {
-        while (true) {
-            emit("observePoolReserves")
-            delay(5000)
-        }
-    }
+    override fun observePoolReserves(): Flow<String> = polkaswapSubscriptionRepository.subscribeEachBlock()
 
 //    override fun observePoolReserves(): Flow<String> {
 //        return poolReservesFlowToken.asStateFlow().filterNotNull()

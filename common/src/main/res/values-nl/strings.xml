@@ -283,7 +283,7 @@
   <string name="invoice_scan_error_no_info">QR kan niet worden gedecodeerd</string>
   <string name="invoice_scan_error_user_not_found">Kan geen gebruiker vinden via QR</string>
   <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
-  <string name="liquid_assets">Liquid assets</string>
+  <string name="liquid_assets">Assets</string>
   <string name="logout_dialog_body">Deze actie zal resulteren in het verwijderen van een account van dit apparaat. Zorg ervoor dat u een back-up hebt gemaakt van uw passphrase voordat u verder gaat.</string>
   <string name="logout_remove_nodes_body">\n\nAlle aangepaste noden worden ook verwijderd</string>
   <string name="mnemonic_confirmation_select_word_2">from the list you have written down</string>
