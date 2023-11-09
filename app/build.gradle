@@ -142,7 +142,7 @@ play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.6.0.0 - Improvements on SORA Card Hub"
+    releaseName = "3.7.0.0 - Night Mode"
 }
 
 dependencies {
@@ -212,8 +212,6 @@ dependencies {
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
-
-    implementation gsonDep
 
     // Tests
     testImplementation project(":test_shared")

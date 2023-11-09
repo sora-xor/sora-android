@@ -102,11 +102,14 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
             )
             if (state.value.logoutDialog) {
                 AlertDialog(
-                    backgroundColor = MaterialTheme.customColors.bgPage,
+                    backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
                     onDismissRequest = viewModel::onLogoutDismiss,
                     buttons = {
                         Row(
-                            Modifier.fillMaxWidth().wrapContentHeight().padding(Dimens.x1),
+                            Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(Dimens.x1),
                             horizontalArrangement = Arrangement.spacedBy(Dimens.x2),
                         ) {
                             TextButton(
@@ -125,8 +128,18 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
                             )
                         }
                     },
-                    title = { Text(text = stringResource(id = R.string.sora_card_option_logout)) },
-                    text = { Text(text = stringResource(id = R.string.sora_card_option_logout_description)) },
+                    title = {
+                        Text(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            text = stringResource(id = R.string.sora_card_option_logout)
+                        )
+                    },
+                    text = {
+                        Text(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            text = stringResource(id = R.string.sora_card_option_logout_description)
+                        )
+                    },
                 )
             }
         }

@@ -5,13 +5,13 @@ buildscript {
             coroutines             : '1.7.3',
             dagger                 : '2.48',
             hiltWorkManager        : '1.0.0',
-            hiltCompose            : '1.0.0',
+            hiltCompose            : '1.1.0',
             timber                 : '5.0.1',
             gson                   : '2.10.1',
-            googleFirebaseBom      : '31.1.1',
-            googlePlayCore         : '1.10.3',
+            googleFirebaseBom      : '32.5.0',
             googleApiServicesDrive : 'v3-rev136-1.25.0',
-            googlePlayServiceAuth  : '20.5.0',
+            googlePlayServiceAuth  : '20.7.0',
+            googleInAppUpdate      : '2.1.0',
             constraint             : '2.2.0-alpha05',
             soraSdk                : '0.3.10',
             iroha                  : '5.1.2',
@@ -43,8 +43,8 @@ buildscript {
             compose                : '1.5.4',
             composeCompiler        : '1.5.3',
             composeConstraintLayout: '1.1.0-alpha05',
-            uiCore                 : '0.2.12',
-            soraCard               : '0.1.64',
+            uiCore                 : '0.2.13',
+            soraCard               : '0.1.67',
             lazySodium             : '5.0.2',
             jna                    : '5.8.0',
             xserializationjson     : '1.5.1',
@@ -55,11 +55,11 @@ buildscript {
     ]
 
     ext {
-//        soralution 117 3.7.0.1 2023.10.28
-//        sora dae 106 3.6.0.0 2023.10.28
+//        soralution 119 3.7.0.3 2023.11.08
+//        sora dae 107 3.7.0.0 2023.11.09
 //        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 96)
-        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 106)
-        appVersionName = '3.6.0.0'
+        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 107)
+        appVersionName = '3.7.0.0'
 
         compileVersion = 34
         minVersion = 24
@@ -75,7 +75,7 @@ buildscript {
         materialDep = "com.google.android.material:material:1.10.0"
         constraintDep = "androidx.constraintlayout:constraintlayout:$versions.constraint"
         activityKtxDep = "androidx.activity:activity-ktx:1.7.1"
-        fragmentKtxDep = "androidx.fragment:fragment-ktx:1.6.1"
+        fragmentKtxDep = "androidx.fragment:fragment-ktx:1.6.2"
         coreKtxDep = "androidx.core:core-ktx:1.12.0"
 
         workManagerDep = "androidx.work:work-runtime-ktx:$versions.workManager"
@@ -124,8 +124,9 @@ buildscript {
 
         gsonDep = "com.google.code.gson:gson:$versions.gson"
 
+        googleInAppUpdateDep = "com.google.android.play:app-update:$versions.googleInAppUpdate"
+        googleInAppUpdateKtxDep = "com.google.android.play:app-update-ktx:$versions.googleInAppUpdate"
         googleCrashlyticsDep = "com.google.firebase:firebase-crashlytics-ktx"
-        googlePlayCoreDep = "com.google.android.play:core:$versions.googlePlayCore"
         googleFirebaseBomDep = "com.google.firebase:firebase-bom:$versions.googleFirebaseBom"
         googlePlayServiceAuth = "com.google.android.gms:play-services-auth:$versions.googlePlayServiceAuth"
         googleApiServicesDrive = "com.google.apis:google-api-services-drive:$versions.googleApiServicesDrive"
@@ -135,7 +136,7 @@ buildscript {
 
         navigationFragmentDep = "androidx.navigation:navigation-fragment-ktx:$versions.navigation"
         navigationUiDep = "androidx.navigation:navigation-ui-ktx:$versions.navigation"
-        navigationComposeDep = "androidx.navigation:navigation-compose:2.7.4"
+        navigationComposeDep = "androidx.navigation:navigation-compose:2.7.5"
 
         zXingCoreDep = "com.google.zxing:core:$versions.zXing"
         zXingEmbeddedDep = "com.journeyapps:zxing-android-embedded:$versions.zXingEmbedded"
@@ -218,7 +219,7 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
         classpath "org.jetbrains.kotlin:kotlin-serialization:${versions.kotlin}"
-        classpath 'com.android.tools.build:gradle:8.2.0-rc01'
+        classpath 'com.android.tools.build:gradle:8.2.0-rc02'
         classpath 'com.google.gms:google-services:4.3.15'
         classpath 'com.google.firebase:firebase-appdistribution-gradle:3.2.0'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
