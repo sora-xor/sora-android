@@ -112,7 +112,6 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":android-foundation")
-    implementation project(":soracrypro")
     implementation project(":network")
 
     implementation googleInAppUpdateDep
@@ -154,6 +153,9 @@ dependencies {
     implementation xbackupDep
     implementation xsubstrateDep
     implementation xcryptoDep
+    implementation(ed25519Dep) {
+        exclude group: 'com.madgag.spongycastle'
+    }
 
     implementation gsonDep
 
