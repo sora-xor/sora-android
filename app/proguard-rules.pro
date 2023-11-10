@@ -139,11 +139,16 @@
 # Ignore JSR 305 annotations for embedding nullability information.
 -dontwarn javax.annotation.**
 
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn org.apiguardian.api.API$Status
+-dontwarn org.apiguardian.api.API
+-dontwarn org.spongycastle.jce.provider.BouncyCastleProvider
+
 -keep class org.apache.xerces.**
 
 # Encryption
 -keep class jp.co.soramitsu.crypto.** { *; }
--keep class org.spongycastle.** { *; }
+-keep class org.bouncycastle.** { *; }
 
 # Keep sora sdk classes
 -keep class jp.co.soramitsu.sora.sdk.** { *; }
@@ -153,7 +158,7 @@
 
 ##--------------- Begin: Ed25519Sha3 ----------
 -keep class jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
--keep class org.spongycastle.jcajce.provider.digest.SHA* { *; }
+-keep class org.bouncycastle.jcajce.provider.digest.SHA* { *; }
 ##--------------- End: Ed25519Sha3 ----------
 
 # Google Drive and Signin

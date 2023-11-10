@@ -94,12 +94,8 @@ dependencies {
     implementation coilComposeDep
 
     implementation lifecycleProcessDep
-    implementation googlePlayServiceAuth
-    implementation googleApiServicesDrive
 
     kapt lifecycleKaptDep
-
-//    implementation sharedUtilsDep
 
     implementation navigationFragmentDep
     implementation navigationUiDep
@@ -118,7 +114,6 @@ dependencies {
     implementation navigationComposeDep
 
     implementation xbackupDep
-    implementation sharedFeaturesModelsDep
     debugImplementation composeToolingDep
 
     implementation daggerDep
