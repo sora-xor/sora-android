@@ -13,7 +13,6 @@ buildscript {
             constraint             : '2.2.0-alpha05',
             soraSdk                : '0.3.10',
             iroha                  : '5.1.2',
-            ed25519                : '2.0.1',
             sharedUtils            : '1.1.1.10-20230809.104953-2',
             navigation             : '2.5.0',
             zXing                  : '3.3.3',
@@ -45,9 +44,9 @@ buildscript {
             jna                    : '5.8.0',
             xserializationjson     : '1.5.1',
             ktor                   : '2.3.1',
-            xbackup                : '1.1.1',
-            xcrypto                : '1.1.1',
-            xsubstrate             : '1.1.1'
+            xbackup                : '1.1.3',
+            xcrypto                : '1.1.4',
+            xsubstrate             : '1.1.3'
     ]
 
     ext {
@@ -124,8 +123,6 @@ buildscript {
         googleCrashlyticsDep = "com.google.firebase:firebase-crashlytics-ktx"
         googleFirebaseBomDep = "com.google.firebase:firebase-bom:$versions.googleFirebaseBom"
 
-        ed25519Dep = "com.github.warchant:ed25519-sha3-java:$versions.ed25519"
-
         navigationFragmentDep = "androidx.navigation:navigation-fragment-ktx:$versions.navigation"
         navigationUiDep = "androidx.navigation:navigation-ui-ktx:$versions.navigation"
         navigationComposeDep = "androidx.navigation:navigation-compose:2.7.5"
@@ -142,6 +139,8 @@ buildscript {
         xbackupDep = "jp.co.soramitsu:xbackup:$versions.xbackup"
         xsubstrateDep = "jp.co.soramitsu:xsubstrate:$versions.xsubstrate"
         xcryptoDep = "jp.co.soramitsu:x-crypto:$versions.xcrypto"
+        ed25519Dep = "com.github.warchant:ed25519-sha3-java:2.0.1"
+        xercesDep = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces:2.9.0"
 
         permissionsRuntimeDep = "com.guolindev.permissionx:permissionx:1.7.1"
 
