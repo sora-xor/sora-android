@@ -57,12 +57,12 @@ class DarkThemeManager @Inject constructor(
     private val soraPreferences: SoraPreferences,
 ) {
 
-    private data class DarkModeSettings(
+    data class DarkModeSettings(
         val isSystemDrivenUiEnabled: Boolean,
         val isDarkModeEnabled: Boolean
     )
 
-    private val mutableDarkThemeSharedFlow = MutableSharedFlow<DarkModeSettings>(
+    val mutableDarkThemeSharedFlow = MutableSharedFlow<DarkModeSettings>(
         replay = 1,
         extraBufferCapacity = 0,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -108,6 +108,7 @@ class DarkThemeManager @Inject constructor(
                              */
                             true
                         }
+
                         currentAppUiMode == AppCompatDelegate.MODE_NIGHT_NO && !isDarkModeEnabled -> {
                             /*
                                 Saved state matches system configuration;
@@ -115,6 +116,7 @@ class DarkThemeManager @Inject constructor(
                              */
                             false
                         }
+
                         else -> {
                             /*
                                 Something went wrong, saved state is different from system config;
