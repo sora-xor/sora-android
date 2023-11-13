@@ -43,8 +43,7 @@ import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -66,9 +65,15 @@ class AppSettingsViewModel @Inject constructor(
             title = R.string.settings_header_app,
         )
 
-        darkThemeManager.darkModeStatusFlow.onEach { isSwitchEnabled ->
-            state = state.copy(darkModeChecked = isSwitchEnabled)
-        }.launchIn(viewModelScope)
+        viewModelScope.launch {
+            darkThemeManager.mutableDarkThemeSharedFlow.collectLatest {
+                state =
+                    state.copy(
+                        darkModeChecked = it.isDarkModeEnabled,
+                        systemAppearanceChecked = it.isSystemDrivenUiEnabled
+                    )
+            }
+        }
     }
 
     fun onLanguageClick() {
