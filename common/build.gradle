@@ -153,9 +153,8 @@ dependencies {
     implementation xbackupDep
     implementation xsubstrateDep
     implementation xcryptoDep
-    implementation(ed25519Dep) {
-        exclude group: 'com.madgag.spongycastle'
-    }
+    implementation ed25519Dep
+    implementation xercesDep
 
     implementation gsonDep
 
