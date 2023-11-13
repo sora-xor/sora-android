@@ -38,9 +38,9 @@ import com.goterl.lazysodium.utils.Key
 import java.security.KeyPair
 import java.security.SecureRandom
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
-import org.spongycastle.crypto.generators.SCrypt
-import org.spongycastle.jcajce.provider.digest.SHA3
-import org.spongycastle.util.encoders.Base64
+import org.bouncycastle.crypto.generators.SCrypt
+import org.bouncycastle.jcajce.provider.digest.SHA3
+import org.bouncycastle.util.encoders.Base64
 
 class CryptoAssistant(
     private val secureRandom: SecureRandom,

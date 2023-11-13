@@ -58,8 +58,8 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import javax.security.auth.x500.X500Principal
-import org.spongycastle.util.Arrays
-import org.spongycastle.util.encoders.Base64
+import org.bouncycastle.util.Arrays
+import org.bouncycastle.util.encoders.Base64
 
 class EncryptionUtil(
     private val context: Context

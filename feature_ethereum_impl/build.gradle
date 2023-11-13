@@ -54,7 +54,6 @@ dependencies {
     implementation project(":feature_ethereum_api")
     implementation project(":feature_wallet_api")
     implementation project(":sorasubstrate")
-    implementation project(":soracrypro")
 
     implementation daggerDep
     kapt daggerKaptDep
