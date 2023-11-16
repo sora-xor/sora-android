@@ -28,14 +28,26 @@ body:
         - ...
    
   - type: textarea
-    id: spike-dod
+    id: tech-ac
+    attributes:
+      label: Acceptance Criteria
+      description: What are the expected behavior ?
+      placeholder: |
+        1. Given ... when ..., ... happens
+        2. Given ... when ..., ... happens
+    validations:
+      required: true
+
+  - type: textarea
+    id: tech-dod
     attributes:
       label: Definition of Done
-      description: How can we consider the research complete ?
-      placeholder: |
-        1. We have checked all function Y
-        2. We have documented the result of our investigation on technology X
-        3. We have made a sandbox implementation of technology X to understand how it works in practice
+      description: When do we consider the task done ?
+      placeholder: |        
+        1. Unit tests
+        2. Migration tests
+        3. Integration tests
+        4. Acceptance criteria 
     validations:
       required: true
 
