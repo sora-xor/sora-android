@@ -144,6 +144,7 @@
   <string name="common_german">גרמנית</string>
   <string name="common_google_authorization_error">הרשאת גוגל נכשלה</string>
   <string name="common_google_backup_decryption_failed">פענוח הגיבוי נכשל. אנא בדוק את הסיסמה ונסה שוב</string>
+  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">עברית</string>
   <string name="common_hindi">הינדי</string>
   <plurals name="common_hour">

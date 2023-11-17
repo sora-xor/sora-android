@@ -144,6 +144,7 @@
   <string name="common_german">Немецкий</string>
   <string name="common_google_authorization_error">Ошибка Google авторизации</string>
   <string name="common_google_backup_decryption_failed">Ошибка расшифровки аккаунта. Проверьте пароль и попробуйте снова.</string>
+  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Иврит</string>
   <string name="common_hindi">Хинди</string>
   <plurals name="common_hour">

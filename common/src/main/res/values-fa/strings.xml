@@ -144,6 +144,7 @@
   <string name="common_german">آلمانی</string>
   <string name="common_google_authorization_error">Google authorization failed</string>
   <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
+  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">

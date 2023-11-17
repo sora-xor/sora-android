@@ -144,6 +144,7 @@
   <string name="common_german">德语</string>
   <string name="common_google_authorization_error">Google授权失败</string>
   <string name="common_google_backup_decryption_failed">备份解密失败。请检查密码并重试。</string>
+  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">希伯来语</string>
   <string name="common_hindi">印地语</string>
   <plurals name="common_hour">

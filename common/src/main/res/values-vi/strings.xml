@@ -144,6 +144,7 @@
   <string name="common_german">Tiếng Đức</string>
   <string name="common_google_authorization_error">Ủy quyền của Google không thành công</string>
   <string name="common_google_backup_decryption_failed">Giải mã bản sao lưu không thành công. Vui lòng kiểm tra mật khẩu và thử lại</string>
+  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
