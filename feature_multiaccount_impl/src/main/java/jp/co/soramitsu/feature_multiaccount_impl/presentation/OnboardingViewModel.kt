@@ -757,7 +757,7 @@ class OnboardingViewModel @Inject constructor(
                     } catch (e: SoraException) {
                         onError(e)
                     } catch (e: IllegalArgumentException) {
-                        onError(e)
+                        onError(SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED))
                     } catch (e: SocketException) {
                         onError(SoraException.networkError(resourceManager, e))
                     } catch (e: SocketTimeoutException) {
