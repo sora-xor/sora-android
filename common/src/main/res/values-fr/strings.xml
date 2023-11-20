@@ -144,6 +144,7 @@
   <string name="common_german">Allemand</string>
   <string name="common_google_authorization_error">L\'authentification a échouée</string>
   <string name="common_google_backup_decryption_failed">Échec du décryptage de la sauvegarde. Veuillez vérifier votre mot de passe et réessayer</string>
+  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hébreu</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
