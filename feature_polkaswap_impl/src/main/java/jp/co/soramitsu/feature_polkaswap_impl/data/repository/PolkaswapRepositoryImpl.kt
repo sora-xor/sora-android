@@ -79,6 +79,16 @@ class PolkaswapRepositoryImpl @Inject constructor(
         }.distinctUntilChanged()
     }
 
+    override suspend fun getBasicPool(b: String, t: String): BasicPoolData? =
+        db.poolDao().getBasicPool(b, t)?.let {
+            PoolLocalMapper.mapBasicToPoolData(
+                basicPoolLocal = it,
+                baseToken = getToken(it.tokenIdBase),
+                token = getToken(it.tokenIdTarget),
+                apy = getPoolStrategicBonusAPY(it.reservesAccount),
+            )
+        }
+
     override suspend fun poolFavoriteOn(ids: StringPair, account: SoraAccount) {
         db.poolDao().poolFavoriteOn(ids.first, ids.second, account.substrateAddress)
     }

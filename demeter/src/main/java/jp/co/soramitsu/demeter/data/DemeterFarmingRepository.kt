@@ -34,15 +34,20 @@ package jp.co.soramitsu.demeter.data
 
 import java.math.BigDecimal
 import java.math.BigInteger
+import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.demeter.domain.DemeterFarmingBasicPool
 import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
+import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.mapToToken
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
@@ -54,6 +59,7 @@ import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 
 interface DemeterFarmingRepository {
     suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>?
+    suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
     suspend fun getStakedFarmedAmountOfAsset(address: String, tokenId: String): BigDecimal
 }
 
@@ -65,13 +71,44 @@ private class DemeterStorage(
     val amount: BigInteger,
 )
 
+private class DemeterBasicStorage(
+    val base: String,
+    val pool: String,
+    val reward: String,
+    val multiplier: BigInteger,
+    val isCore: Boolean,
+    val isFarm: Boolean,
+    val isRemoved: Boolean,
+    val depositFee: BigInteger,
+    val totalTokensInPool: BigInteger,
+    val rewards: BigInteger,
+    val rewardsToBeDistributed: BigInteger,
+)
+
+private class DemeterRewardTokenStorage(
+    val token: String,
+    val account: String,
+    val farmsTotalMultiplier: BigInteger,
+    val stakingTotalMultiplier: BigInteger,
+    val tokenPerBlock: BigInteger,
+    val farmsAllocation: BigInteger,
+    val stakingAllocation: BigInteger,
+    val teamAllocation: BigInteger,
+)
+
 internal class DemeterFarmingRepositoryImpl(
     private val substrateCalls: SubstrateCalls,
     private val runtimeManager: RuntimeManager,
     private val soraConfigManager: SoraConfigManager,
     private val assetLocalToAssetMapper: AssetLocalToAssetMapper,
     private val db: AppDatabase,
+    private val assetsRepository: AssetsRepository,
+    private val polkaswapRepository: PolkaswapRepository,
 ) : DemeterFarmingRepository {
+
+    companion object {
+        private const val BLOCKS_PER_YEAR = 5256000
+    }
 
     override suspend fun getStakedFarmedAmountOfAsset(
         address: String,
@@ -109,6 +146,102 @@ internal class DemeterFarmingRepositoryImpl(
             }
     }
 
+    override suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool> {
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        val rewardTokens = getRewardTokens()
+        return getAllFarms()
+            .mapNotNull { basic ->
+                runCatching {
+                    val baseTokenMapped = assetLocalToAssetMapper.map(
+                        tokenLocal = db.assetDao().getToken(basic.base, selectedCurrency.code)
+                    )
+                    val poolTokenMapped = assetLocalToAssetMapper.map(
+                        tokenLocal = db.assetDao().getToken(basic.pool, selectedCurrency.code)
+                    )
+                    val rewardTokenMapped = assetLocalToAssetMapper.map(
+                        tokenLocal = db.assetDao().getToken(basic.reward, selectedCurrency.code)
+                    )
+                    val rewardToken = rewardTokens.find { it.token == basic.reward }
+                    val emission = getEmission(basic, rewardToken, rewardTokenMapped.precision)
+                    val total = mapBalance(basic.totalTokensInPool, poolTokenMapped.precision)
+                    val poolTokenPrice = BigDecimal(poolTokenMapped.fiatPrice ?: 0.0)
+                    val rewardTokenPrice = BigDecimal(rewardTokenMapped.fiatPrice ?: 0.0)
+                    val tvl = if (basic.isFarm) {
+                        polkaswapRepository.getBasicPool(basic.base, basic.pool)?.let { pool ->
+                            val kf = pool.targetReserves.div(pool.totalIssuance)
+                            kf.times(total).times(2.toBigDecimal()).times(poolTokenPrice)
+                        } ?: BigDecimal.ZERO
+                    } else {
+                        total.times(poolTokenPrice)
+                    }
+                    val apr = if (tvl.isZero()) BigDecimal.ZERO else emission
+                        .times(BLOCKS_PER_YEAR.toBigDecimal())
+                        .times(rewardTokenPrice)
+                        .div(tvl).times(100.toBigDecimal())
+
+                    DemeterFarmingBasicPool(
+                        tokenBase = baseTokenMapped,
+                        tokenTarget = poolTokenMapped,
+                        tokenReward = rewardTokenMapped,
+                        apr = apr.toDouble(),
+                        tvl = tvl,
+                        fee = mapBalance(basic.depositFee, baseTokenMapped.precision).toDouble().times(100.0),
+                    )
+                }.getOrNull()
+            }
+    }
+
+    private fun getEmission(basic: DemeterBasicStorage, reward: DemeterRewardTokenStorage?, precision: Int): BigDecimal {
+        val tokenMultiplier = ((if (basic.isFarm) reward?.farmsTotalMultiplier else reward?.stakingTotalMultiplier))?.toBigDecimal(precision) ?: BigDecimal.ZERO
+        if (tokenMultiplier.isZero()) return BigDecimal.ZERO
+        val multiplier = basic.multiplier.toBigDecimal(precision).div(tokenMultiplier)
+        val allocation =
+            mapBalance((if (basic.isFarm) reward?.farmsAllocation else reward?.stakingAllocation) ?: BigInteger.ZERO, precision)
+        val tokenPerBlock = reward?.tokenPerBlock?.toBigDecimal(precision) ?: BigDecimal.ZERO
+        return allocation.times(tokenPerBlock).times(multiplier)
+    }
+
+    private suspend fun getAllFarms(): List<DemeterBasicStorage> {
+        val storage =
+            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.DEMETER_FARMING.palletName)
+                .storage(Storage.POOLS.storageName)
+        val type = storage.type.value ?: return emptyList()
+        val storageKey = storage.storageKey(
+            runtimeManager.getRuntimeSnapshot(),
+        )
+        val farms = substrateCalls.getBulk(storageKey).mapNotNull { hex ->
+            hex.value?.let { hexValue ->
+                val decoded = type.fromHex(runtimeManager.getRuntimeSnapshot(), hexValue)
+                decoded?.safeCast<List<*>>()
+                    ?.filterIsInstance<Struct.Instance>()
+                    ?.mapNotNull { struct ->
+                        runCatching {
+                            DemeterBasicStorage(
+                                base = struct.mapToToken("baseAsset")!!,
+                                pool = hex.key.assetIdFromKey(1),
+                                reward = hex.key.assetIdFromKey(),
+                                multiplier = struct.get<BigInteger>("multiplier")!!,
+                                isCore = struct.get<Boolean>("isCore")!!,
+                                isFarm = struct.get<Boolean>("isFarm")!!,
+                                isRemoved = struct.get<Boolean>("isRemoved")!!,
+                                depositFee = struct.get<BigInteger>("depositFee")!!,
+                                totalTokensInPool = struct.get<BigInteger>("totalTokensInPool")!!,
+                                rewards = struct.get<BigInteger>("rewards")!!,
+                                rewardsToBeDistributed = struct.get<BigInteger>("rewardsToBeDistributed")!!,
+                            )
+                        }.getOrNull()
+                    }
+            }
+        }.flatten().filter {
+            it.isFarm &&
+                it.isRemoved.not() &&
+                assetsRepository.isWhitelistedToken(it.base) &&
+                assetsRepository.isWhitelistedToken(it.pool) &&
+                assetsRepository.isWhitelistedToken(it.reward)
+        }
+        return farms
+    }
+
     private suspend fun getDemeter(address: String): List<DemeterStorage>? {
         val storage =
             runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.DEMETER_FARMING.palletName)
@@ -128,7 +261,12 @@ internal class DemeterFarmingRepositoryImpl(
                     val rewardToken = instance.mapToToken("rewardAsset")
                     val isFarm = instance.get<Boolean>("isFarm")
                     val pooled = instance.get<BigInteger>("pooledTokens")
-                    if (isFarm != null && baseToken != null && poolToken != null && rewardToken != null && pooled != null) {
+                    if (isFarm != null && baseToken != null && poolToken != null &&
+                        rewardToken != null && pooled != null &&
+                        assetsRepository.isWhitelistedToken(baseToken) &&
+                        assetsRepository.isWhitelistedToken(poolToken) &&
+                        assetsRepository.isWhitelistedToken(rewardToken)
+                    ) {
                         DemeterStorage(
                             base = baseToken,
                             pool = poolToken,
@@ -140,6 +278,36 @@ internal class DemeterFarmingRepositoryImpl(
                         null
                     }
                 }
+        }
+    }
+
+    private suspend fun getRewardTokens(): List<DemeterRewardTokenStorage> {
+        val storage =
+            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.DEMETER_FARMING.palletName)
+                .storage(Storage.TOKEN_INFOS.storageName)
+        val type = storage.type.value ?: return emptyList()
+        val storageKey = storage.storageKey(
+            runtimeManager.getRuntimeSnapshot(),
+        )
+        return substrateCalls.getBulk(storageKey).mapNotNull { hex ->
+            hex.value?.let { hexValue ->
+                runCatching {
+                    type.fromHex(runtimeManager.getRuntimeSnapshot(), hexValue)
+                        ?.safeCast<Struct.Instance>()?.let { decoded ->
+                            DemeterRewardTokenStorage(
+                                token = hex.key.assetIdFromKey(),
+                                account = runtimeManager.toSoraAddressOrNull(decoded["teamAccount"])
+                                    .orEmpty(),
+                                farmsTotalMultiplier = decoded.get<BigInteger>("farmsTotalMultiplier")!!,
+                                stakingTotalMultiplier = decoded.get<BigInteger>("stakingTotalMultiplier")!!,
+                                tokenPerBlock = decoded.get<BigInteger>("tokenPerBlock")!!,
+                                farmsAllocation = decoded.get<BigInteger>("farmsAllocation")!!,
+                                stakingAllocation = decoded.get<BigInteger>("stakingAllocation")!!,
+                                teamAllocation = decoded.get<BigInteger>("teamAllocation")!!,
+                            )
+                        }
+                }.getOrNull()
+            }
         }
     }
 }

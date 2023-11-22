@@ -94,6 +94,11 @@ class PoolDetailsViewModel @AssistedInject constructor(
                 menu = listOf(Action.Close()),
             ),
         )
+
+        viewModelScope.launch {
+            demeterFarmingInteractor.getFarmedBasicPools()
+        }
+
         viewModelScope.launch {
             poolsInteractor.subscribePoolCacheOfCurAccount(token1Id, token2Id)
                 .catch { onError(it) }

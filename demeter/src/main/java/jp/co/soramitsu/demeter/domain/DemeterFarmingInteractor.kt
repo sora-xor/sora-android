@@ -39,6 +39,8 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 interface DemeterFarmingInteractor {
     suspend fun getFarmedPools(): List<DemeterFarmingPool>?
 
+    suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
+
     suspend fun getStakedFarmedBalanceOfAsset(tokenId: String): BigDecimal
 }
 
@@ -52,6 +54,9 @@ internal class DemeterFarmingInteractorImpl(
             userRepository.getCurSoraAccount().substrateAddress,
             tokenId,
         )
+
+    override suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool> =
+        demeterFarmingRepository.getFarmedBasicPools().sortedByDescending { it.tvl }
 
     override suspend fun getFarmedPools(): List<DemeterFarmingPool>? =
         demeterFarmingRepository.getFarmedPools(userRepository.getCurSoraAccount().substrateAddress)

@@ -113,6 +113,11 @@ class SubstrateCalls @Inject constructor(
         const val DEFAULT_ASSETS_PAGE_SIZE = 100
     }
 
+    suspend fun getBulk(key: String): Map<String, String?> {
+        val bulk = BulkRetriever()
+        return bulk.retrieveAllValues(socketService, key)
+    }
+
     suspend fun getStorageHex(storageKey: String): String? =
         socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
