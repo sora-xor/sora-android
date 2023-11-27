@@ -51,6 +51,8 @@ interface PolkaswapRepository {
 
     suspend fun getPoolsCacheOfAccount(address: String): List<CommonUserPoolData>
 
+    suspend fun getBasicPool(b: String, t: String): BasicPoolData?
+
     fun subscribePoolOfAccount(
         address: String,
         baseTokenId: String,

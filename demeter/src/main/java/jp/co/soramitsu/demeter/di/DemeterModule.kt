@@ -43,7 +43,9 @@ import jp.co.soramitsu.demeter.data.DemeterFarmingRepositoryImpl
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractorImpl
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 
@@ -58,6 +60,8 @@ object DemeterFarmingModule {
         soraConfigManager: SoraConfigManager,
         mapper: AssetLocalToAssetMapper,
         db: AppDatabase,
+        assetsRepository: AssetsRepository,
+        polkaswapRepository: PolkaswapRepository,
     ): DemeterFarmingRepository =
         DemeterFarmingRepositoryImpl(
             substrateCalls = substrateCalls,
@@ -65,6 +69,8 @@ object DemeterFarmingModule {
             soraConfigManager = soraConfigManager,
             assetLocalToAssetMapper = mapper,
             db = db,
+            assetsRepository = assetsRepository,
+            polkaswapRepository = polkaswapRepository,
         )
 
     @Provides

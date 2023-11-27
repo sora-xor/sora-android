@@ -63,8 +63,12 @@ dependencies {
     implementation project(":core_db")
     implementation project(":feature_blockexplorer_api")
     implementation project(":feature_account_api")
+    implementation project(":feature_assets_api")
+    implementation project(":feature_polkaswap_api")
     implementation project(":sorasubstrate")
     implementation project(":network")
+
+    implementation timberDep
 
     implementation daggerDep
     kapt daggerKaptDep
