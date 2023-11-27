@@ -63,6 +63,7 @@ import jp.co.soramitsu.common.util.Const.SORA_PRIVACY_PAGE
 import jp.co.soramitsu.common.util.Const.SORA_TERMS_PAGE
 import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
+import jp.co.soramitsu.common.util.ext.trimAccountNameTo32Bytes
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
@@ -268,7 +269,7 @@ class OnboardingViewModel @Inject constructor(
     fun onAccountNameChanged(textFieldValue: TextFieldValue) {
         _createAccountCardState.value?.let {
             val newAccountName = if (textFieldValue.text.isAccountNameLongerThen32Bytes()) {
-                it.accountNameInputState.value
+                textFieldValue.copy(text = textFieldValue.text.trimAccountNameTo32Bytes())
             } else {
                 textFieldValue
             }
@@ -284,7 +285,7 @@ class OnboardingViewModel @Inject constructor(
     fun onRecoveryAccountChanged(textFieldValue: TextFieldValue) {
         _recoveryAccountNameCardState.value?.let {
             val newAccountName = if (textFieldValue.text.isAccountNameLongerThen32Bytes()) {
-                it.accountNameInputState.value
+                textFieldValue.copy(text = textFieldValue.text.trimAccountNameTo32Bytes())
             } else {
                 textFieldValue
             }
