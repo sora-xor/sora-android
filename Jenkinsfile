@@ -1,4 +1,4 @@
-@Library('jenkins-library' ) _
+@Library('jenkins-library@duty/sonar_dojo_ci' ) _
 
 // Job properties
 def jobParams = [
