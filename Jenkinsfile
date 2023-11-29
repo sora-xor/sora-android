@@ -7,8 +7,8 @@ def jobParams = [
 
 def pipeline = new org.android.AppPipeline(steps: this,
     sonar: true,
-    sonarProjectName: 'sora-passport-android',
-    sonarProjectKey: 'sora:sora-passport-android',
+    sonarProjectName: 'sora-passport-android-test',
+    sonarProjectKey: 'sora:sora-passport-android-test',
     testCmd: 'ktlint clean runModuleTests jacocoTestReport',
     jobParams: jobParams,
     appPushNoti: true,
