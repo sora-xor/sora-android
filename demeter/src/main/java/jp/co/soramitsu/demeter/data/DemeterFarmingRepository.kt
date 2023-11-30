@@ -69,6 +69,7 @@ private class DemeterStorage(
     val reward: String,
     val farm: Boolean,
     val amount: BigInteger,
+    val rewardAmount: BigInteger,
 )
 
 private class DemeterBasicStorage(
@@ -142,6 +143,7 @@ internal class DemeterFarmingRepositoryImpl(
                     tokenTarget = poolTokenMapped,
                     tokenReward = rewardTokenMapped,
                     amount = mapBalance(it.amount, baseTokenMapped.precision),
+                    amountReward = mapBalance(it.rewardAmount, rewardTokenMapped.precision),
                 )
             }
     }
@@ -261,8 +263,9 @@ internal class DemeterFarmingRepositoryImpl(
                     val rewardToken = instance.mapToToken("rewardAsset")
                     val isFarm = instance.get<Boolean>("isFarm")
                     val pooled = instance.get<BigInteger>("pooledTokens")
+                    val rewards = instance.get<BigInteger>("rewards")
                     if (isFarm != null && baseToken != null && poolToken != null &&
-                        rewardToken != null && pooled != null &&
+                        rewardToken != null && pooled != null && rewards != null &&
                         assetsRepository.isWhitelistedToken(baseToken) &&
                         assetsRepository.isWhitelistedToken(poolToken) &&
                         assetsRepository.isWhitelistedToken(rewardToken)
@@ -273,6 +276,7 @@ internal class DemeterFarmingRepositoryImpl(
                             reward = rewardToken,
                             farm = isFarm,
                             amount = pooled,
+                            rewardAmount = rewards,
                         )
                     } else {
                         null
