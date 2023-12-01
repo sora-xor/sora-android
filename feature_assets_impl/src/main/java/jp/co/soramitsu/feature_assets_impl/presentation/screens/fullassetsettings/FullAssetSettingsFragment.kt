@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetsettings
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -41,12 +40,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
@@ -83,7 +84,6 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
     }
     private val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -119,6 +119,17 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
                         text = viewModel.fiatSum.collectAsStateWithLifecycle().value,
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary,
+                    )
+                }
+
+                val empty = viewModel.settingsStateEmpty.collectAsStateWithLifecycle().value
+                if (empty) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                        text = stringResource(id = R.string.search_empty_state),
+                        style = MaterialTheme.customTypography.headline2,
+                        color = MaterialTheme.customColors.fgPrimary,
+                        textAlign = TextAlign.Center,
                     )
                 }
 
