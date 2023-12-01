@@ -142,7 +142,7 @@ play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.8.0.0 - Demeter Farming"
+    releaseName = "3.8.0.1 - Demeter Farming"
 }
 
 dependencies {
