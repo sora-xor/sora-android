@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetlist
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ScrollState
@@ -92,7 +91,6 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
         (activity as BottomBarController).hideBottomBar()
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -105,86 +103,98 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                     .background(MaterialTheme.customColors.bgSurface)
                     .fillMaxSize()
             ) {
-                val state = viewModel.state.collectAsStateWithLifecycle()
-                Row(
-                    modifier = Modifier
-                        .padding(
-                            start = Dimens.x3,
-                            end = Dimens.x3,
-                            top = Dimens.x2,
-                            bottom = Dimens.x2
-                        )
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+                val state = viewModel.state.collectAsStateWithLifecycle().value
+                if (state.topList.isEmpty() && state.bottomList.isEmpty()) {
                     Text(
-                        modifier = Modifier.wrapContentSize(),
-                        text = stringResource(id = CardHubType.ASSETS.userName),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
+                        text = stringResource(id = R.string.search_empty_state),
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary,
+                        textAlign = TextAlign.Center,
                     )
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = state.value.fiatSum,
-                        textAlign = TextAlign.End,
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary,
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = Dimens.x3)
-                        .fillMaxSize()
-                ) {
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = state.value.searchMode.not(),
-                        enter = fadeIn(),
-                        exit = fadeOut(),
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .verticalScroll(scrollState),
-                        ) {
-                            CommonAssetsList(
-                                state = state.value,
-                                onAssetClick = viewModel::onAssetClick,
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .padding(
+                                start = Dimens.x3,
+                                end = Dimens.x3,
+                                top = Dimens.x2,
+                                bottom = Dimens.x2
                             )
-                        }
-                    }
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = state.value.searchMode,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        val listState = rememberLazyListState()
-                        LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
-                            items(
-                                count = state.value.topList.size + state.value.bottomList.size + 1,
-                                key = null,
-                                contentType = { p -> if (p == state.value.topList.size) 0 else 1 },
-                            ) { position ->
-                                if (position == state.value.topList.size) {
-                                    Text(
-                                        text = stringResource(id = R.string.global_results).uppercase(),
-                                        style = MaterialTheme.customTypography.headline4,
-                                        color = MaterialTheme.customColors.fgSecondary,
-                                    )
-                                } else {
-                                    val item =
-                                        if (position < state.value.topList.size) state.value.topList[position] else state.value.bottomList[position - state.value.topList.size - 1]
-                                    AssetItem(
-                                        assetState = item,
-                                        testTag = "",
-                                        onClick = viewModel::onAssetClick,
+                        Text(
+                            modifier = Modifier.wrapContentSize(),
+                            text = stringResource(id = CardHubType.ASSETS.userName),
+                            style = MaterialTheme.customTypography.headline2,
+                            color = MaterialTheme.customColors.fgPrimary,
+                        )
+                        Text(
+                            modifier = Modifier.weight(1f),
+                            text = state.fiatSum,
+                            textAlign = TextAlign.End,
+                            style = MaterialTheme.customTypography.headline2,
+                            color = MaterialTheme.customColors.fgPrimary,
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = Dimens.x3)
+                            .fillMaxSize()
+                    ) {
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = state.searchMode.not(),
+                            enter = fadeIn(),
+                            exit = fadeOut(),
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .verticalScroll(scrollState),
+                            ) {
+                                CommonAssetsList(
+                                    state = state,
+                                    onAssetClick = viewModel::onAssetClick,
+                                )
+                            }
+                        }
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = state.searchMode,
+                            enter = fadeIn(),
+                            exit = fadeOut(),
+                        ) {
+                            val listState = rememberLazyListState()
+                            LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                                items(
+                                    count = state.topList.size + state.bottomList.size + 1,
+                                    key = null,
+                                    contentType = { p -> if (p == state.topList.size) 0 else 1 },
+                                ) { position ->
+                                    if (position == state.topList.size) {
+                                        Text(
+                                            text = stringResource(id = R.string.global_results).uppercase(),
+                                            style = MaterialTheme.customTypography.headline4,
+                                            color = MaterialTheme.customColors.fgSecondary,
+                                        )
+                                    } else {
+                                        val item =
+                                            if (position < state.topList.size) state.topList[position] else state.bottomList[position - state.topList.size - 1]
+                                        AssetItem(
+                                            assetState = item,
+                                            testTag = "",
+                                            onClick = viewModel::onAssetClick,
+                                        )
+                                    }
+                                    Divider(
+                                        color = Color.Transparent,
+                                        modifier = Modifier.height(Dimens.x2)
                                     )
                                 }
-                                Divider(
-                                    color = Color.Transparent,
-                                    modifier = Modifier.height(Dimens.x2)
-                                )
                             }
                         }
                     }

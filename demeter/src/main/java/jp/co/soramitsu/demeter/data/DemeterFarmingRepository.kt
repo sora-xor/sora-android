@@ -112,7 +112,7 @@ internal class DemeterFarmingRepositoryImpl(
         private const val BLOCKS_PER_YEAR = 5256000
     }
 
-    private var cachedFarmedPools: List<DemeterFarmingPool>? = null
+    private var cachedFarmedPools: MutableMap<String, List<DemeterFarmingPool>> = mutableMapOf()
     private var cachedFarmedBasicPools: List<DemeterFarmingBasicPool>? = null
 
     override suspend fun getStakedFarmedAmountOfAsset(
@@ -129,40 +129,38 @@ internal class DemeterFarmingRepositoryImpl(
     }
 
     override suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>? {
-        if (cachedFarmedPools == null) {
-            val baseFarms = getFarmedBasicPools()
-            val selectedCurrency = soraConfigManager.getSelectedCurrency()
-            cachedFarmedPools = getDemeter(soraAccountAddress)
-                ?.filter { it.farm && it.amount.isZero().not() }
-                ?.map {
-                    val base = baseFarms.first { base ->
-                        StringTriple(
-                            base.tokenBase.id,
-                            base.tokenTarget.id,
-                            base.tokenReward.id
-                        ) == StringTriple(it.base, it.pool, it.reward)
-                    }
-                    val baseTokenMapped = assetLocalToAssetMapper.map(
-                        tokenLocal = db.assetDao().getToken(it.base, selectedCurrency.code)
-                    )
-                    val poolTokenMapped = assetLocalToAssetMapper.map(
-                        tokenLocal = db.assetDao().getToken(it.pool, selectedCurrency.code)
-                    )
-                    val rewardTokenMapped = assetLocalToAssetMapper.map(
-                        tokenLocal = db.assetDao().getToken(it.reward, selectedCurrency.code)
-                    )
-                    DemeterFarmingPool(
-                        tokenBase = baseTokenMapped,
-                        tokenTarget = poolTokenMapped,
-                        tokenReward = rewardTokenMapped,
-                        apr = base.apr,
-                        amount = mapBalance(it.amount, baseTokenMapped.precision),
-                        amountReward = mapBalance(it.rewardAmount, rewardTokenMapped.precision),
-                    )
+        if (cachedFarmedPools.containsKey(soraAccountAddress)) return cachedFarmedPools[soraAccountAddress]
+        val baseFarms = getFarmedBasicPools()
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        val calculated = getDemeter(soraAccountAddress)
+            ?.filter { it.farm && it.amount.isZero().not() }
+            ?.map {
+                val base = baseFarms.first { base ->
+                    StringTriple(
+                        base.tokenBase.id,
+                        base.tokenTarget.id,
+                        base.tokenReward.id
+                    ) == StringTriple(it.base, it.pool, it.reward)
                 }
-        }
-
-        return cachedFarmedPools
+                val baseTokenMapped = assetLocalToAssetMapper.map(
+                    tokenLocal = db.assetDao().getToken(it.base, selectedCurrency.code)
+                )
+                val poolTokenMapped = assetLocalToAssetMapper.map(
+                    tokenLocal = db.assetDao().getToken(it.pool, selectedCurrency.code)
+                )
+                val rewardTokenMapped = assetLocalToAssetMapper.map(
+                    tokenLocal = db.assetDao().getToken(it.reward, selectedCurrency.code)
+                )
+                DemeterFarmingPool(
+                    tokenBase = baseTokenMapped,
+                    tokenTarget = poolTokenMapped,
+                    tokenReward = rewardTokenMapped,
+                    apr = base.apr,
+                    amount = mapBalance(it.amount, baseTokenMapped.precision),
+                    amountReward = mapBalance(it.rewardAmount, rewardTokenMapped.precision),
+                )
+            } ?: return null
+        return cachedFarmedPools.getOrPut(soraAccountAddress) { calculated }
     }
 
     override suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool> {
@@ -205,7 +203,8 @@ internal class DemeterFarmingRepositoryImpl(
                             tokenReward = rewardTokenMapped,
                             apr = apr.toDouble(),
                             tvl = tvl,
-                            fee = mapBalance(basic.depositFee, baseTokenMapped.precision).toDouble().times(100.0),
+                            fee = mapBalance(basic.depositFee, baseTokenMapped.precision).toDouble()
+                                .times(100.0),
                         )
                     }.getOrNull()
                 }
@@ -227,7 +226,8 @@ internal class DemeterFarmingRepositoryImpl(
         val multiplier = basic.multiplier.toBigDecimal(precision).div(tokenMultiplier)
         val allocation =
             mapBalance(
-                (if (basic.isFarm) reward?.farmsAllocation else reward?.stakingAllocation) ?: BigInteger.ZERO,
+                (if (basic.isFarm) reward?.farmsAllocation else reward?.stakingAllocation)
+                    ?: BigInteger.ZERO,
                 precision
             )
         val tokenPerBlock = reward?.tokenPerBlock?.toBigDecimal(precision) ?: BigDecimal.ZERO

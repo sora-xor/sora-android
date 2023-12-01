@@ -215,6 +215,12 @@ internal fun FarmDetailsScreen(
                             value1Percent = state.poolShareStacked / 100
                         )
 
+                        Divider(
+                            modifier = Modifier.padding(bottom = Dimens.x1_5),
+                            thickness = 1.dp,
+                            color = MaterialTheme.customColors.bgPage
+                        )
+
                         DetailsItem(
                             modifier = Modifier.padding(bottom = Dimens.x1_5),
                             text = stringResource(id = R.string.farm_details_your_rewards),
@@ -240,7 +246,7 @@ internal fun FarmDetailsScreen(
 @Preview
 @Composable
 private fun PreviewAllPoolsInternal() {
-    Column() {
+    Column {
         FarmDetailsScreen(
             state = FarmDetailsState(
                 "XOR-VAL Fark",
@@ -251,6 +257,21 @@ private fun PreviewAllPoolsInternal() {
                 "DEO",
                 DEFAULT_ICON_URI,
                 "2 %",
+            )
+        )
+        FarmDetailsScreen(
+            state = FarmDetailsState(
+                "XOR-VAL Fark",
+                "$123,294.53",
+                "2.95 %",
+                DEFAULT_ICON_URI,
+                DEFAULT_ICON_URI,
+                "DEO",
+                DEFAULT_ICON_URI,
+                "2 %",
+                "34.1 %",
+                13.3f,
+                "98.7 %",
             )
         )
     }
