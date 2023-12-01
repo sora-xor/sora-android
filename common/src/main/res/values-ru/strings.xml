@@ -32,6 +32,7 @@
   <string name="address_not_found_1">Получатели не найдены</string>
   <string name="amount_error_no_funds">Извините, у вас недостаточно средств для осуществления перевода.</string>
   <string name="appearance_title">Внешний вид</string>
+  <string name="apr_description">APR в фарминге обозначает годовую доходность инвестиций за участие в предоставлении ликвидности DeFi или стейкинге.</string>
   <string name="ask_biometry_message">Хотите ли Вы использовать биометрию для входа в приложение?</string>
   <string name="asset_details_asset_id">Asset ID</string>
   <string name="asset_details_liquid_balance">Ликвидный баланс</string>
@@ -138,6 +139,8 @@
   <string name="common_expand">Развернуть</string>
   <string name="common_explore">Explore</string>
   <string name="common_failed">Ошибка</string>
+  <string name="common_farming">Farming</string>
+  <string name="common_fee">Fee</string>
   <string name="common_filipino">Филиппинский</string>
   <string name="common_finnish">Финский</string>
   <string name="common_french">Французский</string>
@@ -164,10 +167,12 @@
   <string name="common_min">мин</string>
   <string name="common_more">Еще</string>
   <string name="common_norwegian">Норвежский</string>
+  <string name="common_nothing_available">Nothing available</string>
   <string name="common_ok">Ок</string>
   <string name="common_passphrase_title">Парольная фраза</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Персидский</string>
+  <string name="common_pools">Pools</string>
   <string name="common_portuguese">Португальский</string>
   <string name="common_raw_seed">Сид-фраза</string>
   <string name="common_receive">Получить</string>
@@ -241,6 +246,8 @@
   <string name="enter_password_title">Введите пароль</string>
   <string name="error_transaction_fee_title">Недостаточно средств для оплаты комиссии</string>
   <string name="explore_create_pool">Create pool</string>
+  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
+  <string name="explore_demeter_title">Demeter Farming</string>
   <string name="explore_provide_and_earn">Предоставляйте ликвидность и получайте вознаграждения</string>
   <string name="explore_swap_tokens_on_sora">Меняйте токены в сети SORA</string>
   <string name="export_account_details_backup_description">При потере доступа к этому устройству, ваши средства будут потеряны, если вы не сделаете резервную копию!</string>
@@ -267,6 +274,8 @@
   <string name="export_protection_seed_description">In the next step you will see Raw Seed (a long hash) that allow you to recover an account.</string>
   <string name="export_select_account">Выберите учетную запись/аккаунт для пакетного экспорта</string>
   <string name="faq_title">FAQ</string>
+  <string name="farm_details_your_rewards">Ваши награды</string>
+  <string name="farming_details_title">Farming details</string>
   <string name="forget_account">Забыть аккаунт</string>
   <string name="get_sora_card_title">Получить SORA карту</string>
   <string name="global_results">Глобальные результаты</string>
@@ -330,6 +339,7 @@
   <string name="pincode_one_try_left">У вас осталась одна попытка до времени восстановления</string>
   <string name="pincode_set_your_pin_code">Установите пин-код</string>
   <string name="pincode_touch_fingerprint_scanner">Коснитесь сканера отпечатков пальцев</string>
+  <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Работает на Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Некоторая часть вашей доли в пуле находится в стейкинге. Чтобы получить к ней доступ, вы должны сначала разблокировать ее.</string>
   <string name="polkaswap_farming_pool_share">Застейканая часть пула</string>
@@ -361,6 +371,7 @@
   <string name="polkaswap_minimum_received_info">Ваша транзакция будет отменена, если произойдет значительное неблагоприятное изменение цены до ее подтверждения.</string>
   <string name="polkaswap_network_fee_info">Комиссия сети используется для обеспечения роста и стабильности системы SORA.</string>
   <string name="polkaswap_output_estimated">Оценочная сумма. Минимально будет куплено %s или транзакция будет отменена.</string>
+  <string name="polkaswap_pool_farms_title">Stake your pool share for extra rewards</string>
   <string name="polkaswap_pool_not_created">Пул не создан</string>
   <string name="polkaswap_reward_payout">Выплата вознаграждений в</string>
   <string name="polkaswap_sb_apy_info">Фарминговое вознаграждение за предоставление ликвидности</string>
@@ -372,6 +383,9 @@
   <string name="polkaswap_swapped">Продано</string>
   <string name="pool_button_remove">Забрать</string>
   <string name="pool_details">Информация о пуле</string>
+  <string name="pool_details_active_farms">Active farms</string>
+  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
+  <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">У вас пока нет активных пулов.\nДобавьте ликвидность, чтобы получить вознаграждение</string>
   <string name="pool_share_title">Доля в пуле</string>
   <string name="pool_share_title_1">Ваша доля в пуле</string>

@@ -163,6 +163,7 @@ private fun PreviewAssetDetailsScreen01() {
                             fiat = "$7908",
                             fiatChange = "+23.1 %",
                             tokenIds = "" to "",
+                            rewardTokenIconsList = emptyList()
                         ),
                     )
                 ),
@@ -211,6 +212,7 @@ private fun PreviewAssetDetailsScreen02() {
                             fiat = "$7908",
                             fiatChange = "+23.1 %",
                             tokenIds = "" to "",
+                            rewardTokenIconsList = emptyList()
                         ),
                     )
                 ),

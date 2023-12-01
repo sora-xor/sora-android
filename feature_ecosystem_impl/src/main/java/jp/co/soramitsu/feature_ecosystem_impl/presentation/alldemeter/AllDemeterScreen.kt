@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,39 +44,40 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItemEnumerated
-import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
+import jp.co.soramitsu.common.util.StringTriple
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItem
+import jp.co.soramitsu.common_wallet.presentation.compose.previewBasicFarmListItemState
 import jp.co.soramitsu.feature_ecosystem_impl.R
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 import jp.co.soramitsu.ui_core.component.card.ContentCardEndless
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
-internal fun AllCurrenciesScreen(
-    onTokenClicked: (String) -> Unit,
-    viewModel: AllCurrenciesViewModel = hiltViewModel(),
+internal fun AllDemeterScreen(
+    onFarmClicked: (StringTriple) -> Unit,
+    viewModel: AllDemeterViewModel = hiltViewModel(),
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        val state = viewModel.state.collectAsStateWithLifecycle().value
-        AllCurrenciesInternal(
-            state = state,
-            onTokenClicked = onTokenClicked,
-        )
+        viewModel.farmsLiveData.observeAsState().value?.let {
+            AllDemeterInternal(
+                state = it,
+                onFarmClicked = onFarmClicked,
+            )
+        }
     }
 }
 
 @Composable
-private fun AllCurrenciesInternal(
-    state: EcoSystemTokensState,
-    onTokenClicked: (String) -> Unit,
+private fun AllDemeterInternal(
+    state: AllFarmsState,
+    onFarmClicked: (ids: StringTriple) -> Unit,
 ) {
     ContentCardEndless(
         modifier = Modifier
@@ -107,7 +108,7 @@ private fun AllCurrenciesInternal(
                         start = Dimens.x3,
                         end = Dimens.x1
                     ),
-                    text = stringResource(id = R.string.common_currencies),
+                    text = stringResource(id = R.string.explore_demeter_title),
                     style = MaterialTheme.customTypography.headline2,
                     color = MaterialTheme.customColors.fgPrimary
                 )
@@ -118,13 +119,12 @@ private fun AllCurrenciesInternal(
                         end = Dimens.x1,
                         bottom = Dimens.x1
                     ),
-                    text = stringResource(id = R.string.explore_swap_tokens_on_sora),
+                    text = stringResource(id = R.string.explore_demeter_subtitle),
                     style = MaterialTheme.customTypography.textXSBold,
                     color = MaterialTheme.customColors.fgSecondary
                 )
 
-                val listState = rememberLazyListState()
-                if (state.topTokens.isEmpty()) {
+                if (state.pools.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -136,16 +136,15 @@ private fun AllCurrenciesInternal(
                         )
                     }
                 } else {
+                    val listState = rememberLazyListState()
                     LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                         items(
-                            count = state.topTokens.size,
+                            count = state.pools.size,
                         ) { position ->
-                            AssetItemEnumerated(
+                            BasicFarmListItem(
                                 modifier = Modifier.padding(vertical = Dimens.x1),
-                                assetState = state.topTokens[position].second,
-                                number = state.topTokens[position].first,
-                                testTag = "",
-                                onClick = onTokenClicked,
+                                state = state.pools[position],
+                                onPoolClick = onFarmClicked,
                             )
                         }
                     }
@@ -155,16 +154,15 @@ private fun AllCurrenciesInternal(
     }
 }
 
+@Preview
 @Composable
-@Preview(showBackground = true)
-private fun PreviewAllCurrenciesInternal() {
-    Column(modifier = Modifier.fillMaxSize()) {
-        AllCurrenciesInternal(
-            state = EcoSystemTokensState(
-                previewAssetItemCardStateList.mapIndexed { q, w ->
-                    q.toString() to w
-                },
+private fun PreviewAllPoolsInternal() {
+    Column() {
+        AllDemeterInternal(
+            state = AllFarmsState(
+                pools = previewBasicFarmListItemState,
             ),
-        ) {}
+            onFarmClicked = {},
+        )
     }
 }

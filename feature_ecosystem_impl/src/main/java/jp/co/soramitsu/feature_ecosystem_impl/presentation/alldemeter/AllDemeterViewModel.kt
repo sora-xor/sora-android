@@ -30,75 +30,51 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
+import jp.co.soramitsu.common.domain.iconUri
+import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringTriple
-import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
-import jp.co.soramitsu.feature_ecosystem_impl.domain.PoolsUpdateSubscription
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.ExploreRoutes
-import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.ui_core.component.toolbar.Action
-import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class ExploreViewModel @Inject constructor(
-    private val polkaswapRouter: PolkaswapRouter,
-    private val assetsRouter: AssetsRouter,
-    private val poolsUpdateSubscription: PoolsUpdateSubscription,
+internal class AllDemeterViewModel @Inject constructor(
+    demeterFarmingInteractor: DemeterFarmingInteractor,
+    numbersFormatter: NumbersFormatter,
 ) : BaseViewModel() {
 
+    private val _farmsLiveData = SingleLiveEvent(AllFarmsState(emptyList(), true))
+    val farmsLiveData: LiveData<AllFarmsState> = _farmsLiveData
+
     init {
-        _toolbarState.value = SoramitsuToolbarState(
-            type = SoramitsuToolbarType.Small(),
-            basic = BasicToolbarState(
-                title = "",
-                navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_arrow_left,
-                visibility = false,
-                searchEnabled = false,
-            ),
-        )
-
         viewModelScope.launch {
-            poolsUpdateSubscription.updateBasicPools()
+            _farmsLiveData.value = AllFarmsState(
+                demeterFarmingInteractor.getFarmedBasicPools().mapIndexed { index, farm ->
+                    BasicFarmListItemState(
+                        StringTriple(farm.tokenBase.id, farm.tokenTarget.id, farm.tokenReward.id),
+                        number = (index + 1).toString(),
+                        token1Icon = farm.tokenBase.iconUri(),
+                        token2Icon = farm.tokenTarget.iconUri(),
+                        rewardTokenIcon = farm.tokenReward.iconUri(),
+                        rewardTokenSymbol = farm.tokenReward.symbol,
+                        text1 = "%s-%s".format(farm.tokenBase.symbol, farm.tokenTarget.symbol),
+                        text2 = farm.tokenBase.printFiat(farm.tvl.formatFiatSuffix()).orEmpty(),
+                        text3 = farm.apr.let {
+                            "%s%%".format(numbersFormatter.format(it, 2))
+                        },
+                    )
+                }
+            )
         }
     }
-
-    override fun startScreen(): String = ExploreRoutes.START
-
-    override fun onMenuItem(action: Action) {
-        when (action) {
-            is Action.Plus -> {
-                onPoolPlus()
-            }
-
-            else -> {}
-        }
-    }
-
-    fun onTokenClicked(tokenId: String) {
-        assetsRouter.showAssetDetails(tokenId)
-    }
-
-    fun onPoolClicked(pool: StringPair) {
-        polkaswapRouter.showPoolDetails(pool)
-    }
-
-    fun onFarmClicked(ids: StringTriple) {
-        polkaswapRouter.showFarmDetails(ids)
-    }
-
-    private fun onPoolPlus() {
-        polkaswapRouter.showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
-    }
-
-    fun isBottomBarNeeded() = currentDestination == ExploreRoutes.START
 }

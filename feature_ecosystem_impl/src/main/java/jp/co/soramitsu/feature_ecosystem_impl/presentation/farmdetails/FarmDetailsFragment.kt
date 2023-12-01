@@ -30,20 +30,16 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.pooldetails
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails
 
 import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -53,30 +49,31 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
-import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.PoolDetailsScreen
-import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.FarmDetailsScreen
 
 @AndroidEntryPoint
-class PoolDetailsFragment : SoraBaseFragment<PoolDetailsViewModel>() {
+class FarmDetailsFragment : SoraBaseFragment<FarmDetailsViewModel>() {
 
     companion object {
         private const val ARG_TOKEN_1 = "arg_token_1"
         private const val ARG_TOKEN_2 = "arg_token_2"
-        fun createBundle(ids: StringPair) =
-            bundleOf(ARG_TOKEN_1 to ids.first, ARG_TOKEN_2 to ids.second)
+        private const val ARG_TOKEN_3 = "arg_token_3"
+        fun createBundle(ids: StringTriple) =
+            bundleOf(ARG_TOKEN_1 to ids.first, ARG_TOKEN_2 to ids.second, ARG_TOKEN_3 to ids.third)
     }
 
     @Inject
-    lateinit var vmf: PoolDetailsViewModel.AssistedPoolDetailsViewModelFactory
+    lateinit var vmf: FarmDetailsViewModel.AssistedFarmDetailsViewModelFactory
 
-    override val viewModel: PoolDetailsViewModel by viewModels {
+    override val viewModel: FarmDetailsViewModel by viewModels {
         CustomViewModelFactory {
             vmf.create(
                 requireArguments().getString(ARG_TOKEN_1).orEmpty(),
                 requireArguments().getString(ARG_TOKEN_2).orEmpty(),
+                requireArguments().getString(ARG_TOKEN_3).orEmpty(),
             )
         }
     }
@@ -97,20 +94,10 @@ class PoolDetailsFragment : SoraBaseFragment<PoolDetailsViewModel>() {
         composable(
             route = theOnlyRoute,
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(top = Dimens.x1)
-                    .fillMaxSize()
-                    .padding(horizontal = Dimens.x2)
-                    .verticalScroll(scrollState)
-            ) {
-                PoolDetailsScreen(
-                    viewModel.detailsState,
-                    viewModel::onSupply,
-                    viewModel::onRemove,
-                    viewModel::onFarm
-                )
-            }
+            val state = viewModel.state.collectAsStateWithLifecycle().value
+            FarmDetailsScreen(
+                state,
+            )
         }
     }
 

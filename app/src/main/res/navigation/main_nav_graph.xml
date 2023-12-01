@@ -11,7 +11,7 @@
 
     <fragment
         android:id="@+id/pincodeFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment"/>
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment" />
 
     <fragment
         android:id="@+id/swapFragment"
@@ -101,6 +101,11 @@
         android:id="@+id/backupJsonFragment"
         android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.json.BackupJsonFragment"
         android:label="BackupJsonFragment" />
+
+    <fragment
+        android:id="@+id/farmDetailsFragment"
+        android:name="jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.FarmDetailsFragment"
+        android:label="FarmDetailsFragment" />
 
     <include app:graph="@navigation/activities_nav_graph" />
     <include app:graph="@navigation/profile_nav_graph" />

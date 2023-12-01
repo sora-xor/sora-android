@@ -32,6 +32,7 @@
   <string name="address_not_found_1">受信者が見つかりません</string>
   <string name="amount_error_no_funds">指定された金額を送金するための十分な残高がありません</string>
   <string name="appearance_title">外観</string>
+  <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">認証に生体認証を使用しますか？</string>
   <string name="asset_details_asset_id">アセットID</string>
   <string name="asset_details_liquid_balance">流動性の残高</string>
@@ -138,6 +139,8 @@
   <string name="common_expand">拡大</string>
   <string name="common_explore">探る</string>
   <string name="common_failed">失敗</string>
+  <string name="common_farming">Farming</string>
+  <string name="common_fee">Fee</string>
   <string name="common_filipino">フィリピン語</string>
   <string name="common_finnish">フィンランド語</string>
   <string name="common_french">フランス語</string>
@@ -160,10 +163,12 @@
   <string name="common_min">分</string>
   <string name="common_more">もっと</string>
   <string name="common_norwegian">ノルウェー語</string>
+  <string name="common_nothing_available">Nothing available</string>
   <string name="common_ok">OK</string>
   <string name="common_passphrase_title">パスフレーズ</string>
   <string name="common_pay_attention">注目してください！</string>
   <string name="common_persian">Persian</string>
+  <string name="common_pools">Pools</string>
   <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">シード</string>
   <string name="common_receive">受け取る</string>
@@ -237,6 +242,8 @@
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">ネットワーク手数料のための資金が不足しています</string>
   <string name="explore_create_pool">Create pool</string>
+  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
+  <string name="explore_demeter_title">Demeter Farming</string>
   <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
   <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">このデバイスへのアクセスを失った場合、バックアップしない限り、資金は失われます！</string>
@@ -263,6 +270,8 @@
   <string name="export_protection_seed_description">次のステップで、アカウントを復元できるシード(長いハッシュ値)が表示されます</string>
   <string name="export_select_account">一括エクスポートするアカウントを選択</string>
   <string name="faq_title">よくある質問</string>
+  <string name="farm_details_your_rewards">Your rewards</string>
+  <string name="farming_details_title">Farming details</string>
   <string name="forget_account">アカウントを忘れる</string>
   <string name="get_sora_card_title">SORAカードを入手</string>
   <string name="global_results">グローバルな結果</string>
@@ -326,6 +335,7 @@
   <string name="pincode_one_try_left">クールダウンまであと1回だけ試せます</string>
   <string name="pincode_set_your_pin_code">PINコードの設定</string>
   <string name="pincode_touch_fingerprint_scanner">指紋スキャナーに触れてください</string>
+  <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
@@ -357,6 +367,7 @@
   <string name="polkaswap_minimum_received_info">確認される前に大きくて不利な価格変動があった場合、取引は元に戻ります</string>
   <string name="polkaswap_network_fee_info">ネットワーク手数料は、SORAシステムの発展と安定したパフォーマンスを確保するために使用されます</string>
   <string name="polkaswap_output_estimated">表示は推定値です。少なくとも %s 受け取らなければ、取引は元に戻ります</string>
+  <string name="polkaswap_pool_farms_title">Stake your pool share for extra rewards</string>
   <string name="polkaswap_pool_not_created">プールが作成されていません</string>
   <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">流動性供給に対するファーミング報酬</string>
@@ -368,6 +379,9 @@
   <string name="polkaswap_swapped">スワップ済み</string>
   <string name="pool_button_remove">削除</string>
   <string name="pool_details">プールの詳細</string>
+  <string name="pool_details_active_farms">Active farms</string>
+  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
+  <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">アクティブなプールがまだありません。\n流動性を追加して報酬を獲得してください</string>
   <string name="pool_share_title">プール内訳</string>
   <string name="pool_share_title_1">プールシェア</string>
@@ -531,7 +545,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">SORAアプリのアップデートがダウンロードされ、インストールできるようになりました。\n\n最新バージョンのアプリを使用することが重要です。\n\nアプリをアップデートするためには再起動が必要です。</string>
   <string name="update_install_now">今すぐアップデートをインストールしますか？</string>
-  <string name="wallet_backup">Wallet backup</string>
+  <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">ロック済み</string>
   <string name="wallet_balance_reserved">予約済み</string>
   <string name="wallet_bonded">ボンド済み</string>

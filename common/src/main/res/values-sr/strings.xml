@@ -32,6 +32,7 @@
   <string name="address_not_found_1">Примаоци нису пронађени</string>
   <string name="amount_error_no_funds">Извините, немате довољно средстава за пренос наведеног износа.</string>
   <string name="appearance_title">Appearance</string>
+  <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Да ли желите да користите биометрију за аутентификацију?</string>
   <string name="asset_details_asset_id">Asset ID</string>
   <string name="asset_details_liquid_balance">Liquid balance</string>
@@ -138,6 +139,8 @@
   <string name="common_expand">Proširi</string>
   <string name="common_explore">Explore</string>
   <string name="common_failed">Није успело</string>
+  <string name="common_farming">Farming</string>
+  <string name="common_fee">Fee</string>
   <string name="common_filipino">Филипино</string>
   <string name="common_finnish">Фински</string>
   <string name="common_french">Француски</string>
@@ -162,10 +165,12 @@
   <string name="common_min">мин</string>
   <string name="common_more">Više</string>
   <string name="common_norwegian">Norveški</string>
+  <string name="common_nothing_available">Nothing available</string>
   <string name="common_ok">OK</string>
   <string name="common_passphrase_title">Passphrase</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_pools">Pools</string>
   <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Сирови сид</string>
   <string name="common_receive">Прими</string>
@@ -239,6 +244,8 @@
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Нема довољно средстава за накнаду за трансакцију</string>
   <string name="explore_create_pool">Create pool</string>
+  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
+  <string name="explore_demeter_title">Demeter Farming</string>
   <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
   <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Ako izgubite pristup ovom uređaju, vaša sredstva će biti izgubljena osim ako ne napravite rezervnu kopiju!</string>
@@ -265,6 +272,8 @@
   <string name="export_protection_seed_description">U sledećem koraku videćete Raw Seed (dugački heš) koji će vam omogućiti da povratite nalog.</string>
   <string name="export_select_account">Izaberite račun za grupni izvoz</string>
   <string name="faq_title">FAQ</string>
+  <string name="farm_details_your_rewards">Your rewards</string>
+  <string name="farming_details_title">Farming details</string>
   <string name="forget_account">Forget account</string>
   <string name="get_sora_card_title">Get SORA Card</string>
   <string name="global_results">Global results</string>
@@ -328,6 +337,7 @@
   <string name="pincode_one_try_left">Imate još jedan pokušaj pre hlađenja</string>
   <string name="pincode_set_your_pin_code">Подесите пин код</string>
   <string name="pincode_touch_fingerprint_scanner">Додирните скенер отиска прста</string>
+  <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
@@ -359,6 +369,7 @@
   <string name="polkaswap_minimum_received_info">Vaša transakcija nece biti procesuirana ukoliko se potvrdi veliko nepovoljno kretanja cena.</string>
   <string name="polkaswap_network_fee_info">Mrežna naknada se koristi da bi se osigurao rast SORA sistema i stabilne performanse.</string>
   <string name="polkaswap_output_estimated">Исход је процењен. Примићете најмање %s или ће трансакција бити отказана.</string>
+  <string name="polkaswap_pool_farms_title">Stake your pool share for extra rewards</string>
   <string name="polkaswap_pool_not_created">Pool nije kreiran</string>
   <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Фарминг награда за давање ликвидности</string>
@@ -370,6 +381,9 @@
   <string name="polkaswap_swapped">Заменио</string>
   <string name="pool_button_remove">Уклони</string>
   <string name="pool_details">Pool details</string>
+  <string name="pool_details_active_farms">Active farms</string>
+  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
+  <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Још увек немате активних пула. Додајте ликвидност да бисте зарадили награде</string>
   <string name="pool_share_title">Удео пулa</string>
   <string name="pool_share_title_1">Ваш удео пула</string>
@@ -542,7 +556,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Ажурирање за апликацију SORA је преузето и спремно за инсталирање. \n\nВажно је да користите најновију верзију апликације. \n\nДа бисте ажурирали апликацију, потребно је поновно покретање.</string>
   <string name="update_install_now">Да ли желите да инсталирате ажурирање сада?</string>
-  <string name="wallet_backup">Wallet backup</string>
+  <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">Zaključano</string>
   <string name="wallet_balance_reserved">Rezervisano</string>
   <string name="wallet_bonded">Vezano</string>

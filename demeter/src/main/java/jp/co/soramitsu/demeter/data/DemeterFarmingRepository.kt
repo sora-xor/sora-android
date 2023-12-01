@@ -34,6 +34,7 @@ package jp.co.soramitsu.demeter.data
 
 import java.math.BigDecimal
 import java.math.BigInteger
+import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
@@ -111,6 +112,9 @@ internal class DemeterFarmingRepositoryImpl(
         private const val BLOCKS_PER_YEAR = 5256000
     }
 
+    private var cachedFarmedPools: MutableMap<String, List<DemeterFarmingPool>> = mutableMapOf()
+    private var cachedFarmedBasicPools: List<DemeterFarmingBasicPool>? = null
+
     override suspend fun getStakedFarmedAmountOfAsset(
         address: String,
         tokenId: String
@@ -125,10 +129,19 @@ internal class DemeterFarmingRepositoryImpl(
     }
 
     override suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>? {
+        if (cachedFarmedPools.containsKey(soraAccountAddress)) return cachedFarmedPools[soraAccountAddress]
+        val baseFarms = getFarmedBasicPools()
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
-        return getDemeter(soraAccountAddress)
-            ?.filter { it.farm }
+        val calculated = getDemeter(soraAccountAddress)
+            ?.filter { it.farm && it.amount.isZero().not() }
             ?.map {
+                val base = baseFarms.first { base ->
+                    StringTriple(
+                        base.tokenBase.id,
+                        base.tokenTarget.id,
+                        base.tokenReward.id
+                    ) == StringTriple(it.base, it.pool, it.reward)
+                }
                 val baseTokenMapped = assetLocalToAssetMapper.map(
                     tokenLocal = db.assetDao().getToken(it.base, selectedCurrency.code)
                 )
@@ -142,63 +155,81 @@ internal class DemeterFarmingRepositoryImpl(
                     tokenBase = baseTokenMapped,
                     tokenTarget = poolTokenMapped,
                     tokenReward = rewardTokenMapped,
+                    apr = base.apr,
                     amount = mapBalance(it.amount, baseTokenMapped.precision),
                     amountReward = mapBalance(it.rewardAmount, rewardTokenMapped.precision),
                 )
-            }
+            } ?: return null
+        return cachedFarmedPools.getOrPut(soraAccountAddress) { calculated }
     }
 
     override suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool> {
-        val selectedCurrency = soraConfigManager.getSelectedCurrency()
-        val rewardTokens = getRewardTokens()
-        return getAllFarms()
-            .mapNotNull { basic ->
-                runCatching {
-                    val baseTokenMapped = assetLocalToAssetMapper.map(
-                        tokenLocal = db.assetDao().getToken(basic.base, selectedCurrency.code)
-                    )
-                    val poolTokenMapped = assetLocalToAssetMapper.map(
-                        tokenLocal = db.assetDao().getToken(basic.pool, selectedCurrency.code)
-                    )
-                    val rewardTokenMapped = assetLocalToAssetMapper.map(
-                        tokenLocal = db.assetDao().getToken(basic.reward, selectedCurrency.code)
-                    )
-                    val rewardToken = rewardTokens.find { it.token == basic.reward }
-                    val emission = getEmission(basic, rewardToken, rewardTokenMapped.precision)
-                    val total = mapBalance(basic.totalTokensInPool, poolTokenMapped.precision)
-                    val poolTokenPrice = BigDecimal(poolTokenMapped.fiatPrice ?: 0.0)
-                    val rewardTokenPrice = BigDecimal(rewardTokenMapped.fiatPrice ?: 0.0)
-                    val tvl = if (basic.isFarm) {
-                        polkaswapRepository.getBasicPool(basic.base, basic.pool)?.let { pool ->
-                            val kf = pool.targetReserves.div(pool.totalIssuance)
-                            kf.times(total).times(2.toBigDecimal()).times(poolTokenPrice)
-                        } ?: BigDecimal.ZERO
-                    } else {
-                        total.times(poolTokenPrice)
-                    }
-                    val apr = if (tvl.isZero()) BigDecimal.ZERO else emission
-                        .times(BLOCKS_PER_YEAR.toBigDecimal())
-                        .times(rewardTokenPrice)
-                        .div(tvl).times(100.toBigDecimal())
+        if (cachedFarmedBasicPools == null) {
+            val selectedCurrency = soraConfigManager.getSelectedCurrency()
+            val rewardTokens = getRewardTokens()
+            cachedFarmedBasicPools = getAllFarms()
+                .mapNotNull { basic ->
+                    runCatching {
+                        val baseTokenMapped = assetLocalToAssetMapper.map(
+                            tokenLocal = db.assetDao().getToken(basic.base, selectedCurrency.code)
+                        )
+                        val poolTokenMapped = assetLocalToAssetMapper.map(
+                            tokenLocal = db.assetDao().getToken(basic.pool, selectedCurrency.code)
+                        )
+                        val rewardTokenMapped = assetLocalToAssetMapper.map(
+                            tokenLocal = db.assetDao().getToken(basic.reward, selectedCurrency.code)
+                        )
+                        val rewardToken = rewardTokens.find { it.token == basic.reward }
+                        val emission = getEmission(basic, rewardToken, rewardTokenMapped.precision)
+                        val total = mapBalance(basic.totalTokensInPool, poolTokenMapped.precision)
+                        val poolTokenPrice = BigDecimal(poolTokenMapped.fiatPrice ?: 0.0)
+                        val rewardTokenPrice = BigDecimal(rewardTokenMapped.fiatPrice ?: 0.0)
+                        val tvl = if (basic.isFarm) {
+                            polkaswapRepository.getBasicPool(basic.base, basic.pool)?.let { pool ->
+                                val kf = pool.targetReserves.div(pool.totalIssuance)
+                                kf.times(total).times(2.toBigDecimal()).times(poolTokenPrice)
+                            } ?: BigDecimal.ZERO
+                        } else {
+                            total.times(poolTokenPrice)
+                        }
+                        val apr = if (tvl.isZero()) BigDecimal.ZERO else emission
+                            .times(BLOCKS_PER_YEAR.toBigDecimal())
+                            .times(rewardTokenPrice)
+                            .div(tvl).times(100.toBigDecimal())
 
-                    DemeterFarmingBasicPool(
-                        tokenBase = baseTokenMapped,
-                        tokenTarget = poolTokenMapped,
-                        tokenReward = rewardTokenMapped,
-                        apr = apr.toDouble(),
-                        tvl = tvl,
-                        fee = mapBalance(basic.depositFee, baseTokenMapped.precision).toDouble().times(100.0),
-                    )
-                }.getOrNull()
-            }
+                        DemeterFarmingBasicPool(
+                            tokenBase = baseTokenMapped,
+                            tokenTarget = poolTokenMapped,
+                            tokenReward = rewardTokenMapped,
+                            apr = apr.toDouble(),
+                            tvl = tvl,
+                            fee = mapBalance(basic.depositFee, baseTokenMapped.precision).toDouble()
+                                .times(100.0),
+                        )
+                    }.getOrNull()
+                }
+        }
+
+        return cachedFarmedBasicPools ?: emptyList()
     }
 
-    private fun getEmission(basic: DemeterBasicStorage, reward: DemeterRewardTokenStorage?, precision: Int): BigDecimal {
-        val tokenMultiplier = ((if (basic.isFarm) reward?.farmsTotalMultiplier else reward?.stakingTotalMultiplier))?.toBigDecimal(precision) ?: BigDecimal.ZERO
+    private fun getEmission(
+        basic: DemeterBasicStorage,
+        reward: DemeterRewardTokenStorage?,
+        precision: Int
+    ): BigDecimal {
+        val tokenMultiplier =
+            ((if (basic.isFarm) reward?.farmsTotalMultiplier else reward?.stakingTotalMultiplier))?.toBigDecimal(
+                precision
+            ) ?: BigDecimal.ZERO
         if (tokenMultiplier.isZero()) return BigDecimal.ZERO
         val multiplier = basic.multiplier.toBigDecimal(precision).div(tokenMultiplier)
         val allocation =
-            mapBalance((if (basic.isFarm) reward?.farmsAllocation else reward?.stakingAllocation) ?: BigInteger.ZERO, precision)
+            mapBalance(
+                (if (basic.isFarm) reward?.farmsAllocation else reward?.stakingAllocation)
+                    ?: BigInteger.ZERO,
+                precision
+            )
         val tokenPerBlock = reward?.tokenPerBlock?.toBigDecimal(precision) ?: BigDecimal.ZERO
         return allocation.times(tokenPerBlock).times(multiplier)
     }

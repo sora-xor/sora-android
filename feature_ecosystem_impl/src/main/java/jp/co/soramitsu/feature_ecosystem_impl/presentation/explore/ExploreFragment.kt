@@ -33,19 +33,41 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.ExploreRoutes
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies.AllCurrenciesScreen
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.AllDemeterScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools.AllPoolsScreen
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.start.StartScreen
+import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.TonalButton
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
+import jp.co.soramitsu.ui_core.theme.customTypography
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
@@ -64,43 +86,94 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
+    @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
-        scrollState: ScrollState,
-        navController: NavHostController
+        scrollState: ScrollState, navController: NavHostController
     ) {
         composable(
             route = ExploreRoutes.START,
         ) {
-//            DiscoverScreen(
-//                onAddLiquidityClicked = viewModel::onPoolPlus,
-//                scrollState = scrollState,
-//            )
-            StartScreen(
-                scrollState = scrollState,
-                onCurrencyShowMore = { navController.navigate(ExploreRoutes.ALL_CURRENCIES) },
-                onPoolShowMore = { navController.navigate(ExploreRoutes.ALL_POOLS) },
-                onTokenClicked = viewModel::onTokenClicked,
-                onPoolClicked = viewModel::onPoolClicked,
-            )
+            val pagerState = rememberPagerState { ExplorePages.entries.size }
+            val scope = rememberCoroutineScope()
+
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    modifier = Modifier.padding(
+                        start = Dimens.x3,
+                        end = Dimens.x3,
+                        top = Dimens.x7,
+                    ),
+                    text = stringResource(id = R.string.common_explore),
+                    style = MaterialTheme.customTypography.headline1,
+                    color = MaterialTheme.customColors.fgPrimary,
+                )
+
+                val horizontalState = rememberScrollState()
+
+                Row(
+                    modifier = Modifier
+                        .padding(vertical = Dimens.x2, horizontal = Dimens.x3)
+                        .horizontalScroll(horizontalState),
+                ) {
+                    (0..<pagerState.pageCount).forEach {
+                        if (it == pagerState.currentPage) {
+                            FilledButton(
+                                modifier = Modifier.padding(end = Dimens.x1),
+                                size = Dimens.x4,
+                                order = Order.SECONDARY,
+                                text = stringResource(id = ExplorePages.entries[it].titleResource)
+                            ) {
+                                scope.launch { pagerState.animateScrollToPage(it) }
+                            }
+                        } else {
+                            TonalButton(
+                                modifier = Modifier.padding(end = Dimens.x1),
+                                size = Dimens.x4,
+                                order = Order.SECONDARY,
+                                text = stringResource(id = ExplorePages.entries[it].titleResource)
+                            ) {
+                                scope.launch { pagerState.animateScrollToPage(it) }
+                            }
+                        }
+                    }
+                }
+
+                HorizontalPager(
+                    modifier = Modifier.fillMaxHeight(), state = pagerState, beyondBoundsPageCount = 1
+                ) {
+                    when (it) {
+                        ExplorePages.CURRENCIES.ordinal -> {
+                            AllCurrenciesScreen(
+                                onTokenClicked = viewModel::onTokenClicked,
+                            )
+                        }
+
+                        ExplorePages.POOLS.ordinal -> {
+                            AllPoolsScreen(
+                                onPoolClicked = viewModel::onPoolClicked,
+                            )
+                        }
+
+                        ExplorePages.FARMING.ordinal -> {
+                            AllDemeterScreen(
+                                onFarmClicked = viewModel::onFarmClicked,
+                            )
+                        }
+                    }
+                }
+            }
         }
-        composable(
-            route = ExploreRoutes.ALL_CURRENCIES,
-        ) {
-            val searchState = viewModel.searchState.collectAsStateWithLifecycle()
-            AllCurrenciesScreen(
-                searchState = searchState.value,
-                onTokenClicked = viewModel::onTokenClicked,
-            )
-        }
-        composable(
-            route = ExploreRoutes.ALL_POOLS,
-        ) {
-            val searchState = viewModel.searchState.collectAsStateWithLifecycle()
-            AllPoolsScreen(
-                searchState = searchState.value,
-                onPoolClicked = viewModel::onPoolClicked,
-            )
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (viewModel.isBottomBarNeeded()) {
+            (activity as BottomBarController).showBottomBar()
+        } else {
+            (activity as BottomBarController).hideBottomBar()
         }
     }
 }

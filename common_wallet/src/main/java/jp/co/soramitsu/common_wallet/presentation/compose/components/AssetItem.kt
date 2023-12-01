@@ -45,7 +45,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
@@ -91,7 +90,7 @@ fun AssetItemEnumerated(
         Text(
             modifier = Modifier
                 .wrapContentHeight()
-                .width(40.dp),
+                .width(Dimens.x4),
             text = number,
             maxLines = 1,
             textAlign = TextAlign.Center,
