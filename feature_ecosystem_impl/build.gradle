@@ -62,6 +62,8 @@ dependencies {
 
     implementation project(":android-foundation")
     implementation project(":common")
+    implementation project(":core_di")
+    implementation project(":demeter")
     implementation project(':common_wallet')
     implementation project(":feature_assets_api")
     implementation project(":feature_polkaswap_api")

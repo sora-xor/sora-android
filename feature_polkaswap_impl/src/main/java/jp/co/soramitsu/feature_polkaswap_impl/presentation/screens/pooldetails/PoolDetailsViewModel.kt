@@ -39,18 +39,23 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.iconUri
+import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common.util.ext.lazyAsync
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicUserFarmListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsDemeterState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsState
 import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
@@ -63,6 +68,7 @@ import kotlinx.coroutines.launch
 class PoolDetailsViewModel @AssistedInject constructor(
     private val poolsInteractor: PoolsInteractor,
     private val numbersFormatter: NumbersFormatter,
+    private val resourceManager: ResourceManager,
     private val polkaswapRouter: PolkaswapRouter,
     private val demeterFarmingInteractor: DemeterFarmingInteractor,
     @Assisted("id1") private val token1Id: String,
@@ -78,7 +84,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
         PoolDetailsState(
             DEFAULT_ICON_URI, DEFAULT_ICON_URI, DEFAULT_ICON_URI,
             "", "", "", "", "", "",
-            true, true, "", emptyList(), false,
+            true, true, "", emptyList(), emptyList(), false,
         )
     )
 
@@ -90,8 +96,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
             type = SoramitsuToolbarType.SmallCentered(),
             basic = BasicToolbarState(
                 title = R.string.pool_details,
-                navIcon = null,
-                menu = listOf(Action.Close()),
+                navIcon = R.drawable.ic_cross_24,
             ),
         )
 
@@ -110,25 +115,62 @@ class PoolDetailsViewModel @AssistedInject constructor(
                         )
                     } else {
                         val userData = data.user
+                        val farms = demeterFarmingInteractor.getFarmedBasicPools()
+                            .filter {
+                                it.tokenBase.id == data.basic.baseToken.id && it.tokenTarget.id == data.basic.targetToken.id
+                            }
+                            .mapIndexed { index, farm ->
+                                BasicFarmListItemState(
+                                    Triple(farm.tokenBase.id, farm.tokenTarget.id, farm.tokenReward.id),
+                                    number = (index + 1).toString(),
+                                    token1Icon = farm.tokenBase.iconUri(),
+                                    token2Icon = farm.tokenTarget.iconUri(),
+                                    rewardTokenIcon = farm.tokenReward.iconUri(),
+                                    rewardTokenSymbol = farm.tokenReward.symbol,
+                                    text1 = "%s-%s".format(farm.tokenBase.symbol, farm.tokenTarget.symbol),
+                                    text2 = farm.tokenBase.printFiat(farm.tvl.formatFiatSuffix()).orEmpty(),
+                                    text3 = farm.apr.let {
+                                        "%s%%".format(numbersFormatter.format(it, 2))
+                                    },
+                                )
+                            }
+
+                        var pools100 = false
+
                         val pools = demeterFarmingInteractor.getFarmedPools()?.filter { pool ->
                             pool.tokenBase.id == token1Id && pool.tokenTarget.id == token2Id
                         }?.map { farming ->
-                            PoolDetailsDemeterState(
-                                rewardsUri = farming.tokenReward.iconUri(),
-                                rewardsTokenSymbol = farming.tokenReward.symbol,
-                                percent = if (userData != null) {
-                                    PolkaswapFormulas.calculateShareOfPoolFromAmount(
-                                        farming.amount,
-                                        userData.poolProvidersBalance,
-                                    ).toFloat()
-                                } else {
-                                    0.0f
-                                },
+                            val percent = if (userData != null) {
+                                PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                                    farming.amount,
+                                    userData.poolProvidersBalance,
+                                ).toFloat()
+                            } else {
+                                0.0f
+                            }
+
+                            pools100 = percent == 100.0f
+
+                            BasicUserFarmListItemState(
+                                ids = StringTriple(
+                                    farming.tokenBase.id,
+                                    farming.tokenTarget.id,
+                                    farming.tokenReward.id
+                                ),
+                                token1Icon = farming.tokenBase.iconUri(),
+                                token2Icon = farming.tokenTarget.iconUri(),
+                                rewardTokenIcon = farming.tokenReward.iconUri(),
+                                text1 = "${farming.tokenBase.symbol}-${farming.tokenTarget.symbol}",
+                                text2 = "${resourceManager.getString(R.string.pool_details_reward)}: ${
+                                    numbersFormatter.formatBigDecimal(
+                                        farming.amountReward
+                                    )
+                                } ${farming.tokenReward.symbol}",
+                                text3 = "${numbersFormatter.format(farming.apr)}% ${resourceManager.getString(R.string.polkaswap_apr)}",
+                                text4 = "${numbersFormatter.format(percent.toDouble())}%",
                             )
                         }
-                        val pools100 = pools?.any {
-                            it.percent == 100.0f
-                        }
+
                         detailsState = PoolDetailsState(
                             token1Icon = data.basic.baseToken.iconUri(),
                             token2Icon = data.basic.targetToken.iconUri(),
@@ -165,6 +207,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
                                     numbersFormatter.format(it, 2, true)
                                 )
                             },
+                            availableDemeterFarms = farms,
                             demeterPools = pools,
                             demeter100Percent = pools100 == true,
                         )
@@ -183,5 +226,9 @@ class PoolDetailsViewModel @AssistedInject constructor(
 
     fun onRemove() {
         polkaswapRouter.showRemoveLiquidity(token1Id to token2Id)
+    }
+
+    fun onFarm(ids: Triple<String, String, String>) {
+        polkaswapRouter.showFarmDetails(ids)
     }
 }

@@ -30,8 +30,12 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
-internal object ExploreRoutes {
-    const val START = "jp.co.soramitsu.feature_ecosystem_impl.Start"
+import jp.co.soramitsu.feature_ecosystem_impl.R
+
+enum class ExplorePages(val titleResource: Int) {
+    CURRENCIES(titleResource = R.string.common_currencies),
+    POOLS(titleResource = R.string.common_pools),
+    FARMING(titleResource = R.string.common_farming),
 }

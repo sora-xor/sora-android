@@ -32,6 +32,7 @@
   <string name="address_not_found_1">Destinataire non trouvé</string>
   <string name="amount_error_no_funds">Désolé, vous n\'avez pas les fonds suffisants pour transférer le montant spécifié.</string>
   <string name="appearance_title">Apparence</string>
+  <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Souhaitez-vous utiliser l\'authentification biométrique ?</string>
   <string name="asset_details_asset_id">ID de l\'actif</string>
   <string name="asset_details_liquid_balance">Solde liquide</string>
@@ -138,6 +139,8 @@
   <string name="common_expand">Agrandir</string>
   <string name="common_explore">Explorer</string>
   <string name="common_failed">Échoué</string>
+  <string name="common_farming">Farming</string>
+  <string name="common_fee">Fee</string>
   <string name="common_filipino">Philippin</string>
   <string name="common_finnish">Finlandais</string>
   <string name="common_french">Français</string>
@@ -161,10 +164,12 @@
   <string name="common_min">min</string>
   <string name="common_more">Plus</string>
   <string name="common_norwegian">Norvégien</string>
+  <string name="common_nothing_available">Nothing available</string>
   <string name="common_ok">Ok</string>
   <string name="common_passphrase_title">Phrase secrète</string>
   <string name="common_pay_attention">Attention!</string>
   <string name="common_persian">Perse</string>
+  <string name="common_pools">Pools</string>
   <string name="common_portuguese">Portugais</string>
   <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Recevoir</string>
@@ -238,6 +243,8 @@
   <string name="enter_password_title">Entrer le mot de passe</string>
   <string name="error_transaction_fee_title">Pas assez de fonds pour les frais de transaction</string>
   <string name="explore_create_pool">Create pool</string>
+  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
+  <string name="explore_demeter_title">Demeter Farming</string>
   <string name="explore_provide_and_earn">Fournir des liquidités et gagner des récompenses</string>
   <string name="explore_swap_tokens_on_sora">Échanger des tokens sur le réseau SORA</string>
   <string name="export_account_details_backup_description">Si vous perdez l\'accès à cet appareil, vos fonds seront perdus, sauf si vous sauvegardez!</string>
@@ -264,6 +271,8 @@
   <string name="export_protection_seed_description">À l\'étape suivante, vous verrez le Raw Seed (un long hash) qui vous permettra de récupérer un compte.</string>
   <string name="export_select_account">Sélectionnez le compte pour l\'exportation groupée</string>
   <string name="faq_title">FAQ</string>
+  <string name="farm_details_your_rewards">Your rewards</string>
+  <string name="farming_details_title">Farming details</string>
   <string name="forget_account">Oublier le compte</string>
   <string name="get_sora_card_title">Obtenir la SORA Card</string>
   <string name="global_results">Résultats globaux</string>
@@ -327,6 +336,7 @@
   <string name="pincode_one_try_left">Vous avez encore un essai avant le délai de réutilisation</string>
   <string name="pincode_set_your_pin_code">Choisissez un code PIN</string>
   <string name="pincode_touch_fingerprint_scanner">Touchez le scanner d\'empreintes digitales</string>
+  <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Alimenté par Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Une partie de votre pool est stakée. Pour y accéder vous devez d\'abord la déstaker</string>
   <string name="polkaswap_farming_pool_share">Votre part du pool stakée</string>
@@ -358,6 +368,7 @@
   <string name="polkaswap_minimum_received_info">Votre transaction sera annulée s\'il y a un mouvement de prix important et défavorable avant qu\'il ne soit confirmé.</string>
   <string name="polkaswap_network_fee_info">Les frais de réseau sont utilisés pour assurer la croissance et la stabilité des performances du système SORA.</string>
   <string name="polkaswap_output_estimated">Le montant à recevoir est estimé. Vous recevrez au moins %s ou la transaction sera annulée.</string>
+  <string name="polkaswap_pool_farms_title">Stake your pool share for extra rewards</string>
   <string name="polkaswap_pool_not_created">Le pool n’est pas créé</string>
   <string name="polkaswap_reward_payout">Récompenses payées en</string>
   <string name="polkaswap_sb_apy_info">Récompense de farming pour l\'apport de liquidités</string>
@@ -369,6 +380,9 @@
   <string name="polkaswap_swapped">Échangé</string>
   <string name="pool_button_remove">Retirer</string>
   <string name="pool_details">Détails du pool</string>
+  <string name="pool_details_active_farms">Active farms</string>
+  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
+  <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Vous n\'avez pas encore de pools actifs.\n Ajoutez des liquidités pour gagner des récompenses</string>
   <string name="pool_share_title">Pourcentage du pool</string>
   <string name="pool_share_title_1">Votre part du pool</string>
@@ -537,7 +551,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Une mise à jour de l\'application SORA a été téléchargée et est prête à être installée.\n\nIl est important d\'utiliser la dernière version de l\'application.\n\nAfin de mettre à jour l\'application, un redémarrage est requis.</string>
   <string name="update_install_now">Voulez-vous installer la mise à jour maintenant ?</string>
-  <string name="wallet_backup">Wallet backup</string>
+  <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">Bloqué</string>
   <string name="wallet_balance_reserved">Réservé</string>
   <string name="wallet_bonded">Lié</string>

@@ -33,11 +33,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_ecosystem_impl.explore
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.verify
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_ecosystem_impl.domain.PoolsUpdateSubscription
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.ExploreViewModel
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.test_shared.MainCoroutineRule
@@ -67,12 +69,16 @@ class ExploreViewModelTest {
     @MockK
     private lateinit var assetsRouter: AssetsRouter
 
+    @MockK
+    private lateinit var poolUpdateSubscription: PoolsUpdateSubscription
+
     private lateinit var discoverViewModel: ExploreViewModel
 
     @Before
     fun setUp() = runTest {
         every { assetsRouter.showAssetDetails(any()) } returns Unit
-        discoverViewModel = ExploreViewModel(polkaswapRouter, assetsRouter)
+        coEvery { poolUpdateSubscription.updateBasicPools() } returns Unit
+        discoverViewModel = ExploreViewModel(polkaswapRouter, assetsRouter, poolUpdateSubscription)
     }
 
     @Test

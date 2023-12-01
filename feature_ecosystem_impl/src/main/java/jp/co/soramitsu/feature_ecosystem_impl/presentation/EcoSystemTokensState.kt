@@ -39,16 +39,20 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.assetItemCardSt
 
 internal data class EcoSystemTokensState(
     val topTokens: List<Pair<String, AssetItemCardState>>,
+    val loading: Boolean = false
 )
 
 internal val initialEcoSystemTokensState = EcoSystemTokensState(
     topTokens = List(5) { i -> (i + 1).toString() to assetItemCardStateEmpty },
+    loading = true
 )
 
 internal data class EcoSystemPoolsState(
     val pools: List<BasicPoolListItemState>,
+    val loading: Boolean = false,
 )
 
 internal val initialEcoSystemPoolsState = EcoSystemPoolsState(
     pools = List(5) { _ -> basicPoolListItemStateEmpty },
+    true,
 )

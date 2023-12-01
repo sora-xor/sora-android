@@ -39,7 +39,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 
-internal interface PoolsUpdateSubscription {
+interface PoolsUpdateSubscription {
     fun start(): Flow<String>
     suspend fun updateBasicPools()
 }

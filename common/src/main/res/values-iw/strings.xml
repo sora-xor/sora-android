@@ -32,6 +32,7 @@
   <string name="address_not_found_1">לא נמצאו נמענים</string>
   <string name="amount_error_no_funds">אנחנו מצטערים, אין לך מספיק כספים כדי להעביר את הסכום שצויין</string>
   <string name="appearance_title">מראה חיצוני</string>
+  <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">האם ברצונך להשתמש בביומטריה לאימות?</string>
   <string name="asset_details_asset_id">כתובת הנכס</string>
   <string name="asset_details_liquid_balance">מאזן נזיל</string>
@@ -138,6 +139,8 @@
   <string name="common_expand">הרחב</string>
   <string name="common_explore">סקירה</string>
   <string name="common_failed">נכשל</string>
+  <string name="common_farming">Farming</string>
+  <string name="common_fee">Fee</string>
   <string name="common_filipino">פיליפינית</string>
   <string name="common_finnish">פינית</string>
   <string name="common_french">צרפתית</string>
@@ -163,10 +166,12 @@
   <string name="common_min">דק\'</string>
   <string name="common_more">עוד</string>
   <string name="common_norwegian">נורבגית</string>
+  <string name="common_nothing_available">Nothing available</string>
   <string name="common_ok">בסדר</string>
   <string name="common_passphrase_title">מילות מפתח</string>
   <string name="common_pay_attention">שים לב!</string>
   <string name="common_persian">פרסית</string>
+  <string name="common_pools">Pools</string>
   <string name="common_portuguese">פורטוגזית</string>
   <string name="common_raw_seed">קוד סיד</string>
   <string name="common_receive">קבל</string>
@@ -240,6 +245,8 @@
   <string name="enter_password_title">הזן סיסמה</string>
   <string name="error_transaction_fee_title">אין מספיק כספים עבור עמלת רשת</string>
   <string name="explore_create_pool">צור מאגר</string>
+  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
+  <string name="explore_demeter_title">Demeter Farming</string>
   <string name="explore_provide_and_earn">ספק נזילות והרווח תגמולים</string>
   <string name="explore_swap_tokens_on_sora">החלף טוקנים ברשת סורה</string>
   <string name="export_account_details_backup_description">אם תאבד את הגישה למכשיר הזה, הכספים שלך יאבדו, אלא אם תעשה גיבוי!</string>
@@ -266,6 +273,8 @@
   <string name="export_protection_seed_description">בשלב הבא תראה קוד סיד (האש ארוך) המאפשר לך לשחזר חשבון.</string>
   <string name="export_select_account">בחר חשבון לייצוא המכלול</string>
   <string name="faq_title">שאלות נפוצות</string>
+  <string name="farm_details_your_rewards">Your rewards</string>
+  <string name="farming_details_title">Farming details</string>
   <string name="forget_account">שכח חשבון</string>
   <string name="get_sora_card_title">קבל כרטיס סורה</string>
   <string name="global_results">תוצאות גלובליות</string>
@@ -329,6 +338,7 @@
   <string name="pincode_one_try_left">נשאר לך עוד ניסיון אחד לפני ההתקררות</string>
   <string name="pincode_set_your_pin_code">הגדר קוד PIN</string>
   <string name="pincode_touch_fingerprint_scanner">גע בסורק טביעת האצבע</string>
+  <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">מופעל על ידי Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">חלק מהנתח שלך במאגר מושקע. כדי לקבל גישה אליו, עליך להסיר אותו תחילה מהמאגר.</string>
   <string name="polkaswap_farming_pool_share">נתח המאגר שלך נעול</string>
@@ -360,6 +370,7 @@
   <string name="polkaswap_minimum_received_info">הטרנזקציה שלך תחזור אם תהיה תנועת מחיר גדולה ובלתי משתלמת לפני אישורה.</string>
   <string name="polkaswap_network_fee_info">עמלת הרשת משמשת כדי להבטיח את הצמיחה והביצועים היציבים של מערכת סורה.</string>
   <string name="polkaswap_output_estimated">התפוקה מוערכת. תקבל לפחות %s או שהטרנזקציה תחזור.</string>
+  <string name="polkaswap_pool_farms_title">Stake your pool share for extra rewards</string>
   <string name="polkaswap_pool_not_created">הבריכה לא נוצרה</string>
   <string name="polkaswap_reward_payout">תשלום תגמולים ב</string>
   <string name="polkaswap_sb_apy_info">תגמול פארמינג על אספקת נזילות</string>
@@ -371,6 +382,9 @@
   <string name="polkaswap_swapped">הוחלף</string>
   <string name="pool_button_remove">הסר</string>
   <string name="pool_details">פרטי המאגר</string>
+  <string name="pool_details_active_farms">Active farms</string>
+  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
+  <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">עדיין אין לך מאגרים פעילים.\nהוסף נזילות כדי להרוויח תגמולים</string>
   <string name="pool_share_title">נתח מהמאגר</string>
   <string name="pool_share_title_1">החלק שלך במאגר</string>
@@ -549,7 +563,7 @@
   <string name="unexpected_error">אירעה שגיאה בלתי צפויה. \n\n אתה יכול לפתור בעיה זו בצ\'אט הטלגרם של קהילת סורה @SORAhappiness.</string>
   <string name="update_downloaded">עדכון עבור אפליקצית סורה הורד והוא מוכן להתקנה.\n\nחשוב להשתמש בגירסה העדכנית ביותר של האפליקציה.\n\nכדי לעדכן את האפליקציה, נדרשת הפעלה מחדש.</string>
   <string name="update_install_now">האם ברצונך להתקין את העדכון כעת?</string>
-  <string name="wallet_backup">Wallet backup</string>
+  <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">נעול</string>
   <string name="wallet_balance_reserved">שמור</string>
   <string name="wallet_bonded">צורף למאגר</string>

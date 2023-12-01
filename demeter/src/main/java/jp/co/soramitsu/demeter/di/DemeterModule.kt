@@ -36,6 +36,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.demeter.data.DemeterFarmingRepository
@@ -54,6 +55,7 @@ import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 object DemeterFarmingModule {
 
     @Provides
+    @Singleton
     fun provideDemeterFarmingRepository(
         substrateCalls: SubstrateCalls,
         runtimeManager: RuntimeManager,

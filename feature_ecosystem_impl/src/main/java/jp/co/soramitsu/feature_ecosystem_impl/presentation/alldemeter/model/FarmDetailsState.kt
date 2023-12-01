@@ -30,8 +30,19 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.model
 
-internal object ExploreRoutes {
-    const val START = "jp.co.soramitsu.feature_ecosystem_impl.Start"
-}
+data class FarmDetailsState(
+    val title: String,
+    val tvlSubtitle: String,
+    val apr: String,
+    val token1Icon: String,
+    val token2Icon: String,
+    val rewardsTokenSymbol: String,
+    val rewardsTokenIcon: String,
+    val fee: String,
+    val poolShareStackedText: String? = null,
+    val poolShareStacked: Float? = null,
+    val userRewardsAmount: String? = null,
+    val loading: Boolean = false,
+)

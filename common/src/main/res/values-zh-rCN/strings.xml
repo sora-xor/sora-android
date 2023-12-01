@@ -32,6 +32,7 @@
   <string name="address_not_found_1">未找到接收人</string>
   <string name="amount_error_no_funds">很抱歉，您没有足够的资金来转账指定的金额。</string>
   <string name="appearance_title">外观</string>
+  <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">您想使用生物特征识别进行认证吗？</string>
   <string name="asset_details_asset_id">资产ID</string>
   <string name="asset_details_liquid_balance">流动资产余额</string>
@@ -138,13 +139,15 @@
   <string name="common_expand">拓展</string>
   <string name="common_explore">探索</string>
   <string name="common_failed">失败了</string>
+  <string name="common_farming">Farming</string>
+  <string name="common_fee">Fee</string>
   <string name="common_filipino">菲律宾语</string>
   <string name="common_finnish">芬兰语</string>
   <string name="common_french">法语</string>
   <string name="common_german">德语</string>
   <string name="common_google_authorization_error">Google授权失败</string>
   <string name="common_google_backup_decryption_failed">备份解密失败。请检查密码并重试。</string>
-  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
+  <string name="common_google_backup_decryption_failed_2">您输入的密码可能无效。</string>
   <string name="common_hebrew">希伯来语</string>
   <string name="common_hindi">印地语</string>
   <plurals name="common_hour">
@@ -160,10 +163,12 @@
   <string name="common_min">分</string>
   <string name="common_more">更多</string>
   <string name="common_norwegian">挪威语</string>
+  <string name="common_nothing_available">Nothing available</string>
   <string name="common_ok">好的</string>
   <string name="common_passphrase_title">助记词</string>
   <string name="common_pay_attention">注意！</string>
   <string name="common_persian">波斯语</string>
+  <string name="common_pools">Pools</string>
   <string name="common_portuguese">葡萄牙语</string>
   <string name="common_raw_seed">种子词</string>
   <string name="common_receive">接收</string>
@@ -237,6 +242,8 @@
   <string name="enter_password_title">输入密码</string>
   <string name="error_transaction_fee_title">网络费用不足</string>
   <string name="explore_create_pool">创建池子</string>
+  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
+  <string name="explore_demeter_title">Demeter Farming</string>
   <string name="explore_provide_and_earn">提供流动性并获得奖励</string>
   <string name="explore_swap_tokens_on_sora">在SORA网络上进行代币兑换</string>
   <string name="export_account_details_backup_description">如果你无法访问这台设备，除非你进行备份，否则你的资金将会丢失！</string>
@@ -263,6 +270,8 @@
   <string name="export_protection_seed_description">在下一步中，您将看到原始种子（一个长哈希值），它可以让您恢复账户。</string>
   <string name="export_select_account">选择账户进行批量导出</string>
   <string name="faq_title">常见问题</string>
+  <string name="farm_details_your_rewards">Your rewards</string>
+  <string name="farming_details_title">Farming details</string>
   <string name="forget_account">忘记账户</string>
   <string name="get_sora_card_title">获取SORA卡</string>
   <string name="global_results">全局结果</string>
@@ -283,7 +292,7 @@
   <string name="invoice_scan_error_no_info">QR不能被解码</string>
   <string name="invoice_scan_error_user_not_found">无法从二维码中找到用户</string>
   <string name="launch_screen_loading_title">这次加载时间稍微长了一点</string>
-  <string name="liquid_assets">流动资产</string>
+  <string name="liquid_assets">资产</string>
   <string name="logout_dialog_body">此操作将导致从该设备删除账户。在继续操作之前，请确保已备份助记词。</string>
   <string name="logout_remove_nodes_body">\n \n您的所有自定义节点也将被移除</string>
   <string name="mnemonic_confirmation_select_word_2">从你写下的清单中</string>
@@ -326,6 +335,7 @@
   <string name="pincode_one_try_left">在冷却之前，您还有一次尝试</string>
   <string name="pincode_set_your_pin_code">设置代码</string>
   <string name="pincode_touch_fingerprint_scanner">触摸指纹识别按键</string>
+  <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">由Demeter农业提供技术支持</string>
   <string name="polkaswap_farming_pool_in_farming_hint">您的一部分流动池份额已被质押。要访问它，您需要先解除质押。</string>
   <string name="polkaswap_farming_pool_share">您质押的流动池份额</string>
@@ -357,6 +367,7 @@
   <string name="polkaswap_minimum_received_info">如果在确认之前有一个较大而不利的价格变动，您的交易将被取消。</string>
   <string name="polkaswap_network_fee_info">网络费用用于保证 SORA 系统的增长和稳定的性能。</string>
   <string name="polkaswap_output_estimated">输出是估计的。您将至少收到%s，否则交易将被取消。</string>
+  <string name="polkaswap_pool_farms_title">Stake your pool share for extra rewards</string>
   <string name="polkaswap_pool_not_created">未创建流动池</string>
   <string name="polkaswap_reward_payout">奖励支付于</string>
   <string name="polkaswap_sb_apy_info">流动性提供的农业奖励</string>
@@ -368,6 +379,9 @@
   <string name="polkaswap_swapped">已兑换</string>
   <string name="pool_button_remove">移除</string>
   <string name="pool_details">流动池详情</string>
+  <string name="pool_details_active_farms">Active farms</string>
+  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
+  <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">您还没有任何生效的流动池。\n赶快来增加流动性以赚取奖励哦</string>
   <string name="pool_share_title">流动池份额</string>
   <string name="pool_share_title_1">您的流动池份额</string>
