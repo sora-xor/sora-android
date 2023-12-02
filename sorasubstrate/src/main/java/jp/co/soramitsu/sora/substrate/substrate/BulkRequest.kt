@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.substrate
 
+import jp.co.soramitsu.sora.substrate.response.StateQueryResponse
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
 import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
@@ -62,15 +63,6 @@ class QueryStorageAtRequest(
         keys,
     )
 )
-
-class QueryStorageAtResponse(
-    val block: String,
-    val changes: List<List<String?>>
-) {
-    fun changesAsMap(): Map<String, String?> {
-        return changes.map { it[0]!! to it[1] }.toMap()
-    }
-}
 
 private const val DEFAULT_PAGE_SIZE = 1000
 
@@ -115,7 +107,7 @@ class BulkRetriever(
             val request = QueryStorageAtRequest(chunk)
 
             val chunkValues = kotlin.runCatching {
-                socketService.executeAsync(request, mapper = pojoList<QueryStorageAtResponse>().nonNull())
+                socketService.executeAsync(request, mapper = pojoList<StateQueryResponse>().nonNull())
             }.getOrNull()?.first()?.changesAsMap().orEmpty()
 
             acc.putAll(chunkValues)

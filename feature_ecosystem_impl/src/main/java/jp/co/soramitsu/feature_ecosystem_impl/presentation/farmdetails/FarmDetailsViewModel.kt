@@ -139,7 +139,7 @@ class FarmDetailsViewModel @AssistedInject constructor(
                         farmDetailsState = farmDetailsState.copy(
                             poolShareStacked = percent,
                             poolShareStackedText = "${numbersFormatter.format(percent.toDouble())}%",
-                            userRewardsAmount = "${numbersFormatter.formatBigDecimal(farmPool.amountReward)} ${farmPool.tokenTarget.symbol}",
+                            userRewardsAmount = "${numbersFormatter.formatBigDecimal(farmPool.amountReward)} ${farmPool.tokenReward.symbol}",
                         )
                     }
 
