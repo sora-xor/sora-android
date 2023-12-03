@@ -32,28 +32,22 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
-import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
-import jp.co.soramitsu.feature_ecosystem_impl.domain.PoolsUpdateSubscription
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.ExploreRoutes
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
-import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
     private val polkaswapRouter: PolkaswapRouter,
     private val assetsRouter: AssetsRouter,
-    private val poolsUpdateSubscription: PoolsUpdateSubscription,
 ) : BaseViewModel() {
 
     init {
@@ -66,22 +60,6 @@ class ExploreViewModel @Inject constructor(
                 searchEnabled = false,
             ),
         )
-
-        viewModelScope.launch {
-            poolsUpdateSubscription.updateBasicPools()
-        }
-    }
-
-    override fun startScreen(): String = ExploreRoutes.START
-
-    override fun onMenuItem(action: Action) {
-        when (action) {
-            is Action.Plus -> {
-                onPoolPlus()
-            }
-
-            else -> {}
-        }
     }
 
     fun onTokenClicked(tokenId: String) {
@@ -96,9 +74,7 @@ class ExploreViewModel @Inject constructor(
         polkaswapRouter.showFarmDetails(ids)
     }
 
-    private fun onPoolPlus() {
+    fun onPoolPlus() {
         polkaswapRouter.showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
     }
-
-    fun isBottomBarNeeded() = currentDestination == ExploreRoutes.START
 }
