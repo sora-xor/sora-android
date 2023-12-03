@@ -32,6 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
+import android.os.Bundle
+import android.view.View
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
@@ -56,8 +58,9 @@ import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
+import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.ExploreRoutes
+import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies.AllCurrenciesScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.AllDemeterScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools.AllPoolsScreen
@@ -74,16 +77,9 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
 
     override val viewModel: ExploreViewModel by viewModels()
 
-    override fun onDestinationChanged(destination: String) {
-        when (destination) {
-            ExploreRoutes.START -> {
-                (activity as BottomBarController).showBottomBar()
-            }
-
-            else -> {
-                (activity as BottomBarController).hideBottomBar()
-            }
-        }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        activity?.safeCast<BottomBarController>()?.showBottomBar()
     }
 
     @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
@@ -91,7 +87,7 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         scrollState: ScrollState, navController: NavHostController
     ) {
         composable(
-            route = ExploreRoutes.START,
+            route = theOnlyRoute,
         ) {
             val pagerState = rememberPagerState { ExplorePages.entries.size }
             val scope = rememberCoroutineScope()
@@ -153,6 +149,7 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                         ExplorePages.POOLS.ordinal -> {
                             AllPoolsScreen(
                                 onPoolClicked = viewModel::onPoolClicked,
+                                onAddPoolClicked = viewModel::onPoolPlus,
                             )
                         }
 
@@ -164,16 +161,6 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                     }
                 }
             }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        if (viewModel.isBottomBarNeeded()) {
-            (activity as BottomBarController).showBottomBar()
-        } else {
-            (activity as BottomBarController).hideBottomBar()
         }
     }
 }

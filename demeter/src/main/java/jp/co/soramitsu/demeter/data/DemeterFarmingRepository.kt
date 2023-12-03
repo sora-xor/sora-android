@@ -34,7 +34,6 @@ package jp.co.soramitsu.demeter.data
 
 import java.math.BigDecimal
 import java.math.BigInteger
-import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
@@ -112,7 +111,7 @@ internal class DemeterFarmingRepositoryImpl(
         private const val BLOCKS_PER_YEAR = 5256000
     }
 
-    private var cachedFarmedPools: MutableMap<String, List<DemeterFarmingPool>> = mutableMapOf()
+    private val cachedFarmedPools: MutableMap<String, List<DemeterFarmingPool>> = mutableMapOf()
     private var cachedFarmedBasicPools: List<DemeterFarmingBasicPool>? = null
 
     override suspend fun getStakedFarmedAmountOfAsset(
@@ -134,14 +133,12 @@ internal class DemeterFarmingRepositoryImpl(
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
         val calculated = getDemeter(soraAccountAddress)
             ?.filter { it.farm && it.amount.isZero().not() }
-            ?.map {
-                val base = baseFarms.first { base ->
-                    StringTriple(
-                        base.tokenBase.id,
-                        base.tokenTarget.id,
-                        base.tokenReward.id
-                    ) == StringTriple(it.base, it.pool, it.reward)
-                }
+            ?.mapNotNull {
+                val base = baseFarms.firstOrNull { base ->
+                    base.tokenBase.id == it.base &&
+                        base.tokenTarget.id == it.pool &&
+                        base.tokenReward.id == it.reward
+                } ?: return@mapNotNull null
                 val baseTokenMapped = assetLocalToAssetMapper.map(
                     tokenLocal = db.assetDao().getToken(it.base, selectedCurrency.code)
                 )

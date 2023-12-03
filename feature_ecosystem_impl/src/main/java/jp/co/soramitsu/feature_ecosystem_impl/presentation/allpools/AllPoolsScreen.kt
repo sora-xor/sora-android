@@ -32,20 +32,26 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -63,6 +69,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @Composable
 internal fun AllPoolsScreen(
     onPoolClicked: (StringPair) -> Unit,
+    onAddPoolClicked: () -> Unit,
     viewModel: AllPoolsViewModel = hiltViewModel(),
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -70,6 +77,7 @@ internal fun AllPoolsScreen(
         AllPoolsInternal(
             state = state,
             onPoolClicked = onPoolClicked,
+            onAddPoolClicked = onAddPoolClicked,
         )
     }
 }
@@ -78,6 +86,7 @@ internal fun AllPoolsScreen(
 private fun AllPoolsInternal(
     state: EcoSystemPoolsState,
     onPoolClicked: (StringPair) -> Unit,
+    onAddPoolClicked: () -> Unit,
 ) {
     ContentCardEndless(
         modifier = Modifier
@@ -102,31 +111,49 @@ private fun AllPoolsInternal(
                 )
             }
         } else {
-            Column {
-                Text(
-                    modifier = Modifier.padding(
-                        start = Dimens.x3,
-                        end = Dimens.x1
-                    ),
-                    text = stringResource(id = R.string.discovery_polkaswap_pools),
-                    style = MaterialTheme.customTypography.headline2,
-                    color = MaterialTheme.customColors.fgPrimary
-                )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(bottom = Dimens.x1)
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = Dimens.x3, end = Dimens.x1),
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.discovery_polkaswap_pools),
+                            style = MaterialTheme.customTypography.headline2,
+                            color = MaterialTheme.customColors.fgPrimary,
+                            maxLines = 1,
+                        )
 
-                Text(
-                    modifier = Modifier.padding(
-                        start = Dimens.x3,
-                        end = Dimens.x1,
-                        bottom = Dimens.x1
-                    ),
-                    text = stringResource(id = R.string.explore_provide_and_earn),
-                    style = MaterialTheme.customTypography.textXSBold,
-                    color = MaterialTheme.customColors.fgSecondary
-                )
-
+                        Text(
+                            text = stringResource(id = R.string.explore_provide_and_earn),
+                            style = MaterialTheme.customTypography.textXSBold,
+                            color = MaterialTheme.customColors.fgSecondary,
+                            maxLines = 1,
+                        )
+                    }
+                    Icon(
+                        modifier = Modifier
+                            .size(Dimens.x3)
+                            .clickable(onClick = onAddPoolClicked),
+                        painter = painterResource(
+                            id = jp.co.soramitsu.common.R.drawable.ic_plus,
+                        ),
+                        contentDescription = "",
+                        tint = MaterialTheme.customColors.fgSecondary,
+                    )
+                }
                 if (state.pools.isEmpty()) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -137,7 +164,7 @@ private fun AllPoolsInternal(
                     }
                 } else {
                     val listState = rememberLazyListState()
-                    LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(state = listState, modifier = Modifier.weight(1f)) {
                         items(
                             count = state.pools.size,
                         ) { position ->
@@ -163,6 +190,7 @@ private fun PreviewAllPoolsInternal() {
                 pools = previewBasicPoolListItemState,
             ),
             onPoolClicked = {},
+            onAddPoolClicked = {},
         )
     }
 }

@@ -30,8 +30,31 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation
+package jp.co.soramitsu.feature_polkaswap_impl.domain
 
-internal object ExploreRoutes {
-    const val START = "jp.co.soramitsu.feature_ecosystem_impl.Start"
+import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscription
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withContext
+
+class PoolsUpdateSubscriptionImpl(
+    private val repository: PolkaswapSubscriptionRepository,
+    private val coroutineManager: CoroutineManager,
+) : PoolsUpdateSubscription {
+
+    override fun start(): Flow<String> =
+        repository
+            .subscribeToBasicPools()
+            .onEach {
+                repository.updateBasicPools()
+            }
+            .flowOn(coroutineManager.io)
+
+    override suspend fun updateBasicPools() =
+        withContext(coroutineManager.io) {
+            repository.updateBasicPools()
+        }
 }

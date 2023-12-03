@@ -60,7 +60,7 @@ internal class DemeterFarmingInteractorImpl(
 
     override suspend fun getUsersFarmedPool(ids: StringTriple): DemeterFarmingPool? {
         return getFarmedPools()?.firstOrNull {
-            Triple(it.tokenBase.id, it.tokenTarget.id, it.tokenReward.id) == ids
+            it.tokenBase.id == ids.first && it.tokenTarget.id == ids.second && it.tokenReward.id == ids.third
         }
     }
 
