@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet
 
-import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -41,9 +40,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.just
-import io.mockk.mockk
 import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.verify
 import jp.co.soramitsu.common.R
@@ -53,11 +50,10 @@ import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -73,7 +69,6 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
 import jp.co.soramitsu.test_data.TestAssets
-import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -140,6 +135,9 @@ class CardsHubViewModelTest {
     @MockK
     private lateinit var connectionManager: ConnectionManager
 
+    @MockK
+    private lateinit var demeterFarmingInteractor: DemeterFarmingInteractor
+
     private lateinit var cardsHubViewModel: CardsHubViewModel
 
     private val account = SoraAccount("address", "name")
@@ -161,6 +159,7 @@ class CardsHubViewModelTest {
                     emit(listOf(POOL_DATA))
                 }
         coEvery { cardsHubInteractorImpl.updateCardVisibilityOnCardHub(any(), any()) } returns Unit
+        coEvery { demeterFarmingInteractor.getFarmedPools() } returns emptyList()
         every { cardsHubInteractorImpl.subscribeVisibleCardsHubList() } returns
                 flow {
                     emit(
@@ -204,6 +203,7 @@ class CardsHubViewModelTest {
             assetsInteractor,
             poolsInteractor,
             cardsHubInteractorImpl,
+            demeterFarmingInteractor,
             numbersFormatter,
             resourceManager,
             router,

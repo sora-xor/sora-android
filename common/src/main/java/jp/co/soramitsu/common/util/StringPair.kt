@@ -33,3 +33,5 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.util
 
 typealias StringPair = Pair<String, String>
+
+typealias StringTriple = Triple<String, String, String>

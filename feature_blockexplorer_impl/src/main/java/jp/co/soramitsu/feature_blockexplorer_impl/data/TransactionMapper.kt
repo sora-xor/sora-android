@@ -33,11 +33,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_blockexplorer_impl.data
 
 import java.math.BigDecimal
+import java.math.BigInteger
 import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.getByIdOrEmpty
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.ext.snakeCaseToCamelCase
+import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
@@ -54,8 +57,11 @@ fun mapHistoryItemsToTransactions(
     myAddress: String,
     tokens: List<Token>,
 ): List<Transaction> {
+    val feePrecision = tokens.find {
+        it.id == SubstrateOptionsProvider.feeAssetId
+    }?.precision ?: OptionsProvider.defaultScale
     return txs.mapNotNull {
-        mapHistoryItemToTransaction(it, myAddress, tokens)
+        mapHistoryItemToTransaction(it, myAddress, tokens, feePrecision)
     }
 }
 
@@ -63,11 +69,12 @@ private fun mapHistoryItemToTransaction(
     tx: TxHistoryItem,
     myAddress: String,
     tokens: List<Token>,
+    feePrecision: Int,
 ): Transaction? {
     val transactionBase = TransactionBase(
         txHash = tx.id,
         blockHash = tx.blockHash,
-        fee = tx.networkFee.toBigDecimalOrDefault(),
+        fee = mapBalance(tx.networkFee.toBigIntegerOrDefault(), feePrecision),
         status = tx.getSuccess(),
         timestamp = tx.getTimestamp(),
     )
@@ -192,6 +199,9 @@ private fun TxHistoryItem.getTimestamp(): Long =
 
 private fun String.toBigDecimalOrDefault(v: BigDecimal = BigDecimal.ZERO): BigDecimal =
     runCatching { BigDecimal(this) }.getOrDefault(v)
+
+private fun String.toBigIntegerOrDefault(v: BigInteger = BigInteger.ZERO): BigInteger =
+    runCatching { BigInteger(this) }.getOrDefault(v)
 
 private fun List<TxHistoryItemParam>.toReferralBond(block: (amount: String) -> Transaction.ReferralBond): Transaction.ReferralBond? {
     val amount = this.firstOrNull { it.paramName == "amount" }

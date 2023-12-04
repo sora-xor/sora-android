@@ -55,7 +55,6 @@ dependencies {
     implementation project(":feature_blockexplorer_api")
     implementation project(":core_db")
     implementation project(":sorasubstrate")
-//    implementation sharedUtilsDep
 
     implementation xcryptoDep
     implementation xsubstrateDep

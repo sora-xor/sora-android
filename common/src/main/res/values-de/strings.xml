@@ -32,6 +32,7 @@
   <string name="address_not_found_1">Empfänger nicht gefunden</string>
   <string name="amount_error_no_funds">Es tut uns leid, dein Guthaben reicht nicht aus, um den angegebenen Betrag zu transferieren.</string>
   <string name="appearance_title">Appearance</string>
+  <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Möchtest du biometrische Authentifizierung nutzen?</string>
   <string name="asset_details_asset_id">Asset ID</string>
   <string name="asset_details_liquid_balance">Liquid balance</string>
@@ -138,12 +139,15 @@
   <string name="common_expand">Expand</string>
   <string name="common_explore">Explore</string>
   <string name="common_failed">Fehlgeschlagen</string>
+  <string name="common_farming">Farming</string>
+  <string name="common_fee">Fee</string>
   <string name="common_filipino">Philippinisch</string>
   <string name="common_finnish">Finnisch</string>
   <string name="common_french">Französisch</string>
   <string name="common_german">Deutsch</string>
   <string name="common_google_authorization_error">Google authorization failed</string>
   <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
+  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -160,10 +164,12 @@
   <string name="common_min">min</string>
   <string name="common_more">More</string>
   <string name="common_norwegian">Norwegisch</string>
+  <string name="common_nothing_available">Nothing available</string>
   <string name="common_ok">OK</string>
   <string name="common_passphrase_title">Passphrase</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_pools">Pools</string>
   <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw Seed</string>
   <string name="common_receive">Empfangen</string>
@@ -237,6 +243,8 @@
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Nicht genügend Guthaben für die Transaktionsgebühr</string>
   <string name="explore_create_pool">Create pool</string>
+  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
+  <string name="explore_demeter_title">Demeter Farming</string>
   <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
   <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Wenn du den Zugang zu diesem Gerät verlierst, gehen deine Assets verloren, es sei denn, du machst ein Backup!</string>
@@ -263,6 +271,8 @@
   <string name="export_protection_seed_description">Im nächsten Schritt siehst du deinen Raw Seed (ein langer Hash), mit dem du dein Konto wiederherstellen kannst.</string>
   <string name="export_select_account">Select account for batch export</string>
   <string name="faq_title">FAQ (Häufig gestellte Fragen)</string>
+  <string name="farm_details_your_rewards">Your rewards</string>
+  <string name="farming_details_title">Farming details</string>
   <string name="forget_account">Forget account</string>
   <string name="get_sora_card_title">Get SORA Card</string>
   <string name="global_results">Global results</string>
@@ -326,6 +336,7 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">PIN-Code einrichten</string>
   <string name="pincode_touch_fingerprint_scanner">Berühre den Fingerabdruckscanner</string>
+  <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
@@ -357,6 +368,7 @@
   <string name="polkaswap_minimum_received_info">Sollte sich eine große, ungünstige Preisveränderung vor der Transaktionsbestätigung ergeben, wird die Transaktion rückgängig gemacht.</string>
   <string name="polkaswap_network_fee_info">Die Netzwerkgebühr wird dazu verwendet, SORAs Systemwachstum und -stabilität abzusichern.</string>
   <string name="polkaswap_output_estimated">Die Ausgabe wird geschätzt. Du erhältst mindestens %s oder die Transaktion wird rückgängig gemacht.</string>
+  <string name="polkaswap_pool_farms_title">Stake your pool share for extra rewards</string>
   <string name="polkaswap_pool_not_created">Pool nicht erstellt</string>
   <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Farming Belohungen für Liquiditätsbereitstellung</string>
@@ -368,6 +380,9 @@
   <string name="polkaswap_swapped">Getauscht</string>
   <string name="pool_button_remove">Entfernen</string>
   <string name="pool_details">Pool details</string>
+  <string name="pool_details_active_farms">Active farms</string>
+  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
+  <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Du hast noch keine aktiven Pools.\nFüge Liquidität hinzu, um Belohnungen zu erhalten</string>
   <string name="pool_share_title">Anteil am Pool</string>
   <string name="pool_share_title_1">Dein Poolanteil</string>
@@ -536,7 +551,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Ein Update für die SORA-App wurde heruntergeladen und kann nun installiert werden.\n\nEs ist wichtig, die neueste Version der App zu verwenden.\n\nUm die App zu aktualisieren, ist ein Neustart erforderlich.</string>
   <string name="update_install_now">Möchtest du das Update jetzt installieren?</string>
-  <string name="wallet_backup">Wallet backup</string>
+  <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">Gesperrt</string>
   <string name="wallet_balance_reserved">Reserviert</string>
   <string name="wallet_bonded">Zugeordnet</string>

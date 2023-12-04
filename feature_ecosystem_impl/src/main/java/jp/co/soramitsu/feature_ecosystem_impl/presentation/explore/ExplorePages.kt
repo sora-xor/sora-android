@@ -30,20 +30,12 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.soracrypro
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
-import org.junit.Test
+import jp.co.soramitsu.feature_ecosystem_impl.R
 
-import org.junit.Assert.*
-
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
-class ExampleUnitTest {
-    @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
-    }
+enum class ExplorePages(val titleResource: Int) {
+    CURRENCIES(titleResource = R.string.common_currencies),
+    POOLS(titleResource = R.string.common_pools),
+    FARMING(titleResource = R.string.common_farming),
 }

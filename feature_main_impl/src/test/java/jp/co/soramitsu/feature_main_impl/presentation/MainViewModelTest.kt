@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_main_impl.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import io.mockk.mockkObject
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.RepeatStrategy
@@ -42,6 +43,7 @@ import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscription
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_shared.MainCoroutineRule
@@ -92,6 +94,9 @@ class MainViewModelTest {
     @Mock
     private lateinit var coroutineManager: CoroutineManager
 
+    @Mock
+    private lateinit var poolUpdateSubscription: PoolsUpdateSubscription
+
     private lateinit var mainViewModel: MainViewModel
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -103,6 +108,7 @@ class MainViewModelTest {
         whenever(coroutineManager.io).thenReturn(this.coroutineContext[CoroutineDispatcher]!!)
         whenever(assetsInteractor.getTokensList()).thenReturn(emptyList())
         whenever(blockExplorerManager.getTokensLiquidity(emptyList())).thenReturn(emptyList())
+        whenever(poolUpdateSubscription.updateBasicPools()).thenReturn(Unit)
 
         mockkObject(RepeatStrategyBuilder)
         every { RepeatStrategyBuilder.infinite() } returns object : RepeatStrategy {
@@ -122,7 +128,8 @@ class MainViewModelTest {
             pinCodeInteractor,
             globalSubscriptionManager,
             blockExplorerManager,
-            coroutineManager
+            coroutineManager,
+            poolUpdateSubscription,
         )
         advanceTimeBy(22000)
         verify(globalSubscriptionManager).start()

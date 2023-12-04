@@ -56,7 +56,6 @@ import jp.co.soramitsu.common.presentation.compose.components.TextWithDelimiter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
-import jp.co.soramitsu.ui_core.component.asset.changePriceColor
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -129,12 +128,15 @@ fun PoolsList(
                     text = poolState.fiat,
                     maxLines = 1,
                 )
-                Text(
-                    color = poolState.fiatChange.changePriceColor(),
-                    style = MaterialTheme.customTypography.textXSBold,
-                    text = poolState.fiatChange,
-                    maxLines = 1,
-                )
+                Row {
+                    poolState.rewardTokenIconsList.forEach {
+                        TokenIcon(
+                            modifier = Modifier.padding(horizontal = 2.dp),
+                            uri = it,
+                            size = Dimens.x2
+                        )
+                    }
+                }
             }
         }
     }
@@ -157,6 +159,7 @@ private fun PreviewPoolsList() {
                         fiat = "$7908",
                         fiatChange = "+23.1 %",
                         tokenIds = "" to "",
+                        rewardTokenIconsList = emptyList()
                     ),
                     PoolsListItemState(
                         token1Icon = DEFAULT_ICON_URI,
@@ -167,6 +170,7 @@ private fun PreviewPoolsList() {
                         fiat = "$ 0.00123",
                         fiatChange = "-9.88 %",
                         tokenIds = "" to "",
+                        rewardTokenIconsList = emptyList()
                     ),
                 ),
             ),

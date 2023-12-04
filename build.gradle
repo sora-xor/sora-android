@@ -9,15 +9,10 @@ buildscript {
             timber                 : '5.0.1',
             gson                   : '2.10.1',
             googleFirebaseBom      : '32.5.0',
-            googleApiServicesDrive : 'v3-rev136-1.25.0',
-            googlePlayServiceAuth  : '20.7.0',
             googleInAppUpdate      : '2.1.0',
             constraint             : '2.2.0-alpha05',
             soraSdk                : '0.3.10',
             iroha                  : '5.1.2',
-            spongycastle           : '1.58.0.0',
-            ed25519                : '2.0.1',
-            web3j                  : '4.2.0-android',
             sharedUtils            : '1.1.1.10-20230809.104953-2',
             navigation             : '2.5.0',
             zXing                  : '3.3.3',
@@ -29,7 +24,7 @@ buildscript {
             archCoreTest           : '2.1.0',
             archFragmentTest       : '1.4.1',
             archComponents         : '2.6.1',
-            room                   : '2.6.0-rc01',
+            room                   : '2.6.0',
             datastore              : '1.0.0',
             biometric              : '1.1.0',
             workManager            : '2.8.1',
@@ -44,18 +39,18 @@ buildscript {
             composeCompiler        : '1.5.3',
             composeConstraintLayout: '1.1.0-alpha05',
             uiCore                 : '0.2.13',
-            soraCard               : '0.1.67',
+            soraCard               : '0.1.69',
             lazySodium             : '5.0.2',
             jna                    : '5.8.0',
             xserializationjson     : '1.5.1',
             ktor                   : '2.3.1',
-            xbackup                : '1.0.0',
-            xcrypto                : '1.0.3',
-            xsubstrate             : '1.0.2'
+            xbackup                : '1.1.3',
+            xcrypto                : '1.1.4',
+            xsubstrate             : '1.1.3'
     ]
 
     ext {
-//        soralution 119 3.7.0.3 2023.11.08
+//        soralution 124 3.8.0.2 2023.12.02
 //        sora dae 107 3.7.0.0 2023.11.09
 //        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 96)
         appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 107)
@@ -117,7 +112,6 @@ buildscript {
         ktorWebSocketDep = "io.ktor:ktor-client-websockets:$versions.ktor"
         webSocketLibDep = "com.neovisionaries:nv-websocket-client:$versions.webSocketLib"
         uiCoreDep = "jp.co.soramitsu:ui-core:$versions.uiCore"
-        sharedUtilsDep = "jp.co.soramitsu.shared_features:core:$versions.sharedUtils"
         sharedFeaturesModelsDep = "jp.co.soramitsu.shared_features:models:$versions.sharedUtils"
 
         soraCardDep = "jp.co.soramitsu:android-sora-card:$versions.soraCard"
@@ -128,11 +122,6 @@ buildscript {
         googleInAppUpdateKtxDep = "com.google.android.play:app-update-ktx:$versions.googleInAppUpdate"
         googleCrashlyticsDep = "com.google.firebase:firebase-crashlytics-ktx"
         googleFirebaseBomDep = "com.google.firebase:firebase-bom:$versions.googleFirebaseBom"
-        googlePlayServiceAuth = "com.google.android.gms:play-services-auth:$versions.googlePlayServiceAuth"
-        googleApiServicesDrive = "com.google.apis:google-api-services-drive:$versions.googleApiServicesDrive"
-
-        ed25519Dep = "com.github.warchant:ed25519-sha3-java:$versions.ed25519"
-        spongycastleDep = "com.madgag.spongycastle:core:$versions.spongycastle"
 
         navigationFragmentDep = "androidx.navigation:navigation-fragment-ktx:$versions.navigation"
         navigationUiDep = "androidx.navigation:navigation-ui-ktx:$versions.navigation"
@@ -145,11 +134,13 @@ buildscript {
         coilSvgDep = "io.coil-kt:coil-svg:$versions.coil"
         coilComposeDep = "io.coil-kt:coil-compose:$versions.coil"
 
-        web3jDep = "org.web3j:core:$versions.web3j"
+        web3jDep = "org.web3j:core:4.6.0-android"
 
         xbackupDep = "jp.co.soramitsu:xbackup:$versions.xbackup"
         xsubstrateDep = "jp.co.soramitsu:xsubstrate:$versions.xsubstrate"
         xcryptoDep = "jp.co.soramitsu:x-crypto:$versions.xcrypto"
+        ed25519Dep = "com.github.warchant:ed25519-sha3-java:2.0.1"
+        xercesDep = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces:2.9.0"
 
         permissionsRuntimeDep = "com.guolindev.permissionx:permissionx:1.7.1"
 
@@ -219,7 +210,7 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
         classpath "org.jetbrains.kotlin:kotlin-serialization:${versions.kotlin}"
-        classpath 'com.android.tools.build:gradle:8.2.0-rc02'
+        classpath 'com.android.tools.build:gradle:8.2.0-rc03'
         classpath 'com.google.gms:google-services:4.3.15'
         classpath 'com.google.firebase:firebase-appdistribution-gradle:3.2.0'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'

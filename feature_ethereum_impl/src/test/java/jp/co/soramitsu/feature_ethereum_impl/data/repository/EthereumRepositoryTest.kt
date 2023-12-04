@@ -62,7 +62,7 @@ import org.mockito.BDDMockito.verify
 import org.mockito.Mock
 import org.mockito.Mockito.mock
 import org.mockito.junit.MockitoJUnitRunner
-import org.spongycastle.util.encoders.Hex
+import org.bouncycastle.util.encoders.Hex
 import org.web3j.crypto.Bip32ECKeyPair
 import org.web3j.crypto.Credentials
 import org.web3j.protocol.core.RemoteCall

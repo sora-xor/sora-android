@@ -39,5 +39,16 @@ data class DemeterFarmingPool(
     val tokenBase: Token,
     val tokenTarget: Token,
     val tokenReward: Token,
+    val apr: Double,
     val amount: BigDecimal,
+    val amountReward: BigDecimal,
+)
+
+data class DemeterFarmingBasicPool(
+    val tokenBase: Token,
+    val tokenTarget: Token,
+    val tokenReward: Token,
+    val apr: Double,
+    val tvl: BigDecimal,
+    val fee: Double,
 )

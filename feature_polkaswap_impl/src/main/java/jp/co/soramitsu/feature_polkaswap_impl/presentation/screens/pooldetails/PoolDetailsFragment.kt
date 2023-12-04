@@ -102,12 +102,13 @@ class PoolDetailsFragment : SoraBaseFragment<PoolDetailsViewModel>() {
                     .padding(top = Dimens.x1)
                     .fillMaxSize()
                     .padding(horizontal = Dimens.x2)
-                    .verticalScroll(scrollState),
+                    .verticalScroll(scrollState)
             ) {
                 PoolDetailsScreen(
                     viewModel.detailsState,
                     viewModel::onSupply,
                     viewModel::onRemove,
+                    viewModel::onFarm
                 )
             }
         }

@@ -51,7 +51,6 @@ dependencies {
 
     implementation project(":common")
     implementation project(":sorasubstrate")
-//    implementation sharedUtilsDep
 
     implementation xsubstrateDep
 

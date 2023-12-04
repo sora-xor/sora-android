@@ -88,10 +88,7 @@ dependencies {
     implementation navigationUiDep
     implementation insetterDep
 
-    implementation googlePlayServiceAuth
-    implementation googleApiServicesDrive
     implementation xbackupDep
-    implementation sharedFeaturesModelsDep
 
     implementation composeUiDep
     implementation composeFoundationDep

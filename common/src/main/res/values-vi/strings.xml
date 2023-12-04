@@ -32,6 +32,7 @@
   <string name="address_not_found_1">Không tìm thấy người nhận</string>
   <string name="amount_error_no_funds">Xin lỗi, bạn không có đủ tiền để chuyển số tiền đã chỉ định.</string>
   <string name="appearance_title">Hiện thị</string>
+  <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Bạn có muốn sử dụng sinh trắc học để xác thực không?</string>
   <string name="asset_details_asset_id">ID Tài sản</string>
   <string name="asset_details_liquid_balance">Số dư thanh khoản</string>
@@ -138,12 +139,15 @@
   <string name="common_expand">Mở rộng</string>
   <string name="common_explore">Khám phá</string>
   <string name="common_failed">Thất bại</string>
+  <string name="common_farming">Farming</string>
+  <string name="common_fee">Fee</string>
   <string name="common_filipino">Tiếng Philippines</string>
   <string name="common_finnish">Tiếng Phần lan</string>
   <string name="common_french">Tiếng Pháp</string>
   <string name="common_german">Tiếng Đức</string>
   <string name="common_google_authorization_error">Ủy quyền của Google không thành công</string>
   <string name="common_google_backup_decryption_failed">Giải mã bản sao lưu không thành công. Vui lòng kiểm tra mật khẩu và thử lại</string>
+  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -159,10 +163,12 @@
   <string name="common_min">phút</string>
   <string name="common_more">Thêm</string>
   <string name="common_norwegian">Tiếng Nauy</string>
+  <string name="common_nothing_available">Nothing available</string>
   <string name="common_ok">Đồng ý</string>
   <string name="common_passphrase_title">Chuỗi từ khóa khôi phục</string>
   <string name="common_pay_attention">Chú ý!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_pools">Pools</string>
   <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Nhận</string>
@@ -236,6 +242,8 @@
   <string name="enter_password_title">Nhập mật khẩu</string>
   <string name="error_transaction_fee_title">Không đủ tiền cho phí giao dịch</string>
   <string name="explore_create_pool">Tạo pool</string>
+  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
+  <string name="explore_demeter_title">Demeter Farming</string>
   <string name="explore_provide_and_earn">Cung cấp thanh khoản và kiếm phần thưởng</string>
   <string name="explore_swap_tokens_on_sora">Hoán đổi token trên mạng SORA</string>
   <string name="export_account_details_backup_description">Nếu bạn mất quyền truy cập vào thiết bị này, tiền của bạn sẽ bị mất, trừ khi bạn sao lưu!</string>
@@ -262,6 +270,8 @@
   <string name="export_protection_seed_description">Trong bước tiếp theo, bạn sẽ thấy Raw Seed (một hàm băm dài) cho phép bạn khôi phục tài khoản.</string>
   <string name="export_select_account">Chọn tài khoản để xuất hàng loạt</string>
   <string name="faq_title">Câu hỏi thường gặp</string>
+  <string name="farm_details_your_rewards">Your rewards</string>
+  <string name="farming_details_title">Farming details</string>
   <string name="forget_account">Quên tài khoản</string>
   <string name="get_sora_card_title">Nhận thẻ SORA</string>
   <string name="global_results">Kết quả</string>
@@ -325,6 +335,7 @@
   <string name="pincode_one_try_left">Bạn còn một lần thử nữa</string>
   <string name="pincode_set_your_pin_code">Thiết lập mã pin</string>
   <string name="pincode_touch_fingerprint_scanner">Chạm vào máy quét vân tay</string>
+  <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Được cung cấp bởi Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Một phần của bạn đã được stake trong pool. Để có quyền truy cập vào nó, trước tiên bạn phải hủy stake.</string>
   <string name="polkaswap_farming_pool_share">Pool của bạn đã được stake</string>
@@ -356,6 +367,7 @@
   <string name="polkaswap_minimum_received_info">Giao dịch của bạn sẽ được hoàn tác nếu có một biến động giá lớn hay một biến động không thuận lợi trước khi nó được xác nhận.</string>
   <string name="polkaswap_network_fee_info">Phí mạng được sử dụng để đảm bảo sự tăng trưởng và hiệu suất ổn định của hệ thống SORA.</string>
   <string name="polkaswap_output_estimated">Kết quả là ước lượng. Bạn sẽ nhận ít nhất %s hoặc giao dịch sẽ hoàn tác.</string>
+  <string name="polkaswap_pool_farms_title">Stake your pool share for extra rewards</string>
   <string name="polkaswap_pool_not_created">Pool chưa được tạo</string>
   <string name="polkaswap_reward_payout">Thanh toán phần thưởng bằng</string>
   <string name="polkaswap_sb_apy_info">Farming reward cho cung cấp thanh khoản</string>
@@ -367,6 +379,9 @@
   <string name="polkaswap_swapped">Đã hoán đổi</string>
   <string name="pool_button_remove">Rút</string>
   <string name="pool_details">Chi tiết Pool</string>
+  <string name="pool_details_active_farms">Active farms</string>
+  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
+  <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Bạn chưa tham gia bất kỳ pool nào.\nThêm thanh khoản để kiếm phần thưởng</string>
   <string name="pool_share_title">Cổ phần trong pool</string>
   <string name="pool_share_title_1">Những pool bạn tham gia</string>

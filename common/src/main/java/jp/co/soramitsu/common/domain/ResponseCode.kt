@@ -118,13 +118,14 @@ enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.str
 
     GOOGLE_LOGIN_FAILED(R.string.common_google_authorization_error),
 
-    GOOGLE_BACKUP_DECRYPTION_FAILED(R.string.common_google_backup_decryption_failed),
+    GOOGLE_BACKUP_DECRYPTION_FAILED(R.string.common_google_backup_decryption_failed_2),
 
     NOW_BROWSER_FOUND(R.string.common_error_no_browser_error);
 
     companion object {
 
-        @JvmStatic fun contains(value: String): Boolean {
+        @JvmStatic
+        fun contains(value: String): Boolean {
             return values().any { it.name == value }
         }
     }

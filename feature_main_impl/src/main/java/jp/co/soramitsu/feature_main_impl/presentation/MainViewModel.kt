@@ -46,6 +46,7 @@ import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscription
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
@@ -63,6 +64,7 @@ class MainViewModel @Inject constructor(
     private val globalSubscriptionManager: GlobalSubscriptionManager,
     private val blockExplorerManager: BlockExplorerManager,
     private val coroutineManager: CoroutineManager,
+    private val poolsUpdateSubscription: PoolsUpdateSubscription,
 ) : BaseViewModel() {
 
     private val _showInviteErrorTimeIsUpLiveData = SingleLiveEvent<Unit>()
@@ -120,6 +122,9 @@ class MainViewModel @Inject constructor(
                     blockExplorerManager.getTokensLiquidity(tokens)
                 }
             }
+        }
+        viewModelScope.launch {
+            poolsUpdateSubscription.updateBasicPools()
         }
     }
 

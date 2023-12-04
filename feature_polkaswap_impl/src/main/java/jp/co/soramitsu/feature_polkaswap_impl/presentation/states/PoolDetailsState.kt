@@ -32,6 +32,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.states
 
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicUserFarmListItemState
+
 internal data class PoolDetailsState(
     val token1Icon: String,
     val token2Icon: String,
@@ -45,7 +48,8 @@ internal data class PoolDetailsState(
     val addEnabled: Boolean,
     val removeEnabled: Boolean,
     val userPoolSharePercent: String?,
-    val demeterPools: List<PoolDetailsDemeterState>?,
+    val demeterPools: List<BasicUserFarmListItemState>?,
+    val availableDemeterFarms: List<BasicFarmListItemState>? = emptyList(),
     val demeter100Percent: Boolean,
 )
 
