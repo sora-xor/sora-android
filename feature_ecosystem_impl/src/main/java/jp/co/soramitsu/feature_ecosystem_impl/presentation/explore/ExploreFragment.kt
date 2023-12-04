@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll

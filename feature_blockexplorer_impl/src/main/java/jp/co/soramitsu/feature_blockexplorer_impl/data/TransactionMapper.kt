@@ -40,7 +40,6 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.getByIdOrEmpty
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.ext.snakeCaseToCamelCase
-import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
@@ -74,7 +73,9 @@ private fun mapHistoryItemToTransaction(
     val transactionBase = TransactionBase(
         txHash = tx.id,
         blockHash = tx.blockHash,
-        fee = mapBalance(tx.networkFee.toBigIntegerOrDefault(), feePrecision),
+        // todo fix it when SubQuery is done
+//        fee = mapBalance(tx.networkFee.toBigIntegerOrDefault(), feePrecision),
+        fee = tx.networkFee.toBigDecimalOrDefault(),
         status = tx.getSuccess(),
         timestamp = tx.getTimestamp(),
     )

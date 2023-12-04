@@ -51,7 +51,7 @@ object TestTransactions {
         module="poolXYK",
         method="depositLiquidity",
         timestamp="1675442934",
-        networkFee="70000000000000000",
+        networkFee="0.07",
         success=true,
         data=listOf(
             TxHistoryItemParam(
