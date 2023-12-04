@@ -81,6 +81,8 @@ fun String.mapAssetId() = this.fromHex().mapAssetId()
 fun ByteArray.mapAssetId() = this.toList().map { it.toInt().toBigInteger() }
 
 fun String.assetIdFromKey() = this.takeLast(64).addHexPrefix()
+fun String.assetIdFromKey(pos: Int): String =
+    this.substring(0, this.length - (64 * pos)).assetIdFromKey()
 
 fun String.takeInt32() = uint32.fromHex(this.takeLast(8)).toInt()
 fun Any.createAsset(id: String): TokenInfoDto? =
@@ -163,6 +165,8 @@ enum class Storage(val storageName: String) {
     DEX_INFOS("DEXInfos"),
     BASE_FEE("BaseFee"),
     USER_INFOS("UserInfos"),
+    TOKEN_INFOS("TokenInfos"),
+    POOLS("Pools"),
 }
 
 enum class Method(val methodName: String) {

@@ -124,7 +124,7 @@ fun BasicPoolListItem(
         Text(
             modifier = Modifier
                 .wrapContentHeight()
-                .width(40.dp),
+                .width(Dimens.x4),
             text = state.number,
             maxLines = 1,
             textAlign = TextAlign.Center,

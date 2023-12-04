@@ -33,10 +33,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_api.launcher
 
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common.util.StringTriple
 
 interface PolkaswapRouter {
 
     fun showPoolDetails(ids: StringPair)
+
+    fun showFarmDetails(ids: StringTriple)
 
     fun showPoolSettings()
 

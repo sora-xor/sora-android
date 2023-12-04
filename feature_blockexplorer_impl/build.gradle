@@ -99,10 +99,7 @@ dependencies {
     implementation composeLifecycleDep
     debugImplementation composeToolingDep
 
-    //implementation accompanistNavAnimationDep
-
     implementation timberDep
-//    implementation sharedUtilsDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep

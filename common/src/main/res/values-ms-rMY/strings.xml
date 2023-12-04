@@ -32,6 +32,7 @@
   <string name="address_not_found_1">Penerima tidak ditemui</string>
   <string name="amount_error_no_funds">Maaf, anda tidak mempunyai dana yang cukup untuk memindahkan jumlah yang ditetapkan.</string>
   <string name="appearance_title">Penampilan</string>
+  <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Adakah anda ingin menggunakan biometri untuk pengesahan?</string>
   <string name="asset_details_asset_id">ID Aset</string>
   <string name="asset_details_liquid_balance">Imbangan cecair</string>
@@ -138,12 +139,15 @@
   <string name="common_expand">Kembangkan</string>
   <string name="common_explore">Meneroka</string>
   <string name="common_failed">Gagal</string>
+  <string name="common_farming">Farming</string>
+  <string name="common_fee">Fee</string>
   <string name="common_filipino">Orang Filipina</string>
   <string name="common_finnish">Finland</string>
   <string name="common_french">Bahasa Perancis</string>
   <string name="common_german">Jerman</string>
   <string name="common_google_authorization_error">Google authorization failed</string>
   <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
+  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Bahasa Ibrani</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -159,10 +163,12 @@
   <string name="common_min">min</string>
   <string name="common_more">Lagi</string>
   <string name="common_norwegian">Norway</string>
+  <string name="common_nothing_available">Nothing available</string>
   <string name="common_ok">OK</string>
   <string name="common_passphrase_title">Frasa Laluan</string>
   <string name="common_pay_attention">Beri perhatian!</string>
   <string name="common_persian">Bahasa Parsi</string>
+  <string name="common_pools">Pools</string>
   <string name="common_portuguese">Portugis</string>
   <string name="common_raw_seed">Benih mentah</string>
   <string name="common_receive">Terima</string>
@@ -236,6 +242,8 @@
   <string name="enter_password_title">Masukkan kata laluan</string>
   <string name="error_transaction_fee_title">Tidak cukup dana untuk bayaran transaksi</string>
   <string name="explore_create_pool">Create pool</string>
+  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
+  <string name="explore_demeter_title">Demeter Farming</string>
   <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
   <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Jika anda kehilangan akses kepada peranti ini, dana anda akan hilang, melainkan anda membuat sandaran!</string>
@@ -262,6 +270,8 @@
   <string name="export_protection_seed_description">Dalam langkah seterusnya anda akan melihat Raw Seed (hash panjang) yang membolehkan anda memulihkan akaun.</string>
   <string name="export_select_account">Pilih akaun untuk eksport kelompok</string>
   <string name="faq_title">Soalan Lazim</string>
+  <string name="farm_details_your_rewards">Your rewards</string>
+  <string name="farming_details_title">Farming details</string>
   <string name="forget_account">Lupa akaun</string>
   <string name="get_sora_card_title">Dapatkan Kad SORA</string>
   <string name="global_results">Keputusan global</string>
@@ -325,6 +335,7 @@
   <string name="pincode_one_try_left">Anda mempunyai satu percubaan lagi sebelum bertenang</string>
   <string name="pincode_set_your_pin_code">Cipta kod pin</string>
   <string name="pincode_touch_fingerprint_scanner">Sentuh pengimbas cap jari</string>
+  <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
@@ -356,6 +367,7 @@
   <string name="polkaswap_minimum_received_info">Transaksi anda akan kembali jika terdapat pergerakan harga yang besar dan tidak menguntungkan sebelum ia disahkan.</string>
   <string name="polkaswap_network_fee_info">Yuran rangkaian digunakan untuk memastikan pertumbuhan sistem SORA dan prestasi yang stabil.</string>
   <string name="polkaswap_output_estimated">Output dianggarkan. Anda akan menerima sekurang-kurangnya %s atau transaksi akan kembali.</string>
+  <string name="polkaswap_pool_farms_title">Stake your pool share for extra rewards</string>
   <string name="polkaswap_pool_not_created">Kolam tidak dicipta</string>
   <string name="polkaswap_reward_payout">Bayaran ganjaran dalam</string>
   <string name="polkaswap_sb_apy_info">Ganjaran pertanian untuk peruntukan kecairan</string>
@@ -367,6 +379,9 @@
   <string name="polkaswap_swapped">Ditukar</string>
   <string name="pool_button_remove">Buang</string>
   <string name="pool_details">Butiran kolam</string>
+  <string name="pool_details_active_farms">Active farms</string>
+  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
+  <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Kecairan anda akan muncul di sini</string>
   <string name="pool_share_title">Bahagian Tabungan</string>
   <string name="pool_share_title_1">Bahagian kolam anda</string>
@@ -530,7 +545,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Kemas kini untuk aplikasi SORA telah dimuat turun dan sedia untuk dipasang.\n\nAdalah penting untuk menggunakan versi terkini aplikasi.\n\nUntuk mengemas kini aplikasi, mulakan semula diperlukan.</string>
   <string name="update_install_now">Adakah anda ingin memasang kemas kini sekarang?</string>
-  <string name="wallet_backup">Wallet backup</string>
+  <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">Dikunci</string>
   <string name="wallet_balance_reserved">Ditempah</string>
   <string name="wallet_bonded">Terikat</string>

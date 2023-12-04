@@ -30,27 +30,19 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.soracrypro
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.model
 
-//import androidx.test.platform.app.InstrumentationRegistry
-//import androidx.test.ext.junit.runners.AndroidJUnit4
-
-import org.junit.Test
-import org.junit.runner.RunWith
-
-import org.junit.Assert.*
-
-/**
- * Instrumented test, which will execute on an Android device.
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
-//@RunWith(AndroidJUnit4::class)
-class ExampleInstrumentedTest {
-    @Test
-    fun useAppContext() {
-        // Context of the app under test.
-//        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-//        assertEquals("jp.co.soramitsu.soracrypro.test", appContext.packageName)
-    }
-}
+data class FarmDetailsState(
+    val title: String,
+    val tvlSubtitle: String,
+    val apr: String,
+    val token1Icon: String,
+    val token2Icon: String,
+    val rewardsTokenSymbol: String,
+    val rewardsTokenIcon: String,
+    val fee: String,
+    val poolShareStackedText: String? = null,
+    val poolShareStacked: Float? = null,
+    val userRewardsAmount: String? = null,
+    val loading: Boolean = false,
+)

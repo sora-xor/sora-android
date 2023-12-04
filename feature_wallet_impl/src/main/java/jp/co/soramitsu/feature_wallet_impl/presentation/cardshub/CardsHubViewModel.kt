@@ -44,6 +44,7 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.fiatSum
 import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
+import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -64,6 +65,8 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
+import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -101,6 +104,7 @@ class CardsHubViewModel @Inject constructor(
     private val assetsInteractor: AssetsInteractor,
     private val poolsInteractor: PoolsInteractor,
     private val cardsHubInteractorImpl: CardsHubInteractorImpl,
+    private val demeterFarmingInteractor: DemeterFarmingInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
     private val router: WalletRouter,
@@ -127,6 +131,8 @@ class CardsHubViewModel @Inject constructor(
     val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
 
     private var currentSoraCardContractData: SoraCardContractData? = null
+
+    private var farms: List<DemeterFarmingPool> = emptyList()
 
     init {
         viewModelScope.launch {
@@ -161,6 +167,8 @@ class CardsHubViewModel @Inject constructor(
                             }
 
                             CardHubType.POOLS -> {
+                                farms = demeterFarmingInteractor.getFarmedPools() ?: emptyList()
+
                                 poolsInteractor.subscribePoolsCacheOfAccount(data.first)
                                     .onStart {
                                         if (indexed.index == 0) this.emit(emptyList())
@@ -334,7 +342,15 @@ class CardsHubViewModel @Inject constructor(
     }
 
     private fun mapPoolsCard(collapsed: Boolean, pools: List<CommonUserPoolData>): CardState {
-        val data = mapPoolsData(pools, numbersFormatter)
+        val rewardTokensList = pools.map { pool ->
+            farms.filter {
+                it.tokenBase.id == pool.basic.baseToken.id && it.tokenTarget.id == pool.basic.targetToken.id
+            }.map {
+                it.tokenReward.iconUri()
+            }
+        }
+
+        val data = mapPoolsData(pools, numbersFormatter, rewardTokensList)
         return TitledAmountCardState(
             amount = formatFiatAmount(data.second, pools.fiatSymbol, numbersFormatter),
             title = CardHubType.POOLS.userName,

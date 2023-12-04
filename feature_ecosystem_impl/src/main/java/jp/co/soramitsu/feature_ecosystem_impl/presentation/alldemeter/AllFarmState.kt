@@ -30,11 +30,11 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.util
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter
 
-object Crypto {
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
 
-    init {
-        // Security.insertProviderAt(org.spongycastle.jce.provider.BouncyCastleProvider(), 1)
-    }
-}
+internal data class AllFarmsState(
+    val pools: List<BasicFarmListItemState>,
+    val loading: Boolean = false
+)

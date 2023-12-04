@@ -30,10 +30,11 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation
+package jp.co.soramitsu.feature_polkaswap_api.domain.interfaces
 
-internal object ExploreRoutes {
-    const val START = "jp.co.soramitsu.feature_ecosystem_impl.Start"
-    const val ALL_CURRENCIES = "jp.co.soramitsu.feature_ecosystem_impl.all_currencies"
-    const val ALL_POOLS = "jp.co.soramitsu.feature_ecosystem_impl.all_pools"
+import kotlinx.coroutines.flow.Flow
+
+interface PoolsUpdateSubscription {
+    fun start(): Flow<String>
+    suspend fun updateBasicPools()
 }

@@ -37,33 +37,17 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.scopes.ViewModelScoped
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPoolsInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPoolsInteractorImpl
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractorImpl
-import jp.co.soramitsu.feature_ecosystem_impl.domain.PoolsUpdateSubscription
-import jp.co.soramitsu.feature_ecosystem_impl.domain.PoolsUpdateSubscriptionImpl
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
-import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 
 @Module
 @InstallIn(ViewModelComponent::class)
 object EcoSystemModule {
-
-    @Provides
-    @ViewModelScoped
-    internal fun providePoolsUpdateSubscription(
-        repo: PolkaswapSubscriptionRepository,
-        manager: CoroutineManager,
-    ): PoolsUpdateSubscription {
-        return PoolsUpdateSubscriptionImpl(
-            repo,
-            manager,
-        )
-    }
 
     @Provides
     @ViewModelScoped

@@ -40,7 +40,7 @@ import jp.co.soramitsu.xcrypto.encryption.Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.EncryptionType
 import jp.co.soramitsu.xsubstrate.encrypt.MultiChainEncryption
 import jp.co.soramitsu.xsubstrate.encrypt.json.JsonSeedEncoder
-import org.spongycastle.util.encoders.Base64
+import org.bouncycastle.util.encoders.Base64
 
 class JsonAccountsEncoder(
     private val gson: Gson,

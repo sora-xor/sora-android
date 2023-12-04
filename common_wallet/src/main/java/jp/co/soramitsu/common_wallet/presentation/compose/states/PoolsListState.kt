@@ -52,16 +52,24 @@ data class PoolsListItemState(
     val fiat: String,
     val fiatChange: String,
     val tokenIds: StringPair,
+    val rewardTokenIconsList: List<String?>
 )
 
 fun mapPoolsData(
     poolsData: List<CommonUserPoolData>,
-    numbersFormatter: NumbersFormatter
+    numbersFormatter: NumbersFormatter,
+    rewardTokenIconsList: List<List<String>> = emptyList()
 ): Pair<PoolsListState, Double> {
     val formatted = poolsData.map { it.printFiat() }
     val sum = formatted.map { it?.first ?: 0.0 }.sumOf { it }
     val state = PoolsListState(
         poolsData.mapIndexed { i, poolData ->
+            val rewardIcons = if (rewardTokenIconsList.isEmpty()) {
+                emptyList()
+            } else {
+                rewardTokenIconsList[i]
+            }
+
             PoolsListItemState(
                 poolToken1Symbol = poolData.basic.baseToken.symbol,
                 poolToken2Symbol = poolData.basic.targetToken.symbol,
@@ -90,6 +98,7 @@ fun mapPoolsData(
 //                    )
 //                }.orEmpty(),
                 tokenIds = poolData.basic.baseToken.id to poolData.basic.targetToken.id,
+                rewardTokenIconsList = rewardIcons
             )
         }
     )

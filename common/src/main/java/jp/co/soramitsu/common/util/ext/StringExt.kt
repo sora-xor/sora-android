@@ -41,6 +41,9 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import java.math.BigDecimal
+import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
+import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.regex.Pattern
 import jp.co.soramitsu.common.domain.OptionsProvider
@@ -248,8 +251,22 @@ fun String.snakeCaseToCamelCase(): String {
     }.joinToString(separator = "")
 }
 
-private val nameBytesLimit = 32
+private const val nameBytesLimit = 32
 fun String.isAccountNameLongerThen32Bytes() = this.toByteArray().size > nameBytesLimit
+
+fun String.trimAccountNameTo32Bytes(): String {
+    val bytes: ByteArray = this.toByteArray()
+    val buffer = ByteBuffer.wrap(bytes)
+
+    if (nameBytesLimit < buffer.limit()) {
+        buffer.limit(nameBytesLimit)
+    }
+
+    val decoder = StandardCharsets.UTF_8.newDecoder()
+    decoder.onMalformedInput(CodingErrorAction.IGNORE)
+
+    return decoder.decode(buffer).toString()
+}
 
 private const val passwordLength = 6
 fun String.isPasswordSecure() = this.length >= passwordLength

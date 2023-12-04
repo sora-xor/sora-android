@@ -32,6 +32,7 @@
   <string name="address_not_found_1">Alıcılar bulunamadı</string>
   <string name="amount_error_no_funds">Üzgünüz, belirtilen tutarı transfer etmek için yeterli bakiyeniz yok.</string>
   <string name="appearance_title">Appearance</string>
+  <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Doğrulama için biyometri kullanmak ister misiniz?</string>
   <string name="asset_details_asset_id">Asset ID</string>
   <string name="asset_details_liquid_balance">Liquid balance</string>
@@ -138,12 +139,15 @@
   <string name="common_expand">Expand</string>
   <string name="common_explore">Explore</string>
   <string name="common_failed">Başarısız</string>
+  <string name="common_farming">Farming</string>
+  <string name="common_fee">Fee</string>
   <string name="common_filipino">Filipince</string>
   <string name="common_finnish">Fince</string>
   <string name="common_french">Fransızca</string>
   <string name="common_german">Almanca</string>
   <string name="common_google_authorization_error">Google authorization failed</string>
   <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
+  <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -160,10 +164,12 @@
   <string name="common_min">dk</string>
   <string name="common_more">More</string>
   <string name="common_norwegian">Norveççe</string>
+  <string name="common_nothing_available">Nothing available</string>
   <string name="common_ok">Tamam</string>
   <string name="common_passphrase_title">Anımsatıcı Dizi</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_pools">Pools</string>
   <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Kurtarma Kelimeleri</string>
   <string name="common_receive">Al</string>
@@ -237,6 +243,8 @@
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">İşlem ücreti için yeterli miktar yok</string>
   <string name="explore_create_pool">Create pool</string>
+  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
+  <string name="explore_demeter_title">Demeter Farming</string>
   <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
   <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">If you lose access to this device, your funds will be lost, unless you back up!</string>
@@ -263,6 +271,8 @@
   <string name="export_protection_seed_description">In the next step you will see Raw Seed (a long hash) that allow you to recover an account.</string>
   <string name="export_select_account">Select account for batch export</string>
   <string name="faq_title">SSS</string>
+  <string name="farm_details_your_rewards">Your rewards</string>
+  <string name="farming_details_title">Farming details</string>
   <string name="forget_account">Forget account</string>
   <string name="get_sora_card_title">Get SORA Card</string>
   <string name="global_results">Global results</string>
@@ -326,6 +336,7 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">PIN kodunuzu ayarlayın</string>
   <string name="pincode_touch_fingerprint_scanner">Parmak izi tarayıcısına dokunun</string>
+  <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
@@ -357,6 +368,7 @@
   <string name="polkaswap_minimum_received_info">İşleminiz onaylanmadan önce büyük veya olumsuz bir fiyat hareketi olursa işleminiz geri alınır.</string>
   <string name="polkaswap_network_fee_info">SORA sisteminin büyümesini ve istikrarlı performansını sağlamak için ağ ücreti alınır.</string>
   <string name="polkaswap_output_estimated">Çıktı tahminidir. En az %s alacaksınız veya işlem geri alınacak.</string>
+  <string name="polkaswap_pool_farms_title">Stake your pool share for extra rewards</string>
   <string name="polkaswap_pool_not_created">Havuz oluşturulmadı</string>
   <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Likidite karşılığında farming ödülü</string>
@@ -368,6 +380,9 @@
   <string name="polkaswap_swapped">Takas edildi</string>
   <string name="pool_button_remove">Kaldır</string>
   <string name="pool_details">Pool details</string>
+  <string name="pool_details_active_farms">Active farms</string>
+  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
+  <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Henüz aktif havuzlarınız yok.\nÖdül kazanmak için likidite ekleyin</string>
   <string name="pool_share_title">Havuz Payı</string>
   <string name="pool_share_title_1">Havuzdaki payınız</string>
@@ -536,7 +551,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">SORA uygulaması için bir güncelleme indirildi ve yüklenmek için hazır.\n\nUygulamanın son sürümünü kullanmak önemlidir.\n\nUygulamayı güncellemek için yeniden başlatma gereklidir.</string>
   <string name="update_install_now">Güncellemeyi şimdi yüklemek Istiyor musunuz?</string>
-  <string name="wallet_backup">Wallet backup</string>
+  <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">Kilitli</string>
   <string name="wallet_balance_reserved">Rezerve edilmiş</string>
   <string name="wallet_bonded">Bond edilmiş</string>

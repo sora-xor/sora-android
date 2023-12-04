@@ -97,7 +97,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import org.spongycastle.util.encoders.Hex
+import org.bouncycastle.util.encoders.Hex
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 @Singleton
@@ -111,6 +111,11 @@ class SubstrateCalls @Inject constructor(
         private const val FINALITY_TIMEOUT = "finalityTimeout"
         const val IN_BLOCK = "inBlock"
         const val DEFAULT_ASSETS_PAGE_SIZE = 100
+    }
+
+    suspend fun getBulk(key: String): Map<String, String?> {
+        val bulk = BulkRetriever()
+        return bulk.retrieveAllValues(socketService, key)
     }
 
     suspend fun getStorageHex(storageKey: String): String? =

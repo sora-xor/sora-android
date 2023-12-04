@@ -32,6 +32,7 @@
   <string name="address_not_found_1">Qəbul edənlər tapılmadı</string>
   <string name="amount_error_no_funds">Bağışlayın, göstərilən məbləği köçürmək üçün kifayət qədər vəsaitiniz yoxdur.</string>
   <string name="appearance_title">Appearance</string>
+  <string name="apr_description">Fermerçilikdə APR, DeFi likvidliyinin təmin edilməsində və ya stakeinq fəaliyyətlərində iştirak üçün investisiyanın illik gəlirini ifadə edir.</string>
   <string name="ask_biometry_message">Doğrulama üçün biometriyadan istifadə etmək istərdinizmi?</string>
   <string name="asset_details_asset_id">Asset ID</string>
   <string name="asset_details_liquid_balance">Liquid balance</string>
@@ -138,12 +139,15 @@
   <string name="common_expand">Expand</string>
   <string name="common_explore">Explore</string>
   <string name="common_failed">Uğursuz oldu</string>
+  <string name="common_farming">Əkinçilik</string>
+  <string name="common_fee">Haqq</string>
   <string name="common_filipino">Filippin dili</string>
   <string name="common_finnish">Fin dili</string>
   <string name="common_french">Fransız dili</string>
   <string name="common_german">Alman</string>
   <string name="common_google_authorization_error">Google authorization failed</string>
   <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
+  <string name="common_google_backup_decryption_failed_2">Ola bilsin ki, daxil etdiyiniz parol yanlışdır.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -160,10 +164,12 @@
   <string name="common_min">dəqiqə</string>
   <string name="common_more">Daha çox</string>
   <string name="common_norwegian">Norveç</string>
+  <string name="common_nothing_available">Əlçatan heç nə yoxdur</string>
   <string name="common_ok">Ok</string>
   <string name="common_passphrase_title">Parol keçidi</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_pools">Hovuzlar</string>
   <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Xam toxum</string>
   <string name="common_receive">Qəbul edin</string>
@@ -237,6 +243,8 @@
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Əməliyyat haqqı üçün kifayət qədər vəsait yoxdur</string>
   <string name="explore_create_pool">Hovuz yaradın</string>
+  <string name="explore_demeter_subtitle">Hovuz payınızı paylayın və əlavə mükafatlar qazanın</string>
+  <string name="explore_demeter_title">Demeter Fermerçilik</string>
   <string name="explore_provide_and_earn">Likvidliyi təmin edin və mükafatlar qazanın</string>
   <string name="explore_swap_tokens_on_sora">SORA şəbəkəsində tokenləri dəyişdirin</string>
   <string name="export_account_details_backup_description">Bu cihaza girişi itirsəniz, ehtiyat nüsxəsini çıxarmasanız, vəsaitiniz itiriləcək!</string>
@@ -263,6 +271,8 @@
   <string name="export_protection_seed_description">Növbəti addımda siz hesabı bərpa etməyə imkan verən Raw Seed (uzun hash) görəcəksiniz.</string>
   <string name="export_select_account">Select account for batch export</string>
   <string name="faq_title">Ən çox soruşulan suallar</string>
+  <string name="farm_details_your_rewards">Mükafatlarınız</string>
+  <string name="farming_details_title">Əkinçilik təfərrüatları</string>
   <string name="forget_account">Forget account</string>
   <string name="get_sora_card_title">Get SORA Card</string>
   <string name="global_results">Global results</string>
@@ -326,6 +336,7 @@
   <string name="pincode_one_try_left">Soyumağa qədər daha bir cəhdiniz qalıb</string>
   <string name="pincode_set_your_pin_code">Pin kodu qurun</string>
   <string name="pincode_touch_fingerprint_scanner">Barmaq izi skanerinə toxunun</string>
+  <string name="polkaswap_farm_title_template"> %s Ferma</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
@@ -357,6 +368,7 @@
   <string name="polkaswap_minimum_received_info">Təsdiq edilməmişdən əvvəl böyük, əlverişsiz bir qiymət hərəkəti olarsa, əməliyyatınız geri qayıdacaq.</string>
   <string name="polkaswap_network_fee_info">Şəbəkə haqqı SORA sisteminin böyüməsini və sabit performansını təmin etmək üçün istifadə olunur.</string>
   <string name="polkaswap_output_estimated">Çıxış hesablanır. Ən azı %s alacaqsınız və ya əməliyyat geri qaytarılacaq.</string>
+  <string name="polkaswap_pool_farms_title">Əlavə mükafatlar üçün hovuz payınızı paylayın</string>
   <string name="polkaswap_pool_not_created">Hovuz (pool) yaradılmadı</string>
   <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Likvidliyin təminatı üçün əkinçilik mükafatı</string>
@@ -368,6 +380,9 @@
   <string name="polkaswap_swapped">Dəyişdirildi</string>
   <string name="pool_button_remove">Sil</string>
   <string name="pool_details">Pool details</string>
+  <string name="pool_details_active_farms">Aktiv təsərrüfatlar</string>
+  <string name="pool_details_extra_reward">Əlavə mükafatlar üçün hovuz payınızı paylayın</string>
+  <string name="pool_details_reward">Mükafat</string>
   <string name="pool_liquidity_placeholder">Likvidliyiniz burada görünəcək</string>
   <string name="pool_share_title">Hovuzun payı</string>
   <string name="pool_share_title_1">Hovuz payınız</string>

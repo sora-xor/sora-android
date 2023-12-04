@@ -57,12 +57,12 @@ class DarkThemeManager @Inject constructor(
     private val soraPreferences: SoraPreferences,
 ) {
 
-    private data class DarkModeSettings(
+    data class DarkModeSettings(
         val isSystemDrivenUiEnabled: Boolean,
         val isDarkModeEnabled: Boolean
     )
 
-    private val mutableDarkThemeSharedFlow = MutableSharedFlow<DarkModeSettings>(
+    val mutableDarkThemeSharedFlow = MutableSharedFlow<DarkModeSettings>(
         replay = 1,
         extraBufferCapacity = 0,
         onBufferOverflow = BufferOverflow.DROP_OLDEST

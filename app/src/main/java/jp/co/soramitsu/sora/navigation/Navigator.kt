@@ -51,10 +51,12 @@ import jp.co.soramitsu.common.presentation.compose.webview.title
 import jp.co.soramitsu.common.presentation.compose.webview.url
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.FarmDetailsFragment
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.util.action
@@ -149,6 +151,10 @@ class Navigator :
 
     override fun showPoolDetails(ids: StringPair) {
         navController?.navigate(R.id.poolDetailsFragment, PoolDetailsFragment.createBundle(ids))
+    }
+
+    override fun showFarmDetails(ids: StringTriple) {
+        navController?.navigate(R.id.farmDetailsFragment, FarmDetailsFragment.createBundle(ids))
     }
 
     override fun showPoolSettings() {

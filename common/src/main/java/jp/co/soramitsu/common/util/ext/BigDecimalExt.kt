@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.util.ext
 
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 import jp.co.soramitsu.common.domain.OptionsProvider
 import kotlin.math.max
@@ -47,6 +48,7 @@ fun compareNullDesc(o1: BigDecimal?, o2: BigDecimal?): Int =
         else -> -1
     }
 
+fun BigInteger.isZero(): Boolean = this.compareTo(BigInteger.ZERO) == 0
 fun BigDecimal.isZero(): Boolean = this.compareTo(BigDecimal.ZERO) == 0
 
 fun BigDecimal?.multiplyNullable(decimal: BigDecimal?): BigDecimal? =

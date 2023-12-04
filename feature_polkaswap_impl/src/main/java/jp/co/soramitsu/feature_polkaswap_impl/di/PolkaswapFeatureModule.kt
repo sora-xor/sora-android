@@ -37,6 +37,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
@@ -46,11 +47,13 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapExtrinsi
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscription
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.data.repository.PolkaswapExtrinsicRepositoryImpl
 import jp.co.soramitsu.feature_polkaswap_impl.data.repository.PolkaswapRepositoryImpl
 import jp.co.soramitsu.feature_polkaswap_impl.data.repository.PolkaswapSubscriptionRepositoryImpl
 import jp.co.soramitsu.feature_polkaswap_impl.domain.PoolsInteractorImpl
+import jp.co.soramitsu.feature_polkaswap_impl.domain.PoolsUpdateSubscriptionImpl
 import jp.co.soramitsu.feature_polkaswap_impl.domain.SwapInteractorImpl
 import kotlinx.coroutines.FlowPreview
 
@@ -92,6 +95,18 @@ class PolkaswapFeatureModule {
             polkaswapExtrinsicRepository,
             assetsRepository,
             transactionBuilder,
+        )
+    }
+
+    @Provides
+    @Singleton
+    internal fun providePoolsUpdateSubscription(
+        repo: PolkaswapSubscriptionRepository,
+        manager: CoroutineManager,
+    ): PoolsUpdateSubscription {
+        return PoolsUpdateSubscriptionImpl(
+            repo,
+            manager,
         )
     }
 

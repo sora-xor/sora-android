@@ -33,13 +33,18 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.demeter.domain
 
 import java.math.BigDecimal
+import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.demeter.data.DemeterFarmingRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 
 interface DemeterFarmingInteractor {
     suspend fun getFarmedPools(): List<DemeterFarmingPool>?
 
+    suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
+
     suspend fun getStakedFarmedBalanceOfAsset(tokenId: String): BigDecimal
+
+    suspend fun getUsersFarmedPool(ids: StringTriple): DemeterFarmingPool?
 }
 
 internal class DemeterFarmingInteractorImpl(
@@ -52,6 +57,15 @@ internal class DemeterFarmingInteractorImpl(
             userRepository.getCurSoraAccount().substrateAddress,
             tokenId,
         )
+
+    override suspend fun getUsersFarmedPool(ids: StringTriple): DemeterFarmingPool? {
+        return getFarmedPools()?.firstOrNull {
+            it.tokenBase.id == ids.first && it.tokenTarget.id == ids.second && it.tokenReward.id == ids.third
+        }
+    }
+
+    override suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool> =
+        demeterFarmingRepository.getFarmedBasicPools().sortedByDescending { it.tvl }
 
     override suspend fun getFarmedPools(): List<DemeterFarmingPool>? =
         demeterFarmingRepository.getFarmedPools(userRepository.getCurSoraAccount().substrateAddress)
