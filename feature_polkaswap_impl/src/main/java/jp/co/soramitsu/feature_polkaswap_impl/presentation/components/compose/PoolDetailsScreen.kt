@@ -62,7 +62,7 @@ import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItem
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicUserFarmListItem
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsState
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.FilledPolkaswapButton
 import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -201,11 +201,11 @@ internal fun PoolDetailsScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            FilledButton(
+            FilledPolkaswapButton(
                 size = Size.Large,
                 order = Order.PRIMARY,
                 enabled = state.addEnabled,
-                text = stringResource(id = R.string.common_supply_liquidity_title),
+                text = stringResource(id = R.string.common_supply),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onSupply,
             )
@@ -218,7 +218,7 @@ internal fun PoolDetailsScreen(
                 size = Size.Large,
                 order = Order.PRIMARY,
                 enabled = state.removeEnabled,
-                text = stringResource(id = R.string.remove_liquidity_title),
+                text = stringResource(id = R.string.common_remove),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onRemove,
             )

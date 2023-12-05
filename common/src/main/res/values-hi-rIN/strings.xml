@@ -381,7 +381,6 @@
   <string name="pool_button_remove">हटाये</string>
   <string name="pool_details">पूल विवरण</string>
   <string name="pool_details_active_farms">Active farms</string>
-  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
   <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">आपके पास अभी तक कोई सक्रिय पूल नहीं है।\n पुरस्कार अर्जित करने के लिए तरलता जोड़ें</string>
   <string name="pool_share_title">पूल का हिस्सा</string>
@@ -459,6 +458,7 @@
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">संपत्ति खोजें</string>
   <string name="search_empty_state">खोजने पर कोई परिणाम नहीं मिला</string>
+  <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address">खाता पता खोजें\n</string>
   <string name="select_account_address_1">नया पता खोजें या जोड़ें</string>
   <string name="select_account_import">Select account to import</string>

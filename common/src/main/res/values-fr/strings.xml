@@ -381,7 +381,6 @@
   <string name="pool_button_remove">Retirer</string>
   <string name="pool_details">Détails du pool</string>
   <string name="pool_details_active_farms">Active farms</string>
-  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
   <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Vous n\'avez pas encore de pools actifs.\n Ajoutez des liquidités pour gagner des récompenses</string>
   <string name="pool_share_title">Pourcentage du pool</string>
@@ -459,6 +458,7 @@
   <string name="scan_qr_show_my_qr">Afficher mon code QR</string>
   <string name="search_assets">Rechercher des actifs</string>
   <string name="search_empty_state">Aucun résultat trouvé</string>
+  <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address">Recherche de l\'adresse du compte</string>
   <string name="select_account_address_1">Chercher ou ajouter une nouvelle adresse</string>
   <string name="select_account_import">Sélectionnez un compte à importer</string>

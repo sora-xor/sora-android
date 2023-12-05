@@ -239,6 +239,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                         basic = state.basic.copy(
                             title = R.string.choose_token,
                             searchEnabled = true,
+                            searchPlaceholder = R.string.search_token_placeholder,
                             searchValue = _sendState.value.searchFilter.filter,
                         )
                     )

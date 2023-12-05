@@ -89,6 +89,7 @@ class FullAssetSettingsViewModel @Inject constructor(
                 actionLabel = jp.co.soramitsu.common.R.string.common_done,
                 searchValue = "",
                 searchEnabled = true,
+                searchPlaceholder = jp.co.soramitsu.common.R.string.search_token_placeholder,
             ),
             type = SoramitsuToolbarType.Small(),
         )

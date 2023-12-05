@@ -383,7 +383,6 @@
   <string name="pool_button_remove">הסר</string>
   <string name="pool_details">פרטי המאגר</string>
   <string name="pool_details_active_farms">Active farms</string>
-  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
   <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">עדיין אין לך מאגרים פעילים.\nהוסף נזילות כדי להרוויח תגמולים</string>
   <string name="pool_share_title">נתח מהמאגר</string>
@@ -471,6 +470,7 @@
   <string name="scan_qr_show_my_qr">הצג את קוד ה-QR שלי</string>
   <string name="search_assets">חפש נכסים</string>
   <string name="search_empty_state">אין תוצאות</string>
+  <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address">חפש כתובת חשבון</string>
   <string name="select_account_address_1">חפש או הוסף כתובת חדשה</string>
   <string name="select_account_import">בחר חשבון לייבוא</string>
