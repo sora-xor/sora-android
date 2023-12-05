@@ -381,7 +381,6 @@
   <string name="pool_button_remove">Sil</string>
   <string name="pool_details">Pool details</string>
   <string name="pool_details_active_farms">Aktiv təsərrüfatlar</string>
-  <string name="pool_details_extra_reward">Əlavə mükafatlar üçün hovuz payınızı paylayın</string>
   <string name="pool_details_reward">Mükafat</string>
   <string name="pool_liquidity_placeholder">Likvidliyiniz burada görünəcək</string>
   <string name="pool_share_title">Hovuzun payı</string>
@@ -459,6 +458,7 @@
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">Search assets</string>
   <string name="search_empty_state">Axtarış nəticələri yoxdur</string>
+  <string name="search_token_placeholder">Aktiv ID, Adı və ya Ticker Simvoluna görə axtarın</string>
   <string name="select_account_address">Hesab ünvanını axtarın</string>
   <string name="select_account_address_1">Yeni ünvan axtarın və ya əlavə edin</string>
   <string name="select_account_import">Select account to import</string>

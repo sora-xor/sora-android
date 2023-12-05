@@ -380,7 +380,6 @@
   <string name="pool_button_remove">Buang</string>
   <string name="pool_details">Butiran kolam</string>
   <string name="pool_details_active_farms">Active farms</string>
-  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
   <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Kecairan anda akan muncul di sini</string>
   <string name="pool_share_title">Bahagian Tabungan</string>
@@ -453,6 +452,7 @@
   <string name="scan_qr_show_my_qr">Tunjukkan kod QR saya</string>
   <string name="search_assets">Cari aset</string>
   <string name="search_empty_state">Tiada hasil carian</string>
+  <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address">Cari alamat akaun</string>
   <string name="select_account_address_1">Cari atau tambah alamat baharu</string>
   <string name="select_account_import">Pilih akaun untuk diimport</string>

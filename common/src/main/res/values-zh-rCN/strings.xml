@@ -380,7 +380,6 @@
   <string name="pool_button_remove">移除</string>
   <string name="pool_details">流动池详情</string>
   <string name="pool_details_active_farms">Active farms</string>
-  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
   <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">您还没有任何生效的流动池。\n赶快来增加流动性以赚取奖励哦</string>
   <string name="pool_share_title">流动池份额</string>
@@ -453,6 +452,7 @@
   <string name="scan_qr_show_my_qr">显示我的二维码</string>
   <string name="search_assets">搜索资产</string>
   <string name="search_empty_state">没有结果</string>
+  <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address">搜索账户地址</string>
   <string name="select_account_address_1">搜索或添加新地址</string>
   <string name="select_account_import">选择要导入的账户</string>

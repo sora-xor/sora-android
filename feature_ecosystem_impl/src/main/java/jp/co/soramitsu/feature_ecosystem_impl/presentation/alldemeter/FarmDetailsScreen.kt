@@ -39,7 +39,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -102,9 +101,9 @@ internal fun FarmDetailsScreen(
                 Column {
                     Row(
                         modifier = Modifier
+                            .padding(bottom = Dimens.x3)
                             .fillMaxWidth()
-                            .wrapContentHeight()
-                            .padding(bottom = Dimens.x3),
+                            .wrapContentHeight(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -141,7 +140,7 @@ internal fun FarmDetailsScreen(
                         }
                         Column(
                             modifier = Modifier
-                                .height(40.dp)
+                                .wrapContentHeight()
                                 .weight(1f)
                                 .padding(start = Dimens.x1, end = Dimens.x1),
                             verticalArrangement = Arrangement.SpaceBetween,

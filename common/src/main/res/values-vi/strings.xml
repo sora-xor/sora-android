@@ -380,7 +380,6 @@
   <string name="pool_button_remove">Rút</string>
   <string name="pool_details">Chi tiết Pool</string>
   <string name="pool_details_active_farms">Active farms</string>
-  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
   <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Bạn chưa tham gia bất kỳ pool nào.\nThêm thanh khoản để kiếm phần thưởng</string>
   <string name="pool_share_title">Cổ phần trong pool</string>
@@ -453,6 +452,7 @@
   <string name="scan_qr_show_my_qr">Hiển thị mã QR của tôi</string>
   <string name="search_assets">Tìm kiếm tài sản</string>
   <string name="search_empty_state">Không có kết quả tìm kiếm</string>
+  <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address">Tìm kiếm địa chỉ tài khoản</string>
   <string name="select_account_address_1">Tìm kiếm hoặc thêm địa chỉ mới</string>
   <string name="select_account_import">Chọn tài khoản để nhập</string>
