@@ -346,8 +346,10 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onBackupClicked(
-        launcher: ActivityResultLauncher<Intent>
+        launcher: ActivityResultLauncher<Intent>?
     ) {
+        if (launcher == null) return
+
         startBackup()
         viewModelScope.launch {
             try {
