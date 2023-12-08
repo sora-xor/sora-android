@@ -51,7 +51,8 @@ import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 enum class SoraCardSettingsOption {
-    SUPPORT_CHAT, LOG_OUT
+    SUPPORT_CHAT,
+    LOG_OUT
 }
 
 data class SoraCardSettingsCardState(

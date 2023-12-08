@@ -80,5 +80,4 @@ class ExploreViewModelTest {
         discoverViewModel.onTokenClicked("0x00")
         verify { assetsRouter.showAssetDetails("0x00") }
     }
-
 }

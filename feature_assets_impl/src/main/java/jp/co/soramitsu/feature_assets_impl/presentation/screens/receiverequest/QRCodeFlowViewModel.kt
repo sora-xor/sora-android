@@ -53,7 +53,7 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
-import jp.co.soramitsu.common_wallet.domain.model.QrException
+import jp.co.soramitsu.common.util.QrException
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat.getAssetBalanceText
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor

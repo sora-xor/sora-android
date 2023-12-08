@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_main_impl.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
 import io.mockk.mockkObject
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.RepeatStrategy

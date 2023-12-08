@@ -121,11 +121,13 @@ enum class TransactionStatus {
 }
 
 enum class TransactionTransferType {
-    OUTGOING, INCOMING
+    OUTGOING,
+    INCOMING
 }
 
 enum class TransactionLiquidityType {
-    ADD, WITHDRAW
+    ADD,
+    WITHDRAW
 }
 
 fun TransactionStatus.toName() = when (this) {

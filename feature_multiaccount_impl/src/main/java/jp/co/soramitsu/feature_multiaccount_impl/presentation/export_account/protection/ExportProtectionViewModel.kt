@@ -65,7 +65,9 @@ class ExportProtectionViewModel @AssistedInject constructor(
 
     @Parcelize
     enum class Type : Parcelable {
-        SEED, PASSPHRASE, JSON
+        SEED,
+        PASSPHRASE,
+        JSON
     }
 
     private val _exportProtectionScreenState = MutableLiveData<ExportProtectionScreenState>()

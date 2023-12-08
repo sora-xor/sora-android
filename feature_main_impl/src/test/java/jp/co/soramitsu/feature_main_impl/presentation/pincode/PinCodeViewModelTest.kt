@@ -158,7 +158,8 @@ class PinCodeViewModelTest {
             PinCodeScreenState(
                 toolbarTitleString = titleString,
                 isBiometricButtonVisible = true
-            ), pinCodeViewModel.state
+            ),
+            pinCodeViewModel.state
         )
     }
 
@@ -208,7 +209,8 @@ class PinCodeViewModelTest {
                 toolbarTitleString = titleString,
                 checkedDotsCount = 1,
                 isBackButtonVisible = true
-            ), pinCodeViewModel.state
+            ),
+            pinCodeViewModel.state
         )
     }
 
@@ -337,7 +339,8 @@ class PinCodeViewModelTest {
                 enableShakeAnimation = true,
                 isBackButtonVisible = false,
                 checkedDotsCount = 0
-            ), pinCodeViewModel.state
+            ),
+            pinCodeViewModel.state
         )
     }
 
@@ -346,7 +349,6 @@ class PinCodeViewModelTest {
         pinCodeViewModel.startAuth(PinCodeAction.OPEN_PASSPHRASE)
 
         given(interactor.checkPin(anyString())).willReturn(false)
-
 
         pinCodeViewModel.pinCodeNumberClicked("1")
         pinCodeViewModel.pinCodeNumberClicked("2")
@@ -444,7 +446,6 @@ class PinCodeViewModelTest {
         verify(interactor).checkPin(anyString())
         verify(selectNodeRouter).returnFromPinCodeCheck()
     }
-
 
     @Test
     fun `back pressed closing the app on CREATE_PIN_CODE action`() = runTest {

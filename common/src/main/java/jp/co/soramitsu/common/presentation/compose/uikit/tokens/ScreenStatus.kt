@@ -33,5 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.presentation.compose.uikit.tokens
 
 enum class ScreenStatus {
-    LOADING, ERROR, READY_TO_RENDER
+    LOADING,
+    ERROR,
+    READY_TO_RENDER
 }
