@@ -32,16 +32,15 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.assetsettings
 
-import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkObject
-import io.mockk.mockkStatic
+import java.math.BigDecimal
+import java.util.Collections
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -68,11 +67,8 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
-import java.math.BigDecimal
-import java.util.Collections
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)

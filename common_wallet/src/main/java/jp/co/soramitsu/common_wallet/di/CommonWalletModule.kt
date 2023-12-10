@@ -39,7 +39,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import jp.co.soramitsu.common_wallet.domain.QrCodeDecoder
+import jp.co.soramitsu.common.util.QrCodeDecoder
 
 @Module
 @InstallIn(SingletonComponent::class)

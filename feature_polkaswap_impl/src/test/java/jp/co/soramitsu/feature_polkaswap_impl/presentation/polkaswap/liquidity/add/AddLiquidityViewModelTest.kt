@@ -32,15 +32,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.polkaswap.liquidity.add
 
-import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.mockk.every
 import io.mockk.mockkObject
-import io.mockk.mockkStatic
+import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -76,12 +72,10 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.times
-import java.math.BigDecimal
 import org.mockito.kotlin.verify as kVerify
 
 @FlowPreview

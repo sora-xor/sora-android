@@ -250,8 +250,14 @@ private fun List<TxHistoryItemParam>.toEthTransfer(block: (amount: String, token
 }
 
 private fun List<TxHistoryItemParam>.toSwap(
-    block:
-    (selectedMarket: String, liquidityProviderFee: String, baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Swap
+    block: (
+        selectedMarket: String,
+        liquidityProviderFee: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        baseTokenAmount: String,
+        targetTokenAmount: String,
+    ) -> Transaction.Swap,
 ): Transaction.Swap? {
     val selectedMarket = this.firstOrNull { it.paramName == "selectedMarket" }
     val liquidityProviderFee = this.firstOrNull { it.paramName == "liquidityProviderFee" }
@@ -273,8 +279,12 @@ private fun List<TxHistoryItemParam>.toSwap(
 }
 
 private fun List<TxHistoryItemParam>.toLiquidity(
-    block:
-    (baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Liquidity
+    block: (
+        baseTokenId: String,
+        targetTokenId: String,
+        baseTokenAmount: String,
+        targetTokenAmount: String,
+    ) -> Transaction.Liquidity,
 ): Transaction.Liquidity? {
     val baseTokenId = this.firstOrNull { it.paramName == "baseAssetId" }
     val targetTokenId = this.firstOrNull { it.paramName == "targetAssetId" }
@@ -292,8 +302,12 @@ private fun List<TxHistoryItemParam>.toLiquidity(
 }
 
 private fun List<TxHistoryItemParam>.toLiquidityBatch(
-    block:
-    (baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Liquidity
+    block: (
+        baseTokenId: String,
+        targetTokenId: String,
+        baseTokenAmount: String,
+        targetTokenAmount: String,
+    ) -> Transaction.Liquidity,
 ): Transaction.Liquidity? {
     val baseTokenId = this.firstOrNull { it.paramName == "input_asset_a" }
     val targetTokenId = this.firstOrNull { it.paramName == "input_asset_b" }

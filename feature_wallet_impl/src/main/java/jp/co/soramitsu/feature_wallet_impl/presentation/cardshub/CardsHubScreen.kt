@@ -111,7 +111,8 @@ fun TopBar(
         Box(modifier = Modifier.size(Size.Small)) {
             BleachedButton(
                 modifier = Modifier,
-                shape = RoundedCornerShape(percent = 49), // value of 50 results in strange shadow behaviour
+//                value of 50 results in strange shadow behaviour
+                shape = RoundedCornerShape(percent = 49),
                 size = Size.Small,
                 order = Order.TERTIARY,
                 leftIcon = painterResource(R.drawable.ic_scan_qr),

@@ -165,8 +165,16 @@ class AssetDetailsViewModel @AssistedInject constructor(
                             asset.balance.transferable,
                             numbersFormatter,
                         ),
-                        frozenBalance = if (assetId == SubstrateOptionsProvider.feeAssetId) { asset.token.printBalance(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter, AssetHolder.ROUNDING) } else { null },
-                        frozenBalanceFiat = if (assetId == SubstrateOptionsProvider.feeAssetId) { asset.token.printFiat(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter) } else { null },
+                        frozenBalance = if (assetId == SubstrateOptionsProvider.feeAssetId) {
+                            asset.token.printBalance(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter, AssetHolder.ROUNDING)
+                        } else {
+                            null
+                        },
+                        frozenBalanceFiat = if (assetId == SubstrateOptionsProvider.feeAssetId) {
+                            asset.token.printFiat(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter)
+                        } else {
+                            null
+                        },
                         isTransferableBalanceAvailable = asset.balance.transferable > BigDecimal.ZERO,
                         buyCryptoAvailable = false,
 //                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId),

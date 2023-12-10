@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_wallet_impl.presentation.contacts
 
 import android.graphics.drawable.PictureDrawable
-import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
 import jp.co.soramitsu.common.R
@@ -41,7 +40,6 @@ import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.common_wallet.domain.QrCodeDecoder
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -56,9 +54,7 @@ import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
-import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)

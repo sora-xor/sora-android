@@ -106,6 +106,5 @@ class SwapInteractorTest {
 
     @Test
     fun `set swap market`() = runTest {
-
     }
 }

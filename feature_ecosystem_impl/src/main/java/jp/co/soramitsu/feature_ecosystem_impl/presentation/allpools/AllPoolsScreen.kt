@@ -184,7 +184,7 @@ private fun AllPoolsInternal(
 @Preview
 @Composable
 private fun PreviewAllPoolsInternal() {
-    Column() {
+    Column {
         AllPoolsInternal(
             state = EcoSystemPoolsState(
                 pools = previewBasicPoolListItemState,

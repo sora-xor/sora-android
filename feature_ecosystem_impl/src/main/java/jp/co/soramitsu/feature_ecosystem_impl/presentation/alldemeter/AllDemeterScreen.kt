@@ -157,7 +157,7 @@ private fun AllDemeterInternal(
 @Preview
 @Composable
 private fun PreviewAllPoolsInternal() {
-    Column() {
+    Column {
         AllDemeterInternal(
             state = AllFarmsState(
                 pools = previewBasicFarmListItemState,

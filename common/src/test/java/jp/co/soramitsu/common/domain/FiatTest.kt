@@ -45,35 +45,33 @@ class FiatTest {
 
     @Before
     fun setup() {
-
     }
 
     @After
     fun teardown() {
-
     }
 
     @Test
     fun test001() {
         val f = formatFiatChange(12.2394, nf)
-        assertEquals("+1${nbspace}223.94${nbspace}%", f)
+        assertEquals("+1${nbspace}223.94$nbspace%", f)
     }
 
     @Test
     fun test002() {
         val f = formatFiatChange(0.0004, nf)
-        assertEquals("+0.04${nbspace}%", f)
+        assertEquals("+0.04$nbspace%", f)
     }
 
     @Test
     fun test003() {
         val f = formatFiatChange(0.0001, nf)
-        assertEquals("+0.01${nbspace}%", f)
+        assertEquals("+0.01$nbspace%", f)
     }
 
     @Test
     fun test004() {
         val f = formatFiatChange(0.0000999999, nf)
-        assertEquals("0${nbspace}%", f)
+        assertEquals("0$nbspace%", f)
     }
 }

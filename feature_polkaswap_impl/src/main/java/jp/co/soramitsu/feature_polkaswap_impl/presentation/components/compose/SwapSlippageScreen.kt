@@ -167,7 +167,8 @@ internal fun SwapSlippageScreen(
                     BasicNumberInput(
                         modifier = Modifier,
                         textStyle = MaterialTheme.customTypography.textM.copy(color = MaterialTheme.customColors.fgPrimary),
-                        initial = value.toBigDecimal(), // input value is used; no locally stored data!!!
+//                        input value is used; no locally stored data!!!
+                        initial = value.toBigDecimal(),
                         precision = 2,
                         enabled = true,
                         visualTransformation = visualTransformation,

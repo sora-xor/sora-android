@@ -73,7 +73,6 @@ class TransactionHistoryRepositoryTest {
     @get:Rule
     val mockkRule = MockKRule(this)
 
-
     @MockK
     private lateinit var subQueryClient: SubQueryClientForSoraWallet
 
@@ -92,7 +91,9 @@ class TransactionHistoryRepositoryTest {
         every { Uri.parse(any()) } returns mockedUri
         every { extrinsicManager.setWatchingExtrinsicListener(any()) } returns Unit
         every { subQueryClient.getTransactionPeers("query") } returns peersList
-        coEvery { subQueryClient.getTransactionHistoryCached(TestAccounts.soraAccount.substrateAddress, 1, null) } returns listOf(TestTransactions.txHistoryItem)
+        coEvery {
+            subQueryClient.getTransactionHistoryCached(TestAccounts.soraAccount.substrateAddress, 1, null)
+        } returns listOf(TestTransactions.txHistoryItem)
 
         transactionHistoryRepository = TransactionHistoryRepositoryImpl(
             subQueryClient,

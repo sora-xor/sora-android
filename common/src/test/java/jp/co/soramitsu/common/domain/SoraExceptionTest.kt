@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.domain
 
+import java.io.IOException
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.ResourceManager
 import org.junit.Assert.assertEquals
@@ -39,7 +40,6 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.mock
-import java.io.IOException
 
 class SoraExceptionTest {
 

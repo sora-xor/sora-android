@@ -86,7 +86,7 @@ class AppSettingsViewModel @Inject constructor(
         }.invokeOnCompletion {
             state = state.copy(
                 systemAppearanceChecked = checked,
-                darkModeChecked = false // check DarkThemeManager.setDarkThemeEnabled
+                darkModeChecked = false,
             )
         }
     }
@@ -96,8 +96,8 @@ class AppSettingsViewModel @Inject constructor(
             tryCatch { darkThemeManager.setDarkThemeEnabled(checked) }
         }.invokeOnCompletion {
             state = state.copy(
-                systemAppearanceChecked = false, // check DarkThemeManager.setDarkThemeEnabled
-                darkModeChecked = checked
+                systemAppearanceChecked = false,
+                darkModeChecked = checked,
             )
         }
     }

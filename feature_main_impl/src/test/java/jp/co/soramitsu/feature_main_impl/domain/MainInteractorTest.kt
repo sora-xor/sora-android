@@ -86,7 +86,6 @@ class MainInteractorTest {
         val actualUser = SoraAccount("address", "user")
         given(userRepository.getCurSoraAccount()).willReturn(actualUser)
 
-
         assertEquals(actualUser.substrateAddress, interactor.getCurUserAddress())
     }
 
@@ -95,7 +94,6 @@ class MainInteractorTest {
         setUpModel()
         val actual = Pair(listOf(Language("ru_Ru", 0, 0)), 0)
         given(userRepository.getAvailableLanguages()).willReturn(actual)
-
 
         assertEquals(actual, interactor.getAvailableLanguagesWithSelected())
     }

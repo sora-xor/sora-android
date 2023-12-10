@@ -42,7 +42,7 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common_wallet.domain.QrCodeDecoder
+import jp.co.soramitsu.common.util.QrCodeDecoder
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.scan.QRCodeScannerScreenState
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow

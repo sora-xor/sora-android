@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.polkaswap
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Market
@@ -76,7 +77,6 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.times
-import java.math.BigDecimal
 import org.mockito.kotlin.verify as kVerify
 
 @FlowPreview
@@ -182,7 +182,7 @@ class SwapViewModelTest {
         given(resourceManager.getString(R.string.common_confirm)).willReturn("Confirm")
         given(resourceManager.getString(R.string.common_enter_amount)).willReturn("Enter amount")
         given(resourceManager.getString(R.string.polkaswap_pool_not_created)).willReturn("Pool not created")
-        //given(resourceManager.getString(R.string.review)).willReturn("Review")
+        // given(resourceManager.getString(R.string.review)).willReturn("Review")
         given(resourceManager.getString(R.string.polkaswap_insufficient_balance)).willReturn("Insufficient balance")
         given(resourceManager.getString(R.string.polkaswap_insufficient_liqudity)).willReturn("Insufficient liquidity")
     }
