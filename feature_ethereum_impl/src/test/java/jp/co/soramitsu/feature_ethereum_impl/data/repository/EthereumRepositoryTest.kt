@@ -33,6 +33,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_ethereum_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.util.concurrent.Callable
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumDatasource
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
@@ -51,6 +54,7 @@ import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.bouncycastle.util.encoders.Hex
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -62,14 +66,10 @@ import org.mockito.BDDMockito.verify
 import org.mockito.Mock
 import org.mockito.Mockito.mock
 import org.mockito.junit.MockitoJUnitRunner
-import org.bouncycastle.util.encoders.Hex
 import org.web3j.crypto.Bip32ECKeyPair
 import org.web3j.crypto.Credentials
 import org.web3j.protocol.core.RemoteCall
 import org.web3j.protocol.core.methods.response.TransactionReceipt
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.util.concurrent.Callable
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -165,9 +165,9 @@ class EthereumRepositoryTest {
                 amount.toBigInteger()
             )
         ).willReturn(remoteCall as RemoteCall<TransactionReceipt>?)
-        //given(ethereumCredentialsMapper.getAddress(anyNonNull())).willReturn(address)
+        // given(ethereumCredentialsMapper.getAddress(anyNonNull())).willReturn(address)
         given(remoteCall!!.send()).willReturn(transactionReceipt)
-        //given(transactionReceipt.transactionHash).willReturn(txHash)
+        // given(transactionReceipt.transactionHash).willReturn(txHash)
 
         ethereumRepository.transferValErc20(address, amount, ethereumCredentials, valTokenAddress)
 

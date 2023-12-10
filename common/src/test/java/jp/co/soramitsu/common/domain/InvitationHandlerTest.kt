@@ -65,5 +65,4 @@ class InvitationHandlerTest {
         advanceUntilIdle()
         assertEquals(listOf("", "", ""), actual)
     }
-
 }

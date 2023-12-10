@@ -77,7 +77,7 @@ class PrefsEthereumDatasourceTest {
 
     @Before
     fun setUp() = runTest {
-        //given(soraPreferences.getString(PREFS_ETH_REGISTER_STATE)).willReturn(ethRegisterState)
+        // given(soraPreferences.getString(PREFS_ETH_REGISTER_STATE)).willReturn(ethRegisterState)
         prefsEthereumDatasource = PrefsEthereumDatasource(encryptedPreferences, soraPreferences)
     }
 

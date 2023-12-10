@@ -151,42 +151,44 @@ class CardsHubViewModelTest {
         mockkObject(OptionsProvider)
         every { OptionsProvider.header } returns "test android client"
         every { assetsInteractor.subscribeAssetsFavoriteOfAccount(account) } returns
-                flow {
-                    emit(listOf(TestAssets.xorAsset(), TestAssets.valAsset()))
-                }
+            flow {
+                emit(listOf(TestAssets.xorAsset(), TestAssets.valAsset()))
+            }
         every { poolsInteractor.subscribePoolsCacheOfAccount(account) } returns
-                flow {
-                    emit(listOf(POOL_DATA))
-                }
+            flow {
+                emit(listOf(POOL_DATA))
+            }
         coEvery { cardsHubInteractorImpl.updateCardVisibilityOnCardHub(any(), any()) } returns Unit
         coEvery { demeterFarmingInteractor.getFarmedPools() } returns emptyList()
         every { cardsHubInteractorImpl.subscribeVisibleCardsHubList() } returns
-                flow {
-                    emit(
-                        account to listOf(
-                            CardHub(
-                                CardHubType.ASSETS,
-                                true,
-                                0,
-                                false
-                            ),
-                            CardHub(
-                                CardHubType.POOLS,
-                                true,
-                                1,
-                                false
-                            ),
-                            CardHub(
-                                CardHubType.GET_SORA_CARD,
-                                visibility = true,
-                                sortOrder = 2,
-                                collapsed = false
-                            )
+            flow {
+                emit(
+                    account to listOf(
+                        CardHub(
+                            CardHubType.ASSETS,
+                            true,
+                            0,
+                            false
+                        ),
+                        CardHub(
+                            CardHubType.POOLS,
+                            true,
+                            1,
+                            false
+                        ),
+                        CardHub(
+                            CardHubType.GET_SORA_CARD,
+                            visibility = true,
+                            sortOrder = 2,
+                            collapsed = false
                         )
                     )
-                }
+                )
+            }
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
-        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
+        every {
+            soraCardInteractor.subscribeSoraCardStatus()
+        } returns flowOf(SoraCardCommonVerification.NotFound)
         every { soraCardInteractor.subscribeToSoraCardAvailabilityFlow() } returns flowOf(
             SoraCardAvailabilityInfo()
         )
@@ -195,7 +197,9 @@ class CardsHubViewModelTest {
         every { assetsRouter.showBuyCrypto(any()) } returns Unit
         every { mainRouter.showGetSoraCard(any()) } just Runs
         every { mainRouter.showSoraCardDetails() } just Runs
-        every { resourceManager.getString(R.string.sora_card_verification_in_progress) } returns "in progress"
+        every {
+            resourceManager.getString(R.string.sora_card_verification_in_progress)
+        } returns "in progress"
         every { resourceManager.getString(R.string.sora_card_verification_successful) } returns "success"
         every { resourceManager.getString(R.string.sora_card_verification_rejected) } returns "rejected"
         every { resourceManager.getString(R.string.sora_card_verification_failed) } returns "failed"

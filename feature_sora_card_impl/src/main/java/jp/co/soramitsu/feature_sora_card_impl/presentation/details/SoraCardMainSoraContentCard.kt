@@ -58,7 +58,10 @@ import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 enum class SoraCardMenuAction {
-    TOP_UP, TRANSFER, EXCHANGE, FREEZE
+    TOP_UP,
+    TRANSFER,
+    EXCHANGE,
+    FREEZE
 }
 
 data class SoraCardMainSoraContentCardState(

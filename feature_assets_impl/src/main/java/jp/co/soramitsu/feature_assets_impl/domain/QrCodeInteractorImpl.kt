@@ -35,7 +35,7 @@ package jp.co.soramitsu.feature_assets_impl.domain
 import java.util.StringJoiner
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.common_wallet.domain.model.QrException
+import jp.co.soramitsu.common.util.QrException
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor

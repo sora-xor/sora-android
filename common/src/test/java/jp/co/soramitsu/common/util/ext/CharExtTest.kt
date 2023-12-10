@@ -40,7 +40,7 @@ class CharExtTest {
 
     @Test
     fun `validating valid chars`() {
-        val input = arrayOf('a', 'ф','1', '3', '\u0308')
+        val input = arrayOf('a', 'ф', '1', '3', '\u0308')
 
         for (char in input) {
             assertTrue(char.isValidNameChar())
@@ -55,5 +55,4 @@ class CharExtTest {
             assertFalse(char.isValidNameChar())
         }
     }
-
 }

@@ -464,7 +464,9 @@ class SwapViewModel @AssistedInject constructor(
                 tokenFromState.amount
             } else if (tokenToState.token.id == SubstrateOptionsProvider.feeAssetId) {
                 -tokenToState.amount.orZero()
-            } else { null }
+            } else {
+                null
+            }
             val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 networkFeeInXor = networkFee.orZero(),
                 xorChange = change,

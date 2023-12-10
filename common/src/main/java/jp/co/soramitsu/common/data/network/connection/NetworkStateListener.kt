@@ -46,7 +46,8 @@ import kotlinx.coroutines.flow.filterNotNull
 class NetworkStateListener {
 
     enum class State {
-        CONNECTED, DISCONNECTED
+        CONNECTED,
+        DISCONNECTED
     }
 
     private val stateSubject = MutableStateFlow<State?>(null)

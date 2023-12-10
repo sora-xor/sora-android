@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.polkaswap.liquidity.remove
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -70,8 +71,6 @@ import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import java.math.BigDecimal
-
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -104,7 +103,8 @@ class RemoveLiquidityViewModelTest {
     private lateinit var router: WalletRouter
 
     @Mock
-    private lateinit var demeterFarmingInteractor: jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
+    private lateinit var demeterFarmingInteractor:
+        jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 
     private lateinit var viewModel: LiquidityRemoveViewModel
 
@@ -261,7 +261,7 @@ class RemoveLiquidityViewModelTest {
                 mock = assetsInteractor,
                 mode = times(1)
             ).isNotEnoughXorLeftAfterTransaction(
-                xorChange = -BigDecimal.ONE, // is not TEN due to basePooled in POOL_DATA
+                xorChange = -BigDecimal.ONE,
                 networkFeeInXor = NETWORK_FEE,
             )
         }

@@ -33,7 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_assets_impl.domain
 
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common_wallet.domain.model.QrException
+import jp.co.soramitsu.common.util.QrException
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor
@@ -67,7 +67,6 @@ class QrCodeInteractorTest {
 
     @Before
     fun init() = runTest {
-
         given(
             methodCall = userRepository.getCurSoraAccount()
         ).willReturn(soraAccount)
@@ -78,8 +77,6 @@ class QrCodeInteractorTest {
             runtimeManager = runtimeManager
         ).apply { qrCodeInteractor = this }
     }
-
-
 
     @Test
     fun `process qr called`() = runTest {
@@ -112,8 +109,6 @@ class QrCodeInteractorTest {
         )
     }
 
-
-
     @Test
     fun `process qr called with wrong qr data`() = runTest {
         val content = "substrate:notMyAddress:en:tjj:qwe"
@@ -135,7 +130,7 @@ class QrCodeInteractorTest {
         val exception = result.exceptionOrNull()!!
         Assert.assertTrue(
             exception is QrException &&
-            exception.kind == QrException.Kind.USER_NOT_FOUND
+                exception.kind == QrException.Kind.USER_NOT_FOUND
         )
     }
 
@@ -153,7 +148,7 @@ class QrCodeInteractorTest {
 
         Assert.assertTrue(
             exception is QrException &&
-            exception.kind == QrException.Kind.SENDING_TO_MYSELF
+                exception.kind == QrException.Kind.SENDING_TO_MYSELF
         )
     }
 }
