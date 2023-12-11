@@ -167,18 +167,17 @@ dependencies {
     implementation(platform(libs.googleFirebaseBomDep))
     implementation(libs.googleCrashlyticsDep)
 
-    implementation("com.goterl:lazysodium-android:5.0.2@aar")
-    implementation("net.java.dev.jna:jna:5.8.0@aar")
-//    implementation(libs.lazySodiumDep) {
-//        artifact {
-//            type = "aar"
-//        }
-//    }
-//    implementation(libs.jnaDep) {
-//        artifact {
-//            type = "aar"
-//        }
-//    }
+    implementation(libs.lazySodiumDep) {
+        artifact {
+            type = "aar"
+        }
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
+    implementation(libs.jnaDep) {
+        artifact {
+            type = "aar"
+        }
+    }
 
     implementation(libs.coilDep)
     implementation(libs.coilComposeDep)
