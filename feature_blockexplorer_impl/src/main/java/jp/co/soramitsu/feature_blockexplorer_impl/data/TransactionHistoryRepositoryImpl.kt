@@ -187,6 +187,8 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
                 is Transaction.Swap -> transaction.tokenFrom.id == tokenId || transaction.tokenTo.id == tokenId
                 is Transaction.Transfer -> transaction.token.id == tokenId
                 is Transaction.EthTransfer -> transaction.token.id == tokenId
+                is Transaction.DemeterFarming -> transaction.baseToken.id == tokenId || transaction.targetToken.id == tokenId || transaction.rewardToken.id == tokenId
+                is Transaction.AdarIncome -> transaction.token.id == tokenId
             }
         }.values
 }

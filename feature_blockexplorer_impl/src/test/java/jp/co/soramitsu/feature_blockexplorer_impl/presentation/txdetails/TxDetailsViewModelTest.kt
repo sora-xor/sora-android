@@ -64,6 +64,7 @@ import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -159,6 +160,7 @@ class TxDetailsViewModelTest {
     @Test
     fun `init with receive transfer tx`() = runTest {
         initTestData(TestTransactions.receiveSuccessfulTx)
+        advanceUntilIdle()
         val s = viewModel.toolbarState.getOrAwaitValue()
         assertEquals(false, s.basic.visibility)
 
@@ -173,8 +175,8 @@ class TxDetailsViewModelTest {
                     ),
                     base.status,
                     date,
-                    TestTokens.xorToken.printBalance(base.fee, nf),
-                    TestTokens.xorToken.printFiat(base.fee, nf),
+                    null,
+                    null,
                     R.drawable.ic_new_arrow_down_24,
                     "received"
                 ),
@@ -187,8 +189,6 @@ class TxDetailsViewModelTest {
                 TxType.REFERRAL_TRANSFER
             )
         }
-
-        delay(10)
 
         assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
     }

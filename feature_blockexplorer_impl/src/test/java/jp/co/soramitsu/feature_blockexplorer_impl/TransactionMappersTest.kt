@@ -101,13 +101,13 @@ class TransactionMappersTest {
     private val transactionsWithHeaders = listOf(
         EventUiModel.EventTxUiModel.EventTransferInUiModel(
             "",
+            1000000,
+            TransactionStatus.COMMITTED,
             DEFAULT_ICON_URI,
             "peerId",
             "01 Jan 1970 00:00",
-            1000000,
             "10.12 VAL",
             "$ 34.3",
-            TransactionStatus.COMMITTED
         )
     )
 

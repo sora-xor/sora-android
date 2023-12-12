@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -73,7 +72,6 @@ class TxDetailsFragment : SoraBaseFragment<TxDetailsViewModel>() {
         (activity as BottomBarController).hideBottomBar()
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController

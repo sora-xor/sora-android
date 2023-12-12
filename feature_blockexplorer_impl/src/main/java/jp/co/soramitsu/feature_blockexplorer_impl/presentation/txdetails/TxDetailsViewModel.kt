@@ -149,8 +149,8 @@ class TxDetailsViewModel @AssistedInject constructor(
                             Date(transaction.base.timestamp),
                             DateTimeFormatter.DD_MMM_YYYY_HH_MM
                         ),
-                        feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
-                        feeToken.printFiat(transaction.base.fee, numbersFormatter),
+                        if (transaction.transferType == TransactionTransferType.OUTGOING) feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING) else null,
+                        if (transaction.transferType == TransactionTransferType.OUTGOING) feeToken.printFiat(transaction.base.fee, numbersFormatter) else null,
                         typeIcon,
                         resourceManager.getString(typeTitle),
                     ),
