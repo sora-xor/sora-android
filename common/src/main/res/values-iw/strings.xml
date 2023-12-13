@@ -231,6 +231,9 @@
   <string name="dark_mode">מצב כהה</string>
   <string name="delete_backup_alert_description">אם תמחק את גיבוי הגוגל שלך, תוכל לשחזר את הארנק שלך רק באמצעות גיבוי ידני של מילות המפתח.</string>
   <string name="delete_backup_alert_title">האם אתה בטוח?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">קפוא</string>
   <string name="details_receive_from_pool">נמשך מהמאגר</string>
   <string name="details_sent_to_pool">נשלח למאגר</string>
@@ -464,6 +467,7 @@
   <string name="remove_node_title">האם אתה באמת רוצה להסיר את הצומת הזה?</string>
   <string name="remove_pool_confirmation_description">התפוקה מוערכת. אם המחיר ישתנה יותר מ- %s %% הטרנזקציה שלך תחזור.</string>
   <string name="remove_pool_confirmation_title">אשר הסרה</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">דרושה הפעלה מחדש</string>
   <string name="review">סקירה</string>
   <string name="route">מסלול</string>
@@ -539,6 +543,7 @@
   <string name="sora_card_verification_successful">הכרטיס בדרך</string>
   <string name="sora_card_you_have_enough_xor">יש לך מספיק XOR עבור כרטיס בחינם</string>
   <string name="sora_card_you_need_xor" formatted="false">אתה צריך %s XOR (€%s)</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">שגיאה</string>
   <string name="status_pending">בהמתנה</string>
   <string name="status_success">הצלחה</string>

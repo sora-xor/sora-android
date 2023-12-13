@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -58,6 +57,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxD
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsScreenState
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.emptyTxDetailsState
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
@@ -65,6 +65,8 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
@@ -87,8 +89,8 @@ class TxDetailsViewModel @AssistedInject constructor(
         fun create(txHash: String): TxDetailsViewModel
     }
 
-    internal var txDetailsScreenState by mutableStateOf(emptyTxDetailsState)
-        private set
+    private val _txDetailsScreenState = MutableStateFlow(emptyTxDetailsState)
+    val txDetailsScreenState = _txDetailsScreenState.asStateFlow()
 
     init {
         _toolbarState.value = SoramitsuToolbarState(
@@ -115,9 +117,55 @@ class TxDetailsViewModel @AssistedInject constructor(
         val currentAddress = assetsInteractor.getCurSoraAccount().substrateAddress
         val feeToken = walletInteractor.getFeeToken()
         val transaction = transactionHistoryHandler.getTransaction(txHash)
-        txDetailsScreenState = when (transaction) {
+        _txDetailsScreenState.value = when (transaction) {
             is Transaction.EthTransfer -> {
                 emptyTxDetailsState
+            }
+            is Transaction.DemeterFarming -> {
+                if (transaction.type == DemeterType.REWARD)
+                    TxDetailsScreenState(
+                        basicTxDetailsState = BasicTxDetailsState(
+                            txHash = transaction.base.txHash,
+                            blockHash = transaction.base.blockHash,
+                            sender = currentAddress,
+                            infos = emptyList(),
+                            txStatus = transaction.base.status,
+                            time = dateTimeFormatter.formatDate(Date(transaction.base.timestamp), DateTimeFormatter.DD_MMM_YYYY_HH_MM),
+                            networkFee = feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
+                            networkFeeFiat = feeToken.printFiat(transaction.base.fee, numbersFormatter),
+                            txTypeIcon = R.drawable.ic_star,
+                            txTypeTitle = resourceManager.getString(R.string.demeter_claimed_reward),
+                        ),
+                        amount1 = transaction.baseToken.printBalance(transaction.amount, numbersFormatter, AssetHolder.ROUNDING),
+                        amount2 = null,
+                        amountFiat = "",
+                        icon1 = transaction.rewardToken.iconUri(),
+                        icon2 = null,
+                        isAmountGreen = true,
+                        txType = TxType.REFERRAL_TRANSFER,
+                    )
+                else TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        txHash = transaction.base.txHash,
+                        blockHash = transaction.base.blockHash,
+                        sender = currentAddress,
+                        infos = emptyList(),
+                        txStatus = transaction.base.status,
+                        time = dateTimeFormatter.formatDate(Date(transaction.base.timestamp), DateTimeFormatter.DD_MMM_YYYY_HH_MM),
+                        networkFee = feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
+                        networkFeeFiat = feeToken.printFiat(transaction.base.fee, numbersFormatter),
+                        txTypeIcon = R.drawable.ic_star,
+                        txTypeTitle = resourceManager.getString(if (transaction.type == DemeterType.STAKE) R.string.demeter_staked_liquidity else R.string.demeter_unstaked_liquidity),
+                    ),
+                    amount1 = numbersFormatter.formatBigDecimal(transaction.amount, AssetHolder.ROUNDING),
+                    amount2 = "%s-%s".format(transaction.baseToken.symbol, transaction.targetToken.symbol),
+                    amountFiat = "",
+                    icon1 = transaction.baseToken.iconUri(),
+                    icon2 = transaction.targetToken.iconUri(),
+                    icon3 = transaction.rewardToken.iconUri(),
+                    isAmountGreen = transaction.type == DemeterType.UNSTAKE,
+                    txType = TxType.DEMETER,
+                )
             }
             is Transaction.Transfer -> {
                 var sender = transaction.peer
@@ -379,9 +427,10 @@ class TxDetailsViewModel @AssistedInject constructor(
                     txType = TxType.REFERRAL_TRANSFER
                 )
             }
-            else -> {
+            is Transaction.AdarIncome -> {
                 emptyTxDetailsState
             }
+            null -> emptyTxDetailsState
         }
     }
 

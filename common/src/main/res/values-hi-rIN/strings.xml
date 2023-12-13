@@ -229,6 +229,9 @@
   <string name="dark_mode">डार्क मोड</string>
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">जमा हुआ</string>
   <string name="details_receive_from_pool">पूल से निकाला गया</string>
   <string name="details_sent_to_pool">पूल में भेजा गया</string>
@@ -452,6 +455,7 @@
   <string name="remove_node_title">क्या आप वास्तव में इस नोड को निकालना चाहते हैं?</string>
   <string name="remove_pool_confirmation_description">आउटपुट अनुमानित है। यदि मूल्य %s %% से अधिक बदलता है तो आपका लेन-देन वापस कर दिया जाएगा।</string>
   <string name="remove_pool_confirmation_title">हटाने की पुष्टि करें</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">पुनरारंभ आवश्यक</string>
   <string name="review">समीक्षा</string>
   <string name="route">मार्ग</string>
@@ -527,6 +531,7 @@
   <string name="sora_card_verification_successful">कार्ड रास्ते में है</string>
   <string name="sora_card_you_have_enough_xor">मुफ़्त कार्ड के लिए आपके पास पर्याप्त XOR है</string>
   <string name="sora_card_you_need_xor" formatted="false">आपको %s XOR (€ %s ) चाहिए</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">त्रुटि</string>
   <string name="status_pending">लंबित</string>
   <string name="status_success">सफल</string>

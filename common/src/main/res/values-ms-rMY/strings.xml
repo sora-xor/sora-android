@@ -228,6 +228,9 @@
   <string name="dark_mode">Mod gelap</string>
   <string name="delete_backup_alert_description">Jika anda memadamkan sandaran Google, anda hanya boleh memulihkan dompet anda dengan sandaran manual frasa laluan anda.</string>
   <string name="delete_backup_alert_title">Adakah anda pasti?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">Dibekukan</string>
   <string name="details_receive_from_pool">Ditarik balik dari Kolam</string>
   <string name="details_sent_to_pool">Dihantar ke kolam</string>
@@ -446,6 +449,7 @@
   <string name="remove_node_title">Adakah anda benar-benar mahu mengeluarkan nod ini?</string>
   <string name="remove_pool_confirmation_description">Output dianggarkan. Jika harga berubah lebih daripada %s %% transaksi anda akan kembali.</string>
   <string name="remove_pool_confirmation_title">Sahkan Alih Keluar</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">Mulakan semula diperlukan</string>
   <string name="review">Semakan</string>
   <string name="route">Laluan</string>
@@ -521,6 +525,7 @@
   <string name="sora_card_verification_successful">Kad sedang dalam perjalanan</string>
   <string name="sora_card_you_have_enough_xor">Anda mempunyai cukup XOR untuk kad PERCUMA</string>
   <string name="sora_card_you_need_xor" formatted="false">Anda memerlukan %s XOR (€%s)</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">Ralat</string>
   <string name="status_pending">Belum selesai</string>
   <string name="status_success">Berjaya</string>

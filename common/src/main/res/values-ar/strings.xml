@@ -233,6 +233,9 @@
   <string name="dark_mode">الوضع المظلم</string>
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">مجمد</string>
   <string name="details_receive_from_pool">تم سحبه من المسبح</string>
   <string name="details_sent_to_pool">أرسل إلى المسبح</string>
@@ -476,6 +479,7 @@
   <string name="remove_node_title">هل تريد حقًا إزالة هذه العقدة؟</string>
   <string name="remove_pool_confirmation_description">الناتج يقدر. إذا تغير السعر أكثر من %s %% ، فستعود معاملتك.</string>
   <string name="remove_pool_confirmation_title">تأكيد الإزالة</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">إعادة التشغيل مطلوبة</string>
   <string name="review">مراجعة</string>
   <string name="route">مسار</string>
@@ -551,6 +555,7 @@
   <string name="sora_card_verification_successful">البطاقة في الطريق</string>
   <string name="sora_card_you_have_enough_xor">لديك ما يكفي من XOR للحصول على بطاقة مجانية</string>
   <string name="sora_card_you_need_xor" formatted="false">أنت بحاجة إلى %s XOR (€ %s )</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">خطأ</string>
   <string name="status_pending">قيد الانتظار</string>
   <string name="status_success">نجاح</string>

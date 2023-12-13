@@ -229,6 +229,9 @@
   <string name="dark_mode">Dark mode</string>
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">Dondurulmuş</string>
   <string name="details_receive_from_pool">Withdrawn from Pool</string>
   <string name="details_sent_to_pool">Sent to pool</string>
@@ -452,6 +455,7 @@
   <string name="remove_node_title">Do you really want to remove this node?</string>
   <string name="remove_pool_confirmation_description">Çıktı tahminidir. Fiyat %s%% değerden fazla değişirse, işleminiz geri döner.</string>
   <string name="remove_pool_confirmation_title">Kaldırmayı Onayla</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">Yeniden başlatma gerekli</string>
   <string name="review">Review</string>
   <string name="route">Route</string>
@@ -527,6 +531,7 @@
   <string name="sora_card_verification_successful">Card is on the way</string>
   <string name="sora_card_you_have_enough_xor">You have enough XOR for a FREE card</string>
   <string name="sora_card_you_need_xor" formatted="false">You need %s XOR (€%s)</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">Hata</string>
   <string name="status_pending">Bekliyor</string>
   <string name="status_success">Başarılı</string>

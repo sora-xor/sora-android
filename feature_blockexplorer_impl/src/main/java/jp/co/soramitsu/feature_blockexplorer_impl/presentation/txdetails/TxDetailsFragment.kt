@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -52,6 +53,7 @@ import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.args.txHash
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsDemeterStake
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsLiquidity
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsReferralOrTransferScreen
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsSwap
@@ -80,7 +82,7 @@ class TxDetailsFragment : SoraBaseFragment<TxDetailsViewModel>() {
             route = theOnlyRoute,
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                val state = viewModel.txDetailsScreenState
+                val state = viewModel.txDetailsScreenState.collectAsStateWithLifecycle().value
                 when (state.txType) {
                     TxType.LIQUIDITY -> {
                         TxDetailsLiquidity(
@@ -93,6 +95,22 @@ class TxDetailsFragment : SoraBaseFragment<TxDetailsViewModel>() {
                             isAmountGreen = state.isAmountGreen,
                             icon1 = state.icon1,
                             icon2 = state.icon2 ?: DEFAULT_ICON_URI,
+                            onCloseClick = ::onBack,
+                            onCopyClick = viewModel::onCopyClicked,
+                        )
+                    }
+                    TxType.DEMETER -> {
+                        TxDetailsDemeterStake(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight(),
+                            state = state.basicTxDetailsState,
+                            amount1 = state.amount1,
+                            amount2 = state.amount2 ?: "",
+                            isAmountGreen = state.isAmountGreen,
+                            icon1 = state.icon1,
+                            icon2 = state.icon2 ?: DEFAULT_ICON_URI,
+                            icon3 = state.icon3 ?: DEFAULT_ICON_URI,
                             onCloseClick = ::onBack,
                             onCopyClick = viewModel::onCopyClicked,
                         )
