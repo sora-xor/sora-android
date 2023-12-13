@@ -222,13 +222,13 @@ private fun PreviewAssetDetailsScreen02() {
                 listOf(
                     EventUiModel.EventTxUiModel.EventTransferInUiModel(
                         "hash",
+                        123123123,
+                        TransactionStatus.COMMITTED,
                         DEFAULT_ICON_URI,
                         "address",
                         "12.12.1970",
-                        123123123,
                         "123.456",
                         "$78.23",
-                        TransactionStatus.COMMITTED,
                     )
                 ),
                 true,

@@ -42,6 +42,7 @@ import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
@@ -76,14 +77,43 @@ class TransactionMappersImpl @Inject constructor(
                 )
             }
 
+            is Transaction.AdarIncome -> {
+                EventUiModel.EventTxUiModel.EventAdarIncomeUiModel(
+                    hash = tx.base.txHash,
+                    timestamp = tx.base.timestamp,
+                    status = tx.base.status,
+                    tokenUri = tx.token.iconUri(),
+                    amountFormatted = tx.token.printBalance(tx.amount, numbersFormatter, AssetHolder.ACTIVITY_LIST_ROUNDING),
+                    peerAddress = tx.peer,
+                )
+            }
+
+            is Transaction.DemeterFarming -> {
+                if (tx.type == DemeterType.REWARD) EventUiModel.EventTxUiModel.EventDemeterRewardUiModel(
+                    hash = tx.base.txHash,
+                    timestamp = tx.base.timestamp,
+                    status = tx.base.status,
+                ) else EventUiModel.EventTxUiModel.EventDemeterStakeUiModel(
+                    hash = tx.base.txHash,
+                    timestamp = tx.base.timestamp,
+                    status = tx.base.status,
+                    stake = tx.type == DemeterType.STAKE,
+                    tokenBase = tx.baseToken.iconUri(),
+                    tokenTarget = tx.targetToken.iconUri(),
+                    tokenReward = tx.rewardToken.iconUri(),
+                    amountFormatted = tx.baseToken.printBalance(tx.amount, numbersFormatter, AssetHolder.ACTIVITY_LIST_ROUNDING),
+                )
+            }
+
             is Transaction.Transfer -> {
                 if (tx.transferType == TransactionTransferType.INCOMING)
                     EventUiModel.EventTxUiModel.EventTransferInUiModel(
                         tx.base.txHash,
+                        tx.base.timestamp,
+                        tx.base.status,
                         tx.token.iconUri(),
                         tx.peer,
                         dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
-                        tx.base.timestamp,
                         "+%s".format(
                             tx.token.printBalance(
                                 tx.amount,
@@ -92,7 +122,6 @@ class TransactionMappersImpl @Inject constructor(
                             )
                         ),
                         "~%s".format(tx.token.printFiat(tx.amount, numbersFormatter)),
-                        tx.base.status,
                     ) else
                     EventUiModel.EventTxUiModel.EventTransferOutUiModel(
                         tx.base.txHash,
