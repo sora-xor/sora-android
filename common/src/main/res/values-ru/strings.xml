@@ -232,6 +232,9 @@
   <string name="dark_mode">Ночной режим</string>
   <string name="delete_backup_alert_description">Если вы удалите свою резервную копию Google, вы сможете восстановить свой кошелек только с резервной копией вашей парольной фразы вручную.</string>
   <string name="delete_backup_alert_title">Вы уверены?</string>
+  <string name="demeter_claimed_reward">Получена награда</string>
+  <string name="demeter_staked_liquidity">Застейкана ликвидность</string>
+  <string name="demeter_unstaked_liquidity">Анстейкана ликвидность</string>
   <string name="details_frozen">Заморожено</string>
   <string name="details_receive_from_pool">Выведено из пула</string>
   <string name="details_sent_to_pool">Sent to pool</string>
@@ -470,6 +473,7 @@
   <string name="remove_node_title">Вы уверены, что хотите удалить ноду?</string>
   <string name="remove_pool_confirmation_description">Результат оценивается. Если цена изменится более чем на %s%% ваша транзакция будет отменена.</string>
   <string name="remove_pool_confirmation_title">Подтвердить Удалить</string>
+  <string name="request_supply_liquidity">Вам необходимо обеспечить ликвидность соответствующей пары пула, чтобы начать делать на нее ставки для получения дополнительных вознаграждений:</string>
   <string name="restart_required">Требуется перезапуск</string>
   <string name="review">Обзор</string>
   <string name="route">Путь</string>
@@ -545,6 +549,7 @@
   <string name="sora_card_verification_successful">Карта в пути</string>
   <string name="sora_card_you_have_enough_xor">У вас достаточно XOR для БЕСПЛАТНОЙ карты</string>
   <string name="sora_card_you_need_xor" formatted="false">You need %s XOR (€%s)</string>
+  <string name="start_staking">Начать стейкинг</string>
   <string name="status_error">Ошибка</string>
   <string name="status_pending">В обработке</string>
   <string name="status_success">Успешно</string>

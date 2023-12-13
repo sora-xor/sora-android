@@ -228,6 +228,9 @@
   <string name="dark_mode">ダークモード</string>
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">凍結</string>
   <string name="details_receive_from_pool">プールから引き上げる</string>
   <string name="details_sent_to_pool">プールに送信されました</string>
@@ -446,6 +449,7 @@
   <string name="remove_node_title">本当にこのノードを削除しますか?</string>
   <string name="remove_pool_confirmation_description">表示は推定です。価格が%s%%以上変化した場合、取引は元に戻ります</string>
   <string name="remove_pool_confirmation_title">解除の確認</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">再起動が必要</string>
   <string name="review">レビュー</string>
   <string name="route">ルート</string>
@@ -521,6 +525,7 @@
   <string name="sora_card_verification_successful">カードは準備中です</string>
   <string name="sora_card_you_have_enough_xor">無料カードに十分なXORをお持ちです</string>
   <string name="sora_card_you_need_xor" formatted="false">%s XOR (€%s) が必要です</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">エラー</string>
   <string name="status_pending">処理中</string>
   <string name="status_success">成功</string>

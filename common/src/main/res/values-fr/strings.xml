@@ -229,6 +229,9 @@
   <string name="dark_mode">Mode sombre</string>
   <string name="delete_backup_alert_description">Si vous supprimez votre sauvegarde Google, vous ne pourrez récupérer l\'accès à votre portefeuille uniquement au moyen d\'une sauvegarde manuelle de votre phrase secrète.</string>
   <string name="delete_backup_alert_title">Êtes-vous sûr(e) ?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">Gelé</string>
   <string name="details_receive_from_pool">Retiré du pool</string>
   <string name="details_sent_to_pool">Envoyé dans le pool</string>
@@ -452,6 +455,7 @@
   <string name="remove_node_title">Voulez-vous vraiment supprimer ce nœud ?</string>
   <string name="remove_pool_confirmation_description">Le résultat est estimé. Si le prix change de plus de %s%%, votre transaction sera annulée.</string>
   <string name="remove_pool_confirmation_title">Confirmer le retrait</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">Redémarrage requis</string>
   <string name="review">Passer en revue</string>
   <string name="route">Route</string>
@@ -527,6 +531,7 @@
   <string name="sora_card_verification_successful">La carte est en route</string>
   <string name="sora_card_you_have_enough_xor">Vous avez assez de XOR pour obtenir la carte gratuitement</string>
   <string name="sora_card_you_need_xor" formatted="false">Vous avez besoin de %s XOR (%s€)</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">Erreur</string>
   <string name="status_pending">En attente</string>
   <string name="status_success">Réussi</string>

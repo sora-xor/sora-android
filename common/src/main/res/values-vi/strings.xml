@@ -228,6 +228,9 @@
   <string name="dark_mode">Chế độ tối</string>
   <string name="delete_backup_alert_description">Nếu bạn xóa bản sao lưu Google của mình, bạn sẽ chỉ có thể khôi phục ví của mình bằng tự sao lưu cụm mật khẩu của mình.</string>
   <string name="delete_backup_alert_title">Bạn có chắc không?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">Đóng băng</string>
   <string name="details_receive_from_pool">Rút tiền từ Pool</string>
   <string name="details_sent_to_pool">Gửi đến pool</string>
@@ -446,6 +449,7 @@
   <string name="remove_node_title">Bạn có thực sự muốn xóa node này không?</string>
   <string name="remove_pool_confirmation_description">Kết quả chỉ là ước lượng. Nếu giá biến động hơn %s%% thì giao dịch của bạn sẽ bị hoàn tác.</string>
   <string name="remove_pool_confirmation_title">Xác nhận Rút</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">Yêu cầu khởi động lại</string>
   <string name="review">Kiểm tra lại</string>
   <string name="route">Route</string>
@@ -521,6 +525,7 @@
   <string name="sora_card_verification_successful">Thẻ đang trên đường đến</string>
   <string name="sora_card_you_have_enough_xor">Bạn có đủ XOR để nhận thẻ MIỄN PHÍ</string>
   <string name="sora_card_you_need_xor" formatted="false">Bạn cần %s XOR (€ %s )</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">Lỗi</string>
   <string name="status_pending">Đang chờ xử lý</string>
   <string name="status_success">Thành công</string>

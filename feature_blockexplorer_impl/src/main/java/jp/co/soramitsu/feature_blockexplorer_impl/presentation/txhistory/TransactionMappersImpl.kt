@@ -93,6 +93,8 @@ class TransactionMappersImpl @Inject constructor(
                     hash = tx.base.txHash,
                     timestamp = tx.base.timestamp,
                     status = tx.base.status,
+                    token = tx.baseToken.iconUri(),
+                    amountFormatted = tx.baseToken.printBalance(tx.amount, numbersFormatter, AssetHolder.ACTIVITY_LIST_ROUNDING),
                 ) else EventUiModel.EventTxUiModel.EventDemeterStakeUiModel(
                     hash = tx.base.txHash,
                     timestamp = tx.base.timestamp,
@@ -101,7 +103,8 @@ class TransactionMappersImpl @Inject constructor(
                     tokenBase = tx.baseToken.iconUri(),
                     tokenTarget = tx.targetToken.iconUri(),
                     tokenReward = tx.rewardToken.iconUri(),
-                    amountFormatted = tx.baseToken.printBalance(tx.amount, numbersFormatter, AssetHolder.ACTIVITY_LIST_ROUNDING),
+                    amountFormatted = numbersFormatter.formatBigDecimal(tx.amount, AssetHolder.ACTIVITY_LIST_ROUNDING),
+                    symbols = "%s-%s".format(tx.baseToken.symbol, tx.targetToken.symbol),
                 )
             }
 

@@ -51,6 +51,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,8 +67,131 @@ import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
-internal fun EventAdarIncome(
-    eventUiModel: EventUiModel.EventTxUiModel.EventAdarIncomeUiModel,
+internal fun EventDemeterStake(
+    eventUiModel: EventUiModel.EventTxUiModel.EventDemeterStakeUiModel,
+    modifier: Modifier,
+) {
+    Row(
+        modifier = modifier.padding(vertical = Dimens.x1),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ConstraintLayout(
+            modifier = Modifier.wrapContentSize()
+        ) {
+            val (token1, token2, token3, typeIcon) = createRefs()
+            TokenIcon(
+                uri = eventUiModel.tokenBase, size = 28.dp,
+                modifier = Modifier
+                    .size(size = 28.dp)
+                    .constrainAs(token1) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                    }
+            )
+            TokenIcon(
+                uri = eventUiModel.tokenTarget, size = 28.dp,
+                modifier = Modifier
+                    .size(size = 28.dp)
+                    .constrainAs(token2) {
+                        top.linkTo(token1.top, margin = 12.dp)
+                        start.linkTo(token1.start, margin = 12.dp)
+                    }
+            )
+            TokenIcon(
+                uri = eventUiModel.tokenReward, size = 16.dp,
+                modifier = Modifier
+                    .size(size = 16.dp)
+                    .constrainAs(token3) {
+                        bottom.linkTo(token2.bottom)
+                        end.linkTo(token2.end)
+                    }
+            )
+            Icon(
+                modifier = Modifier
+                    .size(Dimens.x2)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.customColors.bgSurface)
+                    .padding(2.dp)
+                    .constrainAs(typeIcon) {
+                        bottom.linkTo(token2.bottom)
+                        start.linkTo(token2.start, margin = (-16).dp)
+                    },
+                painter = painterResource(id = if (eventUiModel.stake) R.drawable.ic_send_wrapped else R.drawable.ic_receive_wrapped),
+                contentDescription = null,
+                tint = Color.Unspecified,
+            )
+        }
+        Column(
+            modifier = Modifier
+                .wrapContentSize()
+                .padding(horizontal = Dimens.x1)
+        ) {
+            Text(
+                modifier = Modifier.wrapContentSize(),
+                text = stringResource(id = if (eventUiModel.stake) R.string.demeter_staked_liquidity else R.string.demeter_unstaked_liquidity),
+                style = MaterialTheme.customTypography.textM,
+                color = MaterialTheme.customColors.fgPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                modifier = Modifier.wrapContentSize(),
+                text = stringResource(id = R.string.explore_demeter_title),
+                style = MaterialTheme.customTypography.textXSBold,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.customColors.fgSecondary,
+                maxLines = 1,
+            )
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            horizontalAlignment = Alignment.End,
+        ) {
+            Row(
+                modifier = Modifier.wrapContentSize(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier.wrapContentSize(),
+                    text = "%s %s".format(eventUiModel.amountFormatted, eventUiModel.symbols),
+                    textAlign = TextAlign.End,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.customTypography.textM,
+                    color = if (eventUiModel.stake) MaterialTheme.customColors.fgPrimary else MaterialTheme.customColors.statusSuccess,
+                    maxLines = 1,
+                )
+
+                if (eventUiModel.status != TransactionStatus.COMMITTED) {
+                    val statusIcon = if (eventUiModel.status == TransactionStatus.REJECTED) {
+                        R.drawable.ic_error_16
+                    } else {
+                        R.drawable.ic_pending_16
+                    }
+
+                    Icon(
+                        modifier = Modifier
+                            .padding(start = Dimens.x1_2)
+                            .size(Dimens.x2),
+                        painter = painterResource(id = statusIcon),
+                        contentDescription = null,
+                        tint = Color.Unspecified
+                    )
+                }
+            }
+            Text(
+                modifier = Modifier.wrapContentSize(),
+                text = "",
+                style = MaterialTheme.customTypography.textXSBold,
+                color = MaterialTheme.customColors.fgSecondary,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun EventDemeterReward(
+    eventUiModel: EventUiModel.EventTxUiModel.EventDemeterRewardUiModel,
     modifier: Modifier,
 ) {
     Row(
@@ -78,7 +203,7 @@ internal fun EventAdarIncome(
         ) {
             val (token1, typeIcon) = createRefs()
             TokenIcon(
-                uri = eventUiModel.tokenUri, size = Dimens.x4,
+                uri = eventUiModel.token, size = Dimens.x4,
                 modifier = Modifier
                     .constrainAs(token1) {
                         top.linkTo(parent.top)
@@ -95,7 +220,7 @@ internal fun EventAdarIncome(
                         bottom.linkTo(token1.bottom, (-2).dp)
                         start.linkTo(token1.start, (-2).dp)
                     },
-                painter = painterResource(id = R.drawable.ic_receive_wrapped),
+                painter = painterResource(id = R.drawable.ic_star),
                 contentDescription = null,
                 tint = Color.Unspecified
             )
@@ -112,7 +237,7 @@ internal fun EventAdarIncome(
             ) {
                 Text(
                     modifier = Modifier.wrapContentSize(),
-                    text = "Adar transfer",
+                    text = stringResource(id = R.string.demeter_claimed_reward),
                     style = MaterialTheme.customTypography.textM,
                     color = MaterialTheme.customColors.fgPrimary,
                     maxLines = 1,
@@ -156,7 +281,7 @@ internal fun EventAdarIncome(
                 Text(
                     modifier = Modifier
                         .wrapContentSize(),
-                    text = eventUiModel.peerAddress,
+                    text = stringResource(id = R.string.explore_demeter_title),
                     style = MaterialTheme.customTypography.textXSBold,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.customColors.fgSecondary,
@@ -177,19 +302,56 @@ internal fun EventAdarIncome(
 @Preview(showBackground = true)
 @Composable
 private fun PreviewEventTransferReceived() {
-    EventAdarIncome(
-        eventUiModel = eventPreview,
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
-    )
+    Column {
+        EventDemeterReward(
+            eventUiModel = eventPreview,
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+        )
+        EventDemeterStake(
+            eventUiModel = eventStake,
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+        )
+        EventDemeterStake(
+            eventUiModel = eventUnstake,
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+        )
+    }
 }
 
-private val eventPreview = EventUiModel.EventTxUiModel.EventAdarIncomeUiModel(
+private val eventPreview = EventUiModel.EventTxUiModel.EventDemeterRewardUiModel(
     hash = "hash",
-    tokenUri = DEFAULT_ICON_URI,
-    peerAddress = "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm",
+    token = DEFAULT_ICON_URI,
     timestamp = 1231231312,
-    amountFormatted = "+ 12313132.12145 XOR",
+    amountFormatted = "12313132.12145 XOR",
     status = TransactionStatus.COMMITTED,
+)
+
+private val eventStake = EventUiModel.EventTxUiModel.EventDemeterStakeUiModel(
+    hash = "hash",
+    timestamp = 123123,
+    status = TransactionStatus.COMMITTED,
+    tokenBase = DEFAULT_ICON_URI,
+    tokenTarget = DEFAULT_ICON_URI,
+    tokenReward = DEFAULT_ICON_URI,
+    stake = true,
+    amountFormatted = "89.12",
+    symbols = "XSTUSD-PSWAP",
+)
+
+private val eventUnstake = EventUiModel.EventTxUiModel.EventDemeterStakeUiModel(
+    hash = "hash",
+    timestamp = 123123,
+    status = TransactionStatus.COMMITTED,
+    tokenBase = DEFAULT_ICON_URI,
+    tokenTarget = DEFAULT_ICON_URI,
+    tokenReward = DEFAULT_ICON_URI,
+    stake = false,
+    amountFormatted = "555.123",
+    symbols = "XSTUSD-PSWAP",
 )
