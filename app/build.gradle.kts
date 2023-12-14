@@ -1,4 +1,3 @@
-import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
 plugins {
@@ -128,10 +127,12 @@ android {
         }
     }
 
-    applicationVariants.forEach { variant ->
-        variant.outputs.forEach { output ->
-            (output as BaseVariantOutputImpl).outputFileName = "Sora_" + variant.versionName + "_" + variant.flavorName + ".apk"
-        }
+    applicationVariants.all {
+        val variant = this
+        this.outputs.map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
+            .forEach {
+                it.outputFileName = "SORA_Wallet_${variant.versionName}_${variant.versionCode}_${variant.flavorName}_${variant.buildType.name}.apk"
+            }
     }
 
     configurations {

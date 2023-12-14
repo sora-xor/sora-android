@@ -84,6 +84,8 @@ class FullPoolListViewModel @Inject constructor(
                 navIcon = R.drawable.ic_cross_24,
                 visibility = true,
                 searchEnabled = true,
+                searchValue = "",
+                searchPlaceholder = jp.co.soramitsu.common.R.string.common_search_pools,
                 actionLabel = jp.co.soramitsu.common.R.string.common_edit,
             ),
         )
