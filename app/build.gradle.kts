@@ -13,11 +13,15 @@ plugins {
     alias(libs.plugins.firebaseAppDistributionPlugin)
     id("kotlin-parcelize")
     id("com.github.triplet.play") version "3.8.6"
+    id("org.jetbrains.kotlinx.kover")
 }
 
 kotlin {
     jvmToolchain(11)
 }
+
+// soralution 124 3.8.0.2 2023.12.02
+// sora dae 108 3.8.0.0 2023.12.04
 
 android {
     namespace = "jp.co.soramitsu.sora"
@@ -26,8 +30,8 @@ android {
     defaultConfig {
         applicationId = "jp.co.soramitsu.sora"
         minSdk = 24
-        versionCode = 777
-        versionName = "7.7.7"
+        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 124
+        versionName = "3.8.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
         // resConfigs "en", "ru", "es", "fr", "de", "nb", "in", "tr", "ar"
@@ -145,7 +149,7 @@ play {
     serviceAccountCredentials = file(System.getenv("CI_PLAY_KEY") ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.8.0.2 - Demeter Farming"
+    releaseName = "3.8.1.0 - Demeter Farming"
 }
 
 dependencies {
@@ -214,8 +218,65 @@ dependencies {
 
     // Tests
     testImplementation(project(":test_shared"))
+
+    kover(project(":common"))
 }
 
 kapt {
     correctErrorTypes = true
+}
+
+// kover {
+//    useJacoco()
+// }
+
+// tasks.getByName("") {
+//    extensions.configure(kotlinx.kover.api.KoverTaskExtension::class) {
+//
+//    }
+// }
+
+koverReport {
+    androidReports("developDebug") {
+        filters {
+            excludes {
+                classes(
+                    "*.BuildConfig",
+                    "**.models.*",
+                    "**.core.network.*",
+                    "**.di.*",
+                    "**.shared_utils.wsrpc.*",
+                    "*NetworkDataSource",
+                    "*NetworkDataSource\$*",
+                    "*ChainConnection",
+                    "*ChainConnection\$*",
+                    "**.runtime.definitions.TypeDefinitionsTreeV2",
+                    "**.runtime.definitions.TypeDefinitionsTreeV2\$*",
+
+                    // TODO: Coverage these modules by tests
+                    "**.core.rpc.*",
+                    "**.core.utils.*",
+                    "**.core.extrinsic.*",
+                )
+            }
+        }
+
+        xml {
+            onCheck = false
+        }
+
+        html {
+            onCheck = true
+        }
+
+        verify {
+            onCheck = true
+
+            rule {
+                isEnabled = true
+
+                minBound(85)
+            }
+        }
+    }
 }

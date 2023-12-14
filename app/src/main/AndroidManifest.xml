@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -14,6 +18,7 @@
     <application
         tools:replace="android:allowBackup"
         android:allowBackup="false"
+        android:fullBackupContent="false"
         android:icon="${appIcon}"
         android:roundIcon="${roundedIcon}"
         android:label="@string/app_name"
@@ -32,20 +37,6 @@
 
                 <category android:name="android.intent.category.LAUNCHER"/>
                 <category android:name="android.intent.category.DEFAULT"/>
-
-            </intent-filter>
-
-            <intent-filter
-                android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW"/>
-
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-
-                <data
-                    android:host="polkaswap.io"
-                    android:pathPrefix="${pathPrefix}"
-                    android:scheme="https"/>
 
             </intent-filter>
 

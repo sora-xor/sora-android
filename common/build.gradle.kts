@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.kapt)
     id("kotlin-parcelize")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 fun secret(name: String): String {

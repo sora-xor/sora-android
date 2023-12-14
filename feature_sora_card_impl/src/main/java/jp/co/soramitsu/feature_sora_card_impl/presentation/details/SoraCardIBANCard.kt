@@ -124,7 +124,7 @@ fun SoraCardIBANCard(
             } else {
                 Text(
                     modifier = Modifier.fillMaxWidth().padding(all = Dimens.x1),
-                    text = underlineSubstring(stringResource(id = jp.co.soramitsu.oauth.R.string.iban_pending_description), ClientsFacade.techSupport),
+                    text = underlineSubstring(stringResource(id = jp.co.soramitsu.oauth.R.string.iban_pending_description, ClientsFacade.TECH_SUPPORT), ClientsFacade.TECH_SUPPORT),
                     style = MaterialTheme.customTypography.textS,
                     color = MaterialTheme.customColors.fgSecondary,
                 )
