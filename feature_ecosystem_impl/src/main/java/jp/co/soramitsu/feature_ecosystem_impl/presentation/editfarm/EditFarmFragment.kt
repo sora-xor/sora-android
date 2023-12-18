@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm
 
 import android.os.Bundle
 import android.view.View
@@ -54,7 +54,7 @@ import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 
 @AndroidEntryPoint
-class FarmDetailsFragment : SoraBaseFragment<FarmDetailsViewModel>() {
+class EditFarmFragment : SoraBaseFragment<EditFarmViewModel>() {
 
     companion object {
         private const val ARG_TOKEN_1 = "arg_token_1"
@@ -65,9 +65,9 @@ class FarmDetailsFragment : SoraBaseFragment<FarmDetailsViewModel>() {
     }
 
     @Inject
-    lateinit var vmf: FarmDetailsViewModel.AssistedFarmDetailsViewModelFactory
+    lateinit var vmf: EditFarmViewModel.AssistedFarmDetailsViewModelFactory
 
-    override val viewModel: FarmDetailsViewModel by viewModels {
+    override val viewModel: EditFarmViewModel by viewModels {
         CustomViewModelFactory {
             vmf.create(
                 requireArguments().getString(ARG_TOKEN_1).orEmpty(),
@@ -94,10 +94,10 @@ class FarmDetailsFragment : SoraBaseFragment<FarmDetailsViewModel>() {
             route = theOnlyRoute,
         ) {
             val state = viewModel.state.collectAsStateWithLifecycle().value
-            FarmDetailsScreen(
+            EditFarmScreen(
                 state,
-                viewModel::onSupplyStacking,
-                viewModel::onSupplyLiquidity
+                viewModel::onSliderChange,
+                viewModel::onConfirm
             )
         }
     }

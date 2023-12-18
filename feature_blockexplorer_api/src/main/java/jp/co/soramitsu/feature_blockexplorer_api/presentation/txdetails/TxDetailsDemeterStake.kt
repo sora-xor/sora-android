@@ -89,14 +89,14 @@ fun TxDetailsDemeterStake(
                     uri = icon2,
                     size = 48.dp,
                 )
-                TokenIcon(
-                    modifier = Modifier.constrainAs(token3) {
-                        bottom.linkTo(token1.bottom)
-                        end.linkTo(token1.end)
-                    },
-                    uri = icon3,
-                    size = 24.dp,
-                )
+//                TokenIcon(
+//                    modifier = Modifier.constrainAs(token3) {
+//                        bottom.linkTo(token1.bottom)
+//                        end.linkTo(token1.end)
+//                    },
+//                    uri = icon3,
+//                    size = 24.dp,
+//                )
             }
         },
         amountContent = {

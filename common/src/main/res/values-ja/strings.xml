@@ -62,6 +62,7 @@
   <string name="claim_error_title">移行に失敗しました</string>
   <string name="claim_error_title_v1">アセットが移行できませんでした。後でもう一度やり直してください</string>
   <string name="claim_notification_text">移行中...</string>
+  <string name="claim_rewards">Claim rewards</string>
   <string name="claim_subtitle">SORAから資金を移行して使用できるようにするには、あなたの同意が必要です。 SORAは現在Substrateネットワーク上で動作しています。移行を確認してください</string>
   <string name="claim_subtitle_confirmed">ご確認ありがとうございました！</string>
   <string name="claim_subtitle_confirmed_v2">アセット移行中</string>
@@ -83,6 +84,7 @@
   <string name="common_chinese">中国語</string>
   <string name="common_chinesetaiwan">中国語（台湾）</string>
   <string name="common_choose_asset">アセットを選択</string>
+  <string name="common_claim">Claim</string>
   <string name="common_close">閉じる</string>
   <string name="common_confirm">確認</string>
   <string name="common_connected">接続されました</string>
@@ -160,6 +162,7 @@
   <string name="common_khmer">クメール語</string>
   <string name="common_korean">韓国語</string>
   <string name="common_malay">マレー語</string>
+  <string name="common_max">max</string>
   <string name="common_min">分</string>
   <string name="common_more">もっと</string>
   <string name="common_norwegian">ノルウェー語</string>
@@ -229,6 +232,7 @@
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
   <string name="demeter_staked_liquidity">Staked liquidity</string>
   <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">凍結</string>
@@ -236,6 +240,7 @@
   <string name="details_sent_to_pool">プールに送信されました</string>
   <string name="discover_coming_soon">SORAの開発者は現在、Polkaswapでアクティブになっているプールの全リストを表示する機能の開発に取り組んでいます。\n\n当面の間、プールの作成・追加を希望される方は、以下のボタンからお願いします。</string>
   <string name="discovery_polkaswap_pools">Polkaswapのプール</string>
+  <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">最近の受信者はありません。\n送信したアドレスがここに表示されます。</string>
   <string name="empty_recent_recipients_2">受信者はここに表示されます</string>
@@ -342,6 +347,7 @@
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">PolkaswapはSORAコミュニティによって管理されています。Polkaswapの使用前に、%%Polkaswapのよくある質問 FAQ%%とPolkaswapの仕組みに関する詳細な説明を含む文書、%%Polkaswap覚書と利用規約%%、および%%個人情報保護方針%%を確認してください。\n\nこれらの文書は、安全に使い勝手良く利用して頂くために欠かせないものです。Polkaswapを使用することにより、これらの文書を読んで理解したことを了承したことになります。</string>
@@ -475,6 +481,7 @@
   <string name="select_node_switch_succeed">ノードの切り替えに成功</string>
   <string name="select_node_unable_join_node_message">後でもう一度やり直してください</string>
   <string name="select_node_unable_join_node_title">ノードに参加できません</string>
+  <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">受信者アドレスの選択</string>
   <string name="settings_accounts">アカウント</string>
   <string name="settings_accounts_subtitle">アカウントの管理、パスフレーズのバックアップ</string>

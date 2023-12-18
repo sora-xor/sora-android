@@ -34,6 +34,7 @@ package jp.co.soramitsu.demeter.data
 
 import java.math.BigDecimal
 import java.math.BigInteger
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
@@ -44,12 +45,17 @@ import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.mapToToken
+import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
+import jp.co.soramitsu.sora.substrate.substrate.depositDemeter
+import jp.co.soramitsu.sora.substrate.substrate.withdrawDemeter
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
@@ -61,6 +67,43 @@ interface DemeterFarmingRepository {
     suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>?
     suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
     suspend fun getStakedFarmedAmountOfAsset(address: String, tokenId: String): BigDecimal
+    suspend fun depositDemeterFarm(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseToken: String,
+        targetId: String,
+        rewardAssetId: String,
+        isFarm: Boolean,
+        amount: BigDecimal
+    ): ExtrinsicSubmitStatus
+
+    suspend fun calcDepositFarmFee(
+        address: String,
+        baseToken: String,
+        targetId: String,
+        rewardAssetId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int,
+    ): BigDecimal?
+
+    suspend fun withdrawDemeterFarm(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseToken: String,
+        targetId: String,
+        rewardAssetId: String,
+        isFarm: Boolean,
+        amount: BigDecimal
+    ): ExtrinsicSubmitStatus
+
+    suspend fun calcWithdrawFarmFee(
+        address: String,
+        baseToken: String,
+        targetId: String,
+        rewardAssetId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int,
+    ): BigDecimal?
 }
 
 private class DemeterStorage(
@@ -99,6 +142,7 @@ private class DemeterRewardTokenStorage(
 
 internal class DemeterFarmingRepositoryImpl(
     private val substrateCalls: SubstrateCalls,
+    private val extrinsicManager: ExtrinsicManager,
     private val runtimeManager: RuntimeManager,
     private val soraConfigManager: SoraConfigManager,
     private val assetLocalToAssetMapper: AssetLocalToAssetMapper,
@@ -125,6 +169,100 @@ internal class DemeterFarmingRepositoryImpl(
             }
             ?.sumOf { it.amount }
         return amount?.let { mapBalance(it, token.precision) } ?: BigDecimal.ZERO
+    }
+
+    override suspend fun depositDemeterFarm(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseToken: String,
+        targetId: String,
+        rewardAssetId: String,
+        isFarm: Boolean,
+        amount: BigDecimal
+    ): ExtrinsicSubmitStatus {
+        return extrinsicManager.submitAndWatchExtrinsic(
+            from = address,
+            keypair = keypair,
+        ) {
+            depositDemeter(
+                baseToken,
+                targetId,
+                rewardAssetId,
+                isFarm,
+                mapBalance(amount, OptionsProvider.defaultScale)
+            )
+        }
+    }
+
+    override suspend fun calcDepositFarmFee(
+        address: String,
+        baseToken: String,
+        targetId: String,
+        rewardAssetId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int,
+    ): BigDecimal? {
+        val fee = extrinsicManager.calcFee(
+            from = address
+        ) {
+            depositDemeter(
+                baseToken,
+                targetId,
+                rewardAssetId,
+                isFarm,
+                mapBalance(BigDecimal.ONE, OptionsProvider.defaultScale)
+            )
+        }
+        return fee?.let {
+            mapBalance(it, feeTokenPrecision)
+        }
+    }
+
+    override suspend fun withdrawDemeterFarm(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseToken: String,
+        targetId: String,
+        rewardAssetId: String,
+        isFarm: Boolean,
+        amount: BigDecimal
+    ): ExtrinsicSubmitStatus {
+        return extrinsicManager.submitAndWatchExtrinsic(
+            from = address,
+            keypair = keypair,
+        ) {
+            withdrawDemeter(
+                baseToken,
+                targetId,
+                rewardAssetId,
+                isFarm,
+                mapBalance(amount, OptionsProvider.defaultScale)
+            )
+        }
+    }
+
+    override suspend fun calcWithdrawFarmFee(
+        address: String,
+        baseToken: String,
+        targetId: String,
+        rewardAssetId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int,
+    ): BigDecimal? {
+        val fee = extrinsicManager.calcFee(
+            from = address
+        ) {
+            withdrawDemeter(
+                baseToken,
+                targetId,
+                rewardAssetId,
+                isFarm,
+                mapBalance(BigDecimal.ONE, OptionsProvider.defaultScale)
+            )
+        }
+        return fee?.let {
+            mapBalance(it, feeTokenPrecision)
+        }
     }
 
     override suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>? {

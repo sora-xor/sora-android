@@ -72,6 +72,7 @@ dependencies {
     implementation(project(":common_wallet"))
     implementation(project(":feature_assets_api"))
     implementation(project(":feature_polkaswap_api"))
+    implementation(project(":feature_wallet_api"))
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":network"))

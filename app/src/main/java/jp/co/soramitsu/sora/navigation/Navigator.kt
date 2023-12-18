@@ -56,6 +56,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.EditFarmFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.FarmDetailsFragment
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -155,6 +156,10 @@ class Navigator :
 
     override fun showFarmDetails(ids: StringTriple) {
         navController?.navigate(R.id.farmDetailsFragment, FarmDetailsFragment.createBundle(ids))
+    }
+
+    override fun showEditFarm(ids: StringTriple) {
+        navController?.navigate(R.id.editFarmFragment, EditFarmFragment.createBundle(ids))
     }
 
     override fun showPoolSettings() {

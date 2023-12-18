@@ -30,26 +30,19 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_api.launcher
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.model
 
-import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
 
-interface PolkaswapRouter {
-
-    fun showPoolDetails(ids: StringPair)
-
-    fun showFarmDetails(ids: StringTriple)
-
-    fun showEditFarm(ids: StringTriple)
-
-    fun showPoolSettings()
-
-    fun showFullPoolsSettings()
-
-    fun showAddLiquidity(tokenFrom: String, tokenTo: String? = null)
-
-    fun showRemoveLiquidity(ids: StringPair)
-
-    fun showSwap(tokenFromId: String? = null, tokenToId: String? = null, isLaunchedFromSoraCard: Boolean = false)
-}
+data class EditFarmScreenState(
+    val farmIds: StringTriple,
+    val percentageText: String,
+    val sliderProgressState: Float,
+    val poolShareStaked: String,
+    val poolShareStakedWillBe: String,
+    val fee: String,
+    val networkFee: String,
+    val isButtonLoading: Boolean = false,
+    val isButtonActive: Boolean = false,
+    val isCardLoading: Boolean = true
+)
