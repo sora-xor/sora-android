@@ -185,7 +185,6 @@ class EditFarmViewModel @AssistedInject constructor(
                         )
                     }
 
-
                     if (txHash.isNotEmpty()) {
                         assetsRouter.showTxDetails(txHash, true)
                     } else {
