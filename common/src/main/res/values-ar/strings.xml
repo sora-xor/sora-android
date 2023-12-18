@@ -62,6 +62,7 @@
   <string name="claim_error_title">فشل الانتقال</string>
   <string name="claim_error_title_v1">فشلت عملية نقل العملات. يرجى المحاولة لاحقاً</string>
   <string name="claim_notification_text">جاري إتمام الانتقال...</string>
+  <string name="claim_rewards">Claim rewards</string>
   <string name="claim_subtitle">نحتاج إلى موافقتك على تحويل أموالك من سورا حتى تتمكن من استخدامها. ستعمل سورا الآن على شبكة Substrate. يرجى تأكيد الانتقال.</string>
   <string name="claim_subtitle_confirmed">شكراً لكم على التأكيد!</string>
   <string name="claim_subtitle_confirmed_v2">نقل الأصول قيد التنفيذ</string>
@@ -83,6 +84,7 @@
   <string name="common_chinese">الصينية</string>
   <string name="common_chinesetaiwan">الصينية (تايوان)</string>
   <string name="common_choose_asset">حدد العملة</string>
+  <string name="common_claim">Claim</string>
   <string name="common_close">اغلاق</string>
   <string name="common_confirm">تأكيد</string>
   <string name="common_connected">متصل</string>
@@ -165,6 +167,7 @@
   <string name="common_khmer">الخمير</string>
   <string name="common_korean">الكورية</string>
   <string name="common_malay">لغة الملايو</string>
+  <string name="common_max">max</string>
   <string name="common_min">دقيقة</string>
   <string name="common_more">أكثر</string>
   <string name="common_norwegian">النرويجية</string>
@@ -234,6 +237,7 @@
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
   <string name="demeter_staked_liquidity">Staked liquidity</string>
   <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">مجمد</string>
@@ -241,6 +245,7 @@
   <string name="details_sent_to_pool">أرسل إلى المسبح</string>
   <string name="discover_coming_soon">يعمل مطورو SORA حاليا على ميزة ستعرض قائمة كاملة بالتجمعات النشطة على Polkaswap.\n\nفي الوقت الحالي ، إذا كنت ترغب في إنشاء / إضافة إلى تجمع ، فيرجى استخدام الزر أدناه.</string>
   <string name="discovery_polkaswap_pools">حوض Polkaswap</string>
+  <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">لا يوجد متلقون حديثون.\n سيتم عرض العناوين المرسلة هنا.</string>
   <string name="empty_recent_recipients_2">سيظهر المستلمون هنا</string>
@@ -347,6 +352,7 @@
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">يتم تسيير بولكاسواب من قبل مجتمع سورا. قبل الاستمرار في استخدام بولكاسواب ، يرجى مراجعة %% وثيقة الاسئلة الشائعة حول بولكاسواب %% والوثائق التي تتضمن شرحًا تفصيليًا حول آلية عملها، بالإضافة إلى %% مذكرة شروط استخدام بولكاسواب %% ، و %% احكام الخصوصية %% . \n\n هذه المستندات ضرورية لتجربة مستخدم آمنة وإيجابية. باستخدامك بولكاسواب، فإنك تقر بأنك قد قرأت هذه المستندات وفهمتها.</string>
@@ -505,6 +511,7 @@
   <string name="select_node_switch_succeed">تم تبديل العقدة بنجاح</string>
   <string name="select_node_unable_join_node_message">الرجاء معاودة المحاولة في وقت لاحق</string>
   <string name="select_node_unable_join_node_title">تعذر الانضمام إلى العقدة</string>
+  <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">حدد المستلم</string>
   <string name="settings_accounts">الحسابات</string>
   <string name="settings_accounts_subtitle">إدارة الحسابات ، نسخة احتياطية من عبارة المرور</string>

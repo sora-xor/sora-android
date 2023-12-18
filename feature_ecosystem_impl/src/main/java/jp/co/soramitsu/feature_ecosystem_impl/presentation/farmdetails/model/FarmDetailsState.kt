@@ -30,9 +30,13 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.model
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.model
+
+import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common.util.StringTriple
 
 data class FarmDetailsState(
+    val farmIds: StringTriple,
     val title: String,
     val tvlSubtitle: String,
     val apr: String,
@@ -45,4 +49,8 @@ data class FarmDetailsState(
     val poolShareStacked: Float? = null,
     val userRewardsAmount: String? = null,
     val loading: Boolean = false,
+    val hasSupplyInPool: Boolean = false,
+    val poolIds: StringPair? = null,
+    val poolTitle: String? = null,
+    val apyText: String? = null,
 )

@@ -62,6 +62,7 @@
   <string name="claim_error_title">Transition échouée</string>
   <string name="claim_error_title_v1">La transition des actifs a échoué. Veuillez réessayer plus tard.</string>
   <string name="claim_notification_text">Transition en cours...</string>
+  <string name="claim_rewards">Claim rewards</string>
   <string name="claim_subtitle">Nous avons besoin de votre consentement pour effectuer une transition de vos fonds de SORA afin que vous puissiez les utiliser. SORA fonctionnera désormais sur le réseau Substrate. Veuillez confirmer la transition.</string>
   <string name="claim_subtitle_confirmed">Merci pour la confirmation !</string>
   <string name="claim_subtitle_confirmed_v2">Transition des actifs en cours</string>
@@ -83,6 +84,7 @@
   <string name="common_chinese">Chinois</string>
   <string name="common_chinesetaiwan">Сhinois (Taiwan)</string>
   <string name="common_choose_asset">Sélectionner un actif</string>
+  <string name="common_claim">Claim</string>
   <string name="common_close">Fermer</string>
   <string name="common_confirm">Confirmer</string>
   <string name="common_connected">Connecté</string>
@@ -161,6 +163,7 @@
   <string name="common_khmer">Khmer</string>
   <string name="common_korean">Coréen</string>
   <string name="common_malay">Malaisien</string>
+  <string name="common_max">max</string>
   <string name="common_min">min</string>
   <string name="common_more">Plus</string>
   <string name="common_norwegian">Norvégien</string>
@@ -230,6 +233,7 @@
   <string name="delete_backup_alert_description">Si vous supprimez votre sauvegarde Google, vous ne pourrez récupérer l\'accès à votre portefeuille uniquement au moyen d\'une sauvegarde manuelle de votre phrase secrète.</string>
   <string name="delete_backup_alert_title">Êtes-vous sûr(e) ?</string>
   <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
   <string name="demeter_staked_liquidity">Staked liquidity</string>
   <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">Gelé</string>
@@ -237,6 +241,7 @@
   <string name="details_sent_to_pool">Envoyé dans le pool</string>
   <string name="discover_coming_soon">Les développeurs de SORA travaillent actuellement sur une fonctionnalité permettant d\'afficher la liste de tous les pools actives sur Polkaswap.\n\nPour le moment, si vous souhaitez créer ou ajouter des liquidités à un pool, veuillez utiliser le bouton ci-dessous.</string>
   <string name="discovery_polkaswap_pools">Pools de Polkaswap</string>
+  <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Modifier la vue</string>
   <string name="empty_recent_recipients">Aucun destinataire récent.\nLes adresses utilisées seront affichées ici.</string>
   <string name="empty_recent_recipients_2">Les destinataires apparaîtront ici</string>
@@ -343,6 +348,7 @@
   <string name="polkaswap_farming_demeter_power">Alimenté par Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Une partie de votre pool est stakée. Pour y accéder vous devez d\'abord la déstaker</string>
   <string name="polkaswap_farming_pool_share">Votre part du pool stakée</string>
+  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
   <string name="polkaswap_farming_staked_for">Staké pour %s</string>
   <string name="polkaswap_farming_unstake_to_remove">Pour retirer des liquidités vous devez d\'abord les déstaker</string>
   <string name="polkaswap_info_text_1">Polkaswap est maintenu par la communauté SORA. Avant d\'utiliser la fonctionnalité Polkaswap, veuillez consulter la %%*FAQ Polkaswap%% et la documentation, qui contient une explication détaillée du fonctionnement de Polkaswap, ainsi que %%le mémorandum, les conditions d\'utilisation de Polkaswap%% et %%la politique de confidentialité%%. Ces documents sont cruciaux pour une expérience utilisateur sécurisée et positive. En utilisant Polkaswap, vous reconnaissez avoir lu et compris ces documents.</string>
@@ -481,6 +487,7 @@
   <string name="select_node_switch_succeed">Nœud changé avec succès</string>
   <string name="select_node_unable_join_node_message">Veuillez réessayer plus tard</string>
   <string name="select_node_unable_join_node_title">Impossible de rejoindre le nœud</string>
+  <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Sélectionnez le destinataire</string>
   <string name="settings_accounts">Comptes</string>
   <string name="settings_accounts_subtitle">Gérer les comptes, phrase de récupération</string>

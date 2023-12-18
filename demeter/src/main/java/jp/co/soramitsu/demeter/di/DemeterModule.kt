@@ -43,11 +43,15 @@ import jp.co.soramitsu.demeter.data.DemeterFarmingRepository
 import jp.co.soramitsu.demeter.data.DemeterFarmingRepositoryImpl
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractorImpl
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 
 @Module
@@ -58,6 +62,7 @@ object DemeterFarmingModule {
     @Singleton
     fun provideDemeterFarmingRepository(
         substrateCalls: SubstrateCalls,
+        extrinsicManager: ExtrinsicManager,
         runtimeManager: RuntimeManager,
         soraConfigManager: SoraConfigManager,
         mapper: AssetLocalToAssetMapper,
@@ -67,6 +72,7 @@ object DemeterFarmingModule {
     ): DemeterFarmingRepository =
         DemeterFarmingRepositoryImpl(
             substrateCalls = substrateCalls,
+            extrinsicManager = extrinsicManager,
             runtimeManager = runtimeManager,
             soraConfigManager = soraConfigManager,
             assetLocalToAssetMapper = mapper,
@@ -78,10 +84,18 @@ object DemeterFarmingModule {
     @Provides
     fun provideDemeterFarmingInteractor(
         demeterFarmingRepository: DemeterFarmingRepository,
+        credentialRepository: CredentialsRepository,
+        transactionHistoryRepository: TransactionHistoryRepository,
+        transactionBuilder: TransactionBuilder,
         userRepository: UserRepository,
+        assetsRepository: AssetsRepository,
     ): DemeterFarmingInteractor =
         DemeterFarmingInteractorImpl(
             demeterFarmingRepository = demeterFarmingRepository,
+            credentialsRepository = credentialRepository,
             userRepository = userRepository,
+            transactionHistoryRepository = transactionHistoryRepository,
+            transactionBuilder = transactionBuilder,
+            assetRepository = assetsRepository
         )
 }

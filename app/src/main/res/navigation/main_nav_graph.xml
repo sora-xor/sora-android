@@ -107,6 +107,11 @@
         android:name="jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.FarmDetailsFragment"
         android:label="FarmDetailsFragment" />
 
+    <fragment
+        android:id="@+id/editFarmFragment"
+        android:name="jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.EditFarmFragment"
+        android:label="EditFarmFragment" />
+
     <include app:graph="@navigation/activities_nav_graph" />
     <include app:graph="@navigation/profile_nav_graph" />
     <include app:graph="@navigation/wallet_nav_graph" />

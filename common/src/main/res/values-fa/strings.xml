@@ -62,6 +62,7 @@
   <string name="claim_error_title">انتقال ناموفق بود</string>
   <string name="claim_error_title_v1">انتقال دارایی‌ها ناموفق بود. لطفاً بعداً دوباره امتحان کنید.</string>
   <string name="claim_notification_text">انتقال در حال انجام ...</string>
+  <string name="claim_rewards">Claim rewards</string>
   <string name="claim_subtitle">برای انتقال وجوه شما از SORA به رضایت شما نیاز داریم تا بتوانید از آنها استفاده کنید. SORA اکنون در شبکه Substrate کار میکند. لطفا انتقال را تأیید کنید.</string>
   <string name="claim_subtitle_confirmed">ممنون بابت تایید!</string>
   <string name="claim_subtitle_confirmed_v2">Transition of assets are in progress</string>
@@ -83,6 +84,7 @@
   <string name="common_chinese">چینی</string>
   <string name="common_chinesetaiwan">چینی (تایوان)</string>
   <string name="common_choose_asset">دارایی را انتخاب کنید</string>
+  <string name="common_claim">Claim</string>
   <string name="common_close">بستن</string>
   <string name="common_confirm">تایید</string>
   <string name="common_connected">متصل</string>
@@ -161,6 +163,7 @@
   <string name="common_khmer">خمر</string>
   <string name="common_korean">کره ای</string>
   <string name="common_malay">مالاییایی</string>
+  <string name="common_max">max</string>
   <string name="common_min">دقیقه</string>
   <string name="common_more">More</string>
   <string name="common_norwegian">نروژی</string>
@@ -230,6 +233,7 @@
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
   <string name="demeter_staked_liquidity">Staked liquidity</string>
   <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">قفل شده</string>
@@ -237,6 +241,7 @@
   <string name="details_sent_to_pool">Sent to pool</string>
   <string name="discover_coming_soon">SORA devs are currently working on a feature that will display a full list of pools that are active on Polkaswap.\n\nFor now, if you want to create/add to a pool please use the button below.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
+  <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">اخیراً گیرنده ای وجود نداشته است\nآدرس‌های گیرندگان در اینجا نشان داده می‌شوند.</string>
   <string name="empty_recent_recipients_2">دریافت کنندگان اینجا نشان داده خواهند شد</string>
@@ -343,6 +348,7 @@
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap توسط جامعه SORA نگهداری می‌شود. لطفاً قبل از استفاده از قابلیت Polkaswap ،%% سوالات متداول Polkaswap %% و دیگر نوشته ها ، که شامل توضیحات مفصلی در مورد نحوه عملکرد Polkaswap ، و همچنین یادداشت و شرایط خدمات Polkaswap و سیاست حفظ حریم خصوصی است را مرور کنید. این اسناد برای تجربه ایمن و مثبت کاربر بسیار مهم است. با استفاده از Polkaswap ، تایید می کنید که این اسناد را خوانده و درک کرده اید. \n</string>
@@ -481,6 +487,7 @@
   <string name="select_node_switch_succeed">Successfully switch the node</string>
   <string name="select_node_unable_join_node_message">Please try again later</string>
   <string name="select_node_unable_join_node_title">Unable to join the node</string>
+  <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">گیرنده را انتخاب کنید</string>
   <string name="settings_accounts">حساب‌ها</string>
   <string name="settings_accounts_subtitle">Manage accounts, backup passphrase</string>

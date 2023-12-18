@@ -121,6 +121,7 @@ class TxDetailsViewModel @AssistedInject constructor(
             is Transaction.EthTransfer -> {
                 emptyTxDetailsState
             }
+
             is Transaction.DemeterFarming -> {
                 if (transaction.type == DemeterType.REWARD)
                     TxDetailsScreenState(
@@ -130,13 +131,24 @@ class TxDetailsViewModel @AssistedInject constructor(
                             sender = currentAddress,
                             infos = emptyList(),
                             txStatus = transaction.base.status,
-                            time = dateTimeFormatter.formatDate(Date(transaction.base.timestamp), DateTimeFormatter.DD_MMM_YYYY_HH_MM),
-                            networkFee = feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
+                            time = dateTimeFormatter.formatDate(
+                                Date(transaction.base.timestamp),
+                                DateTimeFormatter.DD_MMM_YYYY_HH_MM
+                            ),
+                            networkFee = feeToken.printBalance(
+                                transaction.base.fee,
+                                numbersFormatter,
+                                AssetHolder.ROUNDING
+                            ),
                             networkFeeFiat = feeToken.printFiat(transaction.base.fee, numbersFormatter),
                             txTypeIcon = R.drawable.ic_star,
                             txTypeTitle = resourceManager.getString(R.string.demeter_claimed_reward),
                         ),
-                        amount1 = transaction.baseToken.printBalance(transaction.amount, numbersFormatter, AssetHolder.ROUNDING),
+                        amount1 = transaction.baseToken.printBalance(
+                            transaction.amount,
+                            numbersFormatter,
+                            AssetHolder.ROUNDING
+                        ),
                         amount2 = null,
                         amountFiat = "",
                         icon1 = transaction.rewardToken.iconUri(),
@@ -151,10 +163,17 @@ class TxDetailsViewModel @AssistedInject constructor(
                         sender = currentAddress,
                         infos = emptyList(),
                         txStatus = transaction.base.status,
-                        time = dateTimeFormatter.formatDate(Date(transaction.base.timestamp), DateTimeFormatter.DD_MMM_YYYY_HH_MM),
-                        networkFee = feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
+                        time = dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM
+                        ),
+                        networkFee = feeToken.printBalance(
+                            transaction.base.fee,
+                            numbersFormatter,
+                            AssetHolder.ROUNDING
+                        ),
                         networkFeeFiat = feeToken.printFiat(transaction.base.fee, numbersFormatter),
-                        txTypeIcon = R.drawable.ic_star,
+                        txTypeIcon = if (transaction.type == DemeterType.STAKE) R.drawable.ic_new_arrow_up_24 else R.drawable.ic_new_arrow_down_24,
                         txTypeTitle = resourceManager.getString(if (transaction.type == DemeterType.STAKE) R.string.demeter_staked_liquidity else R.string.demeter_unstaked_liquidity),
                     ),
                     amount1 = numbersFormatter.formatBigDecimal(transaction.amount, AssetHolder.ROUNDING),
@@ -167,6 +186,7 @@ class TxDetailsViewModel @AssistedInject constructor(
                     txType = TxType.DEMETER,
                 )
             }
+
             is Transaction.Transfer -> {
                 var sender = transaction.peer
                 var recipient = currentAddress
@@ -197,8 +217,15 @@ class TxDetailsViewModel @AssistedInject constructor(
                             Date(transaction.base.timestamp),
                             DateTimeFormatter.DD_MMM_YYYY_HH_MM
                         ),
-                        if (transaction.transferType == TransactionTransferType.OUTGOING) feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING) else null,
-                        if (transaction.transferType == TransactionTransferType.OUTGOING) feeToken.printFiat(transaction.base.fee, numbersFormatter) else null,
+                        if (transaction.transferType == TransactionTransferType.OUTGOING) feeToken.printBalance(
+                            transaction.base.fee,
+                            numbersFormatter,
+                            AssetHolder.ROUNDING
+                        ) else null,
+                        if (transaction.transferType == TransactionTransferType.OUTGOING) feeToken.printFiat(
+                            transaction.base.fee,
+                            numbersFormatter
+                        ) else null,
                         typeIcon,
                         resourceManager.getString(typeTitle),
                     ),
@@ -221,6 +248,7 @@ class TxDetailsViewModel @AssistedInject constructor(
                     txType = TxType.REFERRAL_TRANSFER
                 )
             }
+
             is Transaction.Swap -> {
                 TxDetailsScreenState(
                     basicTxDetailsState = BasicTxDetailsState(
@@ -260,6 +288,7 @@ class TxDetailsViewModel @AssistedInject constructor(
                     txType = TxType.SWAP
                 )
             }
+
             is Transaction.Liquidity -> {
                 var amountSign = ""
                 var typeIcon = R.drawable.ic_new_arrow_up_24
@@ -313,6 +342,7 @@ class TxDetailsViewModel @AssistedInject constructor(
                     txType = TxType.LIQUIDITY
                 )
             }
+
             is Transaction.ReferralBond -> {
                 TxDetailsScreenState(
                     basicTxDetailsState = BasicTxDetailsState(
@@ -344,6 +374,7 @@ class TxDetailsViewModel @AssistedInject constructor(
                     txType = TxType.REFERRAL_TRANSFER
                 )
             }
+
             is Transaction.ReferralUnbond -> {
                 TxDetailsScreenState(
                     basicTxDetailsState = BasicTxDetailsState(
@@ -378,6 +409,7 @@ class TxDetailsViewModel @AssistedInject constructor(
                     txType = TxType.REFERRAL_TRANSFER
                 )
             }
+
             is Transaction.ReferralSetReferrer -> {
                 var title = R.string.referrer_set
                 var detailsItemTitle = R.string.history_referrer
@@ -427,9 +459,11 @@ class TxDetailsViewModel @AssistedInject constructor(
                     txType = TxType.REFERRAL_TRANSFER
                 )
             }
+
             is Transaction.AdarIncome -> {
                 emptyTxDetailsState
             }
+
             null -> emptyTxDetailsState
         }
     }

@@ -37,6 +37,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
@@ -51,6 +52,10 @@ interface PoolsInteractor : PolkaswapInteractor {
     suspend fun getRewardToken(): Token
 
     suspend fun getPoolsCacheOfCurAccount(): List<CommonUserPoolData>
+
+    suspend fun getPoolOfCurAccount(ids: StringPair): CommonUserPoolData?
+
+    suspend fun getBasicPool(poolIds: StringPair): BasicPoolData?
 
     fun subscribePoolCacheOfCurAccount(tokenFromId: String, tokenToId: String): Flow<CommonPoolData?>
 

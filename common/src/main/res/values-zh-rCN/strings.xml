@@ -62,6 +62,7 @@
   <string name="claim_error_title">转移失败</string>
   <string name="claim_error_title_v1">资产转移失败。请稍后再试。</string>
   <string name="claim_notification_text">转移进行中...</string>
+  <string name="claim_rewards">领取奖励</string>
   <string name="claim_subtitle">我们需要您的同意，才能将您的资金从SORA转移出来以供使用。SORA现在将在Substrate网络上运行，请确认是否进行转移。</string>
   <string name="claim_subtitle_confirmed">谢谢您的确认！</string>
   <string name="claim_subtitle_confirmed_v2">资产转移正在进行中</string>
@@ -83,6 +84,7 @@
   <string name="common_chinese">中文</string>
   <string name="common_chinesetaiwan">中文（台湾）</string>
   <string name="common_choose_asset">选择资产</string>
+  <string name="common_claim">领取</string>
   <string name="common_close">关闭</string>
   <string name="common_confirm">确认</string>
   <string name="common_connected">已连接</string>
@@ -160,6 +162,7 @@
   <string name="common_khmer">高棉语</string>
   <string name="common_korean">韩语</string>
   <string name="common_malay">马来语</string>
+  <string name="common_max">最大</string>
   <string name="common_min">分</string>
   <string name="common_more">更多</string>
   <string name="common_norwegian">挪威语</string>
@@ -228,14 +231,16 @@
   <string name="dark_mode">深色模式</string>
   <string name="delete_backup_alert_description">如果您删除了Google备份，您只能通过手动备份助记词来恢复您的钱包。</string>
   <string name="delete_backup_alert_title">你确定吗？</string>
-  <string name="demeter_claimed_reward">Claimed reward</string>
-  <string name="demeter_staked_liquidity">Staked liquidity</string>
-  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
+  <string name="demeter_claimed_reward">领取的奖励</string>
+  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
+  <string name="demeter_staked_liquidity">质押流动性</string>
+  <string name="demeter_unstaked_liquidity">未质押的流动性</string>
   <string name="details_frozen">已被冻结</string>
   <string name="details_receive_from_pool">已从池中撤回</string>
   <string name="details_sent_to_pool">发送到池中</string>
   <string name="discover_coming_soon">SORA开发人员目前正在开发一个功能，该功能将显示在Polkaswap上活跃的所有池子的完整列表。\n\n现在，如果您想创建/添加到池中，请使用下面的按钮。</string>
   <string name="discovery_polkaswap_pools">Polkaswap池</string>
+  <string name="edit_farm">编辑农场</string>
   <string name="edit_view">编辑视图</string>
   <string name="empty_recent_recipients">没有最近的接收人。\n已发送的地址将在此处显示。</string>
   <string name="empty_recent_recipients_2">接收人将出现在此处</string>
@@ -342,6 +347,7 @@
   <string name="polkaswap_farming_demeter_power">由Demeter农业提供技术支持</string>
   <string name="polkaswap_farming_pool_in_farming_hint">您的一部分流动池份额已被质押。要访问它，您需要先解除质押。</string>
   <string name="polkaswap_farming_pool_share">您质押的流动池份额</string>
+  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
   <string name="polkaswap_farming_staked_for">质押了%s</string>
   <string name="polkaswap_farming_unstake_to_remove">要撤出流动性，您需要先解除质押</string>
   <string name="polkaswap_info_text_1">Polkaswap 是由 SORA 社区维护。在使用 Polkaswap 功能之前，请查看%% Polkaswap FAQ %% 和文档，其中包括有关 Polkaswap 操作原理%% 的详细说明、 Polkaswap %%备忘录和服务条款以%%及隐私政策。%%这些文档对于安全和积极的用户体验至关重要。通过使用 Polkaswap，您承认您已阅读并理解这些文件。</string>
@@ -449,7 +455,7 @@
   <string name="remove_node_title">你真的想要删除这个节点吗？</string>
   <string name="remove_pool_confirmation_description">产出是估计的。如果价格变化超过%s%%，您的交易将被取消。</string>
   <string name="remove_pool_confirmation_title">确认移除</string>
-  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
+  <string name="request_supply_liquidity">您需要向相应的流动池对提供流动性，以开始进行质押并获得额外的奖励：</string>
   <string name="restart_required">需要重启</string>
   <string name="review">复核</string>
   <string name="route">路径</string>
@@ -475,6 +481,7 @@
   <string name="select_node_switch_succeed">成功切换节点</string>
   <string name="select_node_unable_join_node_message">请稍后再试</string>
   <string name="select_node_unable_join_node_title">无法加入该节点</string>
+  <string name="select_pool_share">选择您要质押的流动池份额</string>
   <string name="select_recipient">选择接收人地址</string>
   <string name="settings_accounts">账户</string>
   <string name="settings_accounts_subtitle">管理账户，备份密码短语</string>
@@ -525,7 +532,7 @@
   <string name="sora_card_verification_successful">卡片已经寄出</string>
   <string name="sora_card_you_have_enough_xor">您已经拥有足够的XOR来获得一张免费卡</string>
   <string name="sora_card_you_need_xor" formatted="false">你需要%sXOR(€%s)</string>
-  <string name="start_staking">Start staking</string>
+  <string name="start_staking">开始质押</string>
   <string name="status_error">错误</string>
   <string name="status_pending">等待确认</string>
   <string name="status_success">成功</string>

@@ -62,6 +62,7 @@
   <string name="claim_error_title">Wechsel fehlgeschlagen</string>
   <string name="claim_error_title_v1">Die Übertragung der Assets ist fehlgeschlagen. Bitte versuche es später erneut.</string>
   <string name="claim_notification_text">Wechsel wird durchgeführt...</string>
+  <string name="claim_rewards">Claim rewards</string>
   <string name="claim_subtitle">Wir benötigen deine Zustimmung, um eine Transition deiner Assets von SORA vorzunehmen, damit du sie verwenden kannst. SORA wird ab jetzt im Substrate-Netzwerk operieren. Bitte bestätige den Wechsel.</string>
   <string name="claim_subtitle_confirmed">Danke für die Bestätigung!</string>
   <string name="claim_subtitle_confirmed_v2">Transition of assets are in progress</string>
@@ -83,6 +84,7 @@
   <string name="common_chinese">Chinesisch</string>
   <string name="common_chinesetaiwan">Chinesisch (Taiwan)</string>
   <string name="common_choose_asset">Asset auswählen</string>
+  <string name="common_claim">Claim</string>
   <string name="common_close">Schließen</string>
   <string name="common_confirm">Bestätigen</string>
   <string name="common_connected">Verbunden</string>
@@ -161,6 +163,7 @@
   <string name="common_khmer">Khmer</string>
   <string name="common_korean">Koreanisch</string>
   <string name="common_malay">Malaiisch</string>
+  <string name="common_max">max</string>
   <string name="common_min">min</string>
   <string name="common_more">More</string>
   <string name="common_norwegian">Norwegisch</string>
@@ -230,6 +233,7 @@
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
   <string name="demeter_staked_liquidity">Staked liquidity</string>
   <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">Gefroren</string>
@@ -237,6 +241,7 @@
   <string name="details_sent_to_pool">Sent to pool</string>
   <string name="discover_coming_soon">SORA devs are currently working on a feature that will display a full list of pools that are active on Polkaswap.\n\nFor now, if you want to create/add to a pool please use the button below.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
+  <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Keine kürzlichen Empfänger.\nGesendete Adressen werden hier angezeigt.</string>
   <string name="empty_recent_recipients_2">Die Empfänger werden hier angezeigt</string>
@@ -343,6 +348,7 @@
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap wird von der SORA-Community verwaltet. Bevor du die Polkaswap-Funktionalität verwendest, lies bitte die %%Polkaswap-FAQ%% und die Dokumentation, die eine detaillierte Erklärung zur Funktionsweise von Polkaswap, sowie das %%Polkaswap-Memorandum und Servicebedingungen%% und die %%Datenschutzrichtlinien%% enthält.\nDiese Dokumente sind entscheidend für eine sichere und positive Benutzererfahrung. Durch die Nutzung von Polkaswap bestätigst du, dass du diese Dokumente gelesen und verstanden hast.</string>
@@ -481,6 +487,7 @@
   <string name="select_node_switch_succeed">Successfully switch the node</string>
   <string name="select_node_unable_join_node_message">Please try again later</string>
   <string name="select_node_unable_join_node_title">Unable to join the node</string>
+  <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Empfänger auswählen</string>
   <string name="settings_accounts">Konten</string>
   <string name="settings_accounts_subtitle">Manage accounts, backup passphrase</string>

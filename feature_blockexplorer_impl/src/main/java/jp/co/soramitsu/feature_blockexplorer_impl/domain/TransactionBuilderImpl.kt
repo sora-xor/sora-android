@@ -37,6 +37,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
@@ -125,6 +126,33 @@ class TransactionBuilderImpl @Inject constructor() : TransactionBuilder {
             peer = peer,
             transferType = type,
             token = token,
+        )
+
+    override fun buildDemeterStaking(
+        txHash: String,
+        blockHash: String?,
+        fee: BigDecimal,
+        status: TransactionStatus,
+        date: Long,
+        amount: BigDecimal,
+        type: DemeterType,
+        baseToken: Token,
+        targetToken: Token,
+        rewardToken: Token
+    ): Transaction.DemeterFarming =
+        Transaction.DemeterFarming(
+            base = buildBase(
+                txHash = txHash,
+                blockHash = blockHash,
+                fee = fee,
+                status = status,
+                date = date,
+            ),
+            amount = amount,
+            type = DemeterType.STAKE,
+            baseToken = baseToken,
+            targetToken = targetToken,
+            rewardToken = rewardToken,
         )
 
     override fun buildBase(
