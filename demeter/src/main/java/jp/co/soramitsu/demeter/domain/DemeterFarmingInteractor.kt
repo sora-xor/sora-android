@@ -172,7 +172,7 @@ internal class DemeterFarmingInteractorImpl(
                     status,
                     Date().time,
                     amount,
-                    DemeterType.STAKE,
+                    DemeterType.UNSTAKE,
                     assetRepository.getToken(ids.first)!!,
                     assetRepository.getToken(ids.second)!!,
                     assetRepository.getToken(ids.third)!!,

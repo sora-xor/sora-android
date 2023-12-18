@@ -159,7 +159,7 @@ class EditFarmViewModel @AssistedInject constructor(
         poolData?.let { poolData ->
             val currentStakingAmount = farmedPool?.amount ?: BigDecimal.ZERO
             stakingAmount =
-                (poolData.user.poolProvidersBalance * _state.value.sliderProgressState.toBigDecimal()) - currentStakingAmount
+                ((poolData.user.poolProvidersBalance * _state.value.sliderProgressState.toBigDecimal()) - currentStakingAmount).abs()
         }
     }
 
@@ -171,11 +171,20 @@ class EditFarmViewModel @AssistedInject constructor(
 
             _state.value.let {
                 if (stakingAmount > BigDecimal.ZERO) {
-                    val txHash = demeterFarmingInteractor.depositDemeterFarming(
-                        it.farmIds,
-                        stakingAmount,
-                        stakingNetworkFee
-                    )
+                    val txHash = if (it.sliderProgressState * 100 > currentStackedPercent) {
+                        demeterFarmingInteractor.depositDemeterFarming(
+                            it.farmIds,
+                            stakingAmount,
+                            stakingNetworkFee
+                        )
+                    } else {
+                        demeterFarmingInteractor.withdrawDemeterFarming(
+                            it.farmIds,
+                            stakingAmount,
+                            unStakingNetworkFee
+                        )
+                    }
+
 
                     if (txHash.isNotEmpty()) {
                         assetsRouter.showTxDetails(txHash, true)
