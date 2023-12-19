@@ -30,13 +30,11 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -51,16 +49,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
-import jp.co.soramitsu.common.presentation.compose.components.PolkaswapSlider
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.feature_ecosystem_impl.R
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.model.EditFarmScreenState
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.model.ClaimScreenState
 import jp.co.soramitsu.ui_core.component.button.FilledPolkaswapButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
-import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
@@ -69,15 +65,12 @@ import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
-internal fun EditFarmScreen(
-    state: EditFarmScreenState,
-    onSliderValueChange: (Double) -> Unit,
-    onConfirm: () -> Unit,
+internal fun ClaimDemeterScreen(
+    state: ClaimScreenState,
+    onClaimPressed: () -> Unit,
 ) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        if (state.isCardLoading) {
+    Box {
+        if (state.isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -89,90 +82,57 @@ internal fun EditFarmScreen(
             ContentCard(
                 modifier = Modifier
                     .padding(vertical = Dimens.x1, horizontal = Dimens.x2)
-                    .align(Alignment.TopCenter)
                     .fillMaxWidth()
+                    .align(Alignment.TopCenter)
                     .wrapContentHeight(),
                 innerPadding = PaddingValues(Dimens.x3),
             ) {
                 Column {
                     Text(
-                        text = stringResource(id = R.string.select_pool_share),
+                        text = stringResource(id = R.string.claim_rewards),
                         style = MaterialTheme.customTypography.headline2
                     )
 
                     Divider(
                         color = Color.Transparent,
-                        thickness = Dimens.x5
+                        thickness = Dimens.x3
                     )
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = state.percentageText,
-                            style = MaterialTheme.customTypography.displayL
-                        )
-
-                        TonalButton(
-                            size = Size.ExtraSmall,
-                            order = Order.PRIMARY,
-                            text = stringResource(id = R.string.common_max).uppercase(),
-                            onClick = { onSliderValueChange(1.0) }
-                        )
-                    }
-
-                    PolkaswapSlider(
-                        value = state.sliderProgressState,
-                        onValueChange = { onSliderValueChange(it.toDouble()) }
-                    )
-
-                    DetailsItem(
-                        modifier = Modifier.padding(bottom = Dimens.x1_5),
-                        text = stringResource(id = R.string.polkaswap_farming_pool_share),
-                        value1 = state.poolShareStaked,
+                    TokenIcon(
+                        modifier = Modifier
+                            .size(Dimens.x9)
+                            .align(Alignment.CenterHorizontally),
+                        uri = state.tokenIcon,
+                        size = Size.Large
                     )
 
                     Divider(
-                        modifier = Modifier.padding(bottom = Dimens.x1_5),
-                        thickness = 1.dp,
-                        color = MaterialTheme.customColors.bgPage
+                        color = Color.Transparent,
+                        thickness = Dimens.x1_5
                     )
 
-                    DetailsItem(
-                        modifier = Modifier.padding(bottom = Dimens.x1_5),
-                        text = stringResource(id = R.string.polkaswap_farming_pool_share_will_be),
-                        value1 = state.poolShareStakedWillBe
+                    Text(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        text = state.amountTitle,
+                        style = MaterialTheme.customTypography.headline3
                     )
-
-                    Divider(
-                        modifier = Modifier.padding(bottom = Dimens.x1_5),
-                        thickness = 1.dp,
-                        color = MaterialTheme.customColors.bgPage
-                    )
-
-                    DetailsItem(
-                        modifier = Modifier.padding(bottom = Dimens.x1_5),
-                        text = stringResource(id = R.string.common_fee),
-                        hint = stringResource(id = R.string.demeter_farming_deposit_fee_hint),
-                        value1 = state.fee
+                    Text(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        text = state.fiatAmountTitle,
+                        style = MaterialTheme.customTypography.textXSBold,
+                        color = MaterialTheme.customColors.fgSecondary
                     )
 
                     Divider(
-                        modifier = Modifier.padding(bottom = Dimens.x1_5),
-                        thickness = 1.dp,
-                        color = MaterialTheme.customColors.bgPage
+                        color = Color.Transparent,
+                        thickness = Dimens.x3
                     )
 
-                    DetailsItemNetworkFee(
-                        modifier = Modifier.padding(bottom = Dimens.x1_5),
-                        fee = state.networkFee,
-                    )
+                    DetailsItemNetworkFee(fee = state.networkFeeText)
 
                     Divider(
-                        modifier = Modifier.padding(bottom = Dimens.x1_5),
-                        thickness = 1.dp,
-                        color = Color.Transparent
+                        color = Color.Transparent,
+                        thickness = Dimens.x3
                     )
 
                     LoaderWrapper(
@@ -183,11 +143,11 @@ internal fun EditFarmScreen(
                     ) { modifier, elevation ->
                         FilledPolkaswapButton(
                             modifier = Modifier.fillMaxWidth(),
-                            text = stringResource(id = R.string.common_confirm),
+                            text = stringResource(id = R.string.common_claim),
                             size = Size.Large,
                             order = Order.PRIMARY,
                             enabled = state.isButtonActive,
-                            onClick = { onConfirm() }
+                            onClick = onClaimPressed
                         )
                     }
                 }
@@ -200,17 +160,16 @@ internal fun EditFarmScreen(
 @Composable
 private fun PreviewEditFarms() {
     Column {
-        EditFarmScreen(
-            state = EditFarmScreenState(
+        ClaimDemeterScreen(
+            state = ClaimScreenState(
                 StringTriple("", "", ""),
-                "54%",
-                0.54f,
-                "2.95 %",
-                "5.95 %",
-                "0.7",
-                "0.9",
+                DEFAULT_ICON_URI,
+                "",
+                "",
+                "",
+                true,
+                true,
             ),
-            { },
             { }
         )
     }

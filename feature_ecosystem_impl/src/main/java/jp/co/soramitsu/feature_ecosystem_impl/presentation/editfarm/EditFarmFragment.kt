@@ -65,7 +65,7 @@ class EditFarmFragment : SoraBaseFragment<EditFarmViewModel>() {
     }
 
     @Inject
-    lateinit var vmf: EditFarmViewModel.AssistedFarmDetailsViewModelFactory
+    lateinit var vmf: EditFarmViewModel.AssistedEditFarmViewModelFactory
 
     override val viewModel: EditFarmViewModel by viewModels {
         CustomViewModelFactory {

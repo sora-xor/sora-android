@@ -67,6 +67,10 @@ interface DemeterFarmingInteractor {
     suspend fun calcDepositDemeterNetworkFee(ids: StringTriple): BigDecimal
 
     suspend fun calcWithdrawDemeterNetworkFee(ids: StringTriple): BigDecimal
+
+    suspend fun claimDemeterRewards(ids: StringTriple, amount: BigDecimal, networkFee: BigDecimal): String
+
+    suspend fun calcClaimDemeterRewards(ids: StringTriple): BigDecimal
 }
 
 internal class DemeterFarmingInteractorImpl(
@@ -197,6 +201,58 @@ internal class DemeterFarmingInteractorImpl(
         val curAcc = userRepository.getCurSoraAccount()
 
         return demeterFarmingRepository.calcWithdrawFarmFee(
+            curAcc.substrateAddress,
+            ids.first,
+            ids.second,
+            ids.third,
+            true,
+            feeTokenPrecision
+        ) ?: BigDecimal.ZERO
+    }
+
+    override suspend fun claimDemeterRewards(ids: StringTriple, amount: BigDecimal, networkFee: BigDecimal): String {
+        val curAcc = userRepository.getCurSoraAccount()
+        val result = demeterFarmingRepository.claimDemeterRewards(
+            curAcc.substrateAddress,
+            credentialsRepository.retrieveKeyPair(curAcc),
+            ids.first,
+            ids.second,
+            ids.third,
+            true,
+        )
+
+        return if (result.success) {
+            val status = if (result.blockHash.isNullOrEmpty()) {
+                TransactionStatus.PENDING
+            } else {
+                TransactionStatus.COMMITTED
+            }
+            transactionHistoryRepository.saveTransaction(
+                transactionBuilder.buildDemeterRewards(
+                    result.txHash,
+                    result.blockHash,
+                    networkFee,
+                    status,
+                    Date().time,
+                    amount,
+                    DemeterType.REWARD,
+                    assetRepository.getToken(ids.first)!!,
+                    assetRepository.getToken(ids.second)!!,
+                    assetRepository.getToken(ids.third)!!,
+                )
+            )
+            result.txHash
+        } else {
+            ""
+        }
+    }
+
+    override suspend fun calcClaimDemeterRewards(ids: StringTriple): BigDecimal {
+        val feeTokenPrecision =
+            assetRepository.getToken(SubstrateOptionsProvider.feeAssetId)?.precision ?: OptionsProvider.defaultScale
+        val curAcc = userRepository.getCurSoraAccount()
+
+        return demeterFarmingRepository.calcClaimDemeterRewards(
             curAcc.substrateAddress,
             ids.first,
             ids.second,

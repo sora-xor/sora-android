@@ -70,7 +70,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
-import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.feature_ecosystem_impl.R
@@ -88,13 +87,15 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @Composable
 internal fun FarmDetailsScreen(
     state: FarmDetailsState,
-    onStartStakingClicked: (StringTriple) -> Unit,
-    onSupplyClicked: (StringPair) -> Unit,
+    onStartStakingClicked: () -> Unit,
+    onSupplyClicked: () -> Unit,
+    onClaim: () -> Unit
 ) {
     Column {
         FarmCard(
             state = state,
-            onStartStakingClicked = onStartStakingClicked
+            onStartStakingClicked = onStartStakingClicked,
+            onClaim = onClaim
         )
         Divider(
             modifier = Modifier.padding(bottom = Dimens.x1_2),
@@ -110,7 +111,7 @@ internal fun FarmDetailsScreen(
 }
 
 @Composable
-private fun FarmCard(state: FarmDetailsState, onStartStakingClicked: (StringTriple) -> Unit) {
+private fun FarmCard(state: FarmDetailsState, onStartStakingClicked: () -> Unit, onClaim: () -> Unit) {
     ContentCard(
         modifier = Modifier
             .padding(vertical = Dimens.x1, horizontal = Dimens.x2)
@@ -247,7 +248,7 @@ private fun FarmCard(state: FarmDetailsState, onStartStakingClicked: (StringTrip
                         order = Order.PRIMARY,
                         text = stringResource(id = R.string.start_staking),
                         enabled = state.hasSupplyInPool,
-                        onClick = { onStartStakingClicked(state.farmIds) }
+                        onClick = onStartStakingClicked
                     )
                 } else {
                     DetailsItem(
@@ -275,10 +276,10 @@ private fun FarmCard(state: FarmDetailsState, onStartStakingClicked: (StringTrip
                             .testTagAsId("ClaimRewards")
                             .fillMaxWidth(),
                         size = Size.Large,
+                        enabled = state.hasRewardsAvailable,
                         order = Order.PRIMARY,
                         text = stringResource(id = R.string.claim_rewards),
-                        enabled = state.hasSupplyInPool,
-                        onClick = { }
+                        onClick = onClaim
                     )
 
                     TonalButton(
@@ -289,7 +290,7 @@ private fun FarmCard(state: FarmDetailsState, onStartStakingClicked: (StringTrip
                         order = Order.PRIMARY,
                         text = stringResource(id = R.string.edit_farm),
                         enabled = state.hasSupplyInPool,
-                        onClick = { onStartStakingClicked(state.farmIds) }
+                        onClick = onStartStakingClicked
                     )
                 }
 
@@ -316,7 +317,7 @@ private fun FarmCard(state: FarmDetailsState, onStartStakingClicked: (StringTrip
 @Composable
 private fun SupplyLiquidity(
     state: FarmDetailsState,
-    onSupplyClicked: (StringPair) -> Unit
+    onSupplyClicked: () -> Unit
 ) {
     ContentCard(
         modifier = Modifier
@@ -415,11 +416,8 @@ private fun SupplyLiquidity(
                 size = Size.Large,
                 order = Order.PRIMARY,
                 text = stringResource(id = R.string.common_supply_liquidity_title),
-            ) {
-                state.poolIds?.let {
-                    onSupplyClicked(state.poolIds)
-                }
-            }
+                onClick = onSupplyClicked
+            )
         }
     }
 }
@@ -441,6 +439,7 @@ private fun PreviewAllPoolsInternal() {
                 "2 %",
             ),
             { },
+            { },
             { }
         )
         FarmDetailsScreen(
@@ -456,8 +455,10 @@ private fun PreviewAllPoolsInternal() {
                 "2 %",
                 "34.1 %",
                 13.3f,
+                false,
                 "98.7 %",
             ),
+            { },
             { },
             { }
         )

@@ -30,28 +30,17 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.model
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.model
 
-import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
 
-data class FarmDetailsState(
+data class ClaimScreenState(
     val farmIds: StringTriple,
-    val title: String,
-    val tvlSubtitle: String,
-    val apr: String,
-    val token1Icon: String,
-    val token2Icon: String,
-    val rewardsTokenSymbol: String,
-    val rewardsTokenIcon: String,
-    val fee: String,
-    val poolShareStackedText: String? = null,
-    val poolShareStacked: Float? = null,
-    val hasRewardsAvailable: Boolean = false,
-    val userRewardsAmount: String? = null,
-    val loading: Boolean = false,
-    val hasSupplyInPool: Boolean = false,
-    val poolIds: StringPair? = null,
-    val poolTitle: String? = null,
-    val apyText: String? = null,
+    val tokenIcon: String,
+    val amountTitle: String,
+    val fiatAmountTitle: String,
+    val networkFeeText: String,
+    val isButtonActive: Boolean = false,
+    val isButtonLoading: Boolean = false,
+    val isLoading: Boolean = true
 )

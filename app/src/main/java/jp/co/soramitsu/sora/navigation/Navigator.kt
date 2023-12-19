@@ -34,6 +34,7 @@ package jp.co.soramitsu.sora.navigation
 
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.intent.ShareUtil.openAppSettings
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
@@ -56,6 +57,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.ClaimDemeterFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.EditFarmFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.FarmDetailsFragment
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
@@ -156,6 +158,10 @@ class Navigator :
 
     override fun showFarmDetails(ids: StringTriple) {
         navController?.navigate(R.id.farmDetailsFragment, FarmDetailsFragment.createBundle(ids))
+    }
+
+    override fun showClaimDemeter(ids: StringTriple, amount: BigDecimal) {
+        navController?.navigate(R.id.claimDemeterFragment, ClaimDemeterFragment.createBundle(ids, amount))
     }
 
     override fun showEditFarm(ids: StringTriple) {
