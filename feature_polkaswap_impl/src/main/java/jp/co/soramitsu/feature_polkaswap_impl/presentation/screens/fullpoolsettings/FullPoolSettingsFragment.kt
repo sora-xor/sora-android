@@ -32,15 +32,18 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.fullpoolsettings
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -60,6 +63,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
+import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import jp.co.soramitsu.common.presentation.view.WrappedRecyclerView
 import jp.co.soramitsu.common.view.CustomItemTouchHelperCallback
 import jp.co.soramitsu.common_wallet.R as polkaswapR
@@ -82,7 +86,6 @@ class FullPoolSettingsFragment : SoraBaseFragment<FullPoolSettingsViewModel>() {
     }
     private val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -119,6 +122,17 @@ class FullPoolSettingsFragment : SoraBaseFragment<FullPoolSettingsViewModel>() {
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary,
                     )
+                }
+
+                val empty = viewModel.poolsEmptyState.collectAsStateWithLifecycle().value
+                if (empty) {
+                    Spacer(modifier = Modifier.size(Dimens.x5))
+                    Box(
+                        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        NothingFoundText()
+                    }
                 }
 
                 AndroidView(

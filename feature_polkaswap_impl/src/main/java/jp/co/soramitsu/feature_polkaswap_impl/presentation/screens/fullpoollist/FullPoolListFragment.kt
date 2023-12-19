@@ -37,11 +37,14 @@ import android.view.View
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.verticalScroll
@@ -62,6 +65,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -126,10 +130,20 @@ class FullPoolListFragment : SoraBaseFragment<FullPoolListViewModel>() {
                         .fillMaxSize()
                         .verticalScroll(scrollState)
                 ) {
-                    PoolsList(
-                        cardState = state.value.list,
-                        onPoolClick = viewModel::onPoolClick,
-                    )
+                    if (state.value.list.pools.isEmpty() && state.value.loading.not()) {
+                        Spacer(modifier = Modifier.size(Dimens.x5))
+                        Box(
+                            modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            NothingFoundText()
+                        }
+                    } else {
+                        PoolsList(
+                            cardState = state.value.list,
+                            onPoolClick = viewModel::onPoolClick,
+                        )
+                    }
                 }
             }
         }
