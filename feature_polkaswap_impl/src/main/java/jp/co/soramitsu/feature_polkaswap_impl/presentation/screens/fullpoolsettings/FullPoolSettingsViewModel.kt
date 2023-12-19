@@ -82,6 +82,9 @@ class FullPoolSettingsViewModel @Inject constructor(
     private val _fiatSum = MutableStateFlow("")
     internal val fiatSum = _fiatSum.asStateFlow()
 
+    private val _poolsEmptyState = MutableStateFlow(false)
+    val poolsEmptyState = _poolsEmptyState.asStateFlow()
+
     init {
         _toolbarState.value = SoramitsuToolbarState(
             type = SoramitsuToolbarType.Small(),
@@ -154,6 +157,7 @@ class FullPoolSettingsViewModel @Inject constructor(
         }
 
         _settingsState.value = list
+        _poolsEmptyState.value = list.isEmpty()
         _fiatSum.value = if (list.isNotEmpty())
             list.map { it.fiat }.reduce { acc, d -> acc + d }.let {
                 formatFiatAmount(it, symbol, numbersFormatter)

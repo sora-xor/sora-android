@@ -122,7 +122,7 @@ internal fun PoolDetailsScreen(
                         .padding(horizontal = Dimens.x2),
                     color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.headline2,
-                    text = "%s-%s".format(state.symbol1, state.symbol2),
+                    text = "%s-%s %s".format(state.symbol1, state.symbol2, stringResource(id = R.string.activity_pool_title)),
                     maxLines = 1,
                 )
                 Icon(

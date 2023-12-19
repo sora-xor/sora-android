@@ -30,11 +30,12 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_impl.presentation.states
+package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.fullpoollist
 
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
 
 internal data class FullPoolListState(
     val fiatSum: String,
     val list: PoolsListState,
+    val loading: Boolean,
 )
