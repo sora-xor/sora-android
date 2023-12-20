@@ -260,3 +260,20 @@ fun ExtrinsicBuilder.withdrawDemeter(
             "pooled_tokens" to amount
         )
     )
+
+fun ExtrinsicBuilder.claimDemeter(
+    baseAssetId: String,
+    targetAssetId: String,
+    rewardAssetId: String,
+    isFarm: Boolean = true,
+) =
+    this.call(
+        Pallete.DEMETER_FARMING.palletName,
+        Method.DEMETER_REWARDS.methodName,
+        mapOf(
+            "base_asset" to baseAssetId.mapCodeToken(),
+            "pool_asset" to targetAssetId.mapCodeToken(),
+            "reward_asset" to rewardAssetId.mapCodeToken(),
+            "is_farm" to isFarm,
+        )
+    )

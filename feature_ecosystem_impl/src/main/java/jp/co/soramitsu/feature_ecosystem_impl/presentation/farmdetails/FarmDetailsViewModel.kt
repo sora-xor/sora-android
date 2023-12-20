@@ -36,6 +36,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.iconUri
@@ -94,6 +95,10 @@ class FarmDetailsViewModel @AssistedInject constructor(
     )
     val state = _state.asStateFlow()
 
+    private val poolIds = StringPair(token1Id, token2Id)
+    private val farmIds = StringTriple(token1Id, token2Id, token3Id)
+    private var rewardAmount = BigDecimal.ZERO
+
     init {
         _toolbarState.value = SoramitsuToolbarState(
             type = SoramitsuToolbarType.SmallCentered(),
@@ -106,9 +111,6 @@ class FarmDetailsViewModel @AssistedInject constructor(
         )
 
         viewModelScope.launch {
-            val poolIds = StringPair(token1Id, token2Id)
-            val farmIds = StringTriple(token1Id, token2Id, token3Id)
-
             val userPoolData = poolsInteractor.getPoolOfCurAccount(poolIds)
             val basicPoolData = poolsInteractor.getBasicPool(poolIds)
 
@@ -153,10 +155,13 @@ class FarmDetailsViewModel @AssistedInject constructor(
                             0.0f
                         }
 
+                        rewardAmount = farmPool.amountReward
+
                         farmDetailsState = farmDetailsState.copy(
                             poolShareStacked = percent,
                             poolShareStackedText = "${numbersFormatter.format(percent.toDouble())}%",
                             userRewardsAmount = "${numbersFormatter.formatBigDecimal(farmPool.amountReward)} ${farmPool.tokenReward.symbol}",
+                            hasRewardsAvailable = farmPool.amountReward != BigDecimal.ZERO
                         )
                     }
 
@@ -169,11 +174,15 @@ class FarmDetailsViewModel @AssistedInject constructor(
         this.onBackPressed()
     }
 
-    fun onSupplyLiquidity(poolIds: StringPair) {
+    fun onSupplyLiquidity() {
         polkaswapRouter.showPoolDetails(poolIds)
     }
 
-    fun onSupplyStacking(triple: Triple<String, String, String>) {
-        polkaswapRouter.showEditFarm(triple)
+    fun onSupplyStacking() {
+        polkaswapRouter.showEditFarm(farmIds)
+    }
+
+    fun onClaim() {
+        polkaswapRouter.showClaimDemeter(farmIds, rewardAmount)
     }
 }

@@ -54,6 +54,7 @@ import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.mapToToken
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
+import jp.co.soramitsu.sora.substrate.substrate.claimDemeter
 import jp.co.soramitsu.sora.substrate.substrate.depositDemeter
 import jp.co.soramitsu.sora.substrate.substrate.withdrawDemeter
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -79,18 +80,18 @@ interface DemeterFarmingRepository {
     suspend fun depositDemeterFarm(
         address: String,
         keypair: Sr25519Keypair,
-        baseToken: String,
-        targetId: String,
-        rewardAssetId: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
         isFarm: Boolean,
         amount: BigDecimal,
     ): ExtrinsicSubmitStatus
 
     suspend fun calcDepositFarmFee(
         address: String,
-        baseToken: String,
-        targetId: String,
-        rewardAssetId: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
         isFarm: Boolean,
         feeTokenPrecision: Int,
     ): BigDecimal?
@@ -98,18 +99,36 @@ interface DemeterFarmingRepository {
     suspend fun withdrawDemeterFarm(
         address: String,
         keypair: Sr25519Keypair,
-        baseToken: String,
-        targetId: String,
-        rewardAssetId: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
         isFarm: Boolean,
         amount: BigDecimal,
     ): ExtrinsicSubmitStatus
 
     suspend fun calcWithdrawFarmFee(
         address: String,
-        baseToken: String,
-        targetId: String,
-        rewardAssetId: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int,
+    ): BigDecimal?
+
+    suspend fun claimDemeterRewards(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+    ): ExtrinsicSubmitStatus
+
+    suspend fun calcClaimDemeterRewards(
+        address: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
         isFarm: Boolean,
         feeTokenPrecision: Int,
     ): BigDecimal?
@@ -201,9 +220,9 @@ internal class DemeterFarmingRepositoryImpl(
     override suspend fun depositDemeterFarm(
         address: String,
         keypair: Sr25519Keypair,
-        baseToken: String,
-        targetId: String,
-        rewardAssetId: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
         isFarm: Boolean,
         amount: BigDecimal,
     ): ExtrinsicSubmitStatus {
@@ -212,9 +231,9 @@ internal class DemeterFarmingRepositoryImpl(
             keypair = keypair,
         ) {
             depositDemeter(
-                baseToken,
-                targetId,
-                rewardAssetId,
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
                 isFarm,
                 mapBalance(amount, OptionsProvider.defaultScale)
             )
@@ -223,9 +242,9 @@ internal class DemeterFarmingRepositoryImpl(
 
     override suspend fun calcDepositFarmFee(
         address: String,
-        baseToken: String,
-        targetId: String,
-        rewardAssetId: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
         isFarm: Boolean,
         feeTokenPrecision: Int,
     ): BigDecimal? {
@@ -233,9 +252,9 @@ internal class DemeterFarmingRepositoryImpl(
             from = address
         ) {
             depositDemeter(
-                baseToken,
-                targetId,
-                rewardAssetId,
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
                 isFarm,
                 mapBalance(BigDecimal.ONE, OptionsProvider.defaultScale)
             )
@@ -248,9 +267,9 @@ internal class DemeterFarmingRepositoryImpl(
     override suspend fun withdrawDemeterFarm(
         address: String,
         keypair: Sr25519Keypair,
-        baseToken: String,
-        targetId: String,
-        rewardAssetId: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
         isFarm: Boolean,
         amount: BigDecimal
     ): ExtrinsicSubmitStatus {
@@ -259,9 +278,9 @@ internal class DemeterFarmingRepositoryImpl(
             keypair = keypair,
         ) {
             withdrawDemeter(
-                baseToken,
-                targetId,
-                rewardAssetId,
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
                 isFarm,
                 mapBalance(amount, OptionsProvider.defaultScale)
             )
@@ -270,9 +289,9 @@ internal class DemeterFarmingRepositoryImpl(
 
     override suspend fun calcWithdrawFarmFee(
         address: String,
-        baseToken: String,
-        targetId: String,
-        rewardAssetId: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
         isFarm: Boolean,
         feeTokenPrecision: Int,
     ): BigDecimal? {
@@ -280,11 +299,55 @@ internal class DemeterFarmingRepositoryImpl(
             from = address
         ) {
             withdrawDemeter(
-                baseToken,
-                targetId,
-                rewardAssetId,
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
                 isFarm,
                 mapBalance(BigDecimal.ONE, OptionsProvider.defaultScale)
+            )
+        }
+        return fee?.let {
+            mapBalance(it, feeTokenPrecision)
+        }
+    }
+
+    override suspend fun claimDemeterRewards(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean
+    ): ExtrinsicSubmitStatus {
+        return extrinsicManager.submitAndWatchExtrinsic(
+            from = address,
+            keypair = keypair,
+        ) {
+            claimDemeter(
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
+                isFarm,
+            )
+        }
+    }
+
+    override suspend fun calcClaimDemeterRewards(
+        address: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int
+    ): BigDecimal? {
+        val fee = extrinsicManager.calcFee(
+            from = address
+        ) {
+            claimDemeter(
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
+                isFarm,
             )
         }
         return fee?.let {

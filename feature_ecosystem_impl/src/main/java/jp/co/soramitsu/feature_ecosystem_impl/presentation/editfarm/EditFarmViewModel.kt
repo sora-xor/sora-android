@@ -76,7 +76,7 @@ class EditFarmViewModel @AssistedInject constructor(
 ) : BaseViewModel() {
 
     @AssistedFactory
-    interface AssistedFarmDetailsViewModelFactory {
+    interface AssistedEditFarmViewModelFactory {
         fun create(
             @Assisted("id1") id1: String,
             @Assisted("id2") id2: String,

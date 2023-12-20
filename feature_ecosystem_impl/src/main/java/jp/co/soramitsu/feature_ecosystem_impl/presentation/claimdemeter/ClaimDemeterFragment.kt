@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter
 
 import android.os.Bundle
 import android.view.View
@@ -44,6 +44,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
+import java.math.BigDecimal
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
@@ -54,25 +55,32 @@ import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 
 @AndroidEntryPoint
-class FarmDetailsFragment : SoraBaseFragment<FarmDetailsViewModel>() {
+class ClaimDemeterFragment : SoraBaseFragment<ClaimDemeterViewModel>() {
 
     companion object {
         private const val ARG_TOKEN_1 = "arg_token_1"
         private const val ARG_TOKEN_2 = "arg_token_2"
         private const val ARG_TOKEN_3 = "arg_token_3"
-        fun createBundle(ids: StringTriple) =
-            bundleOf(ARG_TOKEN_1 to ids.first, ARG_TOKEN_2 to ids.second, ARG_TOKEN_3 to ids.third)
+        private const val ARG_AMOUNT = "arg_amount"
+        fun createBundle(ids: StringTriple, amount: BigDecimal) =
+            bundleOf(
+                ARG_TOKEN_1 to ids.first,
+                ARG_TOKEN_2 to ids.second,
+                ARG_TOKEN_3 to ids.third,
+                ARG_AMOUNT to amount.toString()
+            )
     }
 
     @Inject
-    lateinit var vmf: FarmDetailsViewModel.AssistedFarmDetailsViewModelFactory
+    lateinit var vmf: ClaimDemeterViewModel.AssistedClaimDemeterViewModelFactory
 
-    override val viewModel: FarmDetailsViewModel by viewModels {
+    override val viewModel: ClaimDemeterViewModel by viewModels {
         CustomViewModelFactory {
             vmf.create(
                 requireArguments().getString(ARG_TOKEN_1).orEmpty(),
                 requireArguments().getString(ARG_TOKEN_2).orEmpty(),
                 requireArguments().getString(ARG_TOKEN_3).orEmpty(),
+                BigDecimal(requireArguments().getString(ARG_AMOUNT)),
             )
         }
     }
@@ -94,10 +102,8 @@ class FarmDetailsFragment : SoraBaseFragment<FarmDetailsViewModel>() {
             route = theOnlyRoute,
         ) {
             val state = viewModel.state.collectAsStateWithLifecycle().value
-            FarmDetailsScreen(
+            ClaimDemeterScreen(
                 state,
-                viewModel::onSupplyStacking,
-                viewModel::onSupplyLiquidity,
                 viewModel::onClaim
             )
         }

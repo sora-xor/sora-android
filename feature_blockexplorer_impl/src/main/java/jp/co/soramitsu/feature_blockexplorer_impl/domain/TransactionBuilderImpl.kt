@@ -155,6 +155,33 @@ class TransactionBuilderImpl @Inject constructor() : TransactionBuilder {
             rewardToken = rewardToken,
         )
 
+    override fun buildDemeterRewards(
+        txHash: String,
+        blockHash: String?,
+        fee: BigDecimal,
+        status: TransactionStatus,
+        date: Long,
+        amount: BigDecimal,
+        type: DemeterType,
+        baseToken: Token,
+        targetToken: Token,
+        rewardToken: Token
+    ): Transaction.DemeterFarming =
+        Transaction.DemeterFarming(
+            base = buildBase(
+                txHash = txHash,
+                blockHash = blockHash,
+                fee = fee,
+                status = status,
+                date = date,
+            ),
+            amount = amount,
+            type = DemeterType.REWARD,
+            baseToken = baseToken,
+            targetToken = targetToken,
+            rewardToken = rewardToken,
+        )
+
     override fun buildBase(
         txHash: String,
         blockHash: String?,
