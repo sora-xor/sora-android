@@ -132,8 +132,6 @@ class CardsHubViewModel @Inject constructor(
 
     private var currentSoraCardContractData: SoraCardContractData? = null
 
-    private var farms: List<DemeterFarmingPool> = emptyList()
-
     init {
         viewModelScope.launch {
             withContext(coroutineManager.io) {
@@ -167,14 +165,14 @@ class CardsHubViewModel @Inject constructor(
                             }
 
                             CardHubType.POOLS -> {
-                                farms = demeterFarmingInteractor.getFarmedPools() ?: emptyList()
-
                                 poolsInteractor.subscribePoolsCacheOfAccount(data.first)
                                     .onStart {
                                         if (indexed.index == 0) this.emit(emptyList())
                                     }
+                                    .combine(demeterFarmingInteractor.subscribeFarms(data.first.substrateAddress)) { f1, _ -> f1 }
                                     .map { list ->
-                                        cardHub to list.filter { it.user.favorite }
+                                        val farms = demeterFarmingInteractor.getFarmedPools() ?: emptyList()
+                                        cardHub to ((list.filter { it.user.favorite }) to farms)
                                     }
                             }
 
@@ -226,7 +224,8 @@ class CardsHubViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .collectLatest { cards ->
                     val usableCards = cards.filterNot {
-                        (it.first.cardType != CardHubType.ASSETS) && (it.second.safeCast<List<*>>()?.size == 0)
+                        (it.first.cardType != CardHubType.ASSETS) &&
+                            ((it.second.safeCast<List<*>>()?.size == 0) || (it.second.safeCast<Pair<*, *>>()?.first?.safeCast<List<*>>())?.size == 0)
                     }
                     _state.value = _state.value.copy(
                         loading = false,
@@ -319,7 +318,7 @@ class CardsHubViewModel @Inject constructor(
                 CardHubType.ASSETS -> mapAssetsCard(it.first.collapsed, it.second as List<Asset>)
                 CardHubType.POOLS -> mapPoolsCard(
                     it.first.collapsed,
-                    it.second as List<CommonUserPoolData>
+                    it.second as Pair<List<CommonUserPoolData>, List<DemeterFarmingPool>>
                 )
 
                 CardHubType.BACKUP -> (it.second as BackupWalletState)
@@ -341,18 +340,18 @@ class CardsHubViewModel @Inject constructor(
         )
     }
 
-    private fun mapPoolsCard(collapsed: Boolean, pools: List<CommonUserPoolData>): CardState {
-        val rewardTokensList = pools.map { pool ->
-            farms.filter {
+    private fun mapPoolsCard(collapsed: Boolean, pools: Pair<List<CommonUserPoolData>, List<DemeterFarmingPool>>): CardState {
+        val rewardTokensList = pools.first.map { pool ->
+            pools.second.filter {
                 it.tokenBase.id == pool.basic.baseToken.id && it.tokenTarget.id == pool.basic.targetToken.id
             }.map {
                 it.tokenReward.iconUri()
             }
         }
 
-        val data = mapPoolsData(pools, numbersFormatter, rewardTokensList)
+        val data = mapPoolsData(pools.first, numbersFormatter, rewardTokensList)
         return TitledAmountCardState(
-            amount = formatFiatAmount(data.second, pools.fiatSymbol, numbersFormatter),
+            amount = formatFiatAmount(data.second, pools.first.fiatSymbol, numbersFormatter),
             title = CardHubType.POOLS.userName,
             state = FavoritePoolsCardState(
                 state = data.first
