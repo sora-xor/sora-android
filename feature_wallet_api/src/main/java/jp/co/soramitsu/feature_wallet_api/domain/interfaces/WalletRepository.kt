@@ -58,7 +58,7 @@ interface WalletRepository {
 
     fun observeStorageAccount(address: String): Flow<String>
 
-    fun subscribeVisibleCardsHubList(address: String): Flow<List<CardHub>>
+    fun subscribeCardsHubList(address: String): Flow<List<CardHub>>
 
     fun subscribeVisibleGlobalCardsHubList(): Flow<List<CardHub>>
 

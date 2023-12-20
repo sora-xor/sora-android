@@ -34,6 +34,7 @@ package jp.co.soramitsu.demeter.data
 
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.concurrent.ConcurrentHashMap
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.safeCast
@@ -62,8 +63,16 @@ import jp.co.soramitsu.xsubstrate.runtime.metadata.module
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 interface DemeterFarmingRepository {
+
+    fun subscribeFarms(address: String): Flow<String>
     suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>?
     suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
     suspend fun getStakedFarmedAmountOfAsset(address: String, tokenId: String): BigDecimal
@@ -74,7 +83,7 @@ interface DemeterFarmingRepository {
         targetId: String,
         rewardAssetId: String,
         isFarm: Boolean,
-        amount: BigDecimal
+        amount: BigDecimal,
     ): ExtrinsicSubmitStatus
 
     suspend fun calcDepositFarmFee(
@@ -93,7 +102,7 @@ interface DemeterFarmingRepository {
         targetId: String,
         rewardAssetId: String,
         isFarm: Boolean,
-        amount: BigDecimal
+        amount: BigDecimal,
     ): ExtrinsicSubmitStatus
 
     suspend fun calcWithdrawFarmFee(
@@ -155,12 +164,30 @@ internal class DemeterFarmingRepositoryImpl(
         private const val BLOCKS_PER_YEAR = 5256000
     }
 
-    private val cachedFarmedPools: MutableMap<String, List<DemeterFarmingPool>> = mutableMapOf()
+    private val cachedFarmedPools = ConcurrentHashMap<String, List<DemeterFarmingPool>>()
     private var cachedFarmedBasicPools: List<DemeterFarmingBasicPool>? = null
+
+    override fun subscribeFarms(address: String): Flow<String> = flow {
+        val storage =
+            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.DEMETER_FARMING.palletName)
+                .storage(Storage.USER_INFOS.storageName)
+        val storageKey = storage.storageKey(
+            runtimeManager.getRuntimeSnapshot(),
+            address.toAccountId(),
+        )
+        emitAll(
+            substrateCalls.observeStorage(storageKey)
+                .debounce(300)
+                .onEach {
+                    cachedFarmedPools.remove(address)
+                    cachedFarmedBasicPools = null
+                }
+        )
+    }
 
     override suspend fun getStakedFarmedAmountOfAsset(
         address: String,
-        tokenId: String
+        tokenId: String,
     ): BigDecimal {
         val token = db.assetDao().getTokenLocal(tokenId)
         val amount = getDemeter(address)
@@ -178,7 +205,7 @@ internal class DemeterFarmingRepositoryImpl(
         targetId: String,
         rewardAssetId: String,
         isFarm: Boolean,
-        amount: BigDecimal
+        amount: BigDecimal,
     ): ExtrinsicSubmitStatus {
         return extrinsicManager.submitAndWatchExtrinsic(
             from = address,

@@ -56,3 +56,14 @@ data class CardHubLocal(
     val sortOrder: Int,
     val collapsed: Boolean,
 )
+
+fun isHubsEqual(old: List<CardHubLocal>, new: List<CardHubLocal>): Boolean {
+    if (old.size == new.size) {
+        for ((index, value) in old.withIndex()) {
+            if (value.cardId != new[index].cardId || value.visibility != new[index].visibility) return false
+        }
+        return true
+    } else {
+        return false
+    }
+}

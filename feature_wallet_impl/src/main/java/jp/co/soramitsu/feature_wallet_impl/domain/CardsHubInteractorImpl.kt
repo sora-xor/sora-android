@@ -55,7 +55,7 @@ class CardsHubInteractorImpl @Inject constructor(
     fun subscribeVisibleCardsHubList(): Flow<Pair<SoraAccount, List<CardHub>>> {
         return userRepository.flowCurSoraAccount().flatMapLatest { account ->
             walletRepository.subscribeVisibleGlobalCardsHubList()
-                .combine(walletRepository.subscribeVisibleCardsHubList(account.substrateAddress)) { global, local ->
+                .combine(walletRepository.subscribeCardsHubList(account.substrateAddress)) { global, local ->
                     global + local
                 }
                 .map {

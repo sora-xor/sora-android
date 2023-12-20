@@ -45,9 +45,12 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterT
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import kotlinx.coroutines.flow.Flow
 
 interface DemeterFarmingInteractor {
     suspend fun getFarmedPools(): List<DemeterFarmingPool>?
+
+    fun subscribeFarms(address: String): Flow<String>
 
     suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
 
@@ -74,6 +77,10 @@ internal class DemeterFarmingInteractorImpl(
     private val transactionBuilder: TransactionBuilder,
     private val credentialsRepository: CredentialsRepository,
 ) : DemeterFarmingInteractor {
+
+    override fun subscribeFarms(address: String): Flow<String> {
+        return demeterFarmingRepository.subscribeFarms(address)
+    }
 
     override suspend fun getStakedFarmedBalanceOfAsset(tokenId: String): BigDecimal =
         demeterFarmingRepository.getStakedFarmedAmountOfAsset(

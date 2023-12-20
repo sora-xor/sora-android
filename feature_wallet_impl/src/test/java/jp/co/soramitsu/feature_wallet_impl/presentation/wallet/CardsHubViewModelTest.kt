@@ -160,6 +160,7 @@ class CardsHubViewModelTest {
             }
         coEvery { cardsHubInteractorImpl.updateCardVisibilityOnCardHub(any(), any()) } returns Unit
         coEvery { demeterFarmingInteractor.getFarmedPools() } returns emptyList()
+        every { demeterFarmingInteractor.subscribeFarms(any()) } returns flow { emit("") }
         every { cardsHubInteractorImpl.subscribeVisibleCardsHubList() } returns
             flow {
                 emit(
