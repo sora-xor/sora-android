@@ -189,13 +189,12 @@ internal class DemeterFarmingRepositoryImpl(
     override fun subscribeFarms(address: String): Flow<String> = flow {
         val storage =
             runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.DEMETER_FARMING.palletName)
-                .storage(Storage.USER_INFOS.storageName)
+                .storage(Storage.POOLS.storageName)
         val storageKey = storage.storageKey(
             runtimeManager.getRuntimeSnapshot(),
-            address.toAccountId(),
         )
         emitAll(
-            substrateCalls.observeStorage(storageKey)
+            substrateCalls.observeBulk(storageKey)
                 .debounce(300)
                 .onEach {
                     cachedFarmedPools.remove(address)

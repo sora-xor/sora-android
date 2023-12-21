@@ -113,6 +113,27 @@ class SubstrateCalls @Inject constructor(
         const val DEFAULT_ASSETS_PAGE_SIZE = 100
     }
 
+    fun observeStorage(key: String): Flow<String> {
+        return socketService.subscriptionFlow(
+            SubscribeStorageRequest(key),
+            "state_unsubscribeStorage",
+        )
+            .map {
+                it.storageChange().getSingleChange().orEmpty()
+            }
+    }
+
+    fun observeBulk(key: String): Flow<String> = flow {
+        val bulk = BulkRetriever()
+        val keys = bulk.retrieveAllKeys(socketService, key)
+        emitAll(
+            socketService.subscriptionFlow(
+                SubscribeStorageRequest(keys),
+                "state_unsubscribeStorage",
+            ).map { "" }
+        )
+    }
+
     suspend fun getBulk(key: String): Map<String, String?> {
         val bulk = BulkRetriever()
         return bulk.retrieveAllValues(socketService, key)
@@ -503,16 +524,6 @@ class SubstrateCalls @Inject constructor(
             request = BlockRequest(blockHash),
             mapper = pojo<BlockResponse>().nonNull(),
         )
-    }
-
-    fun observeStorage(key: String): Flow<String> {
-        return socketService.subscriptionFlow(
-            SubscribeStorageRequest(key),
-            "state_unsubscribeStorage"
-        )
-            .map {
-                it.storageChange().getSingleChange().orEmpty()
-            }
     }
 
     suspend fun isUpgradedToDualRefCount(): Boolean {
