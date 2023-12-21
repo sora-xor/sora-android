@@ -72,10 +72,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 interface DemeterFarmingRepository {
-
-    fun subscribeFarms(address: String): Flow<String>
     suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>?
     suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
+    fun subscribeFarms(address: String): Flow<String>
     suspend fun getStakedFarmedAmountOfAsset(address: String, tokenId: String): BigDecimal
     suspend fun depositDemeterFarm(
         address: String,
@@ -354,8 +353,11 @@ internal class DemeterFarmingRepositoryImpl(
         }
     }
 
-    override suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>? {
+    override suspend fun getFarmedPools(
+        soraAccountAddress: String,
+    ): List<DemeterFarmingPool>? {
         if (cachedFarmedPools.containsKey(soraAccountAddress)) return cachedFarmedPools[soraAccountAddress]
+        cachedFarmedPools.remove(soraAccountAddress)
         val baseFarms = getFarmedBasicPools()
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
         val calculated = getDemeter(soraAccountAddress)

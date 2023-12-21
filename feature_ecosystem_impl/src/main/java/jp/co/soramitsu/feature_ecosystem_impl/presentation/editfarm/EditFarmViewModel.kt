@@ -44,6 +44,8 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
+import jp.co.soramitsu.common.util.ext.Big100
+import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
@@ -53,7 +55,6 @@ import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.model.EditFarmScreenState
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -68,7 +69,7 @@ class EditFarmViewModel @AssistedInject constructor(
     private val assetsRouter: AssetsRouter,
     private val assetsInteractor: AssetsInteractor,
     private val numbersFormatter: NumbersFormatter,
-    private val resourceManager: ResourceManager,
+    resourceManager: ResourceManager,
     private val demeterFarmingInteractor: DemeterFarmingInteractor,
     @Assisted("id1") private val token1Id: String,
     @Assisted("id2") private val token2Id: String,
@@ -105,6 +106,7 @@ class EditFarmViewModel @AssistedInject constructor(
     private var stakingNetworkFee: BigDecimal = BigDecimal.ZERO
     private var unStakingNetworkFee: BigDecimal = BigDecimal.ZERO
     private var feeToken: Token? = null
+    private var stakeFee: BigDecimal = BigDecimal.ZERO
 
     init {
         val ids = StringTriple(token1Id, token2Id, token3Id)
@@ -132,6 +134,7 @@ class EditFarmViewModel @AssistedInject constructor(
                         farmedPool?.amount ?: BigDecimal.ZERO,
                         poolData.user.poolProvidersBalance,
                     )
+                    stakeFee = basicFarm.fee.toBigDecimal().divideBy(Big100, 2)
 
                     recalcFuturePoolShareStacked()
 
@@ -139,7 +142,6 @@ class EditFarmViewModel @AssistedInject constructor(
                     unStakingNetworkFee = demeterFarmingInteractor.calcWithdrawDemeterNetworkFee(ids)
 
                     onSliderChange(currentStackedPercent / 100)
-
                     _state.value = _state.value.copy(
                         poolShareStaked = "${numbersFormatter.format(currentStackedPercent)}%",
                         fee = "${numbersFormatter.format(basicFarm.fee)}%",
@@ -151,15 +153,26 @@ class EditFarmViewModel @AssistedInject constructor(
         }
     }
 
-    override fun onMenuItem(action: Action) {
-        this.onBackPressed()
-    }
-
     private fun recalcFuturePoolShareStacked() {
         poolData?.let { poolData ->
             val currentStakingAmount = farmedPool?.amount ?: BigDecimal.ZERO
             stakingAmount =
                 ((poolData.user.poolProvidersBalance * _state.value.sliderProgressState.toBigDecimal()) - currentStakingAmount).abs()
+
+            val feeAmount = stakingAmount * stakeFee
+            val stakingAmountWithoutFee = stakingAmount - feeAmount
+            var shareWillBe = PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                stakingAmountWithoutFee + currentStakingAmount,
+                poolData.user.poolProvidersBalance - feeAmount
+            )
+
+            if (_state.value.sliderProgressState * 100 < shareWillBe) {
+                shareWillBe = (_state.value.sliderProgressState * 100).toDouble()
+            }
+
+            _state.value = _state.value.copy(
+                poolShareStakedWillBe = "${numbersFormatter.format(shareWillBe)}%"
+            )
         }
     }
 
@@ -214,7 +227,6 @@ class EditFarmViewModel @AssistedInject constructor(
             networkFee = "$networkFee ${feeToken?.symbol}",
             isButtonActive = isChanged && transferableXorBalance >= networkFee,
             percentageText = "${numbersFormatter.format(percentage)}%",
-            poolShareStakedWillBe = "${numbersFormatter.format(percentage)}%"
         )
 
         recalcFuturePoolShareStacked()

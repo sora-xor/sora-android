@@ -49,9 +49,7 @@ import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.model.ClaimScreenState
-import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -60,12 +58,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class ClaimDemeterViewModel @AssistedInject constructor(
-    private val poolsInteractor: PoolsInteractor,
     private val walletInteractor: WalletInteractor,
     private val assetsRouter: AssetsRouter,
     private val assetsInteractor: AssetsInteractor,
     private val numbersFormatter: NumbersFormatter,
-    private val resourceManager: ResourceManager,
+    resourceManager: ResourceManager,
     private val demeterFarmingInteractor: DemeterFarmingInteractor,
     @Assisted("id1") private val token1Id: String,
     @Assisted("id2") private val token2Id: String,
@@ -118,7 +115,9 @@ class ClaimDemeterViewModel @AssistedInject constructor(
             demeterFarmingInteractor.getFarmedPool(ids)?.let { farmPool ->
                 _state.value = _state.value.copy(
                     tokenIcon = farmPool.tokenReward.iconUri(),
-                    amountTitle = "${numbersFormatter.formatBigDecimal(farmPool.amountReward)} ${farmPool.tokenReward.symbol}",
+                    amountTitle = "${
+                        numbersFormatter.formatBigDecimal(farmPool.amountReward, 3)
+                    } ${farmPool.tokenReward.symbol}",
                     fiatAmountTitle = farmPool.tokenReward.printFiat(farmPool.amount, numbersFormatter),
                     networkFeeText = "$networkFee ${feeToken.symbol}",
                     isButtonActive = xorBalance >= networkFee,
@@ -145,9 +144,5 @@ class ClaimDemeterViewModel @AssistedInject constructor(
                 onError(R.string.common_error_general_message)
             }
         }
-    }
-
-    override fun onMenuItem(action: Action) {
-        this.onBackPressed()
     }
 }

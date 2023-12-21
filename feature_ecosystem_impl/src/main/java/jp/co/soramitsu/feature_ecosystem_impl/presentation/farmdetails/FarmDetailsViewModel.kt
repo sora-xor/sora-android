@@ -51,7 +51,6 @@ import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.model.FarmDetailsState
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -168,10 +167,6 @@ class FarmDetailsViewModel @AssistedInject constructor(
                     _state.value = farmDetailsState
                 }
         }
-    }
-
-    override fun onMenuItem(action: Action) {
-        this.onBackPressed()
     }
 
     fun onSupplyLiquidity() {
