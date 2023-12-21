@@ -10,8 +10,8 @@ plugins {
     alias(libs.plugins.googleServicesPlugin)
     alias(libs.plugins.firebaseCrashlyticsPlugin)
     alias(libs.plugins.firebaseAppDistributionPlugin)
+    alias(libs.plugins.triplet)
     id("kotlin-parcelize")
-    id("com.github.triplet.play") version "3.8.6"
     id("org.jetbrains.kotlinx.kover")
 }
 
@@ -19,7 +19,7 @@ kotlin {
     jvmToolchain(11)
 }
 
-// soralution 124 3.8.0.2 2023.12.02
+// soralution 125 3.8.1.0 2023.12.21
 // sora dae 108 3.8.0.0 2023.12.04
 
 android {
@@ -29,7 +29,7 @@ android {
     defaultConfig {
         applicationId = "jp.co.soramitsu.sora"
         minSdk = 24
-        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 124
+        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 125
         versionName = "3.8.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
