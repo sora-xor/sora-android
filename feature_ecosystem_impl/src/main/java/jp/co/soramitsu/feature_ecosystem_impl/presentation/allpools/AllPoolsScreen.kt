@@ -154,7 +154,7 @@ private fun AllPoolsInternal(
                 }
                 if (state.pools.isEmpty()) {
                     Box(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         NothingFoundText()
@@ -184,7 +184,7 @@ private fun PreviewAllPoolsInternal() {
     Column {
         AllPoolsInternal(
             state = EcoSystemPoolsState(
-                pools = previewBasicPoolListItemState,
+                pools = emptyList(),
             ),
             onPoolClicked = {},
             onAddPoolClicked = {},
