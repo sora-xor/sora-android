@@ -59,7 +59,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItem
-import jp.co.soramitsu.common_wallet.presentation.compose.previewBasicPoolListItemState
 import jp.co.soramitsu.feature_ecosystem_impl.R
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemPoolsState
 import jp.co.soramitsu.ui_core.component.card.ContentCardEndless
@@ -154,7 +153,7 @@ private fun AllPoolsInternal(
                 }
                 if (state.pools.isEmpty()) {
                     Box(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         NothingFoundText()
@@ -184,7 +183,7 @@ private fun PreviewAllPoolsInternal() {
     Column {
         AllPoolsInternal(
             state = EcoSystemPoolsState(
-                pools = previewBasicPoolListItemState,
+                pools = emptyList(),
             ),
             onPoolClicked = {},
             onAddPoolClicked = {},

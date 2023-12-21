@@ -144,7 +144,7 @@ class TxDetailsViewModel @AssistedInject constructor(
                             txTypeIcon = R.drawable.ic_star,
                             txTypeTitle = resourceManager.getString(R.string.demeter_claimed_reward),
                         ),
-                        amount1 = transaction.baseToken.printBalance(
+                        amount1 = transaction.rewardToken.printBalance(
                             transaction.amount,
                             numbersFormatter,
                             AssetHolder.ROUNDING
