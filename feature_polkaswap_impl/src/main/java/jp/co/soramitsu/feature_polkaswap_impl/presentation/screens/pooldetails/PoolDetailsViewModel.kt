@@ -101,10 +101,6 @@ class PoolDetailsViewModel @AssistedInject constructor(
         )
 
         viewModelScope.launch {
-            demeterFarmingInteractor.getFarmedBasicPools()
-        }
-
-        viewModelScope.launch {
             poolsInteractor.subscribePoolCacheOfCurAccount(token1Id, token2Id)
                 .catch { onError(it) }
                 .collectLatest { data ->

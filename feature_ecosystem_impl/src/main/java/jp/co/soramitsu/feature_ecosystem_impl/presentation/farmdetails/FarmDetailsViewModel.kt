@@ -39,6 +39,7 @@ import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -51,7 +52,6 @@ import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.model.FarmDetailsState
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -64,6 +64,7 @@ class FarmDetailsViewModel @AssistedInject constructor(
     private val polkaswapRouter: PolkaswapRouter,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
+    private val coroutineManager: CoroutineManager,
     private val demeterFarmingInteractor: DemeterFarmingInteractor,
     @Assisted("id1") private val token1Id: String,
     @Assisted("id2") private val token2Id: String,
@@ -168,10 +169,6 @@ class FarmDetailsViewModel @AssistedInject constructor(
                     _state.value = farmDetailsState
                 }
         }
-    }
-
-    override fun onMenuItem(action: Action) {
-        this.onBackPressed()
     }
 
     fun onSupplyLiquidity() {

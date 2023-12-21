@@ -72,10 +72,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 interface DemeterFarmingRepository {
-
+    suspend fun getFarmedPools(soraAccountAddress: String, updateCache: Boolean = false): List<DemeterFarmingPool>?
+    suspend fun getFarmedBasicPools(updateCache: Boolean = false): List<DemeterFarmingBasicPool>
     fun subscribeFarms(address: String): Flow<String>
-    suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>?
-    suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
     suspend fun getStakedFarmedAmountOfAsset(address: String, tokenId: String): BigDecimal
     suspend fun depositDemeterFarm(
         address: String,
@@ -354,8 +353,12 @@ internal class DemeterFarmingRepositoryImpl(
         }
     }
 
-    override suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>? {
-        if (cachedFarmedPools.containsKey(soraAccountAddress)) return cachedFarmedPools[soraAccountAddress]
+    override suspend fun getFarmedPools(
+        soraAccountAddress: String,
+        updateCache: Boolean
+    ): List<DemeterFarmingPool>? {
+        if (cachedFarmedPools.containsKey(soraAccountAddress) && !updateCache) return cachedFarmedPools[soraAccountAddress]
+        cachedFarmedPools.remove(soraAccountAddress)
         val baseFarms = getFarmedBasicPools()
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
         val calculated = getDemeter(soraAccountAddress)
@@ -387,8 +390,8 @@ internal class DemeterFarmingRepositoryImpl(
         return cachedFarmedPools.getOrPut(soraAccountAddress) { calculated }
     }
 
-    override suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool> {
-        if (cachedFarmedBasicPools == null) {
+    override suspend fun getFarmedBasicPools(updateCache: Boolean): List<DemeterFarmingBasicPool> {
+        if (cachedFarmedBasicPools == null || updateCache) {
             val selectedCurrency = soraConfigManager.getSelectedCurrency()
             val rewardTokens = getRewardTokens()
             cachedFarmedBasicPools = getAllFarms()

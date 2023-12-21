@@ -162,13 +162,14 @@ private fun PreviewEditFarms() {
     Column {
         ClaimDemeterScreen(
             state = ClaimScreenState(
-                StringTriple("", "", ""),
+                StringTriple("id1", "id2", "id3"),
                 DEFAULT_ICON_URI,
-                "",
-                "",
-                "",
+                "100 DAI",
+                "$100",
+                "0.007 XOR",
                 true,
-                true,
+                false,
+                isLoading = false
             ),
             { }
         )
