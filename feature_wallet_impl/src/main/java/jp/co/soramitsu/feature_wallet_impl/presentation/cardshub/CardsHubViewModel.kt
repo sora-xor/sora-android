@@ -165,11 +165,15 @@ class CardsHubViewModel @Inject constructor(
                             }
 
                             CardHubType.POOLS -> {
-                                poolsInteractor.subscribePoolsCacheOfAccount(data.first)
+                                val poolsFlow = poolsInteractor.subscribePoolsCacheOfAccount(data.first)
                                     .onStart {
                                         if (indexed.index == 0) this.emit(emptyList())
                                     }
-                                    .combine(demeterFarmingInteractor.subscribeFarms(data.first.substrateAddress)) { f1, _ -> f1 }
+                                val demeterFlow = demeterFarmingInteractor.subscribeFarms(data.first.substrateAddress)
+                                    .onStart {
+                                        if (indexed.index == 0) this.emit("")
+                                    }
+                                poolsFlow.combine(demeterFlow) { f1, _ -> f1 }
                                     .map { list ->
                                         val farms = demeterFarmingInteractor.getFarmedPools() ?: emptyList()
                                         cardHub to ((list.filter { it.user.favorite }) to farms)
