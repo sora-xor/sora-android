@@ -36,6 +36,7 @@ firebasebom = "32.7.0"
 googleServices = "4.3.15"
 firebaseCrashlytics = "2.9.9"
 firebaseAppDistribution = "3.2.0"
+tripletVersion = "3.8.4"
 timber = "5.0.1"
 ktor = "2.3.1"
 soracard = "0.1.70"
@@ -161,3 +162,4 @@ serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref 
 googleServicesPlugin = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 firebaseCrashlyticsPlugin = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
 firebaseAppDistributionPlugin = { id = "com.google.firebase.appdistribution", version.ref = "firebaseAppDistribution" }
+triplet = { id = "com.github.triplet.play", version.ref = "tripletVersion" }
