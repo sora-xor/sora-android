@@ -38,7 +38,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -55,6 +55,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.model.EditFarmScreenState
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -105,7 +106,7 @@ class EditFarmViewModel @AssistedInject constructor(
     private var transferableXorBalance: BigDecimal = BigDecimal.ZERO
     private var stakingNetworkFee: BigDecimal = BigDecimal.ZERO
     private var unStakingNetworkFee: BigDecimal = BigDecimal.ZERO
-    private var feeToken: Token? = null
+    private var feeAsset: Asset? = null
     private var stakeFee: BigDecimal = BigDecimal.ZERO
 
     init {
@@ -123,8 +124,8 @@ class EditFarmViewModel @AssistedInject constructor(
 
         viewModelScope.launch {
             poolData = poolsInteractor.getPoolOfCurAccount(StringPair(ids.first, ids.second))
-            feeToken = walletInteractor.getFeeToken()
-            transferableXorBalance = assetsInteractor.getXorBalance(feeToken?.precision ?: 18).transferable
+            feeAsset = assetsInteractor.getAssetOrThrow(SubstrateOptionsProvider.feeAssetId)
+            transferableXorBalance = feeAsset?.balance?.transferable ?: BigDecimal.ZERO
 
             poolData?.let { poolData ->
                 demeterFarmingInteractor.getFarmedBasicPool(ids)?.let { basicFarm ->
@@ -145,7 +146,7 @@ class EditFarmViewModel @AssistedInject constructor(
                     _state.value = _state.value.copy(
                         poolShareStaked = "${numbersFormatter.format(currentStackedPercent)}%",
                         fee = "${numbersFormatter.format(basicFarm.fee)}%",
-                        networkFee = "$stakingNetworkFee ${feeToken?.symbol}",
+                        networkFee = "$stakingNetworkFee ${feeAsset?.token?.symbol}",
                         isCardLoading = false,
                     )
                 }
@@ -224,7 +225,7 @@ class EditFarmViewModel @AssistedInject constructor(
 
         _state.value = state.value.copy(
             sliderProgressState = value.toFloat(),
-            networkFee = "$networkFee ${feeToken?.symbol}",
+            networkFee = "$networkFee ${feeAsset?.token?.symbol}",
             isButtonActive = isChanged && transferableXorBalance >= networkFee,
             percentageText = "${numbersFormatter.format(percentage)}%",
         )
