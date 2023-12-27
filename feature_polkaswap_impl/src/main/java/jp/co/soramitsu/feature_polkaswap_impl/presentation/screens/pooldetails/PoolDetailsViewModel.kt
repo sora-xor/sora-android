@@ -83,7 +83,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
     internal var detailsState by mutableStateOf(
         PoolDetailsState(
             DEFAULT_ICON_URI, DEFAULT_ICON_URI, DEFAULT_ICON_URI,
-            "", "", "", "", "", "",
+            "", "", "", "", "", "", "",
             true, true, "", emptyList(), emptyList(), false,
         )
     )
@@ -196,8 +196,9 @@ class PoolDetailsViewModel @AssistedInject constructor(
                                     AssetHolder.ROUNDING,
                                 )
                             },
+                            tvl = data.basic.baseToken.printFiat(data.basic.tvl?.formatFiatSuffix()).orEmpty(),
                             addEnabled = true,
-                            removeEnabled = (userData != null) && ((pools100 == null) || (pools100 == false)),
+                            removeEnabled = (userData != null) && (!pools100),
                             userPoolSharePercent = userData?.poolShare?.let {
                                 "%s%%".format(
                                     numbersFormatter.format(it, 2, true)
@@ -205,7 +206,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
                             },
                             availableDemeterFarms = farms,
                             demeterPools = pools,
-                            demeter100Percent = pools100 == true,
+                            demeter100Percent = pools100,
                         )
                     }
                 }

@@ -45,16 +45,11 @@ internal data class PoolDetailsState(
     val apy: String,
     val pooled1: String?,
     val pooled2: String?,
+    val tvl: String,
     val addEnabled: Boolean,
     val removeEnabled: Boolean,
     val userPoolSharePercent: String?,
     val demeterPools: List<BasicUserFarmListItemState>?,
     val availableDemeterFarms: List<BasicFarmListItemState>? = emptyList(),
     val demeter100Percent: Boolean,
-)
-
-internal data class PoolDetailsDemeterState(
-    val rewardsUri: String,
-    val rewardsTokenSymbol: String,
-    val percent: Float,
 )

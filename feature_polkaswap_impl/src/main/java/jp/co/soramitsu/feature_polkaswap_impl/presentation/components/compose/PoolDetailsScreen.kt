@@ -115,16 +115,31 @@ internal fun PoolDetailsScreen(
                         }
                     )
                 }
-                Text(
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         .wrapContentHeight()
                         .padding(horizontal = Dimens.x2),
-                    color = MaterialTheme.customColors.fgPrimary,
-                    style = MaterialTheme.customTypography.headline2,
-                    text = "%s-%s %s".format(state.symbol1, state.symbol2, stringResource(id = R.string.activity_pool_title)),
-                    maxLines = 1,
-                )
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .padding(horizontal = Dimens.x2),
+                        color = MaterialTheme.customColors.fgPrimary,
+                        style = MaterialTheme.customTypography.headline2,
+                        text = "%s-%s %s".format(state.symbol1, state.symbol2, stringResource(id = R.string.activity_pool_title)),
+                        maxLines = 1,
+                    )
+                    Text(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .padding(horizontal = Dimens.x2),
+                        style = MaterialTheme.customTypography.textXSBold,
+                        color = MaterialTheme.customColors.fgSecondary,
+                        text = state.tvl ?: "",
+                        maxLines = 1,
+                    )
+                }
                 Icon(
                     tint = if (state.userPoolSharePercent == null) {
                         MaterialTheme.customColors.fgTertiary
@@ -356,6 +371,7 @@ private fun PreviewPoolDetailsScreen() {
                 symbol2 = "VAL",
                 pooled1 = "123 VAL",
                 pooled2 = "2424.2 XOR",
+                tvl = "$34.999 TVL",
                 addEnabled = true,
                 removeEnabled = true,
                 userPoolSharePercent = "12.3%",
