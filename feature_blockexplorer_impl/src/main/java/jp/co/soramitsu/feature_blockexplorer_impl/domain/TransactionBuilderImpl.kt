@@ -149,7 +149,7 @@ class TransactionBuilderImpl @Inject constructor() : TransactionBuilder {
                 date = date,
             ),
             amount = amount,
-            type = DemeterType.STAKE,
+            type = type,
             baseToken = baseToken,
             targetToken = targetToken,
             rewardToken = rewardToken,
