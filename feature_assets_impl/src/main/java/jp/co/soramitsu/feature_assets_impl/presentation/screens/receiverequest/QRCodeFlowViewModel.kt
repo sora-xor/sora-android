@@ -204,6 +204,12 @@ class QRCodeFlowViewModel @Inject constructor(
     override fun startScreen(): String = QRCodeFlowRoute.MainScreen.route
 
     override fun onToolbarSearch(value: String) {
+        _toolbarState.value = toolbarState.value?.copy(
+            basic = toolbarState.value!!.basic.copy(
+                searchValue = value
+            )
+        )
+
         _selectTokenScreenState.value = _selectTokenScreenState.value.copy(
             filter = value,
         )

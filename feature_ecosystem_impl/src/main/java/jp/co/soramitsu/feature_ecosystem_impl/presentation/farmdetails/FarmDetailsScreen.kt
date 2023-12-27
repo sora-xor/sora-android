@@ -297,7 +297,7 @@ private fun FarmCard(state: FarmDetailsState, onStartStakingClicked: () -> Unit,
                 Divider(
                     modifier = Modifier.padding(bottom = Dimens.x1_5),
                     thickness = 1.dp,
-                    color = MaterialTheme.customColors.bgPage
+                    color = Color.Transparent
                 )
 
                 Text(

@@ -184,6 +184,12 @@ class SwapViewModel @AssistedInject constructor(
     override fun startScreen(): String = SwapRoutes.start
 
     override fun onToolbarSearch(value: String) {
+        _toolbarState.value = toolbarState.value?.copy(
+            basic = toolbarState.value!!.basic.copy(
+                searchValue = value
+            )
+        )
+
         _swapTokensFilter.value = _swapTokensFilter.value.copy(
             filter = value,
         )
@@ -553,9 +559,11 @@ class SwapViewModel @AssistedInject constructor(
             availableMarkets.isEmpty() -> {
                 resourceManager.getString(R.string.polkaswap_pool_not_created) to false
             }
+
             _swapMainState.value.tokenFromState != null && amountFrom.isZero() && desired == WithDesired.INPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
+
             _swapMainState.value.tokenToState != null && amountTo.isZero() && desired == WithDesired.OUTPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
