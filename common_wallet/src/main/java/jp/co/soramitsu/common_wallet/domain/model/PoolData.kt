@@ -51,6 +51,8 @@ data class BasicPoolData(
     val sbapy: Double?,
 ) {
     val fiatSymbol = baseToken.fiatSymbol
+    val tvl: BigDecimal?
+        get() = baseToken.fiatPrice?.times(2)?.toBigDecimal()?.multiply(baseReserves)
 }
 
 val List<BasicPoolData>.fiatSymbol: String
