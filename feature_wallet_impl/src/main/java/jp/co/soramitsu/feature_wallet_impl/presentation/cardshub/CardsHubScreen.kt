@@ -47,6 +47,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -94,15 +95,19 @@ fun TopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            modifier = Modifier.clickable(onClick = onAccountClick),
+            modifier = Modifier.padding(end = Dimens.x2).weight(1f).clickable(onClick = onAccountClick),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
+                modifier = Modifier.wrapContentWidth().weight(1f),
                 text = account,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.customTypography.displayS,
                 color = MaterialTheme.customColors.fgPrimary,
             )
             Icon(
+                modifier = Modifier.wrapContentWidth(),
                 painter = painterResource(R.drawable.ic_arrows_chevron_right_rounded_24),
                 tint = MaterialTheme.customColors.fgPrimary,
                 contentDescription = null
