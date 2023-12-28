@@ -331,6 +331,10 @@ class PoolsInteractorImpl(
         return polkaswapRepository.getBasicPool(poolIds.first, poolIds.second)
     }
 
+    override suspend fun getBasicPools(): List<BasicPoolData> {
+        return polkaswapRepository.getBasicPools()
+    }
+
     override fun subscribePoolsCacheOfAccount(account: SoraAccount): Flow<List<CommonUserPoolData>> {
         return polkaswapRepository.subscribePools(account.substrateAddress)
     }

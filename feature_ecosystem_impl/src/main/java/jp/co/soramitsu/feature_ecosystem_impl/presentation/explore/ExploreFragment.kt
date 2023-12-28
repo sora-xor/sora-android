@@ -34,39 +34,53 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.util.ext.safeCast
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItem
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItem
+import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItemEnumerated
+import jp.co.soramitsu.feature_ecosystem_impl.R
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies.AllCurrenciesScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.AllDemeterScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools.AllPoolsScreen
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.card.ContentCardEndless
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -82,7 +96,7 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         activity?.safeCast<BottomBarController>()?.showBottomBar()
     }
 
-    @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+    @OptIn(ExperimentalFoundationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState, navController: NavHostController
     ) {
@@ -91,72 +105,181 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         ) {
             val pagerState = rememberPagerState { ExplorePages.entries.size }
             val scope = rememberCoroutineScope()
-
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Text(
-                    modifier = Modifier.padding(
-                        start = Dimens.x3,
-                        end = Dimens.x3,
-                        top = Dimens.x7,
-                    ),
-                    text = stringResource(id = R.string.common_explore),
-                    style = MaterialTheme.customTypography.headline1,
-                    color = MaterialTheme.customColors.fgPrimary,
-                )
-
-                val horizontalState = rememberScrollState()
-
-                Row(
+            val state = viewModel.state.collectAsStateWithLifecycle().value
+            if (state.isSearching) {
+                ContentCardEndless(
                     modifier = Modifier
-                        .padding(vertical = Dimens.x2, horizontal = Dimens.x3)
-                        .horizontalScroll(horizontalState),
+                        .padding(horizontal = Dimens.x2)
+                        .fillMaxSize(),
+                    innerPadding = PaddingValues(
+                        start = Dimens.x1_2,
+                        end = Dimens.x3,
+                        top = Dimens.x3
+                    ),
                 ) {
-                    (0..<pagerState.pageCount).forEach {
-                        if (it == pagerState.currentPage) {
-                            FilledButton(
-                                modifier = Modifier.padding(end = Dimens.x1),
-                                size = Dimens.x4,
-                                order = Order.SECONDARY,
-                                text = stringResource(id = ExplorePages.entries[it].titleResource)
+                    if (state.isLoading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(Dimens.x6)
+                                    .padding(Dimens.x1),
+                                color = MaterialTheme.customColors.accentPrimary
+                            )
+                        }
+                    } else {
+                        if (state.assets.isEmpty() && state.farms.isEmpty() && state.pools.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                scope.launch { pagerState.animateScrollToPage(it) }
+                                Text(
+                                    text = stringResource(id = R.string.common_nothing_found),
+                                    style = MaterialTheme.customTypography.paragraphM,
+                                    color = MaterialTheme.customColors.fgSecondary
+                                )
                             }
                         } else {
-                            TonalButton(
-                                modifier = Modifier.padding(end = Dimens.x1),
-                                size = Dimens.x4,
-                                order = Order.SECONDARY,
-                                text = stringResource(id = ExplorePages.entries[it].titleResource)
-                            ) {
-                                scope.launch { pagerState.animateScrollToPage(it) }
+                            Column {
+                                val listState1 = rememberLazyListState()
+                                LazyColumn(state = listState1) {
+                                    if (state.assets.isNotEmpty()) {
+                                        item {
+                                            Text(
+                                                modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
+                                                style = MaterialTheme.customTypography.headline4,
+                                                color = MaterialTheme.customColors.fgSecondary,
+                                                fontWeight = FontWeight.Normal,
+                                                text = stringResource(id = R.string.liquid_assets).uppercase()
+                                            )
+                                        }
+
+                                        items(
+                                            count = state.assets.size,
+                                        ) { position ->
+                                            AssetItemEnumerated(
+                                                modifier = Modifier.padding(vertical = Dimens.x1),
+                                                assetState = state.assets[position],
+                                                number = "${position + 1}",
+                                                testTag = "AssetFilteredItem",
+                                                onClick = viewModel::onTokenClicked,
+                                            )
+                                        }
+
+                                        item {
+                                            Divider(thickness = Dimens.x2, color = Color.Transparent)
+                                        }
+                                    }
+
+                                    if (state.pools.isNotEmpty()) {
+                                        item {
+                                            Text(
+                                                modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
+                                                style = MaterialTheme.customTypography.headline4,
+                                                color = MaterialTheme.customColors.fgSecondary,
+                                                fontWeight = FontWeight.Normal,
+                                                text = stringResource(id = R.string.common_pools).uppercase()
+                                            )
+                                        }
+
+                                        items(
+                                            count = state.pools.size,
+                                        ) { position ->
+                                            BasicPoolListItem(
+                                                modifier = Modifier.padding(vertical = Dimens.x1),
+                                                state = state.pools[position],
+                                                onPoolClick = viewModel::onPoolClicked
+                                            )
+                                        }
+
+                                        item {
+                                            Divider(thickness = Dimens.x2, color = Color.Transparent)
+                                        }
+                                    }
+
+                                    if (state.farms.isNotEmpty()) {
+                                        item {
+                                            Text(
+                                                modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
+                                                style = MaterialTheme.customTypography.headline4,
+                                                color = MaterialTheme.customColors.fgSecondary,
+                                                fontWeight = FontWeight.Normal,
+                                                text = stringResource(id = R.string.common_farms).uppercase()
+                                            )
+                                        }
+                                        items(
+                                            count = state.farms.size,
+                                        ) { position ->
+                                            BasicFarmListItem(
+                                                modifier = Modifier.padding(vertical = Dimens.x1),
+                                                state = state.farms[position],
+                                                onPoolClick = viewModel::onFarmClicked
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
-
-                HorizontalPager(
-                    modifier = Modifier.fillMaxHeight(), state = pagerState, beyondBoundsPageCount = 1
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    when (it) {
-                        ExplorePages.CURRENCIES.ordinal -> {
-                            AllCurrenciesScreen(
-                                onTokenClicked = viewModel::onTokenClicked,
-                            )
-                        }
+                    val horizontalState = rememberScrollState()
 
-                        ExplorePages.POOLS.ordinal -> {
-                            AllPoolsScreen(
-                                onPoolClicked = viewModel::onPoolClicked,
-                                onAddPoolClicked = viewModel::onPoolPlus,
-                            )
+                    Row(
+                        modifier = Modifier
+                            .padding(bottom = Dimens.x2, start = Dimens.x3)
+                            .horizontalScroll(horizontalState),
+                    ) {
+                        (0..<pagerState.pageCount).forEach {
+                            if (it == pagerState.currentPage) {
+                                FilledButton(
+                                    modifier = Modifier.padding(end = Dimens.x1),
+                                    size = Dimens.x4,
+                                    order = Order.SECONDARY,
+                                    text = stringResource(id = ExplorePages.entries[it].titleResource)
+                                ) {
+                                    scope.launch { pagerState.animateScrollToPage(it) }
+                                }
+                            } else {
+                                TonalButton(
+                                    modifier = Modifier.padding(end = Dimens.x1),
+                                    size = Dimens.x4,
+                                    order = Order.SECONDARY,
+                                    text = stringResource(id = ExplorePages.entries[it].titleResource)
+                                ) {
+                                    scope.launch { pagerState.animateScrollToPage(it) }
+                                }
+                            }
                         }
+                    }
 
-                        ExplorePages.FARMING.ordinal -> {
-                            AllDemeterScreen(
-                                onFarmClicked = viewModel::onFarmClicked,
-                            )
+                    HorizontalPager(
+                        modifier = Modifier.fillMaxHeight(), state = pagerState, beyondBoundsPageCount = 1
+                    ) {
+                        when (it) {
+                            ExplorePages.CURRENCIES.ordinal -> {
+                                AllCurrenciesScreen(
+                                    onTokenClicked = viewModel::onTokenClicked,
+                                )
+                            }
+
+                            ExplorePages.POOLS.ordinal -> {
+                                AllPoolsScreen(
+                                    onPoolClicked = viewModel::onPoolClicked,
+                                    onAddPoolClicked = viewModel::onPoolPlus,
+                                )
+                            }
+
+                            ExplorePages.FARMING.ordinal -> {
+                                AllDemeterScreen(
+                                    onFarmClicked = viewModel::onFarmClicked,
+                                )
+                            }
                         }
                     }
                 }

@@ -221,10 +221,17 @@ class EditFarmViewModel @AssistedInject constructor(
             unStakingNetworkFee
         }
 
+        val fee = if (percentage > currentStackedPercent) {
+            stakeFee * Big100
+        } else {
+            BigDecimal.ZERO
+        }
+
         val isChanged = abs(percentage - currentStackedPercent) > 0.001
 
         _state.value = state.value.copy(
             sliderProgressState = value.toFloat(),
+            fee = "${numbersFormatter.formatBigDecimal(fee)}%",
             networkFee = "$networkFee ${feeAsset?.token?.symbol}",
             isButtonActive = isChanged && transferableXorBalance >= networkFee,
             percentageText = "${numbersFormatter.format(percentage)}%",

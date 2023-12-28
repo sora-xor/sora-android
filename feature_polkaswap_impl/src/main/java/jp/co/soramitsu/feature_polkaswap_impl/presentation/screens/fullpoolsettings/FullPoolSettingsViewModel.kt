@@ -165,6 +165,12 @@ class FullPoolSettingsViewModel @Inject constructor(
     }
 
     override fun onToolbarSearch(value: String) {
+        _toolbarState.value = toolbarState.value?.copy(
+            basic = toolbarState.value!!.basic.copy(
+                searchValue = value
+            )
+        )
+
         _dragList.value = value.isBlank()
         curFilter = value
         filterAndUpdateAssetsList()

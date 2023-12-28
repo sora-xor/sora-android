@@ -30,49 +30,16 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_api.domain.interfaces
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.model
 
-import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.PoolDex
-import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
-import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
-import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
-import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import kotlinx.coroutines.flow.Flow
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 
-interface PolkaswapRepository {
-
-    fun subscribeBasicPools(): Flow<List<BasicPoolData>>
-
-    suspend fun getPoolBaseTokens(): List<PoolDex>
-
-    fun subscribePools(address: String): Flow<List<CommonUserPoolData>>
-
-    suspend fun getPoolsCacheOfAccount(address: String): List<CommonUserPoolData>
-
-    suspend fun getBasicPool(b: String, t: String): BasicPoolData?
-
-    fun subscribePoolOfAccount(
-        address: String,
-        baseTokenId: String,
-        targetTokenId: String,
-    ): Flow<CommonPoolData?>
-
-    fun subscribeLocalPoolReserves(
-        address: String,
-        baseTokenId: String,
-        assetId: String
-    ): Flow<LiquidityData?>
-
-    fun getPolkaswapDisclaimerVisibility(): Flow<Boolean>
-
-    suspend fun setPolkaswapDisclaimerVisibility(v: Boolean)
-
-    suspend fun poolFavoriteOn(ids: StringPair, account: SoraAccount)
-
-    suspend fun poolFavoriteOff(ids: StringPair, account: SoraAccount)
-
-    suspend fun updatePoolPosition(pools: Map<StringPair, Int>, account: SoraAccount)
-    suspend fun getBasicPools(): List<BasicPoolData>
-}
+data class ExploreScreenState(
+    val isSearching: Boolean = false,
+    val assets: List<AssetItemCardState> = emptyList(),
+    val pools: List<BasicPoolListItemState> = emptyList(),
+    val farms: List<BasicFarmListItemState> = emptyList(),
+    val isLoading: Boolean = false,
+)

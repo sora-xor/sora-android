@@ -57,6 +57,8 @@ interface PoolsInteractor : PolkaswapInteractor {
 
     suspend fun getBasicPool(poolIds: StringPair): BasicPoolData?
 
+    suspend fun getBasicPools(): List<BasicPoolData>
+
     fun subscribePoolCacheOfCurAccount(tokenFromId: String, tokenToId: String): Flow<CommonPoolData?>
 
     fun subscribeReservesCache(
