@@ -77,6 +77,30 @@ fun TxHistoryListItem(
                 eventUiModel = eventUiModel
             )
         }
+        is EventUiModel.EventTxUiModel.EventDemeterRewardUiModel -> {
+            EventDemeterReward(
+                eventUiModel = eventUiModel,
+                modifier = modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
+                    .clickable { onTxHistoryItemClick(eventUiModel.txHash) },
+            )
+        }
+        is EventUiModel.EventTxUiModel.EventDemeterStakeUiModel -> {
+            EventDemeterStake(
+                eventUiModel = eventUiModel,
+                modifier = modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
+                    .clickable { onTxHistoryItemClick(eventUiModel.txHash) },
+            )
+        }
+        is EventUiModel.EventTxUiModel.EventAdarIncomeUiModel -> {
+            EventAdarIncome(
+                eventUiModel = eventUiModel,
+                modifier = modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
+                    .clickable { },
+            )
+        }
         is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel -> {
             EventSwap(
                 modifier = modifier

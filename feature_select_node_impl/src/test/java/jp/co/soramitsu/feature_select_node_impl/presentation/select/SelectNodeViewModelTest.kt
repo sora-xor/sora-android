@@ -170,7 +170,6 @@ class SelectNodeViewModelTest {
         assertNull(selectNodeViewModel.state.switchNodeAlertState)
     }
 
-
     @Test
     fun `onNodeSwitchCanceled EXPECT switchNodeAlertState null`() = runTest {
         selectNodeViewModel.onNodeSwitchCanceled()

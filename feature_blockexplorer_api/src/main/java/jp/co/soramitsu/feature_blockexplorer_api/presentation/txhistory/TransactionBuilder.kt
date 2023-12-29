@@ -90,4 +90,30 @@ interface TransactionBuilder {
             status = status,
             timestamp = date,
         )
+
+    fun buildDemeterStaking(
+        txHash: String,
+        blockHash: String?,
+        fee: BigDecimal,
+        status: TransactionStatus,
+        date: Long,
+        amount: BigDecimal,
+        type: DemeterType,
+        baseToken: Token,
+        targetToken: Token,
+        rewardToken: Token
+    ): Transaction.DemeterFarming
+
+    fun buildDemeterRewards(
+        txHash: String,
+        blockHash: String?,
+        fee: BigDecimal,
+        status: TransactionStatus,
+        date: Long,
+        amount: BigDecimal,
+        type: DemeterType,
+        baseToken: Token,
+        targetToken: Token,
+        rewardToken: Token
+    ): Transaction.DemeterFarming
 }

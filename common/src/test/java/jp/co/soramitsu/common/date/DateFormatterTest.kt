@@ -33,6 +33,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.date
 
 import android.content.Context
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -45,9 +48,6 @@ import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 
 @RunWith(MockitoJUnitRunner::class)
 class DateTimeFormatterTest {
@@ -57,8 +57,10 @@ class DateTimeFormatterTest {
 
     @Mock
     private lateinit var resourceManager: ResourceManager
+
     @Mock
     private lateinit var context: Context
+
     @Mock
     private lateinit var languagesHolder: LanguagesHolder
 

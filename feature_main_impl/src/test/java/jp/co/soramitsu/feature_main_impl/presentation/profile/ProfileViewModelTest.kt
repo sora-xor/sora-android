@@ -38,6 +38,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.verify
+import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
@@ -62,7 +63,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
 class ProfileViewModelTest {
@@ -127,23 +127,23 @@ class ProfileViewModelTest {
     @Before
     fun setUp() = runTest {
         every { soraCardInteractor.subscribeToSoraCardAvailabilityFlow() } returns
-                flowOf(
-                    SoraCardAvailabilityInfo(
-                        xorBalance = BigDecimal.ONE,
-                        enoughXor = true,
-                    )
+            flowOf(
+                SoraCardAvailabilityInfo(
+                    xorBalance = BigDecimal.ONE,
+                    enoughXor = true,
                 )
+            )
         coEvery { soraCardInteractor.needInstallUpdate() } returns false
         every { interactor.flowSelectedNode() } returns
-                flowOf(
-                    ChainNode(
-                        chain = "SORA",
-                        name = "node",
-                        address = "address",
-                        isSelected = true,
-                        isDefault = true
-                    )
+            flowOf(
+                ChainNode(
+                    chain = "SORA",
+                    name = "node",
+                    address = "address",
+                    isSelected = true,
+                    isDefault = true
                 )
+            )
         coEvery { soraConfigManager.getSoraCard() } returns true
         every { nodeManager.connectionState } returns flowOf(true)
         every { router.showGetSoraCard(any(), any()) } returns Unit
@@ -152,7 +152,9 @@ class ProfileViewModelTest {
 
     @Test
     fun `init succesfull`() = runTest {
-        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
+        every {
+            soraCardInteractor.subscribeSoraCardStatus()
+        } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         advanceUntilIdle()
         profileViewModel.state.value.let {
@@ -163,7 +165,9 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showSoraCard with no state EXPECT navigate to get sora card`() = runTest {
-        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
+        every {
+            soraCardInteractor.subscribeSoraCardStatus()
+        } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         advanceUntilIdle()
         profileViewModel.showSoraCard()
@@ -172,7 +176,9 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showSoraCard with state EXPECT navigate to sora card sdk state screen`() = runTest {
-        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.Pending)
+        every {
+            soraCardInteractor.subscribeSoraCardStatus()
+        } returns flowOf(SoraCardCommonVerification.Pending)
         initViewModel()
         advanceUntilIdle()
         profileViewModel.showSoraCard()
@@ -182,7 +188,9 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showBuyCrypto EXPECT navigate to buy crypto screen`() {
-        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
+        every {
+            soraCardInteractor.subscribeSoraCardStatus()
+        } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         profileViewModel.showBuyCrypto()
         verify { assetsRouter.showBuyCrypto(any()) }

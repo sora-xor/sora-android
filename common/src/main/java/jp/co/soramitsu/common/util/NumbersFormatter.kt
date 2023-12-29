@@ -108,8 +108,12 @@ class NumbersFormatter {
                     p++
                 }
                 p.coerceAtLeast(precision)
-            } else { precision }
-        } else { precision }
+            } else {
+                precision
+            }
+        } else {
+            precision
+        }
         return decimalFormatterFor(patternWith(newPrecision)).format(num)
     }
 

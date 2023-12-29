@@ -89,6 +89,7 @@ class FullAssetSettingsViewModel @Inject constructor(
                 actionLabel = jp.co.soramitsu.common.R.string.common_done,
                 searchValue = "",
                 searchEnabled = true,
+                searchPlaceholder = jp.co.soramitsu.common.R.string.search_token_placeholder,
             ),
             type = SoramitsuToolbarType.Small(),
         )
@@ -121,6 +122,12 @@ class FullAssetSettingsViewModel @Inject constructor(
     }
 
     override fun onToolbarSearch(value: String) {
+        _toolbarState.value = toolbarState.value?.copy(
+            basic = toolbarState.value!!.basic.copy(
+                searchValue = value
+            )
+        )
+
         _dragList.value = value.isBlank()
         curFilter = value
         filterAndUpdateAssetsList()

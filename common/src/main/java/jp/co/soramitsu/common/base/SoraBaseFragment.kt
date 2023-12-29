@@ -40,7 +40,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.addCallback
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -83,7 +82,6 @@ import kotlinx.coroutines.launch
 
 const val theOnlyRoute = "theOnlyRoute"
 
-@OptIn(ExperimentalAnimationApi::class)
 abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
 
     abstract val viewModel: T

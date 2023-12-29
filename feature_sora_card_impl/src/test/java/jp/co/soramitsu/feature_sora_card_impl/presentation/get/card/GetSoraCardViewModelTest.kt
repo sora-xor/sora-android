@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkObject
+import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -66,7 +67,6 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
-import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -104,19 +104,21 @@ class GetSoraCardViewModelTest {
     private lateinit var connectionManager: ConnectionManager
 
     @Before
-     fun setUp() = runTest {
+    fun setUp() = runTest {
         given(connectionManager.connectionState).willReturn(flowOf(true))
 
         mockkObject(OptionsProvider)
         every { OptionsProvider.header } returns "test android client"
         given(soraCardInteractor.fetchApplicationFee()).willReturn("")
 
-        given(soraCardInteractor.subscribeToSoraCardAvailabilityFlow()).willReturn(flowOf(
-            SoraCardAvailabilityInfo(
-                xorBalance = BigDecimal.ONE,
-                enoughXor = true,
+        given(soraCardInteractor.subscribeToSoraCardAvailabilityFlow()).willReturn(
+            flowOf(
+                SoraCardAvailabilityInfo(
+                    xorBalance = BigDecimal.ONE,
+                    enoughXor = true,
+                )
             )
-        ))
+        )
 
         viewModel = GetSoraCardViewModel(
             assetsRouter,
@@ -146,7 +148,7 @@ class GetSoraCardViewModelTest {
     }
 
     @Test
-    fun `enable sora card EXPECT set up launcher`() = runTest{
+    fun `enable sora card EXPECT set up launcher`() = runTest {
         advanceUntilIdle()
 
         viewModel.onEnableCard()

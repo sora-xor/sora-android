@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItem
 import jp.co.soramitsu.common_wallet.presentation.compose.previewBasicFarmListItemState
@@ -129,11 +130,7 @@ private fun AllDemeterInternal(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = stringResource(id = R.string.common_nothing_available),
-                            style = MaterialTheme.customTypography.headline3,
-                            color = MaterialTheme.customColors.fgSecondary
-                        )
+                        NothingFoundText()
                     }
                 } else {
                     val listState = rememberLazyListState()
@@ -157,7 +154,7 @@ private fun AllDemeterInternal(
 @Preview
 @Composable
 private fun PreviewAllPoolsInternal() {
-    Column() {
+    Column {
         AllDemeterInternal(
             state = AllFarmsState(
                 pools = previewBasicFarmListItemState,

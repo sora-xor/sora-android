@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_referral_impl.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
+import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -71,7 +72,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -233,7 +233,8 @@ class ReferralViewModelTest {
         whenever(interactor.getReferrals()).thenReturn(flow { emit(referrals) })
         whenever(interactor.observeReferrals()).thenReturn(emptyFlow())
         whenever(assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)).thenReturn(
-            flow { emit(TestAssets.xorAsset()) })
+            flow { emit(TestAssets.xorAsset()) }
+        )
         setupViewModel()
         advanceUntilIdle()
         referralViewModel.onBondPlus()

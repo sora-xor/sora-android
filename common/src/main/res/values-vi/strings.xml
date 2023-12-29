@@ -62,6 +62,7 @@
   <string name="claim_error_title">Chuyển đổi không thành công</string>
   <string name="claim_error_title_v1">Giao dịch không thành công. Vui lòng thử lại sau.</string>
   <string name="claim_notification_text">Quá trình chuyển đổi đang diễn ra...</string>
+  <string name="claim_rewards">Claim rewards</string>
   <string name="claim_subtitle">Chúng tôi cần sự đồng ý của bạn để thực hiện chuyển đổi tiền của bạn từ SORA để bạn có thể sử dụng chúng. SORA bây giờ sẽ hoạt động trên mạng Substrate. Vui lòng xác nhận chuyển đổi.</string>
   <string name="claim_subtitle_confirmed">Cảm ơn bạn đã xác nhận!</string>
   <string name="claim_subtitle_confirmed_v2">Quá trình chuyển tài sản đang được tiến hành</string>
@@ -83,6 +84,7 @@
   <string name="common_chinese">Tiếng Trung Quốc</string>
   <string name="common_chinesetaiwan">Tiếng Trung Quốc (Đài Loan)</string>
   <string name="common_choose_asset">Chọn tài sản</string>
+  <string name="common_claim">Claim</string>
   <string name="common_close">Đóng</string>
   <string name="common_confirm">Xác nhận</string>
   <string name="common_connected">Đã kết nối</string>
@@ -140,6 +142,7 @@
   <string name="common_explore">Khám phá</string>
   <string name="common_failed">Thất bại</string>
   <string name="common_farming">Farming</string>
+  <string name="common_farms">Farms</string>
   <string name="common_fee">Fee</string>
   <string name="common_filipino">Tiếng Philippines</string>
   <string name="common_finnish">Tiếng Phần lan</string>
@@ -160,10 +163,12 @@
   <string name="common_khmer">Tiếng Khmer</string>
   <string name="common_korean">Tiếng Hàn Quốc</string>
   <string name="common_malay">Tiếng Mã Lai</string>
+  <string name="common_max">max</string>
   <string name="common_min">phút</string>
   <string name="common_more">Thêm</string>
   <string name="common_norwegian">Tiếng Nauy</string>
   <string name="common_nothing_available">Nothing available</string>
+  <string name="common_nothing_found">Nothing found</string>
   <string name="common_ok">Đồng ý</string>
   <string name="common_passphrase_title">Chuỗi từ khóa khôi phục</string>
   <string name="common_pay_attention">Chú ý!</string>
@@ -228,11 +233,16 @@
   <string name="dark_mode">Chế độ tối</string>
   <string name="delete_backup_alert_description">Nếu bạn xóa bản sao lưu Google của mình, bạn sẽ chỉ có thể khôi phục ví của mình bằng tự sao lưu cụm mật khẩu của mình.</string>
   <string name="delete_backup_alert_title">Bạn có chắc không?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">Đóng băng</string>
   <string name="details_receive_from_pool">Rút tiền từ Pool</string>
   <string name="details_sent_to_pool">Gửi đến pool</string>
   <string name="discover_coming_soon">Các nhà phát triển SORA hiện đang làm việc để tạo ra tính năng sẽ hiển thị danh sách đầy đủ các nhóm đang hoạt động trên Polkaswap. \n\n Hiện tại, nếu bạn muốn tạo/thêm vào một nhóm, vui lòng sử dụng nút bên dưới.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
+  <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Chỉnh sửa dạng xem</string>
   <string name="empty_recent_recipients">Không có người nhận gần đây.\nĐịa chỉ đã gửi sẽ được hiển thị tại đây.</string>
   <string name="empty_recent_recipients_2">Người nhận sẽ xuất hiện ở đây</string>
@@ -339,6 +349,7 @@
   <string name="polkaswap_farming_demeter_power">Được cung cấp bởi Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Một phần của bạn đã được stake trong pool. Để có quyền truy cập vào nó, trước tiên bạn phải hủy stake.</string>
   <string name="polkaswap_farming_pool_share">Pool của bạn đã được stake</string>
+  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
   <string name="polkaswap_farming_staked_for">Stake cho %s</string>
   <string name="polkaswap_farming_unstake_to_remove">Để loại bỏ tính thanh khoản, trước tiên bạn cần hủy stake</string>
   <string name="polkaswap_info_text_1">Polkaswap được duy trì bởi cộng đồng SORA. Trước khi tiếp tục sử dụng Polkaswap, vui lòng xem lại %% Câu hỏi thường gặp về Polkaswap %% và tài liệu, trong đó có giải thích chi tiết về cách Polkaswap hoạt động, cũng như %% Bản ghi nhớ Polkaswap và Điều khoản dịch vụ %% và %% Chính sách quyền riêng tư %% . \n\n Những tài liệu này rất quan trọng đối với trải nghiệm người dùng an toàn và tích cực. Bằng cách sử dụng Polkaswap, bạn xác nhận rằng bạn đã đọc và hiểu các tài liệu này.</string>
@@ -380,7 +391,6 @@
   <string name="pool_button_remove">Rút</string>
   <string name="pool_details">Chi tiết Pool</string>
   <string name="pool_details_active_farms">Active farms</string>
-  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
   <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Bạn chưa tham gia bất kỳ pool nào.\nThêm thanh khoản để kiếm phần thưởng</string>
   <string name="pool_share_title">Cổ phần trong pool</string>
@@ -447,12 +457,14 @@
   <string name="remove_node_title">Bạn có thực sự muốn xóa node này không?</string>
   <string name="remove_pool_confirmation_description">Kết quả chỉ là ước lượng. Nếu giá biến động hơn %s%% thì giao dịch của bạn sẽ bị hoàn tác.</string>
   <string name="remove_pool_confirmation_title">Xác nhận Rút</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">Yêu cầu khởi động lại</string>
   <string name="review">Kiểm tra lại</string>
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Hiển thị mã QR của tôi</string>
   <string name="search_assets">Tìm kiếm tài sản</string>
   <string name="search_empty_state">Không có kết quả tìm kiếm</string>
+  <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address">Tìm kiếm địa chỉ tài khoản</string>
   <string name="select_account_address_1">Tìm kiếm hoặc thêm địa chỉ mới</string>
   <string name="select_account_import">Chọn tài khoản để nhập</string>
@@ -471,6 +483,7 @@
   <string name="select_node_switch_succeed">Chuyển node thành công</string>
   <string name="select_node_unable_join_node_message">Vui lòng thử lại sau</string>
   <string name="select_node_unable_join_node_title">Không thể tham gia vào node</string>
+  <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Chọn người nhận</string>
   <string name="settings_accounts">Tài khoản</string>
   <string name="settings_accounts_subtitle">Quản lý tài khoản, cụm mật khẩu sao lưu</string>
@@ -521,6 +534,7 @@
   <string name="sora_card_verification_successful">Thẻ đang trên đường đến</string>
   <string name="sora_card_you_have_enough_xor">Bạn có đủ XOR để nhận thẻ MIỄN PHÍ</string>
   <string name="sora_card_you_need_xor" formatted="false">Bạn cần %s XOR (€ %s )</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">Lỗi</string>
   <string name="status_pending">Đang chờ xử lý</string>
   <string name="status_success">Thành công</string>

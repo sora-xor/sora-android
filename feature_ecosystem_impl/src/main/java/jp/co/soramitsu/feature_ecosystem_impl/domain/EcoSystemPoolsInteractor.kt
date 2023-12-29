@@ -52,8 +52,7 @@ internal class EcoSystemPoolsInteractorImpl(
                     pools = list.map {
                         EcoSystemPool(
                             pool = it,
-                            tvl = it.baseToken.fiatPrice?.times(2)?.toBigDecimal()
-                                ?.multiply(it.baseReserves),
+                            tvl = it.tvl,
                         )
                     }.sortedWith { o1, o2 ->
                         compareNullDesc(o1.tvl, o2.tvl)

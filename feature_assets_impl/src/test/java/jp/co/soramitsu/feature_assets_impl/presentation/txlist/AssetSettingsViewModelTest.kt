@@ -102,13 +102,15 @@ class TxListViewModelTest {
         every { transactionHistoryHandler.historyState } returns MutableStateFlow(HistoryState.Loading)
         coEvery { transactionHistoryHandler.refreshHistoryEvents(any()) } returns Unit
         every { router.showTxDetails(txHash) } returns Unit
-        every { resourceManager.getString(R.string.asset_details_recent_activity) } returns "recent activity"
+        every {
+            resourceManager.getString(R.string.asset_details_recent_activity)
+        } returns "recent activity"
 
         viewModel = jp.co.soramitsu.feature_assets_impl.presentation.screens.txlist.TxListViewModel(
-                assetsInteractor,
-                router,
-                transactionHistoryHandler,
-                assetId
+            assetsInteractor,
+            router,
+            transactionHistoryHandler,
+            assetId
         )
     }
 

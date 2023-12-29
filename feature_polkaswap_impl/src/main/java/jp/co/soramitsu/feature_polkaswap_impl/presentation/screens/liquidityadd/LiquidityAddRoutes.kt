@@ -38,7 +38,8 @@ internal object LiquidityAddRoutes {
     const val slippage = "Liquidity.Add.Slippage"
     const val selectTokenParamName = "token"
     enum class AddSelectTokenParam(val path: String) {
-        T1("t1"), T2("t2")
+        T1("t1"),
+        T2("t2")
     }
     const val selectToken = "Liquidity.Add.SelectToken/{$selectTokenParamName}"
     fun buildSelectTokenRoute(param: AddSelectTokenParam) = "Liquidity.Add.SelectToken/${param.path}"

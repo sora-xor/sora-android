@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_multiaccount_impl.export.backup
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
+import jp.co.soramitsu.common.R as commonR
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.ext.addHexPrefix
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -56,7 +57,6 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.verify
-import jp.co.soramitsu.common.R as commonR
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)

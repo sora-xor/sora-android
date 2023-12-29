@@ -35,7 +35,8 @@ package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap
 internal object SwapRoutes {
     const val selectTokenParamName = "token"
     enum class SelectTokenParam(val path: String) {
-        TO("to"), FROM("from")
+        TO("to"),
+        FROM("from")
     }
 
     const val start = "Swap.Main"

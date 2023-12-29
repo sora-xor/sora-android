@@ -32,21 +32,17 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails
 
-import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
-import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.verify
+import java.util.Date
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
-import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -68,12 +64,12 @@ import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import java.util.Date
 
 @ExperimentalCoroutinesApi
 class TxDetailsViewModelTest {
@@ -164,6 +160,7 @@ class TxDetailsViewModelTest {
     @Test
     fun `init with receive transfer tx`() = runTest {
         initTestData(TestTransactions.receiveSuccessfulTx)
+        advanceUntilIdle()
         val s = viewModel.toolbarState.getOrAwaitValue()
         assertEquals(false, s.basic.visibility)
 
@@ -178,8 +175,8 @@ class TxDetailsViewModelTest {
                     ),
                     base.status,
                     date,
-                    TestTokens.xorToken.printBalance(base.fee, nf),
-                    TestTokens.xorToken.printFiat(base.fee, nf),
+                    null,
+                    null,
                     R.drawable.ic_new_arrow_down_24,
                     "received"
                 ),
@@ -188,14 +185,13 @@ class TxDetailsViewModelTest {
                 "+${token.printFiat(amount, nf)}",
                 mockedUri,
                 null,
+                null,
                 true,
                 TxType.REFERRAL_TRANSFER
             )
         }
 
-        delay(10)
-
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test
@@ -225,6 +221,7 @@ class TxDetailsViewModelTest {
                 token.printFiat(amount, nf),
                 mockedUri,
                 null,
+                null,
                 false,
                 TxType.REFERRAL_TRANSFER
             )
@@ -232,7 +229,7 @@ class TxDetailsViewModelTest {
 
         delay(10)
 
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test
@@ -262,6 +259,7 @@ class TxDetailsViewModelTest {
                 token.printFiat(amount, nf),
                 mockedUri,
                 null,
+                null,
                 false,
                 TxType.REFERRAL_TRANSFER
             )
@@ -269,7 +267,7 @@ class TxDetailsViewModelTest {
 
         delay(10)
 
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test
@@ -299,6 +297,7 @@ class TxDetailsViewModelTest {
                 token.printFiat(amount, nf),
                 mockedUri,
                 null,
+                null,
                 false,
                 TxType.REFERRAL_TRANSFER
             )
@@ -306,7 +305,7 @@ class TxDetailsViewModelTest {
 
         delay(10)
 
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test
@@ -334,6 +333,7 @@ class TxDetailsViewModelTest {
                 "=${tokenFrom.printFiat(amountFrom, nf)}",
                 mockedUri,
                 mockedUri,
+                null,
                 false,
                 TxType.SWAP
             )
@@ -341,7 +341,7 @@ class TxDetailsViewModelTest {
 
         delay(10)
 
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test
@@ -369,6 +369,7 @@ class TxDetailsViewModelTest {
                 "+${token.printFiat(amount, nf)}",
                 mockedUri,
                 null,
+                null,
                 true,
                 TxType.REFERRAL_TRANSFER
             )
@@ -376,7 +377,7 @@ class TxDetailsViewModelTest {
 
         delay(10)
 
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test
@@ -409,6 +410,7 @@ class TxDetailsViewModelTest {
                 "0",
                 mockedUri,
                 null,
+                null,
                 false,
                 TxType.REFERRAL_TRANSFER
             )
@@ -416,7 +418,7 @@ class TxDetailsViewModelTest {
 
         delay(10)
 
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test
@@ -449,6 +451,7 @@ class TxDetailsViewModelTest {
                 "0",
                 mockedUri,
                 null,
+                null,
                 false,
                 TxType.REFERRAL_TRANSFER
             )
@@ -456,7 +459,7 @@ class TxDetailsViewModelTest {
 
         delay(10)
 
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test
@@ -484,6 +487,7 @@ class TxDetailsViewModelTest {
                 token.printFiat(amount, nf),
                 mockedUri,
                 null,
+                null,
                 false,
                 TxType.REFERRAL_TRANSFER
             )
@@ -491,7 +495,7 @@ class TxDetailsViewModelTest {
 
         delay(10)
 
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test
@@ -519,6 +523,7 @@ class TxDetailsViewModelTest {
                 token1.printFiat(amount1, nf),
                 mockedUri,
                 mockedUri,
+                null,
                 false,
                 TxType.LIQUIDITY
             )
@@ -526,7 +531,7 @@ class TxDetailsViewModelTest {
 
         delay(10)
 
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test
@@ -554,6 +559,7 @@ class TxDetailsViewModelTest {
                 "+${token1.printFiat(amount1, nf)}",
                 mockedUri,
                 mockedUri,
+                null,
                 true,
                 TxType.LIQUIDITY
             )
@@ -561,7 +567,7 @@ class TxDetailsViewModelTest {
 
         delay(10)
 
-        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.toString())
+        assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
     }
 
     @Test

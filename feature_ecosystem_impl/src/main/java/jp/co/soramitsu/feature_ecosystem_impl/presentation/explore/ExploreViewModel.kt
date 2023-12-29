@@ -32,32 +32,63 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
+import jp.co.soramitsu.common.domain.iconUri
+import jp.co.soramitsu.common.domain.isMatchFilter
+import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
+import jp.co.soramitsu.common_wallet.domain.model.isFilterMatch
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
+import jp.co.soramitsu.demeter.domain.isFilterMatch
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_ecosystem_impl.R
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.model.ExploreScreenState
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
+    resourceManager: ResourceManager,
+    private val demeterFarmingInteractor: DemeterFarmingInteractor,
+    private val poolsInteractor: PoolsInteractor,
+    private val assetsInteractor: AssetsInteractor,
     private val polkaswapRouter: PolkaswapRouter,
     private val assetsRouter: AssetsRouter,
+    private val numbersFormatter: NumbersFormatter,
 ) : BaseViewModel() {
+
+    private val _state = MutableStateFlow(
+        ExploreScreenState()
+    )
+    val state = _state.asStateFlow()
 
     init {
         _toolbarState.value = SoramitsuToolbarState(
             type = SoramitsuToolbarType.Small(),
             basic = BasicToolbarState(
-                title = "",
-                navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_arrow_left,
-                visibility = false,
-                searchEnabled = false,
+                title = resourceManager.getString(R.string.common_explore),
+                navIcon = null,
+                searchEnabled = true,
+                searchPlaceholder = R.string.search_token_placeholder
             ),
         )
     }
@@ -76,5 +107,92 @@ class ExploreViewModel @Inject constructor(
 
     fun onPoolPlus() {
         polkaswapRouter.showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
+    }
+
+    override fun onToolbarSearch(value: String) {
+        super.onToolbarSearch(value)
+        _toolbarState.value = toolbarState.value?.copy(
+            basic = toolbarState.value!!.basic.copy(
+                searchValue = value
+            )
+        )
+
+        if (value.isEmpty()) {
+            _state.value = ExploreScreenState()
+        } else {
+            _state.value = ExploreScreenState(isSearching = true, isLoading = true)
+            viewModelScope.launch {
+                val assets = loadAssets(value)
+                val pools = loadPools(value)
+                val farms = loadFarms(value)
+                _state.value = state.value.copy(
+                    isLoading = false,
+                    pools = pools,
+                    assets = assets,
+                    farms = farms,
+                )
+            }
+        }
+    }
+
+    private suspend fun loadAssets(search: String): List<AssetItemCardState> {
+        return assetsInteractor.getWhitelistAssets()
+            .filter { it.token.isMatchFilter(search) }
+            .map {
+                AssetItemCardState(
+                    tokenIcon = it.token.iconUri(),
+                    tokenId = it.token.id,
+                    tokenName = it.token.name,
+                    tokenSymbol = it.token.symbol,
+                    assetAmount = it.token.printBalance(
+                        it.balance.transferable,
+                        numbersFormatter,
+                        it.token.precision
+                    ),
+                    assetFiatAmount = it.printFiat(numbersFormatter),
+                    fiatChange = it.token.printFiatChange(numbersFormatter),
+                )
+            }
+    }
+
+    private suspend fun loadPools(search: String): List<BasicPoolListItemState> {
+        return poolsInteractor.getBasicPools().filter {
+            it.isFilterMatch(search)
+        }.mapIndexed { index, pool ->
+            val tvl = pool.baseToken.fiatPrice?.times(2)?.toBigDecimal()
+                ?.multiply(pool.baseReserves)
+
+            BasicPoolListItemState(
+                ids = StringPair(pool.baseToken.id, pool.targetToken.id),
+                number = "${index + 1}",
+                token1Icon = pool.baseToken.iconUri(),
+                token2Icon = pool.targetToken.iconUri(),
+                text1 = "${pool.baseToken.symbol}-${pool.targetToken.symbol}",
+                text2 = pool.baseToken.printFiat(tvl?.formatFiatSuffix()).orEmpty(),
+                text3 = pool.sbapy?.let {
+                    "%s%%".format(numbersFormatter.format(it, 2))
+                }.orEmpty(),
+            )
+        }
+    }
+
+    private suspend fun loadFarms(search: String): List<BasicFarmListItemState> {
+        return demeterFarmingInteractor.getFarmedBasicPools().filter {
+            it.isFilterMatch(search)
+        }.mapIndexed { index, farm ->
+            BasicFarmListItemState(
+                StringTriple(farm.tokenBase.id, farm.tokenTarget.id, farm.tokenReward.id),
+                number = (index + 1).toString(),
+                token1Icon = farm.tokenBase.iconUri(),
+                token2Icon = farm.tokenTarget.iconUri(),
+                rewardTokenIcon = farm.tokenReward.iconUri(),
+                rewardTokenSymbol = farm.tokenReward.symbol,
+                text1 = "%s-%s".format(farm.tokenBase.symbol, farm.tokenTarget.symbol),
+                text2 = farm.tokenBase.printFiat(farm.tvl.formatFiatSuffix()).orEmpty(),
+                text3 = farm.apr.let {
+                    "%s%%".format(numbersFormatter.format(it, 2))
+                },
+            )
+        }
     }
 }

@@ -56,7 +56,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.doNothing
 import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
@@ -138,5 +137,4 @@ class ReferralRepositoryTest {
         val result = referralRepository.getReferralRewards()
         assertEquals(REFERRER_REWARDS, result.toList()[0])
     }
-
 }

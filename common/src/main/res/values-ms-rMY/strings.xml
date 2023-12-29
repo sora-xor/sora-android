@@ -62,6 +62,7 @@
   <string name="claim_error_title">Peralihan gagal</string>
   <string name="claim_error_title_v1">Peralihan aset gagal. Sila cuba sebentar lagi.</string>
   <string name="claim_notification_text">Peralihan sedang dijalankan ...</string>
+  <string name="claim_rewards">Claim rewards</string>
   <string name="claim_subtitle">Kami memerlukan persetujuan anda untuk membuat peralihan dana anda dari SORA supaya anda dapat menggunakannya. SORA kini akan beroperasi di rangkaian Substrat. Sila sahkan peralihan.</string>
   <string name="claim_subtitle_confirmed">Terima kasih atas pengesahannya!</string>
   <string name="claim_subtitle_confirmed_v2">Peralihan aset sedang berjalan</string>
@@ -83,6 +84,7 @@
   <string name="common_chinese">Bahasa Cina</string>
   <string name="common_chinesetaiwan">Cina Tradisional</string>
   <string name="common_choose_asset">Pilih aset</string>
+  <string name="common_claim">Claim</string>
   <string name="common_close">Tutup</string>
   <string name="common_confirm">Sahkan</string>
   <string name="common_connected">Disambungkan</string>
@@ -140,6 +142,7 @@
   <string name="common_explore">Meneroka</string>
   <string name="common_failed">Gagal</string>
   <string name="common_farming">Farming</string>
+  <string name="common_farms">Farms</string>
   <string name="common_fee">Fee</string>
   <string name="common_filipino">Orang Filipina</string>
   <string name="common_finnish">Finland</string>
@@ -160,10 +163,12 @@
   <string name="common_khmer">Orang Khmer</string>
   <string name="common_korean">Orang Korea</string>
   <string name="common_malay">Bahasa Melayu</string>
+  <string name="common_max">max</string>
   <string name="common_min">min</string>
   <string name="common_more">Lagi</string>
   <string name="common_norwegian">Norway</string>
   <string name="common_nothing_available">Nothing available</string>
+  <string name="common_nothing_found">Nothing found</string>
   <string name="common_ok">OK</string>
   <string name="common_passphrase_title">Frasa Laluan</string>
   <string name="common_pay_attention">Beri perhatian!</string>
@@ -228,11 +233,16 @@
   <string name="dark_mode">Mod gelap</string>
   <string name="delete_backup_alert_description">Jika anda memadamkan sandaran Google, anda hanya boleh memulihkan dompet anda dengan sandaran manual frasa laluan anda.</string>
   <string name="delete_backup_alert_title">Adakah anda pasti?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">Dibekukan</string>
   <string name="details_receive_from_pool">Ditarik balik dari Kolam</string>
   <string name="details_sent_to_pool">Dihantar ke kolam</string>
   <string name="discover_coming_soon">Pembangun SORA sedang mengusahakan ciri yang akan memaparkan senarai penuh kumpulan yang aktif di Polkaswap. \n\n Buat masa ini, jika anda ingin membuat/menambah pada kolam sila gunakan butang di bawah.</string>
   <string name="discovery_polkaswap_pools">Kolam Polkaswap</string>
+  <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Tiada penerima terkini.\nAlamat yang dihantar akan ditunjukkan di sini.</string>
   <string name="empty_recent_recipients_2">Penerima akan muncul di sini</string>
@@ -339,6 +349,7 @@
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap diselenggara oleh komuniti SORA. Sebelum menggunakan fungsi Polkaswap, sila semak %% Polkaswap FAQ %% dan dokumentasi, termasuk penjelasan yang terperinci mengenai cara Polkaswap berfungsi, serta Memorandum Polkaswap dan Syarat Perkhidmatan dan Dasar Privasi. Dokumen-dokumen ini sangat penting untuk pengalaman pengguna yang selamat dan positif. Dengan menggunakan Polkaswap, anda mengakui bahawa anda telah membaca dan memahami dokumen-dokumen ini.</string>
@@ -380,7 +391,6 @@
   <string name="pool_button_remove">Buang</string>
   <string name="pool_details">Butiran kolam</string>
   <string name="pool_details_active_farms">Active farms</string>
-  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
   <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">Kecairan anda akan muncul di sini</string>
   <string name="pool_share_title">Bahagian Tabungan</string>
@@ -447,12 +457,14 @@
   <string name="remove_node_title">Adakah anda benar-benar mahu mengeluarkan nod ini?</string>
   <string name="remove_pool_confirmation_description">Output dianggarkan. Jika harga berubah lebih daripada %s %% transaksi anda akan kembali.</string>
   <string name="remove_pool_confirmation_title">Sahkan Alih Keluar</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">Mulakan semula diperlukan</string>
   <string name="review">Semakan</string>
   <string name="route">Laluan</string>
   <string name="scan_qr_show_my_qr">Tunjukkan kod QR saya</string>
   <string name="search_assets">Cari aset</string>
   <string name="search_empty_state">Tiada hasil carian</string>
+  <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address">Cari alamat akaun</string>
   <string name="select_account_address_1">Cari atau tambah alamat baharu</string>
   <string name="select_account_import">Pilih akaun untuk diimport</string>
@@ -471,6 +483,7 @@
   <string name="select_node_switch_succeed">Berjaya menukar nod</string>
   <string name="select_node_unable_join_node_message">Sila cuba sebentar lagi</string>
   <string name="select_node_unable_join_node_title">Tidak dapat menyertai nod</string>
+  <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Pilih penerima</string>
   <string name="settings_accounts">Akaun</string>
   <string name="settings_accounts_subtitle">Urus akaun, frasa laluan sandaran</string>
@@ -521,6 +534,7 @@
   <string name="sora_card_verification_successful">Kad sedang dalam perjalanan</string>
   <string name="sora_card_you_have_enough_xor">Anda mempunyai cukup XOR untuk kad PERCUMA</string>
   <string name="sora_card_you_need_xor" formatted="false">Anda memerlukan %s XOR (€%s)</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">Ralat</string>
   <string name="status_pending">Belum selesai</string>
   <string name="status_success">Berjaya</string>

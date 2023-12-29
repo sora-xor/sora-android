@@ -43,6 +43,7 @@ import io.mockk.junit4.MockKRule
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
+import java.util.StringJoiner
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
@@ -69,7 +70,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import java.util.StringJoiner
 
 @OptIn(
     ExperimentalStdlibApi::class,
