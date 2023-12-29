@@ -32,16 +32,16 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ethereum_impl.data.repository
 
+import java.math.BigInteger
+import java.util.*
+import org.bouncycastle.util.encoders.Hex
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
-import org.bouncycastle.util.encoders.Hex
 import org.web3j.crypto.Bip32ECKeyPair
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.MnemonicUtils
-import java.math.BigInteger
-import java.util.*
 
 @RunWith(MockitoJUnitRunner::class)
 class Bip3244Test {

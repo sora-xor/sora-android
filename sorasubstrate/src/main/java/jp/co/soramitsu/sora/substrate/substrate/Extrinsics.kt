@@ -222,3 +222,58 @@ fun ExtrinsicBuilder.faucetTransfer(
             "amount" to amount
         )
     )
+
+fun ExtrinsicBuilder.depositDemeter(
+    baseAssetId: String,
+    targetAssetId: String,
+    rewardAssetId: String,
+    isFarm: Boolean = true,
+    amount: BigInteger
+) =
+    this.call(
+        Pallete.DEMETER_FARMING.palletName,
+        Method.DEMETER_STAKE.methodName,
+        mapOf(
+            "base_asset" to baseAssetId.mapCodeToken(),
+            "pool_asset" to targetAssetId.mapCodeToken(),
+            "reward_asset" to rewardAssetId.mapCodeToken(),
+            "is_farm" to isFarm,
+            "pooled_tokens" to amount
+        )
+    )
+
+fun ExtrinsicBuilder.withdrawDemeter(
+    baseAssetId: String,
+    targetAssetId: String,
+    rewardAssetId: String,
+    isFarm: Boolean = true,
+    amount: BigInteger
+) =
+    this.call(
+        Pallete.DEMETER_FARMING.palletName,
+        Method.DEMETER_UNSTAKE.methodName,
+        mapOf(
+            "base_asset" to baseAssetId.mapCodeToken(),
+            "pool_asset" to targetAssetId.mapCodeToken(),
+            "reward_asset" to rewardAssetId.mapCodeToken(),
+            "is_farm" to isFarm,
+            "pooled_tokens" to amount
+        )
+    )
+
+fun ExtrinsicBuilder.claimDemeter(
+    baseAssetId: String,
+    targetAssetId: String,
+    rewardAssetId: String,
+    isFarm: Boolean = true,
+) =
+    this.call(
+        Pallete.DEMETER_FARMING.palletName,
+        Method.DEMETER_REWARDS.methodName,
+        mapOf(
+            "base_asset" to baseAssetId.mapCodeToken(),
+            "pool_asset" to targetAssetId.mapCodeToken(),
+            "reward_asset" to rewardAssetId.mapCodeToken(),
+            "is_farm" to isFarm,
+        )
+    )

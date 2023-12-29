@@ -38,11 +38,6 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavController
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
-import jp.co.soramitsu.xbackup.BackupService
-import jp.co.soramitsu.xbackup.domain.models.BackupAccountType
-import jp.co.soramitsu.xbackup.domain.models.DecryptedBackupAccount
-import jp.co.soramitsu.xbackup.domain.models.Json
-import jp.co.soramitsu.xbackup.domain.models.Seed
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.CoroutineManager
@@ -55,7 +50,12 @@ import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import jp.co.soramitsu.xbackup.BackupService
+import jp.co.soramitsu.xbackup.domain.models.BackupAccountType
 import jp.co.soramitsu.xbackup.domain.models.CryptoType
+import jp.co.soramitsu.xbackup.domain.models.DecryptedBackupAccount
+import jp.co.soramitsu.xbackup.domain.models.Json
+import jp.co.soramitsu.xbackup.domain.models.Seed
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

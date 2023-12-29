@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import java.math.BigDecimal
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
@@ -58,7 +59,6 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
-import java.math.BigDecimal
 
 @RunWith(MockitoJUnitRunner::class)
 @ExperimentalCoroutinesApi

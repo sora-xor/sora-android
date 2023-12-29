@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_blockexplorer_impl.presentation.screen
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -70,7 +69,6 @@ class ActivitiesFragment : SoraBaseFragment<ActivitiesViewModel>() {
         (activity as BottomBarController).showBottomBar()
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController

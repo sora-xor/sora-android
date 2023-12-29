@@ -34,6 +34,8 @@ package jp.co.soramitsu.demeter.data
 
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.concurrent.ConcurrentHashMap
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
@@ -44,23 +46,91 @@ import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.mapToToken
+import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
+import jp.co.soramitsu.sora.substrate.substrate.claimDemeter
+import jp.co.soramitsu.sora.substrate.substrate.depositDemeter
+import jp.co.soramitsu.sora.substrate.substrate.withdrawDemeter
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 interface DemeterFarmingRepository {
     suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>?
     suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
+    fun subscribeFarms(address: String): Flow<String>
     suspend fun getStakedFarmedAmountOfAsset(address: String, tokenId: String): BigDecimal
+    suspend fun depositDemeterFarm(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        amount: BigDecimal,
+    ): ExtrinsicSubmitStatus
+
+    suspend fun calcDepositFarmFee(
+        address: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int,
+    ): BigDecimal?
+
+    suspend fun withdrawDemeterFarm(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        amount: BigDecimal,
+    ): ExtrinsicSubmitStatus
+
+    suspend fun calcWithdrawFarmFee(
+        address: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int,
+    ): BigDecimal?
+
+    suspend fun claimDemeterRewards(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+    ): ExtrinsicSubmitStatus
+
+    suspend fun calcClaimDemeterRewards(
+        address: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int,
+    ): BigDecimal?
 }
 
 private class DemeterStorage(
@@ -99,6 +169,7 @@ private class DemeterRewardTokenStorage(
 
 internal class DemeterFarmingRepositoryImpl(
     private val substrateCalls: SubstrateCalls,
+    private val extrinsicManager: ExtrinsicManager,
     private val runtimeManager: RuntimeManager,
     private val soraConfigManager: SoraConfigManager,
     private val assetLocalToAssetMapper: AssetLocalToAssetMapper,
@@ -111,12 +182,29 @@ internal class DemeterFarmingRepositoryImpl(
         private const val BLOCKS_PER_YEAR = 5256000
     }
 
-    private val cachedFarmedPools: MutableMap<String, List<DemeterFarmingPool>> = mutableMapOf()
+    private val cachedFarmedPools = ConcurrentHashMap<String, List<DemeterFarmingPool>>()
     private var cachedFarmedBasicPools: List<DemeterFarmingBasicPool>? = null
+
+    override fun subscribeFarms(address: String): Flow<String> = flow {
+        val storage =
+            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.DEMETER_FARMING.palletName)
+                .storage(Storage.POOLS.storageName)
+        val storageKey = storage.storageKey(
+            runtimeManager.getRuntimeSnapshot(),
+        )
+        emitAll(
+            substrateCalls.observeBulk(storageKey)
+                .debounce(300)
+                .onEach {
+                    cachedFarmedPools.remove(address)
+                    cachedFarmedBasicPools = null
+                }
+        )
+    }
 
     override suspend fun getStakedFarmedAmountOfAsset(
         address: String,
-        tokenId: String
+        tokenId: String,
     ): BigDecimal {
         val token = db.assetDao().getTokenLocal(tokenId)
         val amount = getDemeter(address)
@@ -127,8 +215,149 @@ internal class DemeterFarmingRepositoryImpl(
         return amount?.let { mapBalance(it, token.precision) } ?: BigDecimal.ZERO
     }
 
-    override suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>? {
+    override suspend fun depositDemeterFarm(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        amount: BigDecimal,
+    ): ExtrinsicSubmitStatus {
+        return extrinsicManager.submitAndWatchExtrinsic(
+            from = address,
+            keypair = keypair,
+        ) {
+            depositDemeter(
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
+                isFarm,
+                mapBalance(amount, OptionsProvider.defaultScale)
+            )
+        }
+    }
+
+    override suspend fun calcDepositFarmFee(
+        address: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int,
+    ): BigDecimal? {
+        val fee = extrinsicManager.calcFee(
+            from = address
+        ) {
+            depositDemeter(
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
+                isFarm,
+                mapBalance(BigDecimal.ONE, OptionsProvider.defaultScale)
+            )
+        }
+        return fee?.let {
+            mapBalance(it, feeTokenPrecision)
+        }
+    }
+
+    override suspend fun withdrawDemeterFarm(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        amount: BigDecimal
+    ): ExtrinsicSubmitStatus {
+        return extrinsicManager.submitAndWatchExtrinsic(
+            from = address,
+            keypair = keypair,
+        ) {
+            withdrawDemeter(
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
+                isFarm,
+                mapBalance(amount, OptionsProvider.defaultScale)
+            )
+        }
+    }
+
+    override suspend fun calcWithdrawFarmFee(
+        address: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int,
+    ): BigDecimal? {
+        val fee = extrinsicManager.calcFee(
+            from = address
+        ) {
+            withdrawDemeter(
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
+                isFarm,
+                mapBalance(BigDecimal.ONE, OptionsProvider.defaultScale)
+            )
+        }
+        return fee?.let {
+            mapBalance(it, feeTokenPrecision)
+        }
+    }
+
+    override suspend fun claimDemeterRewards(
+        address: String,
+        keypair: Sr25519Keypair,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean
+    ): ExtrinsicSubmitStatus {
+        return extrinsicManager.submitAndWatchExtrinsic(
+            from = address,
+            keypair = keypair,
+        ) {
+            claimDemeter(
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
+                isFarm,
+            )
+        }
+    }
+
+    override suspend fun calcClaimDemeterRewards(
+        address: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        rewardTokenId: String,
+        isFarm: Boolean,
+        feeTokenPrecision: Int
+    ): BigDecimal? {
+        val fee = extrinsicManager.calcFee(
+            from = address
+        ) {
+            claimDemeter(
+                baseTokenId,
+                targetTokenId,
+                rewardTokenId,
+                isFarm,
+            )
+        }
+        return fee?.let {
+            mapBalance(it, feeTokenPrecision)
+        }
+    }
+
+    override suspend fun getFarmedPools(
+        soraAccountAddress: String,
+    ): List<DemeterFarmingPool>? {
         if (cachedFarmedPools.containsKey(soraAccountAddress)) return cachedFarmedPools[soraAccountAddress]
+        cachedFarmedPools.remove(soraAccountAddress)
         val baseFarms = getFarmedBasicPools()
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
         val calculated = getDemeter(soraAccountAddress)

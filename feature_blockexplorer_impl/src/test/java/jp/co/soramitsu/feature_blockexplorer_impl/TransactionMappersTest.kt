@@ -36,6 +36,8 @@ import android.net.Uri
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockkStatic
+import java.math.BigDecimal
+import java.util.Date
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
@@ -54,8 +56,6 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
-import java.math.BigDecimal
-import java.util.Date
 
 @RunWith(MockitoJUnitRunner::class)
 class TransactionMappersTest {
@@ -101,13 +101,13 @@ class TransactionMappersTest {
     private val transactionsWithHeaders = listOf(
         EventUiModel.EventTxUiModel.EventTransferInUiModel(
             "",
+            1000000,
+            TransactionStatus.COMMITTED,
             DEFAULT_ICON_URI,
             "peerId",
             "01 Jan 1970 00:00",
-            1000000,
             "10.12 VAL",
             "$ 34.3",
-            TransactionStatus.COMMITTED
         )
     )
 

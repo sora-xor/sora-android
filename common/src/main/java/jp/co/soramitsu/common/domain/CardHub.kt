@@ -42,6 +42,8 @@ const val BUY_XOR_TOKEN_HUB_NAME = "buy xor token"
 const val REFERRAL_SYSTEM_HUB_NAME = "referral system"
 const val BACKUP_WALLET_HUB_NAME = "backup wallet"
 
+val subscriptionKeys = listOf(ASSETS_HUB_NAME, POOLS_HUB_NAME)
+
 data class CardHub(
     val cardType: CardHubType,
     val visibility: Boolean,

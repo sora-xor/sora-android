@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_ethereum_impl.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import java.math.BigDecimal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.test_shared.MainCoroutineRule
@@ -45,7 +46,6 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
-import java.math.BigDecimal
 
 @RunWith(MockitoJUnitRunner::class)
 @Ignore("temp. will be enabled after ethereum bridge is done")
@@ -72,7 +72,7 @@ class EthereumInteractorTest {
     fun setUp() = runTest {
         ethereumInteractorImpl =
             EthereumInteractorImpl(ethereumRepository, credentialsRepository)
-        //given(credentialsRepository.retrieveKeyPair()).willReturn(Single.just(keyPair))
+        // given(credentialsRepository.retrieveKeyPair()).willReturn(Single.just(keyPair))
     }
 
     @Test
@@ -81,9 +81,9 @@ class EthereumInteractorTest {
         val minerFee = "11.0"
         val ethAddress = "0xaddress"
 
-        //given(ethereumRepository.startWithdraw(amount, accountId, ethAddress, minerFee, keyPair)).willReturn(Completable.complete())
+        // given(ethereumRepository.startWithdraw(amount, accountId, ethAddress, minerFee, keyPair)).willReturn(Completable.complete())
 
         ethereumInteractorImpl.startWithdraw(amount, ethAddress, minerFee)
-        //verify(ethereumRepository).startWithdraw(amount, accountId, ethAddress, minerFee, keyPair)
+        // verify(ethereumRepository).startWithdraw(amount, accountId, ethAddress, minerFee, keyPair)
     }
 }

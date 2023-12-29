@@ -58,6 +58,22 @@ sealed class Transaction(
     val base: TransactionBase,
 ) {
 
+    class AdarIncome(
+        base: TransactionBase,
+        val amount: BigDecimal,
+        val peer: String,
+        val token: Token,
+    ) : Transaction(base)
+
+    class DemeterFarming(
+        base: TransactionBase,
+        val type: DemeterType,
+        val amount: BigDecimal,
+        val baseToken: Token,
+        val targetToken: Token,
+        val rewardToken: Token,
+    ) : Transaction(base)
+
     class ReferralBond(
         base: TransactionBase,
         val amount: BigDecimal,
@@ -114,6 +130,12 @@ sealed class Transaction(
     ) : Transaction(base)
 }
 
+enum class DemeterType {
+    STAKE,
+    UNSTAKE,
+    REWARD,
+}
+
 enum class TransactionStatus {
     PENDING,
     COMMITTED,
@@ -121,11 +143,13 @@ enum class TransactionStatus {
 }
 
 enum class TransactionTransferType {
-    OUTGOING, INCOMING
+    OUTGOING,
+    INCOMING
 }
 
 enum class TransactionLiquidityType {
-    ADD, WITHDRAW
+    ADD,
+    WITHDRAW
 }
 
 fun TransactionStatus.toName() = when (this) {

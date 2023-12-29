@@ -83,7 +83,6 @@ class NodeDetailsViewModelTest {
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
-
     @Mock
     private lateinit var mainRouter: MainRouter
 

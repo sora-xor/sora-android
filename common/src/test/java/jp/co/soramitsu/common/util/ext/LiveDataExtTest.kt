@@ -44,7 +44,8 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner::class)
 class LiveDataExtTest {
 
-    @Rule @JvmField val rule: TestRule = InstantTaskExecutorRule()
+    @Rule @JvmField
+    val rule: TestRule = InstantTaskExecutorRule()
 
     @Test
     fun `set value if new called`() {

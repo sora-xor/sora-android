@@ -37,8 +37,13 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.verify
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.ExploreViewModel
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -65,6 +70,21 @@ class ExploreViewModelTest {
     private lateinit var polkaswapRouter: PolkaswapRouter
 
     @MockK
+    private lateinit var resourceManager: ResourceManager
+
+    @MockK
+    private lateinit var demeterFarmingInteractor: DemeterFarmingInteractor
+
+    @MockK
+    private lateinit var poolsInteractor: PoolsInteractor
+
+    @MockK
+    private lateinit var assetsInteractor: AssetsInteractor
+
+    @MockK
+    private lateinit var numbersFormatter: NumbersFormatter
+
+    @MockK
     private lateinit var assetsRouter: AssetsRouter
 
     private lateinit var discoverViewModel: ExploreViewModel
@@ -72,7 +92,16 @@ class ExploreViewModelTest {
     @Before
     fun setUp() = runTest {
         every { assetsRouter.showAssetDetails(any()) } returns Unit
-        discoverViewModel = ExploreViewModel(polkaswapRouter, assetsRouter)
+        every { resourceManager.getString(any()) } returns ""
+        discoverViewModel = ExploreViewModel(
+            resourceManager,
+            demeterFarmingInteractor,
+            poolsInteractor,
+            assetsInteractor,
+            polkaswapRouter,
+            assetsRouter,
+            numbersFormatter
+        )
     }
 
     @Test
@@ -80,5 +109,4 @@ class ExploreViewModelTest {
         discoverViewModel.onTokenClicked("0x00")
         verify { assetsRouter.showAssetDetails("0x00") }
     }
-
 }

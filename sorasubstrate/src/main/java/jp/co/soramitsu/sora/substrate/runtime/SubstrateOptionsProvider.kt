@@ -183,6 +183,10 @@ enum class Method(val methodName: String) {
     UNRESERVE("unreserve"),
     RESERVE("reserve"),
     TRANSFER_TO_SIDECHAIN("transfer_to_sidechain"),
+    DEMETER_REWARDS("get_rewards"),
+    DEMETER_STAKE("deposit"),
+    DEMETER_UNSTAKE("withdraw"),
+    SWAP_TRANSFER_BATCH("swap_transfer_batch"),
 }
 
 enum class Events(val eventName: String) {

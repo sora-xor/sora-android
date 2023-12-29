@@ -40,6 +40,7 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.getByIdOrEmpty
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.ext.snakeCaseToCamelCase
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
@@ -186,6 +187,49 @@ private fun mapHistoryItemToTransaction(
                 )
             }
         }
+    } else if (tx.isMatch(Pallete.DEMETER_FARMING, Method.DEMETER_STAKE)) {
+        tx.data?.toDemeterStake { amount, base, target, reward ->
+            Transaction.DemeterFarming(
+                base = transactionBase,
+                amount = amount.toBigDecimalOrDefault(),
+                type = DemeterType.STAKE,
+                baseToken = tokens.getByIdOrEmpty(base),
+                targetToken = tokens.getByIdOrEmpty(target),
+                rewardToken = tokens.getByIdOrEmpty(reward),
+            )
+        }
+    } else if (tx.isMatch(Pallete.DEMETER_FARMING, Method.DEMETER_UNSTAKE)) {
+        tx.data?.toDemeterStake { amount, base, target, reward ->
+            Transaction.DemeterFarming(
+                base = transactionBase,
+                amount = amount.toBigDecimalOrDefault(),
+                type = DemeterType.UNSTAKE,
+                baseToken = tokens.getByIdOrEmpty(base),
+                targetToken = tokens.getByIdOrEmpty(target),
+                rewardToken = tokens.getByIdOrEmpty(reward),
+            )
+        }
+    } else if (tx.isMatch(Pallete.DEMETER_FARMING, Method.DEMETER_REWARDS)) {
+        tx.data?.toDemeterReward { amount, base ->
+            val token = tokens.getByIdOrEmpty(base)
+            Transaction.DemeterFarming(
+                base = transactionBase,
+                amount = amount.toBigDecimalOrDefault(),
+                type = DemeterType.REWARD,
+                baseToken = token,
+                targetToken = token,
+                rewardToken = token,
+            )
+        }
+    } else if (tx.isMatch(Pallete.LIQUIDITY_PROXY, Method.SWAP_TRANSFER_BATCH) && !BuildUtils.isProdPlayMarket()) {
+        tx.data?.toAdarIncome(myAddress) { amount, token, peer ->
+            Transaction.AdarIncome(
+                base = transactionBase,
+                amount = amount.toBigDecimalOrDefault(),
+                peer = peer,
+                token = tokens.getByIdOrEmpty(token),
+            )
+        }
     } else {
         null
     }
@@ -230,6 +274,34 @@ private fun List<TxHistoryItemParam>.toReferralSetReferrer(
     } else null
 }
 
+private fun List<TxHistoryItemParam>.toAdarIncome(my: String, block: (amount: String, token: String, peer: String) -> Transaction.AdarIncome): Transaction.AdarIncome? {
+    val to = this.firstOrNull { it.paramName == "to" }
+    val from = this.firstOrNull { it.paramName == "from" }
+    val token = this.firstOrNull { it.paramName == "assetId" }
+    val amount = this.firstOrNull { it.paramName == "amount" }
+    return if (to != null && from != null && token != null && amount != null && my == to.paramValue)
+        block.invoke(amount.paramValue, token.paramValue, from.paramValue)
+    else null
+}
+
+private fun List<TxHistoryItemParam>.toDemeterStake(block: (amount: String, base: String, target: String, reward: String) -> Transaction.DemeterFarming): Transaction.DemeterFarming? {
+    val base = this.firstOrNull { it.paramName == "baseAssetId" }
+    val target = this.firstOrNull { it.paramName == "assetId" }
+    val reward = this.firstOrNull { it.paramName == "rewardAssetId" }
+    val amount = this.firstOrNull { it.paramName == "amount" }
+    return if (base != null && target != null && amount != null && reward != null)
+        block.invoke(amount.paramValue, base.paramValue, target.paramValue, reward.paramValue)
+    else null
+}
+
+private fun List<TxHistoryItemParam>.toDemeterReward(block: (amount: String, base: String) -> Transaction.DemeterFarming): Transaction.DemeterFarming? {
+    val base = this.firstOrNull { it.paramName == "assetId" }
+    val amount = this.firstOrNull { it.paramName == "amount" }
+    return if (base != null && amount != null)
+        block.invoke(amount.paramValue, base.paramValue)
+    else null
+}
+
 private fun List<TxHistoryItemParam>.toTransfer(block: (to: String, from: String, amount: String, tokenId: String) -> Transaction.Transfer): Transaction.Transfer? {
     val to = this.firstOrNull { it.paramName == "to" }
     val from = this.firstOrNull { it.paramName == "from" }
@@ -251,8 +323,14 @@ private fun List<TxHistoryItemParam>.toEthTransfer(block: (amount: String, token
 }
 
 private fun List<TxHistoryItemParam>.toSwap(
-    block:
-    (selectedMarket: String, liquidityProviderFee: String, baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Swap
+    block: (
+        selectedMarket: String,
+        liquidityProviderFee: String,
+        baseTokenId: String,
+        targetTokenId: String,
+        baseTokenAmount: String,
+        targetTokenAmount: String,
+    ) -> Transaction.Swap,
 ): Transaction.Swap? {
     val selectedMarket = this.firstOrNull { it.paramName == "selectedMarket" }
     val liquidityProviderFee = this.firstOrNull { it.paramName == "liquidityProviderFee" }
@@ -274,8 +352,12 @@ private fun List<TxHistoryItemParam>.toSwap(
 }
 
 private fun List<TxHistoryItemParam>.toLiquidity(
-    block:
-    (baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Liquidity
+    block: (
+        baseTokenId: String,
+        targetTokenId: String,
+        baseTokenAmount: String,
+        targetTokenAmount: String,
+    ) -> Transaction.Liquidity,
 ): Transaction.Liquidity? {
     val baseTokenId = this.firstOrNull { it.paramName == "baseAssetId" }
     val targetTokenId = this.firstOrNull { it.paramName == "targetAssetId" }
@@ -293,8 +375,12 @@ private fun List<TxHistoryItemParam>.toLiquidity(
 }
 
 private fun List<TxHistoryItemParam>.toLiquidityBatch(
-    block:
-    (baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Liquidity
+    block: (
+        baseTokenId: String,
+        targetTokenId: String,
+        baseTokenAmount: String,
+        targetTokenAmount: String,
+    ) -> Transaction.Liquidity,
 ): Transaction.Liquidity? {
     val baseTokenId = this.firstOrNull { it.paramName == "input_asset_a" }
     val targetTokenId = this.firstOrNull { it.paramName == "input_asset_b" }

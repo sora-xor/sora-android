@@ -82,6 +82,9 @@ class FullPoolSettingsViewModel @Inject constructor(
     private val _fiatSum = MutableStateFlow("")
     internal val fiatSum = _fiatSum.asStateFlow()
 
+    private val _poolsEmptyState = MutableStateFlow(false)
+    val poolsEmptyState = _poolsEmptyState.asStateFlow()
+
     init {
         _toolbarState.value = SoramitsuToolbarState(
             type = SoramitsuToolbarType.Small(),
@@ -90,6 +93,8 @@ class FullPoolSettingsViewModel @Inject constructor(
                 navIcon = R.drawable.ic_cross_24,
                 visibility = true,
                 searchEnabled = true,
+                searchValue = "",
+                searchPlaceholder = jp.co.soramitsu.common.R.string.common_search_pools,
                 actionLabel = jp.co.soramitsu.common.R.string.common_done,
             ),
         )
@@ -152,6 +157,7 @@ class FullPoolSettingsViewModel @Inject constructor(
         }
 
         _settingsState.value = list
+        _poolsEmptyState.value = list.isEmpty()
         _fiatSum.value = if (list.isNotEmpty())
             list.map { it.fiat }.reduce { acc, d -> acc + d }.let {
                 formatFiatAmount(it, symbol, numbersFormatter)
@@ -159,6 +165,12 @@ class FullPoolSettingsViewModel @Inject constructor(
     }
 
     override fun onToolbarSearch(value: String) {
+        _toolbarState.value = toolbarState.value?.copy(
+            basic = toolbarState.value!!.basic.copy(
+                searchValue = value
+            )
+        )
+
         _dragList.value = value.isBlank()
         curFilter = value
         filterAndUpdateAssetsList()

@@ -54,6 +54,7 @@ val emptyTxDetailsState: TxDetailsScreenState = TxDetailsScreenState(
     "",
     DEFAULT_ICON_URI,
     DEFAULT_ICON_URI,
+    DEFAULT_ICON_URI,
     true,
     txType = TxType.LIQUIDITY
 )
@@ -65,6 +66,7 @@ data class TxDetailsScreenState(
     val amountFiat: String,
     val icon1: String,
     val icon2: String? = null,
+    val icon3: String? = null,
     val isAmountGreen: Boolean = false,
     val txType: TxType
 )
@@ -72,5 +74,6 @@ data class TxDetailsScreenState(
 enum class TxType {
     LIQUIDITY,
     REFERRAL_TRANSFER,
-    SWAP
+    SWAP,
+    DEMETER,
 }

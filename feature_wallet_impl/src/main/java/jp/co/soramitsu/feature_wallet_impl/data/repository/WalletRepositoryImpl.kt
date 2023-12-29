@@ -114,8 +114,8 @@ class WalletRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun subscribeVisibleCardsHubList(address: String): Flow<List<CardHub>> {
-        return db.cardsHubDao().getCardsHubVisible(address).map {
+    override fun subscribeCardsHubList(address: String): Flow<List<CardHub>> {
+        return db.cardsHubDao().getCardsHub(address).map {
             it.mapNotNull { card ->
                 CardsHubMapper.map(card)
             }

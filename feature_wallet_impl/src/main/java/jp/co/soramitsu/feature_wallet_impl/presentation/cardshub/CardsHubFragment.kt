@@ -252,7 +252,7 @@ private fun CardsMainScreen(
 @Composable
 @Preview
 private fun PreviewCardsMainScreen() {
-    Column() {
+    Column {
         CardsMainScreen(
             scrollState = rememberScrollState(),
             state = CardsState(

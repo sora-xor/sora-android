@@ -40,6 +40,7 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.safeDivide
+import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
@@ -317,6 +318,21 @@ class PoolsInteractorImpl(
 
     override suspend fun getPoolsCacheOfCurAccount(): List<CommonUserPoolData> {
         return polkaswapRepository.getPoolsCacheOfAccount(userRepository.getCurSoraAccount().substrateAddress)
+    }
+
+    override suspend fun getPoolOfCurAccount(ids: StringPair): CommonUserPoolData? {
+        return polkaswapRepository.getPoolsCacheOfAccount(userRepository.getCurSoraAccount().substrateAddress)
+            .firstOrNull {
+                it.basic.baseToken.id == ids.first && it.basic.targetToken.id == ids.second
+            }
+    }
+
+    override suspend fun getBasicPool(poolIds: StringPair): BasicPoolData? {
+        return polkaswapRepository.getBasicPool(poolIds.first, poolIds.second)
+    }
+
+    override suspend fun getBasicPools(): List<BasicPoolData> {
+        return polkaswapRepository.getBasicPools()
     }
 
     override fun subscribePoolsCacheOfAccount(account: SoraAccount): Flow<List<CommonUserPoolData>> {

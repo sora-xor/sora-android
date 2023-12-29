@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_multiaccount_impl
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.navigation.NavController
-import jp.co.soramitsu.xbackup.BackupService
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.CoroutineManager
@@ -47,6 +46,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.RecoveryState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.RecoveryType
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.ui_core.component.input.InputTextState
+import jp.co.soramitsu.xbackup.BackupService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

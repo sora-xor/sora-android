@@ -37,6 +37,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import java.util.UUID
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.util.BuildUtils
@@ -56,7 +57,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.whenever
-import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)
@@ -65,12 +65,12 @@ class BuyCryptoViewModelTest {
     private companion object {
         val address = "address"
         val unencodedHtml = "<html><body>" +
-                "<div id=\"somewidgetid\" data-address=\"${address}\" " +
-                "data-from-currency=\"EUR\" data-from-amount=\"100\" data-hide-buy-more-button=\"true\" " +
-                "data-to-blockchain=\"TXOR\" data-disable-to-blockchain=\"true\"" +
-                "data-hide-try-again-button=\"true\" data-locale=\"en\" data-payload=\"%s\"></div>" +
-                "<script async src=\"https://some.domain.url\"></script>" +
-                "</body></html>"
+            "<div id=\"somewidgetid\" data-address=\"${address}\" " +
+            "data-from-currency=\"EUR\" data-from-amount=\"100\" data-hide-buy-more-button=\"true\" " +
+            "data-to-blockchain=\"TXOR\" data-disable-to-blockchain=\"true\"" +
+            "data-hide-try-again-button=\"true\" data-locale=\"en\" data-payload=\"%s\"></div>" +
+            "<script async src=\"https://some.domain.url\"></script>" +
+            "</body></html>"
     }
 
     @Rule

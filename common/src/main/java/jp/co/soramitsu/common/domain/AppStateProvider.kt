@@ -40,6 +40,9 @@ interface AppStateProvider {
     fun observeState(): Flow<AppEvent>
 
     enum class AppEvent {
-        ON_CREATE, ON_RESUME, ON_PAUSE, ON_DESTROY
+        ON_CREATE,
+        ON_RESUME,
+        ON_PAUSE,
+        ON_DESTROY
     }
 }

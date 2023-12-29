@@ -69,15 +69,44 @@ sealed class EventUiModel {
             val sidechainAddress: String,
         ) : EventTxUiModel(hash, timestamp, status)
 
+        class EventDemeterStakeUiModel(
+            hash: String,
+            timestamp: Long,
+            status: TransactionStatus,
+            val tokenBase: String,
+            val tokenTarget: String,
+            val tokenReward: String,
+            val stake: Boolean,
+            val amountFormatted: String,
+            val symbols: String,
+        ) : EventTxUiModel(hash, timestamp, status)
+
+        class EventDemeterRewardUiModel(
+            hash: String,
+            timestamp: Long,
+            status: TransactionStatus,
+            val token: String,
+            val amountFormatted: String,
+        ) : EventTxUiModel(hash, timestamp, status)
+
+        class EventAdarIncomeUiModel(
+            hash: String,
+            timestamp: Long,
+            status: TransactionStatus,
+            val tokenUri: String,
+            val amountFormatted: String,
+            val peerAddress: String,
+        ) : EventTxUiModel(hash, timestamp, status)
+
         class EventTransferInUiModel(
             hash: String,
+            timestamp: Long,
+            status: TransactionStatus,
             val tokenIcon: String,
             val peerAddress: String,
             val dateTime: String,
-            timestamp: Long,
             val amountFormatted: String,
             val fiatFormatted: String,
-            status: TransactionStatus,
         ) : EventTxUiModel(hash, timestamp, status)
 
         class EventTransferOutUiModel(

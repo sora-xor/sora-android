@@ -62,6 +62,7 @@
   <string name="claim_error_title">فشل الانتقال</string>
   <string name="claim_error_title_v1">فشلت عملية نقل العملات. يرجى المحاولة لاحقاً</string>
   <string name="claim_notification_text">جاري إتمام الانتقال...</string>
+  <string name="claim_rewards">Claim rewards</string>
   <string name="claim_subtitle">نحتاج إلى موافقتك على تحويل أموالك من سورا حتى تتمكن من استخدامها. ستعمل سورا الآن على شبكة Substrate. يرجى تأكيد الانتقال.</string>
   <string name="claim_subtitle_confirmed">شكراً لكم على التأكيد!</string>
   <string name="claim_subtitle_confirmed_v2">نقل الأصول قيد التنفيذ</string>
@@ -83,6 +84,7 @@
   <string name="common_chinese">الصينية</string>
   <string name="common_chinesetaiwan">الصينية (تايوان)</string>
   <string name="common_choose_asset">حدد العملة</string>
+  <string name="common_claim">Claim</string>
   <string name="common_close">اغلاق</string>
   <string name="common_confirm">تأكيد</string>
   <string name="common_connected">متصل</string>
@@ -140,6 +142,7 @@
   <string name="common_explore">استكشف</string>
   <string name="common_failed">فشل</string>
   <string name="common_farming">Farming</string>
+  <string name="common_farms">Farms</string>
   <string name="common_fee">Fee</string>
   <string name="common_filipino">الفلبينية</string>
   <string name="common_finnish">الفنلندية</string>
@@ -165,10 +168,12 @@
   <string name="common_khmer">الخمير</string>
   <string name="common_korean">الكورية</string>
   <string name="common_malay">لغة الملايو</string>
+  <string name="common_max">max</string>
   <string name="common_min">دقيقة</string>
   <string name="common_more">أكثر</string>
   <string name="common_norwegian">النرويجية</string>
   <string name="common_nothing_available">Nothing available</string>
+  <string name="common_nothing_found">Nothing found</string>
   <string name="common_ok">موافق</string>
   <string name="common_passphrase_title">الكلمات الأولية</string>
   <string name="common_pay_attention">انتبه!</string>
@@ -233,11 +238,16 @@
   <string name="dark_mode">الوضع المظلم</string>
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">مجمد</string>
   <string name="details_receive_from_pool">تم سحبه من المسبح</string>
   <string name="details_sent_to_pool">أرسل إلى المسبح</string>
   <string name="discover_coming_soon">يعمل مطورو SORA حاليا على ميزة ستعرض قائمة كاملة بالتجمعات النشطة على Polkaswap.\n\nفي الوقت الحالي ، إذا كنت ترغب في إنشاء / إضافة إلى تجمع ، فيرجى استخدام الزر أدناه.</string>
   <string name="discovery_polkaswap_pools">حوض Polkaswap</string>
+  <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">لا يوجد متلقون حديثون.\n سيتم عرض العناوين المرسلة هنا.</string>
   <string name="empty_recent_recipients_2">سيظهر المستلمون هنا</string>
@@ -344,6 +354,7 @@
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">يتم تسيير بولكاسواب من قبل مجتمع سورا. قبل الاستمرار في استخدام بولكاسواب ، يرجى مراجعة %% وثيقة الاسئلة الشائعة حول بولكاسواب %% والوثائق التي تتضمن شرحًا تفصيليًا حول آلية عملها، بالإضافة إلى %% مذكرة شروط استخدام بولكاسواب %% ، و %% احكام الخصوصية %% . \n\n هذه المستندات ضرورية لتجربة مستخدم آمنة وإيجابية. باستخدامك بولكاسواب، فإنك تقر بأنك قد قرأت هذه المستندات وفهمتها.</string>
@@ -385,7 +396,6 @@
   <string name="pool_button_remove">إزالة</string>
   <string name="pool_details">تفاصيل المسبح</string>
   <string name="pool_details_active_farms">Active farms</string>
-  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
   <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">سيولتك ستظهر هنا</string>
   <string name="pool_share_title">اسهم الحوض</string>
@@ -477,12 +487,14 @@
   <string name="remove_node_title">هل تريد حقًا إزالة هذه العقدة؟</string>
   <string name="remove_pool_confirmation_description">الناتج يقدر. إذا تغير السعر أكثر من %s %% ، فستعود معاملتك.</string>
   <string name="remove_pool_confirmation_title">تأكيد الإزالة</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">إعادة التشغيل مطلوبة</string>
   <string name="review">مراجعة</string>
   <string name="route">مسار</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">البحث عن الأصول</string>
   <string name="search_empty_state">لا توجد نتائج بحث</string>
+  <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address">البحث عن عنوان الحساب</string>
   <string name="select_account_address_1">بحث أو إضافة عنوان جديد</string>
   <string name="select_account_import">Select account to import</string>
@@ -501,6 +513,7 @@
   <string name="select_node_switch_succeed">تم تبديل العقدة بنجاح</string>
   <string name="select_node_unable_join_node_message">الرجاء معاودة المحاولة في وقت لاحق</string>
   <string name="select_node_unable_join_node_title">تعذر الانضمام إلى العقدة</string>
+  <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">حدد المستلم</string>
   <string name="settings_accounts">الحسابات</string>
   <string name="settings_accounts_subtitle">إدارة الحسابات ، نسخة احتياطية من عبارة المرور</string>
@@ -551,6 +564,7 @@
   <string name="sora_card_verification_successful">البطاقة في الطريق</string>
   <string name="sora_card_you_have_enough_xor">لديك ما يكفي من XOR للحصول على بطاقة مجانية</string>
   <string name="sora_card_you_need_xor" formatted="false">أنت بحاجة إلى %s XOR (€ %s )</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">خطأ</string>
   <string name="status_pending">قيد الانتظار</string>
   <string name="status_success">نجاح</string>

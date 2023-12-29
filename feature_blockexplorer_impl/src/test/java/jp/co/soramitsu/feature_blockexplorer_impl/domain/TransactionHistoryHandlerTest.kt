@@ -32,16 +32,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_impl.domain
 
-import android.net.Uri
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
 import jp.co.soramitsu.common.date.DateTimeFormatter
-import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
-import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -75,12 +68,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -163,7 +154,7 @@ class TransactionHistoryHandlerTest {
 //            mocked.`when`<Any> { Token.iconUri() }.thenReturn(mockedUri)
 //        }
 
-        //whenever(language.getCurrentLocale()).thenReturn(Locale.ENGLISH)
+        // whenever(language.getCurrentLocale()).thenReturn(Locale.ENGLISH)
         whenever(dateTimeFormatter.formatTimeWithoutSeconds(any())).thenReturn("01 Feb 1970")
         whenever(
             dateTimeFormatter.dateToDayWithoutCurrentYear(
@@ -175,14 +166,16 @@ class TransactionHistoryHandlerTest {
         whenever(resourceManager.getString(any())).thenReturn("")
         whenever(transactionHistoryRepository.state).thenReturn(flowOf(true))
         whenever(coroutineManager.applicationScope).thenReturn(this)
-        //whenever(transactionHistoryRepository.onSoraAccountChange()).thenReturn(Unit)
+        // whenever(transactionHistoryRepository.onSoraAccountChange()).thenReturn(Unit)
         assetsRepository.stub {
             onBlocking { tokensList() } doReturn tokens
         }
-        whenever(userRepository.flowCurSoraAccount()).thenReturn(flow {
-            emit(TestAccounts.soraAccount)
-            emit(TestAccounts.soraAccount2)
-        })
+        whenever(userRepository.flowCurSoraAccount()).thenReturn(
+            flow {
+                emit(TestAccounts.soraAccount)
+                emit(TestAccounts.soraAccount2)
+            }
+        )
         transactionHistoryRepository.stub {
             onBlocking {
                 getTransaction(

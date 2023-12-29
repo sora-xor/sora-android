@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -62,7 +63,7 @@ import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItem
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicUserFarmListItem
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsState
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.FilledPolkaswapButton
 import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -114,16 +115,31 @@ internal fun PoolDetailsScreen(
                         }
                     )
                 }
-                Text(
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         .wrapContentHeight()
                         .padding(horizontal = Dimens.x2),
-                    color = MaterialTheme.customColors.fgPrimary,
-                    style = MaterialTheme.customTypography.headline2,
-                    text = "%s-%s".format(state.symbol1, state.symbol2),
-                    maxLines = 1,
-                )
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .padding(horizontal = Dimens.x2),
+                        color = MaterialTheme.customColors.fgPrimary,
+                        style = MaterialTheme.customTypography.headline2,
+                        text = "%s-%s %s".format(state.symbol1, state.symbol2, stringResource(id = R.string.activity_pool_title)),
+                        maxLines = 1,
+                    )
+                    Text(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .padding(horizontal = Dimens.x2),
+                        style = MaterialTheme.customTypography.textXSBold,
+                        color = MaterialTheme.customColors.fgSecondary,
+                        text = state.tvl ?: "",
+                        maxLines = 1,
+                    )
+                }
                 Icon(
                     tint = if (state.userPoolSharePercent == null) {
                         MaterialTheme.customColors.fgTertiary
@@ -201,11 +217,11 @@ internal fun PoolDetailsScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            FilledButton(
+            FilledPolkaswapButton(
                 size = Size.Large,
                 order = Order.PRIMARY,
                 enabled = state.addEnabled,
-                text = stringResource(id = R.string.common_supply_liquidity_title),
+                text = stringResource(id = R.string.common_supply),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onSupply,
             )
@@ -218,7 +234,7 @@ internal fun PoolDetailsScreen(
                 size = Size.Large,
                 order = Order.PRIMARY,
                 enabled = state.removeEnabled,
-                text = stringResource(id = R.string.remove_liquidity_title),
+                text = stringResource(id = R.string.common_remove),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onRemove,
             )
@@ -238,93 +254,106 @@ internal fun PoolDetailsScreen(
             }
         }
     }
-    if (state.demeterPools.isNullOrEmpty()) {
-        if (!state.availableDemeterFarms.isNullOrEmpty()) {
-            Divider(
-                color = Color.Transparent,
-                thickness = Dimens.x2,
-                modifier = Modifier.fillMaxWidth(),
-            )
+    if (!state.demeterPools.isNullOrEmpty()) {
+        Divider(
+            color = Color.Transparent,
+            thickness = Dimens.x2,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
-            ContentCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                innerPadding = PaddingValues(Dimens.x3)
-            ) {
-                Column {
-                    Text(
-                        modifier = Modifier.padding(bottom = Dimens.x2),
-                        text = stringResource(id = R.string.polkaswap_pool_farms_title),
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary
-                    )
+        ContentCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            innerPadding = PaddingValues(Dimens.x3)
+        ) {
+            Column {
+                Text(
+                    modifier = Modifier.padding(bottom = Dimens.x2),
+                    text = stringResource(id = R.string.pool_details_active_farms),
+                    style = MaterialTheme.customTypography.headline2,
+                    color = MaterialTheme.customColors.fgPrimary
+                )
 
-                    state.availableDemeterFarms.forEach {
-                        BasicFarmListItem(
-                            modifier = Modifier.padding(vertical = Dimens.x1),
-                            isEnumerated = false,
-                            state = it,
-                            onPoolClick = onFarmClicked,
-                        )
-                    }
-
-                    Text(
+                state.demeterPools.forEach {
+                    BasicUserFarmListItem(
                         modifier = Modifier
-                            .padding(top = Dimens.x1)
-                            .wrapContentWidth()
-                            .fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        text = stringResource(id = R.string.polkaswap_farming_demeter_power),
-                        color = MaterialTheme.customColors.fgSecondary,
-                        style = MaterialTheme.customTypography.textXSBold
+                            .clickable {
+                                onFarmClicked(it.ids)
+                            }
+                            .padding(vertical = Dimens.x1),
+                        state = it,
                     )
                 }
-            }
-        }
-    } else {
-        if (state.demeterPools.isNotEmpty()) {
-            Divider(
-                color = Color.Transparent,
-                thickness = Dimens.x2,
-                modifier = Modifier.fillMaxWidth(),
-            )
 
-            ContentCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                innerPadding = PaddingValues(Dimens.x3)
-            ) {
-                Column {
-                    Text(
-                        modifier = Modifier.padding(bottom = Dimens.x2),
-                        text = stringResource(id = R.string.pool_details_active_farms),
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary
-                    )
-
-                    state.demeterPools.forEach {
-                        BasicUserFarmListItem(
-                            modifier = Modifier.padding(vertical = Dimens.x1),
-                            state = it,
-                        )
-                    }
-
-                    Text(
-                        modifier = Modifier
-                            .padding(top = Dimens.x1)
-                            .wrapContentWidth()
-                            .fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        text = stringResource(id = R.string.polkaswap_farming_demeter_power),
-                        color = MaterialTheme.customColors.fgSecondary,
-                        style = MaterialTheme.customTypography.textXSBold
-                    )
-                }
+                Text(
+                    modifier = Modifier
+                        .padding(top = Dimens.x1)
+                        .wrapContentWidth()
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    text = stringResource(id = R.string.polkaswap_farming_demeter_power),
+                    color = MaterialTheme.customColors.fgSecondary,
+                    style = MaterialTheme.customTypography.textXSBold
+                )
             }
         }
     }
+
+    val userFarmIds = state.demeterPools?.map { it.ids }
+    val availableDemeterFarms = state.availableDemeterFarms?.filterNot {
+        userFarmIds?.contains(it.ids) ?: false
+    }
+
+    if (!availableDemeterFarms.isNullOrEmpty()) {
+        Divider(
+            color = Color.Transparent,
+            thickness = Dimens.x2,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        ContentCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            innerPadding = PaddingValues(Dimens.x3)
+        ) {
+            Column {
+                Text(
+                    modifier = Modifier.padding(bottom = Dimens.x2),
+                    text = stringResource(id = R.string.polkaswap_pool_farms_title),
+                    style = MaterialTheme.customTypography.headline2,
+                    color = MaterialTheme.customColors.fgPrimary
+                )
+
+                availableDemeterFarms.forEach {
+                    BasicFarmListItem(
+                        modifier = Modifier.padding(vertical = Dimens.x1),
+                        isEnumerated = false,
+                        state = it,
+                        onPoolClick = onFarmClicked,
+                    )
+                }
+
+                Text(
+                    modifier = Modifier
+                        .padding(top = Dimens.x1)
+                        .wrapContentWidth()
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    text = stringResource(id = R.string.polkaswap_farming_demeter_power),
+                    color = MaterialTheme.customColors.fgSecondary,
+                    style = MaterialTheme.customTypography.textXSBold
+                )
+            }
+        }
+    }
+
+    Divider(
+        color = Color.Transparent,
+        thickness = Dimens.x2,
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Preview(showBackground = true)
@@ -342,6 +371,7 @@ private fun PreviewPoolDetailsScreen() {
                 symbol2 = "VAL",
                 pooled1 = "123 VAL",
                 pooled2 = "2424.2 XOR",
+                tvl = "$34.999 TVL",
                 addEnabled = true,
                 removeEnabled = true,
                 userPoolSharePercent = "12.3%",

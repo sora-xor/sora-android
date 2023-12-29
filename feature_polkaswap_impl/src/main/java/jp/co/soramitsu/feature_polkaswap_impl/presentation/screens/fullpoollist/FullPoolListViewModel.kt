@@ -46,7 +46,6 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.FullPoolListState
 import jp.co.soramitsu.ui_core.R
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -56,6 +55,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -71,7 +71,8 @@ class FullPoolListViewModel @Inject constructor(
     private val _state = MutableStateFlow(
         FullPoolListState(
             "",
-            PoolsListState(emptyList())
+            PoolsListState(emptyList()),
+            true,
         )
     )
     internal val state = _state.asStateFlow()
@@ -84,6 +85,8 @@ class FullPoolListViewModel @Inject constructor(
                 navIcon = R.drawable.ic_cross_24,
                 visibility = true,
                 searchEnabled = true,
+                searchValue = "",
+                searchPlaceholder = jp.co.soramitsu.common.R.string.common_search_pools,
                 actionLabel = jp.co.soramitsu.common.R.string.common_edit,
             ),
         )
@@ -98,6 +101,7 @@ class FullPoolListViewModel @Inject constructor(
         }
         viewModelScope.launch {
             filter
+                .drop(1)
                 .debounce(400)
                 .collectLatest {
                     calcState(it)
@@ -106,6 +110,12 @@ class FullPoolListViewModel @Inject constructor(
     }
 
     override fun onToolbarSearch(value: String) {
+        _toolbarState.value = toolbarState.value?.copy(
+            basic = toolbarState.value!!.basic.copy(
+                searchValue = value
+            )
+        )
+
         filter.value = value
     }
 
@@ -114,6 +124,7 @@ class FullPoolListViewModel @Inject constructor(
             if (filter.isBlank()) allPools else allPools.filter { it.basic.isFilterMatch(filter) }
         val data = mapPoolsData(filtered, numbersFormatter)
         _state.value = _state.value.copy(
+            loading = false,
             list = data.first,
             fiatSum = formatFiatAmount(
                 data.second,

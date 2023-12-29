@@ -137,8 +137,10 @@ class DarkThemeManager @Inject constructor(
             }
         }.flowOn(coroutineManager.main.immediate).stateIn(
             scope = coroutineManager.applicationScope,
-            started = SharingStarted.Eagerly, // Eager mode is used to apply changes as soon as possible
-            initialValue = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
+//            Eager mode is used to apply changes as soon as possible
+            started = SharingStarted.Eagerly,
+            initialValue = AppCompatDelegate.getDefaultNightMode()
+                .equals(AppCompatDelegate.MODE_NIGHT_YES)
         )
 
     fun updateUiModeFromCache() {

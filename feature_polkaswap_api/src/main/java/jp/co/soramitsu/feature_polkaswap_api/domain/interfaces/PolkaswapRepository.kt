@@ -74,4 +74,5 @@ interface PolkaswapRepository {
     suspend fun poolFavoriteOff(ids: StringPair, account: SoraAccount)
 
     suspend fun updatePoolPosition(pools: Map<StringPair, Int>, account: SoraAccount)
+    suspend fun getBasicPools(): List<BasicPoolData>
 }

@@ -33,8 +33,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
@@ -73,8 +75,16 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
     @Inject
     lateinit var vmf: AccountDetailsViewModel.AccountDetailsViewModelFactory
 
-    private val launcher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    private var launcher: ActivityResultLauncher<Intent>? = null
+    private var consentHandlerLauncher: ActivityResultLauncher<Intent>? = null
+
+    override val viewModel: AccountDetailsViewModel by viewModels {
+        CustomViewModelFactory { vmf.create(requireArguments().address) }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode != Activity.RESULT_OK) {
                 viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
             } else {
@@ -82,24 +92,20 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
             }
         }
 
-    private val consentHandlerLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        consentHandlerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode != Activity.RESULT_OK) {
                 viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
             } else {
                 viewModel.onSuccessfulConsent()
             }
         }
-
-    override val viewModel: AccountDetailsViewModel by viewModels {
-        CustomViewModelFactory { vmf.create(requireArguments().address) }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
         viewModel.consentExceptionHandler.observe {
-            consentHandlerLauncher.launch(it)
+            consentHandlerLauncher?.launch(it)
         }
     }
 

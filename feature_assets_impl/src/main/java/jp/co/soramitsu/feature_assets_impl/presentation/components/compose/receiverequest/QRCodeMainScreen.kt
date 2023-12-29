@@ -57,7 +57,8 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 import kotlinx.coroutines.launch
 
 enum class QrCodeMainScreenPage {
-    RECEIVE, REQUEST
+    RECEIVE,
+    REQUEST
 }
 
 @Composable

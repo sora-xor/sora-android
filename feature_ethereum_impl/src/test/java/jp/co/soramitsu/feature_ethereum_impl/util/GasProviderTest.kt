@@ -32,12 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ethereum_impl.util
 
+import java.math.BigInteger
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
-import java.math.BigInteger
 
 @RunWith(MockitoJUnitRunner::class)
 class GasProviderTest {

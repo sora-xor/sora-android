@@ -52,7 +52,6 @@ import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.FarmDetailsScreen
 
 @AndroidEntryPoint
 class FarmDetailsFragment : SoraBaseFragment<FarmDetailsViewModel>() {
@@ -97,6 +96,9 @@ class FarmDetailsFragment : SoraBaseFragment<FarmDetailsViewModel>() {
             val state = viewModel.state.collectAsStateWithLifecycle().value
             FarmDetailsScreen(
                 state,
+                viewModel::onSupplyStacking,
+                viewModel::onSupplyLiquidity,
+                viewModel::onClaim
             )
         }
     }

@@ -62,6 +62,7 @@
   <string name="claim_error_title">संक्रमण विफल</string>
   <string name="claim_error_title_v1">संपत्ति का संक्रमण विफल रहा। कृपया बाद में पुन: प्रयास करें।</string>
   <string name="claim_notification_text">परिवर्तन प्रगति पर है ...</string>
+  <string name="claim_rewards">Claim rewards</string>
   <string name="claim_subtitle">हमें SORA से अपने निधियों का परिवर्तन करने के लिए आपकी सहमति की आवश्यकता है ताकि आप उनका उपयोग कर सकें। SORA अब सबस्ट्रेट नेटवर्क पर काम करेगा। कृपया संक्रमण की पुष्टि करें।</string>
   <string name="claim_subtitle_confirmed">पुष्टिकरण के लिए धन्यवाद!</string>
   <string name="claim_subtitle_confirmed_v2">संपत्ति का हस्तांतरण प्रगति पर है</string>
@@ -83,6 +84,7 @@
   <string name="common_chinese">चीनी</string>
   <string name="common_chinesetaiwan">चीनी (ताइवान)</string>
   <string name="common_choose_asset">संपत्ति का चयन करें</string>
+  <string name="common_claim">Claim</string>
   <string name="common_close">बंद करे</string>
   <string name="common_confirm">पुष्टि करें</string>
   <string name="common_connected">जुड़ा</string>
@@ -140,6 +142,7 @@
   <string name="common_explore">अन्वेषण करना</string>
   <string name="common_failed">विफल</string>
   <string name="common_farming">Farming</string>
+  <string name="common_farms">Farms</string>
   <string name="common_fee">Fee</string>
   <string name="common_filipino">फ़िलिपिनो</string>
   <string name="common_finnish">फ़िनिश</string>
@@ -161,10 +164,12 @@
   <string name="common_khmer">खमेर</string>
   <string name="common_korean">कोरियाई</string>
   <string name="common_malay">मलायी</string>
+  <string name="common_max">max</string>
   <string name="common_min">मिनट</string>
   <string name="common_more">अधिक</string>
   <string name="common_norwegian">नार्वेजियन</string>
   <string name="common_nothing_available">Nothing available</string>
+  <string name="common_nothing_found">Nothing found</string>
   <string name="common_ok">ठीक</string>
   <string name="common_passphrase_title">पदबंध</string>
   <string name="common_pay_attention">ध्यान दें!</string>
@@ -229,11 +234,16 @@
   <string name="dark_mode">डार्क मोड</string>
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
+  <string name="demeter_claimed_reward">Claimed reward</string>
+  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
+  <string name="demeter_staked_liquidity">Staked liquidity</string>
+  <string name="demeter_unstaked_liquidity">Unstaked liquidity</string>
   <string name="details_frozen">जमा हुआ</string>
   <string name="details_receive_from_pool">पूल से निकाला गया</string>
   <string name="details_sent_to_pool">पूल में भेजा गया</string>
   <string name="discover_coming_soon">SORA Devs वर्तमान में एक सुविधा पर काम कर रहे हैं जो पोल्कास्वैप पर सक्रिय पूल की पूरी सूची प्रदर्शित करेगा।\n\nअभी के लिए, यदि आप पूल बनाना / जोड़ना चाहते हैं तो कृपया नीचे दिए गए बटन का उपयोग करें।</string>
   <string name="discovery_polkaswap_pools">पोलकस्वैप पूल</string>
+  <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">हाल ही का कोई प्राप्तकर्ता नहीं।\n भेजे गए पते यहां दिखाए जाएंगे।</string>
   <string name="empty_recent_recipients_2">प्राप्तकर्ता यहां दिखाई देंगे</string>
@@ -340,6 +350,7 @@
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap का रखरखाव SORA समुदाय द्वारा किया जाता है। Polkaswap का उपयोग जारी रखने से पहले, कृपया %% Polkaswap FAQ %% और प्रलेखन की समीक्षा करें, जिसमें Polkaswap कैसे काम करता है, साथ ही साथ %% Polkaswap मेमोरेंडम और सेवा की शर्तें %% और %% गोपनीयता नीति %% की विस्तृत व्याख्या शामिल है। . \n\n ये दस्तावेज़ एक सुरक्षित और सकारात्मक उपयोगकर्ता अनुभव के लिए महत्वपूर्ण हैं। Polkaswap का उपयोग करके, आप स्वीकार करते हैं कि आपने इन दस्तावेज़ों को पढ़ और समझ लिया है।</string>
@@ -381,7 +392,6 @@
   <string name="pool_button_remove">हटाये</string>
   <string name="pool_details">पूल विवरण</string>
   <string name="pool_details_active_farms">Active farms</string>
-  <string name="pool_details_extra_reward">Stake your pool share for extra rewards</string>
   <string name="pool_details_reward">Reward</string>
   <string name="pool_liquidity_placeholder">आपके पास अभी तक कोई सक्रिय पूल नहीं है।\n पुरस्कार अर्जित करने के लिए तरलता जोड़ें</string>
   <string name="pool_share_title">पूल का हिस्सा</string>
@@ -453,12 +463,14 @@
   <string name="remove_node_title">क्या आप वास्तव में इस नोड को निकालना चाहते हैं?</string>
   <string name="remove_pool_confirmation_description">आउटपुट अनुमानित है। यदि मूल्य %s %% से अधिक बदलता है तो आपका लेन-देन वापस कर दिया जाएगा।</string>
   <string name="remove_pool_confirmation_title">हटाने की पुष्टि करें</string>
+  <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">पुनरारंभ आवश्यक</string>
   <string name="review">समीक्षा</string>
   <string name="route">मार्ग</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">संपत्ति खोजें</string>
   <string name="search_empty_state">खोजने पर कोई परिणाम नहीं मिला</string>
+  <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address">खाता पता खोजें\n</string>
   <string name="select_account_address_1">नया पता खोजें या जोड़ें</string>
   <string name="select_account_import">Select account to import</string>
@@ -477,6 +489,7 @@
   <string name="select_node_switch_succeed">नोड को सफलतापूर्वक स्विच करें</string>
   <string name="select_node_unable_join_node_message">कृपया बाद में पुन: प्रयास करें</string>
   <string name="select_node_unable_join_node_title">नोड में शामिल होने में असमर्थ</string>
+  <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">प्राप्तकर्ता का पता चुनें</string>
   <string name="settings_accounts">खातों</string>
   <string name="settings_accounts_subtitle">खाते प्रबंधित करें, बैकअप पासफ़्रेज़</string>
@@ -527,6 +540,7 @@
   <string name="sora_card_verification_successful">कार्ड रास्ते में है</string>
   <string name="sora_card_you_have_enough_xor">मुफ़्त कार्ड के लिए आपके पास पर्याप्त XOR है</string>
   <string name="sora_card_you_need_xor" formatted="false">आपको %s XOR (€ %s ) चाहिए</string>
+  <string name="start_staking">Start staking</string>
   <string name="status_error">त्रुटि</string>
   <string name="status_pending">लंबित</string>
   <string name="status_success">सफल</string>

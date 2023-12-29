@@ -52,3 +52,16 @@ data class DemeterFarmingBasicPool(
     val tvl: BigDecimal,
     val fee: Double,
 )
+
+fun DemeterFarmingBasicPool.isFilterMatch(filter: String): Boolean {
+    val t1 = tokenBase.name.lowercase().contains(filter.lowercase()) ||
+        tokenBase.symbol.lowercase().contains(filter.lowercase()) ||
+        tokenBase.id.lowercase().contains(filter.lowercase())
+    val t2 = tokenTarget.name.lowercase().contains(filter.lowercase()) ||
+        tokenTarget.symbol.lowercase().contains(filter.lowercase()) ||
+        tokenTarget.id.lowercase().contains(filter.lowercase())
+    val t3 = tokenReward.name.lowercase().contains(filter.lowercase()) ||
+        tokenReward.symbol.lowercase().contains(filter.lowercase()) ||
+        tokenReward.id.lowercase().contains(filter.lowercase())
+    return t1 || t2 || t3
+}

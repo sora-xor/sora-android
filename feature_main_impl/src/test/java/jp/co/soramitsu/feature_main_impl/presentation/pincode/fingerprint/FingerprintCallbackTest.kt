@@ -68,7 +68,7 @@ class FingerprintCallbackTest {
     }
 
     @Test fun `onAuthenticationError called with error from list`() {
-        fingerprintCallback.onAuthenticationError(ERROR_CANCELED,"")
+        fingerprintCallback.onAuthenticationError(ERROR_CANCELED, "")
 
         verify(pinCodeViewModel).canceledFromPrompt()
     }
