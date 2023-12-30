@@ -68,14 +68,15 @@ class BlockExplorerManager @Inject constructor(
 
     private var assetsInfo: List<Pair<String, BigInteger>>? = null
 
-    private val mutex = Mutex()
+    private val mutexFiat = Mutex()
+    private val mutexLiquidity = Mutex()
 
     fun getTempApy(id: String) = tempApy.find {
         it.id == id
     }?.sbApy?.times(100)
 
     suspend fun getTokensLiquidity(tokenIds: List<String>): List<Pair<String, BigInteger>> =
-        assetsInfo ?: mutex.withLock {
+        assetsInfo ?: mutexLiquidity.withLock {
             assetsInfo ?: getAssetsInfoInternal(tokenIds).also {
                 assetsInfo = it
             }
@@ -159,7 +160,7 @@ class BlockExplorerManager @Inject constructor(
         }
     }
 
-    private suspend fun updateFiatPrices(fiatData: List<FiatInfo>) = mutex.withLock {
+    private suspend fun updateFiatPrices(fiatData: List<FiatInfo>) = mutexFiat.withLock {
         val selected = soraConfigManager.getSelectedCurrency()
         val tokens = db.assetDao().getTokensWithFiatOfCurrency(selected.code)
 
