@@ -171,7 +171,7 @@ class CardsHubViewModel @Inject constructor(
                                     }
                                 val demeterFlow = demeterFarmingInteractor.subscribeFarms(data.first.substrateAddress)
                                     .onStart {
-                                        if (indexed.index == 0) this.emit("")
+                                        this.emit("")
                                     }
                                 poolsFlow.combine(demeterFlow) { f1, _ -> f1 }
                                     .map { list ->
