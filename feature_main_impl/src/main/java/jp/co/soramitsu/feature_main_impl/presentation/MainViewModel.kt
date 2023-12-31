@@ -104,6 +104,7 @@ class MainViewModel @Inject constructor(
                 .catch { onError(it) }
                 .collectLatest {
                     assetsInteractor.updateWhitelistBalances()
+                    poolsUpdateSubscription.updateBasicPools()
                 }
         }
         viewModelScope.launch {
@@ -112,7 +113,7 @@ class MainViewModel @Inject constructor(
                     tryCatch {
                         blockExplorerManager.updateFiat()
                     }
-                    delay(10000)
+                    delay(20000)
                 }
             }
         }
@@ -122,9 +123,6 @@ class MainViewModel @Inject constructor(
                     blockExplorerManager.getTokensLiquidity(tokens)
                 }
             }
-        }
-        viewModelScope.launch {
-            poolsUpdateSubscription.updateBasicPools()
         }
     }
 
