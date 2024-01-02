@@ -130,7 +130,7 @@ class MainViewModelTest {
             coroutineManager,
             poolUpdateSubscription,
         )
-        advanceTimeBy(22000)
+        advanceTimeBy(42000)
         verify(globalSubscriptionManager).start()
         verify(assetsInteractor).updateWhitelistBalances()
         verify(blockExplorerManager, times(3)).updateFiat()
