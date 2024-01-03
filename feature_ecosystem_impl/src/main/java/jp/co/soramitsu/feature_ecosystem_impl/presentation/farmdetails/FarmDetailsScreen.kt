@@ -328,7 +328,8 @@ private fun SupplyLiquidity(
         Column {
             Text(
                 style = MaterialTheme.customTypography.paragraphM,
-                text = stringResource(id = R.string.request_supply_liquidity)
+                text = stringResource(id = R.string.request_supply_liquidity),
+                color = MaterialTheme.customColors.fgPrimary
             )
 
             Divider(
