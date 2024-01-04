@@ -99,12 +99,15 @@ class MainViewModel @Inject constructor(
                     }
             }
         }
-        viewModelScope.launch {
+        viewModelScope.launch(coroutineManager.io) {
             assetsInteractor.flowCurSoraAccount()
                 .catch { onError(it) }
                 .collectLatest {
                     assetsInteractor.updateWhitelistBalances()
                     poolsUpdateSubscription.updateBasicPools()
+                    assetsInteractor.getTokensList().map { it.id }.also { tokens ->
+                        blockExplorerManager.getTokensLiquidity(tokens)
+                    }
                 }
         }
         viewModelScope.launch {
@@ -114,13 +117,6 @@ class MainViewModel @Inject constructor(
                         blockExplorerManager.updateFiat()
                     }
                     delay(20000)
-                }
-            }
-        }
-        viewModelScope.launch {
-            withContext(coroutineManager.io) {
-                assetsInteractor.getTokensList().map { it.id }.also { tokens ->
-                    blockExplorerManager.getTokensLiquidity(tokens)
                 }
             }
         }

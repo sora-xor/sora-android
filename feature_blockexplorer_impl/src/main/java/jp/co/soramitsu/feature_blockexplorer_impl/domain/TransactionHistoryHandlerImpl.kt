@@ -57,6 +57,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 class TransactionHistoryHandlerImpl @Inject constructor(
     private val assetsRepository: AssetsRepository,
@@ -65,7 +66,7 @@ class TransactionHistoryHandlerImpl @Inject constructor(
     private val resourceManager: ResourceManager,
     private val userRepository: UserRepository,
     private val dateTimeFormatter: DateTimeFormatter,
-    coroutineManager: CoroutineManager,
+    private val coroutineManager: CoroutineManager,
 ) : TransactionHistoryHandler {
 
     init {
@@ -103,15 +104,17 @@ class TransactionHistoryHandlerImpl @Inject constructor(
     }
 
     override suspend fun onMoreHistoryEventsRequested() {
-        if (mutex.isLocked) return
-        mutex.withLock {
-            if (historyEndReached) return
-            try {
-                historyPage++
-                val events = loadEvents()
-                _historyState.emit(events)
-            } catch (t: Throwable) {
-                _historyState.emit(HistoryState.Error)
+        withContext(coroutineManager.io) {
+            if (mutex.isLocked) return@withContext
+            mutex.withLock {
+                if (historyEndReached) return@withLock
+                try {
+                    historyPage++
+                    val events = loadEvents()
+                    _historyState.emit(events)
+                } catch (t: Throwable) {
+                    _historyState.emit(HistoryState.Error)
+                }
             }
         }
     }
@@ -131,26 +134,30 @@ class TransactionHistoryHandlerImpl @Inject constructor(
     }
 
     override suspend fun refreshHistoryEvents(tokenId: String?) {
-        if (mutex.isLocked) return
-        mutex.withLock {
-            tokenIdFilter = tokenId
-            if (historyEvents.isEmpty()) {
-                _historyState.emit(HistoryState.Loading)
+        withContext(coroutineManager.io) {
+            if (mutex.isLocked) return@withContext
+            mutex.withLock {
+                tokenIdFilter = tokenId
+                if (historyEvents.isEmpty()) {
+                    _historyState.emit(HistoryState.Loading)
+                }
+                _historyState.value.safeCast<HistoryState.History>()?.let { history ->
+                    _historyState.emit(history.copy(pullToRefresh = true))
+                }
+                val events = reloadHistoryEvents()
+                _historyState.emit(events)
             }
-            _historyState.value.safeCast<HistoryState.History>()?.let { history ->
-                _historyState.emit(history.copy(pullToRefresh = true))
-            }
-            val events = reloadHistoryEvents()
-            _historyState.emit(events)
         }
     }
 
     override suspend fun getTransaction(txHash: String): Transaction? {
-        return transactionHistoryRepository.getTransaction(
-            txHash,
-            assetsRepository.tokensList(),
-            userRepository.getCurSoraAccount()
-        )
+        return withContext(coroutineManager.io) {
+            transactionHistoryRepository.getTransaction(
+                txHash,
+                assetsRepository.tokensList(),
+                userRepository.getCurSoraAccount()
+            )
+        }
     }
 
     private suspend fun reloadHistoryEvents(): HistoryState =
