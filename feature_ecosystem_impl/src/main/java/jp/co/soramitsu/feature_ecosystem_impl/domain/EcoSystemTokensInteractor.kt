@@ -32,10 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import java.math.BigInteger
 import jp.co.soramitsu.common.util.ext.compareNullDesc
-import jp.co.soramitsu.common.util.ext.multiplyNullable
-import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import kotlinx.coroutines.flow.Flow
@@ -56,15 +53,8 @@ internal class EcoSystemTokensInteractorImpl(
         return assetsRepository.subscribeTokensList().combine(flowTokensLiquidity) { f1, f2 ->
             f1 to f2
         }.map { (list, liquidity) ->
-            val mapped = list.map { token ->
-                token to liquidity.firstOrNull { it.first == token.id }?.second?.let { bi ->
-                    mapBalance(bi, token.precision)
-                }
-            }
-            val marketCap = mapped.map { tokenLiquidity ->
-                val sum =
-                    tokenLiquidity.second?.multiplyNullable(tokenLiquidity.first.fiatPrice?.toBigDecimal())
-                EcoSystemToken(tokenLiquidity.first, sum, tokenLiquidity.second)
+            val marketCap = list.map { token ->
+                EcoSystemToken(token, liquidity.firstOrNull { it.first == token.id }?.second)
             }
             val sorted = marketCap.sortedWith { o1, o2 ->
                 compareNullDesc(o1.liquidityFiat, o2.liquidityFiat)
@@ -75,7 +65,7 @@ internal class EcoSystemTokensInteractorImpl(
         }
     }
 
-    private val flowTokensLiquidity: Flow<List<Pair<String, BigInteger>>> = flow {
+    private val flowTokensLiquidity: Flow<List<Pair<String, Double>>> = flow {
         emit(blockExplorerManager.getTokensLiquidity(assetsRepository.tokensList().map { it.id }))
     }.onStart {
         emit(emptyList())

@@ -46,7 +46,7 @@ class EcoSystemMapper @Inject constructor(
     fun mapEcoSystemTokens(tokens: EcoSystemTokens) =
         mapTokensToCardState(
             tokens.tokens.map {
-                it.token to it.liquidityFiat
+                it.token to it.liquidityFiat?.toBigDecimal()
             },
             numbersFormatter,
         )
