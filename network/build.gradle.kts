@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.serialization)
     alias(libs.plugins.kapt)
     id("kotlin-parcelize")
+    alias(libs.plugins.kover)
 }
 
 kotlin {

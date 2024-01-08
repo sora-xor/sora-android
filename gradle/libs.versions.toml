@@ -61,6 +61,7 @@ datastore = "1.0.0"
 room = "2.6.0"
 lazySodium = "5.0.2"
 jna = "5.8.0"
+kover = "0.7.5"
 
 [libraries]
 roomDep = { module = "androidx.room:room-runtime", version.ref = "room" }
@@ -158,6 +159,7 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger" }
 kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 googleServicesPlugin = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 firebaseCrashlyticsPlugin = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
