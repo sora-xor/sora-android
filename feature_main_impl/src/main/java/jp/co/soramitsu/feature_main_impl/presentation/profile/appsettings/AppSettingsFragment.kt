@@ -55,6 +55,7 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.Option
+import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 
@@ -96,8 +97,14 @@ class AppSettingsFragment : SoraBaseFragment<AppSettingsViewModel>() {
                 AppSettingsScreen(
                     checkedSystem = state.systemAppearanceChecked,
                     checkedDark = state.darkModeChecked,
-                    onSystemToggle = viewModel::toggleSystemAppearance,
-                    onDarkToggle = viewModel::toggleDarkMode,
+                    onSystemToggle = {
+                        requireActivity().intent.action = MainActivity.ACTION_DARK_THEME_TOGGLED
+                        viewModel.toggleSystemAppearance(it)
+                    },
+                    onDarkToggle = {
+                        requireActivity().intent.action = MainActivity.ACTION_DARK_THEME_TOGGLED
+                        viewModel.toggleDarkMode(it)
+                    },
                 )
             }
         }
