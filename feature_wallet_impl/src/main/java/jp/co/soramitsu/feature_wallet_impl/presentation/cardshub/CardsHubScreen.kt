@@ -95,11 +95,16 @@ fun TopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            modifier = Modifier.padding(end = Dimens.x2).weight(1f, false).clickable(onClick = onAccountClick),
+            modifier = Modifier
+                .padding(end = Dimens.x2)
+                .weight(1f)
+                .clickable(onClick = onAccountClick),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                modifier = Modifier.wrapContentWidth().weight(1f, false),
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .weight(1f, false),
                 text = account,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
