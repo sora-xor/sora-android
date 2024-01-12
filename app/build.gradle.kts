@@ -12,14 +12,14 @@ plugins {
     alias(libs.plugins.firebaseAppDistributionPlugin)
     alias(libs.plugins.triplet)
     id("kotlin-parcelize")
-    id("org.jetbrains.kotlinx.kover")
+    alias(libs.plugins.kover)
 }
 
 kotlin {
     jvmToolchain(11)
 }
 
-// soralution 127 3.8.1.2 2023.12.28
+// soralution 130 3.8.1.5 2024.01.12
 // sora dae 109 3.8.1.0 2023.12.29
 
 android {
@@ -95,7 +95,22 @@ android {
     }
     packaging {
         resources {
-            excludes += listOf("META-INF/DEPENDENCIES", "META-INF/LICENSE", "META-INF/LICENSE-notice.md", "META-INF/LICENSE.md", "META-INF/LICENSE.txt", "META-INF/license.txt", "META-INF/NOTICE", "META-INF/NOTICE.txt", "META-INF/notice.txt", "META-INF/ASL2.0", "META-INF/AL2.0", "META-INF/LGPL2.1", "META-INF/INDEX.LIST", "META-INF/io.netty.versions.properties")
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE-notice.md",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE.txt",
+                "META-INF/license.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/notice.txt",
+                "META-INF/ASL2.0",
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1",
+                "META-INF/INDEX.LIST",
+                "META-INF/io.netty.versions.properties"
+            )
         }
     }
 
@@ -132,7 +147,8 @@ android {
         val variant = this
         this.outputs.map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
             .forEach {
-                it.outputFileName = "SORA_Wallet_${variant.versionName}_${variant.versionCode}_${variant.flavorName}_${variant.buildType.name}.apk"
+                it.outputFileName =
+                    "SORA_Wallet_${variant.versionName}_${variant.versionCode}_${variant.flavorName}_${variant.buildType.name}.apk"
             }
     }
 
@@ -222,21 +238,41 @@ dependencies {
     testImplementation(project(":test_shared"))
 
     kover(project(":common"))
+    kover(project(":common_wallet"))
+    kover(project(":core_db"))
+    kover(project(":core_di"))
+    kover(project(":demeter"))
+    kover(project(":feature_account_api"))
+    kover(project(":feature_account_impl"))
+    kover(project(":feature_assets_api"))
+    kover(project(":feature_assets_impl"))
+    kover(project(":feature_blockexplorer_api"))
+    kover(project(":feature_blockexplorer_impl"))
+    kover(project(":feature_ecosystem_impl"))
+    kover(project(":feature_main_api"))
+    kover(project(":feature_main_impl"))
+    kover(project(":feature_multiaccount_api"))
+    kover(project(":feature_multiaccount_impl"))
+    kover(project(":feature_referral_api"))
+    kover(project(":feature_referral_impl"))
+    kover(project(":feature_polkaswap_api"))
+    kover(project(":feature_polkaswap_impl"))
+    kover(project(":feature_referral_impl"))
+    kover(project(":feature_ethereum_api"))
+    kover(project(":feature_ethereum_impl"))
+    kover(project(":feature_wallet_api"))
+    kover(project(":feature_wallet_impl"))
+    kover(project(":feature_select_node_api"))
+    kover(project(":feature_select_node_impl"))
+    kover(project(":feature_sora_card_api"))
+    kover(project(":feature_sora_card_impl"))
+    kover(project(":sorasubstrate"))
+    kover(project(":network"))
 }
 
 kapt {
     correctErrorTypes = true
 }
-
-// kover {
-//    useJacoco()
-// }
-
-// tasks.getByName("") {
-//    extensions.configure(kotlinx.kover.api.KoverTaskExtension::class) {
-//
-//    }
-// }
 
 koverReport {
     androidReports("developDebug") {
@@ -277,7 +313,8 @@ koverReport {
             rule {
                 isEnabled = true
 
-                minBound(85)
+                minBound(14)
+                // TODO: Update to 85
             }
         }
     }

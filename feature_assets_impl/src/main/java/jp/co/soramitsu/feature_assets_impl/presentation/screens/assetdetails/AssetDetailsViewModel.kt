@@ -43,6 +43,7 @@ import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
@@ -72,6 +73,7 @@ import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AssetDetailsViewModel @AssistedInject constructor(
     @Assisted private val assetId: String,
@@ -85,6 +87,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
     private val transactionHistoryHandler: TransactionHistoryHandler,
     private val resourceManager: ResourceManager,
     private val soraConfigManager: SoraConfigManager,
+    private val coroutineManager: CoroutineManager,
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -191,7 +194,10 @@ class AssetDetailsViewModel @AssistedInject constructor(
 
     private fun refreshActivities() {
         viewModelScope.launch {
-            val events = transactionHistoryHandler.getCachedEvents(TX_HISTORY_COUNT, assetId)
+            val events =
+                withContext(coroutineManager.io) {
+                    transactionHistoryHandler.getCachedEvents(TX_HISTORY_COUNT, assetId)
+                }
             state = state.copy(
                 state = state.state.copy(
                     events = events,

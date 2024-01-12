@@ -196,7 +196,9 @@ class PoolDetailsViewModel @AssistedInject constructor(
                                     AssetHolder.ROUNDING,
                                 )
                             },
-                            tvl = data.basic.baseToken.printFiat(data.basic.tvl?.formatFiatSuffix()).orEmpty(),
+                            tvl = "${
+                                data.basic.baseToken.printFiat(data.basic.tvl?.formatFiatSuffix()).orEmpty()
+                            } ${resourceManager.getString(R.string.total_value_locked)}",
                             addEnabled = true,
                             removeEnabled = (userData != null) && (!pools100),
                             userPoolSharePercent = userData?.poolShare?.let {

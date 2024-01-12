@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kapt)
     id("kotlin-parcelize")
     id("com.google.devtools.ksp")
+    alias(libs.plugins.kover)
 }
 
 kotlin {

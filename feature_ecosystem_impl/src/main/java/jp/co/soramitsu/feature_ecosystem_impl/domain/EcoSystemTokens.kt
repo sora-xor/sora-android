@@ -42,8 +42,7 @@ class EcoSystemTokens(
 
 class EcoSystemToken(
     val token: Token,
-    val liquidityFiat: BigDecimal?,
-    val liquidity: BigDecimal?,
+    val liquidityFiat: Double?,
 )
 
 class EcoSystemPools(

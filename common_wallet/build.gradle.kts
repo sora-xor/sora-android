@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.kapt)
     id("kotlin-parcelize")
+    alias(libs.plugins.kover)
 }
 
 val composeCompilerVersion: String by project

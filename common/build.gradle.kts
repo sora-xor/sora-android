@@ -10,7 +10,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.kapt)
     id("kotlin-parcelize")
-    id("org.jetbrains.kotlinx.kover")
+    alias(libs.plugins.kover)
 }
 
 fun secret(name: String): String {
@@ -80,7 +80,11 @@ android {
 
             buildConfigField("String", "SORA_CARD_API_KEY", maybeWrapQuotes(secret("SORA_CARD_API_KEY_TEST")))
             buildConfigField("String", "SORA_CARD_DOMAIN", maybeWrapQuotes(secret("SORA_CARD_DOMAIN_TEST")))
-            buildConfigField("String", "SORA_CARD_KYC_ENDPOINT_URL", maybeWrapQuotes(secret("SORA_CARD_KYC_ENDPOINT_URL_TEST")))
+            buildConfigField(
+                "String",
+                "SORA_CARD_KYC_ENDPOINT_URL",
+                maybeWrapQuotes(secret("SORA_CARD_KYC_ENDPOINT_URL_TEST"))
+            )
             buildConfigField("String", "SORA_CARD_KYC_USERNAME", maybeWrapQuotes(secret("SORA_CARD_KYC_USERNAME_TEST")))
             buildConfigField("String", "SORA_CARD_KYC_PASSWORD", maybeWrapQuotes(secret("SORA_CARD_KYC_PASSWORD_TEST")))
 
@@ -95,7 +99,11 @@ android {
 
             buildConfigField("String", "SORA_CARD_API_KEY", maybeWrapQuotes(secret("SORA_CARD_API_KEY_TEST")))
             buildConfigField("String", "SORA_CARD_DOMAIN", maybeWrapQuotes(secret("SORA_CARD_DOMAIN_TEST")))
-            buildConfigField("String", "SORA_CARD_KYC_ENDPOINT_URL", maybeWrapQuotes(secret("SORA_CARD_KYC_ENDPOINT_URL_TEST")))
+            buildConfigField(
+                "String",
+                "SORA_CARD_KYC_ENDPOINT_URL",
+                maybeWrapQuotes(secret("SORA_CARD_KYC_ENDPOINT_URL_TEST"))
+            )
             buildConfigField("String", "SORA_CARD_KYC_USERNAME", maybeWrapQuotes(secret("SORA_CARD_KYC_USERNAME_TEST")))
             buildConfigField("String", "SORA_CARD_KYC_PASSWORD", maybeWrapQuotes(secret("SORA_CARD_KYC_PASSWORD_TEST")))
 
@@ -110,7 +118,11 @@ android {
 
             buildConfigField("String", "SORA_CARD_API_KEY", maybeWrapQuotes(secret("SORA_CARD_API_KEY_PROD")))
             buildConfigField("String", "SORA_CARD_DOMAIN", maybeWrapQuotes(secret("SORA_CARD_DOMAIN_PROD")))
-            buildConfigField("String", "SORA_CARD_KYC_ENDPOINT_URL", maybeWrapQuotes(secret("SORA_CARD_KYC_ENDPOINT_URL_PROD")))
+            buildConfigField(
+                "String",
+                "SORA_CARD_KYC_ENDPOINT_URL",
+                maybeWrapQuotes(secret("SORA_CARD_KYC_ENDPOINT_URL_PROD"))
+            )
             buildConfigField("String", "SORA_CARD_KYC_USERNAME", maybeWrapQuotes(secret("SORA_CARD_KYC_USERNAME_PROD")))
             buildConfigField("String", "SORA_CARD_KYC_PASSWORD", maybeWrapQuotes(secret("SORA_CARD_KYC_PASSWORD_PROD")))
 

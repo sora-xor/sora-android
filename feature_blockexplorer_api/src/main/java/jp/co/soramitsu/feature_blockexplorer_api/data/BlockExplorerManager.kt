@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_blockexplorer_api.data
 
 import androidx.room.withTransaction
-import java.math.BigInteger
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -66,27 +65,27 @@ class BlockExplorerManager @Inject constructor(
 
     private val tempApy = mutableListOf<SbApyInfo>()
 
-    private var assetsInfo: List<Pair<String, BigInteger>>? = null
+    private var assetsInfo: List<Pair<String, Double>>? = null
 
-    private val mutex = Mutex()
+    private val mutexFiat = Mutex()
 
     fun getTempApy(id: String) = tempApy.find {
         it.id == id
     }?.sbApy?.times(100)
 
-    suspend fun getTokensLiquidity(tokenIds: List<String>): List<Pair<String, BigInteger>> =
-        assetsInfo ?: mutex.withLock {
+    suspend fun getTokensLiquidity(tokenIds: List<String>): List<Pair<String, Double>> =
+        assetsInfo ?: mutexFiat.withLock {
             assetsInfo ?: getAssetsInfoInternal(tokenIds).also {
                 assetsInfo = it
             }
         }
 
-    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, BigInteger>> =
+    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, Double>> =
         runCatching {
             val selected = soraConfigManager.getSelectedCurrency()
             val tokens = db.assetDao().getFiatTokenPriceLocal(selected.code)
             val yesterdayHour = yesterday()
-            val resultList = mutableListOf<Pair<String, BigInteger>>()
+            val resultList = mutableListOf<Pair<String, Double>>()
             val fiats = mutableListOf<FiatTokenPriceLocal>()
             RetryStrategyBuilder.build().retryIf(
                 retries = 3,
@@ -98,12 +97,12 @@ class BlockExplorerManager @Inject constructor(
                 if (dbValue != null && delta != null) {
                     fiats.add(
                         dbValue.copy(
-                            fiatPricePrevH = delta,
-                            fiatPricePrevHTime = yesterdayHour
+                            fiatChange = delta / 100.0,
+                            fiatPricePrevHTime = yesterdayHour,
                         )
                     )
                 }
-                resultList.add(assetInfo.tokenId to BigInteger(assetInfo.liquidity))
+                resultList.add(assetInfo.tokenId to (assetInfo.liquidity.toDoubleNan() ?: 0.0))
             }
             db.assetDao().insertFiatPrice(fiats)
             resultList
@@ -159,33 +158,32 @@ class BlockExplorerManager @Inject constructor(
         }
     }
 
-    private suspend fun updateFiatPrices(fiatData: List<FiatInfo>) = mutex.withLock {
+    private suspend fun updateFiatPrices(fiatData: List<FiatInfo>) = mutexFiat.withLock {
         val selected = soraConfigManager.getSelectedCurrency()
         val tokens = db.assetDao().getTokensWithFiatOfCurrency(selected.code)
 
         val prices = fiatData.mapNotNull { apy ->
             val dbValue = tokens.find { it.token.id == apy.id }
-            val apyRate = apy.priceUsd
-            if (dbValue != null && apyRate != null) {
+            val fiatPrice = apy.priceUsd
+            if (dbValue != null && fiatPrice != null) {
                 val dbPrice = dbValue.price
                 if (dbPrice != null) {
-                    val change = fiatChange(dbPrice.fiatPricePrevH, apyRate)
                     FiatTokenPriceLocal(
                         dbPrice.tokenIdFiat,
                         selected.code,
-                        apyRate,
+                        fiatPrice,
                         nowInSecond(),
                         dbPrice.fiatPricePrevH,
                         dbPrice.fiatPricePrevHTime,
                         dbPrice.fiatPricePrevD,
                         dbPrice.fiatPricePrevDTime,
-                        change,
+                        dbPrice.fiatChange,
                     )
                 } else {
                     FiatTokenPriceLocal(
                         tokenIdFiat = dbValue.token.id,
                         selected.code,
-                        apyRate,
+                        fiatPrice,
                         nowInSecond(),
                         0.0,
                         0,

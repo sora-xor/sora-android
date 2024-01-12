@@ -48,6 +48,14 @@ fun compareNullDesc(o1: BigDecimal?, o2: BigDecimal?): Int =
         else -> -1
     }
 
+fun compareNullDesc(o1: Double?, o2: Double?): Int =
+    when {
+        o1 == null && o2 == null -> 0
+        o1 != null && o2 != null -> o2.compareTo(o1)
+        o1 == null -> 1
+        else -> -1
+    }
+
 fun BigInteger.isZero(): Boolean = this.compareTo(BigInteger.ZERO) == 0
 fun BigDecimal.isZero(): Boolean = this.compareTo(BigDecimal.ZERO) == 0
 

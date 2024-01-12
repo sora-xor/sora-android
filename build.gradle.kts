@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.firebaseAppDistributionPlugin) apply false
     alias(libs.plugins.triplet) apply false
     id("com.google.devtools.ksp") version "1.9.10-1.0.13" apply false
-    id("org.jetbrains.kotlinx.kover") version "0.7.4" apply false
+    id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
 
 tasks.register("clean", Delete::class) {
@@ -56,17 +56,5 @@ tasks.register<JavaExec>("ktlintFormat") {
         "**/src/**/*.kt",
         "**.kts",
         "!**/build/**",
-    )
-}
-
-tasks.register<JavaExec>("jacocoTestReport") {
-    group = LifecycleBasePlugin.VERIFICATION_GROUP
-    description = "Check Kotlin code style"
-    classpath = ktlint
-    mainClass.set("com.pinterest.ktlint.Main")
-    args(
-        "**/src/**/*.kt",
-        "**.kts",
-        "!**/build/**"
     )
 }
