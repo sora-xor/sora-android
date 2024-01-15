@@ -168,6 +168,7 @@ play {
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
     releaseName = "3.8.1.5 - Demeter Farming"
+    defaultToAppBundles.set(true)
 }
 
 dependencies {
