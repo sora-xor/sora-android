@@ -10,10 +10,10 @@ def pipeline = new org.android.AppPipeline(steps: this,
     sonarProjectName: 'sora-passport-android',
     sonarProjectKey: 'jp.co.soramitsu:sora-passport-android',
     testCmd: 'ktlintCheck clean testDevelopDebugUnitTest koverVerifyDevelopDebug',
+    publishType: 'Bundle',
     jobParams: jobParams,
     appPushNoti: true,
     gitUpdateSubmodule: true,
     dockerImage: 'build-tools/android-build-box:jdk17',
-    gpgFiles: ['app/google-services.json'],
-    publishType: 'Bundle'),
+    gpgFiles: ['app/google-services.json'])
 pipeline.runPipeline('sora')
