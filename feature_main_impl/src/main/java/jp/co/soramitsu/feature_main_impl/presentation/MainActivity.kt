@@ -48,7 +48,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
 import dagger.hilt.android.AndroidEntryPoint
@@ -90,6 +89,9 @@ class MainActivity :
 
         private const val ACTION_ACCOUNT_ADDED =
             "jp.co.soramitsu.feature_main_impl.ACTION_ACCOUNT_ADDED"
+
+        const val ACTION_DARK_THEME_TOGGLED =
+            "jp.co.soramitsu.feature_main_impl.DARK_THEME"
 
         private const val IDLE_MINUTES: Long = 5
         private const val ANIM_START_POSITION = 100f
@@ -220,7 +222,7 @@ class MainActivity :
 
             when (intent.action) {
                 ACTION_CHANGE_LANGUAGE -> chooseBottomNavigationItem(R.id.profile_nav_graph)
-                ACTION_ACCOUNT_ADDED -> {}
+                ACTION_DARK_THEME_TOGGLED, ACTION_ACCOUNT_ADDED -> {}
                 else -> viewModel.showPinFragment()
             }
         }

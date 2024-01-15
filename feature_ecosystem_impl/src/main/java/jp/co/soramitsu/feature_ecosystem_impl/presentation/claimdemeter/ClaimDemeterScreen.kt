@@ -90,7 +90,8 @@ internal fun ClaimDemeterScreen(
                 Column {
                     Text(
                         text = stringResource(id = R.string.claim_rewards),
-                        style = MaterialTheme.customTypography.headline2
+                        style = MaterialTheme.customTypography.headline2,
+                        color = MaterialTheme.customColors.fgPrimary
                     )
 
                     Divider(
@@ -114,7 +115,8 @@ internal fun ClaimDemeterScreen(
                     Text(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                         text = state.amountTitle,
-                        style = MaterialTheme.customTypography.headline3
+                        style = MaterialTheme.customTypography.headline3,
+                        color = MaterialTheme.customColors.fgPrimary
                     )
                     Text(
                         modifier = Modifier.align(Alignment.CenterHorizontally),

@@ -97,7 +97,8 @@ internal fun EditFarmScreen(
                 Column {
                     Text(
                         text = stringResource(id = R.string.select_pool_share),
-                        style = MaterialTheme.customTypography.headline2
+                        style = MaterialTheme.customTypography.headline2,
+                        color = MaterialTheme.customColors.fgPrimary
                     )
 
                     Divider(
@@ -111,7 +112,8 @@ internal fun EditFarmScreen(
                         Text(
                             modifier = Modifier.weight(1f),
                             text = state.percentageText,
-                            style = MaterialTheme.customTypography.displayL
+                            style = MaterialTheme.customTypography.displayL,
+                            color = MaterialTheme.customColors.fgPrimary
                         )
 
                         TonalButton(

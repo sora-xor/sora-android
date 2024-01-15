@@ -54,6 +54,8 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,6 +71,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.presentation.compose.components.keyboardState
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItem
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItem
@@ -96,190 +99,201 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         activity?.safeCast<BottomBarController>()?.showBottomBar()
     }
 
-    @OptIn(ExperimentalFoundationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState, navController: NavHostController
     ) {
         composable(
             route = theOnlyRoute,
         ) {
-            val pagerState = rememberPagerState { ExplorePages.entries.size }
-            val scope = rememberCoroutineScope()
-            val state = viewModel.state.collectAsStateWithLifecycle().value
-            if (state.isSearching) {
-                ContentCardEndless(
-                    modifier = Modifier
-                        .padding(horizontal = Dimens.x2)
-                        .fillMaxSize(),
-                    innerPadding = PaddingValues(
-                        start = Dimens.x1_2,
-                        end = Dimens.x3,
-                        top = Dimens.x3
-                    ),
-                ) {
-                    if (state.isLoading) {
+            val kbState by keyboardState()
+            if (kbState) {
+                activity?.safeCast<BottomBarController>()?.hideBottomBar()
+            } else {
+                activity?.safeCast<BottomBarController>()?.showBottomBar()
+            }
+            ExplorerContent()
+        }
+    }
+
+    @OptIn(ExperimentalFoundationApi::class)
+    @Composable
+    private fun ExplorerContent() {
+        val pagerState = rememberPagerState { ExplorePages.entries.size }
+        val scope = rememberCoroutineScope()
+        val state = viewModel.state.collectAsStateWithLifecycle().value
+        if (state.isSearching) {
+            ContentCardEndless(
+                modifier = Modifier
+                    .padding(horizontal = Dimens.x2)
+                    .fillMaxSize(),
+                innerPadding = PaddingValues(
+                    start = Dimens.x1_2,
+                    end = Dimens.x3,
+                    top = Dimens.x3
+                ),
+            ) {
+                if (state.isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(Dimens.x6)
+                                .padding(Dimens.x1),
+                            color = MaterialTheme.customColors.accentPrimary
+                        )
+                    }
+                } else {
+                    if (state.assets.isEmpty() && state.farms.isEmpty() && state.pools.isEmpty()) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .size(Dimens.x6)
-                                    .padding(Dimens.x1),
-                                color = MaterialTheme.customColors.accentPrimary
+                            Text(
+                                text = stringResource(id = R.string.common_nothing_found),
+                                style = MaterialTheme.customTypography.paragraphM,
+                                color = MaterialTheme.customColors.fgSecondary
                             )
                         }
                     } else {
-                        if (state.assets.isEmpty() && state.farms.isEmpty() && state.pools.isEmpty()) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.common_nothing_found),
-                                    style = MaterialTheme.customTypography.paragraphM,
-                                    color = MaterialTheme.customColors.fgSecondary
-                                )
-                            }
-                        } else {
-                            Column {
-                                val listState1 = rememberLazyListState()
-                                LazyColumn(state = listState1) {
-                                    if (state.assets.isNotEmpty()) {
-                                        item {
-                                            Text(
-                                                modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
-                                                style = MaterialTheme.customTypography.headline4,
-                                                color = MaterialTheme.customColors.fgSecondary,
-                                                fontWeight = FontWeight.Normal,
-                                                text = stringResource(id = R.string.liquid_assets).uppercase()
-                                            )
-                                        }
-
-                                        items(
-                                            count = state.assets.size,
-                                        ) { position ->
-                                            AssetItemEnumerated(
-                                                modifier = Modifier.padding(vertical = Dimens.x1),
-                                                assetState = state.assets[position],
-                                                number = "${position + 1}",
-                                                testTag = "AssetFilteredItem",
-                                                onClick = viewModel::onTokenClicked,
-                                            )
-                                        }
-
-                                        item {
-                                            Divider(thickness = Dimens.x2, color = Color.Transparent)
-                                        }
+                        Column {
+                            val listState1 = rememberLazyListState()
+                            LazyColumn(state = listState1) {
+                                if (state.assets.isNotEmpty()) {
+                                    item {
+                                        Text(
+                                            modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
+                                            style = MaterialTheme.customTypography.headline4,
+                                            color = MaterialTheme.customColors.fgSecondary,
+                                            fontWeight = FontWeight.Normal,
+                                            text = stringResource(id = R.string.liquid_assets).uppercase()
+                                        )
                                     }
 
-                                    if (state.pools.isNotEmpty()) {
-                                        item {
-                                            Text(
-                                                modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
-                                                style = MaterialTheme.customTypography.headline4,
-                                                color = MaterialTheme.customColors.fgSecondary,
-                                                fontWeight = FontWeight.Normal,
-                                                text = stringResource(id = R.string.common_pools).uppercase()
-                                            )
-                                        }
-
-                                        items(
-                                            count = state.pools.size,
-                                        ) { position ->
-                                            BasicPoolListItem(
-                                                modifier = Modifier.padding(vertical = Dimens.x1),
-                                                state = state.pools[position],
-                                                onPoolClick = viewModel::onPoolClicked
-                                            )
-                                        }
-
-                                        item {
-                                            Divider(thickness = Dimens.x2, color = Color.Transparent)
-                                        }
+                                    items(
+                                        count = state.assets.size,
+                                    ) { position ->
+                                        AssetItemEnumerated(
+                                            modifier = Modifier.padding(vertical = Dimens.x1),
+                                            assetState = state.assets[position],
+                                            number = "${position + 1}",
+                                            testTag = "AssetFilteredItem",
+                                            onClick = viewModel::onTokenClicked,
+                                        )
                                     }
 
-                                    if (state.farms.isNotEmpty()) {
-                                        item {
-                                            Text(
-                                                modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
-                                                style = MaterialTheme.customTypography.headline4,
-                                                color = MaterialTheme.customColors.fgSecondary,
-                                                fontWeight = FontWeight.Normal,
-                                                text = stringResource(id = R.string.common_farms).uppercase()
-                                            )
-                                        }
-                                        items(
-                                            count = state.farms.size,
-                                        ) { position ->
-                                            BasicFarmListItem(
-                                                modifier = Modifier.padding(vertical = Dimens.x1),
-                                                state = state.farms[position],
-                                                onPoolClick = viewModel::onFarmClicked
-                                            )
-                                        }
+                                    item {
+                                        Divider(thickness = Dimens.x2, color = Color.Transparent)
+                                    }
+                                }
+
+                                if (state.pools.isNotEmpty()) {
+                                    item {
+                                        Text(
+                                            modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
+                                            style = MaterialTheme.customTypography.headline4,
+                                            color = MaterialTheme.customColors.fgSecondary,
+                                            fontWeight = FontWeight.Normal,
+                                            text = stringResource(id = R.string.common_pools).uppercase()
+                                        )
+                                    }
+
+                                    items(
+                                        count = state.pools.size,
+                                    ) { position ->
+                                        BasicPoolListItem(
+                                            modifier = Modifier.padding(vertical = Dimens.x1),
+                                            state = state.pools[position],
+                                            onPoolClick = viewModel::onPoolClicked
+                                        )
+                                    }
+
+                                    item {
+                                        Divider(thickness = Dimens.x2, color = Color.Transparent)
+                                    }
+                                }
+
+                                if (state.farms.isNotEmpty()) {
+                                    item {
+                                        Text(
+                                            modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
+                                            style = MaterialTheme.customTypography.headline4,
+                                            color = MaterialTheme.customColors.fgSecondary,
+                                            fontWeight = FontWeight.Normal,
+                                            text = stringResource(id = R.string.common_farms).uppercase()
+                                        )
+                                    }
+                                    items(
+                                        count = state.farms.size,
+                                    ) { position ->
+                                        BasicFarmListItem(
+                                            modifier = Modifier.padding(vertical = Dimens.x1),
+                                            state = state.farms[position],
+                                            onPoolClick = viewModel::onFarmClicked
+                                        )
                                     }
                                 }
                             }
                         }
                     }
                 }
-            } else {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    val horizontalState = rememberScrollState()
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                val horizontalState = rememberScrollState()
 
-                    Row(
-                        modifier = Modifier
-                            .padding(bottom = Dimens.x2, start = Dimens.x3)
-                            .horizontalScroll(horizontalState),
-                    ) {
-                        (0..<pagerState.pageCount).forEach {
-                            if (it == pagerState.currentPage) {
-                                FilledButton(
-                                    modifier = Modifier.padding(end = Dimens.x1),
-                                    size = Dimens.x4,
-                                    order = Order.SECONDARY,
-                                    text = stringResource(id = ExplorePages.entries[it].titleResource)
-                                ) {
-                                    scope.launch { pagerState.animateScrollToPage(it) }
-                                }
-                            } else {
-                                TonalButton(
-                                    modifier = Modifier.padding(end = Dimens.x1),
-                                    size = Dimens.x4,
-                                    order = Order.SECONDARY,
-                                    text = stringResource(id = ExplorePages.entries[it].titleResource)
-                                ) {
-                                    scope.launch { pagerState.animateScrollToPage(it) }
-                                }
+                Row(
+                    modifier = Modifier
+                        .padding(bottom = Dimens.x2, start = Dimens.x3)
+                        .horizontalScroll(horizontalState),
+                ) {
+                    (0..<pagerState.pageCount).forEach {
+                        if (it == pagerState.currentPage) {
+                            FilledButton(
+                                modifier = Modifier.padding(end = Dimens.x1),
+                                size = Dimens.x4,
+                                order = Order.SECONDARY,
+                                text = stringResource(id = ExplorePages.entries[it].titleResource)
+                            ) {
+                                scope.launch { pagerState.animateScrollToPage(it) }
+                            }
+                        } else {
+                            TonalButton(
+                                modifier = Modifier.padding(end = Dimens.x1),
+                                size = Dimens.x4,
+                                order = Order.SECONDARY,
+                                text = stringResource(id = ExplorePages.entries[it].titleResource)
+                            ) {
+                                scope.launch { pagerState.animateScrollToPage(it) }
                             }
                         }
                     }
+                }
 
-                    HorizontalPager(
-                        modifier = Modifier.fillMaxHeight(), state = pagerState, beyondBoundsPageCount = 1
-                    ) {
-                        when (it) {
-                            ExplorePages.CURRENCIES.ordinal -> {
-                                AllCurrenciesScreen(
-                                    onTokenClicked = viewModel::onTokenClicked,
-                                )
-                            }
+                HorizontalPager(
+                    modifier = Modifier.fillMaxHeight(), state = pagerState, beyondBoundsPageCount = 1
+                ) {
+                    when (it) {
+                        ExplorePages.CURRENCIES.ordinal -> {
+                            AllCurrenciesScreen(
+                                onTokenClicked = viewModel::onTokenClicked,
+                            )
+                        }
 
-                            ExplorePages.POOLS.ordinal -> {
-                                AllPoolsScreen(
-                                    onPoolClicked = viewModel::onPoolClicked,
-                                    onAddPoolClicked = viewModel::onPoolPlus,
-                                )
-                            }
+                        ExplorePages.POOLS.ordinal -> {
+                            AllPoolsScreen(
+                                onPoolClicked = viewModel::onPoolClicked,
+                                onAddPoolClicked = viewModel::onPoolPlus,
+                            )
+                        }
 
-                            ExplorePages.FARMING.ordinal -> {
-                                AllDemeterScreen(
-                                    onFarmClicked = viewModel::onFarmClicked,
-                                )
-                            }
+                        ExplorePages.FARMING.ordinal -> {
+                            AllDemeterScreen(
+                                onFarmClicked = viewModel::onFarmClicked,
+                            )
                         }
                     }
                 }

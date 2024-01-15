@@ -57,6 +57,7 @@ import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.test
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
@@ -142,6 +143,7 @@ class TransactionHistoryHandlerTest {
 
     private lateinit var transactionHistoryHandler: TransactionHistoryHandler
 
+    @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
 //        mockkStatic(Uri::parse)
@@ -166,6 +168,7 @@ class TransactionHistoryHandlerTest {
         whenever(resourceManager.getString(any())).thenReturn("")
         whenever(transactionHistoryRepository.state).thenReturn(flowOf(true))
         whenever(coroutineManager.applicationScope).thenReturn(this)
+        whenever(coroutineManager.io).thenReturn(this.coroutineContext[CoroutineDispatcher]!!)
         // whenever(transactionHistoryRepository.onSoraAccountChange()).thenReturn(Unit)
         assetsRepository.stub {
             onBlocking { tokensList() } doReturn tokens
@@ -218,7 +221,7 @@ class TransactionHistoryHandlerTest {
             resourceManager,
             userRepository,
             dateTimeFormatter,
-            coroutineManager
+            coroutineManager,
         )
     }
 
