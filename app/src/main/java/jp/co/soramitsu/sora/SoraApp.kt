@@ -79,8 +79,8 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         return loader.build()
     }
 
-    override fun getWorkManagerConfiguration(): Configuration =
-        Configuration.Builder()
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
 

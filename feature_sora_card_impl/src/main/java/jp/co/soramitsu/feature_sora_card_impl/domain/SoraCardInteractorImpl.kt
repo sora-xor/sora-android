@@ -35,12 +35,11 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 import java.math.BigDecimal
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.IbanInfo
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.OptionsProvider.euroSign
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.Big100
-import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.greaterThan
 import jp.co.soramitsu.common.util.ext.safeDivide
 import jp.co.soramitsu.common.util.ext.splitVersions
@@ -48,9 +47,11 @@ import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
-import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
+import jp.co.soramitsu.oauth.common.domain.PriceInteractor
+import jp.co.soramitsu.oauth.common.model.IbanAccountResponse
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlin.math.min
 import kotlinx.coroutines.delay
@@ -60,6 +61,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 
 internal class SoraCardInteractorImpl @Inject constructor(
     private val blockExplorerManager: BlockExplorerManager,
@@ -82,6 +84,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
         var isLoopInProgress = true
         while (isLoopInProgress) {
             val status = soraCardClientProxy.getKycStatus().getOrDefault(SoraCardCommonVerification.NotFound)
+            Timber.e("foxx status = $status")
             _soraCardStatus.value = status
             if (status != SoraCardCommonVerification.Pending) {
                 isLoopInProgress = false
@@ -113,7 +116,10 @@ internal class SoraCardInteractorImpl @Inject constructor(
         _soraCardStatus.value = status
     }
 
-    override fun setLogout() {
+    override suspend fun setLogout() {
+        soraCardClientProxy.logout()
+        needUpdateCache = null
+        ibanInfoCache = null
         _soraCardStatus.value = SoraCardCommonVerification.NotFound
     }
 
@@ -131,45 +137,22 @@ internal class SoraCardInteractorImpl @Inject constructor(
                         poolData.user.basePooled
                     }
                     val demeterStakedFarmed = demeterFarmingInteractor.getStakedFarmedBalanceOfAsset(SubstrateOptionsProvider.feeAssetId)
-                    val totalPoolBalance = asset.balance.total.plus(poolsSum).plus(demeterStakedFarmed)
+                    val totalTokenBalance = asset.balance.total.plus(poolsSum).plus(demeterStakedFarmed)
                     try {
-                        val xorRequiredBalanceWithBacklash =
-                            KYC_REQUIRED_BALANCE_WITH_BACKLASH.divideBy(
-                                BigDecimal.valueOf(
-                                    xorEuroLocal
-                                )
-                            )
-                        val xorRealRequiredBalance =
-                            KYC_REAL_REQUIRED_BALANCE.divideBy(BigDecimal.valueOf(xorEuroLocal))
-                        val xorBalanceInEur =
-                            totalPoolBalance.multiply(BigDecimal.valueOf(xorEuroLocal))
-
-                        val needInXor =
-                            if (totalPoolBalance.greaterThan(xorRealRequiredBalance)) {
-                                BigDecimal.ZERO
-                            } else {
-                                xorRequiredBalanceWithBacklash.minus(totalPoolBalance)
-                            }
-
-                        val needInEur =
-                            if (xorBalanceInEur.greaterThan(KYC_REAL_REQUIRED_BALANCE)) {
-                                BigDecimal.ZERO
-                            } else {
-                                KYC_REQUIRED_BALANCE_WITH_BACKLASH.minus(xorBalanceInEur)
-                            }
-
+                        val sufficient = PriceInteractor.calcSufficient(
+                            balance = totalTokenBalance,
+                            ratio = xorEuroLocal,
+                        )
                         SoraCardAvailabilityInfo(
-                            xorBalance = totalPoolBalance,
-                            enoughXor = totalPoolBalance.greaterThan(
-                                xorRealRequiredBalance
-                            ),
-                            percent = totalPoolBalance.safeDivide(xorRealRequiredBalance),
-                            needInXor = formatter.formatBigDecimal(needInXor, 5),
-                            needInEur = formatter.formatBigDecimal(needInEur, 2),
+                            xorBalance = totalTokenBalance,
+                            enoughXor = totalTokenBalance.greaterThan(sufficient.realRequiredBalance),
+                            percent = totalTokenBalance.safeDivide(sufficient.realRequiredBalance),
+                            needInXor = formatter.formatBigDecimal(sufficient.needToken, 5),
+                            needInEur = formatter.formatBigDecimal(sufficient.needEuro, 2),
                             xorRatioAvailable = true
                         )
                     } catch (t: Throwable) {
-                        errorInfoState(totalPoolBalance)
+                        errorInfoState(totalTokenBalance)
                     }
                 } else {
                     errorInfoState(BigDecimal.ZERO)
@@ -187,30 +170,45 @@ internal class SoraCardInteractorImpl @Inject constructor(
             xorToEuro = it
         }
 
-    override suspend fun fetchUserIbanAccount(): Result<String> =
-        soraCardClientProxy.getIBAN().mapCatching { wrapper ->
-            val sorted = wrapper.ibans?.sortedByDescending { it.createdDate }
-            sorted?.firstOrNull()?.iban.orEmpty()
+    private var ibanInfoCache: IbanInfo? = null
+
+    override suspend fun fetchUserIbanAccount(force: Boolean): IbanInfo? =
+        if (force) {
+            fetchIbanItem().also {
+                ibanInfoCache = it
+            }
+        } else {
+            ibanInfoCache ?: fetchIbanItem().also {
+                ibanInfoCache = it
+            }
         }
 
-    override suspend fun fetchIbanBalance(): Result<String> =
-        soraCardClientProxy.getIBAN().mapCatching { wrapper ->
-            val sorted = wrapper.ibans?.sortedByDescending { it.createdDate }
-            sorted?.firstOrNull()?.availableBalance?.let {
-                "%s%.2f".format(euroSign, it / 100.0)
-            } ?: ""
+    private suspend fun fetchIbanItem(): IbanInfo? =
+        soraCardClientProxy.getIBAN().getOrNull()?.let { wrapper ->
+            Timber.e("foxx iban $wrapper")
+            wrapper.ibans?.maxByOrNull { it.createdDate }?.let { response ->
+                val bal = response.availableBalance.let {
+                    "%s%.2f".format(euroSign, it / 100.0)
+                }
+                if (response.status == IbanAccountResponse.IBAN_ACCOUNT_ACTIVE_STATUS) {
+                    IbanInfo(
+                        iban = response.iban,
+                        active = true,
+                        balance = bal,
+                    )
+                } else {
+                    IbanInfo(
+                        iban = response.statusDescription,
+                        active = false,
+                        balance = bal,
+                    )
+                }
+            }
         }
 
     override suspend fun fetchApplicationFee(): String = soraCardClientProxy.getApplicationFee()
 
-    override suspend fun logOutFromSoraCard() {
-        soraCardClientProxy.logout()
-        setLogout()
-    }
-
     private companion object {
-        val KYC_REAL_REQUIRED_BALANCE: BigDecimal = BigDecimal.valueOf(95)
-        val KYC_REQUIRED_BALANCE_WITH_BACKLASH: BigDecimal = Big100
         const val POLLING_PERIOD_IN_MILLIS = 30_000L
     }
 }

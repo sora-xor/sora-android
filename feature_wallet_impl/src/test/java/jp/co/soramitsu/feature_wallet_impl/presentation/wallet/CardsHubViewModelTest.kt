@@ -60,8 +60,8 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
-import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
@@ -195,6 +195,7 @@ class CardsHubViewModelTest {
         )
         coEvery { soraCardInteractor.checkSoraCardPending() } just runs
         coEvery { soraCardInteractor.needInstallUpdate() } returns false
+        coEvery { soraCardInteractor.fetchUserIbanAccount(false) } returns null
         every { assetsRouter.showBuyCrypto(any()) } returns Unit
         every { mainRouter.showGetSoraCard(any()) } just Runs
         every { mainRouter.showSoraCardDetails() } just Runs
