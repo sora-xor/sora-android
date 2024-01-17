@@ -79,7 +79,7 @@ internal fun ProfileItems(
             title = stringResource(id = R.string.more_menu_sora_card_title),
             subtitle = if (state.soraCardNeedUpdate)
                 stringResource(id = jp.co.soramitsu.oauth.R.string.card_update_title) else
-                stringResource(id = state.soraCardStatusStringRes),
+                state.soraCardIbanError ?: stringResource(id = state.soraCardStatusStringRes),
             subtitleIcon = if (state.soraCardNeedUpdate) null else state.soraCardStatusIconDrawableRes,
             subtitleColor = if (state.soraCardNeedUpdate) MaterialTheme.customColors.statusError else MaterialTheme.customColors.fgSecondary,
             icon = R.drawable.ic_buy_crypto,
@@ -177,7 +177,8 @@ private fun PreviewProfile() {
                 soraCardEnabled = true,
                 soraCardNeedUpdate = false,
                 soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
-                soraCardStatusIconDrawableRes = R.drawable.ic_connection_indicator_green
+                soraCardStatusIconDrawableRes = R.drawable.ic_connection_indicator_green,
+                soraCardIbanError = null,
             ),
             onAccountsClick = { },
             onSoraCardClick = { },

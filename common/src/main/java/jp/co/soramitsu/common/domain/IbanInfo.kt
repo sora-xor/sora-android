@@ -30,15 +30,10 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_main_impl.presentation.profile
+package jp.co.soramitsu.common.domain
 
-internal data class ProfileScreenState(
-    val nodeName: String,
-    val nodeConnected: Boolean,
-    val isDebugMenuAvailable: Boolean,
-    val soraCardEnabled: Boolean,
-    val soraCardNeedUpdate: Boolean,
-    val soraCardStatusStringRes: Int,
-    val soraCardIbanError: String?,
-    val soraCardStatusIconDrawableRes: Int?,
+data class IbanInfo(
+    val iban: String,
+    val active: Boolean,
+    val balance: String,
 )

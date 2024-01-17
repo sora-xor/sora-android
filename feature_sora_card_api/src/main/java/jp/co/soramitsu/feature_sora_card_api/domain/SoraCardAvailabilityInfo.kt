@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_api.domain.models
+package jp.co.soramitsu.feature_sora_card_api.domain
 
 import java.math.BigDecimal
 

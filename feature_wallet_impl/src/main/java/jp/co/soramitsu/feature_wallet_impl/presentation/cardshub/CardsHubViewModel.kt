@@ -98,6 +98,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @HiltViewModel
 class CardsHubViewModel @Inject constructor(
@@ -184,12 +185,14 @@ class CardsHubViewModel @Inject constructor(
                                 soraCardInteractor.subscribeSoraCardStatus()
                                     .map { status ->
                                         val mapped = mapKycStatus(status)
+                                        val ibanInfo = soraCardInteractor.fetchUserIbanAccount()
+                                        Timber.e("foxx hubs $status")
+                                        Timber.e("foxx hubi $ibanInfo")
                                         cardHub to SoraCardState(
                                             kycStatus = mapped.first,
                                             loading = false,
                                             success = mapped.second,
-                                            ibanBalance = if (mapped.second) soraCardInteractor.fetchIbanBalance()
-                                                .getOrNull() else null,
+                                            ibanBalance = ibanInfo,
                                             needUpdate = soraCardInteractor.needInstallUpdate(),
                                         )
                                     }
@@ -290,7 +293,9 @@ class CardsHubViewModel @Inject constructor(
 
             is SoraCardResult.Canceled -> {}
             is SoraCardResult.Logout -> {
-                soraCardInteractor.setLogout()
+                viewModelScope.launch {
+                    soraCardInteractor.setLogout()
+                }
             }
         }
     }
@@ -389,7 +394,9 @@ class CardsHubViewModel @Inject constructor(
 
     fun onCardStateClicked() {
         _state.value.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
-            if (card.kycStatus == null) {
+            if (card.ibanBalance?.active == true) {
+                mainRouter.showSoraCardDetails()
+            } else if (card.kycStatus == null) {
                 if (!connectionManager.isConnected) return
                 mainRouter.showGetSoraCard()
             } else if (card.success) {
