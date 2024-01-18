@@ -98,7 +98,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 @HiltViewModel
 class CardsHubViewModel @Inject constructor(
@@ -186,8 +185,6 @@ class CardsHubViewModel @Inject constructor(
                                     .map { status ->
                                         val mapped = mapKycStatus(status)
                                         val ibanInfo = soraCardInteractor.fetchUserIbanAccount()
-                                        Timber.e("foxx hubs $status")
-                                        Timber.e("foxx hubi $ibanInfo")
                                         cardHub to SoraCardState(
                                             kycStatus = mapped.first,
                                             loading = false,

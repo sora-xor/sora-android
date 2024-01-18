@@ -62,6 +62,10 @@ fun BigDecimal.isZero(): Boolean = this.compareTo(BigDecimal.ZERO) == 0
 fun BigDecimal?.multiplyNullable(decimal: BigDecimal?): BigDecimal? =
     if (this != null && decimal != null) this.multiply(decimal) else null
 
+fun BigDecimal.toDoubleInfinite() = this.toDouble().takeIf { converted ->
+    converted != Double.NEGATIVE_INFINITY && converted != Double.POSITIVE_INFINITY
+} ?: 0.0
+
 fun BigDecimal.equalTo(a: BigDecimal) = this.compareTo(a) == 0
 
 fun BigDecimal.greaterThan(a: BigDecimal) = this.compareTo(a) == 1
