@@ -61,7 +61,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import timber.log.Timber
 
 internal class SoraCardInteractorImpl @Inject constructor(
     private val blockExplorerManager: BlockExplorerManager,
@@ -84,7 +83,6 @@ internal class SoraCardInteractorImpl @Inject constructor(
         var isLoopInProgress = true
         while (isLoopInProgress) {
             val status = soraCardClientProxy.getKycStatus().getOrDefault(SoraCardCommonVerification.NotFound)
-            Timber.e("foxx status = $status")
             _soraCardStatus.value = status
             if (status != SoraCardCommonVerification.Pending) {
                 isLoopInProgress = false
@@ -185,7 +183,6 @@ internal class SoraCardInteractorImpl @Inject constructor(
 
     private suspend fun fetchIbanItem(): IbanInfo? =
         soraCardClientProxy.getIBAN().getOrNull()?.let { wrapper ->
-            Timber.e("foxx iban $wrapper")
             wrapper.ibans?.maxByOrNull { it.createdDate }?.let { response ->
                 val bal = response.availableBalance.let {
                     "%s%.2f".format(euroSign, it / 100.0)
