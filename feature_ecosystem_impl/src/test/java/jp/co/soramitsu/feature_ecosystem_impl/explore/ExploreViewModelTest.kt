@@ -40,8 +40,9 @@ import io.mockk.verify
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
-import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.ExploreViewModel
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
@@ -79,7 +80,10 @@ class ExploreViewModelTest {
     private lateinit var poolsInteractor: PoolsInteractor
 
     @MockK
-    private lateinit var assetsInteractor: AssetsInteractor
+    private lateinit var ecoSystemMapper: EcoSystemMapper
+
+    @MockK
+    private lateinit var ecoSystemTokensInteractor: EcoSystemTokensInteractor
 
     @MockK
     private lateinit var numbersFormatter: NumbersFormatter
@@ -97,7 +101,8 @@ class ExploreViewModelTest {
             resourceManager,
             demeterFarmingInteractor,
             poolsInteractor,
-            assetsInteractor,
+            ecoSystemTokensInteractor,
+            ecoSystemMapper,
             polkaswapRouter,
             assetsRouter,
             numbersFormatter

@@ -34,6 +34,7 @@ package jp.co.soramitsu.demeter.domain
 
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.util.StringTriple
 
 data class DemeterFarmingPool(
     val tokenBase: Token,
@@ -65,3 +66,5 @@ fun DemeterFarmingBasicPool.isFilterMatch(filter: String): Boolean {
         tokenReward.id.lowercase().contains(filter.lowercase())
     return t1 || t2 || t3
 }
+
+fun DemeterFarmingBasicPool.ids() = StringTriple(this.tokenBase.id, this.tokenTarget.id, this.tokenReward.id)

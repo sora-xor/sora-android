@@ -41,8 +41,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
-internal interface EcoSystemTokensInteractor {
+interface EcoSystemTokensInteractor {
     fun subscribeTokens(): Flow<EcoSystemTokens>
+
+    suspend fun getTokensWithTvl(): EcoSystemTokens
 }
 
 internal class EcoSystemTokensInteractorImpl(
@@ -63,6 +65,19 @@ internal class EcoSystemTokensInteractorImpl(
                 tokens = sorted,
             )
         }
+    }
+
+    override suspend fun getTokensWithTvl(): EcoSystemTokens {
+        val tokens = assetsRepository.tokensList()
+        val tvls = blockExplorerManager.getTokensLiquidity(tokens.map { it.id })
+
+        val marketCap = tokens.map { token ->
+            EcoSystemToken(token, tvls.firstOrNull { it.first == token.id }?.second)
+        }
+        val sorted = marketCap.sortedWith { o1, o2 ->
+            compareNullDesc(o1.liquidityFiat, o2.liquidityFiat)
+        }
+        return EcoSystemTokens(tokens = sorted)
     }
 
     private val flowTokensLiquidity: Flow<List<Pair<String, Double>>> = flow {
