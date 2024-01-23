@@ -38,7 +38,6 @@ import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.getByIdOrEmpty
-import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.ext.snakeCaseToCamelCase
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
@@ -89,7 +88,7 @@ private fun mapHistoryItemToTransaction(
                 token = tokens.getByIdOrEmpty(tokenId),
             )
         }
-    } else if (tx.isMatch(Pallete.ETH_BRIDGE, Method.TRANSFER_TO_SIDECHAIN) && !BuildUtils.isProdPlayMarket()) {
+    } else if (tx.isMatch(Pallete.ETH_BRIDGE, Method.TRANSFER_TO_SIDECHAIN)) {
         tx.data?.toEthTransfer { amount, tokenId, hash, address ->
             Transaction.EthTransfer(
                 base = transactionBase,
@@ -220,7 +219,7 @@ private fun mapHistoryItemToTransaction(
                 rewardToken = token,
             )
         }
-    } else if (tx.isMatch(Pallete.LIQUIDITY_PROXY, Method.SWAP_TRANSFER_BATCH) && !BuildUtils.isProdPlayMarket()) {
+    } else if (tx.isMatch(Pallete.LIQUIDITY_PROXY, Method.SWAP_TRANSFER_BATCH)) {
         tx.data?.toAdarIncome(myAddress) { amount, token, peer ->
             Transaction.AdarIncome(
                 base = transactionBase,

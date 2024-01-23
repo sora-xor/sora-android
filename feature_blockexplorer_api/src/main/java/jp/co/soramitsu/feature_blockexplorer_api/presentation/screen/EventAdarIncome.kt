@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -112,7 +113,7 @@ internal fun EventAdarIncome(
             ) {
                 Text(
                     modifier = Modifier.wrapContentSize(),
-                    text = "Adar transfer",
+                    text = stringResource(id = R.string.received_from_adar),
                     style = MaterialTheme.customTypography.textM,
                     color = MaterialTheme.customColors.fgPrimary,
                     maxLines = 1,
@@ -159,13 +160,6 @@ internal fun EventAdarIncome(
                     text = eventUiModel.peerAddress,
                     style = MaterialTheme.customTypography.textXSBold,
                     overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.customColors.fgSecondary,
-                    maxLines = 1,
-                )
-                Text(
-                    modifier = Modifier.wrapContentSize(),
-                    text = "",
-                    style = MaterialTheme.customTypography.textXSBold,
                     color = MaterialTheme.customColors.fgSecondary,
                     maxLines = 1,
                 )

@@ -47,6 +47,7 @@ data class BasicTxDetailsState(
     val networkFeeFiat: String?,
     @DrawableRes val txTypeIcon: Int,
     val txTypeTitle: String,
+    val txTypeSubTitle: String? = null,
 )
 
 data class BasicTxDetailsItem(
@@ -65,4 +66,5 @@ internal val previewBasicTxDetailsItem = BasicTxDetailsState(
     "$ 123",
     R.drawable.ic_arrow_down_24,
     "Referrer set",
+    "Subtitle",
 )
