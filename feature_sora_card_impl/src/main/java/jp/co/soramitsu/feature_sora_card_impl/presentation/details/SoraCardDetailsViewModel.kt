@@ -89,15 +89,14 @@ class SoraCardDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             tryCatch {
                 soraCardInteractor.fetchUserIbanAccount(true)?.let { iban ->
-                    var local = _soraCardDetailsScreenState.value
+                    val local = _soraCardDetailsScreenState.value
                     ibanCache = iban
-                    local = local.copy(
-                        soraCardIBANCardState = SoraCardIBANCardState(iban.iban),
+                    _soraCardDetailsScreenState.value = local.copy(
+                        soraCardIBANCardState = SoraCardIBANCardState(iban.iban, iban.active),
                         soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
                             balance = iban.balance,
                         ),
                     )
-                    _soraCardDetailsScreenState.value = local
                 }
             }
         }
