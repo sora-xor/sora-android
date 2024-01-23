@@ -145,7 +145,7 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                         )
                     }
                 } else {
-                    if (state.assets.isEmpty() && state.farms.isEmpty() && state.pools.isEmpty()) {
+                    if (state.assets != null && state.farms.isEmpty() && state.pools.isEmpty()) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -160,7 +160,7 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                         Column {
                             val listState1 = rememberLazyListState()
                             LazyColumn(state = listState1) {
-                                if (state.assets.isNotEmpty()) {
+                                if (state.assets != null) {
                                     item {
                                         Text(
                                             modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
@@ -172,12 +172,12 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                                     }
 
                                     items(
-                                        count = state.assets.size,
+                                        count = state.assets.topTokens.size,
                                     ) { position ->
                                         AssetItemEnumerated(
                                             modifier = Modifier.padding(vertical = Dimens.x1),
-                                            assetState = state.assets[position],
-                                            number = "${position + 1}",
+                                            assetState = state.assets.topTokens[position].second,
+                                            number = state.assets.topTokens[position].first,
                                             testTag = "AssetFilteredItem",
                                             onClick = viewModel::onTokenClicked,
                                         )

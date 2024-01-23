@@ -34,11 +34,11 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.model
 
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 
-data class ExploreScreenState(
+internal data class ExploreScreenState(
     val isSearching: Boolean = false,
-    val assets: List<AssetItemCardState> = emptyList(),
+    val assets: EcoSystemTokensState? = null,
     val pools: List<BasicPoolListItemState> = emptyList(),
     val farms: List<BasicFarmListItemState> = emptyList(),
     val isLoading: Boolean = false,
