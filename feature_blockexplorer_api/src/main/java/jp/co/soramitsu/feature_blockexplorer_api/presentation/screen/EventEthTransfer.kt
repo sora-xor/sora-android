@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -76,22 +77,14 @@ internal fun EventEthTransfer(
         ConstraintLayout(
             modifier = Modifier.wrapContentSize()
         ) {
-            val (token1, token2, typeIcon) = createRefs()
+            val (token1, typeIcon) = createRefs()
             TokenIcon(
                 modifier = Modifier.constrainAs(token1) {
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
                 },
                 uri = eventUiModel.tokenUri,
-                size = 28.dp,
-            )
-            TokenIcon(
-                modifier = Modifier.constrainAs(token2) {
-                    top.linkTo(token1.top, margin = 12.dp)
-                    start.linkTo(token1.start, margin = 12.dp)
-                },
-                uri = eventUiModel.ethTokenUri,
-                size = 28.dp,
+                size = Dimens.x4,
             )
             Icon(
                 modifier = Modifier
@@ -100,8 +93,8 @@ internal fun EventEthTransfer(
                     .background(MaterialTheme.customColors.bgSurface)
                     .padding(2.dp)
                     .constrainAs(typeIcon) {
-                        bottom.linkTo(token2.bottom)
-                        start.linkTo(token2.start, margin = (-16).dp)
+                        bottom.linkTo(token1.bottom, (-2).dp)
+                        start.linkTo(token1.start, (-2).dp)
                     },
                 painter = painterResource(id = R.drawable.ic_refresh_24),
                 contentDescription = null,
@@ -125,7 +118,7 @@ internal fun EventEthTransfer(
                 ) {
                     Text(
                         modifier = Modifier.wrapContentSize(),
-                        text = "Sent to Eth",
+                        text = stringResource(id = R.string.common_bridged),
                         style = MaterialTheme.customTypography.textM,
                         color = MaterialTheme.customColors.fgPrimary,
                         maxLines = 1,
@@ -161,7 +154,10 @@ internal fun EventEthTransfer(
             Text(
                 modifier = Modifier
                     .wrapContentSize(),
-                text = eventUiModel.sidechainAddress,
+                text = "%s -> %s".format(
+                    stringResource(id = R.string.asset_sora_fullname),
+                    stringResource(id = R.string.asset_ether_fullname)
+                ),
                 style = MaterialTheme.customTypography.textXSBold,
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.customColors.fgSecondary,

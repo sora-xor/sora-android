@@ -78,6 +78,7 @@
   <string name="common_backup">बैकअप</string>
   <string name="common_balance">राशि</string>
   <string name="common_bashkir">बाशकीर</string>
+  <string name="common_bridged">Bridged</string>
   <string name="common_buy">खरीदें</string>
   <string name="common_buy_xor">XOR खरीदें</string>
   <string name="common_cancel">रद्द करें</string>
@@ -252,6 +253,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">नेटवर्क शुल्क के लिए पर्याप्त धनराशि नहीं है</string>
+  <string name="eth_tx_address">Ethereum account address</string>
+  <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">Create pool</string>
   <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
@@ -420,6 +423,7 @@
   <string name="qr_code">क्यूआर कोड</string>
   <string name="qr_upload">गैलरी से</string>
   <string name="receive_tokens">टोकन प्राप्त करें</string>
+  <string name="received_from_adar">Received from ADAR</string>
   <string name="recent_recipients">हाल के प्राप्तकर्ता</string>
   <string name="recipient_address">प्राप्तकर्ता का पता</string>
   <string name="recovery_enter_passphrase_title">अपना गुप्त passphrase दर्ज करें</string>
