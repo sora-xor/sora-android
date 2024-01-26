@@ -38,6 +38,7 @@ import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.getByIdOrEmpty
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.ext.snakeCaseToCamelCase
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
@@ -88,7 +89,7 @@ private fun mapHistoryItemToTransaction(
                 token = tokens.getByIdOrEmpty(tokenId),
             )
         }
-    } else if (tx.isMatch(Pallete.ETH_BRIDGE, Method.TRANSFER_TO_SIDECHAIN)) {
+    } else if (tx.isMatch(Pallete.ETH_BRIDGE, Method.TRANSFER_TO_SIDECHAIN) && BuildUtils.isProdPlayMarket().not()) {
         tx.data?.toEthTransfer { amount, tokenId, hash, address ->
             Transaction.EthTransfer(
                 base = transactionBase,
