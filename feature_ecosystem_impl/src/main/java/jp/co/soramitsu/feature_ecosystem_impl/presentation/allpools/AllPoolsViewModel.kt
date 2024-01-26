@@ -36,21 +36,15 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.isMatchFilter
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
-import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPools
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPoolsInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemPoolsState
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemPoolsState
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
@@ -60,40 +54,16 @@ internal class AllPoolsViewModel @Inject constructor(
     private val ecoSystemMapper: EcoSystemMapper,
 ) : BaseViewModel() {
 
-    private val filter = MutableStateFlow("")
-    private var positions: Map<StringPair, String>? = null
-
     val poolsState = ecoSystemPoolsInteractor.subscribeBasicPools()
-        .onEach {
-            positions = it.pools.mapIndexed { index, ecoSystemToken ->
-                (ecoSystemToken.pool.baseToken.id to ecoSystemToken.pool.targetToken.id) to (index + 1).toString()
-            }.toMap()
-        }
-        .combine(filter) { t1, t2 ->
-            t1 to t2
-        }
         .catch {
             onError(it)
         }
-        .map { pair ->
-            val filtered = pair.first.pools.filter {
-                it.pool.baseToken.isMatchFilter(pair.second) || it.pool.targetToken.isMatchFilter(
-                    pair.second
-                )
-            }
-            val mapped = ecoSystemMapper.mapEcoSystemPools(EcoSystemPools(filtered))
-            val mappedEnumerated = mapped.map {
-                val indexInAll = positions?.get(it.ids).orEmpty()
-                it.copy(number = indexInAll)
-            }
+        .map {
+            val mapped = ecoSystemMapper.mapEcoSystemPools(it)
             EcoSystemPoolsState(
-                pools = mappedEnumerated,
+                pools = mapped,
             )
         }
         .flowOn(coroutineManager.io)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemPoolsState)
-
-    fun onSearch(value: String) {
-        filter.value = value
-    }
 }

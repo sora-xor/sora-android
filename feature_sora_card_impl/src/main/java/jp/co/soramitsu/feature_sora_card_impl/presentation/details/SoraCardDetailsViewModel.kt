@@ -38,6 +38,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.IbanInfo
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -60,7 +61,7 @@ class SoraCardDetailsViewModel @Inject constructor(
 
     val telegramChat = SingleLiveEvent<Unit>()
 
-    private var ibanCache: String? = null
+    private var ibanCache: IbanInfo? = null
 
     private val _soraCardDetailsScreenState = MutableStateFlow(
         SoraCardDetailsScreenState(
@@ -87,29 +88,16 @@ class SoraCardDetailsViewModel @Inject constructor(
 
         viewModelScope.launch {
             tryCatch {
-                var local = _soraCardDetailsScreenState.value
-                soraCardInteractor.fetchUserIbanAccount()
-                    .onSuccess { iban ->
-                        ibanCache = iban
-                        local = local.copy(
-                            soraCardIBANCardState = SoraCardIBANCardState(iban)
-                        )
-                    }
-                    .onFailure {
-                        onError(it)
-                    }
-                soraCardInteractor.fetchIbanBalance()
-                    .onFailure {
-                        onError(it)
-                    }
-                    .onSuccess {
-                        local = local.copy(
-                            soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
-                                balance = it
-                            )
-                        )
-                    }
-                _soraCardDetailsScreenState.value = local
+                soraCardInteractor.fetchUserIbanAccount(true)?.let { iban ->
+                    val local = _soraCardDetailsScreenState.value
+                    ibanCache = iban
+                    _soraCardDetailsScreenState.value = local.copy(
+                        soraCardIBANCardState = SoraCardIBANCardState(iban.iban, iban.active),
+                        soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
+                            balance = iban.balance,
+                        ),
+                    )
+                }
             }
         }
     }
@@ -140,14 +128,14 @@ class SoraCardDetailsViewModel @Inject constructor(
 
     fun onIbanCardShareClick() {
         ibanCache?.let {
-            if (it.isNotEmpty()) _shareLinkEvent.value = it
+            if (it.active && it.iban.isNotEmpty()) _shareLinkEvent.value = it.iban
         }
     }
 
     fun onIbanCardClick() {
         ibanCache?.let {
-            if (it.isNotEmpty()) {
-                clipboardManager.addToClipboard(it)
+            if (it.active && it.iban.isNotEmpty()) {
+                clipboardManager.addToClipboard(it.iban)
                 copiedToast.trigger()
             }
         }
@@ -175,7 +163,7 @@ class SoraCardDetailsViewModel @Inject constructor(
     fun onSoraCardLogOutClick() {
         viewModelScope.launch {
             tryCatch {
-                soraCardInteractor.logOutFromSoraCard()
+                soraCardInteractor.setLogout()
             }
         }.invokeOnCompletion {
             if (it == null)

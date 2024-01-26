@@ -78,6 +78,7 @@
   <string name="common_backup">גיבוי</string>
   <string name="common_balance">יתרה</string>
   <string name="common_bashkir">בשקירית</string>
+  <string name="common_bridged">Bridged</string>
   <string name="common_buy">קנה</string>
   <string name="common_buy_xor">קנה XOR</string>
   <string name="common_cancel">בטל</string>
@@ -254,6 +255,8 @@
   <string name="enter_password_incorect_title">סיסמה שגויה</string>
   <string name="enter_password_title">הזן סיסמה</string>
   <string name="error_transaction_fee_title">אין מספיק כספים עבור עמלת רשת</string>
+  <string name="eth_tx_address">Ethereum account address</string>
+  <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">צור מאגר</string>
   <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
@@ -430,6 +433,7 @@
   <string name="qr_code">קוד QR</string>
   <string name="qr_upload">מתוך גלריה</string>
   <string name="receive_tokens">קבל טוקנים</string>
+  <string name="received_from_adar">Received from ADAR</string>
   <string name="recent_recipients">נמענים אחרונים</string>
   <string name="recipient_address">כתובת הנמען</string>
   <string name="recovery_enter_passphrase_title">הזן את מילות המפתח הסודיות שלך</string>

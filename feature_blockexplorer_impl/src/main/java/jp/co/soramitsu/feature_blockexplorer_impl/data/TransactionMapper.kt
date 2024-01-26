@@ -89,7 +89,7 @@ private fun mapHistoryItemToTransaction(
                 token = tokens.getByIdOrEmpty(tokenId),
             )
         }
-    } else if (tx.isMatch(Pallete.ETH_BRIDGE, Method.TRANSFER_TO_SIDECHAIN) && !BuildUtils.isProdPlayMarket()) {
+    } else if (tx.isMatch(Pallete.ETH_BRIDGE, Method.TRANSFER_TO_SIDECHAIN) && BuildUtils.isProdPlayMarket().not()) {
         tx.data?.toEthTransfer { amount, tokenId, hash, address ->
             Transaction.EthTransfer(
                 base = transactionBase,
@@ -220,7 +220,7 @@ private fun mapHistoryItemToTransaction(
                 rewardToken = token,
             )
         }
-    } else if (tx.isMatch(Pallete.LIQUIDITY_PROXY, Method.SWAP_TRANSFER_BATCH) && !BuildUtils.isProdPlayMarket()) {
+    } else if (tx.isMatch(Pallete.LIQUIDITY_PROXY, Method.SWAP_TRANSFER_BATCH)) {
         tx.data?.toAdarIncome(myAddress) { amount, token, peer ->
             Transaction.AdarIncome(
                 base = transactionBase,

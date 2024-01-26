@@ -78,6 +78,7 @@
   <string name="common_backup">Резервная копия</string>
   <string name="common_balance">Баланс</string>
   <string name="common_bashkir">Башкирский</string>
+  <string name="common_bridged">Мост</string>
   <string name="common_buy">Купить</string>
   <string name="common_buy_xor">Купить XOR</string>
   <string name="common_cancel">Отмена</string>
@@ -142,7 +143,7 @@
   <string name="common_explore">Explore</string>
   <string name="common_failed">Ошибка</string>
   <string name="common_farming">Фарминг</string>
-  <string name="common_farms">Farms</string>
+  <string name="common_farms">Фермы</string>
   <string name="common_fee">Комиссия</string>
   <string name="common_filipino">Филиппинский</string>
   <string name="common_finnish">Финский</string>
@@ -172,7 +173,7 @@
   <string name="common_more">Еще</string>
   <string name="common_norwegian">Норвежский</string>
   <string name="common_nothing_available">Ничего нет в наличии</string>
-  <string name="common_nothing_found">Nothing found</string>
+  <string name="common_nothing_found">Ничего не найдено</string>
   <string name="common_ok">Ок</string>
   <string name="common_passphrase_title">Парольная фраза</string>
   <string name="common_pay_attention">Pay attention!</string>
@@ -238,7 +239,7 @@
   <string name="delete_backup_alert_description">Если вы удалите свою резервную копию Google, вы сможете восстановить свой кошелек только с резервной копией вашей парольной фразы вручную.</string>
   <string name="delete_backup_alert_title">Вы уверены?</string>
   <string name="demeter_claimed_reward">Получена награда</string>
-  <string name="demeter_farming_deposit_fee_hint">Deposit fee is applied to your amount to stake</string>
+  <string name="demeter_farming_deposit_fee_hint">Комиссия за депозит взимается с суммы стейкинга</string>
   <string name="demeter_staked_liquidity">Застейкана ликвидность</string>
   <string name="demeter_unstaked_liquidity">Анстейкана ликвидность</string>
   <string name="details_frozen">Заморожено</string>
@@ -255,6 +256,8 @@
   <string name="enter_password_incorect_title">Неверный пароль</string>
   <string name="enter_password_title">Введите пароль</string>
   <string name="error_transaction_fee_title">Недостаточно средств для оплаты комиссии</string>
+  <string name="eth_tx_address">Адрес аккаунта Ethereum</string>
+  <string name="eth_tx_hash">Хеш транзакции Ethereum</string>
   <string name="explore_create_pool">Create pool</string>
   <string name="explore_demeter_subtitle">Стейкайте свою долю в пуле и получайте дополнительные вознаграждения</string>
   <string name="explore_demeter_title">Demeter фарминг</string>
@@ -353,7 +356,7 @@
   <string name="polkaswap_farming_demeter_power">Работает на Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Некоторая часть вашей доли в пуле находится в стейкинге. Чтобы получить к ней доступ, вы должны сначала разблокировать ее.</string>
   <string name="polkaswap_farming_pool_share">Застейканая часть пула</string>
-  <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
+  <string name="polkaswap_farming_pool_share_will_be">Ваша доля в пуле будет</string>
   <string name="polkaswap_farming_staked_for">Застейкано в %s</string>
   <string name="polkaswap_farming_unstake_to_remove">Чтобы забрать ликвидность, необходимо сначала разблокировать ее</string>
   <string name="polkaswap_info_text_1">Polkaswap разрабатывается сообществом SORA. Перед тем, как стать контрибьютером Polkaswap, ознакомьтесь с %%Polkaswap FAQ%% и документацией, которая описывает то, как работает Polkaswap, %%Polkaswap Меморандумом и Условиями и положениями%%, и %%Политикой конфиденциальности%%.\n\nЭти документы важны для безопасной и комфортной работы пользователей. Используя Polkaswap вы соглашаетесь, что вы прочли и поняли суть документов.</string>
@@ -435,6 +438,7 @@
   <string name="qr_code">QR код</string>
   <string name="qr_upload">Из галереи</string>
   <string name="receive_tokens">Получить токены</string>
+  <string name="received_from_adar">Получено от ADAR</string>
   <string name="recent_recipients">Недавние получатели</string>
   <string name="recipient_address">Адрес получателя</string>
   <string name="recovery_enter_passphrase_title">Enter your secret Passphrase</string>
@@ -507,7 +511,7 @@
   <string name="select_node_switch_succeed">Нода успешно переключена</string>
   <string name="select_node_unable_join_node_message">Пожалуйста, попробуйте позже</string>
   <string name="select_node_unable_join_node_title">Не удалось подключиться к ноде</string>
-  <string name="select_pool_share">Select your pool share to stake</string>
+  <string name="select_pool_share">Выберите долю пула для стейкинга</string>
   <string name="select_recipient">Выбор получателя</string>
   <string name="settings_accounts">Аккаунты</string>
   <string name="settings_accounts_subtitle">Управление учетными записями, резервная копия парольной фразы</string>

@@ -39,21 +39,24 @@ import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.isMatchFilter
 import jp.co.soramitsu.common.domain.printFiat
-import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
+import jp.co.soramitsu.common.util.ext.compareNullDesc
 import jp.co.soramitsu.common_wallet.domain.model.isFilterMatch
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
+import jp.co.soramitsu.demeter.domain.ids
 import jp.co.soramitsu.demeter.domain.isFilterMatch
-import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_ecosystem_impl.R
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokens
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.model.ExploreScreenState
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
@@ -70,7 +73,8 @@ class ExploreViewModel @Inject constructor(
     resourceManager: ResourceManager,
     private val demeterFarmingInteractor: DemeterFarmingInteractor,
     private val poolsInteractor: PoolsInteractor,
-    private val assetsInteractor: AssetsInteractor,
+    private val ecoSystemTokensInteractor: EcoSystemTokensInteractor,
+    private val ecoSystemMapper: EcoSystemMapper,
     private val polkaswapRouter: PolkaswapRouter,
     private val assetsRouter: AssetsRouter,
     private val numbersFormatter: NumbersFormatter,
@@ -79,7 +83,7 @@ class ExploreViewModel @Inject constructor(
     private val _state = MutableStateFlow(
         ExploreScreenState()
     )
-    val state = _state.asStateFlow()
+    internal val state = _state.asStateFlow()
 
     init {
         _toolbarState.value = SoramitsuToolbarState(
@@ -135,64 +139,87 @@ class ExploreViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadAssets(search: String): List<AssetItemCardState> {
-        return assetsInteractor.getWhitelistAssets()
-            .filter { it.token.isMatchFilter(search) }
-            .map {
-                AssetItemCardState(
-                    tokenIcon = it.token.iconUri(),
-                    tokenId = it.token.id,
-                    tokenName = it.token.name,
-                    tokenSymbol = it.token.symbol,
-                    assetAmount = it.token.printBalance(
-                        it.balance.transferable,
-                        numbersFormatter,
-                        it.token.precision
-                    ),
-                    assetFiatAmount = it.printFiat(numbersFormatter),
-                    fiatChange = it.token.printFiatChange(numbersFormatter),
-                )
-            }
+    private suspend fun loadAssets(search: String): EcoSystemTokensState {
+        val ecoSystemTokens = ecoSystemTokensInteractor
+            .getTokensWithTvl()
+
+        val positions = ecoSystemTokens.tokens.mapIndexed { index, ecoSystemToken ->
+            ecoSystemToken.token.id to (index + 1).toString()
+        }.toMap()
+
+        val tokensFiltered = ecoSystemTokens.tokens.filter { it.token.isMatchFilter(search) }
+
+        val mapped = ecoSystemMapper.mapEcoSystemTokens(EcoSystemTokens(tokensFiltered))
+
+        val mappedEnumerated = mapped.map {
+            val indexInAll = positions.get(it.second.tokenId).orEmpty()
+            indexInAll to it.second
+        }
+
+        return EcoSystemTokensState(mappedEnumerated)
     }
 
     private suspend fun loadPools(search: String): List<BasicPoolListItemState> {
-        return poolsInteractor.getBasicPools().filter {
-            it.isFilterMatch(search)
-        }.mapIndexed { index, pool ->
-            val tvl = pool.baseToken.fiatPrice?.times(2)?.toBigDecimal()
-                ?.multiply(pool.baseReserves)
+        val pools = poolsInteractor.getBasicPools()
+            .sortedWith { o1, o2 ->
+                compareNullDesc(o1.tvl, o2.tvl)
+            }
 
-            BasicPoolListItemState(
-                ids = StringPair(pool.baseToken.id, pool.targetToken.id),
-                number = "${index + 1}",
-                token1Icon = pool.baseToken.iconUri(),
-                token2Icon = pool.targetToken.iconUri(),
-                text1 = "${pool.baseToken.symbol}-${pool.targetToken.symbol}",
-                text2 = pool.baseToken.printFiat(tvl?.formatFiatSuffix()).orEmpty(),
-                text3 = pool.sbapy?.let {
-                    "%s%%".format(numbersFormatter.format(it, 2))
-                }.orEmpty(),
-            )
-        }
+        val positions = pools.mapIndexed { index, pool ->
+            (pool.baseToken.id to pool.targetToken.id) to (index + 1).toString()
+        }.toMap()
+
+        val mappedEnumerated = pools
+            .filter {
+                it.isFilterMatch(search)
+            }
+            .map { pool ->
+                val indexInAll = positions[pool.baseToken.id to pool.targetToken.id].orEmpty()
+
+                val tvl = pool.baseToken.fiatPrice?.times(2)?.toBigDecimal()
+                    ?.multiply(pool.baseReserves)
+
+                BasicPoolListItemState(
+                    ids = StringPair(pool.baseToken.id, pool.targetToken.id),
+                    number = indexInAll,
+                    token1Icon = pool.baseToken.iconUri(),
+                    token2Icon = pool.targetToken.iconUri(),
+                    text1 = "${pool.baseToken.symbol}-${pool.targetToken.symbol}",
+                    text2 = pool.baseToken.printFiat(tvl?.formatFiatSuffix()).orEmpty(),
+                    text3 = pool.sbapy?.let {
+                        "%s%%".format(numbersFormatter.format(it, 2))
+                    }.orEmpty(),
+                )
+            }
+
+        return mappedEnumerated
     }
 
     private suspend fun loadFarms(search: String): List<BasicFarmListItemState> {
-        return demeterFarmingInteractor.getFarmedBasicPools().filter {
-            it.isFilterMatch(search)
-        }.mapIndexed { index, farm ->
-            BasicFarmListItemState(
-                StringTriple(farm.tokenBase.id, farm.tokenTarget.id, farm.tokenReward.id),
-                number = (index + 1).toString(),
-                token1Icon = farm.tokenBase.iconUri(),
-                token2Icon = farm.tokenTarget.iconUri(),
-                rewardTokenIcon = farm.tokenReward.iconUri(),
-                rewardTokenSymbol = farm.tokenReward.symbol,
-                text1 = "%s-%s".format(farm.tokenBase.symbol, farm.tokenTarget.symbol),
-                text2 = farm.tokenBase.printFiat(farm.tvl.formatFiatSuffix()).orEmpty(),
-                text3 = farm.apr.let {
-                    "%s%%".format(numbersFormatter.format(it, 2))
-                },
-            )
-        }
+        val farms = demeterFarmingInteractor.getFarmedBasicPools()
+        val positions = farms.mapIndexed { index, demeterFarmingBasicPool ->
+            demeterFarmingBasicPool.ids() to (index + 1).toString()
+        }.toMap()
+
+        return demeterFarmingInteractor.getFarmedBasicPools()
+            .filter {
+                it.isFilterMatch(search)
+            }.map { farm ->
+                val indexInAll = positions[farm.ids()] ?: ""
+
+                BasicFarmListItemState(
+                    StringTriple(farm.tokenBase.id, farm.tokenTarget.id, farm.tokenReward.id),
+                    number = indexInAll,
+                    token1Icon = farm.tokenBase.iconUri(),
+                    token2Icon = farm.tokenTarget.iconUri(),
+                    rewardTokenIcon = farm.tokenReward.iconUri(),
+                    rewardTokenSymbol = farm.tokenReward.symbol,
+                    text1 = "%s-%s".format(farm.tokenBase.symbol, farm.tokenTarget.symbol),
+                    text2 = farm.tokenBase.printFiat(farm.tvl.formatFiatSuffix()).orEmpty(),
+                    text3 = farm.apr.let {
+                        "%s%%".format(numbersFormatter.format(it, 2))
+                    },
+                )
+            }
     }
 }

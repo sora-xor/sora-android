@@ -19,7 +19,7 @@ kotlin {
     jvmToolchain(11)
 }
 
-// soralution 130 3.8.1.5 2024.01.12
+// soralution 135 3.8.2.1 2024.01.26
 // sora dae 110 3.8.1.1 2024.01.12
 
 android {
@@ -168,6 +168,7 @@ play {
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
     releaseName = "3.8.1.1 - Demeter Farming"
+    defaultToAppBundles = true
 }
 
 dependencies {

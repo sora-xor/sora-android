@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.IbanInfo
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.ext.testTagAsId
@@ -141,21 +142,21 @@ fun SoraCard(
                     modifier = Modifier
                         .wrapContentWidth()
                         .run {
-                            if (state.success.not())
+                            if (state.success.not() && state.ibanBalance == null)
                                 padding(bottom = Dimens.x3) else padding(all = Dimens.x1)
                         }
                         .run {
-                            if (state.success.not())
+                            if (state.success.not() && state.ibanBalance == null)
                                 align(Alignment.BottomCenter) else align(Alignment.BottomEnd)
                         },
                     kycStatus = state.kycStatus,
-                    balance = state.ibanBalance,
+                    ibanInfo = state.ibanBalance,
                     success = state.success,
                     onCardStateClicked = onCardStateClicked,
                 )
             }
 
-            if (state.success.not())
+            if (state.success.not() && state.ibanBalance == null)
                 BleachedButton(
                     modifier = Modifier
                         .wrapContentWidth()
@@ -175,11 +176,20 @@ fun SoraCard(
 private fun CardStateButton(
     modifier: Modifier = Modifier,
     kycStatus: String?,
-    balance: String?,
+    ibanInfo: IbanInfo?,
     success: Boolean,
     onCardStateClicked: () -> Unit
 ) {
-    if (kycStatus == null) {
+    if (ibanInfo != null) {
+        BleachedButton(
+            modifier = modifier
+                .testTagAsId("CardInfo"),
+            size = Size.ExtraSmall,
+            order = Order.SECONDARY,
+            onClick = onCardStateClicked,
+            text = if (ibanInfo.active) ibanInfo.balance else ibanInfo.iban,
+        )
+    } else if (kycStatus == null) {
         FilledButton(
             modifier = modifier
                 .testTagAsId("GetSoraCard"),
@@ -189,16 +199,7 @@ private fun CardStateButton(
             text = stringResource(R.string.sora_card_see_details),
         )
     } else {
-        if (success)
-            BleachedButton(
-                modifier = modifier
-                    .testTagAsId("CardInfo"),
-                size = Size.ExtraSmall,
-                order = Order.SECONDARY,
-                onClick = onCardStateClicked,
-                text = balance ?: stringResource(id = R.string.cant_load_balance),
-            )
-        else
+        if (success.not())
             TonalButton(
                 modifier = modifier
                     .testTagAsId("SoraCardButton"),

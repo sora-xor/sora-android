@@ -60,6 +60,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 class GetSoraCardViewModel @AssistedInject constructor(
     private val assetsRouter: AssetsRouter,
@@ -142,8 +143,11 @@ class GetSoraCardViewModel @AssistedInject constructor(
 
             is SoraCardResult.Canceled -> {}
             is SoraCardResult.Logout -> {
-                soraCardInteractor.setLogout()
-                mainRouter.popBackStack()
+                viewModelScope.launch {
+                    soraCardInteractor.setLogout()
+                }.invokeOnCompletion {
+                    mainRouter.popBackStack()
+                }
             }
         }
     }
