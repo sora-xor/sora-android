@@ -36,20 +36,15 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.isMatchFilter
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
-import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokens
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemTokensState
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
@@ -59,36 +54,14 @@ internal class AllCurrenciesViewModel @Inject constructor(
     coroutineManager: CoroutineManager,
 ) : BaseViewModel() {
 
-    private val filter = MutableStateFlow("")
-    private var positions: Map<String, String>? = null
-
     val state = ecoSystemTokensInteractor.subscribeTokens()
-        .onEach {
-            positions = it.tokens.mapIndexed { index, ecoSystemToken ->
-                ecoSystemToken.token.id to (index + 1).toString()
-            }.toMap()
-        }
-        .combine(filter) { t1, t2 ->
-            t1 to t2
-        }
         .catch {
             onError(it)
         }
-        .map { pair ->
-            val filtered = pair.first.tokens.filter {
-                it.token.isMatchFilter(pair.second)
-            }
-            val mapped = ecoSystemMapper.mapEcoSystemTokens(EcoSystemTokens(filtered))
-            val mappedEnumerated = mapped.map {
-                val indexInAll = positions?.get(it.second.tokenId).orEmpty()
-                indexInAll to it.second
-            }
-            EcoSystemTokensState(mappedEnumerated)
+        .map {
+            val mapped = ecoSystemMapper.mapEcoSystemTokens(it)
+            EcoSystemTokensState(mapped)
         }
         .flowOn(coroutineManager.io)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemTokensState)
-
-    fun onSearch(value: String) {
-        filter.value = value
-    }
 }

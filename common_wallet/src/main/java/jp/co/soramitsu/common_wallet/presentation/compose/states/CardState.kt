@@ -38,6 +38,7 @@ import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.domain.IbanInfo
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.domain.iconUri
@@ -127,7 +128,7 @@ fun mapAssetsToCardState(
 data class SoraCardState(
     val success: Boolean,
     val needUpdate: Boolean,
-    val ibanBalance: String?,
+    val ibanBalance: IbanInfo?,
     val kycStatus: String?,
     override val loading: Boolean,
 ) : BasicBannerCardState(loading)

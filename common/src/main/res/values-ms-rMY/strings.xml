@@ -78,6 +78,7 @@
   <string name="common_backup">Sandaran</string>
   <string name="common_balance">Baki</string>
   <string name="common_bashkir">Bahasa Bashkir</string>
+  <string name="common_bridged">Bridged</string>
   <string name="common_buy">Beli</string>
   <string name="common_buy_xor">Beli XOR</string>
   <string name="common_cancel">Batal</string>
@@ -251,6 +252,8 @@
   <string name="enter_password_incorect_title">Kata laluan tidak betul</string>
   <string name="enter_password_title">Masukkan kata laluan</string>
   <string name="error_transaction_fee_title">Tidak cukup dana untuk bayaran transaksi</string>
+  <string name="eth_tx_address">Ethereum account address</string>
+  <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">Create pool</string>
   <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
@@ -415,6 +418,7 @@
   <string name="qr_code">Kod QR</string>
   <string name="qr_upload">Muat naik dari galeri</string>
   <string name="receive_tokens">Terima token</string>
+  <string name="received_from_adar">Received from ADAR</string>
   <string name="recent_recipients">Penerima terkini</string>
   <string name="recipient_address">Alamat penerima</string>
   <string name="recovery_enter_passphrase_title">Masukkan frasa laluan rahsia anda</string>

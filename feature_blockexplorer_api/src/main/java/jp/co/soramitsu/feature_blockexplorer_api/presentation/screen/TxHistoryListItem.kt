@@ -98,7 +98,7 @@ fun TxHistoryListItem(
                 eventUiModel = eventUiModel,
                 modifier = modifier
                     .background(color = MaterialTheme.customColors.bgSurface)
-                    .clickable { },
+                    .clickable { onTxHistoryItemClick(eventUiModel.txHash) },
             )
         }
         is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel -> {

@@ -39,9 +39,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.IbanInfo
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -58,9 +58,11 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -81,15 +83,7 @@ class ProfileViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(
-        ProfileScreenState(
-            nodeName = "",
-            nodeConnected = false,
-            isDebugMenuAvailable = BuildUtils.isPlayMarket().not(),
-            soraCardEnabled = false,
-            soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
-            soraCardStatusIconDrawableRes = null,
-            soraCardNeedUpdate = false,
-        )
+        initialProfileScreenState,
     )
     internal val state = _state.asStateFlow()
 
@@ -99,55 +93,52 @@ class ProfileViewModel @Inject constructor(
     private var currentSoraCardContractData: SoraCardContractData? = null
 
     private var soraCardInfo: SoraCardCommonVerification = SoraCardCommonVerification.NotFound
-        set(value) {
-            val soraCardStatusStringRes =
-                when (value) {
-                    SoraCardCommonVerification.Rejected -> R.string.sora_card_verification_rejected
-                    SoraCardCommonVerification.Pending -> R.string.sora_card_verification_in_progress
-                    SoraCardCommonVerification.Successful -> R.string.more_menu_sora_card_subtitle
-                    else -> R.string.sora_card_sign_in_required
-                }
-
-            val soraCardStatusIconDrawableRes =
-                when (value) {
-                    SoraCardCommonVerification.Rejected -> R.drawable.ic_status_denied
-                    SoraCardCommonVerification.Pending -> R.drawable.ic_status_pending
-                    else -> null
-                }
-
-            _state.value = _state.value.copy(
-                soraCardStatusStringRes = soraCardStatusStringRes,
-                soraCardStatusIconDrawableRes = soraCardStatusIconDrawableRes
-            )
-            field = value
-        }
+    private var ibanInfo: IbanInfo? = null
 
     init {
-        interactor.flowSelectedNode()
-            .catch { onError(it) }
-            .distinctUntilChanged()
-            .onEach { node ->
-                _state.value = _state.value.copy(nodeName = node?.name.orEmpty())
-            }
-            .launchIn(viewModelScope)
-
-        nodeManager.connectionState
-            .catch { onError(it) }
-            .distinctUntilChanged()
-            .onEach { connected ->
-                _state.value = _state.value.copy(nodeConnected = connected)
-            }
-            .launchIn(viewModelScope)
-
-        viewModelScope.launch {
-            _state.value = _state.value.copy(
-                soraCardEnabled = soraConfigManager.getSoraCard(),
-                soraCardNeedUpdate = soraCardInteractor.needInstallUpdate(),
-            )
+        interactor.flowSelectedNode().combine(nodeManager.connectionState) { node, connection ->
+            node to connection
         }
+            .catch { onError(it) }
+            .distinctUntilChanged()
+            .onEach { (node, connection) ->
+                delay(1000)
+                _state.value = _state.value.copy(
+                    nodeName = node?.name.orEmpty(),
+                    nodeConnected = connection,
+                )
+            }
+            .launchIn(viewModelScope)
 
         soraCardInteractor.subscribeSoraCardStatus()
-            .onEach { soraCardInfo = it }
+            .onEach {
+                soraCardInfo = it
+                ibanInfo = soraCardInteractor.fetchUserIbanAccount()
+                val soraCardStatusStringRes =
+                    if (ibanInfo == null)
+                        when (soraCardInfo) {
+                            SoraCardCommonVerification.Rejected -> R.string.sora_card_verification_rejected
+                            SoraCardCommonVerification.Pending -> R.string.sora_card_verification_in_progress
+                            SoraCardCommonVerification.Successful -> R.string.more_menu_sora_card_subtitle
+                            else -> R.string.sora_card_sign_in_required
+                        } else R.string.more_menu_sora_card_subtitle
+
+                val soraCardStatusIconDrawableRes =
+                    if (ibanInfo == null)
+                        when (soraCardInfo) {
+                            SoraCardCommonVerification.Rejected -> R.drawable.ic_status_denied
+                            SoraCardCommonVerification.Pending -> R.drawable.ic_status_pending
+                            else -> null
+                        } else null
+
+                _state.value = _state.value.copy(
+                    soraCardStatusStringRes = soraCardStatusStringRes,
+                    soraCardIbanError = if (ibanInfo?.active == false) ibanInfo?.iban else null,
+                    soraCardStatusIconDrawableRes = soraCardStatusIconDrawableRes,
+                    soraCardEnabled = soraConfigManager.getSoraCard(),
+                    soraCardNeedUpdate = soraCardInteractor.needInstallUpdate(),
+                )
+            }
             .launchIn(viewModelScope)
 
         soraCardInteractor.subscribeToSoraCardAvailabilityFlow().onEach {
@@ -163,7 +154,9 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun showSoraCard() {
-        when (soraCardInfo) {
+        if (ibanInfo?.active == true)
+            router.showSoraCardDetails()
+        else when (soraCardInfo) {
             SoraCardCommonVerification.NotFound -> {
                 router.showGetSoraCard()
             }
@@ -200,7 +193,9 @@ class ProfileViewModel @Inject constructor(
 
             is SoraCardResult.Canceled -> {}
             is SoraCardResult.Logout -> {
-                soraCardInteractor.setLogout()
+                viewModelScope.launch {
+                    soraCardInteractor.setLogout()
+                }
             }
         }
     }

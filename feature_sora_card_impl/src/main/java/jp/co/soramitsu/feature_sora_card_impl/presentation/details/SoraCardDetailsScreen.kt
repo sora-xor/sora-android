@@ -157,6 +157,7 @@ private fun PreviewSoraCardDetailsScreen() {
                 ),
                 soraCardIBANCardState = SoraCardIBANCardState(
                     iban = "LT61 3250 0467 7252 5583",
+                    active = true,
                 ),
                 soraCardSettingsCard = SoraCardSettingsCardState(
                     soraCardSettingsOptions = SoraCardSettingsOption.entries

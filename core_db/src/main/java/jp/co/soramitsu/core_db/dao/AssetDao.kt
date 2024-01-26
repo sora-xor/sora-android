@@ -205,7 +205,7 @@ interface AssetDao {
         $joinFiatToken where tokens.whitelistName=:whitelist order by tokens.symbol
     """
     )
-    fun getTokensOfWhitelist(
+    suspend fun getTokensOfWhitelist(
         isoCode: String,
         whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME,
     ): List<TokenWithFiatLocal>

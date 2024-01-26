@@ -119,7 +119,51 @@ class TxDetailsViewModel @AssistedInject constructor(
         val transaction = transactionHistoryHandler.getTransaction(txHash)
         _txDetailsScreenState.value = when (transaction) {
             is Transaction.EthTransfer -> {
-                emptyTxDetailsState
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        txHash = transaction.base.txHash,
+                        blockHash = transaction.base.blockHash,
+                        sender = currentAddress,
+                        infos = listOf(
+                            BasicTxDetailsItem(
+                                title = resourceManager.getString(R.string.eth_tx_address),
+                                info = transaction.sidechainAddress,
+                            ),
+                            BasicTxDetailsItem(
+                                title = resourceManager.getString(R.string.eth_tx_hash),
+                                info = transaction.requestHash,
+                            ),
+                        ),
+                        txStatus = transaction.base.status,
+                        time = dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM
+                        ),
+                        networkFee = feeToken.printBalance(
+                            transaction.base.fee,
+                            numbersFormatter,
+                            AssetHolder.ROUNDING
+                        ),
+                        networkFeeFiat = feeToken.printFiat(transaction.base.fee, numbersFormatter),
+                        txTypeIcon = R.drawable.ic_refresh_24,
+                        txTypeTitle = resourceManager.getString(R.string.common_bridged),
+                        txTypeSubTitle = "%s -> %s".format(
+                            resourceManager.getString(R.string.asset_sora_fullname),
+                            resourceManager.getString(R.string.asset_ether_fullname),
+                        )
+                    ),
+                    amount1 = transaction.token.printBalance(
+                        transaction.amount,
+                        numbersFormatter,
+                        AssetHolder.ROUNDING,
+                    ),
+                    amount2 = null,
+                    amountFiat = "",
+                    icon1 = transaction.token.iconUri(),
+                    icon2 = null,
+                    isAmountGreen = false,
+                    txType = TxType.REFERRAL_TRANSFER,
+                )
             }
 
             is Transaction.DemeterFarming -> {
@@ -461,7 +505,46 @@ class TxDetailsViewModel @AssistedInject constructor(
             }
 
             is Transaction.AdarIncome -> {
-                emptyTxDetailsState
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        txHash = transaction.base.txHash,
+                        blockHash = transaction.base.blockHash,
+                        sender = transaction.peer,
+                        infos = listOf(
+                            BasicTxDetailsItem(
+                                title = resourceManager.getString(R.string.common_recipient),
+                                info = currentAddress,
+                            ),
+                        ),
+                        txStatus = transaction.base.status,
+                        time = dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM
+                        ),
+                        networkFee = feeToken.printBalance(
+                            transaction.base.fee,
+                            numbersFormatter,
+                            AssetHolder.ROUNDING
+                        ),
+                        networkFeeFiat = feeToken.printFiat(transaction.base.fee, numbersFormatter),
+                        txTypeIcon = R.drawable.ic_new_arrow_down_24,
+                        txTypeTitle = resourceManager.getString(R.string.received_from_adar),
+                        txTypeSubTitle = null,
+                    ),
+                    amount1 = "+%s".format(
+                        transaction.token.printBalance(
+                            transaction.amount,
+                            numbersFormatter,
+                            AssetHolder.ROUNDING,
+                        )
+                    ),
+                    amount2 = null,
+                    amountFiat = "",
+                    icon1 = transaction.token.iconUri(),
+                    icon2 = null,
+                    isAmountGreen = true,
+                    txType = TxType.REFERRAL_TRANSFER,
+                )
             }
 
             null -> emptyTxDetailsState

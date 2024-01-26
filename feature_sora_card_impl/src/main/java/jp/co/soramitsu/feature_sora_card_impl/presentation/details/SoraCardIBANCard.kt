@@ -64,6 +64,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class SoraCardIBANCardState(
     val iban: String,
+    val active: Boolean,
 )
 
 @Composable
@@ -100,7 +101,7 @@ fun SoraCardIBANCard(
                     color = MaterialTheme.customColors.fgPrimary,
                     textAlign = TextAlign.Center
                 )
-                if (soraCardIBANCardState.iban.isNotEmpty())
+                if (soraCardIBANCardState.iban.isNotEmpty() && soraCardIBANCardState.active)
                     Icon(
                         modifier = Modifier
                             .testTagAsId("IbanCardShareClick")
@@ -111,7 +112,14 @@ fun SoraCardIBANCard(
                         tint = MaterialTheme.customColors.fgSecondary
                     )
             }
-            if (soraCardIBANCardState.iban.isNotEmpty()) {
+            if (soraCardIBANCardState.active.not()) {
+                Text(
+                    modifier = Modifier.fillMaxWidth().padding(all = Dimens.x1),
+                    text = underlineSubstring(stringResource(id = jp.co.soramitsu.oauth.R.string.iban_suspended_description, ClientsFacade.TECH_SUPPORT), ClientsFacade.TECH_SUPPORT),
+                    style = MaterialTheme.customTypography.textS,
+                    color = MaterialTheme.customColors.fgSecondary,
+                )
+            } else if (soraCardIBANCardState.iban.isNotEmpty()) {
                 Text(
                     modifier = Modifier
                         .testTagAsId("IbanValueText")
@@ -139,6 +147,7 @@ private fun PreviewSoraCardIBANCard01() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
             iban = "LT61 3250 0467 7252 5583",
+            active = true,
         ),
         onShareClick = {},
         onCardClick = {},
@@ -151,6 +160,20 @@ private fun PreviewSoraCardIBANCard02() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
             iban = "",
+            active = true,
+        ),
+        onShareClick = {},
+        onCardClick = {},
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewSoraCardIBANCard03() {
+    SoraCardIBANCard(
+        soraCardIBANCardState = SoraCardIBANCardState(
+            iban = "",
+            active = false,
         ),
         onShareClick = {},
         onCardClick = {},

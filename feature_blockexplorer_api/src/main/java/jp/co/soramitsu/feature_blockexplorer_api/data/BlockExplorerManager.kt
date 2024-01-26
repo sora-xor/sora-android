@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_blockexplorer_api.data
 
 import androidx.room.withTransaction
+import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -41,6 +42,8 @@ import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.RetryStrategyBuilder
 import jp.co.soramitsu.common.domain.fiatChange
 import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.util.ext.toDoubleInfinite
+import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
@@ -102,7 +105,14 @@ class BlockExplorerManager @Inject constructor(
                         )
                     )
                 }
-                resultList.add(assetInfo.tokenId to (assetInfo.liquidity.toDoubleNan() ?: 0.0))
+                dbValue?.tokenIdFiat?.let { tokenId ->
+                    db.assetDao().getPrecisionOfToken(tokenId)?.let { precision ->
+                        assetInfo.liquidity.toBigIntegerOrNull()?.let { mapBalance(it, precision) }?.let { supply ->
+                            val tvl = supply.times(BigDecimal(dbValue.fiatPrice))
+                            resultList.add(assetInfo.tokenId to tvl.toDoubleInfinite())
+                        }
+                    }
+                }
             }
             db.assetDao().insertFiatPrice(fiats)
             resultList

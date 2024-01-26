@@ -78,6 +78,7 @@
   <string name="common_backup">Backup</string>
   <string name="common_balance">موجودی</string>
   <string name="common_bashkir">باشکر</string>
+  <string name="common_bridged">Bridged</string>
   <string name="common_buy">Buy</string>
   <string name="common_buy_xor">Buy XOR</string>
   <string name="common_cancel">لغو</string>
@@ -252,6 +253,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">بودجه کافی برای هزینه تراکنش وجود ندارد</string>
+  <string name="eth_tx_address">Ethereum account address</string>
+  <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">Create pool</string>
   <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
@@ -420,6 +423,7 @@
   <string name="qr_code">کد QR</string>
   <string name="qr_upload">بارگیری از گالری</string>
   <string name="receive_tokens">Receive tokens</string>
+  <string name="received_from_adar">Received from ADAR</string>
   <string name="recent_recipients">Recent recipients</string>
   <string name="recipient_address">Recipient address</string>
   <string name="recovery_enter_passphrase_title">Enter your secret Passphrase</string>
