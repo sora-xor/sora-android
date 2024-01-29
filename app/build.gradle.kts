@@ -20,7 +20,7 @@ kotlin {
 }
 
 // soralution 135 3.8.2.1 2024.01.26
-// sora dae 110 3.8.1.1 2024.01.12
+// sora dae 111 3.8.2.0 2024.01.29
 
 android {
     namespace = "jp.co.soramitsu.sora"
@@ -30,8 +30,8 @@ android {
         applicationId = "jp.co.soramitsu.sora"
         minSdk = 24
         targetSdk = 34
-        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 110
-        versionName = "3.8.1.1"
+        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 111
+        versionName = "3.8.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
         // resConfigs "en", "ru", "es", "fr", "de", "nb", "in", "tr", "ar"
@@ -167,7 +167,7 @@ play {
     serviceAccountCredentials = file(System.getenv("CI_PLAY_KEY") ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.8.1.1 - Demeter Farming"
+    releaseName = "3.8.2.0 - UI Improvements"
     defaultToAppBundles = true
 }
 
