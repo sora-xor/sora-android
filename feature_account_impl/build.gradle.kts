@@ -55,6 +55,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":feature_account_api"))
     implementation(project(":feature_blockexplorer_api"))

@@ -32,12 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_select_node_impl
 
+import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
-import jp.co.soramitsu.common.util.ext.removeHexPrefix
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_select_node_api.NodeManager

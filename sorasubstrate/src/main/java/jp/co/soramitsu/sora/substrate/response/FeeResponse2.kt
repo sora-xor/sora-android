@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.substrate.response
 
 import java.math.BigInteger
+import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.util.ParseModel
 import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xcrypto.util.requireHexPrefix
@@ -66,7 +67,7 @@ value class BrokenSubstrateHex(private val originalHex: String?) {
         // 0xb320334
         if (originalHex == null) return BigInteger.ZERO
         return if (originalHex.length.isEven.not()) {
-            val withoutPrefix = originalHex.removePrefix("0x")
+            val withoutPrefix = originalHex.removeHexPrefix()
             "0$withoutPrefix".requireHexPrefix()
         } else {
             originalHex

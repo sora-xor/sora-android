@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.util.ext
 
+import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

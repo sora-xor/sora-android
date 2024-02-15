@@ -46,7 +46,6 @@ object OptionsProvider {
     }
 
     const val substrate = "substrate"
-    const val hexPrefix = "0x"
     const val defaultScale = 18
     const val nameByteLimit = 32
     const val fiatSymbol = "$"

@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_account_impl.data.repository
 
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.runs
 import jp.co.soramitsu.common.account.SoraAccount
@@ -95,25 +94,26 @@ class CredentialsRepositoryTest {
 
     private val fooaddress = "fooaddress"
 
+    private val mn = Mnemonic("words", List(12) { _ -> "word" }, ByteArray(16) { i -> i.toByte() })
+
     @Before
     fun setup() {
         mockkObject(MnemonicCreator)
         mockkObject(SubstrateKeypairFactory)
         mockkObject(FirebaseWrapper)
         mockkObject(SubstrateSeedFactory)
-        val derivationResult = mockk<SeedFactory.Result>()
-        every { SubstrateSeedFactory.deriveSeed(any(), any()) } returns derivationResult
+        every {
+            SubstrateSeedFactory.deriveSeed(
+                any(),
+                any()
+            )
+        } returns SeedFactory.Result(
+            ByteArray(64) { i -> i.toByte() },
+            mn,
+        )
         every { SubstrateKeypairFactory.generate(any(), any()) } returns keypair
         every { SubstrateKeypairFactory.generate(any(), any(), any()) } returns keypair
         every { FirebaseWrapper.log("Keys were created") } just runs
-        every {
-            derivationResult.seed
-        } returns "seedseedseedseedseedseedseedseedseedseedseedseedseedseed".toByteArray()
-        every { derivationResult.mnemonic } returns Mnemonic(
-            "",
-            emptyList(),
-            ByteArray(1) { 1 }
-        )
 
         credentialsRepository = CredentialsRepositoryImpl(
             datasource,
@@ -122,6 +122,15 @@ class CredentialsRepositoryTest {
             jsonAccountsEncoder,
             soraConfigManager,
         )
+    }
+
+    @Test
+    fun `derive seed check`() = runTest {
+        whenever(datasource.retrieveSeed("address")).thenReturn("")
+        whenever(datasource.retrieveMnemonic("address")).thenReturn("mnemonic mnemonic mnemonic mnemonic mnemonic mnemonic")
+        every { MnemonicCreator.fromWords(any()) } returns mn
+        val seed = credentialsRepository.retrieveSeed(SoraAccount("address", "name"))
+        assertEquals(64, seed.length)
     }
 
     @Test
