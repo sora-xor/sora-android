@@ -28,7 +28,7 @@ android {
 
     defaultConfig {
         applicationId = "jp.co.soramitsu.sora"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 135
         versionName = "3.8.2.1"
