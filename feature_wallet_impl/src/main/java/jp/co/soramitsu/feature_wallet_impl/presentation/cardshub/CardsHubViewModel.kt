@@ -289,6 +289,7 @@ class CardsHubViewModel @Inject constructor(
             }
 
             is SoraCardResult.Canceled -> {}
+            is SoraCardResult.SuccessWithIban -> {}
             is SoraCardResult.Logout -> {
                 viewModelScope.launch {
                     soraCardInteractor.setLogout()

@@ -35,9 +35,7 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 import java.math.BigDecimal
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.IbanInfo
 import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.common.domain.OptionsProvider.euroSign
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.greaterThan
@@ -49,9 +47,9 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.common.domain.PriceInteractor
-import jp.co.soramitsu.oauth.common.model.IbanAccountResponse
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlin.math.min
 import kotlinx.coroutines.delay
@@ -75,6 +73,8 @@ internal class SoraCardInteractorImpl @Inject constructor(
     private var xorToEuro: Double? = null
 
     private val _soraCardStatus = MutableStateFlow(SoraCardCommonVerification.NotFound)
+
+    override suspend fun init(): Pair<Boolean, String> = soraCardClientProxy.init()
 
     override fun subscribeSoraCardStatus(): Flow<SoraCardCommonVerification> =
         _soraCardStatus.asStateFlow()
@@ -182,26 +182,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
         }
 
     private suspend fun fetchIbanItem(): IbanInfo? =
-        soraCardClientProxy.getIBAN().getOrNull()?.let { wrapper ->
-            wrapper.ibans?.maxByOrNull { it.createdDate }?.let { response ->
-                val bal = response.availableBalance.let {
-                    "%s%.2f".format(euroSign, it / 100.0)
-                }
-                if (response.status == IbanAccountResponse.IBAN_ACCOUNT_ACTIVE_STATUS) {
-                    IbanInfo(
-                        iban = response.iban,
-                        active = true,
-                        balance = bal,
-                    )
-                } else {
-                    IbanInfo(
-                        iban = response.statusDescription,
-                        active = false,
-                        balance = bal,
-                    )
-                }
-            }
-        }
+        soraCardClientProxy.getIBAN().getOrNull()
 
     override suspend fun fetchApplicationFee(): String = soraCardClientProxy.getApplicationFee()
 

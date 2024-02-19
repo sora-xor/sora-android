@@ -37,56 +37,40 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.config.BuildConfigWrapper
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardBasicContract
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.clients.ClientsFacade
-import jp.co.soramitsu.oauth.common.model.IbanAccountResponseWrapper
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.launch
 
 @Singleton
 internal class SoraCardClientProxy @Inject constructor(
     @ApplicationContext private val context: Context,
     private val clientsFacade: ClientsFacade,
-    private val coroutineManager: CoroutineManager,
 ) {
 
-    private val init: CompletableDeferred<Boolean> = CompletableDeferred()
-
-    init {
-        coroutineManager.applicationScope.launch(coroutineManager.io) {
-            clientsFacade.init(
-                createSoraCardBasicContract(),
-                context,
-                BuildConfigWrapper.getSoraCardBackEndUrl(),
-            )
-            init.complete(true)
-        }
-    }
+    suspend fun init() = clientsFacade.init(
+        createSoraCardBasicContract(),
+        context,
+        BuildConfigWrapper.getSoraCardBackEndUrl(),
+    )
 
     suspend fun getKycStatus(): Result<SoraCardCommonVerification> {
-        init.await()
         return clientsFacade.getKycStatus()
     }
 
     suspend fun getApplicationFee(): String {
-        init.await()
         return clientsFacade.getApplicationFee()
     }
 
     suspend fun getVersion(): Result<String> {
-        init.await()
         return clientsFacade.getSoraSupportVersion()
     }
 
-    suspend fun getIBAN(): Result<IbanAccountResponseWrapper> {
-        init.await()
+    suspend fun getIBAN(): Result<IbanInfo?> {
         return clientsFacade.getIBAN()
     }
 
     suspend fun logout() {
-        init.await()
         clientsFacade.logout()
     }
 }
