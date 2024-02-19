@@ -32,11 +32,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_sora_card_api.domain
 
-import jp.co.soramitsu.common.domain.IbanInfo
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import kotlinx.coroutines.flow.Flow
 
 interface SoraCardInteractor {
+
+    suspend fun init(): Pair<Boolean, String>
 
     fun subscribeToSoraCardAvailabilityFlow(): Flow<SoraCardAvailabilityInfo>
 

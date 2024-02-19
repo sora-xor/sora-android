@@ -142,6 +142,9 @@ class GetSoraCardViewModel @AssistedInject constructor(
             }
 
             is SoraCardResult.Canceled -> {}
+            is SoraCardResult.SuccessWithIban -> {
+                mainRouter.popBackStack()
+            }
             is SoraCardResult.Logout -> {
                 viewModelScope.launch {
                     soraCardInteractor.setLogout()

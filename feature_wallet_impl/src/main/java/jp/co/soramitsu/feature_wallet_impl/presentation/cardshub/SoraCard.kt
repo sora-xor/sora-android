@@ -59,11 +59,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.IbanInfo
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.TonalButton
@@ -196,7 +196,7 @@ private fun CardStateButton(
             size = Size.Large,
             order = Order.SECONDARY,
             onClick = onCardStateClicked,
-            text = stringResource(R.string.sora_card_see_details),
+            text = stringResource(R.string.get_sora_card_title),
         )
     } else {
         if (success.not())

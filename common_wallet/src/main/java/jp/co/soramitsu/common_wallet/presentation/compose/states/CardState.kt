@@ -38,13 +38,13 @@ import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
-import jp.co.soramitsu.common.domain.IbanInfo
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 
 data class CardsState(
     val accountAddress: String,

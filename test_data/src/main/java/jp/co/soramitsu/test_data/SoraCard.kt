@@ -45,6 +45,8 @@ object SoraCardTestData {
         apiKey = BuildConfig.SORA_CARD_API_KEY,
         domain = BuildConfig.SORA_CARD_DOMAIN,
         environment = SoraCardEnvironmentType.TEST,
+        recaptcha = BuildConfig.SORA_CARD_RECAPTCHA,
+        platform = BuildConfig.SORA_CARD_PLATFORM,
     )
 
     val SORA_CARD_CONTRACT_DATA = SoraCardContractData(
