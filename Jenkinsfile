@@ -1,4 +1,4 @@
-@Library('jenkins-library' ) _
+@Library('jenkins-library@duty/add_sora_secrets' ) _
 
 // Job properties
 def jobParams = [
