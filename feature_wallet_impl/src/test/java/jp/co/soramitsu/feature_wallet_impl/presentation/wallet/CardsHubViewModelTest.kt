@@ -41,7 +41,6 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.just
 import io.mockk.mockkObject
-import io.mockk.runs
 import io.mockk.verify
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
@@ -60,20 +59,19 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
+import jp.co.soramitsu.test_data.SoraCardTestData.soraCardBasicStatusTest
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -188,14 +186,8 @@ class CardsHubViewModelTest {
             }
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
         every {
-            soraCardInteractor.subscribeSoraCardStatus()
-        } returns flowOf(SoraCardCommonVerification.NotFound)
-        every { soraCardInteractor.subscribeToSoraCardAvailabilityFlow() } returns flowOf(
-            SoraCardAvailabilityInfo()
-        )
-        coEvery { soraCardInteractor.checkSoraCardPending() } just runs
-        coEvery { soraCardInteractor.needInstallUpdate() } returns false
-        coEvery { soraCardInteractor.fetchUserIbanAccount(false) } returns null
+            soraCardInteractor.basicStatus
+        } returns MutableStateFlow(soraCardBasicStatusTest.copy(initialized = true))
         every { assetsRouter.showBuyCrypto(any()) } returns Unit
         every { mainRouter.showGetSoraCard(any()) } just Runs
         every { mainRouter.showSoraCardDetails() } just Runs
