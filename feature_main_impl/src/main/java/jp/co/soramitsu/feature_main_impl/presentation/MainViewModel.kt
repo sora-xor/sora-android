@@ -102,7 +102,7 @@ class MainViewModel @Inject constructor(
             }
         }
         viewModelScope.launch(coroutineManager.io) {
-            val soraCardInit = soraCardInteractor.init()
+            soraCardInteractor.initialize()
         }
         viewModelScope.launch(coroutineManager.io) {
             assetsInteractor.flowCurSoraAccount()

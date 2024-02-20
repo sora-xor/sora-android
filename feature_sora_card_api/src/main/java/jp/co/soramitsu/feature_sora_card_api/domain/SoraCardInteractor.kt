@@ -32,26 +32,15 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_sora_card_api.domain
 
-import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface SoraCardInteractor {
 
-    suspend fun init(): Pair<Boolean, String>
+    val basicStatus: StateFlow<SoraCardBasicStatus>
 
-    fun subscribeToSoraCardAvailabilityFlow(): Flow<SoraCardAvailabilityInfo>
+    suspend fun initialize()
 
-    fun subscribeSoraCardStatus(): Flow<SoraCardCommonVerification>
-
-    suspend fun checkSoraCardPending()
-
-    suspend fun needInstallUpdate(): Boolean
-
-    fun setStatus(status: SoraCardCommonVerification)
+    suspend fun setStatus(status: SoraCardCommonVerification)
     suspend fun setLogout()
-
-    suspend fun fetchUserIbanAccount(force: Boolean = false): IbanInfo?
-
-    suspend fun fetchApplicationFee(): String
 }
