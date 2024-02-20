@@ -39,7 +39,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.IbanInfo
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -92,9 +91,6 @@ class ProfileViewModel @Inject constructor(
 
     private var currentSoraCardContractData: SoraCardContractData? = null
 
-    private var soraCardInfo: SoraCardCommonVerification = SoraCardCommonVerification.NotFound
-    private var ibanInfo: IbanInfo? = null
-
     init {
         interactor.flowSelectedNode().combine(nodeManager.connectionState) { node, connection ->
             node to connection
@@ -110,13 +106,17 @@ class ProfileViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
 
-        soraCardInteractor.subscribeSoraCardStatus()
+        soraCardInteractor.basicStatus
             .onEach {
-                soraCardInfo = it
-                ibanInfo = soraCardInteractor.fetchUserIbanAccount()
+                it.availabilityInfo?.let { info ->
+                    currentSoraCardContractData = createSoraCardContract(
+                        userAvailableXorAmount = info.xorBalance.toDouble(),
+                        isEnoughXorAvailable = info.enoughXor
+                    )
+                }
                 val soraCardStatusStringRes =
-                    if (ibanInfo == null)
-                        when (soraCardInfo) {
+                    if (it.ibanInfo == null)
+                        when (it.verification) {
                             SoraCardCommonVerification.Rejected -> R.string.sora_card_verification_rejected
                             SoraCardCommonVerification.Pending -> R.string.sora_card_verification_in_progress
                             SoraCardCommonVerification.Successful -> R.string.more_menu_sora_card_subtitle
@@ -124,8 +124,8 @@ class ProfileViewModel @Inject constructor(
                         } else R.string.more_menu_sora_card_subtitle
 
                 val soraCardStatusIconDrawableRes =
-                    if (ibanInfo == null)
-                        when (soraCardInfo) {
+                    if (it.ibanInfo == null)
+                        when (it.verification) {
                             SoraCardCommonVerification.Rejected -> R.drawable.ic_status_denied
                             SoraCardCommonVerification.Pending -> R.drawable.ic_status_pending
                             else -> null
@@ -133,20 +133,13 @@ class ProfileViewModel @Inject constructor(
 
                 _state.value = _state.value.copy(
                     soraCardStatusStringRes = soraCardStatusStringRes,
-                    soraCardIbanError = if (ibanInfo?.active == false) ibanInfo?.iban else null,
+                    soraCardIbanError = if (it.ibanInfo?.active == false) it.ibanInfo?.iban else null,
                     soraCardStatusIconDrawableRes = soraCardStatusIconDrawableRes,
                     soraCardEnabled = soraConfigManager.getSoraCard(),
-                    soraCardNeedUpdate = soraCardInteractor.needInstallUpdate(),
+                    soraCardNeedUpdate = it.needInstallUpdate,
                 )
             }
             .launchIn(viewModelScope)
-
-        soraCardInteractor.subscribeToSoraCardAvailabilityFlow().onEach {
-            currentSoraCardContractData = createSoraCardContract(
-                userAvailableXorAmount = it.xorBalance.toDouble(),
-                isEnoughXorAvailable = it.enoughXor
-            )
-        }.launchIn(viewModelScope)
     }
 
     fun showAccountList() {
@@ -154,20 +147,22 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun showSoraCard() {
-        if (ibanInfo?.active == true)
-            router.showSoraCardDetails()
-        else when (soraCardInfo) {
-            SoraCardCommonVerification.NotFound -> {
-                router.showGetSoraCard()
-            }
-
-            SoraCardCommonVerification.Successful -> {
+        if (soraCardInteractor.basicStatus.value.initialized) {
+            if (soraCardInteractor.basicStatus.value.ibanInfo?.active == true)
                 router.showSoraCardDetails()
-            }
+            else when (soraCardInteractor.basicStatus.value.verification) {
+                SoraCardCommonVerification.NotFound -> {
+                    router.showGetSoraCard()
+                }
 
-            else -> {
-                currentSoraCardContractData?.let { contractData ->
-                    _launchSoraCardSignIn.value = contractData
+                SoraCardCommonVerification.Successful -> {
+                    router.showSoraCardDetails()
+                }
+
+                else -> {
+                    currentSoraCardContractData?.let { contractData ->
+                        _launchSoraCardSignIn.value = contractData
+                    }
                 }
             }
         }
@@ -184,11 +179,15 @@ class ProfileViewModel @Inject constructor(
             }
 
             is SoraCardResult.Success -> {
-                soraCardInteractor.setStatus(soraCardResult.status)
+                viewModelScope.launch {
+                    soraCardInteractor.setStatus(soraCardResult.status)
+                }
             }
 
             is SoraCardResult.Failure -> {
-                soraCardInteractor.setStatus(soraCardResult.status)
+                viewModelScope.launch {
+                    soraCardInteractor.setStatus(soraCardResult.status)
+                }
             }
 
             is SoraCardResult.Canceled -> {}

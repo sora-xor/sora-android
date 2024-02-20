@@ -88,6 +88,9 @@ android {
             buildConfigField("String", "SORA_CARD_KYC_USERNAME", maybeWrapQuotes(secret("SORA_CARD_KYC_USERNAME_TEST")))
             buildConfigField("String", "SORA_CARD_KYC_PASSWORD", maybeWrapQuotes(secret("SORA_CARD_KYC_PASSWORD_TEST")))
 
+            buildConfigField("String", "SORA_CARD_RECAPTCHA", maybeWrapQuotes(secret("SORA_ANDROID_RECAPTCHA_KEY_TEST")))
+            buildConfigField("String", "SORA_CARD_PLATFORM", maybeWrapQuotes(secret("SORA_ANDROID_PLATFORM_ID_TEST")))
+
             buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_TEST")))
         }
         create("soralution") {
@@ -107,6 +110,9 @@ android {
             buildConfigField("String", "SORA_CARD_KYC_USERNAME", maybeWrapQuotes(secret("SORA_CARD_KYC_USERNAME_TEST")))
             buildConfigField("String", "SORA_CARD_KYC_PASSWORD", maybeWrapQuotes(secret("SORA_CARD_KYC_PASSWORD_TEST")))
 
+            buildConfigField("String", "SORA_CARD_RECAPTCHA", maybeWrapQuotes(secret("SORA_ANDROID_RECAPTCHA_KEY_TEST")))
+            buildConfigField("String", "SORA_CARD_PLATFORM", maybeWrapQuotes(secret("SORA_ANDROID_PLATFORM_ID_TEST")))
+
             buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_TEST")))
         }
         create("production") {
@@ -125,6 +131,9 @@ android {
             )
             buildConfigField("String", "SORA_CARD_KYC_USERNAME", maybeWrapQuotes(secret("SORA_CARD_KYC_USERNAME_PROD")))
             buildConfigField("String", "SORA_CARD_KYC_PASSWORD", maybeWrapQuotes(secret("SORA_CARD_KYC_PASSWORD_PROD")))
+
+            buildConfigField("String", "SORA_CARD_RECAPTCHA", maybeWrapQuotes(secret("SORA_ANDROID_RECAPTCHA_KEY_PROD")))
+            buildConfigField("String", "SORA_CARD_PLATFORM", maybeWrapQuotes(secret("SORA_ANDROID_PLATFORM_ID_PROD")))
 
             buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_PROD")))
         }

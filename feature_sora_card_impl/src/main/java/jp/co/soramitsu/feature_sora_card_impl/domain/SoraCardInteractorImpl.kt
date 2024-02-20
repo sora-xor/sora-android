@@ -35,9 +35,7 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 import java.math.BigDecimal
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.IbanInfo
 import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.common.domain.OptionsProvider.euroSign
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.greaterThan
@@ -48,17 +46,21 @@ import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardBasicStatus
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.common.domain.PriceInteractor
-import jp.co.soramitsu.oauth.common.model.IbanAccountResponse
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlin.math.min
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
@@ -72,18 +74,58 @@ internal class SoraCardInteractorImpl @Inject constructor(
     private val coroutineManager: CoroutineManager,
 ) : SoraCardInteractor {
 
-    private var xorToEuro: Double? = null
+    private val _soraCardBasicStatus = MutableStateFlow(
+        SoraCardBasicStatus(
+            initialized = false,
+            initError = null,
+            availabilityInfo = null,
+            verification = SoraCardCommonVerification.NotFound,
+            needInstallUpdate = false,
+            applicationFee = null,
+            ibanInfo = null,
+        )
+    )
 
-    private val _soraCardStatus = MutableStateFlow(SoraCardCommonVerification.NotFound)
+    @Suppress("UNCHECKED_CAST")
+    override suspend fun initialize() {
+        combine(
+            flow { emit(soraCardClientProxy.init()) },
+            needInstallUpdate(),
+            fetchApplicationFee(),
+            fetchUserIbanAccount(),
+            subscribeToSoraCardAvailabilityFlow(),
+            checkSoraCardPending(),
+        ) { flows ->
+            val init = flows[0] as Pair<Boolean, String>
+            val needUpdate = flows[1] as Boolean
+            val fee = flows[2] as String
+            val ibanInfo = flows[3] as IbanInfo?
+            val availability = flows[4] as SoraCardAvailabilityInfo
+            val verification = flows[5] as SoraCardCommonVerification
+            SoraCardBasicStatus(
+                initialized = init.first,
+                initError = init.second,
+                availabilityInfo = availability,
+                verification = verification,
+                needInstallUpdate = needUpdate,
+                applicationFee = fee,
+                ibanInfo = ibanInfo,
+            )
+        }
+            .debounce(1000)
+            .collect {
+                _soraCardBasicStatus.value = it
+            }
+    }
 
-    override fun subscribeSoraCardStatus(): Flow<SoraCardCommonVerification> =
-        _soraCardStatus.asStateFlow()
+    override val basicStatus: StateFlow<SoraCardBasicStatus> = _soraCardBasicStatus.asStateFlow()
 
-    override suspend fun checkSoraCardPending() {
+    private suspend fun checkSoraCardPending() = flow {
         var isLoopInProgress = true
         while (isLoopInProgress) {
-            val status = soraCardClientProxy.getKycStatus().getOrDefault(SoraCardCommonVerification.NotFound)
-            _soraCardStatus.value = status
+            val status =
+                soraCardClientProxy.getKycStatus().getOrDefault(SoraCardCommonVerification.NotFound)
+            emit(status)
             if (status != SoraCardCommonVerification.Pending) {
                 isLoopInProgress = false
             } else {
@@ -92,12 +134,9 @@ internal class SoraCardInteractorImpl @Inject constructor(
         }
     }
 
-    private var needUpdateCache: Boolean? = null
-
-    override suspend fun needInstallUpdate(): Boolean =
-        needUpdateCache ?: needInstallUpdateInternal().also {
-            needUpdateCache = it
-        }
+    private fun needInstallUpdate() = flow {
+        emit(needInstallUpdateInternal())
+    }
 
     private suspend fun needInstallUpdateInternal(): Boolean {
         val remote = soraCardClientProxy.getVersion().getOrNull() ?: return false
@@ -110,18 +149,22 @@ internal class SoraCardInteractorImpl @Inject constructor(
         return false
     }
 
-    override fun setStatus(status: SoraCardCommonVerification) {
-        _soraCardStatus.value = status
+    override suspend fun setStatus(status: SoraCardCommonVerification) {
+        _soraCardBasicStatus.value = _soraCardBasicStatus.value.copy(
+            verification = status,
+            ibanInfo = fetchIbanItem(),
+        )
     }
 
     override suspend fun setLogout() {
         soraCardClientProxy.logout()
-        needUpdateCache = null
-        ibanInfoCache = null
-        _soraCardStatus.value = SoraCardCommonVerification.NotFound
+        _soraCardBasicStatus.value = _soraCardBasicStatus.value.copy(
+            verification = SoraCardCommonVerification.NotFound,
+            ibanInfo = null,
+        )
     }
 
-    override fun subscribeToSoraCardAvailabilityFlow() =
+    private fun subscribeToSoraCardAvailabilityFlow() =
         assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
             .distinctUntilChanged(::compareByTotal)
             .map { asset ->
@@ -134,8 +177,12 @@ internal class SoraCardInteractorImpl @Inject constructor(
                     val poolsSum = pools.sumOf { poolData ->
                         poolData.user.basePooled
                     }
-                    val demeterStakedFarmed = demeterFarmingInteractor.getStakedFarmedBalanceOfAsset(SubstrateOptionsProvider.feeAssetId)
-                    val totalTokenBalance = asset.balance.total.plus(poolsSum).plus(demeterStakedFarmed)
+                    val demeterStakedFarmed =
+                        demeterFarmingInteractor.getStakedFarmedBalanceOfAsset(
+                            SubstrateOptionsProvider.feeAssetId
+                        )
+                    val totalTokenBalance =
+                        asset.balance.total.plus(poolsSum).plus(demeterStakedFarmed)
                     try {
                         val sufficient = PriceInteractor.calcSufficient(
                             balance = totalTokenBalance,
@@ -147,7 +194,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
                             percent = totalTokenBalance.safeDivide(sufficient.realRequiredBalance),
                             needInXor = formatter.formatBigDecimal(sufficient.needToken, 5),
                             needInEur = formatter.formatBigDecimal(sufficient.needEuro, 2),
-                            xorRatioAvailable = true
+                            xorRatioAvailable = true,
                         )
                     } catch (t: Throwable) {
                         errorInfoState(totalTokenBalance)
@@ -163,49 +210,21 @@ internal class SoraCardInteractorImpl @Inject constructor(
         xorRatioAvailable = false,
     )
 
+    private var xorToEuro: Double? = null
+
     private suspend fun getXorEuro(): Double? =
         xorToEuro ?: blockExplorerManager.getXorPerEurRatio().also {
             xorToEuro = it
         }
 
-    private var ibanInfoCache: IbanInfo? = null
-
-    override suspend fun fetchUserIbanAccount(force: Boolean): IbanInfo? =
-        if (force) {
-            fetchIbanItem().also {
-                ibanInfoCache = it
-            }
-        } else {
-            ibanInfoCache ?: fetchIbanItem().also {
-                ibanInfoCache = it
-            }
-        }
+    private fun fetchUserIbanAccount() = flow { emit(fetchIbanItem()) }
 
     private suspend fun fetchIbanItem(): IbanInfo? =
-        soraCardClientProxy.getIBAN().getOrNull()?.let { wrapper ->
-            wrapper.ibans?.maxByOrNull { it.createdDate }?.let { response ->
-                val bal = response.availableBalance.let {
-                    "%s%.2f".format(euroSign, it / 100.0)
-                }
-                if (response.status == IbanAccountResponse.IBAN_ACCOUNT_ACTIVE_STATUS) {
-                    IbanInfo(
-                        iban = response.iban,
-                        active = true,
-                        balance = bal,
-                    )
-                } else {
-                    IbanInfo(
-                        iban = response.statusDescription,
-                        active = false,
-                        balance = bal,
-                    )
-                }
-            }
-        }
+        soraCardClientProxy.getIBAN().getOrNull()
 
-    override suspend fun fetchApplicationFee(): String = soraCardClientProxy.getApplicationFee()
+    private fun fetchApplicationFee() = flow { emit(soraCardClientProxy.getApplicationFee()) }
 
     private companion object {
-        const val POLLING_PERIOD_IN_MILLIS = 30_000L
+        const val POLLING_PERIOD_IN_MILLIS = 90_000L
     }
 }

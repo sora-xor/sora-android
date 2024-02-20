@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.firebaseCrashlyticsPlugin) apply false
     alias(libs.plugins.firebaseAppDistributionPlugin) apply false
     alias(libs.plugins.triplet) apply false
-    id("com.google.devtools.ksp") version "1.9.10-1.0.13" apply false
+    id("com.google.devtools.ksp") version "1.9.22-1.0.17" apply false
     id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
 

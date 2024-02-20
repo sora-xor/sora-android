@@ -56,12 +56,10 @@ android {
 
 dependencies {
     implementation(project(":common"))
+    implementation(project(":common_wallet"))
 
     implementation(libs.kotlinxSerializationJsonDep)
 
     implementation(libs.daggerDep)
     kapt(libs.daggerKaptDep)
-    api(libs.soraCardDep) {
-        exclude(group = "com.paywings.onboarding.kyc.android-libs", module = "java-websocket-lib")
-    }
 }

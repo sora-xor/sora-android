@@ -34,17 +34,31 @@ package jp.co.soramitsu.test_data
 
 import java.util.Locale
 import jp.co.soramitsu.common.BuildConfig
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardBasicStatus
 import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
 import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardBasicContractData
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 
 object SoraCardTestData {
+
+    val soraCardBasicStatusTest = SoraCardBasicStatus(
+        initialized = false,
+        initError = null,
+        availabilityInfo = null,
+        verification = SoraCardCommonVerification.NotFound,
+        needInstallUpdate = false,
+        applicationFee = null,
+        ibanInfo = null,
+    )
 
     private val SORA_CARD_BASIC_CONTRACT = SoraCardBasicContractData(
         apiKey = BuildConfig.SORA_CARD_API_KEY,
         domain = BuildConfig.SORA_CARD_DOMAIN,
         environment = SoraCardEnvironmentType.TEST,
+        recaptcha = BuildConfig.SORA_CARD_RECAPTCHA,
+        platform = BuildConfig.SORA_CARD_PLATFORM,
     )
 
     val SORA_CARD_CONTRACT_DATA = SoraCardContractData(

@@ -34,9 +34,9 @@ package jp.co.soramitsu.sora.substrate.substrate
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
-import jp.co.soramitsu.common.util.ext.removeHexPrefix
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider

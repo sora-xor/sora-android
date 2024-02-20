@@ -44,6 +44,7 @@ import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscription
 import jp.co.soramitsu.feature_select_node_api.NodeManager
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
@@ -91,6 +92,9 @@ class MainViewModelTest {
     private lateinit var blockExplorerManager: BlockExplorerManager
 
     @Mock
+    private lateinit var soraCardInteractor: SoraCardInteractor
+
+    @Mock
     private lateinit var coroutineManager: CoroutineManager
 
     @Mock
@@ -129,6 +133,7 @@ class MainViewModelTest {
             blockExplorerManager,
             coroutineManager,
             poolUpdateSubscription,
+            soraCardInteractor,
         )
         advanceTimeBy(42000)
         verify(globalSubscriptionManager).start()

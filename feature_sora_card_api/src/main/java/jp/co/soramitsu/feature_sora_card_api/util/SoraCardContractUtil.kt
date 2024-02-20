@@ -50,6 +50,8 @@ fun createSoraCardBasicContract() = SoraCardBasicContractData(
         BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
         else -> SoraCardEnvironmentType.TEST
     },
+    platform = BuildConfig.SORA_CARD_PLATFORM,
+    recaptcha = BuildConfig.SORA_CARD_RECAPTCHA,
 )
 
 fun createSoraCardContract(

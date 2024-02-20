@@ -52,10 +52,12 @@ import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
+import jp.co.soramitsu.test_data.SoraCardTestData.soraCardBasicStatusTest
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -126,15 +128,16 @@ class ProfileViewModelTest {
 
     @Before
     fun setUp() = runTest {
-        every { soraCardInteractor.subscribeToSoraCardAvailabilityFlow() } returns
-            flowOf(
-                SoraCardAvailabilityInfo(
-                    xorBalance = BigDecimal.ONE,
-                    enoughXor = true,
+        every { soraCardInteractor.basicStatus } returns
+            MutableStateFlow(
+                soraCardBasicStatusTest.copy(
+                    initialized = true,
+                    availabilityInfo = SoraCardAvailabilityInfo(
+                        xorBalance = BigDecimal.ONE,
+                        enoughXor = true,
+                    )
                 )
             )
-        coEvery { soraCardInteractor.needInstallUpdate() } returns false
-        coEvery { soraCardInteractor.fetchUserIbanAccount(false) } returns null
         every { interactor.flowSelectedNode() } returns
             flowOf(
                 ChainNode(
@@ -153,9 +156,6 @@ class ProfileViewModelTest {
 
     @Test
     fun `init succesfull`() = runTest {
-        every {
-            soraCardInteractor.subscribeSoraCardStatus()
-        } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         advanceUntilIdle()
         profileViewModel.state.value.let {
@@ -166,9 +166,6 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showSoraCard with no state EXPECT navigate to get sora card`() = runTest {
-        every {
-            soraCardInteractor.subscribeSoraCardStatus()
-        } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         advanceUntilIdle()
         profileViewModel.showSoraCard()
@@ -177,10 +174,14 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showSoraCard with state EXPECT navigate to sora card sdk state screen`() = runTest {
-        every {
-            soraCardInteractor.subscribeSoraCardStatus()
-        } returns flowOf(SoraCardCommonVerification.Pending)
         initViewModel()
+        every { soraCardInteractor.basicStatus } returns
+            MutableStateFlow(
+                soraCardBasicStatusTest.copy(
+                    initialized = true,
+                    verification = SoraCardCommonVerification.Pending,
+                )
+            )
         advanceUntilIdle()
         profileViewModel.showSoraCard()
         advanceUntilIdle()
@@ -189,9 +190,6 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showBuyCrypto EXPECT navigate to buy crypto screen`() {
-        every {
-            soraCardInteractor.subscribeSoraCardStatus()
-        } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         profileViewModel.showBuyCrypto()
         verify { assetsRouter.showBuyCrypto(any()) }

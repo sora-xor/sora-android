@@ -96,6 +96,10 @@ dependencies {
     implementation(libs.svgDep)
     implementation(libs.jdenticonDep)
 
+    api(libs.soraCardDep) {
+        exclude(group = "com.paywings.onboarding.kyc.android-libs", module = "java-websocket-lib")
+    }
+
     implementation(libs.daggerDep)
     kapt(libs.daggerKaptDep)
 
