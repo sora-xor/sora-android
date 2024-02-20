@@ -68,6 +68,7 @@ android {
 dependencies {
     implementation(project(":android-foundation"))
     implementation(project(":common"))
+    implementation(project(":common_wallet"))
     implementation(project(":core_db"))
     implementation(project(":feature_assets_api"))
     implementation(project(":feature_blockexplorer_api"))

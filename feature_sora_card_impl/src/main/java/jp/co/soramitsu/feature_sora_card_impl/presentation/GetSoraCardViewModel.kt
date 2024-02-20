@@ -90,36 +90,31 @@ class GetSoraCardViewModel @AssistedInject constructor(
     private val _state = MutableStateFlow(GetSoraCardState(applicationFee = "."))
     val state = _state.asStateFlow()
 
-    private var applicationFeeCache: String? = null
-
     init {
         _toolbarState.value = initSmallTitle2(
             title = R.string.get_sora_card_title,
         )
 
-        soraCardInteractor.subscribeToSoraCardAvailabilityFlow()
+        soraCardInteractor.basicStatus
             .combine(connectionManager.connectionState) { f1, f2 ->
                 f1 to f2
             }
             .catch { onError(it) }
             .onEach { (info, connection) ->
-                currentSoraCardContractData = createSoraCardContract(
-                    userAvailableXorAmount = info.xorBalance.toDouble(),
-                    isEnoughXorAvailable = info.enoughXor,
-                )
+                info.availabilityInfo?.let {
+                    currentSoraCardContractData = createSoraCardContract(
+                        userAvailableXorAmount = it.xorBalance.toDouble(),
+                        isEnoughXorAvailable = it.enoughXor,
+                    )
+                }
                 _state.value = _state.value.copy(
                     connection = connection,
-                    applicationFee = fetchApplicationFee(),
-                    xorRatioAvailable = info.xorRatioAvailable,
+                    applicationFee = info.applicationFee.orEmpty(),
+                    xorRatioAvailable = info.availabilityInfo?.xorRatioAvailable ?: false,
                 )
             }
             .launchIn(viewModelScope)
     }
-
-    private suspend fun fetchApplicationFee(): String =
-        applicationFeeCache ?: soraCardInteractor.fetchApplicationFee().also {
-            applicationFeeCache = it
-        }
 
     fun handleSoraCardResult(soraCardResult: SoraCardResult) {
         when (soraCardResult) {
@@ -132,13 +127,19 @@ class GetSoraCardViewModel @AssistedInject constructor(
             }
 
             is SoraCardResult.Success -> {
-                soraCardInteractor.setStatus(soraCardResult.status)
-                mainRouter.popBackStack()
+                viewModelScope.launch {
+                    soraCardInteractor.setStatus(soraCardResult.status)
+                }.invokeOnCompletion {
+                    mainRouter.popBackStack()
+                }
             }
 
             is SoraCardResult.Failure -> {
-                soraCardInteractor.setStatus(soraCardResult.status)
-                mainRouter.popBackStack()
+                viewModelScope.launch {
+                    soraCardInteractor.setStatus(soraCardResult.status)
+                }.invokeOnCompletion {
+                    mainRouter.popBackStack()
+                }
             }
 
             is SoraCardResult.Canceled -> {}

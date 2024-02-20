@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_account_impl.data.repository
 
 import java.text.Normalizer
+import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.ResponseCode
@@ -41,7 +42,6 @@ import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.ext.didToAccountId
-import jp.co.soramitsu.common.util.ext.removeHexPrefix
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
@@ -243,7 +243,7 @@ class CredentialsRepositoryImpl constructor(
     }
 
     override fun convertPassphraseToSeed(mnemonic: String): String {
-        val derivationResult = SubstrateSeedFactory.deriveSeed(MnemonicCreator.fromWords(mnemonic).words, null)
+        val derivationResult = SubstrateSeedFactory.deriveSeed32(MnemonicCreator.fromWords(mnemonic).words, null)
         return derivationResult.seed.toHexString()
     }
 }

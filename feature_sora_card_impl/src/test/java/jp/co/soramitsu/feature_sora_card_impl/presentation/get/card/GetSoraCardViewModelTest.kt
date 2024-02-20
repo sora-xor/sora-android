@@ -48,10 +48,12 @@ import jp.co.soramitsu.feature_sora_card_impl.presentation.GetSoraCardViewModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import jp.co.soramitsu.test_data.SoraCardTestData.soraCardBasicStatusTest
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -109,13 +111,14 @@ class GetSoraCardViewModelTest {
 
         mockkObject(OptionsProvider)
         every { OptionsProvider.header } returns "test android client"
-        given(soraCardInteractor.fetchApplicationFee()).willReturn("")
 
-        given(soraCardInteractor.subscribeToSoraCardAvailabilityFlow()).willReturn(
-            flowOf(
-                SoraCardAvailabilityInfo(
-                    xorBalance = BigDecimal.ONE,
-                    enoughXor = true,
+        given(soraCardInteractor.basicStatus).willReturn(
+            MutableStateFlow(
+                soraCardBasicStatusTest.copy(
+                    availabilityInfo = SoraCardAvailabilityInfo(
+                        xorBalance = BigDecimal.ONE,
+                        enoughXor = true,
+                    )
                 )
             )
         )
@@ -138,13 +141,6 @@ class GetSoraCardViewModelTest {
         val s = viewModel.toolbarState.getOrAwaitValue()
         assertTrue(s.type is SoramitsuToolbarType.Small)
         assertEquals(R.string.get_sora_card_title, s.basic.title)
-    }
-
-    @Test
-    fun `init EXPECT subscribe fee asset balance`() = runTest {
-        advanceUntilIdle()
-
-        verify(soraCardInteractor).subscribeToSoraCardAvailabilityFlow()
     }
 
     @Test

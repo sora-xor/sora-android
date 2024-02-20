@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.request
 
-import jp.co.soramitsu.common.util.ext.removeHexPrefix
+import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
 
 class BlockHashRequest(number: Int) : RuntimeRequest("chain_getBlockHash", listOf(number)) {

@@ -46,6 +46,7 @@ import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -91,13 +92,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class CardsHubViewModel @Inject constructor(
@@ -133,12 +131,6 @@ class CardsHubViewModel @Inject constructor(
     private var currentSoraCardContractData: SoraCardContractData? = null
 
     init {
-        viewModelScope.launch {
-            withContext(coroutineManager.io) {
-                soraCardInteractor.checkSoraCardPending()
-            }
-        }
-
         viewModelScope.launch {
             cardsHubInteractorImpl
                 .subscribeVisibleCardsHubList()
@@ -181,16 +173,21 @@ class CardsHubViewModel @Inject constructor(
                             }
 
                             CardHubType.GET_SORA_CARD -> {
-                                soraCardInteractor.subscribeSoraCardStatus()
+                                soraCardInteractor.basicStatus
                                     .map { status ->
-                                        val mapped = mapKycStatus(status)
-                                        val ibanInfo = soraCardInteractor.fetchUserIbanAccount()
+                                        status.availabilityInfo?.let {
+                                            currentSoraCardContractData = createSoraCardContract(
+                                                userAvailableXorAmount = it.xorBalance.toDouble(),
+                                                isEnoughXorAvailable = it.enoughXor
+                                            )
+                                        }
+                                        val mapped = mapKycStatus(status.verification)
                                         cardHub to SoraCardState(
                                             kycStatus = mapped.first,
                                             loading = false,
                                             success = mapped.second,
-                                            ibanBalance = ibanInfo,
-                                            needUpdate = soraCardInteractor.needInstallUpdate(),
+                                            ibanBalance = status.ibanInfo,
+                                            needUpdate = status.needInstallUpdate,
                                         )
                                     }
                                     .onStart {
@@ -237,13 +234,6 @@ class CardsHubViewModel @Inject constructor(
                     )
                 }
         }
-
-        soraCardInteractor.subscribeToSoraCardAvailabilityFlow().onEach {
-            currentSoraCardContractData = createSoraCardContract(
-                userAvailableXorAmount = it.xorBalance.toDouble(),
-                isEnoughXorAvailable = it.enoughXor
-            )
-        }.launchIn(viewModelScope)
     }
 
     private fun mapKycStatus(kycStatus: SoraCardCommonVerification): Pair<String?, Boolean> {
@@ -281,11 +271,15 @@ class CardsHubViewModel @Inject constructor(
             }
 
             is SoraCardResult.Success -> {
-                soraCardInteractor.setStatus(soraCardResult.status)
+                viewModelScope.launch {
+                    soraCardInteractor.setStatus(soraCardResult.status)
+                }
             }
 
             is SoraCardResult.Failure -> {
-                soraCardInteractor.setStatus(soraCardResult.status)
+                viewModelScope.launch {
+                    soraCardInteractor.setStatus(soraCardResult.status)
+                }
             }
 
             is SoraCardResult.Canceled -> {}
@@ -390,18 +384,26 @@ class CardsHubViewModel @Inject constructor(
     }
 
     fun onCardStateClicked() {
-        _state.value.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
-            if (card.ibanBalance?.active == true) {
-                mainRouter.showSoraCardDetails()
-            } else if (card.kycStatus == null) {
-                if (!connectionManager.isConnected) return
-                mainRouter.showGetSoraCard()
-            } else if (card.success) {
-                mainRouter.showSoraCardDetails()
-            } else {
-                currentSoraCardContractData?.let { contractData ->
-                    _launchSoraCardSignIn.value = contractData
+        if (soraCardInteractor.basicStatus.value.initialized) {
+            _state.value.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
+                if (card.ibanBalance?.active == true) {
+                    mainRouter.showSoraCardDetails()
+                } else if (card.kycStatus == null) {
+                    if (!connectionManager.isConnected) return
+                    mainRouter.showGetSoraCard()
+                } else if (card.success) {
+                    mainRouter.showSoraCardDetails()
+                } else {
+                    currentSoraCardContractData?.let { contractData ->
+                        _launchSoraCardSignIn.value = contractData
+                    }
                 }
+            }
+        } else {
+            soraCardInteractor.basicStatus.value.initError.takeIf {
+                it.isNullOrEmpty().not()
+            }?.let {
+                snackBarLiveData.value = SnackBarState(title = it)
             }
         }
     }
