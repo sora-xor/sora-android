@@ -20,7 +20,7 @@ kotlin {
 }
 
 // soralution 136 3.8.3.0 2024.02.20
-// sora dae 111 3.8.2.0 2024.01.29
+// sora dae 112 3.8.3.0 2024.02.20
 
 android {
     namespace = "jp.co.soramitsu.sora"
@@ -30,7 +30,7 @@ android {
         applicationId = "jp.co.soramitsu.sora"
         minSdk = 26
         targetSdk = 34
-        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 136
+        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 112
         versionName = "3.8.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
