@@ -9,7 +9,7 @@ def pipeline = new org.android.AppPipeline(
   steps: this,
   sonarProjectName: 'sora-android',
   sonarProjectKey: 'sora:sora-android',
-  testCmd: 'ktlintCheck clean testDevelopDebugUnitTest koverVerifyDevelopDebug',
+  testCmd: 'ktlintCheck clean testDevelopDebugUnitTest koverReport koverVerifyDevelopDebug',
   publishType: 'Bundle',
   jobParams: jobParams,
   appPushNoti: true,
