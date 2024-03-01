@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.firebaseCrashlyticsPlugin) apply false
     alias(libs.plugins.firebaseAppDistributionPlugin) apply false
     alias(libs.plugins.triplet) apply false
+    alias(libs.plugins.sonar) apply false
     id("com.google.devtools.ksp") version "1.9.22-1.0.17" apply false
     id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
@@ -57,4 +58,14 @@ tasks.register<JavaExec>("ktlintFormat") {
         "**.kts",
         "!**/build/**",
     )
+}
+
+sonarqube {
+    properties {
+        property("sonar.projectKey", "sora:sora-android")
+        property("sonar.projectName", "sora-android")
+        property("sonar.junit.reportPaths", "${project.projectDir}/build/test-results/test/")
+        property("sonar.coverage.jacoco.xmlReportPaths", "report/coverage.xml")
+        property("sonar.exclusions", "${project.projectDir}/**/*.txt")
+    }
 }
