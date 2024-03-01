@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.firebaseCrashlyticsPlugin) apply false
     alias(libs.plugins.firebaseAppDistributionPlugin) apply false
     alias(libs.plugins.triplet) apply false
-    alias(libs.plugins.sonar) apply false
+    id("org.sonarqube") version "4.4.1.3373"
     id("com.google.devtools.ksp") version "1.9.22-1.0.17" apply false
     id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
