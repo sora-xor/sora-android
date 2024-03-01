@@ -1,4 +1,4 @@
-@Library('jenkins-library' ) _
+@Library('jenkins-library') _
 
 // Job properties
 def jobParams = [
@@ -7,8 +7,8 @@ def jobParams = [
 
 def pipeline = new org.android.AppPipeline(steps: this,
     sonar: true,
-    sonarProjectName: 'sora-passport-android',
-    sonarProjectKey: 'jp.co.soramitsu:sora-passport-android',
+    sonarProjectName: 'sora-android',
+    sonarProjectKey: 'sora:sora-android',
     testCmd: 'ktlintCheck clean testDevelopDebugUnitTest koverVerifyDevelopDebug',
     publishType: 'Bundle',
     jobParams: jobParams,

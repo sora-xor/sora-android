@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.triplet)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
+    alias(libs.plugins.sonar)
 }
 
 kotlin {
@@ -301,7 +302,8 @@ koverReport {
         }
 
         xml {
-            onCheck = false
+            onCheck = true
+            setReportFile(file("report/coverage.xml"))
         }
 
         html {
@@ -318,5 +320,15 @@ koverReport {
                 // TODO: Update to 85
             }
         }
+    }
+}
+
+sonarqube {
+    properties {
+        property("sonar.projectKey", "sora:sora-android")
+        property("sonar.projectName", "sora-android")
+        property("sonar.junit.reportPaths", "${project.projectDir}/build/test-results/test/")
+        property("sonar.coverage.jacoco.xmlReportPaths", "report/coverage.xml")
+        property("sonar.exclusions", "${project.projectDir}/**/*.txt")
     }
 }
