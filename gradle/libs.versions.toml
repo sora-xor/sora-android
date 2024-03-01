@@ -166,4 +166,4 @@ googleServicesPlugin = { id = "com.google.gms.google-services", version.ref = "g
 firebaseCrashlyticsPlugin = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
 firebaseAppDistributionPlugin = { id = "com.google.firebase.appdistribution", version.ref = "firebaseAppDistribution" }
 triplet = { id = "com.github.triplet.play", version.ref = "tripletVersion" }
-sonar = { id = "org.sonarqube", version.ref = version "sonar" }
+sonar = { id = "org.sonarqube", version.ref = "sonar" }
