@@ -302,7 +302,7 @@ koverReport {
 
         xml {
             onCheck = true
-            setReportFile(file("report/coverage.xml"))
+            setReportFile(file("${project.rootDir}report/coverage.xml"))
         }
 
         html {
