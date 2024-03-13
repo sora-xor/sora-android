@@ -36,7 +36,7 @@ import androidx.room.withTransaction
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
-import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
+import jp.co.soramitsu.common.data.network.dto.SwapFeeDtoV3
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -275,12 +275,12 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                     marketMapper.mapMarketsToFilter(markets),
                 )
             ),
-            mapper = pojo<SwapFeeDto>(),
+            mapper = pojo<SwapFeeDtoV3>(),
         ).result
         return response?.let {
             SwapQuote(
                 mapBalance(it.amount, feeToken.precision),
-                mapBalance(it.fee, feeToken.precision),
+                BigDecimal.ZERO,
                 it.route,
             )
         }
