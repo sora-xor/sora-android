@@ -62,6 +62,7 @@ data class SoraCardDetailsScreenState(
     val soraCardIBANCardState: SoraCardIBANCardState? = null,
     val soraCardSettingsCard: SoraCardSettingsCardState? = null,
     val logoutDialog: Boolean,
+    val fiatWalletDialog: Boolean,
 )
 
 @Composable
@@ -76,7 +77,8 @@ fun SoraCardDetailsScreen(
     onShowMoreRecentActivitiesClick: () -> Unit,
     onIbanCardShareClick: () -> Unit,
     onIbanCardClick: () -> Unit,
-    onSettingsOptionClick: (position: Int) -> Unit
+    onSettingsOptionClick: (position: Int) -> Unit,
+    onFiatWallet: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -91,7 +93,8 @@ fun SoraCardDetailsScreen(
         SoraCardMainSoraContentCard(
             soraCardMainSoraContentCardState = soraCardDetailsScreenState.soraCardMainSoraContentCardState,
             onShowMoreClick = onShowSoraCardDetailsClick,
-            onIconButtonClick = onSoraCardMenuActionClick
+            onIconButtonClick = onSoraCardMenuActionClick,
+            onFiatWallet = onFiatWallet,
         )
         if (soraCardDetailsScreenState.soraCardReferralBannerCardState) {
             BasicBannerCard(
@@ -163,6 +166,7 @@ private fun PreviewSoraCardDetailsScreen() {
                     soraCardSettingsOptions = SoraCardSettingsOption.entries
                 ),
                 logoutDialog = false,
+                fiatWalletDialog = false,
             ),
             onShowSoraCardDetailsClick = {},
             onSoraCardMenuActionClick = { _ -> },
@@ -172,7 +176,8 @@ private fun PreviewSoraCardDetailsScreen() {
             onRecentActivityClick = { _ -> },
             onIbanCardShareClick = {},
             onIbanCardClick = {},
-            onSettingsOptionClick = { _ -> }
+            onSettingsOptionClick = { _ -> },
+            onFiatWallet = {},
         )
     }
 }

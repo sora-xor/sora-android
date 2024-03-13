@@ -1,5 +1,5 @@
 [versions]
-agp = "8.2.2"
+agp = "8.3.0"
 kotlin = "1.9.22"
 appcompat = "1.6.1"
 coroutines = "1.7.3"
@@ -28,7 +28,7 @@ activityCompose = "1.8.2"
 material = "1.11.0"
 fragmentKtx = "1.6.2"
 permission = "1.7.1"
-compose = "1.6.1"
+compose = "1.6.3"
 composeViewModel = "2.7.0"
 composeLifecycle = "2.7.0"
 composeConstraintLayout = "1.1.0-alpha05"
@@ -39,17 +39,18 @@ firebaseAppDistribution = "3.2.0"
 tripletVersion = "3.8.4"
 timber = "5.0.1"
 ktor = "2.3.1"
-soracard = "1.0.4"
+soracard = "1.0.7"
 xnetworking = "0.2.9"
-xsubstrate = "1.1.4"
-uicore = "0.2.21"
-xbackup = "1.1.4"
-xcrypto = "1.1.4"
+xsubstrate = "1.2.0"
+uicore = "0.2.22"
+xbackup = "1.2.0"
+xcrypto = "1.2.0"
 ed = "2.0.1"
 xerces = "2.9.0"
-dagger = "2.48"
-hiltCompose = "1.1.0"
-hiltWorkManager = "1.0.0"
+dagger = "2.49"
+daggerKapt = "2.49"
+hiltCompose = "1.2.0"
+hiltWorkManager = "1.2.0"
 webSocketLib = "2.14"
 web3j = "4.6.0-android"
 zXing = "3.3.3"
@@ -80,7 +81,7 @@ coroutineDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", versi
 coroutineAndroidDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 coroutineTestDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 daggerDep = { module = "com.google.dagger:hilt-android", version.ref = "dagger" }
-daggerKaptDep = { module = "com.google.dagger:hilt-compiler", version.ref = "dagger" }
+daggerKaptDep = { module = "com.google.dagger:hilt-compiler", version.ref = "daggerKapt" }
 hiltUiTestDep = { module = "com.google.dagger:hilt-android-testing", version.ref = "dagger" }
 hiltNavComposeDep = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltCompose" }
 hiltWorkManagerDep = { module = "androidx.hilt:hilt-work", version.ref = "hiltWorkManager" }

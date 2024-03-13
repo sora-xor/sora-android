@@ -199,15 +199,14 @@ private fun CardStateButton(
             text = stringResource(R.string.get_sora_card_title),
         )
     } else {
-        if (success.not())
-            TonalButton(
-                modifier = modifier
-                    .testTagAsId("SoraCardButton"),
-                size = Size.Large,
-                order = Order.TERTIARY,
-                onClick = onCardStateClicked,
-                text = kycStatus,
-            )
+        TonalButton(
+            modifier = modifier
+                .testTagAsId("SoraCardButton"),
+            size = Size.Large,
+            order = Order.TERTIARY,
+            onClick = onCardStateClicked,
+            text = if (success) "--" else kycStatus,
+        )
     }
 }
 
@@ -302,6 +301,26 @@ private fun PreviewSoraCard4() {
                 kycStatus = null,
                 ibanBalance = null,
                 loading = true,
+                success = false,
+                needUpdate = false,
+            ),
+            onCloseClicked = {},
+            onCardStateClicked = {},
+            onNeedUpdate = {},
+        )
+    }
+}
+
+@Composable
+@Preview(locale = "en", uiMode = Configuration.UI_MODE_NIGHT_NO)
+private fun PreviewSoraCard6() {
+    SoraAppTheme {
+        SoraCard(
+            modifier = Modifier.fillMaxWidth(),
+            state = SoraCardState(
+                kycStatus = null,
+                ibanBalance = IbanInfo(iban = "abcderr", active = true, balance = "45.5"),
+                loading = false,
                 success = false,
                 needUpdate = false,
             ),
