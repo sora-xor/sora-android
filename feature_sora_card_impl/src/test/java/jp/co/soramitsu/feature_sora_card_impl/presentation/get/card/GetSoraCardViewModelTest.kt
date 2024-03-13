@@ -99,7 +99,6 @@ class GetSoraCardViewModelTest {
     @Mock
     private lateinit var resourceManager: ResourceManager
 
-    @Mock
     private lateinit var viewModel: GetSoraCardViewModel
 
     @Mock

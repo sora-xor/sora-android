@@ -35,7 +35,6 @@ package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -52,6 +51,10 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
+import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.ui_core.component.button.TonalButton
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -112,7 +115,8 @@ data class SoraCardMainSoraContentCardState(
 fun SoraCardMainSoraContentCard(
     soraCardMainSoraContentCardState: SoraCardMainSoraContentCardState,
     onShowMoreClick: () -> Unit,
-    onIconButtonClick: (Int) -> Unit
+    onIconButtonClick: (Int) -> Unit,
+    onFiatWallet: () -> Unit,
 ) {
     ContentCard(
         cornerRadius = Dimens.x4,
@@ -143,28 +147,17 @@ fun SoraCardMainSoraContentCard(
 //                    text = stringResource(id = R.string.show_more),
 //                    onClick = onShowMoreClick,
 //                )
-            }
-            if (soraCardMainSoraContentCardState.balance != null)
-                Row(
+                BleachedButton(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = Dimens.x2
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.more_menu_sora_card_title),
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary
-                    )
-                    Text(
-                        text = soraCardMainSoraContentCardState.balance,
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary
-                    )
-                }
-            else
+                        .padding(end = Dimens.x1)
+                        .align(Alignment.BottomEnd),
+                    size = Size.ExtraSmall,
+                    order = Order.SECONDARY,
+                    text = soraCardMainSoraContentCardState.balance ?: "--",
+                    onClick = {},
+                )
+            }
+            if (soraCardMainSoraContentCardState.balance == null) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = stringResource(id = R.string.sora_card_details_card_management_coming_soon),
@@ -172,15 +165,24 @@ fun SoraCardMainSoraContentCard(
                     color = MaterialTheme.customColors.fgSecondary,
                     textAlign = TextAlign.Center
                 )
-            IconButtonMenu(
-                iconButtonMenuStates = soraCardMainSoraContentCardState.menuState,
-                onButtonClick = onIconButtonClick
-            )
+                IconButtonMenu(
+                    iconButtonMenuStates = soraCardMainSoraContentCardState.menuState,
+                    onButtonClick = onIconButtonClick
+                )
+            } else {
+                TonalButton(
+                    modifier = Modifier.padding(horizontal = Dimens.x1).fillMaxWidth(),
+                    size = Size.Large,
+                    order = Order.PRIMARY,
+                    onClick = onFiatWallet,
+                    text = stringResource(id = jp.co.soramitsu.oauth.R.string.card_hub_manage_card),
+                )
+            }
         }
     }
 }
 
-@Preview(locale = "ru")
+@Preview(locale = "en")
 @Composable
 private fun PreviewMainSoraContentCard() {
     SoraCardMainSoraContentCard(
@@ -189,7 +191,8 @@ private fun PreviewMainSoraContentCard() {
             soraCardMenuActions = SoraCardMenuAction.entries
         ),
         onShowMoreClick = {},
-        onIconButtonClick = { _ -> }
+        onIconButtonClick = { _ -> },
+        onFiatWallet = {},
     )
 }
 
@@ -202,6 +205,21 @@ private fun PreviewMainSoraContentCard2() {
             soraCardMenuActions = SoraCardMenuAction.entries
         ),
         onShowMoreClick = {},
-        onIconButtonClick = { _ -> }
+        onIconButtonClick = { _ -> },
+        onFiatWallet = {},
+    )
+}
+
+@Preview(locale = "en")
+@Composable
+private fun PreviewMainSoraContentCard3() {
+    SoraCardMainSoraContentCard(
+        soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
+            balance = null,
+            soraCardMenuActions = SoraCardMenuAction.entries
+        ),
+        onShowMoreClick = {},
+        onIconButtonClick = { _ -> },
+        onFiatWallet = {},
     )
 }

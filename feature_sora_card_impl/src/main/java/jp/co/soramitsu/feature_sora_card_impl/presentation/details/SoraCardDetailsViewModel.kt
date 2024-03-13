@@ -32,15 +32,18 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.intent.isAppAvailableCompat
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
@@ -60,6 +63,8 @@ class SoraCardDetailsViewModel @Inject constructor(
     val shareLinkEvent: LiveData<String> = _shareLinkEvent
 
     val telegramChat = SingleLiveEvent<Unit>()
+    val fiatWallet = SingleLiveEvent<String>()
+    val fiatWalletMarket = SingleLiveEvent<String>()
 
     private var ibanCache: IbanInfo? = null
 
@@ -73,6 +78,7 @@ class SoraCardDetailsViewModel @Inject constructor(
                 soraCardSettingsOptions = SoraCardSettingsOption.entries,
             ),
             logoutDialog = false,
+            fiatWalletDialog = false,
         )
     )
     val soraCardDetailsScreenState = _soraCardDetailsScreenState.asStateFlow()
@@ -141,6 +147,16 @@ class SoraCardDetailsViewModel @Inject constructor(
         }
     }
 
+    fun onFiatWalletClick(context: Context?) {
+        if (context == null) return
+        val fiat = BuildUtils.fiatPackageName()
+        if (context.isAppAvailableCompat(fiat)) {
+            fiatWallet.value = fiat
+        } else {
+            _soraCardDetailsScreenState.value = _soraCardDetailsScreenState.value.copy(fiatWalletDialog = true)
+        }
+    }
+
     fun onSettingsOptionClick(position: Int) {
         val settings = soraCardDetailsScreenState.value.soraCardSettingsCard
             ?.soraCardSettingsOptions ?: return
@@ -158,6 +174,14 @@ class SoraCardDetailsViewModel @Inject constructor(
     fun onLogoutDismiss() {
         _soraCardDetailsScreenState.value =
             _soraCardDetailsScreenState.value.copy(logoutDialog = false)
+    }
+
+    fun onFiatWalletDismiss() {
+        _soraCardDetailsScreenState.value = _soraCardDetailsScreenState.value.copy(fiatWalletDialog = false)
+    }
+
+    fun onOpenFiatWalletMarket() {
+        fiatWalletMarket.value = BuildUtils.fiatPackageName()
     }
 
     fun onSoraCardLogOutClick() {

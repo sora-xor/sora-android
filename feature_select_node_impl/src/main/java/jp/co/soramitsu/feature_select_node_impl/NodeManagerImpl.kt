@@ -206,7 +206,6 @@ internal class NodeManagerImpl(
                         val newHash = selectNodeRepository.getBlockHash().removeHexPrefix()
                         if (BuildUtils.isFlavors(
                                 Flavor.DEVELOP,
-                                Flavor.TESTING,
                                 Flavor.SORALUTION
                             )
                         ) {

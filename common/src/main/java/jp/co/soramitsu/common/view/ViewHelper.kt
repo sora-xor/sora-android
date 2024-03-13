@@ -33,5 +33,5 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.view
 
 object ViewHelper {
-    const val debounce = 700L
+    const val debounce = 900L
 }
