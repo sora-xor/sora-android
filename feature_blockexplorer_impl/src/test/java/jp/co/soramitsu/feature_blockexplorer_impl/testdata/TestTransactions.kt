@@ -162,7 +162,6 @@ object TestTransactions {
         BigDecimal.TEN,
         BigDecimal.ONE,
         Market.XYK,
-        BigDecimal.ONE
     )
 
     val addLiquidityTx = Transaction.Liquidity(

@@ -61,7 +61,6 @@ interface TransactionBuilder {
         amountFrom: BigDecimal,
         amountTo: BigDecimal,
         market: Market,
-        liquidityFee: BigDecimal,
     ): Transaction.Swap
 
     fun buildTransfer(

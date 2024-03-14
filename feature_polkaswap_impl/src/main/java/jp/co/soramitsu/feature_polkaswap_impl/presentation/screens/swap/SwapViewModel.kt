@@ -792,11 +792,6 @@ class SwapViewModel @AssistedInject constructor(
                             minmaxToken?.symbol.orEmpty(),
                             maxMinToken?.symbol.orEmpty(),
                         ),
-                        lpFee = feeToken().printBalance(
-                            details.liquidityFee,
-                            numbersFormatter,
-                            AssetHolder.ROUNDING,
-                        ),
                         minmaxTitle = minmaxTitle,
                         minmaxHint = minmaxHint,
                         minmaxValue = minmaxToken?.printBalance(
@@ -932,7 +927,6 @@ class SwapViewModel @AssistedInject constructor(
                                 if (desired == WithDesired.INPUT) fromState.amount.orZero() else toState.amount.orZero(),
                                 details.minmax,
                                 details.networkFee,
-                                details.liquidityFee,
                                 details.dex.dexId,
                                 if (desired == WithDesired.OUTPUT) fromState.amount.orZero() else toState.amount.orZero(),
                             )

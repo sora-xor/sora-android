@@ -37,17 +37,5 @@ import jp.co.soramitsu.common.util.ParseModel
 
 data class SwapFeeDto(
     val amount: BigInteger,
-    val fee: BigInteger,
-    val route: List<String>? = null,
-) : ParseModel()
-
-data class SwapFeeDtoV2(
-    val amount: BigInteger,
-    val fee: Map<String, BigInteger>,
-    val route: List<String>? = null,
-) : ParseModel()
-
-data class SwapFeeDtoV3(
-    val amount: BigInteger,
     val route: List<String>? = null,
 ) : ParseModel()
