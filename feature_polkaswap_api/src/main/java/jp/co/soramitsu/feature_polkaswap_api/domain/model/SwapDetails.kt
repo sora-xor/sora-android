@@ -40,7 +40,6 @@ data class SwapDetails(
     val per1: BigDecimal,
     val per2: BigDecimal,
     val minmax: BigDecimal,
-    val liquidityFee: BigDecimal,
     val networkFee: BigDecimal,
     val dex: PoolDex,
     val swapRoute: List<String>? = null,
@@ -48,6 +47,5 @@ data class SwapDetails(
 
 data class SwapQuote(
     val amount: BigDecimal,
-    val fee: BigDecimal,
     val route: List<String>? = null,
 )

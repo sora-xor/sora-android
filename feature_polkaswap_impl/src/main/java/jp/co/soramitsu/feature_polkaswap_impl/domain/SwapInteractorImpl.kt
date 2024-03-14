@@ -140,7 +140,6 @@ class SwapInteractorImpl(
             amount.divide(swapQuote.first.amount, scale, RoundingMode.HALF_EVEN),
             swapQuote.first.amount.divide(amount, scale, RoundingMode.HALF_EVEN),
             minMax,
-            swapQuote.first.fee,
             networkFee,
             swapQuote.second,
             swapQuote.first.route?.mapNotNull {
@@ -287,7 +286,6 @@ class SwapInteractorImpl(
         amount: BigDecimal,
         limit: BigDecimal,
         networkFee: BigDecimal,
-        liquidityFee: BigDecimal,
         dexId: Int,
         amount2: BigDecimal,
     ): String {
@@ -318,7 +316,6 @@ class SwapInteractorImpl(
                     amountFrom = if (desired == WithDesired.INPUT) amount else amount2,
                     amountTo = if (desired == WithDesired.INPUT) amount2 else amount,
                     market = selectedSwapMarket.value,
-                    liquidityFee = liquidityFee,
                 )
             )
         }

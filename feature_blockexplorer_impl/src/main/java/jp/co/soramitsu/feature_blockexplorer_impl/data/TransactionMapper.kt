@@ -126,15 +126,14 @@ private fun mapHistoryItemToTransaction(
             )
         }
     } else if (tx.isMatch(Pallete.LIQUIDITY_PROXY, Method.SWAP)) {
-        tx.data?.toSwap { selectedMarket, liquidityProviderFee, baseTokenId, targetTokenId, baseTokenAmount, targetTokenAmount ->
+        tx.data?.toSwap { selectedMarket, baseTokenId, targetTokenId, baseTokenAmount, targetTokenAmount ->
             Transaction.Swap(
                 base = transactionBase,
                 tokenFrom = tokens.getByIdOrEmpty(baseTokenId),
                 tokenTo = tokens.getByIdOrEmpty(targetTokenId),
                 amountFrom = baseTokenAmount.toBigDecimalOrDefault(),
                 amountTo = targetTokenAmount.toBigDecimalOrDefault(),
-                market = Market.values().find { m -> m.backString == selectedMarket } ?: Market.SMART,
-                lpFee = liquidityProviderFee.toBigDecimalOrDefault(),
+                market = Market.entries.find { m -> m.backString == selectedMarket } ?: Market.SMART,
             )
         }
     } else if (tx.isMatch(
@@ -324,7 +323,6 @@ private fun List<TxHistoryItemParam>.toEthTransfer(block: (amount: String, token
 private fun List<TxHistoryItemParam>.toSwap(
     block: (
         selectedMarket: String,
-        liquidityProviderFee: String,
         baseTokenId: String,
         targetTokenId: String,
         baseTokenAmount: String,
@@ -332,17 +330,15 @@ private fun List<TxHistoryItemParam>.toSwap(
     ) -> Transaction.Swap,
 ): Transaction.Swap? {
     val selectedMarket = this.firstOrNull { it.paramName == "selectedMarket" }
-    val liquidityProviderFee = this.firstOrNull { it.paramName == "liquidityProviderFee" }
     val baseTokenId = this.firstOrNull { it.paramName == "baseAssetId" }
     val targetTokenId = this.firstOrNull { it.paramName == "targetAssetId" }
     val baseTokenAmount = this.firstOrNull { it.paramName == "baseAssetAmount" }
     val targetTokenAmount = this.firstOrNull { it.paramName == "targetAssetAmount" }
-    return if (selectedMarket != null && liquidityProviderFee != null &&
+    return if (selectedMarket != null &&
         baseTokenId != null && targetTokenId != null &&
         baseTokenAmount != null && targetTokenAmount != null
     ) block.invoke(
         selectedMarket.paramValue,
-        liquidityProviderFee.paramValue,
         baseTokenId.paramValue,
         targetTokenId.paramValue,
         baseTokenAmount.paramValue,

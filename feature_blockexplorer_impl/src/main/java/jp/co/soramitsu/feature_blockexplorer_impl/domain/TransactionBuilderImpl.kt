@@ -85,7 +85,6 @@ class TransactionBuilderImpl @Inject constructor() : TransactionBuilder {
         amountFrom: BigDecimal,
         amountTo: BigDecimal,
         market: Market,
-        liquidityFee: BigDecimal,
     ): Transaction.Swap =
         Transaction.Swap(
             base = buildBase(
@@ -100,7 +99,6 @@ class TransactionBuilderImpl @Inject constructor() : TransactionBuilder {
             amountFrom = amountFrom,
             amountTo = amountTo,
             market = market,
-            lpFee = liquidityFee,
         )
 
     override fun buildTransfer(

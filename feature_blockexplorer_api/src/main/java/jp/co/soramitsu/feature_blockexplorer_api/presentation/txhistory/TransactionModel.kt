@@ -117,7 +117,6 @@ sealed class Transaction(
         val amountFrom: BigDecimal,
         val amountTo: BigDecimal,
         val market: Market,
-        val lpFee: BigDecimal,
     ) : Transaction(base)
 
     class Liquidity(
