@@ -280,7 +280,6 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
         return response?.let {
             SwapQuote(
                 mapBalance(it.amount, feeToken.precision),
-                mapBalance(it.fee, feeToken.precision),
                 it.route,
             )
         }
