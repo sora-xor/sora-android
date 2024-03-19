@@ -54,7 +54,6 @@ interface SwapInteractor {
         amount: BigDecimal,
         limit: BigDecimal,
         networkFee: BigDecimal,
-        liquidityFee: BigDecimal,
         dexId: Int,
         amount2: BigDecimal,
     ): String

@@ -255,7 +255,6 @@ class SwapViewModelTest {
             )
         ).willReturn(
             SwapDetails(
-                BigDecimal("0.2"),
                 BigDecimal("0.02"),
                 BigDecimal("12.2"),
                 BigDecimal("18.3"),

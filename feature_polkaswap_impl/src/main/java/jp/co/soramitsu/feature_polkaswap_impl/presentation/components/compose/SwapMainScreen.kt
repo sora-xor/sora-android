@@ -216,14 +216,6 @@ internal fun SwapMainScreen(
                 value1 = state.details.route,
             )
         }
-        if (state.details.lpFee.isNotEmpty()) {
-            Spacer(modifier = Modifier.size(Dimens.x2))
-            DetailsItem(
-                text = stringResource(id = R.string.polkaswap_liquidity_total_fee),
-                hint = stringResource(id = R.string.polkaswap_liquidity_total_fee_desc),
-                value1 = state.details.lpFee,
-            )
-        }
     }
 }
 
