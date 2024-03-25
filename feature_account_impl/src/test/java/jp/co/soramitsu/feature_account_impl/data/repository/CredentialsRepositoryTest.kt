@@ -44,10 +44,10 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasour
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import jp.co.soramitsu.xcrypto.seed.Mnemonic
+import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.SubstrateKeypairFactory
-import jp.co.soramitsu.xsubstrate.encrypt.mnemonic.Mnemonic
-import jp.co.soramitsu.xsubstrate.encrypt.mnemonic.MnemonicCreator
 import jp.co.soramitsu.xsubstrate.encrypt.seed.SeedFactory
 import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi

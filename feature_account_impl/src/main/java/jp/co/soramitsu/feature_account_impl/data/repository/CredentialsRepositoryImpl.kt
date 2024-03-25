@@ -49,12 +49,12 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
+import jp.co.soramitsu.xcrypto.seed.Mnemonic
+import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
 import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.SubstrateKeypairFactory
-import jp.co.soramitsu.xsubstrate.encrypt.mnemonic.Mnemonic
-import jp.co.soramitsu.xsubstrate.encrypt.mnemonic.MnemonicCreator
 import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
 
 class CredentialsRepositoryImpl constructor(
