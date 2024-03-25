@@ -77,6 +77,7 @@ class SoraCardDetailsViewModel @Inject constructor(
             soraCardSettingsCard = SoraCardSettingsCardState(
                 soraCardSettingsOptions = SoraCardSettingsOption.entries,
             ),
+            soraCardIBANCardState = SoraCardIBANCardState(iban = "", active = true),
             logoutDialog = false,
             fiatWalletDialog = false,
         )

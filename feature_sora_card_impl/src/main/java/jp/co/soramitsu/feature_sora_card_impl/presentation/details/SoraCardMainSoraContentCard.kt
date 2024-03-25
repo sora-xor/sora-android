@@ -39,13 +39,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
@@ -57,8 +55,6 @@ import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.customColors
-import jp.co.soramitsu.ui_core.theme.customTypography
 
 enum class SoraCardMenuAction {
     TOP_UP,
@@ -157,27 +153,29 @@ fun SoraCardMainSoraContentCard(
                     onClick = {},
                 )
             }
-            if (soraCardMainSoraContentCardState.balance == null) {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(id = R.string.sora_card_details_card_management_coming_soon),
-                    style = MaterialTheme.customTypography.textS,
-                    color = MaterialTheme.customColors.fgSecondary,
-                    textAlign = TextAlign.Center
-                )
-                IconButtonMenu(
-                    iconButtonMenuStates = soraCardMainSoraContentCardState.menuState,
-                    onButtonClick = onIconButtonClick
-                )
-            } else {
-                TonalButton(
-                    modifier = Modifier.padding(horizontal = Dimens.x1).fillMaxWidth(),
-                    size = Size.Large,
-                    order = Order.PRIMARY,
-                    onClick = onFiatWallet,
-                    text = stringResource(id = jp.co.soramitsu.oauth.R.string.card_hub_manage_card),
-                )
-            }
+//            if (soraCardMainSoraContentCardState.balance == null) {
+//                Text(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    text = stringResource(id = R.string.sora_card_details_card_management_coming_soon),
+//                    style = MaterialTheme.customTypography.textS,
+//                    color = MaterialTheme.customColors.fgSecondary,
+//                    textAlign = TextAlign.Center
+//                )
+//                IconButtonMenu(
+//                    iconButtonMenuStates = soraCardMainSoraContentCardState.menuState,
+//                    onButtonClick = onIconButtonClick
+//                )
+//            }
+            TonalButton(
+                modifier = Modifier
+                    .padding(horizontal = Dimens.x1)
+                    .fillMaxWidth(),
+                size = Size.Large,
+                enabled = soraCardMainSoraContentCardState.balance != null,
+                order = Order.PRIMARY,
+                onClick = onFiatWallet,
+                text = stringResource(id = jp.co.soramitsu.oauth.R.string.card_hub_manage_card),
+            )
         }
     }
 }
