@@ -108,8 +108,13 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
                 onRecentActivityClick = viewModel::onRecentActivityClick,
                 onIbanCardShareClick = viewModel::onIbanCardShareClick,
                 onIbanCardClick = viewModel::onIbanCardClick,
-                onSettingsOptionClick = viewModel::onSettingsOptionClick,
-                onFiatWallet = { viewModel.onFiatWalletClick(this@SoraCardDetailsFragment.context) },
+                onSettingsOptionClick = {
+                    if (it == 0) {
+                        viewModel.onFiatWalletClick(this@SoraCardDetailsFragment.context)
+                    } else {
+                        viewModel.onSettingsOptionClick(it)
+                    }
+                },
             )
             if (state.value.logoutDialog) {
                 AlertDialog(

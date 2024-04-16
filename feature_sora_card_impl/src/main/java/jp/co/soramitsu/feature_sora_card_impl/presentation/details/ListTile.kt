@@ -69,27 +69,18 @@ data class ListTileState(
     val testTagId: String? = null,
     val variant: ListTileVariant,
     val flag: ListTileFlag,
-    private val title: Text,
-    private val subtitle: Text? = null,
+    val title: Text,
+    val subtitle: Text? = null,
+    val clickEnabled: Boolean = true,
     private val body: Text? = null,
     private val icon: Image? = null
 ) {
-
-    val titleText: Text = title
-
-    val isSubtitleVisible = variant === ListTileVariant.TITLE_SUBTITLE_BODY
-
-    val subtitleText: Text?
-        get() = if (variant === ListTileVariant.TITLE_SUBTITLE_BODY)
-            subtitle else null
 
     val isBodyVisible = variant === ListTileVariant.TITLE_SUBTITLE_BODY
 
     val bodyText: Text?
         get() = if (variant === ListTileVariant.TITLE_SUBTITLE_BODY)
             body else null
-
-    val isNavigationHintVisible = variant === ListTileVariant.TITLE_NAVIGATION_HINT
 
     val navigationIcon: Image?
         get() = if (variant === ListTileVariant.TITLE_NAVIGATION_HINT)
@@ -101,8 +92,6 @@ fun ListTileView(
     listTileState: ListTileState,
     onItemClick: () -> Unit
 ) {
-    // TODO Extract to UI lib
-
     val colorInUse = if (listTileState.variant === ListTileVariant.TITLE_NAVIGATION_HINT && listTileState.flag === ListTileFlag.WARNING) {
         MaterialTheme.customColors.statusError
     } else {
@@ -112,11 +101,11 @@ fun ListTileView(
     Row(
         modifier = Modifier
             .run { if (listTileState.testTagId == null) this else testTagAsId(listTileState.testTagId) }
-            .clickable { onItemClick.invoke() }
+            .clickable(onClick = onItemClick, enabled = listTileState.clickEnabled)
             .fillMaxWidth()
             .padding(
                 vertical = Dimens.x1,
-                horizontal = Dimens.x1
+                horizontal = Dimens.x1,
             ),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -124,29 +113,27 @@ fun ListTileView(
             modifier = Modifier.align(Alignment.CenterVertically)
         ) {
             Text(
-                text = listTileState.titleText.retrieveString(),
+                text = listTileState.title.retrieveString(),
                 style = MaterialTheme.customTypography.textM,
                 color = colorInUse
             )
-            if (listTileState.isSubtitleVisible) {
-                // TODO remove !!
+            if (listTileState.subtitle != null) {
                 Text(
-                    text = listTileState.subtitleText!!.retrieveString(),
+                    text = listTileState.subtitle.retrieveString(),
                     style = MaterialTheme.customTypography.textXSBold,
                     color = MaterialTheme.customColors.fgSecondary,
                 )
             }
         }
         Column {
-            if (listTileState.isSubtitleVisible) {
-                // TODO remove !!
+            if (listTileState.isBodyVisible) {
                 Text(
-                    text = listTileState.bodyText!!.retrieveString(),
+                    text = listTileState.bodyText?.retrieveString().orEmpty(),
                     style = MaterialTheme.customTypography.textM,
                     color = colorInUse,
                 )
             }
-            if (listTileState.isNavigationHintVisible) {
+            if (listTileState.variant == ListTileVariant.TITLE_NAVIGATION_HINT) {
                 Icon(
                     painter = listTileState.navigationIcon!!.retrievePainter(),
                     contentDescription = "",

@@ -55,6 +55,7 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

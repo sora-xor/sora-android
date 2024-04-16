@@ -98,6 +98,7 @@ dependencies {
 
     api(libs.soraCardDep) {
         exclude(group = "com.paywings.onboarding.kyc.android-libs", module = "java-websocket-lib")
+        exclude(module = "android-foundation")
     }
 
     implementation(libs.daggerDep)

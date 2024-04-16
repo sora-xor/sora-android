@@ -38,6 +38,7 @@ dependencyResolutionManagement {
                 password = secret("PAY_WINGS_PASSWORD")
             }
         }
+        mavenLocal()
     }
 }
 

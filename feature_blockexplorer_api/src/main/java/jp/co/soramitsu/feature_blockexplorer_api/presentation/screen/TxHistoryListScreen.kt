@@ -56,8 +56,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.view.LoadMoreHandler
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel

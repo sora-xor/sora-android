@@ -78,7 +78,6 @@ fun SoraCardDetailsScreen(
     onIbanCardShareClick: () -> Unit,
     onIbanCardClick: () -> Unit,
     onSettingsOptionClick: (position: Int) -> Unit,
-    onFiatWallet: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -94,7 +93,8 @@ fun SoraCardDetailsScreen(
             soraCardMainSoraContentCardState = soraCardDetailsScreenState.soraCardMainSoraContentCardState,
             onShowMoreClick = onShowSoraCardDetailsClick,
             onIconButtonClick = onSoraCardMenuActionClick,
-            onFiatWallet = onFiatWallet,
+            onExchangeXor = {},
+            onOptionsClick = {},
         )
         if (soraCardDetailsScreenState.soraCardReferralBannerCardState) {
             BasicBannerCard(
@@ -126,7 +126,8 @@ fun SoraCardDetailsScreen(
             if (state.settings.isNotEmpty())
                 SoraCardSettingsCard(
                     state = state,
-                    onItemClick = onSettingsOptionClick
+                    main = soraCardDetailsScreenState.soraCardMainSoraContentCardState,
+                    onItemClick = onSettingsOptionClick,
                 )
         }
         Spacer(
@@ -152,7 +153,8 @@ private fun PreviewSoraCardDetailsScreen() {
             soraCardDetailsScreenState = SoraCardDetailsScreenState(
                 soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
                     balance = "3665.50",
-                    soraCardMenuActions = SoraCardMenuAction.entries
+                    phone = "+987654",
+                    soraCardMenuActions = SoraCardMenuAction.entries,
                 ),
                 soraCardReferralBannerCardState = true,
                 soraCardRecentActivitiesCardState = SoraCardRecentActivitiesCardState(
@@ -177,7 +179,6 @@ private fun PreviewSoraCardDetailsScreen() {
             onIbanCardShareClick = {},
             onIbanCardClick = {},
             onSettingsOptionClick = { _ -> },
-            onFiatWallet = {},
         )
     }
 }

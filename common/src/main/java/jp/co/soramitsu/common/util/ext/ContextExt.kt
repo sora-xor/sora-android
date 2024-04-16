@@ -47,6 +47,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.core.content.res.use
+import jp.co.soramitsu.androidfoundation.format.safeCast
 
 @ColorInt
 fun Context?.attrColor(@AttrRes attr: Int): Int =

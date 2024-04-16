@@ -36,11 +36,11 @@ import androidx.room.withTransaction
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired

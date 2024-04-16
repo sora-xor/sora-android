@@ -36,7 +36,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkRequest
-import jp.co.soramitsu.common.util.ext.safeCast
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

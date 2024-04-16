@@ -38,8 +38,6 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.greaterThan
-import jp.co.soramitsu.common.util.ext.safeDivide
 import jp.co.soramitsu.common.util.ext.splitVersions
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -50,7 +48,6 @@ import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardBasicStatus
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
-import jp.co.soramitsu.oauth.common.domain.PriceInteractor
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlin.math.min
 import kotlinx.coroutines.delay
@@ -83,6 +80,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
             needInstallUpdate = false,
             applicationFee = null,
             ibanInfo = null,
+            phone = null,
         )
     )
 
@@ -95,6 +93,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
             fetchUserIbanAccount(),
             subscribeToSoraCardAvailabilityFlow(),
             checkSoraCardPending(),
+            fetchUserPhone(),
         ) { flows ->
             val init = flows[0] as Pair<Boolean, String>
             val needUpdate = flows[1] as Boolean
@@ -102,6 +101,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
             val ibanInfo = flows[3] as IbanInfo?
             val availability = flows[4] as SoraCardAvailabilityInfo
             val verification = flows[5] as SoraCardCommonVerification
+            val phone = flows[6] as String
             SoraCardBasicStatus(
                 initialized = init.first,
                 initError = init.second,
@@ -110,6 +110,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
                 needInstallUpdate = needUpdate,
                 applicationFee = fee,
                 ibanInfo = ibanInfo,
+                phone = phone,
             )
         }
             .debounce(1000)
@@ -168,8 +169,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
         assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
             .distinctUntilChanged(::compareByTotal)
             .map { asset ->
-                val xorEuroLocal = getXorEuro()
-                if (asset != null && xorEuroLocal != null) {
+                if (asset != null) {
                     val pools = poolsInteractor.getPoolsCacheOfCurAccount()
                         .filter { poolData ->
                             poolData.basic.baseToken.id == SubstrateOptionsProvider.feeAssetId
@@ -183,41 +183,23 @@ internal class SoraCardInteractorImpl @Inject constructor(
                         )
                     val totalTokenBalance =
                         asset.balance.total.plus(poolsSum).plus(demeterStakedFarmed)
-                    try {
-                        val sufficient = PriceInteractor.calcSufficient(
-                            balance = totalTokenBalance,
-                            ratio = xorEuroLocal,
-                        )
-                        SoraCardAvailabilityInfo(
-                            xorBalance = totalTokenBalance,
-                            enoughXor = totalTokenBalance.greaterThan(sufficient.realRequiredBalance),
-                            percent = totalTokenBalance.safeDivide(sufficient.realRequiredBalance),
-                            needInXor = formatter.formatBigDecimal(sufficient.needToken, 5),
-                            needInEur = formatter.formatBigDecimal(sufficient.needEuro, 2),
-                            xorRatioAvailable = true,
-                        )
-                    } catch (t: Throwable) {
-                        errorInfoState(totalTokenBalance)
-                    }
+                    SoraCardAvailabilityInfo(
+                        xorBalance = totalTokenBalance,
+                        xorRatioAvailable = true,
+                    )
                 } else {
-                    errorInfoState(BigDecimal.ZERO)
+                    errorInfoState()
                 }
             }.flowOn(coroutineManager.io)
 
-    private fun errorInfoState(balance: BigDecimal) = SoraCardAvailabilityInfo(
+    private fun errorInfoState(balance: BigDecimal = BigDecimal.ZERO) = SoraCardAvailabilityInfo(
         xorBalance = balance,
-        enoughXor = false,
         xorRatioAvailable = false,
     )
 
-    private var xorToEuro: Double? = null
-
-    private suspend fun getXorEuro(): Double? =
-        xorToEuro ?: blockExplorerManager.getXorPerEurRatio().also {
-            xorToEuro = it
-        }
-
     private fun fetchUserIbanAccount() = flow { emit(fetchIbanItem()) }
+
+    private fun fetchUserPhone() = flow { emit(soraCardClientProxy.getPhone()) }
 
     private suspend fun fetchIbanItem(): IbanInfo? =
         soraCardClientProxy.getIBAN().getOrNull()

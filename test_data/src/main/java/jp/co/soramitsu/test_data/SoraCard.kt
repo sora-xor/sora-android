@@ -40,6 +40,7 @@ import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardBasicContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 
 object SoraCardTestData {
 
@@ -51,6 +52,7 @@ object SoraCardTestData {
         needInstallUpdate = false,
         applicationFee = null,
         ibanInfo = null,
+        phone = null,
     )
 
     private val SORA_CARD_BASIC_CONTRACT = SoraCardBasicContractData(
@@ -65,47 +67,57 @@ object SoraCardTestData {
         basic = SORA_CARD_BASIC_CONTRACT,
         locale = Locale.ENGLISH,
         client = "test android client",
-        kycCredentials = SoraCardKycCredentials(
-            endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
-            username = BuildConfig.SORA_CARD_KYC_USERNAME,
-            password = BuildConfig.SORA_CARD_KYC_PASSWORD,
-        ),
-        areAttemptsPaidSuccessfully = false,
-        isEnoughXorAvailable = false,
-        isIssuancePaid = false,
-        userAvailableXorAmount = 0.0,
         soraBackEndUrl = "soracard backend",
+        flow = SoraCardFlow.SoraCardKycFlow(
+            kycCredentials = SoraCardKycCredentials(
+                endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
+                username = BuildConfig.SORA_CARD_KYC_USERNAME,
+                password = BuildConfig.SORA_CARD_KYC_PASSWORD,
+            ),
+            areAttemptsPaidSuccessfully = false,
+            isEnoughXorAvailable = false,
+            isIssuancePaid = false,
+            userAvailableXorAmount = 0.0,
+            logIn = false,
+        ),
     )
 
     val registrationLauncher = SoraCardContractData(
         basic = SORA_CARD_BASIC_CONTRACT,
         locale = Locale.ENGLISH,
-        kycCredentials = SoraCardKycCredentials(
-            endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
-            username = BuildConfig.SORA_CARD_KYC_USERNAME,
-            password = BuildConfig.SORA_CARD_KYC_PASSWORD,
-        ),
-        areAttemptsPaidSuccessfully = false,
-        isEnoughXorAvailable = false,
-        isIssuancePaid = false,
         client = "test android client",
-        userAvailableXorAmount = 0.0,
         soraBackEndUrl = "soracard backend",
+        flow = SoraCardFlow.SoraCardKycFlow(
+            kycCredentials = SoraCardKycCredentials(
+                endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
+                username = BuildConfig.SORA_CARD_KYC_USERNAME,
+                password = BuildConfig.SORA_CARD_KYC_PASSWORD,
+            ),
+            areAttemptsPaidSuccessfully = false,
+            isEnoughXorAvailable = false,
+            isIssuancePaid = false,
+            userAvailableXorAmount = 0.0,
+            logIn = false,
+        ),
     )
 
     val signInLauncher = SoraCardContractData(
         basic = SORA_CARD_BASIC_CONTRACT,
         locale = Locale.ENGLISH,
-        areAttemptsPaidSuccessfully = false,
-        isEnoughXorAvailable = false,
-        isIssuancePaid = false,
         client = "test android client",
-        kycCredentials = SoraCardKycCredentials(
-            endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
-            username = BuildConfig.SORA_CARD_KYC_USERNAME,
-            password = BuildConfig.SORA_CARD_KYC_PASSWORD,
-        ),
-        userAvailableXorAmount = 0.0,
         soraBackEndUrl = "soracard backend",
+        flow = SoraCardFlow.SoraCardKycFlow(
+            areAttemptsPaidSuccessfully = false,
+            isEnoughXorAvailable = false,
+            isIssuancePaid = false,
+            kycCredentials = SoraCardKycCredentials(
+                endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
+                username = BuildConfig.SORA_CARD_KYC_USERNAME,
+                password = BuildConfig.SORA_CARD_KYC_PASSWORD,
+            ),
+            userAvailableXorAmount = 0.0,
+            logIn = false,
+        ),
+
     )
 }

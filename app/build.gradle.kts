@@ -119,7 +119,7 @@ android {
         create("develop") {
             dimension = "default"
             applicationIdSuffix = ".develop"
-            resValue("string", "app_name", "Sora Develop")
+            resValue("string", "app_name", "SORA Develop")
             manifestPlaceholders["pathPrefix"] = "/dev/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_dev_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_dev_launcher"
@@ -136,7 +136,7 @@ android {
 
         create("production") {
             dimension = "default"
-            resValue("string", "app_name", "Sora")
+            resValue("string", "app_name", "SORA")
             manifestPlaceholders["pathPrefix"] = "/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_prod_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_prod_launcher_rounded"

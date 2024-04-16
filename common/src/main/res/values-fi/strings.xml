@@ -50,7 +50,7 @@
   <string name="biometric_dialog_title">Varmenna</string>
   <string name="block_id">Lohkon tarkiste</string>
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
-  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Buy or sell XOR token with euro</string>
+  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Buy or sell XOR token with euro cash</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">Buy XOR with fiat</string>
   <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">Change language</string>

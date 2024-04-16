@@ -46,7 +46,7 @@ import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.regex.Pattern
-import jp.co.soramitsu.androidfoundation.format.hexPrefix
+import jp.co.soramitsu.androidfoundation.format.HEX_PREFIX
 import jp.co.soramitsu.common.util.SoraColoredClickableSpan
 
 fun String.parseOtpCode(): String {
@@ -73,14 +73,14 @@ fun String.getInitials(): String {
 fun String.splitVersions() = split(".").map { it.toInt() }
 
 fun String.isErc20Address(): Boolean {
-    return this.split(" ").size == 1 && this.startsWith(hexPrefix)
+    return this.split(" ").size == 1 && this.startsWith(HEX_PREFIX)
 }
 
 fun String.didToAccountId(): String {
     return this.replace(":", "_") + "@sora"
 }
 
-fun String.addHexPrefix(): String = "${hexPrefix}$this"
+fun String.addHexPrefix(): String = "${HEX_PREFIX}$this"
 
 fun String.removeWebPrefix(): String =
     this.removePrefix("http://").removePrefix("https://").removePrefix("www.")

@@ -39,9 +39,9 @@ import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.res.stringResource
+import jp.co.soramitsu.androidfoundation.compose.toTitle
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.AlertDialogData
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
@@ -72,6 +72,4 @@ fun AlertDialogContent(openAlertDialog: MutableState<AlertDialogData>) {
 }
 
 @Composable
-private fun Any?.message() = this.safeCast<Int>()?.let {
-    stringResource(id = it)
-} ?: this.safeCast<String>()
+private fun Any?.message() = this?.toTitle()
