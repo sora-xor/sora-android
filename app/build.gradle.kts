@@ -280,7 +280,7 @@ kover {
 }
 
 koverReport {
-    androidReports("release") {
+    androidReports("developDebug") {
         filters {
             excludes {
                 classes(
