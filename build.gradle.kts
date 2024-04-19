@@ -64,7 +64,7 @@ sonarqube {
     properties {
         property("sonar.projectKey", "sora:sora-android")
         property("sonar.projectName", "sora-android")
-        property("sonar.junit.reportPaths", "${project.projectDir}/build/reports/tests/testReleaseUnitTest")
+        property("sonar.junit.reportPaths", "${project.projectDir}/build/test-results/testDevelopDebugUnitTest")
         property("sonar.coverage.jacoco.xmlReportPaths", "${project.rootDir}/report/coverage.xml")
         property("sonar.gradle.skipCompile", "true")
     }
