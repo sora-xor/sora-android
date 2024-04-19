@@ -275,8 +275,12 @@ kapt {
     correctErrorTypes = true
 }
 
+kover {
+    useJacoco()
+}
+
 koverReport {
-    androidReports("developDebug") {
+    androidReports("release") {
         filters {
             excludes {
                 classes(
@@ -301,7 +305,8 @@ koverReport {
         }
 
         xml {
-            onCheck = false
+            onCheck = true
+            setReportFile(file("${project.rootDir}/report/coverage.xml"))
         }
 
         html {

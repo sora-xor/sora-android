@@ -63,6 +63,7 @@ room = "2.6.1"
 lazySodium = "5.0.2"
 jna = "5.8.0"
 kover = "0.7.5"
+sonarqube = "4.4.1.3373"
 
 [libraries]
 roomDep = { module = "androidx.room:room-runtime", version.ref = "room" }
@@ -166,3 +167,4 @@ googleServicesPlugin = { id = "com.google.gms.google-services", version.ref = "g
 firebaseCrashlyticsPlugin = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
 firebaseAppDistributionPlugin = { id = "com.google.firebase.appdistribution", version.ref = "firebaseAppDistribution" }
 triplet = { id = "com.github.triplet.play", version.ref = "tripletVersion" }
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
