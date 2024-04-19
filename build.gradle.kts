@@ -13,7 +13,7 @@ plugins {
     alias(libs.plugins.triplet) apply false
     id("com.google.devtools.ksp") version "1.9.22-1.0.17" apply false
     id("org.jetbrains.kotlinx.kover") version "0.7.5"
-    alias(libs.plugins.sonarqube) apply false
+    alias(libs.plugins.sonarqube) apply true
 }
 
 tasks.register("clean", Delete::class) {
