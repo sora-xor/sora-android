@@ -146,7 +146,7 @@ class GetSoraCardViewModelTest {
     fun `enable sora card EXPECT set up launcher`() = runTest {
         advanceUntilIdle()
 
-        viewModel.onEnableCard()
+        viewModel.onLogIn()
 
         assertNotNull(viewModel.launchSoraCardRegistration.value)
     }
@@ -163,15 +163,5 @@ class GetSoraCardViewModelTest {
         viewModel.onSwap()
 
         verify(polkaswapRouter).showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
-    }
-
-    @Test
-    fun `onSeeBlacklist EXPECT open web view`() = runTest {
-        given(resourceManager.getString(R.string.sora_card_blacklisted_countires_title))
-            .willReturn("Title")
-
-        viewModel.onSeeBlacklist()
-
-        verify(mainRouter).showWebView("Title", "https://soracard.com/blacklist/")
     }
 }

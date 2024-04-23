@@ -50,7 +50,7 @@
   <string name="biometric_dialog_title">Doğrulayın</string>
   <string name="block_id">Qarışığı blok edin</string>
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
-  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Buy or sell XOR token with euro</string>
+  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Nağd avro ilə XOR tokenini alın və ya satın</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">Buy XOR with fiat</string>
   <string name="cant_load_balance">Balansı yükləmək mümkün deyil</string>
   <string name="change_language">Change language</string>

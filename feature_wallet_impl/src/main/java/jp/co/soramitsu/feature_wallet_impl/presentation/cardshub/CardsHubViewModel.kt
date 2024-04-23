@@ -36,6 +36,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
@@ -51,7 +52,6 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
@@ -81,6 +81,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
@@ -445,6 +446,9 @@ class CardsHubViewModel @Inject constructor(
 
     fun onBuyCrypto() {
         if (!connectionManager.isConnected) return
-        assetsRouter.showBuyCrypto()
+//        assetsRouter.showBuyCrypto()
+        currentSoraCardContractData?.let { contract ->
+            _launchSoraCardSignIn.value = contract.copy(flow = SoraCardFlow.SoraCardGateHubFlow)
+        }
     }
 }

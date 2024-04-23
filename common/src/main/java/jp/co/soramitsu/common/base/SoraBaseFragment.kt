@@ -67,6 +67,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.findNavController
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.DarkThemeManager
@@ -76,7 +77,6 @@ import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.DebounceClickHandler
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.ui_core.theme.customColors
 import kotlinx.coroutines.launch
 

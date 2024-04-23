@@ -37,9 +37,9 @@ import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.sumByBigInteger
 import jp.co.soramitsu.common_wallet.data.XorBalanceDto
 import jp.co.soramitsu.sora.substrate.models.BlockEvent

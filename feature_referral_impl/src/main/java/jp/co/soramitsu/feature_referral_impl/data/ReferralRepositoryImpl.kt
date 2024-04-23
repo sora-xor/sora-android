@@ -36,8 +36,8 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Date
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager

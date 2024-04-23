@@ -179,8 +179,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
                             null
                         },
                         isTransferableBalanceAvailable = asset.balance.transferable > BigDecimal.ZERO,
-                        buyCryptoAvailable = false,
-//                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId),
+                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId),
                     )
                 )
             }

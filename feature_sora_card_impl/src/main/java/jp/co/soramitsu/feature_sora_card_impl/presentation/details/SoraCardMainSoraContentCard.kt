@@ -35,14 +35,16 @@ package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
@@ -65,6 +67,7 @@ enum class SoraCardMenuAction {
 
 data class SoraCardMainSoraContentCardState(
     val balance: String?,
+    val phone: String?,
     val actionsEnabled: Boolean = false,
     val soraCardMenuActions: List<SoraCardMenuAction>,
 ) {
@@ -112,7 +115,8 @@ fun SoraCardMainSoraContentCard(
     soraCardMainSoraContentCardState: SoraCardMainSoraContentCardState,
     onShowMoreClick: () -> Unit,
     onIconButtonClick: (Int) -> Unit,
-    onFiatWallet: () -> Unit,
+    onExchangeXor: () -> Unit,
+    onOptionsClick: () -> Unit,
 ) {
     ContentCard(
         cornerRadius = Dimens.x4,
@@ -166,16 +170,31 @@ fun SoraCardMainSoraContentCard(
 //                    onButtonClick = onIconButtonClick
 //                )
 //            }
-            TonalButton(
+            Row(
                 modifier = Modifier
-                    .padding(horizontal = Dimens.x1)
-                    .fillMaxWidth(),
-                size = Size.Large,
-                enabled = soraCardMainSoraContentCardState.balance != null,
-                order = Order.PRIMARY,
-                onClick = onFiatWallet,
-                text = stringResource(id = jp.co.soramitsu.oauth.R.string.card_hub_manage_card),
-            )
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+            ) {
+                TonalButton(
+                    modifier = Modifier
+                        .padding(horizontal = Dimens.x1)
+                        .weight(1f),
+                    size = Size.Large,
+                    enabled = true,
+                    order = Order.PRIMARY,
+                    onClick = onExchangeXor,
+                    text = stringResource(id = jp.co.soramitsu.oauth.R.string.exchange_xor),
+                )
+                TonalButton(
+                    modifier = Modifier
+                        .size(Dimens.x7),
+                    size = Size.Large,
+                    leftIcon = painterResource(id = R.drawable.ic_options),
+                    enabled = true,
+                    order = Order.PRIMARY,
+                    onClick = onOptionsClick,
+                )
+            }
         }
     }
 }
@@ -186,11 +205,13 @@ private fun PreviewMainSoraContentCard() {
     SoraCardMainSoraContentCard(
         soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
             balance = "3644.50",
+            phone = "",
             soraCardMenuActions = SoraCardMenuAction.entries
         ),
         onShowMoreClick = {},
         onIconButtonClick = { _ -> },
-        onFiatWallet = {},
+        onExchangeXor = {},
+        onOptionsClick = {},
     )
 }
 
@@ -200,11 +221,13 @@ private fun PreviewMainSoraContentCard2() {
     SoraCardMainSoraContentCard(
         soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
             balance = "3644.50",
+            phone = "",
             soraCardMenuActions = SoraCardMenuAction.entries
         ),
         onShowMoreClick = {},
         onIconButtonClick = { _ -> },
-        onFiatWallet = {},
+        onExchangeXor = {},
+        onOptionsClick = {},
     )
 }
 
@@ -214,10 +237,12 @@ private fun PreviewMainSoraContentCard3() {
     SoraCardMainSoraContentCard(
         soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
             balance = null,
+            phone = "",
             soraCardMenuActions = SoraCardMenuAction.entries
         ),
         onShowMoreClick = {},
         onIconButtonClick = { _ -> },
-        onFiatWallet = {},
+        onExchangeXor = {},
+        onOptionsClick = {},
     )
 }

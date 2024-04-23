@@ -52,7 +52,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 
 enum class SoraCardSettingsOption {
     SUPPORT_CHAT,
-    LOG_OUT
+    LOG_OUT,
 }
 
 data class SoraCardSettingsCardState(
@@ -85,7 +85,8 @@ data class SoraCardSettingsCardState(
 @Composable
 fun SoraCardSettingsCard(
     state: SoraCardSettingsCardState,
-    onItemClick: (position: Int) -> Unit
+    main: SoraCardMainSoraContentCardState,
+    onItemClick: (position: Int) -> Unit,
 ) {
     ContentCard(
         cornerRadius = Dimens.x4,
@@ -104,10 +105,23 @@ fun SoraCardSettingsCard(
                 style = MaterialTheme.customTypography.headline2,
                 color = MaterialTheme.customColors.fgPrimary,
             )
-            repeat(state.settings.size) {
+            buildList {
+                add(
+                    ListTileState(
+                        testTagId = "ManageSoraCard",
+                        variant = ListTileVariant.TITLE_NAVIGATION_HINT,
+                        flag = ListTileFlag.NORMAL,
+                        title = Text.StringRes(id = jp.co.soramitsu.oauth.R.string.card_hub_manage_card),
+                        icon = Image.ResImage(id = R.drawable.ic_arrow_right),
+                        subtitle = Text.SimpleText(text = main.phone.orEmpty()),
+                        clickEnabled = main.balance != null,
+                    )
+                )
+                addAll(state.settings)
+            }.forEachIndexed { i, s ->
                 ListTileView(
-                    listTileState = state.settings[it],
-                    onItemClick = { onItemClick.invoke(it) },
+                    listTileState = s,
+                    onItemClick = { onItemClick.invoke(i) },
                 )
             }
         }
@@ -121,6 +135,7 @@ private fun PreviewSoraCardSettingsCard() {
         state = SoraCardSettingsCardState(
             soraCardSettingsOptions = SoraCardSettingsOption.entries
         ),
+        main = SoraCardMainSoraContentCardState("$34 775.88", "+123123", false, emptyList()),
         onItemClick = { _ -> }
     )
 }

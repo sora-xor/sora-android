@@ -72,6 +72,7 @@ class SoraCardDetailsViewModel @Inject constructor(
         SoraCardDetailsScreenState(
             soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
                 balance = null,
+                phone = null,
                 soraCardMenuActions = SoraCardMenuAction.entries,
             ),
             soraCardSettingsCard = SoraCardSettingsCardState(
@@ -95,15 +96,18 @@ class SoraCardDetailsViewModel @Inject constructor(
 
         viewModelScope.launch {
             tryCatch {
-                soraCardInteractor.basicStatus.value.ibanInfo?.let { iban ->
-                    val local = _soraCardDetailsScreenState.value
-                    ibanCache = iban
-                    _soraCardDetailsScreenState.value = local.copy(
-                        soraCardIBANCardState = SoraCardIBANCardState(iban.iban, iban.active),
-                        soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
-                            balance = iban.balance,
-                        ),
-                    )
+                soraCardInteractor.basicStatus.value.let { basicStatus ->
+                    basicStatus.ibanInfo?.let { iban ->
+                        val local = _soraCardDetailsScreenState.value
+                        ibanCache = iban
+                        _soraCardDetailsScreenState.value = local.copy(
+                            soraCardIBANCardState = SoraCardIBANCardState(iban.iban, iban.active),
+                            soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
+                                balance = iban.balance,
+                                phone = basicStatus.phone,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -154,7 +158,8 @@ class SoraCardDetailsViewModel @Inject constructor(
         if (context.isAppAvailableCompat(fiat)) {
             fiatWallet.value = fiat
         } else {
-            _soraCardDetailsScreenState.value = _soraCardDetailsScreenState.value.copy(fiatWalletDialog = true)
+            _soraCardDetailsScreenState.value =
+                _soraCardDetailsScreenState.value.copy(fiatWalletDialog = true)
         }
     }
 
@@ -178,7 +183,8 @@ class SoraCardDetailsViewModel @Inject constructor(
     }
 
     fun onFiatWalletDismiss() {
-        _soraCardDetailsScreenState.value = _soraCardDetailsScreenState.value.copy(fiatWalletDialog = false)
+        _soraCardDetailsScreenState.value =
+            _soraCardDetailsScreenState.value.copy(fiatWalletDialog = false)
     }
 
     fun onOpenFiatWalletMarket() {

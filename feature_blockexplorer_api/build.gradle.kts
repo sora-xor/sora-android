@@ -66,6 +66,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":core_db"))
     implementation(project(":network"))

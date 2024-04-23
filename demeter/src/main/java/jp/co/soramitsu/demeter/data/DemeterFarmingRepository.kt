@@ -35,9 +35,9 @@ package jp.co.soramitsu.demeter.data
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.concurrent.ConcurrentHashMap
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.util.ext.isZero
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.core_db.AppDatabase
