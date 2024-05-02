@@ -167,7 +167,7 @@ class SoraCardDetailsViewModel @Inject constructor(
         val settings = soraCardDetailsScreenState.value.soraCardSettingsCard
             ?.soraCardSettingsOptions ?: return
 
-        when (settings[position]) {
+        when (settings[position - 1]) {
             SoraCardSettingsOption.LOG_OUT ->
                 _soraCardDetailsScreenState.value =
                     _soraCardDetailsScreenState.value.copy(logoutDialog = true)
