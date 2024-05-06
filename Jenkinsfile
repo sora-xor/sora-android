@@ -1,4 +1,4 @@
-@Library('jenkins-library@support/update-build-notification-android' ) _
+@Library('jenkins-library' ) _
 
 // Job properties
 def jobParams = [
