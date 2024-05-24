@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.uiCoreDep)
     implementation(libs.hiltNavComposeDep)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
     implementation(libs.composeFoundationDep)
     implementation(libs.composeMaterialDep)

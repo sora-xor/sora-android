@@ -109,6 +109,7 @@ dependencies {
 
     implementation(libs.uiCoreDep)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
     implementation(libs.composeFoundationDep)
     implementation(libs.composeMaterialDep)

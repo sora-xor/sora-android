@@ -113,6 +113,7 @@ dependencies {
     implementation(libs.coilComposeDep)
 
     implementation(libs.composeActivityDep)
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
     implementation(libs.composeLiveDataDep)
     implementation(libs.composeFoundationDep)

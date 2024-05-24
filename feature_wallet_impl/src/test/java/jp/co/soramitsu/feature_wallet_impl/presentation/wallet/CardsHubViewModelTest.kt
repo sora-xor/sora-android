@@ -64,6 +64,8 @@ import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
@@ -195,6 +197,7 @@ class CardsHubViewModelTest {
             soraCardBasicStatusTest.copy(
                 initialized = true,
                 availabilityInfo = SoraCardAvailabilityInfo(),
+                ibanInfo = IbanInfo("iban", IbanStatus.ACTIVE, "123", "empty")
             )
         )
         every { assetsRouter.showBuyCrypto(any()) } returns Unit
@@ -260,6 +263,6 @@ class CardsHubViewModelTest {
         advanceUntilIdle()
         cardsHubViewModel.onCardStateClicked()
         advanceUntilIdle()
-        verify { mainRouter.showGetSoraCard(any(), any()) }
+        verify { mainRouter.showSoraCardDetails() }
     }
 }

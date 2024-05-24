@@ -98,6 +98,7 @@ dependencies {
 
     implementation(libs.xbackupDep)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
     implementation(libs.composeFoundationDep)
     implementation(libs.composeMaterialDep)

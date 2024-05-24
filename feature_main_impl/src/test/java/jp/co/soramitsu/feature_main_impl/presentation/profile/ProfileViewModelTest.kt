@@ -37,6 +37,8 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.just
+import io.mockk.runs
 import io.mockk.verify
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.ChainNode
@@ -52,8 +54,10 @@ import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 import jp.co.soramitsu.test_data.SoraCardTestData.soraCardBasicStatusTest
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import jp.co.soramitsu.test_shared.getOrAwaitValue
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -151,6 +155,7 @@ class ProfileViewModelTest {
         coEvery { soraConfigManager.getSoraCard() } returns true
         every { nodeManager.connectionState } returns flowOf(true)
         every { router.showGetSoraCard(any(), any()) } returns Unit
+        every { router.showSoraCardDetails() } just runs
         every { assetsRouter.showBuyCrypto(any()) } returns Unit
     }
 
@@ -192,6 +197,7 @@ class ProfileViewModelTest {
     fun `call showBuyCrypto EXPECT navigate to buy crypto screen`() {
         initViewModel()
         profileViewModel.showBuyCrypto()
-        verify { assetsRouter.showBuyCrypto(any()) }
+        val launch = profileViewModel.launchSoraCardSignIn.getOrAwaitValue()
+        assertEquals(SoraCardFlow.SoraCardGateHubFlow, launch.flow)
     }
 }
