@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.uiCoreDep)
     implementation(libs.navigationComposeDep)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeConstraintLayoutDep)
     implementation(libs.composeUiDep)
     implementation(libs.composeFoundationDep)

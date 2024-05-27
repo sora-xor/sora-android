@@ -76,12 +76,13 @@ import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
+import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
@@ -158,17 +159,20 @@ class CardsHubViewModel @Inject constructor(
                             }
 
                             CardHubType.POOLS -> {
-                                val poolsFlow = poolsInteractor.subscribePoolsCacheOfAccount(data.first)
-                                    .onStart {
-                                        if (indexed.index == 0) this.emit(emptyList())
-                                    }
-                                val demeterFlow = demeterFarmingInteractor.subscribeFarms(data.first.substrateAddress)
-                                    .onStart {
-                                        this.emit("")
-                                    }
+                                val poolsFlow =
+                                    poolsInteractor.subscribePoolsCacheOfAccount(data.first)
+                                        .onStart {
+                                            if (indexed.index == 0) this.emit(emptyList())
+                                        }
+                                val demeterFlow =
+                                    demeterFarmingInteractor.subscribeFarms(data.first.substrateAddress)
+                                        .onStart {
+                                            this.emit("")
+                                        }
                                 poolsFlow.combine(demeterFlow) { f1, _ -> f1 }
                                     .map { list ->
-                                        val farms = demeterFarmingInteractor.getFarmedPools() ?: emptyList()
+                                        val farms =
+                                            demeterFarmingInteractor.getFarmedPools() ?: emptyList()
                                         cardHub to ((list.filter { it.user.favorite }) to farms)
                                     }
                             }
@@ -341,7 +345,10 @@ class CardsHubViewModel @Inject constructor(
         )
     }
 
-    private fun mapPoolsCard(collapsed: Boolean, pools: Pair<List<CommonUserPoolData>, List<DemeterFarmingPool>>): CardState {
+    private fun mapPoolsCard(
+        collapsed: Boolean,
+        pools: Pair<List<CommonUserPoolData>, List<DemeterFarmingPool>>
+    ): CardState {
         val rewardTokensList = pools.first.map { pool ->
             pools.second.filter {
                 it.tokenBase.id == pool.basic.baseToken.id && it.tokenTarget.id == pool.basic.targetToken.id
@@ -387,7 +394,7 @@ class CardsHubViewModel @Inject constructor(
     fun onCardStateClicked() {
         if (soraCardInteractor.basicStatus.value.initialized) {
             _state.value.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
-                if (card.ibanBalance?.active == true) {
+                if (card.ibanBalance?.ibanStatus != IbanStatus.OTHER) {
                     mainRouter.showSoraCardDetails()
                 } else if (card.kycStatus == null) {
                     if (!connectionManager.isConnected) return
@@ -446,9 +453,12 @@ class CardsHubViewModel @Inject constructor(
 
     fun onBuyCrypto() {
         if (!connectionManager.isConnected) return
-//        assetsRouter.showBuyCrypto()
-        currentSoraCardContractData?.let { contract ->
-            _launchSoraCardSignIn.value = contract.copy(flow = SoraCardFlow.SoraCardGateHubFlow)
+        if (soraCardInteractor.basicStatus.value.initialized) {
+            _state.value.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
+                if (card.ibanBalance?.ibanStatus == IbanStatus.ACTIVE) {
+                    _launchSoraCardSignIn.value = createSoraCardGateHubContract()
+                }
+            }
         }
     }
 }

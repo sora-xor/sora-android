@@ -45,7 +45,10 @@ import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -68,6 +71,9 @@ class SoraCardDetailsViewModel @Inject constructor(
 
     private var ibanCache: IbanInfo? = null
 
+    private val _launchSoraCard = SingleLiveEvent<SoraCardContractData>()
+    val launchSoraCard: LiveData<SoraCardContractData> = _launchSoraCard
+
     private val _soraCardDetailsScreenState = MutableStateFlow(
         SoraCardDetailsScreenState(
             soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
@@ -78,7 +84,7 @@ class SoraCardDetailsViewModel @Inject constructor(
             soraCardSettingsCard = SoraCardSettingsCardState(
                 soraCardSettingsOptions = SoraCardSettingsOption.entries,
             ),
-            soraCardIBANCardState = SoraCardIBANCardState(iban = "", active = true),
+            soraCardIBANCardState = SoraCardIBANCardState(iban = "", closed = false),
             logoutDialog = false,
             fiatWalletDialog = false,
         )
@@ -101,7 +107,7 @@ class SoraCardDetailsViewModel @Inject constructor(
                         val local = _soraCardDetailsScreenState.value
                         ibanCache = iban
                         _soraCardDetailsScreenState.value = local.copy(
-                            soraCardIBANCardState = SoraCardIBANCardState(iban.iban, iban.active),
+                            soraCardIBANCardState = SoraCardIBANCardState(iban.iban, iban.ibanStatus == IbanStatus.CLOSED),
                             soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
                                 balance = iban.balance,
                                 phone = basicStatus.phone,
@@ -139,13 +145,13 @@ class SoraCardDetailsViewModel @Inject constructor(
 
     fun onIbanCardShareClick() {
         ibanCache?.let {
-            if (it.active && it.iban.isNotEmpty()) _shareLinkEvent.value = it.iban
+            if (it.ibanStatus != IbanStatus.CLOSED && it.iban.isNotEmpty()) _shareLinkEvent.value = it.iban
         }
     }
 
     fun onIbanCardClick() {
         ibanCache?.let {
-            if (it.active && it.iban.isNotEmpty()) {
+            if (it.ibanStatus != IbanStatus.CLOSED && it.iban.isNotEmpty()) {
                 clipboardManager.addToClipboard(it.iban)
                 copiedToast.trigger()
             }
@@ -161,6 +167,10 @@ class SoraCardDetailsViewModel @Inject constructor(
             _soraCardDetailsScreenState.value =
                 _soraCardDetailsScreenState.value.copy(fiatWalletDialog = true)
         }
+    }
+
+    fun onExchangeXorClick() {
+        _launchSoraCard.value = createSoraCardGateHubContract()
     }
 
     fun onSettingsOptionClick(position: Int) {

@@ -64,7 +64,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class SoraCardIBANCardState(
     val iban: String,
-    val active: Boolean,
+    val closed: Boolean,
 )
 
 @Composable
@@ -101,7 +101,7 @@ fun SoraCardIBANCard(
                     color = MaterialTheme.customColors.fgPrimary,
                     textAlign = TextAlign.Center
                 )
-                if (soraCardIBANCardState.iban.isNotEmpty() && soraCardIBANCardState.active)
+                if (soraCardIBANCardState.iban.isNotEmpty() && soraCardIBANCardState.closed.not())
                     Icon(
                         modifier = Modifier
                             .testTagAsId("IbanCardShareClick")
@@ -112,7 +112,7 @@ fun SoraCardIBANCard(
                         tint = MaterialTheme.customColors.fgSecondary
                     )
             }
-            if (soraCardIBANCardState.active.not()) {
+            if (soraCardIBANCardState.closed) {
                 Text(
                     modifier = Modifier.fillMaxWidth().padding(all = Dimens.x1),
                     text = underlineSubstring(stringResource(id = jp.co.soramitsu.oauth.R.string.iban_frozen_description, ClientsFacade.TECH_SUPPORT), ClientsFacade.TECH_SUPPORT),
@@ -147,7 +147,7 @@ private fun PreviewSoraCardIBANCard01() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
             iban = "LT61 3250 0467 7252 5583",
-            active = true,
+            closed = false,
         ),
         onShareClick = {},
         onCardClick = {},
@@ -160,7 +160,7 @@ private fun PreviewSoraCardIBANCard02() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
             iban = "",
-            active = true,
+            closed = false,
         ),
         onShareClick = {},
         onCardClick = {},
@@ -173,7 +173,7 @@ private fun PreviewSoraCardIBANCard03() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
             iban = "",
-            active = false,
+            closed = true,
         ),
         onShareClick = {},
         onCardClick = {},

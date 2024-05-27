@@ -78,6 +78,7 @@ fun SoraCardDetailsScreen(
     onIbanCardShareClick: () -> Unit,
     onIbanCardClick: () -> Unit,
     onSettingsOptionClick: (position: Int) -> Unit,
+    onExchangeXorClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -93,8 +94,8 @@ fun SoraCardDetailsScreen(
             soraCardMainSoraContentCardState = soraCardDetailsScreenState.soraCardMainSoraContentCardState,
             onShowMoreClick = onShowSoraCardDetailsClick,
             onIconButtonClick = onSoraCardMenuActionClick,
-            onExchangeXor = {},
-            onOptionsClick = {},
+            onExchangeXor = onExchangeXorClick,
+            onOptionsClick = { onSettingsOptionClick.invoke(0) },
         )
         if (soraCardDetailsScreenState.soraCardReferralBannerCardState) {
             BasicBannerCard(
@@ -162,7 +163,7 @@ private fun PreviewSoraCardDetailsScreen() {
                 ),
                 soraCardIBANCardState = SoraCardIBANCardState(
                     iban = "LT61 3250 0467 7252 5583",
-                    active = true,
+                    closed = false,
                 ),
                 soraCardSettingsCard = SoraCardSettingsCardState(
                     soraCardSettingsOptions = SoraCardSettingsOption.entries
@@ -179,6 +180,7 @@ private fun PreviewSoraCardDetailsScreen() {
             onIbanCardShareClick = {},
             onIbanCardClick = {},
             onSettingsOptionClick = { _ -> },
+            onExchangeXorClick = {},
         )
     }
 }

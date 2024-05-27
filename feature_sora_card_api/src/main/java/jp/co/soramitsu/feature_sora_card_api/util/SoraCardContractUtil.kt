@@ -55,6 +55,16 @@ fun createSoraCardBasicContract() = SoraCardBasicContractData(
     recaptcha = BuildConfig.SORA_CARD_RECAPTCHA,
 )
 
+fun createSoraCardGateHubContract(): SoraCardContractData {
+    return SoraCardContractData(
+        basic = createSoraCardBasicContract(),
+        locale = Locale.ENGLISH,
+        soraBackEndUrl = BuildConfigWrapper.getSoraCardBackEndUrl(),
+        client = OptionsProvider.header,
+        flow = SoraCardFlow.SoraCardGateHubFlow,
+    )
+}
+
 fun createSoraCardContract(
     userAvailableXorAmount: Double,
     isEnoughXorAvailable: Boolean,

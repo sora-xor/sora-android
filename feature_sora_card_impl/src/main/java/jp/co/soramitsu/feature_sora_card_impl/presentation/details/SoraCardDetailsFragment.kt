@@ -59,6 +59,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
 import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -70,9 +71,16 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
 
     override val viewModel: SoraCardDetailsViewModel by viewModels()
 
+    private val soraCardLauncher = registerForActivityResult(
+        SoraCardContract()
+    ) { }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         (activity as BottomBarController).hideBottomBar()
         super.onViewCreated(view, savedInstanceState)
+        viewModel.launchSoraCard.observe { contract ->
+            soraCardLauncher.launch(contract)
+        }
         viewModel.shareLinkEvent.observe { share ->
             context?.let { c ->
                 shareText(c, getString(R.string.common_share), share)
@@ -115,6 +123,7 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
                         viewModel.onSettingsOptionClick(it)
                     }
                 },
+                onExchangeXorClick = viewModel::onExchangeXorClick,
             )
             if (state.value.logoutDialog) {
                 AlertDialog(

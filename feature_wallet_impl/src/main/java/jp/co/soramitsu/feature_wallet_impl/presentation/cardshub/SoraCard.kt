@@ -64,6 +64,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.TonalButton
@@ -187,7 +188,7 @@ private fun CardStateButton(
             size = Size.ExtraSmall,
             order = Order.SECONDARY,
             onClick = onCardStateClicked,
-            text = if (ibanInfo.active) ibanInfo.balance else ibanInfo.iban,
+            text = if (ibanInfo.ibanStatus != IbanStatus.CLOSED) ibanInfo.balance else ibanInfo.statusDescription,
         )
     } else if (kycStatus == null) {
         FilledButton(
@@ -319,7 +320,7 @@ private fun PreviewSoraCard6() {
             modifier = Modifier.fillMaxWidth(),
             state = SoraCardState(
                 kycStatus = null,
-                ibanBalance = IbanInfo(iban = "abcderr", active = true, balance = "45.5"),
+                ibanBalance = IbanInfo(iban = "abcderr", ibanStatus = IbanStatus.ACTIVE, balance = "45.5", ""),
                 loading = false,
                 success = false,
                 needUpdate = false,
