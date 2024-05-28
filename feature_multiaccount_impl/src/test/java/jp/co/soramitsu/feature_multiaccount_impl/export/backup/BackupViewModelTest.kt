@@ -34,8 +34,8 @@ package jp.co.soramitsu.feature_multiaccount_impl.export.backup
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
-import jp.co.soramitsu.common.R as commonR
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.common.R as commonR
 import jp.co.soramitsu.common.util.ext.addHexPrefix
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor

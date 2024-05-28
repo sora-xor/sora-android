@@ -34,8 +34,8 @@ package jp.co.soramitsu.feature_blockexplorer_impl.data
 
 import javax.inject.Inject
 import javax.inject.Singleton
-import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.androidfoundation.coroutine.SuspendableProperty
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction

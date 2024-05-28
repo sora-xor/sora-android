@@ -34,7 +34,6 @@ package jp.co.soramitsu.common.util.ext
 
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.Intent
 import android.graphics.Color
 import android.util.TypedValue
 import android.view.View

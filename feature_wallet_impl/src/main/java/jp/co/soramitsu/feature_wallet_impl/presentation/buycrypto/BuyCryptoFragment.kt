@@ -42,11 +42,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.args.isLaunchedFromSoraCard
-import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 
 @AndroidEntryPoint
 class BuyCryptoFragment : SoraBaseFragment<BuyCryptoViewModel>() {

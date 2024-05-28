@@ -33,10 +33,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.date
 
 import android.content.Context
-import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.test_shared.eqNonNull

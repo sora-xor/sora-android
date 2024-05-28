@@ -34,12 +34,12 @@ package jp.co.soramitsu.feature_polkaswap_impl.presentation.polkaswap
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
-import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
