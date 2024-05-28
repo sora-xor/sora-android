@@ -55,7 +55,7 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.ext.getColorFromAttrs
-import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.PoolDetailsScreen
 import jp.co.soramitsu.ui_core.resources.Dimens
 

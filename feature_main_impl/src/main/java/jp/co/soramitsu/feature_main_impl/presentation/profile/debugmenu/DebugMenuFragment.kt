@@ -92,7 +92,6 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
         return super.onCreateView(inflater, container, savedInstanceState)
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -102,9 +101,6 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
                 activity?.getSize()
             }
 
-            val pushState = NewHistoryEventsWorker.getInfo(requireContext()).observeAsState().value
-            val pushEnabled =
-                (pushState != null) && (pushState.size > 0) && ((pushState[0].state == WorkInfo.State.RUNNING) || (pushState[0].state == WorkInfo.State.ENQUEUED))
             Column(modifier = Modifier.fillMaxSize()) {
                 Text(
                     color = MaterialTheme.customColors.fgPrimary,
@@ -136,24 +132,6 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
                         text = "Reset runtime"
                     )
                 }
-                Button(
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .background(color = if (pushEnabled) Color.Green else Color.Gray),
-                    onClick = {
-                        if (pushEnabled) {
-                            NewHistoryEventsWorker.stop(requireContext())
-                        } else {
-                            NewHistoryEventsWorker.start(requireContext())
-                        }
-                    },
-                    content = {
-                        Text(
-                            color = MaterialTheme.customColors.fgPrimary,
-                            text = if (pushEnabled) "Disable" else "Enable"
-                        )
-                    }
-                )
                 DebugMenuScreen(state = viewModel.state)
             }
         }

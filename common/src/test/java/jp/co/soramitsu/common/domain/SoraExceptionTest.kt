@@ -32,9 +32,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.domain
 
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import java.io.IOException
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.resourses.ResourceManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

@@ -47,7 +47,7 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.presentation.args.address
-import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 import jp.co.soramitsu.feature_multiaccount_impl.util.type
 
 @AndroidEntryPoint

@@ -31,7 +31,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -72,7 +72,6 @@ dependencies {
     implementation(project(":feature_main_api"))
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":core_db"))
-    implementation(project(":core_di"))
     implementation(project(":sorasubstrate"))
     implementation(project(":network"))
 

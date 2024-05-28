@@ -37,7 +37,7 @@ import com.neovisionaries.ws.client.WebSocket
 import com.neovisionaries.ws.client.WebSocketAdapter
 import com.neovisionaries.ws.client.WebSocketException
 import com.neovisionaries.ws.client.WebSocketFactory
-import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.ResponseMapper
 import jp.co.soramitsu.xsubstrate.wsrpc.request.base.RpcRequest
 import jp.co.soramitsu.xsubstrate.wsrpc.response.RpcResponse

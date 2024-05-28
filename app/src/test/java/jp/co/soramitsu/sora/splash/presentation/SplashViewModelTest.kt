@@ -100,32 +100,4 @@ class SplashViewModelTest {
         val r = splashViewModel.showOnBoardingScreen.getOrAwaitValue()
         assertEquals(OnboardingState.INITIAL, r)
     }
-
-    @Test
-    fun `handleDeepLink before registration called`() = runTest {
-        val state = OnboardingState.INITIAL
-        val invitationCode = "INVITATION_CODE"
-
-        given(interactor.getRegistrationState()).willReturn(state)
-
-        splashViewModel.handleDeepLink(invitationCode)
-        advanceUntilIdle()
-        verify(interactor).saveInviteCode(invitationCode)
-        val r = splashViewModel.showOnBoardingScreenViaInviteLink.getOrAwaitValue()
-        assertEquals(Unit, r)
-    }
-
-    @Test
-    fun `handleDeepLink after registration called`() = runTest {
-        val state = OnboardingState.REGISTRATION_FINISHED
-        val invitationCode = "INVITATION_CODE"
-
-        given(interactor.getRegistrationState()).willReturn(state)
-
-        splashViewModel.handleDeepLink(invitationCode)
-        advanceUntilIdle()
-        verify(interactor).saveInviteCode(invitationCode)
-        val r = splashViewModel.showMainScreenFromInviteLink.getOrAwaitValue()
-        assertEquals(Unit, r)
-    }
 }

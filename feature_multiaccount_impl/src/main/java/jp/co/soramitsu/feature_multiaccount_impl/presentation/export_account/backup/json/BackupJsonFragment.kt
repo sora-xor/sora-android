@@ -54,7 +54,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.presentation.args.addresses
-import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 
 @AndroidEntryPoint
 class BackupJsonFragment : SoraBaseFragment<BackupJsonViewModel>() {

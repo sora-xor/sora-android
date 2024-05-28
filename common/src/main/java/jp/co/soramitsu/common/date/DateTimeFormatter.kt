@@ -34,13 +34,13 @@ package jp.co.soramitsu.common.date
 
 import android.content.Context
 import android.text.format.DateUtils
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.LanguagesHolder
-import jp.co.soramitsu.common.resourses.ResourceManager
 
 class DateTimeFormatter(
     private val languagesHolder: LanguagesHolder,

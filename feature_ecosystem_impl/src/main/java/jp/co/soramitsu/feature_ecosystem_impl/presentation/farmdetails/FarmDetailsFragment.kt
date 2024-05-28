@@ -51,7 +51,7 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common.util.ext.getColorFromAttrs
-import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 
 @AndroidEntryPoint
 class FarmDetailsFragment : SoraBaseFragment<FarmDetailsViewModel>() {
