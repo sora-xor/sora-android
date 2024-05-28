@@ -394,7 +394,7 @@ class CardsHubViewModel @Inject constructor(
     fun onCardStateClicked() {
         if (soraCardInteractor.basicStatus.value.initialized) {
             _state.value.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
-                if (card.ibanBalance?.ibanStatus != IbanStatus.OTHER) {
+                if (card.ibanBalance?.ibanStatus != null) {
                     mainRouter.showSoraCardDetails()
                 } else if (card.kycStatus == null) {
                     if (!connectionManager.isConnected) return
