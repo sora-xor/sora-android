@@ -37,6 +37,4 @@ import android.content.Context
 interface MultiaccountStarter {
 
     fun startOnboardingFlow(context: Context, isClearTask: Boolean = true)
-
-    fun startOnboardingFlowWithInviteLink(context: Context)
 }

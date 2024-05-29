@@ -49,13 +49,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.androidfoundation.intent.restartApplication
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.io.MainThreadExecutor
 import jp.co.soramitsu.common.presentation.args.addresses
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
-import jp.co.soramitsu.common.util.ext.restartApplication
 import jp.co.soramitsu.common.util.ext.runDelayed
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_impl.R

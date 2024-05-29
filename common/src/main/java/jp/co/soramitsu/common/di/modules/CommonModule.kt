@@ -53,6 +53,7 @@ import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.AppStateProviderImpl
@@ -71,7 +72,6 @@ import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.io.FileManagerImpl
 import jp.co.soramitsu.common.resourses.LanguagesHolder
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.EncryptionUtil

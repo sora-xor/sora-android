@@ -31,7 +31,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -70,7 +70,6 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":common_wallet"))
     implementation(project(":core_db"))
-    implementation(project(":core_di"))
     implementation(project(":network"))
     implementation(project(":feature_assets_api"))
     implementation(project(":feature_polkaswap_api"))

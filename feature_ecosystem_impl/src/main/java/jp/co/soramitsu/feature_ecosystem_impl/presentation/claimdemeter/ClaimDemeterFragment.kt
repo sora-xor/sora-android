@@ -46,13 +46,13 @@ import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import java.math.BigDecimal
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common.util.ext.getColorFromAttrs
-import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 
 @AndroidEntryPoint
 class ClaimDemeterFragment : SoraBaseFragment<ClaimDemeterViewModel>() {

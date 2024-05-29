@@ -113,18 +113,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             )
             context.startActivity(intent, options.toBundle())
         }
-
-        fun startWithInviteLink(context: Context) {
-            val intent = Intent(context, OnboardingActivity::class.java).apply {
-                action = ACTION_INVITE
-            }
-            val options = ActivityOptions.makeCustomAnimation(
-                context,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
-            )
-            context.startActivity(intent, options.toBundle())
-        }
     }
 
     private val launcher =
@@ -513,14 +501,4 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
     }
 
     private lateinit var navController: NavController
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-
-        intent?.let {
-            if (ACTION_INVITE == it.action) {
-                viewModel.startedWithInviteAction()
-            }
-        }
-    }
 }

@@ -37,11 +37,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.intent.isAppAvailableCompat
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.SingleLiveEvent
-import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
@@ -84,7 +84,7 @@ class SoraCardDetailsViewModel @Inject constructor(
             soraCardSettingsCard = SoraCardSettingsCardState(
                 soraCardSettingsOptions = SoraCardSettingsOption.entries,
             ),
-            soraCardIBANCardState = SoraCardIBANCardState(iban = "", closed = false),
+            soraCardIBANCardState = null,
             logoutDialog = false,
             fiatWalletDialog = false,
         )
@@ -103,17 +103,20 @@ class SoraCardDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             tryCatch {
                 soraCardInteractor.basicStatus.value.let { basicStatus ->
-                    basicStatus.ibanInfo?.let { iban ->
-                        val local = _soraCardDetailsScreenState.value
-                        ibanCache = iban
-                        _soraCardDetailsScreenState.value = local.copy(
-                            soraCardIBANCardState = SoraCardIBANCardState(iban.iban, iban.ibanStatus == IbanStatus.CLOSED),
-                            soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
-                                balance = iban.balance,
-                                phone = basicStatus.phone,
-                            ),
-                        )
-                    }
+                    val local = _soraCardDetailsScreenState.value
+                    ibanCache = basicStatus.ibanInfo
+                    _soraCardDetailsScreenState.value = local.copy(
+                        soraCardIBANCardState = basicStatus.ibanInfo?.let { iban ->
+                            SoraCardIBANCardState(
+                                iban.iban,
+                                iban.ibanStatus == IbanStatus.CLOSED,
+                            )
+                        },
+                        soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
+                            balance = basicStatus.ibanInfo?.balance,
+                            phone = basicStatus.phone,
+                        ),
+                    )
                 }
             }
         }

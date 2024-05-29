@@ -34,7 +34,6 @@ package jp.co.soramitsu.common.util.ext
 
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.Intent
 import android.graphics.Color
 import android.util.TypedValue
 import android.view.View
@@ -82,14 +81,6 @@ fun Context.getColorFromAttrs(attr: Int): TypedValue {
 
 fun Context.dpRes2px(@DimenRes res: Int): Int =
     this.resources.getDimensionPixelSize(res)
-
-fun Context.restartApplication() {
-    val intent = packageManager.getLaunchIntentForPackage(packageName)
-    val componentName = intent?.component
-    val mainIntent = Intent.makeRestartActivityTask(componentName)
-    startActivity(mainIntent)
-    Runtime.getRuntime().exit(0)
-}
 
 // todo remove
 fun Context.hideSoftKeyboard() {

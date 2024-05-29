@@ -37,6 +37,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.format.safeCast
+import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
@@ -46,10 +48,8 @@ import jp.co.soramitsu.common.domain.fiatSum
 import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.iconUri
-import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
@@ -394,7 +394,7 @@ class CardsHubViewModel @Inject constructor(
     fun onCardStateClicked() {
         if (soraCardInteractor.basicStatus.value.initialized) {
             _state.value.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
-                if (card.ibanBalance?.ibanStatus != IbanStatus.OTHER) {
+                if (card.ibanBalance?.ibanStatus != null) {
                     mainRouter.showSoraCardDetails()
                 } else if (card.kycStatus == null) {
                     if (!connectionManager.isConnected) return

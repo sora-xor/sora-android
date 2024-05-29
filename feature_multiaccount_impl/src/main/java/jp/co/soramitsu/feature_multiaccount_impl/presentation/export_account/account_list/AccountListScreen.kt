@@ -63,7 +63,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
-import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountListScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportAccountData
 import jp.co.soramitsu.ui_core.component.card.ContentCard

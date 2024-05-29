@@ -36,9 +36,9 @@ import android.content.Context
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.LanguagesHolder
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.test_shared.eqNonNull
 import org.junit.Assert.assertEquals
 import org.junit.Before
