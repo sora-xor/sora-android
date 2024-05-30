@@ -74,7 +74,7 @@ import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
-import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
+import jp.co.soramitsu.xsubstrate.wsrpc.executeAsyncMapped
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojoList
@@ -107,12 +107,12 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 .storage(Storage.DEX_INFOS.storageName)
         val partialKey = metadataStorage.storageKey()
         return runCatching {
-            socketService.executeAsync(
+            socketService.executeAsyncMapped(
                 request = StateKeys(listOf(partialKey)),
                 mapper = pojoList<String>().nonNull()
             ).let { storageKeys ->
                 storageKeys.mapNotNull { storageKey ->
-                    socketService.executeAsync(
+                    socketService.executeAsyncMapped(
                         request = GetStorageRequest(listOf(storageKey)),
                         mapper = pojo<String>().nonNull(),
                     )
@@ -262,7 +262,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
         feeToken: Token,
         dexId: Int,
     ): SwapQuote? {
-        val response = socketService.executeAsync(
+        val response = socketService.executeAsyncMapped(
             request = RuntimeRequest(
                 "liquidityProxy_quote",
                 listOf(

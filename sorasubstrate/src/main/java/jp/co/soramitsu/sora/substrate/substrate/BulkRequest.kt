@@ -34,7 +34,7 @@ package jp.co.soramitsu.sora.substrate.substrate
 
 import jp.co.soramitsu.sora.substrate.response.StateQueryResponse
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
-import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
+import jp.co.soramitsu.xsubstrate.wsrpc.executeAsyncMapped
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojoList
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
@@ -83,7 +83,7 @@ class BulkRetriever(
 
             val request = GetKeysPagedRequest(keyPrefix, DEFAULT_PAGE_SIZE, currentOffset)
 
-            val page = socketService.executeAsync(request, mapper = pojoList<String>().nonNull())
+            val page = socketService.executeAsyncMapped(request, mapper = pojoList<String>().nonNull())
 
             result += page
 
@@ -107,7 +107,7 @@ class BulkRetriever(
             val request = QueryStorageAtRequest(chunk)
 
             val chunkValues = kotlin.runCatching {
-                socketService.executeAsync(request, mapper = pojoList<StateQueryResponse>().nonNull())
+                socketService.executeAsyncMapped(request, mapper = pojoList<StateQueryResponse>().nonNull())
             }.getOrNull()?.first()?.changesAsMap().orEmpty()
 
             acc.putAll(chunkValues)

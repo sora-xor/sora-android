@@ -62,7 +62,7 @@ import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAddress
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
-import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
+import jp.co.soramitsu.xsubstrate.wsrpc.executeAsyncMapped
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.chain.RuntimeVersion
@@ -145,7 +145,7 @@ class RuntimeManager @Inject constructor(
 
     private suspend fun checkRuntimeVersion(snapshot: RuntimeSnapshot): RuntimeSnapshot {
         var result = snapshot
-        val runtimeVersion = socketService.executeAsync(
+        val runtimeVersion = socketService.executeAsyncMapped(
             request = RuntimeVersionRequest(),
             mapper = pojo<RuntimeVersion>().nonNull()
         )
@@ -156,7 +156,7 @@ class RuntimeManager @Inject constructor(
         ) {
             FirebaseWrapper.log("New runtime version ${runtimeVersion.specVersion}")
             try {
-                val metadata = socketService.executeAsync(
+                val metadata = socketService.executeAsyncMapped(
                     request = GetMetadataRequest,
                     mapper = pojo<String>().nonNull()
                 )
