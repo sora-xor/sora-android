@@ -114,7 +114,7 @@ class SoraCardDetailsViewModel @Inject constructor(
                         },
                         soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
                             balance = basicStatus.ibanInfo?.balance,
-                            phone = basicStatus.phone,
+                            phone = basicStatus.phone?.let { "+$it" },
                         ),
                     )
                 }

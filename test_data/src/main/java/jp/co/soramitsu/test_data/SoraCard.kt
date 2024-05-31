@@ -68,6 +68,7 @@ object SoraCardTestData {
         locale = Locale.ENGLISH,
         client = "test android client",
         soraBackEndUrl = "soracard backend",
+        clientDark = false,
         flow = SoraCardFlow.SoraCardKycFlow(
             kycCredentials = SoraCardKycCredentials(
                 endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
@@ -87,6 +88,7 @@ object SoraCardTestData {
         locale = Locale.ENGLISH,
         client = "test android client",
         soraBackEndUrl = "soracard backend",
+        clientDark = false,
         flow = SoraCardFlow.SoraCardKycFlow(
             kycCredentials = SoraCardKycCredentials(
                 endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
@@ -106,6 +108,7 @@ object SoraCardTestData {
         locale = Locale.ENGLISH,
         client = "test android client",
         soraBackEndUrl = "soracard backend",
+        clientDark = false,
         flow = SoraCardFlow.SoraCardKycFlow(
             areAttemptsPaidSuccessfully = false,
             isEnoughXorAvailable = false,

@@ -59,7 +59,7 @@ object OptionsProvider {
     const val sourceLink = "https://github.com/sora-xor/Sora-Android"
     const val telegramLink = "https://t.me/sora_xor"
     const val telegramAnnouncementsLink = "https://t.me/sora_announcements"
-    const val telegramHappinessLink = "https://t.me/sorahappiness"
+    const val telegramHappinessLink = "https://t.me/sora_happy"
     const val email = "support@sora.org"
     const val twitterLink = "https://twitter.com/sora_xor"
     const val youtubeLink = "https://youtube.com/sora_xor"

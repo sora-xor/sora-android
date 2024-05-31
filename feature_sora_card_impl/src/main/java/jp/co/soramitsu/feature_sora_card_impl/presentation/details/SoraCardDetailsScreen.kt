@@ -154,7 +154,7 @@ private fun PreviewSoraCardDetailsScreen() {
             soraCardDetailsScreenState = SoraCardDetailsScreenState(
                 soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
                     balance = "3665.50",
-                    phone = "+987654",
+                    phone = "987654",
                     soraCardMenuActions = SoraCardMenuAction.entries,
                 ),
                 soraCardReferralBannerCardState = true,

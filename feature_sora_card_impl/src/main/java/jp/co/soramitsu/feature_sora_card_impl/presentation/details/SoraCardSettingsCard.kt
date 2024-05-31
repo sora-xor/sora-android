@@ -114,7 +114,6 @@ fun SoraCardSettingsCard(
                         title = Text.StringRes(id = jp.co.soramitsu.oauth.R.string.card_hub_manage_card),
                         icon = Image.ResImage(id = R.drawable.ic_arrow_right),
                         subtitle = Text.SimpleText(text = main.phone.orEmpty()),
-                        clickEnabled = main.balance != null,
                     )
                 )
                 addAll(state.settings)

@@ -566,7 +566,7 @@
   <string name="tutorial_terms_and_conditions"> با ایجاد حساب شما با %% شرایط و ضوابط %% و %% خط مشی رازداری %% موافقت می‌کنید</string>
   <string name="tutorial_terms_and_conditions_3">شرایط و ضوابط</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
-  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
   <string name="update_downloaded">بروز رسانی برنامه SORA دانلود شده و آماده نصب است. \n\n مهم است که از آخرین نسخه برنامه استفاده کنید. \n\n برای به روز رسانی، برنامه نیازمند راه‌اندازی مجدد است.</string>
   <string name="update_install_now">آیا می‌خواهید هم اکنون آپدیت را نصب کنید؟</string>
   <string name="wallet_backup">Wallet Backup</string>
