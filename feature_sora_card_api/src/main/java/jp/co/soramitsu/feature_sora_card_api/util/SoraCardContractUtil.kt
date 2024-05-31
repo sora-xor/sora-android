@@ -61,6 +61,7 @@ fun createSoraCardGateHubContract(): SoraCardContractData {
         locale = Locale.ENGLISH,
         soraBackEndUrl = BuildConfigWrapper.getSoraCardBackEndUrl(),
         client = OptionsProvider.header,
+        clientDark = true,
         flow = SoraCardFlow.SoraCardGateHubFlow,
     )
 }
@@ -74,6 +75,7 @@ fun createSoraCardContract(
         locale = Locale.ENGLISH,
         soraBackEndUrl = BuildConfigWrapper.getSoraCardBackEndUrl(),
         client = OptionsProvider.header,
+        clientDark = true,
         flow = SoraCardFlow.SoraCardKycFlow(
             kycCredentials = SoraCardKycCredentials(
                 endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,

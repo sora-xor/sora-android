@@ -571,7 +571,7 @@
   <string name="tutorial_terms_and_conditions">Kreiranjem naloga pristajete na %%Uslove korišćenja%% i %%Politiku privatnosti%%</string>
   <string name="tutorial_terms_and_conditions_3">Услови коришћења</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
-  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
   <string name="update_downloaded">Ажурирање за апликацију SORA је преузето и спремно за инсталирање. \n\nВажно је да користите најновију верзију апликације. \n\nДа бисте ажурирали апликацију, потребно је поновно покретање.</string>
   <string name="update_install_now">Да ли желите да инсталирате ажурирање сада?</string>
   <string name="wallet_backup">Wallet Backup</string>

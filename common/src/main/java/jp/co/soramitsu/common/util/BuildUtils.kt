@@ -46,7 +46,7 @@ object BuildUtils {
 
     fun isPlayMarket(): Boolean = isBuildType(BuildType.RELEASE) && isFlavors(Flavor.PROD, Flavor.SORALUTION)
     fun isProdPlayMarket(): Boolean = isBuildType(BuildType.RELEASE) && isFlavors(Flavor.PROD)
-    fun fiatPackageName() = if (isProdPlayMarket()) OptionsProvider.soracardFiatPackageProd else OptionsProvider.soracardFiatPackageTest
+    fun fiatPackageName() = OptionsProvider.soracardFiatPackageProd
 }
 
 enum class BuildType(val type: String) {
