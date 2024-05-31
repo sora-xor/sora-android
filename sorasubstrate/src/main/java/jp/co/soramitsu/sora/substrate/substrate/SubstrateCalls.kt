@@ -78,6 +78,7 @@ import jp.co.soramitsu.xsubstrate.scale.EncodableStruct
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
 import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
+import jp.co.soramitsu.xsubstrate.wsrpc.executeAsyncMapped
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojoList
@@ -140,13 +141,13 @@ class SubstrateCalls @Inject constructor(
     }
 
     suspend fun getStorageHex(storageKey: String): String? =
-        socketService.executeAsync(
+        socketService.executeAsyncMapped(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = pojo<String>(),
         ).result
 
     suspend fun getStateKeys(partialKey: String): List<String> =
-        socketService.executeAsync(
+        socketService.executeAsyncMapped(
             request = StateKeys(listOf(partialKey)),
             mapper = pojoList<String>(),
         ).result ?: emptyList()
@@ -158,7 +159,7 @@ class SubstrateCalls @Inject constructor(
             .storage(Storage.ACCOUNT.storageName)
         val storageKey =
             storage.storageKey(runtimeManager.getRuntimeSnapshot(), accountId.toAccountId())
-        val hexString = socketService.executeAsync(
+        val hexString = socketService.executeAsyncMapped(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = pojo<String>(),
         )
@@ -219,7 +220,7 @@ class SubstrateCalls @Inject constructor(
                     runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.STAKING.palletName)
                         .storage(Storage.LEDGER.storageName)
                         .storageKey(runtimeManager.getRuntimeSnapshot(), it.toAccountId())
-                socketService.executeAsync(
+                socketService.executeAsyncMapped(
                     request = GetStorageRequest(listOf(storageKey)),
                     mapper = scale(StakingLedger).nonNull()
                 )
@@ -231,7 +232,7 @@ class SubstrateCalls @Inject constructor(
             runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.STAKING.palletName)
                 .storage(Storage.ACTIVE_ERA.storageName)
                 .storageKey()
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = scale(ActiveEraInfo).nonNull()
         ).let {
@@ -276,13 +277,13 @@ class SubstrateCalls @Inject constructor(
                     )
                 )
             val a =
-                socketService.executeAsync(request = request, mapper = pojoList<String>().nonNull())
+                socketService.executeAsyncMapped(request = request, mapper = pojoList<String>().nonNull())
             assetKeys.addAll(a)
             lastKey = a.lastOrNull()
             loaded = a.size
         } while (loaded >= amount && lastKey != null)
         if (assetKeys.isEmpty()) return emptyList()
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = StateQueryStorageAt(listOf(assetKeys)),
             mapper = pojoList<SubscribeStorageResult>().nonNull(),
         ).let {
@@ -330,7 +331,7 @@ class SubstrateCalls @Inject constructor(
                 )
             }
             val request = StateQueryStorageAt(listOf(storageKeys))
-            val chunkValues = socketService.executeAsync(
+            val chunkValues = socketService.executeAsyncMapped(
                 request,
                 mapper = pojoList<StateQueryResponse>().nonNull()
             ).first().changesAsMap()
@@ -352,7 +353,7 @@ class SubstrateCalls @Inject constructor(
     }
 
     suspend fun needsMigration(irohaAddress: String): Boolean =
-        socketService.executeAsync(
+        socketService.executeAsyncMapped(
             request = RuntimeRequest("irohaMigration_needsMigration", listOf(irohaAddress)),
             mapper = pojo<Boolean>().nonNull(),
         )
@@ -360,7 +361,7 @@ class SubstrateCalls @Inject constructor(
     suspend fun submitExtrinsic(
         extrinsic: String,
     ): String {
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = SubmitExtrinsicRequest(extrinsic),
             mapper = pojo<String>().nonNull(),
         )
@@ -395,7 +396,7 @@ class SubstrateCalls @Inject constructor(
     }
 
     suspend fun getNonce(from: String): BigInteger {
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = NextAccountIndexRequest(from),
             mapper = pojo<Double>().nonNull()
         )
@@ -403,35 +404,35 @@ class SubstrateCalls @Inject constructor(
     }
 
     suspend fun getBlockHash(number: Int = 0): String {
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = BlockHashRequest(number),
             mapper = pojo<String>().nonNull(),
         )
     }
 
     suspend fun getRuntimeVersion(): RuntimeVersion {
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = RuntimeVersionRequest(),
             mapper = pojo<RuntimeVersion>().nonNull(),
         )
     }
 
     suspend fun getFinalizedHead(): String {
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = FinalizedHeadRequest(),
             mapper = pojo<String>().nonNull()
         )
     }
 
     suspend fun getChainHeader(hash: String): ChainHeaderResponse {
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = ChainHeaderRequest(hash),
             mapper = pojo<ChainHeaderResponse>().nonNull(),
         )
     }
 
     suspend fun getChainLastHeader(): ChainHeaderResponse {
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = ChainLastHeaderRequest(),
             mapper = pojo<ChainHeaderResponse>().nonNull(),
         )
@@ -444,7 +445,7 @@ class SubstrateCalls @Inject constructor(
             runtimeManager.getRuntimeSnapshot().metadata.module("System").storage("Events")
                 .storageKey()
         return runCatching {
-            socketService.executeAsync(
+            socketService.executeAsyncMapped(
                 request = GetStorageRequest(listOf(storageKey, blockHash)),
                 mapper = pojo<String>().nonNull(),
             )
@@ -499,7 +500,7 @@ class SubstrateCalls @Inject constructor(
         result = runCatching {
             val request = FeeCalculationRequest(extrinsic)
             val feeResponse =
-                socketService.executeAsync(
+                socketService.executeAsyncMapped(
                     request = request,
                     mapper = pojo<FeeResponse>().nonNull()
                 )
@@ -509,7 +510,7 @@ class SubstrateCalls @Inject constructor(
             result = runCatching {
                 val request = FeeCalculationRequest2(extrinsic)
                 val feeResponse =
-                    socketService.executeAsync(
+                    socketService.executeAsyncMapped(
                         request = request,
                         mapper = pojo<FeeResponse2>().nonNull()
                     )
@@ -520,7 +521,7 @@ class SubstrateCalls @Inject constructor(
     }
 
     suspend fun getBlock(blockHash: String): BlockResponse {
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = BlockRequest(blockHash),
             mapper = pojo<BlockResponse>().nonNull(),
         )
@@ -530,7 +531,7 @@ class SubstrateCalls @Inject constructor(
         val storageKey =
             runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.SYSTEM.palletName)
                 .storage(Storage.UPGRADED_TO_DUAL_REF_COUNT.storageName).storageKey()
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = pojo<String>().nonNull()
         ).let {

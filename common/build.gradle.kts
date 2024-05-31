@@ -38,7 +38,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 26
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -180,7 +180,9 @@ dependencies {
     implementation(libs.xbackupDep)
     implementation(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)
-    implementation(libs.ed25519Dep)
+    implementation(libs.ed25519Dep) {
+//        exclude(module = "bcpkix-jdk15on")
+    }
     implementation(libs.xercesDep)
 
     implementation(libs.gsonDep)
