@@ -54,9 +54,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import jp.co.soramitsu.androidfoundation.format.TextValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -71,10 +71,10 @@ data class QRCodeScannerScreenState(
     val screenStatus: ScreenStatus,
     val throwable: Throwable?
 ) {
-    val errorText: Text
+    val errorText: TextValue
         get() = throwable?.message?.let {
-            Text.SimpleText(it)
-        } ?: Text.StringRes(id = R.string.common_error_general_title)
+            TextValue.SimpleText(it)
+        } ?: TextValue.StringRes(id = R.string.common_error_general_title)
 }
 
 @Composable

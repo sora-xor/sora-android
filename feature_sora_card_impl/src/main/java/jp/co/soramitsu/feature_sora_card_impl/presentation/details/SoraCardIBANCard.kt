@@ -53,7 +53,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.util.ext.underlineSubstring
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.oauth.clients.ClientsFacade

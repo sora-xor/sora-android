@@ -47,10 +47,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.androidfoundation.format.ImageValue
+import jp.co.soramitsu.androidfoundation.format.TextValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -78,32 +78,32 @@ data class SoraCardMainSoraContentCardState(
                 SoraCardMenuAction.TOP_UP ->
                     IconButtonMenuState(
                         testTagId = it.toString(),
-                        image = Image.ResImage(id = R.drawable.ic_new_arrow_down_24),
-                        text = Text.StringRes(id = R.string.sora_card_action_top_up),
+                        image = ImageValue.ResImage(id = R.drawable.ic_new_arrow_down_24),
+                        text = TextValue.StringRes(id = R.string.sora_card_action_top_up),
                         isEnabled = actionsEnabled,
                     )
 
                 SoraCardMenuAction.TRANSFER ->
                     IconButtonMenuState(
                         testTagId = it.toString(),
-                        image = Image.ResImage(id = R.drawable.ic_new_arrow_up_24),
-                        text = Text.StringRes(id = R.string.sora_card_action_transfer),
+                        image = ImageValue.ResImage(id = R.drawable.ic_new_arrow_up_24),
+                        text = TextValue.StringRes(id = R.string.sora_card_action_transfer),
                         isEnabled = actionsEnabled,
                     )
 
                 SoraCardMenuAction.EXCHANGE ->
                     IconButtonMenuState(
                         testTagId = it.toString(),
-                        image = Image.ResImage(id = R.drawable.ic_refresh_24),
-                        text = Text.StringRes(id = R.string.sora_card_action_exchange),
+                        image = ImageValue.ResImage(id = R.drawable.ic_refresh_24),
+                        text = TextValue.StringRes(id = R.string.sora_card_action_exchange),
                         isEnabled = actionsEnabled,
                     )
 
                 SoraCardMenuAction.FREEZE ->
                     IconButtonMenuState(
                         testTagId = it.toString(),
-                        image = Image.ResImage(id = R.drawable.ic_snow_flake),
-                        text = Text.StringRes(id = R.string.sora_card_action_freeze),
+                        image = ImageValue.ResImage(id = R.drawable.ic_snow_flake),
+                        text = TextValue.StringRes(id = R.string.sora_card_action_freeze),
                         isEnabled = actionsEnabled,
                     )
             }

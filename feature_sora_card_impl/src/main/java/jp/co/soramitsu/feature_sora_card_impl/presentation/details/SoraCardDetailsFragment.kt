@@ -117,11 +117,7 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
                 onIbanCardShareClick = viewModel::onIbanCardShareClick,
                 onIbanCardClick = viewModel::onIbanCardClick,
                 onSettingsOptionClick = {
-                    if (it == 0) {
-                        viewModel.onFiatWalletClick(this@SoraCardDetailsFragment.context)
-                    } else {
-                        viewModel.onSettingsOptionClick(it)
-                    }
+                    viewModel.onSettingsOptionClick(it, this@SoraCardDetailsFragment.context)
                 },
                 onExchangeXorClick = viewModel::onExchangeXorClick,
             )

@@ -45,11 +45,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.androidfoundation.format.ImageValue
+import jp.co.soramitsu.androidfoundation.format.TextValue
+import jp.co.soramitsu.androidfoundation.format.retrievePainter
+import jp.co.soramitsu.androidfoundation.format.retrieveString
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -69,20 +69,20 @@ data class ListTileState(
     val testTagId: String? = null,
     val variant: ListTileVariant,
     val flag: ListTileFlag,
-    val title: Text,
-    val subtitle: Text? = null,
+    val title: TextValue,
+    val subtitle: TextValue? = null,
     val clickEnabled: Boolean = true,
-    private val body: Text? = null,
-    private val icon: Image? = null
+    private val body: TextValue? = null,
+    private val icon: ImageValue? = null
 ) {
 
     val isBodyVisible = variant === ListTileVariant.TITLE_SUBTITLE_BODY
 
-    val bodyText: Text?
+    val bodyText: TextValue?
         get() = if (variant === ListTileVariant.TITLE_SUBTITLE_BODY)
             body else null
 
-    val navigationIcon: Image?
+    val navigationIcon: ImageValue?
         get() = if (variant === ListTileVariant.TITLE_NAVIGATION_HINT)
             icon else null
 }
@@ -151,8 +151,8 @@ private fun PreviewListTile_TITLE_NAVIGATION_HINT() {
         listTileState = ListTileState(
             variant = ListTileVariant.TITLE_NAVIGATION_HINT,
             flag = ListTileFlag.WARNING,
-            title = Text.SimpleText(text = "Title"),
-            icon = Image.ResImage(id = R.drawable.ic_arrow_right)
+            title = TextValue.SimpleText(text = "Title"),
+            icon = ImageValue.ResImage(id = R.drawable.ic_arrow_right)
         ),
         onItemClick = {}
     )
@@ -165,9 +165,9 @@ private fun PreviewListTile_TITLE_SUBTITLE_BODY() {
         listTileState = ListTileState(
             variant = ListTileVariant.TITLE_SUBTITLE_BODY,
             flag = ListTileFlag.NORMAL,
-            title = Text.SimpleText(text = "Title"),
-            subtitle = Text.SimpleText(text = "Subtitle"),
-            body = Text.SimpleText(text = "Body")
+            title = TextValue.SimpleText(text = "Title"),
+            subtitle = TextValue.SimpleText(text = "Subtitle"),
+            body = TextValue.SimpleText(text = "Body")
         ),
         onItemClick = {}
     )

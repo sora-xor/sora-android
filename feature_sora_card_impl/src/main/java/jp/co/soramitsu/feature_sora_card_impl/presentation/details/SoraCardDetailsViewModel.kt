@@ -83,6 +83,7 @@ class SoraCardDetailsViewModel @Inject constructor(
             ),
             soraCardSettingsCard = SoraCardSettingsCardState(
                 soraCardSettingsOptions = SoraCardSettingsOption.entries,
+                phone = "",
             ),
             soraCardIBANCardState = null,
             logoutDialog = false,
@@ -105,6 +106,7 @@ class SoraCardDetailsViewModel @Inject constructor(
                 soraCardInteractor.basicStatus.value.let { basicStatus ->
                     val local = _soraCardDetailsScreenState.value
                     ibanCache = basicStatus.ibanInfo
+                    val phoneFormatted = basicStatus.phone?.let { "+$it" }
                     _soraCardDetailsScreenState.value = local.copy(
                         soraCardIBANCardState = basicStatus.ibanInfo?.let { iban ->
                             SoraCardIBANCardState(
@@ -114,8 +116,11 @@ class SoraCardDetailsViewModel @Inject constructor(
                         },
                         soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
                             balance = basicStatus.ibanInfo?.balance,
-                            phone = basicStatus.phone?.let { "+$it" },
+                            phone = phoneFormatted,
                         ),
+                        soraCardSettingsCard = local.soraCardSettingsCard?.copy(
+                            phone = phoneFormatted.orEmpty(),
+                        )
                     )
                 }
             }
@@ -161,32 +166,32 @@ class SoraCardDetailsViewModel @Inject constructor(
         }
     }
 
-    fun onFiatWalletClick(context: Context?) {
-        if (context == null) return
-        val fiat = BuildUtils.fiatPackageName()
-        if (context.isAppAvailableCompat(fiat)) {
-            fiatWallet.value = fiat
-        } else {
-            _soraCardDetailsScreenState.value =
-                _soraCardDetailsScreenState.value.copy(fiatWalletDialog = true)
-        }
-    }
-
     fun onExchangeXorClick() {
         _launchSoraCard.value = createSoraCardGateHubContract()
     }
 
-    fun onSettingsOptionClick(position: Int) {
+    fun onSettingsOptionClick(position: Int, context: Context?) {
         val settings = soraCardDetailsScreenState.value.soraCardSettingsCard
             ?.soraCardSettingsOptions ?: return
 
-        when (settings[position - 1]) {
+        when (settings[position]) {
             SoraCardSettingsOption.LOG_OUT ->
                 _soraCardDetailsScreenState.value =
                     _soraCardDetailsScreenState.value.copy(logoutDialog = true)
 
             SoraCardSettingsOption.SUPPORT_CHAT ->
                 telegramChat.trigger()
+
+            SoraCardSettingsOption.MANAGE_SORA_CARD -> {
+                checkNotNull(context)
+                val fiat = BuildUtils.fiatPackageName()
+                if (context.isAppAvailableCompat(fiat)) {
+                    fiatWallet.value = fiat
+                } else {
+                    _soraCardDetailsScreenState.value =
+                        _soraCardDetailsScreenState.value.copy(fiatWalletDialog = true)
+                }
+            }
         }
     }
 

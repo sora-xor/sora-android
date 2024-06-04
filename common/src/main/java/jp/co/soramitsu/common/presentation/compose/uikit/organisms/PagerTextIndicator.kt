@@ -58,9 +58,9 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
+import jp.co.soramitsu.androidfoundation.format.TextValue
+import jp.co.soramitsu.androidfoundation.format.retrieveString
 import jp.co.soramitsu.common.presentation.compose.extension.noRippleClickable
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -69,7 +69,7 @@ import kotlin.math.abs
 @Composable
 fun PagerTextIndicator(
     modifier: Modifier,
-    indicatorsArray: List<Text>,
+    indicatorsArray: List<TextValue>,
     currentPageRetriever: () -> Int,
     slideOffsetRetriever: () -> Float,
     onIndicatorClick: (Int) -> Unit
@@ -182,8 +182,8 @@ private fun PreviewSlidingPagerIndicator() {
                 .fillMaxWidth()
                 .wrapContentHeight(),
             indicatorsArray = listOf(
-                Text.SimpleText("1234512345"),
-                Text.SimpleText("3"),
+                TextValue.SimpleText("1234512345"),
+                TextValue.SimpleText("3"),
             ),
             currentPageRetriever = { ci.value },
             slideOffsetRetriever = { 0f },
