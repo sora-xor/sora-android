@@ -43,9 +43,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.androidfoundation.format.TextValue
+import jp.co.soramitsu.androidfoundation.format.retrieveString
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -61,7 +61,7 @@ data class SoraCardRecentActivitiesCardState(
     val data: List<SoraCardRecentActivity>
 ) {
 
-    val headlineText: Text = Text.StringRes(
+    val headlineText: TextValue = TextValue.StringRes(
         id = R.string.asset_details_recent_activity
     )
 
@@ -71,13 +71,13 @@ data class SoraCardRecentActivitiesCardState(
         ListTileState(
             variant = ListTileVariant.TITLE_SUBTITLE_BODY,
             flag = ListTileFlag.NORMAL,
-            title = Text.SimpleText(text = it.t),
-            subtitle = Text.SimpleText(text = it.t),
-            body = Text.SimpleText(text = it.t)
+            title = TextValue.SimpleText(text = it.t),
+            subtitle = TextValue.SimpleText(text = it.t),
+            body = TextValue.SimpleText(text = it.t)
         )
     }
 
-    val showMoreText: Text = Text.StringRes(
+    val showMoreText: TextValue = TextValue.StringRes(
         id = R.string.show_more
     )
 }

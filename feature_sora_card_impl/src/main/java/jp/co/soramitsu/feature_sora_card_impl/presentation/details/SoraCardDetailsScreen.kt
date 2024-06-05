@@ -127,7 +127,6 @@ fun SoraCardDetailsScreen(
             if (state.settings.isNotEmpty())
                 SoraCardSettingsCard(
                     state = state,
-                    main = soraCardDetailsScreenState.soraCardMainSoraContentCardState,
                     onItemClick = onSettingsOptionClick,
                 )
         }
@@ -166,7 +165,8 @@ private fun PreviewSoraCardDetailsScreen() {
                     closed = false,
                 ),
                 soraCardSettingsCard = SoraCardSettingsCardState(
-                    soraCardSettingsOptions = SoraCardSettingsOption.entries
+                    soraCardSettingsOptions = SoraCardSettingsOption.entries,
+                    phone = "123123",
                 ),
                 logoutDialog = false,
                 fiatWalletDialog = false,

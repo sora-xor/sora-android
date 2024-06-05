@@ -61,6 +61,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.format.ImageValue
+import jp.co.soramitsu.androidfoundation.format.TextValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
@@ -68,9 +70,7 @@ import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmount
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTile
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTileState
 import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCard
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -86,38 +86,38 @@ data class RequestTokenScreenState(
     val assetAmountInputState: AssetAmountInputState?,
 ) {
 
-    val recipientAddressHeader: Text
+    val recipientAddressHeader: TextValue
         get() {
             if (untransformedUserName == null)
-                return Text.StringRes(
+                return TextValue.StringRes(
                     id = R.string.common_error_general_title
                 )
 
-            return Text.SimpleText(
+            return TextValue.SimpleText(
                 text = untransformedUserName
             )
         }
 
-    private val recipientAddressAvatar: Image
+    private val recipientAddressAvatar: ImageValue
         get() {
             if (untransformedAvatarDrawable == null)
-                return Image.ResImage(
+                return ImageValue.ResImage(
                     id = R.drawable.ic_empty_state
                 )
 
-            return Image.DrawableImage(
+            return ImageValue.DrawableImage(
                 drawable = untransformedAvatarDrawable
             )
         }
 
-    val recipientAddressBody: Text
+    val recipientAddressBody: TextValue
         get() {
             if (untransformedUserAddress == null)
-                return Text.StringRes(
+                return TextValue.StringRes(
                     id = R.string.common_error_general_title
                 )
 
-            return Text.SimpleText(
+            return TextValue.SimpleText(
                 text = untransformedUserAddress
             )
         }

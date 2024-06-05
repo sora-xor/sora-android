@@ -46,15 +46,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.zxing.client.android.Intents
 import com.journeyapps.barcodescanner.CaptureManager
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.androidfoundation.format.retrieveString
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.feature_assets_impl.databinding.QrCodeScannerLayoutBinding
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.scan.QrCodeScannerScreen
 import kotlinx.coroutines.flow.collectLatest

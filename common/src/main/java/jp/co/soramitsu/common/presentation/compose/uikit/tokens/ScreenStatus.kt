@@ -35,5 +35,5 @@ package jp.co.soramitsu.common.presentation.compose.uikit.tokens
 enum class ScreenStatus {
     LOADING,
     ERROR,
-    READY_TO_RENDER
+    READY_TO_RENDER,
 }

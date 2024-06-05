@@ -53,14 +53,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.androidfoundation.format.ImageValue
+import jp.co.soramitsu.androidfoundation.format.TextValue
+import jp.co.soramitsu.androidfoundation.format.retrievePainter
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTile
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTileState
 import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCard
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -75,50 +75,50 @@ data class ReceiveTokenByQrScreenState(
     val untransformedUserAddress: String?,
 ) {
 
-    val qrCodeImage: Image
+    val qrCodeImage: ImageValue
         get() {
             if (untransformedQrBitmap == null)
-                return Image.ResImage(
+                return ImageValue.ResImage(
                     id = R.drawable.ic_empty_state
                 )
 
-            return Image.BitmapImage(
+            return ImageValue.BitmapImage(
                 bitmap = untransformedQrBitmap
             )
         }
 
-    val userAddressTitle: Text
+    val userAddressTitle: TextValue
         get() {
             if (untransformedUserName == null)
-                return Text.StringRes(
+                return TextValue.StringRes(
                     id = R.string.common_error_general_title
                 )
 
-            return Text.SimpleText(
+            return TextValue.SimpleText(
                 text = untransformedUserName
             )
         }
 
-    val userAddressAvatar: Image
+    val userAddressAvatar: ImageValue
         get() {
             if (untransformedAvatarDrawable == null)
-                return Image.ResImage(
+                return ImageValue.ResImage(
                     id = R.drawable.ic_empty_state
                 )
 
-            return Image.DrawableImage(
+            return ImageValue.DrawableImage(
                 drawable = untransformedAvatarDrawable
             )
         }
 
-    val userAddressBody: Text
+    val userAddressBody: TextValue
         get() {
             if (untransformedUserAddress == null)
-                return Text.StringRes(
+                return TextValue.StringRes(
                     id = R.string.common_error_general_title
                 )
 
-            return Text.SimpleText(
+            return TextValue.SimpleText(
                 text = untransformedUserAddress
             )
         }

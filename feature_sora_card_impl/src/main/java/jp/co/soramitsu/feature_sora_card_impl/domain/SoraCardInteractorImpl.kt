@@ -37,11 +37,9 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.compareByTotal
-import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.splitVersions
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
-import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardBasicStatus
@@ -62,8 +60,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
 internal class SoraCardInteractorImpl @Inject constructor(
-    private val blockExplorerManager: BlockExplorerManager,
-    private val formatter: NumbersFormatter,
     private val assetsInteractor: AssetsInteractor,
     private val poolsInteractor: PoolsInteractor,
     private val soraCardClientProxy: SoraCardClientProxy,
@@ -84,16 +80,19 @@ internal class SoraCardInteractorImpl @Inject constructor(
         )
     )
 
+    private val _ibanFlow = MutableStateFlow<IbanInfo?>(null)
+    private val _phoneFlow = MutableStateFlow("")
+
     @Suppress("UNCHECKED_CAST")
     override suspend fun initialize() {
         combine(
             flow { emit(soraCardClientProxy.init()) },
             needInstallUpdate(),
             fetchApplicationFee(),
-            fetchUserIbanAccount(),
+            _ibanFlow.asStateFlow(),
             subscribeToSoraCardAvailabilityFlow(),
             checkSoraCardPending(),
-            fetchUserPhone(),
+            _phoneFlow.asStateFlow(),
         ) { flows ->
             val init = flows[0] as Pair<Boolean, String>
             val needUpdate = flows[1] as Boolean
@@ -117,6 +116,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
             .collect {
                 _soraCardBasicStatus.value = it
             }
+        resetInfo()
     }
 
     override val basicStatus: StateFlow<SoraCardBasicStatus> = _soraCardBasicStatus.asStateFlow()
@@ -150,11 +150,16 @@ internal class SoraCardInteractorImpl @Inject constructor(
         return false
     }
 
+    private suspend fun resetInfo() {
+        fetchUserIbanAccount()
+        fetchUserPhone()
+    }
+
     override suspend fun setStatus(status: SoraCardCommonVerification) {
         _soraCardBasicStatus.value = _soraCardBasicStatus.value.copy(
             verification = status,
-            ibanInfo = fetchIbanItem(),
         )
+        resetInfo()
     }
 
     override suspend fun setLogout() {
@@ -162,6 +167,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
         _soraCardBasicStatus.value = _soraCardBasicStatus.value.copy(
             verification = SoraCardCommonVerification.NotFound,
             ibanInfo = null,
+            phone = null,
         )
     }
 
@@ -197,12 +203,13 @@ internal class SoraCardInteractorImpl @Inject constructor(
         xorRatioAvailable = false,
     )
 
-    private fun fetchUserIbanAccount() = flow { emit(fetchIbanItem()) }
+    private suspend fun fetchUserIbanAccount() {
+        _ibanFlow.value = soraCardClientProxy.getIBAN().getOrNull()
+    }
 
-    private fun fetchUserPhone() = flow { emit(soraCardClientProxy.getPhone()) }
-
-    private suspend fun fetchIbanItem(): IbanInfo? =
-        soraCardClientProxy.getIBAN().getOrNull()
+    private suspend fun fetchUserPhone() {
+        _phoneFlow.value = soraCardClientProxy.getPhone()
+    }
 
     private fun fetchApplicationFee() = flow { emit(soraCardClientProxy.getApplicationFee()) }
 
