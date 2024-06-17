@@ -37,9 +37,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.presentation.SingleLiveEvent
-import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
@@ -58,7 +58,6 @@ class SplashViewModel @Inject constructor(
 
     val showMainScreen = SingleLiveEvent<Unit>()
     val showOnBoardingScreen = SingleLiveEvent<OnboardingState>()
-    val showOnBoardingScreenViaInviteLink = SingleLiveEvent<Unit>()
     val showMainScreenFromInviteLink = SingleLiveEvent<Unit>()
 
     init {
@@ -90,19 +89,6 @@ class SplashViewModel @Inject constructor(
                 OnboardingState.INITIAL -> {
                     showOnBoardingScreen.value = state
                 }
-            }
-        }
-    }
-
-    fun handleDeepLink(invitationCode: String) {
-        viewModelScope.launch {
-            val state = interactor.getRegistrationState()
-            interactor.saveInviteCode(invitationCode)
-
-            if (OnboardingState.INITIAL == state) {
-                showOnBoardingScreenViaInviteLink.trigger()
-            } else {
-                showMainScreenFromInviteLink.trigger()
             }
         }
     }

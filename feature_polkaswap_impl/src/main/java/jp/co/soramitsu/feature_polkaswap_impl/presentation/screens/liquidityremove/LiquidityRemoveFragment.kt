@@ -54,13 +54,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.ext.getColorFromAttrs
-import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityRemoveConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityRemoveScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapSlippageScreen

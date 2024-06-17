@@ -41,8 +41,4 @@ class MultiaccountStarterImpl : MultiaccountStarter {
     override fun startOnboardingFlow(context: Context, isClearTask: Boolean) {
         OnboardingActivity.start(context, isClearTask)
     }
-
-    override fun startOnboardingFlowWithInviteLink(context: Context) {
-        OnboardingActivity.startWithInviteLink(context)
-    }
 }

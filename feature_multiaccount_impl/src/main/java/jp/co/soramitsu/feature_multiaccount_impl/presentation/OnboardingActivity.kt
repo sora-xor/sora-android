@@ -98,25 +98,11 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 
     companion object {
 
-        const val ACTION_INVITE = "jp.co.soramitsu.feature_onboarding_impl.ACTION_INVITE"
-
         fun start(context: Context, isClearTask: Boolean) {
             val intent = Intent(context, OnboardingActivity::class.java).apply {
                 if (isClearTask) {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
-            }
-            val options = ActivityOptions.makeCustomAnimation(
-                context,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
-            )
-            context.startActivity(intent, options.toBundle())
-        }
-
-        fun startWithInviteLink(context: Context) {
-            val intent = Intent(context, OnboardingActivity::class.java).apply {
-                action = ACTION_INVITE
             }
             val options = ActivityOptions.makeCustomAnimation(
                 context,
@@ -513,14 +499,4 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
     }
 
     private lateinit var navController: NavController
-
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-
-        intent?.let {
-            if (ACTION_INVITE == it.action) {
-                viewModel.startedWithInviteAction()
-            }
-        }
-    }
 }

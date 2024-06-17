@@ -34,7 +34,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.claim
 
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter

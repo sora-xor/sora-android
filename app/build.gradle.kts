@@ -241,7 +241,6 @@ dependencies {
     kover(project(":common"))
     kover(project(":common_wallet"))
     kover(project(":core_db"))
-    kover(project(":core_di"))
     kover(project(":demeter"))
     kover(project(":feature_account_api"))
     kover(project(":feature_account_impl"))

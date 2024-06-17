@@ -19,7 +19,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 26
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -31,7 +31,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -68,7 +68,6 @@ android {
 dependencies {
     implementation(project(":android-foundation"))
     implementation(project(":common"))
-    implementation(project(":core_di"))
     implementation(project(":demeter"))
     implementation(project(":common_wallet"))
     implementation(project(":feature_assets_api"))
