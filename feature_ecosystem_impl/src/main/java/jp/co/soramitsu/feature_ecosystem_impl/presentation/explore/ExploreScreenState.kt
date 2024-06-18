@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.model
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState
@@ -38,7 +38,7 @@ import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 
 internal data class ExploreScreenState(
     val isSearching: Boolean = false,
-    val assets: EcoSystemTokensState? = null,
+    val ecoSystemTokensState: EcoSystemTokensState? = null,
     val pools: List<BasicPoolListItemState> = emptyList(),
     val farms: List<BasicFarmListItemState> = emptyList(),
     val isLoading: Boolean = false,

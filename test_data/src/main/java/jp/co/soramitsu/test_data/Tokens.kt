@@ -36,6 +36,18 @@ import jp.co.soramitsu.common.domain.Token
 
 object TestTokens {
 
+    val kxorToken = Token(
+        "0x02000e0000000000000000000000000000000000000000000000000000000000",
+        "Kensetsu xor token",
+        "KXOR",
+        18,
+        true,
+        null,
+        null,
+        null,
+        null,
+    )
+
     val xorToken = Token(
         "0x0200000000000000000000000000000000000000000000000000000000000000",
         "Sora token",
