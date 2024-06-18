@@ -35,11 +35,13 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -68,7 +70,9 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -98,6 +102,9 @@ class AssetDetailsViewModel @AssistedInject constructor(
     companion object {
         private const val TX_HISTORY_COUNT = 5
     }
+
+    private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
+    val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
 
     internal var state by mutableStateOf(AssetCardState(true, emptyAssetCardState))
         private set
@@ -277,6 +284,6 @@ class AssetDetailsViewModel @AssistedInject constructor(
     }
 
     fun onBuyCrypto() {
-        assetsRouter.showBuyCrypto()
+        _launchSoraCardSignIn.value = createSoraCardGateHubContract()
     }
 }

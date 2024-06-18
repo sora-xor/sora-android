@@ -57,7 +57,6 @@ import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokens
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.model.ExploreScreenState
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
@@ -132,7 +131,7 @@ class ExploreViewModel @Inject constructor(
                 _state.value = state.value.copy(
                     isLoading = false,
                     pools = pools,
-                    assets = assets,
+                    ecoSystemTokensState = assets,
                     farms = farms,
                 )
             }
@@ -152,7 +151,7 @@ class ExploreViewModel @Inject constructor(
         val mapped = ecoSystemMapper.mapEcoSystemTokens(EcoSystemTokens(tokensFiltered))
 
         val mappedEnumerated = mapped.map {
-            val indexInAll = positions.get(it.second.tokenId).orEmpty()
+            val indexInAll = positions[it.second.tokenId].orEmpty()
             indexInAll to it.second
         }
 

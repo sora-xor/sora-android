@@ -1,5 +1,5 @@
 [versions]
-agp = "8.4.1"
+agp = "8.5.0"
 kotlin = "1.9.24"
 appcompat = "1.6.1"
 coroutines = "1.8.1"
@@ -41,6 +41,7 @@ timber = "5.0.1"
 ktor = "2.3.1"
 soracard = "1.1.11"
 xnetworking = "0.2.9"
+xnetworkingS = "1.0.1"
 xsubstrate = "1.2.4"
 uicore = "0.2.32"
 xbackup = "1.2.1"
@@ -90,6 +91,7 @@ lazySodiumDep = { module = "com.goterl:lazysodium-android", version.ref = "lazyS
 jnaDep = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 ktorWebSocketDep = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 soraCardDep = { module = "jp.co.soramitsu:android-sora-card", version.ref = "soracard" }
+xnetworkingSDep = { module = "jp.co.soramitsu.xnetworking:lib-android", version.ref = "xnetworkingS" }
 xnetworkingDep = { module = "jp.co.soramitsu.xnetworking:basic-android", version.ref = "xnetworking" }
 xnetworkingSoraWalletDep = { module = "jp.co.soramitsu.xnetworking:sorawallet-android", version.ref = "xnetworking" }
 xsubstrateDep = { module = "jp.co.soramitsu:xsubstrate", version.ref = "xsubstrate" }

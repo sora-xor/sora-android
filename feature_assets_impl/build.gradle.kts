@@ -78,6 +78,7 @@ dependencies {
     implementation(project(":feature_account_api"))
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_main_api"))
+    implementation(project(":feature_sora_card_api"))
     implementation(project(":feature_blockexplorer_api"))
 
     implementation(libs.xsubstrateDep)
