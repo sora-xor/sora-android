@@ -102,10 +102,6 @@ class SplashActivity : AppCompatActivity() {
         splashViewModel.showOnBoardingScreen.observe(this) {
             multiaccStarter.startOnboardingFlow(this)
         }
-        splashViewModel.showOnBoardingScreenViaInviteLink.observe(this) {
-            multiaccStarter.startOnboardingFlowWithInviteLink(this)
-            finish()
-        }
         splashViewModel.showMainScreenFromInviteLink.observe(this) {
             mainStarter.startWithInvite(this)
             finish()

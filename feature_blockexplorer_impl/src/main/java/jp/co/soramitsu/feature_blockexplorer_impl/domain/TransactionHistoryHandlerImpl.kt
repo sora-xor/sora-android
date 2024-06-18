@@ -34,10 +34,10 @@ package jp.co.soramitsu.feature_blockexplorer_impl.domain
 
 import java.util.Date
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.DateTimeUtils
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository

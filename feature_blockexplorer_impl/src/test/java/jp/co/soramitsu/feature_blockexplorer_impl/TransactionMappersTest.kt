@@ -38,10 +38,10 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import java.math.BigDecimal
 import java.util.Date
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction

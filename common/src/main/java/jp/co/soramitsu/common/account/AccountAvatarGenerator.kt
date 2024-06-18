@@ -36,7 +36,7 @@ import android.graphics.drawable.PictureDrawable
 import com.caverock.androidsvg.SVG
 import javax.inject.Singleton
 import jdenticon.Jdenticon
-import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 
