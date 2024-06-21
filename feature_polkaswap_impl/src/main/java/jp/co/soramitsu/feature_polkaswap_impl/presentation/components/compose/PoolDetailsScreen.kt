@@ -198,6 +198,13 @@ internal fun PoolDetailsScreen(
                     text = stringResource(id = R.string.your_pooled).format(state.symbol1),
                     value1 = state.pooled1,
                 )
+                if (state.kensetsu != null) {
+                    Text(
+                        text = "KXOR pooled ${state.kensetsu}",
+                        style = MaterialTheme.customTypography.textXSBold,
+                        color = MaterialTheme.customColors.fgSecondary,
+                    )
+                }
                 Divider(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -371,6 +378,7 @@ private fun PreviewPoolDetailsScreen() {
                 symbol2 = "VAL",
                 pooled1 = "123 VAL",
                 pooled2 = "2424.2 XOR",
+                kensetsu = "",
                 tvl = "$34.999 TVL",
                 addEnabled = true,
                 removeEnabled = true,
