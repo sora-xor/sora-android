@@ -79,6 +79,8 @@ data class AssetBalance(
 
 fun createAssetBalance(b: BigDecimal = BigDecimal.ZERO) = AssetBalance(b, b, b, b, b, b, b, b)
 
+typealias TokenPrecision = Pair<String, Int>
+
 @Parcelize
 data class Token(
     val id: String,

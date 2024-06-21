@@ -36,6 +36,7 @@ import java.math.BigDecimal
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TokenPrecision
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
@@ -191,8 +192,8 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
 
     override suspend fun calcAddLiquidityNetworkFee(
         address: String,
-        tokenFrom: Token,
-        tokenTo: Token,
+        tokenFrom: TokenPrecision,
+        tokenTo: TokenPrecision,
         tokenFromAmount: BigDecimal,
         tokenToAmount: BigDecimal,
         pairEnabled: Boolean,
@@ -201,7 +202,7 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
     ): BigDecimal? {
         val amountFromMin = PolkaswapFormulas.calculateMinAmount(tokenFromAmount, slippageTolerance)
         val amountToMin = PolkaswapFormulas.calculateMinAmount(tokenToAmount, slippageTolerance)
-        val dexId = getPoolBaseTokenDexId(tokenFrom.id)
+        val dexId = getPoolBaseTokenDexId(tokenFrom.first)
         val fee = extrinsicManager.calcFee(
             from = address,
         ) {
@@ -209,49 +210,49 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
                 if (!pairEnabled) {
                     register(
                         dexId = dexId,
-                        tokenFrom.id, tokenTo.id
+                        tokenFrom.first, tokenTo.first
                     )
                 }
                 initializePool(
                     dexId = dexId,
-                    tokenFrom.id, tokenTo.id
+                    tokenFrom.first, tokenTo.first
                 )
             }
 
             depositLiquidity(
                 dexId = dexId,
-                tokenFrom.id,
-                tokenTo.id,
-                mapBalance(tokenFromAmount, tokenFrom.precision),
-                mapBalance(tokenToAmount, tokenTo.precision),
-                mapBalance(amountFromMin, tokenFrom.precision),
-                mapBalance(amountToMin, tokenTo.precision)
+                tokenFrom.first,
+                tokenTo.first,
+                mapBalance(tokenFromAmount, tokenFrom.second),
+                mapBalance(tokenToAmount, tokenTo.second),
+                mapBalance(amountFromMin, tokenFrom.second),
+                mapBalance(amountToMin, tokenTo.second)
             )
         }
         return fee?.let {
-            mapBalance(it, tokenFrom.precision)
+            mapBalance(it, tokenFrom.second)
         }
     }
 
     override suspend fun calcRemoveLiquidityNetworkFee(
-        tokenId1: Token,
-        tokenId2: Token,
+        tokenId1: TokenPrecision,
+        tokenId2: TokenPrecision,
         address: String,
     ): BigDecimal? {
         val fee = extrinsicManager.calcFee(
             from = address
         ) {
             removeLiquidity(
-                dexId = getPoolBaseTokenDexId(tokenId1.id),
-                outputAssetIdA = tokenId1.id,
-                outputAssetIdB = tokenId2.id,
-                markerAssetDesired = mapBalance(BigDecimal.ONE, tokenId1.precision),
-                outputAMin = mapBalance(BigDecimal.ONE, tokenId1.precision),
-                outputBMin = mapBalance(BigDecimal.ONE, tokenId1.precision)
+                dexId = getPoolBaseTokenDexId(tokenId1.first),
+                outputAssetIdA = tokenId1.first,
+                outputAssetIdB = tokenId2.first,
+                markerAssetDesired = mapBalance(BigDecimal.ONE, tokenId1.second),
+                outputAMin = mapBalance(BigDecimal.ONE, tokenId1.second),
+                outputBMin = mapBalance(BigDecimal.ONE, tokenId1.second)
             )
         }
         return fee?.let {
-            mapBalance(it, tokenId1.precision)
+            mapBalance(it, tokenId1.second)
         }
     }
 }

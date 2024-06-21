@@ -226,24 +226,26 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getRemotePoolReserves(
-        tokenFrom: Token,
-        tokenTo: Token,
+        tokenFromId: String,
+        tokenFromPrecision: Int,
+        tokenToId: String,
+        tokenToPrecision: Int,
         enabled: Boolean,
-        presented: Boolean
+        presented: Boolean,
     ): LiquidityData {
         return if (presented || enabled) {
             val (reservesFirst, reservesSecond) = wsConnection.getPoolReserves(
-                tokenFrom.id,
-                tokenTo.id
+                tokenFromId,
+                tokenToId,
             ) ?: (BigInteger.ZERO to BigInteger.ZERO)
 
-            val poolLocal = db.poolDao().getBasicPool(tokenFrom.id, tokenTo.id)
+            val poolLocal = db.poolDao().getBasicPool(tokenFromId, tokenToId)
 
             LiquidityData(
-                firstReserves = mapBalance(reservesFirst, tokenFrom.precision),
-                secondReserves = mapBalance(reservesSecond, tokenTo.precision),
-                firstPooled = mapBalance(BigInteger.ZERO, tokenFrom.precision),
-                secondPooled = mapBalance(BigInteger.ZERO, tokenTo.precision),
+                firstReserves = mapBalance(reservesFirst, tokenFromPrecision),
+                secondReserves = mapBalance(reservesSecond, tokenToPrecision),
+                firstPooled = mapBalance(BigInteger.ZERO, tokenFromPrecision),
+                secondPooled = mapBalance(BigInteger.ZERO, tokenToPrecision),
                 sbApy = poolLocal?.reservesAccount?.let {
                     getPoolStrategicBonusAPY(it)?.times(100)
                 },
