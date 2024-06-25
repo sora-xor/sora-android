@@ -34,6 +34,8 @@ package jp.co.soramitsu.feature_assets_impl.domain
 
 import java.math.BigDecimal
 import java.util.Date
+import jp.co.soramitsu.androidfoundation.format.isZero
+import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
@@ -41,8 +43,7 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
-import jp.co.soramitsu.common.util.ext.isZero
-import jp.co.soramitsu.common.util.ext.orZero
+import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -209,6 +210,16 @@ class AssetsInteractorImpl constructor(
     override suspend fun updateBalanceVisibleAssets() {
         val soraAccount = userRepository.getCurSoraAccount()
         assetsRepository.updateBalancesVisibleAssets(soraAccount.substrateAddress)
+    }
+
+    override suspend fun fetchBalance(
+        address: String,
+        ids: List<String>,
+        precision: Int,
+    ): List<BigDecimal> {
+        return assetsRepository.fetchBalance(address, ids).map {
+            mapBalance(it, precision)
+        }
     }
 
     override suspend fun updateWhitelistBalances() {

@@ -40,6 +40,9 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.format.isZero
+import jp.co.soramitsu.androidfoundation.format.nullZero
+import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
@@ -49,8 +52,6 @@ import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
-import jp.co.soramitsu.common.util.ext.nullZero
-import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
@@ -264,7 +265,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                                 poolDataLocal.user.poolProvidersBalance,
                             )
                         }
-                        if (maxPercent != null && !maxPercent.isNaN()) {
+                        var fixedPoolData: CommonUserPoolData? = if (maxPercent != null && !maxPercent.isNaN()) {
                             poolInFarming = true
                             val usablePercent = 100 - maxPercent
                             poolDataLocal.copy(
@@ -289,6 +290,35 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         } else {
                             poolDataLocal
                         }
+                        fixedPoolData = if (fixedPoolData != null && token2Id == SubstrateOptionsProvider.ethTokenId) {
+                            if (token1Id == SubstrateOptionsProvider.feeAssetId || token1Id == SubstrateOptionsProvider.kxorTokenId) {
+                                val kxorBalance = assetsInteractor
+                                    .fetchBalance(poolDataLocal.basic.reserveAccount, listOf(SubstrateOptionsProvider.kxorTokenId))
+                                    .getOrElse(0) { BigDecimal.ZERO }
+                                if (kxorBalance.isZero()) {
+                                    fixedPoolData
+                                } else {
+                                    if (token1Id == SubstrateOptionsProvider.feeAssetId) {
+                                        fixedPoolData.copy(
+                                            user = fixedPoolData.user.copy(
+                                                basePooled = fixedPoolData.user.basePooled.minus(kxorBalance)
+                                            )
+                                        )
+                                    } else {
+                                        fixedPoolData.copy(
+                                            user = fixedPoolData.user.copy(
+                                                basePooled = kxorBalance
+                                            )
+                                        )
+                                    }
+                                }
+                            } else {
+                                fixedPoolData
+                            }
+                        } else {
+                            fixedPoolData
+                        }
+                        fixedPoolData
                     } else {
                         null
                     }

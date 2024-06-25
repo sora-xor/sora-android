@@ -44,6 +44,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import java.util.StringJoiner
+import jp.co.soramitsu.androidfoundation.format.Big100
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -53,7 +54,6 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
-import jp.co.soramitsu.common.util.ext.Big100
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowViewModel

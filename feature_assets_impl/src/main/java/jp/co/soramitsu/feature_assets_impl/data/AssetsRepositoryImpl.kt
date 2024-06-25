@@ -432,6 +432,13 @@ class AssetsRepositoryImpl @Inject constructor(
         return balances to xorBalance
     }
 
+    override suspend fun fetchBalance(
+        address: String,
+        ids: List<String>,
+    ): List<BigInteger> {
+        return substrateCalls.fetchBalances(address, ids)
+    }
+
     private suspend fun checkDefaultNeed(address: String, code: String) {
         if (db.assetDao().getAssetsWhitelist(address, code)
                 .all { it.assetLocal == null }

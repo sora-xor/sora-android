@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import jp.co.soramitsu.common.util.ext.compareNullDesc
+import jp.co.soramitsu.androidfoundation.format.compareNullDesc
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
