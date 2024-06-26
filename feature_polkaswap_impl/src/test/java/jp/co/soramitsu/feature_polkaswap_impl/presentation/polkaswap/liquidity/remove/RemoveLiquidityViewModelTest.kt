@@ -124,8 +124,8 @@ class RemoveLiquidityViewModelTest {
             poolsInteractor = poolsInteractor,
             numbersFormatter = NumbersFormatter(),
             resourceManager = resourceManager,
-            token1Id = firstTokenId ?: TestTokens.xorToken.id,
-            token2Id = secondTokenId ?: TestTokens.valToken.id,
+            token1IdStart = firstTokenId ?: TestTokens.xorToken.id,
+            token2IdStart = secondTokenId ?: TestTokens.valToken.id,
             demeterFarmingInteractor = demeterFarmingInteractor,
         )
     }
