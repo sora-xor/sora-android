@@ -81,6 +81,7 @@ internal fun LiquidityRemoveScreen(
     onFocusChange2: (Boolean) -> Unit,
     onAmountChange1: (BigDecimal) -> Unit,
     onAmountChange2: (BigDecimal) -> Unit,
+    onSelectToken1: () -> Unit,
     onSlippageClick: () -> Unit,
     onReview: () -> Unit,
 ) {
@@ -102,7 +103,7 @@ internal fun LiquidityRemoveScreen(
                 },
                 state = state.assetState1,
                 onAmountChange = onAmountChange1,
-                onSelectToken = {},
+                onSelectToken = onSelectToken1,
                 onFocusChange = onFocusChange1,
             )
             AssetAmountInput(
@@ -233,6 +234,7 @@ private fun PreviewLiquidityRemoveScreen() {
                 onAmountChange1 = {},
                 onFocusChange2 = {},
                 onFocusChange1 = {},
+                onSelectToken1 = {},
                 state = LiquidityRemoveState(
                     btnState = ButtonState(
                         text = "btn",

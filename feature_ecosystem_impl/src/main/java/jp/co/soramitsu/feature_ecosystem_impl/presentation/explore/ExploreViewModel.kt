@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.compareNullDesc
 import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.domain.iconUri
@@ -44,7 +45,6 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
-import jp.co.soramitsu.common.util.ext.compareNullDesc
 import jp.co.soramitsu.common_wallet.domain.model.isFilterMatch
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState

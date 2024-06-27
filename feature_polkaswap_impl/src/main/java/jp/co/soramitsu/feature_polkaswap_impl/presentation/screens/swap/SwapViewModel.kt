@@ -43,6 +43,9 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.coroutine.SuspendableProperty
+import jp.co.soramitsu.androidfoundation.format.isZero
+import jp.co.soramitsu.androidfoundation.format.nullZero
+import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -57,10 +60,7 @@ import jp.co.soramitsu.common.domain.subtractFee
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.lazyAsync
-import jp.co.soramitsu.common.util.ext.nullZero
-import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat

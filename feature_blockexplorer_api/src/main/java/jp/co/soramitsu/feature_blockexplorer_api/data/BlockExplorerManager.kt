@@ -37,12 +37,11 @@ import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import jp.co.soramitsu.androidfoundation.format.toDoubleInfinite
 import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.RetryStrategyBuilder
-import jp.co.soramitsu.common.domain.fiatChange
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.util.ext.toDoubleInfinite
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal

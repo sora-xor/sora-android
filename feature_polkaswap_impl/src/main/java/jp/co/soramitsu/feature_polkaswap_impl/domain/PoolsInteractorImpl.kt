@@ -34,12 +34,12 @@ package jp.co.soramitsu.feature_polkaswap_impl.domain
 
 import java.math.BigDecimal
 import java.util.Date
+import jp.co.soramitsu.androidfoundation.format.isZero
+import jp.co.soramitsu.androidfoundation.format.safeDivide
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common.util.ext.isZero
-import jp.co.soramitsu.common.util.ext.safeDivide
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
