@@ -63,6 +63,16 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
@@ -115,6 +125,11 @@ dependencies {
     implementation(libs.daggerDep)
     kapt(libs.daggerKaptDep)
 
-    testImplementation(project(":test_shared"))
     testImplementation(project(":test_data"))
+    testImplementation(libs.coroutineTestDep)
+    testImplementation(libs.junitDep)
+    testImplementation(libs.mockkDep)
+    testImplementation(libs.mockitoKotlinDep)
+    testImplementation(libs.archCoreTestDep)
+    testImplementation(libs.truthDep)
 }

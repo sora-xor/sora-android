@@ -41,7 +41,8 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
-import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
+import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
 import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
 import jp.co.soramitsu.xsubstrate.runtime.definitions.TypeDefinitionParser
 import jp.co.soramitsu.xsubstrate.runtime.definitions.TypeDefinitionsTree
@@ -71,6 +72,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.serializer
 
 private const val DEFAULT_TYPES_FILE = "default_types.json"
 private const val SORA2_TYPES_FILE = "types_scalecodec_mobile.json"
@@ -84,7 +86,7 @@ class RuntimeManager @Inject constructor(
     private val gson: Gson,
     private val soraPreferences: SoraPreferences,
     private val socketService: SocketService,
-    private val networkClient: SoramitsuNetworkClient,
+    private val restClient: RestClient,
     private val coroutineManager: CoroutineManager,
     private val soraConfigManager: SoraConfigManager,
 ) {
@@ -195,7 +197,12 @@ class RuntimeManager @Inject constructor(
             }
 
             is MetadataSource.SoraNet -> {
-                val sora2Types = networkClient.get(soraConfigManager.getSubstrateTypesUrl())
+                val sora2Types = restClient.getReturnString(
+                    JsonGetRequest(
+                        url = soraConfigManager.getSubstrateTypesUrl(),
+                        responseDeserializer = String.serializer()
+                    )
+                )
                 buildTypeRegistry14(sora2Types, runtimeMetadataReader, runtimeVersion).also {
                     saveToCache(SORA2_TYPES_FILE, sora2Types)
                 }

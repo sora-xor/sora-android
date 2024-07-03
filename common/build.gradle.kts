@@ -138,6 +138,16 @@ android {
             buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_PROD")))
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
@@ -218,7 +228,9 @@ dependencies {
     implementation(libs.navigationComposeDep)
     debugImplementation(libs.composeToolingDep)
 
-    testImplementation(project(":test_shared"))
+    testImplementation(libs.mockitoDep)
+    testImplementation(libs.archCoreTestDep)
+    testImplementation(libs.coroutineTestDep)
 }
 
 kapt {

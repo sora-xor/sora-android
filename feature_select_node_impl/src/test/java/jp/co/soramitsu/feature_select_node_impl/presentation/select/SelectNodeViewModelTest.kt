@@ -34,6 +34,8 @@ package jp.co.soramitsu.feature_select_node_impl.presentation.select
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -47,8 +49,6 @@ import jp.co.soramitsu.feature_select_node_impl.TestData.SELECTED_NODE
 import jp.co.soramitsu.feature_select_node_impl.domain.SelectNodeInteractor
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.model.RemoveNodeAlertState
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.model.SwitchNodeAlertState
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf

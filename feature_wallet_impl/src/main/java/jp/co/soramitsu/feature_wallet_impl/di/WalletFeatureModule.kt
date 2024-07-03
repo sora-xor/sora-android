@@ -57,8 +57,8 @@ import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalle
 import jp.co.soramitsu.feature_wallet_impl.domain.PoolsFeatureStorageManager
 import jp.co.soramitsu.feature_wallet_impl.domain.WalletInteractorImpl
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProvider
 import kotlinx.coroutines.FlowPreview
+import kotlinx.serialization.json.Json
 
 @FlowPreview
 @Module
@@ -77,10 +77,8 @@ class WalletFeatureModule {
 
     @Provides
     @Singleton
-    fun provideBuyCryptoDataSource(
-        clientProvider: SoramitsuHttpClientProvider
-    ): BuyCryptoDataSource =
-        BuyCryptoDataSourceImpl(clientProvider)
+    fun provideBuyCryptoDataSource(json: Json): BuyCryptoDataSource =
+        BuyCryptoDataSourceImpl(json)
 
     @Singleton
     @Provides

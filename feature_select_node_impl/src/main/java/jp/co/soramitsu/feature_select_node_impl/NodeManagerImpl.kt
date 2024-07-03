@@ -203,7 +203,7 @@ internal class NodeManagerImpl(
                 if (state.url == customNodeUrl) {
                     blockHashCheckObserverEnabled = false
                     try {
-                        val newHash = selectNodeRepository.getBlockHash().removeHexPrefix()
+                        val newHash = selectNodeRepository.getBlockHash()
                         if (BuildUtils.isFlavors(
                                 Flavor.DEVELOP,
                                 Flavor.SORALUTION
@@ -211,7 +211,7 @@ internal class NodeManagerImpl(
                         ) {
                             _events.emit(NodeManagerEvent.GenesisValidated(result = true))
                         } else {
-                            _events.emit(NodeManagerEvent.GenesisValidated(result = soraConfigManager.getGenesis() == newHash))
+                            _events.emit(NodeManagerEvent.GenesisValidated(result = soraConfigManager.getGenesis().removeHexPrefix() == newHash.removeHexPrefix()))
                         }
                     } catch (e: Throwable) {
                         _events.emit(NodeManagerEvent.GenesisValidated(result = false))

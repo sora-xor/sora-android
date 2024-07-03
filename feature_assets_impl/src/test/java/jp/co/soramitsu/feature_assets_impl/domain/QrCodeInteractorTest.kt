@@ -38,7 +38,6 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Before
@@ -49,7 +48,6 @@ import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.given
 
 @RunWith(MockitoJUnitRunner::class)
-@OptIn(ExperimentalCoroutinesApi::class)
 class QrCodeInteractorTest {
 
     private val soraAccount = SoraAccount("address", "name")

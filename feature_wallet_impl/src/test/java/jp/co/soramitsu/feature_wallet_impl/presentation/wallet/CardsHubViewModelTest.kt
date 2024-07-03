@@ -43,6 +43,8 @@ import io.mockk.just
 import io.mockk.mockkObject
 import io.mockk.verify
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.config.BuildConfigWrapper
@@ -71,8 +73,6 @@ import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
 import jp.co.soramitsu.test_data.SoraCardTestData.soraCardBasicStatusTest
 import jp.co.soramitsu.test_data.TestAssets
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

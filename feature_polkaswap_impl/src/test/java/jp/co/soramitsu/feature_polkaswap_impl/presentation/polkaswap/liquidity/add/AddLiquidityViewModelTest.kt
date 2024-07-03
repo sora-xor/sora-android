@@ -37,6 +37,7 @@ import io.mockk.mockkObject
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.equalTo
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -55,7 +56,6 @@ import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XSTXAU_ASSET
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview

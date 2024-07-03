@@ -63,6 +63,16 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
@@ -124,6 +134,10 @@ dependencies {
     debugImplementation(libs.composeToolingDep)
     implementation(libs.navigationComposeDep)
 
-    testImplementation(project(":test_shared"))
     testImplementation(project(":test_data"))
+    testImplementation(libs.coroutineTestDep)
+    testImplementation(libs.junitDep)
+    testImplementation(libs.mockkDep)
+    testImplementation(libs.mockitoKotlinDep)
+    testImplementation(libs.archCoreTestDep)
 }

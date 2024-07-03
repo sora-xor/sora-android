@@ -33,7 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.delegate
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.test_shared.MainCoroutineRule
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertFalse

@@ -51,6 +51,16 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
@@ -63,7 +73,7 @@ dependencies {
 
     implementation(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)
-    implementation(libs.xnetworkingDep)
+    implementation(libs.xnetworkingLibDep)
 
     implementation(libs.gsonDep)
     implementation(libs.webSocketLibDep)
@@ -72,6 +82,4 @@ dependencies {
     implementation(libs.timberDep)
     implementation(libs.daggerDep)
     kapt(libs.daggerKaptDep)
-
-    testImplementation(project(":test_shared"))
 }
