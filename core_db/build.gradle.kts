@@ -52,6 +52,16 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 class RoomSchemaArgProvider(
@@ -82,9 +92,11 @@ dependencies {
     implementation(libs.roomKtxDep)
     ksp(libs.roomKaptDep)
 
-    androidTestImplementation(project(":test_shared"))
     androidTestImplementation(project(":test_data"))
+    androidTestImplementation(project(":android-foundation"))
     androidTestImplementation(libs.androidxTestExtJunitDep)
     androidTestImplementation(libs.androidxTestEspressoCoreDep)
     androidTestImplementation(libs.archCoreTestDep)
+    androidTestImplementation(libs.roomTestHelpersDep)
+    androidTestImplementation(libs.coroutineTestDep)
 }

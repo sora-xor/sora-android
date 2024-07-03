@@ -34,51 +34,204 @@ package jp.co.soramitsu.feature_blockexplorer_api.data
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import jp.co.soramitsu.androidfoundation.format.addHexPrefix
+import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraConfig
-import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraConfigNode
-import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraCurrency
-import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigBuilder
+import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.util.CachingFactory
+import jp.co.soramitsu.feature_blockexplorer_api.data.models.ConfigExplorerType
+import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraConfig
+import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraConfigNode
+import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraCurrency
+import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
+import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 
 @Singleton
 class SoraConfigManager @Inject constructor(
-    private val remoteConfigBuilder: SoraRemoteConfigBuilder,
+    private val json: Json,
+    private val restClient: RestClient,
     private val soraPreferences: SoraPreferences,
 ) {
 
-    companion object {
-        private const val SELECTED_CURRENCY = "selected_currency"
-        private val default = SoraCurrency("USD", "United States Dollar", "$")
+    private companion object {
+        const val SELECTED_CURRENCY = "selected_currency"
+
+        val DEFAULT_SORA_CURRENCY = SoraCurrency(
+            code = "USD",
+            name = "United States Dollar",
+            sign = "$"
+        )
     }
 
-    private suspend fun getConfig(): SoraConfig? = remoteConfigBuilder.getConfig()
+    private object EmptyArgs : CachingFactory.Args()
 
-    suspend fun getNodes(): List<SoraConfigNode> {
-        return getConfig()?.nodes ?: emptyList()
+    private val soraConfigFactory = CachingFactory<EmptyArgs, SoraConfig?> {
+        val commonConfig = tryLoadSaveRecoverMap(
+            url = { OptionsProvider.configCommon },
+            nameToSaveWith = { "commonConfig" },
+            deserializer = { ConfigDto.serializer() }
+        ) ?: return@CachingFactory null
+
+        val mobileConfig = tryLoadSaveRecoverMap(
+            url = { OptionsProvider.configMobile },
+            nameToSaveWith = { "mobileConfig" },
+            deserializer = { MobileDto.serializer() }
+        ) ?: return@CachingFactory null
+
+        val blockExplorerType = ConfigExplorerType(
+            fiat = mobileConfig.explorerTypeFiat,
+            reward = mobileConfig.explorerTypeReward,
+            sbapy = mobileConfig.explorerTypeSbapy,
+            assets = mobileConfig.explorerTypeAssets,
+        )
+
+        val nodes = commonConfig.nodes.map { nodeInfo ->
+            SoraConfigNode(
+                chain = nodeInfo.chain,
+                name = nodeInfo.name,
+                address = nodeInfo.address,
+            )
+        }
+
+        val currencies = mobileConfig.currencies.map { currencyDto ->
+            SoraCurrency(
+                code = currencyDto.code,
+                name = currencyDto.name,
+                sign = currencyDto.sign,
+            )
+        }
+
+        return@CachingFactory SoraConfig(
+            blockExplorerUrl = commonConfig.subquery,
+            blockExplorerType = blockExplorerType,
+            nodes = nodes,
+            genesis = commonConfig.genesis,
+            joinUrl = mobileConfig.joinLink,
+            substrateTypesUrl = mobileConfig.substrateTypesAndroid,
+            soracard = mobileConfig.soracard,
+            currencies = currencies
+        )
     }
+
+    private suspend inline fun <reified T> tryLoadSaveRecoverMap(
+        url: () -> String,
+        nameToSaveWith: () -> String,
+        deserializer: () -> DeserializationStrategy<T>
+    ): T? {
+        val result = runCatching {
+            restClient.getReturnString(
+                JsonGetRequest(
+                    url = url(),
+                    responseDeserializer = String.serializer()
+                )
+            )
+        }.onSuccess { configAsString ->
+            soraPreferences.putString(
+                field = nameToSaveWith(),
+                value = configAsString
+            )
+        }.recoverCatching {
+            soraPreferences.getString(
+                field = nameToSaveWith()
+            )
+        }.mapCatching { configAsString ->
+            json.decodeFromString(
+                deserializer = deserializer(),
+                string = configAsString
+            )
+        }.getOrNull()
+
+        return result
+    }
+
+    suspend fun getNodes(): List<SoraConfigNode> =
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.nodes ?: emptyList()
 
     suspend fun getSoraCard(): Boolean =
-        getConfig()?.soracard ?: false
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.soracard ?: false
 
-    suspend fun getGenesis(): String = getConfig()?.genesis.orEmpty()
+    suspend fun getGenesis(prefix: Boolean = false): String =
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.genesis.orEmpty().removeHexPrefix().let { if (prefix) it.addHexPrefix() else it }
 
-    suspend fun getInviteLink(): String = getConfig()?.joinUrl.orEmpty()
+    suspend fun getInviteLink(): String =
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.joinUrl.orEmpty()
 
-    suspend fun getSubstrateTypesUrl(): String = getConfig()?.substrateTypesUrl.orEmpty()
+    suspend fun getSubstrateTypesUrl(): String =
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.substrateTypesUrl.orEmpty()
 
     private suspend fun getCurrencies(): List<SoraCurrency> =
-        getConfig()?.currencies ?: listOf(default)
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.currencies ?: listOf(DEFAULT_SORA_CURRENCY)
 
-    private var selectedCurrency: SoraCurrency? = null
-
-    suspend fun getSelectedCurrency() = selectedCurrency ?: getSelectedCurrencyInternal().also {
-        selectedCurrency = it
+    private val selectedCurrencyFactory = CachingFactory<EmptyArgs, SoraCurrency> {
+        val selectedCurrency = getCurrencies().find {
+            it.code == soraPreferences.getString(SELECTED_CURRENCY).ifEmpty { "USD" }
+        }
+        return@CachingFactory selectedCurrency ?: DEFAULT_SORA_CURRENCY
     }
 
-    private suspend fun getSelectedCurrencyInternal(): SoraCurrency = getCurrencies().find {
-        it.code == (
-            soraPreferences.getString(SELECTED_CURRENCY).takeIf { pref -> pref.isNotEmpty() }
-                ?: "USD"
-            )
-    } ?: default
+    suspend fun getSelectedCurrency() =
+        selectedCurrencyFactory.value(EmptyArgs)
 }
+
+@Serializable
+private data class ConfigDto(
+    @SerialName("SUBQUERY_ENDPOINT")
+    val subquery: String,
+    @SerialName("DEFAULT_NETWORKS")
+    val nodes: List<NodeInfo>,
+    @SerialName("CHAIN_GENESIS_HASH")
+    val genesis: String,
+)
+
+@Serializable
+private data class NodeInfo(
+    @SerialName("chain")
+    val chain: String,
+    @SerialName("name")
+    val name: String,
+    @SerialName("address")
+    val address: String,
+)
+
+@Serializable
+private data class MobileDto(
+    @SerialName("explorer_type_fiat")
+    val explorerTypeFiat: String,
+    @SerialName("explorer_type_sbapy")
+    val explorerTypeSbapy: String,
+    @SerialName("explorer_type_reward")
+    val explorerTypeReward: String,
+    @SerialName("explorer_type_assets")
+    val explorerTypeAssets: String,
+    @SerialName("join_link")
+    val joinLink: String,
+    @SerialName("substrate_types_android")
+    val substrateTypesAndroid: String,
+    @SerialName("substrate_types_ios")
+    val substrateTypesIos: String,
+    @SerialName("soracard")
+    val soracard: Boolean = false,
+    @SerialName("currencies")
+    val currencies: List<CurrencyDto>,
+)
+
+@Serializable
+private data class CurrencyDto(
+    @SerialName("code")
+    val code: String,
+    @SerialName("name")
+    val name: String,
+    @SerialName("sign")
+    val sign: String,
+)

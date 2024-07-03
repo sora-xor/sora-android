@@ -35,7 +35,7 @@ package jp.co.soramitsu.feature_referral_api.data
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
+import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.flow.Flow
 
@@ -43,7 +43,7 @@ interface ReferralRepository {
 
     suspend fun updateReferralRewards(address: String)
 
-    fun getReferralRewards(): Flow<List<ReferrerReward>>
+    fun getReferralRewards(): Flow<List<ReferralReward>>
 
     suspend fun getSetReferrerFee(from: String, feeToken: Token): BigDecimal?
 

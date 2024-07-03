@@ -36,6 +36,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkObject
 import io.mockk.runs
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
@@ -43,7 +44,6 @@ import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.xcrypto.seed.Mnemonic
 import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair

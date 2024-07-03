@@ -155,6 +155,11 @@ android {
     configurations {
         all {
             exclude(module = "bcprov-jdk15on")
+//            resolutionStrategy {
+//                dependencySubstitution {
+//                    substitute(module("")).using(module(""))
+//                }
+//            }
         }
     }
 }
@@ -234,8 +239,11 @@ dependencies {
 
     implementation(libs.webSocketLibDep)
 
-    // Tests
-    testImplementation(project(":test_shared"))
+    testImplementation(libs.coroutineTestDep)
+    testImplementation(libs.junitDep)
+    testImplementation(libs.mockkDep)
+    testImplementation(libs.mockitoKotlinDep)
+    testImplementation(libs.archCoreTestDep)
 
     kover(project(":common"))
     kover(project(":common_wallet"))

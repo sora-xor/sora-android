@@ -33,10 +33,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_select_node_impl.presentation.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.feature_select_node_impl.domain.InetAddressesWrapper
 import jp.co.soramitsu.feature_select_node_impl.domain.NodeValidator
 import jp.co.soramitsu.feature_select_node_impl.domain.ValidationEvent
-import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

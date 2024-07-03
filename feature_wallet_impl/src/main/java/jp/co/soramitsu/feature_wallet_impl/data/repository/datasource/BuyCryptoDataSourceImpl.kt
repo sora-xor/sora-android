@@ -40,22 +40,14 @@ import jp.co.soramitsu.network.WebSocket
 import jp.co.soramitsu.network.WebSocketListener
 import jp.co.soramitsu.network.WebSocketRequest
 import jp.co.soramitsu.network.WebSocketResponse
-import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class BuyCryptoDataSourceImpl(
-    clientProvider: SoramitsuHttpClientProvider
+    private val json: Json
 ) : BuyCryptoDataSource {
-
-    private val json = Json {
-        prettyPrint = true
-        isLenient = true
-        ignoreUnknownKeys = true
-    }
 
     private val paymentOrderFlow = MutableSharedFlow<PaymentOrderInfo>()
 
@@ -77,8 +69,7 @@ class BuyCryptoDataSourceImpl(
         url = BuildConfigWrapper.soraCardX1StatusUrl,
         listener = webSocketListener,
         json = json,
-        logging = false,
-        provider = clientProvider,
+        logging = false
     )
 
     override suspend fun requestPaymentOrderStatus(paymentOrder: PaymentOrder) {

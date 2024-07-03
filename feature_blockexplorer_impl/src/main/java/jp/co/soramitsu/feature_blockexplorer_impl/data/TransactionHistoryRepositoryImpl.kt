@@ -37,6 +37,7 @@ import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.SuspendableProperty
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
@@ -44,16 +45,19 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
-import jp.co.soramitsu.xnetworking.basic.txhistory.TxHistoryItem
-import jp.co.soramitsu.xnetworking.sorawallet.txhistory.client.SubQueryClientForSoraWallet
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.TxHistoryRepository
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.ChainInfo
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxFilter
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.debounce
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class TransactionHistoryRepositoryImpl @Inject constructor(
-    private val subQueryClient: SubQueryClientForSoraWallet,
+    private val txHistoryRepository: TxHistoryRepository,
     extrinsicManager: ExtrinsicManager,
+    private val soraConfigManager: SoraConfigManager,
 ) : TransactionHistoryRepository {
 
     init {
@@ -69,7 +73,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getContacts(query: String): Set<String> =
-        subQueryClient.getTransactionPeers(query).toSet()
+        txHistoryRepository.getTransactionPeers(query, soraConfigManager.getGenesis()).toSet()
 
     private fun updateTransactionStatus(txHash: String, status: Boolean, block: String?) {
         localPendingTransactions[txHash]?.base?.status =
@@ -84,14 +88,21 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         count: Int,
         filterTokenId: String?,
     ): List<Transaction> {
-        val tx = subQueryClient.getTransactionHistoryCached(
+        val tx = txHistoryRepository.getTransactionHistoryCached(
+            count = count,
+            address = soraAccount.substrateAddress,
+            chainId = soraConfigManager.getGenesis(),
+        ).filter {
+            if (filterTokenId != null)
+                return@filter isReferral(it, filterTokenId)
+
+            return@filter true
+        }
+        val mapped = mapHistoryItemsToTransactions(
+            tx,
             soraAccount.substrateAddress,
-            count,
-            filter = if (filterTokenId == null) null else { r ->
-                filterHistoryItem(r, filterTokenId)
-            }
+            tokens
         )
-        val mapped = mapHistoryItemsToTransactions(tx, soraAccount.substrateAddress, tokens)
         return buildList {
             addAll(filterLocalPendingTx(filterTokenId))
             addAll(mapped)
@@ -103,9 +114,10 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         tokens: List<Token>,
         soraAccount: SoraAccount
     ): Transaction? {
-        val tx = subQueryClient.getTransactionCached(
+        val tx = txHistoryRepository.getTransactionCached(
             address = soraAccount.substrateAddress,
-            txHash = txHash
+            txHash = txHash,
+            chainId = soraConfigManager.getGenesis(),
         )
         val transaction =
             mapHistoryItemsToTransactions(
@@ -124,26 +136,37 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         filterTokenId: String?,
     ): TransactionsInfo {
         val historyInfo =
-            subQueryClient.getTransactionHistoryPaged(
+            txHistoryRepository.getTransactionHistoryPaged(
                 address = soraAccount.substrateAddress,
                 page = page,
-                filter = if (filterTokenId == null) null else { r ->
-                    filterHistoryItem(r, filterTokenId)
-                },
+                chainInfo = ChainInfo.Simple("SoraChainId"),
+                pageCount = 100,
+                filters = TxFilter.entries.toSet()
             )
 
-        val transactions = historyInfo?.items?.let {
-            mapHistoryItemsToTransactions(it, soraAccount.substrateAddress, tokens)
-        }.orEmpty()
+        val referralTransactions = historyInfo.items
+            .filter { item ->
+                if (filterTokenId != null)
+                    return@filter isReferral(item, filterTokenId)
+
+                return@filter true
+            }.let { item ->
+                mapHistoryItemsToTransactions(
+                    item,
+                    soraAccount.substrateAddress,
+                    tokens
+                )
+            }
+
         val filtered = localPendingTransactions.filter { transactionLocal ->
-            transactions.find { transaction -> transaction.base.txHash == transactionLocal.key } == null
+            referralTransactions.find { transaction -> transaction.base.txHash == transactionLocal.key } == null
         }
         localPendingTransactions.clear()
         localPendingTransactions.putAll(filtered)
         return TransactionsInfo(
             buildList {
                 if (page == 1L) addAll(filterLocalPendingTx(filterTokenId).sortedByDescending { it.base.timestamp })
-                addAll(transactions)
+                addAll(referralTransactions)
             },
             historyInfo?.endReached ?: true,
             historyInfo?.errorMessage,
@@ -157,23 +180,22 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         _state.set(true)
     }
 
-    private fun filterHistoryItem(item: TxHistoryItem, tokenId: String): Boolean {
-        return (
+    private fun isReferral(item: TxHistoryItem, tokenId: String): Boolean {
+        val hasTokenIdInMainParams =
             item.data?.find {
                 it.paramValue == tokenId
             } != null
-            ) || (
+
+        val hasTokenIdInNestedParams =
             item.nestedData?.find { nested ->
-                nested.data.find {
-                    it.paramValue == tokenId
-                } != null
+                nested.data.find { it.paramValue == tokenId } != null
             } != null
-            ) || (
-            tokenId == SubstrateOptionsProvider.feeAssetId && item.module.equals(
-                Pallete.Referrals.palletName,
-                true
-            )
-            )
+
+        val usedInReferralModule =
+            tokenId == SubstrateOptionsProvider.feeAssetId &&
+                item.module.equals(Pallete.Referrals.palletName, true)
+
+        return hasTokenIdInMainParams || hasTokenIdInNestedParams || usedInReferralModule
     }
 
     private fun filterLocalPendingTx(tokenId: String?): Collection<Transaction> =

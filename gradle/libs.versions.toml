@@ -39,13 +39,12 @@ firebaseAppDistribution = "3.2.0"
 tripletVersion = "3.8.4"
 timber = "5.0.1"
 ktor = "2.3.1"
-soracard = "1.1.11"
-xnetworking = "0.2.9"
-xnetworkingS = "1.0.1"
-xsubstrate = "1.2.4"
+soracard = "1.1.13"
+xnetworkingLib = "1.0.5"
+xsubstrate = "1.2.7"
 uicore = "0.2.32"
-xbackup = "1.2.1"
-xcrypto = "1.2.3"
+xbackup = "1.2.2"
+xcrypto = "1.2.6"
 ed = "2.0.1"
 xerces = "2.9.0"
 dagger = "2.49"
@@ -89,15 +88,16 @@ hiltWorkManagerDep = { module = "androidx.hilt:hilt-work", version.ref = "hiltWo
 hiltWorkManagerKaptDep = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWorkManager" }
 lazySodiumDep = { module = "com.goterl:lazysodium-android", version.ref = "lazySodium" }
 jnaDep = { module = "net.java.dev.jna:jna", version.ref = "jna" }
+ktorLoggingDep = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+ktorContentNegotiationDep = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktorOkHttpDep = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktorWebSocketDep = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 soraCardDep = { module = "jp.co.soramitsu:android-sora-card", version.ref = "soracard" }
-xnetworkingSDep = { module = "jp.co.soramitsu.xnetworking:lib-android", version.ref = "xnetworkingS" }
-xnetworkingDep = { module = "jp.co.soramitsu.xnetworking:basic-android", version.ref = "xnetworking" }
-xnetworkingSoraWalletDep = { module = "jp.co.soramitsu.xnetworking:sorawallet-android", version.ref = "xnetworking" }
+xnetworkingLibDep = { module = "jp.co.soramitsu.xnetworking:lib-android", version.ref = "xnetworkingLib" }
 xsubstrateDep = { module = "jp.co.soramitsu:xsubstrate", version.ref = "xsubstrate" }
 uiCoreDep = { module = "jp.co.soramitsu:ui-core", version.ref = "uicore" }
 xbackupDep = { module = "jp.co.soramitsu:xbackup", version.ref = "xbackup" }
-xcryptoDep = { module = "jp.co.soramitsu:x-crypto", version.ref = "xcrypto" }
+xcryptoDep = { module = "jp.co.soramitsu:xcrypto", version.ref = "xcrypto" }
 ed25519Dep = { module = "com.github.warchant:ed25519-sha3-java", version.ref = "ed" }
 xercesDep = { module = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces", version.ref = "xerces" }
 timberDep = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
