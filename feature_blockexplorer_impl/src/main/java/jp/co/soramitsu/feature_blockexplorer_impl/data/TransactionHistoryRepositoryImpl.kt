@@ -139,7 +139,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             txHistoryRepository.getTransactionHistoryPaged(
                 address = soraAccount.substrateAddress,
                 page = page,
-                chainInfo = ChainInfo.Simple("SoraChainId"),
+                chainInfo = ChainInfo.Simple(soraConfigManager.getGenesis()),
                 pageCount = 100,
                 filters = TxFilter.entries.toSet()
             )

@@ -101,19 +101,7 @@ class WhitelistTokensManager @Inject constructor(
                 )
             )
         }.onSuccess { dtoList ->
-            val ids = dtoList.mapNotNull {
-                TokenDto(
-                    id = it.fieldOrNull("address")
-                        ?: return@mapNotNull null,
-                    type = it.fieldOrNull("icon")
-                        ?: return@mapNotNull null
-                )
-            }
-            updateWhitelist(ids)
-            fileManager.writeInternalFile(
-                WHITELIST_FILE_NAME,
-                Json.encodeToString(ids)
-            )
+            val ids = mutableListOf<TokenDto>()
 
             dtoList.forEach { dto ->
                 val address = dto.fieldOrNull("address") ?: return@forEach
@@ -123,23 +111,33 @@ class WhitelistTokensManager @Inject constructor(
                     delimiter = ",",
                     missingDelimiterValue = ""
                 )
-                val iconExtension = iconField.removeSurrounding(
-                    prefix = "data:image/",
-                    suffix = iconRaw
-                )
 
-                when (iconExtension) {
-                    "svg" -> fileManager.writeInternalCacheFile(
-                        fileName = "$address.$iconExtension",
-                        content = iconRaw.decodeURLPart()
-                    )
-                    "png" -> fileManager.writeInternalCacheFile(
-                        fileName = "$address.$iconExtension",
-                        content = iconRaw.decodeBase64Bytes()
-                    )
+                when {
+                    iconField.startsWith("data:image/svg") -> {
+                        fileManager.writeInternalCacheFile(
+                            fileName = "$address.svg",
+                            content = iconRaw.decodeURLPart()
+                        )
+
+                        ids += TokenDto(id = address, type = "svg")
+                    }
+                    iconField.startsWith("data:image/png") -> {
+                        fileManager.writeInternalCacheFile(
+                            fileName = "$address.png",
+                            content = iconRaw.decodeBase64Bytes()
+                        )
+
+                        ids += TokenDto(id = address, type = "png")
+                    }
                     else -> return@forEach
                 }
             }
+
+            updateWhitelist(ids)
+            fileManager.writeInternalFile(
+                WHITELIST_FILE_NAME,
+                Json.encodeToString(ids)
+            )
         }.onFailure {
             FirebaseWrapper.recordException(it)
 
