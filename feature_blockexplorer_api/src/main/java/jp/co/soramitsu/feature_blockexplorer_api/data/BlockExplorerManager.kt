@@ -46,79 +46,101 @@ import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
-import jp.co.soramitsu.xnetworking.basic.common.Utils.toDoubleNan
-import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
-import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkException
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.sbapy.SbApyInfo
+import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.BlockExplorerRepository
+import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.Apy
+import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
+import jp.co.soramitsu.xnetworking.lib.engines.rest.api.models.RestClientException
+import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
+
+fun String.toDoubleNan(): Double? = this.toDoubleOrNull()?.let {
+    if (it.isNaN()) null else it
+}
 
 @Singleton
 class BlockExplorerManager @Inject constructor(
-    private val info: SoraWalletBlockExplorerInfo,
+    private val restClient: RestClient,
+    private val info: BlockExplorerRepository,
     private val db: AppDatabase,
     private val appStateProvider: AppStateProvider,
-    private val networkClient: SoramitsuNetworkClient,
     private val soraConfigManager: SoraConfigManager,
 ) {
 
-    private val tempApy = mutableListOf<SbApyInfo>()
+    private val tempApy = mutableListOf<Apy>()
 
     private var assetsInfo: List<Pair<String, Double>>? = null
 
     private val mutexFiat = Mutex()
 
-    fun getTempApy(id: String) = tempApy.find {
-        it.id == id
-    }?.sbApy?.times(100)
+    fun getTempApy(id: String) = tempApy.find { it.id == id }?.value?.toDoubleNan()
+        ?.times(100)
 
-    suspend fun getTokensLiquidity(tokenIds: List<String>): List<Pair<String, Double>> =
-        assetsInfo ?: mutexFiat.withLock {
-            assetsInfo ?: getAssetsInfoInternal(tokenIds).also {
-                assetsInfo = it
+    suspend fun getTokensLiquidity(tokenIds: List<String>): List<Pair<String, Double>> {
+        if (assetsInfo == null) {
+            mutexFiat.withLock {
+                if (assetsInfo == null) {
+                    assetsInfo = getAssetsInfoInternal(tokenIds)
+                }
             }
         }
 
-    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, Double>> =
-        runCatching {
+        return checkNotNull(assetsInfo)
+    }
+
+    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, Double>> {
+        return runCatching {
             val selected = soraConfigManager.getSelectedCurrency()
             val tokens = db.assetDao().getFiatTokenPriceLocal(selected.code)
             val yesterdayHour = yesterday()
             val resultList = mutableListOf<Pair<String, Double>>()
             val fiats = mutableListOf<FiatTokenPriceLocal>()
+
             RetryStrategyBuilder.build().retryIf(
                 retries = 3,
-                predicate = { t -> t is SoramitsuNetworkException },
-                block = { info.getAssetsInfo(tokenIds, yesterdayHour) },
+                predicate = { t ->
+                    t is RestClientException
+                },
+                block = {
+                    info.getAssetsInfo(
+                        soraConfigManager.getGenesis(),
+                        tokenIds,
+                        yesterdayHour.toInt(),
+                    )
+                },
             ).forEach { assetInfo ->
-                val dbValue = tokens.find { it.tokenIdFiat == assetInfo.tokenId }
-                val delta = assetInfo.hourDelta
-                if (dbValue != null && delta != null) {
-                    fiats.add(
-                        dbValue.copy(
-                            fiatChange = delta / 100.0,
-                            fiatPricePrevHTime = yesterdayHour,
-                        )
+                val dbValue = tokens.find { it.tokenIdFiat == assetInfo.id }
+                val prevPrice = assetInfo.previousPrice
+
+                if (dbValue != null) {
+                    fiats += dbValue.copy(
+                        fiatChange = prevPrice?.div(100.0),
+                        fiatPricePrevHTime = yesterdayHour,
                     )
                 }
-                dbValue?.tokenIdFiat?.let { tokenId ->
-                    db.assetDao().getPrecisionOfToken(tokenId)?.let { precision ->
-                        assetInfo.liquidity.toBigIntegerOrNull()?.let { mapBalance(it, precision) }?.let { supply ->
-                            val tvl = supply.times(BigDecimal(dbValue.fiatPrice))
-                            resultList.add(assetInfo.tokenId to tvl.toDoubleInfinite())
-                        }
-                    }
-                }
+
+                val precision = db.assetDao().getPrecisionOfToken(
+                    tokenId = dbValue?.tokenIdFiat ?: return@forEach
+                ) ?: return@forEach
+
+                val supply = assetInfo.liquidity.toBigIntegerOrNull()?.let {
+                    mapBalance(it, precision)
+                } ?: return@forEach
+
+                resultList += Pair(
+                    first = assetInfo.id,
+                    second = supply.times(BigDecimal(dbValue.fiatPrice))
+                        .toDoubleInfinite()
+                )
             }
+
             db.assetDao().insertFiatPrice(fiats)
             resultList
         }.getOrElse {
             FirebaseWrapper.recordException(it)
             emptyList()
         }
+    }
 
     suspend fun updatePoolsSbApy() {
         updateSbApyInternal()
@@ -127,41 +149,42 @@ class BlockExplorerManager @Inject constructor(
     suspend fun updateFiat() {
         if (appStateProvider.isForeground) {
             runCatching {
-                val response = info.getFiat()
-                updateFiatPrices(response.map { FiatInfo(it.id, it.priceUsd) })
+                updateFiatPrices(
+                    fiatData = info.getFiat(soraConfigManager.getGenesis()).map {
+                        FiatInfo(it.id, it.priceUSD.toDoubleNan())
+                    }
+                )
             }
         }
     }
 
-    suspend fun updateReferrerRewards(
-        address: String,
-    ) {
+    suspend fun updateReferrerRewards(address: String) {
         runCatching {
-            val response = info.getReferrerRewards(address)
-            response.rewards.map {
+            val rewards = info.getReferralReward(soraConfigManager.getGenesis(), address).map {
                 ReferralLocal(it.referral, it.amount)
             }
+
+            db.withTransaction {
+                db.referralsDao().clearTable()
+                db.referralsDao().insertReferrals(rewards)
+            }
+        }.onFailure {
+            FirebaseWrapper.recordException(it)
         }
-            .onSuccess {
-                db.withTransaction {
-                    db.referralsDao().clearTable()
-                    db.referralsDao().insertReferrals(it)
-                }
-            }
-            .onFailure {
-                FirebaseWrapper.recordException(it)
-            }
     }
 
     suspend fun getXorPerEurRatio(): Double? = runCatching {
-        val json = networkClient.get(BuildConfigWrapper.soraCardEuroRateUrl)
-        val soraCoin = Json.decodeFromString<SoraCoin>(serializer(), json)
-        soraCoin.price.toDoubleNan()
+        restClient.get(
+            request = JsonGetRequest(
+                url = BuildConfigWrapper.soraCardEuroRateUrl,
+                responseDeserializer = SoraCoin.serializer()
+            )
+        ).price.toDoubleNan()
     }.getOrNull()
 
     private suspend fun updateSbApyInternal() {
         runCatching {
-            val response = info.getSpApy()
+            val response = info.getApy(soraConfigManager.getGenesis())
             tempApy.clear()
             tempApy.addAll(response)
         }

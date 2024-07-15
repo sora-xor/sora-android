@@ -72,6 +72,7 @@ import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.io.FileManagerImpl
 import jp.co.soramitsu.common.resourses.LanguagesHolder
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.EncryptionUtil
@@ -82,15 +83,17 @@ import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import jp.co.soramitsu.xbackup.BackupService
-import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProvider
-import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProviderImpl
-import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
-import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigBuilder
-import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigProvider
-import jp.co.soramitsu.xnetworking.sorawallet.tokenwhitelist.SoraTokensWhitelistManager
-import jp.co.soramitsu.xnetworking.sorawallet.txhistory.client.SubQueryClientForSoraWalletFactory
+import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.BlockExplorerRepository
+import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.impl.BlockExplorerRepositoryImpl
+import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.api.ConfigDAO
+import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.api.data.ConfigParser
+import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.impl.SuperWalletConfigDAOImpl
+import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.impl.data.RemoteConfigParserImpl
+import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
+import jp.co.soramitsu.xnetworking.lib.engines.rest.api.models.AbstractRestClientConfig
+import jp.co.soramitsu.xnetworking.lib.engines.rest.impl.RestClientImpl
 import jp.co.soramitsu.xsubstrate.encrypt.json.JsonSeedEncoder
+import kotlinx.serialization.json.Json
 
 @InstallIn(SingletonComponent::class)
 @Module
@@ -133,6 +136,50 @@ class CommonModule {
 
     @Singleton
     @Provides
+    fun provideJson(): Json = Json {
+        prettyPrint = true
+        isLenient = true
+        ignoreUnknownKeys = true
+    }
+
+    @Singleton
+    @Provides
+    fun provideConfigParser(
+        restClient: RestClient
+    ): ConfigParser = RemoteConfigParserImpl(
+        restClient = restClient,
+        chainsRequestUrl = OptionsProvider.configXn,
+    )
+
+    @Singleton
+    @Provides
+    fun provideConfigDAO(configParser: ConfigParser): ConfigDAO =
+        SuperWalletConfigDAOImpl(configParser = configParser)
+
+    @Singleton
+    @Provides
+    fun provideBlockExplorerRepository(
+        configDAO: ConfigDAO,
+        restClient: RestClient
+    ): BlockExplorerRepository = BlockExplorerRepositoryImpl(
+        configDAO = configDAO,
+        restClient = restClient
+    )
+
+    @Singleton
+    @Provides
+    fun provideRestClient(json: Json): RestClient = RestClientImpl(
+        restClientConfig = object : AbstractRestClientConfig() {
+            override fun getConnectTimeoutMillis(): Long = 30_000L
+            override fun getOrCreateJsonConfig(): Json = json
+            override fun getRequestTimeoutMillis(): Long = 30_000L
+            override fun getSocketTimeoutMillis(): Long = 30_000L
+            override fun isLoggingEnabled(): Boolean = BuildUtils.isPlayMarket().not()
+        }
+    )
+
+    @Singleton
+    @Provides
     fun provideSvgDecoder(): SvgDecoder.Factory {
         return SvgDecoder.Factory()
     }
@@ -169,55 +216,6 @@ class CommonModule {
     fun provideQrCodeGenerator(): QrCodeGenerator {
         return QrCodeGenerator(Color.BLACK)
     }
-
-    @Singleton
-    @Provides
-    fun provideSoramitsuNetworkClient(): SoramitsuNetworkClient =
-        SoramitsuNetworkClient(logging = BuildConfig.DEBUG, timeout = 20000)
-
-    @Singleton
-    @Provides
-    fun provideSoraWalletBlockExplorerInfo(
-        client: SoramitsuNetworkClient,
-        soraRemoteConfigBuilder: SoraRemoteConfigBuilder,
-    ): SoraWalletBlockExplorerInfo {
-        return SoraWalletBlockExplorerInfo(
-            networkClient = client,
-            soraRemoteConfigBuilder = soraRemoteConfigBuilder,
-        )
-    }
-
-    @Singleton
-    @Provides
-    fun provideSoraRemoteConfigBuilder(
-        client: SoramitsuNetworkClient,
-        @ApplicationContext context: Context,
-    ): SoraRemoteConfigBuilder {
-        return SoraRemoteConfigProvider(
-            context = context,
-            client = client,
-            commonUrl = OptionsProvider.configCommon,
-            mobileUrl = OptionsProvider.configMobile,
-        ).provide()
-    }
-
-    @Singleton
-    @Provides
-    fun provideSoramitsuHttpClientProvider(): SoramitsuHttpClientProvider =
-        SoramitsuHttpClientProviderImpl()
-
-    @Singleton
-    @Provides
-    fun provideSubQueryClientForSoraWalletFactory(
-        @ApplicationContext context: Context
-    ): SubQueryClientForSoraWalletFactory = SubQueryClientForSoraWalletFactory(context)
-
-    @Singleton
-    @Provides
-    fun provideSoraTokensWhitelistFetcher(
-        client: SoramitsuNetworkClient,
-    ): SoraTokensWhitelistManager =
-        SoraTokensWhitelistManager(networkClient = client)
 
     @Singleton
     @Provides

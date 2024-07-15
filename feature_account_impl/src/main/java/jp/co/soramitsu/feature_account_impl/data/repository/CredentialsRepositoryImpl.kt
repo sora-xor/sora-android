@@ -207,6 +207,7 @@ class CredentialsRepositoryImpl constructor(
     }
 
     override suspend fun generateJson(accounts: List<SoraAccount>, password: String): String {
+        val localGenesis = soraConfigManager.getGenesis(true)
         if (accounts.size == 1) {
             accounts.first().let {
                 val seed = credentialsPrefs.retrieveSeed(it.substrateAddress)
@@ -222,7 +223,7 @@ class CredentialsRepositoryImpl constructor(
                 return jsonSeedEncoder.generate(
                     account = exportAccountData,
                     password = password,
-                    genesisHash = soraConfigManager.getGenesis()
+                    genesisHash = localGenesis,
                 )
             }
         } else {
@@ -238,7 +239,7 @@ class CredentialsRepositoryImpl constructor(
                 )
             }
 
-            return jsonSeedEncoder.generate(accountsList, password, soraConfigManager.getGenesis())
+            return jsonSeedEncoder.generate(accountsList, password, localGenesis)
         }
     }
 

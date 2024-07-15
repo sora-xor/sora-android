@@ -40,6 +40,7 @@ object OptionsProvider {
     var APPLICATION_ID: String = ""
     const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
     const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
+    const val configXn = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/xn.json"
     val fileProviderAuthority: String get() = "$APPLICATION_ID.soraFileProvider"
     val header: String by lazy {
         "$APPLICATION_ID/$CURRENT_VERSION_NAME/$CURRENT_VERSION_CODE/${BuildConfig.BUILD_TYPE}/${BuildConfig.FLAVOR}"
@@ -49,7 +50,7 @@ object OptionsProvider {
     const val defaultScale = 18
     const val nameByteLimit = 32
     const val fiatSymbol = "$"
-    const val nbspace = ' '
+    const val nbspace = Typography.nbsp
     const val euroSign = '€'
     const val soracard = "2.2.4"
     const val soracardFiatPackageTest = "com.soracard.iban.wallet.test"

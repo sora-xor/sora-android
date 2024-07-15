@@ -33,8 +33,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.substrate.runtime
 
 import java.math.BigInteger
+import jp.co.soramitsu.androidfoundation.format.addHexPrefix
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
-import jp.co.soramitsu.common.util.ext.addHexPrefix
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider.syntheticTokenRegex
 import jp.co.soramitsu.sora.substrate.substrate.fromHex
 import jp.co.soramitsu.xcrypto.util.fromHex

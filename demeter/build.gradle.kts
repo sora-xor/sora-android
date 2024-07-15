@@ -63,6 +63,16 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
@@ -86,13 +96,11 @@ dependencies {
     implementation(libs.coroutineAndroidDep)
 
     implementation(libs.xsubstrateDep)
-    implementation(libs.xnetworkingDep)
 
     implementation(libs.composeRuntimeDep)
 
     implementation(libs.roomDep)
     implementation(libs.roomKtxDep)
 
-    testImplementation(project(":test_shared"))
     testImplementation(project(":test_data"))
 }

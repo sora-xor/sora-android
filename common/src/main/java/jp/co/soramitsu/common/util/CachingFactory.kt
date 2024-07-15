@@ -30,16 +30,37 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.test_shared
+package jp.co.soramitsu.common.util
 
-import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mockito
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
-fun <T> anyNonNull(): T {
-    Mockito.any<T>()
-    return initialized()
+class CachingFactory<Args : CachingFactory.Args, Value>(
+    private val factory: suspend Args.() -> Value
+) {
+
+    abstract class Args
+
+    private val cacheMutex = Mutex()
+    private var cachedValue = mutableMapOf<Args, Value>()
+
+    suspend fun nullableValue(args: Args): Value? {
+        initialize(args)
+        return cachedValue[args]
+    }
+
+    suspend fun value(args: Args): Value {
+        initialize(args)
+        return checkNotNull(cachedValue[args])
+    }
+
+    private suspend fun initialize(args: Args) {
+        if (cachedValue[args] == null) {
+            cacheMutex.withLock {
+                if (cachedValue[args] == null) {
+                    cachedValue[args] = factory(args)
+                }
+            }
+        }
+    }
 }
-
-fun <T : Any> eqNonNull(value: T): T = eq(value) ?: value
-
-private fun <T> initialized(): T = null as T

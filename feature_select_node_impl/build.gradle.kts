@@ -63,6 +63,16 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
@@ -89,7 +99,6 @@ dependencies {
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
-    implementation(libs.xnetworkingDep)
     implementation(libs.xsubstrateDep)
 
     implementation(libs.roomDep)
@@ -114,5 +123,9 @@ dependencies {
     implementation(libs.daggerDep)
     kapt(libs.daggerKaptDep)
 
-    testImplementation(project(":test_shared"))
+    testImplementation(libs.coroutineTestDep)
+    testImplementation(libs.junitDep)
+    testImplementation(libs.mockkDep)
+    testImplementation(libs.mockitoKotlinDep)
+    testImplementation(libs.archCoreTestDep)
 }

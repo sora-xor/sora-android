@@ -35,6 +35,8 @@ package jp.co.soramitsu.feature_blockexplorer_impl.domain
 import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.androidfoundation.format.unsafeCast
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.androidfoundation.testing.test
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
@@ -53,8 +55,6 @@ import jp.co.soramitsu.feature_blockexplorer_impl.presentation.txhistory.Transac
 import jp.co.soramitsu.feature_blockexplorer_impl.testdata.TestTransactions
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.test
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.CoroutineDispatcher
