@@ -98,15 +98,23 @@ class BlockExplorerManager @Inject constructor(
 
             RetryStrategyBuilder.build().retryIf(
                 retries = 3,
-                predicate = { t -> t is RestClientException },
-                block = { info.getAssetsInfo(soraConfigManager.getGenesis(), tokenIds, yesterdayHour.toInt()) },
+                predicate = { t ->
+                    t is RestClientException
+                },
+                block = {
+                    info.getAssetsInfo(
+                        soraConfigManager.getGenesis(),
+                        tokenIds,
+                        yesterdayHour.toInt(),
+                    )
+                },
             ).forEach { assetInfo ->
                 val dbValue = tokens.find { it.tokenIdFiat == assetInfo.id }
-                val delta = assetInfo.previousPrice
+                val prevPrice = assetInfo.previousPrice
 
-                if (dbValue != null && delta != null) {
+                if (dbValue != null) {
                     fiats += dbValue.copy(
-                        fiatChange = delta / 100.0,
+                        fiatChange = prevPrice?.div(100.0),
                         fiatPricePrevHTime = yesterdayHour,
                     )
                 }

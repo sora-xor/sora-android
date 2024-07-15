@@ -72,6 +72,7 @@ import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.io.FileManagerImpl
 import jp.co.soramitsu.common.resourses.LanguagesHolder
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.EncryptionUtil
@@ -173,7 +174,7 @@ class CommonModule {
             override fun getOrCreateJsonConfig(): Json = json
             override fun getRequestTimeoutMillis(): Long = 30_000L
             override fun getSocketTimeoutMillis(): Long = 30_000L
-            override fun isLoggingEnabled(): Boolean = BuildConfig.DEBUG
+            override fun isLoggingEnabled(): Boolean = BuildUtils.isPlayMarket().not()
         }
     )
 

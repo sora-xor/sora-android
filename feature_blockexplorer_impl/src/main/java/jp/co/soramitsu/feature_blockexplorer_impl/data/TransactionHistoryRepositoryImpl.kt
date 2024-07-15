@@ -168,8 +168,8 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
                 if (page == 1L) addAll(filterLocalPendingTx(filterTokenId).sortedByDescending { it.base.timestamp })
                 addAll(referralTransactions)
             },
-            historyInfo?.endReached ?: true,
-            historyInfo?.errorMessage,
+            historyInfo.endReached,
+            historyInfo.errorMessage,
         )
     }
 
