@@ -37,9 +37,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource

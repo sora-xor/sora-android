@@ -34,9 +34,9 @@ package jp.co.soramitsu.sora.substrate.substrate
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
 import jp.co.soramitsu.xsubstrate.wsrpc.networkStateFlow
 import jp.co.soramitsu.xsubstrate.wsrpc.state.SocketStateMachine

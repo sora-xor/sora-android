@@ -34,7 +34,7 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 
 import java.math.BigDecimal
 import javax.inject.Inject
-import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.ext.splitVersions

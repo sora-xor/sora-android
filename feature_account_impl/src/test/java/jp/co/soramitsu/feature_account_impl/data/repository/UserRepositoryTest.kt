@@ -41,11 +41,11 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.mockkStatic
 import io.mockk.slot
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.CardHubType
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.core_db.AppDatabase

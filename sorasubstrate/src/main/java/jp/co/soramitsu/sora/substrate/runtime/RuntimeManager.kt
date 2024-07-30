@@ -36,8 +36,8 @@ import com.google.gson.Gson
 import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager

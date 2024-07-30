@@ -35,9 +35,9 @@ package jp.co.soramitsu.feature_main_impl.presentation
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkObject
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.RepeatStrategy
 import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor

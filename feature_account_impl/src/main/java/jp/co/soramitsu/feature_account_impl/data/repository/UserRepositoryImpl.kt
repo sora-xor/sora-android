@@ -33,9 +33,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_account_impl.data.repository
 
 import androidx.room.withTransaction
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.CardHubType
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.core_db.AppDatabase
