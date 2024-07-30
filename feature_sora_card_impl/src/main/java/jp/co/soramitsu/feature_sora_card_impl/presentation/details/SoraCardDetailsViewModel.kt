@@ -108,12 +108,10 @@ class SoraCardDetailsViewModel @Inject constructor(
                     ibanCache = basicStatus.ibanInfo
                     val phoneFormatted = basicStatus.phone?.let { "+$it" }
                     _soraCardDetailsScreenState.value = local.copy(
-                        soraCardIBANCardState = basicStatus.ibanInfo?.let { iban ->
-                            SoraCardIBANCardState(
-                                iban.iban,
-                                iban.ibanStatus == IbanStatus.CLOSED,
-                            )
-                        },
+                        soraCardIBANCardState = SoraCardIBANCardState(
+                            iban = basicStatus.ibanInfo?.iban.orEmpty(),
+                            closed = basicStatus.ibanInfo?.ibanStatus == IbanStatus.CLOSED,
+                        ),
                         soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
                             balance = basicStatus.ibanInfo?.balance,
                             phone = phoneFormatted,

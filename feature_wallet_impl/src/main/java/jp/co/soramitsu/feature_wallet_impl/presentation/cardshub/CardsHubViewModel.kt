@@ -144,7 +144,6 @@ class CardsHubViewModel @Inject constructor(
                     _state.value = _state.value.copy(
                         accountAddress = data.first.substrateAddress,
                         curAccount = data.first.accountTitle(),
-                        loading = false,
                     )
                     val flows = data.second.filter { it.visibility }.map { cardHub ->
                         when (cardHub.cardType) {

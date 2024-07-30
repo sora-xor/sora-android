@@ -63,6 +63,7 @@ import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.ui_core.extensions.withOpacity
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -186,17 +187,20 @@ internal fun AssetDetailsBalanceCard(
                     AmountCardIcon(
                         res = R.drawable.ic_new_arrow_up_24,
                         text = stringResource(id = R.string.common_send),
+                        enabled = true,
                         onClick = onSendClick,
                     )
                 }
                 AmountCardIcon(
                     res = R.drawable.ic_new_arrow_down_24,
                     text = stringResource(id = R.string.common_receive),
+                    enabled = true,
                     onClick = onReceiveClick,
                 )
                 AmountCardIcon(
                     res = R.drawable.ic_refresh_24,
                     text = stringResource(id = R.string.polkaswap_swap_title),
+                    enabled = true,
                     onClick = onSwapClick,
                 )
 
@@ -204,6 +208,7 @@ internal fun AssetDetailsBalanceCard(
                     AmountCardIcon(
                         res = R.drawable.ic_buy_crypto,
                         text = stringResource(id = R.string.common_buy),
+                        enabled = false,
                         onClick = onBuyCryptoClick
                     )
                 }
@@ -216,6 +221,7 @@ internal fun AssetDetailsBalanceCard(
 private fun AmountCardIcon(
     @DrawableRes res: Int,
     text: String,
+    enabled: Boolean,
     onClick: () -> Unit,
 ) {
     Column(
@@ -228,6 +234,7 @@ private fun AmountCardIcon(
                 shape = CircleShape,
                 size = Size.Large,
                 order = Order.TERTIARY,
+                enabled = enabled,
                 leftIcon = painterResource(res),
                 onClick = onClick,
             )
@@ -238,7 +245,7 @@ private fun AmountCardIcon(
                 .padding(top = Dimens.x1),
             text = text,
             style = MaterialTheme.customTypography.textXSBold,
-            color = MaterialTheme.customColors.fgSecondary,
+            color = MaterialTheme.customColors.fgSecondary.withOpacity(opacity = if (enabled) 1.0f else 0.3f),
         )
     }
 }

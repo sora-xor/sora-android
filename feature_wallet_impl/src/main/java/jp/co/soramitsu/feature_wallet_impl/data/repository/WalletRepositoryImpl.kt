@@ -129,7 +129,8 @@ class WalletRepositoryImpl @Inject constructor(
                 val card = CardsHubMapper.map(cardLocal)
                 when (card?.cardType) {
                     CardHubType.GET_SORA_CARD -> if (soraCard) card else null
-                    CardHubType.BUY_XOR_TOKEN -> if (soraCard) card else null
+//                    CardHubType.BUY_XOR_TOKEN -> if (soraCard) card else null
+                    CardHubType.BUY_XOR_TOKEN -> null
                     else -> card
                 }
             }
