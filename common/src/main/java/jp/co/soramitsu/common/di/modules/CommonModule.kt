@@ -52,6 +52,7 @@ import java.security.SecureRandom
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Singleton
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.BuildConfig
@@ -63,7 +64,6 @@ import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.PushHandler

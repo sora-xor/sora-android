@@ -34,7 +34,7 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 
 import java.math.BigDecimal
 import javax.inject.Inject
-import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.ext.splitVersions
@@ -48,16 +48,20 @@ import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlin.math.min
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 internal class SoraCardInteractorImpl @Inject constructor(
     private val assetsInteractor: AssetsInteractor,
@@ -82,51 +86,60 @@ internal class SoraCardInteractorImpl @Inject constructor(
 
     private val _ibanFlow = MutableStateFlow<IbanInfo?>(null)
     private val _phoneFlow = MutableStateFlow("")
+    private val _verStatus = MutableStateFlow(SoraCardCommonVerification.NotFound)
 
+    @OptIn(FlowPreview::class)
     @Suppress("UNCHECKED_CAST")
     override suspend fun initialize() {
-        combine(
-            flow { emit(soraCardClientProxy.init()) },
-            needInstallUpdate(),
-            fetchApplicationFee(),
-            _ibanFlow.asStateFlow(),
-            subscribeToSoraCardAvailabilityFlow(),
-            checkSoraCardPending(),
-            _phoneFlow.asStateFlow(),
-        ) { flows ->
-            val init = flows[0] as Pair<Boolean, String>
-            val needUpdate = flows[1] as Boolean
-            val fee = flows[2] as String
-            val ibanInfo = flows[3] as IbanInfo?
-            val availability = flows[4] as SoraCardAvailabilityInfo
-            val verification = flows[5] as SoraCardCommonVerification
-            val phone = flows[6] as String
-            SoraCardBasicStatus(
-                initialized = init.first,
-                initError = init.second,
-                availabilityInfo = availability,
-                verification = verification,
-                needInstallUpdate = needUpdate,
-                applicationFee = fee,
-                ibanInfo = ibanInfo,
-                phone = phone,
-            )
-        }
-            .debounce(1000)
-            .collect {
-                _soraCardBasicStatus.value = it
+        coroutineScope {
+            launch {
+                resetInfo()
             }
-        resetInfo()
+            launch {
+                checkSoraCardPending()
+            }
+            combine(
+                flow { emit(soraCardClientProxy.init()) },
+                needInstallUpdate(),
+                fetchApplicationFee(),
+                _ibanFlow.asStateFlow(),
+                subscribeToSoraCardAvailabilityFlow(),
+                _verStatus.asStateFlow(),
+                _phoneFlow.asStateFlow(),
+            ) { flows ->
+                val init = flows[0] as Pair<Boolean, String>
+                val needUpdate = flows[1] as Boolean
+                val fee = flows[2] as String
+                val ibanInfo = flows[3] as IbanInfo?
+                val availability = flows[4] as SoraCardAvailabilityInfo
+                val verification = flows[5] as SoraCardCommonVerification
+                val phone = flows[6] as String
+                SoraCardBasicStatus(
+                    initialized = init.first,
+                    initError = init.second,
+                    availabilityInfo = availability,
+                    verification = verification,
+                    needInstallUpdate = needUpdate,
+                    applicationFee = fee,
+                    ibanInfo = ibanInfo,
+                    phone = phone,
+                )
+            }
+                .debounce(1000)
+                .collectLatest {
+                    _soraCardBasicStatus.value = it
+                }
+        }
     }
 
     override val basicStatus: StateFlow<SoraCardBasicStatus> = _soraCardBasicStatus.asStateFlow()
 
-    private suspend fun checkSoraCardPending() = flow {
+    private suspend fun checkSoraCardPending() {
         var isLoopInProgress = true
         while (isLoopInProgress) {
             val status =
                 soraCardClientProxy.getKycStatus().getOrDefault(SoraCardCommonVerification.NotFound)
-            emit(status)
+            _verStatus.value = status
             if (status != SoraCardCommonVerification.Pending) {
                 isLoopInProgress = false
             } else {
@@ -156,19 +169,15 @@ internal class SoraCardInteractorImpl @Inject constructor(
     }
 
     override suspend fun setStatus(status: SoraCardCommonVerification) {
-        _soraCardBasicStatus.value = _soraCardBasicStatus.value.copy(
-            verification = status,
-        )
+        _verStatus.value = status
         resetInfo()
     }
 
     override suspend fun setLogout() {
         soraCardClientProxy.logout()
-        _soraCardBasicStatus.value = _soraCardBasicStatus.value.copy(
-            verification = SoraCardCommonVerification.NotFound,
-            ibanInfo = null,
-            phone = null,
-        )
+        _verStatus.value = SoraCardCommonVerification.NotFound
+        _ibanFlow.value = null
+        _phoneFlow.value = ""
     }
 
     private fun subscribeToSoraCardAvailabilityFlow() =

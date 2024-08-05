@@ -39,10 +39,10 @@ import io.mockk.junit4.MockKRule
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository

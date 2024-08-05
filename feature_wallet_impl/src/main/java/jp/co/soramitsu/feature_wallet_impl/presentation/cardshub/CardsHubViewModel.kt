@@ -36,6 +36,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -43,7 +44,6 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.fiatSum
 import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
@@ -144,7 +144,6 @@ class CardsHubViewModel @Inject constructor(
                     _state.value = _state.value.copy(
                         accountAddress = data.first.substrateAddress,
                         curAccount = data.first.accountTitle(),
-                        loading = false,
                     )
                     val flows = data.second.filter { it.visibility }.map { cardHub ->
                         when (cardHub.cardType) {
