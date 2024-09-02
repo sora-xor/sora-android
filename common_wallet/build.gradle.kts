@@ -79,7 +79,6 @@ android {
 dependencies {
     // implementation(libs.fileTree(dir: 'libs', include: ['*.jar']))
 
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":core_db"))
@@ -93,6 +92,7 @@ dependencies {
     implementation(libs.coroutineDep)
 
     implementation(libs.uiCoreDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.coilSvgDep)
 
@@ -106,9 +106,8 @@ dependencies {
     implementation(libs.svgDep)
     implementation(libs.jdenticonDep)
 
-    api(libs.soraCardDep) {
+    api(libs.soramitsu.sora.card) {
         exclude(group = "com.paywings.onboarding.kyc.android-libs", module = "java-websocket-lib")
-        exclude(module = "android-foundation")
     }
 
     implementation(libs.daggerDep)

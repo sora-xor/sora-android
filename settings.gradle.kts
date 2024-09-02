@@ -43,7 +43,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "passport-android"
-include(":android-foundation")
 include(":app")
 include(":common")
 include(":common_wallet")

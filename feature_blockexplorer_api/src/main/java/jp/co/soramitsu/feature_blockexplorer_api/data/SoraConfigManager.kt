@@ -44,7 +44,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraConfig
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraConfigNode
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraCurrency
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
-import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
+import jp.co.soramitsu.xnetworking.lib.engines.utils.getAsString
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -124,12 +124,7 @@ class SoraConfigManager @Inject constructor(
         deserializer: () -> DeserializationStrategy<T>
     ): T? {
         val result = runCatching {
-            restClient.getReturnString(
-                JsonGetRequest(
-                    url = url(),
-                    responseDeserializer = String.serializer()
-                )
-            )
+            restClient.getAsString(url())
         }.onSuccess { configAsString ->
             soraPreferences.putString(
                 field = nameToSaveWith(),

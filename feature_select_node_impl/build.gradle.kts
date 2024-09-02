@@ -76,7 +76,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":feature_select_node_api"))
     implementation(project(":feature_main_api"))
@@ -100,6 +99,7 @@ dependencies {
     implementation(libs.navigationUiDep)
 
     implementation(libs.xsubstrateDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.roomDep)
     implementation(libs.roomKtxDep)

@@ -81,7 +81,6 @@ android {
 
 dependencies {
 
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":feature_assets_api"))
     implementation(project(":feature_account_api"))
@@ -105,6 +104,7 @@ dependencies {
     implementation(libs.viewmodelKtxDep)
 
     implementation(libs.uiCoreDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.coilDep)
     implementation(libs.coilComposeDep)

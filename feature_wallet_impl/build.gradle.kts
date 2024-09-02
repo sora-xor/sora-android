@@ -80,7 +80,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":common_wallet"))
     implementation(project(":core_db"))
@@ -99,6 +98,7 @@ dependencies {
 
     implementation(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)

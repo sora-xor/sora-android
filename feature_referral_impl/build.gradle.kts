@@ -77,7 +77,6 @@ android {
 
 dependencies {
 
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":core_db"))
     implementation(project(":feature_assets_api"))
@@ -98,6 +97,7 @@ dependencies {
     implementation(libs.viewmodelKtxDep)
 
     implementation(libs.uiCoreDep)
+    implementation(libs.soramitsu.android.foundation)
     implementation(libs.navigationComposeDep)
 
     implementation(platform(libs.compose.bom))

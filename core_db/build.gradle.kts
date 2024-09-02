@@ -93,7 +93,7 @@ dependencies {
     ksp(libs.roomKaptDep)
 
     androidTestImplementation(project(":test_data"))
-    androidTestImplementation(project(":android-foundation"))
+    androidTestImplementation(libs.soramitsu.android.foundation)
     androidTestImplementation(libs.androidxTestExtJunitDep)
     androidTestImplementation(libs.androidxTestEspressoCoreDep)
     androidTestImplementation(libs.archCoreTestDep)

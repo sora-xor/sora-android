@@ -76,7 +76,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":common_wallet"))
     implementation(project(":demeter"))
@@ -106,6 +105,7 @@ dependencies {
     implementation(libs.navigationUiDep)
 
     implementation(libs.uiCoreDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.timberDep)
 
