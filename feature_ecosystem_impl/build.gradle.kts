@@ -76,7 +76,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":demeter"))
     implementation(project(":common_wallet"))
@@ -119,6 +118,7 @@ dependencies {
     kapt(libs.lifecycleKaptDep)
 
     implementation(libs.uiCoreDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)

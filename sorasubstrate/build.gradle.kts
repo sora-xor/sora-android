@@ -65,7 +65,6 @@ android {
 
 dependencies {
 
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":common_wallet"))
     implementation(project(":feature_blockexplorer_api"))
@@ -74,6 +73,7 @@ dependencies {
     implementation(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)
     implementation(libs.xnetworkingLibDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.gsonDep)
     implementation(libs.webSocketLibDep)

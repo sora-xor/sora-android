@@ -151,7 +151,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":android-foundation"))
     implementation(project(":network"))
 
     implementation(libs.activityKtxDep)
@@ -165,6 +164,7 @@ dependencies {
     implementation(libs.coroutineDep)
 
     implementation(libs.uiCoreDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.kotlinxSerializationJsonDep)
 

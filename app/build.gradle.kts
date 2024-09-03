@@ -178,7 +178,6 @@ play {
 
 dependencies {
     // implementation(libs.fileTree(dir: 'libs', include: ['*.jar'])
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":core_db"))
     implementation(project(":demeter"))
@@ -222,6 +221,7 @@ dependencies {
     implementation(libs.timberDep)
 
     implementation(libs.xsubstrateDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.daggerDep)
     kapt(libs.daggerKaptDep)
