@@ -42,6 +42,7 @@ import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
 import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardBasicContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 
 fun createSoraCardBasicContract() = SoraCardBasicContractData(
     apiKey = BuildConfig.SORA_CARD_API_KEY,
@@ -54,6 +55,17 @@ fun createSoraCardBasicContract() = SoraCardBasicContractData(
     recaptcha = BuildConfig.SORA_CARD_RECAPTCHA,
 )
 
+fun createSoraCardGateHubContract(): SoraCardContractData {
+    return SoraCardContractData(
+        basic = createSoraCardBasicContract(),
+        locale = Locale.ENGLISH,
+        soraBackEndUrl = BuildConfigWrapper.getSoraCardBackEndUrl(),
+        client = OptionsProvider.header,
+        clientDark = true,
+        flow = SoraCardFlow.SoraCardGateHubFlow,
+    )
+}
+
 fun createSoraCardContract(
     userAvailableXorAmount: Double,
     isEnoughXorAvailable: Boolean,
@@ -61,18 +73,22 @@ fun createSoraCardContract(
     return SoraCardContractData(
         basic = createSoraCardBasicContract(),
         locale = Locale.ENGLISH,
-        kycCredentials = SoraCardKycCredentials(
-            endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
-            username = BuildConfig.SORA_CARD_KYC_USERNAME,
-            password = BuildConfig.SORA_CARD_KYC_PASSWORD,
-        ),
-        client = OptionsProvider.header,
-        userAvailableXorAmount = userAvailableXorAmount,
-//        will be available in Phase 2
-        areAttemptsPaidSuccessfully = false,
-        isEnoughXorAvailable = isEnoughXorAvailable,
-//        will be available in Phase 2
-        isIssuancePaid = false,
         soraBackEndUrl = BuildConfigWrapper.getSoraCardBackEndUrl(),
+        client = OptionsProvider.header,
+        clientDark = true,
+        flow = SoraCardFlow.SoraCardKycFlow(
+            kycCredentials = SoraCardKycCredentials(
+                endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
+                username = BuildConfig.SORA_CARD_KYC_USERNAME,
+                password = BuildConfig.SORA_CARD_KYC_PASSWORD,
+            ),
+            userAvailableXorAmount = userAvailableXorAmount,
+//        will be available in Phase 2
+            areAttemptsPaidSuccessfully = false,
+            isEnoughXorAvailable = isEnoughXorAvailable,
+//        will be available in Phase 2
+            isIssuancePaid = false,
+            logIn = false,
+        ),
     )
 }

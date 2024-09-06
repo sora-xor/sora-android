@@ -98,6 +98,8 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 
     companion object {
 
+        const val ACTION_INVITE = "jp.co.soramitsu.feature_onboarding_impl.ACTION_INVITE"
+
         fun start(context: Context, isClearTask: Boolean) {
             val intent = Intent(context, OnboardingActivity::class.java).apply {
                 if (isClearTask) {

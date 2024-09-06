@@ -35,7 +35,7 @@ package jp.co.soramitsu.sora.substrate.substrate
 import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
-import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicStatusResponse
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus

@@ -62,6 +62,7 @@ data class SoraCardDetailsScreenState(
     val soraCardIBANCardState: SoraCardIBANCardState? = null,
     val soraCardSettingsCard: SoraCardSettingsCardState? = null,
     val logoutDialog: Boolean,
+    val fiatWalletDialog: Boolean,
 )
 
 @Composable
@@ -76,7 +77,8 @@ fun SoraCardDetailsScreen(
     onShowMoreRecentActivitiesClick: () -> Unit,
     onIbanCardShareClick: () -> Unit,
     onIbanCardClick: () -> Unit,
-    onSettingsOptionClick: (position: Int) -> Unit
+    onSettingsOptionClick: (position: Int) -> Unit,
+    onExchangeXorClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -91,7 +93,9 @@ fun SoraCardDetailsScreen(
         SoraCardMainSoraContentCard(
             soraCardMainSoraContentCardState = soraCardDetailsScreenState.soraCardMainSoraContentCardState,
             onShowMoreClick = onShowSoraCardDetailsClick,
-            onIconButtonClick = onSoraCardMenuActionClick
+            onIconButtonClick = onSoraCardMenuActionClick,
+            onExchangeXor = onExchangeXorClick,
+            onOptionsClick = { onSettingsOptionClick.invoke(0) },
         )
         if (soraCardDetailsScreenState.soraCardReferralBannerCardState) {
             BasicBannerCard(
@@ -123,7 +127,7 @@ fun SoraCardDetailsScreen(
             if (state.settings.isNotEmpty())
                 SoraCardSettingsCard(
                     state = state,
-                    onItemClick = onSettingsOptionClick
+                    onItemClick = onSettingsOptionClick,
                 )
         }
         Spacer(
@@ -149,7 +153,8 @@ private fun PreviewSoraCardDetailsScreen() {
             soraCardDetailsScreenState = SoraCardDetailsScreenState(
                 soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
                     balance = "3665.50",
-                    soraCardMenuActions = SoraCardMenuAction.entries
+                    phone = "987654",
+                    soraCardMenuActions = SoraCardMenuAction.entries,
                 ),
                 soraCardReferralBannerCardState = true,
                 soraCardRecentActivitiesCardState = SoraCardRecentActivitiesCardState(
@@ -157,12 +162,14 @@ private fun PreviewSoraCardDetailsScreen() {
                 ),
                 soraCardIBANCardState = SoraCardIBANCardState(
                     iban = "LT61 3250 0467 7252 5583",
-                    active = true,
+                    closed = false,
                 ),
                 soraCardSettingsCard = SoraCardSettingsCardState(
-                    soraCardSettingsOptions = SoraCardSettingsOption.entries
+                    soraCardSettingsOptions = SoraCardSettingsOption.entries,
+                    phone = "123123",
                 ),
                 logoutDialog = false,
+                fiatWalletDialog = false,
             ),
             onShowSoraCardDetailsClick = {},
             onSoraCardMenuActionClick = { _ -> },
@@ -172,7 +179,8 @@ private fun PreviewSoraCardDetailsScreen() {
             onRecentActivityClick = { _ -> },
             onIbanCardShareClick = {},
             onIbanCardClick = {},
-            onSettingsOptionClick = { _ -> }
+            onSettingsOptionClick = { _ -> },
+            onExchangeXorClick = {},
         )
     }
 }

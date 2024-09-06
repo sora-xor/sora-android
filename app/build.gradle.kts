@@ -19,8 +19,8 @@ kotlin {
     jvmToolchain(11)
 }
 
-// soralution 138 3.8.4.0 2024.03.14
-// sora dae 114 3.8.4.0 2024.03.19
+// soralution 138 3.8.5.0 2024.09.06
+// sora dae 114 3.8.4.0 2024.03.20
 
 android {
     namespace = "jp.co.soramitsu.sora"
@@ -30,8 +30,8 @@ android {
         applicationId = "jp.co.soramitsu.sora"
         minSdk = 26
         targetSdk = 34
-        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 114
-        versionName = "3.8.4.0"
+        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 139
+        versionName = "3.8.5.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
         // resConfigs "en", "ru", "es", "fr", "de", "nb", "in", "tr", "ar"
@@ -119,7 +119,7 @@ android {
         create("develop") {
             dimension = "default"
             applicationIdSuffix = ".develop"
-            resValue("string", "app_name", "Sora Develop")
+            resValue("string", "app_name", "SORA Develop")
             manifestPlaceholders["pathPrefix"] = "/dev/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_dev_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_dev_launcher"
@@ -136,7 +136,7 @@ android {
 
         create("production") {
             dimension = "default"
-            resValue("string", "app_name", "Sora")
+            resValue("string", "app_name", "SORA")
             manifestPlaceholders["pathPrefix"] = "/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_prod_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_prod_launcher_rounded"
@@ -155,6 +155,11 @@ android {
     configurations {
         all {
             exclude(module = "bcprov-jdk15on")
+//            resolutionStrategy {
+//                dependencySubstitution {
+//                    substitute(module("")).using(module(""))
+//                }
+//            }
         }
     }
 }
@@ -167,13 +172,12 @@ play {
     serviceAccountCredentials = file(System.getenv("CI_PLAY_KEY") ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.8.4.0 - Bug fixes and minor improvements"
+    releaseName = "3.8.5.0 - SORA Card Improvements"
     defaultToAppBundles = true
 }
 
 dependencies {
     // implementation(libs.fileTree(dir: 'libs', include: ['*.jar'])
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":core_db"))
     implementation(project(":demeter"))
@@ -188,7 +192,6 @@ dependencies {
     implementation(project(":feature_account_api"))
     implementation(project(":feature_account_impl"))
     implementation(project(":feature_ethereum_api"))
-    implementation(project(":feature_ethereum_impl"))
     implementation(project(":feature_polkaswap_api"))
     implementation(project(":feature_polkaswap_impl"))
     implementation(project(":feature_wallet_api"))
@@ -218,6 +221,7 @@ dependencies {
     implementation(libs.timberDep)
 
     implementation(libs.xsubstrateDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.daggerDep)
     kapt(libs.daggerKaptDep)
@@ -235,8 +239,11 @@ dependencies {
 
     implementation(libs.webSocketLibDep)
 
-    // Tests
-    testImplementation(project(":test_shared"))
+    testImplementation(libs.coroutineTestDep)
+    testImplementation(libs.junitDep)
+    testImplementation(libs.mockkDep)
+    testImplementation(libs.mockitoKotlinDep)
+    testImplementation(libs.archCoreTestDep)
 
     kover(project(":common"))
     kover(project(":common_wallet"))
@@ -259,7 +266,6 @@ dependencies {
     kover(project(":feature_polkaswap_impl"))
     kover(project(":feature_referral_impl"))
     kover(project(":feature_ethereum_api"))
-    kover(project(":feature_ethereum_impl"))
     kover(project(":feature_wallet_api"))
     kover(project(":feature_wallet_impl"))
     kover(project(":feature_select_node_api"))

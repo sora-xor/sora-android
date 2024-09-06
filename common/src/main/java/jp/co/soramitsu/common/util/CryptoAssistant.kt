@@ -109,6 +109,10 @@ class CryptoAssistant(
     }
 
     fun generateEd25519Keys(seed: ByteArray): KeyPair {
+//        return KeyPairGenerator.getInstance("RSA").let {
+//            it.initialize(2048)
+//            it.generateKeyPair()
+//        }
         return ed25519Sha3.generateKeypair(seed)
     }
 }

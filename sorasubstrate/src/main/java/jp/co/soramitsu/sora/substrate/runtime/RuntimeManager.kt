@@ -36,12 +36,13 @@ import com.google.gson.Gson
 import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
-import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
+import jp.co.soramitsu.xnetworking.lib.engines.utils.getAsString
 import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
 import jp.co.soramitsu.xsubstrate.runtime.definitions.TypeDefinitionParser
 import jp.co.soramitsu.xsubstrate.runtime.definitions.TypeDefinitionsTree
@@ -62,7 +63,7 @@ import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAddress
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
-import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
+import jp.co.soramitsu.xsubstrate.wsrpc.executeAsyncMapped
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.chain.RuntimeVersion
@@ -84,7 +85,7 @@ class RuntimeManager @Inject constructor(
     private val gson: Gson,
     private val soraPreferences: SoraPreferences,
     private val socketService: SocketService,
-    private val networkClient: SoramitsuNetworkClient,
+    private val restClient: RestClient,
     private val coroutineManager: CoroutineManager,
     private val soraConfigManager: SoraConfigManager,
 ) {
@@ -145,7 +146,7 @@ class RuntimeManager @Inject constructor(
 
     private suspend fun checkRuntimeVersion(snapshot: RuntimeSnapshot): RuntimeSnapshot {
         var result = snapshot
-        val runtimeVersion = socketService.executeAsync(
+        val runtimeVersion = socketService.executeAsyncMapped(
             request = RuntimeVersionRequest(),
             mapper = pojo<RuntimeVersion>().nonNull()
         )
@@ -156,7 +157,7 @@ class RuntimeManager @Inject constructor(
         ) {
             FirebaseWrapper.log("New runtime version ${runtimeVersion.specVersion}")
             try {
-                val metadata = socketService.executeAsync(
+                val metadata = socketService.executeAsyncMapped(
                     request = GetMetadataRequest,
                     mapper = pojo<String>().nonNull()
                 )
@@ -195,7 +196,9 @@ class RuntimeManager @Inject constructor(
             }
 
             is MetadataSource.SoraNet -> {
-                val sora2Types = networkClient.get(soraConfigManager.getSubstrateTypesUrl())
+                val sora2Types = restClient.getAsString(
+                    soraConfigManager.getSubstrateTypesUrl()
+                )
                 buildTypeRegistry14(sora2Types, runtimeMetadataReader, runtimeVersion).also {
                     saveToCache(SORA2_TYPES_FILE, sora2Types)
                 }

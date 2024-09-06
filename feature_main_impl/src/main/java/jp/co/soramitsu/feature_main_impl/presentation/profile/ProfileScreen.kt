@@ -42,7 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.ui_core.component.item.CategoryItem
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -85,15 +85,15 @@ internal fun ProfileItems(
             icon = R.drawable.ic_buy_crypto,
             onClick = onSoraCardClick,
         )
-        CategoryItem(
-            modifier = Modifier
-                .testTagAsId("BuyXor")
-                .padding(top = Dimens.x2),
-            title = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_title),
-            subtitle = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
-            icon = R.drawable.ic_settings_buy_crypto,
-            onClick = onBuyCrypto,
-        )
+//        CategoryItem(
+//            modifier = Modifier
+//                .testTagAsId("BuyXor")
+//                .padding(top = Dimens.x2),
+//            title = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_title),
+//            subtitle = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
+//            icon = R.drawable.ic_settings_buy_crypto,
+//            onClick = onBuyCrypto,
+//        )
     }
     CategoryItem(
         modifier = Modifier

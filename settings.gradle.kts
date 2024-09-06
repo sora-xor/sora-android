@@ -38,11 +38,11 @@ dependencyResolutionManagement {
                 password = secret("PAY_WINGS_PASSWORD")
             }
         }
+        mavenLocal()
     }
 }
 
 rootProject.name = "passport-android"
-include(":android-foundation")
 include(":app")
 include(":common")
 include(":common_wallet")
@@ -56,7 +56,6 @@ include(":feature_blockexplorer_api")
 include(":feature_blockexplorer_impl")
 include(":feature_ecosystem_impl")
 include(":feature_ethereum_api")
-include(":feature_ethereum_impl")
 include(":feature_main_api")
 include(":feature_main_impl")
 include(":feature_multiaccount_api")
@@ -74,4 +73,3 @@ include(":feature_wallet_impl")
 include(":network")
 include(":sorasubstrate")
 include(":test_data")
-include(":test_shared")

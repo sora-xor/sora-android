@@ -34,12 +34,12 @@ package jp.co.soramitsu.feature_polkaswap_impl.domain
 
 import java.math.BigDecimal
 import java.util.Date
+import jp.co.soramitsu.androidfoundation.format.isZero
+import jp.co.soramitsu.androidfoundation.format.safeDivide
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common.util.ext.isZero
-import jp.co.soramitsu.common.util.ext.safeDivide
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
@@ -60,6 +60,7 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscrip
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.emitAll
@@ -106,8 +107,8 @@ class PoolsInteractorImpl(
         return removeLiquidityNetworkFee ?: (
             (
                 polkaswapExtrinsicRepository.calcRemoveLiquidityNetworkFee(
-                    tokenId1,
-                    tokenId2,
+                    tokenId1.id.kensetsu() to tokenId1.precision,
+                    tokenId2.id to tokenId2.precision,
                     userRepository.getCurSoraAccount().substrateAddress,
                 ) ?: BigDecimal.ZERO
                 ).also {
@@ -128,8 +129,8 @@ class PoolsInteractorImpl(
         val user = userRepository.getCurSoraAccount().substrateAddress
         val result = polkaswapExtrinsicRepository.calcAddLiquidityNetworkFee(
             user,
-            tokenFrom,
-            tokenTo,
+            tokenFrom.id.kensetsu() to tokenFrom.precision,
+            tokenTo.id to tokenTo.precision,
             tokenFromAmount,
             tokenToAmount,
             pairEnabled,
@@ -185,6 +186,7 @@ class PoolsInteractorImpl(
         return result
     }
 
+    @OptIn(FlowPreview::class)
     override fun subscribePoolsChangesOfAccount(address: String): Flow<String> {
         return polkaswapSubscriptionRepository.subscribeToPoolsAssets(address)
             .debounce(300)
@@ -355,8 +357,8 @@ class PoolsInteractorImpl(
         userRepository.flowCurSoraAccount().flatMapLatest {
             polkaswapRepository.subscribeLocalPoolReserves(
                 it.substrateAddress,
-                baseTokenId,
-                assetId
+                baseTokenId.kensetsu(),
+                assetId,
             )
         }
 
@@ -364,23 +366,23 @@ class PoolsInteractorImpl(
         val address = userRepository.getCurSoraAccount().substrateAddress
         emitAll(
             polkaswapSubscriptionRepository.isPairEnabled(
-                inputAssetId,
+                inputAssetId.kensetsu(),
                 outputAssetId,
-                address
+                address,
             )
         )
     }
 
     override fun isPairPresentedInNetwork(
         baseTokenId: String,
-        tokenId: String
+        tokenId: String,
     ): Flow<Boolean> = flow {
         val address = userRepository.getCurSoraAccount().substrateAddress
         emitAll(
             polkaswapSubscriptionRepository.isPairPresentedInNetwork(
-                baseTokenId,
+                baseTokenId.kensetsu(),
                 tokenId,
-                address
+                address,
             )
         )
     }
@@ -389,11 +391,13 @@ class PoolsInteractorImpl(
         tokenFrom: Token,
         tokenTo: Token,
         enabled: Boolean,
-        presented: Boolean
+        presented: Boolean,
     ): LiquidityData {
         return polkaswapSubscriptionRepository.getRemotePoolReserves(
-            tokenFrom,
-            tokenTo,
+            tokenFrom.id.kensetsu(),
+            tokenFrom.precision,
+            tokenTo.id.kensetsu(),
+            tokenTo.precision,
             enabled,
             presented
         )
@@ -440,4 +444,7 @@ class PoolsInteractorImpl(
     override suspend fun getRewardToken(): Token {
         return requireNotNull(assetsRepository.getToken(SubstrateOptionsProvider.pswapAssetId))
     }
+
+    private fun String.kensetsu() =
+        if (this == SubstrateOptionsProvider.kxorTokenId) SubstrateOptionsProvider.feeAssetId else this
 }

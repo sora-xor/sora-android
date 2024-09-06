@@ -52,8 +52,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
-import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
@@ -66,7 +67,8 @@ fun GetSoraCardScreen(
     scrollState: ScrollState,
     state: GetSoraCardState,
     onBlackList: () -> Unit,
-    onEnableCard: () -> Unit,
+    onSignUp: () -> Unit,
+    onLogIn: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -107,7 +109,7 @@ fun GetSoraCardScreen(
 
                 AnnualFee()
 
-                FreeCardIssuance(state.applicationFee)
+                FreeCardIssuance()
 
                 Text(
                     modifier = Modifier
@@ -133,13 +135,24 @@ fun GetSoraCardScreen(
                 FilledButton(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTagAsId("SoraCardLogInOrSignUp")
+                        .testTagAsId("SoraCardSignUp")
                         .padding(vertical = Dimens.x2, horizontal = Dimens.x1),
-                    text = stringResource(R.string.sora_card_log_in_or_sign_up),
+                    text = "Sign up for SORA Card",
                     size = Size.Large,
                     enabled = state.xorRatioAvailable && state.connection,
                     order = Order.PRIMARY,
-                    onClick = onEnableCard,
+                    onClick = onSignUp,
+                )
+                TextButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTagAsId("SoraCardHaveCard")
+                        .padding(horizontal = Dimens.x1),
+                    size = Size.Large,
+                    enabled = state.xorRatioAvailable && state.connection,
+                    order = Order.PRIMARY,
+                    text = stringResource(id = jp.co.soramitsu.oauth.R.string.details_already_have_card),
+                    onClick = onLogIn,
                 )
             }
         }
@@ -168,9 +181,7 @@ private fun AnnualFee() {
 }
 
 @Composable
-private fun FreeCardIssuance(
-    applicationFee: String,
-) {
+private fun FreeCardIssuance() {
     ContentCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -189,25 +200,6 @@ private fun FreeCardIssuance(
                 color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.textL,
             )
-
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(top = Dimens.x2),
-                text = stringResource(R.string.sora_card_free_card_issuance_conditions_xor),
-                style = MaterialTheme.customTypography.paragraphS,
-                color = MaterialTheme.customColors.fgPrimary,
-            )
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(vertical = Dimens.x2),
-                text = stringResource(jp.co.soramitsu.oauth.R.string.details_free_card_issuance_conditions_euro, applicationFee),
-                style = MaterialTheme.customTypography.paragraphM,
-                color = MaterialTheme.customColors.fgSecondary,
-            )
         }
     }
 }
@@ -217,7 +209,7 @@ private fun FreeCardIssuance(
 private fun PreviewGetSoraCardScreen() {
     GetSoraCardScreen(
         scrollState = rememberScrollState(),
-        state = GetSoraCardState(applicationFee = "29"),
-        {}, {},
+        state = GetSoraCardState(applicationFee = "29", connection = true, xorRatioAvailable = true),
+        {}, {}, {},
     )
 }

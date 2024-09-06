@@ -578,7 +578,7 @@
   <string name="tutorial_terms_and_conditions">על ידי יצירת חשבון אתה מסכים עם %%התנאים וההגבלות%% ו- %%מדיניות הפרטיות%%</string>
   <string name="tutorial_terms_and_conditions_3">תנאים והגבלות</string>
   <string name="tutorial_terms_and_conditions_template_1">כשאתה ממשיך אתה מסכים עם ה-</string>
-  <string name="unexpected_error">אירעה שגיאה בלתי צפויה. \n\n אתה יכול לפתור בעיה זו בצ\'אט הטלגרם של קהילת סורה @SORAhappiness.</string>
+  <string name="unexpected_error">אירעה שגיאה בלתי צפויה. \n\n אתה יכול לפתור בעיה זו בצ\'אט הטלגרם של קהילת סורה @sora_happy.</string>
   <string name="update_downloaded">עדכון עבור אפליקצית סורה הורד והוא מוכן להתקנה.\n\nחשוב להשתמש בגירסה העדכנית ביותר של האפליקציה.\n\nכדי לעדכן את האפליקציה, נדרשת הפעלה מחדש.</string>
   <string name="update_install_now">האם ברצונך להתקין את העדכון כעת?</string>
   <string name="wallet_backup">Wallet Backup</string>

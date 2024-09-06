@@ -50,8 +50,8 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.sora.substrate.runtime.Method
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.xnetworking.basic.txhistory.TxHistoryItem
-import jp.co.soramitsu.xnetworking.basic.txhistory.TxHistoryItemParam
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItem
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItemParam
 
 fun mapHistoryItemsToTransactions(
     txs: List<TxHistoryItem>,
@@ -133,7 +133,7 @@ private fun mapHistoryItemToTransaction(
                 tokenTo = tokens.getByIdOrEmpty(targetTokenId),
                 amountFrom = baseTokenAmount.toBigDecimalOrDefault(),
                 amountTo = targetTokenAmount.toBigDecimalOrDefault(),
-                market = Market.values().find { m -> m.backString == selectedMarket } ?: Market.SMART,
+                market = Market.entries.find { m -> m.backString == selectedMarket } ?: Market.SMART,
             )
         }
     } else if (tx.isMatch(
@@ -342,7 +342,7 @@ private fun List<TxHistoryItemParam>.toSwap(
         baseTokenId.paramValue,
         targetTokenId.paramValue,
         baseTokenAmount.paramValue,
-        targetTokenAmount.paramValue,
+        targetTokenAmount.paramValue
     ) else null
 }
 

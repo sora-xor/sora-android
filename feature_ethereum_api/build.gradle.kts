@@ -61,6 +61,4 @@ dependencies {
 
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
-
-    testImplementation(project(":test_shared"))
 }

@@ -33,8 +33,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.substrate.runtime
 
 import java.math.BigInteger
+import jp.co.soramitsu.androidfoundation.format.addHexPrefix
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
-import jp.co.soramitsu.common.util.ext.addHexPrefix
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider.syntheticTokenRegex
 import jp.co.soramitsu.sora.substrate.substrate.fromHex
 import jp.co.soramitsu.xcrypto.util.fromHex
@@ -58,6 +58,7 @@ object SubstrateOptionsProvider {
     const val xstTokenId = "0x0200090000000000000000000000000000000000000000000000000000000000"
     const val xstusdTokenId = "0x0200080000000000000000000000000000000000000000000000000000000000"
     const val ethTokenId = "0x0200070000000000000000000000000000000000000000000000000000000000"
+    const val kxorTokenId = "0x02000e0000000000000000000000000000000000000000000000000000000000"
 }
 
 fun String.isSynthetic(): Boolean = this.matches(syntheticTokenRegex)

@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_referral_impl.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -43,8 +44,7 @@ import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
 import jp.co.soramitsu.feature_referral_impl.domain.model.Referral
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
+import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -95,7 +95,7 @@ class ReferralInteractorTest {
     private lateinit var interactor: ReferralInteractor
 
     private val REFERRER_REWARDS = listOf(
-        ReferrerReward(
+        ReferralReward(
             "address",
             "1000000000000000000"
         )

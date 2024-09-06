@@ -32,9 +32,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_select_node_impl
 
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.domain.ChainNode
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
@@ -203,16 +203,15 @@ internal class NodeManagerImpl(
                 if (state.url == customNodeUrl) {
                     blockHashCheckObserverEnabled = false
                     try {
-                        val newHash = selectNodeRepository.getBlockHash().removeHexPrefix()
+                        val newHash = selectNodeRepository.getBlockHash()
                         if (BuildUtils.isFlavors(
                                 Flavor.DEVELOP,
-                                Flavor.TESTING,
                                 Flavor.SORALUTION
                             )
                         ) {
                             _events.emit(NodeManagerEvent.GenesisValidated(result = true))
                         } else {
-                            _events.emit(NodeManagerEvent.GenesisValidated(result = soraConfigManager.getGenesis() == newHash))
+                            _events.emit(NodeManagerEvent.GenesisValidated(result = soraConfigManager.getGenesis().removeHexPrefix() == newHash.removeHexPrefix()))
                         }
                     } catch (e: Throwable) {
                         _events.emit(NodeManagerEvent.GenesisValidated(result = false))

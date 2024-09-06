@@ -37,6 +37,8 @@ import io.mockk.every
 import io.mockk.mockkObject
 import java.math.BigDecimal
 import java.util.Collections
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
@@ -52,8 +54,6 @@ import jp.co.soramitsu.test_data.TestTokens.valToken
 import jp.co.soramitsu.test_data.TestTokens.xorToken
 import jp.co.soramitsu.test_data.TestTokens.xstToken
 import jp.co.soramitsu.test_data.TestTokens.xstusdToken
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest

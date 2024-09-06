@@ -61,9 +61,10 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
-import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.TonalButton
@@ -187,7 +188,7 @@ private fun CardStateButton(
             size = Size.ExtraSmall,
             order = Order.SECONDARY,
             onClick = onCardStateClicked,
-            text = if (ibanInfo.active) ibanInfo.balance else ibanInfo.iban,
+            text = if (ibanInfo.ibanStatus != IbanStatus.CLOSED) ibanInfo.balance else ibanInfo.statusDescription,
         )
     } else if (kycStatus == null) {
         FilledButton(
@@ -199,15 +200,14 @@ private fun CardStateButton(
             text = stringResource(R.string.get_sora_card_title),
         )
     } else {
-        if (success.not())
-            TonalButton(
-                modifier = modifier
-                    .testTagAsId("SoraCardButton"),
-                size = Size.Large,
-                order = Order.TERTIARY,
-                onClick = onCardStateClicked,
-                text = kycStatus,
-            )
+        TonalButton(
+            modifier = modifier
+                .testTagAsId("SoraCardButton"),
+            size = Size.Large,
+            order = Order.TERTIARY,
+            onClick = onCardStateClicked,
+            text = if (success) "--" else kycStatus,
+        )
     }
 }
 
@@ -302,6 +302,26 @@ private fun PreviewSoraCard4() {
                 kycStatus = null,
                 ibanBalance = null,
                 loading = true,
+                success = false,
+                needUpdate = false,
+            ),
+            onCloseClicked = {},
+            onCardStateClicked = {},
+            onNeedUpdate = {},
+        )
+    }
+}
+
+@Composable
+@Preview(locale = "en", uiMode = Configuration.UI_MODE_NIGHT_NO)
+private fun PreviewSoraCard6() {
+    SoraAppTheme {
+        SoraCard(
+            modifier = Modifier.fillMaxWidth(),
+            state = SoraCardState(
+                kycStatus = null,
+                ibanBalance = IbanInfo(iban = "abcderr", ibanStatus = IbanStatus.ACTIVE, balance = "45.5", ""),
+                loading = false,
                 success = false,
                 needUpdate = false,
             ),

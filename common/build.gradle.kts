@@ -138,10 +138,19 @@ android {
             buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_PROD")))
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
-    implementation(project(":android-foundation"))
     implementation(project(":network"))
 
     implementation(libs.activityKtxDep)
@@ -155,6 +164,7 @@ dependencies {
     implementation(libs.coroutineDep)
 
     implementation(libs.uiCoreDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.kotlinxSerializationJsonDep)
 
@@ -180,7 +190,9 @@ dependencies {
     implementation(libs.xbackupDep)
     implementation(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)
-    implementation(libs.ed25519Dep)
+    implementation(libs.ed25519Dep) {
+//        exclude(module = "bcpkix-jdk15on")
+    }
     implementation(libs.xercesDep)
 
     implementation(libs.gsonDep)
@@ -205,6 +217,7 @@ dependencies {
     implementation(libs.coilComposeDep)
 
     implementation(libs.composeActivityDep)
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
     implementation(libs.composeLiveDataDep)
     implementation(libs.composeFoundationDep)
@@ -215,7 +228,9 @@ dependencies {
     implementation(libs.navigationComposeDep)
     debugImplementation(libs.composeToolingDep)
 
-    testImplementation(project(":test_shared"))
+    testImplementation(libs.mockitoDep)
+    testImplementation(libs.archCoreTestDep)
+    testImplementation(libs.coroutineTestDep)
 }
 
 kapt {

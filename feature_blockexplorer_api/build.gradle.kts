@@ -63,6 +63,16 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
@@ -82,8 +92,10 @@ dependencies {
     implementation(libs.viewmodelKtxDep)
 
     implementation(libs.uiCoreDep)
+    implementation(libs.soramitsu.android.foundation)
     implementation(libs.navigationComposeDep)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeConstraintLayoutDep)
     implementation(libs.composeUiDep)
     implementation(libs.composeFoundationDep)
@@ -110,8 +122,6 @@ dependencies {
 
     implementation(libs.daggerDep)
     kapt(libs.daggerKaptDep)
-
-    testImplementation(project(":test_shared"))
 }
 
 kapt {

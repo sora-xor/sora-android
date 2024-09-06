@@ -37,15 +37,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
+import jp.co.soramitsu.androidfoundation.format.ImageValue
+import jp.co.soramitsu.androidfoundation.format.TextValue
+import jp.co.soramitsu.androidfoundation.format.retrieveString
 import jp.co.soramitsu.common.view.AmountCardIcon
 
 data class IconButtonMenuState(
     val testTagId: String? = null,
-    val image: Image.ResImage,
-    val text: Text,
+    val image: ImageValue.ResImage,
+    val text: TextValue,
     val isEnabled: Boolean
 )
 
