@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_wallet_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
@@ -51,8 +52,6 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_data.TestAssets
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraCurrency
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -177,12 +176,6 @@ class WalletRepositoryTest {
 
         verify(globalCardsHubDao).updateCardVisibility(cardId = "cardId", visibility = true)
     }
-
-    private val usdFiat = SoraCurrency(
-        code = "USD",
-        name = "Dollar",
-        sign = "$",
-    )
 
     private fun assetLocalList() = listOf(
         AssetLocal(

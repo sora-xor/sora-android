@@ -35,15 +35,14 @@ package jp.co.soramitsu.feature_multiaccount_impl.export.backup
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R as commonR
-import jp.co.soramitsu.common.util.ext.addHexPrefix
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.BackupViewModel
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection.ExportProtectionViewModel
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -134,7 +133,7 @@ class BackupViewModelTest {
     fun backupPressedWithSeed() {
         setUp(ExportProtectionViewModel.Type.SEED)
         viewModel.backupPressed()
-        verify(clipboardManager).addToClipboard(seed.addHexPrefix())
+        verify(clipboardManager).addToClipboard("0x$seed")
         viewModel.copiedToast.getOrAwaitValue()
     }
 

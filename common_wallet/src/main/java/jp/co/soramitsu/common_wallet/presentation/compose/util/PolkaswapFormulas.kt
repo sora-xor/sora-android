@@ -33,11 +33,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common_wallet.presentation.compose.util
 
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.format.Big100
+import jp.co.soramitsu.androidfoundation.format.divideBy
+import jp.co.soramitsu.androidfoundation.format.equalTo
+import jp.co.soramitsu.androidfoundation.format.safeDivide
 import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.common.util.ext.Big100
-import jp.co.soramitsu.common.util.ext.divideBy
-import jp.co.soramitsu.common.util.ext.equalTo
-import jp.co.soramitsu.common.util.ext.safeDivide
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 
 object PolkaswapFormulas {

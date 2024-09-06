@@ -32,15 +32,23 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.network
 
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.logging.SIMPLE
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.http.ContentType
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
-import jp.co.soramitsu.xnetworking.basic.networkclient.NetworkClientConfig
-import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProvider
-import jp.co.soramitsu.xnetworking.basic.networkclient.WebSocketClientConfig
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -63,24 +71,41 @@ class WebSocket(
     pingInterval: Long = 20,
     maxFrameSize: Long = Int.MAX_VALUE.toLong(),
     logging: Boolean = false,
-    provider: SoramitsuHttpClientProvider,
 ) {
 
     private var socketSession: DefaultClientWebSocketSession? = null
 
-    private val networkClient = provider.provide(
-        NetworkClientConfig(
-            logging = logging,
-            requestTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS,
-            connectTimeoutMillis = connectTimeoutMillis,
-            socketTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS,
-            json = json,
-            webSocketClientConfig = WebSocketClientConfig(
-                pingInterval = pingInterval,
-                maxFrameSize = maxFrameSize
-            )
-        )
-    )
+    private val networkClient =
+        HttpClient(OkHttp) {
+            expectSuccess = true
+
+            if (logging) {
+                install(Logging) {
+                    level = LogLevel.ALL
+                    logger = Logger.SIMPLE
+                }
+            }
+
+            install(ContentNegotiation) {
+                json(
+                    json = json,
+                    contentType = ContentType.Any
+                )
+            }
+
+            install(HttpTimeout) {
+                this.requestTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS
+                this.connectTimeoutMillis = connectTimeoutMillis
+                this.socketTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS
+            }
+
+            install(WebSockets) {
+                this.pingInterval = pingInterval
+                this.maxFrameSize = maxFrameSize
+                this.contentConverter =
+                    KotlinxWebsocketSerializationConverter(json)
+            }
+        }
 
     private suspend fun DefaultClientWebSocketSession.listenIncomingMessages() {
         try {

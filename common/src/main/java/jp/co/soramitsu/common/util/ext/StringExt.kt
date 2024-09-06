@@ -80,8 +80,6 @@ fun String.didToAccountId(): String {
     return this.replace(":", "_") + "@sora"
 }
 
-fun String.addHexPrefix(): String = "${HEX_PREFIX}$this"
-
 fun String.removeWebPrefix(): String =
     this.removePrefix("http://").removePrefix("https://").removePrefix("www.")
 

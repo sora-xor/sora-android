@@ -49,7 +49,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.view.PolkaswapDisclaimerView
-import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size

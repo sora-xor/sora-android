@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.compareNullDesc
 import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.domain.iconUri
@@ -44,7 +45,6 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
-import jp.co.soramitsu.common.util.ext.compareNullDesc
 import jp.co.soramitsu.common_wallet.domain.model.isFilterMatch
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState
@@ -57,7 +57,6 @@ import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokens
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.model.ExploreScreenState
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
@@ -132,7 +131,7 @@ class ExploreViewModel @Inject constructor(
                 _state.value = state.value.copy(
                     isLoading = false,
                     pools = pools,
-                    assets = assets,
+                    ecoSystemTokensState = assets,
                     farms = farms,
                 )
             }
@@ -152,7 +151,7 @@ class ExploreViewModel @Inject constructor(
         val mapped = ecoSystemMapper.mapEcoSystemTokens(EcoSystemTokens(tokensFiltered))
 
         val mappedEnumerated = mapped.map {
-            val indexInAll = positions.get(it.second.tokenId).orEmpty()
+            val indexInAll = positions[it.second.tokenId].orEmpty()
             indexInAll to it.second
         }
 

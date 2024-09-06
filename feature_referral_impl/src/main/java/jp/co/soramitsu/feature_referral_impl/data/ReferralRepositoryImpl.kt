@@ -36,8 +36,8 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Date
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
@@ -53,7 +53,7 @@ import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.referralBond
 import jp.co.soramitsu.sora.substrate.substrate.referralUnbond
 import jp.co.soramitsu.sora.substrate.substrate.setReferrer
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
+import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
@@ -222,10 +222,10 @@ class ReferralRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getReferralRewards(): Flow<List<ReferrerReward>> {
+    override fun getReferralRewards(): Flow<List<ReferralReward>> {
         return db.referralsDao().getReferrals().map { list ->
             list.map {
-                ReferrerReward(it.address, it.amount)
+                ReferralReward(it.address, it.amount)
             }
         }
     }

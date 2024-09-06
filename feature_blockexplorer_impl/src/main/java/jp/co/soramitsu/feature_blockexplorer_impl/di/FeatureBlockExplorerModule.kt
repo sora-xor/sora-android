@@ -32,9 +32,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_impl.di
 
+import android.content.Context
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
@@ -45,10 +47,37 @@ import jp.co.soramitsu.feature_blockexplorer_impl.data.TransactionHistoryReposit
 import jp.co.soramitsu.feature_blockexplorer_impl.domain.TransactionBuilderImpl
 import jp.co.soramitsu.feature_blockexplorer_impl.domain.TransactionHistoryHandlerImpl
 import jp.co.soramitsu.feature_blockexplorer_impl.presentation.txhistory.TransactionMappersImpl
+import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.api.ConfigDAO
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.HistoryItemsFilter
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.TxHistoryRepository
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItem
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.impl.TxHistoryRepositoryImpl
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.impl.builder.ExpectActualDBDriverFactory
+import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 
 @Module
 @InstallIn(SingletonComponent::class)
 class FeatureBlockExplorerModule {
+
+    private companion object {
+        const val txHistoryDBName = "historyDatabase.db"
+    }
+
+    @Singleton
+    @Provides
+    fun provideTxHistoryRepository(
+        @ApplicationContext context: Context,
+        configDAO: ConfigDAO,
+        restClient: RestClient,
+    ): TxHistoryRepository = TxHistoryRepositoryImpl(
+        databaseDriverFactory = ExpectActualDBDriverFactory(context, txHistoryDBName),
+        configDAO = configDAO,
+        restClient = restClient,
+        historyItemsFilter = object : HistoryItemsFilter {
+            override fun List<TxHistoryItem>.filterCachedHistoryItems(): List<TxHistoryItem> = this
+            override fun List<TxHistoryItem>.filterPagedHistoryItems(): List<TxHistoryItem> = this
+        }
+    )
 
     @Singleton
     @Provides

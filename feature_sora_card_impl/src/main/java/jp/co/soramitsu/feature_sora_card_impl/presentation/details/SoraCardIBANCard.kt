@@ -53,9 +53,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.common.util.ext.underlineSubstring
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.oauth.clients.ClientsFacade
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -64,7 +63,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class SoraCardIBANCardState(
     val iban: String,
-    val active: Boolean,
+    val closed: Boolean,
 )
 
 @Composable
@@ -101,7 +100,7 @@ fun SoraCardIBANCard(
                     color = MaterialTheme.customColors.fgPrimary,
                     textAlign = TextAlign.Center
                 )
-                if (soraCardIBANCardState.iban.isNotEmpty() && soraCardIBANCardState.active)
+                if (soraCardIBANCardState.iban.isNotEmpty() && soraCardIBANCardState.closed.not())
                     Icon(
                         modifier = Modifier
                             .testTagAsId("IbanCardShareClick")
@@ -112,10 +111,10 @@ fun SoraCardIBANCard(
                         tint = MaterialTheme.customColors.fgSecondary
                     )
             }
-            if (soraCardIBANCardState.active.not()) {
+            if (soraCardIBANCardState.closed) {
                 Text(
                     modifier = Modifier.fillMaxWidth().padding(all = Dimens.x1),
-                    text = underlineSubstring(stringResource(id = jp.co.soramitsu.oauth.R.string.iban_suspended_description, ClientsFacade.TECH_SUPPORT), ClientsFacade.TECH_SUPPORT),
+                    text = underlineSubstring(stringResource(id = jp.co.soramitsu.oauth.R.string.iban_frozen_description, ClientsFacade.TECH_SUPPORT), ClientsFacade.TECH_SUPPORT),
                     style = MaterialTheme.customTypography.textS,
                     color = MaterialTheme.customColors.fgSecondary,
                 )
@@ -147,7 +146,7 @@ private fun PreviewSoraCardIBANCard01() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
             iban = "LT61 3250 0467 7252 5583",
-            active = true,
+            closed = false,
         ),
         onShareClick = {},
         onCardClick = {},
@@ -160,7 +159,7 @@ private fun PreviewSoraCardIBANCard02() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
             iban = "",
-            active = true,
+            closed = false,
         ),
         onShareClick = {},
         onCardClick = {},
@@ -173,7 +172,7 @@ private fun PreviewSoraCardIBANCard03() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
             iban = "",
-            active = false,
+            closed = true,
         ),
         onShareClick = {},
         onCardClick = {},

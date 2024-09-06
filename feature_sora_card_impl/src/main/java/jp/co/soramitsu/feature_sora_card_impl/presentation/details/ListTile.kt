@@ -45,12 +45,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.androidfoundation.format.ImageValue
+import jp.co.soramitsu.androidfoundation.format.TextValue
+import jp.co.soramitsu.androidfoundation.format.retrievePainter
+import jp.co.soramitsu.androidfoundation.format.retrieveString
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
-import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -69,29 +69,20 @@ data class ListTileState(
     val testTagId: String? = null,
     val variant: ListTileVariant,
     val flag: ListTileFlag,
-    private val title: Text,
-    private val subtitle: Text? = null,
-    private val body: Text? = null,
-    private val icon: Image? = null
+    val title: TextValue,
+    val subtitle: TextValue? = null,
+    val clickEnabled: Boolean = true,
+    private val body: TextValue? = null,
+    private val icon: ImageValue? = null
 ) {
-
-    val titleText: Text = title
-
-    val isSubtitleVisible = variant === ListTileVariant.TITLE_SUBTITLE_BODY
-
-    val subtitleText: Text?
-        get() = if (variant === ListTileVariant.TITLE_SUBTITLE_BODY)
-            subtitle else null
 
     val isBodyVisible = variant === ListTileVariant.TITLE_SUBTITLE_BODY
 
-    val bodyText: Text?
+    val bodyText: TextValue?
         get() = if (variant === ListTileVariant.TITLE_SUBTITLE_BODY)
             body else null
 
-    val isNavigationHintVisible = variant === ListTileVariant.TITLE_NAVIGATION_HINT
-
-    val navigationIcon: Image?
+    val navigationIcon: ImageValue?
         get() = if (variant === ListTileVariant.TITLE_NAVIGATION_HINT)
             icon else null
 }
@@ -101,8 +92,6 @@ fun ListTileView(
     listTileState: ListTileState,
     onItemClick: () -> Unit
 ) {
-    // TODO Extract to UI lib
-
     val colorInUse = if (listTileState.variant === ListTileVariant.TITLE_NAVIGATION_HINT && listTileState.flag === ListTileFlag.WARNING) {
         MaterialTheme.customColors.statusError
     } else {
@@ -112,11 +101,11 @@ fun ListTileView(
     Row(
         modifier = Modifier
             .run { if (listTileState.testTagId == null) this else testTagAsId(listTileState.testTagId) }
-            .clickable { onItemClick.invoke() }
+            .clickable(onClick = onItemClick, enabled = listTileState.clickEnabled)
             .fillMaxWidth()
             .padding(
                 vertical = Dimens.x1,
-                horizontal = Dimens.x1
+                horizontal = Dimens.x1,
             ),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -124,29 +113,27 @@ fun ListTileView(
             modifier = Modifier.align(Alignment.CenterVertically)
         ) {
             Text(
-                text = listTileState.titleText.retrieveString(),
+                text = listTileState.title.retrieveString(),
                 style = MaterialTheme.customTypography.textM,
                 color = colorInUse
             )
-            if (listTileState.isSubtitleVisible) {
-                // TODO remove !!
+            if (listTileState.subtitle != null) {
                 Text(
-                    text = listTileState.subtitleText!!.retrieveString(),
+                    text = listTileState.subtitle.retrieveString(),
                     style = MaterialTheme.customTypography.textXSBold,
                     color = MaterialTheme.customColors.fgSecondary,
                 )
             }
         }
         Column {
-            if (listTileState.isSubtitleVisible) {
-                // TODO remove !!
+            if (listTileState.isBodyVisible) {
                 Text(
-                    text = listTileState.bodyText!!.retrieveString(),
+                    text = listTileState.bodyText?.retrieveString().orEmpty(),
                     style = MaterialTheme.customTypography.textM,
                     color = colorInUse,
                 )
             }
-            if (listTileState.isNavigationHintVisible) {
+            if (listTileState.variant == ListTileVariant.TITLE_NAVIGATION_HINT) {
                 Icon(
                     painter = listTileState.navigationIcon!!.retrievePainter(),
                     contentDescription = "",
@@ -164,8 +151,8 @@ private fun PreviewListTile_TITLE_NAVIGATION_HINT() {
         listTileState = ListTileState(
             variant = ListTileVariant.TITLE_NAVIGATION_HINT,
             flag = ListTileFlag.WARNING,
-            title = Text.SimpleText(text = "Title"),
-            icon = Image.ResImage(id = R.drawable.ic_arrow_right)
+            title = TextValue.SimpleText(text = "Title"),
+            icon = ImageValue.ResImage(id = R.drawable.ic_arrow_right)
         ),
         onItemClick = {}
     )
@@ -178,9 +165,9 @@ private fun PreviewListTile_TITLE_SUBTITLE_BODY() {
         listTileState = ListTileState(
             variant = ListTileVariant.TITLE_SUBTITLE_BODY,
             flag = ListTileFlag.NORMAL,
-            title = Text.SimpleText(text = "Title"),
-            subtitle = Text.SimpleText(text = "Subtitle"),
-            body = Text.SimpleText(text = "Body")
+            title = TextValue.SimpleText(text = "Title"),
+            subtitle = TextValue.SimpleText(text = "Subtitle"),
+            body = TextValue.SimpleText(text = "Body")
         ),
         onItemClick = {}
     )

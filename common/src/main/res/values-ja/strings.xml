@@ -560,7 +560,7 @@
   <string name="tutorial_terms_and_conditions">アカウントを作成することにより、%%規約と条件%%および%%個人情報保護方針%%に同意したことになります</string>
   <string name="tutorial_terms_and_conditions_3">規約と条件</string>
   <string name="tutorial_terms_and_conditions_template_1">続行することにより、同意したことになります</string>
-  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
   <string name="update_downloaded">SORAアプリのアップデートがダウンロードされ、インストールできるようになりました。\n\n最新バージョンのアプリを使用することが重要です。\n\nアプリをアップデートするためには再起動が必要です。</string>
   <string name="update_install_now">今すぐアップデートをインストールしますか？</string>
   <string name="wallet_backup">Wallet Backup</string>

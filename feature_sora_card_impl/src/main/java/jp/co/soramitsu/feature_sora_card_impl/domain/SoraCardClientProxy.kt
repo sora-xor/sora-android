@@ -70,6 +70,8 @@ internal class SoraCardClientProxy @Inject constructor(
         return clientsFacade.getIBAN()
     }
 
+    suspend fun getPhone() = clientsFacade.getPhoneNumber()
+
     suspend fun logout() {
         clientsFacade.logout()
     }

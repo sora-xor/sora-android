@@ -37,10 +37,10 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import jp.co.soramitsu.androidfoundation.format.unsafeCast
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -51,6 +51,7 @@ import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
@@ -153,9 +154,19 @@ class GetSoraCardViewModel @AssistedInject constructor(
         }
     }
 
-    fun onEnableCard() {
+    fun onSignUp() {
         currentSoraCardContractData?.let {
-            _launchSoraCardRegistration.value = it
+            _launchSoraCardRegistration.value = it.copy(
+                flow = it.flow.unsafeCast<SoraCardFlow.SoraCardKycFlow>().copy(logIn = false)
+            )
+        }
+    }
+
+    fun onLogIn() {
+        currentSoraCardContractData?.let {
+            _launchSoraCardRegistration.value = it.copy(
+                flow = it.flow.unsafeCast<SoraCardFlow.SoraCardKycFlow>().copy(logIn = true)
+            )
         }
     }
 
@@ -165,12 +176,5 @@ class GetSoraCardViewModel @AssistedInject constructor(
 
     fun onSwap() {
         polkaswapRouter.showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
-    }
-
-    fun onSeeBlacklist() {
-        mainRouter.showWebView(
-            title = resourceManager.getString(R.string.sora_card_blacklisted_countires_title),
-            url = OptionsProvider.soraCardBlackList,
-        )
     }
 }

@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import jp.co.soramitsu.common.util.ext.compareNullDesc
+import jp.co.soramitsu.androidfoundation.format.compareNullDesc
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import kotlinx.coroutines.flow.Flow

@@ -38,13 +38,13 @@ import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import java.util.UUID
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BuyCryptoRepository
-import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest

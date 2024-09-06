@@ -52,11 +52,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.androidfoundation.intent.ShareUtil.shareText
+import jp.co.soramitsu.androidfoundation.intent.getIntentForPackage
+import jp.co.soramitsu.androidfoundation.intent.openGooglePlay
 import jp.co.soramitsu.androidfoundation.intent.openSoraTelegramSupportChat
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
 import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -68,9 +71,16 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
 
     override val viewModel: SoraCardDetailsViewModel by viewModels()
 
+    private val soraCardLauncher = registerForActivityResult(
+        SoraCardContract()
+    ) { }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         (activity as BottomBarController).hideBottomBar()
         super.onViewCreated(view, savedInstanceState)
+        viewModel.launchSoraCard.observe { contract ->
+            soraCardLauncher.launch(contract)
+        }
         viewModel.shareLinkEvent.observe { share ->
             context?.let { c ->
                 shareText(c, getString(R.string.common_share), share)
@@ -78,6 +88,14 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
         }
         viewModel.telegramChat.observe {
             openSoraTelegramSupportChat(context)
+        }
+        viewModel.fiatWallet.observe {
+            this@SoraCardDetailsFragment.context?.getIntentForPackage(it)?.let { intent ->
+                startActivity(intent)
+            }
+        }
+        viewModel.fiatWalletMarket.observe {
+            this.context?.openGooglePlay(it)
         }
     }
 
@@ -98,7 +116,10 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
                 onRecentActivityClick = viewModel::onRecentActivityClick,
                 onIbanCardShareClick = viewModel::onIbanCardShareClick,
                 onIbanCardClick = viewModel::onIbanCardClick,
-                onSettingsOptionClick = viewModel::onSettingsOptionClick
+                onSettingsOptionClick = {
+                    viewModel.onSettingsOptionClick(it, this@SoraCardDetailsFragment.context)
+                },
+                onExchangeXorClick = viewModel::onExchangeXorClick,
             )
             if (state.value.logoutDialog) {
                 AlertDialog(
@@ -138,6 +159,48 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
                         Text(
                             color = MaterialTheme.customColors.fgPrimary,
                             text = stringResource(id = R.string.sora_card_option_logout_description)
+                        )
+                    },
+                )
+            }
+            if (state.value.fiatWalletDialog) {
+                AlertDialog(
+                    backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
+                    onDismissRequest = viewModel::onFiatWalletDismiss,
+                    buttons = {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(Dimens.x1),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.x2),
+                        ) {
+                            TextButton(
+                                modifier = Modifier.weight(1f),
+                                size = Size.Small,
+                                order = Order.TERTIARY,
+                                text = stringResource(id = R.string.common_cancel),
+                                onClick = viewModel::onFiatWalletDismiss,
+                            )
+                            TextButton(
+                                modifier = Modifier.weight(1f),
+                                size = Size.Small,
+                                order = Order.PRIMARY,
+                                text = stringResource(id = R.string.common_ok),
+                                onClick = viewModel::onOpenFiatWalletMarket,
+                            )
+                        }
+                    },
+                    title = {
+                        Text(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            text = stringResource(id = jp.co.soramitsu.oauth.R.string.card_hub_manage_card_alert_title)
+                        )
+                    },
+                    text = {
+                        Text(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            text = stringResource(id = jp.co.soramitsu.oauth.R.string.card_hub_manage_google_play)
                         )
                     },
                 )

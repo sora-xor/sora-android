@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.domain
 
-import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscription
 import kotlinx.coroutines.flow.Flow

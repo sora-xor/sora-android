@@ -40,14 +40,15 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.mockkStatic
 import io.mockk.verify
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_impl.testdata.TestTransactions
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.xnetworking.sorawallet.txhistory.client.SubQueryClientForSoraWallet
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.TxHistoryRepository
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -74,7 +75,10 @@ class TransactionHistoryRepositoryTest {
     val mockkRule = MockKRule(this)
 
     @MockK
-    private lateinit var subQueryClient: SubQueryClientForSoraWallet
+    private lateinit var txHistoryRepository: TxHistoryRepository
+
+    @MockK
+    private lateinit var soraConfigManager: SoraConfigManager
 
     @MockK
     private lateinit var extrinsicManager: ExtrinsicManager
@@ -89,15 +93,31 @@ class TransactionHistoryRepositoryTest {
     fun setUp() = runTest {
         mockkStatic(Uri::parse)
         every { Uri.parse(any()) } returns mockedUri
-        every { extrinsicManager.setWatchingExtrinsicListener(any()) } returns Unit
-        every { subQueryClient.getTransactionPeers("query") } returns peersList
+        every {
+            extrinsicManager.setWatchingExtrinsicListener(
+                listener = any()
+            )
+        } returns Unit
+        coEvery { soraConfigManager.getGenesis() } returns "7e4e"
+        every {
+            txHistoryRepository.getTransactionPeers(
+                query = "query",
+                chainId = "7e4e",
+            )
+        } returns peersList
+
         coEvery {
-            subQueryClient.getTransactionHistoryCached(TestAccounts.soraAccount.substrateAddress, 1, null)
+            txHistoryRepository.getTransactionHistoryCached(
+                address = TestAccounts.soraAccount.substrateAddress,
+                count = 1,
+                chainId = "7e4e",
+            )
         } returns listOf(TestTransactions.txHistoryItem)
 
         transactionHistoryRepository = TransactionHistoryRepositoryImpl(
-            subQueryClient,
-            extrinsicManager
+            txHistoryRepository,
+            extrinsicManager,
+            soraConfigManager,
         )
     }
 

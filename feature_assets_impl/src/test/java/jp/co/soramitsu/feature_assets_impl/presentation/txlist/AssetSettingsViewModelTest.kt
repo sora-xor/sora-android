@@ -40,6 +40,8 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.verify
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -48,8 +50,6 @@ import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens.xorToken
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf

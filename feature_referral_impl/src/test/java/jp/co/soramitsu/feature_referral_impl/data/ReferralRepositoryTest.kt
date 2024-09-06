@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_referral_impl.data
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.ReferralsDao
 import jp.co.soramitsu.core_db.model.ReferralLocal
@@ -41,8 +42,7 @@ import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
+import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -90,7 +90,7 @@ class ReferralRepositoryTest {
     private lateinit var referralRepository: ReferralRepository
 
     private val REFERRER_REWARDS = listOf(
-        ReferrerReward(
+        ReferralReward(
             "address",
             "1000000000000000000"
         )

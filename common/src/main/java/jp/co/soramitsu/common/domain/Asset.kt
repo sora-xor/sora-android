@@ -34,9 +34,9 @@ package jp.co.soramitsu.common.domain
 
 import android.os.Parcelable
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.format.equalTo
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.equalTo
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
@@ -78,6 +78,8 @@ data class AssetBalance(
 ) : Parcelable
 
 fun createAssetBalance(b: BigDecimal = BigDecimal.ZERO) = AssetBalance(b, b, b, b, b, b, b, b)
+
+typealias TokenPrecision = Pair<String, Int>
 
 @Parcelize
 data class Token(

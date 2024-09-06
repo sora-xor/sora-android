@@ -43,13 +43,13 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.net.SocketException
 import java.net.SocketTimeoutException
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2

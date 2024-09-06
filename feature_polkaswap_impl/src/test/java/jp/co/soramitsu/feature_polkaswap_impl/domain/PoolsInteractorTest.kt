@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_polkaswap_impl.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
@@ -46,7 +47,6 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapReposito
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

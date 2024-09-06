@@ -45,10 +45,12 @@ interface PolkaswapSubscriptionRepository {
     fun subscribeEachBlock(): Flow<String>
 
     suspend fun getRemotePoolReserves(
-        tokenFrom: Token,
-        tokenTo: Token,
+        tokenFromId: String,
+        tokenFromPrecision: Int,
+        tokenToId: String,
+        tokenToPrecision: Int,
         enabled: Boolean,
-        presented: Boolean
+        presented: Boolean,
     ): LiquidityData
 
     suspend fun updateAccountPools(address: String)

@@ -49,19 +49,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.androidfoundation.format.ImageValue
+import jp.co.soramitsu.androidfoundation.format.TextValue
+import jp.co.soramitsu.androidfoundation.format.retrievePainter
+import jp.co.soramitsu.androidfoundation.format.retrieveString
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class ListTileState(
-    val titleText: Text,
-    val image: Image,
-    val bodyText: Text
+    val titleText: TextValue,
+    val image: ImageValue,
+    val bodyText: TextValue,
 )
 
 @Composable
@@ -118,9 +118,9 @@ fun ListTile(
 private fun PreviewListTile() {
     ListTile(
         state = ListTileState(
-            titleText = Text.SimpleText("Title"),
-            image = Image.ResImage(id = R.drawable.ic_0x0200000000000000000000000000000000000000000000000000000000000000),
-            bodyText = Text.SimpleText("Body text")
+            titleText = TextValue.SimpleText("Title"),
+            image = ImageValue.ResImage(id = R.drawable.ic_0x0200000000000000000000000000000000000000000000000000000000000000),
+            bodyText = TextValue.SimpleText("Body text")
         ),
         onClick = { }
     )

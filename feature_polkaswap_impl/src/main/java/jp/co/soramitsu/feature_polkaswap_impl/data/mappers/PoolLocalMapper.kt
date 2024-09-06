@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.data.mappers
 
+import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
@@ -82,6 +83,7 @@ object PoolLocalMapper {
         baseToken: Token,
         token: Token,
         apy: Double?,
+        kensetsuIncluded: BigDecimal? = null,
     ): CommonUserPoolData {
         val basePooled = PolkaswapFormulas.calculatePooledValue(
             poolLocal.basicPoolLocal.reserveBase,
@@ -112,10 +114,11 @@ object PoolLocalMapper {
             user = UserPoolData(
                 basePooled = basePooled,
                 targetPooled = secondPooled,
-                share,
-                poolLocal.userPoolLocal.poolProvidersBalance,
-                poolLocal.userPoolLocal.favorite,
-                poolLocal.userPoolLocal.sortOrder,
+                poolShare = share,
+                poolProvidersBalance = poolLocal.userPoolLocal.poolProvidersBalance,
+                favorite = poolLocal.userPoolLocal.favorite,
+                sort = poolLocal.userPoolLocal.sortOrder,
+                kensetsuIncluded = kensetsuIncluded,
             ),
         )
     }

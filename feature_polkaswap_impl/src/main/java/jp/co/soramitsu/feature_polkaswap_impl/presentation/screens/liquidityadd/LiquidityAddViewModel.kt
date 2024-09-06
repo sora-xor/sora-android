@@ -37,21 +37,21 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.coroutine.SuspendableProperty
+import jp.co.soramitsu.androidfoundation.format.isZero
+import jp.co.soramitsu.androidfoundation.format.nullZero
+import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.lazyAsync
-import jp.co.soramitsu.common.util.ext.nullZero
-import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
@@ -509,7 +509,12 @@ class LiquidityAddViewModel @AssistedInject constructor(
     fun onToken1Click() {
         if (assets.isNotEmpty()) {
             viewModelScope.launch {
-                val bases = poolsInteractor.getPoolDexList().map { it.tokenId }
+                val bases = buildList {
+                    if (addToken2 == null || addToken2 == SubstrateOptionsProvider.ethTokenId) {
+                        add(SubstrateOptionsProvider.kxorTokenId)
+                    }
+                    addAll(poolsInteractor.getPoolDexList().map { it.tokenId })
+                }
                 val list = assets.filter { it.token.id in bases && it.token.id != addToken2 }
                 _addState.value = _addState.value.copy(
                     assetState1 = _addState.value.assetState1?.copy(
@@ -532,6 +537,13 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 val bases = poolsInteractor.getPoolDexList()
                 val curBase = bases.find { it.tokenId == addToken1 }
                 val list = assets
+                    .filter { asset ->
+                        if (addToken1 != null && addToken1 == SubstrateOptionsProvider.kxorTokenId) {
+                            asset.token.id == SubstrateOptionsProvider.ethTokenId
+                        } else {
+                            true
+                        }
+                    }
                     .filter { asset ->
                         val inBases = bases.find { it.tokenId == asset.token.id }
                         if (inBases != null && curBase != null) {

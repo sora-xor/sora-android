@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.presentation.compose.webview
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
@@ -57,7 +56,6 @@ class WebViewFragment : SoraBaseFragment<WebViewViewModel>() {
         )
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController

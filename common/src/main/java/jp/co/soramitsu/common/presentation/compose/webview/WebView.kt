@@ -68,7 +68,7 @@ fun WebView(
                             onPageFinished()
                         }
                     }
-
+                    settings.domStorageEnabled = true
                     settings.javaScriptEnabled = state.javaScriptEnabled
                     loadUrl(state.url)
                 }

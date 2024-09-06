@@ -36,10 +36,10 @@ import io.emeraldpay.polkaj.scale.ScaleCodecReader
 import io.emeraldpay.polkaj.scale.ScaleCodecWriter
 import java.io.ByteArrayOutputStream
 import jp.co.soramitsu.xcrypto.hash.blake2.blake2b256
+import jp.co.soramitsu.xcrypto.seed.Mnemonic
 import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.junction.BIP32JunctionDecoder
-import jp.co.soramitsu.xsubstrate.encrypt.mnemonic.Mnemonic
 import jp.co.soramitsu.xsubstrate.encrypt.seed.SeedFactory
 import jp.co.soramitsu.xsubstrate.encrypt.seed.ethereum.EthereumSeedFactory
 import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
