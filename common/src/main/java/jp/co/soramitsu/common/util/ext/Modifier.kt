@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.util.ext
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloatAsState
@@ -40,32 +39,11 @@ import androidx.compose.animation.core.repeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.debugInspectorInfo
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
-import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.DebounceClickHandler
-
-const val PACKAGE_ID = "jp.co.soramitsu.sora.develop"
-
-@OptIn(ExperimentalComposeUiApi::class)
-@SuppressLint("ModifierFactoryUnreferencedReceiver")
-fun Modifier.testTagAsId(tag: String): Modifier {
-    return if (BuildUtils.isPlayMarket()) {
-        this
-    } else {
-        this
-            .semantics {
-                testTagsAsResourceId = true
-            }
-            .testTag("$PACKAGE_ID:id/$tag")
-    }
-}
 
 fun Modifier.debounceClickable(debounceClickHandler: DebounceClickHandler, onClick: () -> Unit): Modifier {
     return this.clickable { debounceClickHandler.debounceClick(onClick) }

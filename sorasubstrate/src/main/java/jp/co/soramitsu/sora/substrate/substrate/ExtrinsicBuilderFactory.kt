@@ -105,7 +105,7 @@ class ExtrinsicBuilderFactory @Inject constructor(
     }
 
     private suspend fun genesisBytes(): ByteArray =
-        if (BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.TESTING, Flavor.SORALUTION)) {
+        if (BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.SORALUTION)) {
             val result = calls.getBlockHash()
             result.removeHexPrefix().fromHex()
         } else {

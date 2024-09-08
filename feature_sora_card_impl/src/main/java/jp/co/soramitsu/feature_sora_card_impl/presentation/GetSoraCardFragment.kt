@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_sora_card_impl.presentation
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,6 +46,8 @@ import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
 
 @AndroidEntryPoint
@@ -77,7 +78,6 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -89,8 +89,9 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
             GetSoraCardScreen(
                 scrollState = scrollState,
                 state = state,
-                viewModel::onSeeBlacklist,
-                viewModel::onEnableCard,
+                { ShareUtil.shareInBrowser(this@GetSoraCardFragment, OptionsProvider.soraCardBlackList) },
+                viewModel::onSignUp,
+                viewModel::onLogIn,
             )
         }
     }

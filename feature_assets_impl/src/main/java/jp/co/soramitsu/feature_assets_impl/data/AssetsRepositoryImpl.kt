@@ -36,11 +36,11 @@ import androidx.room.withTransaction
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.WhitelistTokensManager
@@ -430,6 +430,13 @@ class AssetsRepositoryImpl @Inject constructor(
         )
         (balances as MutableList).add(xorIndex, transferable)
         return balances to xorBalance
+    }
+
+    override suspend fun fetchBalance(
+        address: String,
+        ids: List<String>,
+    ): List<BigInteger> {
+        return substrateCalls.fetchBalances(address, ids)
     }
 
     private suspend fun checkDefaultNeed(address: String, code: String) {

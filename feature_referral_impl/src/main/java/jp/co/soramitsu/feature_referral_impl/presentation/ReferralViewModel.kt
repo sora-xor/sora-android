@@ -38,6 +38,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
@@ -48,7 +49,6 @@ import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
-import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter

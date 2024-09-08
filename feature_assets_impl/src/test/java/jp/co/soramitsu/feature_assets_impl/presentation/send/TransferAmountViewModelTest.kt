@@ -40,12 +40,13 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.format.equalTo
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.equalTo
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountViewModel
@@ -53,7 +54,6 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.PolkaswapTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle

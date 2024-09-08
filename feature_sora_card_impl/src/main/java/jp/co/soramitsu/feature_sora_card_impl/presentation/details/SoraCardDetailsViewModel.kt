@@ -32,17 +32,23 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
+import jp.co.soramitsu.androidfoundation.intent.isAppAvailableCompat
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -60,19 +66,28 @@ class SoraCardDetailsViewModel @Inject constructor(
     val shareLinkEvent: LiveData<String> = _shareLinkEvent
 
     val telegramChat = SingleLiveEvent<Unit>()
+    val fiatWallet = SingleLiveEvent<String>()
+    val fiatWalletMarket = SingleLiveEvent<String>()
 
     private var ibanCache: IbanInfo? = null
+
+    private val _launchSoraCard = SingleLiveEvent<SoraCardContractData>()
+    val launchSoraCard: LiveData<SoraCardContractData> = _launchSoraCard
 
     private val _soraCardDetailsScreenState = MutableStateFlow(
         SoraCardDetailsScreenState(
             soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
                 balance = null,
+                phone = null,
                 soraCardMenuActions = SoraCardMenuAction.entries,
             ),
             soraCardSettingsCard = SoraCardSettingsCardState(
                 soraCardSettingsOptions = SoraCardSettingsOption.entries,
+                phone = "",
             ),
+            soraCardIBANCardState = null,
             logoutDialog = false,
+            fiatWalletDialog = false,
         )
     )
     val soraCardDetailsScreenState = _soraCardDetailsScreenState.asStateFlow()
@@ -88,14 +103,22 @@ class SoraCardDetailsViewModel @Inject constructor(
 
         viewModelScope.launch {
             tryCatch {
-                soraCardInteractor.basicStatus.value.ibanInfo?.let { iban ->
+                soraCardInteractor.basicStatus.value.let { basicStatus ->
                     val local = _soraCardDetailsScreenState.value
-                    ibanCache = iban
+                    ibanCache = basicStatus.ibanInfo
+                    val phoneFormatted = basicStatus.phone?.let { "+$it" }
                     _soraCardDetailsScreenState.value = local.copy(
-                        soraCardIBANCardState = SoraCardIBANCardState(iban.iban, iban.active),
-                        soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
-                            balance = iban.balance,
+                        soraCardIBANCardState = SoraCardIBANCardState(
+                            iban = basicStatus.ibanInfo?.iban.orEmpty(),
+                            closed = basicStatus.ibanInfo?.ibanStatus == IbanStatus.CLOSED,
                         ),
+                        soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
+                            balance = basicStatus.ibanInfo?.balance,
+                            phone = phoneFormatted,
+                        ),
+                        soraCardSettingsCard = local.soraCardSettingsCard?.copy(
+                            phone = phoneFormatted.orEmpty(),
+                        )
                     )
                 }
             }
@@ -128,20 +151,24 @@ class SoraCardDetailsViewModel @Inject constructor(
 
     fun onIbanCardShareClick() {
         ibanCache?.let {
-            if (it.active && it.iban.isNotEmpty()) _shareLinkEvent.value = it.iban
+            if (it.ibanStatus != IbanStatus.CLOSED && it.iban.isNotEmpty()) _shareLinkEvent.value = it.iban
         }
     }
 
     fun onIbanCardClick() {
         ibanCache?.let {
-            if (it.active && it.iban.isNotEmpty()) {
+            if (it.ibanStatus != IbanStatus.CLOSED && it.iban.isNotEmpty()) {
                 clipboardManager.addToClipboard(it.iban)
                 copiedToast.trigger()
             }
         }
     }
 
-    fun onSettingsOptionClick(position: Int) {
+    fun onExchangeXorClick() {
+        _launchSoraCard.value = createSoraCardGateHubContract()
+    }
+
+    fun onSettingsOptionClick(position: Int, context: Context?) {
         val settings = soraCardDetailsScreenState.value.soraCardSettingsCard
             ?.soraCardSettingsOptions ?: return
 
@@ -152,12 +179,32 @@ class SoraCardDetailsViewModel @Inject constructor(
 
             SoraCardSettingsOption.SUPPORT_CHAT ->
                 telegramChat.trigger()
+
+            SoraCardSettingsOption.MANAGE_SORA_CARD -> {
+                checkNotNull(context)
+                val fiat = BuildUtils.fiatPackageName()
+                if (context.isAppAvailableCompat(fiat)) {
+                    fiatWallet.value = fiat
+                } else {
+                    _soraCardDetailsScreenState.value =
+                        _soraCardDetailsScreenState.value.copy(fiatWalletDialog = true)
+                }
+            }
         }
     }
 
     fun onLogoutDismiss() {
         _soraCardDetailsScreenState.value =
             _soraCardDetailsScreenState.value.copy(logoutDialog = false)
+    }
+
+    fun onFiatWalletDismiss() {
+        _soraCardDetailsScreenState.value =
+            _soraCardDetailsScreenState.value.copy(fiatWalletDialog = false)
+    }
+
+    fun onOpenFiatWalletMarket() {
+        fiatWalletMarket.value = BuildUtils.fiatPackageName()
     }
 
     fun onSoraCardLogOutClick() {

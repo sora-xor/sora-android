@@ -32,16 +32,21 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.domain
 
+import io.ktor.http.decodeURLPart
+import io.ktor.util.decodeBase64Bytes
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.xnetworking.sorawallet.tokenwhitelist.SoraTokensWhitelistManager
+import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
+import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
+import jp.co.soramitsu.xnetworking.lib.engines.utils.fieldOrNull
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 
 @Serializable
 private data class TokenDto(
@@ -51,12 +56,12 @@ private data class TokenDto(
 
 @Singleton
 class WhitelistTokensManager @Inject constructor(
-    private val manager: SoraTokensWhitelistManager,
+    private val restClient: RestClient,
     private val fileManager: FileManager,
 ) {
 
     companion object {
-        private const val whitelistFileName = "whitelist_tokens.json"
+        private const val WHITELIST_FILE_NAME = "whitelist_tokens.json"
     }
 
     var whitelistIds: List<String> = emptyList()
@@ -71,7 +76,7 @@ class WhitelistTokensManager @Inject constructor(
     }
 
     init {
-        fileManager.readInternalFile(whitelistFileName)?.let {
+        fileManager.readInternalFile(WHITELIST_FILE_NAME)?.let {
             val ids = Json.decodeFromString(ListSerializer(TokenDto.serializer()), it)
             updateWhitelist(ids)
         }
@@ -88,36 +93,62 @@ class WhitelistTokensManager @Inject constructor(
     }
 
     suspend fun updateWhitelistStorage() {
-        runCatching { manager.getTokens() }.onSuccess { dtoList ->
-            val ids = dtoList.map { TokenDto(it.address, it.type) }
-            updateWhitelist(ids)
-            fileManager.writeInternalFile(whitelistFileName, Json.encodeToString(ids))
+        runCatching {
+            restClient.get(
+                JsonGetRequest(
+                    url = "https://whitelist.polkaswap2.io/whitelist.json",
+                    responseDeserializer = JsonArray.serializer()
+                )
+            )
+        }.onSuccess { dtoList ->
+            val ids = mutableListOf<TokenDto>()
+
             dtoList.forEach { dto ->
-                when (dto.rawIcon) {
-                    is String -> {
+                val address = dto.fieldOrNull("address") ?: return@forEach
+                val iconField = dto.fieldOrNull("icon") ?: return@forEach
+
+                val iconRaw = iconField.substringAfter(
+                    delimiter = ",",
+                    missingDelimiterValue = ""
+                )
+
+                when {
+                    iconField.startsWith("data:image/svg") -> {
                         fileManager.writeInternalCacheFile(
-                            "${dto.address}.${dto.type}",
-                            dto.rawIcon as String,
+                            fileName = "$address.svg",
+                            content = iconRaw.decodeURLPart()
                         )
+
+                        ids += TokenDto(id = address, type = "svg")
                     }
-                    is ByteArray -> {
+                    iconField.startsWith("data:image/png") -> {
                         fileManager.writeInternalCacheFile(
-                            "${dto.address}.${dto.type}",
-                            dto.rawIcon as ByteArray,
+                            fileName = "$address.png",
+                            content = iconRaw.decodeBase64Bytes()
                         )
+
+                        ids += TokenDto(id = address, type = "png")
                     }
-                    else -> {}
+                    else -> return@forEach
                 }
             }
+
+            updateWhitelist(ids)
+            fileManager.writeInternalFile(
+                WHITELIST_FILE_NAME,
+                Json.encodeToString(ids)
+            )
         }.onFailure {
             FirebaseWrapper.recordException(it)
-            if (fileManager.existsInternalFile(whitelistFileName).not()) {
-                updateWhitelist(
-                    AssetHolder.getIds().map { id ->
-                        TokenDto(id, "")
-                    }
-                )
-            }
+
+            if (fileManager.existsInternalFile(WHITELIST_FILE_NAME))
+                return@onFailure
+
+            updateWhitelist(
+                AssetHolder.getIds().map { id ->
+                    TokenDto(id, "")
+                }
+            )
         }
     }
 }

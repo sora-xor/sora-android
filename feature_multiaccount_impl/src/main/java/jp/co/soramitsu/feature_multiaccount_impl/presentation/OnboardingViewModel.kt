@@ -47,12 +47,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.net.SocketException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException

@@ -35,7 +35,7 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor

@@ -63,10 +63,19 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":common_wallet"))
     implementation(project(":core_db"))
@@ -78,10 +87,12 @@ dependencies {
     implementation(project(":feature_account_api"))
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_main_api"))
+    implementation(project(":feature_sora_card_api"))
     implementation(project(":feature_blockexplorer_api"))
 
     implementation(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)
@@ -120,6 +131,7 @@ dependencies {
 
     implementation(libs.uiCoreDep)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
     implementation(libs.composeFoundationDep)
     implementation(libs.composeMaterialDep)
@@ -140,6 +152,10 @@ dependencies {
         }
     }
 
-    testImplementation(project(":test_shared"))
     testImplementation(project(":test_data"))
+    testImplementation(libs.coroutineTestDep)
+    testImplementation(libs.junitDep)
+    testImplementation(libs.mockkDep)
+    testImplementation(libs.mockitoKotlinDep)
+    testImplementation(libs.archCoreTestDep)
 }

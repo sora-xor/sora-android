@@ -32,12 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_main_impl.domain
 
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
-import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

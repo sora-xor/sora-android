@@ -36,12 +36,12 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.core_db.dao.AssetDao
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After

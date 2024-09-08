@@ -63,7 +63,7 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.AccountWithIcon
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
-import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.component.input.InputText
 import jp.co.soramitsu.ui_core.component.input.InputTextState

@@ -56,7 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.base.ProgressDialog
 import jp.co.soramitsu.common.util.ext.shake
-import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors

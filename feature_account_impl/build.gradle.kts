@@ -52,10 +52,19 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":feature_account_api"))
     implementation(project(":feature_blockexplorer_api"))
@@ -64,6 +73,7 @@ dependencies {
 
     implementation(libs.xcryptoDep)
     implementation(libs.xsubstrateDep)
+    implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.daggerDep)
     kapt(libs.daggerKaptDep)
@@ -75,5 +85,9 @@ dependencies {
     implementation(libs.coroutineDep)
     implementation(libs.viewmodelKtxDep)
 
-    testImplementation(project(":test_shared"))
+    testImplementation(libs.coroutineTestDep)
+    testImplementation(libs.junitDep)
+    testImplementation(libs.mockkDep)
+    testImplementation(libs.mockitoKotlinDep)
+    testImplementation(libs.archCoreTestDep)
 }

@@ -30,31 +30,37 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ethereum_impl.data.mappers
+package jp.co.soramitsu.common.util
 
-import java.math.BigInteger
-import org.web3j.crypto.Bip32ECKeyPair
-import org.web3j.crypto.Credentials
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
-class EthereumCredentialsMapper {
+class CachingFactory<Args : CachingFactory.Args, Value>(
+    private val factory: suspend Args.() -> Value
+) {
 
-    companion object {
-        private const val hexRadix = 16
+    abstract class Args
+
+    private val cacheMutex = Mutex()
+    private var cachedValue = mutableMapOf<Args, Value>()
+
+    suspend fun nullableValue(args: Args): Value? {
+        initialize(args)
+        return cachedValue[args]
     }
 
-    fun getPublicKey(privateKey: BigInteger): BigInteger {
-        return Credentials.create(privateKey.toString(hexRadix)).ecKeyPair.publicKey
+    suspend fun value(args: Args): Value {
+        initialize(args)
+        return checkNotNull(cachedValue[args])
     }
 
-    fun getAddress(privateKey: BigInteger): String {
-        return Credentials.create(privateKey.toString(hexRadix)).address
-    }
-
-    fun getCredentials(privateKey: BigInteger): Credentials {
-        return Credentials.create(privateKey.toString(hexRadix))
-    }
-
-    fun getCredentialsFromECKeyPair(ecKeyPair: Bip32ECKeyPair): Credentials {
-        return Credentials.create(ecKeyPair)
+    private suspend fun initialize(args: Args) {
+        if (cachedValue[args] == null) {
+            cacheMutex.withLock {
+                if (cachedValue[args] == null) {
+                    cachedValue[args] = factory(args)
+                }
+            }
+        }
     }
 }

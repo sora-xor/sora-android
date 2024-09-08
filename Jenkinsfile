@@ -16,6 +16,5 @@ def pipeline = new org.android.AppPipeline(steps: this,
     gitUpdateSubmodule: true,
     dockerImage: 'build-tools/android-build-box:jdk17',
     gpgFiles: ['app/google-services.json'],
-    dojoProductType: 'sora-mobile'
-    )
+    dojoProductType: 'sora-mobile')
 pipeline.runPipeline('sora')

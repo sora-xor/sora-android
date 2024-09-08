@@ -83,7 +83,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
     internal var detailsState by mutableStateOf(
         PoolDetailsState(
             DEFAULT_ICON_URI, DEFAULT_ICON_URI, DEFAULT_ICON_URI,
-            "", "", "", "", "", "", "",
+            "", "", "", "", "", "", "", "",
             true, true, "", emptyList(), emptyList(), false,
         )
     )
@@ -188,6 +188,9 @@ class PoolDetailsViewModel @AssistedInject constructor(
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 )
+                            },
+                            kensetsu = userData?.kensetsuIncluded?.let { kxor ->
+                                numbersFormatter.formatBigDecimal(kxor, AssetHolder.ROUNDING)
                             },
                             pooled2 = userData?.targetPooled?.let {
                                 data.basic.targetToken.printBalance(

@@ -37,8 +37,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.ext.setValueIfNew

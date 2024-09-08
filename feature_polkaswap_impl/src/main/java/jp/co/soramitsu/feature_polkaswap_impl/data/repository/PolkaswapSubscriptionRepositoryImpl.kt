@@ -36,11 +36,11 @@ import androidx.room.withTransaction
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
@@ -74,7 +74,7 @@ import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
-import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
+import jp.co.soramitsu.xsubstrate.wsrpc.executeAsyncMapped
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojoList
@@ -107,12 +107,12 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 .storage(Storage.DEX_INFOS.storageName)
         val partialKey = metadataStorage.storageKey()
         return runCatching {
-            socketService.executeAsync(
+            socketService.executeAsyncMapped(
                 request = StateKeys(listOf(partialKey)),
                 mapper = pojoList<String>().nonNull()
             ).let { storageKeys ->
                 storageKeys.mapNotNull { storageKey ->
-                    socketService.executeAsync(
+                    socketService.executeAsyncMapped(
                         request = GetStorageRequest(listOf(storageKey)),
                         mapper = pojo<String>().nonNull(),
                     )
@@ -226,24 +226,26 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getRemotePoolReserves(
-        tokenFrom: Token,
-        tokenTo: Token,
+        tokenFromId: String,
+        tokenFromPrecision: Int,
+        tokenToId: String,
+        tokenToPrecision: Int,
         enabled: Boolean,
-        presented: Boolean
+        presented: Boolean,
     ): LiquidityData {
         return if (presented || enabled) {
             val (reservesFirst, reservesSecond) = wsConnection.getPoolReserves(
-                tokenFrom.id,
-                tokenTo.id
+                tokenFromId,
+                tokenToId,
             ) ?: (BigInteger.ZERO to BigInteger.ZERO)
 
-            val poolLocal = db.poolDao().getBasicPool(tokenFrom.id, tokenTo.id)
+            val poolLocal = db.poolDao().getBasicPool(tokenFromId, tokenToId)
 
             LiquidityData(
-                firstReserves = mapBalance(reservesFirst, tokenFrom.precision),
-                secondReserves = mapBalance(reservesSecond, tokenTo.precision),
-                firstPooled = mapBalance(BigInteger.ZERO, tokenFrom.precision),
-                secondPooled = mapBalance(BigInteger.ZERO, tokenTo.precision),
+                firstReserves = mapBalance(reservesFirst, tokenFromPrecision),
+                secondReserves = mapBalance(reservesSecond, tokenToPrecision),
+                firstPooled = mapBalance(BigInteger.ZERO, tokenFromPrecision),
+                secondPooled = mapBalance(BigInteger.ZERO, tokenToPrecision),
                 sbApy = poolLocal?.reservesAccount?.let {
                     getPoolStrategicBonusAPY(it)?.times(100)
                 },
@@ -262,7 +264,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
         feeToken: Token,
         dexId: Int,
     ): SwapQuote? {
-        val response = socketService.executeAsync(
+        val response = socketService.executeAsyncMapped(
             request = RuntimeRequest(
                 "liquidityProxy_quote",
                 listOf(

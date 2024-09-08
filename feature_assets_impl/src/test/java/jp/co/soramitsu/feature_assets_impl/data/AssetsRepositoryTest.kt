@@ -35,9 +35,10 @@ package jp.co.soramitsu.feature_assets_impl.data
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import java.math.BigDecimal
 import java.math.BigInteger
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.WhitelistTokensManager
@@ -49,13 +50,12 @@ import jp.co.soramitsu.core_db.model.AssetTokenWithFiatLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraCurrency
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraCurrency
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest

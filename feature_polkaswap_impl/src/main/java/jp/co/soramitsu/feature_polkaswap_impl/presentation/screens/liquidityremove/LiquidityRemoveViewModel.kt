@@ -40,6 +40,9 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.format.isZero
+import jp.co.soramitsu.androidfoundation.format.nullZero
+import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
@@ -49,8 +52,6 @@ import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
-import jp.co.soramitsu.common.util.ext.nullZero
-import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
@@ -93,8 +94,8 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     private val demeterFarmingInteractor: DemeterFarmingInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
-    @Assisted("id1") private val token1Id: String,
-    @Assisted("id2") private val token2Id: String,
+    @Assisted("id1") private val token1IdStart: String,
+    @Assisted("id2") private val token2IdStart: String,
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -104,6 +105,9 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
             @Assisted("id2") id2: String
         ): LiquidityRemoveViewModel
     }
+
+    private var token1Id = token1IdStart
+    private var token2Id = token2IdStart
 
     private companion object {
         const val ASSET_PRECISION = 8
@@ -119,6 +123,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     private val feeTokenAsync by viewModelScope.lazyAsync { walletInteractor.getFeeToken() }
     private suspend fun feeToken() = feeTokenAsync.await()
 
+    private var poolDataUsableWithKensetsu: CommonUserPoolData? = null
     private var poolDataUsable: CommonUserPoolData? = null
     private var poolDataReal: CommonUserPoolData? = null
     private val amount1Flow = MutableStateFlow(BigDecimal.ZERO)
@@ -184,59 +189,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 .collectLatest { assets ->
                     assetList.clear()
                     assetList.addAll(assets)
-
-                    val asset1 = assets.first { it.token.id == token1Id }
-                    val asset2 = assets.first { it.token.id == token2Id }
-                    if (networkFee == null) {
-                        networkFee = poolsInteractor.fetchRemoveLiquidityNetworkFee(
-                            asset1.token,
-                            asset2.token,
-                        )
-                    }
-                    if (removeState.assetState1 == null) {
-                        removeState = removeState.copy(
-                            assetState1 = AssetAmountInputState(
-                                token = asset1.token,
-                                balance = getAssetBalanceText(asset1),
-                                amount = null,
-                                amountFiat = "",
-                                enabled = true,
-                            ),
-                        )
-                    }
-                    if (removeState.assetState2 == null) {
-                        removeState = removeState.copy(
-                            assetState2 = AssetAmountInputState(
-                                token = asset2.token,
-                                balance = getAssetBalanceText(asset2),
-                                amount = null,
-                                amountFiat = "",
-                                enabled = true,
-                            ),
-                        )
-                    }
-                    balanceFee =
-                        assets.first { it.token.id == SubstrateOptionsProvider.feeAssetId }.balance.transferable
-
-                    removeState.assetState1?.let { state ->
-                        assets.find { it.token.id == state.token.id }?.let { asset ->
-                            removeState = removeState.copy(
-                                assetState1 = state.copy(
-                                    balance = getAssetBalanceText(asset)
-                                )
-                            )
-                        }
-                    }
-                    removeState.assetState2?.let { state ->
-                        assets.find { it.token.id == state.token.id }?.let { asset ->
-                            removeState = removeState.copy(
-                                assetState2 = state.copy(
-                                    balance = getAssetBalanceText(asset)
-                                )
-                            )
-                        }
-                    }
-                    reCalcDetails()
+                    onAssetsActiveCollect()
                 }
         }
         viewModelScope.launch {
@@ -264,67 +217,30 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                                 poolDataLocal.user.poolProvidersBalance,
                             )
                         }
-                        if (maxPercent != null && !maxPercent.isNaN()) {
-                            poolInFarming = true
-                            val usablePercent = 100 - maxPercent
-                            poolDataLocal.copy(
-                                user = poolDataLocal.user.copy(
-                                    basePooled = PolkaswapFormulas.calculateAmountByPercentage(
-                                        poolDataLocal.user.basePooled,
-                                        usablePercent,
-                                        poolDataLocal.basic.baseToken.precision,
-                                    ),
-                                    targetPooled = PolkaswapFormulas.calculateAmountByPercentage(
-                                        poolDataLocal.user.targetPooled,
-                                        usablePercent,
-                                        poolDataLocal.basic.baseToken.precision,
-                                    ),
-                                    poolProvidersBalance = PolkaswapFormulas.calculateAmountByPercentage(
-                                        poolDataLocal.user.poolProvidersBalance,
-                                        usablePercent,
-                                        poolDataLocal.basic.baseToken.precision,
-                                    ),
-                                )
-                            )
-                        } else {
-                            poolDataLocal
-                        }
+                        userPoolDataFixDemeter(poolDataLocal, maxPercent)
                     } else {
                         null
                     }
                 }
-                .collectLatest { poolDataLocal ->
-                    poolDataUsable = poolDataLocal
-                    amount1 =
-                        if (poolDataLocal != null) PolkaswapFormulas.calculateAmountByPercentage(
-                            poolDataLocal.user.basePooled,
-                            percent,
-                            poolDataLocal.basic.baseToken.precision,
-                        ) else BigDecimal.ZERO
-                    amount2 =
-                        if (poolDataLocal != null) PolkaswapFormulas.calculateAmountByPercentage(
-                            poolDataLocal.user.targetPooled,
-                            percent,
-                            poolDataLocal.basic.targetToken.precision,
-                        ) else BigDecimal.ZERO
-                    reCalcDetails()
-                }
+                .collectLatest(::onPoolCollectKensetsu)
         }
         viewModelScope.launch {
             amount1Flow
                 .debounce(ViewHelper.debounce)
                 .onEach { amount ->
-                    poolDataUsable?.let {
-                        amount1 = if (amount <= it.user.basePooled) amount else it.user.basePooled
+                    val pduk = poolDataUsableWithKensetsu
+                    val pdu = poolDataUsable
+                    if (pdu != null && pduk != null) {
+                        amount1 = if (amount <= pdu.user.basePooled) amount else pdu.user.basePooled
                         amount2 = PolkaswapFormulas.calculateOneAmountFromAnother(
                             amount1,
-                            it.user.basePooled,
-                            it.user.targetPooled,
-                            removeState.assetState2?.token?.precision
+                            pduk.user.basePooled,
+                            pduk.user.targetPooled,
+                            removeState.assetState2?.token?.precision,
                         )
                         percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
                             amount1,
-                            it.user.basePooled,
+                            pduk.user.basePooled,
                         )
                         reCalcDetails()
                     }
@@ -356,6 +272,128 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                     }
                 }
         }
+    }
+
+    private fun userPoolDataFixDemeter(poolData: CommonUserPoolData, prc: Double?): CommonUserPoolData {
+        return if (prc != null && !prc.isNaN()) {
+            poolInFarming = true
+            val usablePercent = 100 - prc
+            poolData.copy(
+                user = poolData.user.copy(
+                    basePooled = PolkaswapFormulas.calculateAmountByPercentage(
+                        poolData.user.basePooled,
+                        usablePercent,
+                        poolData.basic.baseToken.precision,
+                    ),
+                    targetPooled = PolkaswapFormulas.calculateAmountByPercentage(
+                        poolData.user.targetPooled,
+                        usablePercent,
+                        poolData.basic.baseToken.precision,
+                    ),
+                    poolProvidersBalance = PolkaswapFormulas.calculateAmountByPercentage(
+                        poolData.user.poolProvidersBalance,
+                        usablePercent,
+                        poolData.basic.baseToken.precision,
+                    ),
+                )
+            )
+        } else {
+            poolData
+        }
+    }
+
+    private suspend fun userPoolDataFixKensetsu(poolData: CommonUserPoolData?): CommonUserPoolData? {
+        return if (poolData != null && token2Id == SubstrateOptionsProvider.ethTokenId) {
+            if (token1Id == SubstrateOptionsProvider.feeAssetId || token1Id == SubstrateOptionsProvider.kxorTokenId) {
+                val kxorBalance = assetsInteractor
+                    .fetchBalance(poolData.basic.reserveAccount, listOf(SubstrateOptionsProvider.kxorTokenId))
+                    .getOrElse(0) { BigDecimal.ZERO }
+                if (kxorBalance.isZero()) {
+                    poolData
+                } else {
+                    if (token1Id == SubstrateOptionsProvider.feeAssetId) {
+                        poolData.copy(
+                            user = poolData.user.copy(
+                                basePooled = poolData.user.basePooled.minus(kxorBalance)
+                            )
+                        )
+                    } else {
+                        poolData.copy(
+                            user = poolData.user.copy(
+                                basePooled = kxorBalance
+                            )
+                        )
+                    }
+                }
+            } else {
+                poolData
+            }
+        } else {
+            poolData
+        }
+    }
+
+    private suspend fun onAssetsActiveCollect() {
+        val asset1 = assetList.first { it.token.id == token1Id }
+        val asset2 = assetList.first { it.token.id == token2Id }
+        if (networkFee == null) {
+            networkFee = poolsInteractor.fetchRemoveLiquidityNetworkFee(
+                asset1.token,
+                asset2.token,
+            )
+        }
+        if (removeState.assetState1 == null) {
+            removeState = removeState.copy(
+                assetState1 = AssetAmountInputState(
+                    token = asset1.token,
+                    balance = getAssetBalanceText(asset1),
+                    amount = null,
+                    amountFiat = "",
+                    enabled = true,
+                ),
+            )
+        }
+        if (removeState.assetState1?.token?.id != asset1.token.id) {
+            removeState = removeState.copy(
+                assetState1 = removeState.assetState1?.copy(
+                    token = asset1.token,
+                    balance = getAssetBalanceText(asset1),
+                ),
+            )
+        }
+        if (removeState.assetState2 == null) {
+            removeState = removeState.copy(
+                assetState2 = AssetAmountInputState(
+                    token = asset2.token,
+                    balance = getAssetBalanceText(asset2),
+                    amount = null,
+                    amountFiat = "",
+                    enabled = true,
+                ),
+            )
+        }
+        balanceFee =
+            assetList.first { it.token.id == SubstrateOptionsProvider.feeAssetId }.balance.transferable
+
+        removeState.assetState1?.let { state ->
+            assetList.find { it.token.id == state.token.id }?.let { asset ->
+                removeState = removeState.copy(
+                    assetState1 = state.copy(
+                        balance = getAssetBalanceText(asset)
+                    )
+                )
+            }
+        }
+        removeState.assetState2?.let { state ->
+            assetList.find { it.token.id == state.token.id }?.let { asset ->
+                removeState = removeState.copy(
+                    assetState2 = state.copy(
+                        balance = getAssetBalanceText(asset)
+                    )
+                )
+            }
+        }
+        reCalcDetails()
     }
 
     override fun onCurrentDestinationChanged(curDest: String) {
@@ -397,12 +435,12 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
         )
     }
 
-    fun onPercentClick(p: Int) {
+    fun onPercentClick(prc: Int) {
         viewModelScope.launch {
             poolDataUsable?.let { poolData ->
                 removeState.assetState1?.let { asset1 ->
                     removeState.assetState2?.let { asset2 ->
-                        percent = p.toDouble()
+                        percent = prc.toDouble()
                         if (percent == 100.0) {
                             amount1 = poolData.user.basePooled
                             amount2 = poolData.user.targetPooled
@@ -440,6 +478,37 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
         removeState = removeState.copy(
             slippage = slippageTolerance
         )
+    }
+
+    private suspend fun onPoolCollectKensetsu(cups: CommonUserPoolData?) {
+        poolDataUsableWithKensetsu = cups
+        val poolData = userPoolDataFixKensetsu(cups)
+        poolDataUsable = poolData
+        amount1 =
+            if (poolData != null) PolkaswapFormulas.calculateAmountByPercentage(
+                poolData.user.basePooled,
+                percent,
+                poolData.basic.baseToken.precision,
+            ) else BigDecimal.ZERO
+        amount2 =
+            if (poolData != null) PolkaswapFormulas.calculateAmountByPercentage(
+                poolData.user.targetPooled,
+                percent,
+                poolData.basic.targetToken.precision,
+            ) else BigDecimal.ZERO
+        reCalcDetails()
+    }
+
+    fun onSelectToken1() {
+        if (token1Id == SubstrateOptionsProvider.feeAssetId && token2Id == SubstrateOptionsProvider.ethTokenId) {
+            viewModelScope.launch {
+                poolDataUsable?.let { pdu ->
+                    token1Id = SubstrateOptionsProvider.kxorTokenId
+                    onAssetsActiveCollect()
+                    onPoolCollectKensetsu(pdu)
+                }
+            }
+        }
     }
 
     fun onAmount1Change(value: BigDecimal) {

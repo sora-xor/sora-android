@@ -54,6 +54,7 @@ import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @AndroidEntryPoint
@@ -70,6 +71,10 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
             }
         }
     }
+
+    private val soraCardSignIn = registerForActivityResult(
+        SoraCardContract()
+    ) { }
 
     @Inject
     lateinit var vmf: AssetDetailsViewModel.AssetDetailsViewModelFactory
@@ -125,5 +130,8 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
+        viewModel.launchSoraCardSignIn.observe { contract ->
+            soraCardSignIn.launch(contract)
+        }
     }
 }
