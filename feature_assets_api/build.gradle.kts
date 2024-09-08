@@ -63,6 +63,16 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
@@ -79,6 +89,7 @@ dependencies {
     implementation(libs.uiCoreDep)
     implementation(libs.hiltNavComposeDep)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
     implementation(libs.composeFoundationDep)
     implementation(libs.composeMaterialDep)

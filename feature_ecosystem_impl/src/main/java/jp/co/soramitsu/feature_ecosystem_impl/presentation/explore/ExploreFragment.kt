@@ -68,11 +68,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.keyboardState
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItem
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItem
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItemEnumerated
@@ -145,7 +145,7 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                         )
                     }
                 } else {
-                    if (state.assets != null && state.farms.isEmpty() && state.pools.isEmpty()) {
+                    if ((state.ecoSystemTokensState == null || state.ecoSystemTokensState.topTokens.isEmpty()) && state.farms.isEmpty() && state.pools.isEmpty()) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -160,7 +160,7 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                         Column {
                             val listState1 = rememberLazyListState()
                             LazyColumn(state = listState1) {
-                                if (state.assets != null) {
+                                if (state.ecoSystemTokensState != null) {
                                     item {
                                         Text(
                                             modifier = Modifier.padding(start = Dimens.x3, bottom = Dimens.x2),
@@ -172,12 +172,12 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                                     }
 
                                     items(
-                                        count = state.assets.topTokens.size,
+                                        count = state.ecoSystemTokensState.topTokens.size,
                                     ) { position ->
                                         AssetItemEnumerated(
                                             modifier = Modifier.padding(vertical = Dimens.x1),
-                                            assetState = state.assets.topTokens[position].second,
-                                            number = state.assets.topTokens[position].first,
+                                            assetState = state.ecoSystemTokensState.topTokens[position].second,
+                                            number = state.ecoSystemTokensState.topTokens[position].first,
                                             testTag = "AssetFilteredItem",
                                             onClick = viewModel::onTokenClicked,
                                         )

@@ -1,7 +1,7 @@
 [versions]
-agp = "8.5.0"
+agp = "8.6.0"
 kotlin = "1.9.24"
-appcompat = "1.6.1"
+appcompat = "1.7.0"
 coroutines = "1.8.1"
 coreKtx = "1.13.1"
 constraint = "2.2.0-alpha05"
@@ -10,25 +10,25 @@ navigation = "2.7.7"
 navigationCompose = "2.7.7"
 lottie = "4.2.0"
 insetter = "0.6.1"
-workManager = "2.9.0"
+workManager = "2.9.1"
 coil = "2.2.2"
 svg = "1.4"
 jdenticon = "1.1"
-archFragmentTest = "1.8.0"
+archFragmentTest = "1.8.2"
 mockk = "1.13.8"
 truth = "1.4.2"
 mockitoKotlin = "5.2.1"
 mockito = "5.2.0"
 junit = "4.13.2"
-androidxTestExtJunit = "1.1.5"
-androidxTestEspressoCore = "3.5.1"
+androidxTestExtJunit = "1.2.1"
+androidxTestEspressoCore = "3.6.1"
 archCoreTest = "2.2.0"
 archComponents = "2.7.0"
-activityCompose = "1.9.0"
+activityCompose = "1.9.1"
 material = "1.12.0"
-fragmentKtx = "1.8.0"
+fragmentKtx = "1.7.1"
 permission = "1.7.1"
-compose = "1.6.8"
+compose-bom = "2024.05.00"
 composeViewModel = "2.7.0"
 composeLifecycle = "2.7.0"
 composeConstraintLayout = "1.1.0-alpha05"
@@ -38,23 +38,18 @@ firebaseCrashlytics = "2.9.9"
 firebaseAppDistribution = "3.2.0"
 tripletVersion = "3.8.4"
 timber = "5.0.1"
-ktor = "2.3.1"
-soracard = "1.0.4"
-xnetworking = "0.2.9"
-xsubstrate = "1.1.4"
-uicore = "0.2.21"
-xbackup = "1.1.4"
-xcrypto = "1.1.4"
+ktor = "2.3.2"
 ed = "2.0.1"
 xerces = "2.9.0"
-dagger = "2.51.1"
+dagger = "2.52"
+daggerKapt = "2.52"
 hiltCompose = "1.2.0"
 hiltWorkManager = "1.2.0"
 webSocketLib = "2.14"
 web3j = "4.6.0-android"
 zXing = "3.3.3"
 zXingEmbedded = "4.3.0"
-activityKtx = "1.9.0"
+activityKtx = "1.9.1"
 xserializationjson = "1.6.3"
 gson = "2.10.1"
 datastore = "1.0.0"
@@ -62,8 +57,22 @@ room = "2.6.1"
 lazySodium = "5.0.2"
 jna = "5.8.0"
 kover = "0.7.5"
+soramitsuSoracard = "1.1.18"
+soramitsuXnetworking = "1.0.9"
+soramitsuXsubstrate = "1.2.7"
+soramitsuUicore = "0.2.34"
+soramitsuXbackup = "1.2.2"
+soramitsuXcrypto = "1.2.6"
+soramitsuAndroidFoundation = "0.0.1"
 
 [libraries]
+soramitsu-android-foundation = { module = "jp.co.soramitsu:android-foundation", version.ref = "soramitsuAndroidFoundation" }
+soramitsu-sora-card = { module = "jp.co.soramitsu:android-sora-card", version.ref = "soramitsuSoracard" }
+xnetworkingLibDep = { module = "jp.co.soramitsu.xnetworking:lib-android", version.ref = "soramitsuXnetworking" }
+xsubstrateDep = { module = "jp.co.soramitsu:xsubstrate", version.ref = "soramitsuXsubstrate" }
+uiCoreDep = { module = "jp.co.soramitsu:ui-core", version.ref = "soramitsuUicore" }
+xbackupDep = { module = "jp.co.soramitsu:xbackup", version.ref = "soramitsuXbackup" }
+xcryptoDep = { module = "jp.co.soramitsu:xcrypto", version.ref = "soramitsuXcrypto" }
 roomDep = { module = "androidx.room:room-runtime", version.ref = "room" }
 roomKaptDep = { module = "androidx.room:room-compiler", version.ref = "room" }
 roomKtxDep = { module = "androidx.room:room-ktx", version.ref = "room" }
@@ -80,21 +89,17 @@ coroutineDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", versi
 coroutineAndroidDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 coroutineTestDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 daggerDep = { module = "com.google.dagger:hilt-android", version.ref = "dagger" }
-daggerKaptDep = { module = "com.google.dagger:hilt-compiler", version.ref = "dagger" }
+daggerKaptDep = { module = "com.google.dagger:hilt-compiler", version.ref = "daggerKapt" }
 hiltUiTestDep = { module = "com.google.dagger:hilt-android-testing", version.ref = "dagger" }
 hiltNavComposeDep = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltCompose" }
 hiltWorkManagerDep = { module = "androidx.hilt:hilt-work", version.ref = "hiltWorkManager" }
 hiltWorkManagerKaptDep = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWorkManager" }
 lazySodiumDep = { module = "com.goterl:lazysodium-android", version.ref = "lazySodium" }
 jnaDep = { module = "net.java.dev.jna:jna", version.ref = "jna" }
+ktorLoggingDep = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+ktorContentNegotiationDep = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktorOkHttpDep = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktorWebSocketDep = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
-soraCardDep = { module = "jp.co.soramitsu:android-sora-card", version.ref = "soracard" }
-xnetworkingDep = { module = "jp.co.soramitsu.xnetworking:basic-android", version.ref = "xnetworking" }
-xnetworkingSoraWalletDep = { module = "jp.co.soramitsu.xnetworking:sorawallet-android", version.ref = "xnetworking" }
-xsubstrateDep = { module = "jp.co.soramitsu:xsubstrate", version.ref = "xsubstrate" }
-uiCoreDep = { module = "jp.co.soramitsu:ui-core", version.ref = "uicore" }
-xbackupDep = { module = "jp.co.soramitsu:xbackup", version.ref = "xbackup" }
-xcryptoDep = { module = "jp.co.soramitsu:x-crypto", version.ref = "xcrypto" }
 ed25519Dep = { module = "com.github.warchant:ed25519-sha3-java", version.ref = "ed" }
 xercesDep = { module = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces", version.ref = "xerces" }
 timberDep = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
@@ -128,19 +133,20 @@ androidxTestEspressoCoreDep = { module = "androidx.test.espresso:espresso-core",
 archCoreTestDep = { module = "androidx.arch.core:core-testing", version.ref = "archCoreTest" }
 composeActivityDep = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 materialDep = { group = "com.google.android.material", name = "material", version.ref = "material" }
-composeRuntimeDep = { group = "androidx.compose.runtime", name = "runtime", version.ref = "compose" }
-composeUiDep = { group = "androidx.compose.ui", name = "ui", version.ref = "compose" }
-composeViewModelDep = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "composeViewModel" }
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
+composeRuntimeDep = { group = "androidx.compose.runtime", name = "runtime" }
+composeUiDep = { group = "androidx.compose.ui", name = "ui" }
+composeViewModelDep = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose" }
 composeLifecycleDep = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "composeLifecycle" }
-composeLiveDataDep = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "compose" }
-composeFoundationDep = { group = "androidx.compose.foundation", name = "foundation", version.ref = "compose" }
-composeToolingDep = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "compose" }
-composeToolingPreviewDep = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "compose" }
-composeMaterialDep = { group = "androidx.compose.material", name = "material", version.ref = "compose" }
-composeAnimationDep = { group = "androidx.compose.animation", name = "animation", version.ref = "compose" }
-composeAnimationGraphicsDep = { group = "androidx.compose.animation", name = "animation-graphics", version.ref = "compose" }
+composeLiveDataDep = { group = "androidx.compose.runtime", name = "runtime-livedata" }
+composeFoundationDep = { group = "androidx.compose.foundation", name = "foundation" }
+composeToolingDep = { group = "androidx.compose.ui", name = "ui-tooling" }
+composeToolingPreviewDep = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+composeMaterialDep = { group = "androidx.compose.material", name = "material" }
+composeAnimationDep = { group = "androidx.compose.animation", name = "animation" }
+composeAnimationGraphicsDep = { group = "androidx.compose.animation", name = "animation-graphics" }
 composeConstraintLayoutDep = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version.ref = "composeConstraintLayout" }
-composeUiGraphicsDep = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "compose" }
+composeUiGraphicsDep = { group = "androidx.compose.ui", name = "ui-graphics" }
 #ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 #ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 #androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }

@@ -48,11 +48,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.format.TextValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.uikit.organisms.PagerTextIndicator
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.ui_core.resources.Dimens
 import kotlinx.coroutines.launch
 
@@ -104,9 +104,9 @@ fun QrCodeMainScreen(
                 .padding(horizontal = Dimens.x9),
             indicatorsArray = qrCodeMainScreenPages.map {
                 when (it) {
-                    QrCodeMainScreenPage.RECEIVE -> Text.StringRes(id = R.string.common_receive)
+                    QrCodeMainScreenPage.RECEIVE -> TextValue.StringRes(id = R.string.common_receive)
 
-                    QrCodeMainScreenPage.REQUEST -> Text.StringRes(id = R.string.common_request)
+                    QrCodeMainScreenPage.REQUEST -> TextValue.StringRes(id = R.string.common_request)
                 }
             },
             currentPageRetriever = { pagerState.currentPage },

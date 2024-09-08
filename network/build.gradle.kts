@@ -57,9 +57,9 @@ dependencies {
 
     implementation(libs.kotlinxSerializationJsonDep)
 
-    api(libs.xnetworkingDep)
-    api(libs.xnetworkingSoraWalletDep) {
-        exclude(group = "jp.co.soramitsu.xnetworking", module = "basic")
-    }
+    api(libs.xnetworkingLibDep)
+    implementation(libs.ktorOkHttpDep)
+    implementation(libs.ktorLoggingDep)
+    implementation(libs.ktorContentNegotiationDep)
     implementation(libs.ktorWebSocketDep)
 }

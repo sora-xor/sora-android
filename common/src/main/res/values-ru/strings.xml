@@ -584,7 +584,7 @@
   <string name="tutorial_terms_and_conditions">Создавая учетную запись, вы соглашаетесь с %% Условиями и положениями %% и %% Политикой конфиденциальности %%</string>
   <string name="tutorial_terms_and_conditions_3">Условиями использования</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
-  <string name="unexpected_error">Произошла непредвиденная ошибка.\n\nВы можете решить эту проблему в сообществе SORA в Telegram чате @SORAhappiness.</string>
+  <string name="unexpected_error">Произошла непредвиденная ошибка.\n\nВы можете решить эту проблему в сообществе SORA в Telegram чате @sora_happy.</string>
   <string name="update_downloaded">Обновление для приложения SORA было загружено и готово к установке. \n\n Важно использовать последнюю версию приложения. \n\n Чтобы обновить приложение, требуется перезагрузка.</string>
   <string name="update_install_now">Хотите установить обновление сейчас?</string>
   <string name="wallet_backup">Сделайте резервную копию</string>

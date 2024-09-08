@@ -32,8 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -51,7 +49,9 @@ import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
+import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
@@ -133,7 +133,7 @@ class ProfileViewModel @Inject constructor(
 
                 _state.value = _state.value.copy(
                     soraCardStatusStringRes = soraCardStatusStringRes,
-                    soraCardIbanError = if (it.ibanInfo?.active == false) it.ibanInfo?.iban else null,
+                    soraCardIbanError = if (it.ibanInfo?.ibanStatus == IbanStatus.OTHER) it.ibanInfo?.statusDescription else null,
                     soraCardStatusIconDrawableRes = soraCardStatusIconDrawableRes,
                     soraCardEnabled = soraConfigManager.getSoraCard(),
                     soraCardNeedUpdate = it.needInstallUpdate,
@@ -148,7 +148,7 @@ class ProfileViewModel @Inject constructor(
 
     fun showSoraCard() {
         if (soraCardInteractor.basicStatus.value.initialized) {
-            if (soraCardInteractor.basicStatus.value.ibanInfo?.active == true)
+            if (soraCardInteractor.basicStatus.value.ibanInfo != null && soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus != IbanStatus.OTHER)
                 router.showSoraCardDetails()
             else when (soraCardInteractor.basicStatus.value.verification) {
                 SoraCardCommonVerification.NotFound -> {
@@ -200,7 +200,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun showBuyCrypto() {
-        assetsRouter.showBuyCrypto()
+        _launchSoraCardSignIn.value = createSoraCardGateHubContract()
     }
 
     fun showSelectNode() {

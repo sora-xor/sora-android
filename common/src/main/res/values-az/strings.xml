@@ -50,7 +50,7 @@
   <string name="biometric_dialog_title">Doğrulayın</string>
   <string name="block_id">Qarışığı blok edin</string>
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
-  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Buy or sell XOR token with euro</string>
+  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Nağd avro ilə XOR tokenini alın və ya satın</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">Buy XOR with fiat</string>
   <string name="cant_load_balance">Balansı yükləmək mümkün deyil</string>
   <string name="change_language">Change language</string>
@@ -566,7 +566,7 @@
   <string name="tutorial_terms_and_conditions">Bir hesab yaratmaqla %% Şərtlər %% və %% Məxfilik Siyasəti %%</string>
   <string name="tutorial_terms_and_conditions_3">Şərtlər və Qaydalar</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
-  <string name="unexpected_error">Gözlənilməz xəta baş verdi. \n\n Siz @SORAhappiness Telegram çatında SORA icmasında bu problemi həll edə bilərsiniz.</string>
+  <string name="unexpected_error">Gözlənilməz xəta baş verdi. \n\n Siz @sora_happy Telegram çatında SORA icmasında bu problemi həll edə bilərsiniz.</string>
   <string name="update_downloaded">SORA tətbiqi üçün yeniləmə endirilib və quraşdırılmağa hazırdır. \n\n Proqramın ən son versiyasından istifadə etmək vacibdir. \n\n Proqramı yeniləmək üçün yenidən başladın tələb olunur.</string>
   <string name="update_install_now">Güncəlləməni indi quraşdırmaq istərdinizmi?</string>
   <string name="wallet_backup">Pulqabı ehtiyat nüsxəsi</string>

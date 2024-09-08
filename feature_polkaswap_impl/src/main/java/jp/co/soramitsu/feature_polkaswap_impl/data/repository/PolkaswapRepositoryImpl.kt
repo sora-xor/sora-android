@@ -33,11 +33,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.data.repository
 
 import androidx.room.withTransaction
+import java.math.BigInteger
 import javax.inject.Inject
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
@@ -51,9 +53,11 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.PoolLocalMapper
-import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.PoolLocalMapper.mapBasicToPoolData
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -66,6 +70,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
     private val assetLocalToAssetMapper: AssetLocalToAssetMapper,
     blockExplorerManager: BlockExplorerManager,
     private val soraConfigManager: SoraConfigManager,
+    private val substrateCalls: SubstrateCalls,
 ) : PolkaswapRepository, PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
 
     override fun subscribeBasicPools(): Flow<List<BasicPoolData>> {
@@ -108,7 +113,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
 
     override suspend fun getBasicPools(): List<BasicPoolData> {
         return db.poolDao().getBasicPools().map {
-            mapBasicToPoolData(
+            PoolLocalMapper.mapBasicToPoolData(
                 basicPoolLocal = it,
                 baseToken = getToken(it.tokenIdBase),
                 token = getToken(it.tokenIdTarget),
@@ -146,6 +151,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
         }
     }
 
+    @OptIn(FlowPreview::class)
     override fun subscribePools(address: String): Flow<List<CommonUserPoolData>> {
         return db.poolDao().subscribePoolsList(address).map { pools ->
             pools.map { poolLocal ->
@@ -170,8 +176,9 @@ class PolkaswapRepositoryImpl @Inject constructor(
                 basic, null,
             )
         } else {
-            val userPoolData =
-                mapPoolLocalToUserData(UserPoolJoinedLocal(userLocal, poolLocal.basicPoolLocal))
+            val userPoolData = mapPoolLocalToUserData(
+                UserPoolJoinedLocal(userLocal, poolLocal.basicPoolLocal),
+            )
             CommonPoolData(
                 basic,
                 userPoolData.user,
@@ -185,10 +192,19 @@ class PolkaswapRepositoryImpl @Inject constructor(
         val token = getToken(poolLocal.userPoolLocal.userTokenIdTarget)
         val baseToken = getToken(poolLocal.userPoolLocal.userTokenIdBase)
         return PoolLocalMapper.mapLocal(
-            poolLocal,
-            baseToken,
-            token,
-            getPoolStrategicBonusAPY(poolLocal.basicPoolLocal.reservesAccount),
+            poolLocal = poolLocal,
+            baseToken = baseToken,
+            token = token,
+            apy = getPoolStrategicBonusAPY(poolLocal.basicPoolLocal.reservesAccount),
+            kensetsuIncluded = if (baseToken.id == SubstrateOptionsProvider.feeAssetId && token.id == SubstrateOptionsProvider.ethTokenId) {
+                substrateCalls.fetchBalances(poolLocal.basicPoolLocal.reservesAccount, listOf(SubstrateOptionsProvider.kxorTokenId))
+                    .getOrElse(0) { BigInteger.ZERO }
+                    .let {
+                        mapBalance(it, baseToken.precision)
+                    }
+            } else {
+                null
+            },
         )
     }
 

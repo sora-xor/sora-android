@@ -55,7 +55,7 @@ import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
-import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
+import jp.co.soramitsu.xsubstrate.wsrpc.executeAsyncMapped
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojoList
@@ -72,7 +72,7 @@ class SubstrateApiImpl @Inject constructor(
     override suspend fun getUserPoolsTokenIdsKeys(address: String): List<String> {
         val accountPoolsKey = runtimeManager.getRuntimeSnapshot().accountPoolsKey(address)
         return runCatching {
-            socketService.executeAsync(
+            socketService.executeAsyncMapped(
                 request = StateKeys(listOf(accountPoolsKey)),
                 mapper = pojoList<String>().nonNull()
             )
@@ -87,7 +87,7 @@ class SubstrateApiImpl @Inject constructor(
         return runCatching {
             val storageKeys = getUserPoolsTokenIdsKeys(address)
             storageKeys.map { storageKey ->
-                socketService.executeAsync(
+                socketService.executeAsyncMapped(
                     request = GetStorageRequest(listOf(storageKey)),
                     mapper = pojo<String>().nonNull(),
                 )
@@ -154,7 +154,7 @@ class SubstrateApiImpl @Inject constructor(
     ): Pair<BigInteger, BigInteger>? {
         val storageKey =
             runtimeManager.getRuntimeSnapshot().reservesKey(baseTokenId, tokenId)
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = scale(ReservesResponse),
         )
@@ -175,7 +175,7 @@ class SubstrateApiImpl @Inject constructor(
                     baseTokenId.mapCodeToken(),
                     tokenId.mapCodeToken(),
                 )
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = scale(PoolPropertiesResponse),
         )
@@ -217,7 +217,7 @@ class SubstrateApiImpl @Inject constructor(
             runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.POOL_XYK.palletName)
                 .storage(Storage.TOTAL_ISSUANCES.storageName)
                 .storageKey(runtimeManager.getRuntimeSnapshot(), reservesAccountId)
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = scale(TotalIssuance),
         )
@@ -239,7 +239,7 @@ class SubstrateApiImpl @Inject constructor(
                     currentAddress.toAccountId()
                 )
         return runCatching {
-            socketService.executeAsync(
+            socketService.executeAsyncMapped(
                 request = GetStorageRequest(listOf(storageKey)),
                 mapper = scale(PoolProviders),
             )
@@ -255,7 +255,7 @@ class SubstrateApiImpl @Inject constructor(
     }
 
     override suspend fun isSwapAvailable(tokenId1: String, tokenId2: String, dexId: Int): Boolean =
-        socketService.executeAsync(
+        socketService.executeAsyncMapped(
             request = RuntimeRequest(
                 "liquidityProxy_isPathAvailable",
                 listOf(dexId, tokenId1, tokenId2)
@@ -268,7 +268,7 @@ class SubstrateApiImpl @Inject constructor(
         tokenId2: String,
         dexId: Int
     ): List<String> =
-        socketService.executeAsync(
+        socketService.executeAsyncMapped(
             request = RuntimeRequest(
                 "liquidityProxy_listEnabledSourcesForPath",
                 listOf(dexId, tokenId1, tokenId2)
@@ -281,7 +281,7 @@ class SubstrateApiImpl @Inject constructor(
         outputAssetId: String,
         dexId: Int
     ): Boolean {
-        return socketService.executeAsync(
+        return socketService.executeAsyncMapped(
             request = IsPairEnabledRequest(inputAssetId, outputAssetId, dexId),
             mapper = pojo<Boolean>().nonNull()
         )

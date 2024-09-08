@@ -61,7 +61,7 @@ import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetwork
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
-import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveConfirmState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveEstimatedState
@@ -81,6 +81,7 @@ internal fun LiquidityRemoveScreen(
     onFocusChange2: (Boolean) -> Unit,
     onAmountChange1: (BigDecimal) -> Unit,
     onAmountChange2: (BigDecimal) -> Unit,
+    onSelectToken1: () -> Unit,
     onSlippageClick: () -> Unit,
     onReview: () -> Unit,
 ) {
@@ -102,7 +103,7 @@ internal fun LiquidityRemoveScreen(
                 },
                 state = state.assetState1,
                 onAmountChange = onAmountChange1,
-                onSelectToken = {},
+                onSelectToken = onSelectToken1,
                 onFocusChange = onFocusChange1,
             )
             AssetAmountInput(
@@ -233,6 +234,7 @@ private fun PreviewLiquidityRemoveScreen() {
                 onAmountChange1 = {},
                 onFocusChange2 = {},
                 onFocusChange1 = {},
+                onSelectToken1 = {},
                 state = LiquidityRemoveState(
                     btnState = ButtonState(
                         text = "btn",

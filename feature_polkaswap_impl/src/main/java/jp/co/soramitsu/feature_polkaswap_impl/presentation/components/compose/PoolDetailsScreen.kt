@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,6 +47,10 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -194,10 +199,25 @@ internal fun PoolDetailsScreen(
                 )
             }
             if (state.pooled1 != null) {
+                var visibleClick by remember { mutableStateOf(false) }
                 DetailsItem(
+                    modifier = Modifier.clickable(
+                        enabled = state.kensetsu != null,
+                        onClick = { visibleClick = !visibleClick },
+                    ),
                     text = stringResource(id = R.string.your_pooled).format(state.symbol1),
                     value1 = state.pooled1,
                 )
+                AnimatedVisibility(
+                    modifier = Modifier.padding(horizontal = Dimens.x1),
+                    visible = state.kensetsu != null && visibleClick,
+                ) {
+                    Text(
+                        text = "KXOR pooled ${state.kensetsu}",
+                        style = MaterialTheme.customTypography.textXSBold,
+                        color = MaterialTheme.customColors.fgSecondary,
+                    )
+                }
                 Divider(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -371,6 +391,7 @@ private fun PreviewPoolDetailsScreen() {
                 symbol2 = "VAL",
                 pooled1 = "123 VAL",
                 pooled2 = "2424.2 XOR",
+                kensetsu = "",
                 tvl = "$34.999 TVL",
                 addEnabled = true,
                 removeEnabled = true,

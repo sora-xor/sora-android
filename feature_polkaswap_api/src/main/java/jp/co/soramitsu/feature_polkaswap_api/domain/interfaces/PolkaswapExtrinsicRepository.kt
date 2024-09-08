@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_polkaswap_api.domain.interfaces
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TokenPrecision
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -82,8 +83,8 @@ interface PolkaswapExtrinsicRepository {
 
     suspend fun calcAddLiquidityNetworkFee(
         address: String,
-        tokenFrom: Token,
-        tokenTo: Token,
+        tokenFrom: TokenPrecision,
+        tokenTo: TokenPrecision,
         tokenFromAmount: BigDecimal,
         tokenToAmount: BigDecimal,
         pairEnabled: Boolean,
@@ -92,8 +93,8 @@ interface PolkaswapExtrinsicRepository {
     ): BigDecimal?
 
     suspend fun calcRemoveLiquidityNetworkFee(
-        tokenId1: Token,
-        tokenId2: Token,
-        address: String
+        tokenId1: TokenPrecision,
+        tokenId2: TokenPrecision,
+        address: String,
     ): BigDecimal?
 }

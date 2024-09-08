@@ -63,10 +63,19 @@ android {
             dimension = "default"
         }
     }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
-    implementation(project(":android-foundation"))
     implementation(project(":common"))
     implementation(project(":demeter"))
     implementation(project(":common_wallet"))
@@ -109,7 +118,9 @@ dependencies {
     kapt(libs.lifecycleKaptDep)
 
     implementation(libs.uiCoreDep)
+    implementation(libs.soramitsu.android.foundation)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
     implementation(libs.composeFoundationDep)
     implementation(libs.composeMaterialDep)
@@ -123,6 +134,10 @@ dependencies {
     debugImplementation(libs.composeToolingDep)
     implementation(libs.navigationComposeDep)
 
-    testImplementation(project(":test_shared"))
     testImplementation(project(":test_data"))
+    testImplementation(libs.coroutineTestDep)
+    testImplementation(libs.junitDep)
+    testImplementation(libs.mockkDep)
+    testImplementation(libs.mockitoKotlinDep)
+    testImplementation(libs.archCoreTestDep)
 }

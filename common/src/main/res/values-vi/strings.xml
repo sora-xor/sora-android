@@ -78,7 +78,7 @@
   <string name="common_backup">Sao lưu</string>
   <string name="common_balance">Số dư</string>
   <string name="common_bashkir">Tiếng Bashkir</string>
-  <string name="common_bridged">Bridged</string>
+  <string name="common_bridged">Cầu nối</string>
   <string name="common_buy">Mua</string>
   <string name="common_buy_xor">Mua XOR</string>
   <string name="common_cancel">Huỷ bỏ</string>
@@ -142,7 +142,7 @@
   <string name="common_expand">Mở rộng</string>
   <string name="common_explore">Khám phá</string>
   <string name="common_failed">Thất bại</string>
-  <string name="common_farming">h\nFarming</string>
+  <string name="common_farming">Farming</string>
   <string name="common_farms">Farms</string>
   <string name="common_fee">Phí</string>
   <string name="common_filipino">Tiếng Philippines</string>
@@ -252,8 +252,8 @@
   <string name="enter_password_incorect_title">Mật khẩu không chính xác</string>
   <string name="enter_password_title">Nhập mật khẩu</string>
   <string name="error_transaction_fee_title">Không đủ tiền cho phí giao dịch</string>
-  <string name="eth_tx_address">Ethereum account address</string>
-  <string name="eth_tx_hash">Ethereum transaction hash</string>
+  <string name="eth_tx_address">Địa chỉ tài khoản Ethereum</string>
+  <string name="eth_tx_hash">Mã giao dịch Ethereum</string>
   <string name="explore_create_pool">Tạo pool</string>
   <string name="explore_demeter_subtitle">Stake phần pool của bạn và kiếm thêm phần thưởng</string>
   <string name="explore_demeter_title">Demeter Farming</string>
@@ -418,7 +418,7 @@
   <string name="qr_code">Mã QR</string>
   <string name="qr_upload">Từ bộ sưu tập</string>
   <string name="receive_tokens">Nhận token</string>
-  <string name="received_from_adar">Received from ADAR</string>
+  <string name="received_from_adar">Đã nhận từ ADAR</string>
   <string name="recent_recipients">Người nhận gần đây</string>
   <string name="recipient_address">Địa chỉ người nhận</string>
   <string name="recovery_enter_passphrase_title">Nhập cụm mật khẩu ví gốc (Raw seed)</string>
@@ -461,14 +461,14 @@
   <string name="remove_node_title">Bạn có thực sự muốn xóa node này không?</string>
   <string name="remove_pool_confirmation_description">Kết quả chỉ là ước lượng. Nếu giá biến động hơn %s%% thì giao dịch của bạn sẽ bị hoàn tác.</string>
   <string name="remove_pool_confirmation_title">Xác nhận Rút</string>
-  <string name="request_supply_liquidity">Bạn cần cung cấp tính thanh khoản cho một cặp nhóm tương ứng để bắt đầu đặt cược để nhận thêm phần thưởng:</string>
+  <string name="request_supply_liquidity">Bạn cần cung cấp thanh khoản cho pool của một cặp token tương ứng để bắt đầu staking nhận thêm phần thưởng:</string>
   <string name="restart_required">Yêu cầu khởi động lại</string>
   <string name="review">Kiểm tra lại</string>
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Hiển thị mã QR của tôi</string>
   <string name="search_assets">Tìm kiếm tài sản</string>
   <string name="search_empty_state">Không có kết quả tìm kiếm</string>
-  <string name="search_token_placeholder">Tìm kiếm theo ID nội dung, tên hoặc ký hiệu mã</string>
+  <string name="search_token_placeholder">Tìm kiếm theo ID nội dung, tên hoặc mã token</string>
   <string name="select_account_address">Tìm kiếm địa chỉ tài khoản</string>
   <string name="select_account_address_1">Tìm kiếm hoặc thêm địa chỉ mới</string>
   <string name="select_account_import">Chọn tài khoản để nhập</string>
@@ -501,7 +501,7 @@
   <string name="settings_login_subtitle">Mã PIN và xác thực sinh trắc học</string>
   <string name="settings_login_title">Đăng nhập &amp; Bảo mật</string>
   <string name="settings_nodes">Node</string>
-  <string name="show_more">Xm nhiều hơn</string>
+  <string name="show_more">Xem thêm</string>
   <string name="show_zero_balances">Hiển thị số dư bằng không</string>
   <string name="slippage">Trượt giá</string>
   <string name="something_went_wrong">Đã xảy ra sự cố</string>
@@ -560,7 +560,7 @@
   <string name="tutorial_terms_and_conditions">Tạo tài khoản là bạn đã đồng ý với %% Điều khoản &amp; Điều kiện %% và %% Chính sách quyền riêng tư %%</string>
   <string name="tutorial_terms_and_conditions_3">Điều khoản &amp; Điều kiện</string>
   <string name="tutorial_terms_and_conditions_template_1">Bằng cách tiếp tục, bạn đồng ý với</string>
-  <string name="unexpected_error">Đã xảy ra lỗi không mong muốn. \n\n Bạn có thể khắc phục sự cố này trong cộng đồng SORA tại cuộc trò chuyện Telegram @SORAhappiness.</string>
+  <string name="unexpected_error">Đã xảy ra lỗi không mong muốn. \n\n Bạn có thể khắc phục sự cố này trong cộng đồng SORA tại cuộc trò chuyện Telegram @sora_happy.</string>
   <string name="update_downloaded">Bản cập nhật cho ứng dụng SORA đã được tải xuống và sẵn sàng cài đặt. \n\n Hãy sử dụng phiên bản mới nhất của ứng dụng. \n\n Để cập nhật ứng dụng thành công, bạn cần khởi động lại ứng dụng.</string>
   <string name="update_install_now">Bạn có muốn cài đặt bản cập nhật ngay bây giờ không?</string>
   <string name="wallet_backup">Sao lưu ví</string>

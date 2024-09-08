@@ -36,10 +36,10 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Date
 import jp.co.soramitsu.androidfoundation.coroutine.SuspendableProperty
+import jp.co.soramitsu.androidfoundation.format.isZero
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository

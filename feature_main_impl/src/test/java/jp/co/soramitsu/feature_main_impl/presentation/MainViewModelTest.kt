@@ -35,7 +35,9 @@ package jp.co.soramitsu.feature_main_impl.presentation
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkObject
-import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
+import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.domain.RepeatStrategy
 import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -46,8 +48,6 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscr
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.test_data.TestAccounts
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf

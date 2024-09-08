@@ -38,7 +38,7 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 
 data class SoraCardAvailabilityInfo(
     val xorBalance: BigDecimal = BigDecimal.ZERO,
-    val enoughXor: Boolean = false,
+    val enoughXor: Boolean = true,
     val percent: BigDecimal = BigDecimal.ZERO,
     val needInXor: String = "",
     val needInEur: String = "",
@@ -53,4 +53,5 @@ data class SoraCardBasicStatus(
     val needInstallUpdate: Boolean,
     val applicationFee: String?,
     val ibanInfo: IbanInfo?,
+    val phone: String?,
 )

@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_assets_api.data
 
 import java.math.BigDecimal
+import java.math.BigInteger
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Token
@@ -121,4 +122,6 @@ interface AssetsRepository {
     suspend fun updateBalancesVisibleAssets(address: String)
 
     suspend fun updateWhitelistBalances(address: String)
+
+    suspend fun fetchBalance(address: String, ids: List<String>): List<BigInteger>
 }

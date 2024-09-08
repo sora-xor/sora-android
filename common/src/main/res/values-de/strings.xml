@@ -50,7 +50,7 @@
   <string name="biometric_dialog_title">Authentifizieren</string>
   <string name="block_id">Block-Hash</string>
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
-  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Buy or sell XOR token with euro</string>
+  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Buy or sell XOR token with euro cash</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">Buy XOR with fiat</string>
   <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">Change language</string>
@@ -566,7 +566,7 @@
   <string name="tutorial_terms_and_conditions">Durch das Erstellen eines Kontos akzeptierst du die %%Geschäftsbedingungen%% und die %%Datenschutzrichtlinien%%</string>
   <string name="tutorial_terms_and_conditions_3">Allgemeine Geschäftsbedingungen</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
-  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
   <string name="update_downloaded">Ein Update für die SORA-App wurde heruntergeladen und kann nun installiert werden.\n\nEs ist wichtig, die neueste Version der App zu verwenden.\n\nUm die App zu aktualisieren, ist ein Neustart erforderlich.</string>
   <string name="update_install_now">Möchtest du das Update jetzt installieren?</string>
   <string name="wallet_backup">Wallet Backup</string>

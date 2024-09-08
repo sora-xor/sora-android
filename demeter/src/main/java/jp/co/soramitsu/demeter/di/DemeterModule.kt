@@ -96,6 +96,6 @@ object DemeterFarmingModule {
             userRepository = userRepository,
             transactionHistoryRepository = transactionHistoryRepository,
             transactionBuilder = transactionBuilder,
-            assetRepository = assetsRepository
+            assetRepository = assetsRepository,
         )
 }

@@ -45,6 +45,7 @@ internal data class PoolDetailsState(
     val apy: String,
     val pooled1: String?,
     val pooled2: String?,
+    val kensetsu: String? = null,
     val tvl: String,
     val addEnabled: Boolean,
     val removeEnabled: Boolean,
