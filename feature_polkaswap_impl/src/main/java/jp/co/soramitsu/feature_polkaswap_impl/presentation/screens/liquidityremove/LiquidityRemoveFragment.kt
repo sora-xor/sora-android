@@ -177,7 +177,6 @@ class LiquidityRemoveFragment : SoraBaseFragment<LiquidityRemoveViewModel>() {
                     onAmountChange2 = viewModel::onAmount2Change,
                     onSlippageClick = onSlippageClick,
                     onReview = onReview,
-                    onSelectToken1 = viewModel::onSelectToken1,
                 )
             }
         }
