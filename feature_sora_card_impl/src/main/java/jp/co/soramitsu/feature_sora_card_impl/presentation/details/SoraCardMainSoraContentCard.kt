@@ -180,7 +180,7 @@ fun SoraCardMainSoraContentCard(
                         .padding(horizontal = Dimens.x1)
                         .weight(1f),
                     size = Size.Large,
-                    enabled = false,
+                    enabled = true,
                     order = Order.PRIMARY,
                     onClick = onExchangeXor,
                     text = stringResource(id = jp.co.soramitsu.oauth.R.string.exchange_xor),

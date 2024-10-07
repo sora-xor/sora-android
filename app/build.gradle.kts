@@ -16,7 +16,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
 }
 
 // soralution 138 3.8.5.0 2024.09.06
@@ -280,47 +280,46 @@ kapt {
     correctErrorTypes = true
 }
 
-koverReport {
-    androidReports("developDebug") {
-        filters {
-            excludes {
-                classes(
-                    "*.BuildConfig",
-                    "**.models.*",
-                    "**.core.network.*",
-                    "**.di.*",
-                    "**.shared_utils.wsrpc.*",
-                    "*NetworkDataSource",
-                    "*NetworkDataSource\$*",
-                    "*ChainConnection",
-                    "*ChainConnection\$*",
-                    "**.runtime.definitions.TypeDefinitionsTreeV2",
-                    "**.runtime.definitions.TypeDefinitionsTreeV2\$*",
-
-                    // TODO: Coverage these modules by tests
-                    "**.core.rpc.*",
-                    "**.core.utils.*",
-                    "**.core.extrinsic.*",
-                )
+kover {
+    reports {
+        variant("developDebug") {
+            xml {
+                onCheck = true
+                title = "sora wallet xml report"
+                xmlFile = file("${project.rootDir}/report/coverage.xml")
             }
-        }
+            html {
+                title = "sora wallet html report"
+                onCheck = true
+                charset = "UTF-8"
+                htmlDir.set(file("${project.rootDir}/htmlreport"))
+            }
+            verify {
+                rule {
+                    minBound(14)
+                }
+            }
+            filters {
+                excludes {
+                    classes(
+                        "*.BuildConfig",
+                        "**.models.*",
+                        "**.core.network.*",
+                        "**.di.*",
+                        "**.shared_utils.wsrpc.*",
+                        "*NetworkDataSource",
+                        "*NetworkDataSource\$*",
+                        "*ChainConnection",
+                        "*ChainConnection\$*",
+                        "**.runtime.definitions.TypeDefinitionsTreeV2",
+                        "**.runtime.definitions.TypeDefinitionsTreeV2\$*",
 
-        xml {
-            onCheck = false
-        }
-
-        html {
-            onCheck = true
-        }
-
-        verify {
-            onCheck = true
-
-            rule {
-                isEnabled = true
-
-                minBound(14)
-                // TODO: Update to 85
+                        // TODO: Coverage these modules by tests
+                        "**.core.rpc.*",
+                        "**.core.utils.*",
+                        "**.core.extrinsic.*",
+                    )
+                }
             }
         }
     }

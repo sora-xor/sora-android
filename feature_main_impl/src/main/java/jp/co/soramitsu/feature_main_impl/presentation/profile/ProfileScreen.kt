@@ -85,15 +85,15 @@ internal fun ProfileItems(
             icon = R.drawable.ic_buy_crypto,
             onClick = onSoraCardClick,
         )
-//        CategoryItem(
-//            modifier = Modifier
-//                .testTagAsId("BuyXor")
-//                .padding(top = Dimens.x2),
-//            title = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_title),
-//            subtitle = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
-//            icon = R.drawable.ic_settings_buy_crypto,
-//            onClick = onBuyCrypto,
-//        )
+        CategoryItem(
+            modifier = Modifier
+                .testTagAsId("BuyXor")
+                .padding(top = Dimens.x2),
+            title = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_title),
+            subtitle = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
+            icon = R.drawable.ic_settings_buy_crypto,
+            onClick = onBuyCrypto,
+        )
     }
     CategoryItem(
         modifier = Modifier
