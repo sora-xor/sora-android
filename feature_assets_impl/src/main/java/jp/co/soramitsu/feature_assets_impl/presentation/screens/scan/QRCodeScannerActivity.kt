@@ -32,14 +32,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.screens.scan
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
 import android.widget.Toast
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -68,12 +68,10 @@ class QRCodeScannerActivity : AppCompatActivity() {
 
     private var capture: CaptureManager? = null
 
-    private val startForResultFromGallery: ActivityResultLauncher<Intent> =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.data?.let { selectedImageUri ->
-                    viewModel.decodeScannedQrCodeUri(selectedImageUri)
-                }
+    private val startForResultFromGallery: ActivityResultLauncher<PickVisualMediaRequest> =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { resultUri: Uri? ->
+            resultUri?.let { selectedImageUri ->
+                viewModel.decodeScannedQrCodeUri(selectedImageUri)
             }
         }
 
@@ -176,14 +174,8 @@ class QRCodeScannerActivity : AppCompatActivity() {
     }
 
     private fun selectQrFromGallery() {
-        val intent = Intent().apply {
-            type = QR_CODE_IMAGE_TYPE
-            action = Intent.ACTION_GET_CONTENT
-        }
-        startForResultFromGallery.launch(intent)
-    }
-
-    private companion object {
-        const val QR_CODE_IMAGE_TYPE = "image/*"
+        val pickVisualMediaRequest =
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        startForResultFromGallery.launch(pickVisualMediaRequest)
     }
 }
