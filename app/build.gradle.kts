@@ -16,7 +16,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
 }
 
 // soralution 138 3.8.5.0 2024.09.06
