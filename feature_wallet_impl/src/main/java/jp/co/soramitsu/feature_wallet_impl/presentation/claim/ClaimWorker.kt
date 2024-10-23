@@ -33,6 +33,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_wallet_impl.presentation.claim
 
 import android.content.Context
+import android.content.pm.ServiceInfo
+import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -46,6 +48,7 @@ import dagger.assisted.AssistedInject
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Notification
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
@@ -82,7 +85,11 @@ class ClaimWorker @AssistedInject constructor(
             .setContentTitle(appContext.getString(R.string.claim_notification_text))
             .build()
 
-        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, notification)
+        val foregroundInfo = if (BuildUtils.sdkAtLeast(Build.VERSION_CODES.Q)) {
+            ForegroundInfo(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            ForegroundInfo(NOTIFICATION_ID, notification)
+        }
         setForeground(foregroundInfo)
 
         val result = runCatching { walletInteractor.migrate() }.getOrElse {
