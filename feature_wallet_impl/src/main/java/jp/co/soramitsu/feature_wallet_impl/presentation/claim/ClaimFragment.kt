@@ -32,8 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.claim
 
-import android.Manifest
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.Image
@@ -50,7 +48,6 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import com.permissionx.guolindev.PermissionX
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.androidfoundation.intent.ShareUtil
 import jp.co.soramitsu.common.R
@@ -84,20 +81,8 @@ class ClaimFragment : SoraBaseFragment<ClaimViewModel>() {
                 viewModel.claimScreenState.observeAsState().value?.let {
                     ClaimScreen(
                         claimState = it,
-                        onSubmitClicked = {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                PermissionX.init(this@ClaimFragment)
-                                    .permissions(Manifest.permission.POST_NOTIFICATIONS)
-                                    .request { allGranted, _, _ ->
-                                        if (allGranted) {
-                                            viewModel.nextButtonClicked(this@ClaimFragment)
-                                        }
-                                    }
-                            } else {
-                                viewModel.nextButtonClicked(this@ClaimFragment)
-                            }
-                        },
-                        onContactUsClicked = viewModel::contactsUsClicked
+                        onSubmitClicked = viewModel::nextButtonClicked,
+                        onContactUsClicked = viewModel::contactsUsClicked,
                     )
                 }
             }

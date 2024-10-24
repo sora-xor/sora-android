@@ -32,25 +32,28 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.claim
 
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class ClaimViewModel @Inject constructor(
     private val router: WalletRouter,
     private val walletInteractor: WalletInteractor,
+    private val coroutineManager: CoroutineManager,
 ) : BaseViewModel() {
 
     private val _openSendEmailEvent = SingleLiveEvent<String>()
@@ -85,10 +88,21 @@ class ClaimViewModel @Inject constructor(
         _openSendEmailEvent.postValue(OptionsProvider.email)
     }
 
-    fun nextButtonClicked(fragment: Fragment) {
-        _claimScreenState.value?.let {
-            _claimScreenState.value = it.copy(loading = true)
+    fun nextButtonClicked() {
+        viewModelScope.launch {
+            _claimScreenState.value?.let {
+                _claimScreenState.value = it.copy(loading = true)
+            }
+            withContext(coroutineManager.io) {
+                val result = runCatching { walletInteractor.migrate() }.getOrElse {
+                    FirebaseWrapper.recordException(it)
+                    false
+                }
+                FirebaseWrapper.log("SORA migration done $result")
+                walletInteractor.saveMigrationStatus(
+                    if (result) MigrationStatus.SUCCESS else MigrationStatus.FAILED
+                )
+            }
         }
-        ClaimWorker.start(fragment.requireContext())
     }
 }
