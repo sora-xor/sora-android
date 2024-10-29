@@ -210,8 +210,9 @@ private fun CardsMainScreen(
                                 onStartClicked = onBackupBannerClick,
                             )
                         }
-                        BuyXorState -> {
+                        is BuyXorState -> {
                             BuyXorCard(
+                                buttonEnabled = cardState.canStartGatehub,
                                 onBuyXorClicked = onBuyXorClick,
                                 onCloseCard = onBuyXorClose,
                             )
@@ -260,7 +261,7 @@ private fun PreviewCardsMainScreen() {
                 accountAddress = "",
                 loading = true,
                 cards = listOf(
-                    BuyXorState, ReferralState, BackupWalletState,
+                    BuyXorState(true), ReferralState, BackupWalletState,
                 ),
             ),
             {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}

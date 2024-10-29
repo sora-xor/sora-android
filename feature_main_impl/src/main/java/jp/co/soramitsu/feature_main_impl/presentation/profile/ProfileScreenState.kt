@@ -44,6 +44,7 @@ internal data class ProfileScreenState(
     val soraCardStatusStringRes: Int,
     val soraCardIbanError: String?,
     val soraCardStatusIconDrawableRes: Int?,
+    val canStartGatehubOnboarding: Boolean,
 )
 
 internal val initialProfileScreenState =
@@ -56,4 +57,5 @@ internal val initialProfileScreenState =
         soraCardStatusIconDrawableRes = null,
         soraCardNeedUpdate = false,
         soraCardIbanError = null,
+        canStartGatehubOnboarding = false,
     )

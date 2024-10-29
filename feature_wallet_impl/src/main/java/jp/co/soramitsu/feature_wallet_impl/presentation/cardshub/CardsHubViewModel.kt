@@ -74,6 +74,7 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardBasicStatus
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
@@ -218,9 +219,13 @@ class CardsHubViewModel @Inject constructor(
                             }
 
                             CardHubType.BUY_XOR_TOKEN -> {
-                                flowOf(
-                                    cardHub to BuyXorState
-                                )
+                                soraCardInteractor.basicStatus
+                                    .map { soraCardBasicStatus: SoraCardBasicStatus ->
+                                        cardHub to BuyXorState(soraCardBasicStatus.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding())
+                                    }
+                                    .onStart {
+                                        cardHub to BuyXorState(false)
+                                    }
                             }
                         }
                     }
@@ -454,9 +459,7 @@ class CardsHubViewModel @Inject constructor(
         if (!connectionManager.isConnected) return
         if (soraCardInteractor.basicStatus.value.initialized) {
             _state.value.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
-                if (card.ibanBalance?.ibanStatus.readyToStartGatehubOnboarding()) {
-                    _launchSoraCardSignIn.value = createSoraCardGateHubContract()
-                }
+                _launchSoraCardSignIn.value = createSoraCardGateHubContract()
             }
         }
     }

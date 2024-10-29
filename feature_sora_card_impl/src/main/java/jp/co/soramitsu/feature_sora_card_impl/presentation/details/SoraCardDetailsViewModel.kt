@@ -81,6 +81,7 @@ class SoraCardDetailsViewModel @Inject constructor(
                 balance = null,
                 phone = null,
                 soraCardMenuActions = SoraCardMenuAction.entries,
+                canStartGatehubFlow = false,
             ),
             soraCardSettingsCard = SoraCardSettingsCardState(
                 soraCardSettingsOptions = SoraCardSettingsOption.entries,
@@ -116,10 +117,11 @@ class SoraCardDetailsViewModel @Inject constructor(
                         soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
                             balance = basicStatus.ibanInfo?.balance,
                             phone = phoneFormatted,
+                            canStartGatehubFlow = basicStatus.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
                         ),
                         soraCardSettingsCard = local.soraCardSettingsCard?.copy(
                             phone = phoneFormatted.orEmpty(),
-                        )
+                        ),
                     )
                 }
             }
@@ -165,10 +167,11 @@ class SoraCardDetailsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * only clickable if IBAN is issued
+     */
     fun onExchangeXorClick() {
-        if (soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding()) {
-            _launchSoraCard.value = createSoraCardGateHubContract()
-        }
+        _launchSoraCard.value = createSoraCardGateHubContract()
     }
 
     fun onSettingsOptionClick(position: Int, context: Context?) {

@@ -138,6 +138,7 @@ class ProfileViewModel @Inject constructor(
                     soraCardStatusIconDrawableRes = soraCardStatusIconDrawableRes,
                     soraCardEnabled = soraConfigManager.getSoraCard(),
                     soraCardNeedUpdate = it.needInstallUpdate,
+                    canStartGatehubOnboarding = it.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
                 )
             }
             .launchIn(viewModelScope)
@@ -201,9 +202,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun showBuyCrypto() {
-        if (soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding()) {
-            _launchSoraCardSignIn.value = createSoraCardGateHubContract()
-        }
+        _launchSoraCardSignIn.value = createSoraCardGateHubContract()
     }
 
     fun showSelectNode() {
