@@ -20,7 +20,7 @@ kotlin {
 }
 
 // soralution 140 3.8.6.0 2024.10.21
-// sora dae 108 3.8.0.0 2023.12.04
+// sora dae 118 3.8.5.3 2024.10.23
 
 android {
     namespace = "jp.co.soramitsu.sora"

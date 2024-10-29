@@ -209,7 +209,7 @@ internal fun AssetDetailsBalanceCard(
                         res = R.drawable.ic_buy_crypto,
                         text = stringResource(id = R.string.common_buy),
                         enabled = true,
-                        onClick = onBuyCryptoClick
+                        onClick = onBuyCryptoClick,
                     )
                 }
             }
