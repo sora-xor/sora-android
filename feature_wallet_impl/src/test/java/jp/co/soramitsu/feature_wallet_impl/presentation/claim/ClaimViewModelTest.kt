@@ -32,9 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.claim
 
-import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
@@ -67,23 +66,24 @@ class ClaimViewModelTest {
     var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
-    private lateinit var context: Context
-
-    @Mock
     private lateinit var walletInteractor: WalletInteractor
 
     @Mock
     private lateinit var router: WalletRouter
 
     @Mock
-    private lateinit var resourceManager: ResourceManager
+    private lateinit var cm: CoroutineManager
 
     private lateinit var viewModel: ClaimViewModel
 
     @Before
     fun setUp() {
         given(walletInteractor.observeMigrationStatus()).willReturn(flow { emit(MigrationStatus.SUCCESS) })
-        viewModel = ClaimViewModel(router, walletInteractor)
+        viewModel = ClaimViewModel(
+            router,
+            walletInteractor,
+            cm,
+        )
     }
 
     @Test

@@ -399,7 +399,7 @@ class PoolsInteractorImpl(
             tokenTo.id,
             tokenTo.precision,
             enabled,
-            presented
+            presented,
         )
     }
 

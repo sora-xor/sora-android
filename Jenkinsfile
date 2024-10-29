@@ -12,8 +12,9 @@ def pipeline = new org.android.AppPipeline(steps: this,
     testCmd: 'ktlintCheck clean testDevelopDebugUnitTest koverVerifyDevelopDebug',
     publishType: 'Bundle',
     jobParams: jobParams,
-    appPushNoti: true,
+    statusNotif: true,
     gitUpdateSubmodule: true,
     dockerImage: 'build-tools/android-build-box:jdk17',
-    gpgFiles: ['app/google-services.json'])
+    gpgFiles: ['app/google-services.json'],
+    dojoProductType: 'sora-mobile')
 pipeline.runPipeline('sora')

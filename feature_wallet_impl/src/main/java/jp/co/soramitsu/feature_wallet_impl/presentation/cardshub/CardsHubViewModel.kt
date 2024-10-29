@@ -77,9 +77,9 @@ import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
+import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
-import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
@@ -454,7 +454,7 @@ class CardsHubViewModel @Inject constructor(
         if (!connectionManager.isConnected) return
         if (soraCardInteractor.basicStatus.value.initialized) {
             _state.value.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
-                if (card.ibanBalance?.ibanStatus == IbanStatus.ACTIVE) {
+                if (card.ibanBalance?.ibanStatus.readyToStartGatehubOnboarding()) {
                     _launchSoraCardSignIn.value = createSoraCardGateHubContract()
                 }
             }
