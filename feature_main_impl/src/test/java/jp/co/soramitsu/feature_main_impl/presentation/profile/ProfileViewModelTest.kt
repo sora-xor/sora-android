@@ -198,13 +198,13 @@ class ProfileViewModelTest {
     @Test
     fun `call showBuyCrypto EXPECT navigate to buy crypto screen`() {
         every { soraCardInteractor.basicStatus } returns
-                MutableStateFlow(
-                    soraCardBasicStatusTest.copy(
-                        initialized = true,
-                        verification = SoraCardCommonVerification.Pending,
-                        ibanInfo = IbanInfo("", IbanStatus.ACTIVE, "", "")
-                    )
+            MutableStateFlow(
+                soraCardBasicStatusTest.copy(
+                    initialized = true,
+                    verification = SoraCardCommonVerification.Pending,
+                    ibanInfo = IbanInfo("", IbanStatus.ACTIVE, "", "")
                 )
+            )
         initViewModel()
         profileViewModel.showBuyCrypto()
         val launch = profileViewModel.launchSoraCardSignIn.getOrAwaitValue()
