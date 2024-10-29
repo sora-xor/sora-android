@@ -56,13 +56,13 @@ room = "2.6.1"
 lazySodium = "5.0.2"
 jna = "5.8.0"
 kover = "0.8.3"
-soramitsuSoracard = "1.1.20"
+soramitsuSoracard = "1.1.21"
 soramitsuXnetworking = "1.0.10"
 soramitsuXsubstrate = "1.2.7"
 soramitsuUicore = "0.2.37"
-soramitsuXbackup = "1.2.2"
-soramitsuXcrypto = "1.2.6"
-soramitsuAndroidFoundation = "0.0.2"
+soramitsuXbackup = "1.2.3"
+soramitsuXcrypto = "1.2.7"
+soramitsuAndroidFoundation = "0.0.3"
 
 [libraries]
 soramitsu-android-foundation = { module = "jp.co.soramitsu:android-foundation", version.ref = "soramitsuAndroidFoundation" }

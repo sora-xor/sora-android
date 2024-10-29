@@ -46,6 +46,7 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
+import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
@@ -165,7 +166,9 @@ class SoraCardDetailsViewModel @Inject constructor(
     }
 
     fun onExchangeXorClick() {
-        _launchSoraCard.value = createSoraCardGateHubContract()
+        if (soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding()) {
+            _launchSoraCard.value = createSoraCardGateHubContract()
+        }
     }
 
     fun onSettingsOptionClick(position: Int, context: Context?) {
