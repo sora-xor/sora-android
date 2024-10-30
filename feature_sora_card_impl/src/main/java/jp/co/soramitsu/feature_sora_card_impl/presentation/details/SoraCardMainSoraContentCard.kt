@@ -70,6 +70,7 @@ data class SoraCardMainSoraContentCardState(
     val phone: String?,
     val actionsEnabled: Boolean = false,
     val soraCardMenuActions: List<SoraCardMenuAction>,
+    val canStartGatehubFlow: Boolean,
 ) {
 
     val menuState: List<IconButtonMenuState>
@@ -180,7 +181,7 @@ fun SoraCardMainSoraContentCard(
                         .padding(horizontal = Dimens.x1)
                         .weight(1f),
                     size = Size.Large,
-                    enabled = true,
+                    enabled = soraCardMainSoraContentCardState.canStartGatehubFlow,
                     order = Order.PRIMARY,
                     onClick = onExchangeXor,
                     text = stringResource(id = jp.co.soramitsu.oauth.R.string.exchange_xor),
@@ -206,7 +207,8 @@ private fun PreviewMainSoraContentCard() {
         soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
             balance = "3644.50",
             phone = "",
-            soraCardMenuActions = SoraCardMenuAction.entries
+            soraCardMenuActions = SoraCardMenuAction.entries,
+            canStartGatehubFlow = true,
         ),
         onShowMoreClick = {},
         onIconButtonClick = { _ -> },
@@ -222,7 +224,8 @@ private fun PreviewMainSoraContentCard2() {
         soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
             balance = "3644.50",
             phone = "",
-            soraCardMenuActions = SoraCardMenuAction.entries
+            soraCardMenuActions = SoraCardMenuAction.entries,
+            canStartGatehubFlow = true,
         ),
         onShowMoreClick = {},
         onIconButtonClick = { _ -> },
@@ -238,7 +241,8 @@ private fun PreviewMainSoraContentCard3() {
         soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
             balance = null,
             phone = "",
-            soraCardMenuActions = SoraCardMenuAction.entries
+            soraCardMenuActions = SoraCardMenuAction.entries,
+            canStartGatehubFlow = true,
         ),
         onShowMoreClick = {},
         onIconButtonClick = { _ -> },

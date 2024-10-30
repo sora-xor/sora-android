@@ -85,15 +85,17 @@ internal fun ProfileItems(
             icon = R.drawable.ic_buy_crypto,
             onClick = onSoraCardClick,
         )
-        CategoryItem(
-            modifier = Modifier
-                .testTagAsId("BuyXor")
-                .padding(top = Dimens.x2),
-            title = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_title),
-            subtitle = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
-            icon = R.drawable.ic_settings_buy_crypto,
-            onClick = onBuyCrypto,
-        )
+        if (state.canStartGatehubOnboarding) {
+            CategoryItem(
+                modifier = Modifier
+                    .testTagAsId("BuyXor")
+                    .padding(top = Dimens.x2),
+                title = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_title),
+                subtitle = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
+                icon = R.drawable.ic_settings_buy_crypto,
+                onClick = onBuyCrypto,
+            )
+        }
     }
     CategoryItem(
         modifier = Modifier
@@ -179,6 +181,7 @@ private fun PreviewProfile() {
                 soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
                 soraCardStatusIconDrawableRes = R.drawable.ic_connection_indicator_green,
                 soraCardIbanError = null,
+                canStartGatehubOnboarding = true,
             ),
             onAccountsClick = { },
             onSoraCardClick = { },

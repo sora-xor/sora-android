@@ -197,7 +197,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
                             null
                         },
                         isTransferableBalanceAvailable = asset.balance.transferable > BigDecimal.ZERO,
-                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId),
+                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId) && soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
                     )
                 )
             }
@@ -319,7 +319,6 @@ class AssetDetailsViewModel @AssistedInject constructor(
     }
 
     fun onBuyCrypto() {
-        if (soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding())
-            _launchSoraCardSignIn.value = createSoraCardGateHubContract()
+        _launchSoraCardSignIn.value = createSoraCardGateHubContract()
     }
 }
