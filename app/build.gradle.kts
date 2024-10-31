@@ -239,11 +239,13 @@ dependencies {
 
     implementation(libs.webSocketLibDep)
 
+    testImplementation(project(":test_data"))
     testImplementation(libs.coroutineTestDep)
     testImplementation(libs.junitDep)
     testImplementation(libs.mockkDep)
     testImplementation(libs.mockitoKotlinDep)
     testImplementation(libs.archCoreTestDep)
+    testImplementation(libs.truthDep)
 
     kover(project(":common"))
     kover(project(":common_wallet"))
