@@ -49,11 +49,11 @@ import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetsettings.FullAssetSettingsViewModel
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetSettingsState
 import jp.co.soramitsu.test_data.TestAssets
+import jp.co.soramitsu.test_data.TestTokens.daiToken
+import jp.co.soramitsu.test_data.TestTokens.ethToken
 import jp.co.soramitsu.test_data.TestTokens.pswapToken
 import jp.co.soramitsu.test_data.TestTokens.valToken
 import jp.co.soramitsu.test_data.TestTokens.xorToken
-import jp.co.soramitsu.test_data.TestTokens.xstToken
-import jp.co.soramitsu.test_data.TestTokens.xstusdToken
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -367,7 +367,7 @@ class AssetSettingsViewModelTest {
         verify(assetsInteractor).tokenFavoriteOff(listOf("0x0200050000000000000000000000000000000000000000000000000000000000"))
         viewModel.onFavoriteClick(mappedModels[3])
         advanceUntilIdle()
-        verify(assetsInteractor).tokenFavoriteOff(listOf("0x0200080000000000000000000000000000000000000000000000000000000000"))
+        verify(assetsInteractor).tokenFavoriteOff(listOf("0x0200060000000000000000000000000000000000000000000000000000000000"))
         viewModel.onFavoriteClick(mappedModels[5])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token_id"))
@@ -521,14 +521,14 @@ class AssetSettingsViewModelTest {
             true,
         ),
         Asset(
-            xstusdToken,
+            daiToken,
             visibility[3],
             4,
             TestAssets.balance(BigDecimal.ONE),
             true
         ),
         Asset(
-            xstToken,
+            ethToken,
             visibility[4],
             5,
             TestAssets.balance(BigDecimal.ONE),

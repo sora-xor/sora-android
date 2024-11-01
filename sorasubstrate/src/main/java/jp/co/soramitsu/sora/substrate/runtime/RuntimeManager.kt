@@ -283,6 +283,6 @@ class RuntimeManager @Inject constructor(
 
     private sealed class MetadataSource {
         data class Cache(val replaceCache: Boolean) : MetadataSource()
-        object SoraNet : MetadataSource()
+        data object SoraNet : MetadataSource()
     }
 }

@@ -124,7 +124,7 @@ fun ImportAccountPasswordScreen(
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Done,
                     keyboardType = KeyboardType.Password,
-                    autoCorrect = false
+                    autoCorrectEnabled = false,
                 ),
             )
 

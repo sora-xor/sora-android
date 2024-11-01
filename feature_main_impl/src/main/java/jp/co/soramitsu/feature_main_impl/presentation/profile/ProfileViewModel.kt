@@ -50,6 +50,7 @@ import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
+import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
@@ -137,6 +138,7 @@ class ProfileViewModel @Inject constructor(
                     soraCardStatusIconDrawableRes = soraCardStatusIconDrawableRes,
                     soraCardEnabled = soraConfigManager.getSoraCard(),
                     soraCardNeedUpdate = it.needInstallUpdate,
+                    canStartGatehubOnboarding = it.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
                 )
             }
             .launchIn(viewModelScope)

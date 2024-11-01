@@ -155,6 +155,7 @@ private fun PreviewSoraCardDetailsScreen() {
                     balance = "3665.50",
                     phone = "987654",
                     soraCardMenuActions = SoraCardMenuAction.entries,
+                    canStartGatehubFlow = true,
                 ),
                 soraCardReferralBannerCardState = true,
                 soraCardRecentActivitiesCardState = SoraCardRecentActivitiesCardState(

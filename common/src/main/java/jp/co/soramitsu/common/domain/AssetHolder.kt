@@ -70,26 +70,19 @@ object AssetHolder {
                 true, true,
                 3,
             ),
-        // xst
-        "0x0200090000000000000000000000000000000000000000000000000000000000" to
+        // dai
+        "0x0200060000000000000000000000000000000000000000000000000000000000" to
             AssetDefault(
-                "SORA Synthetics", "XST",
+                "Dai", "DAI",
                 true, true,
                 4,
             ),
-        // xstusd
-        "0x0200080000000000000000000000000000000000000000000000000000000000" to
+        // eth
+        "0x0200070000000000000000000000000000000000000000000000000000000000" to
             AssetDefault(
-                "SORA Synthetic USD", "XSTUSD",
+                "Ether", "ETH",
                 true, true,
                 5,
-            ),
-        // tbcd
-        "0x02000a0000000000000000000000000000000000000000000000000000000000" to
-            AssetDefault(
-                "SORA TBC Dollar", "TBCD",
-                true, true,
-                6,
             ),
     )
     private val defaultAsset: AssetDefault = AssetDefault(

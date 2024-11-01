@@ -71,13 +71,14 @@ fun BasicBannerCard(
     title: String,
     description: String,
     button: String,
+    buttonEnabled: Boolean = true,
     onButtonClicked: () -> Unit,
     closeEnabled: Boolean,
     onCloseCard: () -> Unit,
 ) {
     ContentCard(
         modifier = Modifier.fillMaxWidth(),
-        onClick = onButtonClicked,
+        onClick = if (buttonEnabled) onButtonClicked else null,
     ) {
         Box(
             modifier = Modifier
@@ -103,6 +104,7 @@ fun BasicBannerCard(
                     description = description,
                     button = button,
                     onStartClicked = onButtonClicked,
+                    buttonEnabled = buttonEnabled,
                 )
 
                 Image(
@@ -144,6 +146,7 @@ private fun CardContent(
     title: String,
     description: String,
     button: String,
+    buttonEnabled: Boolean,
     onStartClicked: () -> Unit,
 ) {
     Column(
@@ -174,6 +177,7 @@ private fun CardContent(
                 .padding(top = Dimens.x1_5),
             text = button,
             size = Size.ExtraSmall,
+            enabled = buttonEnabled,
             order = Order.PRIMARY,
             onClick = onStartClicked,
         )
@@ -188,6 +192,7 @@ private fun PreviewBasicBannerCard1() {
         title = "Some title of banner card, let it be longeeerr",
         description = "Long description of banner card, The quick brown fox jumps over the lazy dog, The quick brown fox jumps over the lazy dog.And I, even I Artaxerxes the king, do make a decree to all the treasurers which are beyond the river, that whatsoever Ezra the priest, the scribe of the law of the God of heaven, shall require of you, it be done speedily",
         button = "Just button title",
+        buttonEnabled = true,
         closeEnabled = true,
         onCloseCard = {},
         onButtonClicked = {},
@@ -202,6 +207,7 @@ private fun PreviewBasicBannerCard12() {
         title = "Some title",
         description = "Long description of banner",
         button = "Just button title",
+        buttonEnabled = true,
         closeEnabled = false,
         onCloseCard = {},
         onButtonClicked = {},
@@ -216,6 +222,7 @@ private fun PreviewBasicBannerCard2() {
         title = "Title",
         description = "Description",
         button = "Button",
+        buttonEnabled = true,
         closeEnabled = true,
         onCloseCard = {},
         onButtonClicked = {},

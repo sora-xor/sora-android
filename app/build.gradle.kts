@@ -19,7 +19,7 @@ kotlin {
     jvmToolchain(17)
 }
 
-// soralution 138 3.8.5.0 2024.09.06
+// soralution 143 3.8.6.3 2024.10.31
 // sora dae 118 3.8.5.3 2024.10.23
 
 android {
@@ -30,8 +30,8 @@ android {
         applicationId = "jp.co.soramitsu.sora"
         minSdk = 26
         targetSdk = 34
-        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 118
-        versionName = "3.8.5.3"
+        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 143
+        versionName = "3.8.6.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
         // resConfigs "en", "ru", "es", "fr", "de", "nb", "in", "tr", "ar"
@@ -172,7 +172,7 @@ play {
     serviceAccountCredentials = file(System.getenv("CI_PLAY_KEY") ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.8.5.3 - Bug fixes and minor improvements"
+    releaseName = "3.8.6.3 - SORA Card Improvements"
     defaultToAppBundles = true
 }
 
@@ -239,11 +239,13 @@ dependencies {
 
     implementation(libs.webSocketLibDep)
 
+    testImplementation(project(":test_data"))
     testImplementation(libs.coroutineTestDep)
     testImplementation(libs.junitDep)
     testImplementation(libs.mockkDep)
     testImplementation(libs.mockitoKotlinDep)
     testImplementation(libs.archCoreTestDep)
+    testImplementation(libs.truthDep)
 
     kover(project(":common"))
     kover(project(":common_wallet"))
@@ -280,47 +282,46 @@ kapt {
     correctErrorTypes = true
 }
 
-koverReport {
-    androidReports("developDebug") {
-        filters {
-            excludes {
-                classes(
-                    "*.BuildConfig",
-                    "**.models.*",
-                    "**.core.network.*",
-                    "**.di.*",
-                    "**.shared_utils.wsrpc.*",
-                    "*NetworkDataSource",
-                    "*NetworkDataSource\$*",
-                    "*ChainConnection",
-                    "*ChainConnection\$*",
-                    "**.runtime.definitions.TypeDefinitionsTreeV2",
-                    "**.runtime.definitions.TypeDefinitionsTreeV2\$*",
-
-                    // TODO: Coverage these modules by tests
-                    "**.core.rpc.*",
-                    "**.core.utils.*",
-                    "**.core.extrinsic.*",
-                )
+kover {
+    reports {
+        variant("developDebug") {
+            xml {
+                onCheck = true
+                title = "sora wallet xml report"
+                xmlFile = file("${project.rootDir}/report/coverage.xml")
             }
-        }
+            html {
+                title = "sora wallet html report"
+                onCheck = true
+                charset = "UTF-8"
+                htmlDir.set(file("${project.rootDir}/htmlreport"))
+            }
+            verify {
+                rule {
+                    minBound(14)
+                }
+            }
+            filters {
+                excludes {
+                    classes(
+                        "*.BuildConfig",
+                        "**.models.*",
+                        "**.core.network.*",
+                        "**.di.*",
+                        "**.shared_utils.wsrpc.*",
+                        "*NetworkDataSource",
+                        "*NetworkDataSource\$*",
+                        "*ChainConnection",
+                        "*ChainConnection\$*",
+                        "**.runtime.definitions.TypeDefinitionsTreeV2",
+                        "**.runtime.definitions.TypeDefinitionsTreeV2\$*",
 
-        xml {
-            onCheck = false
-        }
-
-        html {
-            onCheck = true
-        }
-
-        verify {
-            onCheck = true
-
-            rule {
-                isEnabled = true
-
-                minBound(14)
-                // TODO: Update to 85
+                        // TODO: Coverage these modules by tests
+                        "**.core.rpc.*",
+                        "**.core.utils.*",
+                        "**.core.extrinsic.*",
+                    )
+                }
             }
         }
     }

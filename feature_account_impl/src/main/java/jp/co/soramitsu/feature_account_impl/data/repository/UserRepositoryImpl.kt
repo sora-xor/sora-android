@@ -60,7 +60,7 @@ class UserRepositoryImpl(
     private val userDatasource: UserDatasource,
     private val credentialsDatasource: CredentialsDatasource,
     private val db: AppDatabase,
-    private val coroutineManager: CoroutineManager,
+    coroutineManager: CoroutineManager,
     private val languagesHolder: LanguagesHolder,
 ) : UserRepository {
 
@@ -188,14 +188,14 @@ class UserRepositoryImpl(
         val count = db.globalCardsHubDao().count()
         if (count == 0) {
             db.globalCardsHubDao().insert(
-                CardHubType.values()
+                CardHubType.entries
                     .filter { !it.boundToAccount }
                     .map { cardType ->
                         GlobalCardHubLocal(
                             cardId = cardType.hubName,
                             visibility = true,
                             sortOrder = cardType.order,
-                            collapsed = false
+                            collapsed = false,
                         )
                     }
             )

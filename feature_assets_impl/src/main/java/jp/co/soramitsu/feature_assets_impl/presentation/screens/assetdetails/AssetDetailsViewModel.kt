@@ -70,7 +70,9 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
+import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
@@ -92,6 +94,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
     private val resourceManager: ResourceManager,
     private val soraConfigManager: SoraConfigManager,
     private val coroutineManager: CoroutineManager,
+    private val soraCardInteractor: SoraCardInteractor,
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -157,7 +160,8 @@ class AssetDetailsViewModel @AssistedInject constructor(
                         tokenName = asset.token.name,
                         tokenIcon = asset.token.iconUri(),
                         tokenSymbol = asset.token.symbol,
-                        poolsCardTitle = resourceManager.getString(R.string.asset_details_your_pools).format(asset.token.symbol),
+                        poolsCardTitle = resourceManager.getString(R.string.asset_details_your_pools)
+                            .format(asset.token.symbol),
                         price = asset.token.formatFiatOrEmpty(
                             asset.token.fiatPrice,
                             numbersFormatter,
@@ -176,17 +180,24 @@ class AssetDetailsViewModel @AssistedInject constructor(
                             numbersFormatter,
                         ),
                         frozenBalance = if (assetId == SubstrateOptionsProvider.feeAssetId) {
-                            asset.token.printBalance(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter, AssetHolder.ROUNDING)
+                            asset.token.printBalance(
+                                xorAssetBalance?.frozen ?: BigDecimal.ZERO,
+                                numbersFormatter,
+                                AssetHolder.ROUNDING
+                            )
                         } else {
                             null
                         },
                         frozenBalanceFiat = if (assetId == SubstrateOptionsProvider.feeAssetId) {
-                            asset.token.printFiat(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter)
+                            asset.token.printFiat(
+                                xorAssetBalance?.frozen ?: BigDecimal.ZERO,
+                                numbersFormatter
+                            )
                         } else {
                             null
                         },
                         isTransferableBalanceAvailable = asset.balance.transferable > BigDecimal.ZERO,
-                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId),
+                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId) && soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
                     )
                 )
             }
@@ -257,17 +268,41 @@ class AssetDetailsViewModel @AssistedInject constructor(
                     state = curState.copy(
                         state = curState.state.copy(
                             xorBalance = FrozenXorDetailsModel(
-                                token.printBalance(xorBalance.frozen, numbersFormatter, AssetHolder.ROUNDING),
+                                token.printBalance(
+                                    xorBalance.frozen,
+                                    numbersFormatter,
+                                    AssetHolder.ROUNDING,
+                                ),
                                 token.printFiat(xorBalance.frozen, numbersFormatter),
-                                token.printBalance(xorBalance.bonded, numbersFormatter, AssetHolder.ROUNDING),
+                                token.printBalance(
+                                    xorBalance.bonded,
+                                    numbersFormatter,
+                                    AssetHolder.ROUNDING,
+                                ),
                                 token.printFiat(xorBalance.bonded, numbersFormatter),
-                                token.printBalance(xorBalance.locked, numbersFormatter, AssetHolder.ROUNDING),
+                                token.printBalance(
+                                    xorBalance.locked,
+                                    numbersFormatter,
+                                    AssetHolder.ROUNDING,
+                                ),
                                 token.printFiat(xorBalance.locked, numbersFormatter),
-                                token.printBalance(xorBalance.reserved, numbersFormatter, AssetHolder.ROUNDING),
+                                token.printBalance(
+                                    xorBalance.reserved,
+                                    numbersFormatter,
+                                    AssetHolder.ROUNDING,
+                                ),
                                 token.printFiat(xorBalance.reserved, numbersFormatter),
-                                token.printBalance(xorBalance.redeemable, numbersFormatter, AssetHolder.ROUNDING),
+                                token.printBalance(
+                                    xorBalance.redeemable,
+                                    numbersFormatter,
+                                    AssetHolder.ROUNDING,
+                                ),
                                 token.printFiat(xorBalance.redeemable, numbersFormatter),
-                                token.printBalance(xorBalance.unbonding, numbersFormatter, AssetHolder.ROUNDING),
+                                token.printBalance(
+                                    xorBalance.unbonding,
+                                    numbersFormatter,
+                                    AssetHolder.ROUNDING,
+                                ),
                                 token.printFiat(xorBalance.unbonding, numbersFormatter),
                             )
                         )

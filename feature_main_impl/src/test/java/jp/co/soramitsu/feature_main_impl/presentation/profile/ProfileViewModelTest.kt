@@ -55,6 +55,8 @@ import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 import jp.co.soramitsu.test_data.SoraCardTestData.soraCardBasicStatusTest
@@ -195,6 +197,14 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showBuyCrypto EXPECT navigate to buy crypto screen`() {
+        every { soraCardInteractor.basicStatus } returns
+            MutableStateFlow(
+                soraCardBasicStatusTest.copy(
+                    initialized = true,
+                    verification = SoraCardCommonVerification.Pending,
+                    ibanInfo = IbanInfo("", IbanStatus.ACTIVE, "", "")
+                )
+            )
         initViewModel()
         profileViewModel.showBuyCrypto()
         val launch = profileViewModel.launchSoraCardSignIn.getOrAwaitValue()

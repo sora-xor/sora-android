@@ -73,7 +73,7 @@ interface AssetDao {
         private const val QUERY_ASSET_TOKEN_ACTIVE = """
             select * from assets inner join ($joinFiatToken) tokensfiats on assets.tokenId=tokensfiats.id 
             where assets.accountAddress=:address and tokensfiats.whitelistName=:whitelist 
-            and ((assets.visibility=1 or assets.displayAsset=1 or tokensfiats.isHidable = 0) or (tokensfiats.id = "0x02000e0000000000000000000000000000000000000000000000000000000000") or (tokensfiats.id in (select tokenIdTarget from allpools)) or (tokensfiats.id in (select tokenId from poolBaseTokens))) order by assets.position
+            and ((assets.visibility=1 or assets.displayAsset=1 or tokensfiats.isHidable = 0) or (tokensfiats.id in (select tokenIdTarget from allpools)) or (tokensfiats.id in (select tokenId from poolBaseTokens))) order by assets.position
         """
     }
 

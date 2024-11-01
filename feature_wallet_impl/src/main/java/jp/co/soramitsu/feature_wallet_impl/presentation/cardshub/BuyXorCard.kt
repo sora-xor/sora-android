@@ -42,6 +42,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 
 @Composable
 fun BuyXorCard(
+    buttonEnabled: Boolean,
     onCloseCard: () -> Unit,
     onBuyXorClicked: () -> Unit,
 ) {
@@ -50,6 +51,7 @@ fun BuyXorCard(
         title = stringResource(id = R.string.buy_crypto_buy_xor_banner_title),
         description = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
         button = stringResource(id = R.string.common_buy_xor),
+        buttonEnabled = buttonEnabled,
         closeEnabled = true,
         onButtonClicked = onBuyXorClicked,
         onCloseCard = onCloseCard,
@@ -61,6 +63,7 @@ fun BuyXorCard(
 private fun PreviewBuyXorCard01() {
     SoraAppTheme {
         BuyXorCard(
+            buttonEnabled = true,
             onCloseCard = {},
             onBuyXorClicked = {},
         )
@@ -72,6 +75,7 @@ private fun PreviewBuyXorCard01() {
 private fun PreviewBuyXorCard02() {
     SoraAppTheme {
         BuyXorCard(
+            buttonEnabled = true,
             onCloseCard = {},
             onBuyXorClicked = {},
         )
