@@ -35,12 +35,14 @@ package jp.co.soramitsu.sora.splash.presentation
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkObject
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -53,6 +55,7 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -68,13 +71,18 @@ class SplashViewModelTest {
     @Mock
     private lateinit var interactor: SplashInteractor
 
+    @Mock
+    private lateinit var coroutineManager: CoroutineManager
+
     private lateinit var splashViewModel: SplashViewModel
 
+    @OptIn(ExperimentalStdlibApi::class)
     @Before
-    fun setUp() {
+    fun setUp() = runTest {
         mockkObject(FirebaseWrapper)
         every { FirebaseWrapper.log("Splash next screen true") } returns Unit
-        splashViewModel = SplashViewModel(interactor)
+        whenever(coroutineManager.io).thenReturn(this.coroutineContext[CoroutineDispatcher]!!)
+        splashViewModel = SplashViewModel(interactor, coroutineManager)
     }
 
     @Test

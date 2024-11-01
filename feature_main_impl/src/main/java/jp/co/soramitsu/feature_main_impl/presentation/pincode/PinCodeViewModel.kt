@@ -74,10 +74,6 @@ class PinCodeViewModel @Inject constructor(
     connectionManager: ConnectionManager,
 ) : BaseViewModel(), WithProgress by progress {
 
-    companion object {
-        private const val COMPLETE_PIN_CODE_DELAY: Long = 12
-    }
-
     internal var state by mutableStateOf(
         PinCodeScreenState(
             maxDotsCount = PinCodeInteractor.PINCODE_LENGTH,
@@ -269,7 +265,6 @@ class PinCodeViewModel @Inject constructor(
     private fun pinCodeEntered() {
         viewModelScope.launch {
             tryCatch {
-                delay(COMPLETE_PIN_CODE_DELAY)
                 if (PinCodeAction.CREATE_PIN_CODE == action) {
                     if (tempCode.isEmpty()) {
                         tempCode = inputedCode

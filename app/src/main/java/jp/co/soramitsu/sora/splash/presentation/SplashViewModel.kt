@@ -37,6 +37,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -49,6 +50,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val interactor: SplashInteractor,
+    coroutineManager: CoroutineManager,
 ) : BaseViewModel() {
 
     private val _runtimeInitiated = MutableLiveData<Boolean>()
@@ -73,7 +75,7 @@ class SplashViewModel @Inject constructor(
                 loadingTextVisiblity.trigger()
             }
         }
-        viewModelScope.launch {
+        viewModelScope.launch(coroutineManager.io) {
             interactor.checkMigration()
         }
     }
