@@ -40,9 +40,14 @@ import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
 import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
+import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardBasicContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
+
+fun IbanStatus?.readyToStartGatehubOnboarding(): Boolean {
+    return (this != null) && (this == IbanStatus.ACTIVE)
+}
 
 fun createSoraCardBasicContract() = SoraCardBasicContractData(
     apiKey = BuildConfig.SORA_CARD_API_KEY,

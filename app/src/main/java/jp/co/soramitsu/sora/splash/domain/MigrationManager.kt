@@ -66,7 +66,6 @@ class MigrationManager @Inject constructor(
                 FirebaseWrapper.log("Migration ma done")
             }
         }
-        userRepository.defaultGlobalCards()
         return true
     }
 }

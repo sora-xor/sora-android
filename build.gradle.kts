@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.firebaseAppDistributionPlugin) apply false
     alias(libs.plugins.triplet) apply false
     id("com.google.devtools.ksp") version "1.9.24-1.0.20" apply false
-    id("org.jetbrains.kotlinx.kover") version "0.7.5"
+    id("org.jetbrains.kotlinx.kover") version "0.8.3"
 }
 
 tasks.register("clean", Delete::class) {

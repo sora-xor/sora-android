@@ -509,12 +509,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     fun onToken1Click() {
         if (assets.isNotEmpty()) {
             viewModelScope.launch {
-                val bases = buildList {
-                    if (addToken2 == null || addToken2 == SubstrateOptionsProvider.ethTokenId) {
-                        add(SubstrateOptionsProvider.kxorTokenId)
-                    }
-                    addAll(poolsInteractor.getPoolDexList().map { it.tokenId })
-                }
+                val bases = poolsInteractor.getPoolDexList().map { it.tokenId }
                 val list = assets.filter { it.token.id in bases && it.token.id != addToken2 }
                 _addState.value = _addState.value.copy(
                     assetState1 = _addState.value.assetState1?.copy(
@@ -537,13 +532,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 val bases = poolsInteractor.getPoolDexList()
                 val curBase = bases.find { it.tokenId == addToken1 }
                 val list = assets
-                    .filter { asset ->
-                        if (addToken1 != null && addToken1 == SubstrateOptionsProvider.kxorTokenId) {
-                            asset.token.id == SubstrateOptionsProvider.ethTokenId
-                        } else {
-                            true
-                        }
-                    }
                     .filter { asset ->
                         val inBases = bases.find { it.tokenId == asset.token.id }
                         if (inBases != null && curBase != null) {

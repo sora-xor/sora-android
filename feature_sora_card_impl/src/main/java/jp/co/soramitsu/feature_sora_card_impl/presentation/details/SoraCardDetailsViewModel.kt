@@ -46,6 +46,7 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
+import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
@@ -80,6 +81,7 @@ class SoraCardDetailsViewModel @Inject constructor(
                 balance = null,
                 phone = null,
                 soraCardMenuActions = SoraCardMenuAction.entries,
+                canStartGatehubFlow = false,
             ),
             soraCardSettingsCard = SoraCardSettingsCardState(
                 soraCardSettingsOptions = SoraCardSettingsOption.entries,
@@ -115,10 +117,11 @@ class SoraCardDetailsViewModel @Inject constructor(
                         soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
                             balance = basicStatus.ibanInfo?.balance,
                             phone = phoneFormatted,
+                            canStartGatehubFlow = basicStatus.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
                         ),
                         soraCardSettingsCard = local.soraCardSettingsCard?.copy(
                             phone = phoneFormatted.orEmpty(),
-                        )
+                        ),
                     )
                 }
             }
@@ -164,6 +167,9 @@ class SoraCardDetailsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * only clickable if IBAN is issued
+     */
     fun onExchangeXorClick() {
         _launchSoraCard.value = createSoraCardGateHubContract()
     }

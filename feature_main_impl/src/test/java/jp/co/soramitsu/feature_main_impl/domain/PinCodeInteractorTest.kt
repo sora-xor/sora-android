@@ -196,6 +196,7 @@ class PinCodeInteractorTest {
         given(userRepository.getCurSoraAccount()).willReturn(account)
         given(userRepository.isMigrationFetched(account)).willReturn(false)
         given(credentialsRepository.getIrohaData(account)).willReturn(irohaData)
+        given(credentialsRepository.retrieveMnemonic(account)).willReturn("qwe asd zxc vbn tyu qwe asd zxc vbn tyu qwe asd zxc vbn tyu")
         given(walletRepository.needsMigration(address)).willReturn(needsMigration)
 
         interactor.needsMigration()

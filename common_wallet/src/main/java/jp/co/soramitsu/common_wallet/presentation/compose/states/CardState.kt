@@ -133,7 +133,7 @@ data class SoraCardState(
     override val loading: Boolean,
 ) : BasicBannerCardState(loading)
 
-data object BuyXorState : BasicBannerCardState(false)
+data class BuyXorState(val canStartGatehub: Boolean) : BasicBannerCardState(false)
 
 data object ReferralState : BasicBannerCardState(false)
 

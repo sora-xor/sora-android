@@ -73,7 +73,6 @@ object PolkaswapTestData {
         BigDecimal.TEN,
         true,
         2,
-        null,
     )
 
     val COMMON_POOL_DATA = CommonPoolData(

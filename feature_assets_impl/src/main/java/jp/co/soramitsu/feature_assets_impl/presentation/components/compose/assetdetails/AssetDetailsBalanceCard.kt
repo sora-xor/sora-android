@@ -208,8 +208,8 @@ internal fun AssetDetailsBalanceCard(
                     AmountCardIcon(
                         res = R.drawable.ic_buy_crypto,
                         text = stringResource(id = R.string.common_buy),
-                        enabled = false,
-                        onClick = onBuyCryptoClick
+                        enabled = true,
+                        onClick = onBuyCryptoClick,
                     )
                 }
             }

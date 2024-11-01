@@ -107,7 +107,7 @@ fun BackupPasswordScreen(
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Done,
                     keyboardType = KeyboardType.Password,
-                    autoCorrect = false
+                    autoCorrectEnabled = false,
                 ),
             )
 
@@ -128,7 +128,7 @@ fun BackupPasswordScreen(
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Done,
                     keyboardType = KeyboardType.Password,
-                    autoCorrect = false
+                    autoCorrectEnabled = false,
                 ),
             )
 
@@ -145,7 +145,7 @@ fun BackupPasswordScreen(
                     .fillMaxWidth(),
                 loading = state.isLoading,
                 loaderSize = Size.Large,
-            ) { modifier, elevation ->
+            ) { modifier, _ ->
                 FilledButton(
                     modifier = modifier
                         .fillMaxWidth(),

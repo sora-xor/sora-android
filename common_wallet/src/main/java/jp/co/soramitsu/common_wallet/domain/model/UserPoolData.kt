@@ -59,7 +59,6 @@ data class UserPoolData(
     val poolProvidersBalance: BigDecimal,
     val favorite: Boolean,
     val sort: Int,
-    val kensetsuIncluded: BigDecimal?,
 )
 
 val List<CommonUserPoolData>.fiatSymbol: String

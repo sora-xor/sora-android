@@ -84,8 +84,12 @@ class PinCodeInteractor @Inject constructor(
         return if (isFetched) {
             userRepository.needsMigration(soraAccount)
         } else {
-            val irohaData = credentialsRepository.getIrohaData(soraAccount)
-            val needs = walletRepository.needsMigration(irohaData.address)
+            val needs = if (credentialsRepository.retrieveMnemonic(soraAccount).split(" ").size == 15) {
+                val irohaData = credentialsRepository.getIrohaData(soraAccount)
+                walletRepository.needsMigration(irohaData.address)
+            } else {
+                false
+            }
             userRepository.saveNeedsMigration(needs, soraAccount)
             userRepository.saveIsMigrationFetched(true, soraAccount)
             userRepository.needsMigration(soraAccount)

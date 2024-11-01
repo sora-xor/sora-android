@@ -40,7 +40,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
-import jp.co.soramitsu.androidfoundation.format.isZero
 import jp.co.soramitsu.androidfoundation.format.nullZero
 import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -123,7 +122,6 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     private val feeTokenAsync by viewModelScope.lazyAsync { walletInteractor.getFeeToken() }
     private suspend fun feeToken() = feeTokenAsync.await()
 
-    private var poolDataUsableWithKensetsu: CommonUserPoolData? = null
     private var poolDataUsable: CommonUserPoolData? = null
     private var poolDataReal: CommonUserPoolData? = null
     private val amount1Flow = MutableStateFlow(BigDecimal.ZERO)
@@ -222,25 +220,24 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         null
                     }
                 }
-                .collectLatest(::onPoolCollectKensetsu)
+                .collectLatest(::onPoolCollect)
         }
         viewModelScope.launch {
             amount1Flow
                 .debounce(ViewHelper.debounce)
                 .onEach { amount ->
-                    val pduk = poolDataUsableWithKensetsu
                     val pdu = poolDataUsable
-                    if (pdu != null && pduk != null) {
+                    if (pdu != null) {
                         amount1 = if (amount <= pdu.user.basePooled) amount else pdu.user.basePooled
                         amount2 = PolkaswapFormulas.calculateOneAmountFromAnother(
                             amount1,
-                            pduk.user.basePooled,
-                            pduk.user.targetPooled,
+                            pdu.user.basePooled,
+                            pdu.user.targetPooled,
                             removeState.assetState2?.token?.precision,
                         )
                         percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
                             amount1,
-                            pduk.user.basePooled,
+                            pdu.user.basePooled,
                         )
                         reCalcDetails()
                     }
@@ -297,37 +294,6 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                     ),
                 )
             )
-        } else {
-            poolData
-        }
-    }
-
-    private suspend fun userPoolDataFixKensetsu(poolData: CommonUserPoolData?): CommonUserPoolData? {
-        return if (poolData != null && token2Id == SubstrateOptionsProvider.ethTokenId) {
-            if (token1Id == SubstrateOptionsProvider.feeAssetId || token1Id == SubstrateOptionsProvider.kxorTokenId) {
-                val kxorBalance = assetsInteractor
-                    .fetchBalance(poolData.basic.reserveAccount, listOf(SubstrateOptionsProvider.kxorTokenId))
-                    .getOrElse(0) { BigDecimal.ZERO }
-                if (kxorBalance.isZero()) {
-                    poolData
-                } else {
-                    if (token1Id == SubstrateOptionsProvider.feeAssetId) {
-                        poolData.copy(
-                            user = poolData.user.copy(
-                                basePooled = poolData.user.basePooled.minus(kxorBalance)
-                            )
-                        )
-                    } else {
-                        poolData.copy(
-                            user = poolData.user.copy(
-                                basePooled = kxorBalance
-                            )
-                        )
-                    }
-                }
-            } else {
-                poolData
-            }
         } else {
             poolData
         }
@@ -480,35 +446,21 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
         )
     }
 
-    private suspend fun onPoolCollectKensetsu(cups: CommonUserPoolData?) {
-        poolDataUsableWithKensetsu = cups
-        val poolData = userPoolDataFixKensetsu(cups)
-        poolDataUsable = poolData
+    private suspend fun onPoolCollect(cups: CommonUserPoolData?) {
+        poolDataUsable = cups
         amount1 =
-            if (poolData != null) PolkaswapFormulas.calculateAmountByPercentage(
-                poolData.user.basePooled,
+            if (cups != null) PolkaswapFormulas.calculateAmountByPercentage(
+                cups.user.basePooled,
                 percent,
-                poolData.basic.baseToken.precision,
+                cups.basic.baseToken.precision,
             ) else BigDecimal.ZERO
         amount2 =
-            if (poolData != null) PolkaswapFormulas.calculateAmountByPercentage(
-                poolData.user.targetPooled,
+            if (cups != null) PolkaswapFormulas.calculateAmountByPercentage(
+                cups.user.targetPooled,
                 percent,
-                poolData.basic.targetToken.precision,
+                cups.basic.targetToken.precision,
             ) else BigDecimal.ZERO
         reCalcDetails()
-    }
-
-    fun onSelectToken1() {
-        if (token1Id == SubstrateOptionsProvider.feeAssetId && token2Id == SubstrateOptionsProvider.ethTokenId) {
-            viewModelScope.launch {
-                poolDataUsable?.let { pdu ->
-                    token1Id = SubstrateOptionsProvider.kxorTokenId
-                    onAssetsActiveCollect()
-                    onPoolCollectKensetsu(pdu)
-                }
-            }
-        }
     }
 
     fun onAmount1Change(value: BigDecimal) {

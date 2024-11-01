@@ -274,7 +274,8 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                 }
 
                 HorizontalPager(
-                    modifier = Modifier.fillMaxHeight(), state = pagerState, beyondBoundsPageCount = 1
+                    modifier = Modifier.fillMaxHeight(),
+                    state = pagerState,
                 ) {
                     when (it) {
                         ExplorePages.CURRENCIES.ordinal -> {
