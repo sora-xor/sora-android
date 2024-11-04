@@ -53,8 +53,8 @@ object OptionsProvider {
     const val nbspace = Typography.nbsp
     const val euroSign = '€'
     const val soracard = "2.2.4"
-    const val soracardFiatPackageTest = "com.soracard.iban.wallet.test"
-    const val soracardFiatPackageProd = "com.soracard.iban.wallet"
+    const val soracardFiatPackageTest = "com.soracard.wallet.iban.test"
+    const val soracardFiatPackageProd = "com.soracard.wallet.iban"
 
     const val website = "https://sora.org"
     const val sourceLink = "https://github.com/sora-xor/Sora-Android"
