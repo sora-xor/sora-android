@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.triplet) apply false
     id("com.google.devtools.ksp") version "1.9.24-1.0.20" apply false
     id("org.jetbrains.kotlinx.kover") version "0.8.3"
+    alias(libs.plugins.sonarqube)
 }
 
 tasks.register("clean", Delete::class) {
@@ -57,4 +58,12 @@ tasks.register<JavaExec>("ktlintFormat") {
         "**.kts",
         "!**/build/**",
     )
+}
+
+sonarqube {
+    properties {
+        property("sonar.junit.reportPaths", "${project.projectDir}/build/test-results/testDevelopDebugUnitTest")
+        property("sonar.coverage.jacoco.xmlReportPaths", "${project.rootDir}/report/coverage.xml")
+        property("sonar.gradle.skipCompile", "true")
+    }
 }

@@ -283,6 +283,7 @@ kapt {
 }
 
 kover {
+    useJacoco()
     reports {
         variant("developDebug") {
             xml {

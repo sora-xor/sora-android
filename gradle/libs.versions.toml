@@ -63,6 +63,7 @@ soramitsuUicore = "0.2.37"
 soramitsuXbackup = "1.2.3"
 soramitsuXcrypto = "1.2.7"
 soramitsuAndroidFoundation = "0.0.3"
+sonarqube = "6.0.0.5145"
 
 [libraries]
 soramitsu-android-foundation = { module = "jp.co.soramitsu:android-foundation", version.ref = "soramitsuAndroidFoundation" }
@@ -170,3 +171,4 @@ googleServicesPlugin = { id = "com.google.gms.google-services", version.ref = "g
 firebaseCrashlyticsPlugin = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
 firebaseAppDistributionPlugin = { id = "com.google.firebase.appdistribution", version.ref = "firebaseAppDistribution" }
 triplet = { id = "com.github.triplet.play", version.ref = "tripletVersion" }
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
