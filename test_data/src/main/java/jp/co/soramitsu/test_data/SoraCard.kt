@@ -41,6 +41,7 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardBasicContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
+import jp.co.soramitsu.oauth.uiscreens.clientsui.UiStyle
 
 object SoraCardTestData {
 
@@ -81,6 +82,7 @@ object SoraCardTestData {
             userAvailableXorAmount = 0.0,
             logIn = false,
         ),
+        clientCase = UiStyle.SW,
     )
 
     val registrationLauncher = SoraCardContractData(
@@ -101,6 +103,7 @@ object SoraCardTestData {
             userAvailableXorAmount = 0.0,
             logIn = false,
         ),
+        clientCase = UiStyle.SW,
     )
 
     val signInLauncher = SoraCardContractData(
@@ -121,6 +124,7 @@ object SoraCardTestData {
             userAvailableXorAmount = 0.0,
             logIn = false,
         ),
+        clientCase = UiStyle.SW,
 
     )
 }

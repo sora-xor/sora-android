@@ -53,6 +53,7 @@ import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
+import jp.co.soramitsu.oauth.uiscreens.clientsui.GetSoraCardState
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.flow.MutableStateFlow
