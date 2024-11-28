@@ -44,6 +44,7 @@ import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardBasicContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
+import jp.co.soramitsu.oauth.uiscreens.clientsui.UiStyle
 
 fun IbanStatus?.readyToStartGatehubOnboarding(): Boolean {
     return (this != null) && (this == IbanStatus.ACTIVE)
@@ -68,6 +69,7 @@ fun createSoraCardGateHubContract(): SoraCardContractData {
         client = OptionsProvider.header,
         clientDark = true,
         flow = SoraCardFlow.SoraCardGateHubFlow,
+        clientCase = UiStyle.SW,
     )
 }
 
@@ -95,5 +97,6 @@ fun createSoraCardContract(
             isIssuancePaid = false,
             logIn = false,
         ),
+        clientCase = UiStyle.SW,
     )
 }
