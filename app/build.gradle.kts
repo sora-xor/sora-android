@@ -20,7 +20,7 @@ kotlin {
 }
 
 // soralution 143 3.8.6.3 2024.10.31
-// sora dae 121 3.8.6.2 2024.11.04
+// sora dae 122 3.8.6.3 2024.11.21
 
 android {
     namespace = "jp.co.soramitsu.sora"
@@ -30,8 +30,8 @@ android {
         applicationId = "jp.co.soramitsu.sora"
         minSdk = 26
         targetSdk = 34
-        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 121
-        versionName = "3.8.6.2"
+        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 122
+        versionName = "3.8.6.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
         // resConfigs "en", "ru", "es", "fr", "de", "nb", "in", "tr", "ar"
@@ -172,7 +172,7 @@ play {
     serviceAccountCredentials = file(System.getenv("CI_PLAY_KEY") ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.8.6.2 - SORA Card Improvements"
+    releaseName = "3.8.6.3 - SORA Card Improvements"
     defaultToAppBundles = true
 }
 

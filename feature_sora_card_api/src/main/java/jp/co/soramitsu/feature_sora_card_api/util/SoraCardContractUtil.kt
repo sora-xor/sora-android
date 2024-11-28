@@ -46,8 +46,7 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 
 fun IbanStatus?.readyToStartGatehubOnboarding(): Boolean {
-//    return (this != null) && (this == IbanStatus.ACTIVE)
-    return false
+    return (this != null) && (this == IbanStatus.ACTIVE)
 }
 
 fun createSoraCardBasicContract() = SoraCardBasicContractData(
