@@ -1,5 +1,5 @@
 [versions]
-agp = "8.7.2"
+agp = "8.7.3"
 kotlin = "1.9.24"
 appcompat = "1.7.0"
 coroutines = "1.8.1"
@@ -56,13 +56,13 @@ room = "2.6.1"
 lazySodium = "5.0.2"
 jna = "5.8.0"
 kover = "0.8.3"
-soramitsuSoracard = "1.2.0-RC4"
+soramitsuSoracard = "1.2.0-RC7"
 soramitsuXnetworking = "1.0.10"
 soramitsuXsubstrate = "1.2.7"
-soramitsuUicore = "0.2.37"
+soramitsuUicore = "0.2.39"
 soramitsuXbackup = "1.2.3"
 soramitsuXcrypto = "1.2.7"
-soramitsuAndroidFoundation = "0.0.3"
+soramitsuAndroidFoundation = "0.0.4"
 
 [libraries]
 soramitsu-android-foundation = { module = "jp.co.soramitsu:android-foundation", version.ref = "soramitsuAndroidFoundation" }
