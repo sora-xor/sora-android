@@ -44,6 +44,7 @@ import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.domain.ChainNode
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -115,6 +116,9 @@ class ProfileViewModelTest {
     @MockK
     private lateinit var soraConfigManager: SoraConfigManager
 
+    @MockK
+    private lateinit var darkThemeManager: DarkThemeManager
+
     private lateinit var profileViewModel: ProfileViewModel
 
     private fun initViewModel() {
@@ -129,6 +133,7 @@ class ProfileViewModelTest {
             soraConfigManager,
             soraCardInteractor,
             nodeManager,
+            darkThemeManager
         )
     }
 
@@ -159,6 +164,7 @@ class ProfileViewModelTest {
         every { router.showGetSoraCard(any(), any()) } returns Unit
         every { router.showSoraCardDetails() } just runs
         every { assetsRouter.showBuyCrypto(any()) } returns Unit
+        every { darkThemeManager.darkModeStatusFlow } returns MutableStateFlow(true)
     }
 
     @Test

@@ -38,6 +38,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
@@ -80,6 +81,7 @@ class ProfileViewModel @Inject constructor(
     private val soraConfigManager: SoraConfigManager,
     private val soraCardInteractor: SoraCardInteractor,
     nodeManager: NodeManager,
+    private val darkThemeManager: DarkThemeManager,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(
@@ -107,17 +109,23 @@ class ProfileViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
 
-        soraCardInteractor.basicStatus
-            .onEach {
-                it.availabilityInfo?.let { info ->
+        combine(
+            soraCardInteractor.basicStatus,
+            darkThemeManager.darkModeStatusFlow
+        ) { basicStatus, isDarkTheme ->
+            basicStatus to isDarkTheme
+        }
+            .onEach { (basicStatus, isDarkTheme) ->
+                basicStatus.availabilityInfo?.let { info ->
                     currentSoraCardContractData = createSoraCardContract(
                         userAvailableXorAmount = info.xorBalance.toDouble(),
-                        isEnoughXorAvailable = info.enoughXor
+                        isEnoughXorAvailable = info.enoughXor,
+                        clientDark = isDarkTheme
                     )
                 }
                 val soraCardStatusStringRes =
-                    if (it.ibanInfo == null)
-                        when (it.verification) {
+                    if (basicStatus.ibanInfo == null)
+                        when (basicStatus.verification) {
                             SoraCardCommonVerification.Rejected -> R.string.sora_card_verification_rejected
                             SoraCardCommonVerification.Pending -> R.string.sora_card_verification_in_progress
                             SoraCardCommonVerification.Successful -> R.string.more_menu_sora_card_subtitle
@@ -125,8 +133,8 @@ class ProfileViewModel @Inject constructor(
                         } else R.string.more_menu_sora_card_subtitle
 
                 val soraCardStatusIconDrawableRes =
-                    if (it.ibanInfo == null)
-                        when (it.verification) {
+                    if (basicStatus.ibanInfo == null)
+                        when (basicStatus.verification) {
                             SoraCardCommonVerification.Rejected -> R.drawable.ic_status_denied
                             SoraCardCommonVerification.Pending -> R.drawable.ic_status_pending
                             else -> null
@@ -134,11 +142,11 @@ class ProfileViewModel @Inject constructor(
 
                 _state.value = _state.value.copy(
                     soraCardStatusStringRes = soraCardStatusStringRes,
-                    soraCardIbanError = if (it.ibanInfo?.ibanStatus == IbanStatus.OTHER) it.ibanInfo?.statusDescription else null,
+                    soraCardIbanError = if (basicStatus.ibanInfo?.ibanStatus == IbanStatus.OTHER) basicStatus.ibanInfo?.statusDescription else null,
                     soraCardStatusIconDrawableRes = soraCardStatusIconDrawableRes,
                     soraCardEnabled = soraConfigManager.getSoraCard(),
-                    soraCardNeedUpdate = it.needInstallUpdate,
-                    canStartGatehubOnboarding = it.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
+                    soraCardNeedUpdate = basicStatus.needInstallUpdate,
+                    canStartGatehubOnboarding = basicStatus.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
                 )
             }
             .launchIn(viewModelScope)

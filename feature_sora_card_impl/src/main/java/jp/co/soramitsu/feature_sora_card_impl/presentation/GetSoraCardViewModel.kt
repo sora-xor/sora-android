@@ -109,6 +109,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
                     currentSoraCardContractData = createSoraCardContract(
                         userAvailableXorAmount = it.xorBalance.toDouble(),
                         isEnoughXorAvailable = it.enoughXor,
+                        clientDark = darkThemeManager.darkModeStatusFlow.value
                     )
                 }
                 _state.value = _state.value.copy(
