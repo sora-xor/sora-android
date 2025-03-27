@@ -89,6 +89,11 @@ import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.api.ConfigDAO
 import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.api.data.ConfigParser
 import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.impl.SuperWalletConfigDAOImpl
 import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.impl.data.RemoteConfigParserImpl
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.HistoryItemsFilter
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.TxHistoryRepository
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItem
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.impl.TxHistoryRepositoryImpl
+import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.impl.builder.ExpectActualDBDriverFactory
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.models.AbstractRestClientConfig
 import jp.co.soramitsu.xnetworking.lib.engines.rest.impl.RestClientImpl
@@ -126,6 +131,10 @@ class CommonActivityModule {
 @Module
 class CommonModule {
 
+    private companion object {
+        const val txHistoryDBName = "historyDatabase.db"
+    }
+
     @Singleton
     @Provides
     fun provideSoraPreferences(@ApplicationContext c: Context): SoraPreferences = SoraPreferences(c)
@@ -160,10 +169,28 @@ class CommonModule {
     @Provides
     fun provideBlockExplorerRepository(
         configDAO: ConfigDAO,
-        restClient: RestClient
+        restClient: RestClient,
+        txHistoryRepository: TxHistoryRepository
     ): BlockExplorerRepository = BlockExplorerRepositoryImpl(
         configDAO = configDAO,
-        restClient = restClient
+        restClient = restClient,
+        txHistoryRepository = txHistoryRepository
+    )
+
+    @Singleton
+    @Provides
+    fun provideTxHistoryRepository(
+        @ApplicationContext context: Context,
+        configDAO: ConfigDAO,
+        restClient: RestClient,
+    ): TxHistoryRepository = TxHistoryRepositoryImpl(
+        databaseDriverFactory = ExpectActualDBDriverFactory(context, txHistoryDBName),
+        configDAO = configDAO,
+        restClient = restClient,
+        historyItemsFilter = object : HistoryItemsFilter {
+            override fun List<TxHistoryItem>.filterCachedHistoryItems(): List<TxHistoryItem> = this
+            override fun List<TxHistoryItem>.filterPagedHistoryItems(): List<TxHistoryItem> = this
+        }
     )
 
     @Singleton
