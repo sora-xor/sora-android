@@ -61,7 +61,7 @@ android {
                 "proguard-rules.pro"
             )
         }
-        
+
         debug {
             isMinifyEnabled = false
             versionNameSuffix = "-debug"
@@ -233,7 +233,6 @@ dependencies {
     implementation(libs.lifecycleProcessDep)
     kapt(libs.lifecycleKaptDep)
     implementation(libs.composeRuntimeDep)
-
 
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
