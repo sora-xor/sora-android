@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_select_node_impl.presentation.details
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -218,6 +219,7 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
             .catch { onError(it) }
             .onEach { url ->
                 if (url.isNotEmpty()) {
+                    println("subscribeAddressChanges $url")
                     validateAddress(url)
                 }
             }
@@ -258,8 +260,10 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
                     ),
                     submitButtonEnabled = submitButtonEnabled(),
                 )
+                println("descriptionText in when: ${state.addressState.descriptionText}")
             }
         }
+        println("descriptionText after when: ${state.addressState.descriptionText}")
     }
 
     private fun checkGenesisHash(url: String) {
@@ -267,11 +271,14 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
     }
 
     private fun subscribeNodeManagerEvents() {
+        println("subscribeNodeManagerEvents")
+
         nodeManager.events
             .catch {
                 onError(it)
             }
             .onEach { event ->
+                println("subscribeNodeManagerEvents event $event")
                 when (event) {
                     is NodeManagerEvent.NodeExisting -> {
                         state = state.copy(loading = false)
@@ -281,6 +288,7 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
                     is NodeManagerEvent.GenesisValidated -> {
                         genesisHashIsValid = event.result
                         state = if (!genesisHashIsValid) {
+                            println("subscribeNodeManagerEvents genesisHashIsValid $genesisHashIsValid")
                             state.copy(
                                 addressState = state.addressState.copy(
                                     descriptionText = resourceManager.getString(R.string.node_details_genesis_validation_failed),
@@ -290,6 +298,7 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
                                 loading = false
                             )
                         } else {
+                            println("subscribeNodeManagerEvents genesisHashIsValid $genesisHashIsValid")
                             state.copy(
                                 submitButtonEnabled = submitButtonEnabled(),
                                 loading = false
@@ -316,6 +325,8 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
                     else -> {
                     }
                 }
+                println("subscribeNodeManagerEvents descriptionText after when: ${state.addressState.descriptionText}")
+
             }
             .launchIn(viewModelScope)
     }

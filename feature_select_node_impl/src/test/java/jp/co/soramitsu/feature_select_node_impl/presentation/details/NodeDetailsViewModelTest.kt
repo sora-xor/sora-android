@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_select_node_impl.presentation.details
 
+import android.util.Log
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -54,8 +55,11 @@ import jp.co.soramitsu.feature_select_node_impl.domain.SelectNodeInteractor
 import jp.co.soramitsu.feature_select_node_impl.domain.ValidationEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -265,9 +269,11 @@ class NodeDetailsViewModelTest {
 
     @Test
     fun `onAddressChanged EXPECT validate url`() = runTest {
+        given(interactor.validateNodeAddress(NODE_DETAILS_ADDRESS.text)).willReturn(ValidationEvent.Succeed)
         addNodeViewModel()
 
         viewModel.onAddressChanged(NODE_DETAILS_ADDRESS)
+
         advanceUntilIdle()
 
         verify(interactor).validateNodeAddress(NODE_DETAILS_ADDRESS.text)
@@ -317,14 +323,20 @@ class NodeDetailsViewModelTest {
 
     @Test
     fun `genesis validation failed EXPECT error text`() = runTest {
-        addNodeViewModel()
-
         given(resourceManager.getString(R.string.node_details_genesis_validation_failed)).willReturn(
             "error"
         )
+//        given(resourceManager.getString(R.string.node_details_address_validation_failed)).willReturn(
+//            "error"
+//        )
+//        given(interactor.validateNodeAddress(NODE_DETAILS_ADDRESS.text)).willReturn(ValidationEvent.AddressValidationFailed)
 
-        viewModel.onAddressChanged(NODE_DETAILS_ADDRESS)
+        addNodeViewModel()
+        println("descriptionText before: ${viewModel.state.addressState.descriptionText}")
+
+//        viewModel.onAddressChanged(NODE_DETAILS_ADDRESS)
         advanceUntilIdle()
+        println("descriptionText after: ${viewModel.state.addressState.descriptionText}")
 
         assertEquals("error", viewModel.state.addressState.descriptionText)
         assertTrue(viewModel.state.addressState.error)
@@ -333,6 +345,7 @@ class NodeDetailsViewModelTest {
 
     @Test
     fun `pin code checked EXPECT add custom node`() = runTest {
+        given(interactor.validateNodeAddress(NODE_DETAILS_ADDRESS.text)).willReturn(ValidationEvent.Succeed)
         addNodeViewModel()
         advanceUntilIdle()
 
@@ -347,6 +360,7 @@ class NodeDetailsViewModelTest {
 
     @Test
     fun `pin code checked for node details EXPECT update existing node`() = runTest {
+        given(interactor.validateNodeAddress(NODE_DETAILS_ADDRESS.text)).willReturn(ValidationEvent.Succeed)
         nodeDetailsViewModel(NODE_DETAIL_NODE.copy(address = "old address"))
         advanceUntilIdle()
 
@@ -360,6 +374,7 @@ class NodeDetailsViewModelTest {
 
     @Test
     fun `connection to custom node failed EXPECT error dialog`() = runTest {
+        given(interactor.validateNodeAddress(NODE_DETAILS_ADDRESS.text)).willReturn(ValidationEvent.Succeed)
         nodeManagerEvents.emit(NodeManagerEvent.ConnectionFailed(NODE_DETAILS_ADDRESS.text))
 
         addNodeViewModel()
@@ -388,9 +403,8 @@ class NodeDetailsViewModelTest {
                 SELECTED_NODE.address
             )
         )
-
+        given(interactor.validateNodeAddress(NODE_LIST.last().address)).willReturn(ValidationEvent.Succeed)
         addNodeViewModel()
-
         viewModel.onAddressChanged(TextFieldValue(NODE_LIST.last().address))
         advanceUntilIdle()
 
