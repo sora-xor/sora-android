@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.kapt)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
+    alias(libs.plugins.compose.compiler)
 }
 
 fun secret(name: String): String {
@@ -35,7 +36,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.common"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 26
@@ -57,14 +58,8 @@ android {
             )
         }
     }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = composeCompilerVersion
-    }
-
     buildFeatures {
         viewBinding = true
-        compose = true
         buildConfig = true
     }
 

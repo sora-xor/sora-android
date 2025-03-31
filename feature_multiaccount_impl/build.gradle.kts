@@ -6,9 +6,8 @@ plugins {
     alias(libs.plugins.kapt)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
+    alias(libs.plugins.compose.compiler)
 }
-
-val composeCompilerVersion: String by project
 
 kotlin {
     jvmToolchain(17)
@@ -16,7 +15,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.feature_multiaccount_impl"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 26
@@ -43,13 +42,8 @@ android {
         freeCompilerArgs += listOf("-Xstring-concat=inline")
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = composeCompilerVersion
-    }
-
     buildFeatures {
         viewBinding = true
-        compose = true
     }
 
     flavorDimensions += listOf("default")

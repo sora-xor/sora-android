@@ -6,9 +6,8 @@ plugins {
     alias(libs.plugins.kapt)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
+    alias(libs.plugins.compose.compiler)
 }
-
-val composeCompilerVersion: String by project
 
 kotlin {
     jvmToolchain(17)
@@ -41,11 +40,6 @@ android {
 
     buildFeatures {
         viewBinding = true
-        compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = composeCompilerVersion
     }
 
     flavorDimensions += listOf("default")

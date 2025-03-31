@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.triplet)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
+    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
@@ -24,7 +25,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.sora"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "jp.co.soramitsu.sora"
@@ -60,6 +61,7 @@ android {
                 "proguard-rules.pro"
             )
         }
+
         debug {
             isMinifyEnabled = false
             versionNameSuffix = "-debug"
@@ -230,6 +232,7 @@ dependencies {
 
     implementation(libs.lifecycleProcessDep)
     kapt(libs.lifecycleKaptDep)
+    implementation(libs.composeRuntimeDep)
 
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
