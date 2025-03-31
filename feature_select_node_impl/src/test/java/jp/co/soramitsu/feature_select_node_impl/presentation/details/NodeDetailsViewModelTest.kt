@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_select_node_impl.presentation.details
 
-import android.util.Log
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -55,11 +54,8 @@ import jp.co.soramitsu.feature_select_node_impl.domain.SelectNodeInteractor
 import jp.co.soramitsu.feature_select_node_impl.domain.ValidationEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -159,21 +155,24 @@ class NodeDetailsViewModelTest {
     fun `init EXPECT set up toolbar state title`() {
         addNodeViewModel()
 
-        assertEquals(R.string.select_node_node_details, viewModel.toolbarState.getOrAwaitValue().basic.title)
+        assertEquals(
+            R.string.select_node_node_details,
+            viewModel.toolbarState.getOrAwaitValue().basic.title
+        )
     }
 
     @Test
     fun `init EXPECT set up node name label`() {
         addNodeViewModel()
 
-        assertEquals("Node name", viewModel.state.nameState.label)
+        assertEquals("Node name", viewModel.state.value.nameState.label)
     }
 
     @Test
     fun `init EXPECT set up node address label`() {
         addNodeViewModel()
 
-        assertEquals("Node address", viewModel.state.addressState.label)
+        assertEquals("Node address", viewModel.state.value.addressState.label)
     }
 
     @Test
@@ -231,11 +230,11 @@ class NodeDetailsViewModelTest {
     fun `onNameChanged EXPECT change state`() {
         addNodeViewModel()
 
-        assertEquals(TextFieldValue(), viewModel.state.nameState.value)
+        assertEquals(TextFieldValue(), viewModel.state.value.nameState.value)
 
         viewModel.onNameChanged(NODE_DETAILS_ADDRESS)
 
-        assertEquals(NODE_DETAILS_ADDRESS, viewModel.state.nameState.value)
+        assertEquals(NODE_DETAILS_ADDRESS, viewModel.state.value.nameState.value)
     }
 
     @Test
@@ -244,7 +243,7 @@ class NodeDetailsViewModelTest {
 
         viewModel.onNameChanged(TextFieldValue())
 
-        assertFalse(viewModel.state.submitButtonEnabled)
+        assertFalse(viewModel.state.value.submitButtonEnabled)
     }
 
     @Test
@@ -253,18 +252,18 @@ class NodeDetailsViewModelTest {
 
         viewModel.onAddressChanged(TextFieldValue("text"))
 
-        assertFalse(viewModel.state.submitButtonEnabled)
+        assertFalse(viewModel.state.value.submitButtonEnabled)
     }
 
     @Test
     fun `onAddressChanged EXPECT change state`() {
         addNodeViewModel()
 
-        assertEquals(TextFieldValue(), viewModel.state.addressState.value)
+        assertEquals(TextFieldValue(), viewModel.state.value.addressState.value)
 
         viewModel.onAddressChanged(NODE_DETAILS_ADDRESS)
 
-        assertEquals(NODE_DETAILS_ADDRESS, viewModel.state.addressState.value)
+        assertEquals(NODE_DETAILS_ADDRESS, viewModel.state.value.addressState.value)
     }
 
     @Test
@@ -273,7 +272,6 @@ class NodeDetailsViewModelTest {
         addNodeViewModel()
 
         viewModel.onAddressChanged(NODE_DETAILS_ADDRESS)
-
         advanceUntilIdle()
 
         verify(interactor).validateNodeAddress(NODE_DETAILS_ADDRESS.text)
@@ -301,8 +299,8 @@ class NodeDetailsViewModelTest {
         viewModel.onAddressChanged(NODE_DETAILS_ADDRESS)
         advanceUntilIdle()
 
-        assertEquals("error", viewModel.state.addressState.descriptionText)
-        assertTrue(viewModel.state.addressState.error)
+        assertEquals("error", viewModel.state.value.addressState.descriptionText)
+        assertTrue(viewModel.state.value.addressState.error)
     }
 
     @Test
@@ -316,31 +314,28 @@ class NodeDetailsViewModelTest {
         viewModel.onAddressChanged(NODE_DETAILS_ADDRESS)
         advanceUntilIdle()
 
-        assertEquals("error", viewModel.state.addressState.descriptionText)
-        assertTrue(viewModel.state.addressState.error)
-        assertFalse(viewModel.state.submitButtonEnabled)
+        assertEquals("error", viewModel.state.value.addressState.descriptionText)
+        assertTrue(viewModel.state.value.addressState.error)
+        assertFalse(viewModel.state.value.submitButtonEnabled)
     }
 
     @Test
     fun `genesis validation failed EXPECT error text`() = runTest {
+        given(interactor.validateNodeAddress(NODE_DETAILS_ADDRESS.text)).willReturn(ValidationEvent.ProtocolValidationFailed)
         given(resourceManager.getString(R.string.node_details_genesis_validation_failed)).willReturn(
-            "error"
+            "gen error"
         )
-//        given(resourceManager.getString(R.string.node_details_address_validation_failed)).willReturn(
-//            "error"
-//        )
-//        given(interactor.validateNodeAddress(NODE_DETAILS_ADDRESS.text)).willReturn(ValidationEvent.AddressValidationFailed)
-
+        given(resourceManager.getString(R.string.node_details_protocol_validation_failed)).willReturn(
+            "pro error"
+        )
         addNodeViewModel()
-        println("descriptionText before: ${viewModel.state.addressState.descriptionText}")
-
-//        viewModel.onAddressChanged(NODE_DETAILS_ADDRESS)
         advanceUntilIdle()
-        println("descriptionText after: ${viewModel.state.addressState.descriptionText}")
+        viewModel.onAddressChanged(NODE_DETAILS_ADDRESS)
+        advanceUntilIdle()
 
-        assertEquals("error", viewModel.state.addressState.descriptionText)
-        assertTrue(viewModel.state.addressState.error)
-        assertFalse(viewModel.state.submitButtonEnabled)
+        assertTrue(viewModel.state.value.addressState.error)
+        assertFalse(viewModel.state.value.submitButtonEnabled)
+        assertEquals("pro error", viewModel.state.value.addressState.descriptionText)
     }
 
     @Test
@@ -360,8 +355,8 @@ class NodeDetailsViewModelTest {
 
     @Test
     fun `pin code checked for node details EXPECT update existing node`() = runTest {
-        given(interactor.validateNodeAddress(NODE_DETAILS_ADDRESS.text)).willReturn(ValidationEvent.Succeed)
         nodeDetailsViewModel(NODE_DETAIL_NODE.copy(address = "old address"))
+        given(interactor.validateNodeAddress(NODE_DETAILS_ADDRESS.text)).willReturn(ValidationEvent.Succeed)
         advanceUntilIdle()
 
         viewModel.onAddressChanged(TextFieldValue(NODE_DETAIL_NODE.address))
@@ -397,18 +392,20 @@ class NodeDetailsViewModelTest {
 
     @Test
     fun `node already existed EXPECT error dialog`() = runTest {
+        given(interactor.validateNodeAddress(NODE_LIST.last().address)).willReturn(ValidationEvent.Succeed)
         nodeManagerEvents.emit(
             NodeManagerEvent.NodeExisting(
                 NODE_LIST.last().name,
                 SELECTED_NODE.address
             )
         )
-        given(interactor.validateNodeAddress(NODE_LIST.last().address)).willReturn(ValidationEvent.Succeed)
+
         addNodeViewModel()
+
         viewModel.onAddressChanged(TextFieldValue(NODE_LIST.last().address))
         advanceUntilIdle()
 
-        assertFalse(viewModel.state.submitButtonEnabled)
+        assertFalse(viewModel.state.value.submitButtonEnabled)
         assertEquals(
             "Title",
             viewModel.alertDialogLiveData.getOrAwaitValue().first
@@ -424,15 +421,15 @@ class NodeDetailsViewModelTest {
     fun `open node details EXPECT set up name and address`() {
         nodeDetailsViewModel(CUSTOM_NODES.first())
 
-        assertEquals(CUSTOM_NODES.first().name, viewModel.state.nameState.value.text)
-        assertEquals(CUSTOM_NODES.first().address, viewModel.state.addressState.value.text)
+        assertEquals(CUSTOM_NODES.first().name, viewModel.state.value.nameState.value.text)
+        assertEquals(CUSTOM_NODES.first().address, viewModel.state.value.addressState.value.text)
     }
 
     @Test
     fun `open node details EXPECT submit button enabled`() {
         nodeDetailsViewModel(CUSTOM_NODES.first())
 
-        assertTrue(viewModel.state.submitButtonEnabled)
+        assertTrue(viewModel.state.value.submitButtonEnabled)
     }
 
     @Test
@@ -448,7 +445,7 @@ class NodeDetailsViewModelTest {
         nodeDetailsViewModel(CUSTOM_NODES.first())
         advanceUntilIdle()
 
-        assertFalse(viewModel.state.addressState.enabled)
+        assertFalse(viewModel.state.value.addressState.enabled)
     }
 
     @Test
@@ -478,8 +475,8 @@ class NodeDetailsViewModelTest {
 
         viewModel.onNameChanged(TextFieldValue(NODE_LIST.first().name))
 
-        assertEquals("Error", viewModel.state.nameState.descriptionText)
-        assertTrue(viewModel.state.nameState.error)
+        assertEquals("Error", viewModel.state.value.nameState.descriptionText)
+        assertTrue(viewModel.state.value.nameState.error)
     }
 
     @Test
@@ -489,7 +486,7 @@ class NodeDetailsViewModelTest {
 
         viewModel.onNameChanged(TextFieldValue(NODE_DETAIL_NODE.name))
 
-        assertNull("Error", viewModel.state.nameState.descriptionText)
-        assertFalse(viewModel.state.nameState.error)
+        assertNull("Error", viewModel.state.value.nameState.descriptionText)
+        assertFalse(viewModel.state.value.nameState.error)
     }
 }
