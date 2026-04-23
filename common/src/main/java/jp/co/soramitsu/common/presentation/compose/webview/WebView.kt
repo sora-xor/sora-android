@@ -42,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.base.ProgressDialog
 import jp.co.soramitsu.ui_core.theme.customColors
 
@@ -50,6 +51,11 @@ fun WebView(
     state: WebViewState,
     onPageFinished: () -> Unit
 ) {
+    if (BuildConfig.DEBUG) {
+        // Allow Appium and chrome://inspect to discover the WebView contents in
+        // debug builds only. Release builds remain non-inspectable.
+        WebView.setWebContentsDebuggingEnabled(true)
+    }
     Box(
         modifier = Modifier
             .background(color = MaterialTheme.customColors.bgPage)
