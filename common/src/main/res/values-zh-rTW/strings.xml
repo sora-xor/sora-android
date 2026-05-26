@@ -87,6 +87,7 @@
   <string name="common_choose_asset">選擇資產</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">關閉</string>
+  <string name="tx_details_view_on_explorer">在區塊瀏覽器中查看</string>
   <string name="common_confirm">確認交換</string>
   <string name="common_connected">連接的</string>
   <string name="common_connecting">正在連線...</string>

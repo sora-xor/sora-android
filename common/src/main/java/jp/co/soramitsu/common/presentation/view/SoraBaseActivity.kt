@@ -68,6 +68,8 @@ import jp.co.soramitsu.common.presentation.compose.components.Toolbar
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.ext.attrColor
+import jp.co.soramitsu.common.util.ext.setNavigationBarColorCompat
+import jp.co.soramitsu.common.util.ext.setStatusBarColorCompat
 import jp.co.soramitsu.ui_core.theme.customColors
 
 abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
@@ -165,8 +167,9 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        window.statusBarColor = attrColor(backgroundColor())
-        window.navigationBarColor = attrColor(backgroundColor())
+        val background = attrColor(backgroundColor())
+        window.setStatusBarColorCompat(background)
+        window.setNavigationBarColorCompat(background)
     }
 
     abstract fun onToolbarNavigation()

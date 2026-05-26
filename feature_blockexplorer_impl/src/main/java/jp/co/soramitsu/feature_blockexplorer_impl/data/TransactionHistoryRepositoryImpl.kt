@@ -37,7 +37,9 @@ import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.SuspendableProperty
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
+import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryElement
+import jp.co.soramitsu.feature_blockexplorer_api.data.PolkaswapIndexerClient
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
@@ -45,19 +47,15 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.TxHistoryRepository
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.ChainInfo
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxFilter
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @Singleton
 class TransactionHistoryRepositoryImpl @Inject constructor(
-    private val txHistoryRepository: TxHistoryRepository,
+    private val polkaswapIndexerClient: PolkaswapIndexerClient,
     extrinsicManager: ExtrinsicManager,
-    private val soraConfigManager: SoraConfigManager,
 ) : TransactionHistoryRepository {
 
     init {
@@ -73,7 +71,12 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getContacts(query: String): Set<String> =
-        txHistoryRepository.getTransactionPeers(query, soraConfigManager.getGenesis()).toSet()
+        runCatching {
+            polkaswapIndexerClient.getTransactionPeers(query)
+        }.getOrElse {
+            FirebaseWrapper.recordException(it)
+            emptySet()
+        }
 
     private fun updateTransactionStatus(txHash: String, status: Boolean, block: String?) {
         localPendingTransactions[txHash]?.base?.status =
@@ -88,11 +91,15 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         count: Int,
         filterTokenId: String?,
     ): List<Transaction> {
-        val tx = txHistoryRepository.getTransactionHistoryCached(
-            count = count,
-            address = soraAccount.substrateAddress,
-            chainId = soraConfigManager.getGenesis(),
-        ).filter {
+        val tx = runCatching {
+            polkaswapIndexerClient.getLastTransactions(
+                address = soraAccount.substrateAddress,
+                count = count,
+            )
+        }.getOrElse {
+            FirebaseWrapper.recordException(it)
+            emptyList()
+        }.filter {
             if (filterTokenId != null)
                 return@filter isReferral(it, filterTokenId)
 
@@ -114,17 +121,17 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         tokens: List<Token>,
         soraAccount: SoraAccount
     ): Transaction? {
-        val tx = txHistoryRepository.getTransactionCached(
-            address = soraAccount.substrateAddress,
-            txHash = txHash,
-            chainId = soraConfigManager.getGenesis(),
-        )
-        val transaction =
-            mapHistoryItemsToTransactions(
-                tx.items,
-                soraAccount.substrateAddress,
-                tokens
-            ).firstOrNull()
+        val tx = runCatching {
+            polkaswapIndexerClient.getTransaction(txHash)
+        }.getOrElse {
+            FirebaseWrapper.recordException(it)
+            emptyList()
+        }
+        val transaction = mapHistoryItemsToTransactions(
+            tx,
+            soraAccount.substrateAddress,
+            tokens
+        ).firstOrNull()
         val local = localPendingTransactions[txHash]
         return transaction ?: local
     }
@@ -135,14 +142,22 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         soraAccount: SoraAccount,
         filterTokenId: String?,
     ): TransactionsInfo {
-        val historyInfo =
-            txHistoryRepository.getTransactionHistoryPaged(
+        val historyInfo = runCatching {
+            polkaswapIndexerClient.getTransactionHistory(
                 address = soraAccount.substrateAddress,
                 page = page,
-                chainInfo = ChainInfo.Simple(soraConfigManager.getGenesis()),
                 pageCount = 100,
-                filters = TxFilter.entries.toSet()
             )
+        }.getOrElse {
+            FirebaseWrapper.recordException(it)
+            return TransactionsInfo(
+                buildList {
+                    if (page == 1L) addAll(filterLocalPendingTx(filterTokenId).sortedByDescending { tx -> tx.base.timestamp })
+                },
+                endReached = true,
+                errorMessage = it.message,
+            )
+        }
 
         val referralTransactions = historyInfo.items
             .filter { item ->
@@ -169,7 +184,6 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
                 addAll(referralTransactions)
             },
             historyInfo.endReached,
-            historyInfo.errorMessage,
         )
     }
 
@@ -180,7 +194,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         _state.set(true)
     }
 
-    private fun isReferral(item: TxHistoryItem, tokenId: String): Boolean {
+    private fun isReferral(item: IndexerHistoryElement, tokenId: String): Boolean {
         val hasTokenIdInMainParams =
             item.data?.find {
                 it.paramValue == tokenId

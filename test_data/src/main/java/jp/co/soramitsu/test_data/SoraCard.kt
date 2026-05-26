@@ -41,6 +41,7 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardBasicContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
+import jp.co.soramitsu.oauth.uiscreens.clientsui.UiStyle
 
 object SoraCardTestData {
 
@@ -69,6 +70,7 @@ object SoraCardTestData {
         client = "test android client",
         soraBackEndUrl = "soracard backend",
         clientDark = false,
+        clientCase = UiStyle.SW,
         flow = SoraCardFlow.SoraCardKycFlow(
             kycCredentials = SoraCardKycCredentials(
                 endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
@@ -89,6 +91,7 @@ object SoraCardTestData {
         client = "test android client",
         soraBackEndUrl = "soracard backend",
         clientDark = false,
+        clientCase = UiStyle.SW,
         flow = SoraCardFlow.SoraCardKycFlow(
             kycCredentials = SoraCardKycCredentials(
                 endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
@@ -109,6 +112,7 @@ object SoraCardTestData {
         client = "test android client",
         soraBackEndUrl = "soracard backend",
         clientDark = false,
+        clientCase = UiStyle.SW,
         flow = SoraCardFlow.SoraCardKycFlow(
             areAttemptsPaidSuccessfully = false,
             isEnoughXorAvailable = false,

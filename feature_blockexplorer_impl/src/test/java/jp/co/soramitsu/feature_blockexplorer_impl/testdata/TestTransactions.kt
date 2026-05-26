@@ -39,13 +39,13 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
+import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryElement
+import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryItemParam
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItem
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItemParam
 
 object TestTransactions {
-    val txHistoryItem = TxHistoryItem(
+    val txHistoryItem = IndexerHistoryElement(
         id = "0xb594da199715b4efd01aa59faa23607e68ce51ef5226dcfe2e17d436c58dd0d0",
         blockHash = "0x200335cb5a84a7d85b7d7a5ae8825c1a54b3aaf6c266fb977dcdd32774b5f560",
         module = "poolXYK",
@@ -54,23 +54,23 @@ object TestTransactions {
         networkFee = "70000000000000000",
         success = true,
         data = listOf(
-            TxHistoryItemParam(
+            IndexerHistoryItemParam(
                 paramName = "baseAssetAmount",
                 paramValue = "0.009693118078249083"
             ),
-            TxHistoryItemParam(
+            IndexerHistoryItemParam(
                 paramName = "baseAssetId",
                 paramValue = "0x0200000000000000000000000000000000000000000000000000000000000000"
             ),
-            TxHistoryItemParam(
+            IndexerHistoryItemParam(
                 paramName = "targetAssetAmount",
                 paramValue = "4.365445441023082229"
             ),
-            TxHistoryItemParam(
+            IndexerHistoryItemParam(
                 paramName = "targetAssetId",
                 paramValue = "0x0200040000000000000000000000000000000000000000000000000000000000"
             ),
-            TxHistoryItemParam(
+            IndexerHistoryItemParam(
                 paramName = "type",
                 paramValue = "Deposit"
             )

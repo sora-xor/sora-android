@@ -1,18 +1,28 @@
+import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
-    alias(libs.plugins.googleServicesPlugin)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.firebaseCrashlyticsPlugin)
     alias(libs.plugins.firebaseAppDistributionPlugin)
     alias(libs.plugins.triplet)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
+}
+
+val googleServicesJsonFiles = fileTree(projectDir) {
+    include("google-services.json")
+    include("src/**/google-services.json")
+}
+
+if (!googleServicesJsonFiles.isEmpty) {
+    apply(plugin = "com.google.gms.google-services")
+} else {
+    logger.lifecycle("Skipping Google Services plugin because google-services.json is not present.")
 }
 
 kotlin {
@@ -21,17 +31,19 @@ kotlin {
 
 // soralution 143 3.8.6.3 2024.10.31
 // sora dae 122 3.8.6.3 2024.11.21
+val appVersionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 122
+val appVersionName = "3.8.6.3"
 
 android {
     namespace = "jp.co.soramitsu.sora"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "jp.co.soramitsu.sora"
         minSdk = 26
-        targetSdk = 34
-        versionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 122
-        versionName = "3.8.6.3"
+        targetSdk = 36
+        versionCode = appVersionCode
+        versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
         // resConfigs "en", "ru", "es", "fr", "de", "nb", "in", "tr", "ar"
@@ -92,6 +104,7 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        resValues = true
     }
     packaging {
         resources {
@@ -143,15 +156,6 @@ android {
         }
     }
 
-    applicationVariants.all {
-        val variant = this
-        this.outputs.map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
-            .forEach {
-                it.outputFileName =
-                    "SORA_Wallet_${variant.versionName}_${variant.versionCode}_${variant.flavorName}_${variant.buildType.name}.apk"
-            }
-    }
-
     configurations {
         all {
             exclude(module = "bcprov-jdk15on")
@@ -164,8 +168,18 @@ android {
     }
 }
 
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set(
+                "SORA_Wallet_${appVersionName}_${appVersionCode}_${variant.flavorName}_${variant.buildType}.apk"
+            )
+        }
+    }
+}
+
 hilt {
-    enableAggregatingTask = true
+    enableAggregatingTask = false
 }
 
 play {
@@ -179,6 +193,7 @@ play {
 dependencies {
     // implementation(libs.fileTree(dir: 'libs', include: ['*.jar'])
     implementation(project(":common"))
+    implementation(project(":common_wallet"))
     implementation(project(":core_db"))
     implementation(project(":demeter"))
     implementation(project(":feature_assets_api"))
@@ -224,12 +239,11 @@ dependencies {
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
     implementation(libs.hiltWorkManagerDep)
-    kapt(libs.hiltWorkManagerKaptDep)
+    ksp(libs.hiltWorkManagerCompilerDep)
 
     implementation(libs.lifecycleProcessDep)
-    kapt(libs.lifecycleKaptDep)
 
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
@@ -277,11 +291,6 @@ dependencies {
     kover(project(":sorasubstrate"))
     kover(project(":network"))
 }
-
-kapt {
-    correctErrorTypes = true
-}
-
 kover {
     reports {
         variant("developDebug") {

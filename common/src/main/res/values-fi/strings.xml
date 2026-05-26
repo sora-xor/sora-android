@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Valitse resurssi</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Sulje</string>
+  <string name="tx_details_view_on_explorer">Näytä explorerissa</string>
   <string name="common_confirm">Vahvista</string>
   <string name="common_connected">Yhdistetty</string>
   <string name="common_connecting">Yhdistetään...</string>
@@ -450,8 +451,8 @@
   <string name="referral_referrer_address">Referrer\'s address</string>
   <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
   <string name="referral_start_inviting">Aloita kutsuminen</string>
-  <string name="referral_subtitle">Aina kun suosittelija suorittaa tapahtuman, 10 % maksetusta verkkomaksusta tulee sinulle palkkiona.</string>
-  <string name="referral_title">Saat 10 % suosittelemiesi jäsenten verkkomaksuista.</string>
+  <string name="referral_subtitle">Aina kun suosittelija suorittaa tapahtuman, 10 %% maksetusta verkkomaksusta tulee sinulle palkkiona.</string>
+  <string name="referral_title">Saat 10 %% suosittelemiesi jäsenten verkkomaksuista.</string>
   <string name="referral_toolbar_title">Suositteluohjelma</string>
   <string name="referral_total_rewards">Palkkiot yhteensä</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>

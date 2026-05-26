@@ -1,9 +1,8 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
 }
@@ -14,7 +13,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.sora.substrate"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -24,7 +23,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -72,7 +71,6 @@ dependencies {
 
     implementation(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)
-    implementation(libs.xnetworkingLibDep)
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.gsonDep)
@@ -81,5 +79,5 @@ dependencies {
     implementation(libs.coroutineDep)
     implementation(libs.timberDep)
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
 }

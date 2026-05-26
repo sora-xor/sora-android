@@ -2,6 +2,7 @@ package jp.co.soramitsu.feature_blockexplorer_api.data.models
 
 data class SoraConfig(
     val blockExplorerUrl: String,
+    val indexerUrl: String,
     val blockExplorerType: ConfigExplorerType,
     val nodes: List<SoraConfigNode>,
     val genesis: String,

@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Chọn tài sản</string>
   <string name="common_claim">Lấy</string>
   <string name="common_close">Đóng</string>
+  <string name="tx_details_view_on_explorer">Xem trong trình khám phá</string>
   <string name="common_confirm">Xác nhận</string>
   <string name="common_connected">Đã kết nối</string>
   <string name="common_connecting">Đang kết nối...</string>

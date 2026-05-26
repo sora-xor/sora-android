@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Seleccionar activo</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Cerrar</string>
+  <string name="tx_details_view_on_explorer">Ver en el explorador</string>
   <string name="common_confirm">Confirmar</string>
   <string name="common_connected">Conectado</string>
   <string name="common_connecting">Conectando ...</string>

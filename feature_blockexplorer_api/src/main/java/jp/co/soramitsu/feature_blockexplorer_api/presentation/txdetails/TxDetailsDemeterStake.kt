@@ -64,6 +64,7 @@ fun TxDetailsDemeterStake(
     icon3: String,
     onCloseClick: () -> Unit,
     onCopyClick: (String) -> Unit,
+    onOpenExplorerClick: (String) -> Unit,
 ) {
     BasicTxDetails(
         modifier = modifier,
@@ -116,6 +117,7 @@ fun TxDetailsDemeterStake(
         },
         onCloseClick = onCloseClick,
         onCopy = onCopyClick,
+        onOpenExplorer = onOpenExplorerClick,
     )
 }
 
@@ -135,5 +137,6 @@ private fun PreviewTxDetailsAddLiquidity() {
         icon3 = DEFAULT_ICON_URI,
         onCopyClick = {},
         onCloseClick = {},
+        onOpenExplorerClick = {},
     )
 }

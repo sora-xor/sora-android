@@ -34,6 +34,7 @@ package jp.co.soramitsu.common.presentation.args
 
 import android.os.Bundle
 import android.os.Parcelable
+import androidx.core.os.BundleCompat
 import java.io.Serializable
 import jp.co.soramitsu.common.util.BuildUtils
 
@@ -48,13 +49,8 @@ inline fun <reified T : Serializable> Bundle.getSerializableKey(key: String): T?
     }
 }
 
-@Suppress("DEPRECATION")
 inline fun <reified T : Parcelable> Bundle.getParcelableKey(key: String): T? {
-    return if (BuildUtils.sdkAtLeast(33)) {
-        getParcelable(key, T::class.java)
-    } else {
-        getParcelable(key) as? T
-    }
+    return BundleCompat.getParcelable(this, key, T::class.java)
 }
 
 fun Bundle.requireString(key: String): String =

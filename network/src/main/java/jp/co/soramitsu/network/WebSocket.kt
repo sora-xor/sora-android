@@ -35,6 +35,7 @@ package jp.co.soramitsu.network
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.HttpTimeoutConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -94,13 +95,13 @@ class WebSocket(
             }
 
             install(HttpTimeout) {
-                this.requestTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS
+                this.requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
                 this.connectTimeoutMillis = connectTimeoutMillis
-                this.socketTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS
+                this.socketTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
             }
 
             install(WebSockets) {
-                this.pingInterval = pingInterval
+                this.pingIntervalMillis = pingInterval
                 this.maxFrameSize = maxFrameSize
                 this.contentConverter =
                     KotlinxWebsocketSerializationConverter(json)

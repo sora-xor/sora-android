@@ -33,8 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.util
 
 import android.content.Context
-import android.os.Build
-import android.security.KeyPairGeneratorSpec
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import java.math.BigInteger
@@ -47,7 +45,6 @@ import java.security.NoSuchAlgorithmException
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.SecureRandom
-import java.security.spec.AlgorithmParameterSpec
 import java.util.Calendar
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
@@ -129,29 +126,17 @@ class EncryptionUtil(
         val endDate = Calendar.getInstance()
         endDate.add(Calendar.YEAR, 25)
 
-        val spec: AlgorithmParameterSpec
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            spec = KeyPairGeneratorSpec.Builder(context)
-                .setAlias(KEY_ALIAS)
-                .setSubject(X500Principal("CN=Sora"))
-                .setSerialNumber(BigInteger.ONE)
-                .setStartDate(startDate.time)
-                .setEndDate(endDate.time)
-                .build()
-        } else {
-            spec = KeyGenParameterSpec.Builder(
-                KEY_ALIAS,
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-            )
-                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                .setCertificateSubject(X500Principal("CN=Sora"))
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
-                .setCertificateSerialNumber(BigInteger.ONE)
-                .setCertificateNotBefore(startDate.time)
-                .setCertificateNotAfter(endDate.time)
-                .build()
-        }
+        val spec = KeyGenParameterSpec.Builder(
+            KEY_ALIAS,
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+        )
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            .setCertificateSubject(X500Principal("CN=Sora"))
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+            .setCertificateSerialNumber(BigInteger.ONE)
+            .setCertificateNotBefore(startDate.time)
+            .setCertificateNotAfter(endDate.time)
+            .build()
         val keyPairGenerator = KeyPairGenerator.getInstance(RSA, KEY_STORE_PROVIDER)
         keyPairGenerator.initialize(spec)
         keyPairGenerator.generateKeyPair()

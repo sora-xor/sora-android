@@ -68,6 +68,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
 import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -98,7 +99,7 @@ class NodeDetailsViewModelTest {
     private lateinit var viewModel: NodeDetailsViewModel
 
     private val nodeManagerEvents =
-        MutableStateFlow<NodeManagerEvent>(NodeManagerEvent.GenesisValidated(false))
+        MutableStateFlow<NodeManagerEvent>(NodeManagerEvent.GenesisValidated(true))
 
     @Before
     fun setUp() {
@@ -127,6 +128,7 @@ class NodeDetailsViewModelTest {
         )
         given(interactor.subscribeSelectedNode()).willReturn(flowOf(CUSTOM_NODES.first()))
         given(interactor.subscribeNodes()).willReturn(flowOf(NODE_LIST))
+        given(interactor.validateNodeAddress(any())).willReturn(ValidationEvent.Succeed)
     }
 
     private fun addNodeViewModel() {
@@ -317,13 +319,15 @@ class NodeDetailsViewModelTest {
 
     @Test
     fun `genesis validation failed EXPECT error text`() = runTest {
-        addNodeViewModel()
-
         given(resourceManager.getString(R.string.node_details_genesis_validation_failed)).willReturn(
             "error"
         )
 
+        addNodeViewModel()
         viewModel.onAddressChanged(NODE_DETAILS_ADDRESS)
+        advanceUntilIdle()
+
+        nodeManagerEvents.emit(NodeManagerEvent.GenesisValidated(false))
         advanceUntilIdle()
 
         assertEquals("error", viewModel.state.addressState.descriptionText)

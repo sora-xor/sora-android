@@ -42,7 +42,7 @@ import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
+import jp.co.soramitsu.feature_referral_api.data.ReferralReward
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList

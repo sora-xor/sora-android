@@ -113,7 +113,7 @@ abstract class AppDatabase : RoomDatabase() {
                 AppDatabase::class.java,
                 "app.db"
             )
-                .fallbackToDestructiveMigrationFrom(*destructiveMigrationFromList)
+                .fallbackToDestructiveMigrationFrom(true, *destructiveMigrationFromList)
                 .addMigrations(migration_poolsBaseToken_61_62)
                 .addMigrations(migration_reorderBaseToken_62_63)
                 .addMigrations(migration_CardHub_63_64)

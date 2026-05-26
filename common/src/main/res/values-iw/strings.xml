@@ -87,6 +87,7 @@
   <string name="common_choose_asset">בחר נכס</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">סגור</string>
+  <string name="tx_details_view_on_explorer">הצג בסייר</string>
   <string name="common_confirm">אשר</string>
   <string name="common_connected">מחובר</string>
   <string name="common_connecting">מתחבר...</string>

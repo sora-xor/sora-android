@@ -38,17 +38,18 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.verify
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
+import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.feature_blockexplorer_api.data.PolkaswapIndexerClient
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_impl.testdata.TestTransactions
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.TxHistoryRepository
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -75,10 +76,7 @@ class TransactionHistoryRepositoryTest {
     val mockkRule = MockKRule(this)
 
     @MockK
-    private lateinit var txHistoryRepository: TxHistoryRepository
-
-    @MockK
-    private lateinit var soraConfigManager: SoraConfigManager
+    private lateinit var polkaswapIndexerClient: PolkaswapIndexerClient
 
     @MockK
     private lateinit var extrinsicManager: ExtrinsicManager
@@ -92,32 +90,26 @@ class TransactionHistoryRepositoryTest {
     @Before
     fun setUp() = runTest {
         mockkStatic(Uri::parse)
+        mockkObject(FirebaseWrapper)
         every { Uri.parse(any()) } returns mockedUri
+        every { FirebaseWrapper.recordException(any()) } returns Unit
         every {
             extrinsicManager.setWatchingExtrinsicListener(
                 listener = any()
             )
         } returns Unit
-        coEvery { soraConfigManager.getGenesis() } returns "7e4e"
-        every {
-            txHistoryRepository.getTransactionPeers(
-                query = "query",
-                chainId = "7e4e",
-            )
-        } returns peersList
+        coEvery { polkaswapIndexerClient.getTransactionPeers("query") } returns peersList.toSet()
 
         coEvery {
-            txHistoryRepository.getTransactionHistoryCached(
+            polkaswapIndexerClient.getLastTransactions(
                 address = TestAccounts.soraAccount.substrateAddress,
                 count = 1,
-                chainId = "7e4e",
             )
         } returns listOf(TestTransactions.txHistoryItem)
 
         transactionHistoryRepository = TransactionHistoryRepositoryImpl(
-            txHistoryRepository,
+            polkaswapIndexerClient,
             extrinsicManager,
-            soraConfigManager,
         )
     }
 
@@ -151,5 +143,76 @@ class TransactionHistoryRepositoryTest {
                 assertEquals(expected.token2, res.token2)
             }
         }
+    }
+
+    @Test
+    fun `getContacts returns empty set when indexer fails`() = runTest {
+        coEvery { polkaswapIndexerClient.getTransactionPeers("bad query") } throws IllegalStateException("indexer down")
+
+        val result = transactionHistoryRepository.getContacts("bad query")
+
+        assertEquals(emptySet<String>(), result)
+        verify { FirebaseWrapper.recordException(any()) }
+    }
+
+    @Test
+    fun `getLastTransactions keeps local pending transactions when indexer fails`() = runTest {
+        coEvery {
+            polkaswapIndexerClient.getLastTransactions(
+                address = TestAccounts.soraAccount.substrateAddress,
+                count = 10,
+            )
+        } throws IllegalStateException("history unavailable")
+        transactionHistoryRepository.saveTransaction(TestTransactions.sendSuccessfulTx)
+
+        val result = transactionHistoryRepository.getLastTransactions(
+            TestAccounts.soraAccount,
+            listOf(TestTokens.xorToken, TestTokens.valToken),
+            10,
+            null,
+        )
+
+        assertEquals(1, result.size)
+        assertEquals(TestTransactions.sendSuccessfulTx.base.txHash, result.single().base.txHash)
+        verify { FirebaseWrapper.recordException(any()) }
+    }
+
+    @Test
+    fun `getTransaction falls back to local pending transaction when indexer fails`() = runTest {
+        coEvery { polkaswapIndexerClient.getTransaction(TestTransactions.sendSuccessfulTx.base.txHash) } throws IllegalStateException("tx unavailable")
+        transactionHistoryRepository.saveTransaction(TestTransactions.sendSuccessfulTx)
+
+        val result = transactionHistoryRepository.getTransaction(
+            TestTransactions.sendSuccessfulTx.base.txHash,
+            listOf(TestTokens.xorToken, TestTokens.valToken),
+            TestAccounts.soraAccount,
+        )
+
+        assertEquals(TestTransactions.sendSuccessfulTx.base.txHash, result?.base?.txHash)
+        verify { FirebaseWrapper.recordException(any()) }
+    }
+
+    @Test
+    fun `getTransactionHistory returns first page pending transactions and error message when indexer fails`() = runTest {
+        coEvery {
+            polkaswapIndexerClient.getTransactionHistory(
+                address = TestAccounts.soraAccount.substrateAddress,
+                page = 1,
+                pageCount = 100,
+            )
+        } throws IllegalStateException("history unavailable")
+        transactionHistoryRepository.saveTransaction(TestTransactions.sendSuccessfulTx)
+
+        val result = transactionHistoryRepository.getTransactionHistory(
+            page = 1,
+            tokens = listOf(TestTokens.xorToken, TestTokens.valToken),
+            soraAccount = TestAccounts.soraAccount,
+            filterTokenId = null,
+        )
+
+        assertEquals(true, result.endReached)
+        assertEquals("history unavailable", result.errorMessage)
+        assertEquals(TestTransactions.sendSuccessfulTx.base.txHash, result.transactions.single().base.txHash)
+        verify { FirebaseWrapper.recordException(any()) }
     }
 }

@@ -87,6 +87,7 @@
   <string name="common_choose_asset">选择资产</string>
   <string name="common_claim">领取</string>
   <string name="common_close">关闭</string>
+  <string name="tx_details_view_on_explorer">在区块浏览器中查看</string>
   <string name="common_confirm">确认</string>
   <string name="common_connected">已连接</string>
   <string name="common_connecting">正在连接...</string>

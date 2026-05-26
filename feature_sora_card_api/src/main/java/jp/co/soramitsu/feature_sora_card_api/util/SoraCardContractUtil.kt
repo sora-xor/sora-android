@@ -44,6 +44,7 @@ import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardBasicContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
+import jp.co.soramitsu.oauth.uiscreens.clientsui.UiStyle
 
 fun IbanStatus?.readyToStartGatehubOnboarding(): Boolean {
     return (this != null) && (this == IbanStatus.ACTIVE)
@@ -67,6 +68,7 @@ fun createSoraCardGateHubContract(): SoraCardContractData {
         soraBackEndUrl = BuildConfigWrapper.getSoraCardBackEndUrl(),
         client = OptionsProvider.header,
         clientDark = true,
+        clientCase = UiStyle.SW,
         flow = SoraCardFlow.SoraCardGateHubFlow,
     )
 }
@@ -81,6 +83,7 @@ fun createSoraCardContract(
         soraBackEndUrl = BuildConfigWrapper.getSoraCardBackEndUrl(),
         client = OptionsProvider.header,
         clientDark = true,
+        clientCase = UiStyle.SW,
         flow = SoraCardFlow.SoraCardKycFlow(
             kycCredentials = SoraCardKycCredentials(
                 endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,

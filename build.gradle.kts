@@ -1,22 +1,19 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.androidLibrary) apply false
-    alias(libs.plugins.kotlinAndroid) apply false
+    alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.hilt) apply false
-    alias(libs.plugins.kapt) apply false
+    alias(libs.plugins.ksp) apply false
     alias(libs.plugins.serialization) apply false
     alias(libs.plugins.googleServicesPlugin) apply false
     alias(libs.plugins.firebaseCrashlyticsPlugin) apply false
     alias(libs.plugins.firebaseAppDistributionPlugin) apply false
     alias(libs.plugins.triplet) apply false
-    id("com.google.devtools.ksp") version "1.9.24-1.0.20" apply false
-    id("org.jetbrains.kotlinx.kover") version "0.8.3"
+    alias(libs.plugins.kover)
 }
 
 tasks.register("clean", Delete::class) {
-    delete(rootProject.buildDir)
+    delete(layout.buildDirectory)
 }
 
 val ktlint by configurations.creating
@@ -36,11 +33,12 @@ tasks.register<JavaExec>("ktlintCheck") {
     classpath = ktlint
     mainClass.set("com.pinterest.ktlint.Main")
     // see https://pinterest.github.io/ktlint/install/cli/#command-line-usage for more information
+    val reportFile = layout.buildDirectory.file("reports/checkstyle/ktlint.xml")
     args(
         "**/src/**/*.kt",
         "**.kts",
         "!**/build/**",
-        "--reporter=checkstyle,output=${project.buildDir}/reports/checkstyle/ktlint.xml"
+        "--reporter=checkstyle,output=${reportFile.get().asFile}"
     )
 }
 
