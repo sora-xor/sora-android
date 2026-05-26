@@ -87,6 +87,7 @@
   <string name="common_choose_asset">حدد العملة</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">اغلاق</string>
+  <string name="tx_details_view_on_explorer">عرض في المستكشف</string>
   <string name="common_confirm">تأكيد</string>
   <string name="common_connected">متصل</string>
   <string name="common_connecting">توصيل...</string>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
   <string name="about_announcements">Получайте анонсы</string>
   <string name="about_ask_support">Обратиться за поддержкой</string>
   <string name="about_contact_us">Свяжитесь с нами по почте</string>
@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Выбор ассета</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Закрыть</string>
+  <string name="tx_details_view_on_explorer">Посмотреть в обозревателе</string>
   <string name="common_confirm">Подтвердить</string>
   <string name="common_connected">Подключено</string>
   <string name="common_connecting">Подключение…</string>
@@ -154,7 +155,7 @@
   <string name="common_google_backup_decryption_failed_2">Возможно, введенный вами пароль неверен.</string>
   <string name="common_hebrew">Иврит</string>
   <string name="common_hindi">Хинди</string>
-  <plurals name="common_hour">
+  <plurals name="common_hour" tools:ignore="ImpliedQuantity">
     <item quantity="zero">часов</item>
     <item quantity="one">час</item>
     <item quantity="few">часа</item>
@@ -456,7 +457,7 @@
   <string name="referral_input_reward_title">Введите желаемое количество приглашений</string>
   <string name="referral_invitaion_link_title">Доступные приглашения</string>
   <string name="referral_invitation_link">Invitation link</string>
-  <plurals name="referral_invitations">
+  <plurals name="referral_invitations" tools:ignore="ImpliedQuantity">
     <item quantity="zero"></item>
     <item quantity="one">приглашение</item>
     <item quantity="few">приглашения</item>

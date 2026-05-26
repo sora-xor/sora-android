@@ -40,7 +40,8 @@ object OptionsProvider {
     var APPLICATION_ID: String = ""
     const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
     const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
-    const val configXn = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/xn.json"
+    const val polkaswapIndexerEndpoint = "https://pi.soramitsu.io/graphql"
+    const val blockExplorerUrl = "https://sorametrics.org"
     val fileProviderAuthority: String get() = "$APPLICATION_ID.soraFileProvider"
     val header: String by lazy {
         "$APPLICATION_ID/$CURRENT_VERSION_NAME/$CURRENT_VERSION_CODE/${BuildConfig.BUILD_TYPE}/${BuildConfig.FLAVOR}"

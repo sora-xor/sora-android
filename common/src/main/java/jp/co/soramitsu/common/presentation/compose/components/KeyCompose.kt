@@ -38,13 +38,15 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun keyboardState(): State<Boolean> {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    val isResumed = lifecycle.currentState == Lifecycle.State.RESUMED
+    val lifecycleState = lifecycle.currentStateAsState()
+    val isResumed = lifecycleState.value == Lifecycle.State.RESUMED
     return rememberUpdatedState(WindowInsets.isImeVisible && isResumed)
 }

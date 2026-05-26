@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.vibration
 
+import android.os.VibrationEffect
 import android.os.Vibrator
 
 class DeviceVibrator(
@@ -43,6 +44,11 @@ class DeviceVibrator(
     }
 
     fun makeShortVibration() {
-        vibrator.vibrate(SHORT_VIBRATION_DURATION)
+        vibrator.vibrate(
+            VibrationEffect.createOneShot(
+                SHORT_VIBRATION_DURATION,
+                VibrationEffect.DEFAULT_AMPLITUDE
+            )
+        )
     }
 }

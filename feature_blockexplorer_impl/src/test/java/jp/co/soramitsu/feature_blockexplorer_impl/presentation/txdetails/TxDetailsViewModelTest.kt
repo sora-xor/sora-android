@@ -38,6 +38,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.verify
+import java.math.BigDecimal
 import java.util.Date
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -49,12 +50,16 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsItem
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsState
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsScreenState
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_impl.testdata.TestTransactions
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -94,6 +99,9 @@ class TxDetailsViewModelTest {
     private lateinit var transactionHistoryHandler: TransactionHistoryHandler
 
     @MockK
+    private lateinit var soraConfigManager: SoraConfigManager
+
+    @MockK
     private lateinit var clipboardManager: BasicClipboardManager
 
     @MockK
@@ -114,14 +122,40 @@ class TxDetailsViewModelTest {
 
     private lateinit var viewModel: TxDetailsViewModel
 
+    private fun explorerUrl(txHash: String) = "https://sorametrics.org/sorav2?tab=extrinsics&q=$txHash"
+
+    private fun base(hash: String) = TransactionBase(
+        txHash = hash,
+        blockHash = "blockHash",
+        fee = BigDecimal.ONE,
+        status = TransactionStatus.COMMITTED,
+        timestamp = 1673918013,
+    )
+
+    private suspend fun assertExplorerUrlFor(tx: Transaction) {
+        initTestData(tx)
+        delay(10)
+
+        assertEquals(explorerUrl(tx.base.txHash), viewModel.txDetailsScreenState.value.basicTxDetailsState.explorerUrl)
+    }
+
     private suspend fun initTestData(tx: Transaction = TestTransactions.sendFailedTx) {
         coEvery { transactionHistoryHandler.getTransaction(txHash) } returns tx
+        coEvery { soraConfigManager.getTransactionExplorerUrl(tx.base.txHash) } returns explorerUrl(tx.base.txHash)
         every { transactionHistoryHandler.flowLocalTransactions() } returns flowOf(true)
         every { resourceManager.getString(R.string.common_recipient) } returns "recipient"
         every { resourceManager.getString(R.string.common_sent) } returns "sent"
+        every { resourceManager.getString(R.string.common_bridged) } returns "bridged"
+        every { resourceManager.getString(R.string.asset_sora_fullname) } returns "SORA"
+        every { resourceManager.getString(R.string.asset_ether_fullname) } returns "Ethereum"
+        every { resourceManager.getString(R.string.eth_tx_address) } returns "Ethereum address"
+        every { resourceManager.getString(R.string.eth_tx_hash) } returns "Ethereum transaction hash"
         every { resourceManager.getString(R.string.polkaswap_swapped) } returns "swapped"
         every { resourceManager.getString(R.string.details_sent_to_pool) } returns "sent to pool"
         every { resourceManager.getString(R.string.details_receive_from_pool) } returns "received from pool"
+        every { resourceManager.getString(R.string.demeter_claimed_reward) } returns "claimed reward"
+        every { resourceManager.getString(R.string.demeter_staked_liquidity) } returns "staked liquidity"
+        every { resourceManager.getString(R.string.demeter_unstaked_liquidity) } returns "unstaked liquidity"
         every { resourceManager.getString(R.string.wallet_bonded) } returns "wallet bonded"
         every { resourceManager.getString(R.string.wallet_unbonded) } returns "wallet unbonded"
         every { resourceManager.getString(R.string.referrer_set) } returns "referrer set"
@@ -129,6 +163,7 @@ class TxDetailsViewModelTest {
         every { resourceManager.getString(R.string.activity_referral_title) } returns "referrer join"
         every { resourceManager.getString(R.string.history_referral) } returns "referral"
         every { resourceManager.getString(R.string.common_received) } returns "received"
+        every { resourceManager.getString(R.string.received_from_adar) } returns "received from adar"
         every { resourceManager.getQuantityString(R.plurals.referral_invitations, 1) } returns "invitation"
         every {
             dateTimeFormatter.formatDate(
@@ -146,6 +181,7 @@ class TxDetailsViewModelTest {
             resourceManager,
             dateTimeFormatter,
             nf,
+            soraConfigManager,
             txHash
         )
     }
@@ -178,7 +214,8 @@ class TxDetailsViewModelTest {
                     null,
                     null,
                     R.drawable.ic_new_arrow_down_24,
-                    "received"
+                    "received",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 "+${token.printBalance(amount, nf)}",
                 null,
@@ -214,7 +251,8 @@ class TxDetailsViewModelTest {
                     TestTokens.xorToken.printBalance(base.fee, nf),
                     TestTokens.xorToken.printFiat(base.fee, nf),
                     R.drawable.ic_new_arrow_up_24,
-                    "sent"
+                    "sent",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 token.printBalance(amount, nf),
                 null,
@@ -252,7 +290,8 @@ class TxDetailsViewModelTest {
                     TestTokens.xorToken.printBalance(base.fee, nf),
                     TestTokens.xorToken.printFiat(base.fee, nf),
                     R.drawable.ic_new_arrow_up_24,
-                    "sent"
+                    "sent",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 token.printBalance(amount, nf),
                 null,
@@ -290,7 +329,8 @@ class TxDetailsViewModelTest {
                     TestTokens.xorToken.printBalance(base.fee, nf),
                     TestTokens.xorToken.printFiat(base.fee, nf),
                     R.drawable.ic_new_arrow_up_24,
-                    "sent"
+                    "sent",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 token.printBalance(amount, nf),
                 null,
@@ -326,7 +366,8 @@ class TxDetailsViewModelTest {
                     TestTokens.xorToken.printBalance(base.fee, nf),
                     TestTokens.xorToken.printFiat(base.fee, nf),
                     R.drawable.ic_refresh_24,
-                    "swapped"
+                    "swapped",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 tokenFrom.printBalance(amountFrom, nf),
                 tokenTo.printBalance(amountTo, nf),
@@ -362,7 +403,8 @@ class TxDetailsViewModelTest {
                     TestTokens.xorToken.printBalance(base.fee, nf),
                     TestTokens.xorToken.printFiat(base.fee, nf),
                     R.drawable.ic_new_arrow_down_24,
-                    "wallet unbonded"
+                    "wallet unbonded",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 token.printBalance(amount, nf),
                 null,
@@ -403,7 +445,8 @@ class TxDetailsViewModelTest {
                     null,
                     null,
                     R.drawable.ic_new_arrow_up_24,
-                    "referrer set"
+                    "referrer set",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 "--",
                 null,
@@ -444,7 +487,8 @@ class TxDetailsViewModelTest {
                     TestTokens.xorToken.printBalance(base.fee, nf),
                     TestTokens.xorToken.printFiat(base.fee, nf),
                     R.drawable.ic_new_arrow_up_24,
-                    "referrer join"
+                    "referrer join",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 "-1 invitation",
                 null,
@@ -480,7 +524,8 @@ class TxDetailsViewModelTest {
                     TestTokens.xorToken.printBalance(base.fee, nf),
                     TestTokens.xorToken.printFiat(base.fee, nf),
                     R.drawable.ic_new_arrow_up_24,
-                    "wallet bonded"
+                    "wallet bonded",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 token.printBalance(amount, nf),
                 null,
@@ -516,7 +561,8 @@ class TxDetailsViewModelTest {
                     TestTokens.xorToken.printBalance(base.fee, nf),
                     TestTokens.xorToken.printFiat(base.fee, nf),
                     R.drawable.ic_new_arrow_up_24,
-                    "sent to pool"
+                    "sent to pool",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 token1.printBalance(amount1, nf),
                 token2.printBalance(amount2, nf),
@@ -552,7 +598,8 @@ class TxDetailsViewModelTest {
                     TestTokens.xorToken.printBalance(base.fee, nf),
                     TestTokens.xorToken.printFiat(base.fee, nf),
                     R.drawable.ic_new_arrow_down_24,
-                    "received from pool"
+                    "received from pool",
+                    explorerUrl = explorerUrl(base.txHash)
                 ),
                 "+${token1.printBalance(amount1, nf)}",
                 "+${token2.printBalance(amount2, nf)}",
@@ -568,6 +615,46 @@ class TxDetailsViewModelTest {
         delay(10)
 
         assertEquals(expectedScreenState.toString(), viewModel.txDetailsScreenState.value.toString())
+    }
+
+    @Test
+    fun `bridge tx exposes explorer url`() = runTest {
+        assertExplorerUrlFor(
+            Transaction.EthTransfer(
+                base = base("bridgeHash"),
+                amount = BigDecimal.ONE,
+                token = TestTokens.xorToken,
+                ethToken = TestTokens.ethToken,
+                requestHash = "requestHash",
+                sidechainAddress = "0xabc",
+            )
+        )
+    }
+
+    @Test
+    fun `demeter tx exposes explorer url`() = runTest {
+        assertExplorerUrlFor(
+            Transaction.DemeterFarming(
+                base = base("demeterHash"),
+                type = DemeterType.STAKE,
+                amount = BigDecimal.ONE,
+                baseToken = TestTokens.xorToken,
+                targetToken = TestTokens.valToken,
+                rewardToken = TestTokens.pswapToken,
+            )
+        )
+    }
+
+    @Test
+    fun `adar income tx exposes explorer url`() = runTest {
+        assertExplorerUrlFor(
+            Transaction.AdarIncome(
+                base = base("adarHash"),
+                amount = BigDecimal.ONE,
+                peer = "cnPeer",
+                token = TestTokens.xorToken,
+            )
+        )
     }
 
     @Test

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
   <string name="about_announcements">دریافت اطلاعیه‌ها</string>
   <string name="about_ask_support">درخواست پشتیبانی</string>
   <string name="about_contact_us">ایمیل تماس</string>
@@ -87,6 +87,7 @@
   <string name="common_choose_asset">دارایی را انتخاب کنید</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">بستن</string>
+  <string name="tx_details_view_on_explorer">مشاهده در کاوشگر</string>
   <string name="common_confirm">تایید</string>
   <string name="common_connected">متصل</string>
   <string name="common_connecting">برقراری ارتباط...</string>
@@ -154,7 +155,7 @@
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
+  <plurals name="common_hour" tools:ignore="ImpliedQuantity">
     <item quantity="one">ساعت</item>
     <item quantity="other">ساعت</item>
   </plurals>
@@ -441,7 +442,7 @@
   <string name="referral_input_reward_title">Enter desired amount of invitations</string>
   <string name="referral_invitaion_link_title">Available invitations</string>
   <string name="referral_invitation_link">Invitation link</string>
-  <plurals name="referral_invitations">
+  <plurals name="referral_invitations" tools:ignore="ImpliedQuantity">
     <item quantity="one">invitation</item>
     <item quantity="other">invitations</item>
   </plurals>

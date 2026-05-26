@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Aktiv seçin</string>
   <string name="common_claim">iddia</string>
   <string name="common_close">Bağlayın</string>
+  <string name="tx_details_view_on_explorer">Eksplorerdə bax</string>
   <string name="common_confirm">Təsdiqləyin</string>
   <string name="common_connected">Əlaqədar</string>
   <string name="common_connecting">Qoşulur ...</string>

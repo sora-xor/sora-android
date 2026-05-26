@@ -44,7 +44,7 @@ import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
 import jp.co.soramitsu.feature_referral_impl.domain.model.Referral
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
+import jp.co.soramitsu.feature_referral_api.data.ReferralReward
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList

@@ -78,6 +78,7 @@ fun BasicTxDetails(
     amountContent: @Composable BoxScope.() -> Unit,
     onCloseClick: () -> Unit,
     onCopy: (String) -> Unit,
+    onOpenExplorer: (String) -> Unit,
 ) {
     Column(
         modifier = modifier.padding(vertical = Dimens.x1_5, horizontal = Dimens.x2),
@@ -225,6 +226,18 @@ fun BasicTxDetails(
                 )
             }
         }
+        state.explorerUrl?.let { explorerUrl ->
+            BleachedButton(
+                size = Size.Large,
+                modifier = Modifier
+                    .testTagAsId("ViewOnExplorerButton")
+                    .fillMaxWidth()
+                    .padding(bottom = Dimens.x1),
+                order = Order.SECONDARY,
+                text = stringResource(id = R.string.tx_details_view_on_explorer),
+                onClick = { onOpenExplorer(explorerUrl) },
+            )
+        }
         BleachedButton(
             size = Size.Large,
             modifier = Modifier
@@ -274,7 +287,8 @@ private fun PreviewBasicTxDetails() {
         state = previewBasicTxDetailsItem,
         imageContent = { Text(text = "imageContent") },
         amountContent = { Text(text = "amountContent") },
-        onCloseClick = { /*TODO*/ },
+        onCloseClick = {},
         onCopy = {},
+        onOpenExplorer = {},
     )
 }

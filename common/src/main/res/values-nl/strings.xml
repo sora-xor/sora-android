@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Selecteer asset</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Sluit</string>
+  <string name="tx_details_view_on_explorer">Bekijk in explorer</string>
   <string name="common_confirm">Bevestigen</string>
   <string name="common_connected">Verbonden</string>
   <string name="common_connecting">Verbinding maken...</string>

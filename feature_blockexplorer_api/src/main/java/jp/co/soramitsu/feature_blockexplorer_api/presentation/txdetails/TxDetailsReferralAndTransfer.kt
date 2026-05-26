@@ -57,6 +57,7 @@ fun TxDetailsReferralOrTransferScreen(
     amount: String,
     onCloseClick: () -> Unit,
     onCopyClick: (String) -> Unit,
+    onOpenExplorerClick: (String) -> Unit,
 ) {
     BasicTxDetails(
         modifier = modifier,
@@ -80,6 +81,7 @@ fun TxDetailsReferralOrTransferScreen(
         },
         onCloseClick = onCloseClick,
         onCopy = onCopyClick,
+        onOpenExplorer = onOpenExplorerClick,
     )
 }
 
@@ -96,5 +98,6 @@ fun PreviewReferrerTxCard() {
         icon = DEFAULT_ICON_URI,
         onCloseClick = {},
         onCopyClick = {},
+        onOpenExplorerClick = {},
     )
 }

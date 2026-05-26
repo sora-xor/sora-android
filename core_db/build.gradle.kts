@@ -1,12 +1,10 @@
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
-    id("com.google.devtools.ksp")
     alias(libs.plugins.kover)
 }
 
@@ -16,7 +14,7 @@ kotlin {
 
 android {
     namespace = "com.example.core_db"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -24,7 +22,7 @@ android {
     }
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -83,14 +81,14 @@ dependencies {
     implementation(project(":common"))
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
 
     implementation(libs.coroutineDep)
     implementation(libs.coroutineAndroidDep)
 
     implementation(libs.roomDep)
     implementation(libs.roomKtxDep)
-    ksp(libs.roomKaptDep)
+    ksp(libs.roomCompilerDep)
 
     androidTestImplementation(project(":test_data"))
     androidTestImplementation(libs.soramitsu.android.foundation)

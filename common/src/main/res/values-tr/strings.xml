@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Varlık seçin</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Kapat</string>
+  <string name="tx_details_view_on_explorer">Gezginde görüntüle</string>
   <string name="common_confirm">Onayla</string>
   <string name="common_connected">Bağlandı</string>
   <string name="common_connecting">Bağlanıyor...</string>

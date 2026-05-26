@@ -10,18 +10,14 @@ pluginManagement {
     }
 }
 
-fun secret(name: String): String {
+fun optionalSecret(name: String): String? {
     val fileProperties = File(rootProject.projectDir.absolutePath, "local.properties")
-    val pr = runCatching { FileInputStream(fileProperties) }.getOrNull()?.let { file ->
+    val pr = runCatching { FileInputStream(fileProperties) }.getOrNull()?.use { file ->
         Properties().apply {
             load(file)
         }
     }
-    return pr?.getProperty(name) ?: System.getenv(name)!!
-}
-
-fun maybeWrapQuotes(s: String): String {
-    return if (s.startsWith("\"")) s else "\"" + s + "\""
+    return pr?.getProperty(name) ?: System.getenv(name)
 }
 
 dependencyResolutionManagement {
@@ -31,14 +27,21 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
-        maven {
-            url = uri(secret("PAY_WINGS_REPOSITORY_URL"))
-            credentials {
-                username = secret("PAY_WINGS_USERNAME")
-                password = secret("PAY_WINGS_PASSWORD")
+        val payWingsRepositoryUrl = optionalSecret("PAY_WINGS_REPOSITORY_URL")
+        val payWingsUsername = optionalSecret("PAY_WINGS_USERNAME")
+        val payWingsPassword = optionalSecret("PAY_WINGS_PASSWORD")
+        if (!payWingsRepositoryUrl.isNullOrBlank() && !payWingsUsername.isNullOrBlank() && !payWingsPassword.isNullOrBlank()) {
+            maven {
+                url = uri(payWingsRepositoryUrl)
+                credentials {
+                    username = payWingsUsername
+                    password = payWingsPassword
+                }
             }
         }
-        mavenLocal()
+        if (providers.gradleProperty("useMavenLocal").orNull == "true") {
+            mavenLocal()
+        }
     }
 }
 

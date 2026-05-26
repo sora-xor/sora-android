@@ -87,6 +87,7 @@
   <string name="common_choose_asset">アセットを選択</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">閉じる</string>
+  <string name="tx_details_view_on_explorer">エクスプローラーで表示</string>
   <string name="common_confirm">確認</string>
   <string name="common_connected">接続されました</string>
   <string name="common_connecting">接続しています..</string>

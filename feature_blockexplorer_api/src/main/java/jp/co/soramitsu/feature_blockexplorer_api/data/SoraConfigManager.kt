@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_blockexplorer_api.data
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import java.net.URLEncoder
 import jp.co.soramitsu.androidfoundation.format.addHexPrefix
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.data.SoraPreferences
@@ -50,6 +51,21 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
+
+internal fun buildTransactionExplorerUrl(
+    blockExplorerUrl: String,
+    txHash: String,
+): String? {
+    val trimmedHash = txHash.trim()
+    if (trimmedHash.isEmpty()) return null
+
+    val baseUrl = blockExplorerUrl.trim()
+        .ifEmpty { OptionsProvider.blockExplorerUrl }
+        .trimEnd('/')
+    val encodedHash = URLEncoder.encode(trimmedHash, Charsets.UTF_8.name())
+
+    return "$baseUrl/sorav2?tab=extrinsics&q=$encodedHash"
+}
 
 @Singleton
 class SoraConfigManager @Inject constructor(
@@ -107,7 +123,8 @@ class SoraConfigManager @Inject constructor(
         }
 
         return@CachingFactory SoraConfig(
-            blockExplorerUrl = commonConfig.subquery,
+            blockExplorerUrl = OptionsProvider.blockExplorerUrl,
+            indexerUrl = OptionsProvider.polkaswapIndexerEndpoint,
             blockExplorerType = blockExplorerType,
             nodes = nodes,
             genesis = commonConfig.genesis,
@@ -164,6 +181,20 @@ class SoraConfigManager @Inject constructor(
         soraConfigFactory.nullableValue(EmptyArgs)
             ?.substrateTypesUrl.orEmpty()
 
+    suspend fun getBlockExplorerUrl(): String =
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.blockExplorerUrl ?: OptionsProvider.blockExplorerUrl
+
+    suspend fun getTransactionExplorerUrl(txHash: String): String? =
+        buildTransactionExplorerUrl(
+            blockExplorerUrl = getBlockExplorerUrl(),
+            txHash = txHash
+        )
+
+    suspend fun getIndexerUrl(): String =
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.indexerUrl ?: OptionsProvider.polkaswapIndexerEndpoint
+
     private suspend fun getCurrencies(): List<SoraCurrency> =
         soraConfigFactory.nullableValue(EmptyArgs)
             ?.currencies ?: listOf(DEFAULT_SORA_CURRENCY)
@@ -181,8 +212,6 @@ class SoraConfigManager @Inject constructor(
 
 @Serializable
 private data class ConfigDto(
-    @SerialName("SUBQUERY_ENDPOINT")
-    val subquery: String,
     @SerialName("DEFAULT_NETWORKS")
     val nodes: List<NodeInfo>,
     @SerialName("CHAIN_GENESIS_HASH")

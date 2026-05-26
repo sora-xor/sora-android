@@ -32,10 +32,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_select_node_impl.domain
 
-import android.net.InetAddresses
+import androidx.core.util.PatternsCompat
 import javax.inject.Inject
 
 class InetAddressesWrapper @Inject constructor() {
 
-    fun isIpAddressValid(address: String) = InetAddresses.isNumericAddress(address)
+    fun isIpAddressValid(address: String) = PatternsCompat.IP_ADDRESS.matcher(address).matches()
 }

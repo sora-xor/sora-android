@@ -40,16 +40,12 @@ import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.format.toDoubleInfinite
 import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.domain.RetryStrategyBuilder
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.BlockExplorerRepository
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.Apy
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
-import jp.co.soramitsu.xnetworking.lib.engines.rest.api.models.RestClientException
 import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -61,13 +57,13 @@ fun String.toDoubleNan(): Double? = this.toDoubleOrNull()?.let {
 @Singleton
 class BlockExplorerManager @Inject constructor(
     private val restClient: RestClient,
-    private val info: BlockExplorerRepository,
+    private val polkaswapIndexerClient: PolkaswapIndexerClient,
     private val db: AppDatabase,
     private val appStateProvider: AppStateProvider,
     private val soraConfigManager: SoraConfigManager,
 ) {
 
-    private val tempApy = mutableListOf<Apy>()
+    private val tempApy = mutableListOf<IndexerPoolApy>()
 
     private var assetsInfo: List<Pair<String, Double>>? = null
 
@@ -96,25 +92,13 @@ class BlockExplorerManager @Inject constructor(
             val resultList = mutableListOf<Pair<String, Double>>()
             val fiats = mutableListOf<FiatTokenPriceLocal>()
 
-            RetryStrategyBuilder.build().retryIf(
-                retries = 3,
-                predicate = { t ->
-                    t is RestClientException
-                },
-                block = {
-                    info.getAssetsInfo(
-                        soraConfigManager.getGenesis(),
-                        tokenIds,
-                        yesterdayHour.toInt(),
-                    )
-                },
-            ).forEach { assetInfo ->
+            polkaswapIndexerClient.getAssetsInfo(tokenIds).forEach { assetInfo ->
                 val dbValue = tokens.find { it.tokenIdFiat == assetInfo.id }
-                val prevPrice = assetInfo.previousPrice
+                val priceChangeDay = assetInfo.priceChangeDay
 
                 if (dbValue != null) {
                     fiats += dbValue.copy(
-                        fiatChange = prevPrice?.div(100.0),
+                        fiatChange = priceChangeDay?.div(100.0),
                         fiatPricePrevHTime = yesterdayHour,
                     )
                 }
@@ -123,7 +107,7 @@ class BlockExplorerManager @Inject constructor(
                     tokenId = dbValue?.tokenIdFiat ?: return@forEach
                 ) ?: return@forEach
 
-                val supply = assetInfo.liquidity.toBigIntegerOrNull()?.let {
+                val supply = assetInfo.liquidity?.toBigIntegerOrNull()?.let {
                     mapBalance(it, precision)
                 } ?: return@forEach
 
@@ -150,8 +134,8 @@ class BlockExplorerManager @Inject constructor(
         if (appStateProvider.isForeground) {
             runCatching {
                 updateFiatPrices(
-                    fiatData = info.getFiat(soraConfigManager.getGenesis()).map {
-                        FiatInfo(it.id, it.priceUSD.toDoubleNan())
+                    fiatData = polkaswapIndexerClient.getFiat().map {
+                        FiatInfo(it.id, it.priceUSD?.toDoubleNan())
                     }
                 )
             }
@@ -160,7 +144,7 @@ class BlockExplorerManager @Inject constructor(
 
     suspend fun updateReferrerRewards(address: String) {
         runCatching {
-            val rewards = info.getReferralReward(soraConfigManager.getGenesis(), address).map {
+            val rewards = polkaswapIndexerClient.getReferralRewards(address).map {
                 ReferralLocal(it.referral, it.amount)
             }
 
@@ -184,7 +168,7 @@ class BlockExplorerManager @Inject constructor(
 
     private suspend fun updateSbApyInternal() {
         runCatching {
-            val response = info.getApy(soraConfigManager.getGenesis())
+            val response = polkaswapIndexerClient.getPoolApys()
             tempApy.clear()
             tempApy.addAll(response)
         }
