@@ -1,6 +1,7 @@
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)

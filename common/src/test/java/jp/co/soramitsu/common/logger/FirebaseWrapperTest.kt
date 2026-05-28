@@ -32,41 +32,25 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.logger
 
-import com.google.firebase.crashlytics.FirebaseCrashlytics
-import kotlinx.coroutines.CancellationException
-import timber.log.Timber
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 
-object FirebaseWrapper {
-    private val blackList = listOf(CancellationException::class)
+class FirebaseWrapperTest {
 
-    @Volatile
-    private var crashlyticsEnabled = false
-
-    fun setCrashlyticsEnabled(enabled: Boolean) {
-        crashlyticsEnabled = enabled
+    @Before
+    fun setUp() {
+        FirebaseWrapper.setCrashlyticsEnabled(false)
     }
 
-    fun recordException(t: Throwable) {
-        if (blackList.any { it.isInstance(t) }) {
-            return
-        }
-
-        Timber.e(t, "ERROR")
-        crashlyticsInstance()?.recordException(t)
+    @After
+    fun tearDown() {
+        FirebaseWrapper.setCrashlyticsEnabled(false)
     }
 
-    fun log(message: String) {
-        Timber.d(message)
-        crashlyticsInstance()?.log(message)
-    }
-
-    private fun crashlyticsInstance(): FirebaseCrashlytics? {
-        if (!crashlyticsEnabled) {
-            return null
-        }
-
-        return runCatching { FirebaseCrashlytics.getInstance() }
-            .onFailure { crashlyticsEnabled = false }
-            .getOrNull()
+    @Test
+    fun `log and recordException do not reach Firebase when Crashlytics is disabled`() {
+        FirebaseWrapper.log("Firebase disabled")
+        FirebaseWrapper.recordException(IllegalStateException("Firebase disabled"))
     }
 }

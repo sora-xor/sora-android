@@ -45,6 +45,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.io.FileManager
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.BuildType
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
@@ -90,7 +91,10 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         initLogger()
 
         registerActivityLifecycleCallbacks(resourceManager)
-        FirebaseApp.initializeApp(this)
+        val firebaseApp = runCatching { FirebaseApp.initializeApp(this) }
+            .onFailure { Timber.e(it) }
+            .getOrNull()
+        FirebaseWrapper.setCrashlyticsEnabled(firebaseApp != null)
 
         OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
         OptionsProvider.CURRENT_VERSION_NAME = BuildConfig.VERSION_NAME
