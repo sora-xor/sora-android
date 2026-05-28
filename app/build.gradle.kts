@@ -4,6 +4,7 @@ import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidApplication)
+    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)

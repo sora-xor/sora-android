@@ -39,17 +39,34 @@ import timber.log.Timber
 object FirebaseWrapper {
     private val blackList = listOf(CancellationException::class)
 
+    @Volatile
+    private var crashlyticsEnabled = false
+
+    fun setCrashlyticsEnabled(enabled: Boolean) {
+        crashlyticsEnabled = enabled
+    }
+
     fun recordException(t: Throwable) {
-        blackList.forEach { kClass ->
-            if (!kClass.isInstance(t)) {
-                Timber.e(t, "ERROR")
-                FirebaseCrashlytics.getInstance().recordException(t)
-            }
+        if (blackList.any { it.isInstance(t) }) {
+            return
         }
+
+        Timber.e(t, "ERROR")
+        crashlyticsInstance()?.recordException(t)
     }
 
     fun log(message: String) {
         Timber.d(message)
-        FirebaseCrashlytics.getInstance().log(message)
+        crashlyticsInstance()?.log(message)
+    }
+
+    private fun crashlyticsInstance(): FirebaseCrashlytics? {
+        if (!crashlyticsEnabled) {
+            return null
+        }
+
+        return runCatching { FirebaseCrashlytics.getInstance() }
+            .onFailure { crashlyticsEnabled = false }
+            .getOrNull()
     }
 }
