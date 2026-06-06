@@ -141,7 +141,9 @@ class TxDetailsViewModelTest {
 
     private suspend fun initTestData(tx: Transaction = TestTransactions.sendFailedTx) {
         coEvery { transactionHistoryHandler.getTransaction(txHash) } returns tx
-        coEvery { soraConfigManager.getTransactionExplorerUrl(tx.base.txHash) } returns explorerUrl(tx.base.txHash)
+        coEvery {
+            soraConfigManager.getTransactionExplorerUrl(tx.base.txHash)
+        } returns explorerUrl(tx.base.txHash)
         every { transactionHistoryHandler.flowLocalTransactions() } returns flowOf(true)
         every { resourceManager.getString(R.string.common_recipient) } returns "recipient"
         every { resourceManager.getString(R.string.common_sent) } returns "sent"
@@ -154,8 +156,12 @@ class TxDetailsViewModelTest {
         every { resourceManager.getString(R.string.details_sent_to_pool) } returns "sent to pool"
         every { resourceManager.getString(R.string.details_receive_from_pool) } returns "received from pool"
         every { resourceManager.getString(R.string.demeter_claimed_reward) } returns "claimed reward"
-        every { resourceManager.getString(R.string.demeter_staked_liquidity) } returns "staked liquidity"
-        every { resourceManager.getString(R.string.demeter_unstaked_liquidity) } returns "unstaked liquidity"
+        every {
+            resourceManager.getString(R.string.demeter_staked_liquidity)
+        } returns "staked liquidity"
+        every {
+            resourceManager.getString(R.string.demeter_unstaked_liquidity)
+        } returns "unstaked liquidity"
         every { resourceManager.getString(R.string.wallet_bonded) } returns "wallet bonded"
         every { resourceManager.getString(R.string.wallet_unbonded) } returns "wallet unbonded"
         every { resourceManager.getString(R.string.referrer_set) } returns "referrer set"

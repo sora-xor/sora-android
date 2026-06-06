@@ -174,13 +174,16 @@ class UserRepositoryImpl(
     }
 
     override suspend fun fullLogout() {
-        userDatasource.clearAllData()
-        db.withTransaction {
-            db.accountDao().clearAll()
-            db.referralsDao().clearTable()
-            db.nodeDao().clearTable()
-            db.globalCardsHubDao().clearTable()
-            defaultGlobalCards()
+        mutex.withLock {
+            userDatasource.clearAllData()
+            db.withTransaction {
+                db.accountDao().clearAll()
+                db.referralsDao().clearTable()
+                db.nodeDao().clearTable()
+                db.globalCardsHubDao().clearTable()
+                defaultGlobalCards()
+            }
+            currentSoraAccount.value = null
         }
     }
 
@@ -203,10 +206,16 @@ class UserRepositoryImpl(
     }
 
     override suspend fun clearAccountData(address: String) {
-        credentialsDatasource.clearAllDataForAddress(address)
-        db.withTransaction {
-            db.accountDao().clearAccount(address)
-            db.referralsDao().clearTable()
+        mutex.withLock {
+            credentialsDatasource.clearAllDataForAddress(address)
+            db.withTransaction {
+                db.accountDao().clearAccount(address)
+                db.referralsDao().clearTable()
+            }
+            if (currentSoraAccount.value?.substrateAddress == address) {
+                userDatasource.setCurAccountAddress("")
+                currentSoraAccount.value = null
+            }
         }
     }
 

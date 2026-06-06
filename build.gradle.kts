@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.androidLibrary) apply false
-    alias(libs.plugins.kotlinAndroid) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
@@ -35,12 +34,15 @@ tasks.register<JavaExec>("ktlintCheck") {
     mainClass.set("com.pinterest.ktlint.Main")
     // see https://pinterest.github.io/ktlint/install/cli/#command-line-usage for more information
     val reportFile = layout.buildDirectory.file("reports/checkstyle/ktlint.xml")
-    args(
-        "**/src/**/*.kt",
-        "**.kts",
-        "!**/build/**",
-        "--reporter=checkstyle,output=${reportFile.get().asFile}"
-    )
+    val sourceFiles = fileTree(rootDir) {
+        include("**/src/**/*.kt")
+        include("**/*.gradle.kts")
+        include("settings.gradle.kts")
+        exclude("**/build/**")
+        exclude(".gradle/**")
+    }
+    args(sourceFiles.files.map { it.relativeTo(rootDir).path })
+    args("--reporter=checkstyle,output=${reportFile.get().asFile}")
 }
 
 tasks.register<JavaExec>("ktlintFormat") {

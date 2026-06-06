@@ -34,13 +34,13 @@ package jp.co.soramitsu.feature_blockexplorer_impl.testdata
 
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryElement
+import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryItemParam
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
-import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryElement
-import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryItemParam
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens
 
