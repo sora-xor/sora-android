@@ -63,6 +63,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -385,6 +386,30 @@ class UserRepositoryTest {
     }
 
     @Test
+    fun `full logout clears in-memory current account`() = runTest {
+        coEvery { userDatasource.clearAllData() } returns Unit
+        coEvery { accountDao.clearAll() } returns Unit
+        coEvery { referralsDao.clearTable() } returns Unit
+        coEvery { nodeDao.clearTable() } returns Unit
+        coEvery { globalCardsHubDao.clearTable() } returns Unit
+        coEvery { globalCardsHubDao.insert(TestData.DEFAULT_GLOBAL_CARDS) } returns Unit
+        coEvery { globalCardsHubDao.count() } returns 0
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        val lambda = slot<suspend () -> R>()
+        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
+            lambda.captured.invoke()
+        }
+
+        userRepository.fullLogout()
+
+        coEvery { userDatasource.getCurAccountAddress() } returns ""
+        coEvery { accountDao.getAccounts() } returns emptyList()
+        val result = runCatching { userRepository.getCurSoraAccount() }
+
+        assertTrue(result.isFailure)
+    }
+
+    @Test
     fun `save parent invite code called`() = runTest {
         val parentInviteCode = "parentInviteCode"
         coEvery { userDatasource.saveParentInviteCode(parentInviteCode) } returns Unit
@@ -430,6 +455,29 @@ class UserRepositoryTest {
         coVerify { accountDao.clearAccount(address) }
         coVerify { referralsDao.clearTable() }
         coVerify { credentialsDatasource.clearAllDataForAddress(address) }
+    }
+
+    @Test
+    fun `clear current account data clears in-memory current account`() = runTest {
+        val address = "accountAddress"
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        val lambda = slot<suspend () -> R>()
+        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
+            lambda.captured.invoke()
+        }
+        coEvery { accountDao.clearAccount(address) } returns Unit
+        coEvery { referralsDao.clearTable() } returns Unit
+        coEvery { credentialsDatasource.clearAllDataForAddress(address) } returns Unit
+        coEvery { userDatasource.setCurAccountAddress("") } returns Unit
+
+        userRepository.clearAccountData(address)
+
+        coEvery { userDatasource.getCurAccountAddress() } returns ""
+        coEvery { accountDao.getAccounts() } returns emptyList()
+        val result = runCatching { userRepository.getCurSoraAccount() }
+
+        assertTrue(result.isFailure)
+        coVerify { userDatasource.setCurAccountAddress("") }
     }
 
     @Test

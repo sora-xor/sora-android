@@ -39,10 +39,10 @@ import jp.co.soramitsu.core_db.dao.ReferralsDao
 import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
+import jp.co.soramitsu.feature_referral_api.data.ReferralReward
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
-import jp.co.soramitsu.feature_referral_api.data.ReferralReward
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList

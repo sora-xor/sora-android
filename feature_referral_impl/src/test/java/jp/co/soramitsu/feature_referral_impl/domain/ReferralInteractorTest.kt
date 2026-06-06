@@ -41,10 +41,10 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
+import jp.co.soramitsu.feature_referral_api.data.ReferralReward
 import jp.co.soramitsu.feature_referral_impl.domain.model.Referral
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.feature_referral_api.data.ReferralReward
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList

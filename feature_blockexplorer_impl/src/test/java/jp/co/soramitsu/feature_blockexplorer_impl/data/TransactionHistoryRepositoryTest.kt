@@ -147,7 +147,9 @@ class TransactionHistoryRepositoryTest {
 
     @Test
     fun `getContacts returns empty set when indexer fails`() = runTest {
-        coEvery { polkaswapIndexerClient.getTransactionPeers("bad query") } throws IllegalStateException("indexer down")
+        coEvery {
+            polkaswapIndexerClient.getTransactionPeers("bad query")
+        } throws IllegalStateException("indexer down")
 
         val result = transactionHistoryRepository.getContacts("bad query")
 
@@ -179,7 +181,9 @@ class TransactionHistoryRepositoryTest {
 
     @Test
     fun `getTransaction falls back to local pending transaction when indexer fails`() = runTest {
-        coEvery { polkaswapIndexerClient.getTransaction(TestTransactions.sendSuccessfulTx.base.txHash) } throws IllegalStateException("tx unavailable")
+        coEvery {
+            polkaswapIndexerClient.getTransaction(TestTransactions.sendSuccessfulTx.base.txHash)
+        } throws IllegalStateException("tx unavailable")
         transactionHistoryRepository.saveTransaction(TestTransactions.sendSuccessfulTx)
 
         val result = transactionHistoryRepository.getTransaction(

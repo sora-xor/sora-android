@@ -1,10 +1,10 @@
-import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
+import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
@@ -19,8 +19,9 @@ val googleServicesJsonFiles = fileTree(projectDir) {
     include("google-services.json")
     include("src/**/google-services.json")
 }
+val hasGoogleServicesJson = !googleServicesJsonFiles.isEmpty
 
-if (!googleServicesJsonFiles.isEmpty) {
+if (hasGoogleServicesJson) {
     apply(plugin = "com.google.gms.google-services")
 } else {
     logger.lifecycle("Skipping Google Services plugin because google-services.json is not present.")
@@ -68,6 +69,9 @@ android {
             isMinifyEnabled = true
             signingConfig = signingConfigs.getByName("cidebug")
             isShrinkResources = true
+            configure<CrashlyticsExtension> {
+                mappingFileUploadEnabled = hasGoogleServicesJson
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

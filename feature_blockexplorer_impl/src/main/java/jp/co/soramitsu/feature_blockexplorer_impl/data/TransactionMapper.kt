@@ -41,14 +41,14 @@ import jp.co.soramitsu.common.domain.getByIdOrEmpty
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.ext.snakeCaseToCamelCase
 import jp.co.soramitsu.common.util.mapBalance
+import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryElement
+import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryItemParam
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
-import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryElement
-import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryItemParam
 import jp.co.soramitsu.sora.substrate.runtime.Method
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider

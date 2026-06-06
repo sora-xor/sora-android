@@ -616,7 +616,7 @@ class PinCodeViewModel @Inject constructor(
 
             override fun onFinish() {
                 buttonsDisabled = false
-                showFingerPrintEventLiveData.value = true
+                showFingerPrintEventLiveData.value = isBiometryEnabled
                 viewModelScope.launch { interactor.resetTimerStartedTimestamp() }
                 state =
                     state.copy(toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code))
