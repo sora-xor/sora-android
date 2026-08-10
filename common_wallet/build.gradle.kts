@@ -1,7 +1,6 @@
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
@@ -100,8 +99,6 @@ dependencies {
     implementation(libs.jdenticonDep)
 
     api(libs.soramitsu.sora.card) {
-        exclude(group = "com.paywings.oauth", module = "android-sdk")
-        exclude(group = "com.paywings.kyc", module = "android-sdk")
         exclude(group = "com.paywings.onboarding.kyc.android-libs", module = "java-websocket-lib")
     }
 

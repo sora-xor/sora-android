@@ -117,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">U hebt al een andere uitnodigingscode toegepast</string>
   <string name="common_error_invitation_code_not_found">Uitnodigingscode is ongeldig</string>
   <string name="common_error_inviter_registered_after_invitee">De verstrekte uitnodigingscode kan niet worden toegepast omdat deze afkomstig is van de gebruiker die zich na u heeft geregistreerd</string>
-  <string name="common_error_mnemonic_is_not_valid">Uw wachtwoord is ongeldig. Probeer alstublieft een andere.</string>
-  <string name="common_error_mnemonic_length_error">De wachtwoordzin moet 15 woorden bevatten</string>
+  <string name="common_error_mnemonic_is_not_valid">Controleer of uw herstelzin uit 12 of 24 woorden bestaat en of alle woorden correct zijn.</string>
+  <string name="common_error_mnemonic_length_error">De wachtwoordzin moet 12 of 24 woorden bevatten</string>
   <string name="common_error_network">Controleer de internetverbinding en probeer het later opnieuw.</string>
   <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">Sorry, maar je hebt geen uitnodigingen om te delen</string>
@@ -278,7 +278,7 @@
   <string name="export_protection_passphrase_1">If I lose my passphrase, my funds will be lost forever.</string>
   <string name="export_protection_passphrase_2">If I expose or share my passphrase to anybody, my funds can get stolen.</string>
   <string name="export_protection_passphrase_3">It is my full reponsibility to keep my passphrase secure.</string>
-  <string name="export_protection_passphrase_description">In the next step you will see Passphrase (12 words) that allow you to recover an account.</string>
+  <string name="export_protection_passphrase_description">In de volgende stap ziet u de wachtwoordzin (24 woorden) waarmee u een account kunt herstellen.</string>
   <string name="export_protection_seed_1">If I lose my raw seed, my funds will be lost forever.</string>
   <string name="export_protection_seed_2">If I expose or share my raw seed to anybody, my funds can get stolen.</string>
   <string name="export_protection_seed_3">It is my full reponsibility to keep my raw seed secure.</string>

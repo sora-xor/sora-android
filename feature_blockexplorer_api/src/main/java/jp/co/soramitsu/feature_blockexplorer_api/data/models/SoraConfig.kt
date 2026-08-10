@@ -10,6 +10,15 @@ data class SoraConfig(
     val substrateTypesUrl: String,
     val soracard: Boolean,
     val currencies: List<SoraCurrency>,
+    val emergencyFlags: EmergencyFeatureFlags,
+)
+
+data class EmergencyFeatureFlags(
+    val nexusAvailable: Boolean,
+    val nexusSendsAvailable: Boolean,
+    val polkamarktVisible: Boolean,
+    val polkamarktMutationsAvailable: Boolean,
+    val tairaDefaultVisible: Boolean,
 )
 
 data class SoraConfigNode(

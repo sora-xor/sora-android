@@ -53,4 +53,17 @@ interface ConnectionManager {
     val networkState: StateFlow<SocketStateMachine.State>
 
     fun switchUrl(url: String)
+
+    /** Fails closed unless the socket is connected to the reviewed SORA2 mutation endpoint. */
+    fun requireReviewedSora2MutationTransport()
+
+    /**
+     * Prevents the selected socket from switching between the last exact transport check and the
+     * terminal result of the one-shot handoff/subscription.
+     */
+    fun acquireReviewedSora2MutationTransport(): Sora2MutationTransportLease
+}
+
+fun interface Sora2MutationTransportLease : AutoCloseable {
+    override fun close()
 }

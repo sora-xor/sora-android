@@ -1,0 +1,468 @@
+{
+  "format": "sora-mobile-polkamarkt-contract-v2",
+  "sora2Network": {
+    "revision": "411dcdb70c5c00b21482a44d02334840d5f338c6",
+    "specVersion": 130,
+    "transactionVersion": 130
+  },
+  "webReference": {
+    "path": "/Users/takemiyamakoto/dev/polkaswap-exchange-web",
+    "branch": "ui-updates",
+    "inspectedRevision": "893783ba6a19c33043eb5dabe42d949c14d0f257",
+    "commitTreeObject": "e391982c0921dea5278e919a7558b7a6a2afc0d4",
+    "polkamarktTreeObject": "57f0fe7623f2b93b34faecfc66d6c5da96d54e1b",
+    "commitSignatureStatus": "verified",
+    "version": "1.46.0",
+    "polkamarktContractPresentAtInspectedRevision": true,
+    "sourceFiles": [
+      "components/CreateMarketDialog.vue",
+      "components/MarketDetail.vue",
+      "components/MarketList.vue",
+      "components/MarketOutcomeChart.vue",
+      "components/MarketProbabilitySparkline.vue",
+      "components/MarketShareWidget.vue",
+      "components/MyPositionsPanel.vue",
+      "components/PricingCurvePositionChart.vue",
+      "components/TradeTicket.vue",
+      "consts.ts",
+      "index.ts",
+      "lib/amounts.ts",
+      "lib/markets.ts",
+      "lib/pricingCurve.ts",
+      "lib/share.ts",
+      "pages/PolkamarktPage.vue",
+      "routes.ts",
+      "services/accountActivity.ts",
+      "services/marketHistory.ts",
+      "services/markets.ts",
+      "services/runtimeMarkets.ts",
+      "types.ts"
+    ],
+    "sourceBlobObjects": {
+      "components/CreateMarketDialog.vue": {
+        "gitSha1": "9b78f78ca9fc6b5284842159b38322b73e77cf6c",
+        "bytes": 14565
+      },
+      "components/MarketDetail.vue": {
+        "gitSha1": "4907baf693238cbf1776dd3ac9e5b694249a1c15",
+        "bytes": 13224
+      },
+      "components/MarketList.vue": {
+        "gitSha1": "3046a4017b2c5693f7f5756519a421d06f9f86c7",
+        "bytes": 13784
+      },
+      "components/MarketOutcomeChart.vue": {
+        "gitSha1": "ae5f5610a36154a052363bec24093395ed04297f",
+        "bytes": 11779
+      },
+      "components/MarketProbabilitySparkline.vue": {
+        "gitSha1": "c1b66b37ad9ae134a6526dd0b9820460e237c460",
+        "bytes": 7144
+      },
+      "components/MarketShareWidget.vue": {
+        "gitSha1": "d39a40de3d001f051a718052c0e9b3a8541ce3a5",
+        "bytes": 34861
+      },
+      "components/MyPositionsPanel.vue": {
+        "gitSha1": "d0c0e0e1f42f26b0b32277f8822f1190d84c4dba",
+        "bytes": 5658
+      },
+      "components/PricingCurvePositionChart.vue": {
+        "gitSha1": "595d922b8da1bac6c616f76e7f0220e68cc8b22a",
+        "bytes": 13374
+      },
+      "components/TradeTicket.vue": {
+        "gitSha1": "96add09529b46aaef472097ad7e56f21ee3c3529",
+        "bytes": 46457
+      },
+      "consts.ts": {
+        "gitSha1": "f59aed030540bf7a48e76a7b3d86731c044ddd1c",
+        "bytes": 1606
+      },
+      "index.ts": {
+        "gitSha1": "a63af3010332591b60afd1d801dd191549ceab8d",
+        "bytes": 45
+      },
+      "lib/amounts.ts": {
+        "gitSha1": "45b3b8f658aeb3e3b21ace52be850635a0970e86",
+        "bytes": 2185
+      },
+      "lib/markets.ts": {
+        "gitSha1": "e64900293e5271cb323404d597f93c98c8817c84",
+        "bytes": 11773
+      },
+      "lib/pricingCurve.ts": {
+        "gitSha1": "16f1b2e686e34cbea604c4f1e9db35e59ebf82ea",
+        "bytes": 3918
+      },
+      "lib/share.ts": {
+        "gitSha1": "ee1fc1f2f8c197b81b788bdf157b21d7b72ac5d3",
+        "bytes": 3185
+      },
+      "pages/PolkamarktPage.vue": {
+        "gitSha1": "0fa3838706464347f5fa5d8b1ed033a9bfd32012",
+        "bytes": 14994
+      },
+      "routes.ts": {
+        "gitSha1": "a4a822ad872df098b92e8c02695f378156932c25",
+        "bytes": 375
+      },
+      "services/accountActivity.ts": {
+        "gitSha1": "f0dd3a0a9be0beb260fdea4a01e049e41e9e9281",
+        "bytes": 8185
+      },
+      "services/marketHistory.ts": {
+        "gitSha1": "063f6129b6c20c983c58a9280495057cc077461e",
+        "bytes": 3629
+      },
+      "services/markets.ts": {
+        "gitSha1": "2dfedd05de3b3bacf66c8a31bc8021f2f9e8c033",
+        "bytes": 8611
+      },
+      "services/runtimeMarkets.ts": {
+        "gitSha1": "e958629ad3fa60715fdd337e6374fc478ced4f30",
+        "bytes": 19050
+      },
+      "types.ts": {
+        "gitSha1": "c2a68a3cf717526c231de2f09e8a6eb9d818df83",
+        "bytes": 2620
+      }
+    }
+  },
+  "runtime": {
+    "module": "Polkamarkt",
+    "marketIdScaleType": "u32",
+    "marketIdMaximum": 4294967295,
+    "closeBlockScaleType": "u32",
+    "closeBlockMaximum": 4294967295,
+    "calls": [
+      "buy",
+      "sell",
+      "claim_market",
+      "claim_markets",
+      "claim_creator_fees"
+    ],
+    "rpc": [
+      "polkamarkt_quoteBuy",
+      "polkamarkt_quoteSell",
+      "polkamarkt_marketState",
+      "polkamarkt_claimable"
+    ],
+    "indices": "resolve-from-live-metadata"
+  },
+  "canonicalBehavior": {
+    "collateralAsset": "KUSD",
+    "outcomes": ["YES", "NO"],
+    "tradeModes": ["buy", "sell", "claim"],
+    "excludedMobileModes": [
+      "create",
+      "report",
+      "resolve",
+      "governance"
+    ],
+    "statusFilters": ["active", "finalized", "all"],
+    "openStatuses": ["open", "active", "live"],
+    "finalizedStatuses": [
+      "resolved",
+      "cancelled",
+      "canceled",
+      "finalized",
+      "closed"
+    ],
+    "claimableStatuses": ["resolved", "cancelled", "canceled"],
+    "categories": [
+      "Politics",
+      "Geopolitics",
+      "Elections",
+      "Crypto",
+      "Macro",
+      "Finance",
+      "Sports",
+      "Technology",
+      "AI",
+      "Science",
+      "Climate",
+      "Health",
+      "Business",
+      "Entertainment",
+      "Culture",
+      "Legal",
+      "Other"
+    ],
+    "defaultSlippagePercent": "0.5",
+    "defaultSlippageBps": 50,
+    "minimumMobileSlippageBps": 1,
+    "maximumMobileSlippageBps": 1000,
+    "slippagePresetsBps": [10, 50, 100],
+    "minimumOutputFormula": "floor(output * (10000 - slippageBps) / 10000)",
+    "quoteDebounceMilliseconds": 250,
+    "amountPrecision": 18,
+    "tradeFeeBps": 50,
+    "maxBatchClaims": 24,
+    "cardHistoryMarketLimit": 12,
+    "dpmCurvePointCount": 99,
+    "dpmPricingFormula": "yes / sqrt(yes^2 + no^2)",
+    "boardOpensBeforeDetail": true,
+    "refreshAfterConfirmedReceipt": true,
+    "receiptStates": [
+      "submitting",
+      "submitted",
+      "confirmed",
+      "failed"
+    ],
+    "authoritativeReads": "finalized-runtime-state",
+    "discoveryAndHistory": "https://pi.soramitsu.io/graphql",
+    "ambiguousSubmissionRetry": false
+  },
+  "canonicalVectors": {
+    "derivationSources": {
+      "minimumOutput": "lib/amounts.ts",
+      "runtimeCalls": "services/runtimeMarkets.ts",
+      "scaleArguments": "../sora2-network/pallets/polkamarkt/src/lib.rs",
+      "runtimeRevision": "411dcdb70c5c00b21482a44d02334840d5f338c6"
+    },
+    "minimumOutput": [
+      {
+        "quotedOutput": "1000",
+        "slippageBps": 50,
+        "expectedMinimum": "995"
+      },
+      {
+        "quotedOutput": "10000",
+        "slippageBps": 1,
+        "expectedMinimum": "9999"
+      },
+      {
+        "quotedOutput": "999",
+        "slippageBps": 1000,
+        "expectedMinimum": "899"
+      },
+      {
+        "quotedOutput": "123456789012345678901234567890",
+        "slippageBps": 50,
+        "expectedMinimum": "122839505067283950506728395050"
+      }
+    ],
+    "runtimeCalls": [
+      {
+        "call": "buy",
+        "arguments": {
+          "market_id": 7,
+          "outcome": "Yes",
+          "collateral_in": "1000",
+          "min_shares_out": "900"
+        },
+        "scaleArgumentsHex": "0700000000e803000000000000000000000000000084030000000000000000000000000000"
+      },
+      {
+        "call": "sell",
+        "arguments": {
+          "market_id": 8,
+          "outcome": "No",
+          "shares_in": "700",
+          "min_collateral_out": "600"
+        },
+        "scaleArgumentsHex": "0800000001bc02000000000000000000000000000058020000000000000000000000000000"
+      },
+      {
+        "call": "claim_market",
+        "arguments": {
+          "market_id": 12
+        },
+        "scaleArgumentsHex": "0c000000"
+      },
+      {
+        "call": "claim_markets",
+        "arguments": {
+          "market_ids": [1, 9, 4294967295]
+        },
+        "scaleArgumentsHex": "0c0100000009000000ffffffff"
+      },
+      {
+        "call": "claim_creator_fees",
+        "arguments": {
+          "market_id": 22
+        },
+        "scaleArgumentsHex": "16000000"
+      }
+    ],
+    "fullExtrinsicQualification": {
+      "receiptSchema": "sora-mobile-polkamarkt-full-extrinsic-receipt-v1",
+      "requiredMetadataSha256": "2b49c3cbf682d8b88985a04a60a958de3ef5de77d282c3622bdae53f7e4fbabf",
+      "requiredGenesisHash": "0x7e4e32d0feafd4f9c9414b0be86373f9a1efa904809b683453a9af6856d38ad5",
+      "requiredSpecVersion": 130,
+      "requiredTransactionVersion": 130,
+      "metadataIndicesMustBeResolvedDynamically": true,
+      "requiredVectorOrder": [
+        "buy",
+        "sell",
+        "claim_market",
+        "claim_markets",
+        "claim_creator_fees"
+      ],
+      "canonicalContractSha256": null,
+      "generationContract": {
+        "candidateReceiptSchema": "sora-mobile-polkamarkt-platform-extrinsic-receipt-v1",
+        "independentReviewSchema": "sora-mobile-polkamarkt-extrinsic-review-v1",
+        "merger": "scripts/qualify-polkamarkt-extrinsic-receipts.mjs",
+        "referenceImplementation": {
+          "repository": "/Users/takemiyamakoto/dev/polkaswap-exchange-web",
+          "revision": "893783ba6a19c33043eb5dabe42d949c14d0f257",
+          "package": "polkadotApi",
+          "packageVersion": "11.2.1"
+        },
+        "runtimeMetadata": {
+          "source": "common/src/production/assets/sora2_metadata",
+          "sha256": "2b49c3cbf682d8b88985a04a60a958de3ef5de77d282c3622bdae53f7e4fbabf",
+          "palletAndCallIndices": "resolve-from-this-metadata-never-hardcode"
+        },
+        "signingContext": {
+          "cryptoType": "sr25519",
+          "accountIdSource": "reviewed-receipt",
+          "nonceSource": "reviewed-receipt",
+          "mortalEraSource": "reviewed-receipt",
+          "finalizedBlockHashSource": "reviewed-receipt",
+          "tipSource": "reviewed-receipt",
+          "signaturePayloadHashingThresholdBytes": 256,
+          "signaturePayloadHashingRule": "blake2b-256-only-when-raw-payload-length-is-greater-than-256",
+          "privateSigningMaterialPermittedInFixture": false,
+          "qualificationAccountIdHex": null
+        },
+        "cryptographicProofSchema": "sora-mobile-polkamarkt-native-cryptographic-proof-v1",
+        "requiredCryptographicProofFields": [
+          "format",
+          "platform",
+          "candidateBindingSha256",
+          "sourceRevision",
+          "sourceTreeSha256",
+          "generatorSha256",
+          "verifierRevision",
+          "verifierBinarySha256",
+          "metadataSha256",
+          "runtimeRevision",
+          "genesisHash",
+          "specVersion",
+          "transactionVersion",
+          "signingContextSha256",
+          "vectorsSha256",
+          "claims",
+          "verifiedAtEpochSeconds",
+          "publicKeySpkiDerHex",
+          "signatureHex"
+        ],
+        "requiredCryptographicProofClaims": [
+          "candidate-identity-bound",
+          "sr25519-signatures-verified-over-reconstructed-signing-prehashes",
+          "signed-extrinsics-decoded-through-pinned-live-metadata",
+          "decoded-projections-match-canonical-runtime-call-vectors",
+          "signed-extrinsic-hashes-recomputed",
+          "non-production-qualification-account-used",
+          "private-signing-material-absent-from-receipts"
+        ],
+        "platformSourceManifests": {
+          "reference": {
+            "repository": "polkaswap-exchange-web",
+            "revision": "893783ba6a19c33043eb5dabe42d949c14d0f257",
+            "sourceTreeSha256": null,
+            "generatorSha256": null,
+            "proofVerifierRevision": null,
+            "proofVerifierBinarySha256": null,
+            "proofVerifierPublicKeySha256": null
+          },
+          "android": {
+            "repository": "sora-wallet/sora-android",
+            "revision": null,
+            "sourceTreeSha256": null,
+            "generatorSha256": null,
+            "proofVerifierRevision": null,
+            "proofVerifierBinarySha256": null,
+            "proofVerifierPublicKeySha256": null
+          },
+          "ios": {
+            "repository": "sora-wallet/sora-ios",
+            "revision": null,
+            "sourceTreeSha256": null,
+            "generatorSha256": null,
+            "proofVerifierRevision": null,
+            "proofVerifierBinarySha256": null,
+            "proofVerifierPublicKeySha256": null
+          }
+        },
+        "requiredSharedVectorFields": [
+          "id",
+          "call",
+          "arguments",
+          "metadataPalletIndex",
+          "metadataCallIndex",
+          "scaleArgumentsHex",
+          "fullCallHex",
+          "rawSigningPayloadHex",
+          "signingPrehashHex",
+          "signingPrehashRule",
+          "decodedProjection",
+          "decodedProjectionSha256"
+        ],
+        "requiredPlatformVectorFields": [
+          "id",
+          "signerPublicKeyHex",
+          "signatureHex",
+          "signedExtrinsicHex",
+          "extrinsicHashHex",
+          "signingPrehashHex",
+          "decodedProjection",
+          "decodedProjectionSha256"
+        ],
+        "parityRules": [
+          "reference-android-ios-full-call-bytes-equal",
+          "reference-android-ios-signing-prehash-equal",
+          "reference-android-ios-decoded-projection-sha256-equal",
+          "each-platform-reviewed-cryptographic-proof-signature-verifies",
+          "each-proof-binds-source-metadata-context-vectors-and-signed-extrinsics",
+          "each-proof-attests-sr25519-verification-and-live-metadata-round-trip",
+          "sr25519-signature-bytes-may-differ-but-must-verify"
+        ]
+      },
+      "reviewedReceipt": null,
+      "reviewedWebAndRuntimeReceiptQualified": false,
+      "blocker": "Generate independent reference, Android, and iOS receipts from the pinned web revision and exact runtime metadata; independently sign the composite receipt; then prove full call bytes, signing prehashes, signatures, signed extrinsics, and decoded projections before enabling mutations."
+    }
+  },
+  "mobileClaimConfirmation": {
+    "requiresExplicitConfirmation": true,
+    "requiredReviewedFields": [
+      "accountId",
+      "source",
+      "marketIds",
+      "finalizedBlockHash",
+      "claims"
+    ],
+    "freshChecksBeforeSigning": [
+      "account",
+      "featureFlags",
+      "runtimeMetadata",
+      "claimValues",
+      "xorFee",
+      "xorBalance"
+    ],
+    "copy": {
+      "title": "Confirm claim",
+      "batchTitle": "Confirm %1$d trader payouts",
+      "body": "Verify these finalized runtime values before signing.",
+      "feeNotice": "The exact XOR network fee and balance will be rechecked before signing."
+    }
+  },
+  "translationKeys": {
+    "pageTitle": "pageTitle.Polkamarkt",
+    "yes": "polkamarkt.outcomes.yes",
+    "no": "polkamarkt.outcomes.no",
+    "buy": "polkamarkt.actions.buy",
+    "sell": "polkamarkt.actions.sell",
+    "claimTrader": "polkamarkt.actions.claimTraderPayout",
+    "claimCreatorFees": "polkamarkt.actions.claimCreatorFees",
+    "sharesOut": "polkamarkt.ticket.sharesOut",
+    "collateralOut": "polkamarkt.ticket.collateralOut",
+    "slippage": "polkamarkt.ticket.slippage",
+    "takerFee": "polkamarkt.ticket.takerFee",
+    "networkFee": "networkFeeText"
+  }
+}

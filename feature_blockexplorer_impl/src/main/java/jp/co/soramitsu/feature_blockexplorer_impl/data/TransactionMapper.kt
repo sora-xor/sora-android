@@ -75,7 +75,7 @@ private fun mapHistoryItemToTransaction(
     val transactionBase = TransactionBase(
         txHash = tx.id,
         blockHash = tx.blockHash,
-        fee = mapBalance(tx.networkFee.toBigIntegerOrDefault(), feePrecision),
+        fee = mapBalance(tx.networkFee.toNonNegativeBigInteger(), feePrecision),
         status = tx.getSuccess(),
         timestamp = tx.getTimestamp(),
     )
@@ -83,7 +83,7 @@ private fun mapHistoryItemToTransaction(
         tx.data?.toTransfer { to, from, amount, tokenId ->
             Transaction.Transfer(
                 base = transactionBase,
-                amount = amount.toBigDecimalOrDefault(),
+                amount = amount.toNonNegativeBigDecimal(),
                 peer = if (to == myAddress) from else to,
                 transferType = if (to == myAddress) TransactionTransferType.INCOMING else TransactionTransferType.OUTGOING,
                 token = tokens.getByIdOrEmpty(tokenId),
@@ -93,7 +93,7 @@ private fun mapHistoryItemToTransaction(
         tx.data?.toEthTransfer { amount, tokenId, hash, address ->
             Transaction.EthTransfer(
                 base = transactionBase,
-                amount = amount.toBigDecimalOrDefault(),
+                amount = amount.toNonNegativeBigDecimal(),
                 token = tokens.getByIdOrEmpty(tokenId),
                 ethToken = tokens.getByIdOrEmpty(SubstrateOptionsProvider.ethTokenId),
                 requestHash = hash,
@@ -104,7 +104,7 @@ private fun mapHistoryItemToTransaction(
         tx.data?.toReferralBond { amount ->
             Transaction.ReferralBond(
                 base = transactionBase,
-                amount = amount.toBigDecimalOrDefault(),
+                amount = amount.toNonNegativeBigDecimal(),
                 token = tokens.getByIdOrEmpty(SubstrateOptionsProvider.feeAssetId)
             )
         }
@@ -112,7 +112,7 @@ private fun mapHistoryItemToTransaction(
         tx.data?.toReferralUnbond { amount ->
             Transaction.ReferralUnbond(
                 base = transactionBase,
-                amount = amount.toBigDecimalOrDefault(),
+                amount = amount.toNonNegativeBigDecimal(),
                 token = tokens.getByIdOrEmpty(SubstrateOptionsProvider.feeAssetId)
             )
         }
@@ -131,8 +131,8 @@ private fun mapHistoryItemToTransaction(
                 base = transactionBase,
                 tokenFrom = tokens.getByIdOrEmpty(baseTokenId),
                 tokenTo = tokens.getByIdOrEmpty(targetTokenId),
-                amountFrom = baseTokenAmount.toBigDecimalOrDefault(),
-                amountTo = targetTokenAmount.toBigDecimalOrDefault(),
+                amountFrom = baseTokenAmount.toNonNegativeBigDecimal(),
+                amountTo = targetTokenAmount.toNonNegativeBigDecimal(),
                 market = Market.entries.find { m -> m.backString == selectedMarket } ?: Market.SMART,
             )
         }
@@ -146,8 +146,8 @@ private fun mapHistoryItemToTransaction(
                 base = transactionBase,
                 token1 = tokens.getByIdOrEmpty(baseTokenId),
                 token2 = tokens.getByIdOrEmpty(targetTokenId),
-                amount1 = baseTokenAmount.toBigDecimalOrDefault(),
-                amount2 = targetTokenAmount.toBigDecimalOrDefault(),
+                amount1 = baseTokenAmount.toNonNegativeBigDecimal(),
+                amount2 = targetTokenAmount.toNonNegativeBigDecimal(),
                 type = if (tx.isMatch(
                         Pallete.POOL_XYK,
                         Method.DEPOSIT_LIQUIDITY
@@ -167,8 +167,8 @@ private fun mapHistoryItemToTransaction(
                     base = transactionBase,
                     token1 = tokens.getByIdOrEmpty(baseTokenId),
                     token2 = tokens.getByIdOrEmpty(targetTokenId),
-                    amount1 = baseTokenAmount.toBigDecimalOrDefault(),
-                    amount2 = targetTokenAmount.toBigDecimalOrDefault(),
+                    amount1 = baseTokenAmount.toNonNegativeBigDecimal(),
+                    amount2 = targetTokenAmount.toNonNegativeBigDecimal(),
                     type = TransactionLiquidityType.ADD,
                 )
             }
@@ -179,8 +179,8 @@ private fun mapHistoryItemToTransaction(
                     base = transactionBase,
                     token1 = tokens.getByIdOrEmpty(baseTokenId),
                     token2 = tokens.getByIdOrEmpty(targetTokenId),
-                    amount1 = baseTokenAmount.toBigDecimalOrDefault(),
-                    amount2 = targetTokenAmount.toBigDecimalOrDefault(),
+                    amount1 = baseTokenAmount.toNonNegativeBigDecimal(),
+                    amount2 = targetTokenAmount.toNonNegativeBigDecimal(),
                     type = TransactionLiquidityType.WITHDRAW,
                 )
             }
@@ -189,7 +189,7 @@ private fun mapHistoryItemToTransaction(
         tx.data?.toDemeterStake { amount, base, target, reward ->
             Transaction.DemeterFarming(
                 base = transactionBase,
-                amount = amount.toBigDecimalOrDefault(),
+                amount = amount.toNonNegativeBigDecimal(),
                 type = DemeterType.STAKE,
                 baseToken = tokens.getByIdOrEmpty(base),
                 targetToken = tokens.getByIdOrEmpty(target),
@@ -200,7 +200,7 @@ private fun mapHistoryItemToTransaction(
         tx.data?.toDemeterStake { amount, base, target, reward ->
             Transaction.DemeterFarming(
                 base = transactionBase,
-                amount = amount.toBigDecimalOrDefault(),
+                amount = amount.toNonNegativeBigDecimal(),
                 type = DemeterType.UNSTAKE,
                 baseToken = tokens.getByIdOrEmpty(base),
                 targetToken = tokens.getByIdOrEmpty(target),
@@ -212,7 +212,7 @@ private fun mapHistoryItemToTransaction(
             val token = tokens.getByIdOrEmpty(base)
             Transaction.DemeterFarming(
                 base = transactionBase,
-                amount = amount.toBigDecimalOrDefault(),
+                amount = amount.toNonNegativeBigDecimal(),
                 type = DemeterType.REWARD,
                 baseToken = token,
                 targetToken = token,
@@ -223,7 +223,7 @@ private fun mapHistoryItemToTransaction(
         tx.data?.toAdarIncome(myAddress) { amount, token, peer ->
             Transaction.AdarIncome(
                 base = transactionBase,
-                amount = amount.toBigDecimalOrDefault(),
+                amount = amount.toNonNegativeBigDecimal(),
                 peer = peer,
                 token = tokens.getByIdOrEmpty(token),
             )
@@ -235,16 +235,51 @@ private fun mapHistoryItemToTransaction(
 }
 
 private fun IndexerHistoryElement.getSuccess(): TransactionStatus =
-    if (this.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED
+    if (this.executionKnown) {
+        if (this.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED
+    } else {
+        throw IllegalStateException("PI_INDEXER_HISTORY_EXECUTION_INVALID")
+    }
 
-private fun IndexerHistoryElement.getTimestamp(): Long =
-    (this.timestamp.substringBefore(".").toLongOrNull() ?: 0) * 1000
+private fun IndexerHistoryElement.getTimestamp(): Long {
+    val seconds = timestamp.toLongOrNull()
+        ?: throw IllegalStateException("PI_INDEXER_HISTORY_TIMESTAMP_INVALID")
+    check(seconds >= 0L) { "PI_INDEXER_HISTORY_TIMESTAMP_INVALID" }
+    return try {
+        Math.multiplyExact(seconds, 1_000L)
+    } catch (_: ArithmeticException) {
+        throw IllegalStateException("PI_INDEXER_HISTORY_TIMESTAMP_INVALID")
+    }
+}
 
-private fun String.toBigDecimalOrDefault(v: BigDecimal = BigDecimal.ZERO): BigDecimal =
-    runCatching { BigDecimal(this) }.getOrDefault(v)
+private const val MAXIMUM_EXACT_QUANTITY_LENGTH = 4_096
+private val exactNonNegativeDecimal =
+    Regex("^(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$")
+private val exactNonNegativeInteger = Regex("^(?:0|[1-9][0-9]*)$")
 
-private fun String.toBigIntegerOrDefault(v: BigInteger = BigInteger.ZERO): BigInteger =
-    runCatching { BigInteger(this) }.getOrDefault(v)
+private fun String.toNonNegativeBigDecimal(): BigDecimal {
+    check(
+        length in 1..MAXIMUM_EXACT_QUANTITY_LENGTH &&
+            exactNonNegativeDecimal.matches(this)
+    ) { "PI_INDEXER_HISTORY_QUANTITY_INVALID" }
+    return try {
+        BigDecimal(this)
+    } catch (_: NumberFormatException) {
+        throw IllegalStateException("PI_INDEXER_HISTORY_QUANTITY_INVALID")
+    }
+}
+
+private fun String.toNonNegativeBigInteger(): BigInteger {
+    check(
+        length in 1..MAXIMUM_EXACT_QUANTITY_LENGTH &&
+            exactNonNegativeInteger.matches(this)
+    ) { "PI_INDEXER_HISTORY_FEE_INVALID" }
+    return try {
+        BigInteger(this)
+    } catch (_: NumberFormatException) {
+        throw IllegalStateException("PI_INDEXER_HISTORY_FEE_INVALID")
+    }
+}
 
 private fun List<IndexerHistoryItemParam>.toReferralBond(block: (amount: String) -> Transaction.ReferralBond): Transaction.ReferralBond? {
     val amount = this.firstOrNull { it.paramName == "amount" }

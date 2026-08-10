@@ -54,6 +54,26 @@ interface CredentialsRepository {
 
     suspend fun retrieveSeed(soraAccount: SoraAccount): String
 
+    /**
+     * Reads only the legacy stored seed. Unlike [retrieveSeed], this never derives or writes one.
+     * Upgrade verification uses it so inspecting an installed wallet cannot alter its secret store.
+     */
+    suspend fun retrieveStoredSeed(soraAccount: SoraAccount): String
+
+    /**
+     * Reads the durable, explicit watch-only marker. The absence of a key, phrase, or seed is not
+     * itself a watch-only declaration.
+     */
+    suspend fun isExplicitWatchOnly(soraAccount: SoraAccount): Boolean
+
+    suspend fun setExplicitWatchOnly(soraAccount: SoraAccount, watchOnly: Boolean)
+
+    /**
+     * Returns a stored signing key when one belongs to [soraAccount], or null when no complete key
+     * exists. Decryption/Keystore failures still propagate and must never be treated as absence.
+     */
+    suspend fun retrieveKeyPairOrNull(soraAccount: SoraAccount): Sr25519Keypair?
+
     suspend fun retrieveKeyPair(soraAccount: SoraAccount): Sr25519Keypair
 
     suspend fun saveKeyPair(key: Sr25519Keypair, soraAccount: SoraAccount)
@@ -65,4 +85,11 @@ interface CredentialsRepository {
     suspend fun generateJson(accounts: List<SoraAccount>, password: String): String
 
     fun convertPassphraseToSeed(mnemonic: String): String
+
+    /**
+     * Migration-only derivation for an already-installed SORA wallet. Unlike public recovery,
+     * this retains the historical 15-word format so its existing SORA2 key can be verified; it
+     * does not make that phrase eligible for Nexus child derivation.
+     */
+    fun convertRetainedSoraPassphraseToSeed(mnemonic: String): String
 }

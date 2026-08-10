@@ -33,11 +33,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_assets_impl.domain
 
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.verify
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
@@ -57,6 +60,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicSubmissionUnknownException
 import jp.co.soramitsu.sora.substrate.substrate.extrinsicHash
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
@@ -147,13 +151,93 @@ class AssetsInteractorTest {
         } returns BigDecimal.TEN
         Assert.assertEquals(
             BigDecimal.TEN,
-            interactor.calcTransactionFee("to", TestTokens.xorToken, BigDecimal.ONE)
+            interactor.calcTransactionFee(
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE,
+                expectedWalletId = "address",
+            )
         )
     }
 
     @Test
+    fun `calc transaction fee rejects a different selected wallet`() = runTest {
+        coEvery { userRepository.getCurSoraAccount() } returns
+            SoraAccount("different-address", "different-name")
+
+        val error = try {
+            interactor.calcTransactionFee(
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE,
+                expectedWalletId = "address",
+            )
+            Assert.fail("Expected selected-wallet rejection")
+            null
+        } catch (error: Throwable) {
+            error
+        }
+
+        Assert.assertEquals("SORA2_SELECTED_WALLET_CHANGED", error?.message)
+        coVerify(exactly = 0) {
+            assetsRepository.calcTransactionFee(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `transfer wallet validator rejects selection changed after admission`() = runTest {
+        val kp = Sr25519Keypair(
+            ByteArray(32) { 1 },
+            ByteArray(32) { 2 },
+            ByteArray(32) { 3 },
+        )
+        val walletValidator = slot<suspend () -> Unit>()
+        coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns kp
+        coEvery {
+            assetsRepository.observeTransfer(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                capture(walletValidator),
+            )
+        } returns ExtrinsicSubmitStatus(false, "", "")
+
+        Assert.assertEquals(
+            "",
+            interactor.observeTransfer(
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                expectedWalletId = "address",
+            ),
+        )
+        coEvery { userRepository.getCurSoraAccount() } returns
+            SoraAccount("different-address", "different-name")
+
+        val error = try {
+            walletValidator.captured()
+            Assert.fail("Expected selected-wallet rejection")
+            null
+        } catch (error: Throwable) {
+            error
+        }
+
+        Assert.assertEquals("SORA2_SELECTED_WALLET_CHANGED", error?.message)
+        Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
+        Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
+    }
+
+    @Test
     fun `observe transfer`() = runTest {
-        val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
+        val kp = Sr25519Keypair(
+            ByteArray(32) { 1 },
+            ByteArray(32) { 2 },
+            ByteArray(32) { 3 },
+        )
         every {
             builder.buildTransfer(
                 any(),
@@ -164,10 +248,12 @@ class AssetsInteractorTest {
                 any(),
                 any(),
                 any(),
-                any()
+                any(),
             )
         } returns txTransfer()
-        every { transactionHistoryRepository.saveTransaction(any()) } returns Unit
+        every {
+            transactionHistoryRepository.saveTransaction("address", any())
+        } returns Unit
         coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns kp
         coEvery {
             assetsRepository.observeTransfer(
@@ -176,13 +262,181 @@ class AssetsInteractorTest {
                 any(),
                 any(),
                 any(),
-                any()
+                any(),
+                any(),
             )
         } returns ExtrinsicSubmitStatus(true, "txhash", "")
         Assert.assertEquals(
             "txhash",
-            interactor.observeTransfer("to", TestTokens.xorToken, BigDecimal.ONE, BigDecimal.ONE)
+            interactor.observeTransfer(
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                expectedWalletId = "address",
+            )
         )
+        Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
+        Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
+    }
+
+    @Test
+    fun `confirmed transfer survives local history persistence failure`() = runTest {
+        val kp = Sr25519Keypair(
+            ByteArray(32) { 1 },
+            ByteArray(32) { 2 },
+            ByteArray(32) { 3 },
+        )
+        every {
+            builder.buildTransfer(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } returns txTransfer()
+        every {
+            transactionHistoryRepository.saveTransaction("address", any())
+        } throws IllegalStateException("local history unavailable")
+        coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns kp
+        coEvery {
+            assetsRepository.observeTransfer(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } returns ExtrinsicSubmitStatus(true, "txhash", "blockhash")
+
+        Assert.assertEquals(
+            "txhash",
+            interactor.observeTransfer(
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                expectedWalletId = "address",
+            )
+        )
+        Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
+        Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
+    }
+
+    @Test
+    fun `submission unknown transfer is persisted pending and returns exact hash`() = runTest {
+        val kp = Sr25519Keypair(
+            ByteArray(32) { 1 },
+            ByteArray(32) { 2 },
+            ByteArray(32) { 3 },
+        )
+        val transactionHash = "0x${"11".repeat(32)}"
+        val submissionUnknown = ExtrinsicSubmissionUnknownException(
+            transactionHash = transactionHash,
+            cause = IllegalStateException("RPC connection lost"),
+        )
+        every {
+            builder.buildTransfer(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } returns txTransfer()
+        every {
+            transactionHistoryRepository.saveTransaction("address", any())
+        } returns Unit
+        coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns kp
+        coEvery {
+            assetsRepository.observeTransfer(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } throws submissionUnknown
+
+        Assert.assertEquals(
+            transactionHash,
+            interactor.observeTransfer(
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                expectedWalletId = "address",
+            ),
+        )
+
+        verify {
+            builder.buildTransfer(
+                txHash = transactionHash,
+                blockHash = null,
+                fee = BigDecimal.ONE,
+                status = TransactionStatus.PENDING,
+                date = any(),
+                amount = BigDecimal.ONE,
+                peer = "to",
+                type = TransactionTransferType.OUTGOING,
+                token = TestTokens.xorToken,
+            )
+        }
+        Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
+        Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
+    }
+
+    @Test
+    fun `unrelated transfer failure propagates after keypair zeroization`() = runTest {
+        val kp = Sr25519Keypair(
+            ByteArray(32) { 1 },
+            ByteArray(32) { 2 },
+            ByteArray(32) { 3 },
+        )
+        val submissionFailure = IllegalStateException("definitive local validation failure")
+        coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns kp
+        coEvery {
+            assetsRepository.observeTransfer(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } throws submissionFailure
+
+        val error = try {
+            interactor.observeTransfer(
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                expectedWalletId = "address",
+            )
+            Assert.fail("Expected definitive failure")
+            null
+        } catch (error: Throwable) {
+            error
+        }
+
+        Assert.assertTrue(error === submissionFailure)
+        Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
+        Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
     }
 
     @Test

@@ -53,6 +53,7 @@ internal fun ProfileItems(
     onAccountsClick: () -> Unit,
     onSoraCardClick: () -> Unit,
     onBuyCrypto: () -> Unit,
+    onPolkamarktClick: () -> Unit,
     onNodeClick: () -> Unit,
     onAppSettingsClick: () -> Unit,
     onLoginClick: () -> Unit,
@@ -96,6 +97,17 @@ internal fun ProfileItems(
                 onClick = onBuyCrypto,
             )
         }
+    }
+    if (state.polkamarktVisible) {
+        CategoryItem(
+            modifier = Modifier
+                .testTagAsId("Polkamarkt")
+                .padding(top = Dimens.x2),
+            title = stringResource(id = R.string.polkamarkt_title),
+            subtitle = stringResource(id = R.string.polkamarkt_subtitle),
+            icon = R.drawable.ic_settings_buy_crypto,
+            onClick = onPolkamarktClick,
+        )
     }
     CategoryItem(
         modifier = Modifier
@@ -182,10 +194,12 @@ private fun PreviewProfile() {
                 soraCardStatusIconDrawableRes = R.drawable.ic_connection_indicator_green,
                 soraCardIbanError = null,
                 canStartGatehubOnboarding = true,
+                polkamarktVisible = true,
             ),
             onAccountsClick = { },
             onSoraCardClick = { },
             onBuyCrypto = { },
+            onPolkamarktClick = { },
             onNodeClick = { },
             onAppSettingsClick = { },
             onLoginClick = { },

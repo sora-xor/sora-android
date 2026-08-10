@@ -55,4 +55,6 @@ interface PolkaswapRouter {
     fun showRemoveLiquidity(ids: StringPair)
 
     fun showSwap(tokenFromId: String? = null, tokenToId: String? = null, isLaunchedFromSoraCard: Boolean = false)
+
+    fun showPolkamarkt()
 }

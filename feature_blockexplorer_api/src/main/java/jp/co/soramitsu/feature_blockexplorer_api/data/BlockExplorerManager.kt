@@ -47,6 +47,7 @@ import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -121,6 +122,7 @@ class BlockExplorerManager @Inject constructor(
             db.assetDao().insertFiatPrice(fiats)
             resultList
         }.getOrElse {
+            if (it is CancellationException) throw it
             FirebaseWrapper.recordException(it)
             emptyList()
         }
@@ -138,6 +140,8 @@ class BlockExplorerManager @Inject constructor(
                         FiatInfo(it.id, it.priceUSD?.toDoubleNan())
                     }
                 )
+            }.onFailure {
+                if (it is CancellationException) throw it
             }
         }
     }
@@ -153,6 +157,7 @@ class BlockExplorerManager @Inject constructor(
                 db.referralsDao().insertReferrals(rewards)
             }
         }.onFailure {
+            if (it is CancellationException) throw it
             FirebaseWrapper.recordException(it)
         }
     }
@@ -171,6 +176,8 @@ class BlockExplorerManager @Inject constructor(
             val response = polkaswapIndexerClient.getPoolApys()
             tempApy.clear()
             tempApy.addAll(response)
+        }.onFailure {
+            if (it is CancellationException) throw it
         }
     }
 

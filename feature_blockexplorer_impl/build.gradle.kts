@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
@@ -72,6 +71,7 @@ android {
 dependencies {
 
     implementation(project(":common"))
+    implementation(project(":core_db"))
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_assets_api"))
     implementation(project(":feature_blockexplorer_api"))
@@ -80,6 +80,7 @@ dependencies {
     implementation(project(":feature_wallet_api"))
     implementation(project(":network"))
 
+    implementation(libs.roomDep)
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)
     implementation(libs.constraintDep)

@@ -102,6 +102,29 @@ fun <S : Schema<S>> EncodableStruct<S>.hash(): String {
 
 fun String.extrinsicHash(): String {
     return fromHex().blake2b256().toHexString(withPrefix = true)
+        .canonicalExtrinsicHash()
+}
+
+/**
+ * Canonical transaction identity used by durable pending journals and reconciliation.
+ *
+ * Whitespace, truncated values, overlong values, embedded prefixes, and the all-zero sentinel are
+ * rejected instead of being normalized into a different transaction.
+ */
+fun String.canonicalExtrinsicHash(): String {
+    require(this == trim()) { "INVALID_EXTRINSIC_HASH" }
+    val payload = when {
+        startsWith("0x") || startsWith("0X") -> substring(2)
+        else -> this
+    }
+    require(
+        payload.length == 64 &&
+            payload.all { it.isDigit() || it.lowercaseChar() in 'a'..'f' } &&
+            payload.any { it != '0' }
+    ) {
+        "INVALID_EXTRINSIC_HASH"
+    }
+    return "0x${payload.lowercase()}"
 }
 
 fun String.toHexAccountId(): String = toAccountId().toHexString()

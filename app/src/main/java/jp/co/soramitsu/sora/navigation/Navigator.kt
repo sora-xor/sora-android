@@ -296,6 +296,10 @@ class Navigator :
         )
     }
 
+    override fun showPolkamarkt() {
+        navController?.navigate(R.id.polkamarktFragment)
+    }
+
     override fun showAppSettings() {
         navController?.navigate(R.id.appSettingsFragment)
     }

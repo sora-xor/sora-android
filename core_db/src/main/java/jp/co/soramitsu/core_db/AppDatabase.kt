@@ -40,6 +40,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.AutoMigrationSpec
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.core_db.converters.BigDecimalNullableConverter
 import jp.co.soramitsu.core_db.dao.AccountDao
 import jp.co.soramitsu.core_db.dao.AssetDao
@@ -48,6 +49,7 @@ import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.dao.NodeDao
 import jp.co.soramitsu.core_db.dao.PoolDao
 import jp.co.soramitsu.core_db.dao.ReferralsDao
+import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_63_64
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_65_66
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_66_67
@@ -57,6 +59,10 @@ import jp.co.soramitsu.core_db.migrations.migration_addBackupCardHub_72_73
 import jp.co.soramitsu.core_db.migrations.migration_addReferralCardHub_71_72
 import jp.co.soramitsu.core_db.migrations.migration_poolsBaseToken_61_62
 import jp.co.soramitsu.core_db.migrations.migration_reorderBaseToken_62_63
+import jp.co.soramitsu.core_db.migrations.migration_walletIdentity_73_74
+import jp.co.soramitsu.core_db.migrations.migration_walletDeletionJournal_74_75
+import jp.co.soramitsu.core_db.migrations.migration_pendingNetworkTransactionChain_76_77
+import jp.co.soramitsu.core_db.migrations.migration_sora2PendingSubmission_75_76
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.BasicPoolLocal
 import jp.co.soramitsu.core_db.model.CardHubLocal
@@ -68,10 +74,17 @@ import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.core_db.model.UserPoolLocal
+import jp.co.soramitsu.core_db.model.NetworkAccountLocal
+import jp.co.soramitsu.core_db.model.PendingNetworkTransactionLocal
+import jp.co.soramitsu.core_db.model.Sora2PendingSubmissionLocal
+import jp.co.soramitsu.core_db.model.WalletIdentityLocal
+import jp.co.soramitsu.core_db.model.WalletMigrationJournalLocal
+import jp.co.soramitsu.core_db.model.WalletDeletionOperationLocal
+import jp.co.soramitsu.core_db.model.WalletDeletionTargetLocal
 
 @TypeConverters(BigDecimalNullableConverter::class)
 @Database(
-    version = 73,
+    version = 77,
     entities = [
         AssetLocal::class,
         TokenLocal::class,
@@ -84,6 +97,13 @@ import jp.co.soramitsu.core_db.model.UserPoolLocal
         NodeLocal::class,
         CardHubLocal::class,
         GlobalCardHubLocal::class,
+        WalletIdentityLocal::class,
+        NetworkAccountLocal::class,
+        WalletMigrationJournalLocal::class,
+        PendingNetworkTransactionLocal::class,
+        Sora2PendingSubmissionLocal::class,
+        WalletDeletionOperationLocal::class,
+        WalletDeletionTargetLocal::class,
     ],
     exportSchema = true,
     autoMigrations = [
@@ -108,12 +128,19 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private fun buildDatabase(context: Context): AppDatabase {
+            if (
+                WalletUpgradeBackup.blockingFailure() == null &&
+                WalletRecoveryCapabilityGate.mode() ==
+                WalletRecoveryCapabilityGate.Mode.NORMAL
+            ) {
+                WalletUpgradeBackup.requirePrepared(context)
+            }
             return Room.databaseBuilder(
                 context.applicationContext,
                 AppDatabase::class.java,
                 "app.db"
             )
-                .fallbackToDestructiveMigrationFrom(true, *destructiveMigrationFromList)
+                .openHelperFactory(WalletUpgradeBackup.gatedOpenHelperFactory())
                 .addMigrations(migration_poolsBaseToken_61_62)
                 .addMigrations(migration_reorderBaseToken_62_63)
                 .addMigrations(migration_CardHub_63_64)
@@ -123,6 +150,10 @@ abstract class AppDatabase : RoomDatabase() {
                 .addMigrations(migration_PoolsTables_69_70)
                 .addMigrations(migration_addReferralCardHub_71_72)
                 .addMigrations(migration_addBackupCardHub_72_73)
+                .addMigrations(migration_walletIdentity_73_74)
+                .addMigrations(migration_walletDeletionJournal_74_75)
+                .addMigrations(migration_sora2PendingSubmission_75_76)
+                .addMigrations(migration_pendingNetworkTransactionChain_76_77)
                 .build()
         }
     }
@@ -141,6 +172,8 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun globalCardsHubDao(): GlobalCardsHubDao
 
+    abstract fun walletIdentityDao(): WalletIdentityDao
+
     @DeleteTable.Entries(
         DeleteTable(tableName = "extrinsics"),
         DeleteTable(tableName = "extrinsic_params")
@@ -157,5 +190,3 @@ abstract class AppDatabase : RoomDatabase() {
     )
     class AutoMigrationSpecTo71 : AutoMigrationSpec
 }
-
-private val destructiveMigrationFromList = IntArray(43) { i -> i + 15 }

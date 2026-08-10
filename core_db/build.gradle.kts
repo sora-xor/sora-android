@@ -1,7 +1,6 @@
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
@@ -61,11 +60,20 @@ android {
             )
         }
     }
+
+    // MigrationTestHelper resolves retained schemas from instrumentation assets by the
+    // production database's canonical name. KSP exports the v74/v75/v76 compiler fixtures under
+    // their own canonical-name directories first; after each reviewed JSON is copied
+    // byte-for-byte into jp.co.soramitsu.core_db.AppDatabase/{74,75,76}.json, this source set makes
+    // those canonical artifacts available to every flavored Android-test APK.
+    sourceSets {
+        getByName("androidTest").assets.directories.add(File(projectDir, "schemas").absolutePath)
+    }
 }
 
 class RoomSchemaArgProvider(
-    @InputDirectory
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     val schemaDir: File,
 ) : CommandLineArgumentProvider {
 
@@ -90,6 +98,7 @@ dependencies {
     implementation(libs.roomDep)
     implementation(libs.roomKtxDep)
     ksp(libs.roomCompilerDep)
+    add("kspAndroidTest", libs.roomCompilerDep)
 
     androidTestImplementation(project(":test_data"))
     androidTestImplementation(libs.soramitsu.android.foundation)

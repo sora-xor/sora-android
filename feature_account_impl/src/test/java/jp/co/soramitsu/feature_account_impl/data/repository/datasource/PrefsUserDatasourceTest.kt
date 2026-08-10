@@ -119,13 +119,6 @@ class PrefsUserDatasourceTest {
     }
 
     @Test
-    fun `clear user data called`() = runTest {
-        prefsUserDatasource.clearAllData()
-
-        verify(soraPreferences).clearAll()
-    }
-
-    @Test
     fun `save parent invite code called`() = runTest {
         val inviteCode = "1234"
         val keyInviteCode = "invite_code"

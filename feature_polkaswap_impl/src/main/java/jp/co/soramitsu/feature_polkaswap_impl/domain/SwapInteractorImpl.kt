@@ -305,6 +305,7 @@ class SwapInteractorImpl(
         swapResult.set(result.success)
         if (result.success) {
             transactionHistoryRepository.saveTransaction(
+                soraAccount.substrateAddress,
                 transactionBuilder.buildSwap(
                     txHash = result.txHash,
                     blockHash = result.blockHash,

@@ -115,12 +115,12 @@ class TransactionHistoryHandlerTest {
     private var mockedUri = DEFAULT_ICON_URI
 
     private val tokens = listOf(TestTokens.xorToken)
-    private val txHash = "txHash"
+    private val txHash = TestTransactions.sendSuccessfulTx.base.txHash
 
     private val transactionsWithHeaders = listOf(
         EventUiModel.EventTimeSeparatorUiModel(title = "01 Feb 1970"),
         EventUiModel.EventTxUiModel.EventTransferOutUiModel(
-            "txHash",
+            txHash,
             mockedUri,
             "cnRuoXdU9t5bv5EQAiXT2gQozAvrVawqZkT2AQS1Msr8T8ZZu",
             "11:58",

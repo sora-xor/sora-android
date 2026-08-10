@@ -101,7 +101,7 @@ class WalletRepositoryImpl @Inject constructor(
         keypair: Sr25519Keypair,
         from: String,
     ): ExtrinsicSubmitStatus {
-        return extrinsicManager.submitAndWaitExtrinsic(
+        return extrinsicManager.submitLegacyMigrationAndWaitExtrinsic(
             from = from,
             keypair = keypair,
             useBatchAll = false,

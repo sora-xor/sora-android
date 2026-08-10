@@ -46,6 +46,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -123,6 +124,37 @@ class TxDetailsViewModel @AssistedInject constructor(
             soraConfigManager.getTransactionExplorerUrl(it)
         }
         val screenState = when (transaction) {
+            is Transaction.Sora2Submission -> {
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        txHash = transaction.base.txHash,
+                        blockHash = transaction.base.blockHash,
+                        sender = currentAddress,
+                        infos = emptyList(),
+                        txStatus = transaction.base.status,
+                        time = dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM,
+                        ),
+                        networkFee = null,
+                        networkFeeFiat = null,
+                        txTypeIcon = R.drawable.ic_refresh_24,
+                        txTypeTitle = resourceManager.getString(
+                            if (transaction.submissionIsAmbiguous) {
+                                R.string.wallet_transaction_status_unknown
+                            } else {
+                                R.string.wallet_transaction_submitted
+                            }
+                        ),
+                        txTypeSubTitle = transaction.networkId.uppercase(),
+                    ),
+                    amount1 = "",
+                    amountFiat = "",
+                    icon1 = DEFAULT_ICON_URI,
+                    txType = TxType.REFERRAL_TRANSFER,
+                )
+            }
+
             is Transaction.EthTransfer -> {
                 TxDetailsScreenState(
                     basicTxDetailsState = BasicTxDetailsState(

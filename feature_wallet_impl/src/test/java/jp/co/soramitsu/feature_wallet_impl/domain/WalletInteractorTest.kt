@@ -69,6 +69,8 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 
 @RunWith(MockitoJUnitRunner::class)
 @ExperimentalCoroutinesApi
@@ -147,7 +149,12 @@ class WalletInteractorTest {
     @Test
     fun `migrate extrinsic`() = runTest {
         given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
-        val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
+        given(walletRepository.needsMigration(irohaData.address)).willReturn(true)
+        val kp = Sr25519Keypair(
+            ByteArray(32) { 1 },
+            ByteArray(32) { 2 },
+            ByteArray(32) { 3 },
+        )
         given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(kp)
         given(
             walletRepository.migrate(
@@ -165,6 +172,34 @@ class WalletInteractorTest {
             BlockEntry("header", listOf("0x112323345", "0x35456472"))
         )
         assertEquals(true, interactor.migrate())
+        verify(walletRepository).needsMigration(irohaData.address)
+        verify(walletRepository).migrate(
+            irohaData.address,
+            irohaData.publicKey,
+            irohaData.claimSignature,
+            kp,
+            soraAccount.substrateAddress,
+        )
+        assertEquals(true, kp.privateKey.all { it == 0.toByte() })
+        assertEquals(true, kp.nonce.all { it == 0.toByte() })
+    }
+
+    @Test
+    fun `migrate rechecks authoritative account state before loading the signing key`() = runTest {
+        given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
+        given(walletRepository.needsMigration(irohaData.address)).willReturn(false)
+
+        assertEquals(true, interactor.migrate())
+
+        verify(userRepository).saveNeedsMigration(false, soraAccount)
+        verify(credentialsRepository, never()).retrieveKeyPair(soraAccount)
+        verify(walletRepository, never()).migrate(
+            anyString(),
+            anyString(),
+            anyString(),
+            any(),
+            anyString(),
+        )
     }
 
 //    @Ignore

@@ -117,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Већ сте применили други позивни код</string>
   <string name="common_error_invitation_code_not_found">Код позивнице је неважећи</string>
   <string name="common_error_inviter_registered_after_invitee">Наведени позивни код се не може применити јер је од корисника који се регистровао после вас</string>
-  <string name="common_error_mnemonic_is_not_valid">Уверите се да се приступна фраза састоји од 12 или 15 речи и да су све тачне.</string>
-  <string name="common_error_mnemonic_length_error">Приступна фраза мора да садржи 15 речи</string>
+  <string name="common_error_mnemonic_is_not_valid">Уверите се да се приступна фраза састоји од 12 или 24 речи и да су све тачне.</string>
+  <string name="common_error_mnemonic_length_error">Приступна фраза мора да садржи 12 или 24 речи</string>
   <string name="common_error_network">Молимо вас, проверите интернет везу и покушајте поново касније.</string>
   <string name="common_error_no_browser_error">Molim vas instalirajte brauzer da otvorite link</string>
   <string name="common_error_not_enough_invitations">Жао нам је, али немате ниједну позивницу за дељење</string>
@@ -279,7 +279,7 @@
   <string name="export_protection_passphrase_1">Ako izgubim moju pristupnu frazu, moja sredstvace biti izgubljena zauvek.</string>
   <string name="export_protection_passphrase_2">Ako otkrijem ili podelim sa nekim moju pristupnu frazu, moja sredstva mogu biti ukradena:</string>
   <string name="export_protection_passphrase_3">Moja potpuna odgovornost je da čuvam bezbednom moju pistupnu frazu.</string>
-  <string name="export_protection_passphrase_description">U sledećem koraku ćete videti vašu pristupnu frazu (12 reči) koja će vam omogućiti da povratite vaš nalog.</string>
+  <string name="export_protection_passphrase_description">U sledećem koraku ćete videti vašu pristupnu frazu (24 reči) koja će vam omogućiti da povratite vaš nalog.</string>
   <string name="export_protection_seed_1">Ako izgubim moj raw seed, moja sredstva će biti izgubljena zauvek.</string>
   <string name="export_protection_seed_2">Ako otkrijem ili podelim sa nekim moj raw seed, moja sredstva mogu biti ukradena.</string>
   <string name="export_protection_seed_3">Moja potpuna odgovornost je da čuvam moj raw seed bezbednim</string>

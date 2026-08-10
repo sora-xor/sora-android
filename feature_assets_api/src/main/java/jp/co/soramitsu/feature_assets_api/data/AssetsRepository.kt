@@ -79,7 +79,8 @@ interface AssetsRepository {
         to: String,
         token: Token,
         amount: BigDecimal,
-        fee: BigDecimal
+        fee: BigDecimal,
+        validateSelectedWallet: suspend () -> Unit,
     ): ExtrinsicSubmitStatus
 
     fun subscribeAsset(

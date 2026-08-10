@@ -1,5 +1,5 @@
 [versions]
-agp = "9.2.0"
+agp = "9.2.1"
 kotlin = "2.3.21"
 ksp = "2.3.6"
 appcompat = "1.7.1"
@@ -16,7 +16,7 @@ coil = "2.7.0"
 svg = "1.4"
 jdenticon = "1.1"
 archFragmentTest = "1.8.9"
-mockk = "1.14.6"
+mockk = "1.13.11"
 truth = "1.4.2"
 mockitoKotlin = "6.1.0"
 mockito = "5.20.0"
@@ -41,6 +41,7 @@ timber = "5.0.1"
 ktor = "2.3.1"
 ed = "2.0.1"
 xerces = "2.9.0"
+bouncycastle = "1.78.1"
 dagger = "2.59.2"
 hiltCompose = "1.3.0"
 hiltWorkManager = "1.3.0"
@@ -101,6 +102,7 @@ ktorOkHttpDep = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktorWebSocketDep = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 ed25519Dep = { module = "com.github.warchant:ed25519-sha3-java", version.ref = "ed" }
 xercesDep = { module = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces", version.ref = "xerces" }
+bcprovDep = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 timberDep = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 workManagerDep = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }
 insetterDep = { module = "dev.chrisbanes.insetter:insetter", version.ref = "insetter" }
@@ -123,6 +125,7 @@ firebaseAnalyticsDep = { module = "com.google.firebase:firebase-analytics" }
 coreKtxDep = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 archFragmentTestDep = { module = "androidx.fragment:fragment-testing", version.ref = "archFragmentTest" }
 mockkDep = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockkAndroidDep = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 truthDep = { module = "com.google.truth:truth", version.ref = "truth" }
 mockitoKotlinDep = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 mockitoDep = { module = "org.mockito:mockito-core", version.ref = "mockito" }

@@ -73,14 +73,30 @@ class WalletInteractorImpl(
     override suspend fun migrate(): Boolean {
         val soraAccount = userRepository.getCurSoraAccount()
         val irohaData = credentialsRepository.getIrohaData(soraAccount)
+        // The claim screen can remain open while another client completes the legacy migration.
+        // Re-read the authoritative account-bound state before touching the SORA2 signing key;
+        // a stale local/fetched flag is never authority to submit a duplicate claim.
+        if (!walletRepository.needsMigration(irohaData.address)) {
+            userRepository.saveNeedsMigration(false, soraAccount)
+            return true
+        }
+        check(
+            userRepository.getCurSoraAccount().substrateAddress ==
+                soraAccount.substrateAddress
+        ) { "MIGRATION_SELECTED_WALLET_CHANGED" }
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        return walletRepository.migrate(
-            irohaData.address,
-            irohaData.publicKey,
-            irohaData.claimSignature,
-            keypair,
-            soraAccount.substrateAddress,
-        ).success
+        return try {
+            walletRepository.migrate(
+                irohaData.address,
+                irohaData.publicKey,
+                irohaData.claimSignature,
+                keypair,
+                soraAccount.substrateAddress,
+            ).success
+        } finally {
+            keypair.privateKey.fill(0)
+            keypair.nonce.fill(0)
+        }
     }
 
     override suspend fun getContacts(query: String): List<String>? {

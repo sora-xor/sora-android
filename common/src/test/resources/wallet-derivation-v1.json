@@ -1,0 +1,78 @@
+{
+  "format": "sora-mobile-wallet-derivation-v1",
+  "provenance": {
+    "sora2PublicKeySource": "Fearless Universal Wallet V2 retained vectors",
+    "sora2PublicKeySourceFile": "docs/universal-wallet-v2-vectors.json",
+    "sora2PublicKeySourceGeneratedAt": "2026-06-23",
+    "sora2PublicKeySourceSha256": "3b6ea60c00eae541c6dc05617b295acf8fc3ad1e097274a6c0dad5c15fbfdbc6",
+    "sora2SeedSource": "Retained entropy-based PBKDF2-HMAC-SHA512 mini-seed, first 32 bytes, shared by Android SubstrateSeedFactory and iOS SSFUtils SeedFactory",
+    "directBip39Seed32Source": "First 32 bytes of the mnemonic-string BIP-39 PBKDF2-HMAC-SHA512 seed; a Nexus master-seed companion vector, never a SORA2 seed"
+  },
+  "iroha": {
+    "curve": "ed25519",
+    "derivation": "SLIP-0010 hardened",
+    "minamoto": {
+      "chainId": "00000000-0000-0000-0000-000000000753",
+      "i105Discriminant": 753,
+      "path": "m/44'/617'/0'/0'"
+    },
+    "taira": {
+      "chainId": "fc56984b-2be7-431d-840e-21514d1883f0",
+      "i105Discriminant": 369,
+      "path": "m/44'/617'/1'/0'"
+    }
+  },
+  "sora2": {
+    "curve": "sr25519",
+    "ss58Prefix": 69,
+    "derivationVersion": 1,
+    "derivationPath": "",
+    "seedContract": "Preserve the installed-wallet entropy-based mini-seed contract exactly on Android and iOS; never replace it with the distinct mnemonic-string BIP-39 seed contract."
+  },
+  "vectors": [
+    {
+      "name": "bip39-12-abandon",
+      "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+      "sora2": {
+        "directBip39Seed32Hex": "5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc1",
+        "legacySora2MiniSeedHex": "4ed8d4b17698ddeaa1f1559f152f87b5d472f725ca86d341bd0276f1b61197e2",
+        "publicKeyHex": "66933bd1f37070ef87bd1198af3dacceb095237f803f3d32b173e6b425ed7972",
+        "address": "cnTon6cV8Ze8ATHT1tZdHregCc3wBc8vfg7P5o2TtwdUoRf4m"
+      },
+      "minamoto": {
+        "privateKeyHex": "37b9341a9c5b929033232530e8ecfa3aab48c288995b07c6c323e4b8d0ace9de",
+        "publicKeyHex": "8dea60946dd00558e61254c7aadeccabd1e39d5b9a12a45b678e22209f19426f",
+        "address": "sorauﾛ1Pcﾅ2ﾗtﾉaﾘLﾕｽ2MヱﾐﾎｳﾓヱｷﾆｲMﾒSﾏｱヱｷJヱFmJﾇMs6YN687Y"
+      },
+      "taira": {
+        "privateKeyHex": "1c8892e7107b47862ec584fe774c3849d28c34c27b95c8a77465abbc6b1e56a7",
+        "publicKeyHex": "ebe2fe329305f8e4c19cc4b159bc6ddd413cf5831422bdb9b3b93ee5053bd4d3",
+        "address": "testuﾛ1Q1ﾘﾚxgﾁﾃﾀdRZﾀWｿfXLGﾜﾘPﾐﾉﾉkﾃ7ﾖｶBｹssﾙﾈjｷｹUNYWHP"
+      }
+    },
+    {
+      "name": "bip39-24-abandon",
+      "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+      "minamoto": {
+        "privateKeyHex": "1cb3508397019db593a6ad5b7dd9f65f38c690c9a310535fc0713f79e9876a19",
+        "publicKeyHex": "2651a79b3da908fbdb63e0756e9be9561c6c4638120c3af0d444670cd088a138",
+        "address": "sorauﾛ1NﾍﾖﾁﾘﾗoEuKﾗﾁK2ｴA9ｸxmxBﾈｴDﾋﾐﾐﾅｴjuXvｾﾍｵn5FAXTS3"
+      },
+      "taira": {
+        "privateKeyHex": "5f916a08a0ed1414873eedd4b8ae45f54a1a75097bd6f34e9d379edfc205c374",
+        "publicKeyHex": "6f14b7c26f99962837dfc13244188d9c4699f987b319b41949a898e6988d98a4",
+        "address": "testuﾛ1PDｵｾNｸkﾁoｹﾐyTW2Xiﾙo1yﾔｵhｷ7CﾃgｷｵｶkｶﾋWｴﾎn73BW7C"
+      }
+    },
+    {
+      "name": "fearless-default-24",
+      "mnemonic": "abandon amount liar amount expire adjust cage candy arch gather drum bullet absurd math era live bid rhythm alien crouch range attend journey unaware",
+      "sora2": {
+        "directBip39Seed32Hex": "0a6d060f6242aece4b074e48e7d8166f792a9b2bb7b295fa5ac289eda7647290",
+        "legacySora2MiniSeedHex": "8b5c2f0b1d0f27f223df9bf205e3f3cdbf2fb9c3e4da36e0351a7a6ca6d10785",
+        "publicKeyHex": "4a50a9606f3b0c47e0582f9a2dce9da3ec59819c6e15468f6f03f07e7fcfed23",
+        "address": "cnTAiyqa6dqfhfX5HhJfmPdd56sum2WXFvg1i1UgRReB336yz"
+      }
+    }
+  ]
+}

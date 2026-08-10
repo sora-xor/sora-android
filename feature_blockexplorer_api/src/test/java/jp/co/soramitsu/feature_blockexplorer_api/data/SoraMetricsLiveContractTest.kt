@@ -35,13 +35,15 @@ class SoraMetricsLiveContractTest {
         val response = postGraphQl(
             """
                 query {
-                  historyElements(first: 1, offset: 0, orderBy: [TIMESTAMP_DESC, ID_DESC]) {
-                    pageInfo { hasNextPage }
+                  historyElements(first: 1, after: null, orderBy: [TIMESTAMP_DESC, ID_DESC]) {
+                    totalCount
+                    pageInfo { hasNextPage endCursor }
                     edges {
                       node {
                         id
                         timestamp
                         blockHash
+                        blockHeight
                         module
                         method
                         address

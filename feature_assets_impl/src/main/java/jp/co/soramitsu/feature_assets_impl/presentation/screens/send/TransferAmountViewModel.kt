@@ -62,16 +62,32 @@ import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.SendState
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+
+internal data class Sora2TransferFeePreviewRequest(
+    val revision: Long,
+    val walletId: String,
+    val tokenId: String,
+    val amount: BigDecimal,
+) {
+    fun matches(
+        currentRevision: Long,
+        currentWalletId: String?,
+        currentTokenId: String?,
+        currentAmount: BigDecimal?,
+    ): Boolean =
+        revision == currentRevision &&
+            walletId == currentWalletId &&
+            tokenId == currentTokenId &&
+            currentAmount?.compareTo(amount) == 0
+}
 
 class TransferAmountViewModel @AssistedInject constructor(
     private val interactor: AssetsInteractor,
@@ -103,6 +119,9 @@ class TransferAmountViewModel @AssistedInject constructor(
     private var curAsset: Asset? = null
     private var feeAsset: Asset? = null
     private var fee: BigDecimal? = null
+    private var feeWalletId: String? = null
+    private var currentWalletId: String? = null
+    private var feeReviewRevision = 0L
     private val assetsList = mutableListOf<Asset>()
     private var curTokenId: String = assetId
     private var hasXorReminderWarningBeenChecked = false
@@ -122,6 +141,14 @@ class TransferAmountViewModel @AssistedInject constructor(
             title = R.string.common_enter_amount,
         )
         viewModelScope.launch {
+            interactor.flowCurSoraAccount().collectLatest { account ->
+                if (currentWalletId != account.substrateAddress) {
+                    currentWalletId = account.substrateAddress
+                    invalidateFeeReview()
+                }
+            }
+        }
+        viewModelScope.launch {
             interactor.subscribeAssetsActiveOfCurAccount()
                 .catch { onError(it) }
                 .collectLatest { list ->
@@ -131,7 +158,10 @@ class TransferAmountViewModel @AssistedInject constructor(
                     feeAsset = list.find { it.token.id == SubstrateOptionsProvider.feeAssetId }
                         ?.also { asset ->
                             if (fee == null) {
-                                calcTransactionFee(asset)
+                                calcTransactionFee(
+                                    asset,
+                                    _sendState.value.input?.amount.orZero(),
+                                )
                             }
                         }
                     _sendState.value.input?.amount?.let {
@@ -143,15 +173,18 @@ class TransferAmountViewModel @AssistedInject constructor(
             enteredFlow
                 .drop(1)
                 .debounce(ViewHelper.debounce)
-                .onEach { amount ->
+                .collectLatest { amount ->
+                    feeAsset?.let { calcTransactionFee(it, amount) }
                     checkEnteredAmount(amount)
-                }.filter {
-                    _sendState.value.input?.token?.id == SubstrateOptionsProvider.feeAssetId ||
+                    if (
+                        _sendState.value.input?.token?.id ==
+                        SubstrateOptionsProvider.feeAssetId ||
                         !hasXorReminderWarningBeenChecked
-                }.onEach {
-                    updateTransactionReminderWarningVisibility()
-                    hasXorReminderWarningBeenChecked = true
-                }.collect()
+                    ) {
+                        updateTransactionReminderWarningVisibility()
+                        hasXorReminderWarningBeenChecked = true
+                    }
+                }
         }
     }
 
@@ -200,10 +233,17 @@ class TransferAmountViewModel @AssistedInject constructor(
         }
 
     fun onTokenChange(tokenId: String) {
+        invalidateFeeReview()
         curTokenId = tokenId
         updateCurAsset()
         _sendState.value.input?.amount?.let {
             checkEnteredAmount(it)
+            viewModelScope.launch {
+                feeAsset?.let { feeAsset ->
+                    calcTransactionFee(feeAsset, it)
+                    checkEnteredAmount(it)
+                }
+            }
         }
         hasXorReminderWarningBeenChecked = false
     }
@@ -277,22 +317,55 @@ class TransferAmountViewModel @AssistedInject constructor(
         asset.printFiat(numbersFormatter)
     )
 
-    private suspend fun calcTransactionFee(feeAsset: Asset) {
-        fee = interactor.calcTransactionFee(
-            recipientId, feeAsset.token, BigDecimal.ONE,
-        ).also {
-            if (it != null) {
-                _sendState.value = _sendState.value.copy(
-                    feeLoading = false,
-                    fee = feeAsset.token.printBalance(it, numbersFormatter, AssetHolder.ROUNDING),
-                    feeFiat = feeAsset.token.printFiat(it, numbersFormatter),
-                    input = _sendState.value.input?.copy(
-                        enabled = true,
-                    ),
-                )
+    private suspend fun calcTransactionFee(feeAsset: Asset, amount: BigDecimal) {
+        val token = curAsset?.token ?: return
+        val walletId = currentWalletId
+            ?: interactor.getCurSoraAccount().substrateAddress.also {
+                currentWalletId = it
             }
+        val request = Sora2TransferFeePreviewRequest(
+            revision = invalidateFeeReview(),
+            walletId = walletId,
+            tokenId = token.id,
+            amount = amount,
+        )
+        val calculatedFee = try {
+            interactor.calcTransactionFee(
+                recipientId,
+                token,
+                amount,
+                expectedWalletId = walletId,
+            )
+        } catch (error: Throwable) {
+            if (error is CancellationException) throw error
+            if (request.matchesCurrent()) onError(error)
+            return
+        }
+        if (!request.matchesCurrent()) return
+        fee = calculatedFee
+        feeWalletId = calculatedFee?.let { walletId }
+        if (calculatedFee != null) {
+            _sendState.value = _sendState.value.copy(
+                feeLoading = false,
+                fee = feeAsset.token.printBalance(
+                    calculatedFee,
+                    numbersFormatter,
+                    AssetHolder.ROUNDING,
+                ),
+                feeFiat = feeAsset.token.printFiat(calculatedFee, numbersFormatter),
+                input = _sendState.value.input?.copy(
+                    enabled = true,
+                ),
+            )
         }
     }
+
+    private fun Sora2TransferFeePreviewRequest.matchesCurrent(): Boolean = matches(
+        currentRevision = feeReviewRevision,
+        currentWalletId = currentWalletId,
+        currentTokenId = curAsset?.token?.id,
+        currentAmount = _sendState.value.input?.amount.orZero(),
+    )
 
     fun copyAddress() {
         clipboardManager.addToClipboard(recipientId)
@@ -303,6 +376,11 @@ class TransferAmountViewModel @AssistedInject constructor(
         val curAsset = curAsset ?: return
         val amount = _sendState.value.input?.amount ?: return
         val fee = fee ?: return
+        val expectedWalletId = feeWalletId ?: return
+        if (currentWalletId != expectedWalletId) {
+            invalidateFeeReview()
+            return
+        }
         viewModelScope.launch {
             _sendState.value = _sendState.value.copy(
                 inProgress = true
@@ -314,6 +392,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     curAsset.token,
                     amount,
                     fee,
+                    expectedWalletId,
                 )
                 if (success.isNotEmpty()) _transactionSuccessEvent.trigger()
             } catch (t: Throwable) {
@@ -405,6 +484,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     }
 
     fun amountChanged(value: BigDecimal) {
+        invalidateFeeReview()
         _sendState.value = _sendState.value.copy(
             input = _sendState.value.input?.copy(
                 amount = value,
@@ -437,6 +517,18 @@ class TransferAmountViewModel @AssistedInject constructor(
                 ).orEmpty()
             )
         )
+        invalidateFeeReview()
         enteredFlow.value = amount
+    }
+
+    private fun invalidateFeeReview(): Long {
+        feeReviewRevision += 1L
+        fee = null
+        feeWalletId = null
+        _sendState.value = _sendState.value.copy(
+            feeLoading = true,
+            reviewEnabled = false,
+        )
+        return feeReviewRevision
     }
 }

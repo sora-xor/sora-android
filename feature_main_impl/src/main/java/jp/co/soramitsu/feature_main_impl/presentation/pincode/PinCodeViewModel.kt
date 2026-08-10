@@ -51,11 +51,14 @@ import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
@@ -115,6 +118,7 @@ class PinCodeViewModel @Inject constructor(
 
     private val _logoutEvent = SingleLiveEvent<String>()
     val logoutEvent: LiveData<String> = _logoutEvent
+    private var pendingDeletionPreview: WalletDeletionPreview? = null
 
     private val _biometryInitialDialogEvent = SingleLiveEvent<Unit>()
     val biometryInitialDialogEvent: LiveData<Unit> = _biometryInitialDialogEvent
@@ -453,15 +457,17 @@ class PinCodeViewModel @Inject constructor(
 
     private fun logout() {
         viewModelScope.launch {
-            val multiAccount = mainInteractor.getSoraAccountsCount() > 1
-
-            if (multiAccount) {
-                _logoutEvent.value = resourceManager.getString(R.string.logout_dialog_body)
-            } else {
-                _logoutEvent.value =
-                    resourceManager.getString(R.string.logout_dialog_body) + resourceManager.getString(
-                        R.string.logout_remove_nodes_body
-                    )
+            try {
+                check(this@PinCodeViewModel::addresses.isInitialized) {
+                    "WALLET_DELETION_TARGETS_MISSING"
+                }
+                publishDeletionPreview(
+                    interactor.createWalletDeletionPreview(addresses.toList())
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                handleWalletDeletionError(error, reloadPreview = false)
             }
         }
     }
@@ -482,32 +488,89 @@ class PinCodeViewModel @Inject constructor(
     fun logoutOkPressed() {
         viewModelScope.launch {
             progress.showProgress()
-            if (mainInteractor.getSoraAccountsCount() == 1) {
-                fullLogout()
-            } else {
-                logoutWithSwitchAccount()
-            }
-            progress.hideProgress()
-        }
-    }
-
-    private suspend fun fullLogout() {
-        interactor.fullLogout()
-        _resetApplicationEvent.trigger()
-    }
-
-    private suspend fun logoutWithSwitchAccount() {
-        if (this::addresses.isInitialized && addresses.size == 1) {
-            val currentAddress = mainInteractor.getCurUserAddress()
-            interactor.clearAccountData(addresses.first())
-            if (currentAddress == addresses.first()) {
-                mainInteractor.getSoraAccountsList().firstOrNull()?.let { account ->
-                    mainInteractor.setCurSoraAccount(account)
+            try {
+                val preview = checkNotNull(pendingDeletionPreview) {
+                    "WALLET_DELETION_PREVIEW_MISSING"
                 }
+                val result = interactor.confirmAndExecuteWalletDeletion(preview)
+                pendingDeletionPreview = null
+                when (result.scope) {
+                    WalletDeletionScope.ALL -> _resetApplicationEvent.trigger()
+                    WalletDeletionScope.SINGLE -> _switchAccountEvent.trigger()
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                handleWalletDeletionError(error, reloadPreview = true)
+            } finally {
+                progress.hideProgress()
             }
-            _switchAccountEvent.trigger()
         }
     }
+
+    private fun publishDeletionPreview(preview: WalletDeletionPreview) {
+        pendingDeletionPreview = preview
+        val walletNames = preview.targets.joinToString(separator = "\n\n") {
+            "${it.displayName}\n${it.walletId}"
+        }
+        val baseMessage = resourceManager.getString(R.string.logout_dialog_body)
+        val allWalletSuffix =
+            if (preview.scope == WalletDeletionScope.ALL) {
+                resourceManager.getString(R.string.logout_remove_nodes_body)
+            } else {
+                ""
+            }
+        _logoutEvent.value =
+            "$baseMessage$allWalletSuffix\n\n$walletNames"
+    }
+
+    private suspend fun handleWalletDeletionError(
+        error: Throwable,
+        reloadPreview: Boolean,
+    ) {
+        onError(error)
+        val failureCode = try {
+            interactor.walletDeletionFailureCode()
+        } catch (lookupError: CancellationException) {
+            throw lookupError
+        } catch (_: Throwable) {
+            null
+        }
+        if (failureCode != null) {
+            pendingDeletionPreview = null
+            errorLiveData.value = failureCode
+            // Startup resumes the durable journal and routes the user to the
+            // encrypted-backup recovery screen. Never continue in a partially
+            // deleted session.
+            _resetApplicationEvent.trigger()
+            return
+        }
+
+        errorLiveData.value = error.walletDeletionSafeCode()
+        if (!reloadPreview || !this::addresses.isInitialized) {
+            pendingDeletionPreview = null
+            return
+        }
+        try {
+            // Confirmation capabilities are one-shot. If no durable journal
+            // exists, present a newly verified preview and require another
+            // explicit confirmation rather than reusing the consumed value.
+            publishDeletionPreview(
+                interactor.createWalletDeletionPreview(addresses.toList())
+            )
+        } catch (reloadError: CancellationException) {
+            throw reloadError
+        } catch (reloadError: Throwable) {
+            pendingDeletionPreview = null
+            onError(reloadError)
+            errorLiveData.value = reloadError.walletDeletionSafeCode()
+        }
+    }
+
+    private fun Throwable.walletDeletionSafeCode(): String =
+        message
+            ?.takeIf { it.matches(Regex("^[A-Z0-9_]{1,128}$")) }
+            ?: "WALLET_DELETION_FAILED"
 
     fun biometryDialogYesClicked() {
         viewModelScope.launch {
