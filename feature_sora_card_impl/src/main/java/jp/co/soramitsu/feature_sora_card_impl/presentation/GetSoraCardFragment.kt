@@ -49,6 +49,7 @@ import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
+import jp.co.soramitsu.oauth.uiscreens.clientsui.GetSoraCardScreen
 
 @AndroidEntryPoint
 class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {

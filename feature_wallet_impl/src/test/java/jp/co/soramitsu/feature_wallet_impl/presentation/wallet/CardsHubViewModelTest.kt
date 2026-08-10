@@ -53,6 +53,7 @@ import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.nexus.WalletNetworkId
@@ -156,6 +157,9 @@ class CardsHubViewModelTest {
     private lateinit var demeterFarmingInteractor: DemeterFarmingInteractor
 
     @MockK
+    private lateinit var darkThemeManager: DarkThemeManager
+
+    @MockK
     private lateinit var nexusPortfolioRepository: NexusPortfolioRepository
 
     @MockK
@@ -211,6 +215,7 @@ class CardsHubViewModelTest {
         coEvery { cardsHubInteractorImpl.updateCardVisibilityOnCardHub(any(), any()) } returns Unit
         coEvery { demeterFarmingInteractor.getFarmedPools() } returns emptyList()
         every { demeterFarmingInteractor.subscribeFarms(any()) } returns flow { emit("") }
+        every { darkThemeManager.darkModeStatusFlow } returns MutableStateFlow(true)
         every { cardsHubInteractorImpl.subscribeVisibleCardsHubList() } returns
             flow {
                 emit(
@@ -272,6 +277,7 @@ class CardsHubViewModelTest {
             connectionManager,
             soraCardInteractor,
             coroutineManager,
+            darkThemeManager,
             nexusPortfolioRepository,
             nexusTransactionCoordinator,
         )
