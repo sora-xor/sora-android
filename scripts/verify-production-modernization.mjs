@@ -25,7 +25,8 @@ import {
 } from "./lib/qualified-candidate-provenance.mjs";
 import {
   PRODUCTION_PI_CAPABILITY_KEYS,
-  validateProductionPiReceipt,
+  validateProductionPiRawLiveReceipt,
+  verifyProductionPiCandidateReceiptV3,
 } from "./lib/production-pi-receipt.mjs";
 import {
   ANDROID_PRODUCTION_ADMISSION_V3,
@@ -2224,6 +2225,15 @@ const productionRolloutCandidateProvenance = read(
 const productionRolloutPiReceipt = read(
   "scripts/lib/production-pi-receipt.mjs",
 );
+const productionPiCandidateRequest = read(
+  "scripts/create-production-pi-candidate-controller-request.mjs",
+);
+const productionPiCandidateVerifier = read(
+  "scripts/verify-production-pi-candidate-receipt.mjs",
+);
+const productionPiV3ContractHarness = read(
+  "scripts/test-production-pi-receipt-v3.mjs",
+);
 const productionRolloutV3Contract = read(
   "scripts/lib/production-rollout-v3-contract.mjs",
 );
@@ -3254,8 +3264,22 @@ const productionRunnerTempPathBindings = Object.freeze([
     "PRODUCTION_CANDIDATE_ARTIFACT_RECEIPT_PATH",
     "sora-qualified-candidate-artifacts.json",
   ],
-  ["PI_PRODUCTION_PROBE_RECEIPT", "sora-pi-production-probe.json"],
-  ["PRODUCTION_CANDIDATE_PI_RECEIPT_PATH", "sora-pi-production-probe.json"],
+  [
+    "PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH",
+    "sora-pi-production-raw-live-v1.json",
+  ],
+  [
+    "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH",
+    "sora-pi-production-capability-probe-v3.json",
+  ],
+  [
+    "PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH",
+    "sora-pi-production-capability-probe-v3-signature.json",
+  ],
+  [
+    "PRODUCTION_PI_CANDIDATE_CONTROLLER_REQUEST_PATH",
+    "sora-pi-production-candidate-controller-request-v1.json",
+  ],
   ["PRODUCTION_QUALIFICATION_RECEIPT_PATH", "sora-production-admission.json"],
   ["PRODUCTION_PRIMARY_BUILD_LOG_PATH", "sora-android-primary-build.log"],
   [
@@ -9049,23 +9073,13 @@ const piProbeObservedAtMs = Date.parse(
   probe.piIndexer?.lastReprobedAtUtc ?? "",
 );
 const piProbeNowMs = Date.now();
-const piLiveReceiptPath = process.env.PI_PRODUCTION_PROBE_RECEIPT ?? "";
+const piLiveReceiptPath =
+  process.env.PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH ?? "";
 const piLiveRecord =
   piLiveReceiptPath.length > 0 && isAbsolute(piLiveReceiptPath)
     ? readStrictJsonFile(piLiveReceiptPath, 64 * 1024)
     : null;
 const piLiveReceipt = piLiveRecord?.value ?? null;
-const piLiveCapabilityKeys = Object.keys(
-  piLiveReceipt?.capabilities ?? {},
-).sort();
-const piExpectedCapabilityKeys = [
-  "nexusAvailable",
-  "nexusSendsAvailable",
-  "polkamarktMutationsAvailable",
-  "polkamarktVisible",
-  "tairaDefaultVisible",
-].sort();
-const piLiveCheckedAt = piLiveReceipt?.checkedAtEpochSeconds;
 const piLiveNow = Math.floor(piProbeNowMs / 1000);
 assert(
   probe.schemaVersion === 1 &&
@@ -9082,90 +9096,7 @@ block(
   "PI_PRODUCTION_PROBE_EVIDENCE_STALE_OR_INVALID",
 );
 block(
-  !(
-    hasExactKeys(piLiveReceipt, [
-      "schemaVersion",
-      "endpoint",
-      "checkedAtEpochSeconds",
-      "serviceId",
-      "ecosystem",
-      "chainId",
-      "network",
-      "readOnly",
-      "finalizedCheckpoint",
-      "indexedCheckpoint",
-      "lastIndexedAtEpochSeconds",
-      "mobileConfigHealthBound",
-      "capabilityFinalizedCheckpoint",
-      "capabilityIndexedCheckpoint",
-      "sora2GenesisHash",
-      "finalizedCheckpointBlockHash",
-      "capabilityFinalizedCheckpointBlockHash",
-      "historyBlockHeightContractDeployed",
-      "capabilities",
-      "privacy",
-    ]) &&
-    hasExactKeys(piLiveReceipt.capabilities, piExpectedCapabilityKeys) &&
-    hasExactKeys(piLiveReceipt.privacy, [
-      "accountIdentifiersIncluded",
-      "mutationsAttempted",
-    ]) &&
-    piLiveReceipt.schemaVersion === 1 &&
-    piLiveReceipt.endpoint === "https://pi.soramitsu.io/graphql" &&
-    piLiveReceipt.serviceId === "pi.soramitsu.io" &&
-    piLiveReceipt.ecosystem === "sora2" &&
-    piLiveReceipt.chainId === "sora:mainnet" &&
-    piLiveReceipt.network === "mainnet" &&
-    piLiveReceipt.readOnly === true &&
-    Number.isSafeInteger(piLiveCheckedAt) &&
-    piLiveCheckedAt <= piLiveNow + 30 &&
-    piLiveNow - piLiveCheckedAt <= 5 * 60 &&
-    Number.isSafeInteger(piLiveReceipt.finalizedCheckpoint) &&
-    piLiveReceipt.finalizedCheckpoint > 0 &&
-    Number.isSafeInteger(piLiveReceipt.indexedCheckpoint) &&
-    piLiveReceipt.indexedCheckpoint > 0 &&
-    piLiveReceipt.indexedCheckpoint <= piLiveReceipt.finalizedCheckpoint &&
-    piLiveReceipt.finalizedCheckpoint - piLiveReceipt.indexedCheckpoint <= 32 &&
-    Number.isSafeInteger(piLiveReceipt.lastIndexedAtEpochSeconds) &&
-    piLiveReceipt.lastIndexedAtEpochSeconds <= piLiveNow + 30 &&
-    piLiveNow - piLiveReceipt.lastIndexedAtEpochSeconds <= 5 * 60 &&
-    piLiveReceipt.mobileConfigHealthBound === true &&
-    Number.isSafeInteger(piLiveReceipt.capabilityFinalizedCheckpoint) &&
-    piLiveReceipt.capabilityFinalizedCheckpoint >=
-    piLiveReceipt.finalizedCheckpoint &&
-    Number.isSafeInteger(piLiveReceipt.capabilityIndexedCheckpoint) &&
-    piLiveReceipt.capabilityIndexedCheckpoint >=
-      piLiveReceipt.indexedCheckpoint &&
-    piLiveReceipt.capabilityIndexedCheckpoint <=
-      piLiveReceipt.capabilityFinalizedCheckpoint &&
-    piLiveReceipt.capabilityFinalizedCheckpoint -
-      piLiveReceipt.capabilityIndexedCheckpoint <=
-      32 &&
-    piLiveReceipt.sora2GenesisHash ===
-      "0x7e4e32d0feafd4f9c9414b0be86373f9a1efa904809b683453a9af6856d38ad5" &&
-    /^0x[0-9a-f]{64}$/.test(
-      piLiveReceipt.finalizedCheckpointBlockHash ?? "",
-    ) &&
-    !/^0x0{64}$/.test(piLiveReceipt.finalizedCheckpointBlockHash) &&
-    /^0x[0-9a-f]{64}$/.test(
-      piLiveReceipt.capabilityFinalizedCheckpointBlockHash ?? "",
-    ) &&
-    !/^0x0{64}$/.test(
-      piLiveReceipt.capabilityFinalizedCheckpointBlockHash,
-    ) &&
-    (piLiveReceipt.capabilityFinalizedCheckpoint !==
-      piLiveReceipt.finalizedCheckpoint ||
-      piLiveReceipt.capabilityFinalizedCheckpointBlockHash ===
-        piLiveReceipt.finalizedCheckpointBlockHash) &&
-    piLiveReceipt.historyBlockHeightContractDeployed === true &&
-    JSON.stringify(piLiveCapabilityKeys) ===
-      JSON.stringify(piExpectedCapabilityKeys) &&
-    piExpectedCapabilityKeys.every(
-      (key) => piLiveReceipt.capabilities[key] === true,
-    ) &&
-    piLiveReceipt.privacy?.accountIdentifiersIncluded === false &&
-    piLiveReceipt.privacy?.mutationsAttempted === false
-  ),
+  validateProductionPiRawLiveReceipt(piLiveReceipt, piLiveNow) === null,
   "LIVE_PI_PRODUCTION_PROBE_RECEIPT_MISSING_OR_INVALID",
 );
 assert(
@@ -9210,10 +9141,10 @@ assert(
     piProductionProbe.includes("SYNTHETIC_HISTORY_ACCOUNT") &&
     piProductionProbe.includes("mutationsAttempted: false") &&
     productionReleaseWorkflow.includes(
-      'node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_PROBE_RECEIPT"',
+      'node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH"',
     ) &&
     productionReleaseWorkflow.includes(
-      'append_runner_temp_path "PI_PRODUCTION_PROBE_RECEIPT" "sora-pi-production-probe.json"',
+      'append_runner_temp_path "PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH" "sora-pi-production-raw-live-v1.json"',
     ),
   "LIVE_PI_PRODUCTION_CONTRACT_GATE_MISSING",
 );
@@ -13074,7 +13005,7 @@ const fundedCanaryPiReceiptQualifiedAt = ({
   maximumFutureSkewSeconds,
 }) =>
   isFundedCanaryEpoch(referenceEpochSeconds) &&
-  validateProductionPiReceipt(receipt, referenceEpochSeconds, {
+  validateProductionPiRawLiveReceipt(receipt, referenceEpochSeconds, {
     requireAllCapabilities: false,
     maximumFutureSkewSeconds,
   }) !== null;
@@ -15071,15 +15002,57 @@ assert(
     !productionRolloutValidator.includes(
       "sora-android-production-rollout-v2",
     ) &&
-    productionRolloutValidator.includes("PI_PRODUCTION_PROBE_RECEIPT") &&
-    productionRolloutPiReceipt.includes("productionPiCapabilityBinding") &&
+    productionRolloutValidator.includes(
+      "PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH",
+    ) &&
+    productionRolloutValidator.includes(
+      "PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH",
+    ) &&
+    productionRolloutPiReceipt.includes(
+      "productionPiRawCapabilityBinding",
+    ) &&
+    productionRolloutPiReceipt.includes(
+      "productionPiCandidateBinding",
+    ) &&
+    productionRolloutPiReceipt.includes(
+      'contractId: "sora-pi-production-capability-probe-v3"',
+    ) &&
+    productionRolloutPiReceipt.includes(
+      "verifyProductionPiCandidateReceiptV3",
+    ) &&
     productionRolloutValidator.includes("MAXIMUM_CAPABILITY_AGE_SECONDS") &&
     productionRolloutPiReceipt.includes(
-      "receipt.capabilities[key] === true",
+      "capabilities[key] === true",
     ) &&
-    productionRolloutPiReceipt.includes("PRODUCTION_PI_RECEIPT_KEYS") &&
+    productionRolloutPiReceipt.includes(
+      "PRODUCTION_PI_RAW_LIVE_RECEIPT_KEYS",
+    ) &&
+    productionRolloutPiReceipt.includes(
+      "PRODUCTION_PI_CANDIDATE_RECEIPT_KEYS",
+    ) &&
     productionRolloutPiReceipt.includes("walletaddress") &&
     productionRolloutPiReceipt.includes("rawpayload") &&
+    productionPiCandidateRequest.includes(
+      "sora-android-production-pi-candidate-controller-request-v1",
+    ) &&
+    productionPiCandidateRequest.includes(
+      "PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH",
+    ) &&
+    productionPiCandidateVerifier.includes(
+      "--require-raw-live-binding",
+    ) &&
+    productionPiCandidateVerifier.includes(
+      "verifyProductionPiCandidateReceiptV3",
+    ) &&
+    productionPiV3ContractHarness.includes(
+      "legacy v1 receipt is wire-incompatible",
+    ) &&
+    productionPiV3ContractHarness.includes(
+      "legacy v2 receipt is wire-incompatible",
+    ) &&
+    productionPiV3ContractHarness.includes(
+      "2 positive contexts and ${failClosedCases} fail-closed cases passed",
+    ) &&
     productionRolloutStrictEvidence.includes("fsConstants.O_NOFOLLOW") &&
     productionRolloutStrictEvidence.includes("parseStrictJsonBytes") &&
     productionRolloutStrictEvidence.includes("keys.has(key)") &&
@@ -15133,7 +15106,7 @@ assert(
       "verifyTairaDeploymentManifestV1",
     ) &&
     productionRolloutValidator.includes(
-      "identity.tairaDeploymentManifestSha256",
+      "identity?.tairaDeploymentManifestSha256",
     ) &&
     productionRolloutValidator.includes(
       "productionAdmission.tairaDeployment.current.chainId",
@@ -15191,10 +15164,28 @@ assert(
       'append_runner_temp_path "PRODUCTION_CANDIDATE_ARTIFACT_RECEIPT_PATH" "sora-qualified-candidate-artifacts.json"',
     ) &&
     productionReleaseWorkflowForRollout.includes(
-      'append_runner_temp_path "PI_PRODUCTION_PROBE_RECEIPT" "sora-pi-production-probe.json"',
+      'append_runner_temp_path "PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH" "sora-pi-production-raw-live-v1.json"',
     ) &&
     productionReleaseWorkflowForRollout.includes(
-      'append_runner_temp_path "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" "sora-pi-production-probe.json"',
+      'append_runner_temp_path "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" "sora-pi-production-capability-probe-v3.json"',
+    ) &&
+    productionReleaseWorkflowForRollout.includes(
+      'append_runner_temp_path "PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH" "sora-pi-production-capability-probe-v3-signature.json"',
+    ) &&
+    productionReleaseWorkflowForRollout.includes(
+      "node scripts/test-production-pi-receipt-v3.mjs",
+    ) &&
+    productionReleaseWorkflowForRollout.includes(
+      "node scripts/create-production-pi-candidate-controller-request.mjs",
+    ) &&
+    productionReleaseWorkflowForRollout.includes(
+      "node scripts/verify-production-pi-candidate-receipt.mjs",
+    ) &&
+    productionReleaseWorkflowForRollout.includes(
+      "/v3/android/pi-candidate-receipt",
+    ) &&
+    productionReleaseWorkflowForRollout.includes(
+      "candidate-pi-receipt-signature.json",
     ) &&
     productionReleaseWorkflowForRollout.includes(
       'append_runner_temp_path "PRODUCTION_QUALIFICATION_RECEIPT_PATH" "sora-production-admission.json"',
@@ -15235,7 +15226,7 @@ assert(
     sourceMatchCount(
       productionReleaseWorkflowForRollout,
       /--pinnedpubkey "sha256\/\/\$PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64"/g,
-    ) === 2 &&
+    ) === 4 &&
     productionReleaseWorkflowForRollout.includes(
       "secrets.PRODUCTION_ROLLOUT_CONTROLLER_TOKEN",
     ) &&
@@ -15310,7 +15301,10 @@ assert(
       "!exactKeys(admissionValue",
     ) &&
     productionRolloutControllerRequest.includes(
-      "validateProductionPiReceipt",
+      "validateProductionPiRawLiveReceipt",
+    ) &&
+    productionRolloutControllerRequest.includes(
+      "verifyProductionPiCandidateReceiptV3",
     ) &&
     productionRolloutControllerRequest.includes(
       "productionRolloutTrustSha256",
@@ -15398,10 +15392,16 @@ assert(
       'System.getenv("PRODUCTION_CANDIDATE_ARTIFACT_RECEIPT_PATH") ?: ""',
     ) &&
     rootBuildForRollout.includes(
-      'System.getenv("PI_PRODUCTION_PROBE_RECEIPT") ?: ""',
+      'System.getenv("PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH") ?: ""',
     ) &&
     rootBuildForRollout.includes(
       'System.getenv("PRODUCTION_CANDIDATE_PI_RECEIPT_PATH") ?: ""',
+    ) &&
+    rootBuildForRollout.includes(
+      'System.getenv("PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH") ?: ""',
+    ) &&
+    rootBuildForRollout.includes(
+      'System.getenv("PRODUCTION_PI_CONTROLLER_ID") ?: ""',
     ) &&
     rootBuildForRollout.includes(
       'System.getenv("PRODUCTION_ROLLOUT_EVIDENCE_PATH") ?: ""',
@@ -15472,6 +15472,56 @@ const releaseAdmissionRuntimeMetadata = hashExternalRegularFile({
   suffix: "sora2_metadata",
   maximumBytes: 2 * 1024 * 1024,
 });
+const releaseCandidatePiPath =
+  process.env.PRODUCTION_CANDIDATE_PI_RECEIPT_PATH ?? "";
+const releaseCandidatePiSignaturePath =
+  process.env.PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH ?? "";
+const releaseCandidatePiRecord =
+  isAbsolute(releaseCandidatePiPath) &&
+  resolve(releaseCandidatePiPath) === releaseCandidatePiPath &&
+  releaseCandidatePiPath !== piLiveReceiptPath
+    ? readStrictJsonFile(releaseCandidatePiPath, 64 * 1024)
+    : null;
+const releaseCandidatePiSignatureRecord =
+  isAbsolute(releaseCandidatePiSignaturePath) &&
+  resolve(releaseCandidatePiSignaturePath) ===
+    releaseCandidatePiSignaturePath &&
+  releaseCandidatePiSignaturePath !== releaseCandidatePiPath &&
+  releaseCandidatePiSignaturePath !== piLiveReceiptPath
+    ? readStrictJsonFile(releaseCandidatePiSignaturePath, 64 * 1024)
+    : null;
+const releaseCandidatePiQualification = strictRelease
+  ? verifyProductionPiCandidateReceiptV3({
+      receiptRecord: releaseCandidatePiRecord,
+      signatureRecord: releaseCandidatePiSignatureRecord,
+      trustRecord: productionRolloutTrustStrictRecord,
+      expectedTrustSha256: protectedProductionRolloutTrustSha256,
+      evaluationEpoch: fundedCanaryEvaluationEpoch,
+      validationContext: {
+        expectedControllerId:
+          process.env.PRODUCTION_PI_CONTROLLER_ID ?? "",
+        expectedCandidate: {
+          artifactSha256: fundedCanaryAab?.sha256,
+          artifactBytes: fundedCanaryAab?.bytes,
+          sourceRevision: fundedCanarySourceRevision,
+        },
+        expectedRawLiveReceiptSha256: fundedCanaryPiRecord?.sha256,
+        expectedRuntimeMetadataSha256:
+          releaseAdmissionRuntimeMetadata?.sha256,
+        expectedTairaDeployment: {
+          chainId: tairaDeploymentAdmission?.current?.chainId,
+          toriiEndpoint:
+            tairaDeploymentAdmission?.current?.toriiBaseUrl,
+          genesisHash:
+            tairaDeploymentAdmission?.current?.genesisSha256,
+        },
+      },
+    })
+  : null;
+block(
+  strictRelease && releaseCandidatePiQualification === null,
+  "PI_CANDIDATE_BOUND_V3_RECEIPT_NOT_QUALIFIED",
+);
 const releaseAdmissionWorkflow = hashExternalRegularFile({
   path: join(root, QUALIFICATION_WORKFLOW_RELATIVE_PATH),
   suffix: "production_release_qualification.yml",
@@ -15496,7 +15546,8 @@ const releaseAdmissionIdentity = {
   qualifiedAtEpochSeconds: fundedCanaryEvaluationEpochQualified
     ? fundedCanaryEvaluationEpoch
     : null,
-  candidatePiProbeReceiptSha256: fundedCanaryPiRecord?.sha256 ?? null,
+  candidatePiProbeReceiptSha256:
+    releaseCandidatePiRecord?.sha256 ?? null,
   qualificationRepository: process.env.GITHUB_REPOSITORY ?? null,
   qualificationWorkflowPath: QUALIFICATION_WORKFLOW_RELATIVE_PATH,
   qualificationWorkflowSha256: releaseAdmissionWorkflow?.sha256 ?? null,

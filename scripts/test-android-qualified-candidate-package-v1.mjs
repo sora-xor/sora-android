@@ -151,6 +151,7 @@ const createFixture = () => {
     ),
     admission: join(root, "inputs/production-admission.json"),
     pi: join(root, "inputs/candidate-pi.json"),
+    piSignature: join(root, "inputs/candidate-pi-signature.json"),
     dependency: join(root, "config/gradle-dependency-provenance.json"),
     signing: join(root, "config/android-production-signing-identity.json"),
     iroha: join(root, "config/iroha-mobile-sdk-pin.json"),
@@ -182,6 +183,11 @@ const createFixture = () => {
     mode: 0o600,
   });
   writeJson(paths.pi, { schemaVersion: 3, status: "qualified" });
+  writeJson(paths.piSignature, {
+    schemaVersion: 1,
+    contractId: "sora-pi-production-capability-probe-signature-v1",
+    receiptSha256: sha256File(paths.pi),
+  });
 
   const dependency = {
     schemaVersion: 3,
@@ -775,6 +781,7 @@ const create = (fixture) =>
       fixture.paths.canaryExtraction,
     productionAdmissionPath: fixture.paths.admission,
     candidatePiReceiptPath: fixture.paths.pi,
+    candidatePiReceiptSignaturePath: fixture.paths.piSignature,
   });
 
 const materializePackage = (fixture, manifest) => {
@@ -845,6 +852,7 @@ const materializePackage = (fixture, manifest) => {
     ],
     [fixture.paths.admission, "production-admission.json"],
     [fixture.paths.pi, "candidate-pi-receipt.json"],
+    [fixture.paths.piSignature, "candidate-pi-receipt-signature.json"],
   ];
   for (const [source, name] of copies) copyFileSync(source, join(packageRoot, name));
   writeJson(join(packageRoot, "candidate-package-manifest.json"), manifest);

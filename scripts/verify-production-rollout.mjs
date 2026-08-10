@@ -17,7 +17,8 @@ import {
 } from "./lib/qualified-candidate-provenance.mjs";
 import {
   containsPrivacySensitiveField,
-  validateProductionPiReceipt,
+  validateProductionPiRawLiveReceipt,
+  verifyProductionPiCandidateReceiptV3,
 } from "./lib/production-pi-receipt.mjs";
 import {
   isProductionAdmissionV3Envelope,
@@ -43,11 +44,15 @@ const evidencePathRaw = process.env.PRODUCTION_ROLLOUT_EVIDENCE_PATH ?? "";
 const targetRaw = process.env.PRODUCTION_ROLLOUT_TARGET_PERCENT ?? "";
 const candidateArtifactPathRaw =
   process.env.PRODUCTION_CANDIDATE_AAB_PATH ?? "";
-const capabilitySnapshotPathRaw = process.env.PI_PRODUCTION_PROBE_RECEIPT ?? "";
+const capabilitySnapshotPathRaw =
+  process.env.PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH ?? "";
 const productionQualificationPathRaw =
   process.env.PRODUCTION_QUALIFICATION_RECEIPT_PATH ?? "";
 const candidatePiReceiptPathRaw =
   process.env.PRODUCTION_CANDIDATE_PI_RECEIPT_PATH ?? "";
+const candidatePiSignaturePathRaw =
+  process.env.PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH ?? "";
+const piControllerIdRaw = process.env.PRODUCTION_PI_CONTROLLER_ID ?? "";
 const priorRolloutReceiptPaths = new Map([
   [1, process.env.PRODUCTION_ROLLOUT_RECEIPT_1_PATH ?? ""],
   [5, process.env.PRODUCTION_ROLLOUT_RECEIPT_5_PATH ?? ""],
@@ -321,7 +326,10 @@ const validateLiveCapabilitySnapshot = () => {
     fail("ROLLOUT_LIVE_CAPABILITY_SNAPSHOT_MISSING_OR_INVALID");
     return null;
   }
-  const snapshot = validateProductionPiReceipt(record.value, evaluationEpoch);
+  const snapshot = validateProductionPiRawLiveReceipt(
+    record.value,
+    evaluationEpoch,
+  );
   if (snapshot === null) {
     fail("ROLLOUT_LIVE_CAPABILITY_SNAPSHOT_NOT_QUALIFIED");
     return null;
@@ -569,6 +577,24 @@ const validateProductionAdmission = (
     fail("ROLLOUT_CANDIDATE_PI_RECEIPT_MISSING_OR_INVALID");
     return null;
   }
+  if (
+    candidatePiSignaturePathRaw.length === 0 ||
+    !isAbsolute(candidatePiSignaturePathRaw) ||
+    resolve(candidatePiSignaturePathRaw) !== candidatePiSignaturePathRaw ||
+    candidatePiSignaturePathRaw === candidatePiReceiptPathRaw ||
+    candidatePiReceiptPathRaw === capabilitySnapshotPathRaw
+  ) {
+    fail("ROLLOUT_CANDIDATE_PI_SIGNATURE_PATH_MISSING_OR_INVALID");
+    return null;
+  }
+  const candidatePiSignatureRecord = readStrictJsonFile(
+    candidatePiSignaturePathRaw,
+    MAXIMUM_RECEIPT_BYTES,
+  );
+  if (candidatePiSignatureRecord === null) {
+    fail("ROLLOUT_CANDIDATE_PI_SIGNATURE_MISSING_OR_INVALID");
+    return null;
+  }
   const result = record.value;
   const admission = result?.admission;
   const identity = admission?.identity;
@@ -583,6 +609,33 @@ const validateProductionAdmission = (
         ),
       ]
     : [];
+  const tairaDeployment = validateTairaDeployment(
+    identity?.tairaDeploymentManifestSha256,
+  );
+  const candidatePiSnapshot =
+    tairaDeployment === null
+      ? null
+      : verifyProductionPiCandidateReceiptV3({
+          receiptRecord: candidatePiRecord,
+          signatureRecord: candidatePiSignatureRecord,
+          trustRecord,
+          expectedTrustSha256: trustSha256PinRaw,
+          evaluationEpoch: identity?.qualifiedAtEpochSeconds,
+          validationContext: {
+            expectedControllerId: piControllerIdRaw,
+            expectedCandidate: {
+              artifactSha256: candidateArtifact.sha256,
+              artifactBytes: candidateArtifact.bytes,
+              sourceRevision: candidateSourceRevisionRaw,
+            },
+            expectedRuntimeMetadataSha256: runtimeMetadata.sha256,
+            expectedTairaDeployment: {
+              chainId: tairaDeployment.current.chainId,
+              toriiEndpoint: tairaDeployment.current.toriiBaseUrl,
+              genesisHash: tairaDeployment.current.genesisSha256,
+            },
+          },
+        });
   if (
     !exactKeys(result, ["mode", "failures", "releaseBlockers", "admission"]) ||
     result.mode !== "release" ||
@@ -609,19 +662,16 @@ const validateProductionAdmission = (
     identity.qualifiedAtEpochSeconds === 0 ||
     identity.qualifiedAtEpochSeconds > evaluationEpoch ||
     identity.candidatePiProbeReceiptSha256 !== candidatePiRecord.sha256 ||
-    validateProductionPiReceipt(
-      candidatePiRecord.value,
-      identity.qualifiedAtEpochSeconds,
-    ) === null ||
+    candidatePiSnapshot === null ||
     !isBoundedInteger(
-      candidatePiRecord.value?.checkedAtEpochSeconds,
+      candidatePiRecord.value?.capturedAtEpochSeconds,
       9_999_999_999,
     ) ||
-    candidatePiRecord.value.checkedAtEpochSeconds === 0 ||
-    candidatePiRecord.value.checkedAtEpochSeconds >
+    candidatePiRecord.value.capturedAtEpochSeconds === 0 ||
+    candidatePiRecord.value.capturedAtEpochSeconds >
       identity.qualifiedAtEpochSeconds + MAXIMUM_FUTURE_SKEW_SECONDS ||
     identity.qualifiedAtEpochSeconds -
-      candidatePiRecord.value.checkedAtEpochSeconds >
+      candidatePiRecord.value.capturedAtEpochSeconds >
       MAXIMUM_CAPABILITY_AGE_SECONDS ||
     identity.sora2NetworkRevision !== SORA2_REVISION ||
     identity.runtimeSpecVersion !== 130 ||
@@ -638,12 +688,7 @@ const validateProductionAdmission = (
     fail("ROLLOUT_PRODUCTION_ADMISSION_NOT_QUALIFIED");
     return null;
   }
-  const tairaDeployment = validateTairaDeployment(
-    identity.tairaDeploymentManifestSha256,
-  );
-  if (tairaDeployment === null) {
-    return null;
-  }
+  if (tairaDeployment === null) return null;
   const provenance = validateQualifiedCandidateProvenance({
     root,
     admissionIdentity: identity,

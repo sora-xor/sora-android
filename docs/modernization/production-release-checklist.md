@@ -1027,6 +1027,15 @@ This release is fail-closed. A build is not a production candidate while
   the shared operational envelope predicates for admission, current and prior rollout receipts, the
   prior-link cursor, and the controller request; exact v3 must pass, while complete v2 and both mixed
   schema/contract-ID combinations must fail in every context.
+- Run `scripts/test-production-pi-receipt-v3.mjs`. The fresh
+  `PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH` is an observed-only raw v1 contract; it must never share a
+  path with `PRODUCTION_CANDIDATE_PI_RECEIPT_PATH`. Before candidate admission, obtain the exact
+  candidate-bound `sora-pi-production-capability-probe-v3` and
+  `PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH` from the pinned protected controller. Verify the
+  receipt against the AAB bytes, source revision, raw-live receipt digest, runtime 130 identity,
+  admitted Taira epoch, Minamoto/Taira checkpoints, protected controller ID, rollout-authorizer
+  public key, and protected trust-file digest. Seal both receipt and signature into the immutable
+  candidate artifact; reject candidate v1/v2 and mixed-generation envelopes.
 - A qualified trust-root replacement must remain accepted by ordinary source/build gates while the
   rollout gate separately requires its protected exact SHA-256 and two distinct reviewed Ed25519
   authorities. Missing controller origin/token, current evidence, any prior-chain or GitHub

@@ -290,6 +290,7 @@ export const createAndroidQualifiedCandidatePackageV1 = ({
   fundedCanaryControllerExtractionReceiptPath,
   productionAdmissionPath,
   candidatePiReceiptPath,
+  candidatePiReceiptSignaturePath,
 }) => {
   if (!canonicalAbsoluteRoot(root)) fail("CANDIDATE_PACKAGE_ROOT_INVALID");
   if (!REVISION.test(sourceRevision ?? "") || /^0+$/.test(sourceRevision)) {
@@ -391,6 +392,11 @@ export const createAndroidQualifiedCandidatePackageV1 = ({
     MAXIMUM_EVIDENCE_BYTES,
     "CANDIDATE_PACKAGE_PI_RECEIPT_INVALID",
   );
+  const candidatePiSignature = strictJsonInput(
+    candidatePiReceiptSignaturePath,
+    MAXIMUM_EVIDENCE_BYTES,
+    "CANDIDATE_PACKAGE_PI_SIGNATURE_INVALID",
+  );
   const primarySigningVerification = strictJsonInput(
     primarySigningVerificationPath,
     MAXIMUM_EVIDENCE_BYTES,
@@ -485,6 +491,7 @@ export const createAndroidQualifiedCandidatePackageV1 = ({
     [
       admission,
       candidatePi,
+      candidatePiSignature,
       primarySigningVerification,
       reproducedSigningVerification,
       migrationControllerEnvelope,
@@ -878,6 +885,13 @@ export const createAndroidQualifiedCandidatePackageV1 = ({
         "candidate-pi-receipt.json",
         { sha256: candidatePi.sha256, bytes: candidatePi.byteCount },
       ),
+      candidatePiReceiptSignature: artifactProjection(
+        "candidate-pi-receipt-signature.json",
+        {
+          sha256: candidatePiSignature.sha256,
+          bytes: candidatePiSignature.byteCount,
+        },
+      ),
       primarySigningVerification: artifactProjection(
         "primary-signing-verification.json",
         {
@@ -1120,6 +1134,7 @@ export const validateAndroidQualifiedCandidatePackageV1 = (value) => {
     hasExactKeys(value.evidence, [
       "productionAdmission",
       "candidatePiReceipt",
+      "candidatePiReceiptSignature",
       "primarySigningVerification",
       "reproducedSigningVerification",
       "migrationControllerEnvelope",
@@ -1155,6 +1170,10 @@ export const validateAndroidQualifiedCandidatePackageV1 = (value) => {
     artifactProjectionValid(
       value.evidence.candidatePiReceipt,
       "candidate-pi-receipt.json",
+    ) &&
+    artifactProjectionValid(
+      value.evidence.candidatePiReceiptSignature,
+      "candidate-pi-receipt-signature.json",
     ) &&
     artifactProjectionValid(
       value.evidence.primarySigningVerification,
@@ -1321,6 +1340,7 @@ const DOWNLOADED_PACKAGE_FILES = [
   "android-migration-controller-extraction-v1.json",
   "candidate-package-manifest.json",
   "candidate-pi-receipt.json",
+  "candidate-pi-receipt-signature.json",
   "candidate.aab",
   "candidate.apk",
   "funded-canary-controller-bundle-v1.tar",
@@ -1442,6 +1462,11 @@ export const validateDownloadedAndroidQualifiedCandidatePackageV1 = ({
     MAXIMUM_EVIDENCE_BYTES,
     "DOWNLOADED_CANDIDATE_PI_RECEIPT_INVALID",
   );
+  const candidatePiSignature = strictJsonInput(
+    path("candidate-pi-receipt-signature.json"),
+    MAXIMUM_EVIDENCE_BYTES,
+    "DOWNLOADED_CANDIDATE_PI_SIGNATURE_INVALID",
+  );
   const primarySigning = strictJsonInput(
     path("primary-signing-verification.json"),
     MAXIMUM_EVIDENCE_BYTES,
@@ -1561,6 +1586,7 @@ export const validateDownloadedAndroidQualifiedCandidatePackageV1 = ({
       ...Object.values(files),
       admission,
       candidatePi,
+      candidatePiSignature,
       primarySigning,
       reproducedSigning,
       migrationControllerEnvelope,
@@ -1612,6 +1638,10 @@ export const validateDownloadedAndroidQualifiedCandidatePackageV1 = ({
     !projectionMatchesRecord(manifest.evidence.candidatePiReceipt, {
       sha256: candidatePi.sha256,
       bytes: candidatePi.byteCount,
+    }) ||
+    !projectionMatchesRecord(manifest.evidence.candidatePiReceiptSignature, {
+      sha256: candidatePiSignature.sha256,
+      bytes: candidatePiSignature.byteCount,
     }) ||
     !projectionMatchesRecord(manifest.evidence.primarySigningVerification, {
       sha256: primarySigning.sha256,

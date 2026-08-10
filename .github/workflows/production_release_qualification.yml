@@ -55,6 +55,7 @@ jobs:
       # The protected controller response is written here only after the fresh PI probe;
       # repository code never fabricates or self-signs rollout evidence.
       PRODUCTION_ROLLOUT_TRUST_SHA256: ${{ vars.PRODUCTION_ROLLOUT_TRUST_SHA256 }}
+      PRODUCTION_PI_CONTROLLER_ID: ${{ vars.PRODUCTION_PI_CONTROLLER_ID }}
       PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN: ${{ vars.PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN }}
       PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64: ${{ vars.PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64 }}
       FUNDED_CANARY_CONTROLLER_ORIGIN: ${{ vars.FUNDED_CANARY_CONTROLLER_ORIGIN }}
@@ -89,8 +90,10 @@ jobs:
           }
           append_runner_temp_path "PRODUCTION_CANDIDATE_RUN_RECEIPT_PATH" "sora-qualified-candidate-run.json"
           append_runner_temp_path "PRODUCTION_CANDIDATE_ARTIFACT_RECEIPT_PATH" "sora-qualified-candidate-artifacts.json"
-          append_runner_temp_path "PI_PRODUCTION_PROBE_RECEIPT" "sora-pi-production-probe.json"
-          append_runner_temp_path "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" "sora-pi-production-probe.json"
+          append_runner_temp_path "PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH" "sora-pi-production-raw-live-v1.json"
+          append_runner_temp_path "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" "sora-pi-production-capability-probe-v3.json"
+          append_runner_temp_path "PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH" "sora-pi-production-capability-probe-v3-signature.json"
+          append_runner_temp_path "PRODUCTION_PI_CANDIDATE_CONTROLLER_REQUEST_PATH" "sora-pi-production-candidate-controller-request-v1.json"
           append_runner_temp_path "PRODUCTION_QUALIFICATION_RECEIPT_PATH" "sora-production-admission.json"
           append_runner_temp_path "PRODUCTION_PRIMARY_BUILD_LOG_PATH" "sora-android-primary-build.log"
           append_runner_temp_path "PRODUCTION_PRIMARY_SIGNING_VERIFICATION_PATH" "sora-android-primary-signing-verification.json"
@@ -364,6 +367,7 @@ jobs:
             printf '%s\n' "PRODUCTION_CANDIDATE_AAB_PATH=$RUNNER_TEMP/qualified-candidate/candidate.aab"
             printf '%s\n' "PRODUCTION_QUALIFICATION_RECEIPT_PATH=$RUNNER_TEMP/qualified-candidate/production-admission.json"
             printf '%s\n' "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH=$RUNNER_TEMP/qualified-candidate/candidate-pi-receipt.json"
+            printf '%s\n' "PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH=$RUNNER_TEMP/qualified-candidate/candidate-pi-receipt-signature.json"
           } >> "$GITHUB_ENV"
 
       - name: Validate complete downloaded reproducibility package
@@ -375,13 +379,16 @@ jobs:
             > "$RUNNER_TEMP/sora-android-downloaded-candidate-validation.json"
 
       - name: Live PI production contract (read-only)
-        run: node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_PROBE_RECEIPT"
+        run: node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH"
 
       - name: Static production source gates
         run: node scripts/verify-production-modernization.mjs
 
       - name: Production rollout v3 envelope contract
         run: node scripts/test-production-rollout-v3-contract.mjs
+
+      - name: Production PI raw-live and signed candidate v3 contracts
+        run: node scripts/test-production-pi-receipt-v3.mjs
 
       - name: Android migration v7/v2 evidence contracts
         run: |
@@ -770,7 +777,7 @@ jobs:
 
       - name: Refresh live PI contract before funded canaries
         if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
-        run: node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_PROBE_RECEIPT"
+        run: node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH"
 
       - name: Record explicit pre-canary evaluation epoch
         if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
@@ -863,7 +870,79 @@ jobs:
 
       - name: Refresh live PI contract after funded canaries
         if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
-        run: node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_PROBE_RECEIPT"
+        run: node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH"
+
+      - name: Create candidate-bound PI v3 controller request
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          request_epoch="$(date +%s)"
+          echo "PRODUCTION_PI_CANDIDATE_REQUESTED_AT_EPOCH_SECONDS=$request_epoch" >> "$GITHUB_ENV"
+          export PRODUCTION_PI_CANDIDATE_REQUESTED_AT_EPOCH_SECONDS="$request_epoch"
+          node scripts/create-production-pi-candidate-controller-request.mjs \
+            > "$PRODUCTION_PI_CANDIDATE_CONTROLLER_REQUEST_PATH"
+
+      - name: Obtain signed candidate-bound PI v3 receipt
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        env:
+          PI_CONTROLLER_TOKEN: ${{ secrets.PRODUCTION_ROLLOUT_CONTROLLER_TOKEN }}
+        run: |
+          set -euo pipefail
+          [[ "$PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN" =~ ^https://[A-Za-z0-9.-]+(:[1-9][0-9]{0,4})?$ ]] || {
+            echo "protected PI controller origin is missing or invalid" >&2
+            exit 1
+          }
+          [[ "$PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64" =~ ^[A-Za-z0-9+/]{43}=$ ]] || {
+            echo "protected PI controller TLS SPKI pin is missing or invalid" >&2
+            exit 1
+          }
+          [[ "$PRODUCTION_PI_CONTROLLER_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{2,255}$ ]] || {
+            echo "protected PI controller identity is missing or invalid" >&2
+            exit 1
+          }
+          [[ -n "$PI_CONTROLLER_TOKEN" && ${#PI_CONTROLLER_TOKEN} -le 4096 && "$PI_CONTROLLER_TOKEN" != *$'\r'* && "$PI_CONTROLLER_TOKEN" != *$'\n'* ]] || {
+            echo "protected PI controller token is missing or unsafe" >&2
+            exit 1
+          }
+          curl \
+            --proto '=https' \
+            --tlsv1.2 \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --connect-timeout 10 \
+            --max-time 60 \
+            --max-filesize 65536 \
+            --pinnedpubkey "sha256//$PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64" \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --header "Authorization: Bearer $PI_CONTROLLER_TOKEN" \
+            --data-binary "@$PRODUCTION_PI_CANDIDATE_CONTROLLER_REQUEST_PATH" \
+            --output "$PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" \
+            "$PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN/v3/android/pi-candidate-receipt"
+          receipt_sha256="$(sha256sum "$PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" | awk '{print $1}')"
+          [[ "$receipt_sha256" =~ ^[0-9a-f]{64}$ ]] || exit 1
+          curl \
+            --proto '=https' \
+            --tlsv1.2 \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --max-filesize 65536 \
+            --pinnedpubkey "sha256//$PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64" \
+            --header 'Accept: application/json' \
+            --header "Authorization: Bearer $PI_CONTROLLER_TOKEN" \
+            --output "$PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH" \
+            "$PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN/v3/android/pi-candidate-receipt/$receipt_sha256/signature"
+          echo "PRODUCTION_PI_CANDIDATE_EVALUATED_AT_EPOCH_SECONDS=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Verify signed candidate-bound PI v3 receipt
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          node scripts/verify-production-pi-candidate-receipt.mjs \
+            --require-raw-live-binding \
+            > "$RUNNER_TEMP/sora-pi-production-candidate-admission-v1.json"
 
       - name: Record explicit release evaluation epoch
         if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
@@ -907,6 +986,7 @@ jobs:
           install -m 400 "$FUNDED_CANARY_CONTROLLER_EXTRACTION_RECEIPT_PATH" "$RUNNER_TEMP/qualified-candidate/funded-canary-controller-extraction-v1.json"
           install -m 400 "$PRODUCTION_QUALIFICATION_RECEIPT_PATH" "$RUNNER_TEMP/qualified-candidate/production-admission.json"
           install -m 400 "$PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" "$RUNNER_TEMP/qualified-candidate/candidate-pi-receipt.json"
+          install -m 400 "$PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH" "$RUNNER_TEMP/qualified-candidate/candidate-pi-receipt-signature.json"
           node scripts/create-android-qualified-candidate-package.mjs \
             > "$RUNNER_TEMP/qualified-candidate/candidate-package-manifest.json"
           chmod 400 "$RUNNER_TEMP/qualified-candidate/candidate-package-manifest.json"
@@ -947,6 +1027,7 @@ jobs:
             ${{ runner.temp }}/qualified-candidate/funded-canary-controller-extraction-v1.json
             ${{ runner.temp }}/qualified-candidate/production-admission.json
             ${{ runner.temp }}/qualified-candidate/candidate-pi-receipt.json
+            ${{ runner.temp }}/qualified-candidate/candidate-pi-receipt-signature.json
             ${{ runner.temp }}/qualified-candidate/candidate-package-manifest.json
             ${{ runner.temp }}/qualified-candidate/source-revision.txt
           if-no-files-found: error
