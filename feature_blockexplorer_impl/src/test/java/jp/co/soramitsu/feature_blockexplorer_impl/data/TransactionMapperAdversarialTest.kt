@@ -18,30 +18,94 @@ import org.junit.Test
 class TransactionMapperAdversarialTest {
 
     @Test
-    fun `transfer with invalid numeric values maps to zeroes and rejected status`() {
-        val result = mapSingle(
-            history(
-                module = "Assets",
-                method = "transfer",
-                timestamp = "not-a-time",
-                networkFee = "not-a-number",
-                success = false,
-                data = params(
-                    "from" to MY_ADDRESS,
-                    "to" to PEER_ADDRESS,
-                    "amount" to "not-a-decimal",
-                    "assetId" to TestTokens.valToken.id,
-                ),
+    fun `transfer with invalid network fee is rejected instead of mapping zero`() {
+        val error = runCatching {
+            mapSingle(
+                history(
+                    module = "Assets",
+                    method = "transfer",
+                    networkFee = "not-a-number",
+                    data = params(
+                        "from" to MY_ADDRESS,
+                        "to" to PEER_ADDRESS,
+                        "amount" to "1",
+                        "assetId" to TestTokens.valToken.id,
+                    ),
+                )
             )
-        ) as Transaction.Transfer
+        }.exceptionOrNull()
 
-        assertThat(result.base.fee).isEqualTo(BigDecimal.ZERO)
-        assertThat(result.base.timestamp).isEqualTo(0L)
-        assertThat(result.base.status).isEqualTo(TransactionStatus.REJECTED)
-        assertThat(result.amount).isEqualTo(BigDecimal.ZERO)
-        assertThat(result.peer).isEqualTo(PEER_ADDRESS)
-        assertThat(result.transferType).isEqualTo(TransactionTransferType.OUTGOING)
-        assertThat(result.token.id).isEqualTo(TestTokens.valToken.id)
+        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        assertThat(error).hasMessageThat()
+            .isEqualTo("PI_INDEXER_HISTORY_FEE_INVALID")
+    }
+
+    @Test
+    fun `transfer with malformed amount is rejected instead of mapping zero`() {
+        val error = runCatching {
+            mapSingle(
+                history(
+                    module = "Assets",
+                    method = "transfer",
+                    data = params(
+                        "from" to MY_ADDRESS,
+                        "to" to PEER_ADDRESS,
+                        "amount" to "not-a-decimal",
+                        "assetId" to TestTokens.valToken.id,
+                    ),
+                )
+            )
+        }.exceptionOrNull()
+
+        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        assertThat(error).hasMessageThat()
+            .isEqualTo("PI_INDEXER_HISTORY_QUANTITY_INVALID")
+    }
+
+    @Test
+    fun `history with malformed timestamp is rejected instead of mapping epoch`() {
+        val error = runCatching {
+            mapSingle(
+                history(
+                    module = "Assets",
+                    method = "transfer",
+                    timestamp = "not-a-time",
+                    data = params(
+                        "from" to MY_ADDRESS,
+                        "to" to PEER_ADDRESS,
+                        "amount" to "1",
+                        "assetId" to TestTokens.valToken.id,
+                    ),
+                )
+            )
+        }.exceptionOrNull()
+
+        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        assertThat(error).hasMessageThat()
+            .isEqualTo("PI_INDEXER_HISTORY_TIMESTAMP_INVALID")
+    }
+
+    @Test
+    fun `history with unknown execution result is rejected instead of committed`() {
+        val error = runCatching {
+            mapSingle(
+                history(
+                    module = "Assets",
+                    method = "transfer",
+                    executionKnown = false,
+                    data = params(
+                        "from" to MY_ADDRESS,
+                        "to" to PEER_ADDRESS,
+                        "amount" to "1",
+                        "assetId" to TestTokens.valToken.id,
+                    ),
+                )
+            )
+        }.exceptionOrNull()
+
+        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        assertThat(error).hasMessageThat()
+            .isEqualTo("PI_INDEXER_HISTORY_EXECUTION_INVALID")
     }
 
     @Test
@@ -205,17 +269,20 @@ class TransactionMapperAdversarialTest {
     }
 
     @Test
-    fun `referral reserve with invalid amount maps amount to zero`() {
-        val result = mapSingle(
-            history(
-                module = "Referrals",
-                method = "reserve",
-                data = params("amount" to "bad"),
+    fun `referral reserve with invalid amount is rejected`() {
+        val error = runCatching {
+            mapSingle(
+                history(
+                    module = "Referrals",
+                    method = "reserve",
+                    data = params("amount" to "bad"),
+                )
             )
-        ) as Transaction.ReferralBond
+        }.exceptionOrNull()
 
-        assertThat(result.amount).isEqualTo(BigDecimal.ZERO)
-        assertThat(result.token.id).isEqualTo(TestTokens.xorToken.id)
+        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        assertThat(error).hasMessageThat()
+            .isEqualTo("PI_INDEXER_HISTORY_QUANTITY_INVALID")
     }
 
     @Test
@@ -320,9 +387,10 @@ class TransactionMapperAdversarialTest {
     private fun history(
         module: String,
         method: String,
-        timestamp: String = "123.456",
+        timestamp: String = "123",
         networkFee: String = "0",
         success: Boolean = true,
+        executionKnown: Boolean = true,
         data: List<IndexerHistoryItemParam>? = null,
         nestedData: List<IndexerNestedHistoryItem>? = null,
     ) = IndexerHistoryElement(
@@ -333,6 +401,7 @@ class TransactionMapperAdversarialTest {
         timestamp = timestamp,
         networkFee = networkFee,
         success = success,
+        executionKnown = executionKnown,
         data = data,
         nestedData = nestedData,
     )

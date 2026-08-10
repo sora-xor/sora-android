@@ -41,6 +41,8 @@ import dagger.multibindings.StringKey
 import javax.inject.Singleton
 import jp.co.soramitsu.common.domain.POOLS_HUB_NAME
 import jp.co.soramitsu.common.domain.SingleFeatureStorageManager
+import jp.co.soramitsu.common.nexus.NexusToriiClient
+import jp.co.soramitsu.common.nexus.NexusToriiReadClient
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
@@ -50,6 +52,15 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BuyCryptoRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.DefaultNexusSendQualification
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusFinalityReader
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPendingReconciler
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPendingRecovery
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendQualification
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusTransactionSigner
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.UnavailableNexusFinalityReader
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.UnavailableNexusTransactionSigner
+import jp.co.soramitsu.feature_wallet_impl.data.recovery.Sora2PendingRecoveryScheduler
 import jp.co.soramitsu.feature_wallet_impl.data.repository.BuyCryptoRepositoryImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.WalletRepositoryImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.BuyCryptoDataSourceImpl
@@ -57,6 +68,7 @@ import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalle
 import jp.co.soramitsu.feature_wallet_impl.domain.PoolsFeatureStorageManager
 import jp.co.soramitsu.feature_wallet_impl.domain.WalletInteractorImpl
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingRecoveryKick
 import kotlinx.coroutines.FlowPreview
 import kotlinx.serialization.json.Json
 
@@ -64,6 +76,42 @@ import kotlinx.serialization.json.Json
 @Module
 @InstallIn(SingletonComponent::class)
 class WalletFeatureModule {
+
+    @Provides
+    @Singleton
+    fun provideSora2PendingRecoveryKick(
+        scheduler: Sora2PendingRecoveryScheduler,
+    ): Sora2PendingRecoveryKick = scheduler
+
+    @Provides
+    @Singleton
+    fun provideNexusTransactionSigner(): NexusTransactionSigner =
+        UnavailableNexusTransactionSigner()
+
+    @Provides
+    @Singleton
+    fun provideNexusFinalityReader(): NexusFinalityReader =
+        UnavailableNexusFinalityReader()
+
+    @Provides
+    @Singleton
+    fun provideNexusSendQualification(
+        signer: NexusTransactionSigner,
+        finalityReader: NexusFinalityReader,
+    ): NexusSendQualification =
+        DefaultNexusSendQualification(signer, finalityReader)
+
+    @Provides
+    @Singleton
+    fun provideNexusToriiReadClient(
+        client: NexusToriiClient,
+    ): NexusToriiReadClient = client
+
+    @Provides
+    @Singleton
+    fun provideNexusPendingRecovery(
+        reconciler: NexusPendingReconciler,
+    ): NexusPendingRecovery = reconciler
 
     @Provides
     @Singleton

@@ -87,7 +87,11 @@ class ReferralRepositoryImpl @Inject constructor(
         val result = extrinsicManager.submitAndWaitExtrinsic(
             from = from,
             keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
+            // `inBlock` is not canonical finality and can be reorged. The shared
+            // extrinsic manager resolves execution events from the returned block,
+            // so referral state must wait for the finalized notification just like
+            // every other production SORA2 mutation.
+            untilStatus = SubstrateCalls.FINALIZED,
         ) {
             setReferrer(referrer)
         }
@@ -132,7 +136,7 @@ class ReferralRepositoryImpl @Inject constructor(
         val result = extrinsicManager.submitAndWaitExtrinsic(
             from = from,
             keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
+            untilStatus = SubstrateCalls.FINALIZED,
         ) {
             referralUnbond(mapped)
         }
@@ -162,7 +166,7 @@ class ReferralRepositoryImpl @Inject constructor(
         val result = extrinsicManager.submitAndWaitExtrinsic(
             from = from,
             keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
+            untilStatus = SubstrateCalls.FINALIZED,
         ) {
             referralBond(mapped)
         }

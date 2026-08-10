@@ -117,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">आपने पहले ही एक अन्य निमंत्रण कोड लागू कर दिया है</string>
   <string name="common_error_invitation_code_not_found">निमंत्रण कोड अमान्य है</string>
   <string name="common_error_inviter_registered_after_invitee">बशर्ते आमंत्रण कोड लागू नहीं किया जा सकता क्योंकि यह उस उपयोगकर्ता से है जिसने आपके बाद पंजीकरण कराया था</string>
-  <string name="common_error_mnemonic_is_not_valid">आपका पदबंध अमान्य है। कृपया, एक और कोशिश करें।</string>
-  <string name="common_error_mnemonic_length_error">पदबंध में 15 शब्द होने चाहिए</string>
+  <string name="common_error_mnemonic_is_not_valid">कृपया सुनिश्चित करें कि आपका पासफ़्रेज़ 12 या 24 शब्दों का है और सभी शब्द सही हैं।</string>
+  <string name="common_error_mnemonic_length_error">पदबंध में 12 या 24 शब्द होने चाहिए</string>
   <string name="common_error_network">कृपया, अंतराजाल कनेक्शन जांचें और बाद में पुनः प्रयास करें।</string>
   <string name="common_error_no_browser_error">लिंक खोलने के लिए कृपया एक ब्राउज़र स्थापित करें</string>
   <string name="common_error_not_enough_invitations">क्षमा करें, लेकिन आपके पास साझा करने के लिए कोई निमंत्रण नहीं है</string>
@@ -278,7 +278,7 @@
   <string name="export_protection_passphrase_1">अगर मैं अपना पासफ़्रेज़ खो देता हूँ, तो मेरी निधि हमेशा के लिए खो जाएगी।</string>
   <string name="export_protection_passphrase_2">यदि मैं अपना पासफ़्रेज़ किसी को प्रकट या साझा करता हूँ, तो मेरे फंड की चोरी हो सकती है।</string>
   <string name="export_protection_passphrase_3">मेरे पासफ़्रेज़ को सुरक्षित रखने की पूरी जिम्मेदारी मेरी है।</string>
-  <string name="export_protection_passphrase_description">अगले चरण में आप पासफ़्रेज़ (12 शब्द) देखेंगे जो आपको खाता पुनर्प्राप्त करने की अनुमति देता है।</string>
+  <string name="export_protection_passphrase_description">अगले चरण में आप पासफ़्रेज़ (24 शब्द) देखेंगे जो आपको खाता पुनर्प्राप्त करने की अनुमति देता है।</string>
   <string name="export_protection_seed_1">यदि मैं अपना Raw Seed  खो देता हूं, तो मेरा धन हमेशा के लिए खो जाएगा।</string>
   <string name="export_protection_seed_2">अगर मैं अपने Raw Seed  को किसी के सामने उजागर या साझा करता हूं, तो मेरा पैसा चोरी हो सकता है।</string>
   <string name="export_protection_seed_3">अपने Raw Seed को सुरक्षित रखना मेरी पूर्ण जिम्मेदारी है।</string>

@@ -46,11 +46,17 @@ import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+data class WalletMigrationRecoveryUiState(
+    val code: String,
+    val canContinueLegacyWallet: Boolean,
+)
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val interactor: SplashInteractor,
-    coroutineManager: CoroutineManager,
+    private val coroutineManager: CoroutineManager,
 ) : BaseViewModel() {
 
     private val _runtimeInitiated = MutableLiveData<Boolean>()
@@ -61,6 +67,7 @@ class SplashViewModel @Inject constructor(
     val showMainScreen = SingleLiveEvent<Unit>()
     val showOnBoardingScreen = SingleLiveEvent<OnboardingState>()
     val showMainScreenFromInviteLink = SingleLiveEvent<Unit>()
+    val showMigrationRecovery = SingleLiveEvent<WalletMigrationRecoveryUiState>()
 
     init {
         viewModelScope.launch {
@@ -84,13 +91,59 @@ class SplashViewModel @Inject constructor(
         viewModelScope.launch {
             val migrationDone = interactor.getMigrationDoneAsync().await()
             FirebaseWrapper.log("Splash next screen $migrationDone")
+            if (!migrationDone) {
+                showMigrationRecovery.value = WalletMigrationRecoveryUiState(
+                    code =
+                        interactor.getMigrationFailureCode()
+                            ?: "WALLET_VERIFICATION_FAILED",
+                    canContinueLegacyWallet = interactor.canContinueLegacyWallet(),
+                )
+                return@launch
+            }
             when (val state = interactor.getRegistrationState()) {
                 OnboardingState.REGISTRATION_FINISHED -> {
                     showMainScreen.trigger()
                 }
                 OnboardingState.INITIAL -> {
-                    showOnBoardingScreen.value = state
+                    if (interactor.hasExistingWallet()) {
+                        showMainScreen.trigger()
+                    } else {
+                        showOnBoardingScreen.value = state
+                    }
                 }
+            }
+        }
+    }
+
+    fun continueLegacyWallet() {
+        viewModelScope.launch {
+            if (interactor.canContinueLegacyWallet()) {
+                showMainScreen.trigger()
+            } else {
+                showMigrationRecovery.value = WalletMigrationRecoveryUiState(
+                    code =
+                        interactor.getMigrationFailureCode()
+                            ?: "LEGACY_WALLET_SELECTION_UNAVAILABLE",
+                    canContinueLegacyWallet = false,
+                )
+            }
+        }
+    }
+
+    fun retryWalletMigration() {
+        viewModelScope.launch {
+            val migrationDone = withContext(coroutineManager.io) {
+                interactor.retryMigration()
+            }
+            if (migrationDone) {
+                showMainScreen.trigger()
+            } else {
+                showMigrationRecovery.value = WalletMigrationRecoveryUiState(
+                    code =
+                        interactor.getMigrationFailureCode()
+                            ?: "WALLET_VERIFICATION_FAILED",
+                    canContinueLegacyWallet = interactor.canContinueLegacyWallet(),
+                )
             }
         }
     }

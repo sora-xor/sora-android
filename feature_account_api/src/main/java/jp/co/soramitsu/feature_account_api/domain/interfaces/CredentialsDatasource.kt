@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_account_api.domain.interfaces
 
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
 
 interface CredentialsDatasource {
 
@@ -50,5 +51,37 @@ interface CredentialsDatasource {
 
     suspend fun retrieveSeed(suffixAddress: String): String
 
-    suspend fun clearAllDataForAddress(suffixAddress: String)
+    /**
+     * A watch-only account must be explicitly marked. Missing or unreadable signing material is
+     * never enough to infer this state during a production upgrade.
+     */
+    suspend fun isExplicitWatchOnly(suffixAddress: String): Boolean
+
+    suspend fun setExplicitWatchOnly(suffixAddress: String, watchOnly: Boolean)
+
+    suspend fun requireWalletPreferenceCoverage(
+        walletIds: Set<String>,
+        selectedAddress: String,
+    )
+
+    /**
+     * Executes and verifies the preference half of an already journaled explicit deletion.
+     * Implementations must use one atomic preference transaction and must not touch the shared
+     * Android Keystore alias.
+     */
+    suspend fun previewWalletDeletionPreferences(
+        walletIds: Set<String>,
+        selectedAfter: String,
+        removeLegacyUnsuffixed: Boolean,
+        clearAll: Boolean,
+    ): WalletPreferenceIntegrity.Hashes
+
+    suspend fun commitWalletDeletionPreferences(
+        walletIds: Set<String>,
+        selectedAfter: String,
+        removeLegacyUnsuffixed: Boolean,
+        clearAll: Boolean,
+        expectedBeforeHash: String,
+        expectedAfterHash: String,
+    )
 }

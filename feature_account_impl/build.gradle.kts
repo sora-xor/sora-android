@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
@@ -90,4 +89,8 @@ dependencies {
     testImplementation(libs.mockkDep)
     testImplementation(libs.mockitoKotlinDep)
     testImplementation(libs.archCoreTestDep)
+
+    androidTestImplementation(libs.androidxTestExtJunitDep)
+    androidTestImplementation(libs.androidxTestEspressoCoreDep)
+    androidTestImplementation(libs.coroutineTestDep)
 }

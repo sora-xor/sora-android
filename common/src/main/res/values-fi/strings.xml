@@ -117,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Olet jo käyttänyt toista kutsukoodia</string>
   <string name="common_error_invitation_code_not_found">Kutsukoodi ei kelpaa</string>
   <string name="common_error_inviter_registered_after_invitee">Annettua kutsukoodia ei voi käyttää, koska se on käyttäjältä, joka rekisteröity sinuun jälkeen</string>
-  <string name="common_error_mnemonic_is_not_valid">Varmista, että tunnuslauseesi koostuu 12 tai 15 sanasta ja että ne ovat kaikki oikein.</string>
-  <string name="common_error_mnemonic_length_error">Tunnuslauseessa on oltava 15 sanaa</string>
+  <string name="common_error_mnemonic_is_not_valid">Varmista, että tunnuslauseesi koostuu 12 tai 24 sanasta ja että ne ovat kaikki oikein.</string>
+  <string name="common_error_mnemonic_length_error">Tunnuslauseessa on oltava 12 tai 24 sanaa</string>
   <string name="common_error_network">Tarkista internetyhteys ja yritä myöhemmin uudelleen.</string>
   <string name="common_error_no_browser_error">Asenna selain avataksesi linkin</string>
   <string name="common_error_not_enough_invitations">Anteeksi, mutta sinulla ei ole kutsuja jakaa</string>
@@ -278,7 +278,7 @@
   <string name="export_protection_passphrase_1">If I lose my passphrase, my funds will be lost forever.</string>
   <string name="export_protection_passphrase_2">If I expose or share my passphrase to anybody, my funds can get stolen.</string>
   <string name="export_protection_passphrase_3">It is my full reponsibility to keep my passphrase secure.</string>
-  <string name="export_protection_passphrase_description">In the next step you will see Passphrase (12 words) that allow you to recover an account.</string>
+  <string name="export_protection_passphrase_description">In the next step you will see the 24-word passphrase that allows you to recover the account.</string>
   <string name="export_protection_seed_1">If I lose my raw seed, my funds will be lost forever.</string>
   <string name="export_protection_seed_2">If I expose or share my raw seed to anybody, my funds can get stolen.</string>
   <string name="export_protection_seed_3">It is my full reponsibility to keep my raw seed secure.</string>

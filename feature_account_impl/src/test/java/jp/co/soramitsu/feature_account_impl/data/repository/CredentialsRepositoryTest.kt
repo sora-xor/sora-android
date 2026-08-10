@@ -38,12 +38,13 @@ import io.mockk.mockkObject
 import io.mockk.runs
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.runtime.Sora2RuntimeContract
 import jp.co.soramitsu.xcrypto.seed.Mnemonic
 import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -52,6 +53,7 @@ import jp.co.soramitsu.xsubstrate.encrypt.seed.SeedFactory
 import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -62,6 +64,9 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -84,7 +89,7 @@ class CredentialsRepositoryTest {
     lateinit var runtimeManager: RuntimeManager
 
     @Mock
-    lateinit var soraConfigManager: SoraConfigManager
+    lateinit var sora2AddressCodec: Sora2AddressCodec
 
     @Mock
     lateinit var jsonAccountsEncoder: JsonAccountsEncoder
@@ -119,15 +124,17 @@ class CredentialsRepositoryTest {
             datasource,
             cryptoAssistant,
             runtimeManager,
+            sora2AddressCodec,
             jsonAccountsEncoder,
-            soraConfigManager,
         )
     }
 
     @Test
     fun `derive seed check`() = runTest {
         whenever(datasource.retrieveSeed("address")).thenReturn("")
-        whenever(datasource.retrieveMnemonic("address")).thenReturn("mnemonic mnemonic mnemonic mnemonic mnemonic mnemonic")
+        whenever(datasource.retrieveMnemonic("address")).thenReturn(
+            "airport wish wish loan width country acoustic country ceiling good enact penalty"
+        )
         every { MnemonicCreator.fromWords(any()) } returns mn
         val seed = credentialsRepository.retrieveSeed(SoraAccount("address", "name"))
         assertEquals(64, seed.length)
@@ -135,7 +142,8 @@ class CredentialsRepositoryTest {
 
     @Test
     fun `is mnemonic valid returns true`() = runTest {
-        val mnemonic = "mnemonic"
+        val mnemonic =
+            "airport wish wish loan width country acoustic country ceiling good enact penalty"
         every { MnemonicCreator.fromWords(any()) } returns Mnemonic(
             "",
             emptyList(),
@@ -149,6 +157,97 @@ class CredentialsRepositoryTest {
         val mnemonic = "mnemonic2"
         every { MnemonicCreator.fromWords(any()) } throws IllegalArgumentException()
         assertFalse(credentialsRepository.isMnemonicValid(mnemonic))
+    }
+
+    @Test
+    fun `retained fifteen word wallet derives Sora2 seed but public recovery rejects it`() =
+        runTest {
+            val phrase = List(15) { index -> "legacy$index" }.joinToString(" ")
+            val legacyMnemonic = Mnemonic(
+                phrase,
+                List(15) { index -> "legacy$index" },
+                ByteArray(20) { index -> index.toByte() },
+            )
+            every { MnemonicCreator.fromWords(phrase) } returns legacyMnemonic
+            whenever(datasource.retrieveSeed("legacy-address")).thenReturn("")
+            whenever(datasource.retrieveMnemonic("legacy-address")).thenReturn(phrase)
+            whenever(datasource.retrieveKeys("")).thenReturn(null)
+
+            assertFalse(credentialsRepository.isMnemonicValid(phrase))
+            assertTrue(
+                runCatching {
+                    credentialsRepository.convertPassphraseToSeed(phrase)
+                }.isFailure
+            )
+            assertEquals(
+                64,
+                credentialsRepository
+                    .convertRetainedSoraPassphraseToSeed(phrase)
+                    .length,
+            )
+            assertEquals(
+                64,
+                credentialsRepository.retrieveSeed(
+                    SoraAccount("legacy-address", "Legacy")
+                ).length,
+            )
+            verify(datasource, never()).saveSeed(any(), any())
+        }
+
+    @Test
+    fun `missing mnemonic never synthesizes or persists a seed`() = runTest {
+        val account = SoraAccount("watch-address", "Watch")
+        whenever(datasource.retrieveSeed(account.substrateAddress)).thenReturn("")
+        whenever(datasource.retrieveMnemonic(account.substrateAddress)).thenReturn("")
+        whenever(datasource.retrieveKeys("")).thenReturn(null)
+
+        val error = runCatching {
+            credentialsRepository.retrieveSeed(account)
+        }.exceptionOrNull()
+
+        assertTrue(
+            error?.message?.contains(
+                "MNEMONIC_NOT_AVAILABLE_FOR_SEED_DERIVATION"
+            ) == true
+        )
+        verify(datasource, never()).saveSeed(any(), any())
+    }
+
+    @Test
+    fun `multiaccount recovery export decodes every stored hex seed to raw bytes`() = runTest {
+        val first = SoraAccount("first-address", "First")
+        val second = SoraAccount("second-address", "Second")
+        val firstSeed = "00".repeat(32)
+        val secondSeed = "ff".repeat(32)
+        whenever(datasource.retrieveSeed(first.substrateAddress)).thenReturn(firstSeed)
+        whenever(datasource.retrieveSeed(second.substrateAddress)).thenReturn(secondSeed)
+        whenever(datasource.retrieveKeys(first.substrateAddress)).thenReturn(keypair)
+        whenever(datasource.retrieveKeys(second.substrateAddress)).thenReturn(keypair)
+        whenever(
+            jsonAccountsEncoder.generate(
+                accounts = any(),
+                password = any(),
+                genesisHash = any(),
+            )
+        ).thenReturn("recovery-json")
+
+        assertEquals(
+            "recovery-json",
+            credentialsRepository.generateJson(listOf(first, second), "password"),
+        )
+
+        val accounts = argumentCaptor<List<JsonAccountsEncoder.ExportAccount>>()
+        verify(jsonAccountsEncoder).generate(
+            accounts.capture(),
+            eq("password"),
+            eq(Sora2RuntimeContract.SORA_MAINNET_GENESIS_HASH),
+        )
+        assertEquals(
+            listOf(first.accountName, second.accountName),
+            accounts.firstValue.map { it.name },
+        )
+        assertArrayEquals(ByteArray(32), accounts.firstValue[0].seed)
+        assertArrayEquals(ByteArray(32) { 0xff.toByte() }, accounts.firstValue[1].seed)
     }
 
     @Test
@@ -230,4 +329,57 @@ class CredentialsRepositoryTest {
         whenever(datasource.retrieveKeys("")).thenReturn(keypair)
         assertEquals(keypair, credentialsRepository.retrieveKeyPair(SoraAccount("", "")))
     }
+
+    @Test
+    fun `explicit watch only marker is account scoped`() = runTest {
+        val account = SoraAccount("watch-address", "Watch")
+        whenever(datasource.isExplicitWatchOnly(account.substrateAddress)).thenReturn(true)
+
+        assertTrue(credentialsRepository.isExplicitWatchOnly(account))
+
+        credentialsRepository.setExplicitWatchOnly(account, false)
+        verify(datasource).setExplicitWatchOnly(account.substrateAddress, false)
+    }
+
+    @Test
+    fun `legacy empty suffix is read only when its public key matches requested account`() =
+        runTest {
+            val account = SoraAccount("legacy-address", "Legacy")
+            val mnemonic =
+                "airport wish wish loan width country acoustic country ceiling good enact penalty"
+            val publicKey = ByteArray(32) { it.toByte() }
+            whenever(datasource.retrieveMnemonic(account.substrateAddress)).thenReturn("")
+            whenever(datasource.retrieveKeys("")).thenReturn(keypair)
+            whenever(datasource.retrieveMnemonic("")).thenReturn(mnemonic)
+            whenever(keypair.publicKey).thenReturn(publicKey)
+            whenever(keypair.privateKey).thenReturn(ByteArray(64))
+            whenever(keypair.nonce).thenReturn(ByteArray(32))
+            whenever(sora2AddressCodec.toSoraAddressOrNull(publicKey))
+                .thenReturn(account.substrateAddress)
+
+            assertEquals(mnemonic, credentialsRepository.retrieveMnemonic(account))
+            verify(datasource).retrieveMnemonic("")
+        }
+
+    @Test
+    fun `legacy empty suffix is rejected when its public key belongs to another account`() =
+        runTest {
+            val account = SoraAccount("requested-address", "Requested")
+            val publicKey = ByteArray(32) { it.toByte() }
+            val privateKey = ByteArray(64) { 1 }
+            val nonce = ByteArray(32) { 2 }
+            whenever(datasource.retrieveKeys(account.substrateAddress)).thenReturn(null)
+            whenever(datasource.retrieveKeys("")).thenReturn(keypair)
+            whenever(keypair.publicKey).thenReturn(publicKey)
+            whenever(keypair.privateKey).thenReturn(privateKey)
+            whenever(keypair.nonce).thenReturn(nonce)
+            whenever(sora2AddressCodec.toSoraAddressOrNull(publicKey))
+                .thenReturn("different-address")
+
+            val result = runCatching { credentialsRepository.retrieveKeyPair(account) }
+
+            assertTrue(result.isFailure)
+            assertTrue(privateKey.all { it == 0.toByte() })
+            assertTrue(nonce.all { it == 0.toByte() })
+        }
 }

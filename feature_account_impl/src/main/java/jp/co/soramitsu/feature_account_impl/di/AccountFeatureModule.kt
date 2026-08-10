@@ -46,7 +46,9 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasour
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositoryImpl
+import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositorySr25519Crypto
 import jp.co.soramitsu.feature_account_impl.data.repository.datasource.PrefsUserDatasource
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -60,8 +62,18 @@ class AccountFeatureModule {
         cd: CredentialsDatasource,
         cm: CoroutineManager,
         lh: LanguagesHolder,
+        runtimeManager: RuntimeManager,
+        userRepositorySr25519Crypto: UserRepositorySr25519Crypto,
     ): UserRepository =
-        UserRepositoryImpl(ud, cd, db, cm, lh)
+        UserRepositoryImpl(
+            ud,
+            cd,
+            db,
+            cm,
+            lh,
+            runtimeManager,
+            userRepositorySr25519Crypto,
+        )
 
     @Provides
     @Singleton

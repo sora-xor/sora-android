@@ -117,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">شما قبلاً کد دعوت دیگری را اعمال کرده اید</string>
   <string name="common_error_invitation_code_not_found">کد دعوتنامه نامعتبر است</string>
   <string name="common_error_inviter_registered_after_invitee">کد دعوت ارائه شده قابل استفاده نیست زیرا این کد از کاربری است که بعد از شما ثبت نام کرده است</string>
-  <string name="common_error_mnemonic_is_not_valid">لطفاً مطمئن شوید که عبارت عبور شما شامل 12 یا 15 کلمه است و همه آنها صحیح هستند.</string>
-  <string name="common_error_mnemonic_length_error">عبارت عبور باید شامل 15 حرف باشد</string>
+  <string name="common_error_mnemonic_is_not_valid">لطفاً مطمئن شوید که عبارت عبور شما شامل 12 یا 24 کلمه است و همه آنها صحیح هستند.</string>
+  <string name="common_error_mnemonic_length_error">عبارت عبور باید شامل 12 یا 24 کلمه باشد</string>
   <string name="common_error_network">لطفاً، اتصال اینترنت را بررسی کنید و بعداً دوباره امتحان کنید.</string>
   <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">با عرض پوزش، شما هیچ دعوتنامه ای برای اشتراک گذاری ندارید.</string>
@@ -278,7 +278,7 @@
   <string name="export_protection_passphrase_1">If I lose my passphrase, my funds will be lost forever.</string>
   <string name="export_protection_passphrase_2">If I expose or share my passphrase to anybody, my funds can get stolen.</string>
   <string name="export_protection_passphrase_3">It is my full reponsibility to keep my passphrase secure.</string>
-  <string name="export_protection_passphrase_description">In the next step you will see Passphrase (12 words) that allow you to recover an account.</string>
+  <string name="export_protection_passphrase_description">In the next step you will see the 24-word passphrase that allows you to recover the account.</string>
   <string name="export_protection_seed_1">If I lose my raw seed, my funds will be lost forever.</string>
   <string name="export_protection_seed_2">If I expose or share my raw seed to anybody, my funds can get stolen.</string>
   <string name="export_protection_seed_3">It is my full reponsibility to keep my raw seed secure.</string>

@@ -117,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">لقد قمت مسبقاً بتقعيل رمز دعوة آخر</string>
   <string name="common_error_invitation_code_not_found">رمز الدعوة غير صالح</string>
   <string name="common_error_inviter_registered_after_invitee">لا يمكن تفعيل رمز الدعوة المقدم لأنه تابع لمستخدم سجل حسابه بعد تاريخ تسجيبك</string>
-  <string name="common_error_mnemonic_is_not_valid">كلمات الإستذكار الأولية غير صحيحة. الرجاء المحاولة مرة أخرى</string>
-  <string name="common_error_mnemonic_length_error">يجب أن تتكون كلمات الإستذكار الأولية من ١٥ كلمة</string>
+  <string name="common_error_mnemonic_is_not_valid">يرجى التأكد من أن عبارة المرور تتكون من 12 أو 24 كلمة وأن جميع الكلمات صحيحة.</string>
+  <string name="common_error_mnemonic_length_error">يجب أن تتكون عبارة المرور من 12 أو 24 كلمة</string>
   <string name="common_error_network">الرجاء التحقق من اتصال الإنترنت وإعادة المحاولة لاحقًا.</string>
   <string name="common_error_no_browser_error">الرجاء تثبيت متصفح لفتح الرابط</string>
   <string name="common_error_not_enough_invitations">نأسف، ليس لديك أي دعوات للمشاركة</string>
@@ -282,7 +282,7 @@
   <string name="export_protection_passphrase_1">إذا فقدت رمزي السري الأولي (Passphrase) ، فستضيع أموالي إلى الأبد.</string>
   <string name="export_protection_passphrase_2">إذا قمت بكشف الرمز السري الأولي  (Passphrase) الخاص بي أو مشاركته مع أي شخص ، فقد تتم سرقة أموالي.</string>
   <string name="export_protection_passphrase_3">إنها مسؤوليتي الكاملة أن أبقي الرمز الأولي (Passphrase) آمنًا.</string>
-  <string name="export_protection_passphrase_description">في الخطوة التالية ، سترى عبارة المرور Passphrase (12 كلمة) التي تتيح لك استرداد حساب.</string>
+  <string name="export_protection_passphrase_description">في الخطوة التالية ، سترى عبارة المرور Passphrase (24 كلمة) التي تتيح لك استرداد حساب.</string>
   <string name="export_protection_seed_1">إذا فقدت رمزي السري الأولي(Raw Seed) ، فستضيع أموالي إلى الأبد.</string>
   <string name="export_protection_seed_2">إذا قمت بكشف الرمز الأولي (Raw Seed)  الخاص بي أو مشاركته مع أي شخص ، فقد تتم سرقة أموالي.</string>
   <string name="export_protection_seed_3">إنها مسؤوليتي الكاملة أن أبقي الرمز الأولي آمنًا.</string>

@@ -35,6 +35,8 @@ package jp.co.soramitsu.feature_main_impl.domain
 import javax.inject.Inject
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 
 class PinCodeInteractor @Inject constructor(
@@ -46,6 +48,7 @@ class PinCodeInteractor @Inject constructor(
     companion object {
         const val PINCODE_LENGTH = 6
         const val OLD_PINCODE_LENGTH = 4
+        private const val LEGACY_SORA_MNEMONIC_WORD_COUNT = 15
     }
 
     suspend fun savePin(pin: String) {
@@ -58,13 +61,18 @@ class PinCodeInteractor @Inject constructor(
         return userRepository.retrievePin().isNotEmpty()
     }
 
-    suspend fun fullLogout() {
-        userRepository.fullLogout()
-    }
+    suspend fun createWalletDeletionPreview(
+        targetWalletIds: List<String>,
+    ): WalletDeletionPreview =
+        userRepository.createWalletDeletionPreview(targetWalletIds)
 
-    suspend fun clearAccountData(address: String) {
-        userRepository.clearAccountData(address)
-    }
+    suspend fun confirmAndExecuteWalletDeletion(
+        preview: WalletDeletionPreview,
+    ): WalletDeletionResult =
+        userRepository.confirmAndExecuteWalletDeletion(preview)
+
+    suspend fun walletDeletionFailureCode(): String? =
+        userRepository.walletDeletionFailureCode()
 
     suspend fun setBiometryAvailable(isBiometryAvailable: Boolean) {
         userRepository.setBiometryAvailable(isBiometryAvailable)
@@ -84,7 +92,11 @@ class PinCodeInteractor @Inject constructor(
         return if (isFetched) {
             userRepository.needsMigration(soraAccount)
         } else {
-            val needs = if (credentialsRepository.retrieveMnemonic(soraAccount).split(" ").size == 15) {
+            val retainedWordCount = credentialsRepository.retrieveMnemonic(soraAccount)
+                .trim()
+                .split(Regex("\\s+"))
+                .count(String::isNotBlank)
+            val needs = if (retainedWordCount == LEGACY_SORA_MNEMONIC_WORD_COUNT) {
                 val irohaData = credentialsRepository.getIrohaData(soraAccount)
                 walletRepository.needsMigration(irohaData.address)
             } else {

@@ -59,7 +59,7 @@ class WsConnectionManager(
     @ApplicationContext private val context: Context
 ) : ConnectionManager {
 
-    private lateinit var address: String
+    private val mutationTransport = Sora2MutationTransportCoordinator()
 
     private val socketState =
         MutableStateFlow<SocketStateMachine.State>(SocketStateMachine.State.Disconnected)
@@ -72,7 +72,7 @@ class WsConnectionManager(
         )
 
     override fun setAddress(address: String) {
-        this.address = address
+        mutationTransport.setAddress(address)
     }
 
     override fun observeAppState() {
@@ -81,9 +81,8 @@ class WsConnectionManager(
             .onEach {
                 when (it) {
                     AppStateProvider.AppEvent.ON_CREATE -> {
-                        if (this::address.isInitialized) {
-                            socket.start(address, true)
-                        }
+                        mutationTransport.requestedAddress()
+                            ?.let { socket.start(it, true) }
                     }
 
                     AppStateProvider.AppEvent.ON_RESUME -> {
@@ -95,6 +94,7 @@ class WsConnectionManager(
                     }
 
                     AppStateProvider.AppEvent.ON_DESTROY -> {
+                        mutationTransport.observeConnectedAddress(null)
                         socket.stop()
                     }
                 }
@@ -103,6 +103,9 @@ class WsConnectionManager(
 
         socket.networkStateFlow()
             .onEach {
+                mutationTransport.observeConnectedAddress(
+                    (it as? SocketStateMachine.State.Connected)?.url
+                )
                 socketState.value = it
             }
             .launchIn(coroutineManager.applicationScope)
@@ -124,7 +127,17 @@ class WsConnectionManager(
         get() = socket.started()
 
     override fun switchUrl(url: String) {
-        address = url
-        socket.switchUrl(url)
+        mutationTransport.requestSwitch(url)?.let(socket::switchUrl)
+    }
+
+    override fun requireReviewedSora2MutationTransport() {
+        mutationTransport.requireReviewedTransport()
+    }
+
+    override fun acquireReviewedSora2MutationTransport(): Sora2MutationTransportLease {
+        val lease = mutationTransport.acquire()
+        return Sora2MutationTransportLease {
+            lease.closeAndRunDeferredSwitch(socket::switchUrl)
+        }
     }
 }

@@ -1,7 +1,8 @@
+import org.gradle.api.artifacts.dsl.LockMode
+
 plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.androidLibrary) apply false
-    alias(libs.plugins.kotlinAndroid) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
@@ -11,6 +12,24 @@ plugins {
     alias(libs.plugins.firebaseAppDistributionPlugin) apply false
     alias(libs.plugins.triplet) apply false
     alias(libs.plugins.kover)
+}
+
+subprojects {
+    dependencyLocking {
+        lockMode.set(LockMode.STRICT)
+    }
+
+    configurations.configureEach {
+        val configurationName = name
+        resolutionStrategy {
+            if (configurationName.contains("productionRelease", ignoreCase = true)) {
+                activateDependencyLocking()
+            } else {
+                failOnDynamicVersions()
+                failOnChangingVersions()
+            }
+        }
+    }
 }
 
 tasks.register("clean", Delete::class) {
@@ -58,5 +77,67 @@ tasks.register<JavaExec>("ktlintFormat") {
         "**/src/**/*.kt",
         "**.kts",
         "!**/build/**",
+    )
+}
+tasks.register<Exec>("verifyProductionRollout") {
+    group = "verification"
+    description = "Validates an explicitly requested production rollout candidate or advancement receipt"
+    workingDir(rootDir)
+    commandLine("node", "scripts/verify-production-rollout.mjs")
+    environment(
+        "PRODUCTION_ROLLOUT_TARGET_PERCENT",
+        System.getenv("PRODUCTION_ROLLOUT_TARGET_PERCENT") ?: "",
+    )
+    environment(
+        "PRODUCTION_CANDIDATE_AAB_PATH",
+        System.getenv("PRODUCTION_CANDIDATE_AAB_PATH") ?: "",
+    )
+    environment(
+        "PRODUCTION_CANDIDATE_SOURCE_REVISION",
+        System.getenv("PRODUCTION_CANDIDATE_SOURCE_REVISION") ?: "",
+    )
+    environment(
+        "PRODUCTION_CANDIDATE_REPOSITORY",
+        System.getenv("PRODUCTION_CANDIDATE_REPOSITORY") ?: "",
+    )
+    environment(
+        "PRODUCTION_CANDIDATE_RUN_ID",
+        System.getenv("PRODUCTION_CANDIDATE_RUN_ID") ?: "",
+    )
+    environment(
+        "PRODUCTION_CANDIDATE_RUN_RECEIPT_PATH",
+        System.getenv("PRODUCTION_CANDIDATE_RUN_RECEIPT_PATH") ?: "",
+    )
+    environment(
+        "PRODUCTION_CANDIDATE_ARTIFACT_RECEIPT_PATH",
+        System.getenv("PRODUCTION_CANDIDATE_ARTIFACT_RECEIPT_PATH") ?: "",
+    )
+    environment(
+        "PI_PRODUCTION_PROBE_RECEIPT",
+        System.getenv("PI_PRODUCTION_PROBE_RECEIPT") ?: "",
+    )
+    environment(
+        "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH",
+        System.getenv("PRODUCTION_CANDIDATE_PI_RECEIPT_PATH") ?: "",
+    )
+    environment(
+        "PRODUCTION_ROLLOUT_EVIDENCE_PATH",
+        System.getenv("PRODUCTION_ROLLOUT_EVIDENCE_PATH") ?: "",
+    )
+    environment(
+        "PRODUCTION_ROLLOUT_EVALUATED_AT_EPOCH_SECONDS",
+        System.getenv("PRODUCTION_ROLLOUT_EVALUATED_AT_EPOCH_SECONDS") ?: "",
+    )
+    environment(
+        "PRODUCTION_QUALIFICATION_RECEIPT_PATH",
+        System.getenv("PRODUCTION_QUALIFICATION_RECEIPT_PATH") ?: "",
+    )
+    listOf(1, 5, 25).forEach { cohortPercent ->
+        val environmentName = "PRODUCTION_ROLLOUT_RECEIPT_${cohortPercent}_PATH"
+        environment(environmentName, System.getenv(environmentName) ?: "")
+    }
+    environment(
+        "PRODUCTION_ROLLOUT_TRUST_SHA256",
+        System.getenv("PRODUCTION_ROLLOUT_TRUST_SHA256") ?: "",
     )
 }

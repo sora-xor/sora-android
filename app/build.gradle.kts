@@ -1,11 +1,14 @@
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
+import java.nio.file.Files
+import java.nio.file.LinkOption
+import java.nio.file.Paths
+import java.nio.file.attribute.PosixFilePermission
 
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
@@ -21,6 +24,20 @@ val googleServicesJsonFiles = fileTree(projectDir) {
     include("src/**/google-services.json")
 }
 val hasGoogleServicesJson = !googleServicesJsonFiles.isEmpty
+val productionKeystorePath = System.getenv("CI_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+val productionKeystorePassword = System.getenv("CI_KEYSTORE_PASS")?.takeIf { it.isNotBlank() }
+val productionKeyAlias = System.getenv("CI_KEYSTORE_KEY_ALIAS")?.takeIf { it.isNotBlank() }
+val productionKeyPassword = System.getenv("CI_KEYSTORE_KEY_PASS")?.takeIf { it.isNotBlank() }
+val productionVersionCodeRaw = System.getenv("CI_BUILD_ID")?.takeIf { it.isNotBlank() }
+val productionVersionCode = productionVersionCodeRaw
+    ?.takeIf { it.matches(Regex("[1-9][0-9]{0,8}")) }
+    ?.toInt()
+val productionReleaseSigningConfigured = listOf(
+    productionKeystorePath,
+    productionKeystorePassword,
+    productionKeyAlias,
+    productionKeyPassword,
+).all { it != null }
 
 if (hasGoogleServicesJson) {
     apply(plugin = "com.google.gms.google-services")
@@ -34,7 +51,7 @@ kotlin {
 
 // soralution 143 3.8.6.3 2024.10.31
 // sora dae 122 3.8.6.3 2024.11.21
-val appVersionCode = System.getenv("CI_BUILD_ID")?.toInt() ?: 122
+val appVersionCode = productionVersionCode ?: 122
 val appVersionName = "3.8.6.3"
 
 android {
@@ -56,19 +73,30 @@ android {
         unitTests.isReturnDefaultValues = true
     }
 
+    lint {
+        abortOnError = true
+        checkDependencies = true
+    }
+
     signingConfigs {
         create("cidebug") {
-            storeFile = file(System.getenv("CI_KEYSTORE_PATH") ?: "../key/testdebug.jks")
-            storePassword = System.getenv("CI_KEYSTORE_PASS") ?: "soratestpsw"
-            keyAlias = System.getenv("CI_KEYSTORE_KEY_ALIAS") ?: "key0"
-            keyPassword = System.getenv("CI_KEYSTORE_KEY_PASS") ?: "sorakeypw"
+            storeFile = file("../key/testdebug.jks")
+            storePassword = "soratestpsw"
+            keyAlias = "key0"
+            keyPassword = "sorakeypw"
+        }
+        create("productionRelease") {
+            storeFile = productionKeystorePath?.let { file(it) }
+            storePassword = productionKeystorePassword
+            keyAlias = productionKeyAlias
+            keyPassword = productionKeyPassword
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
-            signingConfig = signingConfigs.getByName("cidebug")
+            signingConfig = signingConfigs.getByName("productionRelease")
             isShrinkResources = true
             configure<CrashlyticsExtension> {
                 mappingFileUploadEnabled = hasGoogleServicesJson
@@ -133,6 +161,15 @@ android {
         }
     }
 
+    // The isolated production-path qualification APK creates the retained
+    // Room 76 source from the exact exported schema before opening it through
+    // the production Room 77 builder. Keep the canonical schema inventory in
+    // instrumentation assets; never approximate the old database by opening
+    // the current entity model first.
+    sourceSets {
+        getByName("androidTest").assets.directories.add(file("../core_db/schemas").absolutePath)
+    }
+
     flavorDimensions += listOf("default")
     productFlavors {
         create("develop") {
@@ -160,21 +197,87 @@ android {
             manifestPlaceholders["appIcon"] = "@mipmap/ic_prod_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_prod_launcher_rounded"
         }
+
+        create("qualification") {
+            dimension = "default"
+            applicationIdSuffix = ".qualification"
+            testApplicationId = "jp.co.soramitsu.sora.qualification.test"
+            matchingFallbacks += listOf("production")
+            resValue("string", "app_name", "SORA Migration Qualification")
+            manifestPlaceholders["pathPrefix"] = "/qualification/#/referral"
+            manifestPlaceholders["appIcon"] = "@mipmap/ic_prod_launcher"
+            manifestPlaceholders["roundedIcon"] = "@mipmap/ic_prod_launcher_rounded"
+        }
     }
 
     configurations {
         all {
             exclude(module = "bcprov-jdk15on")
-//            resolutionStrategy {
-//                dependencySubstitution {
-//                    substitute(module("")).using(module(""))
-//                }
-//            }
         }
     }
 }
 
+val verifyProductionReleaseSigning by tasks.registering {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = "Fail closed unless production release signing inputs are complete and local."
+    doLast {
+        if (!productionReleaseSigningConfigured) {
+            throw GradleException(
+                "Production release signing requires CI_KEYSTORE_PATH, CI_KEYSTORE_PASS, " +
+                    "CI_KEYSTORE_KEY_ALIAS, and CI_KEYSTORE_KEY_PASS.",
+            )
+        }
+        if (productionVersionCode == null) {
+            throw GradleException(
+                "Production release signing requires CI_BUILD_ID as a canonical positive " +
+                    "version code with at most nine decimal digits.",
+            )
+        }
+        val configuredKeystore = Paths.get(requireNotNull(productionKeystorePath))
+        if (!configuredKeystore.isAbsolute) {
+            throw GradleException("Production release keystore path must be absolute.")
+        }
+        val normalizedKeystore = configuredKeystore.normalize()
+        if (
+            normalizedKeystore != configuredKeystore ||
+            !Files.isRegularFile(normalizedKeystore, LinkOption.NOFOLLOW_LINKS) ||
+            Files.isSymbolicLink(normalizedKeystore)
+        ) {
+            throw GradleException("Production release keystore must be a canonical regular non-symlink file.")
+        }
+        val realKeystore = normalizedKeystore.toRealPath(LinkOption.NOFOLLOW_LINKS)
+        if (realKeystore != normalizedKeystore) {
+            throw GradleException("Production release keystore path must not traverse symbolic links.")
+        }
+        val forbiddenPermissions = setOf(
+            PosixFilePermission.GROUP_READ,
+            PosixFilePermission.GROUP_WRITE,
+            PosixFilePermission.GROUP_EXECUTE,
+            PosixFilePermission.OTHERS_READ,
+            PosixFilePermission.OTHERS_WRITE,
+            PosixFilePermission.OTHERS_EXECUTE,
+        )
+        if (Files.getPosixFilePermissions(realKeystore).any(forbiddenPermissions::contains)) {
+            throw GradleException("Production release keystore must be owner-only.")
+        }
+    }
+}
+
+tasks.configureEach {
+    if (
+        name != verifyProductionReleaseSigning.name &&
+        name.contains("productionRelease", ignoreCase = true)
+    ) {
+        dependsOn(verifyProductionReleaseSigning)
+    }
+}
+
 androidComponents {
+    beforeVariants(selector().withFlavor("default" to "qualification")) { variantBuilder ->
+        if (variantBuilder.buildType != "debug") {
+            variantBuilder.enable = false
+        }
+    }
     onVariants { variant ->
         variant.outputs.forEach { output ->
             output.outputFileName.set(
@@ -241,6 +344,8 @@ dependencies {
 
     implementation(libs.timberDep)
 
+    implementation(libs.roomDep)
+    implementation(libs.xcryptoDep)
     implementation(libs.xsubstrateDep)
     implementation(libs.soramitsu.android.foundation)
 
@@ -248,6 +353,7 @@ dependencies {
     ksp(libs.hiltCompilerDep)
     implementation(libs.hiltWorkManagerDep)
     ksp(libs.hiltWorkManagerCompilerDep)
+    implementation(libs.workManagerDep)
 
     implementation(libs.lifecycleProcessDep)
 
@@ -266,6 +372,13 @@ dependencies {
     testImplementation(libs.mockitoKotlinDep)
     testImplementation(libs.archCoreTestDep)
     testImplementation(libs.truthDep)
+
+    androidTestImplementation(libs.androidxTestExtJunitDep)
+    androidTestImplementation(libs.androidxTestEspressoCoreDep)
+    androidTestImplementation(libs.coroutineTestDep)
+    androidTestImplementation(libs.junitDep)
+    androidTestImplementation(libs.mockkAndroidDep)
+    androidTestImplementation(libs.roomTestHelpersDep)
 
     kover(project(":common"))
     kover(project(":common_wallet"))

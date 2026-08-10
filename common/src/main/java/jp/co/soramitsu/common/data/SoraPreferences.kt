@@ -54,6 +54,8 @@ class SoraPreferences(
     companion object {
         private const val SHARED_PREFERENCES_FILE = "sora_prefs"
         private const val SORA_COMMON_PREFS = "sora_prefs_datastore"
+        private const val MAXIMUM_BOOLEAN_SNAPSHOT_FIELDS = 32
+        private const val MAXIMUM_PREFERENCE_KEY_LENGTH = 256
     }
 
     private val Context.dataStorePreferences: DataStore<Preferences> by preferencesDataStore(
@@ -79,14 +81,6 @@ class SoraPreferences(
         }
     }
 
-    suspend fun clear(fields: List<String>) {
-        dataStore.edit {
-            fields.forEach { field ->
-                it.remove(stringPreferencesKey(field))
-            }
-        }
-    }
-
     suspend fun getOrPutInt(field: String, value: Int): Int =
         dataStore.data.map {
             val key = intPreferencesKey(field)
@@ -109,6 +103,34 @@ class SoraPreferences(
             it[booleanPreferencesKey(field)] ?: defaultValue
         }
 
+    /**
+     * Observes a group of Boolean preferences from the same immutable DataStore snapshot.
+     * Missing keys are omitted so callers can distinguish an explicit false value from a value
+     * that has never been persisted. Combining independent per-key flows could otherwise publish
+     * a capability state that never existed atomically.
+     */
+    fun getBooleanSnapshotFlow(fields: Set<String>): Flow<Map<String, Boolean>> {
+        require(fields.isNotEmpty() && fields.size <= MAXIMUM_BOOLEAN_SNAPSHOT_FIELDS) {
+            "BOOLEAN_PREFERENCE_SNAPSHOT_FIELDS_INVALID"
+        }
+        require(fields.all { it.isNotBlank() && it.length <= MAXIMUM_PREFERENCE_KEY_LENGTH }) {
+            "BOOLEAN_PREFERENCE_SNAPSHOT_KEY_INVALID"
+        }
+        val keys = fields.associateWith(::booleanPreferencesKey)
+        return dataStore.data.map { preferences ->
+            buildMap {
+                keys.forEach { (field, key) ->
+                    if (preferences.contains(key)) {
+                        preferences[key]?.let { value -> put(field, value) }
+                    }
+                }
+            }
+        }
+    }
+
+    suspend fun getBooleanSnapshot(fields: Set<String>): Map<String, Boolean> =
+        getBooleanSnapshotFlow(fields).first()
+
     suspend fun getBoolean(field: String, defaultValue: Boolean = false): Boolean =
         dataStore.data.map {
             it[booleanPreferencesKey(field)] ?: defaultValue
@@ -119,6 +141,19 @@ class SoraPreferences(
             it[booleanPreferencesKey(field)] = value
         }
     }
+
+    suspend fun putBooleans(values: Map<String, Boolean>) {
+        dataStore.edit { preferences ->
+            values.forEach { (field, value) ->
+                preferences[booleanPreferencesKey(field)] = value
+            }
+        }
+    }
+
+    suspend fun containsBoolean(field: String): Boolean =
+        dataStore.data.map {
+            it.contains(booleanPreferencesKey(field))
+        }.first()
 
     suspend fun getInt(field: String, defaultValue: Int): Int =
         dataStore.data.map {
@@ -171,9 +206,168 @@ class SoraPreferences(
         }
     }
 
-    suspend fun clearAll() {
-        dataStore.edit {
-            it.clear()
+    suspend fun previewWalletDeletion(
+        stringFields: Set<String>,
+        booleanFields: Set<String>,
+        selectedAddress: String,
+        clearAll: Boolean,
+    ): WalletPreferenceIntegrity.Hashes {
+        val preferences = dataStore.data.first()
+        val before = preferences.walletState()
+        val after = before.afterDeletion(
+            stringFields = stringFields,
+            booleanFields = booleanFields,
+            selectedAddress = selectedAddress,
+            clearAll = clearAll,
+        )
+        return WalletPreferenceIntegrity.Hashes(
+            before = before.hash(),
+            after = after.hash(),
+        )
+    }
+
+    suspend fun requireWalletPreferenceCoverage(
+        walletIds: Set<String>,
+        selectedAddress: String,
+    ) {
+        check(walletIds.isNotEmpty()) { "WALLET_PREFERENCE_ACCOUNT_SET_EMPTY" }
+        val state = dataStore.data.first().walletState()
+        val scopedWalletIds = buildSet {
+            state.strings.forEach { (key, value) ->
+                if (value.isNotBlank()) {
+                    WalletPreferenceKeys.encryptedCredentialPrefixes
+                        .firstOrNull { prefix ->
+                            key.length > prefix.length && key.startsWith(prefix)
+                        }
+                        ?.let { prefix -> add(key.removePrefix(prefix)) }
+                }
+            }
+            state.booleans.forEach { (key, value) ->
+                if (
+                    value &&
+                    key.length > WalletPreferenceKeys.WATCH_ONLY.length &&
+                    key.startsWith(WalletPreferenceKeys.WATCH_ONLY)
+                ) {
+                    add(key.removePrefix(WalletPreferenceKeys.WATCH_ONLY))
+                }
+            }
+        }
+        val legacyOwner = state.strings[WalletPreferenceKeys.LEGACY_ADDRESS]
+            ?.takeIf(String::isNotBlank)
+            ?.takeIf {
+                WalletPreferenceKeys.encryptedCredentialPrefixes.any { key ->
+                    !state.strings[key].isNullOrBlank()
+                }
+            }
+        val covered = scopedWalletIds + listOfNotNull(legacyOwner)
+        check(
+            selectedAddress in walletIds &&
+                state.strings[WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS] ==
+                selectedAddress &&
+                covered.containsAll(walletIds) &&
+                scopedWalletIds.all { it in walletIds } &&
+                (legacyOwner == null || legacyOwner in walletIds)
+        ) { "WALLET_PREFERENCE_COVERAGE_MISMATCH" }
+    }
+
+    /**
+     * Applies the preference half of a journaled wallet deletion as one durable DataStore edit.
+     * The Android Keystore and wrapped AES key live outside this DataStore and are intentionally
+     * retained.
+     */
+    suspend fun commitWalletDeletion(
+        stringFields: Set<String>,
+        booleanFields: Set<String>,
+        selectedAddress: String,
+        clearAll: Boolean,
+        expectedBeforeHash: String,
+        expectedAfterHash: String,
+    ) {
+        check(
+            WalletPreferenceIntegrity.isSha256(expectedBeforeHash) &&
+                WalletPreferenceIntegrity.isSha256(expectedAfterHash)
+        ) { "WALLET_DELETION_PREFERENCE_HASH_INVALID" }
+        dataStore.edit { preferences ->
+            val beforeHash = preferences.walletState().hash()
+            if (beforeHash != expectedAfterHash) {
+                check(beforeHash == expectedBeforeHash) {
+                    "WALLET_DELETION_PREFERENCES_CHANGED"
+                }
+                if (clearAll) {
+                    preferences.clear()
+                } else {
+                    stringFields.forEach { field ->
+                        preferences.remove(stringPreferencesKey(field))
+                    }
+                    booleanFields.forEach { field ->
+                        preferences.remove(booleanPreferencesKey(field))
+                    }
+                    preferences[
+                        stringPreferencesKey(WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS)
+                    ] = selectedAddress
+                }
+                check(preferences.walletState().hash() == expectedAfterHash) {
+                    "WALLET_DELETION_PREFERENCES_RESULT_MISMATCH"
+                }
+            }
+        }
+    }
+
+    suspend fun walletDeletionPreferencesMatch(
+        stringFields: Set<String>,
+        booleanFields: Set<String>,
+        selectedAddress: String,
+        clearAll: Boolean,
+        expectedAfterHash: String,
+    ): Boolean = dataStore.data.map { preferences ->
+        preferences.walletState().hash() == expectedAfterHash &&
+            if (clearAll) {
+                preferences.asMap().isEmpty()
+            } else {
+                stringFields.none { preferences.contains(stringPreferencesKey(it)) } &&
+                    booleanFields.none { preferences.contains(booleanPreferencesKey(it)) } &&
+                    preferences[
+                        stringPreferencesKey(WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS)
+                    ] == selectedAddress
+            }
+    }.first()
+
+    private fun Preferences.walletState(): WalletPreferenceState {
+        val strings = mutableMapOf<String, String>()
+        val booleans = mutableMapOf<String, Boolean>()
+        asMap().forEach { (key, value) ->
+            if (WalletPreferenceKeys.isWalletStateKey(key.name)) {
+                when (value) {
+                    is String -> strings[key.name] = value
+                    is Boolean -> booleans[key.name] = value
+                    else -> error("WALLET_PREFERENCE_TYPE_INVALID")
+                }
+            }
+        }
+        return WalletPreferenceState(strings, booleans)
+    }
+
+    private data class WalletPreferenceState(
+        val strings: Map<String, String>,
+        val booleans: Map<String, Boolean>,
+    ) {
+        fun hash(): String = WalletPreferenceIntegrity.hash(strings, booleans)
+
+        fun afterDeletion(
+            stringFields: Set<String>,
+            booleanFields: Set<String>,
+            selectedAddress: String,
+            clearAll: Boolean,
+        ): WalletPreferenceState {
+            if (clearAll) return WalletPreferenceState(emptyMap(), emptyMap())
+            val remainingStrings = strings.toMutableMap().apply {
+                stringFields.forEach(::remove)
+                this[WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS] = selectedAddress
+            }
+            val remainingBooleans = booleans.toMutableMap().apply {
+                booleanFields.forEach(::remove)
+            }
+            return WalletPreferenceState(remainingStrings, remainingBooleans)
         }
     }
 }

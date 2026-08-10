@@ -170,10 +170,13 @@ class AssetsRepositoryTest {
     fun `observe transfer`() = runTest {
         val key = Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6))
         BDDMockito.given(
-            extrinsicManager.submitAndWatchExtrinsic(
+            extrinsicManager.submitFeeQualifiedAndWatchExtrinsic(
                 BDDMockito.anyString(),
                 any(),
+                any(),
                 BDDMockito.anyBoolean(),
+                any(),
+                any(),
                 any()
             )
         ).willReturn(
@@ -185,7 +188,8 @@ class AssetsRepositoryTest {
             "to",
             TestTokens.xorToken,
             BigDecimal.ONE,
-            BigDecimal.ZERO
+            BigDecimal.ONE,
+            validateSelectedWallet = {},
         )
         Assert.assertEquals(true, result.success)
     }

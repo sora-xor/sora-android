@@ -117,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Vous avez déjà appliqué un autre code d\'invitation</string>
   <string name="common_error_invitation_code_not_found">Le code d\'invitation est invalide.</string>
   <string name="common_error_inviter_registered_after_invitee">Le code d\'invitation fourni ne peut pas être appliqué car il provient d\'un utilisateur qui s\'est inscrit après vous.</string>
-  <string name="common_error_mnemonic_is_not_valid">Veuillez vous assurer que votre phrase secrète contient 12 ou 15 mots et qu\'ils sont tous corrects.</string>
-  <string name="common_error_mnemonic_length_error">La phrase secrète doit contenir 15 mots</string>
+  <string name="common_error_mnemonic_is_not_valid">Veuillez vous assurer que votre phrase secrète contient 12 ou 24 mots et qu\'ils sont tous corrects.</string>
+  <string name="common_error_mnemonic_length_error">La phrase secrète doit contenir 12 ou 24 mots</string>
   <string name="common_error_network">Veuillez vérifier votre connexion Internet et réessayer plus tard.</string>
   <string name="common_error_no_browser_error">Veuillez installer un navigateur pour ouvrir le lien</string>
   <string name="common_error_not_enough_invitations">Désolé, vous n\'avez aucune invitation à partager</string>
@@ -278,7 +278,7 @@
   <string name="export_protection_passphrase_1">Si je perds ma phrase secrète, mes fonds seront définitivement perdus.</string>
   <string name="export_protection_passphrase_2">Si j\'expose ou partage ma phrase secrète avec qui que ce soit, mes fonds peuvent être volés.</string>
   <string name="export_protection_passphrase_3">Il est de mon entière responsabilité de garder ma phrase secrète en sécurité.</string>
-  <string name="export_protection_passphrase_description">À l\'étape suivante, vous verrez Passphrase (12 mots) qui vous permet de récupérer un compte.</string>
+  <string name="export_protection_passphrase_description">À l\'étape suivante, vous verrez Passphrase (24 mots) qui vous permet de récupérer un compte.</string>
   <string name="export_protection_seed_1">Si je perds ma phrase mnémonique, mes fonds seront perdus à jamais.</string>
   <string name="export_protection_seed_2">Si j\'expose ou partage ma phrase mnémonique avec qui que ce soit, mes fonds peuvent être volés.</string>
   <string name="export_protection_seed_3">Il est de mon entière responsabilité de garder ma phrase mnémonique en sécurité.</string>

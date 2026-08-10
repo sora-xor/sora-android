@@ -117,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Вы уже приняли другое приглашение</string>
   <string name="common_error_invitation_code_not_found">Код приглашения недействителен</string>
   <string name="common_error_inviter_registered_after_invitee">Вы не можете использовать код приглашения пользователя, зарегистрированного позже вас</string>
-  <string name="common_error_mnemonic_is_not_valid">Пожалуйста, убедитесь, что ваша кодовая фраза состоит из 12 или 15 слов и все они верны.</string>
-  <string name="common_error_mnemonic_length_error">Парольная фраза содержит 15 слов</string>
+  <string name="common_error_mnemonic_is_not_valid">Пожалуйста, убедитесь, что ваша кодовая фраза состоит из 12 или 24 слов и все они верны.</string>
+  <string name="common_error_mnemonic_length_error">Парольная фраза должна содержать 12 или 24 слова</string>
   <string name="common_error_network">Пожалуйста, проверьте подключение к Интернету и повторите попытку.</string>
   <string name="common_error_no_browser_error">Пожалуйста, установите браузер, чтобы открыть ссылку</string>
   <string name="common_error_not_enough_invitations">Извините, но у Вас не осталось кодов приглашения</string>
@@ -281,7 +281,7 @@
   <string name="export_protection_passphrase_1">Если я потеряю парольную фразу, мои средства будут утеряны навсегда.</string>
   <string name="export_protection_passphrase_2">Если я раскрою или передам свою парольную фразу кому-либо, мои средства могут быть украдены.</string>
   <string name="export_protection_passphrase_3">Я несу полную ответственность за сохранность моей парольной фразы.</string>
-  <string name="export_protection_passphrase_description">На следующем шаге вы увидите парольную фразу (12 слов), которая позволит вам восстановить учетную запись.</string>
+  <string name="export_protection_passphrase_description">На следующем шаге вы увидите парольную фразу (24 слова), которая позволит вам восстановить учетную запись.</string>
   <string name="export_protection_seed_1">Если я потеряю свой raw seed, мои средства будут потеряны навсегда.</string>
   <string name="export_protection_seed_2">Если я раскрою или поделюсь с кем-либо своими raw seed, мои средства могут быть украдены.</string>
   <string name="export_protection_seed_3">Я несу полную ответственность за сохранность моего raw seed.</string>

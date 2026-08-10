@@ -18,6 +18,10 @@
         android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapFragment" />
 
     <fragment
+        android:id="@+id/polkamarktFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.polkamarkt.PolkamarktFragment" />
+
+    <fragment
         android:id="@+id/claimFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimFragment" />
 

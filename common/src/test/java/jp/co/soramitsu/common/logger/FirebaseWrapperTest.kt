@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.logger
 
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -51,6 +52,16 @@ class FirebaseWrapperTest {
     @Test
     fun `log and recordException do not reach Firebase when Crashlytics is disabled`() {
         FirebaseWrapper.log("Firebase disabled")
-        FirebaseWrapper.recordException(IllegalStateException("Firebase disabled"))
+        val sensitive = IllegalStateException(
+            "phrase seed private key cnSensitiveWalletAddress raw signed payload"
+        )
+        assertEquals(
+            FirebaseWrapper.PrivacySafeErrorClass.STATE_FAILURE,
+            FirebaseWrapper.privacySafeErrorClass(sensitive),
+        )
+        FirebaseWrapper.recordException(sensitive)
+        FirebaseWrapper.recordErrorClass(
+            FirebaseWrapper.PrivacySafeErrorClass.EXTRINSIC_SUBMISSION
+        )
     }
 }

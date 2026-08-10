@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 
@@ -43,8 +44,9 @@ class PrefsUserDatasource(
 ) : UserDatasource {
 
     companion object {
-        private const val PREFS_PIN_CODE = "user_pin_code"
-        private const val PREFS_REGISTRATION_STATE = "registration_state"
+        private const val PREFS_PIN_CODE = WalletPreferenceKeys.PIN_CODE
+        private const val PREFS_REGISTRATION_STATE =
+            WalletPreferenceKeys.REGISTRATION_STATE
 
         private const val KEY_PIN_TRIES = "key_pin_tries"
         private const val KEY_PIN_START_TIMESTAMP = "key_pin_start_timestamp"
@@ -53,9 +55,11 @@ class PrefsUserDatasource(
         private const val KEY_PARENT_INVITE_CODE = "invite_code"
         private const val KEY_BIOMETRY_AVAILABLE = "biometry_available"
         private const val KEY_BIOMETRY_ENABLED = "biometry_enabled"
-        private const val KEY_NEEDS_MIGRATION = "needs_migration"
-        private const val KEY_IS_MIGRATION_FETCHED = "is_migration_fetched"
-        private const val KEY_CUR_ACCOUNT_ADDRESS = "cur_account_address"
+        private const val KEY_NEEDS_MIGRATION = WalletPreferenceKeys.NEEDS_MIGRATION
+        private const val KEY_IS_MIGRATION_FETCHED =
+            WalletPreferenceKeys.IS_MIGRATION_FETCHED
+        private const val KEY_CUR_ACCOUNT_ADDRESS =
+            WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS
     }
 
     override suspend fun getCurAccountAddress(): String =
@@ -85,10 +89,6 @@ class PrefsUserDatasource(
                 OnboardingState.INITIAL
             )
         }
-    }
-
-    override suspend fun clearAllData() {
-        soraPreferences.clearAll()
     }
 
     override suspend fun saveParentInviteCode(inviteCode: String) {

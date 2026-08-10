@@ -48,11 +48,14 @@ object TestTransactions {
     val txHistoryItem = IndexerHistoryElement(
         id = "0xb594da199715b4efd01aa59faa23607e68ce51ef5226dcfe2e17d436c58dd0d0",
         blockHash = "0x200335cb5a84a7d85b7d7a5ae8825c1a54b3aaf6c266fb977dcdd32774b5f560",
+        blockHeight = 100,
         module = "poolXYK",
         method = "depositLiquidity",
+        address = TestAccounts.soraAccount.substrateAddress,
         timestamp = "1675442934",
         networkFee = "70000000000000000",
         success = true,
+        executionKnown = true,
         data = listOf(
             IndexerHistoryItemParam(
                 paramName = "baseAssetAmount",
@@ -95,7 +98,7 @@ object TestTransactions {
 
     val sendSuccessfulTx = Transaction.Transfer(
         TransactionBase(
-            "txHash",
+            "0x" + "9a".repeat(32),
             "blockHash",
             BigDecimal.ONE,
             TransactionStatus.COMMITTED,

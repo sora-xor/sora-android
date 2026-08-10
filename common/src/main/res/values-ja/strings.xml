@@ -117,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">あなたは既に別の招待コードを利用しています</string>
   <string name="common_error_invitation_code_not_found">招待コードが無効です</string>
   <string name="common_error_inviter_registered_after_invitee">あなたの後に登録を行ったユーザーのものなので、この招待コードは利用できません</string>
-  <string name="common_error_mnemonic_is_not_valid">お手数ですが、パスフレーズの12単語なり15単語が全て正しいか確認してください</string>
-  <string name="common_error_mnemonic_length_error">パスフレーズは15個の単語を含めてください</string>
+  <string name="common_error_mnemonic_is_not_valid">お手数ですが、パスフレーズが12単語または24単語で、全て正しいか確認してください</string>
+  <string name="common_error_mnemonic_length_error">パスフレーズは12個または24個の単語を含めてください</string>
   <string name="common_error_network">インターネット接続を確認し、後でもう一度やり直してください</string>
   <string name="common_error_no_browser_error">リンクを開くにはブラウザをインストールしてください</string>
   <string name="common_error_not_enough_invitations">申し訳ありませんが、共有できる招待枠がありません</string>
@@ -277,7 +277,7 @@
   <string name="export_protection_passphrase_1">パスフレーズを紛失すると、資金は永久に失われます</string>
   <string name="export_protection_passphrase_2">パスフレーズを誰かに公開または共有すると、資金が盗まれる可能性があります</string>
   <string name="export_protection_passphrase_3">パスフレーズを安全に保つことは、全て自己責任です</string>
-  <string name="export_protection_passphrase_description">次のステップで、アカウントを復元できるパスフレーズ(12単語)が表示されます</string>
+  <string name="export_protection_passphrase_description">次のステップで、アカウントを復元できるパスフレーズ（24単語）が表示されます</string>
   <string name="export_protection_seed_1">シードを紛失すると、資金は永久に失われます</string>
   <string name="export_protection_seed_2">シードを誰かに公開または共有すると、資金が盗まれる可能性があります</string>
   <string name="export_protection_seed_3">シードを安全に保つことは、全て自己責任です</string>

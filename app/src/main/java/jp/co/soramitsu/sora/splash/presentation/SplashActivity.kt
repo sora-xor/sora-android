@@ -33,15 +33,24 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.splash.presentation
 
 import android.animation.ValueAnimator
+import android.content.ClipData
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
+import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
 import jp.co.soramitsu.sora.databinding.ActivitySplashBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class SplashActivity : AppCompatActivity() {
@@ -78,12 +87,118 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(ActivitySplashBinding.inflate(layoutInflater).also { viewBinding = it }.root)
 
-        viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
+        viewBinding.retryWalletMigrationButton.setOnClickListener { button ->
+            button.isEnabled = false
+            lifecycleScope.launch {
+                val migrationRetry =
+                    WalletUpgradeBackup.canAuthorizeMigrationRetry()
+                val result = withContext(Dispatchers.IO) {
+                    if (migrationRetry) {
+                        WalletUpgradeBackup.authorizeMigrationRetry(applicationContext)
+                    } else {
+                        WalletUpgradeBackup.prepare(applicationContext)
+                    }
+                }
+                button.isEnabled = true
+                if (result.isSuccess) {
+                    if (migrationRetry) {
+                        splashViewModel.retryWalletMigration()
+                    } else {
+                        recreate()
+                    }
+                } else {
+                    showRecovery(
+                        code =
+                            (result.exceptionOrNull() as?
+                                jp.co.soramitsu.core_db.WalletUpgradeBackupException)
+                                ?.code
+                                ?: WalletUpgradeBackup.blockingFailure()?.code
+                                ?: "BACKUP_RETRY_FAILED",
+                        canContinueLegacyWallet = false,
+                    )
+                }
+            }
+        }
+        viewBinding.contactWalletSupportButton.setOnClickListener {
+            startActivity(
+                Intent(
+                    Intent.ACTION_SENDTO,
+                    Uri.parse("mailto:support@sora.org?subject=SORA%20wallet%20upgrade%20recovery")
+                )
+            )
+        }
+        viewBinding.continueLegacyWalletButton.setOnClickListener {
+            val button = viewBinding.continueLegacyWalletButton
+            button.isEnabled = false
+            lifecycleScope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    WalletUpgradeBackup.authorizeLegacyReadOnly(applicationContext)
+                }
+                button.isEnabled = true
+                if (result.isSuccess) {
+                    splashViewModel.continueLegacyWallet()
+                } else {
+                    showRecovery(
+                        code =
+                            (result.exceptionOrNull() as?
+                                jp.co.soramitsu.core_db.WalletUpgradeBackupException)
+                                ?.code
+                                ?: "LEGACY_RECOVERY_AUTHORIZATION_FAILED",
+                        canContinueLegacyWallet = false,
+                    )
+                }
+            }
+        }
+        viewBinding.exportWalletRecoveryButton.setOnClickListener { button ->
+            button.isEnabled = false
+            lifecycleScope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    WalletUpgradeBackup.createRecoveryArchive(applicationContext)
+                }
+                button.isEnabled = true
+                result.onSuccess { archive ->
+                    val uri = FileProvider.getUriForFile(
+                        this@SplashActivity,
+                        "$packageName.soraFileProvider",
+                        archive,
+                    )
+                    startActivity(
+                        Intent.createChooser(
+                            Intent(Intent.ACTION_SEND).apply {
+                                type = "application/zip"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                clipData = ClipData.newUri(
+                                    contentResolver,
+                                    "SORA encrypted recovery archive",
+                                    uri,
+                                )
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            },
+                            getString(
+                                jp.co.soramitsu.sora.R.string.wallet_upgrade_recovery_export,
+                            ),
+                        )
+                    )
+                }.onFailure {
+                    showRecovery(
+                        code =
+                            (it as? jp.co.soramitsu.core_db.WalletUpgradeBackupException)?.code
+                                ?: "RECOVERY_EXPORT_FAILED",
+                        canContinueLegacyWallet = false,
+                    )
+                }
+            }
+        }
 
         splashViewModel.runtimeInitiated.observe(
             this
         ) {
-            if (it && isFirstPartFinished && !isSecondPartStarted) {
+            if (
+                it &&
+                viewBinding.walletRecoveryPanel.visibility != View.VISIBLE &&
+                isFirstPartFinished &&
+                !isSecondPartStarted
+            ) {
                 isSecondPartStarted = true
                 viewBinding.animationView.resumeAnimation()
             }
@@ -92,12 +207,22 @@ class SplashActivity : AppCompatActivity() {
         splashViewModel.loadingTextVisiblity.observe(
             this
         ) {
-            viewBinding.loadingDisclaimerTextView.visibility = View.VISIBLE
-            viewBinding.loadingProgressBar.visibility = View.VISIBLE
+            if (viewBinding.walletRecoveryPanel.visibility != View.VISIBLE) {
+                viewBinding.loadingDisclaimerTextView.visibility = View.VISIBLE
+                viewBinding.loadingProgressBar.visibility = View.VISIBLE
+            }
         }
 
         splashViewModel.showMainScreen.observe(this) {
-            mainStarter.start(this)
+            val backupFailure = WalletUpgradeBackup.blockingFailure()
+            if (backupFailure == null) {
+                mainStarter.start(this)
+            } else {
+                showRecovery(
+                    code = backupFailure.code,
+                    canContinueLegacyWallet = false,
+                )
+            }
         }
         splashViewModel.showOnBoardingScreen.observe(this) {
             multiaccStarter.startOnboardingFlow(this)
@@ -106,10 +231,46 @@ class SplashActivity : AppCompatActivity() {
             mainStarter.startWithInvite(this)
             finish()
         }
+        splashViewModel.showMigrationRecovery.observe(this) { recovery ->
+            showRecovery(
+                code = recovery.code,
+                canContinueLegacyWallet = recovery.canContinueLegacyWallet,
+            )
+        }
+
+        val startupFailure = WalletUpgradeBackup.blockingFailure()
+        if (startupFailure == null) {
+            viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
+        } else {
+            showRecovery(
+                code = startupFailure.code,
+                canContinueLegacyWallet =
+                    WalletUpgradeBackup.hasValidatedLegacyRecovery(),
+            )
+        }
     }
 
     private fun goNext() {
         viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
         splashViewModel.nextScreen()
+    }
+
+    private fun showRecovery(
+        code: String,
+        canContinueLegacyWallet: Boolean,
+    ) {
+        viewBinding.animationView.cancelAnimation()
+        viewBinding.animationView.visibility = View.GONE
+        viewBinding.loadingDisclaimerTextView.visibility = View.GONE
+        viewBinding.loadingProgressBar.visibility = View.GONE
+        viewBinding.walletRecoveryPanel.visibility = View.VISIBLE
+        viewBinding.walletRecoveryCodeTextView.text =
+            getString(jp.co.soramitsu.sora.R.string.wallet_upgrade_recovery_code, code)
+        viewBinding.continueLegacyWalletButton.visibility =
+            if (canContinueLegacyWallet) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
     }
 }

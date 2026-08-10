@@ -37,6 +37,19 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 object FirebaseWrapper {
+    enum class PrivacySafeErrorClass {
+        PI_TRANSACTION_PEERS,
+        PI_TRANSACTION_HISTORY,
+        PI_TRANSACTION_DETAIL,
+        EXTRINSIC_SUBMISSION,
+        FINALIZED_EVENT_READ,
+        NETWORK_FAILURE,
+        INVALID_INPUT_FAILURE,
+        STATE_FAILURE,
+        SECURITY_FAILURE,
+        UNCLASSIFIED_FAILURE,
+    }
+
     private val blackList = listOf(CancellationException::class)
 
     @Volatile
@@ -50,9 +63,25 @@ object FirebaseWrapper {
         if (blackList.any { it.isInstance(t) }) {
             return
         }
+        recordErrorClass(privacySafeErrorClass(t))
+    }
 
-        Timber.e(t, "ERROR")
-        crashlyticsInstance()?.recordException(t)
+    internal fun privacySafeErrorClass(t: Throwable): PrivacySafeErrorClass = when (t) {
+        is SecurityException -> PrivacySafeErrorClass.SECURITY_FAILURE
+        is IllegalArgumentException -> PrivacySafeErrorClass.INVALID_INPUT_FAILURE
+        is IllegalStateException -> PrivacySafeErrorClass.STATE_FAILURE
+        is java.io.IOException -> PrivacySafeErrorClass.NETWORK_FAILURE
+        else -> PrivacySafeErrorClass.UNCLASSIFIED_FAILURE
+    }
+
+    /**
+     * Records an allowlisted class without retaining an originating exception as a cause. Network
+     * and signing exceptions may contain addresses, request bodies, or signed payload material.
+     */
+    fun recordErrorClass(errorClass: PrivacySafeErrorClass) {
+        val sanitized = PrivacySafeTelemetryException(errorClass.name)
+        Timber.e(sanitized, "ERROR_CLASS")
+        crashlyticsInstance()?.recordException(sanitized)
     }
 
     fun log(message: String) {
@@ -69,4 +98,8 @@ object FirebaseWrapper {
             .onFailure { crashlyticsEnabled = false }
             .getOrNull()
     }
+
+    private class PrivacySafeTelemetryException(
+        errorClass: String,
+    ) : IllegalStateException(errorClass)
 }

@@ -36,6 +36,9 @@ import java.text.Normalizer
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.account.Sora2AddressCodec
+import jp.co.soramitsu.common.account.WalletMutationCoordinator
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -45,8 +48,8 @@ import jp.co.soramitsu.common.util.ext.didToAccountId
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.runtime.Sora2RuntimeContract
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.xcrypto.seed.Mnemonic
@@ -61,24 +64,28 @@ class CredentialsRepositoryImpl constructor(
     private val credentialsPrefs: CredentialsDatasource,
     private val cryptoAssistant: CryptoAssistant,
     private val runtimeManager: RuntimeManager,
+    private val sora2AddressCodec: Sora2AddressCodec,
     private val jsonSeedEncoder: JsonAccountsEncoder,
-    private val soraConfigManager: SoraConfigManager,
 ) : CredentialsRepository {
 
     private val irohaCash = mutableMapOf<String, IrohaData>()
 
     override suspend fun isMnemonicValid(mnemonic: String): Boolean {
-        return runCatching { MnemonicCreator.fromWords(mnemonic) }.isSuccess
+        return hasImportWordCount(mnemonic) &&
+            runCatching { MnemonicCreator.fromWords(mnemonic) }.isSuccess
     }
 
     override suspend fun isRawSeedValid(rawSeed: String): Boolean {
         return runCatching { rawSeed.fromHex().size == 32 }.getOrDefault(false)
     }
 
-    override suspend fun generateUserCredentials(accountName: String): SoraAccount {
+    override suspend fun generateUserCredentials(
+        accountName: String,
+    ): SoraAccount = WalletMutationCoordinator.withLock {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
         val mnemonic = generateMnemonic()
         val address = generateEntropyAndKeysFromMnemonic(mnemonic)
-        return SoraAccount(address, accountName)
+        SoraAccount(address, accountName)
     }
 
     private suspend fun generateEntropyAndKeysFromMnemonic(mnemonic: Mnemonic): String {
@@ -121,49 +128,115 @@ class CredentialsRepositoryImpl constructor(
     }
 
     private fun generateMnemonic(): Mnemonic =
-        MnemonicCreator.randomMnemonic(Mnemonic.Length.TWELVE)
+        MnemonicCreator.randomMnemonic(Mnemonic.Length.TWENTY_FOUR)
 
     override suspend fun restoreUserCredentialsFromMnemonic(
         mnemonic: String,
         accountName: String
-    ): SoraAccount {
+    ): SoraAccount = WalletMutationCoordinator.withLock {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
+        require(hasImportWordCount(mnemonic)) {
+            "Only 12- or 24-word recovery phrases are supported"
+        }
         val address = generateEntropyAndKeysFromMnemonic(MnemonicCreator.fromWords(mnemonic))
-        return SoraAccount(address, accountName)
+        SoraAccount(address, accountName)
     }
 
     override suspend fun restoreUserCredentialsFromRawSeed(
         rawSeed: String,
         accountName: String
-    ): SoraAccount {
+    ): SoraAccount = WalletMutationCoordinator.withLock {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
         val address = generateEntropyAndKeysFromRawSeed(rawSeed.removeHexPrefix())
-        return SoraAccount(address, accountName)
+        SoraAccount(address, accountName)
     }
 
-    override suspend fun saveMnemonic(mnemonic: String, soraAccount: SoraAccount) {
+    override suspend fun saveMnemonic(
+        mnemonic: String,
+        soraAccount: SoraAccount,
+    ) = WalletMutationCoordinator.withLock {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
         credentialsPrefs.saveMnemonic(mnemonic, soraAccount.substrateAddress)
     }
 
     override suspend fun retrieveMnemonic(soraAccount: SoraAccount): String {
-        return credentialsPrefs.retrieveMnemonic(soraAccount.substrateAddress)
+        val current = credentialsPrefs.retrieveMnemonic(soraAccount.substrateAddress)
+        if (current.isNotEmpty()) return current
+        return if (legacyEmptySuffixBelongsTo(soraAccount.substrateAddress)) {
+            credentialsPrefs.retrieveMnemonic("")
+        } else {
+            ""
+        }
     }
 
     override suspend fun retrieveSeed(soraAccount: SoraAccount): String {
-        var seed = credentialsPrefs.retrieveSeed(soraAccount.substrateAddress)
+        var seed = retrieveStoredSeed(soraAccount)
 
         if (seed.isEmpty()) {
-            seed = convertPassphraseToSeed(credentialsPrefs.retrieveMnemonic(soraAccount.substrateAddress))
-            credentialsPrefs.saveSeed(seed, soraAccount.substrateAddress)
+            val mnemonic = retrieveMnemonic(soraAccount)
+            val retainedWordCount = mnemonicWordCount(mnemonic)
+            check(
+                hasRetainedSoraWordCount(retainedWordCount) &&
+                    runCatching { MnemonicCreator.fromWords(mnemonic) }.isSuccess
+            ) {
+                "MNEMONIC_NOT_AVAILABLE_FOR_SEED_DERIVATION"
+            }
+            seed = convertRetainedSoraPassphraseToSeed(mnemonic)
+            WalletMutationCoordinator.withLock {
+                if (
+                    WalletRecoveryCapabilityGate.mode() ==
+                    WalletRecoveryCapabilityGate.Mode.NORMAL &&
+                    retainedWordCount != LEGACY_SORA_WORD_COUNT
+                ) {
+                    credentialsPrefs.saveSeed(seed, soraAccount.substrateAddress)
+                }
+            }
         }
 
         return seed
     }
 
-    override suspend fun retrieveKeyPair(soraAccount: SoraAccount): Sr25519Keypair {
-        return credentialsPrefs.retrieveKeys(soraAccount.substrateAddress)
-            ?: throw IllegalStateException("Keypair not found")
+    override suspend fun retrieveStoredSeed(soraAccount: SoraAccount): String {
+        val current = credentialsPrefs.retrieveSeed(soraAccount.substrateAddress)
+        if (current.isNotEmpty()) return current
+        return if (legacyEmptySuffixBelongsTo(soraAccount.substrateAddress)) {
+            credentialsPrefs.retrieveSeed("")
+        } else {
+            ""
+        }
     }
 
-    override suspend fun saveKeyPair(key: Sr25519Keypair, soraAccount: SoraAccount) {
+    override suspend fun isExplicitWatchOnly(soraAccount: SoraAccount): Boolean =
+        credentialsPrefs.isExplicitWatchOnly(soraAccount.substrateAddress)
+
+    override suspend fun setExplicitWatchOnly(
+        soraAccount: SoraAccount,
+        watchOnly: Boolean,
+    ) = WalletMutationCoordinator.withLock {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
+        credentialsPrefs.setExplicitWatchOnly(soraAccount.substrateAddress, watchOnly)
+    }
+
+    override suspend fun retrieveKeyPairOrNull(soraAccount: SoraAccount): Sr25519Keypair? {
+        credentialsPrefs.retrieveKeys(soraAccount.substrateAddress)?.let { return it }
+        val legacy = credentialsPrefs.retrieveKeys("") ?: return null
+        if (sora2AddressCodec.toSoraAddressOrNull(legacy.publicKey) == soraAccount.substrateAddress) {
+            return legacy
+        }
+        legacy.privateKey.fill(0)
+        legacy.nonce.fill(0)
+        return null
+    }
+
+    override suspend fun retrieveKeyPair(soraAccount: SoraAccount): Sr25519Keypair =
+        retrieveKeyPairOrNull(soraAccount)
+            ?: throw IllegalStateException("Keypair not found")
+
+    override suspend fun saveKeyPair(
+        key: Sr25519Keypair,
+        soraAccount: SoraAccount,
+    ) = WalletMutationCoordinator.withLock {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
         credentialsPrefs.saveKeys(key, soraAccount.substrateAddress)
     }
 
@@ -172,6 +245,12 @@ class CredentialsRepositoryImpl constructor(
             return requireNotNull(irohaCash[soraAccount.substrateAddress]) { "Iroha cash failure" }
         } else {
             val mnemonic = retrieveMnemonic(soraAccount)
+            check(
+                hasRetainedSoraWordCount(mnemonicWordCount(mnemonic)) &&
+                    runCatching { MnemonicCreator.fromWords(mnemonic) }.isSuccess
+            ) {
+                "MNEMONIC_NOT_AVAILABLE_FOR_IROHA_DERIVATION"
+            }
             val purpose = "iroha keypair"
 
             val entropy =
@@ -198,20 +277,26 @@ class CredentialsRepositoryImpl constructor(
     override suspend fun getAddressForMigration(): String {
         var address = credentialsPrefs.getAddress()
         if (address.isEmpty()) {
-            address =
-                runtimeManager.toSoraAddressOrNull(credentialsPrefs.retrieveKeys("")?.publicKey)
-                    .orEmpty()
+            val keyPair = credentialsPrefs.retrieveKeys("")
+            address = try {
+                sora2AddressCodec.toSoraAddressOrNull(keyPair?.publicKey).orEmpty()
+            } finally {
+                keyPair?.privateKey?.fill(0)
+                keyPair?.nonce?.fill(0)
+            }
             FirebaseWrapper.log("Address recreated ${address.isNotEmpty()}")
         }
         return address
     }
 
     override suspend fun generateJson(accounts: List<SoraAccount>, password: String): String {
-        val localGenesis = soraConfigManager.getGenesis(true)
+        // Recovery export is part of the installed wallet's safety boundary. Never let a missing,
+        // stale, or compromised remote configuration rewrite the chain identity embedded in it.
+        val localGenesis = Sora2RuntimeContract.SORA_MAINNET_GENESIS_HASH
         if (accounts.size == 1) {
             accounts.first().let {
-                val seed = credentialsPrefs.retrieveSeed(it.substrateAddress)
-                val keys = credentialsPrefs.retrieveKeys(it.substrateAddress) as Sr25519Keypair
+                val seed = retrieveSeed(it)
+                val keys = retrieveKeyPair(it)
 
                 val exportAccountData = JsonAccountsEncoder.ExportAccount(
                     keypair = keys,
@@ -228,12 +313,12 @@ class CredentialsRepositoryImpl constructor(
             }
         } else {
             val accountsList = accounts.map {
-                val seed = credentialsPrefs.retrieveSeed(it.substrateAddress)
-                val keys = credentialsPrefs.retrieveKeys(it.substrateAddress) as Sr25519Keypair
+                val seed = retrieveSeed(it)
+                val keys = retrieveKeyPair(it)
 
                 JsonAccountsEncoder.ExportAccount(
                     keypair = keys,
-                    seed = seed.toByteArray(),
+                    seed = seed.fromHex(),
                     it.accountName,
                     it.substrateAddress
                 )
@@ -244,7 +329,60 @@ class CredentialsRepositoryImpl constructor(
     }
 
     override fun convertPassphraseToSeed(mnemonic: String): String {
-        val derivationResult = SubstrateSeedFactory.deriveSeed32(MnemonicCreator.fromWords(mnemonic).words, null)
-        return derivationResult.seed.toHexString()
+        require(hasImportWordCount(mnemonic)) {
+            "MNEMONIC_NOT_AVAILABLE_FOR_SEED_DERIVATION"
+        }
+        return derivePassphraseToSeed(mnemonic)
+    }
+
+    override fun convertRetainedSoraPassphraseToSeed(mnemonic: String): String {
+        require(hasRetainedSoraWordCount(mnemonicWordCount(mnemonic))) {
+            "MNEMONIC_NOT_AVAILABLE_FOR_SEED_DERIVATION"
+        }
+        return derivePassphraseToSeed(mnemonic)
+    }
+
+    private fun derivePassphraseToSeed(mnemonic: String): String {
+        val parsed = runCatching { MnemonicCreator.fromWords(mnemonic) }
+            .getOrElse {
+                throw IllegalArgumentException(
+                    "MNEMONIC_NOT_AVAILABLE_FOR_SEED_DERIVATION",
+                    it,
+                )
+            }
+        val seed = SubstrateSeedFactory.deriveSeed32(parsed.words, null).seed
+        return try {
+            seed.toHexString()
+        } finally {
+            seed.fill(0)
+        }
+    }
+
+    private fun mnemonicWordCount(mnemonic: String): Int =
+        mnemonic.trim().split(Regex("\\s+")).count(String::isNotBlank)
+
+    private fun hasImportWordCount(mnemonic: String): Boolean =
+        mnemonicWordCount(mnemonic) in setOf(12, 24)
+
+    private fun hasRetainedSoraWordCount(wordCount: Int): Boolean =
+        wordCount in setOf(12, LEGACY_SORA_WORD_COUNT, 24)
+
+    private companion object {
+        const val LEGACY_SORA_WORD_COUNT = 15
+    }
+
+    /**
+     * Release-era accounts used unsuffixed encrypted preference keys. They remain read-only
+     * compatibility input for this release and are accepted only when the stored public key
+     * re-derives the exact requested SORA2 address.
+     */
+    private suspend fun legacyEmptySuffixBelongsTo(substrateAddress: String): Boolean {
+        val legacy = credentialsPrefs.retrieveKeys("") ?: return false
+        return try {
+            sora2AddressCodec.toSoraAddressOrNull(legacy.publicKey) == substrateAddress
+        } finally {
+            legacy.privateKey.fill(0)
+            legacy.nonce.fill(0)
+        }
     }
 }

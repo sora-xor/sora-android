@@ -36,9 +36,12 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.vibration.DeviceVibrator
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionTarget
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
@@ -62,6 +65,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.verifyNoInteractions
 import org.mockito.Mock
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -589,91 +593,181 @@ class PinCodeViewModelTest {
 
     @Test
     fun `logout ok pressed with only 1 account EXPECT full logout`() = runTest {
-        given(mainInteractor.getSoraAccountsCount()).willReturn(1)
+        val preview = deletionPreview(WalletDeletionScope.ALL)
+        given(interactor.createWalletDeletionPreview(listOf("address"))).willReturn(preview)
+        given(interactor.confirmAndExecuteWalletDeletion(preview)).willReturn(
+            WalletDeletionResult(WalletDeletionScope.ALL, "")
+        )
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
         pinCodeViewModel.logoutOkPressed()
         advanceUntilIdle()
 
-        verify(interactor).fullLogout()
+        verify(interactor).confirmAndExecuteWalletDeletion(preview)
         assertNotNull(pinCodeViewModel.resetApplicationEvent)
     }
 
     @Test
     fun `logout ok pressed with multiple accounts EXPECT clear account data`() = runTest {
-        given(mainInteractor.getSoraAccountsCount()).willReturn(2)
-        given(mainInteractor.getCurUserAddress()).willReturn("address")
-        given(mainInteractor.getSoraAccountsList()).willReturn(
-            listOf(
-                SoraAccount(
-                    substrateAddress = "address2",
-                    accountName = ""
-                )
-            )
+        val preview = deletionPreview(WalletDeletionScope.SINGLE)
+        given(interactor.createWalletDeletionPreview(listOf("address"))).willReturn(preview)
+        given(interactor.confirmAndExecuteWalletDeletion(preview)).willReturn(
+            WalletDeletionResult(WalletDeletionScope.SINGLE, "address2")
         )
         pinCodeViewModel.addresses = listOf("address")
-
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
         pinCodeViewModel.logoutOkPressed()
         advanceUntilIdle()
 
-        verify(interactor).clearAccountData("address")
+        verify(interactor).confirmAndExecuteWalletDeletion(preview)
     }
 
     @Test
     fun `logout ok pressed with multiple accounts EXPECT switch account`() = runTest {
-        val account = SoraAccount(
-            substrateAddress = "address2",
-            accountName = ""
-        )
-        given(mainInteractor.getSoraAccountsCount()).willReturn(2)
-        given(mainInteractor.getCurUserAddress()).willReturn("address")
-        given(mainInteractor.getSoraAccountsList()).willReturn(
-            listOf(
-                account
-            )
+        val preview = deletionPreview(WalletDeletionScope.SINGLE)
+        given(interactor.createWalletDeletionPreview(listOf("address"))).willReturn(preview)
+        given(interactor.confirmAndExecuteWalletDeletion(preview)).willReturn(
+            WalletDeletionResult(WalletDeletionScope.SINGLE, "address2")
         )
         pinCodeViewModel.addresses = listOf("address")
-
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
         pinCodeViewModel.logoutOkPressed()
         advanceUntilIdle()
-        verify(mainInteractor).setCurSoraAccount(account)
         assertNotNull(pinCodeViewModel.switchAccountEvent)
     }
 
     @Test
-    fun `logout EXPECT check accounts amount`() = runTest {
-        given(mainInteractor.getSoraAccountsCount()).willReturn(2)
+    fun `logout preview failure is surfaced without executing deletion`() = runTest {
+        given(interactor.createWalletDeletionPreview(listOf("address")))
+            .willThrow(IllegalStateException("WALLET_DELETION_SECRET_VERIFICATION_FAILED"))
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+
+        assertEquals(
+            "WALLET_DELETION_SECRET_VERIFICATION_FAILED",
+            pinCodeViewModel.errorLiveData.value,
+        )
+        verify(interactor).createWalletDeletionPreview(listOf("address"))
+    }
+
+    @Test
+    fun `journaled deletion failure hides progress and restarts into recovery`() = runTest {
+        val preview = deletionPreview(WalletDeletionScope.SINGLE)
+        given(interactor.createWalletDeletionPreview(listOf("address"))).willReturn(preview)
+        given(interactor.confirmAndExecuteWalletDeletion(preview))
+            .willThrow(IllegalStateException("WALLET_DELETION_PREFERENCES_CHANGED"))
+        given(interactor.walletDeletionFailureCode())
+            .willReturn("WALLET_DELETION_PREFERENCES_CHANGED")
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+
+        pinCodeViewModel.logoutOkPressed()
+        advanceUntilIdle()
+
+        verify(progress).showProgress()
+        verify(progress).hideProgress()
+        assertEquals(
+            "WALLET_DELETION_PREFERENCES_CHANGED",
+            pinCodeViewModel.errorLiveData.value,
+        )
+        assertEquals(Unit, pinCodeViewModel.resetApplicationEvent.value)
+    }
+
+    @Test
+    fun `safe confirmation failure requires a newly verified preview`() = runTest {
+        val preview = deletionPreview(WalletDeletionScope.SINGLE)
+        val replacement = preview.copy(previewId = "replacement")
+        given(interactor.createWalletDeletionPreview(listOf("address")))
+            .willReturn(preview, replacement)
+        given(interactor.confirmAndExecuteWalletDeletion(preview))
+            .willThrow(IllegalStateException("WALLET_DELETION_PREVIEW_STALE"))
+        given(interactor.walletDeletionFailureCode()).willReturn(null)
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+
+        pinCodeViewModel.logoutOkPressed()
+        advanceUntilIdle()
+
+        verify(interactor, times(2))
+            .createWalletDeletionPreview(listOf("address"))
+        assertEquals(
+            "WALLET_DELETION_PREVIEW_STALE",
+            pinCodeViewModel.errorLiveData.value,
+        )
+    }
+
+    private fun deletionPreview(scope: WalletDeletionScope): WalletDeletionPreview =
+        WalletDeletionPreview(
+            previewId = "preview",
+            scope = scope,
+            targets = listOf(WalletDeletionTarget("address", "Wallet")),
+            selectedBefore = "address",
+            selectedAfter = if (scope == WalletDeletionScope.ALL) "" else "address2",
+            snapshotHash = "0".repeat(64),
+            beforePreferencesHash = "1".repeat(64),
+            afterPreferencesHash = "2".repeat(64),
+            removeLegacyUnsuffixed = false,
+            expiresAtElapsedRealtime = Long.MAX_VALUE,
+        )
+
+    @Test
+    fun `logout EXPECT create exact deletion preview`() = runTest {
+        val preview = deletionPreview(WalletDeletionScope.SINGLE)
+        given(interactor.createWalletDeletionPreview(listOf("address"))).willReturn(preview)
+        pinCodeViewModel.addresses = listOf("address")
 
         pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
         advanceUntilIdle()
         pinCodeViewModel.onAuthenticationSucceeded()
         advanceUntilIdle()
 
-        verify(mainInteractor).getSoraAccountsCount()
+        verify(interactor).createWalletDeletionPreview(listOf("address"))
     }
 
     @Test
     fun `logout with multiple accounts EXPECT logout message`() = runTest {
-        given(mainInteractor.getSoraAccountsCount()).willReturn(2)
+        val preview = deletionPreview(WalletDeletionScope.SINGLE)
+        given(interactor.createWalletDeletionPreview(listOf("address"))).willReturn(preview)
         given(resourceManager.getString(R.string.logout_dialog_body)).willReturn("Logout")
+        pinCodeViewModel.addresses = listOf("address")
 
         pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
         advanceUntilIdle()
         pinCodeViewModel.onAuthenticationSucceeded()
         advanceUntilIdle()
 
-        assertEquals("Logout", pinCodeViewModel.logoutEvent.value)
+        assertEquals("Logout\n\nWallet\naddress", pinCodeViewModel.logoutEvent.value)
     }
 
     @Test
     fun `logout with single account EXPECT logout message`() = runTest {
-        given(mainInteractor.getSoraAccountsCount()).willReturn(1)
+        val preview = deletionPreview(WalletDeletionScope.ALL)
+        given(interactor.createWalletDeletionPreview(listOf("address"))).willReturn(preview)
         given(resourceManager.getString(R.string.logout_dialog_body)).willReturn("Logout")
         given(resourceManager.getString(R.string.logout_remove_nodes_body)).willReturn(" Remove nodes")
+        pinCodeViewModel.addresses = listOf("address")
 
         pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
         advanceUntilIdle()
         pinCodeViewModel.onAuthenticationSucceeded()
         advanceUntilIdle()
 
-        assertEquals("Logout Remove nodes", pinCodeViewModel.logoutEvent.value)
+        assertEquals(
+            "Logout Remove nodes\n\nWallet\naddress",
+            pinCodeViewModel.logoutEvent.value,
+        )
     }
 }
