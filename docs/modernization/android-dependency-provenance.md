@@ -35,7 +35,7 @@ The finalized materialized dependency snapshot is bound by these aggregate ident
 - vendor whole-tree manifest SHA-256:
   `d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f`
 - strict verification metadata SHA-256:
-  `1d64328207598741c78d834be6e50f8648635c9175ca14c5bffd897e19b5fa92`
+  `90b196d775f064b7f80b9520582eec8fc40f874b6f750a49546141a8b793bfab`
 - 31-file lock-set SHA-256:
   `1b91b6168ff2c0ec74e0f239e90ff8125742ae8a8fea3458f2a7cbfe472eb9ea`
 - 271-entry configuration inventory SHA-256 (270 `productionRelease` entries plus the settings
@@ -45,12 +45,13 @@ The finalized materialized dependency snapshot is bound by these aggregate ident
 These identities record the frozen bytes accepted by the structural gate. They are not reviewer
 signatures, attestations, or evidence that the snapshot is production-qualified.
 
-The verification snapshot includes eleven transitive plugin and compile-classpath metadata files
+The verification snapshot includes twelve transitive plugin and compile-classpath metadata files
 first requested by the clean Linux CI resolver: Guava parent POMs `32.1.3-jre`, `33.0.0-jre`,
-`33.2.1-jre`, and `33.3.1-jre`, JUnit BOM module metadata `5.10.2`, `5.11.0-M2`, and `5.11.2`,
-the JUnit BOM POM `5.8.2`, Kotlin Gradle plugins BOM module/POM metadata `2.2.10`, and the IntelliJ
-coroutines BOM POM `1.8.0-intellij-14`. Their SHA-256 values were matched independently against
-Maven Central; no trusted-artifact exception or verification downgrade was added.
+`33.2.1-jre`, and `33.3.1-jre`, JUnit BOM module metadata `5.9.2`, `5.10.2`, `5.11.0-M2`, and
+`5.11.2`, the JUnit BOM POM `5.8.2`, Kotlin Gradle plugins BOM module/POM metadata `2.2.10`, and
+the IntelliJ coroutines BOM POM `1.8.0-intellij-14`. Their SHA-256 values were matched
+independently against Maven Central; no trusted-artifact exception or verification downgrade was
+added.
 
 The Linux-specific `com.android.tools.build:aapt2:9.2.1-15009934` executable JAR is also pinned at
 SHA-256 `755f6727fb3f4cce5e319eac0f3618ed4b36b49a46d4bb2cbb6fa8e9175a54d6`. Direct HTTPS fetches
