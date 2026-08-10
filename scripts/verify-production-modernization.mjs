@@ -596,9 +596,9 @@ const EXPECTED_VENDOR_SOURCE_PROVENANCE_SHA256 =
 const EXPECTED_VENDOR_CONTENTS_MANIFEST_SHA256 =
   "d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f";
 const EXPECTED_GRADLE_VERIFICATION_METADATA_SHA256 =
-  "d625ffec8ffd795c8a6e0692f6b41e0749a48c3bc0d23a3a2cf68bb663891793";
+  "1d64328207598741c78d834be6e50f8648635c9175ca14c5bffd897e19b5fa92";
 const EXPECTED_GRADLE_VERIFICATION_METADATA_DIGEST_SHA256 =
-  "43fc0a714e492b520c55e0d0aa8503ffe80d804c1f548f89e80e27d84b634d85";
+  "9f628b94c4e72948c68e968bf9f161ddd744ea7ab9eff9004f083f16009ea08f";
 const EXPECTED_GRADLE_LOCK_FILE_SET_SHA256 =
   "1b91b6168ff2c0ec74e0f239e90ff8125742ae8a8fea3458f2a7cbfe472eb9ea";
 const EXPECTED_GRADLE_LOCK_CONFIGURATION_INVENTORY_SHA256 =
@@ -3240,6 +3240,9 @@ const androidMigrationControllerEnvelopeTestSource = read(
   "scripts/test-android-migration-controller-envelope-v1.mjs",
 );
 const gradleWrapperJarSha256 = sha256("gradle/wrapper/gradle-wrapper.jar");
+const androidVerificationWorkflow = read(
+  ".github/workflows/android_verification.yml",
+);
 const productionReleaseWorkflow = read(
   ".github/workflows/production_release_qualification.yml",
 );
@@ -3388,6 +3391,55 @@ const githubWorkflows = [
   ".github/workflows/on_pullrequest.yml",
   ".github/workflows/on_push.yml",
 ].map((path) => ({ path, source: read(path) }));
+const kvmAccessContractLines = Object.freeze([
+  "set -euo pipefail",
+  "if [[ ! -e /dev/kvm ]]; then",
+  "[[ -c /dev/kvm && ! -L /dev/kvm ]] || {",
+  "kvm_rules_dir=/etc/udev/rules.d",
+  'kvm_rule_path="$kvm_rules_dir/99-kvm4all.rules"',
+  '[[ -d "$kvm_rules_dir" && ! -L "$kvm_rules_dir" ]] || {',
+  '[[ -f "$kvm_rule_path" && ! -L "$kvm_rule_path" ]] || {',
+  `kvm_rule='KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"'`,
+  `printf '%s\\n' "$kvm_rule" | sudo tee "$kvm_rule_path" >/dev/null`,
+  '[[ "$(sudo cat "$kvm_rule_path")" == "$kvm_rule" ]] || {',
+  "sudo udevadm control --reload-rules",
+  "sudo udevadm trigger --name-match=kvm",
+  "[[ -r /dev/kvm && -w /dev/kvm ]] || {",
+]);
+const hasKvmAccessContract = (source) =>
+  kvmAccessContractLines.every((line) => source.includes(line));
+const androidVerificationKvmAccessIndex = androidVerificationWorkflow.indexOf(
+  "Enable KVM access for Android emulator",
+);
+const androidVerificationEmulatorIndex = androidVerificationWorkflow.indexOf(
+  "reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d",
+);
+const productionKvmAccessIndex = productionReleaseWorkflow.indexOf(
+  "Enable KVM access for Android emulators",
+);
+const productionFirstEmulatorIndex = productionReleaseWorkflow.indexOf(
+  "reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d",
+);
+assert(
+  hasKvmAccessContract(androidVerificationWorkflow) &&
+    hasKvmAccessContract(productionReleaseWorkflow) &&
+    sourceMatchCount(
+      androidVerificationWorkflow,
+      /^\s*- name: Enable KVM access for Android emulator\s*$/gm,
+    ) === 1 &&
+    sourceMatchCount(
+      productionReleaseWorkflow,
+      /^\s*- name: Enable KVM access for Android emulators\s*$/gm,
+    ) === 1 &&
+    androidVerificationKvmAccessIndex >= 0 &&
+    androidVerificationKvmAccessIndex < androidVerificationEmulatorIndex &&
+    productionKvmAccessIndex >= 0 &&
+    productionKvmAccessIndex < productionFirstEmulatorIndex &&
+    productionReleaseWorkflow.includes(
+      "- name: Enable KVM access for Android emulators\n        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}",
+    ),
+  "ANDROID_EMULATOR_KVM_PERMISSION_CONTRACT_INVALID",
+);
 const workflowActions = githubWorkflows.flatMap(({ path, source }) =>
   [...source.matchAll(/^\s*uses:\s*([^@\s]+)@([^\s#]+)(?:\s+#.*)?\s*$/gm)].map(
     ([, action, revision]) => ({ path, action, revision }),
