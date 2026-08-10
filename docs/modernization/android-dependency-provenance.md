@@ -35,7 +35,7 @@ The finalized materialized dependency snapshot is bound by these aggregate ident
 - vendor whole-tree manifest SHA-256:
   `d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f`
 - strict verification metadata SHA-256:
-  `d625ffec8ffd795c8a6e0692f6b41e0749a48c3bc0d23a3a2cf68bb663891793`
+  `1d64328207598741c78d834be6e50f8648635c9175ca14c5bffd897e19b5fa92`
 - 31-file lock-set SHA-256:
   `1b91b6168ff2c0ec74e0f239e90ff8125742ae8a8fea3458f2a7cbfe472eb9ea`
 - 271-entry configuration inventory SHA-256 (270 `productionRelease` entries plus the settings
@@ -51,6 +51,12 @@ first requested by the clean Linux CI resolver: Guava parent POMs `32.1.3-jre`, 
 the JUnit BOM POM `5.8.2`, Kotlin Gradle plugins BOM module/POM metadata `2.2.10`, and the IntelliJ
 coroutines BOM POM `1.8.0-intellij-14`. Their SHA-256 values were matched independently against
 Maven Central; no trusted-artifact exception or verification downgrade was added.
+
+The Linux-specific `com.android.tools.build:aapt2:9.2.1-15009934` executable JAR is also pinned at
+SHA-256 `755f6727fb3f4cce5e319eac0f3618ed4b36b49a46d4bb2cbb6fa8e9175a54d6`. Direct HTTPS fetches
+from both official Google Maven hostnames (`dl.google.com` and `maven.google.com`) produced the
+same digest after the clean Linux connected-test resolver exposed the classifier-specific input.
+No trusted-artifact exception or dependency-verification downgrade was added.
 
 The 31 lock inputs are the 30 module-local `gradle.lockfile` files plus the root
 `settings-gradle.lockfile`; an inventory that searches only for the literal basename

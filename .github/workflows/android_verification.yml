@@ -64,6 +64,43 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
 
+      - name: Enable KVM access for Android emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -e /dev/kvm ]]; then
+            echo "/dev/kvm is unavailable; keeping the emulator runner's software fallback."
+            exit 0
+          fi
+          [[ -c /dev/kvm && ! -L /dev/kvm ]] || {
+            echo "/dev/kvm exists but is not a direct character device" >&2
+            exit 1
+          }
+          kvm_rules_dir=/etc/udev/rules.d
+          kvm_rule_path="$kvm_rules_dir/99-kvm4all.rules"
+          [[ -d "$kvm_rules_dir" && ! -L "$kvm_rules_dir" ]] || {
+            echo "KVM udev rules directory is missing or unsafe: $kvm_rules_dir" >&2
+            exit 1
+          }
+          if [[ -e "$kvm_rule_path" ]]; then
+            [[ -f "$kvm_rule_path" && ! -L "$kvm_rule_path" ]] || {
+              echo "KVM udev rule path is not a regular file: $kvm_rule_path" >&2
+              exit 1
+            }
+          fi
+          kvm_rule='KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"'
+          printf '%s\n' "$kvm_rule" | sudo tee "$kvm_rule_path" >/dev/null
+          [[ "$(sudo cat "$kvm_rule_path")" == "$kvm_rule" ]] || {
+            echo "KVM udev rule content did not round-trip exactly" >&2
+            exit 1
+          }
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          [[ -r /dev/kvm && -w /dev/kvm ]] || {
+            echo "/dev/kvm is not readable and writable after udev activation" >&2
+            exit 1
+          }
+
       - name: Run connected block explorer test
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
