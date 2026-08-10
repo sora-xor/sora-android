@@ -35,7 +35,7 @@ The finalized materialized dependency snapshot is bound by these aggregate ident
 - vendor whole-tree manifest SHA-256:
   `d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f`
 - strict verification metadata SHA-256:
-  `d152d3e58c3c6ee1b4681ad455d314c3fbae9f818d0aa1592e2344f2d05dba23`
+  `30386cd57c266e1841a9e2cf4303db94a94326da11e0ca66748a4d7b5dd6f346`
 - 31-file lock-set SHA-256:
   `1b91b6168ff2c0ec74e0f239e90ff8125742ae8a8fea3458f2a7cbfe472eb9ea`
 - 271-entry configuration inventory SHA-256 (270 `productionRelease` entries plus the settings
@@ -45,11 +45,12 @@ The finalized materialized dependency snapshot is bound by these aggregate ident
 These identities record the frozen bytes accepted by the structural gate. They are not reviewer
 signatures, attestations, or evidence that the snapshot is production-qualified.
 
-The verification snapshot includes seven transitive plugin-classpath metadata files first
-requested by the clean Linux CI resolver: Guava parent POMs `32.1.3-jre` and `33.3.1-jre`, JUnit
-BOM module metadata `5.10.2`, `5.11.0-M2`, and `5.11.2`, and Kotlin Gradle plugins BOM module/POM
-metadata `2.2.10`. Their SHA-256 values were matched independently against Maven Central; no
-trusted-artifact exception or verification downgrade was added.
+The verification snapshot includes nine transitive plugin and compile-classpath metadata files
+first requested by the clean Linux CI resolver: Guava parent POMs `32.1.3-jre`, `33.0.0-jre`,
+`33.2.1-jre`, and `33.3.1-jre`, JUnit BOM module metadata `5.10.2`, `5.11.0-M2`, and `5.11.2`,
+and Kotlin Gradle plugins BOM module/POM metadata `2.2.10`. Their SHA-256 values were matched
+independently against Maven Central; no trusted-artifact exception or verification downgrade was
+added.
 
 The 31 lock inputs are the 30 module-local `gradle.lockfile` files plus the root
 `settings-gradle.lockfile`; an inventory that searches only for the literal basename
