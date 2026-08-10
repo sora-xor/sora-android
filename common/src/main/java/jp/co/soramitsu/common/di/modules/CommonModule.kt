@@ -119,6 +119,10 @@ class CommonActivityModule {
 @Module
 class CommonModule {
 
+    private companion object {
+        const val txHistoryDBName = "historyDatabase.db"
+    }
+
     @Singleton
     @Provides
     fun provideSoraPreferences(@ApplicationContext c: Context): SoraPreferences = SoraPreferences(c)

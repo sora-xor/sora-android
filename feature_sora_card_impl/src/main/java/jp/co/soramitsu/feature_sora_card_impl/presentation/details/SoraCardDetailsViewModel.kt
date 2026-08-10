@@ -50,6 +50,12 @@ import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import jp.co.soramitsu.oauth.uiscreens.clientsui.soracarddetails.SoraCardDetailsScreenState
+import jp.co.soramitsu.oauth.uiscreens.clientsui.soracarddetails.SoraCardIBANCardState
+import jp.co.soramitsu.oauth.uiscreens.clientsui.soracarddetails.SoraCardMainSoraContentCardState
+import jp.co.soramitsu.oauth.uiscreens.clientsui.soracarddetails.SoraCardMenuAction
+import jp.co.soramitsu.oauth.uiscreens.clientsui.soracarddetails.SoraCardSettingsCardState
+import jp.co.soramitsu.oauth.uiscreens.clientsui.soracarddetails.SoraCardSettingsOption
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -126,14 +132,6 @@ class SoraCardDetailsViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun onShowSoraCardDetailsClick() {
-        /* Functionality will be added in further releases */
-    }
-
-    fun onSoraCardMenuActionClick(position: Int) {
-        /* Functionality will be added in further releases */
     }
 
     fun onReferralBannerClick() {

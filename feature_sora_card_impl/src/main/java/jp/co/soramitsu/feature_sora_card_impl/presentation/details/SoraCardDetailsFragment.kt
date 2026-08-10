@@ -60,6 +60,8 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
+import jp.co.soramitsu.oauth.uiscreens.clientsui.soracarddetails.SoraCardDetailsCallback
+import jp.co.soramitsu.oauth.uiscreens.clientsui.soracarddetails.SoraCardDetailsScreen
 import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -108,18 +110,43 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
             SoraCardDetailsScreen(
                 scrollState = scrollState,
                 soraCardDetailsScreenState = state.value,
-                onShowSoraCardDetailsClick = viewModel::onShowSoraCardDetailsClick,
-                onSoraCardMenuActionClick = viewModel::onSoraCardMenuActionClick,
-                onReferralBannerClick = viewModel::onReferralBannerClick,
-                onCloseReferralBannerClick = viewModel::onCloseReferralBannerClick,
-                onShowMoreRecentActivitiesClick = viewModel::onShowMoreRecentActivitiesClick,
-                onRecentActivityClick = viewModel::onRecentActivityClick,
-                onIbanCardShareClick = viewModel::onIbanCardShareClick,
-                onIbanCardClick = viewModel::onIbanCardClick,
-                onSettingsOptionClick = {
-                    viewModel.onSettingsOptionClick(it, this@SoraCardDetailsFragment.context)
-                },
-                onExchangeXorClick = viewModel::onExchangeXorClick,
+                callback = object : SoraCardDetailsCallback {
+                    override fun onReferralBannerClick() {
+                        viewModel.onReferralBannerClick()
+                    }
+
+                    override fun onCloseReferralBannerClick() {
+                        viewModel.onCloseReferralBannerClick()
+                    }
+
+                    override fun onRecentActivityClick(position: Int) {
+                        viewModel.onRecentActivityClick(position)
+                    }
+
+                    override fun onIbanCardShareClick() {
+                        viewModel.onIbanCardShareClick()
+                    }
+
+                    override fun onIbanCardClick() {
+                        viewModel.onIbanCardClick()
+                    }
+
+                    override fun onSettingsOptionClick(position: Int) {
+                        viewModel.onSettingsOptionClick(
+                            position,
+                            this@SoraCardDetailsFragment.context
+                        )
+                    }
+
+                    override fun onShowMoreRecentActivitiesClick() {
+                        viewModel.onShowMoreRecentActivitiesClick()
+                    }
+
+                    override fun onExchangeXorClick() {
+                        viewModel.onExchangeXorClick()
+                    }
+                }
+
             )
             if (state.value.logoutDialog) {
                 AlertDialog(

@@ -44,6 +44,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.domain.fiatSum
 import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
@@ -142,6 +143,7 @@ class CardsHubViewModel @Inject constructor(
     private val connectionManager: ConnectionManager,
     private val soraCardInteractor: SoraCardInteractor,
     private val coroutineManager: CoroutineManager,
+    private val darkThemeManager: DarkThemeManager,
     private val nexusPortfolioRepository: NexusPortfolioRepository,
     private val nexusTransactionCoordinator: NexusTransactionCoordinator,
 ) : BaseViewModel() {
@@ -285,12 +287,18 @@ class CardsHubViewModel @Inject constructor(
                             }
 
                             CardHubType.GET_SORA_CARD -> {
-                                soraCardInteractor.basicStatus
-                                    .map { status ->
+                                combine(
+                                    soraCardInteractor.basicStatus,
+                                    darkThemeManager.darkModeStatusFlow
+                                ) { status, isDarkTheme ->
+                                    status to isDarkTheme
+                                }
+                                    .map { (status, isDarkTheme) ->
                                         status.availabilityInfo?.let {
                                             currentSoraCardContractData = createSoraCardContract(
                                                 userAvailableXorAmount = it.xorBalance.toDouble(),
-                                                isEnoughXorAvailable = it.enoughXor
+                                                isEnoughXorAvailable = it.enoughXor,
+                                                clientDark = isDarkTheme
                                             )
                                         }
                                         val mapped = mapKycStatus(status.verification)
@@ -563,6 +571,10 @@ class CardsHubViewModel @Inject constructor(
 
             SoraCardCommonVerification.Successful -> {
                 resourceManager.getString(R.string.sora_card_verification_successful) to true
+            }
+
+            SoraCardCommonVerification.Retry -> {
+                resourceManager.getString(R.string.sora_card_verification_rejected) to false
             }
 
             else -> {

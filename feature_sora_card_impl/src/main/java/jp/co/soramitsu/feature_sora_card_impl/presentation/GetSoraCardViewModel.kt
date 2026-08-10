@@ -41,6 +41,7 @@ import jp.co.soramitsu.androidfoundation.format.unsafeCast
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -53,6 +54,7 @@ import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
+import jp.co.soramitsu.oauth.uiscreens.clientsui.GetSoraCardState
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,6 +71,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
     private val mainRouter: MainRouter,
     private val polkaswapRouter: PolkaswapRouter,
     private val resourceManager: ResourceManager,
+    private val darkThemeManager: DarkThemeManager,
     connectionManager: ConnectionManager,
     private val soraCardInteractor: SoraCardInteractor,
     @Assisted("SHOULD_START_SIGN_IN") val shouldStartSignIn: Boolean,
@@ -106,6 +109,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
                     currentSoraCardContractData = createSoraCardContract(
                         userAvailableXorAmount = it.xorBalance.toDouble(),
                         isEnoughXorAvailable = it.enoughXor,
+                        clientDark = darkThemeManager.darkModeStatusFlow.value
                     )
                 }
                 _state.value = _state.value.copy(
@@ -157,6 +161,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
     fun onSignUp() {
         currentSoraCardContractData?.let {
             _launchSoraCardRegistration.value = it.copy(
+                clientDark = darkThemeManager.darkModeStatusFlow.value,
                 flow = it.flow.unsafeCast<SoraCardFlow.SoraCardKycFlow>().copy(logIn = false)
             )
         }
@@ -165,6 +170,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
     fun onLogIn() {
         currentSoraCardContractData?.let {
             _launchSoraCardRegistration.value = it.copy(
+                clientDark = darkThemeManager.darkModeStatusFlow.value,
                 flow = it.flow.unsafeCast<SoraCardFlow.SoraCardKycFlow>().copy(logIn = true)
             )
         }
