@@ -1,0 +1,438 @@
+{
+  "schemaVersion": 3,
+  "platform": "android",
+  "assessedAt": "2026-08-09",
+  "status": "blocked",
+  "releaseEnabled": false,
+  "wrapper": {
+    "distributionVersion": "9.5.1",
+    "distributionUrl": "https://services.gradle.org/distributions/gradle-9.5.1-bin.zip",
+    "distributionSha256": "bafc141b619ad6350fd975fc903156dd5c151998cc8b058e8c1044ab5f7b031f",
+    "expectedWrapperJarSha256": "497c8c2a7e5031f6aa847f88104aa80a93532ec32ee17bdb8d1d2f67a194a9c7",
+    "observedWrapperJarSha256": "497c8c2a7e5031f6aa847f88104aa80a93532ec32ee17bdb8d1d2f67a194a9c7",
+    "wrapperJarMatchesDistribution": true,
+    "checksumSource": "https://gradle.org/release-checksums/"
+  },
+  "repositoryPolicy": {
+    "projectRepositoriesForbidden": true,
+    "mavenLocalForbidden": true,
+    "unmanifestedFileRepositoriesForbidden": true,
+    "flatDirectoryRepositoriesForbidden": true,
+    "compositeBuildSubstitutionsForbidden": true,
+    "arbitraryPayWingsRepositoryRemoved": true,
+    "deadSoramitsuNexusRemoved": true,
+    "sourceQualifiedVendorRepository": {
+      "path": "vendor/soramitsu-maven",
+      "gradleRepositoryName": "SourceQualifiedSoramitsu",
+      "metadataSources": [
+        "gradleMetadata",
+        "mavenPom"
+      ],
+      "exactModules": [
+        "com.paywings.kyc:android-sdk",
+        "com.paywings.oauth:android-sdk",
+        "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk",
+        "io.emeraldpay.polkaj:polkaj-scale",
+        "jp.co.soramitsu.xnetworking:lib-android",
+        "jp.co.soramitsu:android-foundation",
+        "jp.co.soramitsu:android-sora-card",
+        "jp.co.soramitsu:ui-core",
+        "jp.co.soramitsu:xbackup",
+        "jp.co.soramitsu:xcrypto",
+        "jp.co.soramitsu:xsubstrate"
+      ],
+      "materializedCoordinates": [
+        "com.paywings.kyc:android-sdk:1.2.2",
+        "com.paywings.oauth:android-sdk:2.0.0",
+        "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3",
+        "io.emeraldpay.polkaj:polkaj-scale:0.2.3",
+        "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
+        "jp.co.soramitsu:android-foundation:0.0.4",
+        "jp.co.soramitsu:android-sora-card:1.2.1-K2",
+        "jp.co.soramitsu:ui-core:0.2.39",
+        "jp.co.soramitsu:xbackup:1.2.3",
+        "jp.co.soramitsu:xcrypto:1.2.7",
+        "jp.co.soramitsu:xsubstrate:1.2.7"
+      ],
+      "sourceProvenancePath": "vendor/soramitsu-maven/SOURCE_PROVENANCE.json",
+      "sourceProvenanceSha256": "39264fee02d09548e04806fbffcdaedebef29ce4715f3aa804093e44b51f5118",
+      "contentsManifestPath": "vendor/soramitsu-maven/CONTENTS.sha256",
+      "contentsManifestSha256": "d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f",
+      "manifestFormat": "sha256-two-space-relative-path-lf",
+      "symlinkFree": true,
+      "exactRegularFileCoverage": true,
+      "status": "materialized-unreviewed",
+      "productionAllowed": false
+    },
+    "idensicTensorflowNamespaceCompatibility": {
+      "status": "scoped-unreviewed-workaround",
+      "gradleProperty": "android.uniquePackageNames",
+      "requiredValue": false,
+      "pinnedCoordinates": [
+        "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3",
+        "org.tensorflow:tensorflow-lite-api:2.12.0",
+        "org.tensorflow:tensorflow-lite:2.12.0"
+      ],
+      "scope": "idensic-1.31.3-tensorflow-lite-2.12.0-agp9-namespace-migration",
+      "broadQualificationGranted": false,
+      "independentlyReviewed": false
+    },
+    "jitpackRepository": "https://jitpack.io",
+    "jitpackExclusiveModules": [
+      "com.github.WycliffeAssociates:jdenticon-kotlin",
+      "com.github.warchant:ed25519-sha3-java"
+    ],
+    "reviewedStagedIrohaRepository": {
+      "path": "build/iroha-mobile-sdk/maven",
+      "gradleRepositoryName": "ReviewedIrohaMobileSdk",
+      "exclusiveGroup": "org.hyperledger.iroha.sdk",
+      "present": false,
+      "qualified": false,
+      "symlinkFree": false,
+      "manifestPath": "build/iroha-mobile-sdk/maven/REVIEWED_CONTENTS.sha256",
+      "manifestSha256": null,
+      "manifestFormat": "sha256-two-space-relative-path",
+      "wholeTreeManifestReviewed": false
+    }
+  },
+  "workflowPolicy": {
+    "status": "source-qualified",
+    "reviewedAt": "2026-08-03",
+    "permissions": "contents:read",
+    "checkoutPersistCredentials": false,
+    "actions": {
+      "actions/checkout": {
+        "version": "v4.3.1",
+        "revision": "34e114876b0b11c390a56381ad16ebd13914f8d5"
+      },
+      "actions/download-artifact": {
+        "version": "v4.3.0",
+        "revision": "d3f86a106a0bac45b974a628896c90dbdf5c8093"
+      },
+      "actions/setup-java": {
+        "version": "v4.8.0",
+        "revision": "c1e323688fd81a25caa38c78aa6df2d33d3e20d9"
+      },
+      "actions/upload-artifact": {
+        "version": "v4.6.2",
+        "revision": "ea165f8d65b6e75b540449e92b4886f43607fa02"
+      },
+      "android-actions/setup-android": {
+        "version": "v3.2.2",
+        "revision": "9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407"
+      },
+      "gradle/actions/setup-gradle": {
+        "version": "v4.4.4",
+        "revision": "748248ddd2a24f49513d8f472f81c3a07d4d50e1"
+      },
+      "reactivecircus/android-emulator-runner": {
+        "version": "v2.38.0",
+        "revision": "a421e43855164a8197daf9d8d40fe71c6996bb0d"
+      },
+      "appleboy/telegram-action": {
+        "version": "v1.0.1",
+        "revision": "221e6b684967abe813051ee4a37dd61770a83ad3"
+      }
+    },
+    "jenkinsSharedLibrary": {
+      "name": "jenkins-library",
+      "repository": "https://github.com/soramitsu/jenkins-library.git",
+      "selector": "jenkins-library@65079bbe356bca4a3d5a1964e360498735afa1f0",
+      "defaultBranch": "master",
+      "defaultBranchProtected": false,
+      "revision": "65079bbe356bca4a3d5a1964e360498735afa1f0",
+      "treeObject": "d48928bf7706be3fd7d6bb37aae43593c3ba5100",
+      "commitVerification": "github-valid",
+      "sourceReviewStatus": "source-qualified",
+      "androidAppPipeline": {
+        "path": "src/org/android/AppPipeline.groovy",
+        "blob": "efb74759096cc53df123fed9d519c4ce77e0fa68",
+        "sha256": "59202e27bd9715d5f3b19cab86db6eb8eb962f1a4479ee01cb3a622745efa8ac"
+      },
+      "androidMainPipeline": {
+        "path": "src/org/android/MainPipeline.groovy",
+        "blob": "b7122116557157bda97bd1e22e59a269975c3078",
+        "sha256": "c98d14e29fc95f395971b20d6cc5949b7ad32a6a63f45c5e8ef500eb11b47a57"
+      },
+      "androidParams": {
+        "path": "src/org/android/Params.groovy",
+        "blob": "9e28009d53ca4338369ebf3ffb7dae0d5d8a874c",
+        "sha256": "6c580e4054b238a5c68a6b878df0e608db0cad156c7fb355fec117ddf8cfad1a"
+      },
+      "status": "qualified",
+      "productionAllowed": true
+    }
+  },
+  "dependencyVerification": {
+    "status": "materialized-unreviewed",
+    "mode": "strict",
+    "metadataPath": "gradle/verification-metadata.xml",
+    "metadataPresent": true,
+    "metadataSha256": "0d4c6923096c5fc39eeae458b20f935a1ec53ac90beff390ac024f6fbf946615",
+    "metadataDigestPath": "gradle/verification-metadata.sha256",
+    "metadataDigestSha256": "cd4a8e678142bde37c7d48f70d6e277fdd3d503e053886b09c5e944f510204c7",
+    "verifyMetadata": true,
+    "verifySignatures": false,
+    "sha256ForEveryResolvedArtifact": true,
+    "materializedVendorCoordinates": [
+      "com.paywings.kyc:android-sdk:1.2.2",
+      "com.paywings.oauth:android-sdk:2.0.0",
+      "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3",
+      "io.emeraldpay.polkaj:polkaj-scale:0.2.3",
+      "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
+      "jp.co.soramitsu:android-foundation:0.0.4",
+      "jp.co.soramitsu:android-sora-card:1.2.1-K2",
+      "jp.co.soramitsu:ui-core:0.2.39",
+      "jp.co.soramitsu:xbackup:1.2.3",
+      "jp.co.soramitsu:xcrypto:1.2.7",
+      "jp.co.soramitsu:xsubstrate:1.2.7"
+    ],
+    "independentlyReviewed": false,
+    "trustedArtifactExceptions": []
+  },
+  "dependencyLocking": {
+    "status": "materialized-unreviewed",
+    "mode": "strict",
+    "allConfiguredProductionReleaseConfigurationsMaterialized": true,
+    "independentlyReviewed": false,
+    "materializedInventory": {
+      "status": "materialized",
+      "complete": true,
+      "lockFilePaths": [
+        "app/gradle.lockfile",
+        "common/gradle.lockfile",
+        "common_wallet/gradle.lockfile",
+        "core_db/gradle.lockfile",
+        "demeter/gradle.lockfile",
+        "feature_account_api/gradle.lockfile",
+        "feature_account_impl/gradle.lockfile",
+        "feature_assets_api/gradle.lockfile",
+        "feature_assets_impl/gradle.lockfile",
+        "feature_blockexplorer_api/gradle.lockfile",
+        "feature_blockexplorer_impl/gradle.lockfile",
+        "feature_ecosystem_impl/gradle.lockfile",
+        "feature_ethereum_api/gradle.lockfile",
+        "feature_main_api/gradle.lockfile",
+        "feature_main_impl/gradle.lockfile",
+        "feature_multiaccount_api/gradle.lockfile",
+        "feature_multiaccount_impl/gradle.lockfile",
+        "feature_polkaswap_api/gradle.lockfile",
+        "feature_polkaswap_impl/gradle.lockfile",
+        "feature_referral_api/gradle.lockfile",
+        "feature_referral_impl/gradle.lockfile",
+        "feature_select_node_api/gradle.lockfile",
+        "feature_select_node_impl/gradle.lockfile",
+        "feature_sora_card_api/gradle.lockfile",
+        "feature_sora_card_impl/gradle.lockfile",
+        "feature_wallet_api/gradle.lockfile",
+        "feature_wallet_impl/gradle.lockfile",
+        "network/gradle.lockfile",
+        "settings-gradle.lockfile",
+        "sorasubstrate/gradle.lockfile",
+        "test_data/gradle.lockfile"
+      ],
+      "lockFileSetFormat": "sorted-path-nul-file-bytes-nul-sha256",
+      "lockFileSetSha256": "1b91b6168ff2c0ec74e0f239e90ff8125742ae8a8fea3458f2a7cbfe472eb9ea",
+      "configurationInventoryFormat": "project-path-colon-configuration-lf-no-terminal-lf-sha256",
+      "configurationInventorySha256": "d35d7512074d387ae71dfad3f52833af70875e3afe4a84d46b667a31e3bbfd1f",
+      "configurationCount": 271,
+      "productionReleaseConfigurationCount": 270
+    },
+    "lockFiles": [
+      {
+        "path": "app/gradle.lockfile",
+        "sha256": "8cf76fb6632d8313699bad089c67857f3aaa1545104557a32e1c24a5a4fef286",
+        "configurationCount": 10
+      },
+      {
+        "path": "common/gradle.lockfile",
+        "sha256": "f4f5402c56c868035ffee22721588f78f7d4e9a394326cacc243a2dabe2c14b7",
+        "configurationCount": 9
+      },
+      {
+        "path": "common_wallet/gradle.lockfile",
+        "sha256": "23997292b71b17869add33bb7f5813b6cfc5a9b6fd4c9b8534cbee3b38c4014a",
+        "configurationCount": 9
+      },
+      {
+        "path": "core_db/gradle.lockfile",
+        "sha256": "bbd2e5f33c217cb245ebbd22baa6a59c992268c70923ea1e19b87a5e473aade6",
+        "configurationCount": 9
+      },
+      {
+        "path": "demeter/gradle.lockfile",
+        "sha256": "f09ad941e4b47c38a73c974849b5648cd79d7a5f57d38ca72b568b487620d39c",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_account_api/gradle.lockfile",
+        "sha256": "cf5929dc30b4be2e286163e2e57fefc470d57c79c35c9ace746cf81d31c06470",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_account_impl/gradle.lockfile",
+        "sha256": "3df98227967d590c9cd042fb790d6b0ddb420e646e9772a19e7367b161a58be5",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_assets_api/gradle.lockfile",
+        "sha256": "d2b6e76bcac89abce6b128cfa244f47df79966c69704bfe33655c3d48fc04acc",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_assets_impl/gradle.lockfile",
+        "sha256": "d2b3c93377b43d03dd0977b31f6512b9b4d700b44c45d949d845af918ae584d9",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_blockexplorer_api/gradle.lockfile",
+        "sha256": "5d4663bbb147033637ee85aa64b05a9b2556834d35c0445553b0fc49049a4422",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_blockexplorer_impl/gradle.lockfile",
+        "sha256": "1cc0c1e769a276633295e0d7b665a2e0d39edc26293f1be281235dcf09a12a56",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_ecosystem_impl/gradle.lockfile",
+        "sha256": "59a10a89986b760c12273f13b6c80a126e40e82967aebf3efc180f79c94a440d",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_ethereum_api/gradle.lockfile",
+        "sha256": "57f93ad2b348adff32d6d545fe9fab06eaa18cf882b798dc1535bd805b561bac",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_main_api/gradle.lockfile",
+        "sha256": "caf95e77c0ace37fa648108dc0803f0a6d4f8efd1ac6c6e7771afe751abe3ae7",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_main_impl/gradle.lockfile",
+        "sha256": "a49a44b3dee004a3792435cd4984dd5e30e3eb4e86da6f3a1e8f24a7c1ab228c",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_multiaccount_api/gradle.lockfile",
+        "sha256": "c64f31008b376e5eb8b7629361f92d5f1809c032092386186a01611b77ae8c00",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_multiaccount_impl/gradle.lockfile",
+        "sha256": "db1484e4f02d074a2e209abd8cacf7feb5bfbdc9ffd392745153adfd833a8a4b",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_polkaswap_api/gradle.lockfile",
+        "sha256": "b9f1b95a70e739e708507e0facfbe7dbd3d831d3c4303b02b27e90c587303dd3",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_polkaswap_impl/gradle.lockfile",
+        "sha256": "d12377cccb38557a5d2323d3c80335255c12df7c8ea6536b7eccf5bc8e06d064",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_referral_api/gradle.lockfile",
+        "sha256": "69f88677f405c8ca223790717fc5466c1d01aaca005489274673c27b71128b51",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_referral_impl/gradle.lockfile",
+        "sha256": "ea21405acb440ff70262268b454cb16b9f0b177a81cb74ccc1124a4c30c23363",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_select_node_api/gradle.lockfile",
+        "sha256": "4b48532899883fec3d55b855cf33206512251bfba8bb794ab38b74559325827b",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_select_node_impl/gradle.lockfile",
+        "sha256": "9334dd047abea2151e64b8fb83a3df896a718cae25a6d912387d4b9827ff36ef",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_sora_card_api/gradle.lockfile",
+        "sha256": "5354f471bf8a076e724f39ef84be59366f53481291db7196296a7c444d98a168",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_sora_card_impl/gradle.lockfile",
+        "sha256": "b4f30dcf2a5d911e307aaccfc832b1a6798608fd57bf9cbd1c9e913e32b81dde",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_wallet_api/gradle.lockfile",
+        "sha256": "b9f1b95a70e739e708507e0facfbe7dbd3d831d3c4303b02b27e90c587303dd3",
+        "configurationCount": 9
+      },
+      {
+        "path": "feature_wallet_impl/gradle.lockfile",
+        "sha256": "b2130ca80d44bd0cf66e1990040c482ca3254ce214e615722252f53a31c694ce",
+        "configurationCount": 9
+      },
+      {
+        "path": "network/gradle.lockfile",
+        "sha256": "f71caf79679140442f535b2701dc0f82113a0cdace26627bd61293da5fc860a9",
+        "configurationCount": 9
+      },
+      {
+        "path": "settings-gradle.lockfile",
+        "sha256": "e58bb2ed80db9f829601a658d7c33b9802eb7d2191c31e79c28e01f14c225926",
+        "configurationCount": 1
+      },
+      {
+        "path": "sorasubstrate/gradle.lockfile",
+        "sha256": "edff9a4c699f61d41bc61ef63bdc84336bf7dd3a77629b36649d1183441f9e3b",
+        "configurationCount": 9
+      },
+      {
+        "path": "test_data/gradle.lockfile",
+        "sha256": "11d04c331056c9a450587856c5b3dbeb040d0242e38af61a1136452d0b08d770",
+        "configurationCount": 8
+      }
+    ]
+  },
+  "credentialIncident": {
+    "trackedProjectAuthTokenRemoved": true,
+    "priorTokenRevoked": false,
+    "replacementCredentialRotated": false,
+    "rotationEvidenceReviewed": false,
+    "secretValueRetainedInEvidence": false
+  },
+  "releaseCriteria": {
+    "distributionChecksumPinned": true,
+    "wrapperJarMatchesDistribution": true,
+    "vendoredRepositoryManifestValid": true,
+    "vendoredSourceIdentitiesPinned": true,
+    "vendoredSourceToBinaryReviewComplete": false,
+    "strictVerificationMetadataMaterialized": true,
+    "strictVerificationMetadataReviewed": false,
+    "everyResolvedArtifactHasSha256": true,
+    "productionReleaseLocksMaterialized": true,
+    "productionReleaseLocksReviewed": false,
+    "repositoryAllowlistReviewed": false,
+    "noLocalOrCompositeSubstitution": true,
+    "idensicTensorflowNamespaceWorkaroundReviewed": false,
+    "githubActionsPinnedToReviewedCommits": true,
+    "jenkinsSharedLibraryPinned": true,
+    "exposedCredentialRotatedAndRevoked": false
+  },
+  "blocker": {
+    "code": "gradle_dependency_provenance_not_qualified",
+    "reason": "The exact vendored repository, strict verification metadata, and productionRelease locks are materialized and hash-stable, but independent source-to-binary/artifact, metadata, lock, namespace-workaround, license/SBOM/attestation reviews are incomplete and the formerly tracked credential still lacks reviewed revocation/rotation evidence."
+  },
+  "exitCriteria": [
+    "independently reproduce and review source-to-binary correspondence for every source-built module and review the tracked/package binary artifacts",
+    "complete license/notice, SBOM, and build-attestation review for the exact vendored inventory",
+    "independently review every strict verification-metadata component and checksum",
+    "independently review the complete productionRelease lock and configuration inventory",
+    "review the IDensic 1.31.3/TensorFlow Lite 2.12.0 scoped namespace workaround and its removal or upgrade path",
+    "revoke the formerly tracked auth token, rotate its replacement outside the repository, and review non-secret rotation evidence",
+    "obtain a canonical dual-P-256-signed external dependency/signing review manifest admitted against protected authority, sequence, source, and contract pins",
+    "run dependency preflight before every Gradle invocation in production qualification"
+  ]
+}

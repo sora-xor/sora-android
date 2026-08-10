@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "contractId": "sora-android-nexus-finality-trust-manifest-v1",
+  "status": "blocked",
+  "platform": "android",
+  "reviewedAtEpochSeconds": 0,
+  "verifierSourceRevision": null,
+  "verifierArtifactSha256": null,
+  "nativeFinalityCanaryReceiptSha256": null,
+  "serverContractSourceRevision": null,
+  "serverOpenApiSha256": null,
+  "serverRouteSourceSha256": null,
+  "attestationRoute": "/v1/bridge/finality/attestation/{height}",
+  "bundleRoute": "/v1/bridge/finality/bundle/{height}",
+  "minamotoTrustContextReceiptSha256": null,
+  "tairaTrustContextReceiptSha256": null,
+  "independentReviewerKeyId": null,
+  "independentReviewerSignatureBase64": null,
+  "privacy": {
+    "redactedAggregateEvidenceOnly": true,
+    "accountIdentifiersIncluded": false,
+    "addressesIncluded": false,
+    "transactionIdentifiersIncluded": false,
+    "phrasesOrSeedsIncluded": false,
+    "privateKeysIncluded": false,
+    "rawSignedPayloadsIncluded": false,
+    "rawNetworkResponsesIncluded": false,
+    "deviceIdentifiersIncluded": false,
+    "operatorNamesIncluded": false
+  },
+  "blockingReasons": [
+    "No independently reviewed Android finality verifier, native canary, server contract, or network trust contexts have been supplied."
+  ]
+}

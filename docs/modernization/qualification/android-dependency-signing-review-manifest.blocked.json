@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "contractId": "sora-android-dependency-signing-review-v1",
+  "status": "blocked",
+  "platform": "android",
+  "applicationId": "jp.co.soramitsu.sora",
+  "reviewSequenceNumber": null,
+  "sourceRevision": null,
+  "issuedAtEpochSeconds": null,
+  "reviewedAtEpochSeconds": null,
+  "reviewContractSha256": null,
+  "authorities": {
+    "producer": {
+      "keyId": null,
+      "publicKeySha256": null
+    },
+    "independentReviewer": {
+      "keyId": null,
+      "publicKeySha256": null
+    }
+  },
+  "reviewedInputs": {
+    "gradleDependencyProvenanceSha256": null,
+    "verificationMetadataSha256": null,
+    "verificationMetadataDigestSha256": null,
+    "vendorSourceProvenanceSha256": null,
+    "vendorContentsManifestSha256": null,
+    "lockFileSetSha256": null,
+    "lockConfigurationInventorySha256": null,
+    "androidProductionSigningIdentitySha256": null,
+    "productionAppSigningCertificateSha256": null,
+    "productionUploadCertificateSha256": null
+  },
+  "externalEvidence": {
+    "vendorSourceToBinaryReviewReceiptSha256": null,
+    "licensesAndNoticesReviewReceiptSha256": null,
+    "sbomReviewReceiptSha256": null,
+    "dependencyBuildAttestationReviewReceiptSha256": null,
+    "repositoryAllowlistReviewReceiptSha256": null,
+    "verificationMetadataReviewReceiptSha256": null,
+    "productionReleaseLockReviewReceiptSha256": null,
+    "idensicTensorflowWorkaroundReviewReceiptSha256": null,
+    "credentialIncidentClosureReceiptSha256": null,
+    "playSigningContinuityReceiptSha256": null
+  },
+  "qualification": {
+    "vendoredCoordinateCountReviewed": 0,
+    "lockFileCountReviewed": 0,
+    "lockConfigurationCountReviewed": 0,
+    "sourceToBinaryCorrespondenceReviewed": false,
+    "licensesAndNoticesReviewed": false,
+    "sbomReviewed": false,
+    "provenanceReviewed": false,
+    "buildAttestationsReviewed": false,
+    "repositoryAllowlistReviewed": false,
+    "verificationMetadataReviewed": false,
+    "productionReleaseLocksReviewed": false,
+    "idensicTensorflowWorkaroundReviewed": false,
+    "credentialRevocationAndRotationReviewed": false,
+    "productionAppSigningIdentityReviewed": false,
+    "productionUploadCertificateReviewed": false,
+    "playAppSigningContinuityReviewed": false
+  },
+  "privacy": {
+    "aggregateOnly": true,
+    "secretsIncluded": false,
+    "privateKeysIncluded": false,
+    "keyPasswordsIncluded": false
+  },
+  "authorization": {
+    "authorizesDependencySigningQualification": false,
+    "authorizesArtifactSigning": false,
+    "authorizesRelease": false,
+    "authorizesProductionMutation": false
+  },
+  "blockingReasons": [
+    "A qualified manifest and distinct protected P-256 producer/reviewer signatures are absent by design."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "platform": "android",
+  "applicationId": "jp.co.soramitsu.sora",
+  "assessedAt": "2026-08-02",
+  "status": "blocked",
+  "releaseEnabled": false,
+  "releaseSigningConfig": "productionRelease",
+  "debugSigningConfig": "cidebug",
+  "debugFallbackAllowedForRelease": false,
+  "requiredEnvironmentVariables": [
+    "CI_KEYSTORE_PATH",
+    "CI_KEYSTORE_PASS",
+    "CI_KEYSTORE_KEY_ALIAS",
+    "CI_KEYSTORE_KEY_PASS",
+    "CI_BUILD_ID"
+  ],
+  "productionAppSigningCertificateSha256": null,
+  "productionUploadCertificateSha256": null,
+  "retainedProductionCertificateMatched": false,
+  "signedBundleCertificateMatched": false,
+  "playAppSigningContinuityReviewed": false,
+  "secretsRecordedInEvidence": false,
+  "blocker": {
+    "code": "android_production_signing_identity_not_qualified",
+    "reason": "The code now rejects debug-key fallback, but the retained production app-signing and upload certificate SHA-256 identities have not been supplied and independently matched."
+  },
+  "exitCriteria": [
+    "obtain the existing production app-signing and upload certificate SHA-256 fingerprints from the authorized release system without copying private keys",
+    "record and independently review both public fingerprints",
+    "supply the authorized canonical positive production version code as CI_BUILD_ID",
+    "build the qualified production bundle with a regular non-symlink CI keystore",
+    "verify the signed bundle certificate and Play App Signing continuity match the retained production identities",
+    "admit those reviewed public identities through the canonical dual-P-256-signed external dependency/signing review contract"
+  ]
+}

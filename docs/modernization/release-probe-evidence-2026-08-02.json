@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "observedAtUtc": "2026-08-02T16:32:48Z",
+  "privacy": {
+    "accountIdentifiersIncluded": false,
+    "secretsIncluded": false,
+    "signedPayloadsIncluded": false,
+    "mutationsAttempted": false
+  },
+  "piIndexer": {
+    "endpoint": "https://pi.soramitsu.io/graphql",
+    "lastReprobedAtUtc": "2026-08-05T14:32:55Z",
+    "status": "health_and_history_height_contract_present_end_to_end_history_unverified_mutation_capabilities_blocked",
+    "readContractStatus": "blocked",
+    "historyCheckpointContractStatus": "field_deployed_end_to_end_unverified",
+    "mutationCapabilitiesStatus": "blocked",
+    "observedContract": {
+      "service": "polkaswap-indexer",
+      "serviceId": "pi.soramitsu.io",
+      "schemaVersion": 1,
+      "ecosystem": "sora2",
+      "chainId": "sora:mainnet",
+      "network": "mainnet",
+      "readOnly": true,
+      "workerReady": true,
+      "workerLatestFinalizedBlock": 27183376,
+      "workerLatestIndexedBlock": 27183376,
+      "workerLag": 0,
+      "workerLastSuccessfulIndexTimestamp": 1785940359
+    },
+    "missingOptionalLegacyHealthAliases": [
+      "genesisHash",
+      "latestIndexedBlock",
+      "latestIndexedBlockHash",
+      "latestIndexedAt"
+    ],
+    "readQualification": "The reviewed endpoint, serviceId, ecosystem, chainId, network, read-only mode, worker lifecycle, and fresh coherent finalized/indexed worker checkpoint passed again. A privacy-safe filtered query now proves historyElements.blockHeight is deployed. Full history-read qualification remains blocked until a reviewed account cohort proves exact account, transaction-hash, nonzero block-hash, and canonical SORA RPC checkpoint binding.",
+    "unverifiedRequiredHistoryFields": [],
+    "historyQualification": {
+      "blockHeightFieldDeployed": true,
+      "exactAccountBindingQualified": false,
+      "canonicalTransactionHashQualified": false,
+      "nonzeroBlockHashQualified": false,
+      "soraRpcCheckpointBindingQualified": false,
+      "boundedRpcVerificationQualified": false,
+      "partialGraphQLErrorRejectionQualified": false,
+      "pendingOverlayFallbackQualified": false
+    },
+    "missingRequiredMobileConfigFields": [
+      "nexusAvailable",
+      "nexusSendsAvailable",
+      "polkamarktVisible",
+      "polkamarktMutationsAvailable",
+      "tairaDefaultVisible"
+    ],
+    "mobileConfigQualification": {
+      "allRequiredFieldsDeployed": false,
+      "strictBooleanTypesQualified": false,
+      "healthBoundFetchQualified": false,
+      "capabilityChangeFailClosedQualified": false
+    },
+    "accountBalancesQualification": {
+      "typedContractDeployed": false,
+      "exactAccountBindingQualified": false,
+      "exactAssetBindingQualified": false,
+      "finalizedCheckpointBindingQualified": false,
+      "arbitraryPrecisionQualified": false
+    },
+    "releaseBlocker": "The deployed mobileConfig schema still rejects every required emergency capability field, and schema v1 exposes only untyped account JSON rather than a reviewed account-balance contract. historyElements.blockHeight is now deployed, but exact account binding and canonical SORA RPC transaction/block checkpoint qualification remain incomplete. Production history qualification and mutation flags stay fail-closed."
+  },
+  "androidSdk": {
+    "upstreamCommit": "4f8cfbdd17aa6a3b049e619f23ec02501e5297b6",
+    "currentArchiveSha256": "24bb47552977cc2610512f59b8bccfd0b047b179302ed972600a66ddc1a01de6",
+    "currentArchiveBytes": 116992564,
+    "previouslyReviewedArchiveSha256": "50e37369e3b08e4435f15ae31d1baca28dd55eae82686000df8f39b85feee7e6",
+    "githubReleaseImmutable": false,
+    "freshArtifactReviewRequired": true,
+    "currentArchiveRuntimeIdentityVerified": false,
+    "knownHasherDefect": "fixed-u64-length-do-not-enable",
+    "applicationRuntimeDependency": false,
+    "qualification": "blocked"
+  },
+  "gradleDependencyProvenance": {
+    "dependencyInventoryMaterializedAt": "2026-08-09",
+    "distributionVersion": "9.5.1",
+    "distributionSha256Pinned": true,
+    "expectedWrapperJarSha256": "497c8c2a7e5031f6aa847f88104aa80a93532ec32ee17bdb8d1d2f67a194a9c7",
+    "observedWrapperJarSha256": "497c8c2a7e5031f6aa847f88104aa80a93532ec32ee17bdb8d1d2f67a194a9c7",
+    "wrapperJarMatchesDistribution": true,
+    "sourceQualifiedVendorRepositoryPresent": true,
+    "sourceQualifiedVendorRepositoryStatus": "materialized-unreviewed",
+    "exactRepositoryModuleFilterCount": 11,
+    "materializedVendorModuleCount": 11,
+    "sourceProvenanceSha256": "39264fee02d09548e04806fbffcdaedebef29ce4715f3aa804093e44b51f5118",
+    "vendorContentsManifestSha256": "d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f",
+    "sourceToBinaryReviewComplete": false,
+    "strictVerificationMetadataPresent": true,
+    "verificationMetadataSha256": "0d4c6923096c5fc39eeae458b20f935a1ec53ac90beff390ac024f6fbf946615",
+    "verificationMetadataDigestSha256": "cd4a8e678142bde37c7d48f70d6e277fdd3d503e053886b09c5e944f510204c7",
+    "verificationMetadataReviewed": false,
+    "productionReleaseLocksPresent": true,
+    "lockFileCount": 31,
+    "lockFileSetSha256": "1b91b6168ff2c0ec74e0f239e90ff8125742ae8a8fea3458f2a7cbfe472eb9ea",
+    "lockConfigurationCount": 271,
+    "productionReleaseLockConfigurationCount": 270,
+    "lockConfigurationInventorySha256": "d35d7512074d387ae71dfad3f52833af70875e3afe4a84d46b667a31e3bbfd1f",
+    "productionReleaseLocksReviewed": false,
+    "idensicTensorflowNamespaceWorkaroundStatus": "scoped-unreviewed-workaround",
+    "idensicTensorflowNamespaceWorkaroundReviewed": false,
+    "broadNamespaceQualificationGranted": false,
+    "arbitraryPayWingsRepositoryRemoved": true,
+    "exactSoramitsuAndJitpackModuleFiltersPresent": true,
+    "trackedAuthTokenRemoved": true,
+    "priorTokenRevocationConfirmed": false,
+    "replacementCredentialRotationConfirmed": false,
+    "secretsRecordedInEvidence": false,
+    "qualification": "blocked"
+  },
+  "androidSigningIdentity": {
+    "applicationId": "jp.co.soramitsu.sora",
+    "dedicatedProductionReleaseConfig": true,
+    "debugFallbackAllowedForRelease": false,
+    "productionAppSigningCertificateSha256Recorded": false,
+    "productionUploadCertificateSha256Recorded": false,
+    "signedBundleCertificateMatched": false,
+    "playAppSigningContinuityReviewed": false,
+    "privateKeyOrPasswordRecorded": false,
+    "qualification": "blocked"
+  },
+  "nexus": {
+    "taira": {
+      "endpoint": "https://taira.sora.org/v1/mcp",
+      "nativeTool": "iroha.health",
+      "httpStatus": 200,
+      "observedChainId": null,
+      "observedI105Discriminant": null,
+      "status": "http_healthy_consensus_stalled",
+      "lastHealthProbeAt": "2026-08-06T08:30:10Z",
+      "lastHealthProbeResult": "Healthy",
+      "lastHealthContentType": "text/plain; charset=utf-8",
+      "jsonOnlyHealthAcceptHttpStatus": 406,
+      "healthRouteSpecificAcceptQualified": true,
+      "rolloutValidation": {
+        "configuredEndpointClass": "convenience",
+        "canonicalPublicNodeEndpointProvided": false,
+        "qualification": "blocked until operators provide and qualify the explicit public-node /v1/mcp endpoint"
+      },
+      "xorHolderRead": {
+        "nativeTool": "iroha.assets.holders",
+        "assetDefinitionAlias": "xor#universal",
+        "httpStatus": 200,
+        "boundedLimit": 1,
+        "accountIdentifiersRecorded": false,
+        "status": "authoritative_fanout_read_succeeded"
+      },
+      "sumeragiTelemetry": {
+        "httpStatus": 200,
+        "contentType": "application/json",
+        "updatedAtHeight": 2,
+        "validatorRosterLength": 4,
+        "vrfCommitments": 4,
+        "vrfReveals": 0,
+        "vrfFinalized": false,
+        "chainIdentityDecoded": false
+      },
+      "sumeragiStatus": {
+        "httpStatus": 200,
+        "contentType": "application/json; charset=utf-8",
+        "protocolVersion": 4,
+        "height": 3,
+        "lastCommittedHeight": 2,
+        "phase": "awaiting_proposal",
+        "livenessBlocker": "missing_proposal",
+        "noProgressAgeMillis": 122702558,
+        "networkIngressDepth": 5,
+        "networkIngressOldestAgeMillis": 122700760,
+        "validatorCount": 4,
+        "minimumSigners": 3,
+        "restartRequired": false
+      },
+      "sumeragiQcHttpStatus": 503,
+      "sumeragiQcStatus": "telemetry_profile_restricted",
+      "sumeragiCheckpointsHttpStatus": 503,
+      "sumeragiCheckpointsStatus": "telemetry_profile_restricted",
+      "qualification": "blocked: the convenience endpoint still reports HTTP health, but Sumeragi is awaiting a proposal at height 3 with more than 34 hours without progress and an aged network-ingress backlog; canonical rollout endpoint, chain identity, and funded XOR receive/send/finality canary remain unqualified"
+    },
+    "minamoto": {
+      "endpoint": "https://minamoto.sora.org/health",
+      "lastHealthProbeAt": "2026-08-05T14:32:00Z",
+      "connectTimeoutSeconds": 5,
+      "totalTimeoutSeconds": 10,
+      "curlExitCode": 28,
+      "httpStatus": 0,
+      "status": "connection_timeout",
+      "observedChainId": null,
+      "observedI105Discriminant": null,
+      "qualification": "blocked"
+    },
+    "releaseBlocker": "Taira's configured convenience MCP endpoint returns HTTP health with the exact text/plain UTF-8 media contract, but its decoded Sumeragi status is stalled at height 3 with missing_proposal, more than 34 hours without progress, and five aged network-ingress entries. QC and checkpoint telemetry are profile-restricted. Operators also have not supplied the explicit canonical public-node /v1/mcp target, and chain identity plus the funded XOR receive/send/finality canary remain unqualified. Minamoto still timed out during the bounded 2026-08-05 health probe and no funded or signing probe was attempted."
+  }
+}

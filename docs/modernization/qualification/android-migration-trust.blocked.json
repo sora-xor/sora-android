@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "contractId": "sora-android-wallet-migration-qualification-trust-v1",
+  "platform": "android",
+  "status": "blocked",
+  "signatureAlgorithm": "ecdsa-p256-sha256",
+  "authorities": {
+    "deviceEvidenceProducer": {
+      "role": "device-evidence-producer",
+      "keyId": null,
+      "publicKeyPemSha256": null,
+      "enabled": false
+    },
+    "independentReviewer": {
+      "role": "independent-reviewer",
+      "keyId": null,
+      "publicKeyPemSha256": null,
+      "enabled": false
+    }
+  },
+  "replayPolicy": {
+    "maximumQualificationAgeSeconds": 604800,
+    "maximumRunDurationSeconds": 172800,
+    "maximumReviewDelaySeconds": 86400
+  },
+  "blockingReasons": [
+    "No independently reviewed Android device-evidence-producer or reviewer public-key pins have been supplied by the retained-device qualification authority."
+  ]
+}
