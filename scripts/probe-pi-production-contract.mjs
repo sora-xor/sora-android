@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
+import { createHash } from "node:crypto";
 import { parseStrictJsonBytes } from "./lib/strict-evidence.mjs";
+import { PRODUCTION_PI_RAW_LIVE_V1 } from "./lib/production-pi-receipt.mjs";
 
 const ENDPOINT = "https://pi.soramitsu.io/graphql";
 const SORA2_RPC_ENDPOINT = "https://ws.mof.sora.org/";
@@ -331,7 +333,23 @@ function validateMobileConfig(config) {
     Array.isArray(config.nodes) && config.nodes.length <= 100,
     "PI_NODES_INVALID",
   );
-  return Object.fromEntries(flags.map((flag) => [flag, config[flag]]));
+  const canonicalJsonValue = (value) => {
+    if (Array.isArray(value)) return value.map(canonicalJsonValue);
+    if (value !== null && typeof value === "object") {
+      return Object.fromEntries(
+        Object.keys(value)
+          .sort()
+          .map((key) => [key, canonicalJsonValue(value[key])]),
+      );
+    }
+    return value;
+  };
+  return {
+    capabilities: Object.fromEntries(flags.map((flag) => [flag, config[flag]])),
+    configRevision: createHash("sha256")
+      .update(JSON.stringify(canonicalJsonValue(config)), "utf8")
+      .digest("hex"),
+  };
 }
 
 function validateHistoryContract(history) {
@@ -358,7 +376,9 @@ try {
       capabilityCheckpoint.lastIndexedAt >= checkpoint.lastIndexedAt,
     "PI_MOBILE_CONFIG_HEALTH_REGRESSED",
   );
-  const capabilities = validateMobileConfig(mobileConfigData.mobileConfig);
+  const { capabilities, configRevision } = validateMobileConfig(
+    mobileConfigData.mobileConfig,
+  );
   const historyData = await graphql(HISTORY_CONTRACT_QUERY, {
     probe: SYNTHETIC_HISTORY_ACCOUNT,
   });
@@ -372,15 +392,27 @@ try {
     checkpoint.finalized,
     2,
   );
+  const indexedCheckpointBlockHash =
+    checkpoint.indexed === checkpoint.finalized
+      ? finalizedCheckpointBlockHash
+      : await substrateBlockHash(checkpoint.indexed, 3);
   const capabilityFinalizedCheckpointBlockHash =
     capabilityCheckpoint.finalized === checkpoint.finalized
       ? finalizedCheckpointBlockHash
-      : await substrateBlockHash(capabilityCheckpoint.finalized, 3);
+      : await substrateBlockHash(capabilityCheckpoint.finalized, 4);
+  const capabilityIndexedCheckpointBlockHash =
+    capabilityCheckpoint.indexed === checkpoint.indexed
+      ? indexedCheckpointBlockHash
+      : capabilityCheckpoint.indexed === capabilityCheckpoint.finalized
+        ? capabilityFinalizedCheckpointBlockHash
+        : await substrateBlockHash(capabilityCheckpoint.indexed, 5);
 
   process.stdout.write(
     `${JSON.stringify(
       {
-        schemaVersion: 1,
+        schemaVersion: PRODUCTION_PI_RAW_LIVE_V1.schemaVersion,
+        contractId: PRODUCTION_PI_RAW_LIVE_V1.contractId,
+        status: PRODUCTION_PI_RAW_LIVE_V1.status,
         endpoint: ENDPOINT,
         checkedAtEpochSeconds: Math.floor(Date.now() / 1000),
         serviceId: "pi.soramitsu.io",
@@ -392,11 +424,16 @@ try {
         indexedCheckpoint: checkpoint.indexed,
         lastIndexedAtEpochSeconds: checkpoint.lastIndexedAt,
         mobileConfigHealthBound: true,
+        configRevision,
         capabilityFinalizedCheckpoint: capabilityCheckpoint.finalized,
         capabilityIndexedCheckpoint: capabilityCheckpoint.indexed,
+        capabilityLastIndexedAtEpochSeconds:
+          capabilityCheckpoint.lastIndexedAt,
         sora2GenesisHash,
         finalizedCheckpointBlockHash,
+        indexedCheckpointBlockHash,
         capabilityFinalizedCheckpointBlockHash,
+        capabilityIndexedCheckpointBlockHash,
         historyBlockHeightContractDeployed: true,
         capabilities,
         privacy: {

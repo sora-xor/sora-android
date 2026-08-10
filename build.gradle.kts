@@ -113,12 +113,16 @@ tasks.register<Exec>("verifyProductionRollout") {
         System.getenv("PRODUCTION_CANDIDATE_ARTIFACT_RECEIPT_PATH") ?: "",
     )
     environment(
-        "PI_PRODUCTION_PROBE_RECEIPT",
-        System.getenv("PI_PRODUCTION_PROBE_RECEIPT") ?: "",
+        "PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH",
+        System.getenv("PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH") ?: "",
     )
     environment(
         "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH",
         System.getenv("PRODUCTION_CANDIDATE_PI_RECEIPT_PATH") ?: "",
+        "PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH",
+        System.getenv("PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH") ?: "",
+        "PRODUCTION_PI_CONTROLLER_ID",
+        System.getenv("PRODUCTION_PI_CONTROLLER_ID") ?: "",
     )
     environment(
         "PRODUCTION_ROLLOUT_EVIDENCE_PATH",

@@ -31,8 +31,8 @@ artifact ID, size, and `sha256:` digest. The privacy-safe controller request car
 safe provenance projection and both API-receipt hashes, so a same-name artifact or self-asserted
 admission from another run cannot authorize rollout.
 
-Each rollout-gate invocation requires the absolute `PI_PRODUCTION_PROBE_RECEIPT` produced by a fresh,
-read-only PI probe and the canonical positive
+Each rollout-gate invocation requires the absolute
+`PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH` produced by a fresh, read-only PI probe and the canonical positive
 `PRODUCTION_ROLLOUT_EVALUATED_AT_EPOCH_SECONDS` recorded immediately before the protected rollout
 controller emits its signed evidence. The validator
 does not use ambient wall-clock time as release authority. It rechecks the bounded receipt, its
@@ -55,8 +55,8 @@ complete prior signed receipt chain, requires unchanged network genesis, rejects
 regression, and rejects a different block hash at an unchanged finalized height.
 
 The capability projection is UTF-8 text with one `key=value` line, in this exact order:
-`schemaVersion`, `endpoint`, `serviceId`, `ecosystem`, `chainId`, `network`, `readOnly`,
-`mobileConfigHealthBound`, `historyBlockHeightContractDeployed`, `nexusAvailable`,
+`schemaVersion`, `contractId`, `endpoint`, `serviceId`, `ecosystem`, `chainId`, `network`, `readOnly`,
+`mobileConfigHealthBound`, `configRevision`, `historyBlockHeightContractDeployed`, `nexusAvailable`,
 `nexusSendsAvailable`, `polkamarktVisible`, `polkamarktMutationsAvailable`, and
 `tairaDefaultVisible`. Its SHA-256 is the receipt value. The candidate binding then uses the exact
 ordered fields implemented by `identityBinding`; reviewers must recompute both hashes rather than
@@ -195,15 +195,26 @@ blocked templates document the fail-closed shape only; never convert them to qua
 the source tree. Qualified evidence comes from the protected external controller and both pinned
 signatures. Do not infer missing counters and do not fabricate qualification evidence.
 
-The production GitHub qualification workflow has two fail-closed modes. Candidate mode runs the
-full migration, test, signing, PI, and release-admission gates once, then publishes a 90-day immutable
-artifact containing only the exact AAB, v3 admission receipt, candidate-time PI receipt, and source
-revision. Rollout mode
+The production GitHub qualification workflow has two fail-closed modes. Candidate mode keeps the
+fresh local raw-live v1 observation distinct from authority. It submits that receipt hash and body,
+the exact AAB identity, source revision, reviewed runtime identity, and admitted Taira epoch to the
+TLS-SPKI-pinned protected controller. The controller must return an exact
+`sora-pi-production-capability-probe-v3` receipt plus a detached-signature JSON envelope. The v3
+receipt has canonical iOS-parity `health`, atomic `capabilities`, and Minamoto/Taira
+`networkCheckpoints`, plus an Android `candidate` block binding the artifact SHA-256/size, source,
+raw-live receipt SHA-256, and controller ID. Its Ed25519 signature must verify with the independently
+protected rollout-authorizer key and exact protected trust-file pin. Candidate v1/v2 receipts and
+mixed schema/contract pairs are wire-incompatible and rejected.
+
+After the full migration, test, signing, PI, funded-canary, and release-admission gates pass once,
+candidate mode publishes a 90-day immutable artifact containing the exact AAB, v3 admission,
+candidate-time PI v3 receipt, its protected signature envelope, and source revision. The raw-live
+file is never aliased to the immutable candidate receipt. Rollout mode
 requires that candidate run ID, downloads the exact artifact without rebuilding it, validates its
 GitHub run/artifact provenance, and rejects a source-revision mismatch. After a fresh PI probe and
 explicit evaluation epoch it creates the privacy-safe
 `sora-android-production-rollout-controller-request-v3` containing the qualified admission and
-candidate PI bodies plus their hashes. Its `productionAdmission` envelope carries the admission
+candidate PI bodies, signature envelope, and their hashes. Its `productionAdmission` envelope carries the admission
 receipt hash, admission binding, and the exact Taira and Minamoto funded-canary receipt hashes as
 four first-class fields; each canary hash must equal the corresponding value inside the bound
 admission identity and the two network hashes must differ. The request is sent over HTTPS to the protected controller origin

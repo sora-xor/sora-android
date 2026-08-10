@@ -38,7 +38,8 @@ receipt is not evidence.
   default) the exact `CI_BUILD_ID` used as the AAB version code;
 - `PRODUCTION_CANDIDATE_APKS_PATH` and `PRODUCTION_BUNDLETOOL_JAR_PATH`, whose actual bytes must
   match the installed-candidate attestation and pinned inspection-tool identity;
-- `PI_PRODUCTION_PROBE_RECEIPT`, captured no more than five minutes before evaluation;
+- `PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH`, captured no more than five minutes before evaluation; this
+  observed-only v1 input is distinct from the signed immutable candidate PI v3 receipt;
 - `TAIRA_FUNDED_CANARY_RECEIPT_PATH` or `MINAMOTO_FUNDED_CANARY_RECEIPT_PATH`;
 - `<NETWORK>_FUNDED_CANARY_APPROVAL_RECEIPT`;
 - `<NETWORK>_FUNDED_CANARY_LOW_VALUE_POLICY`;

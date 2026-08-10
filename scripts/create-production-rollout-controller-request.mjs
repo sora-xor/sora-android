@@ -12,7 +12,8 @@ import {
 } from "./lib/qualified-candidate-provenance.mjs";
 import {
   containsPrivacySensitiveField,
-  validateProductionPiReceipt,
+  validateProductionPiRawLiveReceipt,
+  verifyProductionPiCandidateReceiptV3,
 } from "./lib/production-pi-receipt.mjs";
 import {
   ANDROID_PRODUCTION_ROLLOUT_CONTROLLER_REQUEST_V3,
@@ -25,9 +26,12 @@ const root = resolve(new URL("..", import.meta.url).pathname);
 const candidatePath = process.env.PRODUCTION_CANDIDATE_AAB_PATH ?? "";
 const admissionPath =
   process.env.PRODUCTION_QUALIFICATION_RECEIPT_PATH ?? "";
-const piPath = process.env.PI_PRODUCTION_PROBE_RECEIPT ?? "";
+const piPath = process.env.PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH ?? "";
 const candidatePiPath =
   process.env.PRODUCTION_CANDIDATE_PI_RECEIPT_PATH ?? "";
+const candidatePiSignaturePath =
+  process.env.PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH ?? "";
+const piControllerId = process.env.PRODUCTION_PI_CONTROLLER_ID ?? "";
 const targetRaw = process.env.PRODUCTION_ROLLOUT_TARGET_PERCENT ?? "";
 const evaluatedAtRaw =
   process.env.PRODUCTION_ROLLOUT_EVALUATED_AT_EPOCH_SECONDS ?? "";
@@ -42,6 +46,8 @@ const candidateArtifactReceiptPath =
   process.env.PRODUCTION_CANDIDATE_ARTIFACT_RECEIPT_PATH ?? "";
 const trustPin = process.env.PRODUCTION_ROLLOUT_TRUST_SHA256 ?? "";
 const trustPath = resolve(root, "config/production-rollout-trust.json");
+const tairaDeploymentAdmissionPath =
+  process.env.TAIRA_DEPLOYMENT_ADMISSION_RECEIPT_PATH ?? "";
 const MAXIMUM_RECEIPT_BYTES = 64 * 1024;
 const MAXIMUM_CANDIDATE_BYTES = 512 * 1024 * 1024;
 const MAXIMUM_CAPABILITY_AGE_SECONDS = 5 * 60;
@@ -92,6 +98,9 @@ if (
   !canonicalPath(admissionPath) ||
   !canonicalPath(piPath) ||
   !canonicalPath(candidatePiPath) ||
+  !canonicalPath(candidatePiSignaturePath) ||
+  !canonicalPath(tairaDeploymentAdmissionPath) ||
+  piPath === candidatePiPath ||
   !canonicalPath(candidateRunReceiptPath) ||
   !canonicalPath(candidateArtifactReceiptPath)
 ) {
@@ -111,13 +120,23 @@ const candidatePi = readStrictJsonFile(
   candidatePiPath,
   MAXIMUM_RECEIPT_BYTES,
 );
+const candidatePiSignature = readStrictJsonFile(
+  candidatePiSignaturePath,
+  MAXIMUM_RECEIPT_BYTES,
+);
 const trust = readStrictJsonFile(trustPath, MAXIMUM_RECEIPT_BYTES);
+const tairaDeploymentAdmission = readStrictJsonFile(
+  tairaDeploymentAdmissionPath,
+  MAXIMUM_RECEIPT_BYTES,
+);
 if (
   candidate === null ||
   admission === null ||
   pi === null ||
   candidatePi === null ||
-  trust === null
+  candidatePiSignature === null ||
+  trust === null ||
+  tairaDeploymentAdmission === null
 ) {
   fail("ROLLOUT_CONTROLLER_REQUEST_INPUT_MISSING_OR_UNSTABLE");
 }
@@ -155,14 +174,34 @@ const candidateProvenance = validateQualifiedCandidateProvenance({
   candidateRunReceiptPath,
   candidateArtifactReceiptPath,
 });
-const currentPiSnapshot = validateProductionPiReceipt(
+const currentPiSnapshot = validateProductionPiRawLiveReceipt(
   pi.value,
   Number(evaluatedAtRaw),
 );
-const candidatePiSnapshot = validateProductionPiReceipt(
-  candidatePi.value,
-  admissionIdentity?.qualifiedAtEpochSeconds,
-);
+const candidatePiSnapshot = verifyProductionPiCandidateReceiptV3({
+  receiptRecord: candidatePi,
+  signatureRecord: candidatePiSignature,
+  trustRecord: trust,
+  expectedTrustSha256: trustPin,
+  evaluationEpoch: admissionIdentity?.qualifiedAtEpochSeconds,
+  validationContext: {
+    expectedControllerId: piControllerId,
+    expectedCandidate: {
+      artifactSha256: candidate.sha256,
+      artifactBytes: candidate.bytes,
+      sourceRevision,
+    },
+    expectedRuntimeMetadataSha256:
+      admissionIdentity?.runtimeMetadataSha256,
+    expectedTairaDeployment: {
+      chainId: tairaDeploymentAdmission.value?.current?.chainId,
+      toriiEndpoint:
+        tairaDeploymentAdmission.value?.current?.toriiBaseUrl,
+      genesisHash:
+        tairaDeploymentAdmission.value?.current?.genesisSha256,
+    },
+  },
+});
 if (
   !exactKeys(admissionEnvelope, [
     "mode",
@@ -193,12 +232,14 @@ if (
   admissionIdentity.qualifiedAtEpochSeconds <= 0 ||
   admissionIdentity.qualifiedAtEpochSeconds > Number(evaluatedAtRaw) ||
   admissionIdentity?.candidatePiProbeReceiptSha256 !== candidatePi.sha256 ||
-  !Number.isSafeInteger(candidatePi.value?.checkedAtEpochSeconds) ||
-  candidatePi.value.checkedAtEpochSeconds <= 0 ||
-  candidatePi.value.checkedAtEpochSeconds >
+  tairaDeploymentAdmission.value?.manifestSha256 !==
+    admissionIdentity?.tairaDeploymentManifestSha256 ||
+  !Number.isSafeInteger(candidatePi.value?.capturedAtEpochSeconds) ||
+  candidatePi.value.capturedAtEpochSeconds <= 0 ||
+  candidatePi.value.capturedAtEpochSeconds >
     admissionIdentity.qualifiedAtEpochSeconds + MAXIMUM_FUTURE_SKEW_SECONDS ||
   admissionIdentity.qualifiedAtEpochSeconds -
-    candidatePi.value.checkedAtEpochSeconds >
+    candidatePi.value.capturedAtEpochSeconds >
     MAXIMUM_CAPABILITY_AGE_SECONDS ||
   admissionIdentityKeys
     .filter((key) => key.endsWith("Sha256"))
@@ -258,8 +299,12 @@ const request = {
   },
   candidatePiProbe: {
     receiptSha256: candidatePi.sha256,
-    capabilityBindingSha256: candidatePiSnapshot.bindingSha256,
+    signatureReceiptSha256: candidatePiSignature.sha256,
+    capabilityBindingSha256:
+      candidatePiSnapshot.capabilityBindingSha256,
+    candidateBindingSha256: candidatePiSnapshot.bindingSha256,
     receipt: candidatePi.value,
+    signatureReceipt: candidatePiSignature.value,
   },
   piProbe: {
     receiptSha256: pi.sha256,

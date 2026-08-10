@@ -104,6 +104,9 @@ const manifest = createAndroidQualifiedCandidatePackageV1({
   ),
   productionAdmissionPath: required("PRODUCTION_QUALIFICATION_RECEIPT_PATH"),
   candidatePiReceiptPath: required("PRODUCTION_CANDIDATE_PI_RECEIPT_PATH"),
+  candidatePiReceiptSignaturePath: required(
+    "PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH",
+  ),
 });
 if (!validateAndroidQualifiedCandidatePackageV1(manifest)) {
   throw new Error("ANDROID_QUALIFIED_CANDIDATE_PACKAGE_V1_SELF_CHECK_FAILED");
