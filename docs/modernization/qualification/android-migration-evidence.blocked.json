@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 2,
+  "contractId": "sora-android-wallet-migration-evidence-v2",
+  "platform": "android",
+  "status": "blocked-template",
+  "runId": null,
+  "qualificationSequenceNumber": 0,
+  "sourceRevision": null,
+  "producedAtEpochSeconds": 0,
+  "qualificationContractSha256": null,
+  "trustRootSha256": null,
+  "deviceEvidenceProducerKeyId": null,
+  "independentReviewerKeyId": null,
+  "identity": {
+    "appBuildIdentitySha256": null,
+    "deviceClasses": [],
+    "operatingSystemBuilds": []
+  },
+  "chronology": {
+    "runStartedAtEpochSeconds": 0,
+    "runFinishedAtEpochSeconds": 0,
+    "snapshotManifestProducedAtEpochSeconds": 0,
+    "testResultProducedAtEpochSeconds": 0,
+    "encryptedStorageEvidenceProducedAtEpochSeconds": 0,
+    "deviceExecutionEvidenceProducedAtEpochSeconds": 0,
+    "rawExecutionEvidenceProducedAtEpochSeconds": 0
+  },
+  "artifacts": {
+    "retainedReleaseSnapshotManifest": {
+      "relativePath": "docs/modernization/qualification/android-migration-retained-snapshot-manifest.json",
+      "sha256": null
+    },
+    "testResult": {
+      "relativePath": "docs/modernization/qualification/android-migration-test-results.json",
+      "sha256": null
+    },
+    "encryptedStorageEvidence": {
+      "relativePath": "docs/modernization/qualification/android-migration-encrypted-storage-evidence.json",
+      "sha256": null
+    },
+    "deviceExecutionEvidence": {
+      "relativePath": "docs/modernization/qualification/android-migration-device-execution-evidence.json",
+      "sha256": null
+    },
+    "rawExecutionEvidence": {
+      "relativePath": "docs/modernization/qualification/android-migration-raw-execution-evidence.json",
+      "sha256": null
+    }
+  },
+  "privacy": {
+    "aggregateOnly": true,
+    "accountIdentifiersIncluded": false,
+    "addressesIncluded": false,
+    "deviceIdentifiersIncluded": false,
+    "phrasesOrSeedsIncluded": false,
+    "privateKeysIncluded": false,
+    "publicKeysIncluded": false,
+    "ciphertextsIncluded": false,
+    "wrappedKeysIncluded": false,
+    "keystoreMaterialIncluded": false,
+    "rawSignedPayloadsIncluded": false,
+    "perWalletRecordsIncluded": false
+  },
+  "blockingReasons": [
+    "Template only: publish no evidence manifest until the complete retained-device run, all four aggregate artifacts, and the non-authorizing raw-execution artifact exist."
+  ]
+}

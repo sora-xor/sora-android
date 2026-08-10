@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "contractId": "sora-android-funded-nexus-canary-trust-v1",
+  "platform": "android",
+  "assessedAt": "2026-08-07",
+  "status": "blocked",
+  "signatureAlgorithm": "Ed25519",
+  "ledgerStoreId": null,
+  "artifactInspection": {
+    "status": "blocked",
+    "bundletoolVersion": null,
+    "bundletoolJarSha256": null,
+    "apksignerVersion": null
+  },
+  "authorities": {
+    "releaseOperator": {
+      "role": "release-operator",
+      "keyId": null,
+      "publicKeyPem": null,
+      "publicKeySha256": null,
+      "enabled": false
+    },
+    "independentApprover": {
+      "role": "independent-approver",
+      "keyId": null,
+      "publicKeyPem": null,
+      "publicKeySha256": null,
+      "enabled": false
+    },
+    "independentReviewer": {
+      "role": "independent-reviewer",
+      "keyId": null,
+      "publicKeyPem": null,
+      "publicKeySha256": null,
+      "enabled": false
+    },
+    "consumptionLedger": {
+      "role": "approval-consumption-ledger",
+      "keyId": null,
+      "publicKeyPem": null,
+      "publicKeySha256": null,
+      "enabled": false
+    }
+  },
+  "blockingReasons": [
+    "No reviewed release-controller Ed25519 trust roots are pinned.",
+    "No reviewed bundletool/apksigner inspection tool identities are pinned.",
+    "No append-only approval-consumption ledger store identity is pinned."
+  ]
+}

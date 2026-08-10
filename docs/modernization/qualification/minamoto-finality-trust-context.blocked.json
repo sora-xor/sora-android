@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "contractId": "sora-android-nexus-finality-trust-context-v1",
+  "status": "blocked",
+  "platform": "android",
+  "networkId": "minamoto",
+  "chainId": "00000000-0000-0000-0000-000000000753",
+  "reviewedAtEpochSeconds": 0,
+  "expectedNodeKeySha256": null,
+  "expectedNodeBuildFingerprint": null,
+  "expectedProtocolVersion": null,
+  "expectedConsensusMode": null,
+  "validatorRosterSha256": null,
+  "quorumNumerator": null,
+  "quorumDenominator": null,
+  "canonicalSignedGenesisSha256": null,
+  "genesisPublicKeySha256": null,
+  "trustedFirstHeight": null,
+  "trustedFirstHeightContextId": null,
+  "verifierSourceRevision": null,
+  "verifierArtifactSha256": null,
+  "serverContractSourceRevision": null,
+  "serverOpenApiSha256": null,
+  "serverRouteSourceSha256": null,
+  "independentReviewerKeyId": null,
+  "independentReviewerSignatureBase64": null,
+  "privacy": {
+    "redactedAggregateEvidenceOnly": true,
+    "accountIdentifiersIncluded": false,
+    "addressesIncluded": false,
+    "transactionIdentifiersIncluded": false,
+    "phrasesOrSeedsIncluded": false,
+    "privateKeysIncluded": false,
+    "rawSignedPayloadsIncluded": false,
+    "rawNetworkResponsesIncluded": false,
+    "deviceIdentifiersIncluded": false,
+    "operatorNamesIncluded": false
+  },
+  "blockingReasons": [
+    "No reviewed Minamoto node, validator roster, signed genesis, or trusted first-height context has been supplied."
+  ]
+}
