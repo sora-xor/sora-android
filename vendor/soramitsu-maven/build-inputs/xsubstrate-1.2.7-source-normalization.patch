@@ -1,0 +1,22 @@
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index 5b02b42..2967f15 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -10,7 +10,7 @@ polkajscale = "0.2.3"
+ androidsvg = "1.4"
+ nvwsclient = "2.14"
+ gson = "2.10.1"
+-xcrypto = "1.2.6"
++xcrypto = "1.2.7"
+ coreKtx = "1.13.1"
+ lifecycle-runtime-ktx = "2.7.0"
+ activity-compose = "1.9.0"
+@@ -23,7 +23,7 @@ junit = { module = "junit:junit", version.ref = "junit" }
+ mockito = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito" }
+ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+ 
+-polkajscale = { module = "jp.co.soramitsu:polkaj-scale", version.ref = "polkajscale" }
++polkajscale = { module = "io.emeraldpay.polkaj:polkaj-scale", version.ref = "polkajscale" }
+ androidsvg = { module = "com.caverock:androidsvg-aar", version.ref = "androidsvg" }
+ nvwsclient = { module = "com.neovisionaries:nv-websocket-client", version.ref = "nvwsclient" }
+ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
