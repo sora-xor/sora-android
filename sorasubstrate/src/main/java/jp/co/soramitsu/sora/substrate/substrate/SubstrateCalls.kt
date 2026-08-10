@@ -38,6 +38,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.androidfoundation.format.safeCast
+import jp.co.soramitsu.common.data.network.dto.FinalizedRuntimeValue
+import jp.co.soramitsu.common.data.network.dto.PolkamarktAuthoritativeMarketDto
+import jp.co.soramitsu.common.data.network.dto.PolkamarktBuyQuoteDto
+import jp.co.soramitsu.common.data.network.dto.PolkamarktClaimableDto
+import jp.co.soramitsu.common.data.network.dto.PolkamarktMarketId
+import jp.co.soramitsu.common.data.network.dto.PolkamarktMarketStateDto
+import jp.co.soramitsu.common.data.network.dto.PolkamarktSellQuoteDto
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.ext.sumByBigInteger
@@ -52,7 +59,6 @@ import jp.co.soramitsu.sora.substrate.request.ChainLastHeaderRequest
 import jp.co.soramitsu.sora.substrate.request.FeeCalculationRequest
 import jp.co.soramitsu.sora.substrate.request.FeeCalculationRequest2
 import jp.co.soramitsu.sora.substrate.request.FinalizedHeadRequest
-import jp.co.soramitsu.sora.substrate.request.NextAccountIndexRequest
 import jp.co.soramitsu.sora.substrate.request.StateKeys
 import jp.co.soramitsu.sora.substrate.request.StateKeysPaged
 import jp.co.soramitsu.sora.substrate.request.StateQueryStorageAt
@@ -72,6 +78,7 @@ import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.generics.GenericEvent
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.primitives.BooleanType
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
+import jp.co.soramitsu.xsubstrate.runtime.metadata.GetMetadataRequest
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
 import jp.co.soramitsu.xsubstrate.scale.EncodableStruct
@@ -100,11 +107,22 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import org.bouncycastle.util.encoders.Hex
 
+internal fun calculateSora2TransferableTokenBalance(
+    free: BigInteger,
+    frozen: BigInteger,
+): BigInteger {
+    check(free.signum() >= 0 && frozen.signum() >= 0) {
+        "SORA2_TOKEN_BALANCE_INVALID"
+    }
+    return free.subtract(frozen).max(BigInteger.ZERO)
+}
+
 @Suppress("EXPERIMENTAL_API_USAGE")
 @Singleton
 class SubstrateCalls @Inject constructor(
     private val socketService: SocketService,
     private val runtimeManager: RuntimeManager,
+    private val connectionManager: ConnectionManager,
 ) {
 
     companion object {
@@ -317,7 +335,11 @@ class SubstrateCalls @Inject constructor(
         emitAll(resultFlow)
     }
 
-    suspend fun fetchBalances(accountId: String, assetIds: List<String>): List<BigInteger> {
+    suspend fun fetchBalances(
+        accountId: String,
+        assetIds: List<String>,
+        blockHash: String? = null,
+    ): List<BigInteger> {
         val chunks = assetIds.chunked(DEFAULT_ASSETS_PAGE_SIZE)
         val storage = runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.TOKENS.palletName)
             .storage(Storage.ACCOUNTS.storageName)
@@ -330,14 +352,16 @@ class SubstrateCalls @Inject constructor(
                     assetId.mapCodeToken(),
                 )
             }
-            val request = StateQueryStorageAt(listOf(storageKeys))
+            val request = StateQueryStorageAt(
+                if (blockHash == null) listOf(storageKeys) else listOf(storageKeys, blockHash)
+            )
             val chunkValues = socketService.executeAsyncMapped(
                 request,
                 mapper = pojoList<StateQueryResponse>().nonNull()
             ).first().changesAsMap()
 
-            val results = chunkValues.mapValues {
-                it.value?.let {
+            val results = storageKeys.map { storageKey ->
+                chunkValues[storageKey]?.let {
                     val value =
                         storage.type.value?.fromHex(
                             runtimeManager.getRuntimeSnapshot(),
@@ -347,7 +371,62 @@ class SubstrateCalls @Inject constructor(
                 } ?: BigInteger.ZERO
             }
 
-            acc.addAll(results.values)
+            acc.addAll(results)
+            acc
+        }
+    }
+
+    /**
+     * Reads the spendable portion of each non-XOR Tokens.Accounts balance for a final
+     * pre-transport authorization check. [fetchBalances] intentionally retains its historic
+     * free-balance projection for existing consumers; transfer admission must also honor the
+     * runtime's frozen amount and fail closed when a present account cannot be decoded.
+     */
+    suspend fun fetchTransferableBalances(
+        accountId: String,
+        assetIds: List<String>,
+        blockHash: String? = null,
+    ): List<BigInteger> {
+        val chunks = assetIds.chunked(DEFAULT_ASSETS_PAGE_SIZE)
+        val storage = runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.TOKENS.palletName)
+            .storage(Storage.ACCOUNTS.storageName)
+
+        return chunks.fold(mutableListOf()) { acc, chunk ->
+            val storageKeys = chunk.map { assetId ->
+                storage.storageKey(
+                    runtimeManager.getRuntimeSnapshot(),
+                    accountId.toAccountId(),
+                    assetId.mapCodeToken(),
+                )
+            }
+            val request = StateQueryStorageAt(
+                if (blockHash == null) listOf(storageKeys) else listOf(storageKeys, blockHash)
+            )
+            val chunkValues = socketService.executeAsyncMapped(
+                request,
+                mapper = pojoList<StateQueryResponse>().nonNull()
+            ).first().changesAsMap()
+
+            val results = storageKeys.map { storageKey ->
+                chunkValues[storageKey]?.let { encoded ->
+                    val value = storage.type.value?.fromHex(
+                        runtimeManager.getRuntimeSnapshot(),
+                        encoded,
+                    )
+                    val account = value.safeCast<Struct.Instance>()
+                        ?: throw IllegalStateException("SORA2_TOKEN_BALANCE_INVALID")
+                    calculateSora2TransferableTokenBalance(
+                        free = checkNotNull(account.get<BigInteger>("free")) {
+                            "SORA2_TOKEN_BALANCE_INVALID"
+                        },
+                        frozen = checkNotNull(account.get<BigInteger>("frozen")) {
+                            "SORA2_TOKEN_BALANCE_INVALID"
+                        },
+                    )
+                } ?: BigInteger.ZERO
+            }
+
+            acc.addAll(results)
             acc
         }
     }
@@ -358,49 +437,181 @@ class SubstrateCalls @Inject constructor(
             mapper = pojo<Boolean>().nonNull(),
         )
 
+    suspend fun polkamarktQuoteBuy(
+        marketId: Long,
+        outcome: String,
+        collateralIn: BigInteger,
+        blockHash: String? = null,
+    ): FinalizedRuntimeValue<PolkamarktBuyQuoteDto> {
+        val canonicalMarketId = PolkamarktMarketId.requireValid(marketId)
+        val at = blockHash ?: getFinalizedHead()
+        return FinalizedRuntimeValue(
+            blockHash = at,
+            value = socketService.executeAsyncMapped(
+                request = RuntimeRequest(
+                    "polkamarkt_quoteBuy",
+                    listOf(canonicalMarketId, outcome, collateralIn.toString(), at),
+                ),
+                mapper = pojo<PolkamarktBuyQuoteDto>(),
+            ).result,
+        )
+    }
+
+    suspend fun polkamarktQuoteSell(
+        marketId: Long,
+        outcome: String,
+        sharesIn: BigInteger,
+        blockHash: String? = null,
+    ): FinalizedRuntimeValue<PolkamarktSellQuoteDto> {
+        val canonicalMarketId = PolkamarktMarketId.requireValid(marketId)
+        val at = blockHash ?: getFinalizedHead()
+        return FinalizedRuntimeValue(
+            blockHash = at,
+            value = socketService.executeAsyncMapped(
+                request = RuntimeRequest(
+                    "polkamarkt_quoteSell",
+                    listOf(canonicalMarketId, outcome, sharesIn.toString(), at),
+                ),
+                mapper = pojo<PolkamarktSellQuoteDto>(),
+            ).result,
+        )
+    }
+
+    suspend fun polkamarktMarketState(
+        marketId: Long,
+        blockHash: String? = null,
+    ): FinalizedRuntimeValue<PolkamarktMarketStateDto> {
+        val canonicalMarketId = PolkamarktMarketId.requireValid(marketId)
+        val at = blockHash ?: getFinalizedHead()
+        return FinalizedRuntimeValue(
+            blockHash = at,
+            value = socketService.executeAsyncMapped(
+                request = RuntimeRequest(
+                    "polkamarkt_marketState",
+                    listOf(canonicalMarketId, at),
+                ),
+                mapper = pojo<PolkamarktMarketStateDto>(),
+            ).result,
+        )
+    }
+
+    suspend fun polkamarktClaimable(
+        accountId: String,
+        marketId: Long,
+        blockHash: String? = null,
+    ): FinalizedRuntimeValue<PolkamarktClaimableDto> {
+        val canonicalMarketId = PolkamarktMarketId.requireValid(marketId)
+        val at = blockHash ?: getFinalizedHead()
+        return FinalizedRuntimeValue(
+            blockHash = at,
+            value = socketService.executeAsyncMapped(
+                request = RuntimeRequest(
+                    "polkamarkt_claimable",
+                    listOf(accountId, canonicalMarketId, at),
+                ),
+                mapper = pojo<PolkamarktClaimableDto>(),
+            ).result,
+        )
+    }
+
+    suspend fun polkamarktAuthoritativeMarket(
+        marketId: Long,
+        blockHash: String? = null,
+    ): FinalizedRuntimeValue<PolkamarktAuthoritativeMarketDto> {
+        val canonicalMarketId = PolkamarktMarketId.requireValid(marketId)
+        val at = blockHash ?: getFinalizedHead()
+        val runtime = runtimeManager.getRuntimeSnapshot()
+        val storage = runtime.metadata.module("Polkamarkt").storage("Markets")
+        val storageKey = storage.storageKey(
+            runtime,
+            PolkamarktMarketId.toScale(canonicalMarketId),
+        )
+        val raw = socketService.executeAsyncMapped(
+            request = GetStorageRequest(listOf(storageKey, at)),
+            mapper = pojo<String>(),
+        ).result
+        val decoded = raw?.let {
+            storage.type.value?.fromHex(runtime, it)?.safeCast<Struct.Instance>()
+        }
+        val value = decoded?.let { market ->
+            val storedStatus = checkNotNull(
+                market.get<DictEnum.Entry<*>>("status")
+            ) { "POLKAMARKT_RUNTIME_MARKET_INVALID" }.name
+            val closeBlock = checkNotNull(market.get<BigInteger>("close_block")) {
+                "POLKAMARKT_RUNTIME_MARKET_INVALID"
+            }
+            val observedBlock = BigInteger(
+                getChainHeader(at).number.removeHexPrefix(),
+                16,
+            )
+            PolkamarktAuthoritativeMarketDto(
+                marketId = canonicalMarketId,
+                status = if (storedStatus == "Open" && observedBlock >= closeBlock) {
+                    "Locked"
+                } else {
+                    storedStatus
+                },
+                closeBlock = closeBlock,
+                observedBlockNumber = observedBlock,
+            )
+        }
+        return FinalizedRuntimeValue(at, value)
+    }
+
     suspend fun submitExtrinsic(
         extrinsic: String,
     ): String {
-        return socketService.executeAsyncMapped(
-            request = SubmitExtrinsicRequest(extrinsic),
-            mapper = pojo<String>().nonNull(),
-        )
+        val transportLease = connectionManager.acquireReviewedSora2MutationTransport()
+        return try {
+            socketService.executeAsyncMapped(
+                request = SubmitExtrinsicRequest(extrinsic),
+                mapper = pojo<String>().nonNull(),
+            )
+        } finally {
+            transportLease.close()
+        }
     }
 
     fun submitAndWatchExtrinsic(
         extrinsic: String,
-        finalizedKey: String = IN_BLOCK,
+        // Keep the transport primitive secure-by-default. Mapping a reorgable
+        // `inBlock` notification to ExtrinsicStatusFinalized lets any future
+        // direct caller accidentally publish non-canonical terminal state.
+        finalizedKey: String = FINALIZED,
     ): Flow<Pair<String, ExtrinsicStatusResponse>> {
         val hash = extrinsic.extrinsicHash()
-        return socketService.subscriptionFlow(
-            request = SubmitAndWatchExtrinsicRequest(extrinsic),
-            unsubscribeMethod = "author_unwatchExtrinsic",
-        ).map {
-            val subscriptionId = it.subscriptionId
-            val result = it.params.result
-            val mapped = result.safeCast<Map<String, *>>()
-            val statusResponse: ExtrinsicStatusResponse = when {
-                mapped?.containsKey(finalizedKey) ?: false ->
-                    ExtrinsicStatusResponse.ExtrinsicStatusFinalized(
-                        subscriptionId,
-                        mapped?.getValue(finalizedKey) as String
-                    )
+        return flow {
+            val transportLease = connectionManager.acquireReviewedSora2MutationTransport()
+            try {
+                emitAll(
+                    socketService.subscriptionFlow(
+                        request = SubmitAndWatchExtrinsicRequest(extrinsic),
+                        unsubscribeMethod = "author_unwatchExtrinsic",
+                    ).map {
+                        val subscriptionId = it.subscriptionId
+                        val result = it.params.result
+                        val mapped = result.safeCast<Map<String, *>>()
+                        val statusResponse: ExtrinsicStatusResponse = when {
+                            mapped?.containsKey(finalizedKey) ?: false ->
+                                ExtrinsicStatusResponse.ExtrinsicStatusFinalized(
+                                    subscriptionId,
+                                    mapped?.getValue(finalizedKey) as String
+                                )
 
-                mapped?.containsKey(FINALITY_TIMEOUT) ?: false ->
-                    ExtrinsicStatusResponse.ExtrinsicStatusFinalityTimeout(subscriptionId)
+                            mapped?.containsKey(FINALITY_TIMEOUT) ?: false ->
+                                ExtrinsicStatusResponse.ExtrinsicStatusFinalityTimeout(
+                                    subscriptionId
+                                )
 
-                else -> ExtrinsicStatusResponse.ExtrinsicStatusPending(subscriptionId)
+                            else -> ExtrinsicStatusResponse.ExtrinsicStatusPending(subscriptionId)
+                        }
+                        hash to statusResponse
+                    }
+                )
+            } finally {
+                transportLease.close()
             }
-            hash to statusResponse
         }
-    }
-
-    suspend fun getNonce(from: String): BigInteger {
-        return socketService.executeAsyncMapped(
-            request = NextAccountIndexRequest(from),
-            mapper = pojo<Double>().nonNull()
-        )
-            .toInt().toBigInteger()
     }
 
     suspend fun getBlockHash(number: Int = 0): String {
@@ -416,6 +627,12 @@ class SubstrateCalls @Inject constructor(
             mapper = pojo<RuntimeVersion>().nonNull(),
         )
     }
+
+    suspend fun getMetadataHex(): String =
+        socketService.executeAsyncMapped(
+            request = GetMetadataRequest,
+            mapper = pojo<String>().nonNull(),
+        )
 
     suspend fun getFinalizedHead(): String {
         return socketService.executeAsyncMapped(
@@ -490,7 +707,9 @@ class SubstrateCalls @Inject constructor(
                     } else emptyList()
                 }
         }.getOrElse {
-            FirebaseWrapper.recordException(it)
+            FirebaseWrapper.recordErrorClass(
+                FirebaseWrapper.PrivacySafeErrorClass.FINALIZED_EVENT_READ
+            )
             emptyList()
         }
     }

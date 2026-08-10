@@ -1,0 +1,200 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "jp.co.soramitsu",
+    "module": "xbackup",
+    "version": "1.2.3",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.9"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "com.google.android.gms",
+          "module": "play-services-auth",
+          "version": {
+            "requires": "21.0.0"
+          }
+        },
+        {
+          "group": "com.google.apis",
+          "module": "google-api-services-drive",
+          "version": {
+            "requires": "v3-rev197-1.25.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "xbackup-1.2.3.aar",
+          "url": "xbackup-1.2.3.aar",
+          "size": 106294,
+          "sha512": "b14059de245200a12a88c879d9076a39b5e2a8897e02f599b25443377fa782d4f572119042df068c52b24119e91f62db152726ba3c8d5af3aa1ed780b3146160",
+          "sha256": "a19eece94d2c3d7b562d40e7d855c8797c796087c3a0458c938765261142fbe8",
+          "sha1": "bff4e86c5672c1a2407d69efe593d2485a8f28bd",
+          "md5": "2ea48dffebdd6f9dd7bf5ddb4f17d928"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-parcelize-runtime",
+          "version": {
+            "requires": "1.9.24"
+          }
+        },
+        {
+          "group": "jp.co.soramitsu",
+          "module": "xcrypto",
+          "version": {
+            "requires": "1.2.7"
+          }
+        },
+        {
+          "group": "androidx.activity",
+          "module": "activity-compose",
+          "version": {
+            "requires": "1.9.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.6.3"
+          }
+        },
+        {
+          "group": "androidx.datastore",
+          "module": "datastore-preferences",
+          "version": {
+            "requires": "1.0.0"
+          }
+        },
+        {
+          "group": "com.google.android.gms",
+          "module": "play-services-base",
+          "version": {
+            "requires": "18.3.0"
+          }
+        },
+        {
+          "group": "com.google.api-client",
+          "module": "google-api-client-android",
+          "version": {
+            "requires": "1.26.0"
+          }
+        },
+        {
+          "group": "com.google.http-client",
+          "module": "google-http-client-gson",
+          "version": {
+            "requires": "1.42.3"
+          }
+        },
+        {
+          "group": "com.google.android.gms",
+          "module": "play-services-auth",
+          "version": {
+            "requires": "21.0.0"
+          }
+        },
+        {
+          "group": "com.google.apis",
+          "module": "google-api-services-drive",
+          "version": {
+            "requires": "v3-rev197-1.25.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "xbackup-1.2.3.aar",
+          "url": "xbackup-1.2.3.aar",
+          "size": 106294,
+          "sha512": "b14059de245200a12a88c879d9076a39b5e2a8897e02f599b25443377fa782d4f572119042df068c52b24119e91f62db152726ba3c8d5af3aa1ed780b3146160",
+          "sha256": "a19eece94d2c3d7b562d40e7d855c8797c796087c3a0458c938765261142fbe8",
+          "sha1": "bff4e86c5672c1a2407d69efe593d2485a8f28bd",
+          "md5": "2ea48dffebdd6f9dd7bf5ddb4f17d928"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "xbackup-1.2.3-sources.jar",
+          "url": "xbackup-1.2.3-sources.jar",
+          "size": 11435,
+          "sha512": "bbc0b4679168b3b35ccfee625537edd120e3fc61bf054ffd8c04345bb04e8fb5ede04b2f4217360f765931c2f794323b8f529a5e66f7361ad229b60b366a65b4",
+          "sha256": "486650eebe0c838d05a19da5b63db5b3d9df650167320c9dc53fde2880dd8c81",
+          "sha1": "a51c4821ac9a9db34774050c3cef451536e9b181",
+          "md5": "c33dad6489bc5d69d50796230dd063e6"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseJavaDocPublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "xbackup-1.2.3-javadoc.jar",
+          "url": "xbackup-1.2.3-javadoc.jar",
+          "size": 363933,
+          "sha512": "8604d3cdf92e3fb56152222eb85bab9378f955eb8ee948fd051b658ecba8da7accfa6d19032f3d1ebac9fc2c13d373e1a30a959cd72ea6993d7b5c69baa54079",
+          "sha256": "dfaa0bc48de6351a7f613f23b494574e681f7850b3dbaf13dd51f6479977447f",
+          "sha1": "4e9d02350e6b515c7901d90a7b93e874f7629b43",
+          "md5": "81ac9f9defe32796c4347e52afa5848b"
+        }
+      ]
+    }
+  ]
+}

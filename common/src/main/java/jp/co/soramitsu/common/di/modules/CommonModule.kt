@@ -65,7 +65,6 @@ import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.InvitationHandler
-import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.interfaces.WithProgress
@@ -83,17 +82,6 @@ import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import jp.co.soramitsu.xbackup.BackupService
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.BlockExplorerRepository
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.impl.BlockExplorerRepositoryImpl
-import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.api.ConfigDAO
-import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.api.data.ConfigParser
-import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.impl.SuperWalletConfigDAOImpl
-import jp.co.soramitsu.xnetworking.lib.datasources.chainsconfig.impl.data.RemoteConfigParserImpl
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.HistoryItemsFilter
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.TxHistoryRepository
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItem
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.impl.TxHistoryRepositoryImpl
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.impl.builder.ExpectActualDBDriverFactory
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.models.AbstractRestClientConfig
 import jp.co.soramitsu.xnetworking.lib.engines.rest.impl.RestClientImpl
@@ -150,48 +138,6 @@ class CommonModule {
         isLenient = true
         ignoreUnknownKeys = true
     }
-
-    @Singleton
-    @Provides
-    fun provideConfigParser(
-        restClient: RestClient
-    ): ConfigParser = RemoteConfigParserImpl(
-        restClient = restClient,
-        chainsRequestUrl = OptionsProvider.configXn,
-    )
-
-    @Singleton
-    @Provides
-    fun provideConfigDAO(configParser: ConfigParser): ConfigDAO =
-        SuperWalletConfigDAOImpl(configParser = configParser)
-
-    @Singleton
-    @Provides
-    fun provideBlockExplorerRepository(
-        configDAO: ConfigDAO,
-        restClient: RestClient,
-        txHistoryRepository: TxHistoryRepository
-    ): BlockExplorerRepository = BlockExplorerRepositoryImpl(
-        configDAO = configDAO,
-        restClient = restClient,
-        txHistoryRepository = txHistoryRepository
-    )
-
-    @Singleton
-    @Provides
-    fun provideTxHistoryRepository(
-        @ApplicationContext context: Context,
-        configDAO: ConfigDAO,
-        restClient: RestClient,
-    ): TxHistoryRepository = TxHistoryRepositoryImpl(
-        databaseDriverFactory = ExpectActualDBDriverFactory(context, txHistoryDBName),
-        configDAO = configDAO,
-        restClient = restClient,
-        historyItemsFilter = object : HistoryItemsFilter {
-            override fun List<TxHistoryItem>.filterCachedHistoryItems(): List<TxHistoryItem> = this
-            override fun List<TxHistoryItem>.filterPagedHistoryItems(): List<TxHistoryItem> = this
-        }
-    )
 
     @Singleton
     @Provides
@@ -332,7 +278,7 @@ class CommonModule {
     @Provides
     @Singleton
     fun provideDeviceVibrator(@ApplicationContext context: Context): DeviceVibrator {
-        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        val vibrator = context.getSystemService(Vibrator::class.java)
         return DeviceVibrator(vibrator)
     }
 

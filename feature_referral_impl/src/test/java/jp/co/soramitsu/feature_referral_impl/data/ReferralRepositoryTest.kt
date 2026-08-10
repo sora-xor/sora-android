@@ -33,16 +33,20 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_referral_impl.data
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.ReferralsDao
 import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
+import jp.co.soramitsu.feature_referral_api.data.ReferralReward
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -53,9 +57,15 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito.anyBoolean
+import org.mockito.BDDMockito.anyString
+import org.mockito.BDDMockito.given
 import org.mockito.Mock
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
@@ -86,6 +96,12 @@ class ReferralRepositoryTest {
 
     @Mock
     private lateinit var substrateCalls: SubstrateCalls
+
+    @Mock
+    private lateinit var keypair: Sr25519Keypair
+
+    @Mock
+    private lateinit var feeToken: Token
 
     private lateinit var referralRepository: ReferralRepository
 
@@ -136,5 +152,53 @@ class ReferralRepositoryTest {
         whenever(referralsDao.getReferrals()).thenReturn(flow { emit(REFERRER_LOCAL) })
         val result = referralRepository.getReferralRewards()
         assertEquals(REFERRER_REWARDS, result.toList()[0])
+    }
+
+    @Test
+    fun `referral mutation waits for canonical finality`() = runTest {
+        given(
+            extrinsicManager.submitAndWaitExtrinsic(
+                anyString(),
+                any(),
+                anyBoolean(),
+                anyString(),
+                any(),
+            )
+        ).willReturn(
+            ExtrinsicSubmitStatus(
+                success = true,
+                txHash = "0x${"11".repeat(32)}",
+                blockHash = "0x${"22".repeat(32)}",
+            )
+        )
+
+        referralRepository.observeSetReferrer(
+            keypair = keypair,
+            from = "from",
+            referrer = "referrer",
+            feeToken = feeToken,
+        )
+        referralRepository.observeBond(
+            keypair = keypair,
+            from = "from",
+            amount = BigDecimal.ONE,
+            token = feeToken,
+            fee = BigDecimal.ZERO,
+        )
+        referralRepository.observeUnbond(
+            keypair = keypair,
+            from = "from",
+            amount = BigDecimal.ONE,
+            token = feeToken,
+            fee = BigDecimal.ZERO,
+        )
+
+        verify(extrinsicManager, times(3)).submitAndWaitExtrinsic(
+            from = eq("from"),
+            keypair = eq(keypair),
+            useBatchAll = eq(false),
+            untilStatus = eq(SubstrateCalls.FINALIZED),
+            formExtrinsic = any(),
+        )
     }
 }

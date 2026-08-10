@@ -1,0 +1,193 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "jp.co.soramitsu",
+    "module": "xsubstrate",
+    "version": "1.2.7",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.7"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "io.emeraldpay.polkaj",
+          "module": "polkaj-scale",
+          "version": {
+            "requires": "0.2.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "xsubstrate-1.2.7.aar",
+          "url": "xsubstrate-1.2.7.aar",
+          "size": 655316,
+          "sha512": "6555d0825540d6aa278ce68b3e21693e50b3bc0592265b7a95c85a6645f9fd6d537477afc210dd3f30fdd89620b222aff2695bbe6e4563b528742792ca46c075",
+          "sha256": "dc23dae4c5cd00d45ea10afeb8dbe293952d71ceded6fa6418a92d4f47e56956",
+          "sha1": "bda288132be2473bccc9ad91166434ba46adabc8",
+          "md5": "54dbd4cc894370d1390b46e048b70cef"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-parcelize-runtime",
+          "version": {
+            "requires": "1.9.24"
+          }
+        },
+        {
+          "group": "com.caverock",
+          "module": "androidsvg-aar",
+          "version": {
+            "requires": "1.4"
+          }
+        },
+        {
+          "group": "com.neovisionaries",
+          "module": "nv-websocket-client",
+          "version": {
+            "requires": "2.14"
+          }
+        },
+        {
+          "group": "com.google.code.gson",
+          "module": "gson",
+          "version": {
+            "requires": "2.10.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.8.1"
+          }
+        },
+        {
+          "group": "org.mockito.kotlin",
+          "module": "mockito-kotlin",
+          "version": {
+            "requires": "5.2.1"
+          }
+        },
+        {
+          "group": "junit",
+          "module": "junit",
+          "version": {
+            "requires": "4.13.2"
+          }
+        },
+        {
+          "group": "io.mockk",
+          "module": "mockk",
+          "version": {
+            "requires": "1.13.11"
+          }
+        },
+        {
+          "group": "jp.co.soramitsu",
+          "module": "xcrypto",
+          "version": {
+            "requires": "1.2.7"
+          }
+        },
+        {
+          "group": "io.emeraldpay.polkaj",
+          "module": "polkaj-scale",
+          "version": {
+            "requires": "0.2.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "xsubstrate-1.2.7.aar",
+          "url": "xsubstrate-1.2.7.aar",
+          "size": 655316,
+          "sha512": "6555d0825540d6aa278ce68b3e21693e50b3bc0592265b7a95c85a6645f9fd6d537477afc210dd3f30fdd89620b222aff2695bbe6e4563b528742792ca46c075",
+          "sha256": "dc23dae4c5cd00d45ea10afeb8dbe293952d71ceded6fa6418a92d4f47e56956",
+          "sha1": "bda288132be2473bccc9ad91166434ba46adabc8",
+          "md5": "54dbd4cc894370d1390b46e048b70cef"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "xsubstrate-1.2.7-sources.jar",
+          "url": "xsubstrate-1.2.7-sources.jar",
+          "size": 131266,
+          "sha512": "ce11f829aaf3b436c346225b0c3f8d9b8ef8ad28f3e2311a88b55516556f1e83a5ad40df840ff4bf3992cc1bc3330c29539d89e9b00c1cfa6d3fd08ff8235ab7",
+          "sha256": "94c3da4052e46127c66c57169413b8f6f5f4a23cd9f0dc2bb747d85b66663ffe",
+          "sha1": "641da24d58afd36b0e6286049cde35b3358fbbc8",
+          "md5": "c6f250fc544200d9c39b18930442e50d"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseJavaDocPublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "xsubstrate-1.2.7-javadoc.jar",
+          "url": "xsubstrate-1.2.7-javadoc.jar",
+          "size": 1740951,
+          "sha512": "3d6014622f0bae6701c4fae5dbfc4c9678d262890bd7c14fb2d07270e6b55e85b3c3ab8d6a140d8ae24b1ef5318c5334ce5db41f688b473f17542110f81e12c8",
+          "sha256": "7799228516c1f9ed2b4974f46bfd4bd87ddae9ad98129ae4b71784282f457981",
+          "sha1": "8768ba0ea83f65e8204abed1e94d5ae86efe3e81",
+          "md5": "4aadfeeb4d9794a04b0db8b8aeb4860e"
+        }
+      ]
+    }
+  ]
+}

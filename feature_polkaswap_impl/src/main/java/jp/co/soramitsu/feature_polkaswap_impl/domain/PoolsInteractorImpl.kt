@@ -291,6 +291,7 @@ class PoolsInteractorImpl(
         )
         if (status.success) {
             transactionHistoryRepository.saveTransaction(
+                soraAccount.substrateAddress,
                 transactionBuilder.buildLiquidity(
                     txHash = status.txHash,
                     blockHash = status.blockHash,
@@ -424,6 +425,7 @@ class PoolsInteractorImpl(
         )
         if (status.success) {
             transactionHistoryRepository.saveTransaction(
+                soraAccount.substrateAddress,
                 transactionBuilder.buildLiquidity(
                     txHash = status.txHash,
                     blockHash = status.blockHash,

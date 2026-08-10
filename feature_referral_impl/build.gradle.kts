@@ -1,12 +1,11 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
-    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
@@ -15,7 +14,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.feature_referral_impl"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -25,7 +24,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -40,8 +39,8 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
     }
-
     flavorDimensions += listOf("default")
 
     productFlavors {
@@ -115,13 +114,12 @@ dependencies {
     implementation(libs.xsubstrateDep)
 
     implementation(libs.lifecycleProcessDep)
-    kapt(libs.lifecycleKaptDep)
 
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
 
     testImplementation(project(":test_data"))
     testImplementation(libs.coroutineTestDep)

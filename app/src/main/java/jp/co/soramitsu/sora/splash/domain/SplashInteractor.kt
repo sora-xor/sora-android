@@ -34,7 +34,9 @@ package jp.co.soramitsu.sora.splash.domain
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 
@@ -44,15 +46,59 @@ class SplashInteractor @Inject constructor(
     private val migrationManager: MigrationManager
 ) {
 
-    private val migrationsDone = CompletableDeferred<Boolean>()
+    @Volatile
+    private var migrationsDone = CompletableDeferred<Boolean>()
 
     suspend fun checkMigration() {
-        migrationsDone.complete(migrationManager.start())
+        checkMigration(migrationsDone)
+    }
+
+    suspend fun retryMigration(): Boolean {
+        val retry = CompletableDeferred<Boolean>()
+        synchronized(this) {
+            migrationsDone = retry
+        }
+        checkMigration(retry)
+        return retry.await()
+    }
+
+    private suspend fun checkMigration(target: CompletableDeferred<Boolean>) {
+        val result = try {
+            migrationManager.start()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            // An unexpected migration exception may follow an ambiguously committed Room write.
+            // Keep the current process fail-closed even if the lower layer could not journal it.
+            // The backup-aware helper must not demote or clear an earlier preflight blocker.
+            WalletUpgradeBackup.noteUnexpectedMigrationFailure()
+            false
+        }
+        if (!target.isCompleted) {
+            target.complete(result)
+        }
     }
 
     fun getMigrationDoneAsync(): Deferred<Boolean> = migrationsDone
 
+    suspend fun getMigrationFailureCode(): String? = migrationManager.failureCode()
+
     suspend fun getRegistrationState() = userRepository.getRegistrationState()
+
+    suspend fun hasExistingWallet(): Boolean = userRepository.getSoraAccountsCount() > 0
+
+    /**
+     * Recovery may expose legacy SORA2 only when the existing selection still resolves exactly.
+     * A missing/corrupt selection is never treated as permission to select or create a wallet.
+     */
+    suspend fun canContinueLegacyWallet(): Boolean = try {
+        userRepository.getCurSoraAccount()
+        true
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Throwable) {
+        false
+    }
 
     suspend fun saveInviteCode(inviteCode: String) {
         userRepository.saveParentInviteCode(inviteCode)

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 3,
+  "contractId": "sora-android-production-rollout-v3",
+  "status": "blocked-template",
+  "platform": "android",
+  "fromCohortPercent": 0,
+  "targetCohortPercent": 1,
+  "evaluatedAtEpochSeconds": 0,
+  "priorGateReceiptSha256": null,
+  "identity": {
+    "bindingSha256": "UNAVAILABLE",
+    "candidateArtifactSha256": "UNAVAILABLE",
+    "sora2NetworkRevision": "411dcdb70c5c00b21482a44d02334840d5f338c6",
+    "runtimeSpecVersion": 130,
+    "runtimeTransactionVersion": 130,
+    "runtimeMetadataSha256": "UNAVAILABLE",
+    "productionQualificationReceiptSha256": "UNAVAILABLE",
+    "productionAdmissionBindingSha256": "UNAVAILABLE",
+    "tairaCanaryReceiptSha256": "UNAVAILABLE",
+    "minamotoCanaryReceiptSha256": "UNAVAILABLE",
+    "productionRolloutTrustSha256": "UNAVAILABLE"
+  },
+  "checkpoint": {
+    "piReceiptSha256": null,
+    "capabilitySnapshotSha256": null,
+    "sora2GenesisHash": "0x7e4e32d0feafd4f9c9414b0be86373f9a1efa904809b683453a9af6856d38ad5",
+    "finalizedCheckpoint": null,
+    "finalizedCheckpointBlockHash": null,
+    "indexedCheckpoint": null,
+    "capabilityFinalizedCheckpoint": null,
+    "capabilityFinalizedCheckpointBlockHash": null,
+    "capabilityIndexedCheckpoint": null,
+    "minamotoChainId": "00000000-0000-0000-0000-000000000753",
+    "minamotoGenesisHash": null,
+    "minamotoFinalizedCheckpoint": null,
+    "minamotoFinalizedBlockHash": null,
+    "tairaChainId": "fc56984b-2be7-431d-840e-21514d1883f0",
+    "tairaGenesisHash": null,
+    "tairaFinalizedCheckpoint": null,
+    "tairaFinalizedBlockHash": null,
+    "nexusObservedAtEpochSeconds": null
+  },
+  "privacy": {
+    "aggregateOnly": true,
+    "accountIdentifiersIncluded": false,
+    "addressesIncluded": false,
+    "transactionIdentifiersIncluded": false,
+    "phrasesOrSeedsIncluded": false,
+    "privateKeysIncluded": false,
+    "rawSignedPayloadsIncluded": false,
+    "perWalletRecordsIncluded": false
+  },
+  "cohorts": [],
+  "telemetryAttestation": {
+    "telemetrySourceId": null,
+    "completenessPolicySha256": null,
+    "observedThroughEpochSeconds": null,
+    "collectorKeyId": null,
+    "collectorSignatureBase64": null
+  },
+  "authorization": {
+    "telemetryBindingSha256": null,
+    "collectorSignatureSha256": null,
+    "authorizedTargetPercent": null,
+    "authorizedAtEpochSeconds": null,
+    "releaseAuthorizerKeyId": null,
+    "releaseAuthorizerSignatureBase64": null
+  },
+  "blockingReasons": [
+    "Template only: populate solely from the exact built AAB identity after all candidate qualifications pass; never infer or fabricate evidence."
+  ]
+}

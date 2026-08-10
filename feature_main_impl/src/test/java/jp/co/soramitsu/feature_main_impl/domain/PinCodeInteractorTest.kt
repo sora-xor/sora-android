@@ -37,6 +37,10 @@ import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionTarget
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -85,12 +89,16 @@ class PinCodeInteractorTest {
     }
 
     @Test
-    fun `clear account data called`() = runTest {
-        val address = "address"
+    fun `wallet deletion preview called`() = runTest {
+        val preview = deletionPreview()
+        given(userRepository.createWalletDeletionPreview(listOf("address")))
+            .willReturn(preview)
 
-        interactor.clearAccountData(address)
-
-        verify(userRepository).clearAccountData(address)
+        assertEquals(
+            preview,
+            interactor.createWalletDeletionPreview(listOf("address")),
+        )
+        verify(userRepository).createWalletDeletionPreview(listOf("address"))
     }
 
     @Test
@@ -120,10 +128,41 @@ class PinCodeInteractorTest {
     }
 
     @Test
-    fun `reset user called`() = runTest {
-        interactor.fullLogout()
-        verify(userRepository).fullLogout()
+    fun `confirmed wallet deletion called`() = runTest {
+        val preview = deletionPreview()
+        val result = WalletDeletionResult(WalletDeletionScope.ALL, "")
+        given(userRepository.confirmAndExecuteWalletDeletion(preview))
+            .willReturn(result)
+
+        assertEquals(result, interactor.confirmAndExecuteWalletDeletion(preview))
+        verify(userRepository).confirmAndExecuteWalletDeletion(preview)
     }
+
+    @Test
+    fun `wallet deletion recovery code called`() = runTest {
+        given(userRepository.walletDeletionFailureCode())
+            .willReturn("WALLET_DELETION_RECOVERY_REQUIRED")
+
+        assertEquals(
+            "WALLET_DELETION_RECOVERY_REQUIRED",
+            interactor.walletDeletionFailureCode(),
+        )
+        verify(userRepository).walletDeletionFailureCode()
+    }
+
+    private fun deletionPreview(): WalletDeletionPreview =
+        WalletDeletionPreview(
+            previewId = "preview",
+            scope = WalletDeletionScope.ALL,
+            targets = listOf(WalletDeletionTarget("address", "Wallet")),
+            selectedBefore = "address",
+            selectedAfter = "",
+            snapshotHash = "0".repeat(64),
+            beforePreferencesHash = "1".repeat(64),
+            afterPreferencesHash = "2".repeat(64),
+            removeLegacyUnsuffixed = false,
+            expiresAtElapsedRealtime = Long.MAX_VALUE,
+        )
 
     @Test
     fun `set biometry available called`() = runTest {

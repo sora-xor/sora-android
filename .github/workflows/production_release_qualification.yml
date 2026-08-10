@@ -1,0 +1,1146 @@
+name: Production Release Qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      rollout_target_percent:
+        description: "Leave empty for candidate qualification; set only to 1, 5, 25, or 100 for an explicitly authorized rollout gate"
+        required: false
+        type: string
+      candidate_run_id:
+        description: "Required for rollout gates: workflow run containing the immutable qualified-candidate artifact"
+        required: false
+        type: string
+
+concurrency:
+  group: production-release-qualification
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 240
+    env:
+      CI: "true"
+      CI_BUILD_ID: ${{ vars.PRODUCTION_VERSION_CODE }}
+      PRODUCTION_ROLLOUT_TARGET_PERCENT: ${{ inputs.rollout_target_percent }}
+      PRODUCTION_CANDIDATE_AAB_PATH: ${{ github.workspace }}/app/build/outputs/bundle/productionRelease/app-production-release.aab
+      PRODUCTION_CANDIDATE_SOURCE_REVISION: ${{ github.sha }}
+      PRODUCTION_CANDIDATE_REPOSITORY: ${{ github.repository }}
+      PRODUCTION_CANDIDATE_RUN_ID: ${{ inputs.candidate_run_id }}
+      PRODUCTION_CANDIDATE_APK_PATH: ${{ github.workspace }}/app/build/outputs/apk/production/release/app-production-release.apk
+      PRODUCTION_CANDIDATE_MAPPING_PATH: ${{ github.workspace }}/app/build/outputs/mapping/productionRelease/mapping.txt
+      ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_KEY_SHA256: ${{ vars.ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_KEY_SHA256 }}
+      ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_KEY_SHA256: ${{ vars.ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_KEY_SHA256 }}
+      ANDROID_DEPENDENCY_SIGNING_REVIEW_SEQUENCE_NUMBER: ${{ vars.ANDROID_DEPENDENCY_SIGNING_REVIEW_SEQUENCE_NUMBER }}
+      ANDROID_DEPENDENCY_SIGNING_REVIEW_SOURCE_REVISION: ${{ vars.ANDROID_DEPENDENCY_SIGNING_REVIEW_SOURCE_REVISION }}
+      ANDROID_DEPENDENCY_SIGNING_REVIEW_CONTRACT_SHA256: ${{ vars.ANDROID_DEPENDENCY_SIGNING_REVIEW_CONTRACT_SHA256 }}
+      # Independently protected retained-wallet qualification identity. These values
+      # identify externally produced/reviewed evidence; this workflow never creates it.
+      ANDROID_MIGRATION_QUALIFICATION_RUN_ID: ${{ vars.ANDROID_MIGRATION_QUALIFICATION_RUN_ID }}
+      ANDROID_MIGRATION_QUALIFICATION_SEQUENCE_NUMBER: ${{ vars.ANDROID_MIGRATION_QUALIFICATION_SEQUENCE_NUMBER }}
+      ANDROID_MIGRATION_QUALIFICATION_APP_BUILD_IDENTITY_SHA256: ${{ vars.ANDROID_MIGRATION_QUALIFICATION_APP_BUILD_IDENTITY_SHA256 }}
+      ANDROID_MIGRATION_QUALIFICATION_TRUST_SHA256: ${{ vars.ANDROID_MIGRATION_QUALIFICATION_TRUST_SHA256 }}
+      ANDROID_MIGRATION_QUALIFICATION_DEVICE_PRODUCER_PUBLIC_KEY_SHA256: ${{ vars.ANDROID_MIGRATION_QUALIFICATION_DEVICE_PRODUCER_PUBLIC_KEY_SHA256 }}
+      ANDROID_MIGRATION_QUALIFICATION_REVIEWER_PUBLIC_KEY_SHA256: ${{ vars.ANDROID_MIGRATION_QUALIFICATION_REVIEWER_PUBLIC_KEY_SHA256 }}
+      ANDROID_MIGRATION_CONTROLLER_ORIGIN: ${{ vars.ANDROID_MIGRATION_CONTROLLER_ORIGIN }}
+      ANDROID_MIGRATION_CONTROLLER_TLS_SPKI_SHA256_BASE64: ${{ vars.ANDROID_MIGRATION_CONTROLLER_TLS_SPKI_SHA256_BASE64 }}
+      TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256: ${{ vars.TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256 }}
+      TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256: ${{ vars.TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256 }}
+      # The protected controller response is written here only after the fresh PI probe;
+      # repository code never fabricates or self-signs rollout evidence.
+      PRODUCTION_ROLLOUT_TRUST_SHA256: ${{ vars.PRODUCTION_ROLLOUT_TRUST_SHA256 }}
+      PRODUCTION_PI_CONTROLLER_ID: ${{ vars.PRODUCTION_PI_CONTROLLER_ID }}
+      PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN: ${{ vars.PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN }}
+      PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64: ${{ vars.PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64 }}
+      FUNDED_CANARY_CONTROLLER_ORIGIN: ${{ vars.FUNDED_CANARY_CONTROLLER_ORIGIN }}
+      FUNDED_CANARY_CONTROLLER_TLS_SPKI_SHA256_BASE64: ${{ vars.FUNDED_CANARY_CONTROLLER_TLS_SPKI_SHA256_BASE64 }}
+      # Independently reviewed environment pins. Never derive either value in
+      # this workflow from the checkout that they are intended to protect.
+      POLKAMARKT_EXTRINSIC_REVIEW_KEY_SHA256: ${{ vars.POLKAMARKT_EXTRINSIC_REVIEW_KEY_SHA256 }}
+      POLKAMARKT_EXTRINSIC_QUALIFIED_FIXTURE_SHA256: ${{ vars.POLKAMARKT_EXTRINSIC_QUALIFIED_FIXTURE_SHA256 }}
+      POLKAMARKT_IOS_REPOSITORY: ${{ vars.POLKAMARKT_IOS_REPOSITORY }}
+      POLKAMARKT_IOS_SOURCE_REVISION: ${{ vars.POLKAMARKT_IOS_SOURCE_REVISION }}
+      POLKAMARKT_IOS_SOURCE_ROOT: ${{ github.workspace }}/.cross-platform/sora-ios
+      POLKAMARKT_IOS_FIXTURE_PATH: ${{ github.workspace }}/.cross-platform/sora-ios/Fixtures/Modernization/polkamarkt-runtime-v130.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Initialize runner-scoped qualification paths
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$RUNNER_TEMP" = /* && -d "$RUNNER_TEMP" && ! -L "$RUNNER_TEMP" ]] || exit 1
+          [[ "$GITHUB_ENV" = /* && -f "$GITHUB_ENV" && ! -L "$GITHUB_ENV" ]] || exit 1
+          append_runner_temp_path() {
+            local name="$1"
+            local relative_path="$2"
+            [[ "$name" =~ ^[A-Z][A-Z0-9_]*$ ]] || exit 1
+            [[ "$relative_path" =~ ^[A-Za-z0-9._/-]+$ && "$relative_path" != *".."* ]] || exit 1
+            printf '%s=%s/%s\n' "$name" "$RUNNER_TEMP" "$relative_path" >> "$GITHUB_ENV"
+          }
+          append_runner_temp_path "PRODUCTION_CANDIDATE_RUN_RECEIPT_PATH" "sora-qualified-candidate-run.json"
+          append_runner_temp_path "PRODUCTION_CANDIDATE_ARTIFACT_RECEIPT_PATH" "sora-qualified-candidate-artifacts.json"
+          append_runner_temp_path "PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH" "sora-pi-production-raw-live-v1.json"
+          append_runner_temp_path "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" "sora-pi-production-capability-probe-v3.json"
+          append_runner_temp_path "PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH" "sora-pi-production-capability-probe-v3-signature.json"
+          append_runner_temp_path "PRODUCTION_PI_CANDIDATE_CONTROLLER_REQUEST_PATH" "sora-pi-production-candidate-controller-request-v1.json"
+          append_runner_temp_path "PRODUCTION_QUALIFICATION_RECEIPT_PATH" "sora-production-admission.json"
+          append_runner_temp_path "PRODUCTION_PRIMARY_BUILD_LOG_PATH" "sora-android-primary-build.log"
+          append_runner_temp_path "PRODUCTION_PRIMARY_SIGNING_VERIFICATION_PATH" "sora-android-primary-signing-verification.json"
+          append_runner_temp_path "PRODUCTION_REPRODUCED_AAB_PATH" "sora-android-reproduction/app/build/outputs/bundle/productionRelease/app-production-release.aab"
+          append_runner_temp_path "PRODUCTION_REPRODUCED_APK_PATH" "sora-android-reproduction/app/build/outputs/apk/production/release/app-production-release.apk"
+          append_runner_temp_path "PRODUCTION_REPRODUCED_MAPPING_PATH" "sora-android-reproduction/app/build/outputs/mapping/productionRelease/mapping.txt"
+          append_runner_temp_path "PRODUCTION_REPRODUCED_BUILD_LOG_PATH" "sora-android-reproduction-build.log"
+          append_runner_temp_path "PRODUCTION_REPRODUCED_SIGNING_VERIFICATION_PATH" "sora-android-reproduction-signing-verification.json"
+          append_runner_temp_path "ANDROID_DEPENDENCY_SIGNING_REVIEW_MANIFEST_PATH" "sora-android-dependency-signing-review/manifest.json"
+          append_runner_temp_path "ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_SIGNATURE_PATH" "sora-android-dependency-signing-review/producer.sig"
+          append_runner_temp_path "ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_SIGNATURE_PATH" "sora-android-dependency-signing-review/reviewer.sig"
+          append_runner_temp_path "ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_PUBLIC_KEY_PATH" "sora-android-dependency-signing-review/producer.pem"
+          append_runner_temp_path "ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_PUBLIC_KEY_PATH" "sora-android-dependency-signing-review/reviewer.pem"
+          append_runner_temp_path "ANDROID_DEPENDENCY_SIGNING_REVIEW_ADMISSION_PATH" "sora-android-dependency-signing-review/admission.json"
+          append_runner_temp_path "ANDROID_MIGRATION_CONTROLLER_ENVELOPE_PATH" "sora-android-migration-controller-envelope-v1.json"
+          append_runner_temp_path "ANDROID_MIGRATION_CONTROLLER_EVIDENCE_ROOT" "sora-android-migration-controller-evidence-v1"
+          append_runner_temp_path "ANDROID_MIGRATION_CONTROLLER_EXTRACTION_RECEIPT_PATH" "sora-android-migration-controller-extraction-v1.json"
+          append_runner_temp_path "TAIRA_DEPLOYMENT_MANIFEST_PATH" "sora-taira-deployment/manifest.json"
+          append_runner_temp_path "TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_PATH" "sora-taira-deployment/operator.sig"
+          append_runner_temp_path "TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_PATH" "sora-taira-deployment/reviewer.sig"
+          append_runner_temp_path "TAIRA_DEPLOYMENT_OPERATOR_PUBLIC_KEY_PATH" "sora-taira-deployment/operator.pem"
+          append_runner_temp_path "TAIRA_DEPLOYMENT_REVIEWER_PUBLIC_KEY_PATH" "sora-taira-deployment/reviewer.pem"
+          append_runner_temp_path "TAIRA_DEPLOYMENT_ADMISSION_RECEIPT_PATH" "sora-taira-deployment/admission.json"
+          append_runner_temp_path "PRODUCTION_ROLLOUT_EVIDENCE_PATH" "sora-production-rollout-evidence.json"
+          append_runner_temp_path "FUNDED_CANARY_CONTROLLER_BUNDLE_PATH" "sora-funded-canary-controller-bundle-v1.tar"
+          append_runner_temp_path "FUNDED_CANARY_CONTROLLER_EVIDENCE_ROOT" "sora-funded-canary-controller-evidence-v1"
+          append_runner_temp_path "FUNDED_CANARY_CONTROLLER_EXTRACTION_RECEIPT_PATH" "sora-funded-canary-controller-extraction-v1.json"
+
+      - name: Admit independently signed dependency and signing review
+        env:
+          ANDROID_DEPENDENCY_SIGNING_REVIEW_MANIFEST_BASE64: ${{ secrets.ANDROID_DEPENDENCY_SIGNING_REVIEW_MANIFEST_BASE64 }}
+          ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_SIGNATURE_BASE64: ${{ secrets.ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_SIGNATURE_BASE64 }}
+          ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_SIGNATURE_BASE64: ${{ secrets.ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_SIGNATURE_BASE64 }}
+          ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_PUBLIC_KEY_BASE64: ${{ secrets.ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_PUBLIC_KEY_BASE64 }}
+          ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_PUBLIC_KEY_BASE64: ${{ secrets.ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_PUBLIC_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_KEY_SHA256" =~ ^[0-9a-f]{64}$ && ! "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_KEY_SHA256" =~ ^0+$ ]] || exit 1
+          [[ "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_KEY_SHA256" =~ ^[0-9a-f]{64}$ && ! "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_KEY_SHA256" =~ ^0+$ ]] || exit 1
+          [[ "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_KEY_SHA256" != "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_KEY_SHA256" ]] || exit 1
+          [[ "$ANDROID_DEPENDENCY_SIGNING_REVIEW_SEQUENCE_NUMBER" =~ ^[1-9][0-9]{0,11}$ ]] || exit 1
+          [[ "$ANDROID_DEPENDENCY_SIGNING_REVIEW_SOURCE_REVISION" =~ ^[0-9a-f]{40}$ && "$ANDROID_DEPENDENCY_SIGNING_REVIEW_SOURCE_REVISION" = "$GITHUB_SHA" ]] || exit 1
+          [[ "$ANDROID_DEPENDENCY_SIGNING_REVIEW_CONTRACT_SHA256" =~ ^[0-9a-f]{64}$ && ! "$ANDROID_DEPENDENCY_SIGNING_REVIEW_CONTRACT_SHA256" =~ ^0+$ ]] || exit 1
+          for value in \
+            ANDROID_DEPENDENCY_SIGNING_REVIEW_MANIFEST_BASE64 \
+            ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_SIGNATURE_BASE64 \
+            ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_SIGNATURE_BASE64 \
+            ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_PUBLIC_KEY_BASE64 \
+            ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_PUBLIC_KEY_BASE64; do
+            [[ -n "${!value}" && "${!value}" =~ ^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$ ]] || exit 1
+          done
+          install -d -m 700 "$RUNNER_TEMP/sora-android-dependency-signing-review"
+          printf '%s' "$ANDROID_DEPENDENCY_SIGNING_REVIEW_MANIFEST_BASE64" | base64 --decode > "$ANDROID_DEPENDENCY_SIGNING_REVIEW_MANIFEST_PATH"
+          printf '%s' "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_SIGNATURE_BASE64" | base64 --decode > "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_SIGNATURE_PATH"
+          printf '%s' "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_SIGNATURE_BASE64" | base64 --decode > "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_SIGNATURE_PATH"
+          printf '%s' "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_PUBLIC_KEY_BASE64" | base64 --decode > "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_PUBLIC_KEY_PATH"
+          printf '%s' "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_PUBLIC_KEY_BASE64" | base64 --decode > "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_PUBLIC_KEY_PATH"
+          chmod 600 \
+            "$ANDROID_DEPENDENCY_SIGNING_REVIEW_MANIFEST_PATH" \
+            "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_SIGNATURE_PATH" \
+            "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_SIGNATURE_PATH" \
+            "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_PUBLIC_KEY_PATH" \
+            "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_PUBLIC_KEY_PATH"
+          review_epoch="$(date +%s)"
+          export ANDROID_DEPENDENCY_SIGNING_REVIEW_EVALUATION_EPOCH_SECONDS="$review_epoch"
+          node scripts/verify-android-dependency-signing-review.mjs \
+            > "$ANDROID_DEPENDENCY_SIGNING_REVIEW_ADMISSION_PATH"
+          chmod 600 "$ANDROID_DEPENDENCY_SIGNING_REVIEW_ADMISSION_PATH"
+          echo "ANDROID_DEPENDENCY_SIGNING_REVIEW_EVALUATION_EPOCH_SECONDS=$review_epoch" >> "$GITHUB_ENV"
+
+      - name: Dependency provenance preflight
+        run: node scripts/verify-production-modernization.mjs --dependency-preflight
+
+      - name: Admit operator-signed Taira epoch mapping
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        env:
+          TAIRA_DEPLOYMENT_MANIFEST_BASE64: ${{ secrets.TAIRA_DEPLOYMENT_MANIFEST_BASE64 }}
+          TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_BASE64: ${{ secrets.TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_BASE64 }}
+          TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_BASE64: ${{ secrets.TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_BASE64 }}
+          TAIRA_DEPLOYMENT_OPERATOR_PUBLIC_KEY_BASE64: ${{ secrets.TAIRA_DEPLOYMENT_OPERATOR_PUBLIC_KEY_BASE64 }}
+          TAIRA_DEPLOYMENT_REVIEWER_PUBLIC_KEY_BASE64: ${{ secrets.TAIRA_DEPLOYMENT_REVIEWER_PUBLIC_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          install -d -m 700 "$RUNNER_TEMP/sora-taira-deployment"
+          for value in \
+            TAIRA_DEPLOYMENT_MANIFEST_BASE64 \
+            TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_BASE64 \
+            TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_BASE64 \
+            TAIRA_DEPLOYMENT_OPERATOR_PUBLIC_KEY_BASE64 \
+            TAIRA_DEPLOYMENT_REVIEWER_PUBLIC_KEY_BASE64; do
+            [[ -n "${!value}" && "${!value}" =~ ^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$ ]] || {
+              echo "protected Taira deployment input is missing or non-canonical" >&2
+              exit 1
+            }
+          done
+          printf '%s' "$TAIRA_DEPLOYMENT_MANIFEST_BASE64" | base64 --decode > "$TAIRA_DEPLOYMENT_MANIFEST_PATH"
+          printf '%s' "$TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_BASE64" | base64 --decode > "$TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_PATH"
+          printf '%s' "$TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_BASE64" | base64 --decode > "$TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_PATH"
+          printf '%s' "$TAIRA_DEPLOYMENT_OPERATOR_PUBLIC_KEY_BASE64" | base64 --decode > "$TAIRA_DEPLOYMENT_OPERATOR_PUBLIC_KEY_PATH"
+          printf '%s' "$TAIRA_DEPLOYMENT_REVIEWER_PUBLIC_KEY_BASE64" | base64 --decode > "$TAIRA_DEPLOYMENT_REVIEWER_PUBLIC_KEY_PATH"
+          chmod 600 \
+            "$TAIRA_DEPLOYMENT_MANIFEST_PATH" \
+            "$TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_PATH" \
+            "$TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_PATH" \
+            "$TAIRA_DEPLOYMENT_OPERATOR_PUBLIC_KEY_PATH" \
+            "$TAIRA_DEPLOYMENT_REVIEWER_PUBLIC_KEY_PATH"
+          RELEASE_EVALUATION_EPOCH_SECONDS="$(date +%s)"
+          export RELEASE_EVALUATION_EPOCH_SECONDS
+          node scripts/verify-taira-deployment-manifest.mjs > "$TAIRA_DEPLOYMENT_ADMISSION_RECEIPT_PATH"
+          chmod 600 "$TAIRA_DEPLOYMENT_ADMISSION_RECEIPT_PATH"
+          node --input-type=module - "$TAIRA_DEPLOYMENT_ADMISSION_RECEIPT_PATH" "$GITHUB_ENV" <<'NODE'
+          import { appendFileSync, readFileSync } from "node:fs";
+          const receipt = JSON.parse(readFileSync(process.argv[2], "utf8"));
+          const entries = {
+            TAIRA_DEPLOYMENT_MANIFEST_SHA256: receipt.manifestSha256,
+            TAIRA_DEPLOYMENT_MANIFEST_SEQUENCE_NUMBER: receipt.manifestSequenceNumber,
+            TAIRA_CURRENT_EPOCH: receipt.current.epoch,
+            TAIRA_CURRENT_CHAIN_ID: receipt.current.chainId,
+            TAIRA_CURRENT_GENESIS_SHA256: receipt.current.genesisSha256,
+            TAIRA_CURRENT_I105_DISCRIMINANT: receipt.current.i105Discriminant,
+            TAIRA_CURRENT_TORII_BASE_URL: receipt.current.toriiBaseUrl,
+            TAIRA_CURRENT_PUBLIC_MCP_ENDPOINT: receipt.current.publicNodeMcpEndpoint,
+            TAIRA_CURRENT_EXPLORER_BASE_URL: receipt.current.explorerBaseUrl,
+            TAIRA_RETIRED_EPOCH: receipt.retired.epoch,
+            TAIRA_RETIRED_CHAIN_ID: receipt.retired.chainId,
+            TAIRA_RETIRED_GENESIS_SHA256: receipt.retired.genesisSha256,
+            TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256: receipt.operatorKeySha256,
+            TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256: receipt.reviewerKeySha256,
+          };
+          for (const [key, value] of Object.entries(entries)) {
+            const rendered = String(value);
+            if (!/^[A-Za-z0-9._:/-]+$/.test(rendered) || rendered.includes("\n")) process.exit(1);
+            appendFileSync(process.argv[3], `${key}=${rendered}\n`, { encoding: "utf8" });
+          }
+          NODE
+
+      - name: Validate reviewed iOS parity source
+        env:
+          POLKAMARKT_IOS_READ_TOKEN: ${{ secrets.POLKAMARKT_IOS_READ_TOKEN }}
+        run: |
+          [[ -n "$POLKAMARKT_IOS_READ_TOKEN" ]] || {
+            echo "read-only iOS parity checkout token is missing" >&2
+            exit 1
+          }
+          [[ "$POLKAMARKT_IOS_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ && ! "$POLKAMARKT_IOS_REPOSITORY" =~ (^|/)\.{1,2}($|/) ]] || {
+            echo "protected iOS parity repository is missing or non-canonical" >&2
+            exit 1
+          }
+          [[ "$POLKAMARKT_IOS_SOURCE_REVISION" =~ ^[0-9a-f]{40}$ && ! "$POLKAMARKT_IOS_SOURCE_REVISION" =~ ^0+$ ]] || {
+            echo "protected iOS parity source revision is missing or non-canonical" >&2
+            exit 1
+          }
+
+      - name: Checkout reviewed iOS parity fixture
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: ${{ vars.POLKAMARKT_IOS_REPOSITORY }}
+          ref: ${{ vars.POLKAMARKT_IOS_SOURCE_REVISION }}
+          token: ${{ secrets.POLKAMARKT_IOS_READ_TOKEN }}
+          path: .cross-platform/sora-ios
+          persist-credentials: false
+          fetch-depth: 0
+          sparse-checkout: Fixtures/Modernization/polkamarkt-runtime-v130.json
+          sparse-checkout-cone-mode: false
+
+      - name: Bind iOS parity fixture to reviewed source
+        run: |
+          observed_revision="$(git -C "$GITHUB_WORKSPACE/.cross-platform/sora-ios" rev-parse --verify HEAD)"
+          [[ "$observed_revision" == "$POLKAMARKT_IOS_SOURCE_REVISION" ]] || {
+            echo "checked-out iOS parity source revision changed" >&2
+            exit 1
+          }
+          [[ -f "$POLKAMARKT_IOS_FIXTURE_PATH" && ! -L "$POLKAMARKT_IOS_FIXTURE_PATH" ]] || {
+            echo "reviewed iOS parity fixture is missing or symbolic" >&2
+            exit 1
+          }
+
+      - name: Validate immutable candidate reference
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        env:
+          CANDIDATE_RUN_ID: ${{ inputs.candidate_run_id }}
+        run: |
+          [[ "$PRODUCTION_ROLLOUT_TARGET_PERCENT" =~ ^(1|5|25|100)$ ]] || {
+            echo "rollout target must be exactly 1, 5, 25, or 100" >&2
+            exit 1
+          }
+          [[ "$CANDIDATE_RUN_ID" =~ ^[1-9][0-9]{0,14}$ ]] || {
+            echo "candidate_run_id is required for rollout and must be canonical decimal" >&2
+            exit 1
+          }
+
+      - name: Download immutable qualified candidate
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: sora-android-qualified-candidate
+          path: ${{ runner.temp }}/qualified-candidate
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.candidate_run_id }}
+
+      - name: Normalize downloaded package to owner-only inputs
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        run: |
+          set -euo pipefail
+          package_root="$RUNNER_TEMP/qualified-candidate"
+          [[ -d "$package_root" && ! -L "$package_root" ]] || exit 1
+          mapfile -d '' package_files < <(
+            find "$package_root" -mindepth 1 -maxdepth 1 -type f -print0
+          )
+          [[ ${#package_files[@]} -eq 30 ]] || exit 1
+          chmod 700 "$package_root"
+          chmod 600 "${package_files[@]}"
+
+      - name: Fetch immutable candidate provenance
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        env:
+          GITHUB_API_TOKEN: ${{ github.token }}
+        run: |
+          run_url="https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$PRODUCTION_CANDIDATE_RUN_ID"
+          curl \
+            --proto '=https' \
+            --tlsv1.2 \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --max-filesize 262144 \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer $GITHUB_API_TOKEN" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --output "$PRODUCTION_CANDIDATE_RUN_RECEIPT_PATH" \
+            "$run_url"
+          curl \
+            --proto '=https' \
+            --tlsv1.2 \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --max-filesize 262144 \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer $GITHUB_API_TOKEN" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --output "$PRODUCTION_CANDIDATE_ARTIFACT_RECEIPT_PATH" \
+            "$run_url/artifacts?per_page=100"
+
+      - name: Bind downloaded candidate to this source revision
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        run: |
+          source_file="$RUNNER_TEMP/qualified-candidate/source-revision.txt"
+          [[ -f "$source_file" && ! -L "$source_file" ]] || {
+            echo "qualified candidate source revision is missing" >&2
+            exit 1
+          }
+          mapfile -t source_lines < "$source_file"
+          [[ ${#source_lines[@]} -eq 1 && ${source_lines[0]} =~ ^[0-9a-f]{40}$ ]] || {
+            echo "qualified candidate source revision is non-canonical" >&2
+            exit 1
+          }
+          [[ "${source_lines[0]}" == "$GITHUB_SHA" ]] || {
+            echo "workflow source differs from the immutable candidate source" >&2
+            exit 1
+          }
+          {
+            printf '%s\n' "PRODUCTION_CANDIDATE_SOURCE_REVISION=${source_lines[0]}"
+            printf '%s\n' "PRODUCTION_CANDIDATE_AAB_PATH=$RUNNER_TEMP/qualified-candidate/candidate.aab"
+            printf '%s\n' "PRODUCTION_QUALIFICATION_RECEIPT_PATH=$RUNNER_TEMP/qualified-candidate/production-admission.json"
+            printf '%s\n' "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH=$RUNNER_TEMP/qualified-candidate/candidate-pi-receipt.json"
+            printf '%s\n' "PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH=$RUNNER_TEMP/qualified-candidate/candidate-pi-receipt-signature.json"
+          } >> "$GITHUB_ENV"
+
+      - name: Validate complete downloaded reproducibility package
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        env:
+          PRODUCTION_DOWNLOADED_CANDIDATE_PACKAGE_ROOT: ${{ runner.temp }}/qualified-candidate
+        run: |
+          node scripts/verify-downloaded-android-qualified-candidate-package.mjs \
+            > "$RUNNER_TEMP/sora-android-downloaded-candidate-validation.json"
+
+      - name: Live PI production contract (read-only)
+        run: node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH"
+
+      - name: Static production source gates
+        run: node scripts/verify-production-modernization.mjs
+
+      - name: Production rollout v3 envelope contract
+        run: node scripts/test-production-rollout-v3-contract.mjs
+
+      - name: Production PI raw-live and signed candidate v3 contracts
+        run: node scripts/test-production-pi-receipt-v3.mjs
+
+      - name: Android migration v7/v2 evidence contracts
+        run: |
+          node scripts/test-android-migration-raw-evidence-v1.mjs
+          node scripts/test-android-migration-qualification-v7-contract.mjs
+          node scripts/test-android-migration-controller-envelope-v1.mjs
+
+      - name: Taira deployment epoch manifest contract
+        run: node scripts/test-taira-deployment-manifest-v1.mjs
+
+      - name: Reproducible candidate package and signing contracts
+        run: |
+          node scripts/test-android-dependency-signing-review-v1.mjs
+          node scripts/test-android-candidate-signing-verification-v1.mjs
+          node scripts/test-android-qualified-candidate-package-v1.mjs
+
+      - name: Funded Nexus canary v4 hermetic contract
+        run: |
+          node scripts/test-funded-canary-v4-contract.mjs
+          node scripts/test-funded-canary-controller-bundle-v1.mjs
+
+      - name: Polkamarkt merger contract regression
+        run: node scripts/test-polkamarkt-extrinsic-qualification.mjs
+
+      - name: Set up JDK
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+
+      - name: Install pinned Android platform tools
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Set up Gradle
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: Enable KVM access for Android emulators
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -e /dev/kvm ]]; then
+            echo "/dev/kvm is unavailable; keeping the emulator runner's software fallback."
+            exit 0
+          fi
+          [[ -c /dev/kvm && ! -L /dev/kvm ]] || {
+            echo "/dev/kvm exists but is not a direct character device" >&2
+            exit 1
+          }
+          kvm_rules_dir=/etc/udev/rules.d
+          kvm_rule_path="$kvm_rules_dir/99-kvm4all.rules"
+          [[ -d "$kvm_rules_dir" && ! -L "$kvm_rules_dir" ]] || {
+            echo "KVM udev rules directory is missing or unsafe: $kvm_rules_dir" >&2
+            exit 1
+          }
+          if [[ -e "$kvm_rule_path" ]]; then
+            [[ -f "$kvm_rule_path" && ! -L "$kvm_rule_path" ]] || {
+              echo "KVM udev rule path is not a regular file: $kvm_rule_path" >&2
+              exit 1
+            }
+          fi
+          kvm_rule='KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"'
+          printf '%s\n' "$kvm_rule" | sudo tee "$kvm_rule_path" >/dev/null
+          [[ "$(sudo cat "$kvm_rule_path")" == "$kvm_rule" ]] || {
+            echo "KVM udev rule content did not round-trip exactly" >&2
+            exit 1
+          }
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo chmod 0666 /dev/kvm
+          [[ "$(stat -c '%a' /dev/kvm)" == 666 ]] || {
+            echo "/dev/kvm mode did not converge to the reviewed udev rule" >&2
+            exit 1
+          }
+          [[ -r /dev/kvm && -w /dev/kvm ]] || {
+            echo "/dev/kvm is not readable and writable after udev activation" >&2
+            exit 1
+          }
+
+      - name: Prepare independent reproduction checkout
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          repro_root="$RUNNER_TEMP/sora-android-reproduction"
+          test ! -e "$repro_root"
+          git clone --no-local --no-checkout "$GITHUB_WORKSPACE" "$repro_root"
+          git -C "$repro_root" checkout --detach "$GITHUB_SHA"
+          test "$(git -C "$repro_root" rev-parse --verify HEAD)" = "$GITHUB_SHA"
+          test -z "$(git -C "$repro_root" status --porcelain=v1 --untracked-files=all)"
+
+      - name: Reproduce reviewed Room 74, 75, 76, and 77 schemas
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          cp core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/74.json "$RUNNER_TEMP/AppDatabase-74.reviewed.json"
+          cp core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/75.json "$RUNNER_TEMP/AppDatabase-75.reviewed.json"
+          cp core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/76.json "$RUNNER_TEMP/AppDatabase-76.reviewed.json"
+          cp core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/77.json "$RUNNER_TEMP/AppDatabase-77.reviewed.json"
+          node scripts/verify-production-modernization.mjs --dependency-preflight
+          ./gradlew \
+            :core_db:kspProductionDebugKotlin \
+            --stacktrace --no-daemon --no-parallel
+          node scripts/verify-production-modernization.mjs --dependency-preflight
+          ./gradlew \
+            :core_db:kspProductionDebugAndroidTestKotlin \
+            --stacktrace --no-daemon --no-parallel
+          cmp "$RUNNER_TEMP/AppDatabase-74.reviewed.json" core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/74.json
+          cmp "$RUNNER_TEMP/AppDatabase-75.reviewed.json" core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/75.json
+          cmp "$RUNNER_TEMP/AppDatabase-76.reviewed.json" core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/76.json
+          cmp "$RUNNER_TEMP/AppDatabase-77.reviewed.json" core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/77.json
+          cmp \
+            core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/74.json \
+            core_db/schemas/jp.co.soramitsu.core_db.AppDatabaseV74SchemaFixture/74.json
+          cmp \
+            core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/75.json \
+            core_db/schemas/jp.co.soramitsu.core_db.AppDatabaseV75SchemaFixture/75.json
+          cmp \
+            core_db/schemas/jp.co.soramitsu.core_db.AppDatabase/76.json \
+            core_db/schemas/jp.co.soramitsu.core_db.AppDatabaseV76SchemaFixture/76.json
+
+      - name: Retained Room and encrypted-wallet backup matrix
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        # This reruns only the source-side fixture tests. It does not consume retained
+        # release-produced snapshots, preserve raw transcripts, or create/upgrade any signed
+        # migration evidence or receipt.
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: |
+            node scripts/verify-production-modernization.mjs --dependency-preflight
+            ./gradlew \
+              :common:connectedProductionDebugAndroidTest \
+              :sorasubstrate:connectedProductionDebugAndroidTest \
+              --stacktrace --no-daemon --no-parallel
+            node scripts/verify-production-modernization.mjs --dependency-preflight
+            ./gradlew \
+              :core_db:connectedProductionDebugAndroidTest \
+              -Pandroid.testInstrumentationRunnerArguments.class=jp.co.soramitsu.core_db.WalletIdentityMigration75Test,jp.co.soramitsu.core_db.WalletUpgradeBackupTest \
+              --stacktrace --no-daemon --no-parallel
+            bash scripts/run-encrypted-wallet-upgrade-qualification.sh
+            bash scripts/run-migration-manager-production-path-qualification.sh
+
+      - name: Modernization unit contracts
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          node scripts/verify-production-modernization.mjs --dependency-preflight
+          ./gradlew \
+            :app:testProductionDebugUnitTest \
+            :common:testProductionDebugUnitTest \
+            :common_wallet:testProductionDebugUnitTest \
+            :core_db:testProductionDebugUnitTest \
+            :demeter:testProductionDebugUnitTest \
+            :feature_account_api:testProductionDebugUnitTest \
+            :feature_account_impl:testProductionDebugUnitTest \
+            :feature_assets_api:testProductionDebugUnitTest \
+            :feature_assets_impl:testProductionDebugUnitTest \
+            :feature_blockexplorer_api:testProductionDebugUnitTest \
+            :feature_blockexplorer_impl:testProductionDebugUnitTest \
+            :feature_ecosystem_impl:testProductionDebugUnitTest \
+            :feature_ethereum_api:testProductionDebugUnitTest \
+            :feature_main_api:testProductionDebugUnitTest \
+            :feature_main_impl:testProductionDebugUnitTest \
+            :feature_multiaccount_api:testProductionDebugUnitTest \
+            :feature_multiaccount_impl:testProductionDebugUnitTest \
+            :feature_polkaswap_api:testProductionDebugUnitTest \
+            :feature_polkaswap_impl:testProductionDebugUnitTest \
+            :feature_referral_api:testProductionDebugUnitTest \
+            :feature_referral_impl:testProductionDebugUnitTest \
+            :feature_select_node_api:testProductionDebugUnitTest \
+            :feature_select_node_impl:testProductionDebugUnitTest \
+            :feature_sora_card_api:testProductionDebugUnitTest \
+            :feature_sora_card_impl:testProductionDebugUnitTest \
+            :feature_wallet_api:testProductionDebugUnitTest \
+            :feature_wallet_impl:testProductionDebugUnitTest \
+            :network:testProductionDebugUnitTest \
+            :sorasubstrate:testProductionDebugUnitTest \
+            :test_data:testProductionDebugUnitTest \
+            --stacktrace --no-daemon
+
+      - name: Qualified production bundle
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        env:
+          CI_KEYSTORE_PATH: ${{ secrets.CI_KEYSTORE_PATH }}
+          CI_KEYSTORE_PASS: ${{ secrets.CI_KEYSTORE_PASS }}
+          CI_KEYSTORE_KEY_ALIAS: ${{ secrets.CI_KEYSTORE_KEY_ALIAS }}
+          CI_KEYSTORE_KEY_PASS: ${{ secrets.CI_KEYSTORE_KEY_PASS }}
+        run: |
+          set -o pipefail
+          node scripts/verify-production-modernization.mjs --dependency-preflight
+          ./gradlew \
+            :app:verifyProductionReleaseSigning \
+            :app:testProductionReleaseUnitTest \
+            :app:lintProductionRelease \
+            :app:assembleProductionRelease \
+            :app:bundleProductionRelease \
+            --stacktrace --no-daemon 2>&1 | tee "$PRODUCTION_PRIMARY_BUILD_LOG_PATH"
+          test -s "$PRODUCTION_CANDIDATE_AAB_PATH"
+          test ! -L "$PRODUCTION_CANDIDATE_AAB_PATH"
+          test -s "$PRODUCTION_CANDIDATE_MAPPING_PATH"
+          test ! -L "$PRODUCTION_CANDIDATE_MAPPING_PATH"
+          test -s "$PRODUCTION_CANDIDATE_APK_PATH"
+          test ! -L "$PRODUCTION_CANDIDATE_APK_PATH"
+          test -s "$PRODUCTION_PRIMARY_BUILD_LOG_PATH"
+          test ! -L "$PRODUCTION_PRIMARY_BUILD_LOG_PATH"
+
+      - name: Verify exact primary candidate signing identity
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          PRODUCTION_JARSIGNER_PATH="$(realpath "$JAVA_HOME/bin/jarsigner")" \
+          PRODUCTION_KEYTOOL_PATH="$(realpath "$JAVA_HOME/bin/keytool")" \
+          PRODUCTION_APKSIGNER_PATH="$(realpath "$ANDROID_HOME/build-tools/36.0.0/apksigner")" \
+            node scripts/verify-android-candidate-signing.mjs \
+              > "$PRODUCTION_PRIMARY_SIGNING_VERIFICATION_PATH"
+          observed_upload_certificate="$(
+            node -e \
+              'const fs=require("node:fs");const v=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));process.stdout.write(v.signingIdentity.observedUploadCertificateSha256);' \
+              "$PRODUCTION_PRIMARY_SIGNING_VERIFICATION_PATH"
+          )"
+          [[ "$observed_upload_certificate" =~ ^[0-9a-f]{64}$ ]] || {
+            echo "observed upload certificate digest is invalid" >&2
+            exit 1
+          }
+          echo "PRODUCTION_OBSERVED_UPLOAD_CERTIFICATE_SHA256=$observed_upload_certificate" >> "$GITHUB_ENV"
+
+      - name: Independently rebuild and compare production candidate
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        env:
+          CI_KEYSTORE_PATH: ${{ secrets.CI_KEYSTORE_PATH }}
+          CI_KEYSTORE_PASS: ${{ secrets.CI_KEYSTORE_PASS }}
+          CI_KEYSTORE_KEY_ALIAS: ${{ secrets.CI_KEYSTORE_KEY_ALIAS }}
+          CI_KEYSTORE_KEY_PASS: ${{ secrets.CI_KEYSTORE_KEY_PASS }}
+        run: |
+          set -o pipefail
+          repro_root="$RUNNER_TEMP/sora-android-reproduction"
+          export GRADLE_USER_HOME="$RUNNER_TEMP/sora-android-reproduction-gradle-home"
+          cd "$repro_root"
+          node scripts/verify-production-modernization.mjs --dependency-preflight
+          ./gradlew \
+            :app:verifyProductionReleaseSigning \
+            :app:testProductionReleaseUnitTest \
+            :app:lintProductionRelease \
+            :app:assembleProductionRelease \
+            :app:bundleProductionRelease \
+            --stacktrace --no-daemon 2>&1 | tee "$PRODUCTION_REPRODUCED_BUILD_LOG_PATH"
+          test -s "$PRODUCTION_REPRODUCED_AAB_PATH"
+          test ! -L "$PRODUCTION_REPRODUCED_AAB_PATH"
+          test -s "$PRODUCTION_REPRODUCED_APK_PATH"
+          test ! -L "$PRODUCTION_REPRODUCED_APK_PATH"
+          test -s "$PRODUCTION_REPRODUCED_MAPPING_PATH"
+          test ! -L "$PRODUCTION_REPRODUCED_MAPPING_PATH"
+          test -s "$PRODUCTION_REPRODUCED_BUILD_LOG_PATH"
+          test ! -L "$PRODUCTION_REPRODUCED_BUILD_LOG_PATH"
+          PRODUCTION_CANDIDATE_AAB_PATH="$PRODUCTION_REPRODUCED_AAB_PATH" \
+          PRODUCTION_CANDIDATE_APK_PATH="$PRODUCTION_REPRODUCED_APK_PATH" \
+          PRODUCTION_JARSIGNER_PATH="$(realpath "$JAVA_HOME/bin/jarsigner")" \
+          PRODUCTION_KEYTOOL_PATH="$(realpath "$JAVA_HOME/bin/keytool")" \
+          PRODUCTION_APKSIGNER_PATH="$(realpath "$ANDROID_HOME/build-tools/36.0.0/apksigner")" \
+            node scripts/verify-android-candidate-signing.mjs \
+              > "$PRODUCTION_REPRODUCED_SIGNING_VERIFICATION_PATH"
+          cmp "$PRODUCTION_CANDIDATE_AAB_PATH" "$PRODUCTION_REPRODUCED_AAB_PATH"
+          cmp "$PRODUCTION_CANDIDATE_APK_PATH" "$PRODUCTION_REPRODUCED_APK_PATH"
+          cmp "$PRODUCTION_CANDIDATE_MAPPING_PATH" "$PRODUCTION_REPRODUCED_MAPPING_PATH"
+          git diff --exit-code
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          git -C "$GITHUB_WORKSPACE" diff --exit-code
+          test -z "$(git -C "$GITHUB_WORKSPACE" status --porcelain=v1 --untracked-files=no)"
+
+      - name: Minified signed production APK device smoke
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: |
+            release_apk="app/build/outputs/apk/production/release/app-production-release.apk"
+            test -s "$release_apk"
+            test ! -L "$release_apk"
+            "$ANDROID_HOME/build-tools/36.0.0/apksigner" \
+              verify --verbose --print-certs "$release_apk"
+            adb install --no-streaming "$release_apk"
+            adb shell am force-stop jp.co.soramitsu.sora
+            adb shell am start -W \
+              -n jp.co.soramitsu.sora/.splash.presentation.SplashActivity
+            adb shell pidof jp.co.soramitsu.sora
+
+      - name: Obtain exact retained-device migration evidence
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        env:
+          ANDROID_MIGRATION_CONTROLLER_TOKEN: ${{ secrets.ANDROID_MIGRATION_CONTROLLER_TOKEN }}
+        run: |
+          [[ "$ANDROID_MIGRATION_CONTROLLER_ORIGIN" =~ ^https://[A-Za-z0-9.-]+(:[1-9][0-9]{0,4})?$ ]] || {
+            echo "protected Android migration controller origin is missing or invalid" >&2
+            exit 1
+          }
+          [[ "$ANDROID_MIGRATION_CONTROLLER_TLS_SPKI_SHA256_BASE64" =~ ^[A-Za-z0-9+/]{43}=$ ]] || {
+            echo "protected Android migration controller TLS SPKI pin is missing or invalid" >&2
+            exit 1
+          }
+          [[ -n "$ANDROID_MIGRATION_CONTROLLER_TOKEN" && ${#ANDROID_MIGRATION_CONTROLLER_TOKEN} -le 4096 && "$ANDROID_MIGRATION_CONTROLLER_TOKEN" != *$'\r'* && "$ANDROID_MIGRATION_CONTROLLER_TOKEN" != *$'\n'* ]] || {
+            echo "protected Android migration controller token is missing or unsafe" >&2
+            exit 1
+          }
+          [[ "$ANDROID_MIGRATION_QUALIFICATION_RUN_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ && "$ANDROID_MIGRATION_QUALIFICATION_RUN_ID" != 00000000-0000-0000-0000-000000000000 ]] || {
+            echo "protected Android migration run ID is missing or invalid" >&2
+            exit 1
+          }
+          [[ "$ANDROID_MIGRATION_QUALIFICATION_SEQUENCE_NUMBER" =~ ^[1-9][0-9]{0,14}$ ]] || {
+            echo "protected Android migration sequence is missing or invalid" >&2
+            exit 1
+          }
+          [[ "$ANDROID_MIGRATION_QUALIFICATION_APP_BUILD_IDENTITY_SHA256" =~ ^[0-9a-f]{64}$ && ! "$ANDROID_MIGRATION_QUALIFICATION_APP_BUILD_IDENTITY_SHA256" =~ ^0+$ ]] || {
+            echo "protected Android migration app-build identity is missing or invalid" >&2
+            exit 1
+          }
+          candidate_sha256="$(sha256sum "$PRODUCTION_CANDIDATE_AAB_PATH" | awk '{print $1}')"
+          candidate_bytes="$(stat --format='%s' "$PRODUCTION_CANDIDATE_AAB_PATH")"
+          [[ "$candidate_sha256" =~ ^[0-9a-f]{64}$ && "$candidate_bytes" =~ ^[1-9][0-9]{0,9}$ ]] || {
+            echo "candidate identity is invalid before retained-device evidence handoff" >&2
+            exit 1
+          }
+          umask 077
+          # Retrieval is single-shot and candidate/run idempotent. The protected
+          # authority owns retained snapshots, devices, signing, and review keys.
+          curl \
+            --proto '=https' \
+            --tlsv1.2 \
+            --pinnedpubkey "sha256//$ANDROID_MIGRATION_CONTROLLER_TLS_SPKI_SHA256_BASE64" \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --connect-timeout 15 \
+            --max-time 7200 \
+            --max-filesize 33554432 \
+            --request POST \
+            --header "Authorization: Bearer $ANDROID_MIGRATION_CONTROLLER_TOKEN" \
+            --header 'Content-Type: application/vnd.android.aab' \
+            --header 'Accept: application/vnd.sora.android-migration-envelope-v1+json' \
+            --header 'X-SORA-Contract: sora-android-migration-controller-v1' \
+            --header "X-SORA-Candidate-SHA256: $candidate_sha256" \
+            --header "X-SORA-Candidate-Bytes: $candidate_bytes" \
+            --header "X-SORA-Source-Revision: $PRODUCTION_CANDIDATE_SOURCE_REVISION" \
+            --header "X-SORA-Migration-Run-ID: $ANDROID_MIGRATION_QUALIFICATION_RUN_ID" \
+            --header "X-SORA-Migration-Sequence: $ANDROID_MIGRATION_QUALIFICATION_SEQUENCE_NUMBER" \
+            --header "X-SORA-App-Build-Identity-SHA256: $ANDROID_MIGRATION_QUALIFICATION_APP_BUILD_IDENTITY_SHA256" \
+            --header "X-SORA-Idempotency-Key: android-migration-$candidate_sha256-$ANDROID_MIGRATION_QUALIFICATION_RUN_ID" \
+            --data-binary "@$PRODUCTION_CANDIDATE_AAB_PATH" \
+            --output "$ANDROID_MIGRATION_CONTROLLER_ENVELOPE_PATH" \
+            "$ANDROID_MIGRATION_CONTROLLER_ORIGIN/v1/android/migration-qualification/evidence-envelope"
+
+      - name: Extract and bind retained-device migration evidence
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          node scripts/extract-android-migration-controller-envelope.mjs \
+            > "$ANDROID_MIGRATION_CONTROLLER_EXTRACTION_RECEIPT_PATH"
+          evidence_root="$ANDROID_MIGRATION_CONTROLLER_EVIDENCE_ROOT"
+          qualification_root="$GITHUB_WORKSPACE/docs/modernization/qualification"
+          for file in \
+            android-migration-matrix.json \
+            android-migration-evidence.json \
+            android-migration-trust.json \
+            android-migration-retained-snapshot-manifest.json \
+            android-migration-test-results.json \
+            android-migration-encrypted-storage-evidence.json \
+            android-migration-device-execution-evidence.json \
+            android-migration-raw-execution-evidence.json
+          do
+            test ! -e "$qualification_root/$file"
+            install -m 400 "$evidence_root/$file" "$qualification_root/$file"
+          done
+          {
+            echo "ANDROID_MIGRATION_QUALIFICATION_RECEIPT_SIGNATURE_PATH=$evidence_root/android-migration-receipt-signature.der"
+            echo "ANDROID_MIGRATION_QUALIFICATION_EVIDENCE_PRODUCER_SIGNATURE_PATH=$evidence_root/android-migration-evidence-producer-signature.der"
+            echo "ANDROID_MIGRATION_QUALIFICATION_EVIDENCE_REVIEWER_SIGNATURE_PATH=$evidence_root/android-migration-evidence-reviewer-signature.der"
+            echo "ANDROID_MIGRATION_QUALIFICATION_DEVICE_PRODUCER_PUBLIC_KEY_PATH=$evidence_root/device-producer-public-key.pem"
+            echo "ANDROID_MIGRATION_QUALIFICATION_REVIEWER_PUBLIC_KEY_PATH=$evidence_root/reviewer-public-key.pem"
+          } >> "$GITHUB_ENV"
+
+      - name: Refresh live PI contract before funded canaries
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH"
+
+      - name: Record explicit pre-canary evaluation epoch
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: echo "PRODUCTION_RELEASE_EVALUATED_AT_EPOCH_SECONDS=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Exact pre-canary prerequisite gate
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: node scripts/verify-production-modernization.mjs --pre-canary
+
+      - name: Run protected candidate-bound funded canaries
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        env:
+          FUNDED_CANARY_CONTROLLER_TOKEN: ${{ secrets.FUNDED_CANARY_CONTROLLER_TOKEN }}
+        run: |
+          [[ "$FUNDED_CANARY_CONTROLLER_ORIGIN" =~ ^https://[A-Za-z0-9.-]+(:[1-9][0-9]{0,4})?$ ]] || {
+            echo "protected funded-canary controller origin is missing or invalid" >&2
+            exit 1
+          }
+          [[ "$FUNDED_CANARY_CONTROLLER_TLS_SPKI_SHA256_BASE64" =~ ^[A-Za-z0-9+/]{43}=$ ]] || {
+            echo "protected funded-canary controller TLS SPKI pin is missing or invalid" >&2
+            exit 1
+          }
+          [[ -n "$FUNDED_CANARY_CONTROLLER_TOKEN" && ${#FUNDED_CANARY_CONTROLLER_TOKEN} -le 4096 && "$FUNDED_CANARY_CONTROLLER_TOKEN" != *$'\r'* && "$FUNDED_CANARY_CONTROLLER_TOKEN" != *$'\n'* ]] || {
+            echo "protected funded-canary controller token is missing or unsafe" >&2
+            exit 1
+          }
+          candidate_sha256="$(sha256sum "$PRODUCTION_CANDIDATE_AAB_PATH" | awk '{print $1}')"
+          candidate_bytes="$(stat --format='%s' "$PRODUCTION_CANDIDATE_AAB_PATH")"
+          [[ "$candidate_sha256" =~ ^[0-9a-f]{64}$ && "$candidate_bytes" =~ ^[1-9][0-9]{0,9}$ ]] || {
+            echo "candidate identity is invalid before funded canary handoff" >&2
+            exit 1
+          }
+          umask 077
+          # This mutation-capable request is deliberately single-shot. The protected
+          # controller and its signed consumption ledger enforce no duplicate submission.
+          curl \
+            --proto '=https' \
+            --tlsv1.2 \
+            --pinnedpubkey "sha256//$FUNDED_CANARY_CONTROLLER_TLS_SPKI_SHA256_BASE64" \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --connect-timeout 15 \
+            --max-time 7200 \
+            --max-filesize 5368709120 \
+            --request POST \
+            --header "Authorization: Bearer $FUNDED_CANARY_CONTROLLER_TOKEN" \
+            --header 'Content-Type: application/vnd.android.aab' \
+            --header 'Accept: application/x-ustar' \
+            --header 'X-SORA-Contract: sora-android-funded-canary-controller-v1' \
+            --header "X-SORA-Candidate-SHA256: $candidate_sha256" \
+            --header "X-SORA-Candidate-Bytes: $candidate_bytes" \
+            --header "X-SORA-Source-Revision: $PRODUCTION_CANDIDATE_SOURCE_REVISION" \
+            --header "X-SORA-Idempotency-Key: android-$candidate_sha256" \
+            --header "X-SORA-Qualification-Run: $GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --data-binary "@$PRODUCTION_CANDIDATE_AAB_PATH" \
+            --output "$FUNDED_CANARY_CONTROLLER_BUNDLE_PATH" \
+            "$FUNDED_CANARY_CONTROLLER_ORIGIN/v1/android/funded-canary/evidence-bundle"
+
+      - name: Extract exact funded-canary evidence bundle
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          node scripts/extract-funded-canary-controller-bundle.mjs \
+            > "$FUNDED_CANARY_CONTROLLER_EXTRACTION_RECEIPT_PATH"
+          evidence_root="$FUNDED_CANARY_CONTROLLER_EVIDENCE_ROOT"
+          {
+            echo "PRODUCTION_CANDIDATE_APKS_PATH=$evidence_root/candidate.apks"
+            echo "PRODUCTION_BUNDLETOOL_JAR_PATH=$evidence_root/bundletool.jar"
+            echo "IROHA_REVIEWED_FINALITY_VERIFIER_ARTIFACT_PATH=$evidence_root/iroha-finality-verifier.artifact"
+            echo "IROHA_REVIEWED_FINALITY_PLATFORM_ARTIFACT_PATH=$evidence_root/iroha-finality-platform.artifact"
+            echo "IROHA_REVIEWED_FINALITY_NATIVE_CANARY_RECEIPT_PATH=$evidence_root/iroha-native-finality-canary.json"
+            echo "PRODUCTION_FINALITY_TRUST_MANIFEST_RECEIPT=$evidence_root/production-finality-trust-manifest.json"
+            echo "TAIRA_FUNDED_CANARY_RECEIPT_PATH=$evidence_root/taira-canary.json"
+            echo "TAIRA_FUNDED_CANARY_APPROVAL_RECEIPT=$evidence_root/taira-approval.json"
+            echo "TAIRA_FUNDED_CANARY_LOW_VALUE_POLICY=$evidence_root/taira-low-value-policy.json"
+            echo "TAIRA_FUNDED_CANARY_PI_RECEIPT=$evidence_root/taira-pi-receipt.json"
+            echo "TAIRA_FUNDED_CANARY_ARTIFACT_IDENTITY_RECEIPT=$evidence_root/taira-artifact-identity.json"
+            echo "TAIRA_FUNDED_CANARY_FINALITY_TRUST_CONTEXT=$evidence_root/taira-finality-trust-context.json"
+            echo "TAIRA_FUNDED_CANARY_CONSUMPTION_RECEIPT=$evidence_root/taira-consumption-receipt.json"
+            echo "TAIRA_FUNDED_CANARY_EVIDENCE_BUNDLE=$evidence_root/taira-evidence-bundle.json"
+            echo "MINAMOTO_FUNDED_CANARY_RECEIPT_PATH=$evidence_root/minamoto-canary.json"
+            echo "MINAMOTO_FUNDED_CANARY_APPROVAL_RECEIPT=$evidence_root/minamoto-approval.json"
+            echo "MINAMOTO_FUNDED_CANARY_LOW_VALUE_POLICY=$evidence_root/minamoto-low-value-policy.json"
+            echo "MINAMOTO_FUNDED_CANARY_PI_RECEIPT=$evidence_root/minamoto-pi-receipt.json"
+            echo "MINAMOTO_FUNDED_CANARY_ARTIFACT_IDENTITY_RECEIPT=$evidence_root/minamoto-artifact-identity.json"
+            echo "MINAMOTO_FUNDED_CANARY_FINALITY_TRUST_CONTEXT=$evidence_root/minamoto-finality-trust-context.json"
+            echo "MINAMOTO_FUNDED_CANARY_CONSUMPTION_RECEIPT=$evidence_root/minamoto-consumption-receipt.json"
+            echo "MINAMOTO_FUNDED_CANARY_EVIDENCE_BUNDLE=$evidence_root/minamoto-evidence-bundle.json"
+          } >> "$GITHUB_ENV"
+
+      - name: Refresh live PI contract after funded canaries
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: node scripts/probe-pi-production-contract.mjs > "$PI_PRODUCTION_RAW_LIVE_RECEIPT_PATH"
+
+      - name: Create candidate-bound PI v3 controller request
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          request_epoch="$(date +%s)"
+          echo "PRODUCTION_PI_CANDIDATE_REQUESTED_AT_EPOCH_SECONDS=$request_epoch" >> "$GITHUB_ENV"
+          export PRODUCTION_PI_CANDIDATE_REQUESTED_AT_EPOCH_SECONDS="$request_epoch"
+          node scripts/create-production-pi-candidate-controller-request.mjs \
+            > "$PRODUCTION_PI_CANDIDATE_CONTROLLER_REQUEST_PATH"
+
+      - name: Obtain signed candidate-bound PI v3 receipt
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        env:
+          PI_CONTROLLER_TOKEN: ${{ secrets.PRODUCTION_ROLLOUT_CONTROLLER_TOKEN }}
+        run: |
+          set -euo pipefail
+          [[ "$PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN" =~ ^https://[A-Za-z0-9.-]+(:[1-9][0-9]{0,4})?$ ]] || {
+            echo "protected PI controller origin is missing or invalid" >&2
+            exit 1
+          }
+          [[ "$PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64" =~ ^[A-Za-z0-9+/]{43}=$ ]] || {
+            echo "protected PI controller TLS SPKI pin is missing or invalid" >&2
+            exit 1
+          }
+          [[ "$PRODUCTION_PI_CONTROLLER_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{2,255}$ ]] || {
+            echo "protected PI controller identity is missing or invalid" >&2
+            exit 1
+          }
+          [[ -n "$PI_CONTROLLER_TOKEN" && ${#PI_CONTROLLER_TOKEN} -le 4096 && "$PI_CONTROLLER_TOKEN" != *$'\r'* && "$PI_CONTROLLER_TOKEN" != *$'\n'* ]] || {
+            echo "protected PI controller token is missing or unsafe" >&2
+            exit 1
+          }
+          curl \
+            --proto '=https' \
+            --tlsv1.2 \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --connect-timeout 10 \
+            --max-time 60 \
+            --max-filesize 65536 \
+            --pinnedpubkey "sha256//$PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64" \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --header "Authorization: Bearer $PI_CONTROLLER_TOKEN" \
+            --data-binary "@$PRODUCTION_PI_CANDIDATE_CONTROLLER_REQUEST_PATH" \
+            --output "$PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" \
+            "$PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN/v3/android/pi-candidate-receipt"
+          receipt_sha256="$(sha256sum "$PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" | awk '{print $1}')"
+          [[ "$receipt_sha256" =~ ^[0-9a-f]{64}$ ]] || exit 1
+          curl \
+            --proto '=https' \
+            --tlsv1.2 \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --max-filesize 65536 \
+            --pinnedpubkey "sha256//$PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64" \
+            --header 'Accept: application/json' \
+            --header "Authorization: Bearer $PI_CONTROLLER_TOKEN" \
+            --output "$PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH" \
+            "$PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN/v3/android/pi-candidate-receipt/$receipt_sha256/signature"
+          echo "PRODUCTION_PI_CANDIDATE_EVALUATED_AT_EPOCH_SECONDS=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Verify signed candidate-bound PI v3 receipt
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          node scripts/verify-production-pi-candidate-receipt.mjs \
+            --require-raw-live-binding \
+            > "$RUNNER_TEMP/sora-pi-production-candidate-admission-v1.json"
+
+      - name: Record explicit release evaluation epoch
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: echo "PRODUCTION_RELEASE_EVALUATED_AT_EPOCH_SECONDS=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Exact built-candidate production gates
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          set -o pipefail
+          node scripts/verify-production-modernization.mjs --release | tee "$PRODUCTION_QUALIFICATION_RECEIPT_PATH"
+
+      - name: Seal immutable qualified-candidate package
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          install -d -m 700 "$RUNNER_TEMP/qualified-candidate"
+          install -m 400 "$PRODUCTION_CANDIDATE_AAB_PATH" "$RUNNER_TEMP/qualified-candidate/candidate.aab"
+          install -m 400 "$PRODUCTION_CANDIDATE_APK_PATH" "$RUNNER_TEMP/qualified-candidate/candidate.apk"
+          install -m 400 "$PRODUCTION_CANDIDATE_MAPPING_PATH" "$RUNNER_TEMP/qualified-candidate/r8-mapping.txt"
+          install -m 400 "$PRODUCTION_REPRODUCED_AAB_PATH" "$RUNNER_TEMP/qualified-candidate/reproduced-candidate.aab"
+          install -m 400 "$PRODUCTION_REPRODUCED_APK_PATH" "$RUNNER_TEMP/qualified-candidate/reproduced-candidate.apk"
+          install -m 400 "$PRODUCTION_REPRODUCED_MAPPING_PATH" "$RUNNER_TEMP/qualified-candidate/reproduced-r8-mapping.txt"
+          install -m 400 "$PRODUCTION_PRIMARY_BUILD_LOG_PATH" "$RUNNER_TEMP/qualified-candidate/primary-build.log"
+          install -m 400 "$PRODUCTION_REPRODUCED_BUILD_LOG_PATH" "$RUNNER_TEMP/qualified-candidate/reproduction-build.log"
+          install -m 400 "$PRODUCTION_PRIMARY_SIGNING_VERIFICATION_PATH" "$RUNNER_TEMP/qualified-candidate/primary-signing-verification.json"
+          install -m 400 "$PRODUCTION_REPRODUCED_SIGNING_VERIFICATION_PATH" "$RUNNER_TEMP/qualified-candidate/reproduction-signing-verification.json"
+          install -m 400 "$ANDROID_MIGRATION_CONTROLLER_ENVELOPE_PATH" "$RUNNER_TEMP/qualified-candidate/android-migration-controller-envelope-v1.json"
+          install -m 400 "$ANDROID_MIGRATION_CONTROLLER_EXTRACTION_RECEIPT_PATH" "$RUNNER_TEMP/qualified-candidate/android-migration-controller-extraction-v1.json"
+          install -m 400 "$TAIRA_DEPLOYMENT_MANIFEST_PATH" "$RUNNER_TEMP/qualified-candidate/taira-deployment-manifest.json"
+          install -m 400 "$TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_PATH" "$RUNNER_TEMP/qualified-candidate/taira-deployment-operator.sig"
+          install -m 400 "$TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_PATH" "$RUNNER_TEMP/qualified-candidate/taira-deployment-reviewer.sig"
+          install -m 400 "$TAIRA_DEPLOYMENT_OPERATOR_PUBLIC_KEY_PATH" "$RUNNER_TEMP/qualified-candidate/taira-deployment-operator.pem"
+          install -m 400 "$TAIRA_DEPLOYMENT_REVIEWER_PUBLIC_KEY_PATH" "$RUNNER_TEMP/qualified-candidate/taira-deployment-reviewer.pem"
+          install -m 400 "$TAIRA_DEPLOYMENT_ADMISSION_RECEIPT_PATH" "$RUNNER_TEMP/qualified-candidate/taira-deployment-admission.json"
+          install -m 400 "$ANDROID_DEPENDENCY_SIGNING_REVIEW_MANIFEST_PATH" "$RUNNER_TEMP/qualified-candidate/android-dependency-signing-review-manifest.json"
+          install -m 400 "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_SIGNATURE_PATH" "$RUNNER_TEMP/qualified-candidate/android-dependency-signing-review-producer.sig"
+          install -m 400 "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_SIGNATURE_PATH" "$RUNNER_TEMP/qualified-candidate/android-dependency-signing-review-reviewer.sig"
+          install -m 400 "$ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_PUBLIC_KEY_PATH" "$RUNNER_TEMP/qualified-candidate/android-dependency-signing-review-producer.pem"
+          install -m 400 "$ANDROID_DEPENDENCY_SIGNING_REVIEW_REVIEWER_PUBLIC_KEY_PATH" "$RUNNER_TEMP/qualified-candidate/android-dependency-signing-review-reviewer.pem"
+          install -m 400 "$ANDROID_DEPENDENCY_SIGNING_REVIEW_ADMISSION_PATH" "$RUNNER_TEMP/qualified-candidate/android-dependency-signing-review-admission.json"
+          install -m 400 "$FUNDED_CANARY_CONTROLLER_BUNDLE_PATH" "$RUNNER_TEMP/qualified-candidate/funded-canary-controller-bundle-v1.tar"
+          install -m 400 "$FUNDED_CANARY_CONTROLLER_EXTRACTION_RECEIPT_PATH" "$RUNNER_TEMP/qualified-candidate/funded-canary-controller-extraction-v1.json"
+          install -m 400 "$PRODUCTION_QUALIFICATION_RECEIPT_PATH" "$RUNNER_TEMP/qualified-candidate/production-admission.json"
+          install -m 400 "$PRODUCTION_CANDIDATE_PI_RECEIPT_PATH" "$RUNNER_TEMP/qualified-candidate/candidate-pi-receipt.json"
+          install -m 400 "$PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH" "$RUNNER_TEMP/qualified-candidate/candidate-pi-receipt-signature.json"
+          node scripts/create-android-qualified-candidate-package.mjs \
+            > "$RUNNER_TEMP/qualified-candidate/candidate-package-manifest.json"
+          chmod 400 "$RUNNER_TEMP/qualified-candidate/candidate-package-manifest.json"
+          printf '%s\n' "$PRODUCTION_CANDIDATE_SOURCE_REVISION" > "$RUNNER_TEMP/qualified-candidate/source-revision.txt"
+          chmod 400 "$RUNNER_TEMP/qualified-candidate/source-revision.txt"
+
+      - name: Publish immutable qualified candidate
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sora-android-qualified-candidate
+          path: |
+            ${{ runner.temp }}/qualified-candidate/candidate.aab
+            ${{ runner.temp }}/qualified-candidate/candidate.apk
+            ${{ runner.temp }}/qualified-candidate/r8-mapping.txt
+            ${{ runner.temp }}/qualified-candidate/reproduced-candidate.aab
+            ${{ runner.temp }}/qualified-candidate/reproduced-candidate.apk
+            ${{ runner.temp }}/qualified-candidate/reproduced-r8-mapping.txt
+            ${{ runner.temp }}/qualified-candidate/primary-build.log
+            ${{ runner.temp }}/qualified-candidate/reproduction-build.log
+            ${{ runner.temp }}/qualified-candidate/primary-signing-verification.json
+            ${{ runner.temp }}/qualified-candidate/reproduction-signing-verification.json
+            ${{ runner.temp }}/qualified-candidate/android-migration-controller-envelope-v1.json
+            ${{ runner.temp }}/qualified-candidate/android-migration-controller-extraction-v1.json
+            ${{ runner.temp }}/qualified-candidate/taira-deployment-manifest.json
+            ${{ runner.temp }}/qualified-candidate/taira-deployment-operator.sig
+            ${{ runner.temp }}/qualified-candidate/taira-deployment-reviewer.sig
+            ${{ runner.temp }}/qualified-candidate/taira-deployment-operator.pem
+            ${{ runner.temp }}/qualified-candidate/taira-deployment-reviewer.pem
+            ${{ runner.temp }}/qualified-candidate/taira-deployment-admission.json
+            ${{ runner.temp }}/qualified-candidate/android-dependency-signing-review-manifest.json
+            ${{ runner.temp }}/qualified-candidate/android-dependency-signing-review-producer.sig
+            ${{ runner.temp }}/qualified-candidate/android-dependency-signing-review-reviewer.sig
+            ${{ runner.temp }}/qualified-candidate/android-dependency-signing-review-producer.pem
+            ${{ runner.temp }}/qualified-candidate/android-dependency-signing-review-reviewer.pem
+            ${{ runner.temp }}/qualified-candidate/android-dependency-signing-review-admission.json
+            ${{ runner.temp }}/qualified-candidate/funded-canary-controller-bundle-v1.tar
+            ${{ runner.temp }}/qualified-candidate/funded-canary-controller-extraction-v1.json
+            ${{ runner.temp }}/qualified-candidate/production-admission.json
+            ${{ runner.temp }}/qualified-candidate/candidate-pi-receipt.json
+            ${{ runner.temp }}/qualified-candidate/candidate-pi-receipt-signature.json
+            ${{ runner.temp }}/qualified-candidate/candidate-package-manifest.json
+            ${{ runner.temp }}/qualified-candidate/source-revision.txt
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+
+      - name: Record explicit rollout evaluation epoch
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        run: echo "PRODUCTION_ROLLOUT_EVALUATED_AT_EPOCH_SECONDS=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Create privacy-safe rollout controller request
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        run: node scripts/create-production-rollout-controller-request.mjs > "$RUNNER_TEMP/sora-production-rollout-request.json"
+
+      - name: Obtain signed rollout evidence from protected controller
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        env:
+          ROLLOUT_CONTROLLER_TOKEN: ${{ secrets.PRODUCTION_ROLLOUT_CONTROLLER_TOKEN }}
+        run: |
+          [[ "$PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN" =~ ^https://[A-Za-z0-9.-]+(:[1-9][0-9]{0,4})?$ ]] || {
+            echo "protected rollout controller origin is missing or invalid" >&2
+            exit 1
+          }
+          [[ "$PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64" =~ ^[A-Za-z0-9+/]{43}=$ ]] || {
+            echo "protected rollout controller TLS SPKI pin is missing or invalid" >&2
+            exit 1
+          }
+          [[ -n "$ROLLOUT_CONTROLLER_TOKEN" && ${#ROLLOUT_CONTROLLER_TOKEN} -le 4096 && "$ROLLOUT_CONTROLLER_TOKEN" != *$'\r'* && "$ROLLOUT_CONTROLLER_TOKEN" != *$'\n'* ]] || {
+            echo "protected rollout controller token is missing or unsafe" >&2
+            exit 1
+          }
+          umask 077
+          # The v3 wire contract is intentionally fail-closed. Do not retry a
+          # missing v3 deployment against the incompatible v2 controller API.
+          curl \
+            --proto '=https' \
+            --tlsv1.2 \
+            --pinnedpubkey "sha256//$PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64" \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --connect-timeout 10 \
+            --max-time 20 \
+            --max-filesize 65536 \
+            --request POST \
+            --header "Authorization: Bearer $ROLLOUT_CONTROLLER_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data-binary "@$RUNNER_TEMP/sora-production-rollout-request.json" \
+            --output "$PRODUCTION_ROLLOUT_EVIDENCE_PATH" \
+            "$PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN/v3/android/rollout/evidence"
+          cursor_path="$PRODUCTION_ROLLOUT_EVIDENCE_PATH"
+          cursor_target="$PRODUCTION_ROLLOUT_TARGET_PERCENT"
+          while [[ "$cursor_target" != 1 ]]; do
+            case "$cursor_target" in
+              5) prior_target=1 ;;
+              25) prior_target=5 ;;
+              100) prior_target=25 ;;
+              *) echo "invalid rollout chain target" >&2; exit 1 ;;
+            esac
+            prior_hash="$(
+              PRODUCTION_ROLLOUT_CHAIN_CURSOR_PATH="$cursor_path" \
+              PRODUCTION_ROLLOUT_CHAIN_CURSOR_TARGET="$cursor_target" \
+              node scripts/extract-production-rollout-prior-link.mjs
+            )"
+            [[ "$prior_hash" =~ ^[0-9a-f]{64}$ ]] || {
+              echo "rollout chain link is non-canonical" >&2
+              exit 1
+            }
+            prior_path="$RUNNER_TEMP/sora-production-rollout-receipt-$prior_target.json"
+            curl \
+              --proto '=https' \
+              --tlsv1.2 \
+              --pinnedpubkey "sha256//$PRODUCTION_ROLLOUT_CONTROLLER_TLS_SPKI_SHA256_BASE64" \
+              --fail-with-body \
+              --silent \
+              --show-error \
+              --connect-timeout 10 \
+              --max-time 60 \
+              --max-filesize 65536 \
+              --header "Authorization: Bearer $ROLLOUT_CONTROLLER_TOKEN" \
+              --output "$prior_path" \
+              "$PRODUCTION_ROLLOUT_CONTROLLER_ORIGIN/v3/android/rollout/receipts/sha256/$prior_hash"
+            echo "PRODUCTION_ROLLOUT_RECEIPT_${prior_target}_PATH=$prior_path" >> "$GITHUB_ENV"
+            cursor_path="$prior_path"
+            cursor_target="$prior_target"
+          done
+          terminal_link="$(
+            PRODUCTION_ROLLOUT_CHAIN_CURSOR_PATH="$cursor_path" \
+            PRODUCTION_ROLLOUT_CHAIN_CURSOR_TARGET=1 \
+            node scripts/extract-production-rollout-prior-link.mjs
+          )"
+          [[ "$terminal_link" == NONE ]] || {
+            echo "initial rollout receipt does not terminate the chain" >&2
+            exit 1
+          }
+
+      - name: Exact built-candidate staged-rollout gate
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        run: node scripts/verify-production-rollout.mjs
+
+      - name: Retain validated rollout receipt
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sora-android-rollout-${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT }}-receipt
+          path: |
+            ${{ runner.temp }}/sora-production-*rollout*.json
+            ${{ runner.temp }}/sora-android-downloaded-candidate-validation.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90

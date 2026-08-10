@@ -1,0 +1,10 @@
+{
+  "sourceRepository": "../sora2-network",
+  "sourceRevision": "411dcdb70c5c00b21482a44d02334840d5f338c6",
+  "rpcEndpoint": "https://ws.mof.sora.org",
+  "specVersion": 130,
+  "transactionVersion": 130,
+  "decodedBytes": 621901,
+  "fileSha256": "2b49c3cbf682d8b88985a04a60a958de3ef5de77d282c3622bdae53f7e4fbabf",
+  "generatedBy": "scripts/update-sora2-metadata.mjs"
+}

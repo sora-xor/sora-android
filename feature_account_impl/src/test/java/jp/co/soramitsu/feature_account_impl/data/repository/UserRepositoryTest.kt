@@ -41,10 +41,13 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.mockkStatic
 import io.mockk.slot
+import java.security.MessageDigest
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
@@ -54,15 +57,27 @@ import jp.co.soramitsu.core_db.dao.CardsHubDao
 import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.dao.NodeDao
 import jp.co.soramitsu.core_db.dao.ReferralsDao
+import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
+import jp.co.soramitsu.core_db.model.WalletIdentityLocal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionTarget
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
+import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -103,6 +118,9 @@ class UserRepositoryTest {
     lateinit var globalCardsHubDao: GlobalCardsHubDao
 
     @MockK
+    lateinit var walletIdentityDao: WalletIdentityDao
+
+    @MockK
     lateinit var coroutineManager: CoroutineManager
 
     @MockK
@@ -111,12 +129,19 @@ class UserRepositoryTest {
     @MockK
     lateinit var languagesHolder: LanguagesHolder
 
+    @MockK
+    lateinit var runtimeManager: RuntimeManager
+
+    @MockK
+    lateinit var userRepositorySr25519Crypto: UserRepositorySr25519Crypto
+
     private lateinit var userRepository: UserRepositoryImpl
 
     private val soraAccount = SoraAccount("a", "n")
 
     @Before
     fun setUp() = runTest {
+        WalletRecoveryCapabilityGate.enterNormal()
         val accountName = "accountName"
         val accountAddress = "accountAddress"
         coEvery { userDatasource.getCurAccountAddress() } returns accountAddress
@@ -125,6 +150,67 @@ class UserRepositoryTest {
         every { db.referralsDao() } returns referralsDao
         every { db.nodeDao() } returns nodeDao
         every { db.globalCardsHubDao() } returns globalCardsHubDao
+        every { db.walletIdentityDao() } returns walletIdentityDao
+        coEvery { credentialsDatasource.retrieveMnemonic(any()) } returns ""
+        coEvery { credentialsDatasource.retrieveSeed(any()) } returns ""
+        coEvery { credentialsDatasource.retrieveKeys(any()) } returns null
+        coEvery { credentialsDatasource.isExplicitWatchOnly(any()) } returns false
+        every { userRepositorySr25519Crypto.generateKeypair(any()) } answers {
+            testSr25519Keypair(firstArg())
+        }
+        every {
+            userRepositorySr25519Crypto.signAndVerify(any(), any(), any())
+        } answers {
+            val keypair = firstArg<Sr25519Keypair>()
+            val challenge = secondArg<ByteArray>()
+            val expectedPublicKey = thirdArg<ByteArray>()
+            MessageDigest.isEqual(keypair.publicKey, expectedPublicKey) &&
+                MessageDigest.isEqual(
+                    keypair.privateKey,
+                    testKeyComponent("private", keypair.publicKey),
+                ) &&
+                MessageDigest.isEqual(
+                    keypair.nonce,
+                    testKeyComponent("nonce", keypair.publicKey),
+                ) &&
+                challenge.contentEquals(
+                    LEGACY_SECRET_SIGNING_CHALLENGE.encodeToByteArray()
+                )
+        }
+        coEvery {
+            credentialsDatasource.requireWalletPreferenceCoverage(any(), any())
+        } returns Unit
+        coEvery {
+            credentialsDatasource.previewWalletDeletionPreferences(
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } returns WalletPreferenceIntegrity.Hashes(
+            before = "1".repeat(64),
+            after = "2".repeat(64),
+        )
+        coEvery { walletIdentityDao.upsertWallet(any()) } returns Unit
+        coEvery { walletIdentityDao.upsertNetworkAccounts(any()) } returns Unit
+        coEvery { walletIdentityDao.updateWalletName(any(), any()) } returns Unit
+        coEvery { walletIdentityDao.getActiveDeletionOperation() } returns null
+        coEvery { walletIdentityDao.getMigrationJournal(any()) } returns null
+        coEvery { accountDao.getAccounts() } returns listOf(
+            SoraAccountLocal(accountAddress, accountName)
+        )
+        coEvery { accountDao.getAccount(any()) } answers {
+            SoraAccountLocal(firstArg(), accountName)
+        }
+        coEvery { walletIdentityDao.getWallet(any()) } answers {
+            WalletIdentityLocal(
+                walletId = firstArg(),
+                displayName = accountName,
+                secretSource = "MNEMONIC",
+                migrationState = "VERIFIED",
+                derivationVersion = 1,
+            )
+        }
         coEvery { accountDao.getAccount(accountAddress) } returns SoraAccountLocal(
             accountAddress,
             accountName,
@@ -136,6 +222,8 @@ class UserRepositoryTest {
             db,
             coroutineManager,
             languagesHolder,
+            runtimeManager,
+            userRepositorySr25519Crypto,
         )
     }
 
@@ -228,6 +316,7 @@ class UserRepositoryTest {
 
     @Test
     fun `insert sora account count called`() = runTest {
+        coEvery { walletIdentityDao.getWallet("accountAddress") } returns null
         coEvery {
             accountDao.insertSoraAccount(
                 SoraAccountLocal(
@@ -254,11 +343,149 @@ class UserRepositoryTest {
                     soraAccount.accountName,
                 )
             )
+            walletIdentityDao.upsertWallet(match {
+                it.walletId == soraAccount.substrateAddress &&
+                    it.migrationState == "PENDING_VERIFICATION"
+            })
+            walletIdentityDao.upsertNetworkAccounts(match {
+                it.single().walletId == soraAccount.substrateAddress &&
+                    it.single().networkId == "sora2" &&
+                    it.single().address == soraAccount.substrateAddress
+            })
         }
     }
 
     @Test
+    fun `legacy recovery blocks account insertion before secret or database access`() = runTest {
+        WalletRecoveryCapabilityGate.enterBlocked()
+        WalletRecoveryCapabilityGate.enterLegacyReadOnly()
+
+        val result = runCatching {
+            userRepository.insertSoraAccount(
+                SoraAccount("must-not-be-created", "Blocked"),
+                true,
+            )
+        }
+
+        assertTrue(result.isFailure)
+        assertEquals("WALLET_RECOVERY_READ_ONLY", result.exceptionOrNull()?.message)
+        coVerify(exactly = 0) {
+            credentialsDatasource.retrieveMnemonic("must-not-be-created")
+        }
+        coVerify(exactly = 0) {
+            accountDao.insertSoraAccount(
+                SoraAccountLocal("must-not-be-created", "Blocked")
+            )
+        }
+        assertFalse(WalletRecoveryCapabilityGate.mayResumeWalletDeletion())
+        WalletRecoveryCapabilityGate.enterNormal()
+    }
+
+    @Test
+    fun `insert explicit watch only account creates verified Sora2 identity only`() = runTest {
+        val account = SoraAccount("watch-address", "Watch")
+        val publicKey = ByteArray(32) { index -> (index + 1).toByte() }
+        coEvery { walletIdentityDao.getWallet(account.substrateAddress) } returns null
+        coEvery { credentialsDatasource.isExplicitWatchOnly(account.substrateAddress) } returns true
+        every { runtimeManager.soraPublicKeyOrNull(account.substrateAddress) } returns publicKey
+        every { runtimeManager.toSoraAddressOrNull(publicKey) } returns account.substrateAddress
+        coEvery {
+            accountDao.insertSoraAccount(
+                SoraAccountLocal(account.substrateAddress, account.accountName)
+            )
+        } returns Unit
+        coEvery { db.globalCardsHubDao().count() } returns 2
+        coEvery { hubDao.insert(any()) } returns Unit
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        val lambda = slot<suspend () -> R>()
+        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
+            lambda.captured.invoke()
+        }
+
+        userRepository.insertSoraAccount(account, true)
+
+        coVerify {
+            walletIdentityDao.upsertWallet(match {
+                it.walletId == account.substrateAddress &&
+                    it.secretSource == "WATCH_ONLY" &&
+                    it.migrationState == "VERIFIED"
+            })
+            walletIdentityDao.upsertNetworkAccounts(match {
+                it.size == 1 &&
+                    it.single().networkId == "sora2" &&
+                    it.single().publicKey.isNotBlank()
+            })
+        }
+    }
+
+    @Test
+    fun `insert keypair only account preserves legacy secret as verified Sora2 only`() =
+        runTest {
+            val account = SoraAccount("legacy-secret-address", "Legacy secret")
+            coEvery { walletIdentityDao.getWallet(account.substrateAddress) } returns null
+            coEvery { credentialsDatasource.retrieveKeys(account.substrateAddress) } answers {
+                retainedFifteenWordKeyPair()
+            }
+            every { runtimeManager.toSoraAddressOrNull(any()) } returns
+                account.substrateAddress
+            coEvery {
+                accountDao.insertSoraAccount(
+                    SoraAccountLocal(account.substrateAddress, account.accountName)
+                )
+            } returns Unit
+            coEvery { db.globalCardsHubDao().count() } returns 2
+            coEvery { hubDao.insert(any()) } returns Unit
+            mockkStatic("androidx.room.RoomDatabaseKt")
+            val lambda = slot<suspend () -> R>()
+            coEvery { db.withTransaction(capture(lambda)) } coAnswers {
+                lambda.captured.invoke()
+            }
+
+            userRepository.insertSoraAccount(account, true)
+
+            coVerify {
+                walletIdentityDao.upsertWallet(match {
+                    it.walletId == account.substrateAddress &&
+                        it.secretSource == "LEGACY_SECRET" &&
+                        it.migrationState == "VERIFIED"
+                })
+                walletIdentityDao.upsertNetworkAccounts(match {
+                    it.size == 1 &&
+                        it.single().networkId == "sora2" &&
+                        it.single().walletId == account.substrateAddress
+                })
+            }
+            coVerify(exactly = 0) {
+                credentialsDatasource.saveMnemonic(any(), any())
+            }
+            coVerify(exactly = 0) {
+                credentialsDatasource.saveSeed(any(), any())
+            }
+        }
+
+    @Test
+    fun `verified wallet secret source cannot be reclassified on insertion`() = runTest {
+        val account = SoraAccount("accountAddress", "Primary")
+        coEvery { credentialsDatasource.retrieveKeys(account.substrateAddress) } answers {
+            retainedFifteenWordKeyPair()
+        }
+        every { runtimeManager.toSoraAddressOrNull(any()) } returns
+            account.substrateAddress
+
+        val result = runCatching {
+            userRepository.insertSoraAccount(account, true)
+        }
+
+        assertEquals(
+            "WALLET_SECRET_SOURCE_CONTINUITY_MISMATCH",
+            result.exceptionOrNull()?.message,
+        )
+        coVerify(exactly = 0) { accountDao.insertSoraAccount(any()) }
+    }
+
+    @Test
     fun `insert sora account EXPECT insert local cards hub`() = runTest {
+        coEvery { walletIdentityDao.getWallet("accountAddress") } returns null
         coEvery {
             accountDao.insertSoraAccount(
                 SoraAccountLocal(
@@ -286,7 +513,11 @@ class UserRepositoryTest {
     @Test
     fun `save Account name called`() = runTest {
         val accountName = "accountName"
-        val accountAddress = "accountAddress"
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        val transaction = slot<suspend () -> R>()
+        coEvery { db.withTransaction(capture(transaction)) } coAnswers {
+            transaction.captured.invoke()
+        }
         coEvery { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) } returns Unit
         coEvery {
             accountDao.updateAccountName(
@@ -295,9 +526,9 @@ class UserRepositoryTest {
             )
         } returns Unit
         coEvery { referralsDao.clearTable() } returns Unit
-        coVerify(exactly = 1) { accountDao.getAccount(accountAddress) }
         userRepository.updateAccountName(soraAccount, accountName)
         coVerify { accountDao.updateAccountName(accountName, soraAccount.substrateAddress) }
+        coVerify { walletIdentityDao.updateWalletName(soraAccount.substrateAddress, accountName) }
     }
 
     @Test
@@ -361,27 +592,318 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `clear user data called`() = runTest {
-        coEvery { userDatasource.clearAllData() } returns Unit
-        coEvery { accountDao.clearAll() } returns Unit
-        coEvery { referralsDao.clearTable() } returns Unit
-        coEvery { nodeDao.clearTable() } returns Unit
-        coEvery { globalCardsHubDao.clearTable() } returns Unit
-        coEvery { globalCardsHubDao.insert(TestData.DEFAULT_GLOBAL_CARDS) } returns Unit
-        coEvery { globalCardsHubDao.count() } returns 0
-        every { db.clearAllTables() } returns Unit
-        mockkStatic("androidx.room.RoomDatabaseKt")
-        val lambda = slot<suspend () -> R>()
-        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
-            lambda.captured.invoke()
+    fun `deletion preview is non destructive and names exact target`() = runTest {
+        val address = "accountAddress"
+        coEvery { accountDao.getAccounts() } returns listOf(
+            SoraAccountLocal(address, "Primary")
+        )
+        coEvery { walletIdentityDao.getWallets() } returns listOf(
+            WalletIdentityLocal(
+                walletId = address,
+                displayName = "Primary",
+                secretSource = "WATCH_ONLY",
+                migrationState = "VERIFIED",
+                derivationVersion = 1,
+            )
+        )
+        coEvery { walletIdentityDao.getAllNetworkAccounts() } returns emptyList()
+        coEvery {
+            walletIdentityDao.countUnresolvedTransactionsForJournal(listOf(address))
+        } returns 0
+        coEvery { credentialsDatasource.getAddress() } returns ""
+        coEvery { credentialsDatasource.isExplicitWatchOnly(address) } returns true
+        every { runtimeManager.soraPublicKeyOrNull(address) } returns byteArrayOf(1)
+
+        val preview = userRepository.createWalletDeletionPreview(listOf(address))
+
+        assertEquals(WalletDeletionScope.ALL, preview.scope)
+        assertEquals(listOf(WalletDeletionTarget(address, "Primary")), preview.targets)
+        assertEquals("1".repeat(64), preview.beforePreferencesHash)
+        assertEquals("2".repeat(64), preview.afterPreferencesHash)
+        coVerify(exactly = 0) { walletIdentityDao.beginDeletionOperation(any(), any()) }
+        coVerify(exactly = 0) {
+            credentialsDatasource.commitWalletDeletionPreferences(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
         }
-        userRepository.fullLogout()
-        coVerify { nodeDao.clearTable() }
-        coVerify { globalCardsHubDao.clearTable() }
-        coVerify { globalCardsHubDao.insert(TestData.DEFAULT_GLOBAL_CARDS) }
-        coVerify { referralsDao.clearTable() }
-        coVerify { accountDao.clearAll() }
-        coVerify { userDatasource.clearAllData() }
+    }
+
+    @Test
+    fun `deletion preview fails closed when pending journal is unreadable`() = runTest {
+        val address = "accountAddress"
+        coEvery { accountDao.getAccounts() } returns listOf(
+            SoraAccountLocal(address, "Primary")
+        )
+        coEvery {
+            walletIdentityDao.countUnresolvedTransactionsForJournal(listOf(address))
+        } throws IllegalStateException("PENDING_TRANSACTION_ASSET_INVALID")
+
+        val result = runCatching {
+            userRepository.createWalletDeletionPreview(listOf(address))
+        }
+
+        assertEquals(
+            "WALLET_DELETION_PENDING_JOURNAL_INVALID",
+            result.exceptionOrNull()?.message,
+        )
+        coVerify(exactly = 0) { walletIdentityDao.beginDeletionOperation(any(), any()) }
+        coVerify(exactly = 0) {
+            credentialsDatasource.commitWalletDeletionPreferences(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        }
+    }
+
+    @Test
+    fun `deletion preview fails closed when installed wallet secret is missing`() = runTest {
+        val address = "accountAddress"
+        coEvery { accountDao.getAccounts() } returns listOf(
+            SoraAccountLocal(address, "Primary")
+        )
+        coEvery { walletIdentityDao.getWallets() } returns listOf(
+            WalletIdentityLocal(
+                walletId = address,
+                displayName = "Primary",
+                secretSource = "MNEMONIC",
+                migrationState = "VERIFIED",
+                derivationVersion = 1,
+            )
+        )
+        coEvery {
+            walletIdentityDao.countUnresolvedTransactionsForJournal(listOf(address))
+        } returns 0
+
+        val result = runCatching {
+            userRepository.createWalletDeletionPreview(listOf(address))
+        }
+
+        assertTrue(result.isFailure)
+        coVerify(exactly = 0) { walletIdentityDao.beginDeletionOperation(any(), any()) }
+        coVerify(exactly = 0) {
+            credentialsDatasource.commitWalletDeletionPreferences(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        }
+    }
+
+    @Test
+    fun `deletion preview verifies retained fifteen word wallet without deleting it`() = runTest {
+        val address = "accountAddress"
+        coEvery { accountDao.getAccounts() } returns listOf(
+            SoraAccountLocal(address, "Legacy fifteen")
+        )
+        coEvery { walletIdentityDao.getWallets() } returns listOf(
+            WalletIdentityLocal(
+                walletId = address,
+                displayName = "Legacy fifteen",
+                secretSource = "MNEMONIC_UNSUPPORTED",
+                migrationState = "VERIFIED",
+                derivationVersion = 1,
+            )
+        )
+        coEvery { walletIdentityDao.getAllNetworkAccounts() } returns emptyList()
+        coEvery {
+            walletIdentityDao.countUnresolvedTransactionsForJournal(listOf(address))
+        } returns 0
+        coEvery { credentialsDatasource.getAddress() } returns ""
+        coEvery { credentialsDatasource.retrieveMnemonic(address) } returns
+            RETAINED_FIFTEEN_WORD_MNEMONIC
+        coEvery { credentialsDatasource.retrieveSeed(address) } returns ""
+        coEvery { credentialsDatasource.retrieveKeys(address) } answers {
+            retainedFifteenWordKeyPair()
+        }
+        every { runtimeManager.toSoraAddressOrNull(any()) } returns address
+
+        val preview = userRepository.createWalletDeletionPreview(listOf(address))
+
+        assertEquals(WalletDeletionScope.ALL, preview.scope)
+        assertEquals(
+            listOf(WalletDeletionTarget(address, "Legacy fifteen")),
+            preview.targets,
+        )
+        assertFalse(preview.removeLegacyUnsuffixed)
+        coVerify(exactly = 0) { walletIdentityDao.beginDeletionOperation(any(), any()) }
+        coVerify(exactly = 0) {
+            credentialsDatasource.commitWalletDeletionPreferences(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        }
+    }
+
+    @Test
+    fun `deletion preview verifies keypair only legacy secret without deleting it`() =
+        runTest {
+            val address = "accountAddress"
+            coEvery { accountDao.getAccounts() } returns listOf(
+                SoraAccountLocal(address, "Legacy secret")
+            )
+            coEvery { walletIdentityDao.getWallets() } returns listOf(
+                WalletIdentityLocal(
+                    walletId = address,
+                    displayName = "Legacy secret",
+                    secretSource = "LEGACY_SECRET",
+                    migrationState = "VERIFIED",
+                    derivationVersion = 1,
+                )
+            )
+            coEvery { walletIdentityDao.getAllNetworkAccounts() } returns emptyList()
+            coEvery {
+                walletIdentityDao.countUnresolvedTransactionsForJournal(listOf(address))
+            } returns 0
+            coEvery { credentialsDatasource.getAddress() } returns ""
+            coEvery { credentialsDatasource.retrieveKeys(address) } answers {
+                retainedFifteenWordKeyPair()
+            }
+            every { runtimeManager.toSoraAddressOrNull(any()) } returns address
+
+            val preview = userRepository.createWalletDeletionPreview(listOf(address))
+
+            assertEquals(WalletDeletionScope.ALL, preview.scope)
+            assertEquals(
+                listOf(WalletDeletionTarget(address, "Legacy secret")),
+                preview.targets,
+            )
+            coVerify(exactly = 0) { walletIdentityDao.beginDeletionOperation(any(), any()) }
+        }
+
+    @Test
+    fun `deletion preview rejects legacy secret private public mismatch before journal`() =
+        runTest {
+            val address = "accountAddress"
+            coEvery { accountDao.getAccounts() } returns listOf(
+                SoraAccountLocal(address, "Legacy secret")
+            )
+            coEvery { walletIdentityDao.getWallets() } returns listOf(
+                WalletIdentityLocal(
+                    walletId = address,
+                    displayName = "Legacy secret",
+                    secretSource = "LEGACY_SECRET",
+                    migrationState = "VERIFIED",
+                    derivationVersion = 1,
+                )
+            )
+            coEvery {
+                walletIdentityDao.countUnresolvedTransactionsForJournal(listOf(address))
+            } returns 0
+            coEvery { credentialsDatasource.retrieveKeys(address) } answers {
+                retainedFifteenWordKeyPair().also { keyPair ->
+                    keyPair.privateKey[0] =
+                        (keyPair.privateKey[0].toInt() xor 1).toByte()
+                }
+            }
+            every { runtimeManager.toSoraAddressOrNull(any()) } returns address
+
+            val result = runCatching {
+                userRepository.createWalletDeletionPreview(listOf(address))
+            }
+
+            assertEquals(
+                "WALLET_DELETION_SECRET_VERIFICATION_FAILED",
+                result.exceptionOrNull()?.message,
+            )
+            coVerify(exactly = 0) {
+                credentialsDatasource.previewWalletDeletionPreferences(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+            coVerify(exactly = 0) {
+                walletIdentityDao.beginDeletionOperation(any(), any())
+            }
+        }
+
+    @Test
+    fun `deletion preview rejects retained fifteen word signing mismatch before journal`() =
+        runTest {
+            val address = "accountAddress"
+            coEvery { accountDao.getAccounts() } returns listOf(
+                SoraAccountLocal(address, "Legacy fifteen")
+            )
+            coEvery { walletIdentityDao.getWallets() } returns listOf(
+                WalletIdentityLocal(
+                    walletId = address,
+                    displayName = "Legacy fifteen",
+                    secretSource = "MNEMONIC_UNSUPPORTED",
+                    migrationState = "VERIFIED",
+                    derivationVersion = 1,
+                )
+            )
+            coEvery {
+                walletIdentityDao.countUnresolvedTransactionsForJournal(listOf(address))
+            } returns 0
+            coEvery { credentialsDatasource.retrieveMnemonic(address) } returns
+                RETAINED_FIFTEEN_WORD_MNEMONIC
+            coEvery { credentialsDatasource.retrieveSeed(address) } returns ""
+            coEvery { credentialsDatasource.retrieveKeys(address) } answers {
+                retainedFifteenWordKeyPair().also { keyPair ->
+                    keyPair.privateKey[0] = (keyPair.privateKey[0].toInt() xor 1).toByte()
+                }
+            }
+            every { runtimeManager.toSoraAddressOrNull(any()) } returns address
+
+            val result = runCatching {
+                userRepository.createWalletDeletionPreview(listOf(address))
+            }
+
+            assertEquals(
+                "WALLET_DELETION_SECRET_VERIFICATION_FAILED",
+                result.exceptionOrNull()?.message,
+            )
+            coVerify(exactly = 0) {
+                credentialsDatasource.previewWalletDeletionPreferences(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+            coVerify(exactly = 0) {
+                walletIdentityDao.beginDeletionOperation(any(), any())
+            }
+        }
+
+    @Test
+    fun `constructed deletion preview cannot authorize a mutation`() = runTest {
+        val preview = WalletDeletionPreview(
+            previewId = "forged",
+            scope = WalletDeletionScope.ALL,
+            targets = listOf(WalletDeletionTarget("accountAddress", "Primary")),
+            selectedBefore = "accountAddress",
+            selectedAfter = "",
+            snapshotHash = "0".repeat(64),
+            beforePreferencesHash = "1".repeat(64),
+            afterPreferencesHash = "2".repeat(64),
+            removeLegacyUnsuffixed = false,
+            expiresAtElapsedRealtime = Long.MAX_VALUE,
+        )
+
+        val result = runCatching {
+            userRepository.confirmAndExecuteWalletDeletion(preview)
+        }
+        assertTrue(result.isFailure)
+        coVerify(exactly = 0) { walletIdentityDao.beginDeletionOperation(any(), any()) }
     }
 
     @Test
@@ -409,27 +931,6 @@ class UserRepositoryTest {
         )
         every { languagesHolder.getLanguages() } returns (languages to 1)
         assertEquals(languages to 1, userRepository.getAvailableLanguages())
-    }
-
-    @Test
-    fun `clear account data called`() = runTest {
-        val address = "address"
-        mockkStatic("androidx.room.RoomDatabaseKt")
-        val lambda = slot<suspend () -> R>()
-        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
-            lambda.captured.invoke()
-        }
-        every { db.accountDao() } returns accountDao
-        every { db.referralsDao() } returns referralsDao
-        coEvery { accountDao.clearAccount(address) } returns Unit
-        coEvery { referralsDao.clearTable() } returns Unit
-        coEvery { credentialsDatasource.clearAllDataForAddress(address) } returns Unit
-
-        userRepository.clearAccountData(address)
-
-        coVerify { accountDao.clearAccount(address) }
-        coVerify { referralsDao.clearTable() }
-        coVerify { credentialsDatasource.clearAllDataForAddress(address) }
     }
 
     @Test
@@ -478,5 +979,37 @@ class UserRepositoryTest {
         userRepository.saveTimerStartedTimestamp(1)
 
         coVerify { userDatasource.saveTimerStartedTimestamp(1) }
+    }
+
+    private fun retainedFifteenWordKeyPair(): Sr25519Keypair {
+        val parsed = MnemonicCreator.fromWords(RETAINED_FIFTEEN_WORD_MNEMONIC)
+        val seed = SubstrateSeedFactory.deriveSeed32(parsed.words, null).seed
+        return try {
+            testSr25519Keypair(seed)
+        } finally {
+            seed.fill(0)
+        }
+    }
+
+    private fun testSr25519Keypair(seed: ByteArray): Sr25519Keypair {
+        val publicKey = testKeyComponent("public", seed)
+        return Sr25519Keypair(
+            privateKey = testKeyComponent("private", publicKey),
+            publicKey = publicKey,
+            nonce = testKeyComponent("nonce", publicKey),
+        )
+    }
+
+    private fun testKeyComponent(label: String, material: ByteArray): ByteArray =
+        MessageDigest.getInstance("SHA-256").digest(
+            label.encodeToByteArray() + byteArrayOf(0) + material
+        )
+
+    private companion object {
+        const val RETAINED_FIFTEEN_WORD_MNEMONIC =
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon " +
+                "abandon abandon abandon abandon address"
+        const val LEGACY_SECRET_SIGNING_CHALLENGE =
+            "sora-wallet-legacy-secret-self-consistency-v1"
     }
 }

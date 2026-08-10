@@ -1,44 +1,56 @@
-import java.io.FileInputStream
-import java.util.Properties
-
 pluginManagement {
     repositories {
-        maven { url = uri("https://nexus.iroha.tech/repository/maven-soramitsu/") }
         gradlePluginPortal()
         google()
         mavenCentral()
     }
 }
 
-fun secret(name: String): String {
-    val fileProperties = File(rootProject.projectDir.absolutePath, "local.properties")
-    val pr = runCatching { FileInputStream(fileProperties) }.getOrNull()?.let { file ->
-        Properties().apply {
-            load(file)
-        }
-    }
-    return pr?.getProperty(name) ?: System.getenv(name)!!
-}
-
-fun maybeWrapQuotes(s: String): String {
-    return if (s.startsWith("\"")) s else "\"" + s + "\""
-}
-
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        maven { url = uri("https://nexus.iroha.tech/repository/maven-soramitsu/") }
-        google()
-        mavenCentral()
-        maven { url = uri("https://jitpack.io") }
-        maven {
-            url = uri(secret("PAY_WINGS_REPOSITORY_URL"))
-            credentials {
-                username = secret("PAY_WINGS_USERNAME")
-                password = secret("PAY_WINGS_PASSWORD")
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = "SourceQualifiedSoramitsu"
+                    url = uri(rootDir.resolve("vendor/soramitsu-maven"))
+                    metadataSources {
+                        gradleMetadata()
+                        mavenPom()
+                    }
+                }
+            }
+            filter {
+                includeModule("jp.co.soramitsu", "android-foundation")
+                includeModule("jp.co.soramitsu", "android-sora-card")
+                includeModule("jp.co.soramitsu", "ui-core")
+                includeModule("jp.co.soramitsu", "xbackup")
+                includeModule("jp.co.soramitsu", "xcrypto")
+                includeModule("jp.co.soramitsu", "xsubstrate")
+                includeModule("jp.co.soramitsu.xnetworking", "lib-android")
+                includeModule("io.emeraldpay.polkaj", "polkaj-scale")
+                includeModule("com.paywings.oauth", "android-sdk")
+                includeModule("com.paywings.kyc", "android-sdk")
+                includeModule(
+                    "com.paywings.onboarding.kyc.android-libs",
+                    "idensic-mobile-sdk",
+                )
             }
         }
-        mavenLocal()
+        google()
+        mavenCentral()
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = "JitPack"
+                    url = uri("https://jitpack.io")
+                }
+            }
+            filter {
+                includeModule("com.github.warchant", "ed25519-sha3-java")
+                includeModule("com.github.WycliffeAssociates", "jdenticon-kotlin")
+            }
+        }
     }
 }
 

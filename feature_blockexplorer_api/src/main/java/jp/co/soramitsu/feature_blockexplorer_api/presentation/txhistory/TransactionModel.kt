@@ -58,6 +58,18 @@ sealed class Transaction(
     val base: TransactionBase,
 ) {
 
+    /**
+     * A restart-safe SORA2 mutation whose durable recovery witness intentionally contains no
+     * semantic amount, asset, recipient, or signed bytes. The activity UI must not invent those
+     * values while PI history is still catching up.
+     */
+    class Sora2Submission(
+        base: TransactionBase,
+        val networkId: String,
+        val submissionIsAmbiguous: Boolean,
+        val terminalBlockNumber: Long?,
+    ) : Transaction(base)
+
     class AdarIncome(
         base: TransactionBase,
         val amount: BigDecimal,

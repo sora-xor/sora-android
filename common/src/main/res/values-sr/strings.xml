@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
   <string name="about_announcements">Примите најаве</string>
   <string name="about_ask_support">Питајте за подршку</string>
   <string name="about_contact_us">Kontakt Email</string>
@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Изаберите средство</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Затвори</string>
+  <string name="tx_details_view_on_explorer">Прикажи у експлореру</string>
   <string name="common_confirm">Потврди</string>
   <string name="common_connected">Повезан</string>
   <string name="common_connecting">Повезивање...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Већ сте применили други позивни код</string>
   <string name="common_error_invitation_code_not_found">Код позивнице је неважећи</string>
   <string name="common_error_inviter_registered_after_invitee">Наведени позивни код се не може применити јер је од корисника који се регистровао после вас</string>
-  <string name="common_error_mnemonic_is_not_valid">Уверите се да се приступна фраза састоји од 12 или 15 речи и да су све тачне.</string>
-  <string name="common_error_mnemonic_length_error">Приступна фраза мора да садржи 15 речи</string>
+  <string name="common_error_mnemonic_is_not_valid">Уверите се да се приступна фраза састоји од 12 или 24 речи и да су све тачне.</string>
+  <string name="common_error_mnemonic_length_error">Приступна фраза мора да садржи 12 или 24 речи</string>
   <string name="common_error_network">Молимо вас, проверите интернет везу и покушајте поново касније.</string>
   <string name="common_error_no_browser_error">Molim vas instalirajte brauzer da otvorite link</string>
   <string name="common_error_not_enough_invitations">Жао нам је, али немате ниједну позивницу за дељење</string>
@@ -154,7 +155,7 @@
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
+  <plurals name="common_hour" tools:ignore="ImpliedQuantity">
     <item quantity="one">сат</item>
     <item quantity="few">сати</item>
     <item quantity="other">сати</item>
@@ -278,7 +279,7 @@
   <string name="export_protection_passphrase_1">Ako izgubim moju pristupnu frazu, moja sredstvace biti izgubljena zauvek.</string>
   <string name="export_protection_passphrase_2">Ako otkrijem ili podelim sa nekim moju pristupnu frazu, moja sredstva mogu biti ukradena:</string>
   <string name="export_protection_passphrase_3">Moja potpuna odgovornost je da čuvam bezbednom moju pistupnu frazu.</string>
-  <string name="export_protection_passphrase_description">U sledećem koraku ćete videti vašu pristupnu frazu (12 reči) koja će vam omogućiti da povratite vaš nalog.</string>
+  <string name="export_protection_passphrase_description">U sledećem koraku ćete videti vašu pristupnu frazu (24 reči) koja će vam omogućiti da povratite vaš nalog.</string>
   <string name="export_protection_seed_1">Ako izgubim moj raw seed, moja sredstva će biti izgubljena zauvek.</string>
   <string name="export_protection_seed_2">Ako otkrijem ili podelim sa nekim moj raw seed, moja sredstva mogu biti ukradena.</string>
   <string name="export_protection_seed_3">Moja potpuna odgovornost je da čuvam moj raw seed bezbednim</string>
@@ -404,24 +405,24 @@
   <string name="profile_biometry_title">Биометријска аутентиф.</string>
   <string name="profile_logout_title">Одјављивање</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="one">дан преостао</item>
-    <item quantity="few">дана преостало</item>
-    <item quantity="other">дана преостало</item>
+    <item quantity="one">%s дан преостао</item>
+    <item quantity="few">%s дана преостало</item>
+    <item quantity="other">%s дана преостало</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="one">сат преостао</item>
-    <item quantity="few">сати преостало</item>
-    <item quantity="other">сати преостало</item>
+    <item quantity="one">%s сат преостао</item>
+    <item quantity="few">%s сати преостало</item>
+    <item quantity="other">%s сати преостало</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
-    <item quantity="one">минут преостао</item>
-    <item quantity="few">минута преостало</item>
-    <item quantity="other">минута преостало</item>
+    <item quantity="one">%s минут преостао</item>
+    <item quantity="few">%s минута преостало</item>
+    <item quantity="other">%s минута преостало</item>
   </plurals>
   <plurals name="project_date_second_plurals">
-    <item quantity="one">секунд преостао</item>
-    <item quantity="few">секунди преостало</item>
-    <item quantity="other">секунди преостало</item>
+    <item quantity="one">%s секунд преостао</item>
+    <item quantity="few">%s секунди преостало</item>
+    <item quantity="other">%s секунди преостало</item>
   </plurals>
   <string name="project_ended_template">Завршено %s</string>
   <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
@@ -446,8 +447,9 @@
   <string name="referral_input_reward_title">Unesite željeni broj pozivnica</string>
   <string name="referral_invitaion_link_title">Dostupne pozivnice</string>
   <string name="referral_invitation_link">Invitation link</string>
-  <plurals name="referral_invitations">
+  <plurals name="referral_invitations" tools:ignore="ImpliedQuantity">
     <item quantity="one">invitation</item>
+    <item quantity="few">invitations</item>
     <item quantity="other">invitations</item>
   </plurals>
   <string name="referral_no_available_invitations">No available invitations</string>

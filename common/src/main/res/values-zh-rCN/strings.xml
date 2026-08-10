@@ -87,6 +87,7 @@
   <string name="common_choose_asset">选择资产</string>
   <string name="common_claim">领取</string>
   <string name="common_close">关闭</string>
+  <string name="tx_details_view_on_explorer">在区块浏览器中查看</string>
   <string name="common_confirm">确认</string>
   <string name="common_connected">已连接</string>
   <string name="common_connecting">正在连接...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">您已经申请了另一个邀请码</string>
   <string name="common_error_invitation_code_not_found">邀请码无效</string>
   <string name="common_error_inviter_registered_after_invitee">提供的邀请码不可用，因为它来自您之后注册的用户</string>
-  <string name="common_error_mnemonic_is_not_valid">请确保您的密码由 12 或 15 个单词组成，并且它们都是正确的。</string>
-  <string name="common_error_mnemonic_length_error">助记词必须包含15个字符</string>
+  <string name="common_error_mnemonic_is_not_valid">请确保您的密码由 12 或 24 个单词组成，并且它们都是正确的。</string>
+  <string name="common_error_mnemonic_length_error">助记词必须包含12或24个单词</string>
   <string name="common_error_network">请检查网络连接，稍后再试。</string>
   <string name="common_error_no_browser_error">请安装一个浏览器来打开链接</string>
   <string name="common_error_not_enough_invitations">抱歉，您没有可用的邀请来分享</string>
@@ -276,7 +277,7 @@
   <string name="export_protection_passphrase_1">如果我丢失了密码，我的资金将永远丢失。</string>
   <string name="export_protection_passphrase_2">如果我向任何人公开或分享我的密码，我的资金可能会被盗。</string>
   <string name="export_protection_passphrase_3">确保我的密码安全是我的责任。</string>
-  <string name="export_protection_passphrase_description">在下一步中，您将看到允许您恢复账户的密码（12 个字）。</string>
+  <string name="export_protection_passphrase_description">在下一步中，您将看到允许您恢复账户的密码（24 个单词）。</string>
   <string name="export_protection_seed_1">如果我失去了原始种子，我的资金将永远丢失。</string>
   <string name="export_protection_seed_2">如果我将我的原始种子暴露或分享给任何人，我的资金可能会被盗。</string>
   <string name="export_protection_seed_3">确保我的原始种子安全是我的责任。</string>

@@ -1,0 +1,118 @@
+name: Android Verification
+
+on:
+  pull_request:
+    branches: [ "*" ]
+  push:
+    branches: [ "*" ]
+  workflow_dispatch:
+
+concurrency:
+  group: android-verification-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  explorer-contracts:
+    name: Explorer Contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RUN_LIVE_EXPLORER_TESTS: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: Run live explorer contract tests
+        run: ./gradlew :feature_blockexplorer_api:testDevelopDebugUnitTest --tests '*SoraMetricsLiveContractTest' --stacktrace --no-daemon
+
+  blockexplorer-connected:
+    name: Block Explorer Connected Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: Enable KVM access for Android emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -e /dev/kvm ]]; then
+            echo "/dev/kvm is unavailable; keeping the emulator runner's software fallback."
+            exit 0
+          fi
+          [[ -c /dev/kvm && ! -L /dev/kvm ]] || {
+            echo "/dev/kvm exists but is not a direct character device" >&2
+            exit 1
+          }
+          kvm_rules_dir=/etc/udev/rules.d
+          kvm_rule_path="$kvm_rules_dir/99-kvm4all.rules"
+          [[ -d "$kvm_rules_dir" && ! -L "$kvm_rules_dir" ]] || {
+            echo "KVM udev rules directory is missing or unsafe: $kvm_rules_dir" >&2
+            exit 1
+          }
+          if [[ -e "$kvm_rule_path" ]]; then
+            [[ -f "$kvm_rule_path" && ! -L "$kvm_rule_path" ]] || {
+              echo "KVM udev rule path is not a regular file: $kvm_rule_path" >&2
+              exit 1
+            }
+          fi
+          kvm_rule='KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"'
+          printf '%s\n' "$kvm_rule" | sudo tee "$kvm_rule_path" >/dev/null
+          [[ "$(sudo cat "$kvm_rule_path")" == "$kvm_rule" ]] || {
+            echo "KVM udev rule content did not round-trip exactly" >&2
+            exit 1
+          }
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo chmod 0666 /dev/kvm
+          [[ "$(stat -c '%a' /dev/kvm)" == 666 ]] || {
+            echo "/dev/kvm mode did not converge to the reviewed udev rule" >&2
+            exit 1
+          }
+          [[ -r /dev/kvm && -w /dev/kvm ]] || {
+            echo "/dev/kvm is not readable and writable after udev activation" >&2
+            exit 1
+          }
+
+      - name: Run connected block explorer test
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: ./gradlew :feature_blockexplorer_api:connectedDevelopDebugAndroidTest --stacktrace --no-daemon

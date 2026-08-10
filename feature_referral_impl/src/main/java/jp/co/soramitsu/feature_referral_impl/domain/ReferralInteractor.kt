@@ -119,7 +119,7 @@ class ReferralInteractor @Inject constructor(
             calcBondFee(),
         )
 
-        transactionHistoryRepository.saveTransaction(result)
+        transactionHistoryRepository.saveTransaction(soraAccount.substrateAddress, result)
 
         return result.base.txHash
     }
@@ -135,7 +135,7 @@ class ReferralInteractor @Inject constructor(
             calcBondFee(),
         )
 
-        transactionHistoryRepository.saveTransaction(result)
+        transactionHistoryRepository.saveTransaction(soraAccount.substrateAddress, result)
 
         return result.base.txHash
     }
@@ -152,7 +152,7 @@ class ReferralInteractor @Inject constructor(
             feeToken
         )
 
-        transactionHistoryRepository.saveTransaction(result)
+        transactionHistoryRepository.saveTransaction(soraAccount.substrateAddress, result)
 
         return result.base.txHash
     }

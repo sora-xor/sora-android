@@ -55,7 +55,7 @@ interface TransactionHistoryRepository {
         soraAccount: SoraAccount,
     ): Transaction?
 
-    fun saveTransaction(transfer: Transaction)
+    fun saveTransaction(walletId: String, transfer: Transaction)
     suspend fun getLastTransactions(
         soraAccount: SoraAccount,
         tokens: List<Token>,

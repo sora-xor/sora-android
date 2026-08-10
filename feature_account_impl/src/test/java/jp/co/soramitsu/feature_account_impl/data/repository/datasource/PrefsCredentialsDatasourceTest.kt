@@ -36,6 +36,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,6 +44,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -173,19 +175,129 @@ class PrefsCredentialsDatasourceTest {
     }
 
     @Test
-    fun `clear all data for address called`() = runTest {
+    fun `watch only state requires the explicit durable marker`() = runTest {
         val address = "address"
-        val keys = listOf(
+        given(soraPreferences.getBoolean("wallet.watchOnly.$address")).willReturn(true)
+
+        assertTrue(prefsCredentialsDatasource.isExplicitWatchOnly(address))
+
+        prefsCredentialsDatasource.setExplicitWatchOnly(address, false)
+        verify(soraPreferences).putBoolean("wallet.watchOnly.$address", false)
+    }
+
+    @Test
+    fun `wallet preference coverage delegates exact wallet set and selection`() = runTest {
+        val walletIds = setOf("address", "second-address")
+
+        prefsCredentialsDatasource.requireWalletPreferenceCoverage(
+            walletIds = walletIds,
+            selectedAddress = "second-address",
+        )
+
+        verify(soraPreferences).requireWalletPreferenceCoverage(
+            walletIds,
+            "second-address",
+        )
+    }
+
+    @Test
+    fun `wallet deletion preview delegates exact preference key set`() = runTest {
+        val address = "address"
+        val strings = setOf(
             "prefs_address_pureaddress",
             "prefs_priv_keyaddress",
             "prefs_pub_keyaddress",
             "prefs_key_nonceaddress",
             "prefs_mnemonicaddress",
-            "prefs_seedaddress"
+            "prefs_seedaddress",
+        )
+        val booleans = setOf(
+            "wallet.watchOnly.address",
+            "needs_migrationaddress",
+            "is_migration_fetchedaddress",
+        )
+        val hashes = WalletPreferenceIntegrity.Hashes(
+            before = "1".repeat(64),
+            after = "2".repeat(64),
+        )
+        given(
+            soraPreferences.previewWalletDeletion(
+                strings,
+                booleans,
+                "replacement",
+                false,
+            )
+        ).willReturn(hashes)
+
+        assertEquals(
+            hashes,
+            prefsCredentialsDatasource.previewWalletDeletionPreferences(
+                walletIds = setOf(address),
+                selectedAfter = "replacement",
+                removeLegacyUnsuffixed = false,
+                clearAll = false,
+            ),
         )
 
-        prefsCredentialsDatasource.clearAllDataForAddress(address)
+        verify(soraPreferences).previewWalletDeletion(
+            strings,
+            booleans,
+            "replacement",
+            false,
+        )
+    }
 
-        verify(encryptedPreferences).clear(keys)
+    @Test
+    fun `journaled deletion uses one edit and verifies exact result`() = runTest {
+        val address = "address"
+        val strings = setOf(
+            "prefs_address_pureaddress",
+            "prefs_priv_keyaddress",
+            "prefs_pub_keyaddress",
+            "prefs_key_nonceaddress",
+            "prefs_mnemonicaddress",
+            "prefs_seedaddress",
+        )
+        val booleans = setOf(
+            "wallet.watchOnly.address",
+            "needs_migrationaddress",
+            "is_migration_fetchedaddress",
+        )
+        val beforeHash = "1".repeat(64)
+        val afterHash = "2".repeat(64)
+        given(
+            soraPreferences.walletDeletionPreferencesMatch(
+                strings,
+                booleans,
+                "replacement",
+                false,
+                afterHash,
+            )
+        ).willReturn(true)
+
+        prefsCredentialsDatasource.commitWalletDeletionPreferences(
+            walletIds = setOf(address),
+            selectedAfter = "replacement",
+            removeLegacyUnsuffixed = false,
+            clearAll = false,
+            expectedBeforeHash = beforeHash,
+            expectedAfterHash = afterHash,
+        )
+
+        verify(soraPreferences).commitWalletDeletion(
+            strings,
+            booleans,
+            "replacement",
+            false,
+            beforeHash,
+            afterHash,
+        )
+        verify(soraPreferences).walletDeletionPreferencesMatch(
+            strings,
+            booleans,
+            "replacement",
+            false,
+            afterHash,
+        )
     }
 }

@@ -1,12 +1,11 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
-    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
@@ -15,7 +14,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.feature_blockexplorer_api"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -25,7 +24,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -40,8 +39,8 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
     }
-
     flavorDimensions += listOf("default")
 
     productFlavors {
@@ -100,6 +99,7 @@ dependencies {
     implementation(libs.composeToolingPreviewDep)
     implementation(libs.composeLiveDataDep)
     debugImplementation(libs.composeToolingDep)
+    debugImplementation(libs.composeUiTestManifestDep)
 
     implementation(libs.kotlinxSerializationJsonDep)
 
@@ -109,15 +109,20 @@ dependencies {
     implementation(libs.timberDep)
 
     implementation(libs.lifecycleProcessDep)
-    kapt(libs.lifecycleKaptDep)
 
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
-}
+    ksp(libs.hiltCompilerDep)
 
-kapt {
-    correctErrorTypes = true
+    testImplementation(libs.coroutineTestDep)
+    testImplementation(libs.junitDep)
+    testImplementation(libs.truthDep)
+
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.composeUiTestJunit4Dep)
+    androidTestImplementation(libs.androidxTestExtJunitDep)
+    androidTestImplementation(libs.androidxTestEspressoCoreDep)
+    androidTestImplementation(libs.androidxTestEspressoIntentsDep)
 }

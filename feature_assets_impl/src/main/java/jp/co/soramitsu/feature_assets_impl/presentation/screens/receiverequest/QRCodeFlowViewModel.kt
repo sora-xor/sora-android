@@ -73,7 +73,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -141,6 +140,14 @@ class QRCodeFlowViewModel @Inject constructor(
 
     private val loadRequestByQrScreenDataFlowJob = interactor.subscribeAssetsActiveOfCurAccount()
         .combine(requestByQrScreenReloadMutableSharedFlow) { assets, _ ->
+            if (assets.isEmpty()) {
+                _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
+                    screenStatus = ScreenStatus.ERROR,
+                    assetAmountInputState = null,
+                )
+                return@combine
+            }
+
             val assetInUse = currentTokenId?.let { tokenID ->
                 assets.find { it.token.id == tokenID }
             } ?: assets.first()
@@ -174,17 +181,13 @@ class QRCodeFlowViewModel @Inject constructor(
                         precision = DEFAULT_TOKEN_PRINT_PRECISION,
                     ),
                 ),
+                screenStatus = ScreenStatus.READY_TO_RENDER,
             )
         }.catch {
             onError(it)
             _requestTokenScreenState.value =
                 _requestTokenScreenState.value.copy(
                     screenStatus = ScreenStatus.ERROR
-                )
-        }.onEach {
-            _requestTokenScreenState.value =
-                _requestTokenScreenState.value.copy(
-                    screenStatus = ScreenStatus.READY_TO_RENDER,
                 )
         }.flowOn(coroutineManager.io)
         .launchIn(viewModelScope)
@@ -406,7 +409,7 @@ class QRCodeFlowViewModel @Inject constructor(
                                 tokenId = _requestTokenScreenState.value.assetAmountInputState
                                     ?.token?.id,
                                 amount = _requestTokenScreenState.value.assetAmountInputState
-                                    ?.amount.toString()
+                                    ?.amount?.toPlainString()
                             )
                         )
                     }

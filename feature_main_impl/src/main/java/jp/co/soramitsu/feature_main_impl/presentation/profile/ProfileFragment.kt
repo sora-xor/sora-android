@@ -110,6 +110,7 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
                         if (state.soraCardNeedUpdate) this@ProfileFragment.context?.openGooglePlay() else viewModel.showSoraCard()
                     },
                     onBuyCrypto = viewModel::showBuyCrypto,
+                    onPolkamarktClick = viewModel::showPolkamarkt,
                     onNodeClick = viewModel::showSelectNode,
                     onAppSettingsClick = viewModel::showAppSettings,
                     onLoginClick = viewModel::showLogin,

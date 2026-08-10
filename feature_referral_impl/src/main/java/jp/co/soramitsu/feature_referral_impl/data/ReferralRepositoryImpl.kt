@@ -45,6 +45,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
+import jp.co.soramitsu.feature_referral_api.data.ReferralReward
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
@@ -53,7 +54,6 @@ import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.referralBond
 import jp.co.soramitsu.sora.substrate.substrate.referralUnbond
 import jp.co.soramitsu.sora.substrate.substrate.setReferrer
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
@@ -87,7 +87,11 @@ class ReferralRepositoryImpl @Inject constructor(
         val result = extrinsicManager.submitAndWaitExtrinsic(
             from = from,
             keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
+            // `inBlock` is not canonical finality and can be reorged. The shared
+            // extrinsic manager resolves execution events from the returned block,
+            // so referral state must wait for the finalized notification just like
+            // every other production SORA2 mutation.
+            untilStatus = SubstrateCalls.FINALIZED,
         ) {
             setReferrer(referrer)
         }
@@ -132,7 +136,7 @@ class ReferralRepositoryImpl @Inject constructor(
         val result = extrinsicManager.submitAndWaitExtrinsic(
             from = from,
             keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
+            untilStatus = SubstrateCalls.FINALIZED,
         ) {
             referralUnbond(mapped)
         }
@@ -162,7 +166,7 @@ class ReferralRepositoryImpl @Inject constructor(
         val result = extrinsicManager.submitAndWaitExtrinsic(
             from = from,
             keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
+            untilStatus = SubstrateCalls.FINALIZED,
         ) {
             referralBond(mapped)
         }

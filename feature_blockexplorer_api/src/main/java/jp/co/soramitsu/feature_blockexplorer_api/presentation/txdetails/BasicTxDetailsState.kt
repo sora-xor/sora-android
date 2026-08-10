@@ -48,6 +48,7 @@ data class BasicTxDetailsState(
     @DrawableRes val txTypeIcon: Int,
     val txTypeTitle: String,
     val txTypeSubTitle: String? = null,
+    val explorerUrl: String? = null,
 )
 
 data class BasicTxDetailsItem(

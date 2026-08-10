@@ -1,12 +1,11 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
-    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
@@ -15,7 +14,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.feature_ecosystem_impl"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -25,7 +24,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -40,8 +39,8 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
     }
-
     flavorDimensions += listOf("default")
 
     productFlavors {
@@ -103,13 +102,12 @@ dependencies {
     implementation(libs.fragmentKtxDep)
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
     implementation(libs.hiltWorkManagerDep)
     implementation(libs.hiltNavComposeDep)
-    kapt(libs.hiltWorkManagerKaptDep)
+    ksp(libs.hiltWorkManagerCompilerDep)
 
     implementation(libs.lifecycleProcessDep)
-    kapt(libs.lifecycleKaptDep)
 
     implementation(libs.uiCoreDep)
     implementation(libs.soramitsu.android.foundation)

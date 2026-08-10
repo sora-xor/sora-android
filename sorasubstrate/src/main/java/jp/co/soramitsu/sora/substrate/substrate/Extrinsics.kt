@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.substrate.substrate
 
 import java.math.BigInteger
+import jp.co.soramitsu.common.data.network.dto.PolkamarktMarketId
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.sora.substrate.runtime.Method
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
@@ -136,6 +137,119 @@ fun ExtrinsicBuilder.migrate(
             "iroha_signature" to signature.toByteArray(charset("UTF-8"))
         )
     )
+
+fun ExtrinsicBuilder.polkamarktBuy(
+    marketId: Long,
+    outcome: String,
+    collateralIn: BigInteger,
+    minimumSharesOut: BigInteger,
+) = polkamarktCall(
+    PolkamarktRuntimeCallFactory.buy(
+        marketId = marketId,
+        outcome = outcome,
+        collateralIn = collateralIn,
+        minimumSharesOut = minimumSharesOut,
+    )
+)
+
+fun ExtrinsicBuilder.polkamarktSell(
+    marketId: Long,
+    outcome: String,
+    sharesIn: BigInteger,
+    minimumCollateralOut: BigInteger,
+) = polkamarktCall(
+    PolkamarktRuntimeCallFactory.sell(
+        marketId = marketId,
+        outcome = outcome,
+        sharesIn = sharesIn,
+        minimumCollateralOut = minimumCollateralOut,
+    )
+)
+
+fun ExtrinsicBuilder.polkamarktClaimTraderPayout(
+    marketId: Long,
+) = polkamarktCall(PolkamarktRuntimeCallFactory.claimTraderPayout(marketId))
+
+fun ExtrinsicBuilder.polkamarktClaimTraderPayouts(
+    marketIds: List<Long>,
+) = polkamarktCall(PolkamarktRuntimeCallFactory.claimTraderPayouts(marketIds))
+
+fun ExtrinsicBuilder.polkamarktClaimCreatorFees(
+    marketId: Long,
+) = polkamarktCall(PolkamarktRuntimeCallFactory.claimCreatorFees(marketId))
+
+internal data class PolkamarktRuntimeCall(
+    val pallet: String,
+    val method: String,
+    val arguments: Map<String, Any>,
+)
+
+internal object PolkamarktRuntimeCallFactory {
+    fun buy(
+        marketId: Long,
+        outcome: String,
+        collateralIn: BigInteger,
+        minimumSharesOut: BigInteger,
+    ) = PolkamarktRuntimeCall(
+        pallet = POLKAMARKT_PALLET,
+        method = "buy",
+        arguments = mapOf(
+            "market_id" to PolkamarktMarketId.toScale(marketId),
+            "outcome" to polkamarktOutcome(outcome),
+            "collateral_in" to collateralIn,
+            "min_shares_out" to minimumSharesOut,
+        ),
+    )
+
+    fun sell(
+        marketId: Long,
+        outcome: String,
+        sharesIn: BigInteger,
+        minimumCollateralOut: BigInteger,
+    ) = PolkamarktRuntimeCall(
+        pallet = POLKAMARKT_PALLET,
+        method = "sell",
+        arguments = mapOf(
+            "market_id" to PolkamarktMarketId.toScale(marketId),
+            "outcome" to polkamarktOutcome(outcome),
+            "shares_in" to sharesIn,
+            "min_collateral_out" to minimumCollateralOut,
+        ),
+    )
+
+    fun claimTraderPayout(marketId: Long) = PolkamarktRuntimeCall(
+        pallet = POLKAMARKT_PALLET,
+        method = "claim_market",
+        arguments = mapOf("market_id" to PolkamarktMarketId.toScale(marketId)),
+    )
+
+    fun claimTraderPayouts(marketIds: List<Long>) = PolkamarktRuntimeCall(
+        pallet = POLKAMARKT_PALLET,
+        method = "claim_markets",
+        arguments = mapOf(
+            "market_ids" to marketIds.map { PolkamarktMarketId.toScale(it) }
+        ),
+    )
+
+    fun claimCreatorFees(marketId: Long) = PolkamarktRuntimeCall(
+        pallet = POLKAMARKT_PALLET,
+        method = "claim_creator_fees",
+        arguments = mapOf("market_id" to PolkamarktMarketId.toScale(marketId)),
+    )
+}
+
+private fun ExtrinsicBuilder.polkamarktCall(call: PolkamarktRuntimeCall) = this.call(
+    call.pallet,
+    call.method,
+    call.arguments,
+)
+
+private fun polkamarktOutcome(value: String): DictEnum.Entry<Any?> {
+    require(value == "Yes" || value == "No") { "POLKAMARKT_INVALID_OUTCOME" }
+    return DictEnum.Entry<Any?>(value, null)
+}
+
+private const val POLKAMARKT_PALLET = "Polkamarkt"
 
 fun ExtrinsicBuilder.removeLiquidity(
     dexId: Int,

@@ -34,11 +34,13 @@ package jp.co.soramitsu.feature_select_node_impl
 
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
+import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.NodeManagerEvent
@@ -84,41 +86,44 @@ internal class NodeManagerImpl(
     private val attemptedNodes = mutableListOf<ChainNode>()
 
     init {
-        coroutineManager.applicationScope.launch {
-            val address =
-                appDatabase.nodeDao().getSelectedNode()?.address ?: FlavorOptionsProvider.wsHostUrl
-            connectionManager.setAddress(address)
-            connectionManager.observeAppState()
+        if (WalletUpgradeBackup.blockingFailure() == null) {
+            coroutineManager.applicationScope.launch {
+                val address =
+                    appDatabase.nodeDao().getSelectedNode()?.address
+                        ?: FlavorOptionsProvider.wsHostUrl
+                connectionManager.setAddress(address)
+                connectionManager.observeAppState()
 
-            selectNodeRepository.fetchDefaultNodes()
+                selectNodeRepository.fetchDefaultNodes()
+            }
+
+            connectionManager.networkState
+                .onEach {
+                    if (stateObserverEnabled) {
+                        handleState(it)
+                    }
+                    if (blockHashCheckObserverEnabled) {
+                        handleConnectionStateForBlockHashCheck(it)
+                    }
+                    autoSwitch(it)
+                }
+                .launchIn(coroutineManager.applicationScope)
+
+            selectNodeRepository.getNodes()
+                .distinctUntilChanged()
+                .onEach {
+                    availableNodes = it
+                }
+                .launchIn(coroutineManager.applicationScope)
+
+            selectNodeRepository.getSelectedNode()
+                .distinctUntilChanged()
+                .filterNotNull()
+                .onEach {
+                    selectedNode = it
+                }
+                .launchIn(coroutineManager.applicationScope)
         }
-
-        connectionManager.networkState
-            .onEach {
-                if (stateObserverEnabled) {
-                    handleState(it)
-                }
-                if (blockHashCheckObserverEnabled) {
-                    handleConnectionStateForBlockHashCheck(it)
-                }
-                autoSwitch(it)
-            }
-            .launchIn(coroutineManager.applicationScope)
-
-        selectNodeRepository.getNodes()
-            .distinctUntilChanged()
-            .onEach {
-                availableNodes = it
-            }
-            .launchIn(coroutineManager.applicationScope)
-
-        selectNodeRepository.getSelectedNode()
-            .distinctUntilChanged()
-            .filterNotNull()
-            .onEach {
-                selectedNode = it
-            }
-            .launchIn(coroutineManager.applicationScope)
     }
 
     override fun tryToConnect(node: ChainNode) {
@@ -130,7 +135,7 @@ internal class NodeManagerImpl(
             previousNode = selectedNode
             newNode = node
             stateObserverEnabled = true
-            connectionManager.switchUrl(node.address)
+            switchUrlAfterWalletMutations(node.address)
         }
     }
 
@@ -151,7 +156,7 @@ internal class NodeManagerImpl(
                 newNode = null
                 previousNode?.address?.let {
                     stateObserverEnabled = false
-                    connectionManager.switchUrl(it)
+                    switchUrlWithWalletMutationBarrier(it)
                 }
             }
 
@@ -175,7 +180,7 @@ internal class NodeManagerImpl(
         customNodeUrl = url
 
         blockHashCheckObserverEnabled = true
-        connectionManager.switchUrl(url)
+        switchUrlAfterWalletMutations(url)
     }
 
     private fun isNodeAlreadyExisting(url: String): Boolean {
@@ -216,7 +221,7 @@ internal class NodeManagerImpl(
                     } catch (e: Throwable) {
                         _events.emit(NodeManagerEvent.GenesisValidated(result = false))
                     }
-                    previousNode?.address?.let { connectionManager.switchUrl(it) }
+                    previousNode?.address?.let { switchUrlWithWalletMutationBarrier(it) }
                     customNodeUrl = ""
                 }
             }
@@ -226,7 +231,7 @@ internal class NodeManagerImpl(
                     customNodeUrl = ""
                     blockHashCheckObserverEnabled = false
                     _events.emit(NodeManagerEvent.ConnectionFailed(customNodeUrl))
-                    previousNode?.address?.let { connectionManager.switchUrl(it) }
+                    previousNode?.address?.let { switchUrlWithWalletMutationBarrier(it) }
                 }
             }
 
@@ -269,8 +274,25 @@ internal class NodeManagerImpl(
                 attemptedNodes.add(availableNodes[currentNodeIndex])
             }
 
-            connectionManager.switchUrl(nextNode.address)
+            switchUrlWithWalletMutationBarrier(nextNode.address)
             selectNodeRepository.selectNode(nextNode)
+        }
+    }
+
+    private fun switchUrlAfterWalletMutations(url: String) {
+        coroutineManager.applicationScope.launch {
+            switchUrlWithWalletMutationBarrier(url)
+        }
+    }
+
+    /**
+     * A selected-node change cannot cut across runtime qualification, nonce/header reads, signing,
+     * durable hash journaling, or the final transport handoff guarded by this same process-wide
+     * coordinator.
+     */
+    private suspend fun switchUrlWithWalletMutationBarrier(url: String) {
+        WalletMutationCoordinator.withLock {
+            connectionManager.switchUrl(url)
         }
     }
 }

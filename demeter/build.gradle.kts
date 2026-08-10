@@ -1,12 +1,11 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
-    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
@@ -15,7 +14,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.demeter"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -25,7 +24,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -37,9 +36,9 @@ android {
             )
         }
     }
-
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 
     flavorDimensions += listOf("default")
@@ -83,7 +82,7 @@ dependencies {
     implementation(libs.timberDep)
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
 
     implementation(libs.coroutineDep)
     implementation(libs.coroutineAndroidDep)
@@ -91,6 +90,7 @@ dependencies {
     implementation(libs.xsubstrateDep)
     implementation(libs.soramitsu.android.foundation)
 
+    implementation(platform(libs.compose.bom))
     implementation(libs.composeRuntimeDep)
 
     implementation(libs.roomDep)

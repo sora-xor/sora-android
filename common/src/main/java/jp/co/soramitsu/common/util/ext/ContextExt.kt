@@ -32,11 +32,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.util.ext
 
+import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.Color
 import android.util.TypedValue
 import android.view.View
+import android.view.Window
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
@@ -82,18 +84,29 @@ fun Context.getColorFromAttrs(attr: Int): TypedValue {
 fun Context.dpRes2px(@DimenRes res: Int): Int =
     this.resources.getDimensionPixelSize(res)
 
-// todo remove
 fun Context.hideSoftKeyboard() {
     val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-    inputMethodManager.toggleSoftInput(
-        InputMethodManager.SHOW_IMPLICIT, 0
-    )
+    val windowToken = when (this) {
+        is Activity -> currentFocus?.windowToken
+        else -> getActivity()?.currentFocus?.windowToken
+    }
+    windowToken?.let {
+        inputMethodManager.hideSoftInputFromWindow(it, 0)
+    }
 }
 
 fun Context.openSoftKeyboard(view: View) {
     val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     view.requestFocus()
-    inputMethodManager.toggleSoftInput(
-        InputMethodManager.SHOW_IMPLICIT, 0
-    )
+    inputMethodManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+}
+
+@Suppress("DEPRECATION")
+fun Window.setStatusBarColorCompat(@ColorInt color: Int) {
+    statusBarColor = color
+}
+
+@Suppress("DEPRECATION")
+fun Window.setNavigationBarColorCompat(@ColorInt color: Int) {
+    navigationBarColor = color
 }

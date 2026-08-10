@@ -1,34 +1,38 @@
 import java.io.FileInputStream
 import java.util.Properties
-import org.gradle.kotlin.dsl.kapt
 
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
-    alias(libs.plugins.compose.compiler)
 }
 
 fun secret(name: String): String {
     val fileProperties = File(rootProject.projectDir.absolutePath, "local.properties")
-    val pr = runCatching { FileInputStream(fileProperties) }.getOrNull()?.let { file ->
+    val pr = runCatching { FileInputStream(fileProperties) }.getOrNull()?.use { file ->
         Properties().apply {
             load(file)
         }
     }
-    return pr?.getProperty(name) ?: System.getenv(name)!!
+    return pr?.getProperty(name) ?: System.getenv(name).orEmpty()
 }
 
 fun maybeWrapQuotes(s: String): String {
     return if (s.startsWith("\"")) s else "\"" + s + "\""
 }
 
-val composeCompilerVersion: String by project
+// Taira deployment identity is public, but it is authority-controlled. Read it only from the
+// qualification runner environment and escape it as data; local.properties and source defaults
+// must never select a current Taira epoch for a production build.
+fun protectedBuildConfigString(name: String): String {
+    val value = System.getenv(name).orEmpty()
+    return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+}
 
 kotlin {
     jvmToolchain(17)
@@ -36,17 +40,88 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.common"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "TAIRA_DEPLOYMENT_MANIFEST_SHA256",
+            protectedBuildConfigString("TAIRA_DEPLOYMENT_MANIFEST_SHA256")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_DEPLOYMENT_MANIFEST_SEQUENCE_NUMBER",
+            protectedBuildConfigString("TAIRA_DEPLOYMENT_MANIFEST_SEQUENCE_NUMBER")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_CURRENT_EPOCH",
+            protectedBuildConfigString("TAIRA_CURRENT_EPOCH")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_CURRENT_CHAIN_ID",
+            protectedBuildConfigString("TAIRA_CURRENT_CHAIN_ID")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_CURRENT_GENESIS_SHA256",
+            protectedBuildConfigString("TAIRA_CURRENT_GENESIS_SHA256")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_CURRENT_I105_DISCRIMINANT",
+            protectedBuildConfigString("TAIRA_CURRENT_I105_DISCRIMINANT")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_CURRENT_TORII_BASE_URL",
+            protectedBuildConfigString("TAIRA_CURRENT_TORII_BASE_URL")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_CURRENT_PUBLIC_MCP_ENDPOINT",
+            protectedBuildConfigString("TAIRA_CURRENT_PUBLIC_MCP_ENDPOINT")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_CURRENT_EXPLORER_BASE_URL",
+            protectedBuildConfigString("TAIRA_CURRENT_EXPLORER_BASE_URL")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_RETIRED_EPOCH",
+            protectedBuildConfigString("TAIRA_RETIRED_EPOCH")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_RETIRED_CHAIN_ID",
+            protectedBuildConfigString("TAIRA_RETIRED_CHAIN_ID")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_RETIRED_GENESIS_SHA256",
+            protectedBuildConfigString("TAIRA_RETIRED_GENESIS_SHA256")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256",
+            protectedBuildConfigString("TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256")
+        )
+        buildConfigField(
+            "String",
+            "TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256",
+            protectedBuildConfigString("TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256")
+        )
     }
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -60,6 +135,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        compose = true
         buildConfig = true
     }
 
@@ -146,7 +222,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":network"))
+    api(project(":network"))
 
     implementation(libs.activityKtxDep)
     implementation(libs.coreKtxDep)
@@ -159,38 +235,38 @@ dependencies {
     implementation(libs.coroutineDep)
 
     implementation(libs.uiCoreDep)
-    implementation(libs.soramitsu.android.foundation)
+    api(libs.soramitsu.android.foundation)
 
-    implementation(libs.kotlinxSerializationJsonDep)
+    api(libs.kotlinxSerializationJsonDep)
 
-    implementation(libs.coilSvgDep)
+    api(libs.coilSvgDep)
 
     implementation(libs.webSocketLibDep)
     implementation(libs.uiCoreDep)
 
     implementation(libs.lifecycleProcessDep)
-    kapt(libs.lifecycleKaptDep)
 
     implementation(libs.timberDep)
     implementation(libs.svgDep)
     implementation(libs.jdenticonDep)
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
 
     implementation(libs.datastoreDep)
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
-    implementation(libs.xbackupDep)
-    implementation(libs.xsubstrateDep)
+    api(libs.xbackupDep)
+    api(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)
     implementation(libs.ed25519Dep) {
 //        exclude(module = "bcpkix-jdk15on")
     }
+    implementation(libs.bcprovDep)
     implementation(libs.xercesDep)
 
-    implementation(libs.gsonDep)
+    api(libs.gsonDep)
     implementation(libs.zXingCoreDep)
 
     implementation(platform(libs.googleFirebaseBomDep))
@@ -215,6 +291,7 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
     implementation(libs.composeLiveDataDep)
+    implementation(libs.composeLifecycleDep)
     implementation(libs.composeFoundationDep)
     implementation(libs.composeMaterialDep)
     implementation(libs.composeConstraintLayoutDep)
@@ -226,8 +303,6 @@ dependencies {
     testImplementation(libs.mockitoDep)
     testImplementation(libs.archCoreTestDep)
     testImplementation(libs.coroutineTestDep)
-}
-
-kapt {
-    correctErrorTypes = true
+    androidTestImplementation(libs.androidxTestExtJunitDep)
+    androidTestImplementation(libs.androidxTestEspressoCoreDep)
 }

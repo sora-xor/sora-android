@@ -55,6 +55,8 @@ import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureState
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
@@ -117,6 +119,9 @@ class ProfileViewModelTest {
     private lateinit var soraConfigManager: SoraConfigManager
 
     @MockK
+    private lateinit var productionFeatureManager: ProductionFeatureManager
+
+    @MockK
     private lateinit var darkThemeManager: DarkThemeManager
 
     private lateinit var profileViewModel: ProfileViewModel
@@ -132,6 +137,7 @@ class ProfileViewModelTest {
             selectNodeRouter,
             soraConfigManager,
             soraCardInteractor,
+            productionFeatureManager,
             nodeManager,
             darkThemeManager
         )
@@ -160,6 +166,14 @@ class ProfileViewModelTest {
                 )
             )
         coEvery { soraConfigManager.getSoraCard() } returns true
+        coEvery { productionFeatureManager.getState() } returns ProductionFeatureState(
+            nexusAvailable = true,
+            nexusSendsAvailable = false,
+            polkamarktVisible = true,
+            polkamarktMutationsAvailable = false,
+            tairaVisible = true,
+            tairaPreferenceIsExplicit = false,
+        )
         every { nodeManager.connectionState } returns flowOf(true)
         every { router.showGetSoraCard(any(), any()) } returns Unit
         every { router.showSoraCardDetails() } just runs

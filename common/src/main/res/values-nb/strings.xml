@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Velg aktivum</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Lukk</string>
+  <string name="tx_details_view_on_explorer">Vis i utforsker</string>
   <string name="common_confirm">Bekrefte</string>
   <string name="common_connected">Tilkoblet</string>
   <string name="common_connecting">Kobler til...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Du har allerede brukt en annen invitasjonskode</string>
   <string name="common_error_invitation_code_not_found">Invitasjonskoden er ugyldig</string>
   <string name="common_error_inviter_registered_after_invitee">Oppgitt invitasjonskode kan ikke brukes fordi den er fra en bruker som registrerte seg etter deg</string>
-  <string name="common_error_mnemonic_is_not_valid">Forsikre deg om at passordfrasen din består av 12 eller 15 ord, og at de alle er riktige.</string>
-  <string name="common_error_mnemonic_length_error">Passordfrasen må inneholde 15 ord</string>
+  <string name="common_error_mnemonic_is_not_valid">Forsikre deg om at passordfrasen din består av 12 eller 24 ord, og at de alle er riktige.</string>
+  <string name="common_error_mnemonic_length_error">Passordfrasen må inneholde 12 eller 24 ord</string>
   <string name="common_error_network">Vennligst kontroller internettforbindelsen, og prøv igjen.</string>
   <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">Beklager, men du har ingen invitasjoner å dele</string>
@@ -277,7 +278,7 @@
   <string name="export_protection_passphrase_1">If I lose my passphrase, my funds will be lost forever.</string>
   <string name="export_protection_passphrase_2">If I expose or share my passphrase to anybody, my funds can get stolen.</string>
   <string name="export_protection_passphrase_3">It is my full reponsibility to keep my passphrase secure.</string>
-  <string name="export_protection_passphrase_description">In the next step you will see Passphrase (12 words) that allow you to recover an account.</string>
+  <string name="export_protection_passphrase_description">I neste trinn ser du passordfrasen (24 ord) som lar deg gjenopprette en konto.</string>
   <string name="export_protection_seed_1">If I lose my raw seed, my funds will be lost forever.</string>
   <string name="export_protection_seed_2">If I expose or share my raw seed to anybody, my funds can get stolen.</string>
   <string name="export_protection_seed_3">It is my full reponsibility to keep my raw seed secure.</string>

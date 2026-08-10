@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
   <string name="about_announcements">घोषणाएँ प्राप्त करें</string>
   <string name="about_ask_support">समर्थन के लिए पूछें</string>
   <string name="about_contact_us">संपर्क करें</string>
@@ -87,6 +87,7 @@
   <string name="common_choose_asset">संपत्ति का चयन करें</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">बंद करे</string>
+  <string name="tx_details_view_on_explorer">एक्सप्लोरर में देखें</string>
   <string name="common_confirm">पुष्टि करें</string>
   <string name="common_connected">जुड़ा</string>
   <string name="common_connecting">जुड़ रहा है...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">आपने पहले ही एक अन्य निमंत्रण कोड लागू कर दिया है</string>
   <string name="common_error_invitation_code_not_found">निमंत्रण कोड अमान्य है</string>
   <string name="common_error_inviter_registered_after_invitee">बशर्ते आमंत्रण कोड लागू नहीं किया जा सकता क्योंकि यह उस उपयोगकर्ता से है जिसने आपके बाद पंजीकरण कराया था</string>
-  <string name="common_error_mnemonic_is_not_valid">आपका पदबंध अमान्य है। कृपया, एक और कोशिश करें।</string>
-  <string name="common_error_mnemonic_length_error">पदबंध में 15 शब्द होने चाहिए</string>
+  <string name="common_error_mnemonic_is_not_valid">कृपया सुनिश्चित करें कि आपका पासफ़्रेज़ 12 या 24 शब्दों का है और सभी शब्द सही हैं।</string>
+  <string name="common_error_mnemonic_length_error">पदबंध में 12 या 24 शब्द होने चाहिए</string>
   <string name="common_error_network">कृपया, अंतराजाल कनेक्शन जांचें और बाद में पुनः प्रयास करें।</string>
   <string name="common_error_no_browser_error">लिंक खोलने के लिए कृपया एक ब्राउज़र स्थापित करें</string>
   <string name="common_error_not_enough_invitations">क्षमा करें, लेकिन आपके पास साझा करने के लिए कोई निमंत्रण नहीं है</string>
@@ -154,7 +155,7 @@
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
+  <plurals name="common_hour" tools:ignore="ImpliedQuantity">
     <item quantity="one">खाली</item>
     <item quantity="other">घंटा</item>
   </plurals>
@@ -277,7 +278,7 @@
   <string name="export_protection_passphrase_1">अगर मैं अपना पासफ़्रेज़ खो देता हूँ, तो मेरी निधि हमेशा के लिए खो जाएगी।</string>
   <string name="export_protection_passphrase_2">यदि मैं अपना पासफ़्रेज़ किसी को प्रकट या साझा करता हूँ, तो मेरे फंड की चोरी हो सकती है।</string>
   <string name="export_protection_passphrase_3">मेरे पासफ़्रेज़ को सुरक्षित रखने की पूरी जिम्मेदारी मेरी है।</string>
-  <string name="export_protection_passphrase_description">अगले चरण में आप पासफ़्रेज़ (12 शब्द) देखेंगे जो आपको खाता पुनर्प्राप्त करने की अनुमति देता है।</string>
+  <string name="export_protection_passphrase_description">अगले चरण में आप पासफ़्रेज़ (24 शब्द) देखेंगे जो आपको खाता पुनर्प्राप्त करने की अनुमति देता है।</string>
   <string name="export_protection_seed_1">यदि मैं अपना Raw Seed  खो देता हूं, तो मेरा धन हमेशा के लिए खो जाएगा।</string>
   <string name="export_protection_seed_2">अगर मैं अपने Raw Seed  को किसी के सामने उजागर या साझा करता हूं, तो मेरा पैसा चोरी हो सकता है।</string>
   <string name="export_protection_seed_3">अपने Raw Seed को सुरक्षित रखना मेरी पूर्ण जिम्मेदारी है।</string>
@@ -403,20 +404,20 @@
   <string name="profile_biometry_title">बायोमेट्री ऑथ</string>
   <string name="profile_logout_title">लॉगआउट</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="one">दिन शेष</item>
-    <item quantity="other">दिन शेष</item>
+    <item quantity="one">%s दिन शेष</item>
+    <item quantity="other">%s दिन शेष</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="one">घंटा शेष</item>
-    <item quantity="other">घंटे शेष</item>
+    <item quantity="one">%s घंटा शेष</item>
+    <item quantity="other">%s घंटे शेष</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
-    <item quantity="one">मिनट शेष</item>
-    <item quantity="other">मिनट्स शेष</item>
+    <item quantity="one">%s मिनट शेष</item>
+    <item quantity="other">%s मिनट्स शेष</item>
   </plurals>
   <plurals name="project_date_second_plurals">
-    <item quantity="one">सेकंड शेष</item>
-    <item quantity="other">सेकंड्‌स शेष</item>
+    <item quantity="one">%s सेकंड शेष</item>
+    <item quantity="other">%s सेकंड्‌स शेष</item>
   </plurals>
   <string name="project_ended_template">समाप्त%s</string>
   <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
@@ -441,7 +442,7 @@
   <string name="referral_input_reward_title">आमंत्रणों की वांछित मात्रा दर्ज करें</string>
   <string name="referral_invitaion_link_title">उपलब्ध आमंत्रण</string>
   <string name="referral_invitation_link">आमंत्रण लिंक</string>
-  <plurals name="referral_invitations">
+  <plurals name="referral_invitations" tools:ignore="ImpliedQuantity">
     <item quantity="one">आमंत्रण</item>
     <item quantity="other">आमंत्रण</item>
   </plurals>

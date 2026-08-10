@@ -34,7 +34,6 @@ package jp.co.soramitsu.common.util
 
 import android.app.Activity
 import android.view.WindowManager
-import androidx.core.view.ViewCompat
 
 class ScreenshotBlockHelper(
     private val activity: Activity
@@ -57,7 +56,7 @@ class ScreenshotBlockHelper(
         }
 
         with(activity) {
-            if (changed && ViewCompat.isAttachedToWindow(window.decorView)) {
+            if (changed && window.decorView.isAttachedToWindow) {
                 windowManager.removeViewImmediate(window.decorView)
                 windowManager.addView(window.decorView, window.attributes)
             }

@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora
 
 import android.app.Application
+import android.content.Context
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
@@ -45,10 +46,14 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.io.FileManager
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.BuildType
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_select_node_api.NodeManager
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPendingRecoveryScheduler
+import jp.co.soramitsu.feature_wallet_impl.data.recovery.Sora2PendingRecoveryScheduler
 import timber.log.Timber
 
 @HiltAndroidApp
@@ -72,6 +77,19 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     @Inject
     lateinit var darkThemeManager: DarkThemeManager
 
+    @Inject
+    lateinit var nexusPendingRecoveryScheduler: NexusPendingRecoveryScheduler
+
+    @Inject
+    lateinit var sora2PendingRecoveryScheduler: Sora2PendingRecoveryScheduler
+
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(base)
+        // Hilt injects eager singletons before this class's onCreate body. Prepare the immutable
+        // wallet backup first so no injected database consumer can race the upgrade gate.
+        WalletUpgradeBackup.prepare(this)
+    }
+
     override fun newImageLoader(): ImageLoader {
         val loader = ImageLoader.Builder(this).components {
             add(svg)
@@ -90,13 +108,20 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         initLogger()
 
         registerActivityLifecycleCallbacks(resourceManager)
-        FirebaseApp.initializeApp(this)
+        val firebaseApp = runCatching { FirebaseApp.initializeApp(this) }
+            .onFailure { Timber.e(it) }
+            .getOrNull()
+        FirebaseWrapper.setCrashlyticsEnabled(firebaseApp != null)
 
         OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
         OptionsProvider.CURRENT_VERSION_NAME = BuildConfig.VERSION_NAME
         OptionsProvider.APPLICATION_ID = BuildConfig.APPLICATION_ID
 
         darkThemeManager.updateUiModeFromCache()
+        // Unique, network-constrained work only looks up exact durable hashes. It never signs or
+        // resubmits, and backs off until finality/history reconciliation reaches a terminal state.
+        nexusPendingRecoveryScheduler.ensureOnStartup()
+        sora2PendingRecoveryScheduler.ensureOnStartup()
     }
 
     private fun initLogger() {

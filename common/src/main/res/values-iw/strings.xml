@@ -87,6 +87,7 @@
   <string name="common_choose_asset">בחר נכס</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">סגור</string>
+  <string name="tx_details_view_on_explorer">הצג בסייר</string>
   <string name="common_confirm">אשר</string>
   <string name="common_connected">מחובר</string>
   <string name="common_connecting">מתחבר...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">כבר השתמשת בקוד הזמנה אחר</string>
   <string name="common_error_invitation_code_not_found">קוד ההזמנה שגוי</string>
   <string name="common_error_inviter_registered_after_invitee">לא ניתן להזין את קוד ההזמנה שסופק מכיוון שהוא הגיע מהמשתמש שנרשם אחריך</string>
-  <string name="common_error_mnemonic_is_not_valid">אנא ודא שמילות המפתח שלך מורכבות מ 12 או 15 מילים וכולן נכונות.</string>
-  <string name="common_error_mnemonic_length_error">מילות המפתח חייבות להכיל 15 מילים</string>
+  <string name="common_error_mnemonic_is_not_valid">אנא ודא שמילות המפתח שלך מורכבות מ 12 או 24 מילים וכולן נכונות.</string>
+  <string name="common_error_mnemonic_length_error">מילות המפתח חייבות להכיל 12 או 24 מילים</string>
   <string name="common_error_network">אנא בדוק את חיבור האינטרנט ונסה שוב מאוחר יותר.</string>
   <string name="common_error_no_browser_error">אנא התקן דפדפן כדי לפתוח את הקישור</string>
   <string name="common_error_not_enough_invitations">מצטערים, אבל אין לך הזמנות לשתף</string>
@@ -279,7 +280,7 @@
   <string name="export_protection_passphrase_1">אם אאבד את מילות המפתח שלי, הכספים שלי יאבדו לנצח.</string>
   <string name="export_protection_passphrase_2">אם אחשוף או אשתף את מילות המפתח שלי למישהו, הכספים שלי עלולים להיגנב.</string>
   <string name="export_protection_passphrase_3">זו האחריות המלאה שלי לשמור על מילות המפתח שלי מאובטחות.</string>
-  <string name="export_protection_passphrase_description">בשלב הבא תראה מילות מפתח (12 מילים) המאפשרות לך לשחזר חשבון.</string>
+  <string name="export_protection_passphrase_description">בשלב הבא תראה מילות מפתח (24 מילים) המאפשרות לך לשחזר חשבון.</string>
   <string name="export_protection_seed_1">אם אאבד את קוד הסיד שלי, הכספים שלי יאבדו לנצח.</string>
   <string name="export_protection_seed_2">אם אחשוף או אשתף את קוד הסיד שלי למישהו, הכספים שלי עלולים להיגנב.</string>
   <string name="export_protection_seed_3">זו האחריות המלאה שלי לשמור על קוד הסיד שלי מאובטח.</string>
