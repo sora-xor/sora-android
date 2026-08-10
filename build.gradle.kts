@@ -119,8 +119,12 @@ tasks.register<Exec>("verifyProductionRollout") {
     environment(
         "PRODUCTION_CANDIDATE_PI_RECEIPT_PATH",
         System.getenv("PRODUCTION_CANDIDATE_PI_RECEIPT_PATH") ?: "",
+    )
+    environment(
         "PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH",
         System.getenv("PRODUCTION_CANDIDATE_PI_RECEIPT_SIGNATURE_PATH") ?: "",
+    )
+    environment(
         "PRODUCTION_PI_CONTROLLER_ID",
         System.getenv("PRODUCTION_PI_CONTROLLER_ID") ?: "",
     )
