@@ -3428,6 +3428,8 @@ const kvmAccessContractLines = Object.freeze([
   '[[ "$(sudo cat "$kvm_rule_path")" == "$kvm_rule" ]] || {',
   "sudo udevadm control --reload-rules",
   "sudo udevadm trigger --name-match=kvm",
+  "sudo chmod 0666 /dev/kvm",
+  `[[ "$(stat -c '%a' /dev/kvm)" == 666 ]] || {`,
   "[[ -r /dev/kvm && -w /dev/kvm ]] || {",
 ]);
 const hasKvmAccessContract = (source) =>
