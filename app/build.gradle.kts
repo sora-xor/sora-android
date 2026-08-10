@@ -17,6 +17,7 @@ plugins {
     alias(libs.plugins.triplet)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
+    alias(libs.plugins.composeCompiler)
 }
 
 val googleServicesJsonFiles = fileTree(projectDir) {
@@ -106,6 +107,7 @@ android {
                 "proguard-rules.pro"
             )
         }
+
         debug {
             isMinifyEnabled = false
             versionNameSuffix = "-debug"
@@ -295,7 +297,7 @@ play {
     serviceAccountCredentials = file(System.getenv("CI_PLAY_KEY") ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.8.6.3 - SORA Card Improvements"
+    releaseName = "3.8.6.5 - SORA Card Improvements"
     defaultToAppBundles = true
 }
 
@@ -356,6 +358,8 @@ dependencies {
     implementation(libs.workManagerDep)
 
     implementation(libs.lifecycleProcessDep)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.composeRuntimeDep)
 
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
