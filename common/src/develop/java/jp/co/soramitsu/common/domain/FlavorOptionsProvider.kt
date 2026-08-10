@@ -33,6 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.domain
 
 object FlavorOptionsProvider {
-    const val wsHostUrl = "wss://ws.framenode-1.r0.dev.sora2.soramitsu.co.jp/"
-    const val typesFilePath = "dev"
+    const val wsHostUrl = "wss://ws.framenode-1.r0.tst.sora2.soramitsu.co.jp"
+    const val typesFilePath = "tst"
 }

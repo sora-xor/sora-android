@@ -70,7 +70,6 @@ object SoraCardTestData {
         client = "test android client",
         soraBackEndUrl = "soracard backend",
         clientDark = false,
-        clientCase = UiStyle.SW,
         flow = SoraCardFlow.SoraCardKycFlow(
             kycCredentials = SoraCardKycCredentials(
                 endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
@@ -83,6 +82,7 @@ object SoraCardTestData {
             userAvailableXorAmount = 0.0,
             logIn = false,
         ),
+        clientCase = UiStyle.SW,
     )
 
     val registrationLauncher = SoraCardContractData(
@@ -91,7 +91,6 @@ object SoraCardTestData {
         client = "test android client",
         soraBackEndUrl = "soracard backend",
         clientDark = false,
-        clientCase = UiStyle.SW,
         flow = SoraCardFlow.SoraCardKycFlow(
             kycCredentials = SoraCardKycCredentials(
                 endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
@@ -104,6 +103,7 @@ object SoraCardTestData {
             userAvailableXorAmount = 0.0,
             logIn = false,
         ),
+        clientCase = UiStyle.SW,
     )
 
     val signInLauncher = SoraCardContractData(
@@ -112,7 +112,6 @@ object SoraCardTestData {
         client = "test android client",
         soraBackEndUrl = "soracard backend",
         clientDark = false,
-        clientCase = UiStyle.SW,
         flow = SoraCardFlow.SoraCardKycFlow(
             areAttemptsPaidSuccessfully = false,
             isEnoughXorAvailable = false,
@@ -125,6 +124,7 @@ object SoraCardTestData {
             userAvailableXorAmount = 0.0,
             logIn = false,
         ),
+        clientCase = UiStyle.SW,
 
     )
 }

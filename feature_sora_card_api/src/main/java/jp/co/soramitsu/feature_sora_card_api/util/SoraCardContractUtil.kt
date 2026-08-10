@@ -68,22 +68,22 @@ fun createSoraCardGateHubContract(): SoraCardContractData {
         soraBackEndUrl = BuildConfigWrapper.getSoraCardBackEndUrl(),
         client = OptionsProvider.header,
         clientDark = true,
-        clientCase = UiStyle.SW,
         flow = SoraCardFlow.SoraCardGateHubFlow,
+        clientCase = UiStyle.SW,
     )
 }
 
 fun createSoraCardContract(
     userAvailableXorAmount: Double,
     isEnoughXorAvailable: Boolean,
+    clientDark: Boolean,
 ): SoraCardContractData {
     return SoraCardContractData(
         basic = createSoraCardBasicContract(),
         locale = Locale.ENGLISH,
         soraBackEndUrl = BuildConfigWrapper.getSoraCardBackEndUrl(),
         client = OptionsProvider.header,
-        clientDark = true,
-        clientCase = UiStyle.SW,
+        clientDark = clientDark,
         flow = SoraCardFlow.SoraCardKycFlow(
             kycCredentials = SoraCardKycCredentials(
                 endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
@@ -98,5 +98,6 @@ fun createSoraCardContract(
             isIssuancePaid = false,
             logIn = false,
         ),
+        clientCase = UiStyle.SW,
     )
 }

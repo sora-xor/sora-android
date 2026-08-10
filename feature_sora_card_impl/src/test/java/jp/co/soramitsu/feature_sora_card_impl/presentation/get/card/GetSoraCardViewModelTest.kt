@@ -40,6 +40,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -104,9 +105,13 @@ class GetSoraCardViewModelTest {
     @Mock
     private lateinit var connectionManager: ConnectionManager
 
+    @Mock
+    private lateinit var darkThemeManager: DarkThemeManager
+
     @Before
     fun setUp() = runTest {
         given(connectionManager.connectionState).willReturn(flowOf(true))
+        given(darkThemeManager.darkModeStatusFlow).willReturn(MutableStateFlow(false))
 
         mockkObject(OptionsProvider)
         every { OptionsProvider.header } returns "test android client"
@@ -128,6 +133,7 @@ class GetSoraCardViewModelTest {
             mainRouter,
             polkaswapRouter,
             resourceManager,
+            darkThemeManager,
             connectionManager,
             soraCardInteractor,
             shouldStartSignIn = false,

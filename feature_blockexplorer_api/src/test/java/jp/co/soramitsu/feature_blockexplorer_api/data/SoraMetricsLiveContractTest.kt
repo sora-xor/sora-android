@@ -35,7 +35,12 @@ class SoraMetricsLiveContractTest {
         val response = postGraphQl(
             """
                 query {
-                  historyElements(first: 1, after: null, orderBy: [TIMESTAMP_DESC, ID_DESC]) {
+                  historyElements(
+                    first: 1
+                    after: null
+                    orderBy: [TIMESTAMP_DESC, ID_DESC]
+                    filter: { address: { equalTo: "sora-mobile-contract-probe-no-account" } }
+                  ) {
                     totalCount
                     pageInfo { hasNextPage endCursor }
                     edges {

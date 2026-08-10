@@ -32,9 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_select_node_impl.presentation.details
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -55,12 +52,14 @@ import jp.co.soramitsu.feature_select_node_impl.domain.ValidationEvent
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
@@ -81,7 +80,7 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
         ): NodeDetailsViewModel
     }
 
-    var state by mutableStateOf(
+    private val _state = MutableStateFlow(
         NodeDetailsState(
             nameState = InputTextState(
                 value = TextFieldValue(nodeName ?: ""),
@@ -93,7 +92,7 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
             )
         )
     )
-        private set
+    val state = _state.asStateFlow()
 
     private val address: MutableStateFlow<String> = MutableStateFlow("")
 
@@ -117,7 +116,9 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
             nameIsValid = true
             genesisHashIsValid = true
 
-            state = state.copy(submitButtonEnabled = submitButtonEnabled())
+            _state.update {
+                it.copy(submitButtonEnabled = submitButtonEnabled())
+            }
         }
 
         interactor.subscribeSelectedNode()
@@ -126,11 +127,13 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
             .catch { onError(it) }
             .onEach {
                 selectedNode = it
-                state = state.copy(
-                    addressState = state.addressState.copy(
-                        enabled = !isCurrentNodeConnected()
+                _state.update {
+                    it.copy(
+                        addressState = it.addressState.copy(
+                            enabled = !isCurrentNodeConnected()
+                        )
                     )
-                )
+                }
             }
             .launchIn(viewModelScope)
 
@@ -162,14 +165,16 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
     fun onNameChanged(text: TextFieldValue) {
         pinCodeChecked = false
         val errorMessage = validateName(text.text)
-        state = state.copy(
-            nameState = state.nameState.copy(
-                value = text,
-                descriptionText = errorMessage,
-                error = errorMessage != null
-            ),
-            submitButtonEnabled = submitButtonEnabled()
-        )
+        _state.update {
+            it.copy(
+                nameState = it.nameState.copy(
+                    value = text,
+                    descriptionText = errorMessage,
+                    error = errorMessage != null
+                ),
+                submitButtonEnabled = submitButtonEnabled()
+            )
+        }
     }
 
     private fun validateName(name: String): String? {
@@ -181,8 +186,7 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
         val nameExisting = nodes.firstOrNull {
             it.name.trim() == name.trim()
         }
-            ?.let { true }
-            ?: false
+            ?.let { true } == true
 
         val nameIsOccupied = nameExisting && name.trim() != nodeName
 
@@ -196,20 +200,22 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
     }
 
     fun onAddressChanged(address: TextFieldValue) {
-        if (address.text != state.addressState.value.text) {
+        if (address.text != _state.value.addressState.value.text) {
             pinCodeChecked = false
             addressIsValid = false
             genesisHashIsValid = false
             this.address.value = address.text
         }
-        state = state.copy(
-            addressState = state.addressState.copy(
-                value = address,
-                descriptionText = null,
-                error = false
-            ),
-            submitButtonEnabled = submitButtonEnabled()
-        )
+        _state.update {
+            it.copy(
+                addressState = it.addressState.copy(
+                    value = address,
+                    descriptionText = null,
+                    error = false
+                ),
+                submitButtonEnabled = submitButtonEnabled()
+            )
+        }
     }
 
     private fun subscribeAddressChanges() {
@@ -228,36 +234,43 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
         when (interactor.validateNodeAddress(url)) {
             ValidationEvent.Succeed -> {
                 addressIsValid = true
-                state = state.copy(
-                    addressState = state.addressState.copy(
-                        descriptionText = null,
-                        error = false
-                    ),
-                    submitButtonEnabled = submitButtonEnabled(),
-                    loading = true
-                )
+                _state.update {
+                    it.copy(
+                        addressState = it.addressState.copy(
+                            descriptionText = null,
+                            error = false
+                        ),
+                        submitButtonEnabled = submitButtonEnabled(),
+                        loading = true
+                    )
+                }
                 checkGenesisHash(url)
             }
+
             ValidationEvent.ProtocolValidationFailed -> {
                 addressIsValid = false
-                state = state.copy(
-                    addressState = state.addressState.copy(
-                        descriptionText = resourceManager.getString(R.string.node_details_protocol_validation_failed),
-                        error = true
-                    ),
-                    submitButtonEnabled = submitButtonEnabled(),
-                )
+                _state.update {
+                    it.copy(
+                        addressState = it.addressState.copy(
+                            descriptionText = resourceManager.getString(R.string.node_details_protocol_validation_failed),
+                            error = true
+                        ),
+                        submitButtonEnabled = submitButtonEnabled(),
+                    )
+                }
             }
 
             ValidationEvent.AddressValidationFailed -> {
                 addressIsValid = false
-                state = state.copy(
-                    addressState = state.addressState.copy(
-                        descriptionText = resourceManager.getString(R.string.node_details_address_validation_failed),
-                        error = true
-                    ),
-                    submitButtonEnabled = submitButtonEnabled(),
-                )
+                _state.update {
+                    it.copy(
+                        addressState = it.addressState.copy(
+                            descriptionText = resourceManager.getString(R.string.node_details_address_validation_failed),
+                            error = true
+                        ),
+                        submitButtonEnabled = submitButtonEnabled(),
+                    )
+                }
             }
         }
     }
@@ -274,36 +287,41 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
             .onEach { event ->
                 when (event) {
                     is NodeManagerEvent.NodeExisting -> {
-                        state = state.copy(loading = false)
+                        _state.update {
+                            it.copy(loading = false)
+                        }
                         showNodeAlreadyAddedDialog(event.existedNodeName, event.currentNodeUrl)
                     }
 
                     is NodeManagerEvent.GenesisValidated -> {
                         genesisHashIsValid = event.result
-                        state = if (!genesisHashIsValid) {
-                            state.copy(
-                                addressState = state.addressState.copy(
-                                    descriptionText = resourceManager.getString(R.string.node_details_genesis_validation_failed),
-                                    error = true
-                                ),
-                                submitButtonEnabled = submitButtonEnabled(),
-                                loading = false
-                            )
-                        } else {
-                            state.copy(
-                                submitButtonEnabled = submitButtonEnabled(),
-                                loading = false
-                            )
+                        _state.update {
+                            if (!genesisHashIsValid) {
+                                val te = resourceManager.getString(R.string.node_details_genesis_validation_failed)
+                                it.copy(
+                                    addressState = it.addressState.copy(
+                                        descriptionText = te,
+                                        error = true
+                                    ),
+                                    submitButtonEnabled = submitButtonEnabled(),
+                                    loading = false
+                                )
+                            } else {
+                                it.copy(
+                                    submitButtonEnabled = submitButtonEnabled(),
+                                    loading = false
+                                )
+                            }
                         }
                     }
 
                     is NodeManagerEvent.ConnectionFailed -> {
-                        state = state.copy(loading = false)
+                        _state.update { it.copy(loading = false) }
                         showUnableJoinNodeDialog()
                     }
 
                     is NodeManagerEvent.NoConnection -> {
-                        state = state.copy(loading = false)
+                        _state.update { it.copy(loading = false) }
                         showNoConnectionDialog()
                     }
 
@@ -327,13 +345,13 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
         val nodeConnected = isCurrentNodeConnected()
         node = ChainNode(
             chain = Const.SORA,
-            name = state.nameState.value.text.trim(),
-            address = state.addressState.value.text.trim(),
+            name = _state.value.nameState.value.text.trim(),
+            address = _state.value.addressState.value.text.trim(),
             isSelected = nodeConnected,
             isDefault = false
         )
         if (nodeConnected) {
-            state = state.copy(loading = true)
+            _state.update { it.copy(loading = true) }
             node?.let(nodeManager::tryToConnect)
         } else {
             submitChanges()
