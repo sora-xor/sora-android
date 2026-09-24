@@ -78,6 +78,7 @@ android {
     lint {
         abortOnError = true
         checkDependencies = true
+        baseline = file("lint-baseline.xml")
     }
 
     signingConfigs {
