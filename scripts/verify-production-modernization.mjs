@@ -99,6 +99,15 @@ for (const failure of verifyAndroidLocalizationBaselineV1(
   json("docs/modernization/qualification/android-release-missing-translations-2026-09-24.json"),
   read("app/build.gradle.kts"),
 )) failures.push(failure);
+const localizationCoverage = spawnSync(
+  "python3",
+  [join(root, "scripts/verify-android-localization-coverage.py")],
+  { cwd: root, encoding: "utf8", timeout: 15000 },
+);
+if (localizationCoverage.status !== 0) {
+  failures.push("ANDROID_LOCALIZATION_RESOURCE_PRESENCE_CHANGED");
+  process.stderr.write(localizationCoverage.stderr || localizationCoverage.error?.message || "Localization coverage audit failed\n");
+}
 const sha256 = (path) =>
   createHash("sha256").update(readFileSync(join(root, path))).digest("hex");
 const sha256Files = (paths) => {
