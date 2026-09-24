@@ -62,6 +62,7 @@ import jp.co.soramitsu.core_db.migrations.migration_reorderBaseToken_62_63
 import jp.co.soramitsu.core_db.migrations.migration_walletIdentity_73_74
 import jp.co.soramitsu.core_db.migrations.migration_walletDeletionJournal_74_75
 import jp.co.soramitsu.core_db.migrations.migration_pendingNetworkTransactionChain_76_77
+import jp.co.soramitsu.core_db.migrations.legacyCacheMigrationsTo58
 import jp.co.soramitsu.core_db.migrations.migration_sora2PendingSubmission_75_76
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.BasicPoolLocal
@@ -141,6 +142,7 @@ abstract class AppDatabase : RoomDatabase() {
                 "app.db"
             )
                 .openHelperFactory(WalletUpgradeBackup.gatedOpenHelperFactory())
+                .addMigrations(*legacyCacheMigrationsTo58)
                 .addMigrations(migration_poolsBaseToken_61_62)
                 .addMigrations(migration_reorderBaseToken_62_63)
                 .addMigrations(migration_CardHub_63_64)

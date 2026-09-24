@@ -3,16 +3,16 @@ package jp.co.soramitsu.feature_wallet_impl.data.nexus
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import jp.co.soramitsu.common.nexus.NexusNetworks
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NexusSendQualificationTest {
 
     @Test
-    fun `send qualification requires both capabilities without exercising either capability`() {
+    fun `send support explicitly projects signer and finality capabilities`() {
         listOf(
             Triple(false, false, false),
             Triple(false, true, false),
@@ -26,9 +26,20 @@ class NexusSendQualificationTest {
                 finalityReader.isQualifiedFor(NexusNetworks.minamoto)
             } returns finalityQualified
 
-            val qualification = DefaultNexusSendQualification(signer, finalityReader)
+            val capabilities = DefaultNexusSendQualification(signer, finalityReader)
+                .capabilitiesFor(NexusNetworks.minamoto)
 
-            assertEquals(expected, qualification.isQualifiedFor(NexusNetworks.minamoto))
+            assertEquals(
+                if (signerQualified) NexusCapabilityStatus.QUALIFIED
+                else NexusCapabilityStatus.UNAVAILABLE,
+                capabilities.signing,
+            )
+            assertEquals(
+                if (finalityQualified) NexusCapabilityStatus.QUALIFIED
+                else NexusCapabilityStatus.UNAVAILABLE,
+                capabilities.finality,
+            )
+            assertEquals(expected, capabilities.supportsSend)
             coVerify(exactly = 0) { signer.quote(any()) }
             coVerify(exactly = 0) { signer.sign(any(), any()) }
             coVerify(exactly = 0) { finalityReader.finalizedCheckpoint(any()) }
@@ -36,72 +47,38 @@ class NexusSendQualificationTest {
     }
 
     @Test
-    fun `qualification adapter failures disable sends without invoking sensitive operations`() {
-        val signerFailure = mockk<NexusTransactionSigner>()
-        val untouchedFinalityReader = mockk<NexusFinalityReader>()
-        every {
-            signerFailure.isQualifiedFor(NexusNetworks.taira)
-        } throws IllegalStateException("signer adapter unavailable")
-        val signerFailureQualification = DefaultNexusSendQualification(
-            signerFailure,
-            untouchedFinalityReader,
-        )
+    fun `adapter and native linkage failures remain visible as capability errors`() {
+        listOf<Throwable>(
+            IllegalStateException("adapter unavailable"),
+            UnsatisfiedLinkError("native artifact unavailable"),
+        ).forEach { failure ->
+            val signer = mockk<NexusTransactionSigner>()
+            val finalityReader = mockk<NexusFinalityReader>()
+            every { signer.isQualifiedFor(TEST_TAIRA_NETWORK) } throws failure
+            every { finalityReader.isQualifiedFor(TEST_TAIRA_NETWORK) } returns false
 
-        assertFalse(signerFailureQualification.isQualifiedFor(NexusNetworks.taira))
-        verify(exactly = 0) { untouchedFinalityReader.isQualifiedFor(any()) }
+            val capabilities = DefaultNexusSendQualification(signer, finalityReader)
+                .capabilitiesFor(TEST_TAIRA_NETWORK)
 
-        val qualifiedSigner = mockk<NexusTransactionSigner>()
-        val finalityFailure = mockk<NexusFinalityReader>()
-        every { qualifiedSigner.isQualifiedFor(NexusNetworks.taira) } returns true
-        every {
-            finalityFailure.isQualifiedFor(NexusNetworks.taira)
-        } throws IllegalStateException("finality adapter unavailable")
-        val finalityFailureQualification = DefaultNexusSendQualification(
-            qualifiedSigner,
-            finalityFailure,
-        )
-
-        assertFalse(finalityFailureQualification.isQualifiedFor(NexusNetworks.taira))
-        coVerify(exactly = 0) { signerFailure.quote(any()) }
-        coVerify(exactly = 0) { signerFailure.sign(any(), any()) }
-        coVerify(exactly = 0) { qualifiedSigner.quote(any()) }
-        coVerify(exactly = 0) { qualifiedSigner.sign(any(), any()) }
-        coVerify(exactly = 0) { untouchedFinalityReader.finalizedCheckpoint(any()) }
-        coVerify(exactly = 0) { finalityFailure.finalizedCheckpoint(any()) }
+            assertEquals(NexusCapabilityStatus.ERROR, capabilities.signing)
+            assertEquals(NexusCapabilityStatus.UNAVAILABLE, capabilities.finality)
+            assertFalse(capabilities.supportsSend)
+            coVerify(exactly = 0) { signer.quote(any()) }
+            coVerify(exactly = 0) { signer.sign(any(), any()) }
+            coVerify(exactly = 0) { finalityReader.finalizedCheckpoint(any()) }
+        }
     }
 
     @Test
-    fun `native linkage failures disable sends without invoking sensitive operations`() {
-        val signerFailure = mockk<NexusTransactionSigner>()
-        val untouchedFinalityReader = mockk<NexusFinalityReader>()
-        every {
-            signerFailure.isQualifiedFor(NexusNetworks.taira)
-        } throws UnsatisfiedLinkError("signer native artifact unavailable")
-        val signerFailureQualification = DefaultNexusSendQualification(
-            signerFailure,
-            untouchedFinalityReader,
-        )
+    fun `unavailable production adapters never advertise send support`() {
+        val capabilities = DefaultNexusSendQualification(
+            UnavailableNexusTransactionSigner(),
+            UnavailableNexusFinalityReader(),
+        ).capabilitiesFor(TEST_TAIRA_NETWORK)
 
-        assertFalse(signerFailureQualification.isQualifiedFor(NexusNetworks.taira))
-        verify(exactly = 0) { untouchedFinalityReader.isQualifiedFor(any()) }
-
-        val qualifiedSigner = mockk<NexusTransactionSigner>()
-        val finalityFailure = mockk<NexusFinalityReader>()
-        every { qualifiedSigner.isQualifiedFor(NexusNetworks.taira) } returns true
-        every {
-            finalityFailure.isQualifiedFor(NexusNetworks.taira)
-        } throws UnsatisfiedLinkError("finality native artifact unavailable")
-        val finalityFailureQualification = DefaultNexusSendQualification(
-            qualifiedSigner,
-            finalityFailure,
-        )
-
-        assertFalse(finalityFailureQualification.isQualifiedFor(NexusNetworks.taira))
-        coVerify(exactly = 0) { signerFailure.quote(any()) }
-        coVerify(exactly = 0) { signerFailure.sign(any(), any()) }
-        coVerify(exactly = 0) { qualifiedSigner.quote(any()) }
-        coVerify(exactly = 0) { qualifiedSigner.sign(any(), any()) }
-        coVerify(exactly = 0) { untouchedFinalityReader.finalizedCheckpoint(any()) }
-        coVerify(exactly = 0) { finalityFailure.finalizedCheckpoint(any()) }
+        assertEquals(NexusCapabilityStatus.UNAVAILABLE, capabilities.signing)
+        assertEquals(NexusCapabilityStatus.UNAVAILABLE, capabilities.finality)
+        assertFalse(capabilities.supportsSend)
+        assertTrue(NexusSendCapabilities.unavailable() == capabilities)
     }
 }

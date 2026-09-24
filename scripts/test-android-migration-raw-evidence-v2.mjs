@@ -19,20 +19,22 @@ import {
   ANDROID_MIGRATION_RAW_EVIDENCE_AUTHORIZATION,
   ANDROID_MIGRATION_RAW_EVIDENCE_SUITES,
   AndroidMigrationRawEvidenceError,
-  collectAndroidMigrationRawEvidenceV1,
-  validateAndroidMigrationRawEvidenceV1,
-} from "./lib/android-migration-raw-evidence-v1.mjs";
+  collectAndroidMigrationRawEvidenceV2,
+  validateAndroidMigrationRawEvidenceV2,
+} from "./lib/android-migration-raw-evidence-v2.mjs";
+
+import { ANDROID_PRE_ACCOUNT_EVIDENCE_CATEGORIES } from "./lib/android-migration-coverage-v1.mjs";
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const clone = (value) => structuredClone(value);
 
 const createRun = () => {
   const root = realpathSync(
-    mkdtempSync(join(tmpdir(), "sora-android-migration-raw-v1-")),
+    mkdtempSync(join(tmpdir(), "sora-android-migration-raw-v2-")),
   );
   const files = [];
   for (const [suiteIndex, suite] of ANDROID_MIGRATION_RAW_EVIDENCE_SUITES.entries()) {
-    for (const category of ["method-inventory", "report", "transcript"]) {
+    for (const category of ["method-inventory", "report", "transcript", ...(suite === "legacy-pre-account-upgrade" ? ANDROID_PRE_ACCOUNT_EVIDENCE_CATEGORIES : [])]) {
       const relativePath = `${suite}/${category}.txt`;
       const bytes = Buffer.from(`${suite}:${category}:sanitized\n`, "utf8");
       mkdirSync(join(root, suite), { recursive: true, mode: 0o700 });
@@ -59,8 +61,8 @@ const createRun = () => {
     }
   }
   const index = {
-    schemaVersion: 1,
-    contractId: "sora-android-wallet-migration-raw-run-index-v1",
+    schemaVersion: 2,
+    contractId: "sora-android-wallet-migration-raw-run-index-v2",
     platform: "android",
     status: "complete",
     runId: "12345678-1234-4234-9234-123456789abc",
@@ -91,7 +93,7 @@ const expectRejected = (mutate, expectedMessage) => {
   try {
     mutate(run);
     assert.throws(
-      () => collectAndroidMigrationRawEvidenceV1({ root: run.root }),
+      () => collectAndroidMigrationRawEvidenceV2({ root: run.root }),
       (error) =>
         error instanceof AndroidMigrationRawEvidenceError &&
         error.message.includes(expectedMessage),
@@ -103,18 +105,20 @@ const expectRejected = (mutate, expectedMessage) => {
 
 const positive = createRun();
 try {
-  const result = collectAndroidMigrationRawEvidenceV1({ root: positive.root });
-  validateAndroidMigrationRawEvidenceV1(result.record);
+  const result = collectAndroidMigrationRawEvidenceV2({ root: positive.root });
+  validateAndroidMigrationRawEvidenceV2(result.record);
   assert.deepEqual(
     result.record.authorization,
     ANDROID_MIGRATION_RAW_EVIDENCE_AUTHORIZATION,
   );
-  assert.equal(result.record.aggregate.rawResultFileCount, 20);
-  assert.equal(result.record.aggregate.requiredSuiteCount, 6);
+  assert.equal(result.record.aggregate.rawResultFileCount, 36);
+  assert.equal(result.record.aggregate.requiredSuiteCount, 7);
   assert.equal(result.record.aggregate.apkIdentityArtifactCount, 2);
-  assert.equal(result.record.aggregate.methodInventoryArtifactCount, 6);
-  assert.equal(result.record.aggregate.reportArtifactCount, 6);
-  assert.equal(result.record.aggregate.transcriptArtifactCount, 6);
+  assert.equal(result.record.aggregate.methodInventoryArtifactCount, 7);
+  assert.equal(result.record.aggregate.reportArtifactCount, 7);
+  assert.equal(result.record.aggregate.transcriptArtifactCount, 7);
+  assert.equal(result.record.aggregate.preAccountEvidenceArtifactCount, 13);
+  assert.equal(result.record.aggregate.allPreAccountEvidencePresent, true);
   assert.equal(result.record.aggregate.allRequiredSuitesPresent, true);
   assert.equal(result.record.aggregate.rawValuesExcludedFromPublicEvidence, true);
   const publicBytes = result.bytes.toString("utf8");
@@ -128,9 +132,10 @@ try {
 
 expectRejected(({ index, writeIndex }) => {
   const stale = clone(index);
-  stale.schemaVersion = 0;
+  stale.schemaVersion = 1;
+  stale.contractId = "sora-android-wallet-migration-raw-run-index-v1";
   writeIndex(stale);
-}, "not exact v1");
+}, "not exact v2");
 
 expectRejected(({ root, index, writeIndex }) => {
   const incomplete = clone(index);
@@ -176,7 +181,7 @@ expectRejected(({ root }) => {
   const source = readFileSync(join(root, "raw-run-index.json"), "utf8");
   writeFileSync(
     join(root, "raw-run-index.json"),
-    source.replace('"schemaVersion": 1,', '"schemaVersion": 1,\n  "schemaVersion": 1,'),
+    source.replace('"schemaVersion": 2,', '"schemaVersion": 2,\n  "schemaVersion": 2,'),
   );
 }, "invalid strict JSON");
 
@@ -199,14 +204,23 @@ expectRejected(({ root }) => {
   });
 }, "does not cover the exact protected file inventory");
 
+for (const category of ANDROID_PRE_ACCOUNT_EVIDENCE_CATEGORIES) {
+  expectRejected(({ root, index, writeIndex }) => {
+    const removed = index.files.find((entry) => entry.category === category);
+    index.files = index.files.filter((entry) => entry !== removed);
+    unlinkSync(join(root, removed.relativePath));
+    writeIndex();
+  }, "lacks Room50 provenance or required pre-account restart evidence");
+}
+
 const authorizationMutation = createRun();
 try {
   const record = clone(
-    collectAndroidMigrationRawEvidenceV1({ root: authorizationMutation.root }).record,
+    collectAndroidMigrationRawEvidenceV2({ root: authorizationMutation.root }).record,
   );
   record.authorization.authorizesQualification = true;
   assert.throws(
-    () => validateAndroidMigrationRawEvidenceV1(record),
+    () => validateAndroidMigrationRawEvidenceV2(record),
     /explicitly non-authorizing/,
   );
 } finally {
@@ -214,5 +228,5 @@ try {
 }
 
 process.stdout.write(
-  "Android migration raw evidence v1: positive collection and 11 fail-closed mutations passed\n",
+  "Android migration raw evidence v2: positive collection and 24 fail-closed mutations passed\n",
 );

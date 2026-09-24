@@ -18,9 +18,9 @@ import {
   readStrictJsonFile,
 } from "./strict-evidence.mjs";
 
-export const ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V1 = Object.freeze({
-  schemaVersion: 1,
-  contractId: "sora-android-migration-controller-envelope-v1",
+export const ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V2 = Object.freeze({
+  schemaVersion: 2,
+  contractId: "sora-android-migration-controller-envelope-v2",
 });
 
 const KIB = 1024;
@@ -139,12 +139,12 @@ const validateInternalBindings = ({ envelope, payloads, records }) => {
   const evidence = parseJsonPayload(payloads["android-migration-evidence.json"]);
   const trust = parseJsonPayload(payloads["android-migration-trust.json"]);
   if (
-    receipt?.schemaVersion !== 7 ||
-    receipt?.contractId !== "sora-android-wallet-migration-qualification-v7" ||
+    receipt?.schemaVersion !== 8 ||
+    receipt?.contractId !== "sora-android-wallet-migration-qualification-v8" ||
     receipt?.platform !== "android" ||
     receipt?.status !== "qualified" ||
-    evidence?.schemaVersion !== 2 ||
-    evidence?.contractId !== "sora-android-wallet-migration-evidence-v2" ||
+    evidence?.schemaVersion !== 3 ||
+    evidence?.contractId !== "sora-android-wallet-migration-evidence-v3" ||
     evidence?.platform !== "android" ||
     evidence?.status !== "qualified" ||
     trust?.schemaVersion !== 1 ||
@@ -185,7 +185,7 @@ const validateInternalBindings = ({ envelope, payloads, records }) => {
   return { receipt, evidence, trust };
 };
 
-export const inspectAndroidMigrationControllerEnvelopeV1 = ({
+export const inspectAndroidMigrationControllerEnvelopeV2 = ({
   value,
   expectedSourceRevision,
   expectedCandidateAabSha256,
@@ -209,8 +209,8 @@ export const inspectAndroidMigrationControllerEnvelopeV1 = ({
       "files",
       "authorization",
     ]) ||
-    value.schemaVersion !== ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V1.schemaVersion ||
-    value.contractId !== ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V1.contractId ||
+    value.schemaVersion !== ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V2.schemaVersion ||
+    value.contractId !== ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V2.contractId ||
     value.status !== "delivered-unreviewed" ||
     value.platform !== "android" ||
     !validRevision(value.sourceRevision) ||
@@ -363,7 +363,7 @@ const writeAll = (descriptor, bytes) => {
   }
 };
 
-export const extractAndroidMigrationControllerEnvelopeV1 = ({
+export const extractAndroidMigrationControllerEnvelopeV2 = ({
   envelopePath,
   outputRoot,
   expectedSourceRevision,
@@ -374,7 +374,7 @@ export const extractAndroidMigrationControllerEnvelopeV1 = ({
   expectedAppBuildIdentitySha256,
 }) => {
   const envelopeRecord = protectedEnvelope(envelopePath);
-  const inspected = inspectAndroidMigrationControllerEnvelopeV1({
+  const inspected = inspectAndroidMigrationControllerEnvelopeV2({
     value: envelopeRecord.value,
     expectedSourceRevision,
     expectedCandidateAabSha256,
@@ -418,8 +418,8 @@ export const extractAndroidMigrationControllerEnvelopeV1 = ({
     fail("ANDROID_MIGRATION_CONTROLLER_OUTPUT_INVENTORY_INVALID");
   }
   return {
-    schemaVersion: ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V1.schemaVersion,
-    contractId: ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V1.contractId,
+    schemaVersion: ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V2.schemaVersion,
+    contractId: ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V2.contractId,
     status: "extracted-unreviewed",
     platform: "android",
     sourceRevision: envelopeRecord.value.sourceRevision,

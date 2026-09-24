@@ -1,6 +1,11 @@
 package jp.co.soramitsu.sora.splash.domain
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.util.Base64
+import java.security.SecureRandom
+import javax.crypto.Cipher
+import kotlinx.coroutines.flow.first
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
@@ -128,6 +133,20 @@ class MigrationManagerProductionPathQualificationTest {
                         words = RETAINED_FIFTEEN_WORD_MNEMONIC,
                         nexusCapable = false,
                     ),
+                ),
+                WalletFixture(
+                    name = "Retained eighteen words",
+                    secret = SecretFixture.Mnemonic(
+                        words = "blossom school alcohol coral light army gather adapt blossom school alcohol coral light army gather adapt blossom scare",
+                        nexusCapable = false,
+                    ),
+                ),
+                WalletFixture(
+                    name = "Retained twenty one words",
+                    secret = SecretFixture.Mnemonic(
+                        words = "bright thought alpha deal scrub asthma idea logic bright thought alpha deal scrub asthma idea logic bright thought alpha deal sell",
+                        nexusCapable = false,
+                    ),
                 )
             ),
             selectedIndex = 0,
@@ -190,6 +209,193 @@ class MigrationManagerProductionPathQualificationTest {
             ),
             selectedIndex = 1,
         )
+    }
+
+    /** Three separately invoked phases retain only this disposable qualification package. */
+    @Test
+    fun preparePreMultiaccountRoom50NativeFixture() = runBlocking {
+        assertExactIsolatedPackage()
+        assertSingleQualificationMethodPerProcess()
+        resetIsolatedQualificationState()
+        assertPinnedSora2NativeVector()
+        assertFalse(dataStoreFile().exists())
+
+        // The retained writer layout is SharedPreferences, unsuffixed hex keypair fields,
+        // and AES-CBC envelopes with a 16-byte IV. encrypt(key, value) is the retained
+        // historical writer helper; production decrypts these exact envelopes after upgrade.
+        val encryption = EncryptionUtil(context)
+        val aes = ByteArray(32).also(SecureRandom()::nextBytes)
+        val keys = sr25519KeyPair(PINNED_TWELVE_WORD_SEED)
+        val ciphertext = try {
+            val rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+            rsa.init(Cipher.ENCRYPT_MODE, loadedKeyStore().getCertificate(KEY_ALIAS).publicKey)
+            assertTrue(context.getSharedPreferences(KEYSTORE_PREFERENCES, Context.MODE_PRIVATE)
+                .edit().putString(WRAPPED_AES_KEY, Base64.encodeToString(rsa.doFinal(aes), Base64.NO_WRAP))
+                .commit())
+            mapOf(
+                WalletPreferenceKeys.PRIVATE_KEY to keys.privateKey.toHexString(),
+                WalletPreferenceKeys.PUBLIC_KEY to keys.publicKey.toHexString(),
+                WalletPreferenceKeys.KEY_NONCE to keys.nonce.toHexString(),
+                WalletPreferenceKeys.MNEMONIC to TWELVE_WORD_MNEMONIC,
+                WalletPreferenceKeys.SEED to PINNED_TWELVE_WORD_SEED,
+            ).mapValues { (_, value) -> encryption.encrypt(aes, value) }
+        } finally {
+            aes.fill(0)
+            keys.privateKey.fill(0)
+            keys.nonce.fill(0)
+        }
+        assertTrue(ciphertext.values.all { it.isNotEmpty() && !it.startsWith("v2:") })
+        val oldPreferences = context.getSharedPreferences(SORA_PREFERENCES, Context.MODE_PRIVATE)
+        assertTrue(oldPreferences.edit().apply {
+            putString(WalletPreferenceKeys.REGISTRATION_STATE, "REGISTRATION_FINISHED")
+            putString("key_account_name", PRE_MULTIACCOUNT_NAME)
+            putBoolean(WalletPreferenceKeys.NEEDS_MIGRATION, true)
+            putBoolean(WalletPreferenceKeys.IS_MIGRATION_FETCHED, true)
+            ciphertext.forEach { (field, value) -> putString(field, value) }
+        }.commit())
+        assertFalse(oldPreferences.contains(WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS))
+        assertFalse(oldPreferences.contains(WalletPreferenceKeys.LEGACY_ADDRESS))
+        assertFalse(dataStoreFile().exists())
+
+        val file = context.getDatabasePath(DATABASE_NAME)
+        check(file.parentFile!!.mkdirs() || file.parentFile!!.isDirectory)
+        SQLiteDatabase.openOrCreateDatabase(file, null).use { sqlite ->
+            // Columns from release/sora/2.3.3 Room 50; no accounts table existed yet.
+            sqlite.execSQL("CREATE TABLE tokens(id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, symbol TEXT NOT NULL, precision INTEGER NOT NULL, isMintable INTEGER NOT NULL, whitelistName TEXT NOT NULL, isHidable INTEGER NOT NULL)")
+            sqlite.execSQL("INSERT INTO tokens VALUES('retained-token','Retained','XOR',18,0,'whitelist',0)")
+            sqlite.version = 50
+        }
+        val source = walletStorageSnapshot()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertWalletStorageUnchanged(source)
+        val baseline = JSONObject()
+            .put("sourceDatabaseVersion", 50)
+            .put("ciphertextHashes", JSONObject(ciphertext.mapValues { sha256Hex(it.value.encodeToByteArray()) }))
+            .put("wrappedAesHash", sha256Hex(wrappedAesKey().encodeToByteArray()))
+            .put("sourceHashes", JSONObject(source.mapValues { sha256Hex(it.value) }))
+        File(context.filesDir, PRE_MULTIACCOUNT_BASELINE).writeText(baseline.toString())
+    }
+
+    @Test
+    fun upgradePreMultiaccountRoom50ThroughProductionPath() = runBlocking {
+        verifyPreMultiaccountUpgrade(restarted = false)
+    }
+
+    @Test
+    fun restartPreMultiaccountUpgradeThroughProductionPath() = runBlocking {
+        verifyPreMultiaccountUpgrade(restarted = true)
+    }
+
+    private suspend fun verifyPreMultiaccountUpgrade(restarted: Boolean) {
+        assertExactIsolatedPackage()
+        assertSingleQualificationMethodPerProcess()
+        val baseline = JSONObject(File(context.filesDir, PRE_MULTIACCOUNT_BASELINE).readText())
+        assertEquals(50, baseline.getInt("sourceDatabaseVersion"))
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertNull(WalletUpgradeBackup.blockingFailure())
+        // This is the actual production builder, including 15..57 -> 58 and every later bridge.
+        val database = AppDatabase.get(context)
+        val repositoryJob = SupervisorJob()
+        val initializationFailure = AtomicReference<Throwable?>(null)
+        val repositoryScope = CoroutineScope(repositoryJob + Dispatchers.Unconfined +
+            CoroutineExceptionHandler { _, error -> initializationFailure.compareAndSet(null, error) })
+        try {
+            assertEquals(TARGET_DATABASE_VERSION, database.openHelper.writableDatabase.version)
+            if (!restarted) {
+                assertTrue(database.accountDao().getAccounts().isEmpty())
+                assertTrue(database.walletIdentityDao().getWallets().isEmpty())
+                assertNull(database.walletIdentityDao().getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1))
+            }
+            val soraPreferences = SoraPreferences(context)
+            val encryptedPreferences = EncryptedPreferences(soraPreferences, EncryptionUtil(context))
+            val credentialsDatasource = PrefsCredentialsDatasource(encryptedPreferences, soraPreferences)
+            val userDatasource = PrefsUserDatasource(soraPreferences, encryptedPreferences)
+            val codec = Sora2AddressCodec()
+            val runtime = mockk<RuntimeManager>(relaxed = true)
+            every { runtime.toSoraAddressOrNull(any()) } answers { codec.toSoraAddressOrNull(firstArg()) }
+            val coroutineManager = mockk<CoroutineManager>()
+            every { coroutineManager.applicationScope } returns repositoryScope
+            val credentialsRepository = CredentialsRepositoryImpl(credentialsDatasource,
+                mockk<CryptoAssistant>(relaxed = true), runtime, codec,
+                mockk<JsonAccountsEncoder>(relaxed = true))
+            if (!restarted) assertEquals("", userDatasource.getCurAccountAddress())
+            val journalBefore = database.walletIdentityDao().getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
+            val userRepository = UserRepositoryImpl(userDatasource, credentialsDatasource, database,
+                coroutineManager, LanguagesHolder(), runtime, UserRepositorySr25519Crypto())
+            awaitRepositoryInitialization(repositoryJob, initializationFailure)
+            assertNull(initializationFailure.get())
+            assertEquals(SoraAccount(PINNED_TWELVE_WORD_ADDRESS, PRE_MULTIACCOUNT_NAME), userRepository.getCurSoraAccount())
+            assertEquals(PINNED_TWELVE_WORD_ADDRESS, userDatasource.getCurAccountAddress())
+            assertEquals(PINNED_TWELVE_WORD_ADDRESS, credentialsDatasource.getAddress())
+            val manager = MigrationManager(userRepository, credentialsRepository, codec, database,
+                MigrationSr25519Crypto())
+            assertTrue(manager.start())
+            assertNull(WalletUpgradeBackup.blockingFailure())
+            assertEquals(WalletRecoveryCapabilityGate.Mode.NORMAL, WalletRecoveryCapabilityGate.mode())
+            val account = SoraAccountLocal(PINNED_TWELVE_WORD_ADDRESS, PRE_MULTIACCOUNT_NAME)
+            assertEquals(listOf(account), database.accountDao().getAccounts())
+            val expectedKeys = sr25519KeyPair(PINNED_TWELVE_WORD_SEED)
+            val retainedKeys = credentialsRepository.retrieveKeyPair(SoraAccount(account.substrateAddress, account.accountName))
+            try {
+                assertOpaqueBytesEqual(expectedKeys.privateKey, retainedKeys.privateKey)
+                assertOpaqueBytesEqual(expectedKeys.publicKey, retainedKeys.publicKey)
+                assertOpaqueBytesEqual(expectedKeys.nonce, retainedKeys.nonce)
+                val expectedIdentity = WalletIdentityLocal(account.substrateAddress, account.accountName,
+                    "MNEMONIC", "VERIFIED", DERIVATION_VERSION)
+                val networks = expectedMnemonicNetworks(account.substrateAddress, expectedKeys.publicKey, TWELVE_WORD_MNEMONIC)
+                assertEquals(listOf(expectedIdentity), database.walletIdentityDao().getWallets())
+                assertEquals(networks.sortedBy(NetworkAccountLocal::networkId),
+                    database.walletIdentityDao().getAllNetworkAccounts().sortedBy(NetworkAccountLocal::networkId))
+                assertRecoveredSigningParity(PreparedWallet(account, expectedIdentity, networks,
+                    WalletPreferenceKeys.encryptedCredentialPrefixes, expectedKeys.publicKey.copyOf()), credentialsRepository, codec)
+            } finally {
+                expectedKeys.privateKey.fill(0); expectedKeys.nonce.fill(0)
+                retainedKeys.privateKey.fill(0); retainedKeys.nonce.fill(0)
+            }
+            assertEquals(TWELVE_WORD_MNEMONIC, credentialsDatasource.retrieveMnemonic(""))
+            assertEquals(PINNED_TWELVE_WORD_SEED, credentialsDatasource.retrieveSeed(""))
+            val hashes = baseline.getJSONObject("ciphertextHashes")
+            WalletPreferenceKeys.encryptedCredentialPrefixes.forEach { field ->
+                assertEquals(hashes.getString(field), sha256Hex(soraPreferences.getString(field).encodeToByteArray()))
+                assertEquals("", soraPreferences.getString(field + PINNED_TWELVE_WORD_ADDRESS))
+            }
+            assertEquals(baseline.getString("wrappedAesHash"), sha256Hex(wrappedAesKey().encodeToByteArray()))
+            listOf(WalletPreferenceKeys.NEEDS_MIGRATION, WalletPreferenceKeys.IS_MIGRATION_FETCHED).forEach { field ->
+                assertTrue(soraPreferences.getBoolean(field))
+                assertTrue(soraPreferences.getBoolean(field + PINNED_TWELVE_WORD_ADDRESS))
+            }
+            database.openHelper.writableDatabase.query("SELECT id,name,symbol FROM legacy_v50_tokens").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("retained-token", cursor.getString(0)); assertEquals("Retained", cursor.getString(1))
+                assertEquals("XOR", cursor.getString(2)); assertFalse(cursor.moveToNext())
+            }
+            val receipt = requireNotNull(database.walletIdentityDao().getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1))
+            assertEquals("VERIFIED", receipt.state)
+            assertEquals(1, receipt.legacyAccountCount); assertEquals(1, receipt.verifiedAccountCount)
+            assertEquals(PINNED_TWELVE_WORD_ADDRESS, receipt.selectedWalletId)
+            if (restarted) assertEquals(journalBefore, receipt)
+            val cardsBefore = database.cardsHubDao().getCardsHub(PINNED_TWELVE_WORD_ADDRESS).first()
+            assertTrue(cardsBefore.isNotEmpty())
+            val dataStoreBefore = dataStoreFile().readBytes()
+            assertTrue(manager.start())
+            assertEquals(receipt, database.walletIdentityDao().getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1))
+            assertEquals(cardsBefore, database.cardsHubDao().getCardsHub(PINNED_TWELVE_WORD_ADDRESS).first())
+            assertOpaqueBytesEqual(dataStoreBefore, dataStoreFile().readBytes())
+            val backup = context.noBackupFilesDir.listFiles().orEmpty().single {
+                it.isDirectory && it.name == "${BACKUP_PREFIX}50-to-$TARGET_DATABASE_VERSION"
+            }
+            assertEquals("verified", File(backup, ".complete").readText())
+            val sourceHashes = baseline.getJSONObject("sourceHashes")
+            sourceHashes.keys().forEach { name -> assertEquals(sourceHashes.getString(name), sha256Hex(File(backup, name).readBytes())) }
+            File(context.filesDir, "pre-multiaccount-${if (restarted) "restart" else "migration"}-observation.json").writeText(JSONObject()
+                .put("accountsPreserved", 1).put("ciphertextRecordsPreserved", hashes.length())
+                .put("networkIdentities", database.walletIdentityDao().getAllNetworkAccounts().size)
+                .put("nativeSignaturesVerified", 1).put("repeatedMigrationIdempotent", true)
+                .put("originalBackupUnchanged", true).toString())
+        } finally {
+            repositoryJob.cancelAndJoin()
+            database.close()
+        }
     }
 
     private suspend fun qualify(
@@ -476,7 +682,7 @@ class MigrationManagerProductionPathQualificationTest {
                 val retainedWords = secret.words.trim()
                     .split(Regex("\\s+"))
                     .filter(String::isNotBlank)
-                assertEquals(RETAINED_SORA_MNEMONIC_WORD_COUNT, retainedWords.size)
+                assertTrue(retainedWords.size in RETAINED_SORA_MNEMONIC_WORD_COUNTS)
                 assertFalse(credentialsRepository.isMnemonicValid(secret.words))
                 credentialsRepository.convertRetainedSoraPassphraseToSeed(secret.words)
             }
@@ -652,7 +858,7 @@ class MigrationManagerProductionPathQualificationTest {
         mnemonic: String,
     ): List<NetworkAccountLocal> = buildList {
         add(expectedSora2Network(walletId, publicKey))
-        listOf(NexusNetworks.minamoto, NexusNetworks.taira).forEach { network ->
+        NexusNetworks.admitted.forEach { network ->
             val derived = IrohaKeyDerivation.derive(mnemonic, network)
             try {
                 add(
@@ -1077,6 +1283,8 @@ class MigrationManagerProductionPathQualificationTest {
         const val PRODUCTION_APPLICATION_ID = "jp.co.soramitsu.sora"
         const val DATABASE_NAME = "app.db"
         const val SOURCE_DATABASE_VERSION = 76
+        const val PRE_MULTIACCOUNT_NAME = "Retained pre-multiaccount wallet"
+        const val PRE_MULTIACCOUNT_BASELINE = "pre-multiaccount-native-baseline.json"
         const val TARGET_DATABASE_VERSION = 77
         const val SORA_PREFERENCES = "sora_prefs"
         const val KEYSTORE_PREFERENCES = "key_alias"
@@ -1088,7 +1296,7 @@ class MigrationManagerProductionPathQualificationTest {
         const val WRAPPED_AES_KEY = "secret_key"
         const val AUTHENTICATED_ENVELOPE_PREFIX = "v2:"
         const val DERIVATION_VERSION = 1
-        const val RETAINED_SORA_MNEMONIC_WORD_COUNT = 15
+        val RETAINED_SORA_MNEMONIC_WORD_COUNTS = setOf(15, 18, 21)
         const val REPOSITORY_INITIALIZATION_TIMEOUT_MILLIS = 30_000L
         const val SIGNING_CHALLENGE =
             "sora-wallet-migration-production-path-qualification-v1"

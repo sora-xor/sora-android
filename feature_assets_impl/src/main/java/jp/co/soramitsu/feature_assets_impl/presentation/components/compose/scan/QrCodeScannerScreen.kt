@@ -81,7 +81,8 @@ data class QRCodeScannerScreenState(
 fun QrCodeScannerScreen(
     onNavIconClick: () -> Unit,
     onUploadFromGalleryClick: () -> Unit,
-    onShowUserQrClick: () -> Unit
+    onShowUserQrClick: () -> Unit,
+    recipientOnly: Boolean = false,
 ) {
     ConstraintLayout(
         modifier = Modifier
@@ -112,7 +113,7 @@ fun QrCodeScannerScreen(
             SoramitsuToolbar(
                 state = SoramitsuToolbarState(
                     basic = BasicToolbarState(
-                        title = R.string.common_scan_qr,
+                        title = if (recipientOnly) R.string.wallet_scan_recipient else R.string.common_scan_qr,
                         navIcon = R.drawable.ic_close,
                     ),
                     type = SoramitsuToolbarType.SmallCentered()
@@ -256,7 +257,7 @@ fun QrCodeScannerScreen(
             onClick = onUploadFromGalleryClick
         )
 
-        BleachedButton(
+        if (!recipientOnly) BleachedButton(
             modifier = Modifier
                 .constrainAs(
                     ref = showUserQrButton,

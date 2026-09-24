@@ -129,7 +129,7 @@ class UserRepositoryImpl(
 
     private companion object {
         const val DELETION_PREVIEW_TTL_MILLIS = 2 * 60 * 1_000L
-        const val LEGACY_SORA_MNEMONIC_WORD_COUNT = 15
+        val LEGACY_SORA_MNEMONIC_WORD_COUNTS = setOf(15, 18, 21)
         const val LEGACY_SECRET_SIGNING_CHALLENGE =
             "sora-wallet-legacy-secret-self-consistency-v1"
     }
@@ -145,17 +145,34 @@ class UserRepositoryImpl(
             WalletRecoveryCapabilityGate.mayResumeWalletDeletion()
         ) {
             coroutineManager.applicationScope.launch {
-                mutex.withLock {
-                    resumePendingWalletDeletionLocked()
-                    initCurSoraAccount()
+                try {
+                    mutex.withLock {
+                        resumePendingWalletDeletionLocked()
+                        initCurSoraAccount()
+                    }
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Throwable) {
+                    // Initialization is speculative. Splash's migration call repeats the
+                    // locked read and routes a decryption/storage failure to recovery. An
+                    // uncaught application-scope exception here would crash before that UI.
+                    currentSoraAccount.value = null
                 }
             }
         }
     }
 
     private suspend fun initCurSoraAccount() {
-        val curAddress = userDatasource.getCurAccountAddress()
-        val accounts = db.accountDao().getAccounts()
+        var curAddress = userDatasource.getCurAccountAddress()
+        var accounts = db.accountDao().getAccounts()
+        if (curAddress.isEmpty() &&
+            userDatasource.retrieveRegistratrionState() == OnboardingState.REGISTRATION_FINISHED
+        ) {
+            restoreLegacySingleAccount(accounts)?.let { restored ->
+                curAddress = restored.substrateAddress
+                accounts = listOf(restored)
+            }
+        }
         if (accounts.isEmpty()) {
             check(curAddress.isEmpty()) { "SELECTED_WALLET_WITHOUT_ACCOUNT" }
             currentSoraAccount.value = null
@@ -166,6 +183,61 @@ class UserRepositoryImpl(
             it.substrateAddress == curAddress
         } ?: error("SELECTED_WALLET_MISMATCH")
         currentSoraAccount.value = SoraAccountMapper.map(selected)
+    }
+
+    /**
+     * Replaces the release-era single-account promotion removed when network identities landed.
+     * Only metadata is added; unsuffixed mnemonic/seed/key ciphertext remains authoritative.
+     * If the process stops after the Room insert, the same verified account resumes here.
+     */
+    private suspend fun restoreLegacySingleAccount(
+        accounts: List<SoraAccountLocal>,
+    ): SoraAccountLocal? {
+        if (accounts.size > 1 || db.walletIdentityDao().getWallets().isNotEmpty() ||
+            db.walletIdentityDao().getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1) != null
+        ) return null
+        val keys = credentialsDatasource.retrieveKeys("") ?: return null
+        try {
+            val address = runtimeManager.toSoraAddressOrNull(keys.publicKey)
+                ?: error("LEGACY_ACCOUNT_ADDRESS_INVALID")
+            val recordedAddress = credentialsDatasource.getAddress()
+            check(recordedAddress.isBlank() || recordedAddress == address) {
+                "LEGACY_ACCOUNT_OWNER_CONFLICT"
+            }
+            check(accounts.isEmpty() || accounts.single().substrateAddress == address) {
+                "LEGACY_ACCOUNT_ROW_CONFLICT"
+            }
+            val mnemonic = credentialsDatasource.retrieveMnemonic("")
+            val seed = credentialsDatasource.retrieveSeed("")
+            if (mnemonic.isNotBlank() || seed.isNotBlank()) {
+                verifyStoredSigningKey(keys, mnemonic, seed)
+            }
+            verifyLegacySecretSigningKey(keys)
+            val account = accounts.singleOrNull()
+                ?: SoraAccountLocal(address, userDatasource.getAccountName())
+            if (accounts.isEmpty()) {
+                // WalletMutationCoordinator is held by every caller. Inserting only when
+                // absent avoids REPLACE and its foreign-key cascade on a retained account.
+                db.accountDao().insertSoraAccount(account)
+            }
+            db.cardsHubDao().insertMissing(
+                CardHubType.entries.filter { it.boundToAccount }.map { type ->
+                    CardHubLocal(
+                        cardId = type.hubName,
+                        accountAddress = address,
+                        visibility = type != CardHubType.BACKUP,
+                        sortOrder = type.order,
+                        collapsed = false,
+                    )
+                }
+            )
+            defaultGlobalCards()
+            userDatasource.completeLegacyAccountUpgrade(address)
+            return account
+        } finally {
+            keys.privateKey.fill(0)
+            keys.nonce.fill(0)
+        }
     }
 
     override suspend fun getCurSoraAccount(): SoraAccount = mutex.withLock {
@@ -297,7 +369,7 @@ class UserRepositoryImpl(
                 explicitWatchOnly -> "WATCH_ONLY"
                 words.size == 12 || words.size == 24 -> "MNEMONIC"
                 mnemonic.isNotBlank() -> {
-                    check(words.size == LEGACY_SORA_MNEMONIC_WORD_COUNT) {
+                    check(words.size in LEGACY_SORA_MNEMONIC_WORD_COUNTS) {
                         "SORA_MNEMONIC_WORD_COUNT_UNSUPPORTED"
                     }
                     "MNEMONIC_UNSUPPORTED"
@@ -324,7 +396,7 @@ class UserRepositoryImpl(
                 )
             )
             if (migrationState == "VERIFIED" && secretSource == "MNEMONIC") {
-                NexusNetworks.all.forEach { network ->
+                NexusNetworks.admitted.forEach { network ->
                     val derived = IrohaKeyDerivation.derive(mnemonic, network)
                     try {
                         networkAccounts += NetworkAccountLocal(
@@ -1128,7 +1200,7 @@ class UserRepositoryImpl(
                                 )
                             deletionRequire(
                                 !watchOnly &&
-                                    words.size == LEGACY_SORA_MNEMONIC_WORD_COUNT,
+                                    words.size in LEGACY_SORA_MNEMONIC_WORD_COUNTS,
                                 "WALLET_DELETION_MNEMONIC_MISSING",
                             )
                             verifyDeletionSigningKey(

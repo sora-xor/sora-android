@@ -68,6 +68,9 @@ class PrefsUserDatasource(
     override suspend fun setCurAccountAddress(accountAddress: String) =
         soraPreferences.putString(KEY_CUR_ACCOUNT_ADDRESS, accountAddress)
 
+    override suspend fun completeLegacyAccountUpgrade(accountAddress: String) =
+        soraPreferences.completeLegacyAccountUpgrade(accountAddress)
+
     override suspend fun savePin(pin: String) {
         encryptedPreferences.putEncryptedString(PREFS_PIN_CODE, pin)
     }

@@ -58,6 +58,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -118,9 +121,10 @@ fun TopBar(
                 contentDescription = null
             )
         }
+        val scanLabel = stringResource(R.string.wallet_scan_qr)
         Box(modifier = Modifier.size(Size.Small)) {
             BleachedButton(
-                modifier = Modifier,
+                modifier = Modifier.semantics { contentDescription = scanLabel },
 //                value of 50 results in strange shadow behaviour
                 shape = RoundedCornerShape(percent = 49),
                 size = Size.Small,
@@ -141,6 +145,7 @@ fun CommonHubCard(
     onCollapseClick: () -> Unit,
     content: @Composable (ColumnScope) -> Unit
 ) {
+    val collapseLabel = stringResource(if (collapseState) R.string.wallet_collapsed else R.string.wallet_expanded)
     ContentCard(
         modifier = Modifier.padding(top = Dimens.x1_5),
         onClick = onOpenFullCardClick
@@ -165,7 +170,8 @@ fun CommonHubCard(
                 ) {
                     Text(
                         modifier = Modifier
-                            .noRippleClickable(onClick = onCollapseClick),
+                            .semantics { stateDescription = collapseLabel }
+                            .clickable(onClick = onCollapseClick),
                         text = stringResource(id = title),
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary,

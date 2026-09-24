@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
   createHash,
   generateKeyPairSync,
@@ -29,7 +30,7 @@ import {
   androidCandidateSigningVerificationV1BindingSha256,
 } from "./lib/android-candidate-signing-verification-v1.mjs";
 import { FUNDED_CANARY_CONTROLLER_BUNDLE_FILES } from "./lib/funded-canary-controller-bundle-v1.mjs";
-import { ANDROID_MIGRATION_CONTROLLER_FILES } from "./lib/android-migration-controller-envelope-v1.mjs";
+import { ANDROID_MIGRATION_CONTROLLER_FILES } from "./lib/android-migration-controller-envelope-v2.mjs";
 import { verifyTairaDeploymentManifestV1 } from "./lib/taira-deployment-manifest-v1.mjs";
 import {
   ANDROID_DEPENDENCY_SIGNING_REVIEW_QUALIFICATION_KEYS,
@@ -43,6 +44,11 @@ import {
   validateAndroidQualifiedCandidatePackageV1,
 } from "./lib/android-qualified-candidate-package-v1.mjs";
 
+const PACKAGE_LIBRARY_SOURCE = readFileSync(
+  new URL("./lib/android-qualified-candidate-package-v1.mjs", import.meta.url),
+  "utf8",
+);
+
 const sha256Bytes = (bytes) =>
   createHash("sha256").update(bytes).digest("hex");
 const sha256File = (path) => sha256Bytes(readFileSync(path));
@@ -52,6 +58,46 @@ const canonicalSha256 = (lines) => sha256Bytes(Buffer.from(lines.join("\n")));
 const FIXED_SHA = (digit) => digit.repeat(64);
 const SOURCE_REVISION = "1".repeat(40);
 const UPLOAD_CERTIFICATE = FIXED_SHA("a");
+
+const writeAabWithTairaBinding = (root, primaryPath, reproducedPath, admission) => {
+  const staging = join(root, "aab-staging");
+  const assetDirectory = join(staging, "base/assets");
+  mkdirSync(assetDirectory, { recursive: true, mode: 0o700 });
+  writeJson(join(assetDirectory, "sora-taira-build-binding-v1.json"), {
+    schemaVersion: 1,
+    contractId: "sora-android-taira-build-binding-v1",
+    manifestSha256: admission.manifestSha256,
+    manifestSequenceNumber: String(admission.manifestSequenceNumber),
+    current: {
+      epoch: String(admission.current.epoch),
+      chainId: admission.current.chainId,
+      genesisSha256: admission.current.genesisSha256,
+      i105Discriminant: String(admission.current.i105Discriminant),
+      toriiBaseUrl: admission.current.toriiBaseUrl,
+      publicNodeMcpEndpoint: admission.current.publicNodeMcpEndpoint,
+      explorerBaseUrl: admission.current.explorerBaseUrl,
+    },
+    retired: {
+      epoch: String(admission.retired.epoch),
+      chainId: admission.retired.chainId,
+      genesisSha256: admission.retired.genesisSha256,
+    },
+    operatorKeySha256: admission.operatorKeySha256,
+    reviewerKeySha256: admission.reviewerKeySha256,
+  });
+  unlinkSync(primaryPath);
+  const zipped = spawnSync(
+    "/usr/bin/zip",
+    ["-q", "-X", primaryPath, "base/assets/sora-taira-build-binding-v1.json"],
+    { cwd: staging, encoding: "utf8" },
+  );
+  if (zipped.status !== 0) {
+    throw new Error(`test AAB creation failed: ${zipped.stderr}`);
+  }
+  unlinkSync(reproducedPath);
+  copyFileSync(primaryPath, reproducedPath);
+  rmSync(staging, { recursive: true, force: true });
+};
 const P256_ORDER = BigInt(
   "0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",
 );
@@ -93,11 +139,11 @@ const createFixture = () => {
     reproducedSigning: join(root, "inputs/reproduced-signing.json"),
     migrationEnvelope: join(
       root,
-      "inputs/android-migration-controller-envelope-v1.json",
+      "inputs/android-migration-controller-envelope-v2.json",
     ),
     migrationExtraction: join(
       root,
-      "inputs/android-migration-controller-extraction-v1.json",
+      "inputs/android-migration-controller-extraction-v2.json",
     ),
     tairaDeploymentManifest: join(root, "inputs/taira-deployment-manifest.json"),
     tairaDeploymentOperatorSignature: join(
@@ -326,8 +372,8 @@ const createFixture = () => {
   };
   migrationPayloads["android-migration-evidence.json"] = Buffer.from(
     `${JSON.stringify({
-      schemaVersion: 2,
-      contractId: "sora-android-wallet-migration-evidence-v2",
+      schemaVersion: 3,
+      contractId: "sora-android-wallet-migration-evidence-v3",
       platform: "android",
       status: "qualified",
       runId: migrationRunId,
@@ -350,8 +396,8 @@ const createFixture = () => {
   );
   migrationPayloads["android-migration-matrix.json"] = Buffer.from(
     `${JSON.stringify({
-      schemaVersion: 7,
-      contractId: "sora-android-wallet-migration-qualification-v7",
+      schemaVersion: 8,
+      contractId: "sora-android-wallet-migration-qualification-v8",
       platform: "android",
       status: "qualified",
       runId: migrationRunId,
@@ -367,8 +413,8 @@ const createFixture = () => {
     })}\n`,
   );
   const migrationEnvelope = {
-    schemaVersion: 1,
-    contractId: "sora-android-migration-controller-envelope-v1",
+    schemaVersion: 2,
+    contractId: "sora-android-migration-controller-envelope-v2",
     status: "delivered-unreviewed",
     platform: "android",
     sourceRevision: SOURCE_REVISION,
@@ -389,9 +435,9 @@ const createFixture = () => {
     },
   };
   writeJson(paths.migrationEnvelope, migrationEnvelope);
-  writeJson(paths.migrationExtraction, {
-    schemaVersion: 1,
-    contractId: "sora-android-migration-controller-envelope-v1",
+  const migrationExtraction = {
+    schemaVersion: 2,
+    contractId: "sora-android-migration-controller-envelope-v2",
     status: "extracted-unreviewed",
     platform: "android",
     sourceRevision: SOURCE_REVISION,
@@ -413,9 +459,14 @@ const createFixture = () => {
       authorizesRelease: false,
       authorizesProductionMutation: false,
     },
+  };
+  writeJson(paths.migrationExtraction, migrationExtraction);
+  const tairaOperator = generateKeyPairSync("ec", {
+    namedCurve: "prime256v1",
   });
-  const tairaOperator = generateKeyPairSync("ed25519");
-  const tairaReviewer = generateKeyPairSync("ed25519");
+  const tairaReviewer = generateKeyPairSync("ec", {
+    namedCurve: "prime256v1",
+  });
   const tairaOperatorDer = tairaOperator.publicKey.export({
     type: "spki",
     format: "der",
@@ -446,6 +497,12 @@ const createFixture = () => {
         publicKeySha256: tairaReviewerPin,
       },
     },
+    pendingRowPolicy: {
+      schemaVersion: 77,
+      preserveExactChainUuid: true,
+      mismatchedCurrentDisposition: "quarantine-recovery-only",
+      reinterpretationAllowed: false,
+    },
     epochs: [
       {
         epoch: 1,
@@ -463,9 +520,9 @@ const createFixture = () => {
         genesisSha256: FIXED_SHA("7"),
         i105Discriminant: 369,
         status: "current",
-        toriiBaseUrl: "https://node-2.taira.sora.org",
-        publicNodeMcpEndpoint: "https://node-2.taira.sora.org/v1/mcp",
-        explorerBaseUrl: "https://taira-explorer.sora.org",
+        toriiBaseUrl: "https://taira.sora.org",
+        publicNodeMcpEndpoint: "https://taira.sora.org/v1/mcp",
+        explorerBaseUrl: "https://taira.sora.org",
       },
     ],
     authorization: {
@@ -478,12 +535,12 @@ const createFixture = () => {
   const tairaManifestBytes = readFileSync(paths.tairaDeploymentManifest);
   writeFileSync(
     paths.tairaDeploymentOperatorSignature,
-    signBytes(null, tairaManifestBytes, tairaOperator.privateKey),
+    signBytes("sha256", tairaManifestBytes, tairaOperator.privateKey),
     { mode: 0o600 },
   );
   writeFileSync(
     paths.tairaDeploymentReviewerSignature,
-    signBytes(null, tairaManifestBytes, tairaReviewer.privateKey),
+    signBytes("sha256", tairaManifestBytes, tairaReviewer.privateKey),
     { mode: 0o600 },
   );
   writeFileSync(
@@ -505,8 +562,28 @@ const createFixture = () => {
     expectedOperatorKeySha256: tairaOperatorPin,
     expectedReviewerKeySha256: tairaReviewerPin,
     evaluationEpochSeconds: tairaEvaluationEpochSeconds,
+    expectedManifestSequenceNumber: 17,
   });
   writeJson(paths.tairaDeploymentAdmission, tairaDeploymentAdmission);
+  writeAabWithTairaBinding(
+    root,
+    paths.primaryAab,
+    paths.reproducedAab,
+    tairaDeploymentAdmission,
+  );
+  writeJson(paths.primarySigning, signingReceipt(paths.primaryAab, paths.primaryApk));
+  writeJson(
+    paths.reproducedSigning,
+    signingReceipt(paths.reproducedAab, paths.reproducedApk),
+  );
+  migrationEnvelope.candidateAabSha256 = sha256File(paths.primaryAab);
+  migrationEnvelope.candidateAabBytes = readFileSync(paths.primaryAab).length;
+  writeJson(paths.migrationEnvelope, migrationEnvelope);
+  migrationExtraction.candidateAabSha256 = sha256File(paths.primaryAab);
+  migrationExtraction.candidateAabBytes = readFileSync(paths.primaryAab).length;
+  migrationExtraction.envelopeSha256 = sha256File(paths.migrationEnvelope);
+  migrationExtraction.envelopeBytes = readFileSync(paths.migrationEnvelope).length;
+  writeJson(paths.migrationExtraction, migrationExtraction);
   const dependencyReviewProducer = generateKeyPairSync("ec", {
     namedCurve: "prime256v1",
   });
@@ -546,7 +623,7 @@ const createFixture = () => {
   const dependencyReviewQualification = Object.fromEntries(
     ANDROID_DEPENDENCY_SIGNING_REVIEW_QUALIFICATION_KEYS.map((key, index) => [
       key,
-      index === 0 ? 11 : index === 1 ? 31 : index === 2 ? 271 : true,
+      index === 0 ? 11 : index === 1 ? 31 : index === 2 ? 272 : true,
     ]),
   );
   const dependencyReviewManifest = {
@@ -756,6 +833,7 @@ const create = (fixture) =>
       fixture.paths.tairaDeploymentAdmission,
     expectedTairaDeploymentOperatorKeySha256: fixture.tairaOperatorPin,
     expectedTairaDeploymentReviewerKeySha256: fixture.tairaReviewerPin,
+    expectedTairaDeploymentManifestSequenceNumber: 17,
     dependencySigningReviewManifestPath:
       fixture.paths.dependencySigningReviewManifest,
     dependencySigningReviewProducerSignaturePath:
@@ -800,11 +878,11 @@ const materializePackage = (fixture, manifest) => {
     [fixture.paths.reproducedSigning, "reproduction-signing-verification.json"],
     [
       fixture.paths.migrationEnvelope,
-      "android-migration-controller-envelope-v1.json",
+      "android-migration-controller-envelope-v2.json",
     ],
     [
       fixture.paths.migrationExtraction,
-      "android-migration-controller-extraction-v1.json",
+      "android-migration-controller-extraction-v2.json",
     ],
     [fixture.paths.tairaDeploymentManifest, "taira-deployment-manifest.json"],
     [
@@ -892,6 +970,7 @@ try {
     expectedSourceRevision: SOURCE_REVISION,
     expectedTairaDeploymentOperatorKeySha256: positive.tairaOperatorPin,
     expectedTairaDeploymentReviewerKeySha256: positive.tairaReviewerPin,
+    expectedTairaDeploymentManifestSequenceNumber: 17,
     expectedDependencySigningReviewProducerKeySha256:
       positive.dependencyReviewProducerPin,
     expectedDependencySigningReviewReviewerKeySha256:
@@ -904,6 +983,23 @@ try {
   assert.equal(downloaded.status, "validated");
   assert.equal(downloaded.candidateAabSha256, manifest.reproducibility.primary.aab.sha256);
   assert.equal(downloaded.authorization.authorizesProductionMutation, false);
+  const regularInputSource = PACKAGE_LIBRARY_SOURCE.slice(
+    PACKAGE_LIBRARY_SOURCE.indexOf("const regularInput ="),
+    PACKAGE_LIBRARY_SOURCE.indexOf("const strictJsonInput ="),
+  );
+  assert.ok(regularInputSource.indexOf("openSync(") >= 0);
+  assert.ok(
+    regularInputSource.indexOf("openSync(") <
+      regularInputSource.indexOf("hashDescriptor(descriptor"),
+  );
+  assert.ok(regularInputSource.includes("pathStat.dev !== before.dev"));
+  assert.ok(regularInputSource.includes("pathStat.ino !== before.ino"));
+  const aabBindingSource = PACKAGE_LIBRARY_SOURCE.slice(
+    PACKAGE_LIBRARY_SOURCE.indexOf("const validateAabTairaBuildBinding ="),
+    PACKAGE_LIBRARY_SOURCE.indexOf("const canonicalAbsoluteRoot ="),
+  );
+  assert.ok(aabBindingSource.includes("observed.sha256 !== record.sha256"));
+  assert.ok(aabBindingSource.includes("observed.bytes !== record.bytes"));
 } finally {
   rmSync(positive.root, { recursive: true, force: true });
 }
@@ -1128,6 +1224,16 @@ const downloadMutations = [
       writeFileSync(join(packageRoot, "reproduced-candidate.aab"), "drift\n"),
   ],
   [
+    "downloaded-primary-aab-equal-size-drift",
+    "DOWNLOADED_CANDIDATE_REPRODUCIBILITY_DIVERGED",
+    (_fixture, packageRoot) => {
+      const path = join(packageRoot, "candidate.aab");
+      const bytes = readFileSync(path);
+      bytes[Math.floor(bytes.length / 2)] ^= 0x01;
+      writeFileSync(path, bytes);
+    },
+  ],
+  [
     "downloaded-source-revision-drift",
     "DOWNLOADED_CANDIDATE_SOURCE_REVISION_FILE_INVALID",
     (_fixture, packageRoot) =>
@@ -1162,7 +1268,7 @@ const downloadMutations = [
     "DOWNLOADED_CANDIDATE_EVIDENCE_DIVERGED",
     (_fixture, packageRoot) =>
       writeJson(
-        join(packageRoot, "android-migration-controller-envelope-v1.json"),
+        join(packageRoot, "android-migration-controller-envelope-v2.json"),
         { changed: true },
       ),
   ],
@@ -1202,6 +1308,7 @@ for (const [name, expectedCode, mutate] of downloadMutations) {
           expectedSourceRevision: SOURCE_REVISION,
           expectedTairaDeploymentOperatorKeySha256: fixture.tairaOperatorPin,
           expectedTairaDeploymentReviewerKeySha256: fixture.tairaReviewerPin,
+          expectedTairaDeploymentManifestSequenceNumber: 17,
           expectedDependencySigningReviewProducerKeySha256:
             fixture.dependencyReviewProducerPin,
           expectedDependencySigningReviewReviewerKeySha256:

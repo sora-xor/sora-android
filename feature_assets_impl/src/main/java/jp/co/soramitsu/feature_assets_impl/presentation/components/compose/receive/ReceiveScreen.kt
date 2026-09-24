@@ -89,7 +89,7 @@ internal fun ReceiveScreen(
                     .wrapContentSize()
                     .aspectRatio(1f),
                 bitmap = qr.asImageBitmap(),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.wallet_receive_xor),
             )
         } else {
             Spacer(
@@ -146,6 +146,9 @@ internal fun ReceiveScreen(
         }
     }
     Spacer(modifier = Modifier.size(Dimens.x2))
+    androidx.compose.material.TextButton(onClick = onCopyClick, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.copy_receive_address))
+    }
     FilledButton(
         modifier = Modifier.fillMaxWidth(),
         size = Size.Large,

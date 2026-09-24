@@ -14,6 +14,22 @@ fun requireStrictJsonDocumentWithoutDuplicateKeys(rawJson: String) {
         rawJson = rawJson,
         maximumDepth = MAXIMUM_STRICT_JSON_DEPTH,
         maximumTokens = MAXIMUM_STRICT_JSON_TOKENS,
+        requireCanonicalIntegerNumbers = false,
+    )
+}
+
+/** Nexus wire quantities are strings; every JSON NUMBER must be one exact 64-bit integer token. */
+fun requireStrictNexusJsonDocument(rawJson: String) {
+    // RFC 8259 permits parsers to ignore a leading BOM for interoperability,
+    // but emitters must not produce one. Security-sensitive Nexus admission is
+    // byte-contractual across iOS and Android, so accepting a platform-specific
+    // normalization here would make the two clients disagree on signed input.
+    if (rawJson.startsWith('\uFEFF')) invalidJson()
+    requireStrictJsonDocumentWithoutDuplicateKeys(
+        rawJson = rawJson,
+        maximumDepth = MAXIMUM_STRICT_JSON_DEPTH,
+        maximumTokens = MAXIMUM_STRICT_JSON_TOKENS,
+        requireCanonicalIntegerNumbers = true,
     )
 }
 
@@ -21,6 +37,7 @@ internal fun requireStrictJsonDocumentWithoutDuplicateKeys(
     rawJson: String,
     maximumDepth: Int,
     maximumTokens: Int,
+    requireCanonicalIntegerNumbers: Boolean = false,
 ) {
     require(maximumDepth > 0 && maximumTokens > 0) {
         "BOUNDED_HTTP_JSON_LIMIT_INVALID"
@@ -35,6 +52,7 @@ internal fun requireStrictJsonDocumentWithoutDuplicateKeys(
                 maximumDepth = maximumDepth,
                 maximumTokens = maximumTokens,
                 tokenCount = tokenCount,
+                requireCanonicalIntegerNumbers = requireCanonicalIntegerNumbers,
             )
             if (reader.peek() != JsonToken.END_DOCUMENT) invalidJson()
         }
@@ -51,6 +69,7 @@ private fun readStrictJsonValue(
     maximumDepth: Int,
     maximumTokens: Int,
     tokenCount: IntArray,
+    requireCanonicalIntegerNumbers: Boolean,
 ) {
     if (depth > maximumDepth) jsonTooComplex()
     admitJsonToken(tokenCount, maximumTokens)
@@ -69,6 +88,7 @@ private fun readStrictJsonValue(
                     maximumDepth = maximumDepth,
                     maximumTokens = maximumTokens,
                     tokenCount = tokenCount,
+                    requireCanonicalIntegerNumbers = requireCanonicalIntegerNumbers,
                 )
             }
             reader.endObject()
@@ -83,18 +103,31 @@ private fun readStrictJsonValue(
                     maximumDepth = maximumDepth,
                     maximumTokens = maximumTokens,
                     tokenCount = tokenCount,
+                    requireCanonicalIntegerNumbers = requireCanonicalIntegerNumbers,
                 )
             }
             reader.endArray()
         }
 
         JsonToken.STRING -> requireWellFormedUtf16(reader.nextString())
-        JsonToken.NUMBER -> reader.nextString()
+        JsonToken.NUMBER -> {
+            val token = reader.nextString()
+            if (requireCanonicalIntegerNumbers && !isCanonical64BitInteger(token)) {
+                invalidJson()
+            }
+        }
         JsonToken.BOOLEAN -> reader.nextBoolean()
         JsonToken.NULL -> reader.nextNull()
         else -> invalidJson()
     }
 }
+
+private fun isCanonical64BitInteger(value: String): Boolean =
+    if (value.startsWith("-")) {
+        value.toLongOrNull()?.let { value == it.toString() } == true
+    } else {
+        value.toULongOrNull()?.let { value == it.toString() } == true
+    }
 
 /**
  * JSON string escapes can encode isolated UTF-16 surrogates even when the transport bytes were

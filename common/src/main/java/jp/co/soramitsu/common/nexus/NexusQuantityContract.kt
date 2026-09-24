@@ -23,4 +23,13 @@ object NexusQuantityContract {
         value == value.trim() &&
             value.length <= MAX_WIRE_CHARACTERS &&
             inputPattern.matches(value)
+
+    fun hasScaleAtMost(value: String, maximumScale: Int): Boolean {
+        require(maximumScale in 0..MAX_SCALE)
+        if (!isWireQuantity(value)) return false
+        return value.substringAfter('.', missingDelimiterValue = "").length <= maximumScale
+    }
+
+    fun isTairaXorQuantity(value: String): Boolean =
+        hasScaleAtMost(value, TairaTestnetContract.XOR_SCALE)
 }

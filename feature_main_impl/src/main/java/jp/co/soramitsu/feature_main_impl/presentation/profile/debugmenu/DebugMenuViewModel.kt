@@ -50,14 +50,22 @@ import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.xbackup.BackupService
+import jp.co.soramitsu.common.backup.CloudBackupProvider
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class DebugMenuViewModel @Inject constructor(
     private val runtimeManager: RuntimeManager,
-    private val backupService: BackupService,
+    private val cloudBackupProvider: CloudBackupProvider,
 ) : BaseViewModel() {
+
+    private val backupService get() = requireNotNull(cloudBackupProvider.serviceOrNull())
+
+    private fun requireCloudBackup(): Boolean {
+        if (cloudBackupProvider.isAvailable) return true
+        onError(jp.co.soramitsu.common.R.string.wallet_cloud_backup_unavailable)
+        return false
+    }
 
     internal var state by mutableStateOf(DebugMenuScreenState(emptyList()))
         private set
@@ -124,9 +132,16 @@ class DebugMenuViewModel @Inject constructor(
     }
 
     fun onChangeGoogleAccount(launcher: ActivityResultLauncher<Intent>) {
+        if (!requireCloudBackup()) return
         viewModelScope.launch {
-            backupService.logout()
-            backupService.authorize(launcher)
+            try {
+                backupService.logout()
+                backupService.authorize(launcher)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                onError(jp.co.soramitsu.common.R.string.wallet_cloud_backup_failed)
+            }
         }
     }
 

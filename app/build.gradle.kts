@@ -9,6 +9,7 @@ import java.nio.file.attribute.PosixFilePermission
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidApplication)
+    alias(libs.plugins.baselineProfile)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
@@ -135,12 +136,29 @@ android {
                 "proguard-rules.pro"
             )
         }
+        create("benchmarkRelease") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("cidebug")
+            configure<CrashlyticsExtension> {
+                // Benchmarks are local, unsigned production-shape measurements. They must not
+                // create or upload a release mapping, especially when Google Services is absent.
+                mappingFileUploadEnabled = false
+            }
+        }
+        create("nonMinifiedRelease") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("cidebug")
+            configure<CrashlyticsExtension> {
+                mappingFileUploadEnabled = false
+            }
+        }
     }
 
     buildFeatures {
         viewBinding = true
         buildConfig = true
         resValues = true
+        compose = true
     }
     packaging {
         resources {
@@ -216,6 +234,18 @@ android {
         all {
             exclude(module = "bcprov-jdk15on")
         }
+    }
+}
+
+baselineProfile {
+    // Generate from the production-shaped flavor, then share its startup hot paths with all
+    // flavors. Development-only logging must not influence the shipped profile.
+    mergeIntoMain = true
+    saveInSrc = true
+    automaticGenerationDuringBuild = false
+    warnings {
+        // Qualification intentionally has no release-like variants; it is an isolated debug APK.
+        disabledVariants = false
     }
 }
 
@@ -302,6 +332,9 @@ play {
 }
 
 dependencies {
+    // PayWings uses this serializer entry point. The old 1.0 adapter is binary-incompatible
+    // with DataStore 1.1's Okio serializer; retain the same encrypted preferences format.
+    runtimeOnly("io.github.osipxd:security-crypto-datastore-preferences:1.1.1-beta03")
     // implementation(libs.fileTree(dir: 'libs', include: ['*.jar'])
     implementation(project(":common"))
     implementation(project(":common_wallet"))
@@ -356,10 +389,22 @@ dependencies {
     implementation(libs.hiltWorkManagerDep)
     ksp(libs.hiltWorkManagerCompilerDep)
     implementation(libs.workManagerDep)
+    implementation(libs.profileInstallerDep)
 
     implementation(libs.lifecycleProcessDep)
     implementation(platform(libs.compose.bom))
     implementation(libs.composeRuntimeDep)
+    implementation(libs.composeActivityDep)
+    implementation(libs.composeUiDep)
+    implementation(libs.composeLifecycleDep)
+    implementation(libs.composeFoundationDep)
+    implementation(libs.composeMaterial3Dep)
+    implementation(libs.composeMaterialDep)
+    implementation(libs.uiCoreDep)
+    implementation(libs.composeAnimationDep)
+    implementation(libs.composeToolingPreviewDep)
+    debugImplementation(libs.composeToolingDep)
+    implementation(libs.biometricDep)
 
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
@@ -383,6 +428,11 @@ dependencies {
     androidTestImplementation(libs.junitDep)
     androidTestImplementation(libs.mockkAndroidDep)
     androidTestImplementation(libs.roomTestHelpersDep)
+    androidTestImplementation("io.github.osipxd:security-crypto-datastore-preferences:1.1.1-beta03")
+    androidTestImplementation(libs.zXingCoreDep)
+    androidTestImplementation(libs.zXingEmbeddedDep)
+
+    baselineProfile(project(":baselineprofile"))
 
     kover(project(":common"))
     kover(project(":common_wallet"))
@@ -414,6 +464,7 @@ dependencies {
     kover(project(":sorasubstrate"))
     kover(project(":network"))
 }
+
 kover {
     reports {
         variant("developDebug") {

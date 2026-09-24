@@ -7,6 +7,8 @@ import {
   readStrictJsonFile,
 } from "./strict-evidence.mjs";
 
+import { ANDROID_PRE_ACCOUNT_EVIDENCE_CATEGORIES } from "./android-migration-coverage-v1.mjs";
+
 const MAX_INDEX_BYTES = 2 * 1024 * 1024;
 const MAX_RAW_FILE_BYTES = 128 * 1024 * 1024;
 const MAX_RAW_BUNDLE_BYTES = 4 * 1024 * 1024 * 1024;
@@ -15,16 +17,16 @@ const SHA256 = /^[0-9a-f]{64}$/;
 const SOURCE_REVISION = /^[0-9a-f]{40}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
-export const ANDROID_MIGRATION_RAW_RUN_INDEX_V1 = Object.freeze({
-  schemaVersion: 1,
-  contractId: "sora-android-wallet-migration-raw-run-index-v1",
+export const ANDROID_MIGRATION_RAW_RUN_INDEX_V2 = Object.freeze({
+  schemaVersion: 2,
+  contractId: "sora-android-wallet-migration-raw-run-index-v2",
   platform: "android",
   status: "complete",
 });
 
-export const ANDROID_MIGRATION_RAW_EVIDENCE_V1 = Object.freeze({
-  schemaVersion: 1,
-  contractId: "sora-android-wallet-migration-raw-execution-evidence-v1",
+export const ANDROID_MIGRATION_RAW_EVIDENCE_V2 = Object.freeze({
+  schemaVersion: 2,
+  contractId: "sora-android-wallet-migration-raw-execution-evidence-v2",
   platform: "android",
   status: "collected-unreviewed",
 });
@@ -36,10 +38,11 @@ export const ANDROID_MIGRATION_RAW_EVIDENCE_AUTHORIZATION = Object.freeze({
 });
 
 const NON_AUTHORIZATION_WARNING =
-  "Collection output only: this artifact does not authorize qualification, release, or production mutation without the distinct signed v7 receipt and v2 evidence manifest.";
+  "Collection output only: this artifact does not authorize qualification, release, or production mutation without the distinct signed v8 receipt and v3 evidence manifest.";
 
 export const ANDROID_MIGRATION_RAW_EVIDENCE_SUITES = Object.freeze([
   "encrypted-wallet-migration-storage",
+  "legacy-pre-account-upgrade",
   "migration-manager-production-path-qualification",
   "migration-manager-safety",
   "sora2-address-codec",
@@ -48,6 +51,7 @@ export const ANDROID_MIGRATION_RAW_EVIDENCE_SUITES = Object.freeze([
 ]);
 
 export const ANDROID_MIGRATION_RAW_EVIDENCE_CATEGORIES = Object.freeze([
+  ...ANDROID_PRE_ACCOUNT_EVIDENCE_CATEGORIES,
   "apk-identity",
   "method-inventory",
   "report",
@@ -75,6 +79,8 @@ export const ANDROID_MIGRATION_RAW_EVIDENCE_AGGREGATE_KEYS = Object.freeze([
   "rawResultBundleByteCount",
   "rawResultBundleSha256",
   "requiredSuiteCount",
+  "preAccountEvidenceArtifactCount",
+  "allPreAccountEvidencePresent",
   "apkIdentityArtifactCount",
   "methodInventoryArtifactCount",
   "reportArtifactCount",
@@ -305,12 +311,12 @@ const canonicalRelativePath = (value, root) => {
 const validateIndex = (index) => {
   exactKeys(index, INDEX_KEYS, "raw-run index");
   if (
-    index.schemaVersion !== ANDROID_MIGRATION_RAW_RUN_INDEX_V1.schemaVersion ||
-    index.contractId !== ANDROID_MIGRATION_RAW_RUN_INDEX_V1.contractId ||
-    index.platform !== ANDROID_MIGRATION_RAW_RUN_INDEX_V1.platform ||
-    index.status !== ANDROID_MIGRATION_RAW_RUN_INDEX_V1.status
+    index.schemaVersion !== ANDROID_MIGRATION_RAW_RUN_INDEX_V2.schemaVersion ||
+    index.contractId !== ANDROID_MIGRATION_RAW_RUN_INDEX_V2.contractId ||
+    index.platform !== ANDROID_MIGRATION_RAW_RUN_INDEX_V2.platform ||
+    index.status !== ANDROID_MIGRATION_RAW_RUN_INDEX_V2.status
   ) {
-    fail("raw-run index is not exact v1");
+    fail("raw-run index is not exact v2");
   }
   if (!UUID.test(index.runId) || index.runId === "00000000-0000-0000-0000-000000000000") {
     fail("raw-run ID must be a nonzero lowercase canonical UUID");
@@ -349,7 +355,7 @@ const fixedPrivacy = () =>
 
 const canonicalBundleSha256 = (records) => {
   const digest = createHash("sha256");
-  digest.update("sora-android-wallet-migration-raw-result-bundle-v1\n", "utf8");
+  digest.update("sora-android-wallet-migration-raw-result-bundle-v2\n", "utf8");
   for (const record of records) {
     digest.update(record.relativePath, "utf8");
     digest.update("\0", "utf8");
@@ -361,15 +367,15 @@ const canonicalBundleSha256 = (records) => {
   return digest.digest("hex");
 };
 
-export const validateAndroidMigrationRawEvidenceV1 = (record) => {
+export const validateAndroidMigrationRawEvidenceV2 = (record) => {
   exactKeys(record, OUTPUT_KEYS, "raw execution evidence");
   if (
-    record.schemaVersion !== ANDROID_MIGRATION_RAW_EVIDENCE_V1.schemaVersion ||
-    record.contractId !== ANDROID_MIGRATION_RAW_EVIDENCE_V1.contractId ||
-    record.platform !== ANDROID_MIGRATION_RAW_EVIDENCE_V1.platform ||
-    record.status !== ANDROID_MIGRATION_RAW_EVIDENCE_V1.status
+    record.schemaVersion !== ANDROID_MIGRATION_RAW_EVIDENCE_V2.schemaVersion ||
+    record.contractId !== ANDROID_MIGRATION_RAW_EVIDENCE_V2.contractId ||
+    record.platform !== ANDROID_MIGRATION_RAW_EVIDENCE_V2.platform ||
+    record.status !== ANDROID_MIGRATION_RAW_EVIDENCE_V2.status
   ) {
-    fail("raw execution evidence is not exact collected-unreviewed v1");
+    fail("raw execution evidence is not exact collected-unreviewed v2");
   }
   if (!UUID.test(record.runId) || record.runId === "00000000-0000-0000-0000-000000000000") {
     fail("raw execution evidence run ID is invalid");
@@ -410,6 +416,7 @@ export const validateAndroidMigrationRawEvidenceV1 = (record) => {
     "rawResultFileCount",
     "rawResultBundleByteCount",
     "requiredSuiteCount",
+    "preAccountEvidenceArtifactCount",
     "apkIdentityArtifactCount",
     "methodInventoryArtifactCount",
     "reportArtifactCount",
@@ -421,6 +428,7 @@ export const validateAndroidMigrationRawEvidenceV1 = (record) => {
     record.aggregate.requiredSuiteCount !== ANDROID_MIGRATION_RAW_EVIDENCE_SUITES.length ||
     [
       "allRequiredSuitesPresent",
+      "allPreAccountEvidencePresent",
       "allInputsRegular",
       "allInputsHashVerified",
       "allInputsWithinRunRoot",
@@ -432,11 +440,13 @@ export const validateAndroidMigrationRawEvidenceV1 = (record) => {
   if (
     record.aggregate.rawResultFileCount > MAX_RAW_FILE_COUNT ||
     record.aggregate.rawResultBundleByteCount > MAX_RAW_BUNDLE_BYTES ||
+    record.aggregate.preAccountEvidenceArtifactCount < ANDROID_PRE_ACCOUNT_EVIDENCE_CATEGORIES.length ||
     record.aggregate.apkIdentityArtifactCount < 2 ||
     record.aggregate.methodInventoryArtifactCount < record.aggregate.requiredSuiteCount ||
     record.aggregate.reportArtifactCount < record.aggregate.requiredSuiteCount ||
     record.aggregate.transcriptArtifactCount < record.aggregate.requiredSuiteCount ||
     record.aggregate.rawResultFileCount !==
+      record.aggregate.preAccountEvidenceArtifactCount +
       record.aggregate.apkIdentityArtifactCount +
         record.aggregate.methodInventoryArtifactCount +
         record.aggregate.reportArtifactCount +
@@ -454,7 +464,7 @@ export const validateAndroidMigrationRawEvidenceV1 = (record) => {
   return record;
 };
 
-export const collectAndroidMigrationRawEvidenceV1 = ({ root, indexPath } = {}) => {
+export const collectAndroidMigrationRawEvidenceV2 = ({ root, indexPath } = {}) => {
   const protectedRoot = canonicalRoot(root);
   const initialTree = snapshotRawRunTree(protectedRoot);
   const expectedIndexPath = resolve(protectedRoot, "raw-run-index.json");
@@ -489,6 +499,9 @@ export const collectAndroidMigrationRawEvidenceV1 = ({ root, indexPath } = {}) =
     seenPaths.add(entry.relativePath);
     if (!ANDROID_MIGRATION_RAW_EVIDENCE_CATEGORIES.includes(entry.category)) {
       fail(`${label} has an unreviewed artifact category`);
+    }
+    if (ANDROID_PRE_ACCOUNT_EVIDENCE_CATEGORIES.includes(entry.category) && entry.suite !== "legacy-pre-account-upgrade") {
+      fail(`${label} pre-account evidence is outside its required suite`);
     }
     if (!ANDROID_MIGRATION_RAW_EVIDENCE_SUITES.includes(entry.suite)) {
       fail(`${label} has an unreviewed suite`);
@@ -559,6 +572,10 @@ export const collectAndroidMigrationRawEvidenceV1 = ({ root, indexPath } = {}) =
   if (!allRequiredSuitesPresent || categoryCounts["apk-identity"] < 2) {
     fail("raw-run inventory lacks required per-suite method/report/transcript or APK identity evidence");
   }
+  const allPreAccountEvidencePresent = ANDROID_PRE_ACCOUNT_EVIDENCE_CATEGORIES.every(
+    (category) => suiteCategories["legacy-pre-account-upgrade"].has(category),
+  );
+  if (!allPreAccountEvidencePresent) fail("raw-run inventory lacks Room50 provenance or required pre-account restart evidence");
   const finalTree = snapshotRawRunTree(protectedRoot);
   if (!sameTreeSnapshot(initialTree, finalTree)) {
     fail("raw-run tree changed during collection");
@@ -581,7 +598,7 @@ export const collectAndroidMigrationRawEvidenceV1 = ({ root, indexPath } = {}) =
   }
 
   const output = {
-    ...ANDROID_MIGRATION_RAW_EVIDENCE_V1,
+    ...ANDROID_MIGRATION_RAW_EVIDENCE_V2,
     runId: index.runId,
     qualificationSequenceNumber: index.qualificationSequenceNumber,
     sourceRevision: index.sourceRevision,
@@ -595,6 +612,8 @@ export const collectAndroidMigrationRawEvidenceV1 = ({ root, indexPath } = {}) =
       rawResultBundleByteCount: totalBytes,
       rawResultBundleSha256: canonicalBundleSha256(records),
       requiredSuiteCount: ANDROID_MIGRATION_RAW_EVIDENCE_SUITES.length,
+      preAccountEvidenceArtifactCount: ANDROID_PRE_ACCOUNT_EVIDENCE_CATEGORIES.reduce((total, category) => total + categoryCounts[category], 0),
+      allPreAccountEvidencePresent,
       apkIdentityArtifactCount: categoryCounts["apk-identity"],
       methodInventoryArtifactCount: categoryCounts["method-inventory"],
       reportArtifactCount: categoryCounts.report,
@@ -607,7 +626,7 @@ export const collectAndroidMigrationRawEvidenceV1 = ({ root, indexPath } = {}) =
     },
     blockingReasons: [NON_AUTHORIZATION_WARNING],
   };
-  validateAndroidMigrationRawEvidenceV1(output);
+  validateAndroidMigrationRawEvidenceV2(output);
   return Object.freeze({
     record: output,
     bytes: Buffer.from(`${JSON.stringify(output, null, 2)}\n`, "utf8"),

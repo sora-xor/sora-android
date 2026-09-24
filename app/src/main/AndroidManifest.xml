@@ -46,6 +46,36 @@
         </activity>
 
         <activity
+            android:name=".irohaconnect.IrohaConnectActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:taskAffinity=""
+            android:theme="@style/IrohaConnectTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="connect"
+                    android:scheme="iroha" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="connect"
+                    android:scheme="irohaconnect" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.QRCodeScannerActivity"
             android:exported="false"/>
 

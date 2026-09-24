@@ -95,16 +95,16 @@ object IrohaAddressCodec {
     }
 
     private fun sentinel(discriminant: Int): String = when (discriminant) {
-        NexusNetworks.minamoto.chainDiscriminant -> "sora"
-        NexusNetworks.taira.chainDiscriminant -> "test"
+        NexusDerivationProfiles.minamoto.chainDiscriminant -> "sora"
+        NexusDerivationProfiles.taira.chainDiscriminant -> "test"
         0 -> "dev"
         else -> "n$discriminant"
     }
 
     private fun readDiscriminant(address: String): Int {
         return when {
-            address.startsWith("sora") -> NexusNetworks.minamoto.chainDiscriminant
-            address.startsWith("test") -> NexusNetworks.taira.chainDiscriminant
+            address.startsWith("sora") -> NexusDerivationProfiles.minamoto.chainDiscriminant
+            address.startsWith("test") -> NexusDerivationProfiles.taira.chainDiscriminant
             address.startsWith("dev") -> 0
             address.startsWith("n") -> address.drop(1)
                 .take(5)

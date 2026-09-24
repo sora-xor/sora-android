@@ -71,7 +71,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.mod
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionSelectableModel
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.xbackup.BackupService
+import jp.co.soramitsu.common.backup.CloudBackupProvider
 import jp.co.soramitsu.xbackup.domain.exceptions.AuthConsentException
 import jp.co.soramitsu.xbackup.domain.exceptions.DecodingException
 import jp.co.soramitsu.xbackup.domain.exceptions.DecryptionException
@@ -95,15 +95,23 @@ class OnboardingViewModel @Inject constructor(
     private val multiaccountInteractor: MultiaccountInteractor,
     private val mainStarter: MainStarter,
     private val resourceManager: ResourceManager,
-    private val backupService: BackupService,
+    private val cloudBackupProvider: CloudBackupProvider,
     private val avatarGenerator: AccountAvatarGenerator,
     private val coroutineManager: CoroutineManager,
 ) : BaseViewModel() {
 
+    private val backupService get() = requireNotNull(cloudBackupProvider.serviceOrNull())
+
+    private fun requireCloudBackup(): Boolean {
+        if (cloudBackupProvider.isAvailable) return true
+        onError(jp.co.soramitsu.common.R.string.wallet_cloud_backup_unavailable)
+        return false
+    }
+
     private val _createAccountCardState = MutableLiveData<CreateAccountState>()
     val createAccountCardState: LiveData<CreateAccountState> = _createAccountCardState
 
-    private val _tutorialScreenState = MutableLiveData(TutorialScreenState())
+    private val _tutorialScreenState = MutableLiveData(TutorialScreenState(isGoogleBackupAvailable = cloudBackupProvider.isAvailable))
     val tutorialScreenState: LiveData<TutorialScreenState> = _tutorialScreenState
 
     private val _recoveryDialog = MutableStateFlow(false)
@@ -359,13 +367,14 @@ class OnboardingViewModel @Inject constructor(
         launcher: ActivityResultLauncher<Intent>
     ) {
         _recoveryDialog.value = false
+        if (!requireCloudBackup()) return
         _tutorialScreenState.value?.let {
             _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
             viewModelScope.launch {
                 try {
                     backupService.logout()
                     if (backupService.authorize(launcher)) {
-                        onSuccessfulGoogleSignin(navController)
+                        loadGoogleBackups(navController)
                     } else {
                         _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
                     }
@@ -375,6 +384,14 @@ class OnboardingViewModel @Inject constructor(
                 } catch (e: SocketTimeoutException) {
                     _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
                     onError(SoraException.networkError(resourceManager, e))
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: AuthConsentException) {
+                    _consentExceptionHandler.value = e.intent
+                } catch (e: Exception) {
+                    onError(R.string.wallet_cloud_backup_failed)
+                } finally {
+                    _tutorialScreenState.value = _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
                 }
             }
         }
@@ -548,49 +565,56 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onSuccessfulGoogleSignin(navController: NavController) {
-        _tutorialScreenState.value =
-            _tutorialScreenState.value?.copy(isGoogleSigninLoading = true)
+        if (!requireCloudBackup()) return
+        viewModelScope.launch { loadGoogleBackups(navController) }
+    }
 
-        viewModelScope.launch {
-            try {
-                isFromGoogleDrive = true
+    private suspend fun loadGoogleBackups(navController: NavController) {
+        _tutorialScreenState.value = _tutorialScreenState.value?.copy(isGoogleSigninLoading = true)
+        try {
+            isFromGoogleDrive = true
 
-                if (navController.currentDestination?.route == OnboardingFeatureRoutes.PASSPHRASE) {
-                    navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
+            if (navController.currentDestination?.route == OnboardingFeatureRoutes.PASSPHRASE) {
+                navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
+            } else {
+                val result = getBackupedAccountsFiltered()
+
+                _tutorialScreenState.value =
+                    _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
+
+                if (result.isEmpty()) {
+                    navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
                 } else {
-                    val result = getBackupedAccountsFiltered()
-
-                    _tutorialScreenState.value =
-                        _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
-
-                    if (result.isEmpty()) {
-                        navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
-                    } else {
-                        _importAccountListState.value = ImportAccountListScreenState(
-                            accountList = result.map {
-                                BackupAccountMetaWithIcon(
-                                    it,
-                                    getDrawableFromGoogleBackup(it.address),
-                                )
-                            }
-                        )
-                        navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
-                    }
+                    _importAccountListState.value = ImportAccountListScreenState(
+                        accountList = result.map {
+                            BackupAccountMetaWithIcon(
+                                it,
+                                getDrawableFromGoogleBackup(it.address),
+                            )
+                        }
+                    )
+                    navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
                 }
-            } catch (e: UnauthorizedException) {
-                _tutorialScreenState.value =
-                    _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
-
-                onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
-            } catch (e: SocketException) {
-                onError(SoraException.networkError(resourceManager, e))
-            } catch (e: SocketTimeoutException) {
-                onError(SoraException.networkError(resourceManager, e))
-            } catch (e: AuthConsentException) {
-                _tutorialScreenState.value =
-                    _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
-                _consentExceptionHandler.value = e.intent
             }
+        } catch (e: UnauthorizedException) {
+            _tutorialScreenState.value =
+                _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
+
+            onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
+        } catch (e: SocketException) {
+            onError(SoraException.networkError(resourceManager, e))
+        } catch (e: SocketTimeoutException) {
+            onError(SoraException.networkError(resourceManager, e))
+        } catch (e: AuthConsentException) {
+            _tutorialScreenState.value =
+                _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
+            _consentExceptionHandler.value = e.intent
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            onError(R.string.wallet_cloud_backup_failed)
+        } finally {
+            _tutorialScreenState.value = _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
         }
     }
 
@@ -602,6 +626,7 @@ class OnboardingViewModel @Inject constructor(
     fun onSetBackupPasswordClicked(
         activity: Activity
     ) {
+        if (!requireCloudBackup()) return
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
             viewModelScope.launch(coroutineManager.io) {
@@ -723,6 +748,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onImportContinueClicked(navController: NavController) {
+        if (!requireCloudBackup()) return
         _importAccountPasswordState.value?.let { state ->
             _importAccountPasswordState.value = state.copy(isLoading = true)
             var isImportMoreAvailable = false

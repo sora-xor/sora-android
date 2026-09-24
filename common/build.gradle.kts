@@ -26,14 +26,6 @@ fun maybeWrapQuotes(s: String): String {
     return if (s.startsWith("\"")) s else "\"" + s + "\""
 }
 
-// Taira deployment identity is public, but it is authority-controlled. Read it only from the
-// qualification runner environment and escape it as data; local.properties and source defaults
-// must never select a current Taira epoch for a production build.
-fun protectedBuildConfigString(name: String): String {
-    val value = System.getenv(name).orEmpty()
-    return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
-}
-
 kotlin {
     jvmToolchain(17)
 }
@@ -47,76 +39,6 @@ android {
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField(
-            "String",
-            "TAIRA_DEPLOYMENT_MANIFEST_SHA256",
-            protectedBuildConfigString("TAIRA_DEPLOYMENT_MANIFEST_SHA256")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_DEPLOYMENT_MANIFEST_SEQUENCE_NUMBER",
-            protectedBuildConfigString("TAIRA_DEPLOYMENT_MANIFEST_SEQUENCE_NUMBER")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_CURRENT_EPOCH",
-            protectedBuildConfigString("TAIRA_CURRENT_EPOCH")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_CURRENT_CHAIN_ID",
-            protectedBuildConfigString("TAIRA_CURRENT_CHAIN_ID")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_CURRENT_GENESIS_SHA256",
-            protectedBuildConfigString("TAIRA_CURRENT_GENESIS_SHA256")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_CURRENT_I105_DISCRIMINANT",
-            protectedBuildConfigString("TAIRA_CURRENT_I105_DISCRIMINANT")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_CURRENT_TORII_BASE_URL",
-            protectedBuildConfigString("TAIRA_CURRENT_TORII_BASE_URL")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_CURRENT_PUBLIC_MCP_ENDPOINT",
-            protectedBuildConfigString("TAIRA_CURRENT_PUBLIC_MCP_ENDPOINT")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_CURRENT_EXPLORER_BASE_URL",
-            protectedBuildConfigString("TAIRA_CURRENT_EXPLORER_BASE_URL")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_RETIRED_EPOCH",
-            protectedBuildConfigString("TAIRA_RETIRED_EPOCH")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_RETIRED_CHAIN_ID",
-            protectedBuildConfigString("TAIRA_RETIRED_CHAIN_ID")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_RETIRED_GENESIS_SHA256",
-            protectedBuildConfigString("TAIRA_RETIRED_GENESIS_SHA256")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256",
-            protectedBuildConfigString("TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256")
-        )
-        buildConfigField(
-            "String",
-            "TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256",
-            protectedBuildConfigString("TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256")
-        )
     }
 
     testOptions {
@@ -305,4 +227,18 @@ dependencies {
     testImplementation(libs.coroutineTestDep)
     androidTestImplementation(libs.androidxTestExtJunitDep)
     androidTestImplementation(libs.androidxTestEspressoCoreDep)
+}
+
+// Development builds support local recovery without Google; distributed production builds must retain cloud recovery.
+val validateProductionCloudBackupConfiguration by tasks.registering {
+    group = "verification"
+    description = "Checks that production Google backup has an OAuth client configured without exposing its value."
+    doLast {
+        check(secret("SORA_GOOGLE_TOKEN_PROD").trim().trim('"').isNotBlank()) {
+            "Production Google backup requires SORA_GOOGLE_TOKEN_PROD. Configure the release OAuth client before packaging."
+        }
+    }
+}
+tasks.matching { it.name == "preProductionReleaseBuild" }.configureEach {
+    dependsOn(validateProductionCloudBackupConfiguration)
 }

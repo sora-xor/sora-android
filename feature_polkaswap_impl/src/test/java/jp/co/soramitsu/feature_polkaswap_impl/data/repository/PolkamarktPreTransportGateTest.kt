@@ -384,6 +384,7 @@ class PolkamarktPreTransportGateTest {
         nexusSendsAvailable = false,
         polkamarktVisible = visible,
         polkamarktMutationsAvailable = mutationsAvailable,
+        tairaAvailable = false,
         tairaVisible = false,
         tairaPreferenceIsExplicit = false,
     )

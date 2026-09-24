@@ -3,6 +3,8 @@ package jp.co.soramitsu.feature_blockexplorer_api.data
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.nexus.NexusNetworks
+import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.EmergencyFeatureFlags
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -13,6 +15,7 @@ data class ProductionFeatureState(
     val nexusSendsAvailable: Boolean,
     val polkamarktVisible: Boolean,
     val polkamarktMutationsAvailable: Boolean,
+    val tairaAvailable: Boolean,
     val tairaVisible: Boolean,
     val tairaPreferenceIsExplicit: Boolean,
 )
@@ -111,6 +114,7 @@ class ProductionFeatureManager @Inject constructor(
                     piConfig != null &&
                     flags.polkamarktVisible &&
                     flags.polkamarktMutationsAvailable,
+            tairaAvailable = NexusNetworks.find(WalletNetworkId.TAIRA) != null,
             tairaVisible = tairaVisibility.visible,
             tairaPreferenceIsExplicit = tairaVisibility.preferenceIsExplicit,
         )

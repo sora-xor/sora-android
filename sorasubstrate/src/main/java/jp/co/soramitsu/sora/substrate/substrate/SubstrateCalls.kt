@@ -100,6 +100,7 @@ import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.SubscribeStorage
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.SubscribeStorageResult
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.storageChange
 import jp.co.soramitsu.xsubstrate.wsrpc.subscriptionFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
@@ -715,28 +716,36 @@ class SubstrateCalls @Inject constructor(
     }
 
     suspend fun getExtrinsicFee(extrinsic: String): BigInteger? {
-        var result: BigInteger? = null
-        result = runCatching {
+        val primaryFailure = try {
             val request = FeeCalculationRequest(extrinsic)
             val feeResponse =
                 socketService.executeAsyncMapped(
                     request = request,
                     mapper = pojo<FeeResponse>().nonNull()
                 )
-            feeResponse.partialFee
-        }.getOrNull()
-        if (result == null) {
-            result = runCatching {
-                val request = FeeCalculationRequest2(extrinsic)
-                val feeResponse =
-                    socketService.executeAsyncMapped(
-                        request = request,
-                        mapper = pojo<FeeResponse2>().nonNull()
-                    )
-                feeResponse.inclusionFee.sum
-            }.getOrNull()
+            return feeResponse.partialFee
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            error
         }
-        return result
+
+        return try {
+            val request = FeeCalculationRequest2(extrinsic)
+            val feeResponse =
+                socketService.executeAsyncMapped(
+                    request = request,
+                    mapper = pojo<FeeResponse2>().nonNull()
+                )
+            feeResponse.inclusionFee.sum
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            if (error !== primaryFailure) {
+                error.addSuppressed(primaryFailure)
+            }
+            throw error
+        }
     }
 
     suspend fun getBlock(blockHash: String): BlockResponse {

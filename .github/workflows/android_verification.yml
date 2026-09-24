@@ -15,6 +15,37 @@ permissions:
   contents: read
 
 jobs:
+  modernization-source:
+    name: Modernization Source and Unit Tests
+    if: ${{ github.base_ref == 'modernize' || github.ref == 'refs/heads/modernize' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: Verify source contracts
+        run: |
+          node scripts/verify-production-modernization.mjs
+          node scripts/test-android-wallet-continuity-source-contract.mjs
+
+      - name: Run strict production-flavor unit tests
+        run: ./gradlew --dependency-verification=strict testProductionDebugUnitTest --stacktrace --no-daemon --no-parallel
+
   explorer-contracts:
     name: Explorer Contracts
     runs-on: ubuntu-latest

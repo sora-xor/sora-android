@@ -5,6 +5,7 @@ import {
   createAndroidQualifiedCandidatePackageV1,
   validateAndroidQualifiedCandidatePackageV1,
 } from "./lib/android-qualified-candidate-package-v1.mjs";
+import { parseExpectedTairaDeploymentManifestSequenceNumberV1 } from "./lib/taira-deployment-manifest-v1.mjs";
 
 const required = (name) => {
   const value = process.env[name] ?? "";
@@ -66,6 +67,10 @@ const manifest = createAndroidQualifiedCandidatePackageV1({
   expectedTairaDeploymentReviewerKeySha256: required(
     "TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256",
   ),
+  expectedTairaDeploymentManifestSequenceNumber:
+    parseExpectedTairaDeploymentManifestSequenceNumberV1(
+      required("TAIRA_DEPLOYMENT_EXPECTED_MANIFEST_SEQUENCE_NUMBER"),
+    ),
   dependencySigningReviewManifestPath: required(
     "ANDROID_DEPENDENCY_SIGNING_REVIEW_MANIFEST_PATH",
   ),

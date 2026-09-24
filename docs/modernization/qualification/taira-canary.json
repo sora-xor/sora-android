@@ -32,7 +32,7 @@
     "chainId": "fc56984b-2be7-431d-840e-21514d1883f0",
     "i105Discriminant": 369,
     "toriiBaseUrl": "https://taira.sora.org",
-    "explorerBaseUrl": "https://taira-explorer.sora.org",
+    "explorerBaseUrl": "https://taira.sora.org",
     "assetSymbol": "XOR",
     "xorAssetAlias": "xor#universal",
     "isTestnet": true

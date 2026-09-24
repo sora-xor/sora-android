@@ -1,10 +1,18 @@
 import { createHash } from "node:crypto";
-import { lstatSync, readFileSync, readdirSync, realpathSync } from "node:fs";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { spawnSync } from "node:child_process";
 import {
-  hashStableRegularFile,
-  readStrictJsonFile,
-} from "./strict-evidence.mjs";
+  closeSync,
+  constants as fsConstants,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readFileSync,
+  readSync,
+  readdirSync,
+  realpathSync,
+} from "node:fs";
+import { isAbsolute, join, relative, resolve } from "node:path";
+import { parseStrictJsonBytes, readStrictJsonFile } from "./strict-evidence.mjs";
 import {
   PRODUCTION_ADMISSION_IDENTITY_KEYS,
   QUALIFICATION_WORKFLOW_RELATIVE_PATH,
@@ -19,11 +27,11 @@ import {
   FUNDED_CANARY_CONTROLLER_BUNDLE_V1,
 } from "./funded-canary-controller-bundle-v1.mjs";
 import {
-  ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V1,
+  ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V2,
   ANDROID_MIGRATION_CONTROLLER_FILES,
   ANDROID_MIGRATION_CONTROLLER_MAXIMUM_BYTES,
-  inspectAndroidMigrationControllerEnvelopeV1,
-} from "./android-migration-controller-envelope-v1.mjs";
+  inspectAndroidMigrationControllerEnvelopeV2,
+} from "./android-migration-controller-envelope-v2.mjs";
 import { verifyTairaDeploymentManifestV1 } from "./taira-deployment-manifest-v1.mjs";
 import {
   androidDependencySigningReviewContractSha256V1,
@@ -44,6 +52,9 @@ const MAXIMUM_MAPPING_BYTES = 256 * 1024 * 1024;
 const MAXIMUM_BUILD_LOG_BYTES = 128 * 1024 * 1024;
 const MAXIMUM_EVIDENCE_BYTES = 16 * 1024 * 1024;
 const MAXIMUM_CANARY_BUNDLE_BYTES = 5 * 1024 * 1024 * 1024;
+const MAXIMUM_TAIRA_BUILD_BINDING_BYTES = 16 * 1024;
+const TAIRA_BUILD_BINDING_AAB_PATH =
+  "base/assets/sora-taira-build-binding-v1.json";
 
 const fail = (code) => {
   throw new Error(code);
@@ -75,6 +86,119 @@ const canonicalJsonSha256 = (value) =>
     .update(JSON.stringify(canonicalJsonValue(value)), "utf8")
     .digest("hex");
 
+const expectedTairaBuildBindingBytes = (admission) => Buffer.from(
+  `${JSON.stringify({
+    schemaVersion: 1,
+    contractId: "sora-android-taira-build-binding-v1",
+    manifestSha256: admission.manifestSha256,
+    manifestSequenceNumber: String(admission.manifestSequenceNumber),
+    current: {
+      epoch: String(admission.current.epoch),
+      chainId: admission.current.chainId,
+      genesisSha256: admission.current.genesisSha256,
+      i105Discriminant: String(admission.current.i105Discriminant),
+      toriiBaseUrl: admission.current.toriiBaseUrl,
+      publicNodeMcpEndpoint: admission.current.publicNodeMcpEndpoint,
+      explorerBaseUrl: admission.current.explorerBaseUrl,
+    },
+    retired: {
+      epoch: String(admission.retired.epoch),
+      chainId: admission.retired.chainId,
+      genesisSha256: admission.retired.genesisSha256,
+    },
+    operatorKeySha256: admission.operatorKeySha256,
+    reviewerKeySha256: admission.reviewerKeySha256,
+  }, null, 2)}\n`,
+  "utf8",
+);
+
+const hashDescriptor = (descriptor, maximumBytes) => {
+  const digest = createHash("sha256");
+  const buffer = Buffer.allocUnsafe(1024 * 1024);
+  let bytes = 0;
+  while (true) {
+    const read = readSync(descriptor, buffer, 0, buffer.length, bytes);
+    if (read === 0) break;
+    bytes += read;
+    if (bytes > maximumBytes) return null;
+    digest.update(buffer.subarray(0, read));
+  }
+  return { sha256: digest.digest("hex"), bytes };
+};
+
+const validateAabTairaBuildBinding = (path, record, admission, code) => {
+  let descriptor = null;
+  try {
+    descriptor = openSync(path, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+    const before = fstatSync(descriptor);
+    if (
+      !before.isFile() ||
+      before.dev !== record.device ||
+      before.ino !== record.inode ||
+      before.size !== record.bytes
+    ) {
+      fail(code);
+    }
+    const observed = hashDescriptor(descriptor, MAXIMUM_AAB_BYTES);
+    const afterHash = fstatSync(descriptor);
+    if (
+      observed === null ||
+      observed.sha256 !== record.sha256 ||
+      observed.bytes !== record.bytes ||
+      before.dev !== afterHash.dev ||
+      before.ino !== afterHash.ino ||
+      before.size !== afterHash.size ||
+      before.mtimeMs !== afterHash.mtimeMs ||
+      before.ctimeMs !== afterHash.ctimeMs
+    ) {
+      fail(code);
+    }
+    const extracted = spawnSync(
+      "/usr/bin/unzip",
+      ["-p", "/dev/fd/3", TAIRA_BUILD_BINDING_AAB_PATH],
+      {
+        stdio: ["ignore", "pipe", "pipe", descriptor],
+        maxBuffer: MAXIMUM_TAIRA_BUILD_BINDING_BYTES + 1,
+        timeout: 30_000,
+      },
+    );
+    const after = fstatSync(descriptor);
+    if (
+      extracted.error !== undefined ||
+      extracted.status !== 0 ||
+      !Buffer.isBuffer(extracted.stdout) ||
+      extracted.stdout.length < 1 ||
+      extracted.stdout.length > MAXIMUM_TAIRA_BUILD_BINDING_BYTES ||
+      before.dev !== after.dev ||
+      before.ino !== after.ino ||
+      before.size !== after.size ||
+      before.mtimeMs !== after.mtimeMs ||
+      before.ctimeMs !== after.ctimeMs
+    ) {
+      fail(code);
+    }
+    try {
+      parseStrictJsonBytes(extracted.stdout);
+    } catch {
+      fail(code);
+    }
+    if (!extracted.stdout.equals(expectedTairaBuildBindingBytes(admission))) {
+      fail(code);
+    }
+  } catch (error) {
+    if (error?.message === code) throw error;
+    fail(code);
+  } finally {
+    if (descriptor !== null) {
+      try {
+        closeSync(descriptor);
+      } catch {
+        // A close failure cannot make an unverified artifact admissible.
+      }
+    }
+  }
+};
+
 const canonicalAbsoluteRoot = (value) =>
   typeof value === "string" &&
   value.length > 0 &&
@@ -83,23 +207,53 @@ const canonicalAbsoluteRoot = (value) =>
   realpathSync(value) === value;
 
 const regularInput = (path, maximumBytes, code) => {
-  const record = hashStableRegularFile(path, maximumBytes);
-  if (record === null) fail(code);
-  let stat;
+  let descriptor = null;
   try {
-    stat = lstatSync(path);
-  } catch {
+    descriptor = openSync(path, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+    const before = fstatSync(descriptor);
+    if (
+      !before.isFile() ||
+      before.nlink !== 1 ||
+      before.size < 1 ||
+      before.size > maximumBytes
+    ) {
+      fail(code);
+    }
+    const record = hashDescriptor(descriptor, maximumBytes);
+    const after = fstatSync(descriptor);
+    const pathStat = lstatSync(path);
+    if (
+      record === null ||
+      record.bytes !== before.size ||
+      before.dev !== after.dev ||
+      before.ino !== after.ino ||
+      before.mode !== after.mode ||
+      before.nlink !== after.nlink ||
+      before.size !== after.size ||
+      before.mtimeMs !== after.mtimeMs ||
+      before.ctimeMs !== after.ctimeMs ||
+      !pathStat.isFile() ||
+      pathStat.isSymbolicLink() ||
+      pathStat.nlink !== 1 ||
+      pathStat.dev !== before.dev ||
+      pathStat.ino !== before.ino ||
+      realpathSync(path) !== path
+    ) {
+      fail(code);
+    }
+    return { ...record, device: before.dev, inode: before.ino };
+  } catch (error) {
+    if (error?.message === code) throw error;
     fail(code);
+  } finally {
+    if (descriptor !== null) {
+      try {
+        closeSync(descriptor);
+      } catch {
+        // A close failure cannot make an unverified input admissible.
+      }
+    }
   }
-  if (
-    !stat.isFile() ||
-    stat.isSymbolicLink() ||
-    stat.nlink !== 1 ||
-    realpathSync(path) !== path
-  ) {
-    fail(code);
-  }
-  return { ...record, device: stat.dev, inode: stat.ino };
 };
 
 const strictJsonInput = (path, maximumBytes, code) => {
@@ -215,8 +369,8 @@ const migrationControllerExtractionReceiptValid = (value) =>
     "files",
     "authorization",
   ]) &&
-  value.schemaVersion === ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V1.schemaVersion &&
-  value.contractId === ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V1.contractId &&
+  value.schemaVersion === ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V2.schemaVersion &&
+  value.contractId === ANDROID_MIGRATION_CONTROLLER_ENVELOPE_V2.contractId &&
   value.status === "extracted-unreviewed" &&
   value.platform === "android" &&
   REVISION.test(value.sourceRevision ?? "") &&
@@ -276,6 +430,7 @@ export const createAndroidQualifiedCandidatePackageV1 = ({
   tairaDeploymentAdmissionReceiptPath,
   expectedTairaDeploymentOperatorKeySha256,
   expectedTairaDeploymentReviewerKeySha256,
+  expectedTairaDeploymentManifestSequenceNumber,
   dependencySigningReviewManifestPath,
   dependencySigningReviewProducerSignaturePath,
   dependencySigningReviewReviewerSignaturePath,
@@ -525,7 +680,7 @@ export const createAndroidQualifiedCandidatePackageV1 = ({
   }
   let inspectedMigrationEnvelope;
   try {
-    inspectedMigrationEnvelope = inspectAndroidMigrationControllerEnvelopeV1({
+    inspectedMigrationEnvelope = inspectAndroidMigrationControllerEnvelopeV2({
       value: migrationControllerEnvelope.value,
       expectedSourceRevision: sourceRevision,
       expectedCandidateAabSha256: primaryAab.sha256,
@@ -567,6 +722,8 @@ export const createAndroidQualifiedCandidatePackageV1 = ({
         expectedTairaDeploymentReviewerKeySha256,
       evaluationEpochSeconds:
         tairaDeploymentAdmission.value?.evaluationEpochSeconds,
+      expectedManifestSequenceNumber:
+        expectedTairaDeploymentManifestSequenceNumber,
     });
   } catch {
     fail("CANDIDATE_PACKAGE_TAIRA_DEPLOYMENT_VERIFICATION_FAILED");
@@ -575,10 +732,38 @@ export const createAndroidQualifiedCandidatePackageV1 = ({
     JSON.stringify(verifiedTairaDeployment) !==
       JSON.stringify(tairaDeploymentAdmission.value) ||
     verifiedTairaDeployment.manifestSha256 !==
-      tairaDeploymentManifest.sha256
+      tairaDeploymentManifest.sha256 ||
+    verifiedTairaDeployment.operatorSignatureSha256 !==
+      tairaDeploymentOperatorSignature.sha256 ||
+    verifiedTairaDeployment.operatorSignatureBytes !==
+      tairaDeploymentOperatorSignature.bytes ||
+    verifiedTairaDeployment.reviewerSignatureSha256 !==
+      tairaDeploymentReviewerSignature.sha256 ||
+    verifiedTairaDeployment.reviewerSignatureBytes !==
+      tairaDeploymentReviewerSignature.bytes ||
+    verifiedTairaDeployment.operatorPublicKeyFileSha256 !==
+      tairaDeploymentOperatorPublicKey.sha256 ||
+    verifiedTairaDeployment.operatorPublicKeyFileBytes !==
+      tairaDeploymentOperatorPublicKey.bytes ||
+    verifiedTairaDeployment.reviewerPublicKeyFileSha256 !==
+      tairaDeploymentReviewerPublicKey.sha256 ||
+    verifiedTairaDeployment.reviewerPublicKeyFileBytes !==
+      tairaDeploymentReviewerPublicKey.bytes
   ) {
     fail("CANDIDATE_PACKAGE_TAIRA_DEPLOYMENT_ADMISSION_DIVERGED");
   }
+  validateAabTairaBuildBinding(
+    primaryAabPath,
+    primaryAab,
+    verifiedTairaDeployment,
+    "CANDIDATE_PACKAGE_PRIMARY_AAB_TAIRA_BUILD_BINDING_DIVERGED",
+  );
+  validateAabTairaBuildBinding(
+    reproducedAabPath,
+    reproducedAab,
+    verifiedTairaDeployment,
+    "CANDIDATE_PACKAGE_REPRODUCED_AAB_TAIRA_BUILD_BINDING_DIVERGED",
+  );
   if (
     !fundedCanaryExtractionReceiptValid(
       fundedCanaryControllerExtraction.value,
@@ -907,14 +1092,14 @@ export const createAndroidQualifiedCandidatePackageV1 = ({
         },
       ),
       migrationControllerEnvelope: artifactProjection(
-        "android-migration-controller-envelope-v1.json",
+        "android-migration-controller-envelope-v2.json",
         {
           sha256: migrationControllerEnvelope.sha256,
           bytes: migrationControllerEnvelope.byteCount,
         },
       ),
       migrationControllerExtraction: artifactProjection(
-        "android-migration-controller-extraction-v1.json",
+        "android-migration-controller-extraction-v2.json",
         {
           sha256: migrationControllerExtraction.sha256,
           bytes: migrationControllerExtraction.byteCount,
@@ -1185,11 +1370,11 @@ export const validateAndroidQualifiedCandidatePackageV1 = (value) => {
     ) &&
     artifactProjectionValid(
       value.evidence.migrationControllerEnvelope,
-      "android-migration-controller-envelope-v1.json",
+      "android-migration-controller-envelope-v2.json",
     ) &&
     artifactProjectionValid(
       value.evidence.migrationControllerExtraction,
-      "android-migration-controller-extraction-v1.json",
+      "android-migration-controller-extraction-v2.json",
     ) &&
     artifactProjectionValid(
       value.evidence.tairaDeploymentManifest,
@@ -1336,8 +1521,8 @@ const DOWNLOADED_PACKAGE_FILES = [
   "android-dependency-signing-review-producer.sig",
   "android-dependency-signing-review-reviewer.pem",
   "android-dependency-signing-review-reviewer.sig",
-  "android-migration-controller-envelope-v1.json",
-  "android-migration-controller-extraction-v1.json",
+  "android-migration-controller-envelope-v2.json",
+  "android-migration-controller-extraction-v2.json",
   "candidate-package-manifest.json",
   "candidate-pi-receipt.json",
   "candidate-pi-receipt-signature.json",
@@ -1372,6 +1557,7 @@ export const validateDownloadedAndroidQualifiedCandidatePackageV1 = ({
   expectedSourceRevision,
   expectedTairaDeploymentOperatorKeySha256,
   expectedTairaDeploymentReviewerKeySha256,
+  expectedTairaDeploymentManifestSequenceNumber,
   expectedDependencySigningReviewProducerKeySha256,
   expectedDependencySigningReviewReviewerKeySha256,
   expectedDependencySigningReviewSequenceNumber,
@@ -1478,12 +1664,12 @@ export const validateDownloadedAndroidQualifiedCandidatePackageV1 = ({
     "DOWNLOADED_CANDIDATE_REPRODUCED_SIGNING_INVALID",
   );
   const migrationControllerEnvelope = strictJsonInput(
-    path("android-migration-controller-envelope-v1.json"),
+    path("android-migration-controller-envelope-v2.json"),
     ANDROID_MIGRATION_CONTROLLER_MAXIMUM_BYTES,
     "DOWNLOADED_CANDIDATE_MIGRATION_CONTROLLER_ENVELOPE_INVALID",
   );
   const migrationControllerExtraction = strictJsonInput(
-    path("android-migration-controller-extraction-v1.json"),
+    path("android-migration-controller-extraction-v2.json"),
     MAXIMUM_EVIDENCE_BYTES,
     "DOWNLOADED_CANDIDATE_MIGRATION_CONTROLLER_EXTRACTION_INVALID",
   );
@@ -1738,7 +1924,7 @@ export const validateDownloadedAndroidQualifiedCandidatePackageV1 = ({
   }
   let inspectedMigrationEnvelope;
   try {
-    inspectedMigrationEnvelope = inspectAndroidMigrationControllerEnvelopeV1({
+    inspectedMigrationEnvelope = inspectAndroidMigrationControllerEnvelopeV2({
       value: migrationControllerEnvelope.value,
       expectedSourceRevision,
       expectedCandidateAabSha256: files.candidateAab.sha256,
@@ -1782,6 +1968,8 @@ export const validateDownloadedAndroidQualifiedCandidatePackageV1 = ({
         expectedTairaDeploymentReviewerKeySha256,
       evaluationEpochSeconds:
         tairaDeploymentAdmission.value?.evaluationEpochSeconds,
+      expectedManifestSequenceNumber:
+        expectedTairaDeploymentManifestSequenceNumber,
     });
   } catch {
     fail("DOWNLOADED_CANDIDATE_TAIRA_DEPLOYMENT_VERIFICATION_FAILED");
@@ -1790,10 +1978,38 @@ export const validateDownloadedAndroidQualifiedCandidatePackageV1 = ({
     JSON.stringify(verifiedTairaDeployment) !==
       JSON.stringify(tairaDeploymentAdmission.value) ||
     verifiedTairaDeployment.manifestSha256 !==
-      tairaDeploymentManifest.sha256
+      tairaDeploymentManifest.sha256 ||
+    verifiedTairaDeployment.operatorSignatureSha256 !==
+      tairaDeploymentOperatorSignature.sha256 ||
+    verifiedTairaDeployment.operatorSignatureBytes !==
+      tairaDeploymentOperatorSignature.bytes ||
+    verifiedTairaDeployment.reviewerSignatureSha256 !==
+      tairaDeploymentReviewerSignature.sha256 ||
+    verifiedTairaDeployment.reviewerSignatureBytes !==
+      tairaDeploymentReviewerSignature.bytes ||
+    verifiedTairaDeployment.operatorPublicKeyFileSha256 !==
+      tairaDeploymentOperatorPublicKey.sha256 ||
+    verifiedTairaDeployment.operatorPublicKeyFileBytes !==
+      tairaDeploymentOperatorPublicKey.bytes ||
+    verifiedTairaDeployment.reviewerPublicKeyFileSha256 !==
+      tairaDeploymentReviewerPublicKey.sha256 ||
+    verifiedTairaDeployment.reviewerPublicKeyFileBytes !==
+      tairaDeploymentReviewerPublicKey.bytes
   ) {
     fail("DOWNLOADED_CANDIDATE_TAIRA_DEPLOYMENT_ADMISSION_DIVERGED");
   }
+  validateAabTairaBuildBinding(
+    path("candidate.aab"),
+    files.candidateAab,
+    verifiedTairaDeployment,
+    "DOWNLOADED_CANDIDATE_PRIMARY_AAB_TAIRA_BUILD_BINDING_DIVERGED",
+  );
+  validateAabTairaBuildBinding(
+    path("reproduced-candidate.aab"),
+    files.reproducedAab,
+    verifiedTairaDeployment,
+    "DOWNLOADED_CANDIDATE_REPRODUCED_AAB_TAIRA_BUILD_BINDING_DIVERGED",
+  );
   if (
     !fundedCanaryExtractionReceiptValid(
       fundedCanaryControllerExtraction.value,

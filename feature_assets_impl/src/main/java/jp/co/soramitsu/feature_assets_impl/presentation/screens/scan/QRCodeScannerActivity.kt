@@ -50,7 +50,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.zxing.client.android.Intents
+import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.CaptureManager
+import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.androidfoundation.format.retrieveString
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
@@ -67,6 +69,7 @@ class QRCodeScannerActivity : AppCompatActivity() {
     private val binding by lazy { QrCodeScannerLayoutBinding.inflate(layoutInflater) }
 
     private var capture: CaptureManager? = null
+    private val recipientOnly: Boolean get() = intent.getBooleanExtra(RECIPIENT_SCAN_EXTRA, false)
 
     private val startForResultFromGallery: ActivityResultLauncher<PickVisualMediaRequest> =
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { resultUri: Uri? ->
@@ -82,6 +85,7 @@ class QRCodeScannerActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         capture?.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -121,8 +125,9 @@ class QRCodeScannerActivity : AppCompatActivity() {
             viewFinder?.setLaserVisibility(false)
         }
 
-        capture = CaptureManager(this, barcodeScannerView).apply {
+        capture = IrohaAwareCaptureManager(barcodeScannerView).apply {
             initializeFromIntent(intent, savedInstanceState)
+            if (recipientOnly) setShowMissingCameraPermissionDialog(false)
             decode()
         }
 
@@ -136,6 +141,7 @@ class QRCodeScannerActivity : AppCompatActivity() {
                         onNavIconClick = ::finish,
                         onUploadFromGalleryClick = ::selectQrFromGallery,
                         onShowUserQrClick = ::finish,
+                        recipientOnly = recipientOnly,
                     )
                 }
             }
@@ -146,6 +152,10 @@ class QRCodeScannerActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(state = Lifecycle.State.STARTED) {
                 viewModel.qrCodeDecodedSharedFlow.collectLatest {
+                    if (openIrohaConnect(it)) {
+                        finish()
+                        return@collectLatest
+                    }
                     val resultIntent = Intent().apply {
                         putExtra(Intents.Scan.RESULT, it)
                     }
@@ -178,4 +188,29 @@ class QRCodeScannerActivity : AppCompatActivity() {
             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         startForResultFromGallery.launch(pickVisualMediaRequest)
     }
+
+    private fun openIrohaConnect(value: String): Boolean {
+        val uri = runCatching { Uri.parse(value) }.getOrNull() ?: return false
+        if (!shouldOpenScannedConnect(recipientOnly, uri.scheme, uri.host)) {
+            return false
+        }
+        startActivity(
+            Intent(Intent.ACTION_VIEW, uri)
+                .setPackage(packageName),
+        )
+        return true
+    }
+
+    private inner class IrohaAwareCaptureManager(
+        barcodeView: DecoratedBarcodeView,
+    ) : CaptureManager(this@QRCodeScannerActivity, barcodeView) {
+        override fun returnResult(rawResult: BarcodeResult) {
+            if (openIrohaConnect(rawResult.text)) {
+                finish()
+            } else {
+                super.returnResult(rawResult)
+            }
+        }
+    }
+
 }

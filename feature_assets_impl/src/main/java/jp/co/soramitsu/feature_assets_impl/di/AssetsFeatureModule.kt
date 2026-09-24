@@ -55,6 +55,10 @@ import kotlinx.coroutines.FlowPreview
 @Module
 @InstallIn(SingletonComponent::class)
 class AssetsFeatureModule {
+    @Provides
+    fun provideQrScannerContractFactory(implementation: jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.QrScannerContractFactoryImpl):
+        jp.co.soramitsu.feature_assets_api.presentation.QrScannerContractFactory = implementation
+
 
     @Provides
     @Singleton

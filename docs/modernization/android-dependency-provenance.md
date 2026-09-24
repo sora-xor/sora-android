@@ -28,22 +28,35 @@ covers every other regular file in the repository exactly once, in bytewise rela
 and excludes only itself. Symbolic links, unmanifested files, missing files, checksum drift,
 unexpected module coordinates, and publisher-sidecar mismatches fail dependency preflight.
 
-The finalized materialized dependency snapshot is bound by these aggregate identities:
+The current materialized dependency snapshot (updated 2026-09-24) is bound by these aggregate identities:
 
 - vendor source provenance SHA-256:
   `39264fee02d09548e04806fbffcdaedebef29ce4715f3aa804093e44b51f5118`
 - vendor whole-tree manifest SHA-256:
   `d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f`
 - strict verification metadata SHA-256:
-  `90b196d775f064b7f80b9520582eec8fc40f874b6f750a49546141a8b793bfab`
+  `8390862f04516357a66c51e761c4225204ed02fe9d1d8102687106dc13b0a039`
 - 31-file lock-set SHA-256:
-  `1b91b6168ff2c0ec74e0f239e90ff8125742ae8a8fea3458f2a7cbfe472eb9ea`
-- 271-entry configuration inventory SHA-256 (270 `productionRelease` entries plus the settings
+  `d8a6ec971734bd21e22656bfd8c0932e7505b55e3734175ba031fab98c017d07`
+- 272-entry configuration inventory SHA-256 (271 `productionRelease` entries plus the settings
   catalog configuration):
-  `d35d7512074d387ae71dfad3f52833af70875e3afe4a84d46b667a31e3bbfd1f`
+  `2ebba19b7a650e49d749034cbba4fe52ca2646e789ead09c81a0b9a6daba5731`
 
-These identities record the frozen bytes accepted by the structural gate. They are not reviewer
-signatures, attestations, or evidence that the snapshot is production-qualified.
+These identities record observed bytes accepted by the structural gate. Both dependency verification
+and locking remain `materialized-unreviewed`, with `independentlyReviewed=false`. They are not reviewer
+signatures, attestations, or evidence that the snapshot is production-qualified. The current metadata
+contains 161 additional artifact entries across 89 added coordinates relative to the prior snapshot;
+that full dependency set still needs independent review. The real old-writer/current-reader encrypted
+storage experiment covers its declared adapter/DataStore/Tink closure only (see
+`scripts/qualification/legacy-encrypted-preferences/README.md`). Historical release-probe and
+interoperability fixtures retain their original source and frozen-input hashes.
+
+The current sidecar SHA-256 is
+`a11320aaae95f04a1b19adcfe561536c76b63b536e7c1e4ba8c2adcd7613f1e1`. The app lock records eleven
+configurations, including the empty `productionReleaseBaselineProfile` configuration; its SHA-256 is
+`43921bc7c4d48880a5c271d71ebd7f5aba2ff82d7a5f4c67ad60d3d7b5d4c2e5`. The 2026-09-24 update
+adds one verification-metadata entry and rebinds its observed hashes; the production lock files and
+resolved versions are unchanged.
 
 The verification snapshot includes twelve transitive plugin and compile-classpath metadata files
 first requested by the clean Linux CI resolver: Guava parent POMs `32.1.3-jre`, `33.0.0-jre`,
@@ -59,9 +72,22 @@ from both official Google Maven hostnames (`dl.google.com` and `maven.google.com
 same digest after the clean Linux connected-test resolver exposed the classifier-specific input.
 No trusted-artifact exception or dependency-verification downgrade was added.
 
+The Kotlin serialization BOM `1.8.0` POM is pinned at SHA-256
+`c43e487529ccfd1209eba8653ab8e89598203464aafbfe5f0448ded992871509`.
+The cached POM bytes and Maven Central's POM and SHA-256 sidecar agree. This adds one
+strict metadata entry without changing the production lock set or claiming independent
+review of the full dependency snapshot.
+
 The 31 lock inputs are the 30 module-local `gradle.lockfile` files plus the root
 `settings-gradle.lockfile`; an inventory that searches only for the literal basename
-`gradle.lockfile` will therefore report 30 and is incomplete.
+`gradle.lockfile` will therefore report 30 and is incomplete. `baselineprofile` is the sole test-only
+exception: its offline Gradle model has 36 resolvable configurations and zero `productionRelease`
+configurations, so the root production locking rule creates no module lock. The source gate retains
+an exact thirty-project production inventory, and binds the baseline module, root build, settings,
+and plugin catalog bytes. It also checks the test plugin, namespace, `:app` target and production
+dimension selection. New plugins, namespaces, targets, configurations, root hooks or included projects
+invalidate that exception; production modules cannot silently disappear from lock coverage. The
+shared guard and its mutation tests are bound into the migration qualification source contract.
 
 The xcrypto Rust lock state and the complete xsubstrate semantic normalization are retained in
 `vendor/soramitsu-maven/build-inputs`. Temporary absolute staging-repository edits are not build
@@ -99,3 +125,13 @@ The production environment must also supply the canonical dual-P-256-signed mani
 admits it only against distinct protected producer/reviewer pins and independently protected exact
 sequence, candidate source revision, and review-contract SHA-256. Qualified evidence is deliberately
 absent from the checkout.
+
+The current local observation is retained in
+`docs/modernization/qualification/android-dependency-materialization-2026-09-06.json`. The release
+source gate compares its materialization, public signing-fingerprint, review, credential and
+qualification fields against the current policy. Its historical evidence path/hash binds the
+untouched `docs/modernization/release-probe-evidence-2026-08-02.json`; no live network probe or
+protected signing qualification is newly claimed.
+
+In that record, `observedAtUtc` dates the new materialization observation; `retainedBaselineAssessedAt`
+preserves the prior vendor/config assessment date. The new digests are not backdated to that baseline.

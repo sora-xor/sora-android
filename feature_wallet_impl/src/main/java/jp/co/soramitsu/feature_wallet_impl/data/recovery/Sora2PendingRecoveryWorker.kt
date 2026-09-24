@@ -35,7 +35,12 @@ class Sora2PendingRecoveryWorker @AssistedInject constructor(
             return Result.retry()
         }
         return try {
-            val pass = coordinator.recoverStatusOnly(MAXIMUM_TRANSACTIONS_PER_RUN)
+            // WorkManager persists runAttemptCount across process death, so permanently failing
+            // early witnesses cannot reset every restarted worker to the first bounded batch.
+            val pass = coordinator.recoverStatusOnly(
+                maximumTransactions = MAXIMUM_TRANSACTIONS_PER_RUN,
+                startOffset = runAttemptCount.toLong() * MAXIMUM_TRANSACTIONS_PER_RUN,
+            )
             when {
                 pass.failures > 0 || pass.unresolved > 0 -> Result.retry()
                 pass.remainingUnattempted > 0 -> {

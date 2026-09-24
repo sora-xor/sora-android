@@ -17,7 +17,10 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import { verifyTairaDeploymentManifestV1 } from "./lib/taira-deployment-manifest-v1.mjs";
+import {
+  parseExpectedTairaDeploymentManifestSequenceNumberV1,
+  verifyTairaDeploymentManifestV1,
+} from "./lib/taira-deployment-manifest-v1.mjs";
 
 const EVALUATION = 1_800_000_000;
 const OLD_CHAIN = "809574f5-fee7-5e69-bfcf-52451e42d50f";
@@ -29,8 +32,8 @@ const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const canonical = (value) => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
-const operator = generateKeyPairSync("ed25519");
-const reviewer = generateKeyPairSync("ed25519");
+const operator = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+const reviewer = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
 const operatorDer = operator.publicKey.export({ type: "spki", format: "der" });
 const reviewerDer = reviewer.publicKey.export({ type: "spki", format: "der" });
 const operatorPin = sha256(operatorDer);
@@ -42,16 +45,14 @@ const epoch = ({ number, chainId, genesisSha256, status }) => ({
   genesisSha256,
   i105Discriminant: 369,
   status,
-  toriiBaseUrl: status === "current" ? "https://node-2.taira.sora.org" : null,
+  toriiBaseUrl: status === "current" ? "https://taira.sora.org" : null,
   publicNodeMcpEndpoint:
-    status === "current" ? "https://node-2.taira.sora.org/v1/mcp" : null,
+    status === "current" ? "https://taira.sora.org/v1/mcp" : null,
   explorerBaseUrl:
-    status === "current" ? "https://taira-explorer.sora.org" : null,
+    status === "current" ? "https://taira.sora.org" : null,
 });
 
-const manifest = ({ currentChain = NEW_CHAIN } = {}) => {
-  const retiredChain = currentChain === NEW_CHAIN ? OLD_CHAIN : NEW_CHAIN;
-  return {
+const manifest = () => ({
     schemaVersion: 1,
     contractId: "sora-taira-deployment-epoch-manifest-v1",
     status: "qualified",
@@ -70,16 +71,22 @@ const manifest = ({ currentChain = NEW_CHAIN } = {}) => {
         publicKeySha256: reviewerPin,
       },
     },
+    pendingRowPolicy: {
+      schemaVersion: 77,
+      preserveExactChainUuid: true,
+      mismatchedCurrentDisposition: "quarantine-recovery-only",
+      reinterpretationAllowed: false,
+    },
     epochs: [
       epoch({
         number: 1,
-        chainId: retiredChain,
+        chainId: OLD_CHAIN,
         genesisSha256: SHA_A,
         status: "retired",
       }),
       epoch({
         number: 2,
-        chainId: currentChain,
+        chainId: NEW_CHAIN,
         genesisSha256: SHA_B,
         status: "current",
       }),
@@ -89,8 +96,7 @@ const manifest = ({ currentChain = NEW_CHAIN } = {}) => {
       authorizesFundedCanary: false,
       authorizesRelease: false,
     },
-  };
-};
+});
 
 const roots = [];
 const protectedWrite = (path, bytes) => {
@@ -112,8 +118,14 @@ const makeBundle = ({ value = manifest(), rawBytes = null } = {}) => {
     reviewerPublicKeyPath: join(root, "reviewer.pem"),
   };
   protectedWrite(paths.manifestPath, bytes);
-  protectedWrite(paths.operatorSignaturePath, sign(null, bytes, operator.privateKey));
-  protectedWrite(paths.reviewerSignaturePath, sign(null, bytes, reviewer.privateKey));
+  protectedWrite(
+    paths.operatorSignaturePath,
+    sign("sha256", bytes, operator.privateKey),
+  );
+  protectedWrite(
+    paths.reviewerSignaturePath,
+    sign("sha256", bytes, reviewer.privateKey),
+  );
   protectedWrite(
     paths.operatorPublicKeyPath,
     operator.publicKey.export({ type: "spki", format: "pem" }),
@@ -131,6 +143,7 @@ const verify = (paths, overrides = {}) =>
     expectedOperatorKeySha256: operatorPin,
     expectedReviewerKeySha256: reviewerPin,
     evaluationEpochSeconds: EVALUATION,
+    expectedManifestSequenceNumber: 17,
     ...overrides,
   });
 
@@ -151,6 +164,17 @@ const rejects = (name, mutate, expected) => {
 };
 
 try {
+  for (const noncanonical of ["+17", "0x11", "17.0", " 17", "17 ", "017"]) {
+    try {
+      parseExpectedTairaDeploymentManifestSequenceNumberV1(noncanonical);
+      throw new Error(`noncanonical expected sequence accepted: ${noncanonical}`);
+    } catch (error) {
+      if (!String(error?.message).includes("EXPECTED_MANIFEST_SEQUENCE_INVALID")) {
+        throw error;
+      }
+    }
+    mutations += 1;
+  }
   const first = verify(makeBundle());
   if (
     first.status !== "admitted-for-build-binding" ||
@@ -159,20 +183,6 @@ try {
     first.authorization.authorizesRelease !== false
   ) {
     throw new Error("positive manifest projection diverged");
-  }
-
-  const alternate = verify(
-    makeBundle({ value: manifest({ currentChain: OLD_CHAIN }) }),
-  );
-  if (
-    alternate.status !== "admitted-for-build-binding" ||
-    alternate.current.chainId !== OLD_CHAIN ||
-    alternate.retired.chainId !== NEW_CHAIN ||
-    alternate.current.genesisSha256 !== SHA_B ||
-    alternate.retired.genesisSha256 !== SHA_A ||
-    alternate.authorization.authorizesRelease !== false
-  ) {
-    throw new Error("alternate operator-selected manifest projection diverged");
   }
 
   const cliBundle = makeBundle();
@@ -192,6 +202,7 @@ try {
         TAIRA_DEPLOYMENT_REVIEWER_PUBLIC_KEY_PATH: cliBundle.reviewerPublicKeyPath,
         TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256: operatorPin,
         TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256: reviewerPin,
+        TAIRA_DEPLOYMENT_EXPECTED_MANIFEST_SEQUENCE_NUMBER: "17",
       },
     },
   );
@@ -204,20 +215,33 @@ try {
   }, "EPOCH_1_INVALID");
   rejects("duplicate UUID", (value) => {
     value.epochs[0].chainId = value.epochs[1].chainId;
-  }, "EPOCH_MAPPING_INVALID");
+  }, "RETIRED_ROUTE_PRESENT");
   rejects("two current epochs", (value) => {
     value.epochs[0].status = "current";
-    value.epochs[0].toriiBaseUrl = "https://node-1.taira.sora.org";
-    value.epochs[0].publicNodeMcpEndpoint = "https://node-1.taira.sora.org/v1/mcp";
-    value.epochs[0].explorerBaseUrl = "https://taira-explorer.sora.org";
-  }, "EPOCH_MAPPING_INVALID");
+    value.epochs[0].toriiBaseUrl = "https://taira.sora.org";
+    value.epochs[0].publicNodeMcpEndpoint = "https://taira.sora.org/v1/mcp";
+    value.epochs[0].explorerBaseUrl = "https://taira.sora.org";
+  }, "ROUTING_INVALID");
   rejects("retired route", (value) => {
     value.epochs[0].toriiBaseUrl = "https://retired.taira.sora.org";
   }, "RETIRED_ROUTE_PRESENT");
-  rejects("convenience route", (value) => {
-    value.epochs[1].toriiBaseUrl = "https://taira.sora.org";
-    value.epochs[1].publicNodeMcpEndpoint = "https://taira.sora.org/v1/mcp";
+  rejects("direct validator route", (value) => {
+    value.epochs[1].toriiBaseUrl = "https://node-2.taira.sora.org";
+    value.epochs[1].publicNodeMcpEndpoint =
+      "https://node-2.taira.sora.org/v1/mcp";
   }, "ROUTING_INVALID");
+  rejects("separate explorer origin", (value) => {
+    value.epochs[1].explorerBaseUrl = "https://taira-explorer.sora.org";
+  }, "ROUTING_INVALID");
+  rejects("noncanonical default port", (value) => {
+    value.epochs[1].toriiBaseUrl = "https://taira.sora.org:443";
+    value.epochs[1].publicNodeMcpEndpoint =
+      "https://taira.sora.org:443/v1/mcp";
+  }, "ROUTING_INVALID");
+  rejects("retired chain selected as current", (value) => {
+    value.epochs[0].chainId = NEW_CHAIN;
+    value.epochs[1].chainId = OLD_CHAIN;
+  }, "RETIRED_ROUTE_PRESENT");
   rejects("wrong current epoch", (value) => {
     value.currentEpoch = 1;
   }, "EPOCH_MAPPING_INVALID");
@@ -236,6 +260,9 @@ try {
   rejects("release authorization", (value) => {
     value.authorization.authorizesRelease = true;
   }, "SHAPE_INVALID");
+  rejects("pending row reinterpretation", (value) => {
+    value.pendingRowPolicy.reinterpretationAllowed = true;
+  }, "PENDING_ROW_POLICY_INVALID");
   rejects("stale review", (value) => {
     value.reviewedAtEpochSeconds = EVALUATION - 8 * 24 * 60 * 60;
     value.issuedAtEpochSeconds = value.reviewedAtEpochSeconds - 1;
@@ -246,6 +273,15 @@ try {
   rejects("authority self review", (value) => {
     value.authorities.independentReviewer.keyId = value.authorities.operator.keyId;
   }, "AUTHORITIES_INVALID");
+
+  const sequenceMismatch = makeBundle();
+  try {
+    verify(sequenceMismatch, { expectedManifestSequenceNumber: 16 });
+    throw new Error("mismatched protected manifest sequence accepted");
+  } catch (error) {
+    if (!String(error?.message).includes("MANIFEST_SEQUENCE_MISMATCH")) throw error;
+  }
+  mutations += 1;
 
   const wrongPin = makeBundle();
   try {
@@ -316,7 +352,7 @@ try {
   mutations += 1;
 
   process.stdout.write(
-    `Taira deployment manifest v1: 2 signed operator-selected mappings and ${mutations} fail-closed mutations passed.\n`,
+    `Taira deployment manifest v1: 1 signed canonical mapping and ${mutations} fail-closed mutations passed.\n`,
   );
 } finally {
   for (const root of roots) rmSync(root, { recursive: true, force: true });

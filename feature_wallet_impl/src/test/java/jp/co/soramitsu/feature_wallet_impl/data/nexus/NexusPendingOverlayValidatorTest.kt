@@ -2,6 +2,7 @@ package jp.co.soramitsu.feature_wallet_impl.data.nexus
 
 import jp.co.soramitsu.common.nexus.IrohaAddressCodec
 import jp.co.soramitsu.common.nexus.NexusNetworks
+import jp.co.soramitsu.common.nexus.TairaTestnetContract
 import jp.co.soramitsu.common.nexus.WalletNetworkChainIdentity
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.model.NetworkAccountLocal
@@ -146,42 +147,24 @@ class NexusPendingOverlayValidatorTest {
     }
 
     @Test
-    fun `Taira current identity requires exact manifest namespace for either mapping`() {
-        val epochA = "809574f5-fee7-5e69-bfcf-52451e42d50f"
-        val epochB = "fc56984b-2be7-431d-840e-21514d1883f0"
-        val manifestA = "a".repeat(64)
-        val manifestB = "b".repeat(64)
-        val prefixA = "taira:$manifestA:"
-        val prefixB = "taira:$manifestB:"
-        val currentA = pending().copy(
-            localId = "${prefixA}journal-a",
+    fun `Taira current identity requires the fixed first release namespace`() {
+        val current = pending().copy(
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}journal",
             networkId = "taira",
-            chainId = epochA,
-        )
-        val currentB = pending().copy(
-            localId = "${prefixB}journal-b",
-            networkId = "taira",
-            chainId = epochB,
+            chainId = TairaTestnetContract.CHAIN_ID,
         )
 
         assertTrue(
-            WalletIdentityDao.hasCurrentChainIdentityForBinding(currentA, epochA, prefixA)
-        )
-        assertTrue(
-            WalletIdentityDao.hasCurrentChainIdentityForBinding(currentB, epochB, prefixB)
+            WalletIdentityDao.hasCurrentChainIdentity(current)
         )
         listOf(
-            currentA.copy(localId = "legacy-same-uuid"),
-            currentA.copy(localId = "${prefixB}other-manifest"),
-            currentA.copy(chainId = epochB),
+            current.copy(localId = "un-namespaced"),
+            current.copy(localId = "taira:${"a".repeat(64)}:other-contract"),
+            current.copy(chainId = "809574f5-fee7-5e69-bfcf-52451e42d50f"),
         ).forEach { retained ->
             assertEquals(
                 false,
-                WalletIdentityDao.hasCurrentChainIdentityForBinding(
-                    retained,
-                    epochA,
-                    prefixA,
-                ),
+                WalletIdentityDao.hasCurrentChainIdentity(retained),
             )
         }
     }

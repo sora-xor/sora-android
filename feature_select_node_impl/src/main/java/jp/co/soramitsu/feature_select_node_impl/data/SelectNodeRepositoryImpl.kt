@@ -52,39 +52,39 @@ internal class SelectNodeRepositoryImpl @Inject constructor(
     private val soraConfigManager: SoraConfigManager,
 ) : SelectNodeRepository {
 
-    override suspend fun fetchDefaultNodes(): List<ChainNode> =
-        db.withTransaction {
+    override suspend fun fetchDefaultNodes(): List<ChainNode> {
+        // Remote configuration can consume its full transport deadline. Keep that wait outside
+        // Room, then re-read the current selection and custom nodes in the publishing transaction.
+        val remoteNodes = runCatching {
+            soraConfigManager.getNodes()
+        }.getOrNull() ?: return emptyList()
+
+        return db.withTransaction {
             val selectedNodeAddress =
                 db.nodeDao().getSelectedNode()?.address ?: FlavorOptionsProvider.wsHostUrl
             val customNodes = db.nodeDao().getNodes().filter { !it.isDefault }
-            val result = runCatching {
-                soraConfigManager.getNodes()
-                    .map { nodeInfo ->
-                        NodeLocal(
-                            address = "${nodeInfo.address}/",
-                            chain = nodeInfo.chain,
-                            name = nodeInfo.name,
-                            isDefault = true,
-                            isSelected = selectedNodeAddress.compareWithUrl(nodeInfo.address)
-                        )
-                    }
+            val defaultNodes = remoteNodes.map { nodeInfo ->
+                NodeLocal(
+                    address = "${nodeInfo.address}/",
+                    chain = nodeInfo.chain,
+                    name = nodeInfo.name,
+                    isDefault = true,
+                    isSelected = selectedNodeAddress.compareWithUrl(nodeInfo.address)
+                )
             }
-                .onSuccess { list ->
-                    val nodes = list + customNodes
-                    val noneSelected = nodes.none { it.isSelected }
-                    db.nodeDao().clearTable()
-                    db.nodeDao().insertNodes(nodes)
-                    if (noneSelected) {
-                        nodes.getOrNull(0)?.address?.let { db.nodeDao().selectNode(it) }
-                    }
-                }
+            val nodes = defaultNodes + customNodes
+            val noneSelected = nodes.none { it.isSelected }
+            db.nodeDao().clearTable()
+            db.nodeDao().insertNodes(nodes)
+            if (noneSelected) {
+                nodes.getOrNull(0)?.address?.let { db.nodeDao().selectNode(it) }
+            }
 
-            return@withTransaction result.getOrNull()
-                ?.map {
-                    converter.convert(it)
-                }
-                ?: emptyList()
+            defaultNodes.map {
+                converter.convert(it)
+            }
         }
+    }
 
     override fun getNodes(): Flow<List<ChainNode>> =
         db.nodeDao().flowNodes()
