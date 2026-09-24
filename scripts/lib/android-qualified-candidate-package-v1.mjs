@@ -1514,7 +1514,7 @@ export const validateAndroidQualifiedCandidatePackageV1 = (value) => {
   );
 };
 
-const DOWNLOADED_PACKAGE_FILES = [
+export const DOWNLOADED_PACKAGE_FILES = [
   "android-dependency-signing-review-admission.json",
   "android-dependency-signing-review-manifest.json",
   "android-dependency-signing-review-producer.pem",

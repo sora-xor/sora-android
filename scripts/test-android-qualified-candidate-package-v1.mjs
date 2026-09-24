@@ -43,6 +43,7 @@ import {
   validateDownloadedAndroidQualifiedCandidatePackageV1,
   validateAndroidQualifiedCandidatePackageV1,
 } from "./lib/android-qualified-candidate-package-v1.mjs";
+import { ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1 } from "./lib/android-production-lock-inventory-v1.mjs";
 
 const PACKAGE_LIBRARY_SOURCE = readFileSync(
   new URL("./lib/android-qualified-candidate-package-v1.mjs", import.meta.url),
@@ -623,7 +624,13 @@ const createFixture = () => {
   const dependencyReviewQualification = Object.fromEntries(
     ANDROID_DEPENDENCY_SIGNING_REVIEW_QUALIFICATION_KEYS.map((key, index) => [
       key,
-      index === 0 ? 11 : index === 1 ? 31 : index === 2 ? 272 : true,
+      index === 0
+        ? 11
+        : index === 1
+          ? 31
+          : index === 2
+            ? ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.configurationCount
+            : true,
     ]),
   );
   const dependencyReviewManifest = {

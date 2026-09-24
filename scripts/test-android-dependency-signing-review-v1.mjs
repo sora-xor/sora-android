@@ -28,6 +28,7 @@ import {
   lintAndroidDependencySigningReviewBlockedTemplatesV1,
   verifyAndroidDependencySigningReviewV1,
 } from "./lib/android-dependency-signing-review-v1.mjs";
+import { ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1 } from "./lib/android-production-lock-inventory-v1.mjs";
 
 const EVALUATION = 1_800_000_000;
 const SOURCE_REVISION = "a".repeat(40);
@@ -70,7 +71,13 @@ const contractSha256 = androidDependencySigningReviewContractSha256V1({
 const qualification = Object.fromEntries(
   ANDROID_DEPENDENCY_SIGNING_REVIEW_QUALIFICATION_KEYS.map((key, index) => [
     key,
-    index === 0 ? 11 : index === 1 ? 31 : index === 2 ? 272 : true,
+    index === 0
+      ? 11
+      : index === 1
+        ? 31
+        : index === 2
+          ? ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.configurationCount
+          : true,
   ]),
 );
 const manifest = () => ({
@@ -288,10 +295,12 @@ try {
     value.qualification.lockFileCountReviewed = 30;
   }, "SHAPE_INVALID");
   rejects("configuration count drift", (value) => {
-    value.qualification.lockConfigurationCountReviewed = 270;
+    value.qualification.lockConfigurationCountReviewed =
+      ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.configurationCount - 2;
   }, "SHAPE_INVALID");
   rejects("previous materialization configuration count", (value) => {
-    value.qualification.lockConfigurationCountReviewed = 271;
+    value.qualification.lockConfigurationCountReviewed =
+      ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.configurationCount - 1;
   }, "SHAPE_INVALID");
   for (const key of ["verificationMetadataReviewed", "productionReleaseLocksReviewed"]) {
     rejects(`materialized without required ${key}`, (value) => {

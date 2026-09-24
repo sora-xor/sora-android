@@ -71,6 +71,7 @@ import {
   inspectAndroidProductionLockProjectsV1,
   matchesAndroidMaterializedDependencySnapshotV1,
 } from "./lib/android-production-lock-inventory-v1.mjs";
+import { DOWNLOADED_PACKAGE_FILES } from "./lib/android-qualified-candidate-package-v1.mjs";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
 const strictRelease = process.argv.includes("--release");
@@ -5914,6 +5915,14 @@ const downloadedPackageModeNormalizationIndex =
 const downloadedPackageValidationIndex = productionReleaseWorkflow.indexOf(
   "Validate complete downloaded reproducibility package",
 );
+const publishedCandidatePackageStep = productionReleaseWorkflow
+  .split("      - name: Publish immutable qualified candidate\n")[1]
+  ?.split("\n      - name:")[0];
+const publishedCandidatePackageFiles = [
+  ...(publishedCandidatePackageStep?.matchAll(
+    /^            \$\{\{ runner\.temp \}\}\/qualified-candidate\/([^\s]+)$/gm,
+  ) ?? []),
+].map((match) => match[1]).sort();
 const downloadedTairaBindingIndex = productionReleaseWorkflow.indexOf(
   "Bind validated downloaded Taira deployment evidence",
 );
@@ -5984,8 +5993,10 @@ assert(
       "TAIRA_DEPLOYMENT_ADMISSION_RECEIPT_PATH|taira-deployment-admission.json",
     ].every((binding) => productionReleaseWorkflow.includes(binding)) &&
     productionReleaseWorkflow.includes(
-      '[[ ${#package_files[@]} -eq 30 ]] || exit 1',
+      `[[ \${#package_files[@]} -eq ${DOWNLOADED_PACKAGE_FILES.length} ]] || exit 1`,
     ) &&
+    publishedCandidatePackageFiles.join("\0") ===
+      DOWNLOADED_PACKAGE_FILES.join("\0") &&
     productionReleaseWorkflow.includes('chmod 600 "${package_files[@]}"') &&
     staticSourceAuditIndex >= 0 &&
     staticSourceAuditIndex > dependencyPreflightIndex &&
