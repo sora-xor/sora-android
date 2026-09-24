@@ -1,0 +1,77 @@
+// Run with: ./gradlew -I scripts/verify-production-release-lock-coverage.gradle verifyProductionReleaseLockCoverage
+// This uses Gradle's evaluated model rather than a frozen list of configuration names. It does
+// not resolve dependencies or write locks, so a newly introduced configuration cannot be hidden
+// by the existing lock snapshot.
+gradle.projectsEvaluated {
+    gradle.rootProject.tasks.register('verifyProductionReleaseLockCoverage') {
+        group = 'verification'
+        description = 'Require a lock entry for every resolvable productionRelease configuration'
+
+        doLast {
+            def failures = []
+            int projectCount = 0
+            int configurationCount = 0
+
+            gradle.rootProject.allprojects.sort { it.path }.each { project ->
+                def modelNames = project.configurations
+                    .findAll { it.canBeResolved && it.name.toLowerCase(Locale.ROOT).contains('productionrelease') }
+                    .collect { it.name }
+                    .toSet()
+                if (modelNames.isEmpty()) {
+                    return
+                }
+
+                projectCount++
+                configurationCount += modelNames.size()
+                def lockFile = new File(project.projectDir, 'gradle.lockfile')
+                if (!lockFile.isFile()) {
+                    failures << "${project.path}: missing ${lockFile.name} for ${modelNames.size()} productionRelease configurations"
+                    return
+                }
+
+                def lockedNames = new LinkedHashSet<String>()
+                lockFile.eachLine('UTF-8') { line, lineNumber ->
+                    if (line.isEmpty() || line.startsWith('#')) {
+                        return
+                    }
+                    int separator = line.indexOf('=')
+                    if (separator <= 0 || separator == line.length() - 1 || line.indexOf('=', separator + 1) >= 0) {
+                        failures << "${project.path}: malformed ${lockFile.name}:${lineNumber}"
+                        return
+                    }
+                    def notation = line.substring(0, separator)
+                    if (notation != 'empty' && !(notation ==~ /[^:=\s]+:[^:=\s]+:[^:=\s]+/)) {
+                        failures << "${project.path}: malformed dependency notation at ${lockFile.name}:${lineNumber}"
+                    }
+                    line.substring(separator + 1).split(',', -1).each { name ->
+                        if (name.isEmpty() || name != name.trim()) {
+                            failures << "${project.path}: malformed configuration name at ${lockFile.name}:${lineNumber}"
+                        } else {
+                            lockedNames.add(name)
+                        }
+                    }
+                }
+
+                def missingNames = (modelNames - lockedNames).sort()
+                if (!missingNames.isEmpty()) {
+                    failures << "${project.path}: absent from ${lockFile.name}: ${missingNames.join(', ')}"
+                }
+                def staleNames = (lockedNames.findAll {
+                    it.toLowerCase(Locale.ROOT).contains('productionrelease')
+                } - modelNames).sort()
+                if (!staleNames.isEmpty()) {
+                    failures << "${project.path}: no longer resolvable but present in ${lockFile.name}: ${staleNames.join(', ')}"
+                }
+            }
+
+            if (configurationCount == 0) {
+                failures << 'No resolvable productionRelease configurations exist in the Gradle model'
+            }
+
+            if (!failures.isEmpty()) {
+                throw new GradleException("Production release lock coverage failed:\n - ${failures.join('\n - ')}")
+            }
+            logger.lifecycle("Production release lock coverage: ${configurationCount} resolvable configurations in ${projectCount} projects")
+        }
+    }
+}
