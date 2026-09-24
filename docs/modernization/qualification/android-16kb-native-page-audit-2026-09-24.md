@@ -15,7 +15,9 @@ Both pass `scripts/verify-android-native-16kb.py` with zero findings across 16
 entries. Exact-version replacement evidence for graphics-path, CameraX, and
 TensorFlow Lite is in their companion qualification reports. The Debug APK
 cold-launched to onboarding on an API 36 arm64 emulator reporting 16,384-byte
-pages without a fatal process error.
+pages without a fatal process error. A later [bounded app-flow smoke](android-16kb-app-flow-smoke-2026-09-25.md)
+used the same APK to navigate creation and recovery entry with test-only data;
+it found no fatal process, native-load, or JNI error.
 
 ## Baseline evidence
 
