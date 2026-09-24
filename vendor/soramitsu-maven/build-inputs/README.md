@@ -28,6 +28,13 @@ required to materialize the checked-in Maven modules.
   `graphics-path-1.0.1-16kb-rebuild.md` pin the AndroidX release source, NDK toolchain,
   64-bit JNI build digests, two-member AAR replacement, and Gradle module descriptors.
   `GraphicsPathSmoke.java` preserves the Java/JNI path-iterator smoke source.
+- `camera-core-1.3.1-original.aar`, `camera-core-1.3.1-original.module`, and
+  `camera-core-1.3.1-release-manifest.xml` preserve the exact Google Maven input
+  bytes and official release manifest that pins the contemporaneous libyuv source.
+- `camera-core-1.3.1-build-16kb.py`, `camera-core-1.3.1-repack-16kb.py`,
+  `CameraCoreNativeSmoke.java`, and `camera-core-1.3.1-16kb-rebuild.md` pin the
+  source trees and NDK, deterministic JNI outputs, YUV/JNI parity check, and
+  two-member AAR replacement.
 - `xsubstrate-1.2.7-source-normalization.patch` is the complete semantic source delta applied to
   the pinned xsubstrate commit: consume the materialized xcrypto 1.2.7 module and use polkaj's
   authoritative `io.emeraldpay.polkaj` coordinate. Temporary repository-path edits used only to

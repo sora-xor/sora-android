@@ -414,6 +414,38 @@ const hashExternalRegularFile = ({ path, suffix, maximumBytes }) => {
 
 const EXPECTED_VENDOR_MODULES = [
   {
+    coordinate: "androidx.camera:camera-core:1.3.1",
+    modulePath: "androidx/camera/camera-core/1.3.1",
+    originKind: "git-source-build",
+    repository: "https://android.googlesource.com/platform/frameworks/support",
+    revision: "ee5fe2aa34dba21365bb402477c32c593ccbecda",
+    tree: "0ca4c35926f8b22e4e660dee2f6fc807b69c9738",
+    commitProvider: "gitiles",
+    commitStatus: "unsigned",
+    observedAt: "2026-09-25",
+    additionalSources: [
+      {
+        repository: "https://android.googlesource.com/platform/external/libyuv",
+        revision: "096484820d74c72a6838b3e80743fc7a5d94784b",
+        tree: "303e8eabb435a80ebec36a19c23ca85744d58fb5",
+      },
+      {
+        repository: "https://android.googlesource.com/platform/manifest",
+        revision: "2f7e8332eff3d34fdfb1b471f44d654aa6518e41",
+        tree: "984e5a745f5a677e05e778d6f9c528be9f8d5951",
+      },
+    ],
+    buildInputs: [
+      "build-inputs/CameraCoreNativeSmoke.java",
+      "build-inputs/camera-core-1.3.1-16kb-rebuild.md",
+      "build-inputs/camera-core-1.3.1-build-16kb.py",
+      "build-inputs/camera-core-1.3.1-original.aar",
+      "build-inputs/camera-core-1.3.1-original.module",
+      "build-inputs/camera-core-1.3.1-release-manifest.xml",
+      "build-inputs/camera-core-1.3.1-repack-16kb.py",
+    ],
+  },
+  {
     coordinate: "androidx.graphics:graphics-path:1.0.1",
     modulePath: "androidx/graphics/graphics-path/1.0.1",
     originKind: "git-source-build",
@@ -566,6 +598,20 @@ const EXPECTED_VENDOR_MODULES = [
   },
 ];
 const EXPECTED_VENDOR_BUILD_INPUT_SHA256 = {
+  "build-inputs/CameraCoreNativeSmoke.java":
+    "a0c0411900f07a8de9ea696b04618efd90007b11f185087a5d1df3cfea4fa418",
+  "build-inputs/camera-core-1.3.1-16kb-rebuild.md":
+    "4cc7976f13959bfd4d2b8d386ac3d88c8679e1b86500190567084e81e906cfed",
+  "build-inputs/camera-core-1.3.1-build-16kb.py":
+    "98d41393e2c373f841cb82cb12e7e93d457ad04227e811fa6b3e1d6bbddab531",
+  "build-inputs/camera-core-1.3.1-original.aar":
+    "6b7ea2da7cc504d6624c3c12a0c2d488dd6635563421dacba0790399507443e8",
+  "build-inputs/camera-core-1.3.1-original.module":
+    "fe175138941912c5c1ad8ce070a72c56650beceef7bbdfbde49d179ee3dec894",
+  "build-inputs/camera-core-1.3.1-release-manifest.xml":
+    "8b03ec48a8dc962a921ef333a56f2359e7b4ab41005025ad6e86c20166fe5ec7",
+  "build-inputs/camera-core-1.3.1-repack-16kb.py":
+    "1baeba74d7045fa4bfc2cc949e78a7a26ac3e81b878c25694e05f425cc631d98",
   "build-inputs/GraphicsPathSmoke.java":
     "0ae2dc21debbaf73360a3d5860649172491341ec0bedba39f70b846df4d472f9",
   "build-inputs/graphics-path-1.0.1-16kb-rebuild.md":
@@ -581,7 +627,7 @@ const EXPECTED_VENDOR_BUILD_INPUT_SHA256 = {
   "build-inputs/LazysodiumSmoke.java":
     "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68",
   "build-inputs/README.md":
-    "601fa1e45ec827b1ebe2c6141ee96a463111bc9e665ea7159e795c63f9c05db1",
+    "82f99d8cb07ad4538f0a300453e9e9f8baf6d8518235a5c35fccb5ec9813d355",
   "build-inputs/lazysodium-5.0.2-16kb-rebuild.md":
     "0ca566bc11c25409d398214ef1dbb6094cf221ec069cad04917da1a2584e2707",
   "build-inputs/lazysodium-5.0.2-build-16kb.sh":
@@ -700,9 +746,9 @@ const includeModulesIn = (source) => [
   ),
 ].map(([, group, module]) => `${group}:${module}`);
 const EXPECTED_VENDOR_SOURCE_PROVENANCE_SHA256 =
-  "baa16bbfa92908a3453df1562d96bf8ae76c8c5997b4925849ce6a5fca559926";
+  "2a7645c3c7951607978dcb3f78aa7a3e973f3e00d045b30fe7eee24fd5c00f18";
 const EXPECTED_VENDOR_CONTENTS_MANIFEST_SHA256 =
-  "5b09c410301370ccd1f6e665ed12487687e0ca2a66cbb65540148755f0a3a8bc";
+  "0f9986f91126b969743b8fd15f5d7876746acbe7d2f77842880ee18a7921454a";
 const EXPECTED_GRADLE_VERIFICATION_METADATA_SHA256 =
   ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.metadataSha256;
 const EXPECTED_GRADLE_VERIFICATION_METADATA_DIGEST_SHA256 =
@@ -1403,6 +1449,36 @@ const validateAndroidDependencyPreflight = () => {
 
       const origin = module.origin;
       if (expected.originKind === "git-source-build") {
+        const expectedAdditionalSources = expected.additionalSources ?? [];
+        const actualAdditionalSources = origin?.additionalSources ?? [];
+        const additionalSourcesInvalid =
+          !Array.isArray(actualAdditionalSources) ||
+          actualAdditionalSources.length !== expectedAdditionalSources.length ||
+          actualAdditionalSources.some((source, index) => {
+            const pinned = expectedAdditionalSources[index];
+            return (
+              !hasExactKeys(source, [
+                "repository",
+                "revision",
+                "tree",
+                "commitVerification",
+              ]) ||
+              source.repository !== pinned.repository ||
+              source.revision !== pinned.revision ||
+              source.tree !== pinned.tree ||
+              !hasExactKeys(source.commitVerification, [
+                "provider",
+                "status",
+                "observedAt",
+                "independentlyReviewed",
+              ]) ||
+              source.commitVerification.provider !== "gitiles" ||
+              source.commitVerification.status !== "unsigned" ||
+              source.commitVerification.observedAt !== "2026-09-25" ||
+              typeof source.commitVerification.independentlyReviewed !==
+                "boolean"
+            );
+          });
         fail(
           !hasExactKeys(origin, [
             "kind",
@@ -1413,7 +1489,9 @@ const validateAndroidDependencyPreflight = () => {
             "buildInputs",
             "semanticTransformations",
             "sourceToBinaryReproductionReviewed",
+            ...(expected.additionalSources ? ["additionalSources"] : []),
           ]) ||
+            additionalSourcesInvalid ||
             origin.kind !== expected.originKind ||
             origin.repository !== expected.repository ||
             origin.revision !== expected.revision ||
@@ -1522,6 +1600,9 @@ const validateAndroidDependencyPreflight = () => {
         if (origin?.kind === "git-source-build") {
           return (
             origin.commitVerification?.independentlyReviewed === true &&
+            (origin.additionalSources?.every(
+              (source) => source.commitVerification?.independentlyReviewed === true,
+            ) ?? true) &&
             origin.sourceToBinaryReproductionReviewed === true
           );
         }
