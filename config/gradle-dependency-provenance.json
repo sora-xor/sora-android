@@ -232,16 +232,16 @@
         "test_data/gradle.lockfile"
       ],
       "lockFileSetFormat": "sorted-path-nul-file-bytes-nul-sha256",
-      "lockFileSetSha256": "0feaca60273b6a02ba9d39a89c4e808321b4cf20c6716eeb687dbb896806b9f7",
+      "lockFileSetSha256": "478dd2362dc67238df7bf381e75354ca4c4c082baca011fbe8be03c27db7d4f6",
       "configurationInventoryFormat": "project-path-colon-configuration-lf-no-terminal-lf-sha256",
-      "configurationInventorySha256": "890f129aa574be27b9ca28a07103a7ecafd1f7e753de1255ec5b532dade0c0e5",
-      "configurationCount": 463,
-      "productionReleaseConfigurationCount": 462
+      "configurationInventorySha256": "6a29d71b10b5cfe823ffa608a740dae1cb60ed2840b980a7c30265d671cfb927",
+      "configurationCount": 464,
+      "productionReleaseConfigurationCount": 463
     },
     "lockFiles": [
       {
         "path": "app/gradle.lockfile",
-        "sha256": "d2f377811068edd84f250d1e11df013a505c6667b17c79d210eb1752fc684468",
+        "sha256": "07349c4cc796f699e74aa15e32c7a00e3650cd7e12082cdb44bc84c8ec2c6abb",
         "configurationCount": 17
       },
       {
@@ -376,8 +376,8 @@
       },
       {
         "path": "network/gradle.lockfile",
-        "sha256": "dddcb454802622a57f8cb80dd0707ffc2d84c2cd833c6ced01e1b81f56a4da5c",
-        "configurationCount": 13
+        "sha256": "b04cae7a46b7fcf57059b6b2bf36c70c01c862bc6a0abfc993d5949c7e8b163c",
+        "configurationCount": 14
       },
       {
         "path": "settings-gradle.lockfile",

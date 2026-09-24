@@ -659,9 +659,12 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         records.filterIsInstance<Struct.Instance>().forEach { record ->
             val phase = record.get<DictEnum.Entry<*>>("phase")
             if (phase?.name != "ApplyExtrinsic") return@forEach
-            val number = (phase.value as? BigInteger)?.longValueExact()
+            val phaseNumber = phase.value as? BigInteger
                 ?: throw IllegalStateException("SORA2_RECOVERY_EVENT_PHASE_INVALID")
-            check(number >= 0L) { "SORA2_RECOVERY_EVENT_PHASE_INVALID" }
+            check(phaseNumber.signum() >= 0 && phaseNumber <= BigInteger.valueOf(Long.MAX_VALUE)) {
+                "SORA2_RECOVERY_EVENT_PHASE_INVALID"
+            }
+            val number = phaseNumber.toLong()
             val generic = record.get<GenericEvent.Instance>("event")
             val numericIdentity = generic?.let {
                 it.module.index.toInt() to it.event.index.second
