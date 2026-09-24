@@ -1,6 +1,9 @@
-39264fee02d09548e04806fbffcdaedebef29ce4715f3aa804093e44b51f5118  SOURCE_PROVENANCE.json
-df1d55a57903fcc1f8b21a1d779a23733f974bd495dddae0f67c1e55995b8ded  build-inputs/README.md
+c8d1be70f4d815d45a80c6e529841d5f9a86ecdc500fb40d00acbc497f6713f6  SOURCE_PROVENANCE.json
+645657b9171b16bea212748413c7a370e2ce1d86b215484a6763780e5a224c96  build-inputs/README.md
+9b6eb4495fa8435ed05ce3a7503e1044a5cf1a8c80ccf023925ec1206a792c71  build-inputs/xcrypto-1.2.7-16kb-rebuild.md
 72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395  build-inputs/xcrypto-1.2.7-Cargo.lock
+a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b  build-inputs/xcrypto-1.2.7-original.aar
+595d7aa1b4eed24f553e7201ad6510b1ccb0bb1cc9e20a113d8b967e046f317d  build-inputs/xcrypto-1.2.7-repack-16kb.py
 d490eaac87bf29feec7e443098c2b451e7cfc1aea671d285bd9a13541afc98c5  build-inputs/xsubstrate-1.2.7-source-normalization.patch
 4cda1f49af0a30c5760dd7ed542b04a1cc09ea4f451c6753a425a477a52b97f3  com/paywings/kyc/android-sdk/1.2.2/android-sdk-1.2.2.aar
 cb228d6392fcaf1dc6f317d84b3e9b357962fb3fdbf37d065e5cbf32bba29dfd  com/paywings/kyc/android-sdk/1.2.2/android-sdk-1.2.2.aar.md5
@@ -39,8 +42,8 @@ a19eece94d2c3d7b562d40e7d855c8797c796087c3a0458c938765261142fbe8  jp/co/soramits
 1a30f62ca0383b791a19e329d9d872d03248ba0f77ae9acee015b977cef46185  jp/co/soramitsu/xbackup/1.2.3/xbackup-1.2.3.module
 f6b90f261e485f8f5512c5c05708bfe2923b97ab034788d661f9ff349aa5073b  jp/co/soramitsu/xbackup/1.2.3/xbackup-1.2.3.pom
 1e019d6cbcc14224461a5057ef3b691ebe73203a2f693954d8f779484c866b86  jp/co/soramitsu/xcrypto/1.2.7/xcrypto-1.2.7-sources.jar
-a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b  jp/co/soramitsu/xcrypto/1.2.7/xcrypto-1.2.7.aar
-705f5532c4f9bb0ccfec67b919b0cd52a8854ce228555003fb4cb8ea76b7b731  jp/co/soramitsu/xcrypto/1.2.7/xcrypto-1.2.7.module
+bb2cbb157c36430a7843e8db6900fec1ce36cacd966ff8fe00c6eab524f853ef  jp/co/soramitsu/xcrypto/1.2.7/xcrypto-1.2.7.aar
+fc57d285886c08492c180fb84754249f10ff12f6d9327d2a148d2d2d071a4236  jp/co/soramitsu/xcrypto/1.2.7/xcrypto-1.2.7.module
 3063087b80c3f02068bceccc2db81f580a7d2c0a391ae6a084d85b36162d932c  jp/co/soramitsu/xcrypto/1.2.7/xcrypto-1.2.7.pom
 789f5cabe03aad144670b0cbefdd54d9ad6029fa5bd6add0d194e932e803e1b7  jp/co/soramitsu/xnetworking/lib-android/1.0.15-K2/lib-android-1.0.15-K2-sources.jar
 98f62537ad66eb3eac9940bd58fd6c5511f24e3c988062947548af52e714beac  jp/co/soramitsu/xnetworking/lib-android/1.0.15-K2/lib-android-1.0.15-K2.aar

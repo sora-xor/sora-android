@@ -48,9 +48,9 @@ RootBeer arrive through
 `com.paywings.kyc:android-sdk:1.2.2` →
 `com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3`.
 The IDensic vendor POM declares those three transitive dependencies. The
-repository's verification metadata pins the currently inspected artifacts;
-`vendor/soramitsu-maven` contains only xcrypto 1.2.7, not a reviewed aligned
-replacement.
+repository's verification metadata pins the currently inspected artifacts.
+At baseline, `vendor/soramitsu-maven` contained the original xcrypto 1.2.7 AAR with 4 KB JNI
+libraries.
 
 ## Candidate JNA replacement
 
@@ -76,6 +76,32 @@ raw native loading only; JNA API behavior and full app startup remain to be
 qualified. The `:common` and `:app` production Debug unit suites passed 178
 and 49 tests, respectively, with zero failures. The dependency preflight now
 reports a `STABLE` inventory and retains all review blockers.
+
+## Isolated xcrypto 16 KB integration candidate
+
+The separate `codex/android-xcrypto-16kb-integration-20260924` worktree retains the original
+xcrypto 1.2.7 AAR and [rebuild recipe](../../../vendor/soramitsu-maven/build-inputs/xcrypto-1.2.7-16kb-rebuild.md),
+then materializes an AAR whose only changed members are
+`jni/arm64-v8a/libsr25519java_1.so` and `jni/x86_64/libsr25519java_1.so`. Both rebuilt 64-bit
+ELFs pass the repository's `PT_LOAD` and `GNU_RELRO` 16 KB checks; the exact old AAR and both
+32-bit libraries are retained unchanged. Gradle module checksums, strict verification metadata,
+the whole vendor manifest, source provenance, and materialization bindings were rebased to the
+new bytes. The dependency preflight reports a `STABLE` inventory but retains all independent
+review blockers. The [JNI experiment report](xcrypto-16kb-rebuild-2026-09-24.md) records an
+arm64 16 KB emulator smoke; the x86_64 JNI output has static inspection and byte-for-byte
+second-build reproducibility but no emulator smoke.
+
+This change addresses only xcrypto. CameraX, TensorFlow Lite, RootBeer, and lazysodium remain
+incompatible in the current APK; graphics-path and DataStore native libraries also fail the
+strict `GNU_RELRO` check. The integrated production-flavor Debug APK
+(`e2e5c813224ab79f02268e94ee8f0213aee00032f90dc8512a5f3a22bade9d1b`) and AAB
+(`a6aa9c7ad2e2417c91ccbffe9fbed4419babec082458d41ca8a2a29e7b172d13`) package the
+exact rebuilt xcrypto bytes in both ABIs. Each artifact still has **44 findings across 12 of 16
+64-bit entries**. Both xcrypto entries and both JNA entries pass. The full signed Release package
+and wallet flows remain unqualified. Strict offline Gradle builds of both Debug packages succeeded;
+uncached `:common` and `:app` production Debug unit suites passed 178 and 49 tests respectively,
+with no failures. The Release resource task stopped at the protected signing gate because the
+CI keystore inputs are not present locally. `productionAllowed=false` is unchanged.
 
 ## Reproduce
 

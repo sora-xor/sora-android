@@ -494,7 +494,12 @@ const EXPECTED_VENDOR_MODULES = [
     repository: "https://github.com/soramitsu/x-crypto.git",
     revision: "2346144a127c1121ae3166800b7ab06ed9c5bf20",
     tree: "c0dab19ed314bbe9bf939dc0c33fe0c4d13fbb11",
-    buildInputs: ["build-inputs/xcrypto-1.2.7-Cargo.lock"],
+    buildInputs: [
+      "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
+      "build-inputs/xcrypto-1.2.7-Cargo.lock",
+      "build-inputs/xcrypto-1.2.7-original.aar",
+      "build-inputs/xcrypto-1.2.7-repack-16kb.py",
+    ],
   },
   {
     coordinate: "jp.co.soramitsu:xsubstrate:1.2.7",
@@ -510,9 +515,15 @@ const EXPECTED_VENDOR_MODULES = [
 ];
 const EXPECTED_VENDOR_BUILD_INPUT_SHA256 = {
   "build-inputs/README.md":
-    "df1d55a57903fcc1f8b21a1d779a23733f974bd495dddae0f67c1e55995b8ded",
+    "645657b9171b16bea212748413c7a370e2ce1d86b215484a6763780e5a224c96",
+  "build-inputs/xcrypto-1.2.7-16kb-rebuild.md":
+    "9b6eb4495fa8435ed05ce3a7503e1044a5cf1a8c80ccf023925ec1206a792c71",
   "build-inputs/xcrypto-1.2.7-Cargo.lock":
     "72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395",
+  "build-inputs/xcrypto-1.2.7-original.aar":
+    "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b",
+  "build-inputs/xcrypto-1.2.7-repack-16kb.py":
+    "595d7aa1b4eed24f553e7201ad6510b1ccb0bb1cc9e20a113d8b967e046f317d",
   "build-inputs/xsubstrate-1.2.7-source-normalization.patch":
     "d490eaac87bf29feec7e443098c2b451e7cfc1aea671d285bd9a13541afc98c5",
 };
@@ -607,9 +618,9 @@ const includeModulesIn = (source) => [
   ),
 ].map(([, group, module]) => `${group}:${module}`);
 const EXPECTED_VENDOR_SOURCE_PROVENANCE_SHA256 =
-  "39264fee02d09548e04806fbffcdaedebef29ce4715f3aa804093e44b51f5118";
+  "c8d1be70f4d815d45a80c6e529841d5f9a86ecdc500fb40d00acbc497f6713f6";
 const EXPECTED_VENDOR_CONTENTS_MANIFEST_SHA256 =
-  "d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f";
+  "4e86f9bfe90d094cdf7b893ab9800f73a476f363782e41aae3b17f046c3fdac9";
 const EXPECTED_GRADLE_VERIFICATION_METADATA_SHA256 =
   ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.metadataSha256;
 const EXPECTED_GRADLE_VERIFICATION_METADATA_DIGEST_SHA256 =

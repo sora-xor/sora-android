@@ -17,11 +17,23 @@
   "buildInputs": [
     {
       "path": "build-inputs/README.md",
-      "sha256": "df1d55a57903fcc1f8b21a1d779a23733f974bd495dddae0f67c1e55995b8ded"
+      "sha256": "645657b9171b16bea212748413c7a370e2ce1d86b215484a6763780e5a224c96"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
+      "sha256": "9b6eb4495fa8435ed05ce3a7503e1044a5cf1a8c80ccf023925ec1206a792c71"
     },
     {
       "path": "build-inputs/xcrypto-1.2.7-Cargo.lock",
       "sha256": "72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.7-original.aar",
+      "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.7-repack-16kb.py",
+      "sha256": "595d7aa1b4eed24f553e7201ad6510b1ccb0bb1cc9e20a113d8b967e046f317d"
     },
     {
       "path": "build-inputs/xsubstrate-1.2.7-source-normalization.patch",
@@ -335,7 +347,10 @@
           "independentlyReviewed": false
         },
         "buildInputs": [
-          "build-inputs/xcrypto-1.2.7-Cargo.lock"
+          "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
+          "build-inputs/xcrypto-1.2.7-Cargo.lock",
+          "build-inputs/xcrypto-1.2.7-original.aar",
+          "build-inputs/xcrypto-1.2.7-repack-16kb.py"
         ],
         "semanticTransformations": [],
         "sourceToBinaryReproductionReviewed": false
@@ -347,11 +362,11 @@
         },
         {
           "name": "xcrypto-1.2.7.aar",
-          "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b"
+          "sha256": "bb2cbb157c36430a7843e8db6900fec1ce36cacd966ff8fe00c6eab524f853ef"
         },
         {
           "name": "xcrypto-1.2.7.module",
-          "sha256": "705f5532c4f9bb0ccfec67b919b0cd52a8854ce228555003fb4cb8ea76b7b731"
+          "sha256": "fc57d285886c08492c180fb84754249f10ff12f6d9327d2a148d2d2d071a4236"
         },
         {
           "name": "xcrypto-1.2.7.pom",

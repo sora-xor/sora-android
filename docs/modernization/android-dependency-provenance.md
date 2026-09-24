@@ -10,7 +10,7 @@ it has no artifact-only fallback.
 
 | Coordinate | Origin identity | Current evidence state |
 | --- | --- | --- |
-| `jp.co.soramitsu:xcrypto:1.2.7` | `soramitsu/x-crypto@2346144a127c1121ae3166800b7ab06ed9c5bf20` | source-built, hashes pinned |
+| `jp.co.soramitsu:xcrypto:1.2.7` | `soramitsu/x-crypto@2346144a127c1121ae3166800b7ab06ed9c5bf20` | two 64-bit JNI libraries rebuilt for 16 KB pages; original AAR, recipe, and hashes pinned; review pending |
 | `jp.co.soramitsu:xsubstrate:1.2.7` | `soramitsu/x-substrate@f020817a10590f94d6e7c75d040557e1b9afad56` | source-built with the preserved dependency-coordinate normalization patch |
 | `jp.co.soramitsu:xbackup:1.2.3` | `soramitsu/x-backup@851999f4fb3d8610c500c4879cb4bcc7082aae55` | source-built, hashes pinned |
 | `jp.co.soramitsu:ui-core:0.2.39` | `soramitsu/android-ui-libraries@f2b6f27adef101fa997432e46886dcbf3625ac77` | source-built, hashes pinned |
@@ -31,11 +31,11 @@ unexpected module coordinates, and publisher-sidecar mismatches fail dependency 
 The current materialized dependency snapshot (updated 2026-09-24) is bound by these aggregate identities:
 
 - vendor source provenance SHA-256:
-  `39264fee02d09548e04806fbffcdaedebef29ce4715f3aa804093e44b51f5118`
+  `c8d1be70f4d815d45a80c6e529841d5f9a86ecdc500fb40d00acbc497f6713f6`
 - vendor whole-tree manifest SHA-256:
-  `d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f`
+  `4e86f9bfe90d094cdf7b893ab9800f73a476f363782e41aae3b17f046c3fdac9`
 - strict verification metadata SHA-256:
-  `eae10307c82f3aae2656efce6257e135f314f03b0b6138c540f779b88907f19e`
+  `d4e1d6ee5b80d7c2ee4c2deaccefeab2e1220f7ce922f26417515c63bf39d4c8`
 - 31-file lock-set SHA-256:
   `a7ddc18aca11f0353bcfd45384eaa9d34c002066ef73a5d1fc18cb6a3f921eeb`
 - 464-entry configuration inventory SHA-256 (463 `productionRelease` entries plus the settings
@@ -45,14 +45,17 @@ The current materialized dependency snapshot (updated 2026-09-24) is bound by th
 These identities record observed bytes accepted by the structural gate. Both dependency verification
 and locking remain `materialized-unreviewed`, with `independentlyReviewed=false`. They are not reviewer
 signatures, attestations, or evidence that the snapshot is production-qualified. The current metadata
-includes the pinned JNA 5.17.0 AAR and POM. The full dependency set still needs independent
+includes the pinned JNA 5.17.0 AAR and POM, and the locally repacked xcrypto 1.2.7 AAR. The
+[xcrypto rebuild recipe](../../vendor/soramitsu-maven/build-inputs/xcrypto-1.2.7-16kb-rebuild.md)
+retains the original AAR, exact toolchain inputs and only two changed JNI entries. The full
+dependency set still needs independent
 review. The real old-writer/current-reader encrypted
 storage experiment covers its declared adapter/DataStore/Tink closure only (see
 `scripts/qualification/legacy-encrypted-preferences/README.md`). Historical release-probe and
 interoperability fixtures retain their original source and frozen-input hashes.
 
 The current sidecar SHA-256 is
-`0ac22b33159692cc124032b794ca707e26527e6fe31631c8265328483aaa66ba`. The app lock records 17
+`b63e46ac6627468645037e2f3308b4b7ba435e0f686c03d36a49007f24f4a3e2`. The app lock records 17
 configurations, including the empty `productionReleaseBaselineProfile` configuration; its SHA-256 is
 `56a3ed1d7025bc26f4a3075dfc4983f99d97fdaf551459e704a8f5506d6d3fa9`. The 2026-09-24 update
 adds JNA 5.17.0 and rebinds its observed hashes. Enabling the AGP 9
@@ -90,9 +93,11 @@ dimension selection. New plugins, namespaces, targets, configurations, root hook
 invalidate that exception; production modules cannot silently disappear from lock coverage. The
 shared guard and its mutation tests are bound into the migration qualification source contract.
 
-The xcrypto Rust lock state and the complete xsubstrate semantic normalization are retained in
+The xcrypto Rust lock state, original AAR, 16 KB rebuild recipe, deterministic repack script,
+and complete xsubstrate semantic normalization are retained in
 `vendor/soramitsu-maven/build-inputs`. Temporary absolute staging-repository edits are not build
-semantics and are not retained.
+semantics and are not retained. The 16 KB JNI experiment is not a source-to-binary review or
+release approval; `materialized-unreviewed` and `productionAllowed=false` remain in force.
 
 The pinned IDensic 1.31.3 graph also pins `org.tensorflow:tensorflow-lite:2.12.0` and
 `org.tensorflow:tensorflow-lite-api:2.12.0`. Those two artifacts expose the same legacy manifest
