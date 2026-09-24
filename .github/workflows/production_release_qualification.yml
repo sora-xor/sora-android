@@ -567,19 +567,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          script: |
-            node scripts/verify-production-modernization.mjs --dependency-preflight
-            ./gradlew \
-              :common:connectedProductionDebugAndroidTest \
-              :sorasubstrate:connectedProductionDebugAndroidTest \
-              --stacktrace --no-daemon --no-parallel
-            node scripts/verify-production-modernization.mjs --dependency-preflight
-            ./gradlew \
-              :core_db:connectedProductionDebugAndroidTest \
-              -Pandroid.testInstrumentationRunnerArguments.class=jp.co.soramitsu.core_db.WalletIdentityMigration75Test,jp.co.soramitsu.core_db.WalletUpgradeBackupTest \
-              --stacktrace --no-daemon --no-parallel
-            bash scripts/run-encrypted-wallet-upgrade-qualification.sh
-            bash scripts/run-migration-manager-production-path-qualification.sh
+          script: bash scripts/run-production-connected-device-qualification.sh
 
       - name: Modernization unit contracts
         if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
@@ -754,17 +742,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          script: |
-            release_apk="app/build/outputs/apk/production/release/app-production-release.apk"
-            test -s "$release_apk"
-            test ! -L "$release_apk"
-            "$ANDROID_HOME/build-tools/36.0.0/apksigner" \
-              verify --verbose --print-certs "$release_apk"
-            adb install --no-streaming "$release_apk"
-            adb shell am force-stop jp.co.soramitsu.sora
-            adb shell am start -W \
-              -n jp.co.soramitsu.sora/.splash.presentation.SplashActivity
-            adb shell pidof jp.co.soramitsu.sora
+          script: bash scripts/run-signed-production-apk-device-smoke.sh
 
       - name: Obtain exact retained-device migration evidence
         if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}

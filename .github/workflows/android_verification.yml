@@ -117,6 +117,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
 
+      - name: Build connected test APKs before emulator startup
+        run: ./gradlew --dependency-verification=strict :feature_blockexplorer_api:assembleDevelopDebugAndroidTest :app:assembleProductionDebug :app:assembleProductionDebugAndroidTest --stacktrace --no-daemon
+
       - name: Enable KVM access for Android emulator
         shell: bash
         run: |
