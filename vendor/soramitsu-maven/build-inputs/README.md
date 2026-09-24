@@ -22,6 +22,12 @@ required to materialize the checked-in Maven modules.
   `LazysodiumSmoke.java`, and `lazysodium-5.0.2-16kb-rebuild.md`
   pin the signed libsodium 1.0.18 source archive, NDK r28 compilation, the
   two rebuilt 64-bit JNI digests, a Java/JNA crypto smoke, and the exact AAR replacement.
+- `graphics-path-1.0.1-original.aar` and `graphics-path-1.0.1-original.module` preserve
+  the exact Google Maven publication used by the app dependency graph.
+- `graphics-path-1.0.1-build-16kb.sh`, `graphics-path-1.0.1-repack-16kb.py`, and
+  `graphics-path-1.0.1-16kb-rebuild.md` pin the AndroidX release source, NDK toolchain,
+  64-bit JNI build digests, two-member AAR replacement, and Gradle module descriptors.
+  `GraphicsPathSmoke.java` preserves the Java/JNI path-iterator smoke source.
 - `xsubstrate-1.2.7-source-normalization.patch` is the complete semantic source delta applied to
   the pinned xsubstrate commit: consume the materialized xcrypto 1.2.7 module and use polkaj's
   authoritative `io.emeraldpay.polkaj` coordinate. Temporary repository-path edits used only to

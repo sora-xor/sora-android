@@ -414,6 +414,25 @@ const hashExternalRegularFile = ({ path, suffix, maximumBytes }) => {
 
 const EXPECTED_VENDOR_MODULES = [
   {
+    coordinate: "androidx.graphics:graphics-path:1.0.1",
+    modulePath: "androidx/graphics/graphics-path/1.0.1",
+    originKind: "git-source-build",
+    repository: "https://android.googlesource.com/platform/frameworks/support",
+    revision: "8a05a22af450d589ef911d772a001a49dcb05b71",
+    tree: "f1ec6450df09939325e8dbe5cf57b589a673afc3",
+    commitProvider: "gitiles",
+    commitStatus: "unsigned",
+    observedAt: "2026-09-25",
+    buildInputs: [
+      "build-inputs/GraphicsPathSmoke.java",
+      "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
+      "build-inputs/graphics-path-1.0.1-build-16kb.sh",
+      "build-inputs/graphics-path-1.0.1-original.aar",
+      "build-inputs/graphics-path-1.0.1-original.module",
+      "build-inputs/graphics-path-1.0.1-repack-16kb.py",
+    ],
+  },
+  {
     coordinate: "com.goterl:lazysodium-android:5.0.2",
     modulePath: "com/goterl/lazysodium-android/5.0.2",
     originKind: "git-source-build",
@@ -547,10 +566,22 @@ const EXPECTED_VENDOR_MODULES = [
   },
 ];
 const EXPECTED_VENDOR_BUILD_INPUT_SHA256 = {
+  "build-inputs/GraphicsPathSmoke.java":
+    "0ae2dc21debbaf73360a3d5860649172491341ec0bedba39f70b846df4d472f9",
+  "build-inputs/graphics-path-1.0.1-16kb-rebuild.md":
+    "6f28886b62b5ec6eee6191694c0c78dd36ac1eee06fdd9e57f4d96635bb0ee8a",
+  "build-inputs/graphics-path-1.0.1-build-16kb.sh":
+    "d01272ea5c2be37c64eff6c0f031845efb0071f9704f13a606219a0cd3399e2d",
+  "build-inputs/graphics-path-1.0.1-original.aar":
+    "8ca4032b6d79b351f0b59ad4b580eddbb9423e1652f7c958830687f1eee2ec03",
+  "build-inputs/graphics-path-1.0.1-original.module":
+    "3f6fc7e96f8a1fd21045da7f2e332aef528aa1f56b6455fb8f25043aafa0e1b8",
+  "build-inputs/graphics-path-1.0.1-repack-16kb.py":
+    "d2de5118a37af9d843c9ffc8340f1071d2ecb14fa53d5cb4c144f76b8aff69ac",
   "build-inputs/LazysodiumSmoke.java":
     "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68",
   "build-inputs/README.md":
-    "8dafed6d4c5bf568879bc67f4e8aac48b06788bc93f0b2f499e4f93b221cb45d",
+    "601fa1e45ec827b1ebe2c6141ee96a463111bc9e665ea7159e795c63f9c05db1",
   "build-inputs/lazysodium-5.0.2-16kb-rebuild.md":
     "0ca566bc11c25409d398214ef1dbb6094cf221ec069cad04917da1a2584e2707",
   "build-inputs/lazysodium-5.0.2-build-16kb.sh":
@@ -669,9 +700,9 @@ const includeModulesIn = (source) => [
   ),
 ].map(([, group, module]) => `${group}:${module}`);
 const EXPECTED_VENDOR_SOURCE_PROVENANCE_SHA256 =
-  "c5271c0d8c2b8bdb4d943420449c9f4a741f473a5edceb1a70d1498366723464";
+  "baa16bbfa92908a3453df1562d96bf8ae76c8c5997b4925849ce6a5fca559926";
 const EXPECTED_VENDOR_CONTENTS_MANIFEST_SHA256 =
-  "a6fb482884b5c2a7571038c6ef3455b01d915446a34465f47c696ed3cfed6eb9";
+  "5b09c410301370ccd1f6e665ed12487687e0ca2a66cbb65540148755f0a3a8bc";
 const EXPECTED_GRADLE_VERIFICATION_METADATA_SHA256 =
   ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.metadataSha256;
 const EXPECTED_GRADLE_VERIFICATION_METADATA_DIGEST_SHA256 =
@@ -1393,7 +1424,8 @@ const validateAndroidDependencyPreflight = () => {
               "observedAt",
               "independentlyReviewed",
             ]) ||
-            origin.commitVerification.provider !== "github" ||
+            origin.commitVerification.provider !==
+              (expected.commitProvider ?? "github") ||
             origin.commitVerification.status !==
               (expected.commitStatus ?? "valid") ||
             origin.commitVerification.observedAt !==

@@ -16,12 +16,36 @@
   },
   "buildInputs": [
     {
+      "path": "build-inputs/GraphicsPathSmoke.java",
+      "sha256": "0ae2dc21debbaf73360a3d5860649172491341ec0bedba39f70b846df4d472f9"
+    },
+    {
       "path": "build-inputs/LazysodiumSmoke.java",
       "sha256": "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68"
     },
     {
       "path": "build-inputs/README.md",
-      "sha256": "8dafed6d4c5bf568879bc67f4e8aac48b06788bc93f0b2f499e4f93b221cb45d"
+      "sha256": "601fa1e45ec827b1ebe2c6141ee96a463111bc9e665ea7159e795c63f9c05db1"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
+      "sha256": "6f28886b62b5ec6eee6191694c0c78dd36ac1eee06fdd9e57f4d96635bb0ee8a"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-build-16kb.sh",
+      "sha256": "d01272ea5c2be37c64eff6c0f031845efb0071f9704f13a606219a0cd3399e2d"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-original.aar",
+      "sha256": "8ca4032b6d79b351f0b59ad4b580eddbb9423e1652f7c958830687f1eee2ec03"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-original.module",
+      "sha256": "3f6fc7e96f8a1fd21045da7f2e332aef528aa1f56b6455fb8f25043aafa0e1b8"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-repack-16kb.py",
+      "sha256": "d2de5118a37af9d843c9ffc8340f1071d2ecb14fa53d5cb4c144f76b8aff69ac"
     },
     {
       "path": "build-inputs/lazysodium-5.0.2-16kb-rebuild.md",
@@ -77,6 +101,54 @@
     }
   ],
   "modules": [
+    {
+      "coordinate": "androidx.graphics:graphics-path:1.0.1",
+      "modulePath": "androidx/graphics/graphics-path/1.0.1",
+      "origin": {
+        "kind": "git-source-build",
+        "repository": "https://android.googlesource.com/platform/frameworks/support",
+        "revision": "8a05a22af450d589ef911d772a001a49dcb05b71",
+        "tree": "f1ec6450df09939325e8dbe5cf57b589a673afc3",
+        "commitVerification": {
+          "provider": "gitiles",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [
+          "build-inputs/GraphicsPathSmoke.java",
+          "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
+          "build-inputs/graphics-path-1.0.1-build-16kb.sh",
+          "build-inputs/graphics-path-1.0.1-original.aar",
+          "build-inputs/graphics-path-1.0.1-original.module",
+          "build-inputs/graphics-path-1.0.1-repack-16kb.py"
+        ],
+        "semanticTransformations": [],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "graphics-path-1.0.1-sources.jar",
+          "sha256": "9f1b5995b9577a8876525c3411ebb2a49f9ef0e875f6aec3059e807596dc6ca6"
+        },
+        {
+          "name": "graphics-path-1.0.1-versionMetadata.json",
+          "sha256": "6f54e010c759a56cfe1a2eeb1a0edfd494184791e7b5f370b3ce064e293c2ce1"
+        },
+        {
+          "name": "graphics-path-1.0.1.aar",
+          "sha256": "eb4759c27ae0625d9e81fe95d8ce63d0a3846764a3465363ab195109d6785a71"
+        },
+        {
+          "name": "graphics-path-1.0.1.module",
+          "sha256": "478695824bf314c9d0603ea249e25431b172c485aab20a61856a2cdea6819441"
+        },
+        {
+          "name": "graphics-path-1.0.1.pom",
+          "sha256": "866fb357c7146f5f7678ad44e4bc6c2823d568defce1ed2805bb6c899606b228"
+        }
+      ]
+    },
     {
       "coordinate": "com.goterl:lazysodium-android:5.0.2",
       "modulePath": "com/goterl/lazysodium-android/5.0.2",
