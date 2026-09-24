@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
+import android.os.Build
 import android.os.StatFs
 import android.system.ErrnoException
 import android.system.Os
@@ -2458,6 +2459,12 @@ object WalletUpgradeBackup {
     private fun File.startupPathSnapshot(
         allowMissing: Boolean,
     ): StartupPathSnapshot {
+        // API 26 exposes only second-resolution StructStat timestamps. Without nanoseconds the
+        // metadata shortcut could miss a same-second wallet write, so requirePrepared() must
+        // repeat the complete source verification instead of retaining that shortcut.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) {
+            throw WalletUpgradeBackupException("SOURCE_CHANGED")
+        }
         val path = absoluteFile.toPath().normalize().toString()
         val stat = try {
             Os.lstat(path)
