@@ -604,5 +604,7 @@
   <string name="send_unavailable">Šapārum ul nadin</string>
   <string name="test_networks">Ḫarrānū nissātim</string>
   <string name="test_networks_description">Kaspī u tērtī ša ḫarrān nissātim Taira ukallam. Makkūrū ša nissātim šīm kaspim ul išû</string>
+  <string name="wallet_receive_xor">XOR maḫārum</string>
+  <string name="wallet_status_confirmed">Gamrum</string>
   <string name="your_pooled">%s ša būrtika</string>
 </resources>

@@ -579,9 +579,11 @@
   <string name="wallet_network_activity">פעילות</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">כתובת %s הרשת שלי לקבלת %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">סרוק את ה- QR הזה כדי לשלוח לי %s. מספר חשבון הרשת שלי %s:\n%s</string>
+  <string name="wallet_receive_xor">קבל XOR</string>
   <string name="wallet_redeemable">ניתן למימוש</string>
   <string name="wallet_scan_qr">סרוק קוד QR</string>
   <string name="wallet_send_existential_warning_message">ההעברה שלך תסיר את החשבון מבלאקסטור מכיוון שהיא תהפוך את היתרה הכוללת לנמוכה מההפקדה הקיומית.</string>
+  <string name="wallet_status_confirmed">הושלם</string>
   <string name="wallet_title">ארנק</string>
   <string name="wallet_transaction_rejected">הטרנזקציה נדחתה</string>
   <string name="wallet_transaction_submitted">הטרנזקציה נשלחה</string>

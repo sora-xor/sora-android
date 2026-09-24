@@ -561,9 +561,11 @@
   <string name="wallet_network_activity">Hoạt động</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Địa chỉ mạng %s của tôi để nhận %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Quét mã QR này để gửi cho tôi %s. ID tài khoản của tôi %s:\n%s</string>
+  <string name="wallet_receive_xor">Nhận XOR</string>
   <string name="wallet_redeemable">Có thể hoán đổi</string>
   <string name="wallet_scan_qr">Quét mã QR</string>
   <string name="wallet_send_existential_warning_message">Việc chuyển khoản của bạn sẽ xóa tài khoản khỏi lưu trữ khối vì nó sẽ làm cho tổng số dư thấp hơn khoản tiền gửi hiện có.</string>
+  <string name="wallet_status_confirmed">Đã hoàn thành</string>
   <string name="wallet_title">Ví</string>
   <string name="wallet_transaction_rejected">Giao dịch bị từ chối</string>
   <string name="wallet_transaction_submitted">Giao dịch đã được gửi</string>

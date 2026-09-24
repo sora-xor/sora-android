@@ -564,8 +564,10 @@
   <string name="wallet_network_activity">Fəaliyyət</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">%s qəbul etmək üçün mənim %s şəbəkə ünvanım:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Mənə %s göndərmək üçün bu QR-ni skan edin. Mənim %s Şəbəkə Hesabım ID:\n%s</string>
+  <string name="wallet_receive_xor">XOR qəbul edin</string>
   <string name="wallet_redeemable">Əldə edilə bilər</string>
   <string name="wallet_send_existential_warning_message">Transferiniz hesabınızı blockstore -dan çıxaracaq, çünki ümumi qalıq mövcud depozitdən daha aşağı olacaq.</string>
+  <string name="wallet_status_confirmed">Tamamlandı</string>
   <string name="wallet_title">Cüzdan</string>
   <string name="wallet_transaction_rejected">Köçürmə əməliyyatı rədd edildi</string>
   <string name="wallet_transaction_submitted">Əməliyyat göndərildi</string>

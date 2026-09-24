@@ -560,8 +560,10 @@
   <string name="wallet_network_activity">履歴</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">受取用%sネットワークアドレス%s ：</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">このQRをスキャンして%sを送ってください。私の%sネットワークのアカウントID: \n %s</string>
+  <string name="wallet_receive_xor">XORを受け取る</string>
   <string name="wallet_redeemable">償還可能</string>
   <string name="wallet_send_existential_warning_message">本取引を行うと、残高不足のためアカウントがサーバーのブロックストアから削除されます</string>
+  <string name="wallet_status_confirmed">完了しました</string>
   <string name="wallet_title">ウォレット</string>
   <string name="wallet_transaction_rejected">取引拒否</string>
   <string name="wallet_transaction_submitted">送信済みの取引</string>

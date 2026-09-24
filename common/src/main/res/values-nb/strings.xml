@@ -559,8 +559,10 @@
   <string name="wallet_connect_done">Ferdig</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Min %s nettverksadresse for å motta %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_receive_xor">Motta XOR</string>
   <string name="wallet_redeemable">Innløsbar</string>
   <string name="wallet_send_existential_warning_message">Overføringen din fjerner kontoen fra blockstore da den vil gjøre totalbeløpet lavere enn minste tillatte innskudd</string>
+  <string name="wallet_status_confirmed">Fullført</string>
   <string name="wallet_title">Lommebok</string>
   <string name="wallet_transaction_rejected">Transaksjonen ble avvist</string>
   <string name="wallet_transaction_submitted">Transaksjonen er sendt inn</string>

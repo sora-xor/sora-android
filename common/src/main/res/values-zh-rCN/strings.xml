@@ -560,9 +560,11 @@
   <string name="wallet_network_activity">活动</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">我的%s网络地址要接收%s：</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">扫描此 QR 给我发送%s 。我的%s网络账户 ID： \n %s</string>
+  <string name="wallet_receive_xor">收到XOR</string>
   <string name="wallet_redeemable">可赎回</string>
   <string name="wallet_scan_qr">扫描二维码</string>
   <string name="wallet_send_existential_warning_message">您的转账将会从区块存储中移除账户，因为这将导致总余额低于现有存款。</string>
+  <string name="wallet_status_confirmed">已完成</string>
   <string name="wallet_title">钱包</string>
   <string name="wallet_transaction_rejected">交易被拒绝</string>
   <string name="wallet_transaction_submitted">交易已提交</string>

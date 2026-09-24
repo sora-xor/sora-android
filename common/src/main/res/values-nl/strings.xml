@@ -561,8 +561,10 @@
   <string name="wallet_connect_done">Gedaan</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">%s Netwerkadres om te ontvangen %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_receive_xor">Ontvang XOR</string>
   <string name="wallet_redeemable">Inwisselbaar</string>
   <string name="wallet_send_existential_warning_message">Uw overschrijving zal het account verwijderen uit de blockstore omdat het totale saldo lager zal zijn dan de bestaande storting.</string>
+  <string name="wallet_status_confirmed">Voltooid</string>
   <string name="wallet_title">Portefeuille</string>
   <string name="wallet_transaction_rejected">Transactie verworpen</string>
   <string name="wallet_transaction_submitted">Transactie ingediend</string>

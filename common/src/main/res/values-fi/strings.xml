@@ -559,8 +559,10 @@
   <string name="wallet_connect_done">Tehty</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Minun %s Network address to Receive %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_receive_xor">Vastaanota XOR</string>
   <string name="wallet_redeemable">Lunastettavissa</string>
   <string name="wallet_send_existential_warning_message">Siirtosi poistaa tilin blockstore-kaupasta, koska se tekee kokonaissaldon pienemmäksi kuin olemassa oleva talletus</string>
+  <string name="wallet_status_confirmed">Valmis</string>
   <string name="wallet_title">Lompakko</string>
   <string name="wallet_transaction_rejected">Tapahtuma hylätty</string>
   <string name="wallet_transaction_submitted">Tapahtuma lähetetty</string>

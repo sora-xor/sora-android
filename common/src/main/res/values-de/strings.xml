@@ -559,8 +559,10 @@
   <string name="wallet_connect_done">Erledigt</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Meine %s Netzwerkadresse %s zum Empfangen:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scanne diesen QR, um mir %s zu senden. Meine %s-Netzwerk-Konto-ID:\n%s</string>
+  <string name="wallet_receive_xor">XOR empfangen</string>
   <string name="wallet_redeemable">Einlösbar</string>
   <string name="wallet_send_existential_warning_message">Durch diesen Transfer wird das Konto aus dem Blockstore entfernt, da der Restbetrag niedriger sein wird als das notwendige existenzielle Guthaben.</string>
+  <string name="wallet_status_confirmed">Abgeschlossen</string>
   <string name="wallet_title">Wallet</string>
   <string name="wallet_transaction_rejected">Transaktion abgelehnt</string>
   <string name="wallet_transaction_submitted">Transaktion übermittelt</string>

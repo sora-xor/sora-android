@@ -564,8 +564,10 @@
   <string name="wallet_network_activity">Actividade</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">O meu endereço da rede %s para receber %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Faça scan deste código QR para me enviar %s. A minha %s identificação de conta da rede:\n%s</string>
+  <string name="wallet_receive_xor">Receber XOR</string>
   <string name="wallet_redeemable">Resgatável</string>
   <string name="wallet_send_existential_warning_message">A sua transferência removerá a conta da blockstore, pois tornará o saldo total inferior ao depósito minímo existencial.</string>
+  <string name="wallet_status_confirmed">Concluído</string>
   <string name="wallet_title">Carteira</string>
   <string name="wallet_transaction_rejected">Transação rejeitada</string>
   <string name="wallet_transaction_submitted">Transação enviada</string>
