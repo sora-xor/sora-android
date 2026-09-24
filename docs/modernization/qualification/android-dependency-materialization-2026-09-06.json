@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "observedAtUtc": "2026-09-24T14:19:01Z",
+  "observedAtUtc": "2026-09-24T14:23:48Z",
   "historicalEvidencePath": "docs/modernization/release-probe-evidence-2026-08-02.json",
   "historicalEvidenceSha256": "8cc5d52691e4f48595c1ce70b945bd23fb3fecc6c6a6cc785b076808cb00e07e",
   "androidSigningIdentity": {
@@ -34,10 +34,10 @@
     "verificationMetadataReviewed": false,
     "productionReleaseLocksPresent": true,
     "lockFileCount": 31,
-    "lockFileSetSha256": "2a3a3075934087bbd152ee6c7d75d1ab805d90bcf5ffa5330da51038ddc45e44",
-    "lockConfigurationCount": 464,
-    "productionReleaseLockConfigurationCount": 463,
-    "lockConfigurationInventorySha256": "6a29d71b10b5cfe823ffa608a740dae1cb60ed2840b980a7c30265d671cfb927",
+    "lockFileSetSha256": "206ce5977c8f330b00536d1d71767b9bf8ffe88f7b0a6b92584e495451305b03",
+    "lockConfigurationCount": 566,
+    "productionReleaseLockConfigurationCount": 565,
+    "lockConfigurationInventorySha256": "4bc0c68745a3114f0b8caae98556d4205296e10bcf0058909c06d03f80194a00",
     "productionReleaseLocksReviewed": false,
     "idensicTensorflowNamespaceWorkaroundStatus": "scoped-unreviewed-workaround",
     "idensicTensorflowNamespaceWorkaroundReviewed": false,

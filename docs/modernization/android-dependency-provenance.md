@@ -37,10 +37,10 @@ The current materialized dependency snapshot (updated 2026-09-24) is bound by th
 - strict verification metadata SHA-256:
   `381aadad5c023cdfebc6da49a948e278cbfe7594f7c752768b8fd84474cb2547`
 - 31-file lock-set SHA-256:
-  `2a3a3075934087bbd152ee6c7d75d1ab805d90bcf5ffa5330da51038ddc45e44`
-- 464-entry configuration inventory SHA-256 (463 `productionRelease` entries plus the settings
+  `206ce5977c8f330b00536d1d71767b9bf8ffe88f7b0a6b92584e495451305b03`
+- 566-entry configuration inventory SHA-256 (565 `productionRelease` entries plus the settings
   catalog configuration):
-  `6a29d71b10b5cfe823ffa608a740dae1cb60ed2840b980a7c30265d671cfb927`
+  `4bc0c68745a3114f0b8caae98556d4205296e10bcf0058909c06d03f80194a00`
 
 These identities record observed bytes accepted by the structural gate. Both dependency verification
 and locking remain `materialized-unreviewed`, with `independentlyReviewed=false`. They are not reviewer
@@ -55,12 +55,14 @@ storage experiment covers its declared adapter/DataStore/Tink closure only (see
 interoperability fixtures retain their original source and frozen-input hashes.
 
 The current sidecar SHA-256 is
-`252da0cd85698f8286ad131c4d6f197017327dbd7dcf426fb9c7042143913dfc`. The app lock records 17
+`252da0cd85698f8286ad131c4d6f197017327dbd7dcf426fb9c7042143913dfc`. The app lock records 19
 configurations, including the empty `productionReleaseBaselineProfile` configuration; its SHA-256 is
-`378960720f446c2d1b86e894581d1a5e87163bf13c2a92e4788e26de4f61cb8a`. The 2026-09-24 update
+`c6d9fb14f42e552c691c04a48a4d90bdde15884d627e5cfffa73f55144355f57`. The 2026-09-24 update
 adds JNA 5.17.0, the rebuilt xcrypto native entries, and DataStore 1.2.1, including the transitive Okio 3.9.1 selection. The retained old-writer/current-reader/old-reader storage experiment passed on a 4 KB arm64 emulator. Enabling the AGP 9
-production Release unit-test task materializes 191 more locked configurations; three existing
-app configurations also changed with the current Compose graph. These locks remain unreviewed.
+production Release unit-test task first materialized 191 more locked configurations; the
+subsequent complete Gradle model resolution added 102 previously missing production Release
+configuration names across 30 modules. The current 565 production Release configurations
+now match the resolvable Gradle model; all 31 lockfiles remain unreviewed.
 
 The verification snapshot includes twelve transitive plugin and compile-classpath metadata files
 first requested by the clean Linux CI resolver: Guava parent POMs `32.1.3-jre`, `33.0.0-jre`,

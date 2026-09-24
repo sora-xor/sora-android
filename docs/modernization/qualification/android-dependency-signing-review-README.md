@@ -8,7 +8,7 @@ one from the protected review-evidence producer and one from a distinct independ
 The environment independently pins both P-256 SPKI SHA-256 identities, the exact positive review
 sequence, candidate source revision, and review-contract SHA-256. The contract binds the current
 Gradle dependency-provenance and signing-identity files, verification metadata and its digest,
-vendor provenance and whole-tree manifest, 31-lock/464-configuration identities (463 production
+vendor provenance and whole-tree manifest, 31-lock/566-configuration identities (565 production
 Release configurations plus settings), and both public production certificate fingerprints. A
 manifest is admitted only when those protected values and
 the current checkout projections all agree byte-for-byte.
@@ -63,8 +63,8 @@ Release remains blocked until the retained keystore is provisioned, a signed can
 upload fingerprint, and distinct protected producer/reviewer authorities admit the signing and
 Play-continuity evidence.
 
-The current materialization reconciliation records 463 production Release configurations plus the
-settings catalog configuration, 464 in total. The signed v1 object shape is unchanged; its exact
+The current materialization reconciliation records 565 production Release configurations plus the
+settings catalog configuration, 566 in total. The signed v1 object shape is unchanged; its exact
 configuration count and current provenance/input hashes reject a receipt for the prior 271-entry
 materialization. Updating these observed identities grants no review or signing authority. Metadata
 and lock statuses remain
