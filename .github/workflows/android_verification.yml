@@ -62,8 +62,12 @@ jobs:
           node scripts/test-android-wallet-continuity-source-contract.mjs
           python3 scripts/test-android-native-16kb.py
 
-      - name: Run strict production-flavor unit tests
-        run: ./gradlew --dependency-verification=strict testProductionDebugUnitTest --stacktrace --no-daemon --no-parallel
+      - name: Verify release locks and run strict production-flavor unit tests
+        run: |
+          node scripts/verify-android-dependency-preflight-structure.mjs
+          ./gradlew -I scripts/verify-production-release-lock-coverage.gradle --dependency-verification=strict verifyProductionReleaseLockCoverage --offline --stacktrace --no-daemon
+          node scripts/test-production-release-lock-coverage.mjs
+          ./gradlew --dependency-verification=strict testProductionDebugUnitTest --stacktrace --no-daemon --no-parallel
 
   explorer-contracts:
     name: Explorer Contracts
