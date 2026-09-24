@@ -44,7 +44,7 @@ On `FearlessApi36Ps16k`, build fingerprint `google/sdk_gphone16k_arm64/emu64a16k
 
 On `FearlessMigrationApi36Fresh20260730` (arm64, `PAGE_SIZE=4096`), the same smoke harness using the pinned original arm64 library passed. Four deterministic output SHA-256 values matched the rebuilt library on the 16 KB emulator: pair `d3316accba01e647adb84940b451097cec1f5a4daeb11451898cd04cb5fd391e`, hard pair `c286b53b33f0541a9adf44dea7186dcc1db81f0f7bf66289ad3f3466930e5c0a`, soft public `0e78c1f5bde2c0517688fd5be608c91858ce9b71c582275c23f76eeec94367fb`, Ed25519 secret `2162e8f7362176a7079135a5e7501b13e59678bf34c9ed81eeec1b968a08ee5f`.
 
-These are JNI-level experiments with raw native libraries, not signed production APK installation or full wallet migration/signing tests. x86_64 was checked statically and rebuilt reproducibly but no x86_64 emulator image was installed for runtime exercise. The repacked AAR is not yet an independently reviewed source-to-binary release artifact. The isolated integration branch pins it as `materialized-unreviewed`; release admission remains blocked.
+These are JNI-level experiments with raw native libraries, not signed production APK installation or full wallet migration/signing tests. x86_64 was checked statically and rebuilt reproducibly but no x86_64 emulator image was installed for runtime exercise. The repacked AAR is not yet an independently reviewed source-to-binary release artifact. The Android candidate pins it as `materialized-unreviewed`; release admission remains blocked.
 
 ## Separate JNA 5.17.0 observation
 
