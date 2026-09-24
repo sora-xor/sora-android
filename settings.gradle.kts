@@ -21,6 +21,7 @@ dependencyResolutionManagement {
                 }
             }
             filter {
+                includeModule("androidx.camera", "camera-core")
                 includeModule("androidx.graphics", "graphics-path")
                 includeModule("jp.co.soramitsu", "android-foundation")
                 includeModule("jp.co.soramitsu", "android-sora-card")
