@@ -322,6 +322,7 @@
   <string name="more_menu_sora_card_subtitle">إدارة حسابات البطاقات والعملات الورقية</string>
   <string name="more_menu_sora_card_title">بطاقة سورا</string>
   <string name="network_fee">رسوم الشبكة</string>
+  <string name="network_finalized_history">نشاط</string>
   <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">فشل التحقق من صحة URL (عنوان خاطئ)</string>
   <string name="node_details_genesis_validation_failed">يختلف تجزئة نشأة العقدة عن تجزئة تكوين الشبكة</string>
@@ -354,6 +355,10 @@
   <string name="pincode_one_try_left">لديك محاولة أخرى متبقية قبل التبريد</string>
   <string name="pincode_set_your_pin_code">إعداد رمز الواجهة</string>
   <string name="pincode_touch_fingerprint_scanner">إلمس الماسح الضوئي للبصمة</string>
+  <string name="polkamarkt_action_buy">شراء</string>
+  <string name="polkamarkt_outcome_no">لا</string>
+  <string name="polkamarkt_outcome_yes">نعم</string>
+  <string name="polkamarkt_ticket_slippage">انزلاق</string>
   <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
@@ -580,6 +585,10 @@
   <string name="wallet_balance_locked">المقفل</string>
   <string name="wallet_balance_reserved">المدخر</string>
   <string name="wallet_bonded">المسند</string>
+  <string name="wallet_connect_account">حساب</string>
+  <string name="wallet_connect_done">تم</string>
+  <string name="wallet_market_refresh">تحديث</string>
+  <string name="wallet_network_activity">نشاط</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">عنواني على شبكة %s لاستلام %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">قم بمسح هذا الرمز الضوئي لإرسال %s إلي. رمز هويتي في %s هو: %s</string>
   <string name="wallet_redeemable">قابل للسحب</string>

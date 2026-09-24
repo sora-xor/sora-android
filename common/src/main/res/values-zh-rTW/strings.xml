@@ -317,6 +317,7 @@
   <string name="more_menu_sora_card_subtitle">Manage your card and IBAN account</string>
   <string name="more_menu_sora_card_title">SORA Card</string>
   <string name="network_fee">網絡費用</string>
+  <string name="network_finalized_history">活動</string>
   <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">驗證 URL 失敗（地址錯誤）</string>
   <string name="node_details_genesis_validation_failed">您節點的創世哈希與網絡的創世哈希不同</string>
@@ -349,6 +350,7 @@
   <string name="pincode_one_try_left">冷卻前您還有一次嘗試</string>
   <string name="pincode_set_your_pin_code">設置密碼</string>
   <string name="pincode_touch_fingerprint_scanner">觸摸指紋掃描儀</string>
+  <string name="polkamarkt_outcome_yes">是</string>
   <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
@@ -551,6 +553,9 @@
   <string name="wallet_balance_locked">已鎖定</string>
   <string name="wallet_balance_reserved">已保留</string>
   <string name="wallet_bonded">已綁定</string>
+  <string name="wallet_connect_account">賬戶</string>
+  <string name="wallet_connect_done">完成</string>
+  <string name="wallet_network_activity">活動</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">我用以接收的%s網絡地址%s：</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">掃描此 QR 給我發送%s 。我的%s網絡帳戶 ID： \n %s</string>
   <string name="wallet_redeemable">可贖回</string>

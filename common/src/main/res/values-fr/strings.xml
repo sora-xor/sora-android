@@ -318,6 +318,7 @@
   <string name="more_menu_sora_card_subtitle">Gestion des cartes et des comptes fiduciaires SORA</string>
   <string name="more_menu_sora_card_title">SORA Card</string>
   <string name="network_fee">Frais de réseau</string>
+  <string name="network_finalized_history">Activité</string>
   <string name="node_connection_issue">Votre compte a été créé avec succès. Mais l\'application n\'a pas pu se connecter à un nœud par défaut. Veuillez essayer de vous connecter à un autre nœud.</string>
   <string name="node_details_address_validation_failed">Impossible de valider l\'URL (Mauvaise adresse)</string>
   <string name="node_details_genesis_validation_failed">Le hash de genèse de votre nœud est différent du hash de genèse du réseau</string>
@@ -350,6 +351,10 @@
   <string name="pincode_one_try_left">Vous avez encore un essai avant le délai de réutilisation</string>
   <string name="pincode_set_your_pin_code">Choisissez un code PIN</string>
   <string name="pincode_touch_fingerprint_scanner">Touchez le scanner d\'empreintes digitales</string>
+  <string name="polkamarkt_action_buy">Acheter</string>
+  <string name="polkamarkt_outcome_no">Non</string>
+  <string name="polkamarkt_outcome_yes">Oui</string>
+  <string name="polkamarkt_ticket_slippage">Slippage (écart de cours)</string>
   <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Alimenté par Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Une partie de votre pool est stakée. Pour y accéder vous devez d\'abord la déstaker</string>
@@ -556,9 +561,14 @@
   <string name="wallet_balance_locked">Bloqué</string>
   <string name="wallet_balance_reserved">Réservé</string>
   <string name="wallet_bonded">Lié</string>
+  <string name="wallet_connect_account">Compte</string>
+  <string name="wallet_connect_done">Terminé</string>
+  <string name="wallet_market_refresh">Rafraîchir</string>
+  <string name="wallet_network_activity">Activité</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Mon adresse sur le réseau%s pour recevoir %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scanner ce QR pour m\'envoyer %s. Mon %s ID de compte de réseau:\n%s</string>
   <string name="wallet_redeemable">Montant disponible</string>
+  <string name="wallet_scan_qr">Scanner un code QR</string>
   <string name="wallet_send_existential_warning_message">Votre transfert supprimera le compte du blockstore car il rendra le solde total inférieur au dépôt minimum</string>
   <string name="wallet_title">Portefeuille</string>
   <string name="wallet_transaction_rejected">Transaction rejetée</string>

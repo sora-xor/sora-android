@@ -318,6 +318,7 @@
   <string name="more_menu_sora_card_subtitle">Manage your card and IBAN account</string>
   <string name="more_menu_sora_card_title">SORA Card</string>
   <string name="network_fee">Şəbəkə haqqı</string>
+  <string name="network_finalized_history">Fəaliyyət</string>
   <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">URL-i doğrulamaq alınmadı (Yanlış ünvan)</string>
   <string name="node_details_genesis_validation_failed">Düyününüzün genezis hashı şəbəkənin genezis hashından fərqlidir</string>
@@ -350,6 +351,8 @@
   <string name="pincode_one_try_left">Soyumağa qədər daha bir cəhdiniz qalıb</string>
   <string name="pincode_set_your_pin_code">Pin kodu qurun</string>
   <string name="pincode_touch_fingerprint_scanner">Barmaq izi skanerinə toxunun</string>
+  <string name="polkamarkt_outcome_no">Xeyr</string>
+  <string name="polkamarkt_outcome_yes">Bəli</string>
   <string name="polkaswap_farm_title_template"> %s Ferma</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
@@ -556,6 +559,9 @@
   <string name="wallet_balance_locked">Kilidlənmiş</string>
   <string name="wallet_balance_reserved">Rezerv edilmiş</string>
   <string name="wallet_bonded">Bağlı</string>
+  <string name="wallet_connect_account">Hesab</string>
+  <string name="wallet_connect_done">Tamamlandı</string>
+  <string name="wallet_network_activity">Fəaliyyət</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">%s qəbul etmək üçün mənim %s şəbəkə ünvanım:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Mənə %s göndərmək üçün bu QR-ni skan edin. Mənim %s Şəbəkə Hesabım ID:\n%s</string>
   <string name="wallet_redeemable">Əldə edilə bilər</string>
