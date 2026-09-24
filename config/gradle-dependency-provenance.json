@@ -232,152 +232,152 @@
         "test_data/gradle.lockfile"
       ],
       "lockFileSetFormat": "sorted-path-nul-file-bytes-nul-sha256",
-      "lockFileSetSha256": "2a3a3075934087bbd152ee6c7d75d1ab805d90bcf5ffa5330da51038ddc45e44",
+      "lockFileSetSha256": "206ce5977c8f330b00536d1d71767b9bf8ffe88f7b0a6b92584e495451305b03",
       "configurationInventoryFormat": "project-path-colon-configuration-lf-no-terminal-lf-sha256",
-      "configurationInventorySha256": "6a29d71b10b5cfe823ffa608a740dae1cb60ed2840b980a7c30265d671cfb927",
-      "configurationCount": 464,
-      "productionReleaseConfigurationCount": 463
+      "configurationInventorySha256": "4bc0c68745a3114f0b8caae98556d4205296e10bcf0058909c06d03f80194a00",
+      "configurationCount": 566,
+      "productionReleaseConfigurationCount": 565
     },
     "lockFiles": [
       {
         "path": "app/gradle.lockfile",
-        "sha256": "378960720f446c2d1b86e894581d1a5e87163bf13c2a92e4788e26de4f61cb8a",
-        "configurationCount": 17
+        "sha256": "c6d9fb14f42e552c691c04a48a4d90bdde15884d627e5cfffa73f55144355f57",
+        "configurationCount": 19
       },
       {
         "path": "common/gradle.lockfile",
-        "sha256": "e028d99c754702c93d952ba513e424391f94539a63330dcf12525aee18633a53",
-        "configurationCount": 16
+        "sha256": "75593d0b65a126138c206a5fe1bf76bde984c24da5cceebed2322206bc545294",
+        "configurationCount": 19
       },
       {
         "path": "common_wallet/gradle.lockfile",
-        "sha256": "fdf88b5c77f5f5a38687b9ba44cc7c14a81068465d38a8d92dd302bf3544d2a2",
-        "configurationCount": 16
+        "sha256": "b2b25248ea7b7e4aab6e179bedbbbc8d4c6a31f0f056f6e5da70a30b822081e3",
+        "configurationCount": 19
       },
       {
         "path": "core_db/gradle.lockfile",
-        "sha256": "57364523c268b36db6379c0dfb41cb1a81d71e57e46f8de41605c794d31c77ab",
-        "configurationCount": 15
+        "sha256": "0f3116c7f08d57dc72b88932aa16ba8ee745a41ac38502b34cf448a0122eddc0",
+        "configurationCount": 19
       },
       {
         "path": "demeter/gradle.lockfile",
-        "sha256": "4334e37ead15f305e81eb178a9fbaeda946bf70d244c624e24987587b3ed08d9",
-        "configurationCount": 15
+        "sha256": "db2161a7fb2b844c05b3c4c0bb33aefef4eca805dae993d6f4b444b4ea190258",
+        "configurationCount": 19
       },
       {
         "path": "feature_account_api/gradle.lockfile",
-        "sha256": "5e03f44da785c0da96d3dfb3f53ebc54095dea01459c4cf10e6dea44edda9df8",
-        "configurationCount": 15
+        "sha256": "a19ec2cac77c1403f29503cf280a22ee8419e0ceccd0efe38b40e398e08370b4",
+        "configurationCount": 19
       },
       {
         "path": "feature_account_impl/gradle.lockfile",
-        "sha256": "b1097607c47fe2c30957948699f94ad442016a090acbec7ae7b22282e599ee26",
-        "configurationCount": 16
+        "sha256": "856b8cf147636726cdc8070df33aed9e03f6b5d493d910a06a1fcbed99b40786",
+        "configurationCount": 19
       },
       {
         "path": "feature_assets_api/gradle.lockfile",
-        "sha256": "6396f6675acc311882212f7e540ac143d429eaf3a4aa4d054790873ed021235d",
-        "configurationCount": 15
+        "sha256": "618c6f0f8f885f62bad307ec6f3226352d6cdfa039b0f30e37ad9b1e08f697a4",
+        "configurationCount": 19
       },
       {
         "path": "feature_assets_impl/gradle.lockfile",
-        "sha256": "261207cc5e203c7f0614723d4a302dc93fcf77db115a5b0e08b51d1ce2fa40c9",
-        "configurationCount": 16
+        "sha256": "9c4cfebbb6d29e118b80c945b93274ef6ad699f1b6e3d654a7bb2c42618cd06f",
+        "configurationCount": 19
       },
       {
         "path": "feature_blockexplorer_api/gradle.lockfile",
-        "sha256": "e77feab9d0a89becda1aef707d23be6f472c5433ec988de6b3c35e131b0759c1",
-        "configurationCount": 16
+        "sha256": "e92a604f36706c72e3e3ff6daa6c24481cf5db98af44877e4b360212a96ac62a",
+        "configurationCount": 19
       },
       {
         "path": "feature_blockexplorer_impl/gradle.lockfile",
-        "sha256": "a072e8c82311fbd8e372a6315b16b9ec5f692a2fe7da74b4f10a1b1ad1709b80",
-        "configurationCount": 16
+        "sha256": "86d3d37975a7b1fbe10a7b74f0038d42a51dea39c66579376b11b5c0d5c75a60",
+        "configurationCount": 19
       },
       {
         "path": "feature_ecosystem_impl/gradle.lockfile",
-        "sha256": "778a7fe1ffb264bc65f2f6d06ef7b328569d98ad242576245e580c1d62ce71f7",
-        "configurationCount": 16
+        "sha256": "250dac6a2a7c42adb2aac42e24026102f8e72d2fb47c93534de56ec5f520078d",
+        "configurationCount": 19
       },
       {
         "path": "feature_ethereum_api/gradle.lockfile",
-        "sha256": "73898cbf7f156f622670441bd7dceb70014788bff56a8164c8f90836fb5afc0a",
-        "configurationCount": 15
+        "sha256": "e1ebd4ab84860f28795b97107a8a211e00a248851b32f79bb8208130b650498a",
+        "configurationCount": 19
       },
       {
         "path": "feature_main_api/gradle.lockfile",
-        "sha256": "8b84db42b31c513bda7cd5ea138441f0d90fb5fd066624c98789a85a0d7721ec",
-        "configurationCount": 15
+        "sha256": "a0ad50a32dac508ed204b2f3298909b82db6027f67f7f2aadcbb056c76b5b911",
+        "configurationCount": 19
       },
       {
         "path": "feature_main_impl/gradle.lockfile",
-        "sha256": "8d6e87351492345d5f59c78b9c257231a02c8f5d596404d417bd7555e13974ef",
-        "configurationCount": 16
+        "sha256": "6539f0208d0f09a508db4f21a01a8834d7b10ca8063e6c1c923b7bf1fefabca5",
+        "configurationCount": 19
       },
       {
         "path": "feature_multiaccount_api/gradle.lockfile",
-        "sha256": "5fb9a060a939039bd0d16cbae700d4b0f17a34a3da04177c1d3262b75db71ccc",
-        "configurationCount": 15
+        "sha256": "f0363e19a1a4dadb5c712ccbc259383c79d83365dfc58c299ed8ca11921730d0",
+        "configurationCount": 19
       },
       {
         "path": "feature_multiaccount_impl/gradle.lockfile",
-        "sha256": "294d34874833a75acdac1660c2b8d29451ff95020ff0827547cbe4c935d77de9",
-        "configurationCount": 16
+        "sha256": "fb3dd5a567370743d4eb736ea20524a276faa68c21fea7f3b0ac230d6c371d88",
+        "configurationCount": 19
       },
       {
         "path": "feature_polkaswap_api/gradle.lockfile",
-        "sha256": "090c0871be43273927a28d0b1821016a074b41a6a9b6d720a2858baeed92507f",
-        "configurationCount": 15
+        "sha256": "12a7b652c8602551899c4eb0fef4e1a820437d656cf5f4b31b451a200dbb8bc3",
+        "configurationCount": 19
       },
       {
         "path": "feature_polkaswap_impl/gradle.lockfile",
-        "sha256": "fbc2acf0bcb939579d4ee54000d2fbe2f81cdf35c58497a0855e63f0663eb503",
-        "configurationCount": 16
+        "sha256": "003cba5aead80c049c881e4e6387cd78b0eab293619e452889b19d00b362c721",
+        "configurationCount": 19
       },
       {
         "path": "feature_referral_api/gradle.lockfile",
-        "sha256": "98db1886b92c1a433be2fb1e4d8831b5d677bc7dd1d0554a8828eb15f61c76ba",
-        "configurationCount": 15
+        "sha256": "722740a891e404e5b4d03bab00b77df100ee8867b613b415274ec24415b4f458",
+        "configurationCount": 19
       },
       {
         "path": "feature_referral_impl/gradle.lockfile",
-        "sha256": "d7d44366c33253abfb91c9ea37eddba496b06669caf3d23ed4bdaefa3b9b19a1",
-        "configurationCount": 16
+        "sha256": "4bdf85361f5898d843b79834879197d654fc1f887c05d0763ed5665583d06f0e",
+        "configurationCount": 19
       },
       {
         "path": "feature_select_node_api/gradle.lockfile",
-        "sha256": "a8953231c7358c80b7fa2eb09d363fa5dbf413d07570e9c82f4a7fee4aa75fc1",
-        "configurationCount": 15
+        "sha256": "3a0fe754bb439d7357db747c588a208910e98adac0cf45819c5895a64d5847ac",
+        "configurationCount": 19
       },
       {
         "path": "feature_select_node_impl/gradle.lockfile",
-        "sha256": "2608db8f8f9c80443347effb50f6eb23118bd596b3f9b700b11d6b80ddd66b92",
-        "configurationCount": 16
+        "sha256": "c9ec51da90013a5a85adbca48f0f2df9e2f34c9fd26a643fc480695645367436",
+        "configurationCount": 19
       },
       {
         "path": "feature_sora_card_api/gradle.lockfile",
-        "sha256": "d798a36fafdf7b10a380f0de7daf6dcff8714bb84a941cd976f1065ef850876b",
-        "configurationCount": 15
+        "sha256": "4d18fd130970669ed75badc956236adc194b9772ddfdd7d1309fd5894034b553",
+        "configurationCount": 19
       },
       {
         "path": "feature_sora_card_impl/gradle.lockfile",
-        "sha256": "bb15d2f162f4a451fc0ff180b8dde3e97b22a7281a08bec37f59d330fa187208",
-        "configurationCount": 16
+        "sha256": "c727249d7013446994e38761dd5bfce561a53b0b91edfc50e02453de7708c476",
+        "configurationCount": 19
       },
       {
         "path": "feature_wallet_api/gradle.lockfile",
-        "sha256": "090c0871be43273927a28d0b1821016a074b41a6a9b6d720a2858baeed92507f",
-        "configurationCount": 15
+        "sha256": "12a7b652c8602551899c4eb0fef4e1a820437d656cf5f4b31b451a200dbb8bc3",
+        "configurationCount": 19
       },
       {
         "path": "feature_wallet_impl/gradle.lockfile",
-        "sha256": "dbd0fb7c0457a2ef62e9bb012c67dc276ef1d599a285f90f8daa81242e3b349c",
-        "configurationCount": 16
+        "sha256": "31a1a6218579aa26f7962abfc9823f33d47411b98778da8729cd682a4c0ab279",
+        "configurationCount": 19
       },
       {
         "path": "network/gradle.lockfile",
-        "sha256": "b04cae7a46b7fcf57059b6b2bf36c70c01c862bc6a0abfc993d5949c7e8b163c",
-        "configurationCount": 14
+        "sha256": "8e07316a761193cde731dfd695e1dfd3f94904c964a4109d457499a0b8d0ec98",
+        "configurationCount": 17
       },
       {
         "path": "settings-gradle.lockfile",
@@ -386,13 +386,13 @@
       },
       {
         "path": "sorasubstrate/gradle.lockfile",
-        "sha256": "c104a8e67e10e66649b2ef96ee616eb32edd07f28ec8415c0c9270db919f7a1b",
-        "configurationCount": 16
+        "sha256": "d46ca2b82006eef4572986bb79759ed19aa932b9074aa7c069162c0cbc004601",
+        "configurationCount": 19
       },
       {
         "path": "test_data/gradle.lockfile",
-        "sha256": "c5e6eefdb24febee065d23e2ef25f3916069853cfa1d7328d59f26209db8a380",
-        "configurationCount": 12
+        "sha256": "1978d3262995fded8428c6133e05c4371f9e7d2f723fe577ea6c1f6fb6158bb0",
+        "configurationCount": 16
       }
     ]
   },

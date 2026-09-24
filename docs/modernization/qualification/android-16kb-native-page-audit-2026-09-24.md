@@ -103,6 +103,29 @@ uncached `:common` and `:app` production Debug unit suites passed 178 and 49 tes
 with no failures. The Release resource task stopped at the protected signing gate because the
 CI keystore inputs are not present locally. `productionAllowed=false` is unchanged.
 
+## Combined xcrypto and DataStore candidate
+
+At `5aa607aa`, the production Debug APK also selects official
+`androidx.datastore:datastore-core-android:1.2.1`. The APK SHA-256 is
+`682456245f4acaf7c63e0e7950259616c435dc2252f248c2c85e6dc1eccebd1c`;
+the Debug AAB SHA-256 is
+`c2174ef6ecf2108a51eb6b7a698e64650cea9f7c17d71c0b30c4c61458336894`.
+Both were built with offline strict dependency verification. The APK passes
+Build Tools 36 16 KB ZIP alignment. The native gate still rejects both artifacts
+with **42 findings across 10 of 16 inspected 64-bit entries**. Both ABIs of JNA,
+xcrypto, and `libdatastore_shared_counter.so` pass ELF load and RELRO checks;
+graphics-path, CameraX, lazysodium, TensorFlow Lite, and RootBeer remain.
+
+The official Google Maven DataStore AAR SHA-256 is
+`435edad7bcb1fbb1a2a46de7be4d6daf299479b3328ebf757ebdfe02810cbdd8`.
+Its arm64 and x86_64 shared-counter entries match the packaged entries byte for
+byte. On a 4 KB arm64 emulator, the retained 3.8.6.3 writer, DataStore 1.2.1
+reader/update/reopen, and retained old-reader rollback all passed under the
+same package identity and signer. The 178 `:common` and 49 `:app` Debug unit
+tests passed. `:app:testProductionReleaseUnitTest` passed with protected signing
+and production Google OAuth validation tasks excluded. The native and storage
+checks do not qualify a signed Release artifact or 16 KB device flow.
+
 ## Reproduce
 
 From the repository root:
@@ -142,8 +165,8 @@ also requires 16 KB ELF alignment for prebuilt shared libraries and says to
 recompile and reimport incompatible prebuilts. This is already a device
 compatibility problem, irrespective of the future Play enforcement date.
 
-1. Rebuild the pinned xcrypto source with a 16 KB-capable native toolchain and
-   independently recheck source-to-binary provenance and wallet crypto behavior.
+1. Independently review the pinned xcrypto 16 KB rebuild, its source-to-binary
+   provenance, and wallet crypto behavior in the signed Release artifact.
 2. Independently review the selected JNA AAR and obtain a compatible
    lazysodium AAR. Obtain
    a compatible PayWings/IDensic dependency set (or vendor-approved component
@@ -190,7 +213,8 @@ runs those tests. The currently built
 production-flavor debug APK fails the gate as expected, with 65 individual
 alignment findings and at least one finding in every one of its 16 native
 library entries in the baseline. The JNA-updated debug APK fails with 60
-findings in 14 library entries. Passing this gate on the exact
+findings in 14 library entries; the combined xcrypto and DataStore candidate
+fails with 42 findings in 10 entries. Passing this gate on the exact
 signed Release APK is required in addition to a verified 16 KB device run.
 
 ## Published replacement reconnaissance
