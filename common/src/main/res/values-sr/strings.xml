@@ -370,7 +370,7 @@
   <string name="polkaswap_info_title">Odricanje od odgovornosti</string>
   <string name="polkaswap_info_title_2">Polkaswap disclaimer</string>
   <string name="polkaswap_input_estimated">Улаз је процењен. Продаћете максимум %s или ће трансакција бити отказана.</string>
-  <string name="polkaswap_insufficient_balance">Nedovoljan balans</string>
+  <string name="polkaswap_insufficient_balance">Nedovoljan balans (%s)</string>
   <string name="polkaswap_insufficient_liqudity">Недовољна ликвидност</string>
   <string name="polkaswap_liquidity_fee">Naknada za likvidnost</string>
   <string name="polkaswap_liquidity_fee_info">Deo svake transakcije ide provajderima likvidnosti kao protokolarni podsticaj.</string>
@@ -458,10 +458,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Link ili adresa referenta</string>
   <string name="referral_referrer_address">Adresa referenta</string>
-  <string name="referral_referrer_description">Kada god napravite transakciju, 10% od troška mreže ide referentu kao nagrada.</string>
+  <string name="referral_referrer_description" formatted="false">Kada god napravite transakciju, 10% od troška mreže ide referentu kao nagrada.</string>
   <string name="referral_start_inviting">Počni slati pozivnice</string>
-  <string name="referral_subtitle">Kad god vaša referenca izvrši transakciju, 10% troška mreže ide vama kao nagrada.</string>
-  <string name="referral_title">Dobijte 10% od troškova mreže Vaših referala</string>
+  <string name="referral_subtitle" formatted="false">Kad god vaša referenca izvrši transakciju, 10% troška mreže ide vama kao nagrada.</string>
+  <string name="referral_title" formatted="false">Dobijte 10% od troškova mreže Vaših referala</string>
   <string name="referral_toolbar_title">Program referenci</string>
   <string name="referral_total_rewards">Ukupne nagrade</string>
   <string name="referral_unbond_button_title">Odveži XOR</string>

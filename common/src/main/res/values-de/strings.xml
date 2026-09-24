@@ -449,10 +449,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Link oder Adresse des Referrers</string>
   <string name="referral_referrer_address">Adresse des Referrers</string>
-  <string name="referral_referrer_description">Jedes Mal, wenn du eine Transaktion durchführst, gehen 10 %% der gezahlten Netzwerkgebühr als Belohnung an deinen Referrer.</string>
+  <string name="referral_referrer_description" formatted="false">Jedes Mal, wenn du eine Transaktion durchführst, gehen 10 % der gezahlten Netzwerkgebühr als Belohnung an deinen Referrer.</string>
   <string name="referral_start_inviting">Beginne mit dem Einladen</string>
-  <string name="referral_subtitle">Jedes Mal, wenn deine Empfehlung eine Transaktion durchführt, erhälst du 10 %% der gezahlten Netzwerkgebühr als Belohnung.</string>
-  <string name="referral_title">Erhalte 10 %% der Netzwerkgebühren für deine Empfehlungen</string>
+  <string name="referral_subtitle" formatted="false">Jedes Mal, wenn deine Empfehlung eine Transaktion durchführt, erhälst du 10 % der gezahlten Netzwerkgebühr als Belohnung.</string>
+  <string name="referral_title" formatted="false">Erhalte 10 % der Netzwerkgebühren für deine Empfehlungen</string>
   <string name="referral_toolbar_title">Empfehlungsprogramm</string>
   <string name="referral_total_rewards">Gesamte Belohnung</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>

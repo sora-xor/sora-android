@@ -466,10 +466,10 @@
   <string name="referral_no_available_invitations">אין הזמנות זמינות</string>
   <string name="referral_referral_link">קישור או כתובת המפנה</string>
   <string name="referral_referrer_address">כתובת המפנה</string>
-  <string name="referral_referrer_description">בכל פעם שאתה מבצע טרנזקציה, 10% מעמלות הרשת ששולמו עוברים למפנה שלך כתגמול.</string>
+  <string name="referral_referrer_description" formatted="false">בכל פעם שאתה מבצע טרנזקציה, 10% מעמלות הרשת ששולמו עוברים למפנה שלך כתגמול.</string>
   <string name="referral_start_inviting">התחל להזמין</string>
-  <string name="referral_subtitle">בכל פעם שהמופנה שלך מבצע עסקה, 10% מעמלות הרשת ששולמו עוברים אליך כתגמול.</string>
-  <string name="referral_title">קבל 10% מעמלות הרשת של ההפניות שלך</string>
+  <string name="referral_subtitle" formatted="false">בכל פעם שהמופנה שלך מבצע עסקה, 10% מעמלות הרשת ששולמו עוברים אליך כתגמול.</string>
+  <string name="referral_title" formatted="false">קבל 10% מעמלות הרשת של ההפניות שלך</string>
   <string name="referral_toolbar_title">תוכנית הפניות</string>
   <string name="referral_total_rewards">סה\"כ תגמולים</string>
   <string name="referral_unbond_button_title">הסר XOR מהמאגר</string>

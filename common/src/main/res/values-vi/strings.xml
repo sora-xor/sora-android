@@ -448,10 +448,10 @@
   <string name="referral_no_available_invitations">Không có lời mời có sẵn</string>
   <string name="referral_referral_link">Liên kết hoặc địa chỉ của người giới thiệu</string>
   <string name="referral_referrer_address">Địa chỉ người giới thiệu</string>
-  <string name="referral_referrer_description">Bất cứ khi bạn thực hiện một giao dịch, 10% phí mạng được trả cho người giới thiệu như một phần thưởng.</string>
+  <string name="referral_referrer_description" formatted="false">Bất cứ khi bạn thực hiện một giao dịch, 10% phí mạng được trả cho người giới thiệu như một phần thưởng.</string>
   <string name="referral_start_inviting">Bắt đầu mời</string>
-  <string name="referral_subtitle">Bất cứ khi nào giới thiệu của bạn thực hiện một giao dịch, 10% phí mạng được trả cho bạn như một phần thưởng.</string>
-  <string name="referral_title">Nhận 10% phí mạng từ những người được bạn giới thiệu</string>
+  <string name="referral_subtitle" formatted="false">Bất cứ khi nào giới thiệu của bạn thực hiện một giao dịch, 10% phí mạng được trả cho bạn như một phần thưởng.</string>
+  <string name="referral_title" formatted="false">Nhận 10% phí mạng từ những người được bạn giới thiệu</string>
   <string name="referral_toolbar_title">Chương trình giới thiệu</string>
   <string name="referral_total_rewards">Tổng phần thưởng</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>

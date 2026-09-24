@@ -448,10 +448,10 @@
   <string name="referral_no_available_invitations">利用可能な招待状がありません</string>
   <string name="referral_referral_link">リファラーのリンクまたはアドレス</string>
   <string name="referral_referrer_address">リファラーのアドレス</string>
-  <string name="referral_referrer_description">あなたが取引をするたびに、支払ったネットワーク手数料の10％が報酬としてリファラーに支払われます</string>
+  <string name="referral_referrer_description" formatted="false">あなたが取引をするたびに、支払ったネットワーク手数料の10％が報酬としてリファラーに支払われます</string>
   <string name="referral_start_inviting">招待を開始</string>
-  <string name="referral_subtitle">紹介者が取引を行うたびに、支払われたネットワーク手数料の10％が報酬としてあなたに支払われます</string>
-  <string name="referral_title">紹介者のネットワーク手数料の10%を獲得</string>
+  <string name="referral_subtitle" formatted="false">紹介者が取引を行うたびに、支払われたネットワーク手数料の10％が報酬としてあなたに支払われます</string>
+  <string name="referral_title" formatted="false">紹介者のネットワーク手数料の10%を獲得</string>
   <string name="referral_toolbar_title">紹介プログラム</string>
   <string name="referral_total_rewards">報酬総額</string>
   <string name="referral_unbond_button_title">XORをボンド解除</string>

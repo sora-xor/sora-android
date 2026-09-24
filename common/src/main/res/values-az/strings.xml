@@ -369,7 +369,7 @@
   <string name="polkaswap_info_title">Disclaimer</string>
   <string name="polkaswap_info_title_2">Polkaswap disclaimer</string>
   <string name="polkaswap_input_estimated">Giriş hesablanır. Maksimum %s satacaqsınız və ya əməliyyat geri qaytarılacaq.</string>
-  <string name="polkaswap_insufficient_balance">Balans kifayət deyil</string>
+  <string name="polkaswap_insufficient_balance">Balans kifayət deyil (%s)</string>
   <string name="polkaswap_insufficient_liqudity">Qeyri-kifayət qədər likvidlik</string>
   <string name="polkaswap_liquidity_fee">LP haqqı</string>
   <string name="polkaswap_liquidity_fee_info">Hər bir ticarətin bir hissəsi protokol təşviqi olaraq likvidlik təminatçılarına keçir.</string>
@@ -422,7 +422,7 @@
     <item quantity="one">saniyə qalıb</item>
     <item quantity="other">saniyələr qalıb</item>
   </plurals>
-  <string name="project_ended_template">Tamamlandı</string>
+  <string name="project_ended_template">Tamamlandı %s</string>
   <string name="protect_loss_access_funds">Özünüzü pulunuza girişi itirməkdən qoruyun</string>
   <string name="qr_code">QR kodu</string>
   <string name="qr_upload">Qalereyadan yükləyin</string>
@@ -452,10 +452,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">İstinad linki və ya ünvanı</string>
   <string name="referral_referrer_address">İstinad edənin ünvanı</string>
-  <string name="referral_referrer_description">Hər hansı bir əməliyyat etdiyiniz zaman ödənilən şəbəkə haqqının 10% -i mükafat olaraq yönləndiricinizə gedir.</string>
+  <string name="referral_referrer_description" formatted="false">Hər hansı bir əməliyyat etdiyiniz zaman ödənilən şəbəkə haqqının 10% -i mükafat olaraq yönləndiricinizə gedir.</string>
   <string name="referral_start_inviting">Dəvət etməyə başlayın</string>
-  <string name="referral_subtitle">Referalınız hər hansı bir əməliyyat həyata keçirdikdə, ödənilən şəbəkə haqqının 10% -i mükafat olaraq sizə keçir.</string>
-  <string name="referral_title">Referallarınızın şəbəkə haqlarının 10%-ni alın</string>
+  <string name="referral_subtitle" formatted="false">Referalınız hər hansı bir əməliyyat həyata keçirdikdə, ödənilən şəbəkə haqqının 10% -i mükafat olaraq sizə keçir.</string>
+  <string name="referral_title" formatted="false">Referallarınızın şəbəkə haqlarının 10%-ni alın</string>
   <string name="referral_toolbar_title">İstiqamət proqramı</string>
   <string name="referral_total_rewards">Ümumi mükafatlar</string>
   <string name="referral_unbond_button_title">XOR-u ayırın</string>
