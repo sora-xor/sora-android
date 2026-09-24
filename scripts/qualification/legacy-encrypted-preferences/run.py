@@ -40,14 +40,14 @@ CURRENT = [
     "io.github.osipxd:security-crypto-datastore:1.1.1-beta03:aar",
     "io.github.osipxd:encrypted-datastore-preferences:1.1.1-beta03:jar",
     "io.github.osipxd:encrypted-datastore:1.1.1-beta03:jar",
-    "androidx.datastore:datastore-preferences-android:1.1.7:aar",
-    "androidx.datastore:datastore-android:1.1.7:aar",
-    "androidx.datastore:datastore-preferences-core-android:1.1.7:aar",
-    "androidx.datastore:datastore-core-android:1.1.7:aar",
-    "androidx.datastore:datastore-core-okio-jvm:1.1.7:jar",
-    "androidx.datastore:datastore-preferences-proto:1.1.7:jar",
-    "androidx.datastore:datastore-preferences-external-protobuf:1.1.7:jar",
-    "com.squareup.okio:okio-jvm:3.9.0:jar",
+    "androidx.datastore:datastore-preferences-android:1.2.1:aar",
+    "androidx.datastore:datastore-android:1.2.1:aar",
+    "androidx.datastore:datastore-preferences-core-android:1.2.1:aar",
+    "androidx.datastore:datastore-core-android:1.2.1:aar",
+    "androidx.datastore:datastore-core-okio-jvm:1.2.1:jar",
+    "androidx.datastore:datastore-preferences-proto:1.2.1:jar",
+    "androidx.datastore:datastore-preferences-external-protobuf:1.2.1:jar",
+    "com.squareup.okio:okio-jvm:3.9.1:jar",
     "com.google.crypto.tink:tink-android:1.13.0:jar",
     "org.jetbrains.kotlin:kotlin-stdlib:2.3.21:jar",
     "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10:jar",
@@ -65,6 +65,11 @@ SHARED = [
     "org.jetbrains:annotations:23.0.0:jar",
     "com.google.code.findbugs:jsr305:3.0.2:jar",
 ]
+TOOLCHAIN_FALLBACK_SHA256 = {
+    ("org.jetbrains.kotlin", "kotlin-compiler-embeddable", "1.9.24"): "e71ff19e6b141ab85a9328fd010941531a302543026bd4244c95adc208d501f6",
+    ("org.jetbrains.kotlin", "kotlin-stdlib", "1.9.24"): "858b902696da9cf585ab9d98ffc1c2712269828354dfe9107e3711b084a36468",
+    ("org.jetbrains.kotlin", "kotlin-script-runtime", "1.9.24"): "314c7d308fe750654365bac6144780613c9169cf3d9e1dafbab91cf80bdc357c",
+}
 
 def sha(data): return hashlib.sha256(data).hexdigest()
 def invoke(args, log, **kwargs):
@@ -127,8 +132,20 @@ def classes_jar(path, folder):
 
 def cached(group, name, version):
     choices = list((CACHE / group / name / version).glob(f"*/{name}-{version}.jar"))
-    if len(choices) != 1: raise RuntimeError("TOOLCHAIN_ARTIFACT_MISSING:" + name)
-    return choices[0]
+    expected = TOOLCHAIN_FALLBACK_SHA256.get((group, name, version))
+    if len(choices) == 1:
+        if expected is not None and sha(choices[0].read_bytes()) != expected:
+            raise RuntimeError("TOOLCHAIN_ARTIFACT_DIGEST_MISMATCH:" + name)
+        return choices[0]
+    if choices: raise RuntimeError("TOOLCHAIN_ARTIFACT_AMBIGUOUS:" + name)
+    if expected is None: raise RuntimeError("TOOLCHAIN_ARTIFACT_MISSING:" + name)
+    target = pathlib.Path(tempfile.gettempdir()) / "sora-storage-toolchain" / f"{name}-{version}.jar"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if not target.is_file() or sha(target.read_bytes()) != expected:
+        url = f"https://repo.maven.apache.org/maven2/{group.replace('.', '/')}/{name}/{version}/{target.name}"
+        subprocess.run(["curl", "--fail", "--silent", "--show-error", "--location", "--connect-timeout", "15", "--max-time", "90", url, "--output", str(target)], check=True)
+    if sha(target.read_bytes()) != expected: raise RuntimeError("TOOLCHAIN_ARTIFACT_DIGEST_MISMATCH:" + name)
+    return target
 
 def build(stage, graph, artifacts, work, package, version, log):
     folder = work / stage; folder.mkdir(exist_ok=True)
