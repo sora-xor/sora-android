@@ -72,6 +72,7 @@ import {
   matchesAndroidMaterializedDependencySnapshotV1,
 } from "./lib/android-production-lock-inventory-v1.mjs";
 import { DOWNLOADED_PACKAGE_FILES } from "./lib/android-qualified-candidate-package-v1.mjs";
+import { verifyAndroidLocalizationBaselineV1 } from "./lib/android-localization-baseline-v1.mjs";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
 const strictRelease = process.argv.includes("--release");
@@ -93,6 +94,11 @@ const assert = (condition, code) => {
 const block = (condition, code) => {
   if (condition) blockers.push(code);
 };
+for (const failure of verifyAndroidLocalizationBaselineV1(
+  read("app/lint-baseline.xml"),
+  json("docs/modernization/qualification/android-release-missing-translations-2026-09-24.json"),
+  read("app/build.gradle.kts"),
+)) failures.push(failure);
 const sha256 = (path) =>
   createHash("sha256").update(readFileSync(join(root, path))).digest("hex");
 const sha256Files = (paths) => {
