@@ -35,9 +35,9 @@ The current materialized dependency snapshot (updated 2026-09-24) is bound by th
 - vendor whole-tree manifest SHA-256:
   `d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f`
 - strict verification metadata SHA-256:
-  `8390862f04516357a66c51e761c4225204ed02fe9d1d8102687106dc13b0a039`
+  `eae10307c82f3aae2656efce6257e135f314f03b0b6138c540f779b88907f19e`
 - 31-file lock-set SHA-256:
-  `478dd2362dc67238df7bf381e75354ca4c4c082baca011fbe8be03c27db7d4f6`
+  `a7ddc18aca11f0353bcfd45384eaa9d34c002066ef73a5d1fc18cb6a3f921eeb`
 - 464-entry configuration inventory SHA-256 (463 `productionRelease` entries plus the settings
   catalog configuration):
   `6a29d71b10b5cfe823ffa608a740dae1cb60ed2840b980a7c30265d671cfb927`
@@ -45,17 +45,17 @@ The current materialized dependency snapshot (updated 2026-09-24) is bound by th
 These identities record observed bytes accepted by the structural gate. Both dependency verification
 and locking remain `materialized-unreviewed`, with `independentlyReviewed=false`. They are not reviewer
 signatures, attestations, or evidence that the snapshot is production-qualified. The current metadata
-contains 161 additional artifact entries across 89 added coordinates relative to the prior snapshot;
-that full dependency set still needs independent review. The real old-writer/current-reader encrypted
+includes the pinned JNA 5.17.0 AAR and POM. The full dependency set still needs independent
+review. The real old-writer/current-reader encrypted
 storage experiment covers its declared adapter/DataStore/Tink closure only (see
 `scripts/qualification/legacy-encrypted-preferences/README.md`). Historical release-probe and
 interoperability fixtures retain their original source and frozen-input hashes.
 
 The current sidecar SHA-256 is
-`a11320aaae95f04a1b19adcfe561536c76b63b536e7c1e4ba8c2adcd7613f1e1`. The app lock records 17
+`0ac22b33159692cc124032b794ca707e26527e6fe31631c8265328483aaa66ba`. The app lock records 17
 configurations, including the empty `productionReleaseBaselineProfile` configuration; its SHA-256 is
-`07349c4cc796f699e74aa15e32c7a00e3650cd7e12082cdb44bc84c8ec2c6abb`. The 2026-09-24 update
-adds one verification-metadata entry and rebinds its observed hashes. Enabling the AGP 9
+`56a3ed1d7025bc26f4a3075dfc4983f99d97fdaf551459e704a8f5506d6d3fa9`. The 2026-09-24 update
+adds JNA 5.17.0 and rebinds its observed hashes. Enabling the AGP 9
 production Release unit-test task materializes 191 more locked configurations; three existing
 app configurations also changed with the current Compose graph. These locks remain unreviewed.
 

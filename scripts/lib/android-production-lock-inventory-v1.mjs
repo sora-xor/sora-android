@@ -2,13 +2,13 @@ import { createHash } from "node:crypto";
 
 // Observed source/materialization identities, not dependency approval or signing authority.
 export const ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1 = Object.freeze({
-  metadataSha256: "8390862f04516357a66c51e761c4225204ed02fe9d1d8102687106dc13b0a039",
-  metadataDigestSha256: "a11320aaae95f04a1b19adcfe561536c76b63b536e7c1e4ba8c2adcd7613f1e1",
-  lockFileSetSha256: "478dd2362dc67238df7bf381e75354ca4c4c082baca011fbe8be03c27db7d4f6",
+  metadataSha256: "eae10307c82f3aae2656efce6257e135f314f03b0b6138c540f779b88907f19e",
+  metadataDigestSha256: "0ac22b33159692cc124032b794ca707e26527e6fe31631c8265328483aaa66ba",
+  lockFileSetSha256: "a7ddc18aca11f0353bcfd45384eaa9d34c002066ef73a5d1fc18cb6a3f921eeb",
   configurationInventorySha256: "6a29d71b10b5cfe823ffa608a740dae1cb60ed2840b980a7c30265d671cfb927",
   configurationCount: 464,
   productionReleaseConfigurationCount: 463,
-  appLockSha256: "07349c4cc796f699e74aa15e32c7a00e3650cd7e12082cdb44bc84c8ec2c6abb",
+  appLockSha256: "56a3ed1d7025bc26f4a3075dfc4983f99d97fdaf551459e704a8f5506d6d3fa9",
   appConfigurationCount: 17,
 });
 
@@ -30,7 +30,7 @@ export const ANDROID_TEST_ONLY_LOCK_SOURCE_BINDINGS_V1 = Object.freeze({
   "baselineprofile/build.gradle.kts": "70c435a4b63c7582f81e7ef65135ff2b5fe73618331b68f7af5a8b0fbdc73036",
   "build.gradle.kts": "48fef08f6c3c5e3f018d786f2f02330b3d38b70639d7057b8d2da0c00f6db8a0",
   "settings.gradle.kts": "e0010cbfdfa339aaa1b84feeee058eb0737a1f2a5f44727a92ac30cb6a8c513b",
-  "gradle/libs.versions.toml": "c21b9be4d48d47b7b79a51ea48890f808cc73d42090811ff6337970cd442a003",
+  "gradle/libs.versions.toml": "a8594d4327905356257657a5bb91493a7ff9f937dc243dea0e117d05b17be2c8",
 });
 
 export function inspectAndroidProductionLockProjectsV1(sources) {
