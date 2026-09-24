@@ -185,4 +185,4 @@ for (const [key, value] of Object.entries(currentObservation.gradleDependencyPro
   mutations += 1;
 }
 // This helper attests only observed bytes; signed review admission is tested separately.
-console.log(`Android production lock inventory: exact 30 production projects + sole source-bound test exception; current 31 locks / 272 configurations / 271 production; ${mutations} rejecting mutations passed. No review authority granted.`);
+console.log(`Android production lock inventory: exact 30 production projects + sole source-bound test exception; current 31 locks / ${observed.configurationCount} configurations / ${observed.productionReleaseConfigurationCount} production; ${mutations} rejecting mutations passed. No review authority granted.`);

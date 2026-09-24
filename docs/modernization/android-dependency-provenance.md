@@ -37,10 +37,10 @@ The current materialized dependency snapshot (updated 2026-09-24) is bound by th
 - strict verification metadata SHA-256:
   `8390862f04516357a66c51e761c4225204ed02fe9d1d8102687106dc13b0a039`
 - 31-file lock-set SHA-256:
-  `d8a6ec971734bd21e22656bfd8c0932e7505b55e3734175ba031fab98c017d07`
-- 272-entry configuration inventory SHA-256 (271 `productionRelease` entries plus the settings
+  `0feaca60273b6a02ba9d39a89c4e808321b4cf20c6716eeb687dbb896806b9f7`
+- 463-entry configuration inventory SHA-256 (462 `productionRelease` entries plus the settings
   catalog configuration):
-  `2ebba19b7a650e49d749034cbba4fe52ca2646e789ead09c81a0b9a6daba5731`
+  `890f129aa574be27b9ca28a07103a7ecafd1f7e753de1255ec5b532dade0c0e5`
 
 These identities record observed bytes accepted by the structural gate. Both dependency verification
 and locking remain `materialized-unreviewed`, with `independentlyReviewed=false`. They are not reviewer
@@ -52,11 +52,12 @@ storage experiment covers its declared adapter/DataStore/Tink closure only (see
 interoperability fixtures retain their original source and frozen-input hashes.
 
 The current sidecar SHA-256 is
-`a11320aaae95f04a1b19adcfe561536c76b63b536e7c1e4ba8c2adcd7613f1e1`. The app lock records eleven
+`a11320aaae95f04a1b19adcfe561536c76b63b536e7c1e4ba8c2adcd7613f1e1`. The app lock records 17
 configurations, including the empty `productionReleaseBaselineProfile` configuration; its SHA-256 is
-`43921bc7c4d48880a5c271d71ebd7f5aba2ff82d7a5f4c67ad60d3d7b5d4c2e5`. The 2026-09-24 update
-adds one verification-metadata entry and rebinds its observed hashes; the production lock files and
-resolved versions are unchanged.
+`d2f377811068edd84f250d1e11df013a505c6667b17c79d210eb1752fc684468`. The 2026-09-24 update
+adds one verification-metadata entry and rebinds its observed hashes. Enabling the AGP 9
+production Release unit-test task materializes 191 more locked configurations; three existing
+app configurations also changed with the current Compose graph. These locks remain unreviewed.
 
 The verification snapshot includes twelve transitive plugin and compile-classpath metadata files
 first requested by the clean Linux CI resolver: Guava parent POMs `32.1.3-jre`, `33.0.0-jre`,

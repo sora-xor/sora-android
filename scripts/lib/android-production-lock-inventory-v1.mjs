@@ -4,12 +4,12 @@ import { createHash } from "node:crypto";
 export const ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1 = Object.freeze({
   metadataSha256: "8390862f04516357a66c51e761c4225204ed02fe9d1d8102687106dc13b0a039",
   metadataDigestSha256: "a11320aaae95f04a1b19adcfe561536c76b63b536e7c1e4ba8c2adcd7613f1e1",
-  lockFileSetSha256: "d8a6ec971734bd21e22656bfd8c0932e7505b55e3734175ba031fab98c017d07",
-  configurationInventorySha256: "2ebba19b7a650e49d749034cbba4fe52ca2646e789ead09c81a0b9a6daba5731",
-  configurationCount: 272,
-  productionReleaseConfigurationCount: 271,
-  appLockSha256: "43921bc7c4d48880a5c271d71ebd7f5aba2ff82d7a5f4c67ad60d3d7b5d4c2e5",
-  appConfigurationCount: 11,
+  lockFileSetSha256: "0feaca60273b6a02ba9d39a89c4e808321b4cf20c6716eeb687dbb896806b9f7",
+  configurationInventorySha256: "890f129aa574be27b9ca28a07103a7ecafd1f7e753de1255ec5b532dade0c0e5",
+  configurationCount: 463,
+  productionReleaseConfigurationCount: 462,
+  appLockSha256: "d2f377811068edd84f250d1e11df013a505c6667b17c79d210eb1752fc684468",
+  appConfigurationCount: 17,
 });
 
 export const ANDROID_PRODUCTION_LOCK_PROJECTS_V1 = Object.freeze([
