@@ -1,7 +1,21 @@
 # Android 16 KB native page audit — 2026-09-24
 
-Status: **blocked for 16 KB devices**. This is an artifact inspection, not a signed
-production Release qualification.
+Status on 25 September: the current production-flavor **Debug** APK and AAB pass
+the strict native gate for all 16 packaged 64-bit libraries, and the APK passes
+16 KB ZIP alignment. The protected signed/minified `productionRelease` artifact,
+independent source-to-binary review, and retained-device wallet/KYC flows remain
+open. The baseline and intermediate failures below are a chronological record,
+not findings against the current Debug artifacts.
+
+At `2aa1a378`, strict offline builds produced APK SHA-256
+`feabcb62e1d884d49362716faff9a3b63da0e084c189258c9c949361ffde5665`
+and AAB SHA-256
+`1fd381ecfeb039240b61c000ae96bc9ad2546614f48dcb0329129836b6b5c83a`.
+Both pass `scripts/verify-android-native-16kb.py` with zero findings across 16
+entries. Exact-version replacement evidence for graphics-path, CameraX, and
+TensorFlow Lite is in their companion qualification reports. The Debug APK
+cold-launched to onboarding on an API 36 arm64 emulator reporting 16,384-byte
+pages without a fatal process error.
 
 ## Baseline evidence
 
@@ -158,7 +172,7 @@ of 16 64-bit entries**: both ABIs of `libandroidx.graphics.path.so`, CameraX
 dependency preflight reports `STABLE`, while all independent review and signed
 Release admission blockers remain.
 
-## Reproduce
+## Reproduce current artifact inspection
 
 From the repository root:
 
@@ -166,7 +180,7 @@ From the repository root:
 APK=app/build/outputs/apk/production/debug/SORA_Wallet_3.8.6.3_122_production_debug.apk
 shasum -a 256 "$APK"
 "$HOME/Library/Android/sdk/build-tools/36.0.0/zipalign" -c -P 16 -v 4 "$APK"
-python3 scripts/verify-android-native-16kb.py "$APK" # expected to fail on this candidate
+python3 scripts/verify-android-native-16kb.py "$APK" # current artifact passes
 
 READELF="$HOME/Library/Android/sdk/ndk/28.0.12674087/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-readelf"
 TMP_NATIVE="$(mktemp)"
@@ -199,13 +213,11 @@ compatibility problem, irrespective of the future Play enforcement date.
 
 1. Independently review the pinned xcrypto 16 KB rebuild, its source-to-binary
    provenance, and wallet crypto behavior in the signed Release artifact.
-2. Independently review the selected JNA AAR and the pinned RootBeer and
-   Lazysodium rebuilds, including their source-to-binary provenance and wallet
-   crypto/KYC behavior. Obtain compatible graphics-path, CameraX, and TensorFlow
-   Lite dependencies, including any necessary PayWings/IDensic SDK update. Update the
-   dependency locks, checksums, vendor provenance, and protected review receipts
-   only for artifacts actually selected and tested. No reviewed same-repository
-   replacement currently establishes this gate.
+2. Independently review the selected JNA AAR and pinned RootBeer, Lazysodium,
+   graphics-path, CameraX, and TensorFlow Lite rebuilds, including their
+   source-to-binary provenance and wallet crypto/KYC behavior. The current
+   candidate pins exact dependency coordinates, locks, checksums, and vendor
+   provenance; protected review receipts are still required.
 3. Inspect **every** `arm64-v8a` and `x86_64` `.so` in the exact signed/minified
    `productionRelease` APK and Play bundle output: 16 KB ZIP alignment, ELF
    `PT_LOAD` alignment, and the guide's `GNU_RELRO` end-alignment check. Run
@@ -213,15 +225,14 @@ compatibility problem, irrespective of the future Play enforcement date.
    16 KB device or emulator verified with `adb shell getconf PAGE_SIZE` =
    `16384`, retaining results against the signed candidate digest.
 
-The `GNU_RELRO` gate needs particular attention. An exploratory check on this
-debug APK found nonzero `(VirtAddr + MemSiz) % 0x4000` for many 64-bit libraries,
+The `GNU_RELRO` gate needs particular attention. An exploratory check on the
+baseline debug APK found nonzero `(VirtAddr + MemSiz) % 0x4000` for many 64-bit libraries,
 including `arm64-v8a/libandroidx.graphics.path.so`, whose RELRO end is `0x6000`
 (`0x2000` modulo `0x4000`) even though its `PT_LOAD` segments are 16 KB aligned.
 The [same Android guide](https://developer.android.com/guide/practices/page-sizes)
-warns that RELRO mismatch can cause a runtime segmentation fault. No 16 KB
-device run or protected Release artifact has validated this observation; it is
-an additional unresolved runtime risk, distinct from the conclusive `PT_LOAD`
-failures above.
+warns that RELRO mismatch can cause a runtime segmentation fault. The current
+Debug package clears the static RELRO check and cold-launches on a 16 KB
+emulator; the protected Release artifact and retained device flows remain open.
 
 ## Signed artifact gate
 
@@ -241,13 +252,13 @@ rebuild; rollout rechecks all four downloaded primary and reproduced artifacts.
 The protected signed APK device smoke repeats the APK check after signature
 verification and before installation. Eleven synthetic tests cover aligned
 success, independent ZIP/ELF/RELRO failures, and bundle config handling; PR CI
-runs those tests. The currently built
-production-flavor debug APK fails the gate as expected, with 65 individual
-alignment findings and at least one finding in every one of its 16 native
-library entries in the baseline. The JNA-updated debug APK fails with 60
-findings in 14 library entries; the combined xcrypto and DataStore candidate
-fails with 42 findings in 10 entries. Passing this gate on the exact
-signed Release APK is required in addition to a verified 16 KB device run.
+runs those tests. The baseline production-flavor debug APK failed with 65
+individual alignment findings and at least one finding in every one of its 16
+native library entries. The JNA-updated debug APK failed with 60 findings in
+14 library entries; the combined xcrypto and DataStore candidate failed with
+42 findings in 10 entries. The current Debug APK and AAB pass with zero
+findings. Passing this gate on the exact signed Release APK is required in
+addition to a verified 16 KB device run.
 
 ## Published replacement reconnaissance
 
