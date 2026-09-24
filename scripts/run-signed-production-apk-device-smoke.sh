@@ -6,6 +6,7 @@ test -s "$release_apk"
 test ! -L "$release_apk"
 "$ANDROID_HOME/build-tools/36.0.0/apksigner" \
   verify --verbose --print-certs "$release_apk"
+python3 scripts/verify-android-native-16kb.py "$release_apk"
 adb install --no-streaming "$release_apk"
 adb shell am force-stop jp.co.soramitsu.sora
 adb shell am start -W \

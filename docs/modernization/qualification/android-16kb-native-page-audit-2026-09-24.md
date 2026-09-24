@@ -10,6 +10,12 @@ production Release qualification.
   SHA-256: `9d2f07bf686471f46c681a8d1f56473e132c6fe161c6433e11cdac134043a2d2`.
   This is the production **flavor** with the debug build type. No protected, signed,
   minified `productionRelease` APK was available for inspection.
+- A strict local `:app:bundleProductionDebug` produced
+  `app/build/outputs/bundle/productionDebug/app-production-debug.aab`, SHA-256
+  `c73f59f917a393b6d7768d741f06ad620dd4af7f357675c99fc6c51d230dc221`.
+  Its `BundleConfig.pb` sets `uncompressNativeLibraries.enabled=1` and
+  `alignment=2` (`PAGE_ALIGNMENT_16K`). The AAB still contains the same 16
+  incompatible 64-bit ELF entries; the new artifact gate reports 65 findings.
 - The APK contains eight `arm64-v8a` and eight `x86_64` shared libraries. Android
   Build Tools 36 `zipalign -c -P 16 -v 4` returned `Verification successful`;
   all 16 of those entries are stored with data offsets divisible by 16,384.
@@ -54,6 +60,7 @@ From the repository root:
 APK=app/build/outputs/apk/production/debug/SORA_Wallet_3.8.6.3_122_production_debug.apk
 shasum -a 256 "$APK"
 "$HOME/Library/Android/sdk/build-tools/36.0.0/zipalign" -c -P 16 -v 4 "$APK"
+python3 scripts/verify-android-native-16kb.py "$APK" # expected to fail on this candidate
 
 READELF="$HOME/Library/Android/sdk/ndk/28.0.12674087/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-readelf"
 TMP_NATIVE="$(mktemp)"
@@ -108,3 +115,48 @@ warns that RELRO mismatch can cause a runtime segmentation fault. No 16 KB
 device run or protected Release artifact has validated this observation; it is
 an additional unresolved runtime risk, distinct from the conclusive `PT_LOAD`
 failures above.
+
+## Signed artifact gate
+
+`scripts/verify-android-native-16kb.py` checks every packaged `arm64-v8a` and
+`x86_64` library in the APK and AAB. It requires ELF64 architecture and bounds,
+16 KB `PT_LOAD` alignment and congruence, and the Android guide's `GNU_RELRO`
+end alignment. For the APK, the release policy additionally requires
+uncompressed native entries on 16 KB ZIP data offsets. For the AAB, it parses
+the [official `BundleConfig.pb` fields](https://github.com/google/bundletool/blob/master/src/main/proto/config.proto)
+and requires enabled uncompressed native libraries with 16 KB or 64 KB page
+alignment, so Play-generated APKs are instructed to align them. This is the
+reviewed uncompressed packaging policy for this app; Android also documents a
+compressed-library alternative for other configurations.
+
+The protected build checks the exact signed APK and AAB before the independent
+rebuild; rollout rechecks all four downloaded primary and reproduced artifacts.
+The protected signed APK device smoke repeats the APK check after signature
+verification and before installation. Eleven synthetic tests cover aligned
+success, independent ZIP/ELF/RELRO failures, and bundle config handling; PR CI
+runs those tests. The currently built
+production-flavor debug APK fails the gate as expected, with 65 individual
+alignment findings and at least one finding in every one of its 16 native
+library entries. Passing this gate on the exact
+signed Release APK is required in addition to a verified 16 KB device run.
+
+## Published replacement reconnaissance
+
+Official Maven AARs were inspected with NDK r28 `llvm-readelf` for both
+64-bit ABIs. This checks the published library bytes, not compatibility with
+the resolved app or the closed IDensic SDK.
+
+| Candidate AAR | `PT_LOAD` for both ABIs | `GNU_RELRO` end remainder (arm64 / x86_64) | Finding |
+| --- | --- | --- | --- |
+| [JNA 5.17.0](https://repo.maven.apache.org/maven2/net/java/dev/jna/jna/5.17.0/jna-5.17.0.aar) | `0x4000` | `0 / 0` | Passes both static ELF checks; its [changelog](https://github.com/java-native-access/jna/blob/master/CHANGES.md) records a second Android 16 KB fix. |
+| [lazysodium 5.2.0](https://repo.maven.apache.org/maven2/com/goterl/lazysodium-android/5.2.0/lazysodium-android-5.2.0.aar) | `0x4000` | `0x1000 / 0x1000` | Fails RELRO despite its [16 KB release note](https://github.com/terl/lazysodium-android/releases/tag/v5.2.0). It requests JNA 5.17.0; this app pins JNA separately. |
+| [RootBeer 0.1.2](https://repo.maven.apache.org/maven2/com/scottyab/rootbeer-lib/0.1.2/rootbeer-lib-0.1.2.aar) | `0x4000` | `0x1000 / 0x1000` | Fails RELRO; 0.1.1 has the same result despite [release notes](https://github.com/scottyab/rootbeer/releases) claiming 16 KB support. |
+| [CameraX camera-core 1.4.0](https://dl.google.com/dl/android/maven2/androidx/camera/camera-core/1.4.0/camera-core-1.4.0.aar) | `0x4000` | `0x3000 / 0` | Fails arm64 RELRO. [1.6.2](https://dl.google.com/dl/android/maven2/androidx/camera/camera-core/1.6.2/camera-core-1.6.2.aar) fixes that library but adds another native library with `0x1000 / 0x1000` RELRO remainders. |
+| [LiteRT 1.4.0](https://dl.google.com/dl/android/maven2/com/google/ai/edge/litert/litert/1.4.0/litert-1.4.0.aar) | `0x4000` | `0x2000 / 0x1000` | Fails RELRO. Google's [migration guide](https://developers.google.com/edge/litert/migration) describes its Interpreter API path, but IDensic linkage and model behavior need vendor validation. |
+
+The pinned [xcrypto source](https://github.com/soramitsu/x-crypto/tree/2346144a127c1121ae3166800b7ab06ed9c5bf20)
+uses NDK 25.2. A controlled 16 KB rebuild must establish both ELF checks and
+preserve the wallet's sr25519 behavior before replacing its vendored AAR.
+CameraX, TensorFlow Lite, and RootBeer are selected through the closed
+PayWings/IDensic graph; upgrading their transitive coordinates without vendor
+compatibility review would not qualify the KYC path.

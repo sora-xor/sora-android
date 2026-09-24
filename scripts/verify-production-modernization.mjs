@@ -6096,6 +6096,9 @@ assert(
     signedProductionApkDeviceSmokeScript.includes(
       '"$ANDROID_HOME/build-tools/36.0.0/apksigner"',
     ) &&
+    signedProductionApkDeviceSmokeScript.includes(
+      'python3 scripts/verify-android-native-16kb.py "$release_apk"',
+    ) &&
     productionReleaseWorkflow.includes(
       "app/build/outputs/mapping/productionRelease/mapping.txt",
     ) &&
@@ -6219,6 +6222,26 @@ assert(
     ) &&
     productionReleaseWorkflow.includes(
       "node scripts/verify-downloaded-android-qualified-candidate-package.mjs",
+    ) &&
+    productionReleaseWorkflow.indexOf("Verify exact primary candidate signing identity") <
+      productionReleaseWorkflow.indexOf("Verify 16 KB native release artifacts") &&
+    productionReleaseWorkflow.indexOf("Verify 16 KB native release artifacts") <
+      productionReleaseWorkflow.indexOf("Independently rebuild and compare production candidate") &&
+    productionReleaseWorkflow.indexOf("Validate complete downloaded reproducibility package") <
+      productionReleaseWorkflow.indexOf("Verify downloaded 16 KB native artifacts") &&
+    productionReleaseWorkflow.indexOf("Verify downloaded 16 KB native artifacts") <
+      productionReleaseWorkflow.indexOf("Bind validated downloaded Taira deployment evidence") &&
+    [
+      '"$PRODUCTION_CANDIDATE_AAB_PATH"',
+      '"$PRODUCTION_CANDIDATE_APK_PATH"',
+      '"$RUNNER_TEMP/qualified-candidate/candidate.aab"',
+      '"$RUNNER_TEMP/qualified-candidate/candidate.apk"',
+      '"$RUNNER_TEMP/qualified-candidate/reproduced-candidate.aab"',
+      '"$RUNNER_TEMP/qualified-candidate/reproduced-candidate.apk"',
+    ].every((path) =>
+      productionReleaseWorkflow.includes(
+        `python3 scripts/verify-android-native-16kb.py ${path}`,
+      ),
     ) &&
     productionReleaseWorkflow.includes(
       "node scripts/extract-funded-canary-controller-bundle.mjs",
