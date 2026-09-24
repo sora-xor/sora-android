@@ -3,7 +3,7 @@
 Status: **blocked for 16 KB devices**. This is an artifact inspection, not a signed
 production Release qualification.
 
-## Evidence
+## Baseline evidence
 
 - Checkout HEAD inspected: `13abd5765452aad11620794c9db7a674cad834d4`.
 - Artifact: `app/build/outputs/apk/production/debug/SORA_Wallet_3.8.6.3_122_production_debug.apk`.
@@ -40,7 +40,7 @@ ABI/library pairs: xcrypto `arm64-v8a`, JNA `x86_64`, and lazysodium `x86_64`.
 Direct APK inspection additionally detects both ABIs of CameraX, TensorFlow
 Lite, and RootBeer, plus xcrypto `x86_64`.
 
-The `productionReleaseRuntimeClasspath` dependency graph resolves the same six
+The baseline `productionReleaseRuntimeClasspath` dependency graph resolves the same six
 source artifacts. xcrypto is used directly by `:app` and `:common`; JNA and
 lazysodium are direct `:common` dependencies. CameraX, TensorFlow Lite, and
 RootBeer arrive through
@@ -51,6 +51,31 @@ The IDensic vendor POM declares those three transitive dependencies. The
 repository's verification metadata pins the currently inspected artifacts;
 `vendor/soramitsu-maven` contains only xcrypto 1.2.7, not a reviewed aligned
 replacement.
+
+## Candidate JNA replacement
+
+The current working candidate selects `net.java.dev.jna:jna:5.17.0` through the
+version catalog and both affected production Release locks. The official Maven
+Central AAR SHA-256 is
+`4dbeffffa665d97ad5aa7eee297531d3c841a86716ab7f774fd6956422b3cf38`;
+the POM SHA-256 is
+`501a0ff05d84a4ad10f6de25be94f49398b70a31be8f3a0ed9f4c6b44fbefee4`.
+Both bytes are pinned in strict Gradle verification metadata. JNA's
+[5.17.0 changelog](https://github.com/java-native-access/jna/blob/5.17.0/CHANGES.md)
+records the second Android 16 KB page fix.
+
+Strict `productionReleaseRuntimeClasspath` resolution and
+`:app:assembleProductionDebug` succeeded. The rebuilt debug APK SHA-256 is
+`53aea3e9714556658a7cd00ac2f2bb5f02938d6df2a5bc8af41fe8e28c9dcd09`.
+Its `libjnidispatch.so` passes both static ELF checks for arm64 and x86_64,
+reducing the gate result from 65 findings in 16 libraries to 60 findings in
+14 libraries. On a verified 16 KB arm64 emulator, the exact packaged arm64
+`.so` (`abc26e994517bcaa3309acdb0a27373864086c7569c89d3087b8626fada9ef06`)
+loaded through a one-class `app_process` `System.load` harness. This verifies
+raw native loading only; JNA API behavior and full app startup remain to be
+qualified. The `:common` and `:app` production Debug unit suites passed 178
+and 49 tests, respectively, with zero failures. The dependency preflight now
+reports a `STABLE` inventory and retains all review blockers.
 
 ## Reproduce
 
@@ -93,7 +118,8 @@ compatibility problem, irrespective of the future Play enforcement date.
 
 1. Rebuild the pinned xcrypto source with a 16 KB-capable native toolchain and
    independently recheck source-to-binary provenance and wallet crypto behavior.
-2. Obtain and independently review compatible JNA and lazysodium AARs. Obtain
+2. Independently review the selected JNA AAR and obtain a compatible
+   lazysodium AAR. Obtain
    a compatible PayWings/IDensic dependency set (or vendor-approved component
    replacements) for CameraX, TensorFlow Lite, and RootBeer. Update the
    dependency locks, checksums, vendor provenance, and protected review receipts
@@ -137,7 +163,8 @@ success, independent ZIP/ELF/RELRO failures, and bundle config handling; PR CI
 runs those tests. The currently built
 production-flavor debug APK fails the gate as expected, with 65 individual
 alignment findings and at least one finding in every one of its 16 native
-library entries. Passing this gate on the exact
+library entries in the baseline. The JNA-updated debug APK fails with 60
+findings in 14 library entries. Passing this gate on the exact
 signed Release APK is required in addition to a verified 16 KB device run.
 
 ## Published replacement reconnaissance

@@ -168,9 +168,9 @@
     "mode": "strict",
     "metadataPath": "gradle/verification-metadata.xml",
     "metadataPresent": true,
-    "metadataSha256": "8390862f04516357a66c51e761c4225204ed02fe9d1d8102687106dc13b0a039",
+    "metadataSha256": "eae10307c82f3aae2656efce6257e135f314f03b0b6138c540f779b88907f19e",
     "metadataDigestPath": "gradle/verification-metadata.sha256",
-    "metadataDigestSha256": "a11320aaae95f04a1b19adcfe561536c76b63b536e7c1e4ba8c2adcd7613f1e1",
+    "metadataDigestSha256": "0ac22b33159692cc124032b794ca707e26527e6fe31631c8265328483aaa66ba",
     "verifyMetadata": true,
     "verifySignatures": false,
     "sha256ForEveryResolvedArtifact": true,
@@ -232,7 +232,7 @@
         "test_data/gradle.lockfile"
       ],
       "lockFileSetFormat": "sorted-path-nul-file-bytes-nul-sha256",
-      "lockFileSetSha256": "478dd2362dc67238df7bf381e75354ca4c4c082baca011fbe8be03c27db7d4f6",
+      "lockFileSetSha256": "a7ddc18aca11f0353bcfd45384eaa9d34c002066ef73a5d1fc18cb6a3f921eeb",
       "configurationInventoryFormat": "project-path-colon-configuration-lf-no-terminal-lf-sha256",
       "configurationInventorySha256": "6a29d71b10b5cfe823ffa608a740dae1cb60ed2840b980a7c30265d671cfb927",
       "configurationCount": 464,
@@ -241,12 +241,12 @@
     "lockFiles": [
       {
         "path": "app/gradle.lockfile",
-        "sha256": "07349c4cc796f699e74aa15e32c7a00e3650cd7e12082cdb44bc84c8ec2c6abb",
+        "sha256": "56a3ed1d7025bc26f4a3075dfc4983f99d97fdaf551459e704a8f5506d6d3fa9",
         "configurationCount": 17
       },
       {
         "path": "common/gradle.lockfile",
-        "sha256": "63d837b7e614c5b3bcdb06569cec1c714d3450d628b054ad156e54e8fe7aecbc",
+        "sha256": "c86d3b3ebca9416165b07baeebea766830f5799d6c37b0362bcdcd6bf4399f5a",
         "configurationCount": 16
       },
       {
