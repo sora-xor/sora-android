@@ -3318,7 +3318,7 @@ const androidVerificationWorkflow = read(
 );
 const productionLockCoverageCiCommands = [
   "node scripts/verify-android-dependency-preflight-structure.mjs",
-  "./gradlew -I scripts/verify-production-release-lock-coverage.gradle --dependency-verification=strict verifyProductionReleaseLockCoverage --offline --stacktrace --no-daemon",
+  "./gradlew -I scripts/verify-production-release-lock-coverage.gradle --dependency-verification=strict verifyProductionReleaseLockCoverage --stacktrace --no-daemon",
   "node scripts/test-production-release-lock-coverage.mjs",
   "./gradlew --dependency-verification=strict testProductionDebugUnitTest --stacktrace --no-daemon --no-parallel",
 ];
