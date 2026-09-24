@@ -20,11 +20,27 @@ jobs:
     if: ${{ github.base_ref == 'modernize' || github.ref == 'refs/heads/modernize' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      POLKAMARKT_IOS_REPOSITORY: sora-xor/sora-ios
+      POLKAMARKT_IOS_SOURCE_REVISION: 8af8112b27addaebb1ba016b016cc2eee26a9037
+      POLKAMARKT_IOS_SOURCE_ROOT: ${{ github.workspace }}/.cross-platform/sora-ios
+      POLKAMARKT_IOS_FIXTURE_PATH: ${{ github.workspace }}/.cross-platform/sora-ios/Fixtures/Modernization/polkamarkt-runtime-v130.json
     steps:
       - name: Checkout exact revision
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           persist-credentials: false
+
+      - name: Checkout reviewed iOS parity source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: sora-xor/sora-ios
+          ref: 8af8112b27addaebb1ba016b016cc2eee26a9037
+          path: .cross-platform/sora-ios
+          persist-credentials: false
+
+      - name: Verify reviewed iOS revision
+        run: test "$(git -C "$POLKAMARKT_IOS_SOURCE_ROOT" rev-parse --verify HEAD)" = "$POLKAMARKT_IOS_SOURCE_REVISION"
 
       - name: Set up JDK
         uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0

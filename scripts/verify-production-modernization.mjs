@@ -8440,9 +8440,25 @@ assert(
     ),
   "SHARED_SORA2_WALLET_DERIVATION_TEST_MISSING",
 );
+const configuredIosParityRoot = process.env.POLKAMARKT_IOS_SOURCE_ROOT ?? "";
+const iosParityRoot = configuredIosParityRoot || resolve(root, "../sora-ios");
+assert(
+  configuredIosParityRoot.length === 0 ||
+    (isAbsolute(iosParityRoot) &&
+      resolve(iosParityRoot) === iosParityRoot &&
+      existsSync(iosParityRoot) &&
+      lstatSync(iosParityRoot).isDirectory() &&
+      !lstatSync(iosParityRoot).isSymbolicLink() &&
+      realpathSync(iosParityRoot) === iosParityRoot),
+  "IOS_PARITY_SOURCE_ROOT_INVALID",
+);
 const iosWalletDerivationFixture = resolve(
-  root,
-  "../sora-ios/Fixtures/Modernization/wallet-derivation-v1.json",
+  iosParityRoot,
+  "Fixtures/Modernization/wallet-derivation-v1.json",
+);
+assert(
+  configuredIosParityRoot.length === 0 || existsSync(iosWalletDerivationFixture),
+  "IOS_WALLET_DERIVATION_FIXTURE_MISSING",
 );
 if (existsSync(iosWalletDerivationFixture)) {
   assert(
@@ -9249,8 +9265,8 @@ block(
   "POLKAMARKT_CANONICAL_WEB_IMPLEMENTATION_NOT_PRESENT_AT_PIN",
 );
 const iosPolkamarktContract = resolve(
-  root,
-  "../sora-ios/Fixtures/Modernization/polkamarkt-runtime-v130.json",
+  iosParityRoot,
+  "Fixtures/Modernization/polkamarkt-runtime-v130.json",
 );
 const configuredIosPolkamarktContract =
   process.env.POLKAMARKT_IOS_FIXTURE_PATH ?? "";
@@ -10579,7 +10595,7 @@ const collectIosSwiftSources = (directory, records = []) => {
   }
   return records;
 };
-const iosSwiftSources = collectIosSwiftSources(resolve(root, "../sora-ios"));
+const iosSwiftSources = collectIosSwiftSources(iosParityRoot);
 const iosWalletMnemonicPolicySource =
   iosSwiftSources.find(({ source }) =>
     source.includes("enum WalletMnemonicWordPolicy"),
