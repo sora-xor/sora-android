@@ -576,4 +576,5 @@
   <string name="wallet_unbonded">अनबॉन्डेड</string>
   <string name="wallet_unbonding">अनबॉन्डिंग</string>
   <string name="your_pooled">आपका %s पूल किया गया</string>
+  <string name="wallet_connect_account">खाता</string>
 </resources>

@@ -607,4 +607,9 @@
   <string name="wallet_receive_xor">XOR maḫārum</string>
   <string name="wallet_status_confirmed">Gamrum</string>
   <string name="your_pooled">%s ša būrtika</string>
+  <string name="wallet_network_activity">Epšētum</string>
+  <string name="wallet_connect_account">Nikkassum</string>
+  <string name="wallet_scan_qr">Kunukkam QR šasûm</string>
+  <string name="wallet_connect_done">Gamrum</string>
+  <string name="wallet_market_refresh">Edēšum</string>
 </resources>

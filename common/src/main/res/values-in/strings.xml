@@ -568,4 +568,6 @@
   <string name="wallet_unbonded">Unbonded</string>
   <string name="wallet_unbonding">Unbonding</string>
   <string name="your_pooled">Your %s pooled</string>
+  <string name="network_finalized_history">Aktivitas</string>
+  <string name="wallet_network_activity">Aktivitas</string>
 </resources>
