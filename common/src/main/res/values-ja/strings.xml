@@ -571,4 +571,5 @@
   <string name="wallet_unbonded">ボンド解除済み</string>
   <string name="wallet_unbonding">ボンド解除中</string>
   <string name="your_pooled">%sがプールされました</string>
+  <string name="wallet_connect_account">アカウント</string>
 </resources>

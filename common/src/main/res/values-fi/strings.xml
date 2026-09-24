@@ -570,4 +570,7 @@
   <string name="wallet_unbonded">Unbonded</string>
   <string name="wallet_unbonding">Unbonding</string>
   <string name="your_pooled">Your %s pooled</string>
+  <string name="network_finalized_history">Toiminta</string>
+  <string name="wallet_network_activity">Toiminta</string>
+  <string name="wallet_connect_account">Tili</string>
 </resources>
