@@ -29,6 +29,7 @@
         "mavenPom"
       ],
       "exactModules": [
+        "com.goterl:lazysodium-android",
         "com.paywings.kyc:android-sdk",
         "com.paywings.oauth:android-sdk",
         "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk",
@@ -43,6 +44,7 @@
         "jp.co.soramitsu:xsubstrate"
       ],
       "materializedCoordinates": [
+        "com.goterl:lazysodium-android:5.0.2",
         "com.paywings.kyc:android-sdk:1.2.2",
         "com.paywings.oauth:android-sdk:2.0.0",
         "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3",
@@ -57,9 +59,9 @@
         "jp.co.soramitsu:xsubstrate:1.2.7"
       ],
       "sourceProvenancePath": "vendor/soramitsu-maven/SOURCE_PROVENANCE.json",
-      "sourceProvenanceSha256": "21d48f9a9b2a844b5a54fef710d16ff17d2bb0affe8e9fcf53d0c74e2ea3d806",
+      "sourceProvenanceSha256": "c5271c0d8c2b8bdb4d943420449c9f4a741f473a5edceb1a70d1498366723464",
       "contentsManifestPath": "vendor/soramitsu-maven/CONTENTS.sha256",
-      "contentsManifestSha256": "d93db95642526d61a611b23e999064e99d7bfe2e8d4214eb1aa6a9ee83278307",
+      "contentsManifestSha256": "a6fb482884b5c2a7571038c6ef3455b01d915446a34465f47c696ed3cfed6eb9",
       "manifestFormat": "sha256-two-space-relative-path-lf",
       "symlinkFree": true,
       "exactRegularFileCoverage": true,
@@ -170,13 +172,14 @@
     "mode": "strict",
     "metadataPath": "gradle/verification-metadata.xml",
     "metadataPresent": true,
-    "metadataSha256": "4964725b90d723c20809d40ba2563f4737abdfe133b3614c8d5103e75a4768f3",
+    "metadataSha256": "d909b535db50330ddce6c2f418c93092bfd9592a886da1c1e0f1c9a15a6b0ebd",
     "metadataDigestPath": "gradle/verification-metadata.sha256",
-    "metadataDigestSha256": "46e4650dcae55502e882764744af67cc1b43a637614785f86ba0aa8b9540bb64",
+    "metadataDigestSha256": "6e59e0a666f2d09f016119e196258d1779ce5cb0b32de44707ae586db721da9b",
     "verifyMetadata": true,
     "verifySignatures": false,
     "sha256ForEveryResolvedArtifact": true,
     "materializedVendorCoordinates": [
+      "com.goterl:lazysodium-android:5.0.2",
       "com.paywings.kyc:android-sdk:1.2.2",
       "com.paywings.oauth:android-sdk:2.0.0",
       "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3",

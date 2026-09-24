@@ -31,6 +31,7 @@ dependencyResolutionManagement {
                 includeModule("io.emeraldpay.polkaj", "polkaj-scale")
                 includeModule("com.paywings.oauth", "android-sdk")
                 includeModule("com.paywings.kyc", "android-sdk")
+                includeModule("com.goterl", "lazysodium-android")
                 includeModule("com.scottyab", "rootbeer-lib")
                 includeModule(
                     "com.paywings.onboarding.kyc.android-libs",
