@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 
 // Observed source/materialization identities, not dependency approval or signing authority.
 export const ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1 = Object.freeze({
-  metadataSha256: "eae10307c82f3aae2656efce6257e135f314f03b0b6138c540f779b88907f19e",
-  metadataDigestSha256: "0ac22b33159692cc124032b794ca707e26527e6fe31631c8265328483aaa66ba",
+  metadataSha256: "d4e1d6ee5b80d7c2ee4c2deaccefeab2e1220f7ce922f26417515c63bf39d4c8",
+  metadataDigestSha256: "b63e46ac6627468645037e2f3308b4b7ba435e0f686c03d36a49007f24f4a3e2",
   lockFileSetSha256: "a7ddc18aca11f0353bcfd45384eaa9d34c002066ef73a5d1fc18cb6a3f921eeb",
   configurationInventorySha256: "6a29d71b10b5cfe823ffa608a740dae1cb60ed2840b980a7c30265d671cfb927",
   configurationCount: 464,
