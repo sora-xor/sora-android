@@ -16,7 +16,7 @@ export function verifyAndroidLocalizationBaselineV1(baseline, handoff, gradle) {
   if (issues.length !== issueStarts || issues.length !== handoff.issueCount) {
     fail("ANDROID_LOCALIZATION_BASELINE_ISSUE_COUNT_MISMATCH");
   }
-  if (handoff.schemaVersion !== 1 || handoff.sourceLocale !== "en" ||
+  if (handoff.schemaVersion !== 2 || handoff.sourceLocale !== "en" ||
       handoff.lintIssueId !== "MissingTranslation" ||
       handoff.sourceResource !== "common/src/main/res/values/strings.xml" ||
       !Array.isArray(handoff.strings)) {

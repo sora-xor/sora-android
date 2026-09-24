@@ -19,11 +19,15 @@ still fail lint.
 
 `scripts/verify-production-modernization.mjs` checks that the baseline has
 only the 180 recorded `MissingTranslation` issues and that each key and missing
-locale list matches the handoff. A normal lint run also applies its own
-location and message matching to current source. Remove baseline entries as
-translations are completed, regenerate the handoff, and have language owners
-review the replacement text. Do not add translated text merely to silence
-lint.
+locale list matches the handoff. It also runs
+`scripts/verify-android-localization-coverage.py`, which checks the presence
+of every recorded key across all 23 localized resource directories. Lint's
+baseline alone can hide a newly absent locale value for a key already listed
+in the baseline. The source coverage check catches that regression and rejects
+empty localized strings, which would otherwise display as blank. Remove
+baseline entries as translations are completed, regenerate the handoff, and
+have language owners review the replacement text. Do not add translated text
+merely to silence lint.
 
 Local verification on 25 September 2026:
 
@@ -37,5 +41,8 @@ Local verification on 25 September 2026:
   made that same lint task fail with one new `MissingTranslation` error while
   filtering the original 180. The temporary key was removed and the source
   file restored byte for byte.
+- Removing the existing Japanese `polkamarkt_outcome_yes` translation exposed
+  a lint baseline limitation: lint still passed. The new source coverage check
+  fails on that mutation, and the Japanese file was restored byte for byte.
 - The exact signed, minified Production Release qualification and product
   approval of the fallback policy remain open.
