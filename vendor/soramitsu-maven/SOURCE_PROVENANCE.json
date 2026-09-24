@@ -17,7 +17,23 @@
   "buildInputs": [
     {
       "path": "build-inputs/README.md",
-      "sha256": "645657b9171b16bea212748413c7a370e2ce1d86b215484a6763780e5a224c96"
+      "sha256": "a34aad822a8c3deaf359c0e1ebc7e032cc558ae2d57a927d9dd29fd85362c58b"
+    },
+    {
+      "path": "build-inputs/rootbeer-0.1.0-16kb-rebuild.md",
+      "sha256": "513449dc349924781992c703e49a65442457cbc829b5f703f8f043d1e40c847b"
+    },
+    {
+      "path": "build-inputs/rootbeer-0.1.0-build-16kb.sh",
+      "sha256": "88565712d1b3654c2ce35ecf50c26d326400f57a8d1ef81f853feb38a9c7b379"
+    },
+    {
+      "path": "build-inputs/rootbeer-0.1.0-original.aar",
+      "sha256": "6c4d2e20148111a550aa3923c24e9b1360f300f1454117235a4d435e45928ee7"
+    },
+    {
+      "path": "build-inputs/rootbeer-0.1.0-repack-16kb.py",
+      "sha256": "731d0639802a697be0e60f5a18125ee9f54902c2033be5244f86e62fd225ecc4"
     },
     {
       "path": "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
@@ -152,6 +168,40 @@
         {
           "name": "idensic-mobile-sdk-1.31.3.pom.sha1",
           "sha256": "411ba613459024ddcc771664d9741484315e11750f5a217abed53abf9797248a"
+        }
+      ]
+    },
+    {
+      "coordinate": "com.scottyab:rootbeer-lib:0.1.0",
+      "modulePath": "com/scottyab/rootbeer-lib/0.1.0",
+      "origin": {
+        "kind": "git-source-build",
+        "repository": "https://github.com/scottyab/rootbeer.git",
+        "revision": "d9057ce490c3481bc9be852e343678c93860e6a8",
+        "tree": "e50696d927e68c68e88520a013d50b481c3a1f8c",
+        "commitVerification": {
+          "provider": "github",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [
+          "build-inputs/rootbeer-0.1.0-16kb-rebuild.md",
+          "build-inputs/rootbeer-0.1.0-build-16kb.sh",
+          "build-inputs/rootbeer-0.1.0-original.aar",
+          "build-inputs/rootbeer-0.1.0-repack-16kb.py"
+        ],
+        "semanticTransformations": [],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "rootbeer-lib-0.1.0.aar",
+          "sha256": "d071cebd41c71d920ebfc445adf237ad3c560aaa3a074534af0393560ad85953"
+        },
+        {
+          "name": "rootbeer-lib-0.1.0.pom",
+          "sha256": "7bdcb8d3aa5a345281663c04653df190adb7382b7266a44cffe63d6fa3a6dd35"
         }
       ]
     },

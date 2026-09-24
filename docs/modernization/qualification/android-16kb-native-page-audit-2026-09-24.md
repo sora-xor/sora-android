@@ -126,6 +126,18 @@ tests passed. `:app:testProductionReleaseUnitTest` passed with protected signing
 and production Google OAuth validation tasks excluded. The native and storage
 checks do not qualify a signed Release artifact or 16 KB device flow.
 
+## Isolated RootBeer 0.1.0 candidate
+
+The [RootBeer 16 KB rebuild report](rootbeer-16kb-rebuild-2026-09-25.md) records a
+source-pinned replacement for the exact `com.scottyab:rootbeer-lib:0.1.0` graph.
+Only the two 64-bit `libtoolChecker.so` AAR entries change; the original Java,
+resources, 32-bit JNI entries, and published POM remain. Both new ELFs pass the
+`PT_LOAD` and `GNU_RELRO` checks. An arm64 16 KB JNI smoke passes, and the
+original/rebuilt arm64 outputs agree on a 4 KB emulator. The isolated production
+Debug APK and AAB package those bytes and have 30 findings across eight other
+entries. Full KYC compatibility, independent source review, and signed Release
+qualification remain open.
+
 ## Reproduce
 
 From the repository root:

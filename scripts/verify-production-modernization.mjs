@@ -437,6 +437,22 @@ const EXPECTED_VENDOR_MODULES = [
       "https://github.com/PayWings/integration/packages/1527444?version=1.31.3",
   },
   {
+    coordinate: "com.scottyab:rootbeer-lib:0.1.0",
+    modulePath: "com/scottyab/rootbeer-lib/0.1.0",
+    originKind: "git-source-build",
+    repository: "https://github.com/scottyab/rootbeer.git",
+    revision: "d9057ce490c3481bc9be852e343678c93860e6a8",
+    tree: "e50696d927e68c68e88520a013d50b481c3a1f8c",
+    commitStatus: "unsigned",
+    observedAt: "2026-09-25",
+    buildInputs: [
+      "build-inputs/rootbeer-0.1.0-16kb-rebuild.md",
+      "build-inputs/rootbeer-0.1.0-build-16kb.sh",
+      "build-inputs/rootbeer-0.1.0-original.aar",
+      "build-inputs/rootbeer-0.1.0-repack-16kb.py",
+    ],
+  },
+  {
     coordinate: "io.emeraldpay.polkaj:polkaj-scale:0.2.3",
     modulePath: "io/emeraldpay/polkaj/polkaj-scale/0.2.3",
     originKind: "git-tracked-binary",
@@ -515,7 +531,15 @@ const EXPECTED_VENDOR_MODULES = [
 ];
 const EXPECTED_VENDOR_BUILD_INPUT_SHA256 = {
   "build-inputs/README.md":
-    "645657b9171b16bea212748413c7a370e2ce1d86b215484a6763780e5a224c96",
+    "a34aad822a8c3deaf359c0e1ebc7e032cc558ae2d57a927d9dd29fd85362c58b",
+  "build-inputs/rootbeer-0.1.0-16kb-rebuild.md":
+    "513449dc349924781992c703e49a65442457cbc829b5f703f8f043d1e40c847b",
+  "build-inputs/rootbeer-0.1.0-build-16kb.sh":
+    "88565712d1b3654c2ce35ecf50c26d326400f57a8d1ef81f853feb38a9c7b379",
+  "build-inputs/rootbeer-0.1.0-original.aar":
+    "6c4d2e20148111a550aa3923c24e9b1360f300f1454117235a4d435e45928ee7",
+  "build-inputs/rootbeer-0.1.0-repack-16kb.py":
+    "731d0639802a697be0e60f5a18125ee9f54902c2033be5244f86e62fd225ecc4",
   "build-inputs/xcrypto-1.2.7-16kb-rebuild.md":
     "9b6eb4495fa8435ed05ce3a7503e1044a5cf1a8c80ccf023925ec1206a792c71",
   "build-inputs/xcrypto-1.2.7-Cargo.lock":
@@ -618,9 +642,9 @@ const includeModulesIn = (source) => [
   ),
 ].map(([, group, module]) => `${group}:${module}`);
 const EXPECTED_VENDOR_SOURCE_PROVENANCE_SHA256 =
-  "c8d1be70f4d815d45a80c6e529841d5f9a86ecdc500fb40d00acbc497f6713f6";
+  "21d48f9a9b2a844b5a54fef710d16ff17d2bb0affe8e9fcf53d0c74e2ea3d806";
 const EXPECTED_VENDOR_CONTENTS_MANIFEST_SHA256 =
-  "4e86f9bfe90d094cdf7b893ab9800f73a476f363782e41aae3b17f046c3fdac9";
+  "d93db95642526d61a611b23e999064e99d7bfe2e8d4214eb1aa6a9ee83278307";
 const EXPECTED_GRADLE_VERIFICATION_METADATA_SHA256 =
   ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.metadataSha256;
 const EXPECTED_GRADLE_VERIFICATION_METADATA_DIGEST_SHA256 =
@@ -1343,8 +1367,10 @@ const validateAndroidDependencyPreflight = () => {
               "independentlyReviewed",
             ]) ||
             origin.commitVerification.provider !== "github" ||
-            origin.commitVerification.status !== "valid" ||
-            origin.commitVerification.observedAt !== "2026-08-09" ||
+            origin.commitVerification.status !==
+              (expected.commitStatus ?? "valid") ||
+            origin.commitVerification.observedAt !==
+              (expected.observedAt ?? "2026-08-09") ||
             typeof origin.commitVerification.independentlyReviewed !==
               "boolean" ||
             !exactStringSet(
