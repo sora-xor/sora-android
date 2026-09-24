@@ -29,7 +29,11 @@
     },
     {
       "path": "build-inputs/README.md",
-      "sha256": "82f99d8cb07ad4538f0a300453e9e9f8baf6d8518235a5c35fccb5ec9813d355"
+      "sha256": "97c5309a9af96ca2fd29a2e7c2e15286f079142cfb369082b8a9a1578550650b"
+    },
+    {
+      "path": "build-inputs/TensorFlowLiteCApiSmoke.c",
+      "sha256": "de8536ff1fd38406479f1ff3ed72aff8450ac3b3dab640bf3b88504a43774e60"
     },
     {
       "path": "build-inputs/camera-core-1.3.1-16kb-rebuild.md",
@@ -106,6 +110,30 @@
     {
       "path": "build-inputs/rootbeer-0.1.0-repack-16kb.py",
       "sha256": "731d0639802a697be0e60f5a18125ee9f54902c2033be5244f86e62fd225ecc4"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-16kb-rebuild.md",
+      "sha256": "07cfcf46a01044b5fb604f91e4aa53eb84459dabdbd6baa34a431583f5a5b5bc"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-build-16kb.sh",
+      "sha256": "b3ab471a35edd00f1473a4a61e7fc9a08b5955344a3613335921601d182b6ef9"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-cmake-16kb.patch",
+      "sha256": "4abb4536df76724a7f7ac908871c3840493e215ee0d38e744efef301dc3059e9"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-exports.lds",
+      "sha256": "03c64a35ebeeac3e55134a174a6afdda456505b764fc03549ae9d6c316a7e503"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-original.aar",
+      "sha256": "002371fefe277e93f1421206062823d04daceb6c9e4e824cb543eab2d3a00c91"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-repack-16kb.py",
+      "sha256": "dc4d66e58f15aaa48e4ea950438069420a48928d66a7f65c87925c6e6502f086"
     },
     {
       "path": "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
@@ -463,6 +491,43 @@
       ]
     },
     {
+      "coordinate": "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
+      "modulePath": "jp/co/soramitsu/xnetworking/lib-android/1.0.15-K2",
+      "origin": {
+        "kind": "git-source-build",
+        "repository": "https://github.com/soramitsu/x-networking.git",
+        "revision": "fa94a1d1c0b5457b50885ec72727934a2fea12d5",
+        "tree": "56a87310923d615819819d682a945496e40b3dd7",
+        "commitVerification": {
+          "provider": "github",
+          "status": "valid",
+          "observedAt": "2026-08-09",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [],
+        "semanticTransformations": [],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "lib-android-1.0.15-K2-sources.jar",
+          "sha256": "789f5cabe03aad144670b0cbefdd54d9ad6029fa5bd6add0d194e932e803e1b7"
+        },
+        {
+          "name": "lib-android-1.0.15-K2.aar",
+          "sha256": "98f62537ad66eb3eac9940bd58fd6c5511f24e3c988062947548af52e714beac"
+        },
+        {
+          "name": "lib-android-1.0.15-K2.module",
+          "sha256": "30dbc67da2ed55f0dd70c93c0f12ae8ceb244372b9d98b5c51a73e043da5a61b"
+        },
+        {
+          "name": "lib-android-1.0.15-K2.pom",
+          "sha256": "9ec37ddd5af6d7e162be5e4677583a6c060a35f7f903642baf18379420cda887"
+        }
+      ]
+    },
+    {
       "coordinate": "jp.co.soramitsu:android-foundation:0.0.4",
       "modulePath": "jp/co/soramitsu/android-foundation/0.0.4",
       "origin": {
@@ -692,39 +757,39 @@
       ]
     },
     {
-      "coordinate": "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
-      "modulePath": "jp/co/soramitsu/xnetworking/lib-android/1.0.15-K2",
+      "coordinate": "org.tensorflow:tensorflow-lite:2.12.0",
+      "modulePath": "org/tensorflow/tensorflow-lite/2.12.0",
       "origin": {
         "kind": "git-source-build",
-        "repository": "https://github.com/soramitsu/x-networking.git",
-        "revision": "fa94a1d1c0b5457b50885ec72727934a2fea12d5",
-        "tree": "56a87310923d615819819d682a945496e40b3dd7",
+        "repository": "https://github.com/tensorflow/tensorflow.git",
+        "revision": "0db597d0d758aba578783b5bf46c889700a45085",
+        "tree": "e32b1f067af476b65f944fdcc2390178200408d1",
         "commitVerification": {
           "provider": "github",
-          "status": "valid",
-          "observedAt": "2026-08-09",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
           "independentlyReviewed": false
         },
-        "buildInputs": [],
+        "buildInputs": [
+          "build-inputs/TensorFlowLiteCApiSmoke.c",
+          "build-inputs/tensorflow-lite-2.12.0-16kb-rebuild.md",
+          "build-inputs/tensorflow-lite-2.12.0-build-16kb.sh",
+          "build-inputs/tensorflow-lite-2.12.0-cmake-16kb.patch",
+          "build-inputs/tensorflow-lite-2.12.0-exports.lds",
+          "build-inputs/tensorflow-lite-2.12.0-original.aar",
+          "build-inputs/tensorflow-lite-2.12.0-repack-16kb.py"
+        ],
         "semanticTransformations": [],
         "sourceToBinaryReproductionReviewed": false
       },
       "materializedFiles": [
         {
-          "name": "lib-android-1.0.15-K2-sources.jar",
-          "sha256": "789f5cabe03aad144670b0cbefdd54d9ad6029fa5bd6add0d194e932e803e1b7"
+          "name": "tensorflow-lite-2.12.0.aar",
+          "sha256": "4da11c611a69427c4b6742f66fdda7d276d5267b2f7a08528e1b268c4e65ccbd"
         },
         {
-          "name": "lib-android-1.0.15-K2.aar",
-          "sha256": "98f62537ad66eb3eac9940bd58fd6c5511f24e3c988062947548af52e714beac"
-        },
-        {
-          "name": "lib-android-1.0.15-K2.module",
-          "sha256": "30dbc67da2ed55f0dd70c93c0f12ae8ceb244372b9d98b5c51a73e043da5a61b"
-        },
-        {
-          "name": "lib-android-1.0.15-K2.pom",
-          "sha256": "9ec37ddd5af6d7e162be5e4677583a6c060a35f7f903642baf18379420cda887"
+          "name": "tensorflow-lite-2.12.0.pom",
+          "sha256": "5ad01644c105dff937a70c169fddfd670e04cb783927972f6ee100f2d38bd31c"
         }
       ]
     }

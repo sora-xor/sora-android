@@ -35,6 +35,7 @@ dependencyResolutionManagement {
                 includeModule("com.paywings.kyc", "android-sdk")
                 includeModule("com.goterl", "lazysodium-android")
                 includeModule("com.scottyab", "rootbeer-lib")
+                includeModule("org.tensorflow", "tensorflow-lite")
                 includeModule(
                     "com.paywings.onboarding.kyc.android-libs",
                     "idensic-mobile-sdk",
