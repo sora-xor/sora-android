@@ -6,12 +6,18 @@ required to materialize the checked-in Maven modules.
 - `xcrypto-1.2.7-Cargo.lock` is the exact generated Rust lock state used for the xcrypto 1.2.7
   Android build. It pins `zeroize_derive` to the compatible 1.4.2 release. Its SHA-256 is bound by
   `SOURCE_PROVENANCE.json` and `CONTENTS.sha256`.
+- `xcrypto-1.2.7-original.aar` preserves the exact prior materialized AAR. It supplies the
+  unchanged Java, resources, metadata, and 32-bit libraries for the 16 KB repack.
+- `xcrypto-1.2.7-16kb-rebuild.md` records the pinned xcrypto source, Rust and NDK toolchains,
+  linker flags, output digests, JNI smoke evidence, and exact reproduction commands.
+- `xcrypto-1.2.7-repack-16kb.py` copies only the rebuilt arm64-v8a and x86_64 JNI libraries into
+  that original AAR. It verifies the input and output digests and every ZIP member's contents.
 - `xsubstrate-1.2.7-source-normalization.patch` is the complete semantic source delta applied to
   the pinned xsubstrate commit: consume the materialized xcrypto 1.2.7 module and use polkaj's
   authoritative `io.emeraldpay.polkaj` coordinate. Temporary repository-path edits used only to
   resolve the isolated staging repository are intentionally excluded because they are not source
   or dependency-semantic build inputs.
 
-These inputs and the current artifact hashes establish a stable, inspectable inventory. They do
-not constitute an independent source-to-binary reproduction, artifact review, SBOM, license
-review, or production approval.
+These inputs and the current artifact hashes establish a stable, inspectable inventory. The
+isolated xcrypto JNI experiment does not constitute an independent source-to-binary review, full
+wallet runtime test, SBOM, license review, or production approval.

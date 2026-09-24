@@ -69,11 +69,11 @@
         {
           "name": "xcrypto-1.2.7.aar",
           "url": "xcrypto-1.2.7.aar",
-          "size": 1901645,
-          "sha512": "1895b17aa233fa8bd03488ddbcb9732aa22b529d73753db6b4915b362ce54b4d7a97c5db87feb3358ff20cbe96370277e9a54a1b65bed8e5e4eb91efb52a75d8",
-          "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b",
-          "sha1": "1657a771387609d09c93b85758964470129b1c92",
-          "md5": "826b38e70113fa5b80e3b433cef3de07"
+          "size": 1659744,
+          "sha512": "92326c5ecbe548a6b7871437d3cbb97097bac166b1841a45c2e7c7427e5d32818c3412cd87b74c1c2d3158e35188f387f1023de7bc29b5b327a7fe03fa1caa6e",
+          "sha256": "bb2cbb157c36430a7843e8db6900fec1ce36cacd966ff8fe00c6eab524f853ef",
+          "sha1": "90653c4189ce40abc09cc1f955775ae2436ec8ed",
+          "md5": "4d7b4a71d415791b2f86c154d4d6591c"
         }
       ]
     },
@@ -139,11 +139,11 @@
         {
           "name": "xcrypto-1.2.7.aar",
           "url": "xcrypto-1.2.7.aar",
-          "size": 1901645,
-          "sha512": "1895b17aa233fa8bd03488ddbcb9732aa22b529d73753db6b4915b362ce54b4d7a97c5db87feb3358ff20cbe96370277e9a54a1b65bed8e5e4eb91efb52a75d8",
-          "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b",
-          "sha1": "1657a771387609d09c93b85758964470129b1c92",
-          "md5": "826b38e70113fa5b80e3b433cef3de07"
+          "size": 1659744,
+          "sha512": "92326c5ecbe548a6b7871437d3cbb97097bac166b1841a45c2e7c7427e5d32818c3412cd87b74c1c2d3158e35188f387f1023de7bc29b5b327a7fe03fa1caa6e",
+          "sha256": "bb2cbb157c36430a7843e8db6900fec1ce36cacd966ff8fe00c6eab524f853ef",
+          "sha1": "90653c4189ce40abc09cc1f955775ae2436ec8ed",
+          "md5": "4d7b4a71d415791b2f86c154d4d6591c"
         }
       ]
     },
