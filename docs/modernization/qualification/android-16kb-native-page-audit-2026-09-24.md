@@ -77,9 +77,9 @@ qualified. The `:common` and `:app` production Debug unit suites passed 178
 and 49 tests, respectively, with zero failures. The dependency preflight now
 reports a `STABLE` inventory and retains all review blockers.
 
-## Isolated xcrypto 16 KB integration candidate
+## xcrypto 16 KB integration candidate
 
-The separate `codex/android-xcrypto-16kb-integration-20260924` worktree retains the original
+The candidate retains the original
 xcrypto 1.2.7 AAR and [rebuild recipe](../../../vendor/soramitsu-maven/build-inputs/xcrypto-1.2.7-16kb-rebuild.md),
 then materializes an AAR whose only changed members are
 `jni/arm64-v8a/libsr25519java_1.so` and `jni/x86_64/libsr25519java_1.so`. Both rebuilt 64-bit
@@ -91,7 +91,7 @@ review blockers. The [JNI experiment report](xcrypto-16kb-rebuild-2026-09-24.md)
 arm64 16 KB emulator smoke; the x86_64 JNI output has static inspection and byte-for-byte
 second-build reproducibility but no emulator smoke.
 
-This change addresses only xcrypto. CameraX, TensorFlow Lite, RootBeer, and lazysodium remain
+That integration addresses only xcrypto. CameraX, TensorFlow Lite, RootBeer, and lazysodium remain
 incompatible in the current APK; graphics-path and DataStore native libraries also fail the
 strict `GNU_RELRO` check. The integrated production-flavor Debug APK
 (`e2e5c813224ab79f02268e94ee8f0213aee00032f90dc8512a5f3a22bade9d1b`) and AAB

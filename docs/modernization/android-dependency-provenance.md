@@ -47,10 +47,11 @@ and locking remain `materialized-unreviewed`, with `independentlyReviewed=false`
 signatures, attestations, or evidence that the snapshot is production-qualified. The current metadata
 includes the pinned JNA 5.17.0 AAR and POM, and the locally repacked xcrypto 1.2.7 AAR. The
 [xcrypto rebuild recipe](../../vendor/soramitsu-maven/build-inputs/xcrypto-1.2.7-16kb-rebuild.md)
-retains the original AAR, exact toolchain inputs and only two changed JNI entries. The selected DataStore 1.2.1 and transitive Okio 3.9.1 artifacts are also pinned. The full
-dependency set still needs independent
-review. The real old-writer/current-reader encrypted
-storage experiment covers its declared adapter/DataStore/Tink closure only (see
+retains the original AAR, exact toolchain inputs and only two changed JNI entries.
+The selected DataStore 1.2.1 and transitive Okio 3.9.1 artifacts are also pinned.
+The full dependency set still needs independent review. The real
+old-writer/current-reader encrypted storage experiment covers its declared
+adapter/DataStore/Tink closure only (see
 `scripts/qualification/legacy-encrypted-preferences/README.md`). Historical release-probe and
 interoperability fixtures retain their original source and frozen-input hashes.
 
@@ -58,7 +59,10 @@ The current sidecar SHA-256 is
 `252da0cd85698f8286ad131c4d6f197017327dbd7dcf426fb9c7042143913dfc`. The app lock records 19
 configurations, including the empty `productionReleaseBaselineProfile` configuration; its SHA-256 is
 `c6d9fb14f42e552c691c04a48a4d90bdde15884d627e5cfffa73f55144355f57`. The 2026-09-24 update
-adds JNA 5.17.0, the rebuilt xcrypto native entries, and DataStore 1.2.1, including the transitive Okio 3.9.1 selection. The retained old-writer/current-reader/old-reader storage experiment passed on a 4 KB arm64 emulator. Enabling the AGP 9
+adds JNA 5.17.0, the rebuilt xcrypto native entries, and DataStore 1.2.1,
+including the transitive Okio 3.9.1 selection. The retained
+old-writer/current-reader/old-reader storage experiment passed on a 4 KB arm64
+emulator. Enabling the AGP 9
 production Release unit-test task first materialized 191 more locked configurations; the
 subsequent complete Gradle model resolution added 102 previously missing production Release
 configuration names across 30 modules. The current 565 production Release configurations
