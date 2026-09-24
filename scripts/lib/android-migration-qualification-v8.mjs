@@ -11,8 +11,10 @@ import { createHash, createPublicKey, verify as verifySignature } from "node:cry
 import { isAbsolute, relative, resolve } from "node:path";
 
 import {
-  validateAndroidMigrationRawEvidenceV1,
-} from "./android-migration-raw-evidence-v1.mjs";
+  validateAndroidMigrationRawEvidenceV2,
+} from "./android-migration-raw-evidence-v2.mjs";
+
+import { ANDROID_MIGRATION_SOURCE_SCHEMAS, validateAndroidPreAccountCoverage } from "./android-migration-coverage-v1.mjs";
 
 const MAX_JSON_BYTES = 2 * 1024 * 1024;
 const MAX_KEY_BYTES = 16 * 1024;
@@ -53,7 +55,7 @@ const RECEIPT_KEYS = Object.freeze([
   "qualificationSequenceNumber", "sourceRevision", "qualifiedAtEpochSeconds",
   "reviewedAtEpochSeconds", "trustRootSha256", "evidenceManifestSha256",
   "deviceEvidenceProducerKeyId", "independentReviewerKeyId", "identity", "privacy",
-  "sourceSchemaVersions", "targetSchemaVersion", "retainedSchemaCohortCount",
+  "sourceSchemaVersions", "targetSchemaVersion", "retainedSchemaCohortCount", "preAccountUpgrade",
   "singleAccountCohortCount", "multiAccountCohortCount", "successfulSecretSourceCohortCount",
   "secretFailureCohortCount", "currentSchemaSnapshotCohortCount", "productionPathCohortCount",
   "encryptedStoragePhaseCount", "retainedReleaseSnapshotCount",
@@ -120,6 +122,7 @@ const SAFE_AGGREGATES = new Set([
   "twelvewordmnemonicqualified", "twentyfourwordmnemonicqualified",
   "retainedfifteenwordmnemonicqualified", "rawseedqualified", "legacysecretqualified",
   "wrappedaeskeyparity", "wrappedaeskeyparityqualified", "wrappedkeyfailurequalified",
+  "unsuffixedcredentialciphertextparity",
 ]);
 
 export class AndroidMigrationQualificationError extends Error {}
@@ -393,11 +396,13 @@ const validateTrustShape = (trust, label) => {
   exactKeys(trust.replayPolicy, ["maximumQualificationAgeSeconds", "maximumRunDurationSeconds", "maximumReviewDelaySeconds"], `${label}.replayPolicy`);
 };
 const validateQualifiedReceiptAggregates = (receipt) => {
-  const expectedSources = Array.from({ length: 19 }, (_, index) => index + 58);
+  validateAndroidPreAccountCoverage(receipt.preAccountUpgrade, { qualified: true });
+  if (receipt.retainedReleaseSnapshotCount < receipt.preAccountUpgrade.releasedSnapshotCount + 19) fail("retained snapshots omit required source schemas");
+  const expectedSources = ANDROID_MIGRATION_SOURCE_SCHEMAS;
   if (
     JSON.stringify(receipt.sourceSchemaVersions) !== JSON.stringify(expectedSources) ||
-    receipt.targetSchemaVersion !== 77 || receipt.retainedSchemaCohortCount !== 76 ||
-    receipt.singleAccountCohortCount !== 38 || receipt.multiAccountCohortCount !== 38 ||
+    receipt.targetSchemaVersion !== 77 || receipt.retainedSchemaCohortCount !== 78 ||
+    receipt.singleAccountCohortCount !== 40 || receipt.multiAccountCohortCount !== 38 ||
     receipt.successfulSecretSourceCohortCount !== 6 || receipt.secretFailureCohortCount !== 2 ||
     receipt.currentSchemaSnapshotCohortCount !== 1 || receipt.productionPathCohortCount !== 7 ||
     receipt.encryptedStoragePhaseCount !== 5 ||
@@ -447,7 +452,7 @@ const validateAggregateArtifact = (record, contractId, context, label, aggregate
     "identity", "privacy", "aggregate",
   ], label);
   if (
-    record.schemaVersion !== 1 || record.contractId !== contractId || record.platform !== "android" ||
+    record.schemaVersion !== (contractId.endsWith("-v2") ? 2 : 1) || record.contractId !== contractId || record.platform !== "android" ||
     record.status !== "qualified" || record.runId !== context.runId ||
     record.qualificationSequenceNumber !== context.sequence || record.sourceRevision !== context.sourceRevision ||
     record.producedAtEpochSeconds !== context.producedAt || JSON.stringify(record.identity) !== JSON.stringify(context.identity)
@@ -462,27 +467,28 @@ export const lintAndroidMigrationQualificationTemplates = ({ root }) => {
   const evidence = parseStrictJson(openRegularSnapshot(fixedRepoPath(root, EVIDENCE_TEMPLATE), MAX_JSON_BYTES, "blocked evidence template").bytes, "blocked evidence template");
   const trust = parseStrictJson(openRegularSnapshot(fixedRepoPath(root, TRUST_TEMPLATE), MAX_JSON_BYTES, "blocked trust template").bytes, "blocked trust template");
   if (
-    receipt.schemaVersion <= 6 ||
+    receipt.schemaVersion <= 7 ||
     [
       "sora-android-wallet-migration-qualification-v5",
       "sora-android-wallet-migration-qualification-v6",
     ].includes(receipt.contractId)
-  ) fail("stale v6 or older blocked receipt template is rejected");
+  ) fail("stale v7 or older blocked receipt template is rejected");
   if (
-    evidence.schemaVersion <= 1 ||
+    evidence.schemaVersion <= 2 ||
     evidence.contractId === "sora-android-wallet-migration-evidence-v1"
-  ) fail("stale v1 or older blocked evidence template is rejected");
+  ) fail("stale v2 or older blocked evidence template is rejected");
+  validateAndroidPreAccountCoverage(receipt.preAccountUpgrade, { qualified: false });
   validateReceiptShape(receipt, "blocked receipt template");
   validateEvidenceShape(evidence, "blocked evidence template");
   validateTrustShape(trust, "blocked trust template");
-  if (receipt.schemaVersion !== 7 || receipt.contractId !== "sora-android-wallet-migration-qualification-v7" || receipt.platform !== "android" || receipt.status !== "blocked-template") fail("blocked receipt template is not exact v7");
-  if (evidence.schemaVersion !== 2 || evidence.contractId !== "sora-android-wallet-migration-evidence-v2" || evidence.platform !== "android" || evidence.status !== "blocked-template") fail("blocked evidence template is not exact v2");
+  if (receipt.schemaVersion !== 8 || receipt.contractId !== "sora-android-wallet-migration-qualification-v8" || receipt.platform !== "android" || receipt.status !== "blocked-template") fail("blocked receipt template is not exact v8");
+  if (evidence.schemaVersion !== 3 || evidence.contractId !== "sora-android-wallet-migration-evidence-v3" || evidence.platform !== "android" || evidence.status !== "blocked-template") fail("blocked evidence template is not exact v3");
   if (trust.schemaVersion !== 1 || trust.contractId !== "sora-android-wallet-migration-qualification-trust-v1" || trust.platform !== "android" || trust.status !== "blocked") fail("blocked trust template is not exact v1");
   validatePrivacy(receipt.privacy, RECEIPT_PRIVACY_KEYS, "blocked receipt privacy");
   validatePrivacy(evidence.privacy, EVIDENCE_PRIVACY_KEYS, "blocked evidence privacy");
   privacyScan(receipt, "blocked receipt template");
   privacyScan(evidence, "blocked evidence template");
-  const expectedSources = Array.from({ length: 19 }, (_, index) => index + 58);
+  const expectedSources = ANDROID_MIGRATION_SOURCE_SCHEMAS;
   if (
     receipt.runId !== null || receipt.qualificationSequenceNumber !== 0 ||
     receipt.sourceRevision !== null || receipt.qualifiedAtEpochSeconds !== 0 ||
@@ -491,8 +497,8 @@ export const lintAndroidMigrationQualificationTemplates = ({ root }) => {
     receipt.independentReviewerKeyId !== null || receipt.qualificationContractSha256 !== null ||
     JSON.stringify(receipt.identity) !== JSON.stringify({ appBuildIdentitySha256: null, deviceClasses: [], operatingSystemBuilds: [] }) ||
     JSON.stringify(receipt.sourceSchemaVersions) !== JSON.stringify(expectedSources) ||
-    receipt.targetSchemaVersion !== 77 || receipt.retainedSchemaCohortCount !== 76 ||
-    receipt.singleAccountCohortCount !== 38 || receipt.multiAccountCohortCount !== 38 ||
+    receipt.targetSchemaVersion !== 77 || receipt.retainedSchemaCohortCount !== 78 ||
+    receipt.singleAccountCohortCount !== 40 || receipt.multiAccountCohortCount !== 38 ||
     receipt.successfulSecretSourceCohortCount !== 6 || receipt.secretFailureCohortCount !== 2 ||
     receipt.currentSchemaSnapshotCohortCount !== 1 || receipt.productionPathCohortCount !== 7 ||
     receipt.encryptedStoragePhaseCount !== 5 || receipt.retainedReleaseSnapshotCount !== 0 ||
@@ -546,7 +552,7 @@ export const lintAndroidMigrationQualificationTemplates = ({ root }) => {
   ) fail("blocked trust template carries fabricated or unreviewed state");
 };
 
-export const verifyAndroidMigrationQualificationV7 = ({
+export const verifyAndroidMigrationQualificationV8 = ({
   root,
   environment = process.env,
   expectedQualificationContractSha256,
@@ -580,16 +586,16 @@ export const verifyAndroidMigrationQualificationV7 = ({
   const evidence = parseStrictJson(evidenceSnapshot.bytes, "migration evidence manifest");
   const trust = parseStrictJson(trustSnapshot.bytes, "migration trust root");
   if (
-    receipt.schemaVersion <= 6 ||
+    receipt.schemaVersion <= 7 ||
     [
       "sora-android-wallet-migration-qualification-v5",
       "sora-android-wallet-migration-qualification-v6",
     ].includes(receipt.contractId)
-  ) fail("stale v6 or older migration receipt is rejected");
+  ) fail("stale v7 or older migration receipt is rejected");
   if (
-    evidence.schemaVersion <= 1 ||
+    evidence.schemaVersion <= 2 ||
     evidence.contractId === "sora-android-wallet-migration-evidence-v1"
-  ) fail("stale v1 or older migration evidence manifest is rejected");
+  ) fail("stale v2 or older migration evidence manifest is rejected");
   validateReceiptShape(receipt, "migration receipt");
   validateEvidenceShape(evidence, "migration evidence manifest");
   validateTrustShape(trust, "migration trust root");
@@ -633,8 +639,8 @@ export const verifyAndroidMigrationQualificationV7 = ({
   verifyDetached(evidenceSnapshot, producerSignature, producerKey, "migration evidence production");
   verifyDetached(evidenceSnapshot, reviewerSignature, reviewerKey, "migration evidence review");
 
-  if (receipt.schemaVersion !== 7 || receipt.contractId !== "sora-android-wallet-migration-qualification-v7" || receipt.platform !== "android" || receipt.status !== "qualified" || receipt.blockingReasons.length !== 0) fail("migration receipt is not exact qualified v7");
-  if (evidence.schemaVersion !== 2 || evidence.contractId !== "sora-android-wallet-migration-evidence-v2" || evidence.platform !== "android" || evidence.status !== "qualified" || evidence.blockingReasons.length !== 0) fail("migration evidence manifest is not exact qualified v2");
+  if (receipt.schemaVersion !== 8 || receipt.contractId !== "sora-android-wallet-migration-qualification-v8" || receipt.platform !== "android" || receipt.status !== "qualified" || receipt.blockingReasons.length !== 0) fail("migration receipt is not exact qualified v8");
+  if (evidence.schemaVersion !== 3 || evidence.contractId !== "sora-android-wallet-migration-evidence-v3" || evidence.platform !== "android" || evidence.status !== "qualified" || evidence.blockingReasons.length !== 0) fail("migration evidence manifest is not exact qualified v3");
   validateQualifiedReceiptAggregates(receipt);
   requireUuid(receipt.runId, "receipt run ID", runId); requireUuid(evidence.runId, "evidence run ID", runId);
   if (receipt.qualificationSequenceNumber !== sequence || evidence.qualificationSequenceNumber !== sequence) fail("migration qualification sequence differs from the protected monotonic sequence");
@@ -690,22 +696,26 @@ export const verifyAndroidMigrationQualificationV7 = ({
   ) fail("receipt artifact hashes differ from opened signed evidence");
 
   const contexts = [
-    ["retainedReleaseSnapshotManifest", "sora-android-wallet-migration-retained-snapshot-manifest-v1", artifactTimes[0], ["retainedReleaseSnapshotCount", "sourceSchemaVersions", "targetSchemaVersion", "allSnapshotFilesRegular", "allSnapshotHashesVerified", "allSnapshotDatabasesOpenedReadOnly", "settingsSnapshotsVerified"]],
+    ["retainedReleaseSnapshotManifest", "sora-android-wallet-migration-retained-snapshot-manifest-v2", artifactTimes[0], ["preAccountUpgrade", "retainedReleaseSnapshotCount", "sourceSchemaVersions", "targetSchemaVersion", "allSnapshotFilesRegular", "allSnapshotHashesVerified", "allSnapshotDatabasesOpenedReadOnly", "settingsSnapshotsVerified"]],
     ["testResult", "sora-android-wallet-migration-test-results-v1", artifactTimes[1], ["executedWalletIdentityMigration75TestCount", "executedWalletUpgradeBackupTestCount", "executedMigrationManagerSafetyTestCount", "executedMigrationManagerProductionPathQualificationTestCount", "executedEncryptedWalletMigrationStorageTestCount", "executedSora2AddressCodecTestCount", "testFailureCount", "testUnexpectedFailureCount"]],
-    ["encryptedStorageEvidence", "sora-android-wallet-migration-encrypted-storage-evidence-v1", artifactTimes[2], ["encryptedStoragePhaseCount", "encryptedSecretCiphertextParity", "wrappedAesKeyParity", "keystoreAliasContinuity", "noCredentialRewrite", "authenticatedEnvelopeTamperQualified", "wrappedKeyFailureQualified", "missingKeystoreAliasQualified", "rawValuesExcluded"]],
-    ["deviceExecutionEvidence", "sora-android-wallet-migration-device-execution-evidence-v1", artifactTimes[3], ["retainedSchemaCohortCount", "productionPathCohortCount", "interruptedMigrationQualified", "processDeathRestartQualified", "reinstallUpgradeQualified", "rollbackQualified", "lowStorageQualified"]],
+    ["encryptedStorageEvidence", "sora-android-wallet-migration-encrypted-storage-evidence-v2", artifactTimes[2], ["preAccountUpgrade", "encryptedStoragePhaseCount", "encryptedSecretCiphertextParity", "wrappedAesKeyParity", "keystoreAliasContinuity", "noCredentialRewrite", "authenticatedEnvelopeTamperQualified", "wrappedKeyFailureQualified", "missingKeystoreAliasQualified", "rawValuesExcluded"]],
+    ["deviceExecutionEvidence", "sora-android-wallet-migration-device-execution-evidence-v2", artifactTimes[3], ["preAccountUpgrade", "retainedSchemaCohortCount", "productionPathCohortCount", "interruptedMigrationQualified", "processDeathRestartQualified", "reinstallUpgradeQualified", "rollbackQualified", "lowStorageQualified"]],
   ];
   const aggregates = Object.create(null);
   for (const [key, contractId, producedAt, aggregateKeys] of contexts) {
     const record = parseStrictJson(artifactSnapshots[key].bytes, `artifact ${key}`);
     validateAggregateArtifact(record, contractId, { runId, sequence, sourceRevision, producedAt, identity: receipt.identity }, `artifact ${key}`, aggregateKeys);
+    if (key !== "testResult") {
+      validateAndroidPreAccountCoverage(record.aggregate.preAccountUpgrade, { qualified: true });
+      if (JSON.stringify(record.aggregate.preAccountUpgrade) !== JSON.stringify(receipt.preAccountUpgrade)) fail(`pre-account aggregate differs from receipt: ${key}`);
+    }
     aggregates[key] = record.aggregate;
   }
   const rawExecutionEvidence = parseStrictJson(
     artifactSnapshots.rawExecutionEvidence.bytes,
     "artifact rawExecutionEvidence",
   );
-  validateAndroidMigrationRawEvidenceV1(rawExecutionEvidence);
+  validateAndroidMigrationRawEvidenceV2(rawExecutionEvidence);
   if (
     rawExecutionEvidence.runId !== runId ||
     rawExecutionEvidence.qualificationSequenceNumber !== sequence ||
@@ -719,11 +729,11 @@ export const verifyAndroidMigrationQualificationV7 = ({
   if (
     receipt.rawResultFileCount !== rawAggregate.rawResultFileCount ||
     receipt.rawResultBundleByteCount !== rawAggregate.rawResultBundleByteCount ||
-    rawAggregate.requiredSuiteCount !== 6 ||
+    rawAggregate.requiredSuiteCount !== 7 ||
     rawAggregate.apkIdentityArtifactCount < 2 ||
-    rawAggregate.methodInventoryArtifactCount < 6 ||
-    rawAggregate.reportArtifactCount < 6 ||
-    rawAggregate.transcriptArtifactCount < 6 ||
+    rawAggregate.methodInventoryArtifactCount < 7 ||
+    rawAggregate.reportArtifactCount < 7 ||
+    rawAggregate.transcriptArtifactCount < 7 ||
     rawAggregate.allRequiredSuitesPresent !== true ||
     rawAggregate.allInputsRegular !== true ||
     rawAggregate.allInputsHashVerified !== true ||

@@ -26,7 +26,11 @@ import {
   isProductionRolloutPriorV3Envelope,
   productionAdmissionV3ProjectionPrefix,
 } from "./lib/production-rollout-v3-contract.mjs";
-import { verifyTairaDeploymentManifestV1 } from "./lib/taira-deployment-manifest-v1.mjs";
+import {
+  parseExpectedTairaDeploymentManifestSequenceNumberV1,
+  verifyTairaDeploymentManifestV1,
+} from "./lib/taira-deployment-manifest-v1.mjs";
+import { maximumTairaDeploymentAdmissionAgeSecondsV1 } from "./lib/taira-deployment-freshness-v1.mjs";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
 const templatePath = resolve(
@@ -90,7 +94,8 @@ const MINIMUM_DWELL_SECONDS = 48 * 60 * 60;
 const COHORT_SEQUENCE = [1, 5, 25, 100];
 const SORA2_REVISION = "411dcdb70c5c00b21482a44d02334840d5f338c6";
 const SHA256 = /^[0-9a-f]{64}$/;
-const MAXIMUM_TAIRA_DEPLOYMENT_AGE_SECONDS = 7 * 24 * 60 * 60;
+const maximumTairaDeploymentAgeSeconds =
+  maximumTairaDeploymentAdmissionAgeSecondsV1(targetRaw);
 
 const failures = [];
 const fail = (code) => failures.push(code);
@@ -499,10 +504,11 @@ const validateTairaDeployment = (expectedManifestSha256) => {
   const admittedAt = admissionRecord?.value?.evaluationEpochSeconds;
   if (
     admissionRecord === null ||
+    maximumTairaDeploymentAgeSeconds === null ||
     !isBoundedInteger(admittedAt, 9_999_999_999) ||
     admittedAt === 0 ||
     admittedAt > evaluationEpoch ||
-    evaluationEpoch - admittedAt > MAXIMUM_TAIRA_DEPLOYMENT_AGE_SECONDS
+    evaluationEpoch - admittedAt > maximumTairaDeploymentAgeSeconds
   ) {
     fail("ROLLOUT_TAIRA_DEPLOYMENT_ADMISSION_STALE_OR_INVALID");
     return null;
@@ -524,6 +530,10 @@ const validateTairaDeployment = (expectedManifestSha256) => {
       expectedReviewerKeySha256:
         process.env.TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256 ?? "",
       evaluationEpochSeconds: admittedAt,
+      expectedManifestSequenceNumber:
+        parseExpectedTairaDeploymentManifestSequenceNumberV1(
+          process.env.TAIRA_DEPLOYMENT_EXPECTED_MANIFEST_SEQUENCE_NUMBER ?? "",
+        ),
     });
   } catch {
     fail("ROLLOUT_TAIRA_DEPLOYMENT_SIGNATURE_OR_MANIFEST_INVALID");

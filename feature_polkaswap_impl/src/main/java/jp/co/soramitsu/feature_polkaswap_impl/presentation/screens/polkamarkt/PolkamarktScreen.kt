@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -23,7 +24,17 @@ import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.*
+import jp.co.soramitsu.common.presentation.walletDateTime
+import jp.co.soramitsu.common.presentation.compose.components.WalletErrorMessage
+import jp.co.soramitsu.common.presentation.compose.components.walletStatusLabel
+import jp.co.soramitsu.ui_core.theme.customTypography
+import java.text.NumberFormat
+import kotlin.math.abs
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -98,7 +109,7 @@ internal fun PolkamarktScreen(
                 value = state.search,
                 onValueChange = onSearch,
                 singleLine = true,
-                label = { Text("Search markets") },
+                label = { Text(stringResource(CommonR.string.wallet_market_search_markets)) },
             )
             Row(
                 modifier = Modifier
@@ -107,7 +118,7 @@ internal fun PolkamarktScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 PolkamarktWebContract.STATUS_FILTERS.forEach { filter ->
-                    TextButton(onClick = { onStatusFilter(filter) }) {
+                    TextButton(onClick = { onStatusFilter(filter) }, modifier = Modifier.semantics { selected = state.statusFilter == filter; role = Role.Tab }) {
                         Text(
                             text = filter.replaceFirstChar { it.uppercase() },
                             fontWeight = if (state.statusFilter == filter) {
@@ -118,7 +129,7 @@ internal fun PolkamarktScreen(
                         )
                     }
                 }
-                OutlinedButton(onClick = onMineOnly) {
+                OutlinedButton(onClick = onMineOnly, modifier = Modifier.semantics { selected = state.mineOnly }) {
                     Text(if (state.mineOnly) "My markets ✓" else "My markets")
                 }
             }
@@ -129,7 +140,7 @@ internal fun PolkamarktScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 (listOf("all") + PolkamarktWebContract.CATEGORIES).forEach { category ->
-                    TextButton(onClick = { onCategoryFilter(category) }) {
+                    TextButton(onClick = { onCategoryFilter(category) }, modifier = Modifier.semantics { selected = state.categoryFilter == category; role = Role.Tab }) {
                         Text(
                             text = category.replaceFirstChar { it.uppercase() },
                             fontWeight = if (state.categoryFilter == category) {
@@ -165,6 +176,13 @@ internal fun PolkamarktScreen(
                 )
                 searchMatches && statusMatches && categoryMatches && ownerMatches
             }
+            if (filteredMarkets.isEmpty() && !state.loading) {
+                Text(stringResource(CommonR.string.wallet_market_empty), modifier = Modifier.padding(vertical = 24.dp))
+                TextButton(onClick = {
+                    onSearch(""); onStatusFilter("all"); onCategoryFilter("all")
+                    if (state.mineOnly) onMineOnly()
+                }) { Text(stringResource(CommonR.string.wallet_market_reset)) }
+            }
             filteredMarkets.forEach { market ->
                 MarketRow(
                     market = market,
@@ -176,7 +194,7 @@ internal fun PolkamarktScreen(
         } else {
             val market = checkNotNull(state.selectedMarket)
             TextButton(onClick = onBackToMarkets) {
-                Text("‹ Markets")
+                Text(stringResource(CommonR.string.wallet_market_back_markets))
             }
             Spacer(Modifier.size(Dimens.x2))
             MarketDetail(
@@ -210,7 +228,7 @@ internal fun PolkamarktScreen(
             ) {
                 Text(
                     "Positions",
-                    style = MaterialTheme.typography.h6,
+                    style = MaterialTheme.customTypography.headline2,
                     color = MaterialTheme.customColors.fgPrimary,
                 )
                 val reviewedPayoutMarketIds: List<Long> = state.positions
@@ -231,7 +249,7 @@ internal fun PolkamarktScreen(
                         enabled = mutationsAvailable,
                         onClick = onBatchClaim,
                     ) {
-                        Text("Claim ${reviewedPayoutMarketIds.size} verified payouts")
+                        Text(stringResource(CommonR.string.wallet_market_claim_payouts, reviewedPayoutMarketIds.size))
                     }
                 } else if (state.positions.size > 1) {
                     OutlinedButton(
@@ -240,9 +258,9 @@ internal fun PolkamarktScreen(
                     ) {
                         Text(
                             if (state.claimReviewLoading) {
-                                "Reviewing finalized claims…"
+                                "Checking available payouts…"
                             } else {
-                                "Review finalized claims"
+                                "Check available payouts"
                             }
                         )
                     }
@@ -268,7 +286,7 @@ internal fun PolkamarktScreen(
             Spacer(Modifier.size(Dimens.x3))
             Text(
                 "Trade history",
-                style = MaterialTheme.typography.h6,
+                style = MaterialTheme.customTypography.headline2,
                 color = MaterialTheme.customColors.fgPrimary,
             )
             state.trades.take(25).forEach { trade ->
@@ -290,9 +308,9 @@ internal fun PolkamarktScreen(
                         )
                         Text(
                             "Shares ${trade.sharesAmount.orEmpty()} · Price ${trade.executionPrice.orEmpty()}",
-                            style = MaterialTheme.typography.caption,
+                            style = MaterialTheme.customTypography.paragraphS,
                         )
-                        Text(trade.timestamp.orEmpty(), style = MaterialTheme.typography.caption)
+                        Text(trade.timestamp.orEmpty(), style = MaterialTheme.customTypography.paragraphS)
                     }
                 }
             }
@@ -355,13 +373,13 @@ private fun ClaimConfirmationDialog(
                         CommonR.string.polkamarkt_claim_confirmation_checkpoint,
                         confirmation.finalizedBlockHash.take(18),
                     ),
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.customColors.fgSecondary,
+                    style = MaterialTheme.customTypography.paragraphS,
+                    color = MaterialTheme.customColors.fgPrimary,
                 )
                 Text(
                     stringResource(CommonR.string.polkamarkt_claim_confirmation_fee_notice),
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.customColors.fgSecondary,
+                    style = MaterialTheme.customTypography.paragraphS,
+                    color = MaterialTheme.customColors.fgPrimary,
                 )
             }
         },
@@ -390,59 +408,48 @@ private fun PolkamarktHeader(
     ) {
         Column {
             Text(
-                "Prediction markets",
-                style = MaterialTheme.typography.h5,
+                stringResource(CommonR.string.wallet_market_market_title),
+                style = MaterialTheme.customTypography.displayS,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.customColors.fgPrimary,
             )
             Text(
                 state.signals?.let {
-                    "${it.activeMarkets} active · ${it.activeAccounts} traders"
+                    stringResource(CommonR.string.wallet_market_activity, it.activeMarkets, it.activeAccounts)
                 } ?: "SORA2 · KUSD markets",
-                style = MaterialTheme.typography.caption,
-                color = MaterialTheme.customColors.fgSecondary,
+                style = MaterialTheme.customTypography.paragraphS,
+                color = MaterialTheme.customColors.fgPrimary,
             )
         }
         if (state.loading || state.refreshing) {
             CircularProgressIndicator(modifier = Modifier.size(24.dp))
         } else {
-            TextButton(onClick = onRefresh) { Text("Refresh") }
+            TextButton(onClick = onRefresh) { Text(stringResource(CommonR.string.wallet_market_refresh)) }
         }
     }
-    state.errorCode?.let {
-        Text(
-            text = it,
-            color = MaterialTheme.customColors.statusError,
-            style = MaterialTheme.typography.caption,
-        )
-    }
+    state.errorCode?.let { WalletErrorMessage(it, onRetry = onRefresh) }
     if (state.pendingRecoveryRequired) {
-        Text(
-            text = "Pending transaction recovery required · trading and claims disabled",
-            color = MaterialTheme.customColors.statusError,
-            style = MaterialTheme.typography.caption,
-        )
+        WalletErrorMessage("POLKAMARKT_RECOVERY_REQUIRED", onRetry = onRefresh)
     }
     if (state.usingCachedData) {
         Text(
-            text = "Offline market catalog · runtime checks still required for trading",
-            color = MaterialTheme.customColors.fgSecondary,
-            style = MaterialTheme.typography.caption,
+            text = stringResource(CommonR.string.wallet_market_saved_markets),
+            color = MaterialTheme.customColors.fgPrimary,
+            style = MaterialTheme.customTypography.paragraphS,
         )
     }
     state.pendingTransactions.forEach { pending ->
         Text(
-            text = "${pending.operation} · ${pending.state} · " +
-                (pending.transactionHash?.take(12) ?: pending.localId.take(12)),
-            color = MaterialTheme.customColors.fgSecondary,
-            style = MaterialTheme.typography.caption,
+            text = walletStatusLabel(pending.state),
+            color = MaterialTheme.customColors.fgPrimary,
+            style = MaterialTheme.customTypography.paragraphS,
         )
     }
     state.lastMutation?.let {
         Text(
-            text = "${it.state} · ${it.transactionHash?.take(12) ?: it.localId.take(12)}",
-            color = MaterialTheme.customColors.fgSecondary,
-            style = MaterialTheme.typography.caption,
+            text = walletStatusLabel(it.state),
+            color = MaterialTheme.customColors.fgPrimary,
+            style = MaterialTheme.customTypography.paragraphS,
         )
     }
 }
@@ -470,18 +477,18 @@ private fun MarketRow(
             ) {
                 Text(
                     market.category ?: "Market",
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.customColors.fgSecondary,
+                    style = MaterialTheme.customTypography.paragraphS,
+                    color = MaterialTheme.customColors.fgPrimary,
                 )
                 Text(
                     market.status.orEmpty().uppercase(),
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.customTypography.paragraphS,
                     fontWeight = FontWeight.Bold,
                 )
             }
             Text(
                 market.title ?: "Market ${market.marketId ?: ""}",
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.customTypography.headline3,
                 fontWeight = FontWeight.Bold,
             )
             Row(
@@ -499,8 +506,8 @@ private fun MarketRow(
             }
             Text(
                 "Liquidity ${market.liquidityUsd.orEmpty()} · Volume ${market.volumeUsd.orEmpty()}",
-                style = MaterialTheme.typography.caption,
-                color = MaterialTheme.customColors.fgSecondary,
+                style = MaterialTheme.customTypography.paragraphS,
+                color = MaterialTheme.customColors.fgPrimary,
             )
         }
     }
@@ -525,23 +532,23 @@ private fun MarketDetail(
         Column(Modifier.padding(Dimens.x3)) {
             Text(
                 catalogMarket.title.orEmpty(),
-                style = MaterialTheme.typography.h6,
+                style = MaterialTheme.customTypography.headline2,
                 fontWeight = FontWeight.Bold,
             )
             catalogMarket.description?.takeIf(String::isNotBlank)?.let {
                 Spacer(Modifier.size(Dimens.x1))
-                Text(it, style = MaterialTheme.typography.body2)
+                Text(it, style = MaterialTheme.customTypography.paragraphM)
             }
             Spacer(Modifier.size(Dimens.x2))
             when {
                 loading -> Text(
-                    "Loading finalized runtime state…",
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.customColors.fgSecondary,
+                    "Checking the latest market information…",
+                    style = MaterialTheme.customTypography.paragraphS,
+                    color = MaterialTheme.customColors.fgPrimary,
                 )
                 authoritativeMarket == null -> Text(
-                    "Finalized runtime state unavailable · catalog state is not authoritative",
-                    style = MaterialTheme.typography.caption,
+                    "The latest market information is unavailable. Trading is paused until it can be checked.",
+                    style = MaterialTheme.customTypography.paragraphS,
                     color = MaterialTheme.customColors.statusError,
                 )
                 else -> {
@@ -556,9 +563,9 @@ private fun MarketDetail(
                             formatBps(authoritativeMarket.displayNoProbabilityBps),
                     )
                     Text(
-                        "Finalized ${finalizedBlockHash?.take(12).orEmpty()}",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.customColors.fgSecondary,
+                        "Market information confirmed by the network",
+                        style = MaterialTheme.customTypography.paragraphS,
+                        color = MaterialTheme.customColors.fgPrimary,
                     )
                     val yesShares = claimable?.yesShares ?: BigInteger.ZERO
                     val noShares = claimable?.noShares ?: BigInteger.ZERO
@@ -568,12 +575,12 @@ private fun MarketDetail(
                             "${PolkamarktViewModel.formatUnits(yesShares)} · " +
                             "${polkamarktOutcomeLabel(PolkamarktOutcome.NO).uppercase()} " +
                             PolkamarktViewModel.formatUnits(noShares),
-                        style = MaterialTheme.typography.body2,
+                        style = MaterialTheme.customTypography.paragraphM,
                     )
                     claimable?.claimablePayout?.takeIf { it.signum() == 1 }?.let { payout ->
                         Text(
                             "Claimable ${PolkamarktViewModel.formatUnits(payout)} KUSD",
-                            style = MaterialTheme.typography.caption,
+                            style = MaterialTheme.customTypography.paragraphS,
                         )
                     }
                     if (claimable != null && hasClaimableStatus(claimable)) {
@@ -613,35 +620,37 @@ private fun MarketDetail(
             ProbabilityChart(snapshots)
             if (authoritativeMarket != null && isDpmMarket(authoritativeMarket)) {
                 Spacer(Modifier.size(Dimens.x2))
-                DpmPricingCurve(authoritativeMarket)
+                var showPricing by remember(catalogMarket.marketId) { mutableStateOf(false) }
+                TextButton(onClick = { showPricing = !showPricing }) { Text(if (showPricing) stringResource(CommonR.string.wallet_market_hide_pricing) else stringResource(CommonR.string.wallet_market_show_pricing)) }
+                if (showPricing) DpmPricingCurve(authoritativeMarket)
             }
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 safeWebUri(catalogMarket.metadataUri)?.let { uri ->
-                    TextButton(onClick = { uriHandler.openUri(uri) }) { Text("Metadata") }
+                    TextButton(onClick = { uriHandler.openUri(uri) }) { Text(stringResource(CommonR.string.wallet_market_metadata)) }
                 }
                 safeWebUri(catalogMarket.rulesUri)?.let { uri ->
-                    TextButton(onClick = { uriHandler.openUri(uri) }) { Text("Rules") }
+                    TextButton(onClick = { uriHandler.openUri(uri) }) { Text(stringResource(CommonR.string.wallet_market_rules)) }
                 }
                 safeWebUri(catalogMarket.resolutionEvidenceUri)?.let { uri ->
-                    TextButton(onClick = { uriHandler.openUri(uri) }) { Text("Evidence") }
+                    TextButton(onClick = { uriHandler.openUri(uri) }) { Text(stringResource(CommonR.string.wallet_market_evidence)) }
                 }
                 safeWebUri(catalogMarket.cancellationEvidenceUri)?.let { uri ->
                     TextButton(onClick = { uriHandler.openUri(uri) }) {
-                        Text("Cancellation")
+                        Text(stringResource(CommonR.string.wallet_market_cancellation))
                     }
                 }
                 safeWebUri(catalogMarket.governanceUrl)?.let { uri ->
-                    TextButton(onClick = { uriHandler.openUri(uri) }) { Text("Governance") }
+                    TextButton(onClick = { uriHandler.openUri(uri) }) { Text(stringResource(CommonR.string.wallet_market_governance)) }
                 }
             }
             catalogMarket.resolutionSource?.takeIf(String::isNotBlank)?.let {
                 Text(
                     "Resolution source · $it",
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.customColors.fgSecondary,
+                    style = MaterialTheme.customTypography.paragraphS,
+                    color = MaterialTheme.customColors.fgPrimary,
                 )
             }
         }
@@ -652,15 +661,15 @@ private fun MarketDetail(
 private fun DpmPricingCurve(market: PolkamarktMarket) {
     Text(
         "Dynamic pari-mutuel pricing curve",
-        style = MaterialTheme.typography.subtitle2,
+        style = MaterialTheme.customTypography.headline3,
         fontWeight = FontWeight.Bold,
     )
     Text(
         "${polkamarktOutcomeLabel(PolkamarktOutcome.YES).uppercase()} / " +
             "${polkamarktOutcomeLabel(PolkamarktOutcome.NO).uppercase()} " +
             "marginal quote by demand share",
-        style = MaterialTheme.typography.caption,
-        color = MaterialTheme.customColors.fgSecondary,
+        style = MaterialTheme.customTypography.paragraphS,
+        color = MaterialTheme.customColors.fgPrimary,
     )
     val yesColor = MaterialTheme.customColors.accentPrimary
     val noColor = MaterialTheme.customColors.fgSecondary
@@ -670,7 +679,11 @@ private fun DpmPricingCurve(market: PolkamarktMarket) {
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp),
+            .height(120.dp)
+            .semantics {
+                contentDescription = "Pricing model: the horizontal axis is the YES share of demand, from 1 to 99 percent. The vertical axis is the quoted price, from zero to one. YES prices rise as YES demand rises; NO prices fall."
+                role = Role.Image
+            },
     ) {
         val yesPath = Path()
         val noPath = Path()
@@ -711,47 +724,79 @@ private fun DpmPricingCurve(market: PolkamarktMarket) {
             )
         }
     }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(stringResource(CommonR.string.wallet_market_demand_low), style = MaterialTheme.customTypography.textS)
+        Text(stringResource(CommonR.string.wallet_market_demand_high), style = MaterialTheme.customTypography.textS)
+    }
+    Text(stringResource(CommonR.string.wallet_market_price_axis), style = MaterialTheme.customTypography.paragraphS)
+
 }
 
 @Composable
-private fun ProbabilityChart(snapshots: List<PolkamarktMarketSnapshot>) {
-    val points = snapshots.asReversed().mapNotNull { snapshot ->
-        val yesProbability = snapshot.chartPriceYes
-            ?: snapshot.chartProbability
-            ?: snapshot.chartPriceNo?.let { 1.0 - it }
-        yesProbability?.toFloat()
+internal fun ProbabilityChart(snapshots: List<PolkamarktMarketSnapshot>) {
+    val history = remember(snapshots) { probabilityHistory(snapshots.map {
+        it.timestamp to (it.chartPriceYes ?: it.chartProbability ?: it.chartPriceNo?.let { no -> 1.0 - no })
+    }) }
+    var duration by remember { mutableStateOf<Long?>(null) }
+    val points = remember(history, duration) { probabilityWindow(history, duration) }
+    var selectedPoint by remember(points) { mutableStateOf(points.lastOrNull()) }
+    val percent = remember { NumberFormat.getPercentInstance().apply { maximumFractionDigits = 1 } }
+    Text(stringResource(CommonR.string.wallet_probability_history), style = MaterialTheme.customTypography.headline3)
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).selectableGroup()) {
+        listOf(86_400_000L to CommonR.string.wallet_chart_range_day,
+            604_800_000L to CommonR.string.wallet_chart_range_week,
+            null to CommonR.string.wallet_chart_range_all).forEach { (range, label) ->
+            TextButton(onClick = { duration = range }, modifier = Modifier.semantics {
+                selected = duration == range; role = Role.Tab
+            }) { Text(stringResource(label), fontWeight = if (duration == range) FontWeight.Bold else FontWeight.Normal) }
+        }
     }
     if (points.size < 2) {
-        Text(
-            "Price history unavailable",
-            style = MaterialTheme.typography.caption,
-            color = MaterialTheme.customColors.fgSecondary,
-        )
+        Text(stringResource(CommonR.string.wallet_chart_insufficient), style = MaterialTheme.customTypography.paragraphS)
         return
     }
+    val first = points.first()
+    val last = points.last()
+    val summary = stringResource(CommonR.string.wallet_chart_summary,
+        percent.format(first.probability), walletDateTime(first.timestampMillis),
+        percent.format(last.probability), walletDateTime(last.timestampMillis),
+        percent.format(points.minOf { it.probability }), percent.format(points.maxOf { it.probability }))
     val lineColor = MaterialTheme.customColors.accentPrimary
-    Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp),
-    ) {
-        val path = Path()
-        points.forEachIndexed { index, value ->
-            val x = size.width * index / (points.lastIndex.coerceAtLeast(1))
-            val normalized = value.coerceIn(0f, 1f)
-            val y = size.height * (1f - normalized)
-            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.height(160.dp), verticalArrangement = Arrangement.SpaceBetween) {
+            listOf(1.0, 0.5, 0.0).map(percent::format).forEach { Text(it, style = MaterialTheme.customTypography.textS) }
         }
-        drawPath(
-            path = path,
-            color = lineColor,
-            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round),
-        )
-        drawLine(
-            color = lineColor.copy(alpha = 0.2f),
-            start = Offset(0f, size.height / 2f),
-            end = Offset(size.width, size.height / 2f),
-        )
+        Canvas(Modifier.weight(1f).height(160.dp).semantics {
+            contentDescription = summary; role = Role.Image
+        }.pointerInput(points) {
+            detectTapGestures { offset ->
+                selectedPoint = points.minByOrNull { abs(probabilityX(it, points) - offset.x / size.width) }
+            }
+        }) {
+            listOf(0f, 0.5f, 1f).forEach { fraction ->
+                drawLine(lineColor.copy(alpha = 0.2f), Offset(0f, size.height * fraction),
+                    Offset(size.width, size.height * fraction))
+            }
+            val path = Path()
+            points.forEachIndexed { index, point ->
+                val x = size.width * probabilityX(point, points)
+                val y = size.height * (1f - point.probability.toFloat())
+                if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            drawPath(path, lineColor, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+            selectedPoint?.let { point ->
+                drawCircle(lineColor, radius = 5.dp.toPx(), center = Offset(
+                    size.width * probabilityX(point, points), size.height * (1f - point.probability.toFloat())))
+            }
+        }
+    }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(walletDateTime(first.timestampMillis), modifier = Modifier.weight(1f), style = MaterialTheme.customTypography.textS)
+        Text(walletDateTime(last.timestampMillis), modifier = Modifier.weight(1f), style = MaterialTheme.customTypography.textS)
+    }
+    selectedPoint?.let { point ->
+        Text("${percent.format(point.probability)} · ${walletDateTime(point.timestampMillis)}",
+            style = MaterialTheme.customTypography.paragraphM)
     }
 }
 
@@ -777,7 +822,7 @@ private fun TradeTicket(
         backgroundColor = MaterialTheme.customColors.bgSurface,
     ) {
         Column(Modifier.padding(Dimens.x3)) {
-            Text("Trade", style = MaterialTheme.typography.h6, fontWeight = FontWeight.Bold)
+            Text(stringResource(CommonR.string.wallet_market_trade), style = MaterialTheme.customTypography.headline2, fontWeight = FontWeight.Bold)
             ChoiceRow(
                 values = PolkamarktTradeSide.entries,
                 selected = state.side,
@@ -815,20 +860,20 @@ private fun TradeTicket(
                 }
                 Text(
                     availableShares?.let {
-                        "Finalized available shares ${PolkamarktViewModel.formatUnits(it)}"
-                    } ?: "Finalized share balance unavailable",
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.customColors.fgSecondary,
+                        "Available shares: ${PolkamarktViewModel.formatUnits(it)}"
+                    } ?: "Share balance unavailable",
+                    style = MaterialTheme.customTypography.paragraphS,
+                    color = MaterialTheme.customColors.fgPrimary,
                 )
             }
             Text(
                 stringResource(CommonR.string.polkamarkt_ticket_slippage),
-                style = MaterialTheme.typography.caption,
-                color = MaterialTheme.customColors.fgSecondary,
+                style = MaterialTheme.customTypography.paragraphS,
+                color = MaterialTheme.customColors.fgPrimary,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 PolkamarktWebContract.SLIPPAGE_PRESETS_BPS.forEach { bps ->
-                    TextButton(onClick = { onSlippage(bps) }) {
+                    TextButton(onClick = { onSlippage(bps) }, modifier = Modifier.semantics { selected = state.slippageBps == bps; role = Role.RadioButton }) {
                         Text(
                             text = formatBps(bps),
                             fontWeight = if (state.slippageBps == bps) {
@@ -850,7 +895,7 @@ private fun TradeTicket(
                 Text(
                     when {
                         state.quoteLoading -> "Quoting…"
-                        mutationsAvailable -> "Get fresh quote"
+                        mutationsAvailable -> "Review trade"
                         else -> "Quoting temporarily unavailable"
                     }
                 )
@@ -870,7 +915,7 @@ private fun TradeTicket(
                                 sellLabel
                             }
                         } else {
-                            "Trading temporarily unavailable"
+                            stringResource(CommonR.string.wallet_market_trading_unavailable)
                         },
                     )
                 }
@@ -891,7 +936,7 @@ private fun QuoteDetails(quote: PolkamarktTradeQuote) {
         "$outputLabel ${PolkamarktViewModel.formatUnits(quote.outputAmount)}",
         fontWeight = FontWeight.Bold,
     )
-    Text("Minimum ${PolkamarktViewModel.formatUnits(quote.minimumOutput)}")
+    Text(stringResource(CommonR.string.wallet_market_minimum, PolkamarktViewModel.formatUnits(quote.minimumOutput)))
     Text(
         "${stringResource(CommonR.string.polkamarkt_ticket_taker_fee)} " +
             PolkamarktViewModel.formatUnits(quote.marketFee),
@@ -911,7 +956,7 @@ private fun QuoteDetails(quote: PolkamarktTradeQuote) {
     Text(
         "$inputBalance · " +
             "XOR ${PolkamarktViewModel.formatUnits(quote.xorBalance)}",
-        style = MaterialTheme.typography.caption,
+        style = MaterialTheme.customTypography.paragraphS,
     )
 }
 
@@ -942,12 +987,12 @@ private fun PositionRow(
                         "${PolkamarktViewModel.formatUnits(it.yesShares)} · " +
                         "${polkamarktOutcomeLabel(PolkamarktOutcome.NO).uppercase()} " +
                         PolkamarktViewModel.formatUnits(it.noShares)
-                } ?: "Finalized share balance not reviewed",
-                style = MaterialTheme.typography.body2,
+                } ?: "Check your latest share balance",
+                style = MaterialTheme.customTypography.paragraphM,
             )
             Text(
                 "PnL ${position.realizedPnlUsd.orEmpty()} / ${position.unrealizedPnlUsd.orEmpty()}",
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.customTypography.paragraphS,
             )
             val marketId = position.marketId
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -955,11 +1000,11 @@ private fun PositionRow(
                     OutlinedButton(
                         enabled = !reviewLoading,
                         onClick = { onReview(marketId) },
-                    ) { Text("Review claim") }
+                    ) { Text(stringResource(CommonR.string.wallet_market_review_claim)) }
                 } else if (claimable == null) {
                     Text(
-                        "No claim at reviewed finalized block",
-                        style = MaterialTheme.typography.caption,
+                        "No payout is currently available",
+                        style = MaterialTheme.customTypography.paragraphS,
                     )
                 }
                 if (
@@ -1022,12 +1067,12 @@ private fun <T> ChoiceRow(
     label: (T) -> String,
     onSelect: (T) -> Unit,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(modifier = Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         values.forEach { value ->
             if (value == selected) {
-                Button(onClick = { onSelect(value) }) { Text(label(value)) }
+                Button(onClick = { onSelect(value) }, modifier = Modifier.weight(1f).semantics { this.selected = true; role = Role.RadioButton }) { Text(label(value)) }
             } else {
-                OutlinedButton(onClick = { onSelect(value) }) { Text(label(value)) }
+                OutlinedButton(onClick = { onSelect(value) }, modifier = Modifier.weight(1f).semantics { this.selected = true; role = Role.RadioButton }) { Text(label(value)) }
             }
         }
     }

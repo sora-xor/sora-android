@@ -146,28 +146,22 @@ The SORA2 identity embedded in the candidate must remain exactly:
 
 ## Network, flags, signer, artifact identity, and approval
 
-The last shipped Taira recovery identity is chain
-`fc56984b-2be7-431d-840e-21514d1883f0` with discriminant `369`. It remains available only for
-derivation and retained-journal recovery. It is not current routing authority. Production routing
-requires the dual-signed contract documented in
-`taira-deployment-manifest-README.md`; without that exact build binding every Taira Torii route
-fails before transport. The checked-in blocked canary and rollout contracts are likewise not
-authoritative evidence of the identity currently served by a public endpoint. Minamoto is exactly chain
+The first-release Taira identity is exactly chain
+`fc56984b-2be7-431d-840e-21514d1883f0` with discriminant `369`, Torii and explorer root
+`https://taira.sora.org`, and curated MCP endpoint `https://taira.sora.org/v1/mcp`. These runtime
+values are immutable application constants; signed deployment evidence can confirm them but cannot
+select another route or chain. The checked-in blocked canary and rollout contracts are not live
+proof that the public ingress currently serves that identity. Minamoto is exactly chain
 `00000000-0000-0000-0000-000000000753`, discriminant `753`, Torii
 `https://minamoto.sora.org`, explorer `https://minamoto-explorer.sora.org`, and a mainnet. Both use
 the symbol `XOR` and exact alias `xor#universal`.
 
-The UUID `809574f5-fee7-5e69-bfcf-52451e42d50f` is also retained as recovery evidence. Repository
-source never activates either UUID from its own assertion: protected operator and reviewer inputs
-must explicitly confirm the retired/current ordering. Schema-77 current-chain queries consume both
-the admitted UUID and the exact manifest-digest namespace written into each new Taira `localId`;
-every null, other UUID, unbound ID, or other-manifest ID remains immutable recovery evidence. This
-also prevents a newly selected mapping from reinterpreting an older row that happens to carry the
-same UUID. Until that
-manifest and a challenge-bound Torii observation match, Taira funded canaries and production
-mutation admission remain blocked. Never
-reinterpret retained journal rows or route Torii traffic from a documentation claim; retained keys
-and discriminant-369 addresses remain unchanged.
+The rejected UUID `809574f5-fee7-5e69-bfcf-52451e42d50f` may appear only in pre-release migration
+fixtures and retired release evidence. It is never current routing authority. New Taira pending rows
+carry the canonical chain ID and a namespace derived from the immutable first-release contract;
+every null, other UUID, or other namespace remains recovery evidence and cannot be submitted.
+Until signed release evidence and a challenge-bound live Torii observation match the canonical
+contract, Taira funded canaries and production mutation admission remain blocked.
 
 The feature snapshot binds all five decoded PI `mobileConfig` values, its actual strict receipt
 hash and observation time, the effective Taira choice, its explicit-preference state, and the local

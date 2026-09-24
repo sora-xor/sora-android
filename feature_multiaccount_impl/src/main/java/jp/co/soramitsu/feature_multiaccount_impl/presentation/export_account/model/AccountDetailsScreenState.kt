@@ -40,4 +40,5 @@ data class AccountDetailsScreenState(
     val isBackupLoading: Boolean,
     val isBackupAvailable: Boolean?,
     val address: String,
+    val isCloudBackupAvailable: Boolean = true,
 )

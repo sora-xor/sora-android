@@ -70,6 +70,9 @@ interface UserDatasource {
 
     suspend fun setCurAccountAddress(accountAddress: String)
 
+    /** Atomically publishes the verified owner of retained, unsuffixed legacy credentials. */
+    suspend fun completeLegacyAccountUpgrade(accountAddress: String)
+
     suspend fun savePinTriesUsed(triesUsed: Int)
 
     suspend fun saveTimerStartedTimestamp(timer: Long)

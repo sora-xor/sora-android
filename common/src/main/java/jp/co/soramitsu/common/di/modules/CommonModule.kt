@@ -82,6 +82,7 @@ import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import jp.co.soramitsu.xbackup.BackupService
+import jp.co.soramitsu.common.backup.CloudBackupProvider
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.models.AbstractRestClientConfig
 import jp.co.soramitsu.xnetworking.lib.engines.rest.impl.RestClientImpl
@@ -284,7 +285,8 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideBackupService(@ApplicationContext context: Context): BackupService {
-        return BackupService.create(BuildConfig.GOOGLE_API_TOKEN, context)
-    }
+    fun provideCloudBackupProvider(@ApplicationContext context: Context): CloudBackupProvider =
+        CloudBackupProvider(BuildConfig.GOOGLE_API_TOKEN.isNotBlank()) {
+            BackupService.create(BuildConfig.GOOGLE_API_TOKEN, context)
+        }
 }

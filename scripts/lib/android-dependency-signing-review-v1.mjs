@@ -13,6 +13,7 @@ import {
   realpathSync,
 } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
+import { ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1 } from "./android-production-lock-inventory-v1.mjs";
 import { parseStrictJsonBytes } from "./strict-evidence.mjs";
 
 export const ANDROID_DEPENDENCY_SIGNING_REVIEW_V1 = Object.freeze({
@@ -244,7 +245,7 @@ const qualificationIsComplete = (value) =>
   exactKeys(value, ANDROID_DEPENDENCY_SIGNING_REVIEW_QUALIFICATION_KEYS) &&
   value.vendoredCoordinateCountReviewed === 11 &&
   value.lockFileCountReviewed === 31 &&
-  value.lockConfigurationCountReviewed === 271 &&
+  value.lockConfigurationCountReviewed === ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.configurationCount &&
   ANDROID_DEPENDENCY_SIGNING_REVIEW_QUALIFICATION_KEYS.slice(3).every(
     (key) => value[key] === true,
   );

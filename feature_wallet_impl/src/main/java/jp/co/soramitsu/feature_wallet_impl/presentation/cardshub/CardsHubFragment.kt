@@ -120,6 +120,27 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
         SoraCardContract()
     ) { viewModel.handleSoraCardResult(it) }
 
+    @javax.inject.Inject
+    lateinit var qrScannerFactory: jp.co.soramitsu.feature_assets_api.presentation.QrScannerContractFactory
+    private lateinit var nexusRecipientScanner: androidx.activity.result.ActivityResultLauncher<Unit>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        nexusRecipientScanner = registerForActivityResult(
+            qrScannerFactory.create(jp.co.soramitsu.feature_assets_api.presentation.QrScanPurpose.RECIPIENT),
+            { value ->
+                val cameraPermissionDenied = value == null && context?.let {
+                    androidx.core.content.ContextCompat.checkSelfPermission(it, android.Manifest.permission.CAMERA)
+                } == android.content.pm.PackageManager.PERMISSION_DENIED
+                viewModel.finishNexusRecipientScan(value, cameraPermissionDenied)
+            },
+        )
+    }
+
+    private fun scanNexusRecipient() {
+        if (viewModel.beginNexusRecipientScan()) nexusRecipientScanner.launch(Unit)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).showBottomBar()
@@ -135,13 +156,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
         composable(
             route = theOnlyRoute,
         ) {
-            var qrSelection by remember { mutableStateOf(false) }
-            val onQrClick: () -> Unit = {
-                qrSelection = true
-            }
-            if (qrSelection) {
-                viewModel.openQrCodeFlow()
-            }
+            val onQrClick: () -> Unit = viewModel::openQrCodeFlow
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -159,6 +174,9 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     onAmount = viewModel::setNexusAmount,
                     onPrepare = viewModel::prepareNexusSend,
                     onConfirm = viewModel::confirmNexusSend,
+                    onEdit = viewModel::editNexusSend,
+                    onRecovery = viewModel::onBackupBannerClick,
+                    onScan = ::scanNexusRecipient,
                 )
                 CardsMainScreen(
                     scrollState = scrollState,
@@ -234,6 +252,7 @@ private fun CardsMainScreen(
                 color = MaterialTheme.customColors.fgPrimary,
             )
         }
+        val networkSection: @Composable () -> Unit = {
         if (sora2Portfolio != null || nexusPortfolio.isNotEmpty()) {
             NexusPortfolioCard(
                 sora2 = sora2Portfolio,
@@ -243,10 +262,15 @@ private fun CardsMainScreen(
                 isSora2WalletCurrent = isSora2WalletCurrent,
                 onSend = onNexusSend,
                 isNexusBalanceCurrent = isNexusBalanceCurrent,
+                onRecovery = onBackupBannerClick,
             )
             Spacer(modifier = Modifier.size(size = 16.dp))
         }
-        state.cards.forEach { cardState ->
+        }
+        val orderedCards = state.cards.sortedBy { if (it is TitledAmountCardState) 0 else 1 }
+        val firstBanner = orderedCards.indexOfFirst { it !is TitledAmountCardState }
+        orderedCards.forEachIndexed { index, cardState ->
+            if (index == firstBanner) networkSection()
             when (cardState) {
                 is TitledAmountCardState -> {
                     CommonHubCard(
@@ -303,6 +327,8 @@ private fun CardsMainScreen(
             Spacer(modifier = Modifier.size(size = 16.dp))
         }
 
+        if (firstBanner == -1) networkSection()
+
         if (state.cards.isNotEmpty())
             BleachedButton(
                 modifier = Modifier
@@ -314,546 +340,6 @@ private fun CardsMainScreen(
                 onClick = onEdit,
             )
     }
-}
-
-@Composable
-private fun NexusPortfolioCard(
-    sora2: Sora2PortfolioBalance?,
-    balances: List<NexusPortfolioBalance>,
-    onSora2Receive: (String) -> Unit,
-    onSora2Open: (String) -> Unit,
-    isSora2WalletCurrent: (String) -> Boolean,
-    onSend: (NexusPortfolioBalance) -> Unit,
-    isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
-) {
-    val clipboard = LocalClipboardManager.current
-    val uriHandler = LocalUriHandler.current
-    // The repository is wallet-scoped, and the UI independently refuses to
-    // render any delayed row whose immutable wallet identity differs from the
-    // currently displayed SORA2 account.
-    val scopedBalances = balances.filter { it.walletId == sora2?.address }
-    // The dialog contains a full receive address. Key it to the selected
-    // SORA2 wallet so an account switch cannot leave the previous wallet's
-    // Minamoto/Taira address visible above the replacement portfolio.
-    var receiveBalance by remember(sora2?.address) {
-        mutableStateOf<NexusPortfolioBalance?>(null)
-    }
-    // Keep the full-history route bound to the same immutable wallet/network
-    // tuple as the row that opened it. A delayed portfolio refresh must not
-    // leave another wallet's finalized transfers on screen.
-    var historyBalance by remember(sora2?.address) {
-        mutableStateOf<NexusPortfolioBalance?>(null)
-    }
-    LaunchedEffect(scopedBalances) {
-        receiveBalance?.let { selected ->
-            if (
-                !isNexusBalanceCurrent(selected) ||
-                scopedBalances.none {
-                    it.walletId == selected.walletId &&
-                        it.networkId == selected.networkId &&
-                        it.address == selected.address
-                }
-            ) {
-                receiveBalance = null
-            }
-        }
-        historyBalance = historyBalance?.let { history ->
-            scopedBalances.singleOrNull {
-                it.walletId == history.walletId &&
-                    it.networkId == history.networkId &&
-                    it.address == history.address
-            }?.takeIf(isNexusBalanceCurrent)
-        }
-    }
-    receiveBalance?.takeIf(isNexusBalanceCurrent)?.let { balance ->
-        val qrBitmap = remember(balance.address) {
-            QrCodeGenerator(Color.BLACK).generateQrBitmap(balance.address).asImageBitmap()
-        }
-        AlertDialog(
-            onDismissRequest = { receiveBalance = null },
-            title = {
-                Text(
-                    "${balance.networkName} · " +
-                        stringResource(
-                            if (balance.isTestnet) R.string.network_badge_testnet
-                            else R.string.network_badge_mainnet
-                        )
-                )
-            },
-            text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(
-                        bitmap = qrBitmap,
-                        contentDescription = "${balance.networkName} receive address",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .widthIn(max = 280.dp),
-                    )
-                    Text(
-                        balance.address,
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.customColors.fgSecondary,
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (isNexusBalanceCurrent(balance)) {
-                            clipboard.setText(AnnotatedString(balance.address))
-                        }
-                        receiveBalance = null
-                    }
-                ) {
-                    Text(stringResource(R.string.copy_receive_address))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { receiveBalance = null }) {
-                    Text(stringResource(R.string.common_close))
-                }
-            },
-        )
-    }
-    historyBalance?.takeIf(isNexusBalanceCurrent)?.let { balance ->
-        AlertDialog(
-            onDismissRequest = { historyBalance = null },
-            title = {
-                Text(
-                    "${balance.networkName} · " +
-                        stringResource(
-                            if (balance.isTestnet) R.string.network_badge_testnet
-                            else R.string.network_badge_mainnet
-                        ) +
-                        " · ${stringResource(R.string.network_finalized_history)}"
-                )
-            },
-            text = {
-                key(balance.walletId, balance.networkId, balance.address) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 480.dp),
-                        state = rememberLazyListState(),
-                    ) {
-                        if (
-                            balance.confirmedTransfers.isEmpty() &&
-                            balance.historyErrorCode == null
-                        ) {
-                            item(key = "empty-history") {
-                                Text(
-                                    text = stringResource(R.string.network_history_empty),
-                                    style = MaterialTheme.typography.caption,
-                                    color = MaterialTheme.customColors.fgSecondary,
-                                )
-                            }
-                        } else {
-                            itemsIndexed(
-                                items = balance.confirmedTransfers,
-                                key = { index, transfer ->
-                                    "$index:${transfer.transactionHash}"
-                                },
-                            ) { _, transfer ->
-                                NexusConfirmedTransferRow(
-                                    transfer = transfer,
-                                    accountAddress = balance.address,
-                                    expanded = true,
-                                )
-                            }
-                        }
-                        if (balance.historyErrorCode != null) {
-                            item(key = "history-error") {
-                                Text(
-                                    text = stringResource(R.string.history_unavailable),
-                                    style = MaterialTheme.typography.caption,
-                                    color = MaterialTheme.customColors.fgSecondary,
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { historyBalance = null }) {
-                    Text(stringResource(R.string.common_close))
-                }
-            },
-        )
-    }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        backgroundColor = MaterialTheme.customColors.bgSurface,
-    ) {
-        Column(modifier = Modifier.padding(Dimens.x3)) {
-            Text(
-                text = stringResource(R.string.network_portfolio),
-                style = MaterialTheme.typography.subtitle1,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.customColors.fgPrimary,
-            )
-            sora2?.let { balance ->
-                Spacer(modifier = Modifier.size(Dimens.x2))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "SORA2",
-                        style = MaterialTheme.typography.subtitle2,
-                        color = MaterialTheme.customColors.fgPrimary,
-                    )
-                    Text(
-                        text = stringResource(R.string.network_badge_mainnet),
-                        style = MaterialTheme.typography.caption,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.customColors.fgSecondary,
-                    )
-                }
-                Text(
-                    text = balance.xorQuantity?.let { "$it XOR" }
-                        ?: stringResource(R.string.balance_unavailable),
-                    style = MaterialTheme.typography.h6,
-                    color = MaterialTheme.customColors.fgPrimary,
-                )
-                Text(
-                    text = balance.address,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.customColors.fgSecondary,
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(onClick = { onSora2Receive(balance.address) }) {
-                        Text(stringResource(R.string.common_receive))
-                    }
-                    TextButton(
-                        onClick = {
-                            if (isSora2WalletCurrent(balance.address)) {
-                                clipboard.setText(AnnotatedString(balance.address))
-                            }
-                        }
-                    ) {
-                        Text(stringResource(R.string.copy_receive_address))
-                    }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(onClick = { onSora2Open(balance.address) }) {
-                        Text(stringResource(R.string.network_send_history_action))
-                    }
-                }
-            }
-            scopedBalances.forEach { balance ->
-                Spacer(modifier = Modifier.size(Dimens.x2))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = balance.networkName,
-                        style = MaterialTheme.typography.subtitle2,
-                        color = MaterialTheme.customColors.fgPrimary,
-                    )
-                    Text(
-                        text = stringResource(
-                            if (balance.isTestnet) R.string.network_badge_testnet
-                            else R.string.network_badge_mainnet
-                        ),
-                        style = MaterialTheme.typography.caption,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.customColors.fgSecondary,
-                    )
-                }
-                Text(
-                    text = balance.xorQuantity?.let { "$it XOR" }
-                        ?: stringResource(R.string.balance_unavailable),
-                    style = MaterialTheme.typography.h6,
-                    color = MaterialTheme.customColors.fgPrimary,
-                )
-                Text(
-                    text = balance.address,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.customColors.fgSecondary,
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(
-                        onClick = {
-                            if (isNexusBalanceCurrent(balance)) {
-                                historyBalance = null
-                                receiveBalance = balance
-                            }
-                        },
-                    ) {
-                        Text(stringResource(R.string.common_receive))
-                    }
-                    TextButton(
-                        onClick = {
-                            if (isNexusBalanceCurrent(balance)) {
-                                clipboard.setText(AnnotatedString(balance.address))
-                            }
-                        }
-                    ) {
-                        Text(stringResource(R.string.copy_receive_address))
-                    }
-                    TextButton(
-                        enabled = balance.sendAvailable && isNexusBalanceCurrent(balance),
-                        onClick = { onSend(balance) },
-                    ) {
-                        Text(
-                            stringResource(
-                                if (balance.sendAvailable) R.string.common_send
-                                else R.string.send_unavailable
-                            )
-                        )
-                    }
-                    TextButton(
-                        onClick = {
-                            if (isNexusBalanceCurrent(balance)) {
-                                uriHandler.openUri(balance.explorerBaseUrl)
-                            }
-                        },
-                    ) {
-                        Text("Explorer")
-                    }
-                }
-                balance.pendingTransactions.forEach { pending ->
-                    Text(
-                        text = buildString {
-                            append(pending.state)
-                            append(" · ")
-                            append(pending.amount)
-                            append(" XOR")
-                            if (pending.submissionIsAmbiguous) append(" · awaiting status")
-                        },
-                        style = MaterialTheme.typography.caption,
-                        color = if (pending.submissionIsAmbiguous) {
-                            MaterialTheme.customColors.statusWarning
-                        } else {
-                            MaterialTheme.customColors.fgSecondary
-                        },
-                    )
-                }
-                balance.recoveryPendingTransactions.forEach { pending ->
-                    Text(
-                        text = buildString {
-                            append(pending.state)
-                            append(" · pending asset recovery")
-                            if (pending.submissionIsAmbiguous) append(" · awaiting status")
-                        },
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.customColors.statusWarning,
-                    )
-                }
-                if (balance.errorCode == "NEXUS_PENDING_RECOVERY_REQUIRED") {
-                    Text(
-                        text = stringResource(R.string.pending_transaction_recovery_required),
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.customColors.statusWarning,
-                    )
-                }
-                balance.confirmedTransfers.take(5).forEach { transfer ->
-                    NexusConfirmedTransferRow(
-                        transfer = transfer,
-                        accountAddress = balance.address,
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(
-                        onClick = {
-                            if (isNexusBalanceCurrent(balance)) {
-                                receiveBalance = null
-                                historyBalance = balance
-                            }
-                        },
-                    ) {
-                        Text(stringResource(R.string.network_view_full_history))
-                    }
-                }
-                if (balance.historyErrorCode != null) {
-                    Text(
-                        text = stringResource(R.string.history_unavailable),
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.customColors.fgSecondary,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun NexusConfirmedTransferRow(
-    transfer: jp.co.soramitsu.common.nexus.NexusTransferHistoryItem,
-    accountAddress: String,
-    expanded: Boolean = false,
-) {
-    val outgoing = transfer.sender == accountAddress
-    val counterparty = if (outgoing) transfer.receiver else transfer.sender
-    Text(
-        text = buildString {
-            append(if (outgoing) "Sent" else "Received")
-            append(" · ")
-            append(transfer.amount)
-            append(" XOR · confirmed")
-            if (!expanded) {
-                append(" · ")
-                append(transfer.transactionHash.take(10))
-                append("…")
-            }
-        },
-        style = MaterialTheme.typography.caption,
-        color = MaterialTheme.customColors.fgSecondary,
-    )
-    if (expanded) {
-        Text(
-            text = stringResource(R.string.network_history_counterparty, counterparty),
-            style = MaterialTheme.typography.caption,
-            color = MaterialTheme.customColors.fgSecondary,
-        )
-        Text(
-            text = stringResource(
-                R.string.network_history_transaction_hash,
-                transfer.transactionHash,
-            ),
-            style = MaterialTheme.typography.caption,
-            color = MaterialTheme.customColors.fgSecondary,
-        )
-        Text(
-            text = stringResource(
-                R.string.network_history_timestamp_millis,
-                transfer.timestampMillis,
-            ),
-            style = MaterialTheme.typography.caption,
-            color = MaterialTheme.customColors.fgSecondary,
-        )
-        Spacer(modifier = Modifier.size(Dimens.x1))
-    }
-}
-
-@Composable
-private fun NexusSendDialog(
-    state: NexusSendUiState,
-    onDismiss: () -> Unit,
-    onRecipient: (String) -> Unit,
-    onAmount: (String) -> Unit,
-    onPrepare: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    if (!state.visible) return
-    val network = state.network ?: return
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                "Send XOR · ${network.networkName} · " +
-                    if (network.isTestnet) "TESTNET" else "MAINNET"
-            )
-        },
-        text = {
-            Column {
-                if (state.prepared == null) {
-                    OutlinedTextField(
-                        value = state.recipient,
-                        onValueChange = onRecipient,
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("${network.networkName} I105 address") },
-                        singleLine = true,
-                    )
-                    Spacer(Modifier.size(Dimens.x1))
-                    OutlinedTextField(
-                        value = state.amount,
-                        onValueChange = onAmount,
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("XOR amount") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    )
-                } else {
-                    Text(
-                        "Recipient",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.customColors.fgSecondary,
-                    )
-                    Text(
-                        state.prepared.canonicalRecipient,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Spacer(Modifier.size(Dimens.x1))
-                    Text("Amount · ${state.prepared.canonicalAmount} XOR")
-                    Text("Network fee · ${state.prepared.fee} XOR")
-                    Text(
-                        "Available · ${state.prepared.availableBalance} XOR",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.customColors.fgSecondary,
-                    )
-                    Text(
-                        "The quote, wallet, network, balance, and fee are checked again before signing.",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.customColors.fgSecondary,
-                    )
-                }
-                state.errorCode?.let {
-                    Spacer(Modifier.size(Dimens.x1))
-                    Text(
-                        it,
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.customColors.statusError,
-                    )
-                }
-                state.result?.let {
-                    Spacer(Modifier.size(Dimens.x1))
-                    Text(
-                        "${it.state} · ${it.transactionHash.take(12)}",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.customColors.fgSecondary,
-                    )
-                }
-                if (state.preparing || state.submitting) {
-                    Spacer(Modifier.size(Dimens.x1))
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = !state.preparing &&
-                    !state.submitting &&
-                    state.result == null &&
-                    if (state.prepared == null) {
-                        state.recipient.isNotBlank() && state.amount.isNotBlank()
-                    } else {
-                        true
-                    },
-                onClick = if (state.prepared == null) onPrepare else onConfirm,
-            ) {
-                Text(if (state.prepared == null) "Review" else "Confirm and sign")
-            }
-        },
-        dismissButton = {
-            TextButton(
-                enabled = !state.preparing && !state.submitting,
-                onClick = onDismiss,
-            ) {
-                Text(if (state.result == null) "Cancel" else "Done")
-            }
-        },
-    )
 }
 
 @Composable
