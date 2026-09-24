@@ -16,8 +16,28 @@
   },
   "buildInputs": [
     {
+      "path": "build-inputs/LazysodiumSmoke.java",
+      "sha256": "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68"
+    },
+    {
       "path": "build-inputs/README.md",
-      "sha256": "a34aad822a8c3deaf359c0e1ebc7e032cc558ae2d57a927d9dd29fd85362c58b"
+      "sha256": "8dafed6d4c5bf568879bc67f4e8aac48b06788bc93f0b2f499e4f93b221cb45d"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-16kb-rebuild.md",
+      "sha256": "0ca566bc11c25409d398214ef1dbb6094cf221ec069cad04917da1a2584e2707"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-build-16kb.sh",
+      "sha256": "43b1e18beec1df8b6562e21319dcdf19b0f1cf27dbc033a509dded51483e36ed"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-original.aar",
+      "sha256": "e38503013e03a3623bd9da01a0fbbf644a87947a35dbeb4df7b35605b71534ad"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-repack-16kb.py",
+      "sha256": "ac39c9d93eb7870e8929f1f37a16e970b5ec99b67ea782f551125aaa6c405c4c"
     },
     {
       "path": "build-inputs/rootbeer-0.1.0-16kb-rebuild.md",
@@ -57,6 +77,41 @@
     }
   ],
   "modules": [
+    {
+      "coordinate": "com.goterl:lazysodium-android:5.0.2",
+      "modulePath": "com/goterl/lazysodium-android/5.0.2",
+      "origin": {
+        "kind": "git-source-build",
+        "repository": "https://github.com/jedisct1/libsodium.git",
+        "revision": "940ef42797baa0278df6b7fd9e67c7590f87744b",
+        "tree": "a748f0c89c2243e124df3d310915c8a528135582",
+        "commitVerification": {
+          "provider": "github",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [
+          "build-inputs/LazysodiumSmoke.java",
+          "build-inputs/lazysodium-5.0.2-16kb-rebuild.md",
+          "build-inputs/lazysodium-5.0.2-build-16kb.sh",
+          "build-inputs/lazysodium-5.0.2-original.aar",
+          "build-inputs/lazysodium-5.0.2-repack-16kb.py"
+        ],
+        "semanticTransformations": [],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "lazysodium-android-5.0.2.aar",
+          "sha256": "02eb05b96f8236b646f7f642c8e424cdb7f6ad6451d6b3c9eaec0e8c8138f989"
+        },
+        {
+          "name": "lazysodium-android-5.0.2.pom",
+          "sha256": "6ae9391bb9f4200e9a104d60bbc00a4c85a726c87d1ba46485fa7fd3679e6a88"
+        }
+      ]
+    },
     {
       "coordinate": "com.paywings.kyc:android-sdk:1.2.2",
       "modulePath": "com/paywings/kyc/android-sdk/1.2.2",

@@ -138,6 +138,26 @@ Debug APK and AAB package those bytes and have 30 findings across eight other
 entries. Full KYC compatibility, independent source review, and signed Release
 qualification remain open.
 
+## Combined RootBeer and Lazysodium candidate
+
+The current candidate includes the source-pinned RootBeer 0.1.0 and
+[Lazysodium 5.0.2](lazysodium-16kb-rebuild-2026-09-25.md) AAR overlays at their
+existing dependency coordinates. Each changes only its two 64-bit JNI entries.
+The production-flavor Debug APK SHA-256 is
+`5a62cbae3a86ac6fe5132101068ce02e64bee8d7046c6616a723a3427290ff43`;
+the AAB SHA-256 is
+`fa4ed6af31af03dd92a2a078dab4f32461f99181805e8458d8b9ce57802ecc4f`.
+Strict offline builds and the 16 KB APK ZIP alignment check pass. Both artifacts
+package the exact rebuilt RootBeer and libsodium bytes in arm64-v8a and x86_64.
+
+The whole-artifact native gate still rejects both with **26 findings across six
+of 16 64-bit entries**: both ABIs of `libandroidx.graphics.path.so`, CameraX
+`libimage_processing_util_jni.so`, and TensorFlow Lite
+`libtensorflowlite_jni.so`. The RootBeer and libsodium entries have no static
+16 KB finding. The release source audit has zero structural failures and the
+dependency preflight reports `STABLE`, while all independent review and signed
+Release admission blockers remain.
+
 ## Reproduce
 
 From the repository root:
@@ -179,10 +199,10 @@ compatibility problem, irrespective of the future Play enforcement date.
 
 1. Independently review the pinned xcrypto 16 KB rebuild, its source-to-binary
    provenance, and wallet crypto behavior in the signed Release artifact.
-2. Independently review the selected JNA AAR and obtain a compatible
-   lazysodium AAR. Obtain
-   a compatible PayWings/IDensic dependency set (or vendor-approved component
-   replacements) for CameraX, TensorFlow Lite, and RootBeer. Update the
+2. Independently review the selected JNA AAR and the pinned RootBeer and
+   Lazysodium rebuilds, including their source-to-binary provenance and wallet
+   crypto/KYC behavior. Obtain compatible graphics-path, CameraX, and TensorFlow
+   Lite dependencies, including any necessary PayWings/IDensic SDK update. Update the
    dependency locks, checksums, vendor provenance, and protected review receipts
    only for artifacts actually selected and tested. No reviewed same-repository
    replacement currently establishes this gate.

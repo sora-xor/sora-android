@@ -414,6 +414,23 @@ const hashExternalRegularFile = ({ path, suffix, maximumBytes }) => {
 
 const EXPECTED_VENDOR_MODULES = [
   {
+    coordinate: "com.goterl:lazysodium-android:5.0.2",
+    modulePath: "com/goterl/lazysodium-android/5.0.2",
+    originKind: "git-source-build",
+    repository: "https://github.com/jedisct1/libsodium.git",
+    revision: "940ef42797baa0278df6b7fd9e67c7590f87744b",
+    tree: "a748f0c89c2243e124df3d310915c8a528135582",
+    commitStatus: "unsigned",
+    observedAt: "2026-09-25",
+    buildInputs: [
+      "build-inputs/LazysodiumSmoke.java",
+      "build-inputs/lazysodium-5.0.2-16kb-rebuild.md",
+      "build-inputs/lazysodium-5.0.2-build-16kb.sh",
+      "build-inputs/lazysodium-5.0.2-original.aar",
+      "build-inputs/lazysodium-5.0.2-repack-16kb.py",
+    ],
+  },
+  {
     coordinate: "com.paywings.kyc:android-sdk:1.2.2",
     modulePath: "com/paywings/kyc/android-sdk/1.2.2",
     originKind: "github-packages-asset",
@@ -530,8 +547,18 @@ const EXPECTED_VENDOR_MODULES = [
   },
 ];
 const EXPECTED_VENDOR_BUILD_INPUT_SHA256 = {
+  "build-inputs/LazysodiumSmoke.java":
+    "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68",
   "build-inputs/README.md":
-    "a34aad822a8c3deaf359c0e1ebc7e032cc558ae2d57a927d9dd29fd85362c58b",
+    "8dafed6d4c5bf568879bc67f4e8aac48b06788bc93f0b2f499e4f93b221cb45d",
+  "build-inputs/lazysodium-5.0.2-16kb-rebuild.md":
+    "0ca566bc11c25409d398214ef1dbb6094cf221ec069cad04917da1a2584e2707",
+  "build-inputs/lazysodium-5.0.2-build-16kb.sh":
+    "43b1e18beec1df8b6562e21319dcdf19b0f1cf27dbc033a509dded51483e36ed",
+  "build-inputs/lazysodium-5.0.2-original.aar":
+    "e38503013e03a3623bd9da01a0fbbf644a87947a35dbeb4df7b35605b71534ad",
+  "build-inputs/lazysodium-5.0.2-repack-16kb.py":
+    "ac39c9d93eb7870e8929f1f37a16e970b5ec99b67ea782f551125aaa6c405c4c",
   "build-inputs/rootbeer-0.1.0-16kb-rebuild.md":
     "513449dc349924781992c703e49a65442457cbc829b5f703f8f043d1e40c847b",
   "build-inputs/rootbeer-0.1.0-build-16kb.sh":
@@ -642,9 +669,9 @@ const includeModulesIn = (source) => [
   ),
 ].map(([, group, module]) => `${group}:${module}`);
 const EXPECTED_VENDOR_SOURCE_PROVENANCE_SHA256 =
-  "21d48f9a9b2a844b5a54fef710d16ff17d2bb0affe8e9fcf53d0c74e2ea3d806";
+  "c5271c0d8c2b8bdb4d943420449c9f4a741f473a5edceb1a70d1498366723464";
 const EXPECTED_VENDOR_CONTENTS_MANIFEST_SHA256 =
-  "d93db95642526d61a611b23e999064e99d7bfe2e8d4214eb1aa6a9ee83278307";
+  "a6fb482884b5c2a7571038c6ef3455b01d915446a34465f47c696ed3cfed6eb9";
 const EXPECTED_GRADLE_VERIFICATION_METADATA_SHA256 =
   ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.metadataSha256;
 const EXPECTED_GRADLE_VERIFICATION_METADATA_DIGEST_SHA256 =

@@ -21,6 +21,7 @@ it has no artifact-only fallback.
 | `com.paywings.oauth:android-sdk:2.0.0` | public PayWings GitHub Packages version page | publisher MD5/SHA-1 sidecars match; SHA-256 pinned |
 | `com.paywings.kyc:android-sdk:1.2.2` | public PayWings GitHub Packages version page | publisher MD5/SHA-1 sidecars match; SHA-256 pinned |
 | `com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3` | public PayWings GitHub Packages version page | publisher MD5/SHA-1 sidecars match; SHA-256 pinned |
+| `com.goterl:lazysodium-android:5.0.2` | published Maven Central AAR/POM plus signed `jedisct1/libsodium@1.0.18-RELEASE` archive | original AAR and native source pinned; only 64-bit JNI entries rebuilt for 16 KB; independent review pending |
 | `com.scottyab:rootbeer-lib:0.1.0` | published Maven Central AAR/POM plus `scottyab/rootbeer@d9057ce490c3481bc9be852e343678c93860e6a8` | original AAR and native source pinned; only 64-bit JNI entries rebuilt for 16 KB; source tag is unsigned and review pending |
 
 `vendor/soramitsu-maven/SOURCE_PROVENANCE.json` binds every materialized filename and SHA-256 to
@@ -32,11 +33,11 @@ unexpected module coordinates, and publisher-sidecar mismatches fail dependency 
 The current materialized dependency snapshot (updated 2026-09-25) is bound by these aggregate identities:
 
 - vendor source provenance SHA-256:
-  `21d48f9a9b2a844b5a54fef710d16ff17d2bb0affe8e9fcf53d0c74e2ea3d806`
+  `c5271c0d8c2b8bdb4d943420449c9f4a741f473a5edceb1a70d1498366723464`
 - vendor whole-tree manifest SHA-256:
-  `d93db95642526d61a611b23e999064e99d7bfe2e8d4214eb1aa6a9ee83278307`
+  `a6fb482884b5c2a7571038c6ef3455b01d915446a34465f47c696ed3cfed6eb9`
 - strict verification metadata SHA-256:
-  `4964725b90d723c20809d40ba2563f4737abdfe133b3614c8d5103e75a4768f3`
+  `d909b535db50330ddce6c2f418c93092bfd9592a886da1c1e0f1c9a15a6b0ebd`
 - 31-file lock-set SHA-256:
   `206ce5977c8f330b00536d1d71767b9bf8ffe88f7b0a6b92584e495451305b03`
 - 566-entry configuration inventory SHA-256 (565 `productionRelease` entries plus the settings
@@ -57,10 +58,10 @@ adapter/DataStore/Tink closure only (see
 interoperability fixtures retain their original source and frozen-input hashes.
 
 The current sidecar SHA-256 is
-`46e4650dcae55502e882764744af67cc1b43a637614785f86ba0aa8b9540bb64`. The app lock records 19
+`6e59e0a666f2d09f016119e196258d1779ce5cb0b32de44707ae586db721da9b`. The app lock records 19
 configurations, including the empty `productionReleaseBaselineProfile` configuration; its SHA-256 is
 `c6d9fb14f42e552c691c04a48a4d90bdde15884d627e5cfffa73f55144355f57`. The 2026-09-24 update
-adds JNA 5.17.0, rebuilt xcrypto and RootBeer native entries, and DataStore 1.2.1,
+adds JNA 5.17.0, rebuilt xcrypto, RootBeer, and libsodium native entries, and DataStore 1.2.1,
 including the transitive Okio 3.9.1 selection. The retained
 old-writer/current-reader/old-reader storage experiment passed on a 4 KB arm64
 emulator. Enabling the AGP 9

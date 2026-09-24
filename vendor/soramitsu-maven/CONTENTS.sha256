@@ -1,5 +1,10 @@
-21d48f9a9b2a844b5a54fef710d16ff17d2bb0affe8e9fcf53d0c74e2ea3d806  SOURCE_PROVENANCE.json
-a34aad822a8c3deaf359c0e1ebc7e032cc558ae2d57a927d9dd29fd85362c58b  build-inputs/README.md
+c5271c0d8c2b8bdb4d943420449c9f4a741f473a5edceb1a70d1498366723464  SOURCE_PROVENANCE.json
+a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68  build-inputs/LazysodiumSmoke.java
+8dafed6d4c5bf568879bc67f4e8aac48b06788bc93f0b2f499e4f93b221cb45d  build-inputs/README.md
+0ca566bc11c25409d398214ef1dbb6094cf221ec069cad04917da1a2584e2707  build-inputs/lazysodium-5.0.2-16kb-rebuild.md
+43b1e18beec1df8b6562e21319dcdf19b0f1cf27dbc033a509dded51483e36ed  build-inputs/lazysodium-5.0.2-build-16kb.sh
+e38503013e03a3623bd9da01a0fbbf644a87947a35dbeb4df7b35605b71534ad  build-inputs/lazysodium-5.0.2-original.aar
+ac39c9d93eb7870e8929f1f37a16e970b5ec99b67ea782f551125aaa6c405c4c  build-inputs/lazysodium-5.0.2-repack-16kb.py
 513449dc349924781992c703e49a65442457cbc829b5f703f8f043d1e40c847b  build-inputs/rootbeer-0.1.0-16kb-rebuild.md
 88565712d1b3654c2ce35ecf50c26d326400f57a8d1ef81f853feb38a9c7b379  build-inputs/rootbeer-0.1.0-build-16kb.sh
 6c4d2e20148111a550aa3923c24e9b1360f300f1454117235a4d435e45928ee7  build-inputs/rootbeer-0.1.0-original.aar
@@ -9,6 +14,8 @@ a34aad822a8c3deaf359c0e1ebc7e032cc558ae2d57a927d9dd29fd85362c58b  build-inputs/R
 a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b  build-inputs/xcrypto-1.2.7-original.aar
 595d7aa1b4eed24f553e7201ad6510b1ccb0bb1cc9e20a113d8b967e046f317d  build-inputs/xcrypto-1.2.7-repack-16kb.py
 d490eaac87bf29feec7e443098c2b451e7cfc1aea671d285bd9a13541afc98c5  build-inputs/xsubstrate-1.2.7-source-normalization.patch
+02eb05b96f8236b646f7f642c8e424cdb7f6ad6451d6b3c9eaec0e8c8138f989  com/goterl/lazysodium-android/5.0.2/lazysodium-android-5.0.2.aar
+6ae9391bb9f4200e9a104d60bbc00a4c85a726c87d1ba46485fa7fd3679e6a88  com/goterl/lazysodium-android/5.0.2/lazysodium-android-5.0.2.pom
 4cda1f49af0a30c5760dd7ed542b04a1cc09ea4f451c6753a425a477a52b97f3  com/paywings/kyc/android-sdk/1.2.2/android-sdk-1.2.2.aar
 cb228d6392fcaf1dc6f317d84b3e9b357962fb3fdbf37d065e5cbf32bba29dfd  com/paywings/kyc/android-sdk/1.2.2/android-sdk-1.2.2.aar.md5
 34a80d7f289f7b5b08fec95b66ec8df2b64794d924185997cc783bad6081679b  com/paywings/kyc/android-sdk/1.2.2/android-sdk-1.2.2.aar.sha1
