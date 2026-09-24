@@ -446,10 +446,10 @@
   <string name="referral_no_available_invitations">沒有可用的邀請</string>
   <string name="referral_referral_link">推薦人的鏈接或地址</string>
   <string name="referral_referrer_address">推薦人地址</string>
-  <string name="referral_referrer_description">每當您進行交易時，所支付的網絡費用的 10% 都會作為獎勵給您的推薦人。</string>
+  <string name="referral_referrer_description" formatted="false">每當您進行交易時，所支付的網絡費用的 10% 都會作為獎勵給您的推薦人。</string>
   <string name="referral_start_inviting">開始邀請</string>
-  <string name="referral_subtitle">每當您的推薦人進行交易時，所支付的網絡費用的 10% 作為獎勵。</string>
-  <string name="referral_title">獲得推薦人網絡費用的 10%</string>
+  <string name="referral_subtitle" formatted="false">每當您的推薦人進行交易時，所支付的網絡費用的 10% 作為獎勵。</string>
+  <string name="referral_title" formatted="false">獲得推薦人網絡費用的 10%</string>
   <string name="referral_toolbar_title">推薦人計畫</string>
   <string name="referral_total_rewards">總獎勵</string>
   <string name="referral_unbond_button_title">解綁XOR</string>

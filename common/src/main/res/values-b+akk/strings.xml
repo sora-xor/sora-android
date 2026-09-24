@@ -450,10 +450,10 @@
   <string name="referral_no_available_invitations">Qerītū bašâtum ul ibaššû</string>
   <string name="referral_referral_link">Rikis ū ašar mubbilim</string>
   <string name="referral_referrer_address">Ašar mubbilim</string>
-  <string name="referral_referrer_description">Ina epēš tērtika kalî, 10% ša miks ḫarrānim nadnim ana mubbilika kīma qīštim illak</string>
+  <string name="referral_referrer_description" formatted="false">Ina epēš tērtika kalî, 10% ša miks ḫarrānim nadnim ana mubbilika kīma qīštim illak</string>
   <string name="referral_start_inviting">Qerâm šurrûm</string>
-  <string name="referral_subtitle">Ina epēš tērtim kalî ša awīlim ša taqru, 10% ša miks ḫarrānim nadnim ana kāša kīma qīštim illak</string>
-  <string name="referral_title">10% ša miksī ḫarrānim ša qerûka leqe</string>
+  <string name="referral_subtitle" formatted="false">Ina epēš tērtim kalî ša awīlim ša taqru, 10% ša miks ḫarrānim nadnim ana kāša kīma qīštim illak</string>
+  <string name="referral_title" formatted="false">10% ša miksī ḫarrānim ša qerûka leqe</string>
   <string name="referral_toolbar_title">Dīn mubbilī</string>
   <string name="referral_total_rewards">Qīšātum kalāšina</string>
   <string name="referral_unbond_button_title">XOR paṭārum</string>

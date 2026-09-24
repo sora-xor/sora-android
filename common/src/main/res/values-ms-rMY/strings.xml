@@ -448,10 +448,10 @@
   <string name="referral_no_available_invitations">Tiada jemputan tersedia</string>
   <string name="referral_referral_link">Pautan perujuk atau alamat </string>
   <string name="referral_referrer_address">Alamat perujuk</string>
-  <string name="referral_referrer_description">Setiap kali anda membuat transaksi, 10% daripada yuran rangkaian yang dibayar pergi kepada perujuk anda sebagai ganjaran.</string>
+  <string name="referral_referrer_description" formatted="false">Setiap kali anda membuat transaksi, 10% daripada yuran rangkaian yang dibayar pergi kepada perujuk anda sebagai ganjaran.</string>
   <string name="referral_start_inviting">Mula menjemput</string>
-  <string name="referral_subtitle">Setiap kali rujukan anda membuat transaksi, 10% daripada bayaran rangkaian yang dibayar akan diberikan kepada anda sebagai ganjaran.</string>
-  <string name="referral_title">Dapatkan 10% daripada yuran rangkaian rujukan anda</string>
+  <string name="referral_subtitle" formatted="false">Setiap kali rujukan anda membuat transaksi, 10% daripada bayaran rangkaian yang dibayar akan diberikan kepada anda sebagai ganjaran.</string>
+  <string name="referral_title" formatted="false">Dapatkan 10% daripada yuran rangkaian rujukan anda</string>
   <string name="referral_toolbar_title">Program rujukan</string>
   <string name="referral_total_rewards">Jumlah ganjaran</string>
   <string name="referral_unbond_button_title">Nyahikat XOR</string>

@@ -472,10 +472,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Ссылка или адрес реферера</string>
   <string name="referral_referrer_address">Адрес реферера</string>
-  <string name="referral_referrer_description">Всякий раз, когда вы совершаете транзакцию, 10% от уплаченной комиссии сети переходит вашему рефереру в качестве вознаграждения.</string>
+  <string name="referral_referrer_description" formatted="false">Всякий раз, когда вы совершаете транзакцию, 10% от уплаченной комиссии сети переходит вашему рефереру в качестве вознаграждения.</string>
   <string name="referral_start_inviting">Начать приглашать</string>
-  <string name="referral_subtitle">Всякий раз, когда ваш реферал совершает транзакцию, 10% от уплаченной сетевой комиссии поступает вам в качестве вознаграждения.</string>
-  <string name="referral_title">Получайте 10% от комиссии сети ваших рефералов</string>
+  <string name="referral_subtitle" formatted="false">Всякий раз, когда ваш реферал совершает транзакцию, 10% от уплаченной сетевой комиссии поступает вам в качестве вознаграждения.</string>
+  <string name="referral_title" formatted="false">Получайте 10% от комиссии сети ваших рефералов</string>
   <string name="referral_toolbar_title">Реферальная программа</string>
   <string name="referral_total_rewards">Общее количество вознаграждений</string>
   <string name="referral_unbond_button_title">Вывести из резерва XOR</string>

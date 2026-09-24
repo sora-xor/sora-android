@@ -450,10 +450,10 @@
   <string name="referral_no_available_invitations">𓈖𓈖 𓅱𓈖 𓇋𓄿𓋴𓅱𓏏</string>
   <string name="referral_referral_link">𓇋𓄿𓋴𓅱 𓅱𓄿𓏏 𓂋𓊪𓅱 𓋴𓏏𓈖𓎛𓋴𓃀</string>
   <string name="referral_referrer_address">𓇋𓄿𓋴𓅱 𓋴𓏏𓈖𓎛𓋴𓃀</string>
-  <string name="referral_referrer_description">𓏏𓂋𓈖𓃀 𓈖𓏏𓎡 𓇋𓂋 𓇋𓂋𓏏𓋴𓅱𓈖𓏏, 10% 𓈖 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓃀𓄿𓎡𓅱 𓆓𓃀𓄿 𓈙𓅓 𓂋 𓈖𓎡 𓇋𓄿𓋴𓅱 𓅓𓇋 𓆑𓎡𓄿𓅱.</string>
+  <string name="referral_referrer_description" formatted="false">𓏏𓂋𓈖𓃀 𓈖𓏏𓎡 𓇋𓂋 𓇋𓂋𓏏𓋴𓅱𓈖𓏏, 10% 𓈖 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓃀𓄿𓎡𓅱 𓆓𓃀𓄿 𓈙𓅓 𓂋 𓈖𓎡 𓇋𓄿𓋴𓅱 𓅓𓇋 𓆑𓎡𓄿𓅱.</string>
   <string name="referral_start_inviting">𓈙𓂝 𓇋𓄿𓋴</string>
-  <string name="referral_subtitle">𓏏𓂋𓈖𓃀 𓈖𓎡 𓇋𓄿𓋴𓏏 𓇋𓂋 𓇋𓂋𓏏𓋴𓅱𓈖𓏏, 10% 𓈖 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓃀𓄿𓎡𓅱 𓆓𓃀𓄿 𓈙𓅓 𓂋 𓈖𓏏𓎡 𓅓𓇋 𓆑𓎡𓄿𓅱.</string>
-  <string name="referral_title">𓈙𓋴𓊪 10% 𓈖 𓈖𓎡 𓇋𓄿𓋴𓅱𓏏 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓃀𓄿𓎡𓅱</string>
+  <string name="referral_subtitle" formatted="false">𓏏𓂋𓈖𓃀 𓈖𓎡 𓇋𓄿𓋴𓏏 𓇋𓂋 𓇋𓂋𓏏𓋴𓅱𓈖𓏏, 10% 𓈖 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓃀𓄿𓎡𓅱 𓆓𓃀𓄿 𓈙𓅓 𓂋 𓈖𓏏𓎡 𓅓𓇋 𓆑𓎡𓄿𓅱.</string>
+  <string name="referral_title" formatted="false">𓈙𓋴𓊪 10% 𓈖 𓈖𓎡 𓇋𓄿𓋴𓅱𓏏 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓃀𓄿𓎡𓅱</string>
   <string name="referral_toolbar_title">𓇋𓄿𓋴𓏏 𓋴𓐍𓂋</string>
   <string name="referral_total_rewards">𓂧𓅓𓆓 𓆑𓎡𓄿𓅱</string>
   <string name="referral_unbond_button_title">𓅱𓐍𓄿𓍿𓋴 XOR</string>

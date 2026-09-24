@@ -478,10 +478,10 @@
   <string name="referral_no_available_invitations">لا توجد دعوات متاحة</string>
   <string name="referral_referral_link">رابط المحيل أو عنوانه</string>
   <string name="referral_referrer_address">عنوان المحيل</string>
-  <string name="referral_referrer_description">عندما تقوم بإجراء معاملة ، فإن 10٪ من رسوم الشبكة المدفوعة تذهب إلى المحيل الخاص بك كمكافأة.</string>
+  <string name="referral_referrer_description" formatted="false">عندما تقوم بإجراء معاملة ، فإن 10٪ من رسوم الشبكة المدفوعة تذهب إلى المحيل الخاص بك كمكافأة.</string>
   <string name="referral_start_inviting">ابدأ بالدعوة</string>
-  <string name="referral_subtitle">كلما قامت إحالتك بإجراء معاملة ، فإن 10٪ من رسوم الشبكة المدفوعة تذهب إليك كمكافأة.</string>
-  <string name="referral_title">احصل على 10٪ من رسوم شبكة الإحالات الخاصة بك</string>
+  <string name="referral_subtitle" formatted="false">كلما قامت إحالتك بإجراء معاملة ، فإن 10٪ من رسوم الشبكة المدفوعة تذهب إليك كمكافأة.</string>
+  <string name="referral_title" formatted="false">احصل على 10٪ من رسوم شبكة الإحالات الخاصة بك</string>
   <string name="referral_toolbar_title">برنامج الإحالة</string>
   <string name="referral_total_rewards">إجمالي المكافآت</string>
   <string name="referral_unbond_button_title">فك ربط XOR</string>

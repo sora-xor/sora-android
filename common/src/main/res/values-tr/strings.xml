@@ -451,10 +451,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Referrer’s link or address</string>
   <string name="referral_referrer_address">Referrer\'s address</string>
-  <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
+  <string name="referral_referrer_description" formatted="false">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
   <string name="referral_start_inviting">Start inviting</string>
-  <string name="referral_subtitle">Whenever your referral makes a transaction, 10% of the network fee paid goes to you as a reward.</string>
-  <string name="referral_title">Get 10% of your referrals’ network fees</string>
+  <string name="referral_subtitle" formatted="false">Whenever your referral makes a transaction, 10% of the network fee paid goes to you as a reward.</string>
+  <string name="referral_title" formatted="false">Get 10% of your referrals’ network fees</string>
   <string name="referral_toolbar_title">Referral program</string>
   <string name="referral_total_rewards">Total rewards</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>

@@ -453,10 +453,10 @@
   <string name="referral_no_available_invitations">कोई आमंत्रण उपलब्ध नहीं है</string>
   <string name="referral_referral_link">रेफरर का लिंक या पता</string>
   <string name="referral_referrer_address">रेफरर का पता</string>
-  <string name="referral_referrer_description">जब भी आप कोई लेन-देन करते हैं, भुगतान किए गए नेटवर्क शुल्क का 10% पुरस्कार के रूप में आपके रेफ़रलकर्ता को जाता है।</string>
+  <string name="referral_referrer_description" formatted="false">जब भी आप कोई लेन-देन करते हैं, भुगतान किए गए नेटवर्क शुल्क का 10% पुरस्कार के रूप में आपके रेफ़रलकर्ता को जाता है।</string>
   <string name="referral_start_inviting">आमंत्रित करना शुरू करें</string>
-  <string name="referral_subtitle">जब भी आपका रेफ़रल लेन-देन करता है, भुगतान किए गए नेटवर्क शुल्क का 10% पुरस्कार के रूप में आपको जाता है।</string>
-  <string name="referral_title">अपने रेफ़रल के नेटवर्क शुल्क का 10% प्राप्त करें</string>
+  <string name="referral_subtitle" formatted="false">जब भी आपका रेफ़रल लेन-देन करता है, भुगतान किए गए नेटवर्क शुल्क का 10% पुरस्कार के रूप में आपको जाता है।</string>
+  <string name="referral_title" formatted="false">अपने रेफ़रल के नेटवर्क शुल्क का 10% प्राप्त करें</string>
   <string name="referral_toolbar_title">रेफरल कार्यक्रम</string>
   <string name="referral_total_rewards">कुल पुरस्कार</string>
   <string name="referral_unbond_button_title">अनबॉन्ड XOR</string>

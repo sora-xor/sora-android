@@ -421,7 +421,7 @@
     <item quantity="one">%s ثانیه باقی مانده</item>
     <item quantity="other">%s ثانیه باقی مانده</item>
   </plurals>
-  <string name="project_ended_template">پایان یافت</string>
+  <string name="project_ended_template">پایان یافت %s</string>
   <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">کد QR</string>
   <string name="qr_upload">بارگیری از گالری</string>
@@ -451,10 +451,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Referrer’s link or address</string>
   <string name="referral_referrer_address">Referrer\'s address</string>
-  <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
+  <string name="referral_referrer_description" formatted="false">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
   <string name="referral_start_inviting">شروع به دعوت کنید</string>
-  <string name="referral_subtitle">هر زمان که ارجاع شما معامله ای انجام دهد، 10٪ از کارمزد شبکه پرداختی به عنوان پاداش به شما تعلق می‌گیرد.</string>
-  <string name="referral_title">10٪ از کارمزد شبکه ارجاعات خود را دریافت کنید</string>
+  <string name="referral_subtitle" formatted="false">هر زمان که ارجاع شما معامله ای انجام دهد، 10٪ از کارمزد شبکه پرداختی به عنوان پاداش به شما تعلق می‌گیرد.</string>
+  <string name="referral_title" formatted="false">10٪ از کارمزد شبکه ارجاعات خود را دریافت کنید</string>
   <string name="referral_toolbar_title">برنامه ارجاع</string>
   <string name="referral_total_rewards">مجموع پاداش‌ها</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>

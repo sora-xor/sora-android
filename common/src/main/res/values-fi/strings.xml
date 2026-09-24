@@ -449,10 +449,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Referrer’s link or address</string>
   <string name="referral_referrer_address">Referrer\'s address</string>
-  <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
+  <string name="referral_referrer_description" formatted="false">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
   <string name="referral_start_inviting">Aloita kutsuminen</string>
-  <string name="referral_subtitle">Aina kun suosittelija suorittaa tapahtuman, 10 %% maksetusta verkkomaksusta tulee sinulle palkkiona.</string>
-  <string name="referral_title">Saat 10 %% suosittelemiesi jäsenten verkkomaksuista.</string>
+  <string name="referral_subtitle" formatted="false">Aina kun suosittelija suorittaa tapahtuman, 10 % maksetusta verkkomaksusta tulee sinulle palkkiona.</string>
+  <string name="referral_title" formatted="false">Saat 10 % suosittelemiesi jäsenten verkkomaksuista.</string>
   <string name="referral_toolbar_title">Suositteluohjelma</string>
   <string name="referral_total_rewards">Palkkiot yhteensä</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>

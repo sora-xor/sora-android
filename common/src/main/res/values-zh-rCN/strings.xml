@@ -447,10 +447,10 @@
   <string name="referral_no_available_invitations">没有可用的邀请</string>
   <string name="referral_referral_link">推荐人的链接或地址</string>
   <string name="referral_referrer_address">推荐人的地址</string>
-  <string name="referral_referrer_description">无论何时，您每做一笔转账，都有10%的网络费给予您的推荐人作为奖励</string>
+  <string name="referral_referrer_description" formatted="false">无论何时，您每做一笔转账，都有10%的网络费给予您的推荐人作为奖励</string>
   <string name="referral_start_inviting">开始邀请</string>
-  <string name="referral_subtitle">每当您的推荐人进行交易时，所支付的网络费用的10%将作为奖励发送给您。</string>
-  <string name="referral_title">获得推荐人网络费用的 10%</string>
+  <string name="referral_subtitle" formatted="false">每当您的推荐人进行交易时，所支付的网络费用的10%将作为奖励发送给您。</string>
+  <string name="referral_title" formatted="false">获得推荐人网络费用的 10%</string>
   <string name="referral_toolbar_title">推荐计划</string>
   <string name="referral_total_rewards">总奖励</string>
   <string name="referral_unbond_button_title">解绑XOR</string>

@@ -451,10 +451,10 @@
   <string name="referral_no_available_invitations">Geen beschikbare uitnodigingen</string>
   <string name="referral_referral_link">Link of adres van de verwijzer</string>
   <string name="referral_referrer_address">Adres van de verwijzer</string>
-  <string name="referral_referrer_description">Wanneer u een transactie uitvoert, gaat 10% van de betaalde netwerkvergoeding als beloning naar uw verwijzer.</string>
+  <string name="referral_referrer_description" formatted="false">Wanneer u een transactie uitvoert, gaat 10% van de betaalde netwerkvergoeding als beloning naar uw verwijzer.</string>
   <string name="referral_start_inviting">Start inviting</string>
-  <string name="referral_subtitle">Whenever your referral makes a transaction, 10% of the network fee paid goes to you as a reward.</string>
-  <string name="referral_title">Get 10% of your referrals’ network fees</string>
+  <string name="referral_subtitle" formatted="false">Whenever your referral makes a transaction, 10% of the network fee paid goes to you as a reward.</string>
+  <string name="referral_title" formatted="false">Get 10% of your referrals’ network fees</string>
   <string name="referral_toolbar_title">Referral program</string>
   <string name="referral_total_rewards">Total rewards</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>
@@ -468,7 +468,7 @@
   <string name="remove_node_error_message">Om deze node te verwijderen, maakt u verbinding met een andere node</string>
   <string name="remove_node_error_title">Kan verbonden node niet verwijderen</string>
   <string name="remove_node_title">Wil je deze node echt verwijderen?</string>
-  <string name="remove_pool_confirmation_description">De output wordt geschat. Als de prijs meer dan {slippageTolerance}% verandert, wordt uw transactie teniet gedaan.</string>
+  <string name="remove_pool_confirmation_description">De output wordt geschat. Als de prijs meer dan %s%% verandert, wordt uw transactie teniet gedaan.</string>
   <string name="remove_pool_confirmation_title">Bevestig Verwijderen</string>
   <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
   <string name="restart_required">Opnieuw opstarten vereist</string>

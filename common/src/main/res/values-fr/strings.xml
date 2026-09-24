@@ -454,10 +454,10 @@
   <string name="referral_no_available_invitations">Pas d\'invitations disponible</string>
   <string name="referral_referral_link">Lien ou adresse du référent</string>
   <string name="referral_referrer_address">Adresse du référent</string>
-  <string name="referral_referrer_description">Chaque fois que vous effectuez une transaction, 10% des frais de réseau payés sont reversés à votre parrain en guise de récompense.</string>
+  <string name="referral_referrer_description" formatted="false">Chaque fois que vous effectuez une transaction, 10% des frais de réseau payés sont reversés à votre parrain en guise de récompense.</string>
   <string name="referral_start_inviting">Commencez à inviter</string>
-  <string name="referral_subtitle">Chaque fois qu\'une adresse que vous parrainez effectue une transaction, 10 %% des frais de réseau payés vous reviennent à titre de récompense.</string>
-  <string name="referral_title">Recevez 10 %% des frais de réseau des adresses que vous parrainez.</string>
+  <string name="referral_subtitle" formatted="false">Chaque fois qu\'une adresse que vous parrainez effectue une transaction, 10 % des frais de réseau payés vous reviennent à titre de récompense.</string>
+  <string name="referral_title" formatted="false">Recevez 10 % des frais de réseau des adresses que vous parrainez.</string>
   <string name="referral_toolbar_title">Programme de parrainage</string>
   <string name="referral_total_rewards">Total des récompenses</string>
   <string name="referral_unbond_button_title">Délier XOR</string>
