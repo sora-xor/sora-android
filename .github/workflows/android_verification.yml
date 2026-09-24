@@ -96,7 +96,7 @@ jobs:
   blockexplorer-connected:
     name: Block Explorer Connected Test
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -159,7 +159,7 @@ jobs:
             exit 1
           }
 
-      - name: Run connected block explorer test
+      - name: Run connected block explorer and crypto tests
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 36
@@ -168,4 +168,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew :feature_blockexplorer_api:connectedDevelopDebugAndroidTest --stacktrace --no-daemon
+          script: |
+            set -e
+            ./gradlew :feature_blockexplorer_api:connectedDevelopDebugAndroidTest --stacktrace --no-daemon
+            ./gradlew :app:connectedProductionDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=jp.co.soramitsu.sora.ux.CryptoRuntimeCompatibilityTest --stacktrace --no-daemon
