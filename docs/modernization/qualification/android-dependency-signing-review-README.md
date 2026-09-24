@@ -8,8 +8,9 @@ one from the protected review-evidence producer and one from a distinct independ
 The environment independently pins both P-256 SPKI SHA-256 identities, the exact positive review
 sequence, candidate source revision, and review-contract SHA-256. The contract binds the current
 Gradle dependency-provenance and signing-identity files, verification metadata and its digest,
-vendor provenance and whole-tree manifest, 31-lock/272-configuration identities, and both public
-production certificate fingerprints. A manifest is admitted only when those protected values and
+vendor provenance and whole-tree manifest, 31-lock/464-configuration identities (463 production
+Release configurations plus settings), and both public production certificate fingerprints. A
+manifest is admitted only when those protected values and
 the current checkout projections all agree byte-for-byte.
 
 The signed manifest also carries nonzero SHA-256 identities for the external source-to-binary,
@@ -62,8 +63,22 @@ Release remains blocked until the retained keystore is provisioned, a signed can
 upload fingerprint, and distinct protected producer/reviewer authorities admit the signing and
 Play-continuity evidence.
 
-The 2026-09-06 materialization reconciliation records 271 production configurations plus the settings
-catalog configuration. The signed v1 object shape is unchanged; its exact configuration count and
-current provenance/input hashes reject a receipt for the prior 271-entry materialization. Updating
-these observed identities grants no review or signing authority. Metadata and lock statuses remain
+The current materialization reconciliation records 463 production Release configurations plus the
+settings catalog configuration, 464 in total. The signed v1 object shape is unchanged; its exact
+configuration count and current provenance/input hashes reject a receipt for the prior 271-entry
+materialization. Updating these observed identities grants no review or signing authority. Metadata
+and lock statuses remain
 `materialized-unreviewed` until the required independent review and authenticated admission succeed.
+
+The current app Release lock selects `org.bouncycastle:bcprov-jdk18on` 1.77 for compile and
+1.78.1 for runtime, alongside runtime `bcutil-jdk18on` 1.71. Offline Gradle dependency insight
+confirms the split. This is an unresolved compatibility review item for wallet cryptography and
+KYC; lock and checksum verification alone do not establish on-device behavior. The protected
+review must assess the graph and retained-wallet/KYC device evidence before admission.
+
+The vendored provenance inventory still marks the PayWings KYC, OAuth, and IDensic AARs as
+closed-source packages without completed independent binary review. The `xcrypto:1.2.7` AAR
+contains four ABI variants of `libsr25519java_1.so`; its source revision and Cargo lock are
+pinned, but source-to-binary reproduction review is incomplete. Their recorded hashes establish
+which bytes were materialized, not that these binaries correspond to reviewed source. Keep the
+vendor admission blocked until the independent receipts exist.
