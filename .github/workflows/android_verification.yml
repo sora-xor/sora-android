@@ -169,6 +169,5 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: |
-            set -e
             ./gradlew :feature_blockexplorer_api:connectedDevelopDebugAndroidTest --stacktrace --no-daemon
             ./gradlew :app:connectedProductionDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=jp.co.soramitsu.sora.ux.CryptoRuntimeCompatibilityTest --stacktrace --no-daemon
