@@ -3307,6 +3307,22 @@ const androidVerificationWorkflow = read(
 const productionReleaseWorkflow = read(
   ".github/workflows/production_release_qualification.yml",
 );
+const productionConnectedDeviceQualificationScript = read(
+  "scripts/run-production-connected-device-qualification.sh",
+);
+const signedProductionApkDeviceSmokeScript = read(
+  "scripts/run-signed-production-apk-device-smoke.sh",
+);
+const productionConnectedRunnerStep = sourceBetween(
+  productionReleaseWorkflow,
+  "      - name: Retained Room and encrypted-wallet backup matrix",
+  "      - name: Modernization unit contracts",
+);
+const signedProductionApkRunnerStep = sourceBetween(
+  productionReleaseWorkflow,
+  "      - name: Minified signed production APK device smoke",
+  "      - name: Obtain exact retained-device migration evidence",
+);
 const productionReleaseWorkflowJobEnvironment =
   productionReleaseWorkflow.match(/\n    env:\n[\s\S]*?\n    steps:\n/)?.[0] ?? "";
 const productionRunnerTempPathBindings = Object.freeze([
@@ -3491,6 +3507,9 @@ const androidVerificationKvmAccessIndex = androidVerificationWorkflow.indexOf(
 const androidVerificationEmulatorIndex = androidVerificationWorkflow.indexOf(
   "reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d",
 );
+const androidConnectedPrebuildIndex = androidVerificationWorkflow.indexOf(
+  "Build connected test APKs before emulator startup",
+);
 const productionKvmAccessIndex = productionReleaseWorkflow.indexOf(
   "Enable KVM access for Android emulators",
 );
@@ -3510,6 +3529,11 @@ assert(
     ) === 1 &&
     androidVerificationKvmAccessIndex >= 0 &&
     androidVerificationKvmAccessIndex < androidVerificationEmulatorIndex &&
+    androidConnectedPrebuildIndex >= 0 &&
+    androidConnectedPrebuildIndex < androidVerificationEmulatorIndex &&
+    androidVerificationWorkflow.includes(
+      "./gradlew --dependency-verification=strict :feature_blockexplorer_api:assembleDevelopDebugAndroidTest :app:assembleProductionDebug :app:assembleProductionDebugAndroidTest --stacktrace --no-daemon",
+    ) &&
     productionKvmAccessIndex >= 0 &&
     productionKvmAccessIndex < productionFirstEmulatorIndex &&
     productionReleaseWorkflow.includes(
@@ -3873,6 +3897,8 @@ assert(
       'signingConfig = signingConfigs.getByName("productionRelease")',
     ) &&
     appBuild.includes("verifyProductionReleaseSigning") &&
+    appBuild.includes('if (variant.name == "productionRelease")') &&
+    appBuild.includes('"app-production-release.apk"') &&
     appBuild.includes(
       'name.contains("productionRelease", ignoreCase = true)',
     ) &&
@@ -5978,9 +6004,6 @@ assert(
     productionReleaseWorkflow.includes("persist-credentials: false") &&
     [
       ":app:testProductionDebugUnitTest",
-      ":core_db:connectedProductionDebugAndroidTest",
-      ":common:connectedProductionDebugAndroidTest",
-      ":sorasubstrate:connectedProductionDebugAndroidTest",
       ":common:testProductionDebugUnitTest",
       ":common_wallet:testProductionDebugUnitTest",
       ":core_db:testProductionDebugUnitTest",
@@ -6019,31 +6042,56 @@ assert(
     productionReleaseWorkflow.includes(
       "reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d",
     ) &&
-    productionReleaseWorkflow.includes(
+    sourceMatchCount(productionConnectedRunnerStep, /^\s*script:.*$/gm) === 1 &&
+    productionConnectedRunnerStep.includes(
+      "          script: bash scripts/run-production-connected-device-qualification.sh\n",
+    ) &&
+    productionConnectedDeviceQualificationScript.startsWith(
+      "#!/usr/bin/env bash\nset -euo pipefail\n",
+    ) &&
+    [
+      ":common:connectedProductionDebugAndroidTest",
+      ":sorasubstrate:connectedProductionDebugAndroidTest",
+      ":core_db:connectedProductionDebugAndroidTest",
+      ":app:connectedProductionDebugAndroidTest",
+    ].every((task) =>
+      productionConnectedDeviceQualificationScript.includes(task),
+    ) &&
+    productionConnectedDeviceQualificationScript.includes(
       "jp.co.soramitsu.core_db.WalletIdentityMigration75Test,jp.co.soramitsu.core_db.WalletUpgradeBackupTest",
     ) &&
-    productionReleaseWorkflow.includes(
+    productionConnectedDeviceQualificationScript.includes(
+      "jp.co.soramitsu.sora.ux.CryptoRuntimeCompatibilityTest",
+    ) &&
+    productionConnectedDeviceQualificationScript.includes(
       "bash scripts/run-encrypted-wallet-upgrade-qualification.sh",
     ) &&
-    productionReleaseWorkflow.includes(
+    productionConnectedDeviceQualificationScript.includes(
       "bash scripts/run-migration-manager-production-path-qualification.sh",
     ) &&
     productionReleaseWorkflow.includes(
       "Minified signed production APK device smoke",
     ) &&
+    sourceMatchCount(signedProductionApkRunnerStep, /^\s*script:.*$/gm) === 1 &&
+    signedProductionApkRunnerStep.includes(
+      "          script: bash scripts/run-signed-production-apk-device-smoke.sh\n",
+    ) &&
+    signedProductionApkDeviceSmokeScript.startsWith(
+      "#!/usr/bin/env bash\nset -euo pipefail\n",
+    ) &&
     productionReleaseWorkflow.includes(
       'sdkmanager "platforms;android-36" "build-tools;36.0.0"',
     ) &&
-    productionReleaseWorkflow.includes(
+    signedProductionApkDeviceSmokeScript.includes(
       '"$ANDROID_HOME/build-tools/36.0.0/apksigner"',
     ) &&
     productionReleaseWorkflow.includes(
       "app/build/outputs/mapping/productionRelease/mapping.txt",
     ) &&
-    productionReleaseWorkflow.includes(
+    signedProductionApkDeviceSmokeScript.includes(
       "app/build/outputs/apk/production/release/app-production-release.apk",
     ) &&
-    productionReleaseWorkflow.includes(
+    signedProductionApkDeviceSmokeScript.includes(
       "adb shell am start -W",
     ) &&
     encryptedWalletQualificationScript.includes(
@@ -14414,6 +14462,8 @@ if (
     "scripts/test-android-qualified-candidate-package-v1.mjs",
     "baselineprofile/build.gradle.kts",
     ".github/workflows/production_release_qualification.yml",
+    "scripts/run-production-connected-device-qualification.sh",
+    "scripts/run-signed-production-apk-device-smoke.sh",
     "scripts/run-encrypted-wallet-upgrade-qualification.sh",
     "scripts/run-migration-manager-production-path-qualification.sh",
     "scripts/verify-production-modernization.mjs",
@@ -14435,6 +14485,7 @@ if (
     "docs/modernization/qualification/android-migration-trust.blocked.json",
     "app/src/main/java/jp/co/soramitsu/sora/SoraApp.kt",
     "app/src/androidTestQualification/java/jp/co/soramitsu/sora/splash/domain/MigrationManagerProductionPathQualificationTest.kt",
+    "app/src/androidTest/java/jp/co/soramitsu/sora/ux/CryptoRuntimeCompatibilityTest.kt",
     "app/src/main/java/jp/co/soramitsu/sora/splash/domain/MigrationManager.kt",
     "app/src/main/java/jp/co/soramitsu/sora/splash/domain/SplashInteractor.kt",
     "app/src/main/java/jp/co/soramitsu/sora/splash/domain/PendingRecoveryStartupScheduler.kt",
