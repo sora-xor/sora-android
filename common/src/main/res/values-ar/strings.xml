@@ -591,8 +591,10 @@
   <string name="wallet_network_activity">نشاط</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">عنواني على شبكة %s لاستلام %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">قم بمسح هذا الرمز الضوئي لإرسال %s إلي. رمز هويتي في %s هو: %s</string>
+  <string name="wallet_receive_xor">استلام XOR</string>
   <string name="wallet_redeemable">قابل للسحب</string>
   <string name="wallet_send_existential_warning_message">ستؤدي عملية التحويل الخاصة بك إلى إزالة الحساب من blockstore لأنها ستجعل الرصيد الإجمالي أقل من الإيداع الموجود.</string>
+  <string name="wallet_status_confirmed">منجز</string>
   <string name="wallet_title">المحفظة</string>
   <string name="wallet_transaction_rejected">المعاملة مرفوضة</string>
   <string name="wallet_transaction_submitted">تم تسجيل المعاملة</string>

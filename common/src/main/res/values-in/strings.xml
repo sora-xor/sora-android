@@ -557,8 +557,10 @@
   <string name="wallet_connect_done">Selesai</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Saya %s Alamat Network untuk Menerima %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_receive_xor">Menerima XOR</string>
   <string name="wallet_redeemable">Dapat ditukarkan</string>
   <string name="wallet_send_existential_warning_message">Transfer Anda akan menghapus akun dari blockstore karena akan membuat total saldo lebih rendah dari deposit eksistensial.</string>
+  <string name="wallet_status_confirmed">Selesai</string>
   <string name="wallet_title">Wallet</string>
   <string name="wallet_transaction_rejected">Transaksi ditolak</string>
   <string name="wallet_transaction_submitted">Transaksi dikirim</string>

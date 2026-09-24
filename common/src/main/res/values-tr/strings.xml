@@ -562,8 +562,10 @@
   <string name="wallet_connect_done">Tamamlandı</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">%s Almak için %s Ağ Adresim</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Bana %s göndermek için bu karekodu tara. Benim %s Ağı Hesap Kimliğim:\n%s</string>
+  <string name="wallet_receive_xor">XOR Alın</string>
   <string name="wallet_redeemable">Kullanılabilir</string>
   <string name="wallet_send_existential_warning_message">Transferiniz, toplam bakiyeyi ilk bakiyeden daha düşük yapacağı için hesabı blockstore\'dan kaldıracaktır.</string>
+  <string name="wallet_status_confirmed">Tamamlandı</string>
   <string name="wallet_title">Cüzdan</string>
   <string name="wallet_transaction_rejected">İşlem reddedildi</string>
   <string name="wallet_transaction_submitted">İşlem gönderildi</string>

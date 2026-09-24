@@ -570,8 +570,10 @@
   <string name="wallet_network_activity">Aktivnost</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Моја %s мрежна адреса за примање %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Скенирајте овај КР да бисте ми послали %s . ИД мог %s мрежног налога: \n %s</string>
+  <string name="wallet_receive_xor">Примите XOR</string>
   <string name="wallet_redeemable">Otkupljivo</string>
   <string name="wallet_send_existential_warning_message">Ваш пренос ће уклонити налог из блокчејна, јер ће укупни салдо бити нижи од егзистенцијалног депозита.</string>
+  <string name="wallet_status_confirmed">Завршено</string>
   <string name="wallet_title">Новчаник</string>
   <string name="wallet_transaction_rejected">Transakcija odbijena</string>
   <string name="wallet_transaction_submitted">Трансакција је послата</string>

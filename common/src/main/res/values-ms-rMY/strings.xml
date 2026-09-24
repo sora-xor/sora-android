@@ -561,9 +561,11 @@
   <string name="wallet_network_activity">Aktiviti</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Alamat rangkaian saya %s untuk Menerima %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Imbas QR ini untuk menghantar saya %s. ID Akaun Rangkaian %s saya:\n%s</string>
+  <string name="wallet_receive_xor">Terima XOR</string>
   <string name="wallet_redeemable">Boleh ditebus</string>
   <string name="wallet_scan_qr">Imbas kod QR</string>
   <string name="wallet_send_existential_warning_message">Pemindahan akan memadamkan akaun anda dari blockstore kerana jumlah baki akan lebih rendah daripada simpanan yang wujud.</string>
+  <string name="wallet_status_confirmed">Selesai</string>
   <string name="wallet_title">Dompet</string>
   <string name="wallet_transaction_rejected">Transaksi ditolak</string>
   <string name="wallet_transaction_submitted">Transaksi dihantar</string>

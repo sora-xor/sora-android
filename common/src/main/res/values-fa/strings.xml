@@ -562,8 +562,10 @@
   <string name="wallet_connect_done">انجام شد</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">آدرس شبکه %s برای دریافت %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">برای ارسال %s این QR را اسکن کنید. شناسه حساب شبکه %s من: \n %s</string>
+  <string name="wallet_receive_xor">دریافت XOR</string>
   <string name="wallet_redeemable">قابل آزاد سازی</string>
   <string name="wallet_send_existential_warning_message">انتقال شما حساب را حذف میکند زیرا کل موجودی را کمتر از سپرده لازم برای ادامه بقا حساب می‌کند.</string>
+  <string name="wallet_status_confirmed">تکمیل شده</string>
   <string name="wallet_title">کیف پول</string>
   <string name="wallet_transaction_rejected">تراکنش برگشت خورد</string>
   <string name="wallet_transaction_submitted">تراکنش در دست اقدام</string>

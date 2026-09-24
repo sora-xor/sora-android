@@ -558,8 +558,10 @@
   <string name="wallet_network_activity">活動</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">我用以接收的%s網絡地址%s：</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">掃描此 QR 給我發送%s 。我的%s網絡帳戶 ID： \n %s</string>
+  <string name="wallet_receive_xor">收到XOR</string>
   <string name="wallet_redeemable">可贖回</string>
   <string name="wallet_send_existential_warning_message">您的轉賬將會從blockstore清除賬戶，因為這會使得賬戶總額低於目前存有的質押。</string>
+  <string name="wallet_status_confirmed">已完成</string>
   <string name="wallet_title">錢包</string>
   <string name="wallet_transaction_rejected">交易被拒絕</string>
   <string name="wallet_transaction_submitted">交易已提交</string>

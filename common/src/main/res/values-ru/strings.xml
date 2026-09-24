@@ -584,9 +584,11 @@
   <string name="wallet_network_activity">Активность</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Мой адрес в %s для получения %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Отсканируйте этот QR, чтобы отправить мне %s. Мой идентификатор в %s:\n%s</string>
+  <string name="wallet_receive_xor">Получить XOR</string>
   <string name="wallet_redeemable">Можно забрать</string>
   <string name="wallet_scan_qr">Сканировать QR-код</string>
   <string name="wallet_send_existential_warning_message">Трансфер приведет к удалению аккаунта, так как баланс станет меньше чем existential deposit.</string>
+  <string name="wallet_status_confirmed">Успешно</string>
   <string name="wallet_title">Кошелек</string>
   <string name="wallet_transaction_rejected">Транзакция отклонена</string>
   <string name="wallet_transaction_submitted">Транзакция отправлена</string>
