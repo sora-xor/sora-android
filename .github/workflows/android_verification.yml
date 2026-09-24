@@ -60,6 +60,7 @@ jobs:
         run: |
           node scripts/verify-production-modernization.mjs
           node scripts/test-android-wallet-continuity-source-contract.mjs
+          python3 scripts/test-android-native-16kb.py
 
       - name: Run strict production-flavor unit tests
         run: ./gradlew --dependency-verification=strict testProductionDebugUnitTest --stacktrace --no-daemon --no-parallel

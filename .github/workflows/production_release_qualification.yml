@@ -391,6 +391,14 @@ jobs:
           node scripts/verify-downloaded-android-qualified-candidate-package.mjs \
             > "$RUNNER_TEMP/sora-android-downloaded-candidate-validation.json"
 
+      - name: Verify downloaded 16 KB native artifacts
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
+        run: |
+          python3 scripts/verify-android-native-16kb.py "$RUNNER_TEMP/qualified-candidate/candidate.aab"
+          python3 scripts/verify-android-native-16kb.py "$RUNNER_TEMP/qualified-candidate/candidate.apk"
+          python3 scripts/verify-android-native-16kb.py "$RUNNER_TEMP/qualified-candidate/reproduced-candidate.aab"
+          python3 scripts/verify-android-native-16kb.py "$RUNNER_TEMP/qualified-candidate/reproduced-candidate.apk"
+
       - name: Bind validated downloaded Taira deployment evidence
         if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT != '' }}
         run: |
@@ -442,6 +450,7 @@ jobs:
           node scripts/test-android-dependency-signing-review-v1.mjs
           node scripts/test-android-candidate-signing-verification-v1.mjs
           node scripts/test-android-qualified-candidate-package-v1.mjs
+          python3 scripts/test-android-native-16kb.py
 
       - name: Funded Nexus canary v4 hermetic contract
         run: |
@@ -689,6 +698,12 @@ jobs:
             exit 1
           }
           echo "PRODUCTION_OBSERVED_UPLOAD_CERTIFICATE_SHA256=$observed_upload_certificate" >> "$GITHUB_ENV"
+
+      - name: Verify 16 KB native release artifacts
+        if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
+        run: |
+          python3 scripts/verify-android-native-16kb.py "$PRODUCTION_CANDIDATE_AAB_PATH"
+          python3 scripts/verify-android-native-16kb.py "$PRODUCTION_CANDIDATE_APK_PATH"
 
       - name: Independently rebuild and compare production candidate
         if: ${{ env.PRODUCTION_ROLLOUT_TARGET_PERCENT == '' }}
