@@ -24,7 +24,7 @@ dependency edges. The old probes are compiled with Kotlin 1.9.24 to avoid introd
 stdlib requirements into the historical runtime. This is the storage dependency closure with
 those retained version overrides, not a reconstruction of the entire released APK.
 
-The current storage graph uses adapter 1.1.1-beta03, DataStore 1.1.7, Tink 1.13.0 and the current
+The current storage graph uses adapter 1.1.1-beta03, DataStore 1.2.1, Tink 1.13.0 and the current
 production runtime lock's support versions. Every current runtime coordinate must actually occur
 in `app/gradle.lockfile`. The runner downloads every binary and POM from official Google Maven
 or Maven Central on each run, requires parity with cached bytes when present, and enforces frozen
