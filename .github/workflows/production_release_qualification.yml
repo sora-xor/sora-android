@@ -314,7 +314,7 @@ jobs:
           mapfile -d '' package_files < <(
             find "$package_root" -mindepth 1 -maxdepth 1 -type f -print0
           )
-          [[ ${#package_files[@]} -eq 30 ]] || exit 1
+          [[ ${#package_files[@]} -eq 31 ]] || exit 1
           chmod 700 "$package_root"
           chmod 600 "${package_files[@]}"
 
