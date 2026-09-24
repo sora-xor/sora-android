@@ -12,6 +12,11 @@ required to materialize the checked-in Maven modules.
   linker flags, output digests, JNI smoke evidence, and exact reproduction commands.
 - `xcrypto-1.2.7-repack-16kb.py` copies only the rebuilt arm64-v8a and x86_64 JNI libraries into
   that original AAR. It verifies the input and output digests and every ZIP member's contents.
+- `rootbeer-0.1.0-original.aar` preserves Maven Central's exact 0.1.0 RootBeer AAR, including
+  Java and both 32-bit JNI entries.
+- `rootbeer-0.1.0-build-16kb.sh`, `rootbeer-0.1.0-repack-16kb.py`, and
+  `rootbeer-0.1.0-16kb-rebuild.md` pin the unsigned upstream source tag, NDK r28 compilation,
+  the two rebuilt 64-bit JNI digests, and the deterministic two-member AAR replacement.
 - `xsubstrate-1.2.7-source-normalization.patch` is the complete semantic source delta applied to
   the pinned xsubstrate commit: consume the materialized xcrypto 1.2.7 module and use polkaj's
   authoritative `io.emeraldpay.polkaj` coordinate. Temporary repository-path edits used only to
