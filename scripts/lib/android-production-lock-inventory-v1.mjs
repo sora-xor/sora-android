@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 
 // Observed source/materialization identities, not dependency approval or signing authority.
 export const ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1 = Object.freeze({
-  metadataSha256: "cd60e66444997f6603d0f1c2dd4dc8931b0bc9f736d785f48817ee4547a71b90",
-  metadataDigestSha256: "54f1c335e1524dc63b98bb66284f7f93e52a994c1bd649aa99509a86f399e7b2",
+  metadataSha256: "993edddc18879e03d14b69ff8d718d7731d380cf2670b29c610cbdcf04f54ccd",
+  metadataDigestSha256: "5a396f2cc7f936a284811e4da5251087ac037965b3a6698a9d517c5abfdbd29a",
   lockFileSetSha256: "206ce5977c8f330b00536d1d71767b9bf8ffe88f7b0a6b92584e495451305b03",
   configurationInventorySha256: "4bc0c68745a3114f0b8caae98556d4205296e10bcf0058909c06d03f80194a00",
   configurationCount: 566,
@@ -29,7 +29,7 @@ export const ANDROID_PRODUCTION_LOCK_PROJECTS_V1 = Object.freeze([
 export const ANDROID_TEST_ONLY_LOCK_SOURCE_BINDINGS_V1 = Object.freeze({
   "baselineprofile/build.gradle.kts": "70c435a4b63c7582f81e7ef65135ff2b5fe73618331b68f7af5a8b0fbdc73036",
   "build.gradle.kts": "48fef08f6c3c5e3f018d786f2f02330b3d38b70639d7057b8d2da0c00f6db8a0",
-  "settings.gradle.kts": "e28fbb608ace584f3295faffba1259b0fc6d7fda757bebf3146ab08f85e58047",
+  "settings.gradle.kts": "1a518eefcc788a89ab3aaae1cfd3694dec8da836dcd1397b9420162920444a7d",
   "gradle/libs.versions.toml": "a926d9e809a9d8ce4ed13dc7dc84e37016e90984cdf56a93b8b916b0a905972d",
 });
 

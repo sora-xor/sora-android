@@ -28,6 +28,10 @@ required to materialize the checked-in Maven modules.
   `graphics-path-1.0.1-16kb-rebuild.md` pin the AndroidX release source, NDK toolchain,
   64-bit JNI build digests, two-member AAR replacement, and Gradle module descriptors.
   `GraphicsPathSmoke.java` preserves the Java/JNI path-iterator smoke source.
+- `tensorflow-lite-2.12.0-original.aar` preserves Maven Central's exact 2.12.0
+  AAR. `tensorflow-lite-2.12.0-cmake-16kb.patch`, the exact published export map,
+  build and repack scripts, and the rebuild record pin the two 64-bit JNI
+  replacements. `TensorFlowLiteCApiSmoke.c` preserves the inference smoke source.
 - `camera-core-1.3.1-original.aar`, `camera-core-1.3.1-original.module`, and
   `camera-core-1.3.1-release-manifest.xml` preserve the exact Google Maven input
   bytes and official release manifest that pins the contemporaneous libyuv source.

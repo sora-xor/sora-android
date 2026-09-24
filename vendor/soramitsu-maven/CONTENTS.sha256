@@ -1,4 +1,4 @@
-2a7645c3c7951607978dcb3f78aa7a3e973f3e00d045b30fe7eee24fd5c00f18  SOURCE_PROVENANCE.json
+560b9c7ce80bae57e76dd9c30268e983dbb100cfcee1a2666bfd427d97d7be22  SOURCE_PROVENANCE.json
 472945479992c1cfb4f533bea77f21ed9d8f6d3875cc77a6d3336da67ab041f1  androidx/camera/camera-core/1.3.1/camera-core-1.3.1-sources.jar
 0ede31562de2947c633cc5260ee594335c66679111e9e71305bf226f54a3002f  androidx/camera/camera-core/1.3.1/camera-core-1.3.1-versionMetadata.json
 e42b866b808d12cf69f9477aa902f8ba0934449ca738e97d4ffd341ad4b3ca37  androidx/camera/camera-core/1.3.1/camera-core-1.3.1.aar
@@ -12,7 +12,8 @@ eb4759c27ae0625d9e81fe95d8ce63d0a3846764a3465363ab195109d6785a71  androidx/graph
 a0c0411900f07a8de9ea696b04618efd90007b11f185087a5d1df3cfea4fa418  build-inputs/CameraCoreNativeSmoke.java
 0ae2dc21debbaf73360a3d5860649172491341ec0bedba39f70b846df4d472f9  build-inputs/GraphicsPathSmoke.java
 a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68  build-inputs/LazysodiumSmoke.java
-82f99d8cb07ad4538f0a300453e9e9f8baf6d8518235a5c35fccb5ec9813d355  build-inputs/README.md
+97c5309a9af96ca2fd29a2e7c2e15286f079142cfb369082b8a9a1578550650b  build-inputs/README.md
+de8536ff1fd38406479f1ff3ed72aff8450ac3b3dab640bf3b88504a43774e60  build-inputs/TensorFlowLiteCApiSmoke.c
 4cc7976f13959bfd4d2b8d386ac3d88c8679e1b86500190567084e81e906cfed  build-inputs/camera-core-1.3.1-16kb-rebuild.md
 98d41393e2c373f841cb82cb12e7e93d457ad04227e811fa6b3e1d6bbddab531  build-inputs/camera-core-1.3.1-build-16kb.py
 6b7ea2da7cc504d6624c3c12a0c2d488dd6635563421dacba0790399507443e8  build-inputs/camera-core-1.3.1-original.aar
@@ -32,6 +33,12 @@ ac39c9d93eb7870e8929f1f37a16e970b5ec99b67ea782f551125aaa6c405c4c  build-inputs/l
 88565712d1b3654c2ce35ecf50c26d326400f57a8d1ef81f853feb38a9c7b379  build-inputs/rootbeer-0.1.0-build-16kb.sh
 6c4d2e20148111a550aa3923c24e9b1360f300f1454117235a4d435e45928ee7  build-inputs/rootbeer-0.1.0-original.aar
 731d0639802a697be0e60f5a18125ee9f54902c2033be5244f86e62fd225ecc4  build-inputs/rootbeer-0.1.0-repack-16kb.py
+07cfcf46a01044b5fb604f91e4aa53eb84459dabdbd6baa34a431583f5a5b5bc  build-inputs/tensorflow-lite-2.12.0-16kb-rebuild.md
+b3ab471a35edd00f1473a4a61e7fc9a08b5955344a3613335921601d182b6ef9  build-inputs/tensorflow-lite-2.12.0-build-16kb.sh
+4abb4536df76724a7f7ac908871c3840493e215ee0d38e744efef301dc3059e9  build-inputs/tensorflow-lite-2.12.0-cmake-16kb.patch
+03c64a35ebeeac3e55134a174a6afdda456505b764fc03549ae9d6c316a7e503  build-inputs/tensorflow-lite-2.12.0-exports.lds
+002371fefe277e93f1421206062823d04daceb6c9e4e824cb543eab2d3a00c91  build-inputs/tensorflow-lite-2.12.0-original.aar
+dc4d66e58f15aaa48e4ea950438069420a48928d66a7f65c87925c6e6502f086  build-inputs/tensorflow-lite-2.12.0-repack-16kb.py
 9b6eb4495fa8435ed05ce3a7503e1044a5cf1a8c80ccf023925ec1206a792c71  build-inputs/xcrypto-1.2.7-16kb-rebuild.md
 72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395  build-inputs/xcrypto-1.2.7-Cargo.lock
 a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b  build-inputs/xcrypto-1.2.7-original.aar
@@ -89,3 +96,5 @@ fc57d285886c08492c180fb84754249f10ff12f6d9327d2a148d2d2d071a4236  jp/co/soramits
 dc23dae4c5cd00d45ea10afeb8dbe293952d71ceded6fa6418a92d4f47e56956  jp/co/soramitsu/xsubstrate/1.2.7/xsubstrate-1.2.7.aar
 db5210c397138b57168eac03540d15ff1303d2b5dd40abede01e16b0731717fe  jp/co/soramitsu/xsubstrate/1.2.7/xsubstrate-1.2.7.module
 6af9914a83fbe7b3b0d48629771fb278019a9e0292eb55ad72445c1bdc21cf7a  jp/co/soramitsu/xsubstrate/1.2.7/xsubstrate-1.2.7.pom
+4da11c611a69427c4b6742f66fdda7d276d5267b2f7a08528e1b268c4e65ccbd  org/tensorflow/tensorflow-lite/2.12.0/tensorflow-lite-2.12.0.aar
+5ad01644c105dff937a70c169fddfd670e04cb783927972f6ee100f2d38bd31c  org/tensorflow/tensorflow-lite/2.12.0/tensorflow-lite-2.12.0.pom

@@ -43,7 +43,8 @@
         "jp.co.soramitsu:xbackup",
         "jp.co.soramitsu:xcrypto",
         "jp.co.soramitsu:xsubstrate",
-        "jp.co.soramitsu.xnetworking:lib-android"
+        "jp.co.soramitsu.xnetworking:lib-android",
+        "org.tensorflow:tensorflow-lite"
       ],
       "materializedCoordinates": [
         "androidx.camera:camera-core:1.3.1",
@@ -60,12 +61,13 @@
         "jp.co.soramitsu:xbackup:1.2.3",
         "jp.co.soramitsu:xcrypto:1.2.7",
         "jp.co.soramitsu:xsubstrate:1.2.7",
-        "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2"
+        "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
+        "org.tensorflow:tensorflow-lite:2.12.0"
       ],
       "sourceProvenancePath": "vendor/soramitsu-maven/SOURCE_PROVENANCE.json",
-      "sourceProvenanceSha256": "2a7645c3c7951607978dcb3f78aa7a3e973f3e00d045b30fe7eee24fd5c00f18",
+      "sourceProvenanceSha256": "560b9c7ce80bae57e76dd9c30268e983dbb100cfcee1a2666bfd427d97d7be22",
       "contentsManifestPath": "vendor/soramitsu-maven/CONTENTS.sha256",
-      "contentsManifestSha256": "0f9986f91126b969743b8fd15f5d7876746acbe7d2f77842880ee18a7921454a",
+      "contentsManifestSha256": "2bc1fddb65f0c7e6db98d309804bae1fb43fb24c60e2f88f50a843179c99771f",
       "manifestFormat": "sha256-two-space-relative-path-lf",
       "symlinkFree": true,
       "exactRegularFileCoverage": true,
@@ -176,9 +178,9 @@
     "mode": "strict",
     "metadataPath": "gradle/verification-metadata.xml",
     "metadataPresent": true,
-    "metadataSha256": "cd60e66444997f6603d0f1c2dd4dc8931b0bc9f736d785f48817ee4547a71b90",
+    "metadataSha256": "993edddc18879e03d14b69ff8d718d7731d380cf2670b29c610cbdcf04f54ccd",
     "metadataDigestPath": "gradle/verification-metadata.sha256",
-    "metadataDigestSha256": "54f1c335e1524dc63b98bb66284f7f93e52a994c1bd649aa99509a86f399e7b2",
+    "metadataDigestSha256": "5a396f2cc7f936a284811e4da5251087ac037965b3a6698a9d517c5abfdbd29a",
     "verifyMetadata": true,
     "verifySignatures": false,
     "sha256ForEveryResolvedArtifact": true,
@@ -197,7 +199,8 @@
       "jp.co.soramitsu:xbackup:1.2.3",
       "jp.co.soramitsu:xcrypto:1.2.7",
       "jp.co.soramitsu:xsubstrate:1.2.7",
-      "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2"
+      "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
+      "org.tensorflow:tensorflow-lite:2.12.0"
     ],
     "independentlyReviewed": false,
     "trustedArtifactExceptions": []

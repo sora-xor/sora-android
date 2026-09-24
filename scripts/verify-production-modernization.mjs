@@ -596,6 +596,26 @@ const EXPECTED_VENDOR_MODULES = [
       "build-inputs/xsubstrate-1.2.7-source-normalization.patch",
     ],
   },
+  {
+    coordinate: "org.tensorflow:tensorflow-lite:2.12.0",
+    modulePath: "org/tensorflow/tensorflow-lite/2.12.0",
+    originKind: "git-source-build",
+    repository: "https://github.com/tensorflow/tensorflow.git",
+    revision: "0db597d0d758aba578783b5bf46c889700a45085",
+    tree: "e32b1f067af476b65f944fdcc2390178200408d1",
+    commitProvider: "github",
+    commitStatus: "unsigned",
+    observedAt: "2026-09-25",
+    buildInputs: [
+      "build-inputs/TensorFlowLiteCApiSmoke.c",
+      "build-inputs/tensorflow-lite-2.12.0-16kb-rebuild.md",
+      "build-inputs/tensorflow-lite-2.12.0-build-16kb.sh",
+      "build-inputs/tensorflow-lite-2.12.0-cmake-16kb.patch",
+      "build-inputs/tensorflow-lite-2.12.0-exports.lds",
+      "build-inputs/tensorflow-lite-2.12.0-original.aar",
+      "build-inputs/tensorflow-lite-2.12.0-repack-16kb.py",
+    ],
+  },
 ];
 const EXPECTED_VENDOR_BUILD_INPUT_SHA256 = {
   "build-inputs/CameraCoreNativeSmoke.java":
@@ -627,7 +647,9 @@ const EXPECTED_VENDOR_BUILD_INPUT_SHA256 = {
   "build-inputs/LazysodiumSmoke.java":
     "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68",
   "build-inputs/README.md":
-    "82f99d8cb07ad4538f0a300453e9e9f8baf6d8518235a5c35fccb5ec9813d355",
+    "97c5309a9af96ca2fd29a2e7c2e15286f079142cfb369082b8a9a1578550650b",
+  "build-inputs/TensorFlowLiteCApiSmoke.c":
+    "de8536ff1fd38406479f1ff3ed72aff8450ac3b3dab640bf3b88504a43774e60",
   "build-inputs/lazysodium-5.0.2-16kb-rebuild.md":
     "0ca566bc11c25409d398214ef1dbb6094cf221ec069cad04917da1a2584e2707",
   "build-inputs/lazysodium-5.0.2-build-16kb.sh":
@@ -644,6 +666,18 @@ const EXPECTED_VENDOR_BUILD_INPUT_SHA256 = {
     "6c4d2e20148111a550aa3923c24e9b1360f300f1454117235a4d435e45928ee7",
   "build-inputs/rootbeer-0.1.0-repack-16kb.py":
     "731d0639802a697be0e60f5a18125ee9f54902c2033be5244f86e62fd225ecc4",
+  "build-inputs/tensorflow-lite-2.12.0-16kb-rebuild.md":
+    "07cfcf46a01044b5fb604f91e4aa53eb84459dabdbd6baa34a431583f5a5b5bc",
+  "build-inputs/tensorflow-lite-2.12.0-build-16kb.sh":
+    "b3ab471a35edd00f1473a4a61e7fc9a08b5955344a3613335921601d182b6ef9",
+  "build-inputs/tensorflow-lite-2.12.0-cmake-16kb.patch":
+    "4abb4536df76724a7f7ac908871c3840493e215ee0d38e744efef301dc3059e9",
+  "build-inputs/tensorflow-lite-2.12.0-exports.lds":
+    "03c64a35ebeeac3e55134a174a6afdda456505b764fc03549ae9d6c316a7e503",
+  "build-inputs/tensorflow-lite-2.12.0-original.aar":
+    "002371fefe277e93f1421206062823d04daceb6c9e4e824cb543eab2d3a00c91",
+  "build-inputs/tensorflow-lite-2.12.0-repack-16kb.py":
+    "dc4d66e58f15aaa48e4ea950438069420a48928d66a7f65c87925c6e6502f086",
   "build-inputs/xcrypto-1.2.7-16kb-rebuild.md":
     "9b6eb4495fa8435ed05ce3a7503e1044a5cf1a8c80ccf023925ec1206a792c71",
   "build-inputs/xcrypto-1.2.7-Cargo.lock":
@@ -746,9 +780,9 @@ const includeModulesIn = (source) => [
   ),
 ].map(([, group, module]) => `${group}:${module}`);
 const EXPECTED_VENDOR_SOURCE_PROVENANCE_SHA256 =
-  "2a7645c3c7951607978dcb3f78aa7a3e973f3e00d045b30fe7eee24fd5c00f18";
+  "560b9c7ce80bae57e76dd9c30268e983dbb100cfcee1a2666bfd427d97d7be22";
 const EXPECTED_VENDOR_CONTENTS_MANIFEST_SHA256 =
-  "0f9986f91126b969743b8fd15f5d7876746acbe7d2f77842880ee18a7921454a";
+  "2bc1fddb65f0c7e6db98d309804bae1fb43fb24c60e2f88f50a843179c99771f";
 const EXPECTED_GRADLE_VERIFICATION_METADATA_SHA256 =
   ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.metadataSha256;
 const EXPECTED_GRADLE_VERIFICATION_METADATA_DIGEST_SHA256 =
