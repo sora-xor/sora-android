@@ -556,6 +556,7 @@
   <string name="wallet_balance_locked">Gesperrt</string>
   <string name="wallet_balance_reserved">Reserviert</string>
   <string name="wallet_bonded">Zugeordnet</string>
+  <string name="wallet_connect_done">Erledigt</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Meine %s Netzwerkadresse %s zum Empfangen:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scanne diesen QR, um mir %s zu senden. Meine %s-Netzwerk-Konto-ID:\n%s</string>
   <string name="wallet_redeemable">Einlösbar</string>

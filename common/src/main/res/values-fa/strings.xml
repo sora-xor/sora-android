@@ -350,6 +350,8 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">پین را وارد کنید</string>
   <string name="pincode_touch_fingerprint_scanner">اسکنر اثر انگشت را لمس کنید</string>
+  <string name="polkamarkt_outcome_no">نه</string>
+  <string name="polkamarkt_outcome_yes">بله</string>
   <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
@@ -556,6 +558,8 @@
   <string name="wallet_balance_locked">قفل شده</string>
   <string name="wallet_balance_reserved">رزرو شده</string>
   <string name="wallet_bonded">ادغام شده</string>
+  <string name="wallet_connect_account">حساب</string>
+  <string name="wallet_connect_done">انجام شد</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">آدرس شبکه %s برای دریافت %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">برای ارسال %s این QR را اسکن کنید. شناسه حساب شبکه %s من: \n %s</string>
   <string name="wallet_redeemable">قابل آزاد سازی</string>

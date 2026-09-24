@@ -556,6 +556,7 @@
   <string name="wallet_balance_locked">Låst</string>
   <string name="wallet_balance_reserved">Reservert</string>
   <string name="wallet_bonded">Bundet</string>
+  <string name="wallet_connect_done">Ferdig</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Min %s nettverksadresse for å motta %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_redeemable">Innløsbar</string>

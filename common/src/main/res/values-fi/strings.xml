@@ -556,6 +556,7 @@
   <string name="wallet_balance_locked">Lukittu</string>
   <string name="wallet_balance_reserved">Varattu</string>
   <string name="wallet_bonded">Bonded</string>
+  <string name="wallet_connect_done">Tehty</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Minun %s Network address to Receive %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_redeemable">Lunastettavissa</string>
