@@ -3316,6 +3316,34 @@ const gradleWrapperJarSha256 = sha256("gradle/wrapper/gradle-wrapper.jar");
 const androidVerificationWorkflow = read(
   ".github/workflows/android_verification.yml",
 );
+const productionLockCoverageCiCommands = [
+  "node scripts/verify-android-dependency-preflight-structure.mjs",
+  "./gradlew -I scripts/verify-production-release-lock-coverage.gradle --dependency-verification=strict verifyProductionReleaseLockCoverage --offline --stacktrace --no-daemon",
+  "node scripts/test-production-release-lock-coverage.mjs",
+  "./gradlew --dependency-verification=strict testProductionDebugUnitTest --stacktrace --no-daemon --no-parallel",
+];
+const productionLockCoverageCiPositions = productionLockCoverageCiCommands.map(
+  (command) => androidVerificationWorkflow.indexOf(command),
+);
+assert(
+  productionLockCoverageCiPositions.every((position) => position >= 0) &&
+    productionLockCoverageCiPositions.every(
+      (position, index) =>
+        index === 0 || position > productionLockCoverageCiPositions[index - 1],
+    ) &&
+    productionLockCoverageCiCommands.every(
+      (command, index) =>
+        androidVerificationWorkflow.lastIndexOf(command) ===
+        productionLockCoverageCiPositions[index],
+    ) &&
+    sha256("scripts/verify-production-release-lock-coverage.gradle") ===
+      "c53d388db61a312b02c21780d8a61b98cd034653760233eee23dc4b433590648" &&
+    sha256("scripts/test-production-release-lock-coverage.mjs") ===
+      "876e778e9564fe158abeeeae9d5bdfae68bb5214f090cc286d49c95c52889adc" &&
+    sha256("scripts/verify-android-dependency-preflight-structure.mjs") ===
+      "58a10ce17ed191c3aa65a7fd7bb5e84b151f761061f7a9dbb3aa8500e693153c",
+  "GRADLE_PRODUCTION_RELEASE_LOCK_MODEL_GUARD_INVALID",
+);
 const productionReleaseWorkflow = read(
   ".github/workflows/production_release_qualification.yml",
 );
