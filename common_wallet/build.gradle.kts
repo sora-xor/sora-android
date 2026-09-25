@@ -102,6 +102,15 @@ dependencies {
         exclude(group = "com.paywings.onboarding.kyc.android-libs", module = "java-websocket-lib")
     }
 
+    // IDensic's older JMRTD/bcutil call ASN.1 APIs removed from our wallet's BC provider.
+    // Export the compatible constraints with the card SDK to align every consumer's graph.
+    constraints {
+        api(libs.bcprovDep)
+        api(libs.bcutilDep)
+        api(libs.jmrtdDep)
+        api(libs.scubaSmartcardsDep)
+    }
+
     implementation(libs.daggerDep)
     ksp(libs.hiltCompilerDep)
 

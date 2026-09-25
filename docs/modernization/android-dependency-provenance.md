@@ -33,13 +33,13 @@ unexpected module coordinates, and publisher-sidecar mismatches fail dependency 
 The current materialized dependency snapshot (updated 2026-09-25) is bound by these aggregate identities:
 
 - vendor source provenance SHA-256:
-  `c5271c0d8c2b8bdb4d943420449c9f4a741f473a5edceb1a70d1498366723464`
+  `560b9c7ce80bae57e76dd9c30268e983dbb100cfcee1a2666bfd427d97d7be22`
 - vendor whole-tree manifest SHA-256:
-  `a6fb482884b5c2a7571038c6ef3455b01d915446a34465f47c696ed3cfed6eb9`
+  `2bc1fddb65f0c7e6db98d309804bae1fb43fb24c60e2f88f50a843179c99771f`
 - strict verification metadata SHA-256:
-  `d909b535db50330ddce6c2f418c93092bfd9592a886da1c1e0f1c9a15a6b0ebd`
+  `568c9e4d3fad0872b955e801dc5084dec2bacbab1a42da31a973a6f9305b52eb`
 - 31-file lock-set SHA-256:
-  `206ce5977c8f330b00536d1d71767b9bf8ffe88f7b0a6b92584e495451305b03`
+  `bf73bee62e3da74dca238607cd3497250c9a34bd51b45a9ed3e01fd403f64593`
 - 566-entry configuration inventory SHA-256 (565 `productionRelease` entries plus the settings
   catalog configuration):
   `4bc0c68745a3114f0b8caae98556d4205296e10bcf0058909c06d03f80194a00`
@@ -58,9 +58,9 @@ adapter/DataStore/Tink closure only (see
 interoperability fixtures retain their original source and frozen-input hashes.
 
 The current sidecar SHA-256 is
-`6e59e0a666f2d09f016119e196258d1779ce5cb0b32de44707ae586db721da9b`. The app lock records 19
+`29706737c442f0ff0b6ae6f7c804de80db7c61f01c135607fc4f78470291426d`. The app lock records 19
 configurations, including the empty `productionReleaseBaselineProfile` configuration; its SHA-256 is
-`c6d9fb14f42e552c691c04a48a4d90bdde15884d627e5cfffa73f55144355f57`. The 2026-09-24 update
+`16674d9f67f6cab13c7970604d261b2fb399658ec4dc2f8d87ae93d4e4baed70`. The 2026-09-24 update
 adds JNA 5.17.0, rebuilt xcrypto, RootBeer, and libsodium native entries, and DataStore 1.2.1,
 including the transitive Okio 3.9.1 selection. The retained
 old-writer/current-reader/old-reader storage experiment passed on a 4 KB arm64
@@ -113,6 +113,8 @@ namespace under AGP 9.2.1, so the repository currently carries the documented mi
 `android.uniquePackageNames=false` compatibility property. The provenance policy binds that exact
 property to those three coordinates. It is not a general namespace exception, dependency review,
 or production qualification, and removal/upgrade remains part of the dependency review lane.
+
+The [Bouncy Castle/KYC compatibility qualification](qualification/android-bouncycastle-kyc-compatibility-2026-09-25.md) records the reproduced ASN.1 linkage failures and bounded fix. The card dependency boundary now constrains bcprov and bcutil to 1.78.1, JMRTD to 0.7.42, and Scuba smartcards to 0.0.20. All 565 production Release configurations were resolved with strict verification and only these four coordinates unlocked. The three new JAR/POM pairs were hashed from both official Maven Central endpoints and checked against publisher checksum sidecars. Production review remains pending.
 
 ## Gate and remaining review
 

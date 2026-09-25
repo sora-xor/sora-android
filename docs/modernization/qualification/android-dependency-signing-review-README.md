@@ -70,11 +70,16 @@ materialization. Updating these observed identities grants no review or signing 
 and lock statuses remain
 `materialized-unreviewed` until the required independent review and authenticated admission succeed.
 
-The current app Release lock selects `org.bouncycastle:bcprov-jdk18on` 1.77 for compile and
-1.78.1 for runtime, alongside runtime `bcutil-jdk18on` 1.71. Offline Gradle dependency insight
-confirms the split. This is an unresolved compatibility review item for wallet cryptography and
-KYC; lock and checksum verification alone do not establish on-device behavior. The protected
-review must assess the graph and retained-wallet/KYC device evidence before admission.
+The earlier app Release lock selected `org.bouncycastle:bcprov-jdk18on` 1.77 for compile and
+1.78.1 for runtime with `bcutil-jdk18on` 1.71 and JMRTD 0.7.34. Exact-JAR execution reproduced
+`NoSuchMethodError` in both the bcutil CMS parser and JMRTD signed-data parser: each called
+`ASN1TaggedObject.getObject()`, removed from the selected provider. The current app lock selects
+bcprov 1.78.1 for both compile and runtime, bcutil 1.78.1, JMRTD 0.7.42, and its Scuba smartcards
+0.0.20 dependency. The [bounded compatibility qualification](android-bouncycastle-kyc-compatibility-2026-09-25.md)
+records exact artifacts, upstream evidence, preserved IDensic method references, and regression
+coverage. The SDK's direct NFC calls do not establish that its app flow reaches the broken
+signed-data parser; this fix closes the demonstrated library linkage defect without claiming a
+completed KYC run. Protected review and retained-wallet/KYC physical-device evidence remain open.
 
 The vendored provenance inventory still marks the PayWings KYC, OAuth, and IDensic AARs as
 closed-source packages without completed independent binary review. The `xcrypto:1.2.7` AAR
