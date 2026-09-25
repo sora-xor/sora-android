@@ -2,7 +2,9 @@ import org.gradle.api.artifacts.dsl.LockMode
 
 plugins {
     alias(libs.plugins.androidApplication) apply false
+    alias(libs.plugins.androidTest) apply false
     alias(libs.plugins.androidLibrary) apply false
+    alias(libs.plugins.baselineProfile) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false

@@ -317,6 +317,7 @@
   <string name="more_menu_sora_card_subtitle">カードと法定通貨のアカウント管理</string>
   <string name="more_menu_sora_card_title">SORAカード</string>
   <string name="network_fee">ネットワーク手数料</string>
+  <string name="network_finalized_history">履歴</string>
   <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">URLの検証に失敗しました (アドレスが間違っています)</string>
   <string name="node_details_genesis_validation_failed">あなたのノードのジェネシスハッシュが、ネットワークのジェネシスハッシュと異なっています</string>
@@ -349,6 +350,10 @@
   <string name="pincode_one_try_left">クールダウンまであと1回だけ試せます</string>
   <string name="pincode_set_your_pin_code">PINコードの設定</string>
   <string name="pincode_touch_fingerprint_scanner">指紋スキャナーに触れてください</string>
+  <string name="polkamarkt_action_buy">買う</string>
+  <string name="polkamarkt_outcome_no">いいえ</string>
+  <string name="polkamarkt_outcome_yes">はい</string>
+  <string name="polkamarkt_ticket_slippage">スリッページ</string>
   <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
@@ -443,10 +448,10 @@
   <string name="referral_no_available_invitations">利用可能な招待状がありません</string>
   <string name="referral_referral_link">リファラーのリンクまたはアドレス</string>
   <string name="referral_referrer_address">リファラーのアドレス</string>
-  <string name="referral_referrer_description">あなたが取引をするたびに、支払ったネットワーク手数料の10％が報酬としてリファラーに支払われます</string>
+  <string name="referral_referrer_description" formatted="false">あなたが取引をするたびに、支払ったネットワーク手数料の10％が報酬としてリファラーに支払われます</string>
   <string name="referral_start_inviting">招待を開始</string>
-  <string name="referral_subtitle">紹介者が取引を行うたびに、支払われたネットワーク手数料の10％が報酬としてあなたに支払われます</string>
-  <string name="referral_title">紹介者のネットワーク手数料の10%を獲得</string>
+  <string name="referral_subtitle" formatted="false">紹介者が取引を行うたびに、支払われたネットワーク手数料の10％が報酬としてあなたに支払われます</string>
+  <string name="referral_title" formatted="false">紹介者のネットワーク手数料の10%を獲得</string>
   <string name="referral_toolbar_title">紹介プログラム</string>
   <string name="referral_total_rewards">報酬総額</string>
   <string name="referral_unbond_button_title">XORをボンド解除</string>
@@ -550,10 +555,15 @@
   <string name="wallet_balance_locked">ロック済み</string>
   <string name="wallet_balance_reserved">予約済み</string>
   <string name="wallet_bonded">ボンド済み</string>
+  <string name="wallet_connect_done">終了</string>
+  <string name="wallet_market_refresh">更新</string>
+  <string name="wallet_network_activity">履歴</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">受取用%sネットワークアドレス%s ：</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">このQRをスキャンして%sを送ってください。私の%sネットワークのアカウントID: \n %s</string>
+  <string name="wallet_receive_xor">XORを受け取る</string>
   <string name="wallet_redeemable">償還可能</string>
   <string name="wallet_send_existential_warning_message">本取引を行うと、残高不足のためアカウントがサーバーのブロックストアから削除されます</string>
+  <string name="wallet_status_confirmed">完了しました</string>
   <string name="wallet_title">ウォレット</string>
   <string name="wallet_transaction_rejected">取引拒否</string>
   <string name="wallet_transaction_submitted">送信済みの取引</string>
@@ -561,4 +571,5 @@
   <string name="wallet_unbonded">ボンド解除済み</string>
   <string name="wallet_unbonding">ボンド解除中</string>
   <string name="your_pooled">%sがプールされました</string>
+  <string name="wallet_connect_account">アカウント</string>
 </resources>

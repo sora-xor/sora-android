@@ -130,6 +130,7 @@ internal fun BackupOptions(
     onShowRawSeed: () -> Unit,
     onExportJson: () -> Unit,
     onBackupGoogle: () -> Unit,
+    isCloudBackupAvailable: Boolean = true,
 ) {
     ContentCard {
         Column(
@@ -171,6 +172,10 @@ internal fun BackupOptions(
                 bottomDivider = isBackupAvailable != null,
             )
 
+            if (!isCloudBackupAvailable) {
+                Text(stringResource(R.string.wallet_cloud_backup_unavailable), style = MaterialTheme.customTypography.paragraphS,
+                    color = MaterialTheme.customColors.fgPrimary, modifier = Modifier.padding(vertical = Dimens.x2))
+            }
             isBackupAvailable?.let {
                 val text = if (isBackupAvailable) {
                     stringResource(id = R.string.account_options_delete_backup)

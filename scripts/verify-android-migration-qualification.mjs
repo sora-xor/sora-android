@@ -4,8 +4,8 @@ import { resolve } from "node:path";
 import {
   AndroidMigrationQualificationError,
   lintAndroidMigrationQualificationTemplates,
-  verifyAndroidMigrationQualificationV7,
-} from "./lib/android-migration-qualification-v7.mjs";
+  verifyAndroidMigrationQualificationV8,
+} from "./lib/android-migration-qualification-v8.mjs";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
 
@@ -13,7 +13,7 @@ try {
   if (process.argv.length === 3 && process.argv[2] === "--lint-templates") {
     lintAndroidMigrationQualificationTemplates({ root });
   } else if (process.argv.length === 3 && process.argv[2] === "--verify-qualified") {
-    const result = verifyAndroidMigrationQualificationV7({ root });
+    const result = verifyAndroidMigrationQualificationV8({ root });
     process.stdout.write(`receiptSha256=${result.receiptSha256}\n`);
   } else {
     throw new AndroidMigrationQualificationError(

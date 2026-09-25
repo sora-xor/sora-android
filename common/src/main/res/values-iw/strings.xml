@@ -320,6 +320,7 @@
   <string name="more_menu_sora_card_subtitle">נהל את הכרטיס וחשבון ה-IBAN שלך</string>
   <string name="more_menu_sora_card_title">כרטיס סורה</string>
   <string name="network_fee">עמלת רשת</string>
+  <string name="network_finalized_history">פעילות</string>
   <string name="node_connection_issue">החשבון שלך נוצר בהצלחה. אך האפליקציה אינה יכולה להתחבר לצומת ברירת מחדל. נסה לעבור לחלופה אחרת.</string>
   <string name="node_details_address_validation_failed">נכשל אימות כתובת האתר (כתובת שגויה)</string>
   <string name="node_details_genesis_validation_failed">ההאש הראשון של הצומת שלך שונה מההאש הראשון של הרשת</string>
@@ -352,6 +353,10 @@
   <string name="pincode_one_try_left">נשאר לך עוד ניסיון אחד לפני ההתקררות</string>
   <string name="pincode_set_your_pin_code">הגדר קוד PIN</string>
   <string name="pincode_touch_fingerprint_scanner">גע בסורק טביעת האצבע</string>
+  <string name="polkamarkt_action_buy">קנה</string>
+  <string name="polkamarkt_outcome_no">לא</string>
+  <string name="polkamarkt_outcome_yes">כן</string>
+  <string name="polkamarkt_ticket_slippage">החלקה</string>
   <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">מופעל על ידי Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">חלק מהנתח שלך במאגר מושקע. כדי לקבל גישה אליו, עליך להסיר אותו תחילה מהמאגר.</string>
@@ -461,10 +466,10 @@
   <string name="referral_no_available_invitations">אין הזמנות זמינות</string>
   <string name="referral_referral_link">קישור או כתובת המפנה</string>
   <string name="referral_referrer_address">כתובת המפנה</string>
-  <string name="referral_referrer_description">בכל פעם שאתה מבצע טרנזקציה, 10% מעמלות הרשת ששולמו עוברים למפנה שלך כתגמול.</string>
+  <string name="referral_referrer_description" formatted="false">בכל פעם שאתה מבצע טרנזקציה, 10% מעמלות הרשת ששולמו עוברים למפנה שלך כתגמול.</string>
   <string name="referral_start_inviting">התחל להזמין</string>
-  <string name="referral_subtitle">בכל פעם שהמופנה שלך מבצע עסקה, 10% מעמלות הרשת ששולמו עוברים אליך כתגמול.</string>
-  <string name="referral_title">קבל 10% מעמלות הרשת של ההפניות שלך</string>
+  <string name="referral_subtitle" formatted="false">בכל פעם שהמופנה שלך מבצע עסקה, 10% מעמלות הרשת ששולמו עוברים אליך כתגמול.</string>
+  <string name="referral_title" formatted="false">קבל 10% מעמלות הרשת של ההפניות שלך</string>
   <string name="referral_toolbar_title">תוכנית הפניות</string>
   <string name="referral_total_rewards">סה\"כ תגמולים</string>
   <string name="referral_unbond_button_title">הסר XOR מהמאגר</string>
@@ -568,10 +573,17 @@
   <string name="wallet_balance_locked">נעול</string>
   <string name="wallet_balance_reserved">שמור</string>
   <string name="wallet_bonded">צורף למאגר</string>
+  <string name="wallet_connect_account">חשבון</string>
+  <string name="wallet_connect_done">בוצע</string>
+  <string name="wallet_market_refresh">רענן</string>
+  <string name="wallet_network_activity">פעילות</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">כתובת %s הרשת שלי לקבלת %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">סרוק את ה- QR הזה כדי לשלוח לי %s. מספר חשבון הרשת שלי %s:\n%s</string>
+  <string name="wallet_receive_xor">קבל XOR</string>
   <string name="wallet_redeemable">ניתן למימוש</string>
+  <string name="wallet_scan_qr">סרוק קוד QR</string>
   <string name="wallet_send_existential_warning_message">ההעברה שלך תסיר את החשבון מבלאקסטור מכיוון שהיא תהפוך את היתרה הכוללת לנמוכה מההפקדה הקיומית.</string>
+  <string name="wallet_status_confirmed">הושלם</string>
   <string name="wallet_title">ארנק</string>
   <string name="wallet_transaction_rejected">הטרנזקציה נדחתה</string>
   <string name="wallet_transaction_submitted">הטרנזקציה נשלחה</string>

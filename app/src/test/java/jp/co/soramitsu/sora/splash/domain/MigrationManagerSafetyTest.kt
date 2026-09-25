@@ -13,6 +13,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.nexus.IrohaKeyDerivation
+import jp.co.soramitsu.common.nexus.NexusDerivationProfiles
 import jp.co.soramitsu.common.nexus.NexusNetworks
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
@@ -309,6 +310,72 @@ class MigrationManagerSafetyTest {
             coVerify(exactly = 0) { datasource.saveMnemonic(any(), any()) }
             coVerify(exactly = 0) { datasource.saveSeed(any(), any()) }
             coVerify(exactly = 0) { datasource.saveKeys(any(), any()) }
+        }
+
+    @Test
+    fun `retained eighteen and twenty one word mnemonics preserve Sora2 only`() =
+        runTest {
+          listOf(
+            List(17) { "abandon" }.plus("agent").joinToString(" "),
+            List(20) { "abandon" }.plus("admit").joinToString(" "),
+          ).forEach { phrase ->
+            val runtime = mockk<RuntimeManager>()
+            val sora2AddressCodec = Sora2AddressCodec()
+            val datasource = mockk<CredentialsDatasource>()
+            val credentials = CredentialsRepositoryImpl(
+                datasource,
+                mockk<CryptoAssistant>(),
+                runtime,
+                sora2AddressCodec,
+                mockk<JsonAccountsEncoder>(),
+            )
+            val parsed = MnemonicCreator.fromWords(phrase)
+            val seedBytes = SubstrateSeedFactory.deriveSeed32(parsed.words, null).seed
+            val seed = try {
+                seedBytes.toHex()
+            } finally {
+                seedBytes.fill(0)
+            }
+            val vector = soraVector(seed)
+            val account = SoraAccountLocal(vector.address, "Legacy fifteen")
+            val storage = successfulMigrationStorage(listOf(account))
+            val userRepository = mockk<UserRepository>()
+            stubWalletMutationLock(
+                userRepository = userRepository,
+                selectedAccount = SoraAccount(account.substrateAddress, account.accountName),
+                onboardingState = OnboardingState.REGISTRATION_FINISHED,
+            )
+            coEvery { datasource.isExplicitWatchOnly(any()) } returns false
+            coEvery { datasource.retrieveKeys(vector.address) } answers {
+                sr25519KeyPair(vector.seed)
+            }
+            coEvery { datasource.retrieveKeys("") } returns null
+            coEvery { datasource.retrieveMnemonic(vector.address) } returns
+                phrase
+            coEvery { datasource.retrieveSeed(vector.address) } returns ""
+
+            assertFalse(credentials.isMnemonicValid(phrase))
+            val manager = MigrationManager(
+                userRepository = userRepository,
+                credentialsRepository = credentials,
+                sora2AddressCodec = sora2AddressCodec,
+                database = storage.database,
+                migrationSr25519Crypto = testMigrationSr25519Crypto,
+            )
+
+            assertTrue(manager.start())
+            assertEquals(
+                "MNEMONIC_UNSUPPORTED",
+                storage.wallets.getValue(vector.address).secretSource,
+            )
+            assertEquals(
+                listOf("sora2"),
+                storage.networkAccounts.getValue(vector.address).map { it.networkId },
+            )
+            coVerify(exactly = 0) { datasource.saveMnemonic(any(), any()) }
+            coVerify(exactly = 0) { datasource.saveSeed(any(), any()) }
+            coVerify(exactly = 0) { datasource.saveKeys(any(), any()) }
+          }
         }
 
     @Test
@@ -689,7 +756,7 @@ class MigrationManagerSafetyTest {
         seed.fill(0)
         val soraPublicKey = keyPair.publicKey.toHex()
         val minamoto = IrohaKeyDerivation.derive(MNEMONIC, NexusNetworks.minamoto)
-        val taira = IrohaKeyDerivation.derive(MNEMONIC, NexusNetworks.taira)
+        val taira = IrohaKeyDerivation.derive(MNEMONIC, NexusDerivationProfiles.taira)
         val failureJournal = slot<WalletMigrationJournalLocal>()
 
         every { database.accountDao() } returns accountDao
@@ -757,10 +824,10 @@ class MigrationManagerSafetyTest {
             ),
             NetworkAccountLocal(
                 walletId = WALLET_ID,
-                networkId = NexusNetworks.taira.id.wireId,
+                networkId = NexusDerivationProfiles.taira.id.wireId,
                 publicKey = taira.publicKey.toHex(),
                 address = "tampered-cross-network-child",
-                derivationPath = NexusNetworks.taira.derivationPath,
+                derivationPath = NexusDerivationProfiles.taira.derivationPath,
                 derivationVersion = 1,
                 enabled = true,
             ),
@@ -1885,7 +1952,7 @@ class MigrationManagerSafetyTest {
         mnemonic: String,
         actual: List<NetworkAccountLocal>,
     ) {
-        assertEquals(3, actual.size)
+        assertEquals(1 + NexusNetworks.admitted.size, actual.size)
         assertEquals(
             NetworkAccountLocal(
                 walletId = vector.address,
@@ -1898,7 +1965,7 @@ class MigrationManagerSafetyTest {
             ),
             actual.single { it.networkId == "sora2" },
         )
-        listOf(NexusNetworks.minamoto, NexusNetworks.taira).forEach { network ->
+        NexusNetworks.admitted.forEach { network ->
             val derived = IrohaKeyDerivation.derive(mnemonic, network)
             try {
                 assertEquals(

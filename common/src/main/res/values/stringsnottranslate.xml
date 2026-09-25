@@ -2,6 +2,8 @@
 <resources>
     <string name="common_russian_native" translatable="false">Русский</string>
     <string name="common_english_native" translatable="false">English</string>
+    <string name="common_akkadian_native" translatable="false">lišānum akkadītum labīrtum</string>
+    <string name="common_egyptian_native" translatable="false">𓌃𓂧𓅱𓀁 𓈖 𓆎𓅓𓏏𓊖</string>
     <string name="common_khmer_native" translatable="false">ខ្មែរ</string>
     <string name="common_chinese_taiwan_native" translatable="false">中國台灣</string>
     <string name="common_arab_native" translatable="false">عرب</string>

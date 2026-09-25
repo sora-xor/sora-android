@@ -86,7 +86,10 @@ class WsConnectionManager(
                     }
 
                     AppStateProvider.AppEvent.ON_RESUME -> {
-                        socket.resume()
+                        resumeOrStartSocket(
+                            socket = socket,
+                            requestedAddress = mutationTransport.requestedAddress(),
+                        )
                     }
 
                     AppStateProvider.AppEvent.ON_PAUSE -> {
@@ -139,5 +142,21 @@ class WsConnectionManager(
         return Sora2MutationTransportLease {
             lease.closeAndRunDeferredSwitch(socket::switchUrl)
         }
+    }
+}
+
+/**
+ * A connection manager can now be constructed after the process has already reached ON_RESUME.
+ * In that case there was no observer for ON_CREATE, so resume() alone cannot start a disconnected
+ * socket. Keep the ordinary resume path for an existing socket and bootstrap only when necessary.
+ */
+internal fun resumeOrStartSocket(
+    socket: SocketService,
+    requestedAddress: String?,
+) {
+    if (socket.started()) {
+        socket.resume()
+    } else {
+        requestedAddress?.let { socket.start(it, true) }
     }
 }

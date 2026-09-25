@@ -186,7 +186,7 @@ class CredentialsRepositoryImpl constructor(
                 if (
                     WalletRecoveryCapabilityGate.mode() ==
                     WalletRecoveryCapabilityGate.Mode.NORMAL &&
-                    retainedWordCount != LEGACY_SORA_WORD_COUNT
+                    retainedWordCount in setOf(12, 24)
                 ) {
                     credentialsPrefs.saveSeed(seed, soraAccount.substrateAddress)
                 }
@@ -365,11 +365,7 @@ class CredentialsRepositoryImpl constructor(
         mnemonicWordCount(mnemonic) in setOf(12, 24)
 
     private fun hasRetainedSoraWordCount(wordCount: Int): Boolean =
-        wordCount in setOf(12, LEGACY_SORA_WORD_COUNT, 24)
-
-    private companion object {
-        const val LEGACY_SORA_WORD_COUNT = 15
-    }
+        wordCount in setOf(12, 15, 18, 21, 24)
 
     /**
      * Release-era accounts used unsuffixed encrypted preference keys. They remain read-only

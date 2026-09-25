@@ -24,6 +24,10 @@ export const TAIRA_KNOWN_CHAIN_IDS = Object.freeze([
   "809574f5-fee7-5e69-bfcf-52451e42d50f",
   "fc56984b-2be7-431d-840e-21514d1883f0",
 ]);
+export const TAIRA_CURRENT_CHAIN_ID =
+  "fc56984b-2be7-431d-840e-21514d1883f0";
+export const TAIRA_PUBLIC_TORII_ROOT = "https://taira.sora.org";
+export const TAIRA_PUBLIC_MCP_ENDPOINT = `${TAIRA_PUBLIC_TORII_ROOT}/v1/mcp`;
 
 const MAXIMUM_MANIFEST_BYTES = 64 * 1024;
 const MAXIMUM_KEY_BYTES = 4 * 1024;
@@ -35,6 +39,17 @@ const KEY_ID = /^[a-z0-9][a-z0-9._:-]{2,127}$/;
 
 const fail = (code) => {
   throw new Error(code);
+};
+
+export const parseExpectedTairaDeploymentManifestSequenceNumberV1 = (value) => {
+  if (typeof value !== "string" || !/^[1-9][0-9]{0,15}$/.test(value)) {
+    fail("TAIRA_DEPLOYMENT_EXPECTED_MANIFEST_SEQUENCE_INVALID");
+  }
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed)) {
+    fail("TAIRA_DEPLOYMENT_EXPECTED_MANIFEST_SEQUENCE_INVALID");
+  }
+  return parsed;
 };
 
 const exactKeys = (value, keys) =>
@@ -114,7 +129,7 @@ const readProtectedFile = (path, maximumBytes, code) => {
 };
 
 const canonicalOrigin = (value) => {
-  if (typeof value !== "string" || value.length > 512) return false;
+  if (value !== TAIRA_PUBLIC_TORII_ROOT) return false;
   try {
     const parsed = new URL(value);
     return (
@@ -126,7 +141,7 @@ const canonicalOrigin = (value) => {
       parsed.search === "" &&
       parsed.hash === "" &&
       parsed.origin === value &&
-      parsed.hostname === parsed.hostname.toLowerCase()
+      parsed.hostname === "taira.sora.org"
     );
   } catch {
     return false;
@@ -134,7 +149,10 @@ const canonicalOrigin = (value) => {
 };
 
 const canonicalPublicMcpEndpoint = (value, toriiBaseUrl) => {
-  if (typeof value !== "string" || value !== `${toriiBaseUrl}/v1/mcp`) {
+  if (
+    toriiBaseUrl !== TAIRA_PUBLIC_TORII_ROOT ||
+    value !== TAIRA_PUBLIC_MCP_ENDPOINT
+  ) {
     return false;
   }
   try {
@@ -147,7 +165,7 @@ const canonicalPublicMcpEndpoint = (value, toriiBaseUrl) => {
       parsed.pathname === "/v1/mcp" &&
       parsed.search === "" &&
       parsed.hash === "" &&
-      parsed.hostname !== "taira.sora.org"
+      parsed.hostname === "taira.sora.org"
     );
   } catch {
     return false;
@@ -164,8 +182,9 @@ const parseAuthorityKey = (record, expectedPin, label) => {
   }
   const der = key.export({ type: "spki", format: "der" });
   if (
-    key.asymmetricKeyType !== "ed25519" ||
-    der.length !== 44 ||
+    key.asymmetricKeyType !== "ec" ||
+    !["prime256v1", "P-256"].includes(key.asymmetricKeyDetails?.namedCurve) ||
+    der.length !== 91 ||
     sha256(der) !== expectedPin
   ) {
     fail(`${label}_KEY_INVALID`);
@@ -196,24 +215,29 @@ const validateEpoch = (epoch, label) => {
   }
   if (epoch.status === "current") {
     if (
+      epoch.chainId !== TAIRA_CURRENT_CHAIN_ID ||
       !canonicalOrigin(epoch.toriiBaseUrl) ||
       !canonicalPublicMcpEndpoint(epoch.publicNodeMcpEndpoint, epoch.toriiBaseUrl) ||
       !canonicalOrigin(epoch.explorerBaseUrl)
     ) {
       fail(`${label}_ROUTING_INVALID`);
     }
-  } else if (
-    epoch.toriiBaseUrl !== null ||
-    epoch.publicNodeMcpEndpoint !== null ||
-    epoch.explorerBaseUrl !== null
-  ) {
-    fail(`${label}_RETIRED_ROUTE_PRESENT`);
+  } else {
+    if (
+      epoch.chainId === TAIRA_CURRENT_CHAIN_ID ||
+      epoch.toriiBaseUrl !== null ||
+      epoch.publicNodeMcpEndpoint !== null ||
+      epoch.explorerBaseUrl !== null
+    ) {
+      fail(`${label}_RETIRED_ROUTE_PRESENT`);
+    }
   }
 };
 
 export const inspectTairaDeploymentManifestV1 = ({
   manifestRecord,
   evaluationEpochSeconds,
+  expectedManifestSequenceNumber,
   operatorKeySha256,
   reviewerKeySha256,
 }) => {
@@ -238,6 +262,7 @@ export const inspectTairaDeploymentManifestV1 = ({
       "reviewedAtEpochSeconds",
       "currentEpoch",
       "authorities",
+      "pendingRowPolicy",
       "epochs",
       "authorization",
     ]) ||
@@ -247,6 +272,8 @@ export const inspectTairaDeploymentManifestV1 = ({
     manifest.networkId !== "taira" ||
     !Number.isSafeInteger(manifest.manifestSequenceNumber) ||
     manifest.manifestSequenceNumber < 1 ||
+    !Number.isSafeInteger(expectedManifestSequenceNumber) ||
+    expectedManifestSequenceNumber < 1 ||
     !Number.isSafeInteger(manifest.issuedAtEpochSeconds) ||
     !Number.isSafeInteger(manifest.reviewedAtEpochSeconds) ||
     manifest.issuedAtEpochSeconds < 1 ||
@@ -268,6 +295,9 @@ export const inspectTairaDeploymentManifestV1 = ({
   ) {
     fail("TAIRA_DEPLOYMENT_MANIFEST_SHAPE_INVALID");
   }
+  if (manifest.manifestSequenceNumber !== expectedManifestSequenceNumber) {
+    fail("TAIRA_DEPLOYMENT_MANIFEST_SEQUENCE_MISMATCH");
+  }
   if (
     !exactKeys(manifest.authorities, ["operator", "independentReviewer"]) ||
     !exactKeys(manifest.authorities.operator, ["keyId", "publicKeySha256"]) ||
@@ -280,6 +310,21 @@ export const inspectTairaDeploymentManifestV1 = ({
     operatorKeySha256 === reviewerKeySha256
   ) {
     fail("TAIRA_DEPLOYMENT_MANIFEST_AUTHORITIES_INVALID");
+  }
+  if (
+    !exactKeys(manifest.pendingRowPolicy, [
+      "schemaVersion",
+      "preserveExactChainUuid",
+      "mismatchedCurrentDisposition",
+      "reinterpretationAllowed",
+    ]) ||
+    manifest.pendingRowPolicy.schemaVersion !== 77 ||
+    manifest.pendingRowPolicy.preserveExactChainUuid !== true ||
+    manifest.pendingRowPolicy.mismatchedCurrentDisposition !==
+      "quarantine-recovery-only" ||
+    manifest.pendingRowPolicy.reinterpretationAllowed !== false
+  ) {
+    fail("TAIRA_DEPLOYMENT_PENDING_ROW_POLICY_INVALID");
   }
   if (!Array.isArray(manifest.epochs) || manifest.epochs.length !== 2) {
     fail("TAIRA_DEPLOYMENT_MANIFEST_EPOCHS_INVALID");
@@ -314,6 +359,7 @@ export const verifyTairaDeploymentManifestV1 = ({
   expectedOperatorKeySha256,
   expectedReviewerKeySha256,
   evaluationEpochSeconds,
+  expectedManifestSequenceNumber,
 }) => {
   const manifestRecord = readProtectedFile(
     manifestPath,
@@ -351,20 +397,33 @@ export const verifyTairaDeploymentManifestV1 = ({
     "TAIRA_DEPLOYMENT_REVIEWER",
   );
   if (
-    operatorSignature.bytes.length !== 64 ||
-    !verifySignature(null, manifestRecord.bytes, operator.key, operatorSignature.bytes)
+    operatorSignature.bytes.length < 68 ||
+    operatorSignature.bytes.length > 72 ||
+    !verifySignature(
+      "sha256",
+      manifestRecord.bytes,
+      operator.key,
+      operatorSignature.bytes,
+    )
   ) {
     fail("TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_INVALID");
   }
   if (
-    reviewerSignature.bytes.length !== 64 ||
-    !verifySignature(null, manifestRecord.bytes, reviewer.key, reviewerSignature.bytes)
+    reviewerSignature.bytes.length < 68 ||
+    reviewerSignature.bytes.length > 72 ||
+    !verifySignature(
+      "sha256",
+      manifestRecord.bytes,
+      reviewer.key,
+      reviewerSignature.bytes,
+    )
   ) {
     fail("TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_INVALID");
   }
   const inspected = inspectTairaDeploymentManifestV1({
     manifestRecord,
     evaluationEpochSeconds,
+    expectedManifestSequenceNumber,
     operatorKeySha256: operator.sha256,
     reviewerKeySha256: reviewer.sha256,
   });
@@ -375,6 +434,14 @@ export const verifyTairaDeploymentManifestV1 = ({
     networkId: "taira",
     manifestSha256: manifestRecord.sha256,
     manifestBytes: manifestRecord.bytesCount,
+    operatorSignatureSha256: operatorSignature.sha256,
+    operatorSignatureBytes: operatorSignature.bytesCount,
+    reviewerSignatureSha256: reviewerSignature.sha256,
+    reviewerSignatureBytes: reviewerSignature.bytesCount,
+    operatorPublicKeyFileSha256: operatorKeyRecord.sha256,
+    operatorPublicKeyFileBytes: operatorKeyRecord.bytesCount,
+    reviewerPublicKeyFileSha256: reviewerKeyRecord.sha256,
+    reviewerPublicKeyFileBytes: reviewerKeyRecord.bytesCount,
     manifestSequenceNumber: inspected.manifest.manifestSequenceNumber,
     issuedAtEpochSeconds: inspected.manifest.issuedAtEpochSeconds,
     reviewedAtEpochSeconds: inspected.manifest.reviewedAtEpochSeconds,

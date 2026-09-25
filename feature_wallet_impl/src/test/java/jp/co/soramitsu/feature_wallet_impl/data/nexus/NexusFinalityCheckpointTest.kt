@@ -28,7 +28,7 @@ class NexusFinalityCheckpointTest {
         assertEquals(
             "NEXUS_FINALITY_NETWORK_MISMATCH",
             assertThrows(IllegalStateException::class.java) {
-                checkpoint.copy(chainId = NexusNetworks.taira.chainId)
+                checkpoint.copy(chainId = TEST_TAIRA_NETWORK.chainId)
                     .requireFor(NexusNetworks.minamoto)
             }.message,
         )
@@ -90,7 +90,7 @@ class NexusFinalityCheckpointTest {
         assertEquals(
             "NEXUS_FINALITY_NETWORK_MISMATCH",
             assertThrows(IllegalStateException::class.java) {
-                checkpoint.requireFor(NexusNetworks.taira)
+                checkpoint.requireFor(TEST_TAIRA_NETWORK)
             }.message,
         )
     }

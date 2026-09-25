@@ -50,6 +50,7 @@ data class SwapMainState(
     val confirmButtonState: ButtonState,
     val confirmText: AnnotatedString,
     val confirmResult: Boolean?,
+    val assetCatalogUnavailable: Boolean = false,
 )
 
 data class SwapDetailsState(

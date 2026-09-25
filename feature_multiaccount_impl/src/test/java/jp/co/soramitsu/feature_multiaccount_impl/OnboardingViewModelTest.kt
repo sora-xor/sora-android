@@ -104,10 +104,53 @@ class OnboardingViewModelTest {
             multiAccInteractor,
             mainStarter,
             resourceManager,
-            backupService,
+            jp.co.soramitsu.common.backup.CloudBackupProvider(true) { backupService },
             avatarGenerator,
             coroutineManager,
         )
+    }
+
+    @Test
+    fun `unconfigured Google backup does not initialize SDK or prevent local create`() = runTest {
+        val unavailable = OnboardingViewModel(invitationHandler, multiAccInteractor, mainStarter,
+            resourceManager, jp.co.soramitsu.common.backup.CloudBackupProvider(false) { error("Must remain lazy") },
+            avatarGenerator, coroutineManager)
+        assertEquals(false, unavailable.tutorialScreenState.value?.isGoogleBackupAvailable)
+        unavailable.onCreateAccountClicked(navController)
+        org.mockito.kotlin.verify(navController).navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.CREATE_ACCOUNT)
+        unavailable.onGoogleSignin(navController, org.mockito.kotlin.mock())
+        assertEquals(false, unavailable.tutorialScreenState.value?.isGoogleSigninLoading)
+    }
+
+    @Test
+    fun `cancelled Google authorization always settles loading`() = runTest {
+        val launcher = org.mockito.kotlin.mock<androidx.activity.result.ActivityResultLauncher<android.content.Intent>>()
+        whenever(backupService.authorize(launcher)).thenReturn(false)
+        onboardingViewModel.onGoogleSignin(navController, launcher)
+        testScheduler.advanceUntilIdle()
+        assertEquals(false, onboardingViewModel.tutorialScreenState.value?.isGoogleSigninLoading)
+        org.mockito.kotlin.verify(backupService).logout()
+    }
+
+    @Test
+    fun `unexpected Google authorization error always settles loading`() = runTest {
+        val launcher = org.mockito.kotlin.mock<androidx.activity.result.ActivityResultLauncher<android.content.Intent>>()
+        whenever(backupService.authorize(launcher)).thenThrow(IllegalStateException("SDK error"))
+        onboardingViewModel.onGoogleSignin(navController, launcher)
+        testScheduler.advanceUntilIdle()
+        assertEquals(false, onboardingViewModel.tutorialScreenState.value?.isGoogleSigninLoading)
+    }
+
+    @Test
+    fun `configured Google authorization continues to backup lookup and local creation`() = runTest {
+        val launcher = org.mockito.kotlin.mock<androidx.activity.result.ActivityResultLauncher<android.content.Intent>>()
+        whenever(backupService.authorize(launcher)).thenReturn(true)
+        whenever(backupService.getBackupAccounts()).thenReturn(emptyList())
+        onboardingViewModel.onGoogleSignin(navController, launcher)
+        testScheduler.advanceUntilIdle()
+        org.mockito.kotlin.verify(backupService).getBackupAccounts()
+        org.mockito.kotlin.verify(navController).navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.CREATE_ACCOUNT)
+        assertEquals(false, onboardingViewModel.tutorialScreenState.value?.isGoogleSigninLoading)
     }
 
     @Test

@@ -88,8 +88,8 @@ interface CredentialsRepository {
 
     /**
      * Migration-only derivation for an already-installed SORA wallet. Unlike public recovery,
-     * this retains the historical 15-word format so its existing SORA2 key can be verified; it
-     * does not make that phrase eligible for Nexus child derivation.
+     * this retains historical 15-, 18-, and 21-word phrases so their existing SORA2 keys can be
+     * verified; it does not make those phrases eligible for Nexus child derivation.
      */
     fun convertRetainedSoraPassphraseToSeed(mnemonic: String): String
 }

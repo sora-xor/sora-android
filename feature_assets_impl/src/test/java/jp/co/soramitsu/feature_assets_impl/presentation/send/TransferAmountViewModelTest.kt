@@ -39,6 +39,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.verify
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.equalTo
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
@@ -47,6 +48,8 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -142,6 +145,82 @@ class TransferAmountViewModelTest {
             "recipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientId",
             state.value.address
         )
+    }
+
+    @Test
+    fun `fee preview failure stops loading and keeps amount editable`() = runTest {
+        coEvery {
+            assetsInteractor.calcTransactionFee(
+                recipientId,
+                any(),
+                any(),
+                any(),
+            )
+        } returns null
+
+        initViewModel(BigDecimal.TEN)
+        advanceUntilIdle()
+
+        val state = transferAmountViewModel.sendState.value
+        assertFalse(state.feeLoading)
+        assertFalse(state.reviewEnabled)
+        assertTrue(state.input?.enabled == true)
+        assertEquals(
+            R.string.common_error_general_title to R.string.common_error_fee_rate_not_available,
+            transferAmountViewModel.errorFromResourceLiveData.value,
+        )
+    }
+
+    @Test
+    fun `fee preview exception stops loading and shows retryable error`() = runTest {
+        coEvery {
+            assetsInteractor.calcTransactionFee(
+                recipientId,
+                any(),
+                any(),
+                any(),
+            )
+        } throws IllegalStateException("fee RPC unavailable")
+
+        initViewModel(BigDecimal.TEN)
+        advanceUntilIdle()
+
+        val state = transferAmountViewModel.sendState.value
+        assertFalse(state.feeLoading)
+        assertFalse(state.reviewEnabled)
+        assertTrue(state.input?.enabled == true)
+        assertEquals(
+            R.string.something_went_wrong to R.string.unexpected_error,
+            transferAmountViewModel.errorFromResourceLiveData.value,
+        )
+    }
+
+    @Test
+    fun `finalized transfer failure stays on send screen and shows error`() = runTest {
+        coEvery {
+            assetsInteractor.observeTransfer(
+                recipientId,
+                any(),
+                any(),
+                any(),
+                WALLET_ID,
+            )
+        } throws SoraException.businessError(ResponseCode.BROKEN_TRANSACTION)
+
+        initViewModel(
+            balance = BigDecimal.TEN,
+            initialSendAmount = BigDecimal.ONE.toPlainString(),
+        )
+        advanceUntilIdle()
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        assertEquals(
+            R.string.common_error_general_title to R.string.common_error_general_message,
+            transferAmountViewModel.errorFromResourceLiveData.value,
+        )
+        verify(exactly = 0) { walletRouter.returnToHubFragment() }
+        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
     }
 
     @Test

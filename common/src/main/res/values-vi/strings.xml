@@ -317,6 +317,7 @@
   <string name="more_menu_sora_card_subtitle">Quản lý thẻ và tài khoản IBAN của bạn</string>
   <string name="more_menu_sora_card_title">Thẻ SORA</string>
   <string name="network_fee">Phí mạng</string>
+  <string name="network_finalized_history">Hoạt động</string>
   <string name="node_connection_issue">Tài khoản của bạn đã được tạo thành công. Nhưng ứng dụng không thể kết nối với một node mặc định. Cố gắng chuyển sang một node khác.</string>
   <string name="node_details_address_validation_failed">Không xác thực được URL (Địa chỉ sai)</string>
   <string name="node_details_genesis_validation_failed">Hàm băm genesis của nút của bạn khác với hàm băm genesis của mạng</string>
@@ -349,6 +350,10 @@
   <string name="pincode_one_try_left">Bạn còn một lần thử nữa</string>
   <string name="pincode_set_your_pin_code">Thiết lập mã pin</string>
   <string name="pincode_touch_fingerprint_scanner">Chạm vào máy quét vân tay</string>
+  <string name="polkamarkt_action_buy">Mua</string>
+  <string name="polkamarkt_outcome_no">Không</string>
+  <string name="polkamarkt_outcome_yes">Có</string>
+  <string name="polkamarkt_ticket_slippage">Trượt giá</string>
   <string name="polkaswap_farm_title_template">%s Farm</string>
   <string name="polkaswap_farming_demeter_power">Được cung cấp bởi Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Một phần của bạn đã được stake trong pool. Để có quyền truy cập vào nó, trước tiên bạn phải hủy stake.</string>
@@ -443,10 +448,10 @@
   <string name="referral_no_available_invitations">Không có lời mời có sẵn</string>
   <string name="referral_referral_link">Liên kết hoặc địa chỉ của người giới thiệu</string>
   <string name="referral_referrer_address">Địa chỉ người giới thiệu</string>
-  <string name="referral_referrer_description">Bất cứ khi bạn thực hiện một giao dịch, 10% phí mạng được trả cho người giới thiệu như một phần thưởng.</string>
+  <string name="referral_referrer_description" formatted="false">Bất cứ khi bạn thực hiện một giao dịch, 10% phí mạng được trả cho người giới thiệu như một phần thưởng.</string>
   <string name="referral_start_inviting">Bắt đầu mời</string>
-  <string name="referral_subtitle">Bất cứ khi nào giới thiệu của bạn thực hiện một giao dịch, 10% phí mạng được trả cho bạn như một phần thưởng.</string>
-  <string name="referral_title">Nhận 10% phí mạng từ những người được bạn giới thiệu</string>
+  <string name="referral_subtitle" formatted="false">Bất cứ khi nào giới thiệu của bạn thực hiện một giao dịch, 10% phí mạng được trả cho bạn như một phần thưởng.</string>
+  <string name="referral_title" formatted="false">Nhận 10% phí mạng từ những người được bạn giới thiệu</string>
   <string name="referral_toolbar_title">Chương trình giới thiệu</string>
   <string name="referral_total_rewards">Tổng phần thưởng</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>
@@ -550,10 +555,17 @@
   <string name="wallet_balance_locked">Đã khóa</string>
   <string name="wallet_balance_reserved">Dự trữ</string>
   <string name="wallet_bonded">Được bảo lãnh</string>
+  <string name="wallet_connect_account">Tài khoản</string>
+  <string name="wallet_connect_done">Hoàn tất</string>
+  <string name="wallet_market_refresh">Làm mới</string>
+  <string name="wallet_network_activity">Hoạt động</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Địa chỉ mạng %s của tôi để nhận %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Quét mã QR này để gửi cho tôi %s. ID tài khoản của tôi %s:\n%s</string>
+  <string name="wallet_receive_xor">Nhận XOR</string>
   <string name="wallet_redeemable">Có thể hoán đổi</string>
+  <string name="wallet_scan_qr">Quét mã QR</string>
   <string name="wallet_send_existential_warning_message">Việc chuyển khoản của bạn sẽ xóa tài khoản khỏi lưu trữ khối vì nó sẽ làm cho tổng số dư thấp hơn khoản tiền gửi hiện có.</string>
+  <string name="wallet_status_confirmed">Đã hoàn thành</string>
   <string name="wallet_title">Ví</string>
   <string name="wallet_transaction_rejected">Giao dịch bị từ chối</string>
   <string name="wallet_transaction_submitted">Giao dịch đã được gửi</string>

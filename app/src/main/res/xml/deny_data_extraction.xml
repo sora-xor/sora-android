@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <!-- Wallet state and recovery material must remain on the original device. -->
+    <cloud-backup>
+        <exclude domain="root" path="./" />
+        <exclude domain="device_root" path="./" />
+        <exclude domain="external" path="./" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" path="./" />
+        <exclude domain="device_root" path="./" />
+        <exclude domain="external" path="./" />
+    </device-transfer>
+</data-extraction-rules>

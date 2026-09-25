@@ -318,6 +318,7 @@
   <string name="more_menu_sora_card_subtitle">Manage your card and IBAN account</string>
   <string name="more_menu_sora_card_title">SORA Card</string>
   <string name="network_fee">Şəbəkə haqqı</string>
+  <string name="network_finalized_history">Fəaliyyət</string>
   <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">URL-i doğrulamaq alınmadı (Yanlış ünvan)</string>
   <string name="node_details_genesis_validation_failed">Düyününüzün genezis hashı şəbəkənin genezis hashından fərqlidir</string>
@@ -350,6 +351,8 @@
   <string name="pincode_one_try_left">Soyumağa qədər daha bir cəhdiniz qalıb</string>
   <string name="pincode_set_your_pin_code">Pin kodu qurun</string>
   <string name="pincode_touch_fingerprint_scanner">Barmaq izi skanerinə toxunun</string>
+  <string name="polkamarkt_outcome_no">Xeyr</string>
+  <string name="polkamarkt_outcome_yes">Bəli</string>
   <string name="polkaswap_farm_title_template"> %s Ferma</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
@@ -366,7 +369,7 @@
   <string name="polkaswap_info_title">Disclaimer</string>
   <string name="polkaswap_info_title_2">Polkaswap disclaimer</string>
   <string name="polkaswap_input_estimated">Giriş hesablanır. Maksimum %s satacaqsınız və ya əməliyyat geri qaytarılacaq.</string>
-  <string name="polkaswap_insufficient_balance">Balans kifayət deyil</string>
+  <string name="polkaswap_insufficient_balance">Balans kifayət deyil (%s)</string>
   <string name="polkaswap_insufficient_liqudity">Qeyri-kifayət qədər likvidlik</string>
   <string name="polkaswap_liquidity_fee">LP haqqı</string>
   <string name="polkaswap_liquidity_fee_info">Hər bir ticarətin bir hissəsi protokol təşviqi olaraq likvidlik təminatçılarına keçir.</string>
@@ -419,7 +422,7 @@
     <item quantity="one">saniyə qalıb</item>
     <item quantity="other">saniyələr qalıb</item>
   </plurals>
-  <string name="project_ended_template">Tamamlandı</string>
+  <string name="project_ended_template">Tamamlandı %s</string>
   <string name="protect_loss_access_funds">Özünüzü pulunuza girişi itirməkdən qoruyun</string>
   <string name="qr_code">QR kodu</string>
   <string name="qr_upload">Qalereyadan yükləyin</string>
@@ -449,10 +452,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">İstinad linki və ya ünvanı</string>
   <string name="referral_referrer_address">İstinad edənin ünvanı</string>
-  <string name="referral_referrer_description">Hər hansı bir əməliyyat etdiyiniz zaman ödənilən şəbəkə haqqının 10% -i mükafat olaraq yönləndiricinizə gedir.</string>
+  <string name="referral_referrer_description" formatted="false">Hər hansı bir əməliyyat etdiyiniz zaman ödənilən şəbəkə haqqının 10% -i mükafat olaraq yönləndiricinizə gedir.</string>
   <string name="referral_start_inviting">Dəvət etməyə başlayın</string>
-  <string name="referral_subtitle">Referalınız hər hansı bir əməliyyat həyata keçirdikdə, ödənilən şəbəkə haqqının 10% -i mükafat olaraq sizə keçir.</string>
-  <string name="referral_title">Referallarınızın şəbəkə haqlarının 10%-ni alın</string>
+  <string name="referral_subtitle" formatted="false">Referalınız hər hansı bir əməliyyat həyata keçirdikdə, ödənilən şəbəkə haqqının 10% -i mükafat olaraq sizə keçir.</string>
+  <string name="referral_title" formatted="false">Referallarınızın şəbəkə haqlarının 10%-ni alın</string>
   <string name="referral_toolbar_title">İstiqamət proqramı</string>
   <string name="referral_total_rewards">Ümumi mükafatlar</string>
   <string name="referral_unbond_button_title">XOR-u ayırın</string>
@@ -556,10 +559,15 @@
   <string name="wallet_balance_locked">Kilidlənmiş</string>
   <string name="wallet_balance_reserved">Rezerv edilmiş</string>
   <string name="wallet_bonded">Bağlı</string>
+  <string name="wallet_connect_account">Hesab</string>
+  <string name="wallet_connect_done">Tamamlandı</string>
+  <string name="wallet_network_activity">Fəaliyyət</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">%s qəbul etmək üçün mənim %s şəbəkə ünvanım:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Mənə %s göndərmək üçün bu QR-ni skan edin. Mənim %s Şəbəkə Hesabım ID:\n%s</string>
+  <string name="wallet_receive_xor">XOR qəbul edin</string>
   <string name="wallet_redeemable">Əldə edilə bilər</string>
   <string name="wallet_send_existential_warning_message">Transferiniz hesabınızı blockstore -dan çıxaracaq, çünki ümumi qalıq mövcud depozitdən daha aşağı olacaq.</string>
+  <string name="wallet_status_confirmed">Tamamlandı</string>
   <string name="wallet_title">Cüzdan</string>
   <string name="wallet_transaction_rejected">Köçürmə əməliyyatı rədd edildi</string>
   <string name="wallet_transaction_submitted">Əməliyyat göndərildi</string>

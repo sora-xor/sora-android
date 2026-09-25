@@ -52,14 +52,27 @@ import {
 } from "./lib/funded-canary-v4.mjs";
 import {
   lintAndroidMigrationQualificationTemplates,
-  verifyAndroidMigrationQualificationV7,
-} from "./lib/android-migration-qualification-v7.mjs";
-import { verifyTairaDeploymentManifestV1 } from "./lib/taira-deployment-manifest-v1.mjs";
+  verifyAndroidMigrationQualificationV8,
+} from "./lib/android-migration-qualification-v8.mjs";
+import {
+  parseExpectedTairaDeploymentManifestSequenceNumberV1,
+  verifyTairaDeploymentManifestV1,
+} from "./lib/taira-deployment-manifest-v1.mjs";
+import { maximumTairaDeploymentAdmissionAgeSecondsV1 } from "./lib/taira-deployment-freshness-v1.mjs";
 import {
   androidDependencySigningReviewContractSha256V1,
   lintAndroidDependencySigningReviewBlockedTemplatesV1,
   verifyAndroidDependencySigningReviewV1,
 } from "./lib/android-dependency-signing-review-v1.mjs";
+
+import {
+  ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1,
+  ANDROID_TEST_ONLY_LOCK_SOURCE_BINDINGS_V1,
+  inspectAndroidProductionLockProjectsV1,
+  matchesAndroidMaterializedDependencySnapshotV1,
+} from "./lib/android-production-lock-inventory-v1.mjs";
+import { DOWNLOADED_PACKAGE_FILES } from "./lib/android-qualified-candidate-package-v1.mjs";
+import { verifyAndroidLocalizationBaselineV1 } from "./lib/android-localization-baseline-v1.mjs";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
 const strictRelease = process.argv.includes("--release");
@@ -70,6 +83,8 @@ const dependencyPreflightMode = process.argv.includes(
 const failures = [];
 const blockers = [];
 const SORA2_REVISION = "411dcdb70c5c00b21482a44d02334840d5f338c6";
+const ANDROID_PRODUCTION_CERTIFICATE_SHA256 =
+  "b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0";
 
 const read = (path) => readFileSync(join(root, path), "utf8");
 const json = (path) => JSON.parse(read(path));
@@ -79,6 +94,20 @@ const assert = (condition, code) => {
 const block = (condition, code) => {
   if (condition) blockers.push(code);
 };
+for (const failure of verifyAndroidLocalizationBaselineV1(
+  read("app/lint-baseline.xml"),
+  json("docs/modernization/qualification/android-release-missing-translations-2026-09-24.json"),
+  read("app/build.gradle.kts"),
+)) failures.push(failure);
+const localizationCoverage = spawnSync(
+  "python3",
+  [join(root, "scripts/verify-android-localization-coverage.py")],
+  { cwd: root, encoding: "utf8", timeout: 15000 },
+);
+if (localizationCoverage.status !== 0) {
+  failures.push("ANDROID_LOCALIZATION_RESOURCE_PRESENCE_CHANGED");
+  process.stderr.write(localizationCoverage.stderr || localizationCoverage.error?.message || "Localization coverage audit failed\n");
+}
 const sha256 = (path) =>
   createHash("sha256").update(readFileSync(join(root, path))).digest("hex");
 const sha256Files = (paths) => {
@@ -400,6 +429,74 @@ const hashExternalRegularFile = ({ path, suffix, maximumBytes }) => {
 
 const EXPECTED_VENDOR_MODULES = [
   {
+    coordinate: "androidx.camera:camera-core:1.3.1",
+    modulePath: "androidx/camera/camera-core/1.3.1",
+    originKind: "git-source-build",
+    repository: "https://android.googlesource.com/platform/frameworks/support",
+    revision: "ee5fe2aa34dba21365bb402477c32c593ccbecda",
+    tree: "0ca4c35926f8b22e4e660dee2f6fc807b69c9738",
+    commitProvider: "gitiles",
+    commitStatus: "unsigned",
+    observedAt: "2026-09-25",
+    additionalSources: [
+      {
+        repository: "https://android.googlesource.com/platform/external/libyuv",
+        revision: "096484820d74c72a6838b3e80743fc7a5d94784b",
+        tree: "303e8eabb435a80ebec36a19c23ca85744d58fb5",
+      },
+      {
+        repository: "https://android.googlesource.com/platform/manifest",
+        revision: "2f7e8332eff3d34fdfb1b471f44d654aa6518e41",
+        tree: "984e5a745f5a677e05e778d6f9c528be9f8d5951",
+      },
+    ],
+    buildInputs: [
+      "build-inputs/CameraCoreNativeSmoke.java",
+      "build-inputs/camera-core-1.3.1-16kb-rebuild.md",
+      "build-inputs/camera-core-1.3.1-build-16kb.py",
+      "build-inputs/camera-core-1.3.1-original.aar",
+      "build-inputs/camera-core-1.3.1-original.module",
+      "build-inputs/camera-core-1.3.1-release-manifest.xml",
+      "build-inputs/camera-core-1.3.1-repack-16kb.py",
+    ],
+  },
+  {
+    coordinate: "androidx.graphics:graphics-path:1.0.1",
+    modulePath: "androidx/graphics/graphics-path/1.0.1",
+    originKind: "git-source-build",
+    repository: "https://android.googlesource.com/platform/frameworks/support",
+    revision: "8a05a22af450d589ef911d772a001a49dcb05b71",
+    tree: "f1ec6450df09939325e8dbe5cf57b589a673afc3",
+    commitProvider: "gitiles",
+    commitStatus: "unsigned",
+    observedAt: "2026-09-25",
+    buildInputs: [
+      "build-inputs/GraphicsPathSmoke.java",
+      "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
+      "build-inputs/graphics-path-1.0.1-build-16kb.sh",
+      "build-inputs/graphics-path-1.0.1-original.aar",
+      "build-inputs/graphics-path-1.0.1-original.module",
+      "build-inputs/graphics-path-1.0.1-repack-16kb.py",
+    ],
+  },
+  {
+    coordinate: "com.goterl:lazysodium-android:5.0.2",
+    modulePath: "com/goterl/lazysodium-android/5.0.2",
+    originKind: "git-source-build",
+    repository: "https://github.com/jedisct1/libsodium.git",
+    revision: "940ef42797baa0278df6b7fd9e67c7590f87744b",
+    tree: "a748f0c89c2243e124df3d310915c8a528135582",
+    commitStatus: "unsigned",
+    observedAt: "2026-09-25",
+    buildInputs: [
+      "build-inputs/LazysodiumSmoke.java",
+      "build-inputs/lazysodium-5.0.2-16kb-rebuild.md",
+      "build-inputs/lazysodium-5.0.2-build-16kb.sh",
+      "build-inputs/lazysodium-5.0.2-original.aar",
+      "build-inputs/lazysodium-5.0.2-repack-16kb.py",
+    ],
+  },
+  {
     coordinate: "com.paywings.kyc:android-sdk:1.2.2",
     modulePath: "com/paywings/kyc/android-sdk/1.2.2",
     originKind: "github-packages-asset",
@@ -421,6 +518,22 @@ const EXPECTED_VENDOR_MODULES = [
     originKind: "github-packages-asset",
     packagePage:
       "https://github.com/PayWings/integration/packages/1527444?version=1.31.3",
+  },
+  {
+    coordinate: "com.scottyab:rootbeer-lib:0.1.0",
+    modulePath: "com/scottyab/rootbeer-lib/0.1.0",
+    originKind: "git-source-build",
+    repository: "https://github.com/scottyab/rootbeer.git",
+    revision: "d9057ce490c3481bc9be852e343678c93860e6a8",
+    tree: "e50696d927e68c68e88520a013d50b481c3a1f8c",
+    commitStatus: "unsigned",
+    observedAt: "2026-09-25",
+    buildInputs: [
+      "build-inputs/rootbeer-0.1.0-16kb-rebuild.md",
+      "build-inputs/rootbeer-0.1.0-build-16kb.sh",
+      "build-inputs/rootbeer-0.1.0-original.aar",
+      "build-inputs/rootbeer-0.1.0-repack-16kb.py",
+    ],
   },
   {
     coordinate: "io.emeraldpay.polkaj:polkaj-scale:0.2.3",
@@ -480,7 +593,12 @@ const EXPECTED_VENDOR_MODULES = [
     repository: "https://github.com/soramitsu/x-crypto.git",
     revision: "2346144a127c1121ae3166800b7ab06ed9c5bf20",
     tree: "c0dab19ed314bbe9bf939dc0c33fe0c4d13fbb11",
-    buildInputs: ["build-inputs/xcrypto-1.2.7-Cargo.lock"],
+    buildInputs: [
+      "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
+      "build-inputs/xcrypto-1.2.7-Cargo.lock",
+      "build-inputs/xcrypto-1.2.7-original.aar",
+      "build-inputs/xcrypto-1.2.7-repack-16kb.py",
+    ],
   },
   {
     coordinate: "jp.co.soramitsu:xsubstrate:1.2.7",
@@ -493,12 +611,96 @@ const EXPECTED_VENDOR_MODULES = [
       "build-inputs/xsubstrate-1.2.7-source-normalization.patch",
     ],
   },
+  {
+    coordinate: "org.tensorflow:tensorflow-lite:2.12.0",
+    modulePath: "org/tensorflow/tensorflow-lite/2.12.0",
+    originKind: "git-source-build",
+    repository: "https://github.com/tensorflow/tensorflow.git",
+    revision: "0db597d0d758aba578783b5bf46c889700a45085",
+    tree: "e32b1f067af476b65f944fdcc2390178200408d1",
+    commitProvider: "github",
+    commitStatus: "unsigned",
+    observedAt: "2026-09-25",
+    buildInputs: [
+      "build-inputs/TensorFlowLiteCApiSmoke.c",
+      "build-inputs/tensorflow-lite-2.12.0-16kb-rebuild.md",
+      "build-inputs/tensorflow-lite-2.12.0-build-16kb.sh",
+      "build-inputs/tensorflow-lite-2.12.0-cmake-16kb.patch",
+      "build-inputs/tensorflow-lite-2.12.0-exports.lds",
+      "build-inputs/tensorflow-lite-2.12.0-original.aar",
+      "build-inputs/tensorflow-lite-2.12.0-repack-16kb.py",
+    ],
+  },
 ];
 const EXPECTED_VENDOR_BUILD_INPUT_SHA256 = {
+  "build-inputs/CameraCoreNativeSmoke.java":
+    "a0c0411900f07a8de9ea696b04618efd90007b11f185087a5d1df3cfea4fa418",
+  "build-inputs/camera-core-1.3.1-16kb-rebuild.md":
+    "4cc7976f13959bfd4d2b8d386ac3d88c8679e1b86500190567084e81e906cfed",
+  "build-inputs/camera-core-1.3.1-build-16kb.py":
+    "98d41393e2c373f841cb82cb12e7e93d457ad04227e811fa6b3e1d6bbddab531",
+  "build-inputs/camera-core-1.3.1-original.aar":
+    "6b7ea2da7cc504d6624c3c12a0c2d488dd6635563421dacba0790399507443e8",
+  "build-inputs/camera-core-1.3.1-original.module":
+    "fe175138941912c5c1ad8ce070a72c56650beceef7bbdfbde49d179ee3dec894",
+  "build-inputs/camera-core-1.3.1-release-manifest.xml":
+    "8b03ec48a8dc962a921ef333a56f2359e7b4ab41005025ad6e86c20166fe5ec7",
+  "build-inputs/camera-core-1.3.1-repack-16kb.py":
+    "1baeba74d7045fa4bfc2cc949e78a7a26ac3e81b878c25694e05f425cc631d98",
+  "build-inputs/GraphicsPathSmoke.java":
+    "0ae2dc21debbaf73360a3d5860649172491341ec0bedba39f70b846df4d472f9",
+  "build-inputs/graphics-path-1.0.1-16kb-rebuild.md":
+    "6f28886b62b5ec6eee6191694c0c78dd36ac1eee06fdd9e57f4d96635bb0ee8a",
+  "build-inputs/graphics-path-1.0.1-build-16kb.sh":
+    "d01272ea5c2be37c64eff6c0f031845efb0071f9704f13a606219a0cd3399e2d",
+  "build-inputs/graphics-path-1.0.1-original.aar":
+    "8ca4032b6d79b351f0b59ad4b580eddbb9423e1652f7c958830687f1eee2ec03",
+  "build-inputs/graphics-path-1.0.1-original.module":
+    "3f6fc7e96f8a1fd21045da7f2e332aef528aa1f56b6455fb8f25043aafa0e1b8",
+  "build-inputs/graphics-path-1.0.1-repack-16kb.py":
+    "d2de5118a37af9d843c9ffc8340f1071d2ecb14fa53d5cb4c144f76b8aff69ac",
+  "build-inputs/LazysodiumSmoke.java":
+    "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68",
   "build-inputs/README.md":
-    "df1d55a57903fcc1f8b21a1d779a23733f974bd495dddae0f67c1e55995b8ded",
+    "97c5309a9af96ca2fd29a2e7c2e15286f079142cfb369082b8a9a1578550650b",
+  "build-inputs/TensorFlowLiteCApiSmoke.c":
+    "de8536ff1fd38406479f1ff3ed72aff8450ac3b3dab640bf3b88504a43774e60",
+  "build-inputs/lazysodium-5.0.2-16kb-rebuild.md":
+    "0ca566bc11c25409d398214ef1dbb6094cf221ec069cad04917da1a2584e2707",
+  "build-inputs/lazysodium-5.0.2-build-16kb.sh":
+    "43b1e18beec1df8b6562e21319dcdf19b0f1cf27dbc033a509dded51483e36ed",
+  "build-inputs/lazysodium-5.0.2-original.aar":
+    "e38503013e03a3623bd9da01a0fbbf644a87947a35dbeb4df7b35605b71534ad",
+  "build-inputs/lazysodium-5.0.2-repack-16kb.py":
+    "ac39c9d93eb7870e8929f1f37a16e970b5ec99b67ea782f551125aaa6c405c4c",
+  "build-inputs/rootbeer-0.1.0-16kb-rebuild.md":
+    "513449dc349924781992c703e49a65442457cbc829b5f703f8f043d1e40c847b",
+  "build-inputs/rootbeer-0.1.0-build-16kb.sh":
+    "88565712d1b3654c2ce35ecf50c26d326400f57a8d1ef81f853feb38a9c7b379",
+  "build-inputs/rootbeer-0.1.0-original.aar":
+    "6c4d2e20148111a550aa3923c24e9b1360f300f1454117235a4d435e45928ee7",
+  "build-inputs/rootbeer-0.1.0-repack-16kb.py":
+    "731d0639802a697be0e60f5a18125ee9f54902c2033be5244f86e62fd225ecc4",
+  "build-inputs/tensorflow-lite-2.12.0-16kb-rebuild.md":
+    "07cfcf46a01044b5fb604f91e4aa53eb84459dabdbd6baa34a431583f5a5b5bc",
+  "build-inputs/tensorflow-lite-2.12.0-build-16kb.sh":
+    "b3ab471a35edd00f1473a4a61e7fc9a08b5955344a3613335921601d182b6ef9",
+  "build-inputs/tensorflow-lite-2.12.0-cmake-16kb.patch":
+    "4abb4536df76724a7f7ac908871c3840493e215ee0d38e744efef301dc3059e9",
+  "build-inputs/tensorflow-lite-2.12.0-exports.lds":
+    "03c64a35ebeeac3e55134a174a6afdda456505b764fc03549ae9d6c316a7e503",
+  "build-inputs/tensorflow-lite-2.12.0-original.aar":
+    "002371fefe277e93f1421206062823d04daceb6c9e4e824cb543eab2d3a00c91",
+  "build-inputs/tensorflow-lite-2.12.0-repack-16kb.py":
+    "dc4d66e58f15aaa48e4ea950438069420a48928d66a7f65c87925c6e6502f086",
+  "build-inputs/xcrypto-1.2.7-16kb-rebuild.md":
+    "9b6eb4495fa8435ed05ce3a7503e1044a5cf1a8c80ccf023925ec1206a792c71",
   "build-inputs/xcrypto-1.2.7-Cargo.lock":
     "72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395",
+  "build-inputs/xcrypto-1.2.7-original.aar":
+    "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b",
+  "build-inputs/xcrypto-1.2.7-repack-16kb.py":
+    "595d7aa1b4eed24f553e7201ad6510b1ccb0bb1cc9e20a113d8b967e046f317d",
   "build-inputs/xsubstrate-1.2.7-source-normalization.patch":
     "d490eaac87bf29feec7e443098c2b451e7cfc1aea671d285bd9a13541afc98c5",
 };
@@ -593,17 +795,17 @@ const includeModulesIn = (source) => [
   ),
 ].map(([, group, module]) => `${group}:${module}`);
 const EXPECTED_VENDOR_SOURCE_PROVENANCE_SHA256 =
-  "39264fee02d09548e04806fbffcdaedebef29ce4715f3aa804093e44b51f5118";
+  "560b9c7ce80bae57e76dd9c30268e983dbb100cfcee1a2666bfd427d97d7be22";
 const EXPECTED_VENDOR_CONTENTS_MANIFEST_SHA256 =
-  "d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f";
+  "2bc1fddb65f0c7e6db98d309804bae1fb43fb24c60e2f88f50a843179c99771f";
 const EXPECTED_GRADLE_VERIFICATION_METADATA_SHA256 =
-  "90b196d775f064b7f80b9520582eec8fc40f874b6f750a49546141a8b793bfab";
+  ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.metadataSha256;
 const EXPECTED_GRADLE_VERIFICATION_METADATA_DIGEST_SHA256 =
-  "4993f3789151edb393340b1677e7fa2893689c4876d4ae6ebc23bd243bd0ceb2";
+  ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.metadataDigestSha256;
 const EXPECTED_GRADLE_LOCK_FILE_SET_SHA256 =
-  "1b91b6168ff2c0ec74e0f239e90ff8125742ae8a8fea3458f2a7cbfe472eb9ea";
+  ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.lockFileSetSha256;
 const EXPECTED_GRADLE_LOCK_CONFIGURATION_INVENTORY_SHA256 =
-  "d35d7512074d387ae71dfad3f52833af70875e3afe4a84d46b667a31e3bbfd1f";
+  ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.configurationInventorySha256;
 const androidDependencySigningReviewQualificationDirectory = join(
   root,
   "docs/modernization/qualification",
@@ -1296,6 +1498,36 @@ const validateAndroidDependencyPreflight = () => {
 
       const origin = module.origin;
       if (expected.originKind === "git-source-build") {
+        const expectedAdditionalSources = expected.additionalSources ?? [];
+        const actualAdditionalSources = origin?.additionalSources ?? [];
+        const additionalSourcesInvalid =
+          !Array.isArray(actualAdditionalSources) ||
+          actualAdditionalSources.length !== expectedAdditionalSources.length ||
+          actualAdditionalSources.some((source, index) => {
+            const pinned = expectedAdditionalSources[index];
+            return (
+              !hasExactKeys(source, [
+                "repository",
+                "revision",
+                "tree",
+                "commitVerification",
+              ]) ||
+              source.repository !== pinned.repository ||
+              source.revision !== pinned.revision ||
+              source.tree !== pinned.tree ||
+              !hasExactKeys(source.commitVerification, [
+                "provider",
+                "status",
+                "observedAt",
+                "independentlyReviewed",
+              ]) ||
+              source.commitVerification.provider !== "gitiles" ||
+              source.commitVerification.status !== "unsigned" ||
+              source.commitVerification.observedAt !== "2026-09-25" ||
+              typeof source.commitVerification.independentlyReviewed !==
+                "boolean"
+            );
+          });
         fail(
           !hasExactKeys(origin, [
             "kind",
@@ -1306,7 +1538,9 @@ const validateAndroidDependencyPreflight = () => {
             "buildInputs",
             "semanticTransformations",
             "sourceToBinaryReproductionReviewed",
+            ...(expected.additionalSources ? ["additionalSources"] : []),
           ]) ||
+            additionalSourcesInvalid ||
             origin.kind !== expected.originKind ||
             origin.repository !== expected.repository ||
             origin.revision !== expected.revision ||
@@ -1317,9 +1551,12 @@ const validateAndroidDependencyPreflight = () => {
               "observedAt",
               "independentlyReviewed",
             ]) ||
-            origin.commitVerification.provider !== "github" ||
-            origin.commitVerification.status !== "valid" ||
-            origin.commitVerification.observedAt !== "2026-08-09" ||
+            origin.commitVerification.provider !==
+              (expected.commitProvider ?? "github") ||
+            origin.commitVerification.status !==
+              (expected.commitStatus ?? "valid") ||
+            origin.commitVerification.observedAt !==
+              (expected.observedAt ?? "2026-08-09") ||
             typeof origin.commitVerification.independentlyReviewed !==
               "boolean" ||
             !exactStringSet(
@@ -1412,6 +1649,9 @@ const validateAndroidDependencyPreflight = () => {
         if (origin?.kind === "git-source-build") {
           return (
             origin.commitVerification?.independentlyReviewed === true &&
+            (origin.additionalSources?.every(
+              (source) => source.commitVerification?.independentlyReviewed === true,
+            ) ?? true) &&
             origin.sourceToBinaryReproductionReviewed === true
           );
         }
@@ -1590,13 +1830,14 @@ const validateAndroidDependencyPreflight = () => {
   }
 
   const locking = config.dependencyLocking;
-  const includedProjects = [
-    ...settingsSource.matchAll(/^include\(":([A-Za-z0-9_.-]+)"\)$/gm),
-  ].map(([, project]) => project);
-  const expectedLockPaths = [
-    ...includedProjects.map((project) => `${project}/gradle.lockfile`),
-    "settings-gradle.lockfile",
-  ].sort();
+  const lockInventorySources = Object.fromEntries(
+    Object.keys(ANDROID_TEST_ONLY_LOCK_SOURCE_BINDINGS_V1).map((path) => [
+      path, isCanonicalRegularRepoFile(path) ? read(path) : null,
+    ]),
+  );
+  const lockProjectInventory = inspectAndroidProductionLockProjectsV1(lockInventorySources);
+  for (const code of lockProjectInventory.failures) fail(true, code);
+  const expectedLockPaths = lockProjectInventory.lockFilePaths;
   const actualLockFileSetSha256 = expectedLockPaths.every(
     isCanonicalRegularRepoFile,
   )
@@ -1647,9 +1888,10 @@ const validateAndroidDependencyPreflight = () => {
         "project-path-colon-configuration-lf-no-terminal-lf-sha256" ||
       locking.materializedInventory.configurationInventorySha256 !==
         EXPECTED_GRADLE_LOCK_CONFIGURATION_INVENTORY_SHA256 ||
-      locking.materializedInventory.configurationCount !== 271 ||
+      locking.materializedInventory.configurationCount !==
+        ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.configurationCount ||
       locking.materializedInventory.productionReleaseConfigurationCount !==
-        270 ||
+        ANDROID_MATERIALIZED_DEPENDENCY_SNAPSHOT_V1.productionReleaseConfigurationCount ||
       declaredLockFiles.length !== expectedLockPaths.length ||
       !exactStringSet(
         declaredLockFiles.map((lock) => lock?.path),
@@ -1658,6 +1900,7 @@ const validateAndroidDependencyPreflight = () => {
     "GRADLE_DEPENDENCY_LOCK_INVENTORY_SCHEMA_INVALID",
   );
   const qualifiedConfigurations = [];
+  let appObservedConfigurationCount = null;
   const lockedModuleCoordinates = new Set();
   for (const lock of declaredLockFiles) {
     if (
@@ -1713,6 +1956,7 @@ const validateAndroidDependencyPreflight = () => {
         configurations.add(configuration);
       }
     }
+    if (lock.path === "app/gradle.lockfile") appObservedConfigurationCount = configurations.size;
     const qualified = [...configurations]
       .sort()
       .map((configuration) => `${projectPath}:${configuration}`);
@@ -1744,6 +1988,23 @@ const validateAndroidDependencyPreflight = () => {
           !configuration.toLowerCase().includes("productionrelease"),
       ),
     "GRADLE_DEPENDENCY_LOCK_CONFIGURATION_INVENTORY_INVALID",
+  );
+  fail(
+    !matchesAndroidMaterializedDependencySnapshotV1({
+      verification,
+      inventory: locking?.materializedInventory,
+      appLock: declaredLockFiles.find((lock) => lock?.path === "app/gradle.lockfile"),
+    }, {
+      metadataSha256: metadataPathSafe ? sha256(metadataPath) : null,
+      metadataDigestSha256: metadataDigestPathSafe ? sha256(metadataDigestPath) : null,
+      lockFileSetSha256: actualLockFileSetSha256,
+      configurationInventorySha256: canonicalSha256(sortedQualifiedConfigurations),
+      configurationCount: sortedQualifiedConfigurations.length,
+      productionReleaseConfigurationCount: productionConfigurationCount,
+      appLockSha256: isCanonicalRegularRepoFile("app/gradle.lockfile") ? sha256("app/gradle.lockfile") : null,
+      appConfigurationCount: appObservedConfigurationCount,
+    }),
+    "GRADLE_MATERIALIZED_DEPENDENCY_SNAPSHOT_MISMATCH",
   );
   fail(
     namespaceCompatibilityCoordinates.some(
@@ -2240,6 +2501,9 @@ const productionRolloutV3Contract = read(
 const productionRolloutV3ContractHarness = read(
   "scripts/test-production-rollout-v3-contract.mjs",
 );
+const tairaDeploymentFreshnessV1 = read(
+  "scripts/lib/taira-deployment-freshness-v1.mjs",
+);
 const productionRolloutChainLinkExtractor = read(
   "scripts/extract-production-rollout-prior-link.mjs",
 );
@@ -2576,6 +2840,12 @@ const splashActivity = read(
 const splashViewModel = read(
   "app/src/main/java/jp/co/soramitsu/sora/splash/presentation/SplashViewModel.kt",
 );
+const pendingRecoveryStartupScheduler = read(
+  "app/src/main/java/jp/co/soramitsu/sora/splash/domain/PendingRecoveryStartupScheduler.kt",
+);
+const pendingRecoveryStartupSchedulerTest = read(
+  "app/src/test/java/jp/co/soramitsu/sora/splash/domain/PendingRecoveryStartupSchedulerTest.kt",
+);
 const splashViewModelTest = read(
   "app/src/test/java/jp/co/soramitsu/sora/splash/presentation/SplashViewModelTest.kt",
 );
@@ -2657,6 +2927,14 @@ const androidReleaseBuildTypeBlock = androidBuildTypesBlock === null
 const androidDebugBuildTypeBlock = androidBuildTypesBlock === null
   ? null
   : extractUniqueBracedBlock(androidBuildTypesBlock, /^\s*debug\s*/m);
+const androidMeasurementBuildTypeBlocks = ["benchmarkRelease", "nonMinifiedRelease"].map(
+  (name) => androidBuildTypesBlock === null
+    ? null
+    : extractUniqueBracedBlock(
+      androidBuildTypesBlock,
+      new RegExp(`^\\s*create\\(\\s*"${name}"\\s*\\)\\s*`, "m"),
+    ),
+);
 const androidProductFlavorsBlock = androidBuildBlock === null
   ? null
   : extractUniqueBracedBlock(androidBuildBlock, /^\s*productFlavors\s*/m);
@@ -3241,20 +3519,64 @@ const fundedCanaryControllerBundleTestSource = read(
   "scripts/test-funded-canary-controller-bundle-v1.mjs",
 );
 const androidMigrationControllerEnvelopeSource = read(
-  "scripts/lib/android-migration-controller-envelope-v1.mjs",
+  "scripts/lib/android-migration-controller-envelope-v2.mjs",
 );
 const androidMigrationControllerEnvelopeExtractorSource = read(
   "scripts/extract-android-migration-controller-envelope.mjs",
 );
 const androidMigrationControllerEnvelopeTestSource = read(
-  "scripts/test-android-migration-controller-envelope-v1.mjs",
+  "scripts/test-android-migration-controller-envelope-v2.mjs",
 );
 const gradleWrapperJarSha256 = sha256("gradle/wrapper/gradle-wrapper.jar");
 const androidVerificationWorkflow = read(
   ".github/workflows/android_verification.yml",
 );
+const productionLockCoverageCiCommands = [
+  "node scripts/verify-android-dependency-preflight-structure.mjs",
+  "./gradlew -I scripts/verify-production-release-lock-coverage.gradle --dependency-verification=strict verifyProductionReleaseLockCoverage --stacktrace --no-daemon",
+  "node scripts/test-production-release-lock-coverage.mjs",
+  "./gradlew --dependency-verification=strict testProductionDebugUnitTest --stacktrace --no-daemon --no-parallel",
+];
+const productionLockCoverageCiPositions = productionLockCoverageCiCommands.map(
+  (command) => androidVerificationWorkflow.indexOf(command),
+);
+assert(
+  productionLockCoverageCiPositions.every((position) => position >= 0) &&
+    productionLockCoverageCiPositions.every(
+      (position, index) =>
+        index === 0 || position > productionLockCoverageCiPositions[index - 1],
+    ) &&
+    productionLockCoverageCiCommands.every(
+      (command, index) =>
+        androidVerificationWorkflow.lastIndexOf(command) ===
+        productionLockCoverageCiPositions[index],
+    ) &&
+    sha256("scripts/verify-production-release-lock-coverage.gradle") ===
+      "c53d388db61a312b02c21780d8a61b98cd034653760233eee23dc4b433590648" &&
+    sha256("scripts/test-production-release-lock-coverage.mjs") ===
+      "876e778e9564fe158abeeeae9d5bdfae68bb5214f090cc286d49c95c52889adc" &&
+    sha256("scripts/verify-android-dependency-preflight-structure.mjs") ===
+      "58a10ce17ed191c3aa65a7fd7bb5e84b151f761061f7a9dbb3aa8500e693153c",
+  "GRADLE_PRODUCTION_RELEASE_LOCK_MODEL_GUARD_INVALID",
+);
 const productionReleaseWorkflow = read(
   ".github/workflows/production_release_qualification.yml",
+);
+const productionConnectedDeviceQualificationScript = read(
+  "scripts/run-production-connected-device-qualification.sh",
+);
+const signedProductionApkDeviceSmokeScript = read(
+  "scripts/run-signed-production-apk-device-smoke.sh",
+);
+const productionConnectedRunnerStep = sourceBetween(
+  productionReleaseWorkflow,
+  "      - name: Retained Room and encrypted-wallet backup matrix",
+  "      - name: Modernization unit contracts",
+);
+const signedProductionApkRunnerStep = sourceBetween(
+  productionReleaseWorkflow,
+  "      - name: Minified signed production APK device smoke",
+  "      - name: Obtain exact retained-device migration evidence",
 );
 const productionReleaseWorkflowJobEnvironment =
   productionReleaseWorkflow.match(/\n    env:\n[\s\S]*?\n    steps:\n/)?.[0] ?? "";
@@ -3332,15 +3654,15 @@ const productionRunnerTempPathBindings = Object.freeze([
   ],
   [
     "ANDROID_MIGRATION_CONTROLLER_ENVELOPE_PATH",
-    "sora-android-migration-controller-envelope-v1.json",
+    "sora-android-migration-controller-envelope-v2.json",
   ],
   [
     "ANDROID_MIGRATION_CONTROLLER_EVIDENCE_ROOT",
-    "sora-android-migration-controller-evidence-v1",
+    "sora-android-migration-controller-evidence-v2",
   ],
   [
     "ANDROID_MIGRATION_CONTROLLER_EXTRACTION_RECEIPT_PATH",
-    "sora-android-migration-controller-extraction-v1.json",
+    "sora-android-migration-controller-extraction-v2.json",
   ],
   ["TAIRA_DEPLOYMENT_MANIFEST_PATH", "sora-taira-deployment/manifest.json"],
   [
@@ -3440,6 +3762,9 @@ const androidVerificationKvmAccessIndex = androidVerificationWorkflow.indexOf(
 const androidVerificationEmulatorIndex = androidVerificationWorkflow.indexOf(
   "reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d",
 );
+const androidConnectedPrebuildIndex = androidVerificationWorkflow.indexOf(
+  "Build connected test APKs before emulator startup",
+);
 const productionKvmAccessIndex = productionReleaseWorkflow.indexOf(
   "Enable KVM access for Android emulators",
 );
@@ -3459,6 +3784,11 @@ assert(
     ) === 1 &&
     androidVerificationKvmAccessIndex >= 0 &&
     androidVerificationKvmAccessIndex < androidVerificationEmulatorIndex &&
+    androidConnectedPrebuildIndex >= 0 &&
+    androidConnectedPrebuildIndex < androidVerificationEmulatorIndex &&
+    androidVerificationWorkflow.includes(
+      "./gradlew --dependency-verification=strict :feature_blockexplorer_api:assembleDevelopDebugAndroidTest :app:assembleProductionDebug :app:assembleProductionDebugAndroidTest --stacktrace --no-daemon",
+    ) &&
     productionKvmAccessIndex >= 0 &&
     productionKvmAccessIndex < productionFirstEmulatorIndex &&
     productionReleaseWorkflow.includes(
@@ -3489,8 +3819,8 @@ assert(
     lexicalMatchCount(appBuildSource, /\bapplicationId\b/) === 1 &&
     lexicalMatchCount(appBuildSource, /\bapplicationIdSuffix\b/) === 3 &&
     lexicalMatchCount(appBuildSource, /\btestApplicationId\b/) === 1 &&
-    lexicalMatchCount(appBuildSource, /\bsigningConfig\b/) === 3 &&
-    lexicalMatchCount(appBuildSource, /\binitWith\b/) === 1 &&
+    lexicalMatchCount(appBuildSource, /\bsigningConfig\b/) === 5 &&
+    lexicalMatchCount(appBuildSource, /\binitWith\b/) === 3 &&
     lexicalMatchCount(appBuildSource, /\bdimension\b/) === 4 &&
     lexicalMatchCount(appBuildSource, /\bresValue\b/) === 4 &&
     lexicalMatchCount(appBuildSource, /\bmanifestPlaceholders\b/) === 12 &&
@@ -3498,8 +3828,8 @@ assert(
     sourceMatchCount(appBuildSource, /\bapplicationId\b/) === 1 &&
     sourceMatchCount(appBuildSource, /\bapplicationIdSuffix\b/) === 3 &&
     sourceMatchCount(appBuildSource, /\btestApplicationId\b/) === 1 &&
-    sourceMatchCount(appBuildSource, /\bsigningConfig\b/) === 3 &&
-    sourceMatchCount(appBuildSource, /\binitWith\b/) === 1 &&
+    sourceMatchCount(appBuildSource, /\bsigningConfig\b/) === 5 &&
+    sourceMatchCount(appBuildSource, /\binitWith\b/) === 3 &&
     sourceMatchCount(appBuildSource, /\bdimension\b/) === 4 &&
     sourceMatchCount(appBuildSource, /\bresValue\b/) === 4 &&
     sourceMatchCount(appBuildSource, /\bmanifestPlaceholders\b/) === 12 &&
@@ -3528,6 +3858,20 @@ assert(
       /^\s*signingConfig\s*=\s*signingConfigs\.getByName\(\s*"cidebug"\s*\)\s*$/m,
     ) &&
     lexicalMatchCount(androidDebugBuildTypeBlock, /\bsigningConfig\s*=/) === 1 &&
+    androidMeasurementBuildTypeBlocks.every((buildType) =>
+      buildType !== null &&
+      hasSingleDirectLexicalMatch(
+        buildType,
+        /^\s*initWith\(\s*getByName\(\s*"release"\s*\)\s*\)\s*$/m,
+      ) &&
+      hasSingleDirectLexicalMatch(
+        buildType,
+        /^\s*signingConfig\s*=\s*signingConfigs\.getByName\(\s*"cidebug"\s*\)\s*$/m,
+      ) &&
+      lexicalMatchCount(buildType, /\binitWith\b/) === 1 &&
+      lexicalMatchCount(buildType, /\bsigningConfig\b/) === 1 &&
+      lexicalMatchCount(buildType, /\bapplicationId\b|\bapplicationIdSuffix\b|\btestApplicationId\b/) === 0
+    ) &&
     hasSingleDirectLexicalMatch(
       androidProductionFlavorBlock,
       /^\s*dimension\s*=\s*"default"\s*$/m,
@@ -3717,12 +4061,99 @@ assert(
     androidProductionSigning.debugFallbackAllowedForRelease === false &&
     androidProductionSigning.requiredEnvironmentVariables.join(",") ===
       "CI_KEYSTORE_PATH,CI_KEYSTORE_PASS,CI_KEYSTORE_KEY_ALIAS,CI_KEYSTORE_KEY_PASS,CI_BUILD_ID" &&
+    androidProductionSigning.productionAppSigningCertificateSha256 ===
+      ANDROID_PRODUCTION_CERTIFICATE_SHA256 &&
+    androidProductionSigning.productionUploadCertificateSha256 ===
+      ANDROID_PRODUCTION_CERTIFICATE_SHA256 &&
+    hasExactKeys(androidProductionSigning.publicIdentityEvidence, [
+      "authenticatedPlayConsoleInventoryCompleted",
+      "playAppSigningActive",
+      "playAppSigningCertificateSha256",
+      "uploadCertificateSha256",
+      "generatedDigitalAssetLinksCertificateSha256",
+      "digitalAssetLinksFingerprintPubliclyConfirmable",
+      "independentAdmissionCompleted",
+    ]) &&
+    androidProductionSigning.publicIdentityEvidence
+      .authenticatedPlayConsoleInventoryCompleted === true &&
+    androidProductionSigning.publicIdentityEvidence.playAppSigningActive ===
+      true &&
+    androidProductionSigning.publicIdentityEvidence
+      .playAppSigningCertificateSha256 ===
+      ANDROID_PRODUCTION_CERTIFICATE_SHA256 &&
+    androidProductionSigning.publicIdentityEvidence
+      .uploadCertificateSha256 === ANDROID_PRODUCTION_CERTIFICATE_SHA256 &&
+    androidProductionSigning.publicIdentityEvidence
+      .generatedDigitalAssetLinksCertificateSha256 ===
+      ANDROID_PRODUCTION_CERTIFICATE_SHA256 &&
+    androidProductionSigning.publicIdentityEvidence
+      .digitalAssetLinksFingerprintPubliclyConfirmable === true &&
+    androidProductionSigning.publicIdentityEvidence
+      .independentAdmissionCompleted === false &&
+    hasExactKeys(androidProductionSigning.credentialBindings, [
+      "jenkins",
+      "githubQualification",
+      "localKeystorePresent",
+      "privateKeyMaterialRecorded",
+      "passwordsRecorded",
+    ]) &&
+    hasExactKeys(androidProductionSigning.credentialBindings.jenkins, [
+      "sharedLibrarySelector",
+      "keystoreFileCredentialId",
+      "storePasswordCredentialId",
+      "keyAliasCredentialId",
+      "keyPasswordCredentialId",
+    ]) &&
+    androidProductionSigning.credentialBindings.jenkins
+      .sharedLibrarySelector ===
+      "jenkins-library@65079bbe356bca4a3d5a1964e360498735afa1f0" &&
+    androidProductionSigning.credentialBindings.jenkins
+      .keystoreFileCredentialId === "android_keystore_sora" &&
+    androidProductionSigning.credentialBindings.jenkins
+      .storePasswordCredentialId === "android_keystore_storepass_sora" &&
+    androidProductionSigning.credentialBindings.jenkins.keyAliasCredentialId ===
+      "android_keyalias_sora" &&
+    androidProductionSigning.credentialBindings.jenkins.keyPasswordCredentialId ===
+      "android_keypass_sora" &&
+    hasExactKeys(
+      androidProductionSigning.credentialBindings.githubQualification,
+      [
+        "keystoreBase64SecretName",
+        "runtimeKeystorePathEnvironmentVariable",
+        "fixedRunnerTempRelativePath",
+        "ownerOnlyMode",
+        "keystoreSecretProvisioned",
+      ],
+    ) &&
+    androidProductionSigning.credentialBindings.githubQualification
+      .keystoreBase64SecretName === "CI_KEYSTORE_BASE64" &&
+    androidProductionSigning.credentialBindings.githubQualification
+      .runtimeKeystorePathEnvironmentVariable === "CI_KEYSTORE_PATH" &&
+    androidProductionSigning.credentialBindings.githubQualification
+      .fixedRunnerTempRelativePath ===
+      "sora-android-production-upload.keystore" &&
+    androidProductionSigning.credentialBindings.githubQualification
+      .ownerOnlyMode === "0600" &&
+    androidProductionSigning.credentialBindings.githubQualification
+      .keystoreSecretProvisioned === false &&
+    androidProductionSigning.credentialBindings.localKeystorePresent ===
+      false &&
+    androidProductionSigning.credentialBindings.privateKeyMaterialRecorded ===
+      false &&
+    androidProductionSigning.credentialBindings.passwordsRecorded === false &&
+    androidProductionSigning.status === "blocked" &&
+    androidProductionSigning.releaseEnabled === false &&
+    androidProductionSigning.retainedProductionCertificateMatched === true &&
+    androidProductionSigning.signedBundleCertificateMatched === false &&
+    androidProductionSigning.playAppSigningContinuityReviewed === false &&
     androidProductionSigning.secretsRecordedInEvidence === false &&
     appBuild.includes('create("productionRelease")') &&
     appBuild.includes(
       'signingConfig = signingConfigs.getByName("productionRelease")',
     ) &&
     appBuild.includes("verifyProductionReleaseSigning") &&
+    appBuild.includes('if (variant.name == "productionRelease")') &&
+    appBuild.includes('"app-production-release.apk"') &&
     appBuild.includes(
       'name.contains("productionRelease", ignoreCase = true)',
     ) &&
@@ -4078,7 +4509,7 @@ assert(
     userRepository.includes("verifyLegacySecretSigningKey") &&
     userRepository.includes('"WALLET_SECRET_SOURCE_CONTINUITY_MISMATCH"') &&
     userRepository.includes(
-      "words.size == LEGACY_SORA_MNEMONIC_WORD_COUNT",
+      "words.size in LEGACY_SORA_MNEMONIC_WORD_COUNTS",
     ) &&
     userRepositoryTest.includes(
       "deletion preview verifies retained fifteen word wallet without deleting it",
@@ -4542,8 +4973,27 @@ assert(
     ) &&
     sora2PendingRecoveryWorker.includes("Sora2PendingRecoveryWorker") &&
     sora2PendingRecoveryWorker.includes("Result.retry()") &&
-    soraApplication.includes("sora2PendingRecoveryScheduler.ensureOnStartup()"),
+    pendingRecoveryStartupScheduler.includes("sora2Scheduler.ensureOnStartup()") &&
+    splashViewModel.includes("pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()"),
   "SORA2_GENERIC_AMBIGUITY_RECOVERY_MISSING",
+);
+assert(
+  /val migrationDone = interactor\.getMigrationDoneAsync\(\)\.await\(\)[\s\S]*?if \(!migrationDone\) \{[\s\S]*?return@launch\s*\}\s*pendingRecoveryStartupScheduler\.scheduleAfterWalletMigration\(\)/.test(splashViewModel) &&
+    /interactor\.retryMigration\(\)[\s\S]*?if \(migrationDone\) \{\s*pendingRecoveryStartupScheduler\.scheduleAfterWalletMigration\(\)/.test(splashViewModel) &&
+    !/PendingRecoveryScheduler|ensureOnStartup\(\)/.test(stripGradleComments(soraApplication)) &&
+    pendingRecoveryStartupScheduler.includes("applicationScope.launch(coroutineManager.io)") &&
+    /scheduleSafely\("NEXUS_PENDING_RECOVERY_SCHEDULING_FAILED"\) \{\s*nexusScheduler\.ensureOnStartup\(\)\s*\}\s*scheduleSafely\("SORA2_PENDING_RECOVERY_SCHEDULING_FAILED"\) \{\s*sora2Scheduler\.ensureOnStartup\(\)\s*\}/.test(pendingRecoveryStartupScheduler) &&
+    /try \{\s*schedule\(\)\s*\} catch \(error: CancellationException\) \{\s*throw error\s*\} catch \(_: Throwable\) \{[\s\S]*?Log\.w\("WalletRecoveryStartup", diagnostic\)/.test(pendingRecoveryStartupScheduler) &&
+    !/Log\.[a-z]+\([^\n]*(?:\.message|, error)|printStackTrace\(/.test(pendingRecoveryStartupScheduler) &&
+    [
+      "Nexus scheduling failure cannot crash startup or suppress Sora2",
+      "Sora2 scheduling failure cannot crash startup or undo Nexus scheduling",
+      "both scheduling failures are independent and observable without exception data",
+      "Nexus cancellation propagates without attempting Sora2 or reporting failure",
+      "Sora2 cancellation propagates after Nexus without reporting failure",
+      "later startup retries scheduling after a temporary failure",
+    ].every((test) => pendingRecoveryStartupSchedulerTest.includes(test)),
+  "PENDING_RECOVERY_STARTUP_FAILURE_ISOLATION_MISSING",
 );
 block(
   extrinsicManager.includes("calls.submitExtrinsic(prepared.encoded)") ||
@@ -4783,8 +5233,16 @@ assert(
       "clearedEmptyDataStoreDoesNotInventAnOrphanWallet",
     ) &&
     walletUpgradeBackupTest.includes(
-      "interruptedStagingDirectoryNeverPermitsRoomToOpen",
+      "unrecognizedStagingIsPreservedAndNeverPermitsRoomToOpen",
     ) &&
+    walletUpgradeBackupTest.includes(
+      "interruptedBackupCopiesResumeBeforeRoomAndAcrossRestart",
+    ) &&
+    walletUpgradeBackupTest.includes(
+      "changedStagingCopyIsRetainedAcrossRepeatedRetry",
+    ) &&
+    walletUpgradeBackup.includes("recoverInterruptedBackup(") &&
+    walletUpgradeBackup.includes("requireRedundantBackupPrefix(") &&
     walletUpgradeBackupTest.includes(
       "sharedPreferencesBackupIsAuthoritativeForOrphanDetection",
     ) &&
@@ -5306,7 +5764,7 @@ assert(
       "migrationBoundary(",
     ) &&
     migrationManagerProductionPathQualificationTest.includes(
-      "RETAINED_SORA_MNEMONIC_WORD_COUNT = 15",
+      "RETAINED_SORA_MNEMONIC_WORD_COUNTS = setOf(15, 18, 21)",
     ) &&
     migrationManagerProductionPathQualificationTest.includes(
       "assertFalse(credentialsRepository.isMnemonicValid(secret.words))",
@@ -5711,6 +6169,17 @@ const downloadedPackageModeNormalizationIndex =
 const downloadedPackageValidationIndex = productionReleaseWorkflow.indexOf(
   "Validate complete downloaded reproducibility package",
 );
+const publishedCandidatePackageStep = productionReleaseWorkflow
+  .split("      - name: Publish immutable qualified candidate\n")[1]
+  ?.split("\n      - name:")[0];
+const publishedCandidatePackageFiles = [
+  ...(publishedCandidatePackageStep?.matchAll(
+    /^            \$\{\{ runner\.temp \}\}\/qualified-candidate\/([^\s]+)$/gm,
+  ) ?? []),
+].map((match) => match[1]).sort();
+const downloadedTairaBindingIndex = productionReleaseWorkflow.indexOf(
+  "Bind validated downloaded Taira deployment evidence",
+);
 const exactReleaseGateIndex = productionReleaseWorkflow.indexOf(
   "node scripts/verify-production-modernization.mjs --release",
 );
@@ -5718,6 +6187,12 @@ const firstProductionGradleIndex =
   productionReleaseWorkflow.indexOf("./gradlew");
 const productionBundleIndex = productionReleaseWorkflow.indexOf(
   ":app:bundleProductionRelease",
+);
+const keystoreMaterializationIndex = productionReleaseWorkflow.indexOf(
+  "Materialize owner-only production upload keystore",
+);
+const keystoreCleanupIndex = productionReleaseWorkflow.indexOf(
+  "Remove materialized production upload keystore",
 );
 const releaseEvaluationIndex = productionReleaseWorkflow.indexOf(
   "Record explicit release evaluation epoch",
@@ -5762,14 +6237,28 @@ assert(
     dependencySigningReviewAdmissionIndex < dependencyPreflightIndex &&
     downloadedPackageModeNormalizationIndex >= 0 &&
     downloadedPackageValidationIndex > downloadedPackageModeNormalizationIndex &&
+    downloadedTairaBindingIndex > downloadedPackageValidationIndex &&
+    [
+      "TAIRA_DEPLOYMENT_MANIFEST_PATH|taira-deployment-manifest.json",
+      "TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_PATH|taira-deployment-operator.sig",
+      "TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_PATH|taira-deployment-reviewer.sig",
+      "TAIRA_DEPLOYMENT_OPERATOR_PUBLIC_KEY_PATH|taira-deployment-operator.pem",
+      "TAIRA_DEPLOYMENT_REVIEWER_PUBLIC_KEY_PATH|taira-deployment-reviewer.pem",
+      "TAIRA_DEPLOYMENT_ADMISSION_RECEIPT_PATH|taira-deployment-admission.json",
+    ].every((binding) => productionReleaseWorkflow.includes(binding)) &&
     productionReleaseWorkflow.includes(
-      '[[ ${#package_files[@]} -eq 30 ]] || exit 1',
+      `[[ \${#package_files[@]} -eq ${DOWNLOADED_PACKAGE_FILES.length} ]] || exit 1`,
     ) &&
+    publishedCandidatePackageFiles.join("\0") ===
+      DOWNLOADED_PACKAGE_FILES.join("\0") &&
     productionReleaseWorkflow.includes('chmod 600 "${package_files[@]}"') &&
     staticSourceAuditIndex >= 0 &&
     staticSourceAuditIndex > dependencyPreflightIndex &&
     firstProductionGradleIndex > staticSourceAuditIndex &&
     productionBundleIndex > firstProductionGradleIndex &&
+    keystoreMaterializationIndex > firstProductionGradleIndex &&
+    keystoreMaterializationIndex < productionBundleIndex &&
+    keystoreCleanupIndex > productionBundleIndex &&
     preCanaryGateIndex > productionBundleIndex &&
     fundedCanaryControllerIndex > preCanaryGateIndex &&
     refreshedPiProbeIndex > productionBundleIndex &&
@@ -5780,9 +6269,6 @@ assert(
     productionReleaseWorkflow.includes("persist-credentials: false") &&
     [
       ":app:testProductionDebugUnitTest",
-      ":core_db:connectedProductionDebugAndroidTest",
-      ":common:connectedProductionDebugAndroidTest",
-      ":sorasubstrate:connectedProductionDebugAndroidTest",
       ":common:testProductionDebugUnitTest",
       ":common_wallet:testProductionDebugUnitTest",
       ":core_db:testProductionDebugUnitTest",
@@ -5821,31 +6307,59 @@ assert(
     productionReleaseWorkflow.includes(
       "reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d",
     ) &&
-    productionReleaseWorkflow.includes(
+    sourceMatchCount(productionConnectedRunnerStep, /^\s*script:.*$/gm) === 1 &&
+    productionConnectedRunnerStep.includes(
+      "          script: bash scripts/run-production-connected-device-qualification.sh\n",
+    ) &&
+    productionConnectedDeviceQualificationScript.startsWith(
+      "#!/usr/bin/env bash\nset -euo pipefail\n",
+    ) &&
+    [
+      ":common:connectedProductionDebugAndroidTest",
+      ":sorasubstrate:connectedProductionDebugAndroidTest",
+      ":core_db:connectedProductionDebugAndroidTest",
+      ":app:connectedProductionDebugAndroidTest",
+    ].every((task) =>
+      productionConnectedDeviceQualificationScript.includes(task),
+    ) &&
+    productionConnectedDeviceQualificationScript.includes(
       "jp.co.soramitsu.core_db.WalletIdentityMigration75Test,jp.co.soramitsu.core_db.WalletUpgradeBackupTest",
     ) &&
-    productionReleaseWorkflow.includes(
+    productionConnectedDeviceQualificationScript.includes(
+      "jp.co.soramitsu.sora.ux.CryptoRuntimeCompatibilityTest",
+    ) &&
+    productionConnectedDeviceQualificationScript.includes(
       "bash scripts/run-encrypted-wallet-upgrade-qualification.sh",
     ) &&
-    productionReleaseWorkflow.includes(
+    productionConnectedDeviceQualificationScript.includes(
       "bash scripts/run-migration-manager-production-path-qualification.sh",
     ) &&
     productionReleaseWorkflow.includes(
       "Minified signed production APK device smoke",
     ) &&
+    sourceMatchCount(signedProductionApkRunnerStep, /^\s*script:.*$/gm) === 1 &&
+    signedProductionApkRunnerStep.includes(
+      "          script: bash scripts/run-signed-production-apk-device-smoke.sh\n",
+    ) &&
+    signedProductionApkDeviceSmokeScript.startsWith(
+      "#!/usr/bin/env bash\nset -euo pipefail\n",
+    ) &&
     productionReleaseWorkflow.includes(
       'sdkmanager "platforms;android-36" "build-tools;36.0.0"',
     ) &&
-    productionReleaseWorkflow.includes(
+    signedProductionApkDeviceSmokeScript.includes(
       '"$ANDROID_HOME/build-tools/36.0.0/apksigner"',
+    ) &&
+    signedProductionApkDeviceSmokeScript.includes(
+      'python3 scripts/verify-android-native-16kb.py "$release_apk"',
     ) &&
     productionReleaseWorkflow.includes(
       "app/build/outputs/mapping/productionRelease/mapping.txt",
     ) &&
-    productionReleaseWorkflow.includes(
+    signedProductionApkDeviceSmokeScript.includes(
       "app/build/outputs/apk/production/release/app-production-release.apk",
     ) &&
-    productionReleaseWorkflow.includes(
+    signedProductionApkDeviceSmokeScript.includes(
       "adb shell am start -W",
     ) &&
     encryptedWalletQualificationScript.includes(
@@ -5870,16 +6384,40 @@ assert(
     productionReleaseWorkflow.includes("AppDatabase-77.reviewed.json") &&
     productionReleaseWorkflow.includes("cmp \\") &&
     productionReleaseWorkflow.includes("--no-parallel") &&
-    [
-      "CI_KEYSTORE_PATH",
-      "CI_KEYSTORE_PASS",
-      "CI_KEYSTORE_KEY_ALIAS",
-      "CI_KEYSTORE_KEY_PASS",
-    ].every((name) =>
-      productionReleaseWorkflow.includes(
-        `${name}: \${{ secrets.${name} }}`,
-      ),
+    ["CI_KEYSTORE_PASS", "CI_KEYSTORE_KEY_ALIAS", "CI_KEYSTORE_KEY_PASS"].every(
+      (name) =>
+        productionReleaseWorkflow.includes(
+          `${name}: \${{ secrets.${name} }}`,
+        ),
     ) &&
+    productionReleaseWorkflow.includes(
+      "CI_KEYSTORE_BASE64: ${{ secrets.CI_KEYSTORE_BASE64 }}",
+    ) &&
+    !productionReleaseWorkflow.includes("secrets.CI_KEYSTORE_PATH") &&
+    sourceMatchCount(
+      productionReleaseWorkflow,
+      /^\s*CI_KEYSTORE_BASE64:\s*\$\{\{ secrets\.CI_KEYSTORE_BASE64 \}\}\s*$/gm,
+    ) === 1 &&
+    sourceMatchCount(
+      productionReleaseWorkflow,
+      /^\s*keystore_path="\$RUNNER_TEMP\/sora-android-production-upload\.keystore"\s*$/gm,
+    ) === 2 &&
+    productionReleaseWorkflow.includes(
+      '[[ "$(base64 --wrap=0 "$keystore_path")" == "$CI_KEYSTORE_BASE64" ]] || {',
+    ) &&
+    productionReleaseWorkflow.includes(
+      "[[ \"$(stat --format='%a' \"$keystore_path\")\" == 600 ]] || exit 1",
+    ) &&
+    productionReleaseWorkflow.includes(
+      "[[ \"$(stat --format='%h' \"$keystore_path\")\" == 1 ]] || exit 1",
+    ) &&
+    productionReleaseWorkflow.includes(
+      "printf 'CI_KEYSTORE_PATH=%s\\n' \"$keystore_path\" >> \"$GITHUB_ENV\"",
+    ) &&
+    productionReleaseWorkflow.includes(
+      "- name: Remove materialized production upload keystore\n        if: ${{ always() }}",
+    ) &&
+    productionReleaseWorkflow.includes('rm -f -- "$keystore_path"') &&
     !/--dependency-verification(?:=|\s+)(?:off|lenient)|--write-verification-metadata|--write-locks|mavenLocal|includeBuild|dependencySubstitution|PAY_WINGS_REPOSITORY_URL/i.test(
       productionReleaseWorkflow,
     ),
@@ -5939,6 +6477,26 @@ assert(
     productionReleaseWorkflow.includes(
       "node scripts/verify-downloaded-android-qualified-candidate-package.mjs",
     ) &&
+    productionReleaseWorkflow.indexOf("Verify exact primary candidate signing identity") <
+      productionReleaseWorkflow.indexOf("Verify 16 KB native release artifacts") &&
+    productionReleaseWorkflow.indexOf("Verify 16 KB native release artifacts") <
+      productionReleaseWorkflow.indexOf("Independently rebuild and compare production candidate") &&
+    productionReleaseWorkflow.indexOf("Validate complete downloaded reproducibility package") <
+      productionReleaseWorkflow.indexOf("Verify downloaded 16 KB native artifacts") &&
+    productionReleaseWorkflow.indexOf("Verify downloaded 16 KB native artifacts") <
+      productionReleaseWorkflow.indexOf("Bind validated downloaded Taira deployment evidence") &&
+    [
+      '"$PRODUCTION_CANDIDATE_AAB_PATH"',
+      '"$PRODUCTION_CANDIDATE_APK_PATH"',
+      '"$RUNNER_TEMP/qualified-candidate/candidate.aab"',
+      '"$RUNNER_TEMP/qualified-candidate/candidate.apk"',
+      '"$RUNNER_TEMP/qualified-candidate/reproduced-candidate.aab"',
+      '"$RUNNER_TEMP/qualified-candidate/reproduced-candidate.apk"',
+    ].every((path) =>
+      productionReleaseWorkflow.includes(
+        `python3 scripts/verify-android-native-16kb.py ${path}`,
+      ),
+    ) &&
     productionReleaseWorkflow.includes(
       "node scripts/extract-funded-canary-controller-bundle.mjs",
     ) &&
@@ -5964,8 +6522,8 @@ assert(
       "reproduction-build.log",
       "primary-signing-verification.json",
       "reproduction-signing-verification.json",
-      "android-migration-controller-envelope-v1.json",
-      "android-migration-controller-extraction-v1.json",
+      "android-migration-controller-envelope-v2.json",
+      "android-migration-controller-extraction-v2.json",
       "taira-deployment-manifest.json",
       "taira-deployment-operator.sig",
       "taira-deployment-reviewer.sig",
@@ -5982,6 +6540,9 @@ assert(
       "funded-canary-controller-extraction-v1.json",
       "candidate-package-manifest.json",
     ].every((name) => productionReleaseWorkflow.includes(name)) &&
+    productionReleaseWorkflow.includes(
+      "node scripts/test-android-production-lock-inventory-v1.mjs",
+    ) &&
     productionReleaseWorkflow.includes(
       "node scripts/test-android-dependency-signing-review-v1.mjs",
     ) &&
@@ -6182,7 +6743,7 @@ assert(
 );
 assert(
   androidMigrationControllerEnvelopeSource.includes(
-    'contractId: "sora-android-migration-controller-envelope-v1"',
+    'contractId: "sora-android-migration-controller-envelope-v2"',
   ) &&
     [
       "android-migration-matrix.json",
@@ -6211,7 +6772,7 @@ assert(
       "authorizesProductionMutation: false",
     ) &&
     androidMigrationControllerEnvelopeExtractorSource.includes(
-      "extractAndroidMigrationControllerEnvelopeV1",
+      "extractAndroidMigrationControllerEnvelopeV2",
     ) &&
     androidMigrationControllerEnvelopeTestSource.includes(
       "duplicate-outer-key",
@@ -6223,7 +6784,7 @@ assert(
       "artifact-drift",
     ) &&
     productionReleaseWorkflow.includes(
-      "node scripts/test-android-migration-controller-envelope-v1.mjs",
+      "node scripts/test-android-migration-controller-envelope-v2.mjs",
     ) &&
     productionReleaseWorkflow.includes(
       "node scripts/extract-android-migration-controller-envelope.mjs",
@@ -6232,10 +6793,10 @@ assert(
       '--pinnedpubkey "sha256//$ANDROID_MIGRATION_CONTROLLER_TLS_SPKI_SHA256_BASE64"',
     ) &&
     productionReleaseWorkflow.includes(
-      'Accept: application/vnd.sora.android-migration-envelope-v1+json',
+      'Accept: application/vnd.sora.android-migration-envelope-v2+json',
     ) &&
     productionReleaseWorkflow.includes(
-      '"$ANDROID_MIGRATION_CONTROLLER_ORIGIN/v1/android/migration-qualification/evidence-envelope"',
+      '"$ANDROID_MIGRATION_CONTROLLER_ORIGIN/v2/android/migration-qualification/evidence-envelope"',
     ) &&
     !productionReleaseWorkflow.includes(
       "ANDROID_MIGRATION_QUALIFICATION_RECEIPT_SIGNATURE_PATH: ${{ vars.",
@@ -6429,6 +6990,10 @@ assert(
     ) &&
     strictJsonDocumentAdmission.includes("MAXIMUM_STRICT_JSON_DEPTH = 64") &&
     strictJsonDocumentAdmission.includes("MAXIMUM_STRICT_JSON_TOKENS = 500_000") &&
+    strictJsonDocumentAdmission.includes("fun requireStrictNexusJsonDocument") &&
+    strictJsonDocumentAdmission.includes("rawJson.startsWith('\\uFEFF')") &&
+    strictJsonDocumentAdmission.includes("isCanonical64BitInteger(token)") &&
+    strictJsonDocumentAdmission.includes("value.toULongOrNull()") &&
     strictJsonDocumentAdmissionTest.includes(
       "strict admission rejects duplicate decoded names at every object depth",
     ) &&
@@ -6441,6 +7006,10 @@ assert(
     strictJsonDocumentAdmissionTest.includes(
       "strict admission independently bounds depth and token work",
     ) &&
+    strictJsonDocumentAdmissionTest.includes(
+      "Nexus admission accepts only canonical 64 bit integer number tokens",
+    ) &&
+    strictJsonDocumentAdmissionTest.includes("\\uFEFF") &&
     piCanonicalIntegerLexemeSerializer.includes("KSerializer<String?>") &&
     piCanonicalIntegerLexemeSerializer.includes(
       "All seven PI health",
@@ -7103,13 +7672,10 @@ assert(
       "getOldestAuthoritativelyTerminalTransactionsInternal(",
     ) &&
     walletIdentityDao.includes(
-      "val tairaBinding = TairaDeployment.binding",
+      "val tairaChainId = TairaTestnetContract.CHAIN_ID",
     ) &&
     walletIdentityDao.includes(
-      "val tairaChainId = tairaBinding?.currentChainId",
-    ) &&
-    walletIdentityDao.includes(
-      "val tairaPendingJournalPrefix = tairaBinding?.pendingJournalPrefix.orEmpty()",
+      "val tairaPendingJournalPrefix = TairaTestnetContract.PENDING_JOURNAL_PREFIX",
     ) &&
     walletIdentityDao.includes(
       "it.state in TERMINAL_PENDING_STATES && !it.submissionIsAmbiguous",
@@ -8210,9 +8776,25 @@ assert(
     ),
   "SHARED_SORA2_WALLET_DERIVATION_TEST_MISSING",
 );
+const configuredIosParityRoot = process.env.POLKAMARKT_IOS_SOURCE_ROOT ?? "";
+const iosParityRoot = configuredIosParityRoot || resolve(root, "../sora-ios");
+assert(
+  configuredIosParityRoot.length === 0 ||
+    (isAbsolute(iosParityRoot) &&
+      resolve(iosParityRoot) === iosParityRoot &&
+      existsSync(iosParityRoot) &&
+      lstatSync(iosParityRoot).isDirectory() &&
+      !lstatSync(iosParityRoot).isSymbolicLink() &&
+      realpathSync(iosParityRoot) === iosParityRoot),
+  "IOS_PARITY_SOURCE_ROOT_INVALID",
+);
 const iosWalletDerivationFixture = resolve(
-  root,
-  "../sora-ios/Fixtures/Modernization/wallet-derivation-v1.json",
+  iosParityRoot,
+  "Fixtures/Modernization/wallet-derivation-v1.json",
+);
+assert(
+  configuredIosParityRoot.length === 0 || existsSync(iosWalletDerivationFixture),
+  "IOS_WALLET_DERIVATION_FIXTURE_MISSING",
 );
 if (existsSync(iosWalletDerivationFixture)) {
   assert(
@@ -9019,8 +9601,8 @@ block(
   "POLKAMARKT_CANONICAL_WEB_IMPLEMENTATION_NOT_PRESENT_AT_PIN",
 );
 const iosPolkamarktContract = resolve(
-  root,
-  "../sora-ios/Fixtures/Modernization/polkamarkt-runtime-v130.json",
+  iosParityRoot,
+  "Fixtures/Modernization/polkamarkt-runtime-v130.json",
 );
 const configuredIosPolkamarktContract =
   process.env.POLKAMARKT_IOS_FIXTURE_PATH ?? "";
@@ -9070,7 +9652,45 @@ assert(
   "ANDROID_IOS_POLKAMARKT_FIXTURES_DIVERGED",
 );
 
-const probe = json("docs/modernization/release-probe-evidence-2026-08-02.json");
+const historicalProbePath =
+  "docs/modernization/release-probe-evidence-2026-08-02.json";
+const historicalProbeSha256 =
+  "8cc5d52691e4f48595c1ce70b945bd23fb3fecc6c6a6cc785b076808cb00e07e";
+const probe = json(historicalProbePath);
+assert(
+  sha256(historicalProbePath) === historicalProbeSha256,
+  "HISTORICAL_RELEASE_PROBE_CHANGED",
+);
+// Current observations are separate from the immutable historical/live probe.
+const dependencyMaterializationRecord = json(
+  "docs/modernization/qualification/android-dependency-materialization-2026-09-06.json",
+);
+assert(
+  hasExactKeys(dependencyMaterializationRecord, [
+    "schemaVersion", "observedAtUtc", "historicalEvidencePath", "historicalEvidenceSha256",
+    "androidSigningIdentity", "gradleDependencyProvenance",
+  ]) && dependencyMaterializationRecord.schemaVersion === 1 &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(dependencyMaterializationRecord.observedAtUtc) &&
+    dependencyMaterializationRecord.historicalEvidencePath ===
+      historicalProbePath &&
+    dependencyMaterializationRecord.historicalEvidenceSha256 ===
+      historicalProbeSha256 &&
+    hasExactKeys(dependencyMaterializationRecord.androidSigningIdentity, [
+      "applicationId", "dedicatedProductionReleaseConfig",
+      "debugFallbackAllowedForRelease",
+      "productionAppSigningCertificateSha256Recorded",
+      "productionUploadCertificateSha256Recorded",
+      "signedBundleCertificateMatched", "playAppSigningContinuityReviewed",
+      "privateKeyOrPasswordRecorded", "qualification",
+    ]) &&
+    hasExactKeys(dependencyMaterializationRecord.gradleDependencyProvenance,
+      Object.keys(probe.gradleDependencyProvenance).map((key) =>
+        key === "dependencyInventoryMaterializedAt" ? "retainedBaselineAssessedAt" : key)),
+  "GRADLE_DEPENDENCY_MATERIALIZATION_OBSERVATION_INVALID",
+);
+const dependencyMaterializationProbe = dependencyMaterializationRecord.gradleDependencyProvenance;
+const signingMaterializationProbe = dependencyMaterializationRecord.androidSigningIdentity;
+
 const piProbeObservedAtMs = Date.parse(
   probe.piIndexer?.lastReprobedAtUtc ?? "",
 );
@@ -9170,117 +9790,119 @@ assert(
   "IROHA_ANDROID_RELEASE_EVIDENCE_DIVERGED",
 );
 assert(
-  probe.gradleDependencyProvenance.dependencyInventoryMaterializedAt ===
+  dependencyMaterializationProbe.retainedBaselineAssessedAt ===
     gradleDependencyProvenance.assessedAt &&
-    probe.gradleDependencyProvenance.distributionVersion ===
+    dependencyMaterializationProbe.distributionVersion ===
     gradleDependencyProvenance.wrapper.distributionVersion &&
-    probe.gradleDependencyProvenance.distributionSha256Pinned === true &&
-    probe.gradleDependencyProvenance.expectedWrapperJarSha256 ===
+    dependencyMaterializationProbe.distributionSha256Pinned === true &&
+    dependencyMaterializationProbe.expectedWrapperJarSha256 ===
       gradleDependencyProvenance.wrapper.expectedWrapperJarSha256 &&
-    probe.gradleDependencyProvenance.observedWrapperJarSha256 ===
+    dependencyMaterializationProbe.observedWrapperJarSha256 ===
       gradleWrapperJarSha256 &&
-    probe.gradleDependencyProvenance.wrapperJarMatchesDistribution ===
+    dependencyMaterializationProbe.wrapperJarMatchesDistribution ===
       gradleDependencyProvenance.wrapper.wrapperJarMatchesDistribution &&
-    probe.gradleDependencyProvenance.sourceQualifiedVendorRepositoryPresent ===
+    dependencyMaterializationProbe.sourceQualifiedVendorRepositoryPresent ===
       true &&
-    probe.gradleDependencyProvenance.sourceQualifiedVendorRepositoryStatus ===
+    dependencyMaterializationProbe.sourceQualifiedVendorRepositoryStatus ===
       gradleDependencyProvenance.repositoryPolicy.sourceQualifiedVendorRepository
         .status &&
-    probe.gradleDependencyProvenance.exactRepositoryModuleFilterCount ===
+    dependencyMaterializationProbe.exactRepositoryModuleFilterCount ===
       gradleDependencyProvenance.repositoryPolicy.sourceQualifiedVendorRepository
         .exactModules.length &&
-    probe.gradleDependencyProvenance.materializedVendorModuleCount ===
+    dependencyMaterializationProbe.materializedVendorModuleCount ===
       gradleDependencyProvenance.repositoryPolicy.sourceQualifiedVendorRepository
         .materializedCoordinates.length &&
-    probe.gradleDependencyProvenance.sourceProvenanceSha256 ===
+    dependencyMaterializationProbe.sourceProvenanceSha256 ===
       gradleDependencyProvenance.repositoryPolicy.sourceQualifiedVendorRepository
         .sourceProvenanceSha256 &&
-    probe.gradleDependencyProvenance.vendorContentsManifestSha256 ===
+    dependencyMaterializationProbe.vendorContentsManifestSha256 ===
       gradleDependencyProvenance.repositoryPolicy.sourceQualifiedVendorRepository
         .contentsManifestSha256 &&
-    probe.gradleDependencyProvenance.sourceToBinaryReviewComplete ===
+    dependencyMaterializationProbe.sourceToBinaryReviewComplete ===
       gradleDependencyProvenance.releaseCriteria
         .vendoredSourceToBinaryReviewComplete &&
-    probe.gradleDependencyProvenance.strictVerificationMetadataPresent ===
+    dependencyMaterializationProbe.strictVerificationMetadataPresent ===
       gradleDependencyProvenance.dependencyVerification.metadataPresent &&
-    probe.gradleDependencyProvenance.verificationMetadataSha256 ===
+    dependencyMaterializationProbe.verificationMetadataSha256 ===
       gradleDependencyProvenance.dependencyVerification.metadataSha256 &&
-    probe.gradleDependencyProvenance.verificationMetadataDigestSha256 ===
+    dependencyMaterializationProbe.verificationMetadataDigestSha256 ===
       gradleDependencyProvenance.dependencyVerification.metadataDigestSha256 &&
-    probe.gradleDependencyProvenance.verificationMetadataReviewed ===
+    dependencyMaterializationProbe.verificationMetadataReviewed ===
       gradleDependencyProvenance.dependencyVerification.independentlyReviewed &&
-    probe.gradleDependencyProvenance.productionReleaseLocksPresent ===
+    dependencyMaterializationProbe.productionReleaseLocksPresent ===
       gradleDependencyProvenance.dependencyLocking
         .allConfiguredProductionReleaseConfigurationsMaterialized &&
-    probe.gradleDependencyProvenance.lockFileCount ===
+    dependencyMaterializationProbe.lockFileCount ===
       gradleDependencyProvenance.dependencyLocking.materializedInventory
         .lockFilePaths.length &&
-    probe.gradleDependencyProvenance.lockFileSetSha256 ===
+    dependencyMaterializationProbe.lockFileSetSha256 ===
       gradleDependencyProvenance.dependencyLocking.materializedInventory
         .lockFileSetSha256 &&
-    probe.gradleDependencyProvenance.lockConfigurationCount ===
+    dependencyMaterializationProbe.lockConfigurationCount ===
       gradleDependencyProvenance.dependencyLocking.materializedInventory
         .configurationCount &&
-    probe.gradleDependencyProvenance.productionReleaseLockConfigurationCount ===
+    dependencyMaterializationProbe.productionReleaseLockConfigurationCount ===
       gradleDependencyProvenance.dependencyLocking.materializedInventory
         .productionReleaseConfigurationCount &&
-    probe.gradleDependencyProvenance.lockConfigurationInventorySha256 ===
+    dependencyMaterializationProbe.lockConfigurationInventorySha256 ===
       gradleDependencyProvenance.dependencyLocking.materializedInventory
         .configurationInventorySha256 &&
-    probe.gradleDependencyProvenance.productionReleaseLocksReviewed ===
+    dependencyMaterializationProbe.productionReleaseLocksReviewed ===
       gradleDependencyProvenance.dependencyLocking.independentlyReviewed &&
-    probe.gradleDependencyProvenance
+    dependencyMaterializationProbe
       .idensicTensorflowNamespaceWorkaroundStatus ===
       gradleDependencyProvenance.repositoryPolicy
         .idensicTensorflowNamespaceCompatibility.status &&
-    probe.gradleDependencyProvenance
+    dependencyMaterializationProbe
       .idensicTensorflowNamespaceWorkaroundReviewed ===
       gradleDependencyProvenance.repositoryPolicy
         .idensicTensorflowNamespaceCompatibility.independentlyReviewed &&
-    probe.gradleDependencyProvenance.broadNamespaceQualificationGranted ===
+    dependencyMaterializationProbe.broadNamespaceQualificationGranted ===
       gradleDependencyProvenance.repositoryPolicy
         .idensicTensorflowNamespaceCompatibility.broadQualificationGranted &&
-    probe.gradleDependencyProvenance.arbitraryPayWingsRepositoryRemoved ===
+    dependencyMaterializationProbe.arbitraryPayWingsRepositoryRemoved ===
       gradleDependencyProvenance.repositoryPolicy
         .arbitraryPayWingsRepositoryRemoved &&
-    probe.gradleDependencyProvenance.exactSoramitsuAndJitpackModuleFiltersPresent ===
+    dependencyMaterializationProbe.exactSoramitsuAndJitpackModuleFiltersPresent ===
       true &&
-    probe.gradleDependencyProvenance.trackedAuthTokenRemoved ===
+    dependencyMaterializationProbe.trackedAuthTokenRemoved ===
       gradleDependencyProvenance.credentialIncident
         .trackedProjectAuthTokenRemoved &&
-    probe.gradleDependencyProvenance.priorTokenRevocationConfirmed ===
+    dependencyMaterializationProbe.priorTokenRevocationConfirmed ===
       gradleDependencyProvenance.credentialIncident.priorTokenRevoked &&
-    probe.gradleDependencyProvenance
+    dependencyMaterializationProbe
       .replacementCredentialRotationConfirmed ===
       gradleDependencyProvenance.credentialIncident
         .replacementCredentialRotated &&
-    probe.gradleDependencyProvenance.secretsRecordedInEvidence ===
+    dependencyMaterializationProbe.secretsRecordedInEvidence ===
       gradleDependencyProvenance.credentialIncident
         .secretValueRetainedInEvidence &&
-    probe.gradleDependencyProvenance.qualification ===
+    dependencyMaterializationProbe.qualification ===
       gradleDependencyProvenance.status,
   "GRADLE_DEPENDENCY_RELEASE_EVIDENCE_DIVERGED",
 );
 assert(
-  probe.androidSigningIdentity.applicationId ===
+  signingMaterializationProbe.applicationId ===
     androidProductionSigning.applicationId &&
-    probe.androidSigningIdentity.dedicatedProductionReleaseConfig === true &&
-    probe.androidSigningIdentity.debugFallbackAllowedForRelease === false &&
-    probe.androidSigningIdentity
+    signingMaterializationProbe.dedicatedProductionReleaseConfig === true &&
+    signingMaterializationProbe.debugFallbackAllowedForRelease === false &&
+    signingMaterializationProbe
       .productionAppSigningCertificateSha256Recorded ===
       /^[0-9a-f]{64}$/.test(
         androidProductionSigning.productionAppSigningCertificateSha256 ?? "",
       ) &&
-    probe.androidSigningIdentity
+    signingMaterializationProbe
       .productionUploadCertificateSha256Recorded ===
       /^[0-9a-f]{64}$/.test(
         androidProductionSigning.productionUploadCertificateSha256 ?? "",
       ) &&
-    probe.androidSigningIdentity.signedBundleCertificateMatched ===
+    signingMaterializationProbe.signedBundleCertificateMatched ===
       androidProductionSigning.signedBundleCertificateMatched &&
-    probe.androidSigningIdentity.playAppSigningContinuityReviewed ===
+    signingMaterializationProbe.playAppSigningContinuityReviewed ===
       androidProductionSigning.playAppSigningContinuityReviewed &&
-    probe.androidSigningIdentity.privateKeyOrPasswordRecorded === false,
+    signingMaterializationProbe.privateKeyOrPasswordRecorded === false &&
+    signingMaterializationProbe.qualification ===
+      androidProductionSigning.status,
   "ANDROID_SIGNING_RELEASE_EVIDENCE_DIVERGED",
 );
 block(
@@ -9288,11 +9910,11 @@ block(
   "IROHA_ANDROID_RELEASE_EVIDENCE_NOT_QUALIFIED",
 );
 block(
-  probe.gradleDependencyProvenance.qualification !== "qualified",
+  dependencyMaterializationProbe.qualification !== "qualified",
   "GRADLE_DEPENDENCY_RELEASE_EVIDENCE_NOT_QUALIFIED",
 );
 block(
-  probe.androidSigningIdentity.qualification !== "qualified",
+  signingMaterializationProbe.qualification !== "qualified",
   "ANDROID_SIGNING_RELEASE_EVIDENCE_NOT_QUALIFIED",
 );
 block(
@@ -9352,16 +9974,25 @@ try {
   const evaluationEpochSeconds =
     tairaDeploymentAdmissionRecord?.value?.evaluationEpochSeconds;
   const currentEpochSeconds = Math.floor(Date.now() / 1000);
+  const maximumAdmissionAgeSeconds =
+    maximumTairaDeploymentAdmissionAgeSecondsV1(
+      process.env.PRODUCTION_ROLLOUT_TARGET_PERCENT ?? "",
+    );
   if (
+    maximumAdmissionAgeSeconds === null ||
     !Number.isSafeInteger(evaluationEpochSeconds) ||
     evaluationEpochSeconds > currentEpochSeconds ||
-    currentEpochSeconds - evaluationEpochSeconds > 6 * 60 * 60
+    currentEpochSeconds - evaluationEpochSeconds > maximumAdmissionAgeSeconds
   ) {
     throw new Error("TAIRA_DEPLOYMENT_ADMISSION_STALE");
   }
   const verified = verifyTairaDeploymentManifestV1({
     ...tairaDeploymentInput,
     evaluationEpochSeconds,
+    expectedManifestSequenceNumber:
+      parseExpectedTairaDeploymentManifestSequenceNumberV1(
+        process.env.TAIRA_DEPLOYMENT_EXPECTED_MANIFEST_SEQUENCE_NUMBER ?? "",
+      ),
   });
   if (
     JSON.stringify(verified) !==
@@ -9468,7 +10099,7 @@ const nexusSendQualificationImplementationDeclaration =
     /class\s+DefaultNexusSendQualification[\s\S]*?\{\s*$/m,
   )?.[0] ?? "";
 assert(
-  /interface\s+NexusSendQualification\s*\{\s*fun\s+isQualifiedFor\s*\(\s*network\s*:\s*NexusNetwork\s*\)\s*:\s*Boolean\s*\}/.test(
+  /interface\s+NexusSendQualification\s*\{\s*fun\s+capabilitiesFor\s*\(\s*network\s*:\s*NexusNetwork\s*\)\s*:\s*NexusSendCapabilities\s*\}/.test(
     nexusSendQualificationInterface,
   ) &&
     !/\b(?:quote|sign|finalizedCheckpoint)\s*\(/.test(
@@ -9480,25 +10111,30 @@ assert(
     !/\)\s*:\s*[^\{]*(?:NexusTransactionSigner|NexusFinalityReader)/.test(
       nexusSendQualificationImplementationDeclaration,
     ) &&
-    /override\s+fun\s+isQualifiedFor\s*\(\s*network\s*:\s*NexusNetwork\s*\)\s*:\s*Boolean\s*=\s*try\s*\{[\s\S]*?signer\.isQualifiedFor\(network\)\s*&&\s*finalityReader\.isQualifiedFor\(network\)[\s\S]*?\}\s*catch\s*\(\s*_\s*:\s*Exception\s*\)\s*\{\s*false\s*\}\s*catch\s*\(\s*_\s*:\s*LinkageError\s*\)\s*\{\s*false\s*\}/.test(
-      nexusSendQualificationSource,
+    nexusSendQualificationSource.includes("enum class NexusCapabilityStatus") &&
+    nexusSendQualificationSource.includes("QUALIFIED") &&
+    nexusSendQualificationSource.includes("UNAVAILABLE") &&
+    nexusSendQualificationSource.includes("ERROR") &&
+    nexusSendQualificationSource.includes("data class NexusSendCapabilities(") &&
+    nexusSendQualificationSource.includes("val signing: NexusCapabilityStatus") &&
+    nexusSendQualificationSource.includes("val finality: NexusCapabilityStatus") &&
+    nexusSendQualificationSource.includes("val supportsSend: Boolean") &&
+    nexusSendQualificationSource.includes(
+      "signing = qualification { signer.isQualifiedFor(network) }",
     ) &&
+    nexusSendQualificationSource.includes(
+      "finality = qualification { finalityReader.isQualifiedFor(network) }",
+    ) &&
+    nexusSendQualificationSource.includes("NexusCapabilityStatus.ERROR") &&
     nexusSendQualificationProviderMatches.length === 1 &&
     nexusSendQualificationTest.includes(
-      "send qualification requires both capabilities without exercising either capability",
+      "send support explicitly projects signer and finality capabilities",
     ) &&
     nexusSendQualificationTest.includes(
-      "qualification adapter failures disable sends without invoking sensitive operations",
+      "adapter and native linkage failures remain visible as capability errors",
     ) &&
-    nexusSendQualificationTest.includes(
-      "native linkage failures disable sends without invoking sensitive operations",
-    ) &&
-    nexusSendQualificationTest.includes(
-      'throws UnsatisfiedLinkError("signer native artifact unavailable")',
-    ) &&
-    nexusSendQualificationTest.includes(
-      'throws UnsatisfiedLinkError("finality native artifact unavailable")',
-    ) &&
+    nexusSendQualificationTest.includes("NexusCapabilityStatus.ERROR") &&
+    nexusSendQualificationTest.includes("NexusCapabilityStatus.UNAVAILABLE") &&
     nexusSendQualificationTest.includes("Triple(false, false, false)") &&
     nexusSendQualificationTest.includes("Triple(false, true, false)") &&
     nexusSendQualificationTest.includes("Triple(true, false, false)") &&
@@ -10030,123 +10666,89 @@ const nexusTorii = read(
 const nexusToriiRoutesTest = read(
   "common/src/test/java/jp/co/soramitsu/common/nexus/NexusToriiRoutesTest.kt",
 );
-const tairaDeploymentBindingTest = read(
+const tairaTestnetContractTest = read(
   "common/src/test/java/jp/co/soramitsu/common/nexus/TairaDeploymentBindingTest.kt",
 );
-const commonBuildForTairaDeployment = read("common/build.gradle.kts");
+const tairaMcpContract = read(
+  "common/src/main/java/jp/co/soramitsu/common/nexus/TairaMcpContract.kt",
+);
 const tairaDeploymentManifestLibrary = read(
   "scripts/lib/taira-deployment-manifest-v1.mjs",
-);
-const tairaDeploymentManifestVerifier = read(
-  "scripts/verify-taira-deployment-manifest.mjs",
 );
 const tairaDeploymentManifestTest = read(
   "scripts/test-taira-deployment-manifest-v1.mjs",
 );
-const tairaDeploymentAdmissionWorkflowIndex =
-  productionReleaseWorkflow.indexOf(
-    "- name: Admit operator-signed Taira epoch mapping",
-  );
 assert(
-  tairaDeploymentAdmissionWorkflowIndex >= 0 &&
-    tairaDeploymentAdmissionWorkflowIndex <
-      productionReleaseWorkflow.indexOf("./gradlew") &&
-    productionReleaseWorkflow.includes(
-      "node scripts/verify-taira-deployment-manifest.mjs",
+  nexusNetwork.includes('const val TORII_ROOT = "https://taira.sora.org"') &&
+    nexusNetwork.includes('const val MCP_ENDPOINT = "$TORII_ROOT/v1/mcp"') &&
+    nexusNetwork.includes(
+      'const val CHAIN_ID = "fc56984b-2be7-431d-840e-21514d1883f0"',
     ) &&
-    productionReleaseWorkflow.includes(
-      "node scripts/test-taira-deployment-manifest-v1.mjs",
+    nexusNetwork.includes(
+      'const val XOR_ASSET_DEFINITION_ID = "6TEAJqbb8oEPmLncoNiMRbLEK6tw"',
     ) &&
-    productionReleaseWorkflow.includes(
-      "secrets.TAIRA_DEPLOYMENT_MANIFEST_BASE64",
-    ) &&
-    productionReleaseWorkflow.includes(
-      "secrets.TAIRA_DEPLOYMENT_OPERATOR_SIGNATURE_BASE64",
-    ) &&
-    productionReleaseWorkflow.includes(
-      "secrets.TAIRA_DEPLOYMENT_REVIEWER_SIGNATURE_BASE64",
-    ) &&
-    productionReleaseWorkflow.includes(
-      "vars.TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256",
-    ) &&
-    productionReleaseWorkflow.includes(
-      "vars.TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256",
-    ) &&
-    commonBuildForTairaDeployment.includes(
-      'protectedBuildConfigString("TAIRA_CURRENT_CHAIN_ID")',
-    ) &&
-    commonBuildForTairaDeployment.includes(
-      'protectedBuildConfigString("TAIRA_RETIRED_CHAIN_ID")',
-    ) &&
-    commonBuildForTairaDeployment.includes(
-      'protectedBuildConfigString("TAIRA_DEPLOYMENT_MANIFEST_SHA256")',
-    ) &&
-    nexusNetwork.includes("class TairaDeploymentBinding private constructor") &&
-    nexusNetwork.includes("setOf(currentChainId, retiredChainId) != knownChains") &&
-    !nexusNetwork.includes(
-      "currentChainId != WalletNetworkChainIdentity.TAIRA_EPOCH_B",
-    ) &&
-    !nexusNetwork.includes(
-      "retiredChainId != WalletNetworkChainIdentity.TAIRA_EPOCH_A",
-    ) &&
-    nexusNetwork.includes('currentToriiBaseUrl == "https://taira.sora.org"') &&
-    nexusNetwork.includes("TairaDeployment.binding?.currentChainId") &&
-    nexusNetwork.includes("UNQUALIFIED_TAIRA_CHAIN_ID") &&
-    nexusNetwork.includes("00000000-0000-0000-0000-000000000000") &&
-    !nexusNetwork.includes(
-      "admittedTaira?.currentChainId ?: WalletNetworkChainIdentity.TAIRA_EPOCH_B",
-    ) &&
-    nexusNetwork.includes("TAIRA_EPOCH_A") &&
-    nexusNetwork.includes("TAIRA_EPOCH_B") &&
-    nexusNetwork.includes('val pendingJournalPrefix: String = "taira:$manifestSha256:"') &&
-    nexusNetwork.includes("fun ownsPendingJournal(localId: String)") &&
-    walletIdentityDao.includes("chainId = :tairaChainId") &&
-    walletIdentityDao.includes("tairaPendingJournalPrefix") &&
-    walletIdentityDao.includes(
-      "substr(localId, 1, length(:tairaPendingJournalPrefix))",
-    ) &&
-    walletIdentityDao.includes("hasCurrentChainIdentityForBinding") &&
-    walletIdentityDao.includes("transaction.localId.startsWith(tairaPendingJournalPrefix)") &&
-    !walletIdentityDao.includes(
-      "or (networkId = 'taira' and chainId =\n                'fc56984b-2be7-431d-840e-21514d1883f0')",
-    ) &&
-    !nexusNetwork.includes(
-      'const val TAIRA = "fc56984b-2be7-431d-840e-21514d1883f0"',
-    ) &&
-    nexusToriiRoutes.includes("TAIRA_DEPLOYMENT_MANIFEST_NOT_QUALIFIED") &&
-    nexusToriiRoutes.includes("val binding = TairaDeployment.binding") &&
+    nexusNetwork.includes('const val XOR_ASSET_ALIAS = "xor#universal"') &&
+    nexusNetwork.includes("const val XOR_SCALE = 9") &&
+    nexusNetwork.includes('const val MCP_PROTOCOL_VERSION = "2025-06-18"') &&
+    nexusNetwork.includes('const val PENDING_JOURNAL_PREFIX = "taira:$CONTRACT_SHA256:"') &&
+    !nexusNetwork.includes("TairaDeploymentBinding") &&
+    !nexusNetwork.includes("TAIRA_EPOCH_A") &&
+    !nexusNetwork.includes("TAIRA_EPOCH_B") &&
+    !nexusNetwork.includes("809574f5-fee7-5e69-bfcf-52451e42d50f") &&
+    nexusNetwork.includes("object NexusDerivationProfiles") &&
+    nexusNetwork.includes("val taira = NexusNetwork(") &&
+    nexusNetwork.includes("val admitted: List<NexusNetwork> = listOf(minamoto, taira)") &&
+    nexusNetwork.includes("val admittedIds: Set<WalletNetworkId>") &&
+    nexusNetwork.includes("fun requireAdmitted(network: NexusNetwork)") &&
+    walletIdentityDao.includes("TairaTestnetContract.CHAIN_ID") &&
+    walletIdentityDao.includes("TairaTestnetContract.PENDING_JOURNAL_PREFIX") &&
+    nexusToriiRoutes.includes("NexusNetworks.requireAdmitted(network)") &&
+    nexusToriiRoutes.includes('require(network.id != WalletNetworkId.TAIRA) { "TAIRA_MCP_REQUIRED" }') &&
     nexusToriiRoutesTest.includes(
-      "Taira routes fail before transport when deployment manifest is absent",
+      "Taira MCP route is immutable and alternate topology is rejected",
     ) &&
-    tairaDeploymentBindingTest.includes(
-      "accepts either signed current epoch mapping",
+    tairaTestnetContractTest.includes(
+      "first release exposes one canonical public contract",
     ) &&
-    tairaDeploymentBindingTest.includes(
-      "partial drifted or self reviewed build projections stay unqualified",
+    tairaTestnetContractTest.includes(
+      "forged old epoch or alternate root cannot be constructed",
     ) &&
-    tairaDeploymentBindingTest.includes(
-      "production variant contains the exact admitted deployment projection",
-    ) &&
-    tairaDeploymentBindingTest.includes('BuildConfig.FLAVOR != "production"') &&
-    tairaDeploymentBindingTest.includes(
-      'requireNotNull(TairaDeployment.binding)',
-    ) &&
+    [
+      '"iroha.health"',
+      '"iroha.accounts.assets"',
+      '"iroha.assets.definitions.get"',
+      '"iroha.instructions.list"',
+      '"iroha.transactions.status"',
+      '"iroha.transactions.submit_and_wait"',
+    ].every((tool) => tairaMcpContract.includes(tool)) &&
+    tairaMcpContract.includes('"body_base64" to JsonPrimitive') &&
+    tairaMcpContract.includes('"hash" to JsonPrimitive(canonicalHash)') &&
+    tairaMcpContract.includes('"status_accept" to JsonPrimitive') &&
+    tairaMcpContract.includes('"terminal_statuses" to JsonArray') &&
+    tairaMcpContract.includes('"timeout_ms" to JsonPrimitive(120_000)') &&
+    tairaMcpContract.includes('structured.string("terminal_kind") != "Applied"') &&
+    tairaMcpContract.includes("NEXUS_TRANSACTION_HASH_MISMATCH") &&
+    tairaMcpContract.includes("fun validateToolPage(") &&
+    tairaMcpContract.includes('"toolset_version" to JsonPrimitive(toolsetVersion)') &&
+    tairaMcpContract.includes('root["nextCursor"]') &&
+    tairaMcpContract.includes('"asset" to JsonPrimitive(definitionId)') &&
+    nexusTorii.includes("ensureTairaTools(network") &&
+    nexusTorii.includes("MAX_MCP_TOOL_PAGES") &&
+    nexusTorii.includes("TairaMcpContract.submitAndWaitRequest(") &&
+    nexusTorii.includes("TairaMcpContract.validateSubmitAndWaitResult(") &&
+    nexusTorii.includes('"NEXUS_PUBLIC_INGRESS_UNAVAILABLE"') &&
     tairaDeploymentManifestLibrary.includes(
       "sora-taira-deployment-epoch-manifest-v1",
     ) &&
     tairaDeploymentManifestLibrary.includes(
-      'parsed.hostname !== "taira.sora.org"',
+      'export const TAIRA_PUBLIC_TORII_ROOT = "https://taira.sora.org"',
     ) &&
-    tairaDeploymentManifestLibrary.includes(
-      "verifySignature(null, manifestRecord.bytes",
-    ) &&
-    tairaDeploymentManifestVerifier.includes(
-      "RELEASE_EVALUATION_EPOCH_SECONDS",
-    ) &&
+    tairaDeploymentManifestLibrary.includes("epoch.chainId !== TAIRA_CURRENT_CHAIN_ID") &&
+    !tairaDeploymentManifestLibrary.includes('parsed.hostname !== "taira.sora.org"') &&
     tairaDeploymentManifestTest.includes(
-      "2 signed operator-selected mappings and ${mutations} fail-closed mutations passed",
+      "1 signed canonical mapping and ${mutations} fail-closed mutations passed",
     ),
-  "TAIRA_DEPLOYMENT_MANIFEST_GATE_MISSING_OR_FAIL_OPEN",
+  "TAIRA_FIRST_RELEASE_CONTRACT_MISSING_OR_FAIL_OPEN",
 );
 const nexusBalanceValidatorTest = read(
   "common/src/test/java/jp/co/soramitsu/common/nexus/NexusBalanceValidatorTest.kt",
@@ -10186,6 +10788,18 @@ const cardsHubViewModel = read(
 );
 const cardsHubScreen = read(
   "feature_wallet_impl/src/main/java/jp/co/soramitsu/feature_wallet_impl/presentation/cardshub/CardsHubFragment.kt",
+);
+const nexusWalletScreens = read(
+  "feature_wallet_impl/src/main/java/jp/co/soramitsu/feature_wallet_impl/presentation/cardshub/NexusWalletScreens.kt",
+);
+const walletSheet = read(
+  "common/src/main/java/jp/co/soramitsu/common/presentation/compose/components/WalletSheet.kt",
+);
+const walletStatus = read(
+  "common/src/main/java/jp/co/soramitsu/common/presentation/compose/components/WalletStatus.kt",
+);
+const walletDisplay = read(
+  "common/src/main/java/jp/co/soramitsu/common/presentation/WalletDisplay.kt",
 );
 const cardsHubViewModelTest = read(
   "feature_wallet_impl/src/test/java/jp/co/soramitsu/feature_wallet_impl/presentation/wallet/CardsHubViewModelTest.kt",
@@ -10271,9 +10885,13 @@ const containsExactWordCountLiteral = (source, values) => {
 };
 assert(
   containsExactWordCountLiteral(credentialsRepository, [12, 24]) &&
-    credentialsRepository.includes("const val LEGACY_SORA_WORD_COUNT = 15") &&
-    /wordCount\s+in\s+setOf\(\s*12\s*,\s*LEGACY_SORA_WORD_COUNT\s*,\s*24\s*\)/.test(
-      credentialsRepository,
+    containsExactWordCountLiteral(credentialsRepository, [12, 15, 18, 21, 24]) &&
+    containsExactWordCountLiteral(userRepository, [15, 18, 21]) &&
+    credentialsRepositoryTest.includes(
+      "retained eighteen and twenty one word wallets preserve seed export without writes",
+    ) &&
+    migrationManagerSafetyTest.includes(
+      "retained eighteen and twenty one word mnemonics preserve Sora2 only",
     ) &&
     migrationManager.includes("convertRetainedSoraPassphraseToSeed") &&
     /if \(words\.size == 12 \|\| words\.size == 24\) \{\s*"MNEMONIC"\s*\} else \{\s*"MNEMONIC_UNSUPPORTED"\s*\}/.test(
@@ -10313,7 +10931,7 @@ const collectIosSwiftSources = (directory, records = []) => {
   }
   return records;
 };
-const iosSwiftSources = collectIosSwiftSources(resolve(root, "../sora-ios"));
+const iosSwiftSources = collectIosSwiftSources(iosParityRoot);
 const iosWalletMnemonicPolicySource =
   iosSwiftSources.find(({ source }) =>
     source.includes("enum WalletMnemonicWordPolicy"),
@@ -10326,9 +10944,11 @@ assert(
     containsExactWordCountLiteral(iosWalletMnemonicPolicySource, [
       12,
       15,
+      18,
+      21,
       24,
     ]) &&
-    /case\s+15\s*:[\s\S]{0,320}return\s+\.legacyMnemonicEntropy/.test(
+    /case\s+15\s*,\s*18\s*,\s*21\s*:[\s\S]{0,320}return\s+\.legacyMnemonicEntropy/.test(
       iosWalletMnemonicPolicySource,
     ) &&
     iosLegacyMnemonicEntropySources.length > 0 &&
@@ -10347,7 +10967,7 @@ assert(
 );
 const nexusAuthoritativeTransactionProof =
   nexusTorii.match(
-    /override suspend fun hasAuthoritativeCommittedTransaction\([\s\S]*?\n    }\n\n    suspend fun mcp/,
+    /override suspend fun hasAuthoritativeCommittedTransaction\([\s\S]*?\n    }\n\n    private suspend fun mcp/,
   )?.[0] ?? "";
 const nexusAccountTransactionProofImplementation =
   nexusTorii.match(
@@ -10359,7 +10979,7 @@ const nexusMcpImplementation =
   )?.[0] ?? "";
 const nexusCommittedHistoryImplementation =
   nexusTorii.match(
-    /override suspend fun committedXorTransfers\([\s\S]*?\n    }\n\n    private suspend fun getAllAccountAssets/,
+    /override suspend fun committedXorTransfers\([\s\S]*?(?=\n    private suspend fun getAllAccountAssets)/,
   )?.[0] ?? "";
 const nexusBalanceValidatorImplementation =
   nexusTorii.match(
@@ -10396,7 +11016,10 @@ assert(
     nexusAccountTransactionProofImplementation.includes(
       "NexusTransactionHash.normalized(value)",
     ) &&
-    nexusHistory.includes(".let(NexusTransactionHash::normalized)") &&
+    nexusHistory.includes(
+      "val hash = NexusTransactionHash.normalized(rawHash)",
+    ) &&
+    nexusHistory.includes("?.takeIf { it == rawHash }") &&
     nexusCoordinator.includes("NexusTransactionHash.normalized(value)") &&
     nexusPendingOverlayValidator.includes(
       "NexusTransactionHash.normalized(hash) == hash",
@@ -10414,136 +11037,43 @@ assert(
       'const val NORITO_TRANSACTION_REQUEST_MEDIA_TYPE = "application/x-norito"',
     ) &&
     nexusToriiRoutes.includes("fun responseAccept(url: String): String") &&
-    nexusToriiRoutes.includes("fun requestContentType(method: String, url: String): String?") &&
-    nexusToriiRoutes.includes("fun isExpectedResponseContentType(url: String, value: String?): Boolean") &&
-    nexusToriiRoutes.includes("fun isExpectedContentType(value: String?, expected: String): Boolean") &&
-    nexusToriiRoutes.includes('if (URI(url).path.endsWith("/health"))') &&
-    nexusToriiRoutes.includes("HEALTH_RESPONSE_MEDIA_TYPE") &&
-    nexusToriiRoutes.includes("JSON_RESPONSE_MEDIA_TYPE") &&
-    nexusToriiRoutes.includes('method == "POST" && path.endsWith("/v1/mcp")') &&
     nexusToriiRoutes.includes(
-      'method == "POST" && path.endsWith("/v1/pipeline/transactions")',
+      "fun requestContentType(method: String, url: String): String?",
     ) &&
-    nexusToriiRoutes.includes('parts[1].trim().equals("charset=utf-8", ignoreCase = true)') &&
+    nexusToriiRoutes.includes(
+      'method == "POST" && path.endsWith("/v1/mcp")',
+    ) &&
     nexusToriiRoutes.includes(
       'fun isHealthyResponse(payload: String): Boolean = payload == "Healthy"',
     ) &&
+    tairaMcpContract.includes('const val HEALTH_TOOL = "iroha.health"') &&
+    tairaMcpContract.includes("fun healthRequest(") &&
+    tairaMcpContract.includes("fun validateHealthResult(") &&
+    tairaMcpContract.includes(
+      "NexusToriiRoutes.HEALTH_RESPONSE_MEDIA_TYPE",
+    ) &&
+    nexusTorii.includes(
+      "ensureTairaTools(network, setOf(TairaMcpContract.HEALTH_TOOL))",
+    ) &&
+    nexusTorii.includes("TairaMcpContract.validateHealthResult(result)") &&
     nexusTorii.includes(
       'setRequestProperty("Accept", NexusToriiRoutes.responseAccept(url))',
     ) &&
     nexusTorii.includes(
-      "val expectedRequestContentType = NexusToriiRoutes.requestContentType(method, url)",
-    ) &&
-    nexusTorii.includes("requestContentType == expectedRequestContentType") &&
-    nexusTorii.includes(
       "NexusToriiRoutes.isExpectedResponseContentType(",
     ) &&
-    nexusTorii.includes(
-      "!NexusToriiRoutes.isExpectedContentType(\n                contentType,\n                NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE,",
-    ) &&
-    nexusTorii.includes('connection.getHeaderField("Content-Type")') &&
-    nexusTorii.includes('safeCode = "NEXUS_RESPONSE_CONTENT_TYPE_INVALID"') &&
-    nexusTorii.includes(
-      "if (!NexusToriiRoutes.isHealthyResponse(payload))",
-    ) &&
-    nexusTorii.includes('throw NexusToriiException("NEXUS_HEALTH_INVALID")') &&
-    nexusToriiRoutes.includes('const val XOR_ASSET_ALIAS = "xor#universal"') &&
-    nexusToriiRoutes.includes("fun assetDefinition(network: NexusNetwork, selector: String)") &&
-    nexusTorii.includes("data class NexusAssetAliasBinding(") &&
-    nexusTorii.includes("object NexusAssetDefinitionIdentity") &&
-    nexusTorii.includes("fun hasCanonicalWireShape(value: String): Boolean") &&
-    nexusTorii.includes("fun isQualifiedXorDefinition(definition: NexusAssetDefinition)") &&
-    nexusTorii.includes("NexusAssetDefinitionIdentity.isQualifiedXorDefinition(definition)") &&
-    nexusTorii.includes("NexusAssetDefinitionIdentity.hasCanonicalWireShape(assetDefinitionId)") &&
-    !nexusTorii.includes("getAllAssetDefinitions") &&
-    nexusTorii.includes("object NexusToriiResponseContract") &&
-    nexusTorii.includes('private const val MAX_FANOUT_ROUTES = 1_024') &&
-    nexusTorii.includes('private const val ROUTED_BY = "x-iroha-routed-by"') &&
-    nexusTorii.includes('private const val ROUTE_LANE_ID = "x-iroha-route-lane-id"') &&
-    nexusTorii.includes(
-      'private const val ROUTE_DATASPACE_ID = "x-iroha-route-dataspace-id"',
-    ) &&
-    nexusTorii.includes('private val MAX_LANE_ID = BigInteger("4294967295")') &&
-    nexusTorii.includes(
-      'private val MAX_DATASPACE_ID = BigInteger("18446744073709551615")',
-    ) &&
-    nexusTorii.includes("!isCanonicalRouteId(routeLaneId, MAX_LANE_ID)") &&
-    nexusTorii.includes(
-      "!isCanonicalRouteId(routeDataspaceId, MAX_DATASPACE_ID)",
-    ) &&
-    nexusTorii.includes(
-      'routedBy != null && routedBy !in setOf("local", "proxy")',
-    ) &&
-    nexusTorii.includes(
-      'private val COUNT = Regex("^(?:0|[1-9][0-9]{0,3})$")',
-    ) &&
-    nexusTorii.includes("requireFanout: Boolean = false") &&
-    nexusTorii.includes("firstFailure != null || requireFanout") &&
-    nexusTorii.includes("firstFailure != null || rawCounts.any { it == null }") &&
-    nexusTorii.includes("if (routedBy == null)") &&
-    nexusTorii.includes("routeLaneId != null || routeDataspaceId != null") &&
-    nexusTorii.includes("attempted <= 0") &&
-    nexusTorii.includes("it <= MAX_FANOUT_ROUTES") &&
-    nexusTorii.includes("succeeded != attempted") &&
-    nexusTorii.includes("counts.drop(2).any { it != 0 }") &&
-    nexusTorii.includes(
-      "NexusToriiResponseContract.validateFanout(\n                connection::getHeaderField,\n                requireFanout,",
-    ) &&
-    (nexusTorii.match(/requireFanout = true/g) ?? []).length >= 3 &&
+    nexusTorii.includes('"NEXUS_PUBLIC_INGRESS_UNAVAILABLE"') &&
+    nexusTorii.includes("httpStatus == 502 || httpStatus == 503") &&
+    nexusTorii.includes("NexusToriiResponseContract.validateFanout(") &&
     nexusToriiRoutesTest.includes(
       "qualified network uses exact outer response and typed request media",
     ) &&
-    nexusToriiRoutesTest.includes("listOf(NexusNetworks.minamoto)") &&
     nexusToriiRoutesTest.includes(
-      "Taira routes fail before transport when deployment manifest is absent",
+      "HTTP error envelope preserves deployment health without fanout headers",
     ) &&
-    nexusToriiRoutesTest.includes('"text/plain; charset=UTF-8"') &&
-    nexusToriiRoutesTest.includes('"application/json; profile=unexpected"') &&
-    nexusToriiRoutesTest.includes('"application/json, text/plain"') &&
-    nexusHistoryTest.includes(
-      'mcpResult(contentType = JsonPrimitive("application/json; profile=unexpected"))',
-    ) &&
-    /mcpResult\(\s*contentType = JsonPrimitive\("application\/json; charset=UTF-8"\)/.test(
-      nexusHistoryTest,
-    ) &&
-    nexusHistoryTest.includes(
-      'mcpResult(contentType = JsonPrimitive("application/json;"))',
-    ) &&
-    nexusToriiRoutesTest.includes("NORITO_TRANSACTION_REQUEST_MEDIA_TYPE") &&
-    nexusToriiRoutesTest.includes(
-      'https://minamoto.sora.org/v1/assets/definitions/xor%23universal',
-    ) &&
-    nexusToriiRoutesTest.includes("6TEAJqbb8oEPmLncoNiMRbLEK6tw") &&
-    nexusToriiRoutesTest.includes('status = "leased_grace"') &&
     nexusToriiRoutesTest.includes(
       "partial Torii fanout cannot masquerade as an authoritative success",
-    ) &&
-    nexusToriiRoutesTest.includes('mapOf("x-iroha-routed-by" to "proxy")') &&
-    nexusToriiRoutesTest.includes('mapOf("x-iroha-routed-by" to "local")') &&
-    nexusToriiRoutesTest.includes('mapOf("x-iroha-routed-by" to "Proxy")') &&
-    nexusToriiRoutesTest.includes('"x-iroha-route-lane-id" to "4294967295"') &&
-    nexusToriiRoutesTest.includes(
-      '"x-iroha-route-dataspace-id" to "18446744073709551615"',
-    ) &&
-    nexusToriiRoutesTest.includes('"x-iroha-route-lane-id" to "4294967296"') &&
-    nexusToriiRoutesTest.includes(
-      '"x-iroha-route-dataspace-id" to "18446744073709551616"',
-    ) &&
-    nexusToriiRoutesTest.includes('(complete - "x-iroha-routed-by")') &&
-    nexusToriiRoutesTest.includes(
-      'headerValue = mapOf("x-iroha-routed-by" to "proxy")::get',
-    ) &&
-    nexusToriiRoutesTest.includes('"x-iroha-route-lane-id" to "1"') &&
-    nexusToriiRoutesTest.includes('"x-iroha-route-dataspace-id" to "2"') &&
-    nexusToriiRoutesTest.includes("requireFanout = true") &&
-    [
-      "x-iroha-fanout-routes-attempted",
-      "x-iroha-fanout-routes-succeeded",
-      "x-iroha-fanout-routes-failed",
-      "x-iroha-fanout-routes-unavailable",
-      "x-iroha-fanout-routes-denied",
-      "x-iroha-fanout-routes-not-found",
-    ].every((header) => nexusTorii.includes(header)),
+    ),
   "NEXUS_TORII_HEALTH_CONTENT_NEGOTIATION_MISSING",
 );
 assert(
@@ -10716,6 +11246,7 @@ assert(
       "?limit=25&offset=50&count_mode=exact&scope=global",
     ) &&
     nexusTorii.includes("internal data class NexusAssetBalancePage(") &&
+    nexusTorii.includes("internal data class TairaAccountAssetPage(") &&
     nexusTorii.includes("val asset: String,") &&
     nexusTorii.includes("val items: List<NexusAssetBalance>,") &&
     nexusTorii.includes('val countMode: String') &&
@@ -10739,36 +11270,54 @@ assert(
   "NEXUS_EXACT_ASSET_PAGE_PROOF_MISSING",
 );
 assert(
-  nexusTorii.includes('"iroha.instructions.list"') &&
-    nexusTorii.includes("internal object NexusMcpResultContract") &&
-    nexusMcpImplementation.includes("requestContentType = \"application/json\"") &&
-    !nexusMcpImplementation.includes("requireFanout") &&
-    /val result = response\.result[\s\S]*?val structuredResult = NexusMcpResultContract\.validateEmbeddedRoute\([\s\S]*?result = result,[\s\S]*?requireFanout = true,[\s\S]*?\)[\s\S]*?NexusTransferHistoryParser\.page\([\s\S]*?result = structuredResult/.test(
-      nexusCommittedHistoryImplementation,
+  tairaMcpContract.includes(
+    'const val INSTRUCTIONS_TOOL = "iroha.instructions.list"',
+  ) &&
+    tairaMcpContract.includes(
+      '"asset_definition_id" to JsonPrimitive(definitionId)',
     ) &&
-    nexusTorii.includes('direct["body"] != null || direct["items"] != null') &&
-    nexusTorii.includes('structured["body"] !is JsonObject') &&
-    nexusTorii.includes('structured["items"] != null') &&
-    nexusTorii.includes("requireFanout: Boolean = false") &&
-    nexusTorii.includes("requireFanout = requireFanout") &&
-    nexusHistory.includes("BigDecimal") &&
-    nexusHistory.includes("NexusQuantityContract::isWireQuantity") &&
-    nexusHistory.includes("unsignedInteger") &&
-    nexusTorii.includes("NEXUS_HISTORY_REPEATED_PAGE") &&
-    nexusTorii.includes("val page = pageIndex + 1") &&
-    nexusTorii.includes("parsedPage.requireBoundedSourceCount(HISTORY_PAGE_SIZE)") &&
-    nexusHistory.includes("NEXUS_HISTORY_PAGE_SIZE_EXCEEDED") &&
-    nexusHistory.includes("NEXUS_HISTORY_INVALID_BATCH_ASSET") &&
-    nexusHistory.includes('"asset_definition"') &&
+    !nexusTorii.includes("iroha.accounts.history") &&
+    nexusHistory.includes(
+      "Parser for the current \`iroha.instructions.list\` explorer projection",
+    ) &&
+    nexusHistory.includes(
+      'val rawHash = element.exactString("transaction_hash")',
+    ) &&
+    nexusHistory.includes(
+      "val hash = NexusTransactionHash.normalized(rawHash)",
+    ) &&
+    nexusHistory.includes("?.takeIf { it == rawHash }") &&
+    nexusHistory.includes('element.canonicalLong("block")') &&
+    nexusHistory.includes('element.exactString("authority")') &&
+    nexusHistory.includes('element.exactString("created_at")') &&
+    nexusHistory.includes('element.exactString("kind") != "Transfer"') &&
+    nexusHistory.includes('(element["box"] as? JsonObject)') &&
+    nexusHistory.includes('payload.exactString("variant")') &&
+    nexusHistory.includes('"AssetBatch"') &&
+    nexusHistory.includes('pagination.canonicalLong("total_pages")') &&
+    nexusHistory.includes('pagination.canonicalLong("total_items")') &&
+    nexusHistory.includes("TairaTestnetContract.XOR_SCALE") &&
+    nexusCommittedHistoryImplementation.includes(
+      "TairaMcpContract.instructionsRequest(",
+    ) &&
+    nexusCommittedHistoryImplementation.includes(
+      "requireFanout = network.id != WalletNetworkId.TAIRA",
+    ) &&
+    nexusCommittedHistoryImplementation.includes(
+      "parsedPage.requirePageContract(pageNumber, HISTORY_PAGE_SIZE)",
+    ) &&
     nexusHistoryTest.includes(
-      "batch history requires the exact XOR definition on every leg",
+      "current instruction projection parses bidirectional Taira transfer history",
     ) &&
     nexusHistoryTest.includes(
-      "MCP history requires a complete embedded route fanout proof",
+      "instruction history request uses the bidirectional definition selector",
     ) &&
-    nexusHistoryTest.includes("includesStructuredShadowItems = true") &&
-    nexusHistoryTest.includes("NexusTransferHistoryPage(emptyList(), 101)") &&
-    nexusHistoryTest.includes('"x-iroha-routed-by" to JsonPrimitive("Proxy")'),
+    nexusHistoryTest.includes(
+      "Taira history rejects more than nine fractional digits",
+    ) &&
+    nexusHistoryTest.includes(
+      "Taira history requires canonical committed explorer evidence",
+    ),
   "NEXUS_BOUNDED_EXACT_HISTORY_MISSING",
 );
 assert(
@@ -10816,11 +11365,11 @@ assert(
     /assetDefinitionId\s*=\s*null[\s\S]{0,500}?pendingTransactions\s*=\s*emptyList\(\)/.test(
       nexusPortfolioRepository,
     ) &&
-    /pendingTransactions\s*=\s*emptyList\(\)[\s\S]{0,500}?recoveryPendingTransactions\s*=\s*pending/.test(
+    /pendingTransactions\s*=\s*emptyList\(\)[\s\S]{0,1000}?recoveryPendingTransactions\s*=\s*pending/.test(
       nexusPortfolioRepository,
     ) &&
-    cardsHubScreen.includes("balance.recoveryPendingTransactions.forEach") &&
-    cardsHubScreen.includes('append(" · pending asset recovery")') &&
+    /if \(balance\.recoveryPendingTransactions\.isNotEmpty\(\)\) WalletErrorMessage\("NEXUS_RECOVERY_REQUIRED", onRecovery = onRecovery\)/.test(nexusWalletScreens) &&
+    !/recoveryPendingTransactions\.(?:forEach|map)/.test(nexusWalletScreens) &&
     nexusPortfolioRepository.includes("errorCode = if (pendingRecoveryRequired)") &&
     nexusPortfolioRepository.includes('"NEXUS_PENDING_RECOVERY_REQUIRED"') &&
     nexusPortfolioRepository.includes(
@@ -10859,10 +11408,13 @@ assert(
       "normalAccess.allowsQualifiedReads",
     ) &&
     nexusPendingOverlayValidatorTest.includes("recoveryAccess.allowsSends") &&
-    cardsHubScreen.includes(
-      'balance.errorCode == "NEXUS_PENDING_RECOVERY_REQUIRED"',
-    ) &&
-    cardsHubScreen.includes("pending_transaction_recovery_required") &&
+    nexusWalletScreens.includes('WalletErrorMessage(balance.errorCode ?: "NEXUS_UNAVAILABLE", onRecovery = onRecovery)') &&
+    nexusWalletScreens.includes("balance.errorCode?.let { WalletErrorMessage(it, onRecovery = onRecovery) }") &&
+    /"RECOVERY" in code[^\n]*-> WalletIssue\.RECOVERY/.test(walletDisplay) &&
+    walletStatus.includes("val issue = walletIssue(code)") &&
+    walletStatus.includes("WalletIssue.RECOVERY -> R.string.wallet_issue_recovery") &&
+    /if \(issue == WalletIssue\.RECOVERY && onRecovery != null\) \{\s*TextButton\(onClick = onRecovery\)/.test(walletStatus) &&
+    walletStatus.includes("R.string.wallet_backup_options") &&
     nexusPendingOverlayValidatorTest.includes(
       "pending overlay is bound to exact wallet network and durable state",
     ) &&
@@ -10898,13 +11450,10 @@ assert(
       "unbound and retired chain rows project only as recovery evidence",
     ) &&
     nexusPendingOverlayValidatorTest.includes(
-      "Taira current identity requires exact manifest namespace for either mapping",
+      "Taira current identity requires the fixed first release namespace",
     ) &&
     nexusCoordinatorTest.includes(
       "unbound and retired Taira journals remain immutable without Torii calls",
-    ) &&
-    nexusCoordinatorTest.includes(
-      "Taira cannot sign or journal without an admitted deployment manifest",
     ) &&
     nexusCoordinatorTest.includes(
       "coVerify(exactly = 0) { torii.transactionStatus(any(), any()) }",
@@ -10913,7 +11462,9 @@ assert(
       "private suspend fun requirePendingChainRecoveryClear()",
     ) &&
     nexusCoordinator.includes("val localId = durablePendingLocalId(network)") &&
-    nexusCoordinator.includes('return "${binding.pendingJournalPrefix}$nonce"') &&
+    nexusCoordinator.includes(
+      'return "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}$nonce"',
+    ) &&
     nexusPendingReconciler.includes(
       "check(WalletIdentityDao.hasCurrentChainIdentity(current))",
     ) &&
@@ -10937,7 +11488,7 @@ assert(
       "coVerify(exactly = 0) { signer.sign(any(), any()) }",
     ) &&
     nexusCoordinatorTest.includes(
-      "coVerify(exactly = 0) { torii.submit(any(), any()) }",
+      "coVerify(exactly = 0) { torii.submit(any(), any(), any()) }",
     ),
   "NEXUS_PENDING_CHAIN_IDENTITY_GUARD_MISSING",
 );
@@ -10987,8 +11538,8 @@ assert(
     cardsHubScreen.includes(
       "sora2Portfolio != null || nexusPortfolio.isNotEmpty()",
     ) &&
-    cardsHubScreen.includes('text = "SORA2"') &&
-    cardsHubScreen.includes("R.string.network_badge_mainnet") &&
+    nexusWalletScreens.includes('NetworkSummary("SORA2", false, balance.xorQuantity,') &&
+    nexusWalletScreens.includes("if (testnet) R.string.network_badge_testnet else R.string.network_badge_mainnet") &&
     cardsHubScreen.includes("onSora2Receive") &&
     cardsHubScreen.includes("onSora2Open") &&
     cardsHubViewModelTest.includes(
@@ -11004,7 +11555,13 @@ assert(
     strippedNexusPortfolioRepository,
   ) &&
     strippedNexusPortfolioRepository.includes(
-      "sendQualification.isQualifiedFor(network)",
+      "sendQualification.capabilitiesFor(network)",
+    ) &&
+    strippedNexusPortfolioRepository.includes(
+      "sendCapabilities.supportsSend",
+    ) &&
+    strippedNexusPortfolioRepository.includes(
+      "sendCapabilities = sendCapabilities",
     ) &&
     !/\bNexusTransactionSigner\b/.test(strippedNexusPortfolioRepository) &&
     !/\bNexusFinalityReader\b/.test(strippedNexusPortfolioRepository) &&
@@ -11043,7 +11600,10 @@ assert(
       "network.chainDiscriminant",
     ) &&
     nexusPortfolioRepository.includes(
-      "sendQualification.isQualifiedFor(network)",
+      "sendQualification.capabilitiesFor(network)",
+    ) &&
+    nexusPortfolioRepository.includes(
+      "NexusNetworks.find(networkId) != null",
     ) &&
     cardsHubViewModel.includes("_nexusSend.value = NexusSendUiState()") &&
     cardsHubViewModel.includes(
@@ -11065,39 +11625,40 @@ assert(
     cardsHubViewModel.includes(
       "if (isCurrentSora2Wallet(walletId)) router.openQrCodeFlow()",
     ) &&
-    cardsHubScreen.includes("remember(sora2?.address)") &&
-    cardsHubScreen.includes(
+    nexusWalletScreens.includes("remember(sora2?.address)") &&
+    nexusWalletScreens.includes(
       "val scopedBalances = balances.filter { it.walletId == sora2?.address }",
     ) &&
-    cardsHubScreen.includes("LaunchedEffect(scopedBalances)") &&
-    cardsHubScreen.includes(
-      "receiveBalance?.takeIf(isNexusBalanceCurrent)",
-    ) &&
-    cardsHubScreen.includes(
+    /LaunchedEffect\(scopedBalances\) \{\s*selected = selected\?\.let \{ previous ->\s*scopedBalances\.singleOrNull \{\s*it\.walletId == previous\.walletId && it\.networkId == previous\.networkId &&\s*it\.address == previous\.address\s*\}\?\.takeIf\(isNexusBalanceCurrent\)/.test(nexusWalletScreens) &&
+    nexusWalletScreens.includes("selected?.takeIf(isNexusBalanceCurrent)?.let") &&
+    /if \(receiving\) NexusReceiveSheet\([\s\S]*?isCurrent = \{ isNexusBalanceCurrent\(balance\) \}/.test(nexusWalletScreens) &&
+    /onSend = \{\s*if \(isNexusBalanceCurrent\(balance\)\) \{\s*selected = null\s*onSend\(balance\)/.test(nexusWalletScreens) &&
+    nexusWalletScreens.includes(
       "if (isNexusBalanceCurrent(balance))",
     ) &&
-    cardsHubScreen.includes(
+    nexusWalletScreens.includes(
       "if (isSora2WalletCurrent(balance.address))",
     ) &&
-    cardsHubScreen.includes("R.string.network_badge_testnet") &&
-    cardsHubScreen.includes("clipboard.setText(AnnotatedString(balance.address))") &&
-    cardsHubScreen.includes("uriHandler.openUri(balance.explorerBaseUrl)") &&
-    cardsHubScreen.includes("balance.pendingTransactions.forEach") &&
-    cardsHubScreen.includes("balance.confirmedTransfers.take(5).forEach") &&
-    cardsHubScreen.includes("var historyBalance by remember(sora2?.address)") &&
-    cardsHubScreen.includes(
-      "key(balance.walletId, balance.networkId, balance.address)",
-    ) &&
-    cardsHubScreen.includes("LazyColumn(") &&
-    cardsHubScreen.includes(".heightIn(max = 480.dp)") &&
-    cardsHubScreen.includes("items = balance.confirmedTransfers") &&
-    cardsHubScreen.includes("historyBalance?.takeIf(isNexusBalanceCurrent)") &&
-    cardsHubScreen.includes("R.string.network_view_full_history") &&
-    cardsHubScreen.includes("balance.historyErrorCode == null") &&
-    cardsHubScreen.includes("expanded = true") &&
-    cardsHubScreen.includes("val counterparty = if (outgoing)") &&
-    cardsHubScreen.includes("transfer.transactionHash,") &&
-    cardsHubScreen.includes("transfer.timestampMillis,") &&
+    cardsHubScreen.includes("NexusPortfolioCard(") &&
+    cardsHubScreen.includes("isNexusBalanceCurrent = isNexusBalanceCurrent") &&
+    cardsHubScreen.includes("isSora2WalletCurrent = isSora2WalletCurrent") &&
+    nexusWalletScreens.includes("R.string.network_badge_testnet") &&
+    nexusWalletScreens.includes("if (isCurrent()) { clipboard.setText(AnnotatedString(balance.address))") &&
+    nexusWalletScreens.includes("uriHandler.openUri(balance.explorerBaseUrl)") &&
+    nexusWalletScreens.includes("balance.pendingTransactions.forEach") &&
+    nexusWalletScreens.includes("balance.confirmedTransfers.forEach { NexusTransferRow(it, balance.address) }") &&
+    nexusWalletScreens.includes("WalletSheet(title = stringResource(R.string.wallet_network_activity)") &&
+    walletSheet.includes("Dialog(onDismissRequest") &&
+    walletSheet.includes("Modifier.fillMaxSize()") &&
+    walletSheet.includes("Column(Modifier.weight(1f).verticalScroll(rememberScrollState())") &&
+    nexusWalletScreens.includes("balance.historyErrorCode?.let { WalletErrorMessage(it) }") &&
+    nexusWalletScreens.includes("balance.historyErrorCode == null") &&
+    nexusWalletScreens.includes("var expanded by remember(transfer.transactionHash)") &&
+    nexusWalletScreens.includes("expanded = !expanded") &&
+    nexusWalletScreens.includes("if (expanded) SelectionContainer") &&
+    nexusWalletScreens.includes("if (transfer.sender == address) transfer.receiver else transfer.sender") &&
+    nexusWalletScreens.includes("R.string.network_history_transaction_hash, transfer.transactionHash") &&
+    nexusWalletScreens.includes("walletDateTime(transfer.timestampMillis)") &&
     commonStrings.includes('name="network_view_full_history"') &&
     commonStrings.includes('name="network_history_counterparty"') &&
     commonStrings.includes('name="network_history_transaction_hash"') &&
@@ -11145,7 +11706,7 @@ assert(
       "featureManager.observeTairaVisible(featureState.tairaVisible)",
     ) &&
     nexusPortfolioTairaVisibilityTest.includes(
-      "hidden Taira is removed before any balance history or send qualification call",
+      "hidden canonical Taira row is removed before Torii reads",
     ) &&
     nexusPortfolioTairaVisibilityTest.includes(
       "coVerify(exactly = 0) { torii.getXorBalance(any(), any()) }",
@@ -11160,7 +11721,8 @@ assert(
     nexusPendingReconciler.includes("committedXorTransfers") &&
     nexusPendingReconciler.includes("transfer.transactionHash") &&
     nexusPendingReconciler.includes("transfer.receiver") &&
-    nexusPendingReconciler.includes("exactHistoryMatches != 1") &&
+    nexusPendingReconciler.includes("transfersForSignedHash.singleOrNull()") &&
+    nexusPendingReconciler.includes("if (!exactHistoryMatch)") &&
     nexusPendingReconciler.includes("NEXUS_COMMITTED_HEIGHT_MISSING") &&
     nexusPendingReconciler.includes("committedAt > 0L") &&
     nexusPendingReconciler.includes(
@@ -11206,7 +11768,7 @@ assert(
     ) &&
     nexusCoordinatorTest.includes("entrypointHash = hash") &&
     nexusCoordinatorTest.includes(
-      "duplicate exact transfer history cannot finalize a committed send",
+      "conflicting transfer under the signed hash cannot finalize a committed send",
     ) &&
     nexusCoordinatorTest.includes(
       "finality checkpoint from another chain cannot finalize a committed send",
@@ -11260,9 +11822,10 @@ assert(
     signerBinding.includes("): NexusToriiReadClient = client") &&
     nexusCoordinator.includes("private val torii: NexusToriiClient") &&
     nexusCoordinator.includes(
-      "torii.submit(network, staged.signed.noritoBytes)",
+      "expectedHash = staged.transactionHash",
     ) &&
-    soraApplication.includes("nexusPendingRecoveryScheduler.ensureOnStartup()") &&
+    pendingRecoveryStartupScheduler.includes("nexusScheduler.ensureOnStartup()") &&
+    splashViewModel.includes("pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()") &&
     nexusCoordinator.includes("pendingRecoveryScheduler.kickAfterJournal()") &&
     nexusPendingReconciler.includes(
       "remainingUnattempted = candidates.size - attempted.size",
@@ -11293,7 +11856,7 @@ assert(
     (nexusCoordinator.match(/requireSendEnabled\([^)]*request\.networkId\)/g) ?? [])
       .length >= 4 &&
     nexusCoordinator.includes(
-      "networkId != WalletNetworkId.TAIRA || state.tairaVisible",
+      "(state.tairaAvailable && state.tairaVisible)",
     ) &&
     nexusCoordinator.includes("val finalQuote = signer.quote") &&
     nexusCoordinator.includes("canonicalPositiveFee(quote.fee)") &&
@@ -11328,7 +11891,7 @@ assert(
       "Taira send is rejected when test networks are hidden",
     ) &&
     nexusCoordinatorTest.includes(
-      "coVerify(exactly = 0) { torii.submit(any(), any()) }",
+      "coVerify(exactly = 0) { torii.submit(any(), any(), any()) }",
     ),
   "NEXUS_SIGNING_PENDING_DELETION_RACE_GUARD_MISSING",
 );
@@ -11807,8 +12370,11 @@ assert(
     polkamarktViewModel.includes("reviewBatchClaims") &&
     polkamarktViewModel.includes("requestClaimConfirmation") &&
     polkamarktViewModel.includes("requireCurrentClaimConfirmation") &&
-    polkamarktScreen.includes("Review finalized claims") &&
-    polkamarktScreen.includes("Finalized share balance not reviewed") &&
+    /enabled = !state\.claimReviewLoading,\s*onClick = onReviewBatchClaims/.test(polkamarktScreen) &&
+    polkamarktScreen.includes("Check available payouts") &&
+    /val availableShares = state\.authoritativeMarket\?\.let \{[\s\S]*?state\.authoritativeClaimable\?\.yesShares[\s\S]*?state\.authoritativeClaimable\?\.noShares[\s\S]*?availableShares\?\.let/.test(polkamarktScreen) &&
+    /claimable\?\.let \{[\s\S]*?formatUnits\(it\.yesShares\)[\s\S]*?formatUnits\(it\.noShares\)[\s\S]*?\} \?: "Check your latest share balance"/.test(polkamarktScreen) &&
+    /if \(!reviewed && marketId != null\) \{[\s\S]*?onClick = \{ onReview\(marketId\) \}/.test(polkamarktScreen) &&
     !polkamarktScreen.includes("isPositive(position.claimablePayoutUsd)") &&
     !polkamarktScreen.includes("if (position.isCreator == true)"),
   "POLKAMARKT_RUNTIME_AUTHORITATIVE_PRESENTATION_MISSING",
@@ -12508,7 +13074,7 @@ const blockedTemplateFundedCanaryNetworks = {
     chainId: "fc56984b-2be7-431d-840e-21514d1883f0",
     i105Discriminant: 369,
     toriiBaseUrl: "https://taira.sora.org",
-    explorerBaseUrl: "https://taira-explorer.sora.org",
+    explorerBaseUrl: "https://taira.sora.org",
     hardMaximumAmountCanonical: "1",
     hardMaximumFeeCanonical: "1",
     isTestnet: true,
@@ -14176,19 +14742,30 @@ if (
       ?.lockFilePaths ?? []),
   ].filter((path) => typeof path === "string" && path.length > 0);
   const migrationQualificationContractPaths = [...new Set([
+    "docs/modernization/qualification/android-dependency-materialization-2026-09-06.json",
+    "scripts/lib/android-production-lock-inventory-v1.mjs",
+    "scripts/test-android-production-lock-inventory-v1.mjs",
+    "scripts/lib/android-dependency-signing-review-v1.mjs",
+    "scripts/test-android-dependency-signing-review-v1.mjs",
+    "scripts/test-android-qualified-candidate-package-v1.mjs",
+    "baselineprofile/build.gradle.kts",
     ".github/workflows/production_release_qualification.yml",
+    "scripts/run-production-connected-device-qualification.sh",
+    "scripts/run-signed-production-apk-device-smoke.sh",
     "scripts/run-encrypted-wallet-upgrade-qualification.sh",
     "scripts/run-migration-manager-production-path-qualification.sh",
     "scripts/verify-production-modernization.mjs",
     "scripts/verify-android-migration-qualification.mjs",
-    "scripts/lib/android-migration-qualification-v7.mjs",
-    "scripts/lib/android-migration-raw-evidence-v1.mjs",
-    "scripts/lib/android-migration-controller-envelope-v1.mjs",
+    "scripts/lib/android-migration-qualification-v8.mjs",
+    "scripts/lib/android-migration-coverage-v1.mjs",
+    "scripts/lib/android-migration-raw-evidence-v2.mjs",
+    "scripts/lib/android-migration-controller-envelope-v2.mjs",
     "scripts/collect-android-migration-raw-evidence.mjs",
     "scripts/extract-android-migration-controller-envelope.mjs",
-    "scripts/test-android-migration-raw-evidence-v1.mjs",
-    "scripts/test-android-migration-controller-envelope-v1.mjs",
-    "scripts/test-android-migration-qualification-v7-contract.mjs",
+    "scripts/test-android-migration-raw-evidence-v2.mjs",
+    "scripts/test-android-migration-controller-envelope-v2.mjs",
+    "scripts/test-android-migration-qualification-v8-contract.mjs",
+    "scripts/test-android-wallet-continuity-source-contract.mjs",
     "docs/modernization/production-release-checklist.md",
     "docs/modernization/qualification/android-migration-matrix-README.md",
     "docs/modernization/qualification/android-migration-matrix.blocked.json",
@@ -14196,8 +14773,17 @@ if (
     "docs/modernization/qualification/android-migration-trust.blocked.json",
     "app/src/main/java/jp/co/soramitsu/sora/SoraApp.kt",
     "app/src/androidTestQualification/java/jp/co/soramitsu/sora/splash/domain/MigrationManagerProductionPathQualificationTest.kt",
+    "app/src/androidTest/java/jp/co/soramitsu/sora/ux/CryptoRuntimeCompatibilityTest.kt",
     "app/src/main/java/jp/co/soramitsu/sora/splash/domain/MigrationManager.kt",
     "app/src/main/java/jp/co/soramitsu/sora/splash/domain/SplashInteractor.kt",
+    "app/src/main/java/jp/co/soramitsu/sora/splash/domain/PendingRecoveryStartupScheduler.kt",
+    "app/src/main/java/jp/co/soramitsu/sora/splash/presentation/SplashViewModel.kt",
+    "app/src/test/java/jp/co/soramitsu/sora/splash/domain/PendingRecoveryStartupSchedulerTest.kt",
+    "app/src/test/java/jp/co/soramitsu/sora/splash/presentation/SplashViewModelTest.kt",
+    "feature_wallet_impl/src/main/java/jp/co/soramitsu/feature_wallet_impl/presentation/cardshub/NexusWalletScreens.kt",
+    "common/src/main/java/jp/co/soramitsu/common/presentation/compose/components/WalletSheet.kt",
+    "common/src/main/java/jp/co/soramitsu/common/presentation/compose/components/WalletStatus.kt",
+    "common/src/main/java/jp/co/soramitsu/common/presentation/WalletDisplay.kt",
     "app/src/qualification/AndroidManifest.xml",
     "app/src/qualification/java/jp/co/soramitsu/sora/qualification/MigrationQualificationApplication.kt",
     "app/src/test/java/jp/co/soramitsu/sora/splash/domain/MigrationManagerSafetyTest.kt",
@@ -14219,6 +14805,7 @@ if (
     "common/src/main/res/values/strings.xml",
     "common/src/test/java/jp/co/soramitsu/common/io/FileManagerAtomicEntryPolicyTest.kt",
     "common/src/androidTest/java/jp/co/soramitsu/common/io/FileManagerAtomicRecoveryTest.kt",
+    "common/src/androidTest/java/jp/co/soramitsu/common/data/LegacyAccountPreferenceUpgradeTest.kt",
     "common/src/test/java/jp/co/soramitsu/common/network/BoundedHttpTextClientTest.kt",
     "common/src/test/java/jp/co/soramitsu/common/network/StrictJsonDocumentAdmissionTest.kt",
     "common/src/test/java/jp/co/soramitsu/common/nexus/IrohaKeyDerivationTest.kt",
@@ -14233,6 +14820,8 @@ if (
     "core_db/src/main/java/jp/co/soramitsu/core_db/WalletMigrationIntegrity.kt",
     "core_db/src/main/java/jp/co/soramitsu/core_db/WalletUpgradeBackup.kt",
     "core_db/src/main/java/jp/co/soramitsu/core_db/dao/AccountDao.kt",
+    "core_db/src/main/java/jp/co/soramitsu/core_db/dao/CardsHubDao.kt",
+    "core_db/src/main/java/jp/co/soramitsu/core_db/migrations/LegacyCacheMigration58.kt",
     "core_db/src/main/java/jp/co/soramitsu/core_db/dao/WalletIdentityDao.kt",
     "core_db/src/main/java/jp/co/soramitsu/core_db/migrations/WalletDeletionMigration75.kt",
     "core_db/src/main/java/jp/co/soramitsu/core_db/migrations/WalletIdentityMigration74.kt",
@@ -14256,6 +14845,7 @@ if (
     "feature_account_impl/src/test/java/jp/co/soramitsu/feature_account_impl/data/repository/CredentialsRepositoryTest.kt",
     "feature_account_impl/src/main/java/jp/co/soramitsu/feature_account_impl/data/repository/UserRepositoryImpl.kt",
     "feature_account_impl/src/test/java/jp/co/soramitsu/feature_account_impl/data/repository/UserRepositoryTest.kt",
+    "feature_account_impl/src/test/java/jp/co/soramitsu/feature_account_impl/data/repository/LegacySingleAccountUpgradeTest.kt",
     "feature_account_impl/src/main/java/jp/co/soramitsu/feature_account_impl/data/repository/datasource/PrefsCredentialsDatasource.kt",
     "feature_account_impl/src/main/java/jp/co/soramitsu/feature_account_impl/data/repository/datasource/PrefsUserDatasource.kt",
     "feature_wallet_api/src/main/java/jp/co/soramitsu/feature_wallet_api/domain/interfaces/WalletDatasource.kt",
@@ -14355,6 +14945,7 @@ if (
     "identity",
     "privacy",
     "sourceSchemaVersions",
+    "preAccountUpgrade",
     "targetSchemaVersion",
     "retainedSchemaCohortCount",
     "singleAccountCohortCount",
@@ -14421,13 +15012,13 @@ if (
       : "";
   let authenticatedMigrationQualification = null;
   try {
-    authenticatedMigrationQualification = verifyAndroidMigrationQualificationV7({
+    authenticatedMigrationQualification = verifyAndroidMigrationQualificationV8({
       root,
       expectedQualificationContractSha256:
         migrationQualificationContractSha256,
     });
   } catch {
-    assert(false, "ANDROID_MIGRATION_QUALIFICATION_V7_AUTHENTICATION_FAILED");
+    assert(false, "ANDROID_MIGRATION_QUALIFICATION_V8_AUTHENTICATION_FAILED");
   }
   authenticatedMigrationQualificationReceiptSha256 =
     authenticatedMigrationQualification?.receiptSha256 ?? null;
@@ -14445,12 +15036,12 @@ if (
         migrationQualification,
         expectedMigrationQualificationKeys,
       ) &&
-      migrationQualification.schemaVersion > 6 &&
+      migrationQualification.schemaVersion > 7 &&
       migrationQualification.contractId !==
         "sora-android-wallet-migration-qualification-v6" &&
-      migrationQualification.schemaVersion === 7 &&
+      migrationQualification.schemaVersion === 8 &&
       migrationQualification.contractId ===
-        "sora-android-wallet-migration-qualification-v7" &&
+        "sora-android-wallet-migration-qualification-v8" &&
       migrationQualification.platform === "android" &&
       migrationQualification.status === "qualified" &&
       authenticatedMigrationQualification?.receiptSha256 ===
@@ -14493,10 +15084,10 @@ if (
       migrationQualification.privacy?.perWalletRecordsIncluded === false &&
       Array.isArray(migrationQualification.sourceSchemaVersions) &&
       migrationQualification.sourceSchemaVersions.join(",") ===
-        Array.from({ length: 19 }, (_, index) => index + 58).join(",") &&
+        [50, ...Array.from({ length: 19 }, (_, index) => index + 58)].join(",") &&
       migrationQualification.targetSchemaVersion === 77 &&
-      migrationQualification.retainedSchemaCohortCount === 76 &&
-      migrationQualification.singleAccountCohortCount === 38 &&
+      migrationQualification.retainedSchemaCohortCount === 78 &&
+      migrationQualification.singleAccountCohortCount === 40 &&
       migrationQualification.multiAccountCohortCount === 38 &&
       migrationQualification.successfulSecretSourceCohortCount === 6 &&
       migrationQualification.secretFailureCohortCount === 2 &&
@@ -14936,6 +15527,20 @@ assert(
     productionRolloutTrustStateQualified &&
     productionRolloutValidator.includes("const COHORT_SEQUENCE = [1, 5, 25, 100]") &&
     productionRolloutValidator.includes("const MINIMUM_DWELL_SECONDS = 48 * 60 * 60") &&
+    tairaDeploymentFreshnessV1.includes(
+      "TAIRA_DEPLOYMENT_CANDIDATE_MAXIMUM_AGE_SECONDS_V1 = 6 * 60 * 60",
+    ) &&
+    tairaDeploymentFreshnessV1.includes(
+      "TAIRA_DEPLOYMENT_ROLLOUT_MAXIMUM_AGE_SECONDS_V1 =",
+    ) &&
+    tairaDeploymentFreshnessV1.includes("7 * 24 * 60 * 60") &&
+    productionRolloutValidator.includes(
+      "maximumTairaDeploymentAdmissionAgeSecondsV1(targetRaw)",
+    ) &&
+    productionRolloutV3ContractHarness.includes("72 * 60 * 60") &&
+    productionRolloutV3ContractHarness.includes(
+      "mandatory 48-hour staged-rollout dwell",
+    ) &&
     productionRolloutValidator.includes(
       "metrics.eligibleTerminalFailureEvents * 100 <= eligible",
     ) &&

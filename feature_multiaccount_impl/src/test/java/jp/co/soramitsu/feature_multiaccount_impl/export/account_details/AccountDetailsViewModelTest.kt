@@ -128,10 +128,21 @@ class AccountDetailsViewModelTest {
             mainRouter,
             resourceManager,
             copy,
-            backupService,
+            jp.co.soramitsu.common.backup.CloudBackupProvider(true) { backupService },
             coroutineManager,
             account.substrateAddress,
         )
+    }
+
+    @Test
+    fun `optional backup lookup failure leaves local account details available`() = runTest {
+        given(backupService.isAccountBackedUp("address")).willAnswer { throw IllegalStateException("Google unavailable") }
+        val viewModel = AccountDetailsViewModel(multiAccInteractor, mainRouter, resourceManager, copy,
+            jp.co.soramitsu.common.backup.CloudBackupProvider(true) { backupService }, coroutineManager, account.substrateAddress)
+        testScheduler.advanceUntilIdle()
+        assertEquals(account.substrateAddress, viewModel.accountDetailsScreenState.value?.address)
+        assertEquals(true, viewModel.accountDetailsScreenState.value?.isMnemonicAvailable)
+        org.junit.Assert.assertNull(viewModel.accountDetailsScreenState.value?.isBackupAvailable)
     }
 
     @Test

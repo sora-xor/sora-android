@@ -18,11 +18,11 @@ This release is fail-closed. A build is not a production candidate while
   `lintProductionRelease`, assemble and bundle the minified signed production variant, require a
   nonempty regular R8 mapping file, verify the release APK signature, install that exact APK on an
   API-36 device, and launch its production `SplashActivity` before candidate admission.
-- Export Room schema 77 and migrate retained snapshots for every shipped schema 58–76 under
+- Export Room schema 77 and migrate retained snapshots for released pre-multiaccount Room 50 and retained schemas 58–76 under
   both DELETE and WAL journal modes, including the journaled explicit-wallet-deletion and generic
-  SORA2 ambiguity tables and crash-recovery matrix. The retained-schema identity matrix is 76
-  distinct cohorts: 19 source schemas × 2 journal modes × exact single- and multi-account
-  inventories.
+  SORA2 ambiguity tables and crash-recovery matrix. The retained-schema identity matrix is 78
+  distinct cohorts: Room 50 single-account plus 19 single- and multi-account source schemas,
+  each under DELETE and WAL journal modes.
 - Generate the current schema 77 from `AppDatabase` and retained schemas 74, 75, and 76 with the
   test-only `AppDatabaseV74SchemaFixture`, `AppDatabaseV75SchemaFixture`, and
   `AppDatabaseV76SchemaFixture` using the pinned Room/KSP compiler. Copy each retained JSON byte-for-byte
@@ -36,7 +36,7 @@ This release is fail-closed. A build is not a production candidate while
   explicitly watch-only, missing/corrupt secret, interrupted activation, rollback, reinstall,
   low-storage, WAL, and journal-mode fixtures.
 - After the complete matrix passes, record only non-sensitive aggregate proof in
-  `docs/modernization/qualification/android-migration-matrix.json`: schemas 58–76, target 77,
+  `docs/modernization/qualification/android-migration-matrix.json`: released Room 50 and schemas 58–76, target 77,
   zero lost accounts, SORA2 signing parity, and the independently reviewed SHA-256 identities of
   the exact exported `74.json`, `75.json`, `76.json`, and `77.json` Room schemas. All four schema files must be regular,
   non-symlink files whose embedded Room version and bytes match that receipt. The release verifier
@@ -50,8 +50,8 @@ This release is fail-closed. A build is not a production candidate while
   Failure-only tests, mocked address conversion, placeholder account rows, or a public-key-only
   vector cannot qualify those fields. The current-schema snapshot must use a pinned public
   SORA2 vector and a coherent verified activation journal; placeholder addresses, synthetic
-  public keys, and count-only assertions do not qualify. Record the aggregate counts exactly: 76 retained-schema
-  cohorts (38 single-account and 38 multi-account), six successful secret-source cohorts
+  public keys, and count-only assertions do not qualify. Record the aggregate counts exactly: 78 retained-schema
+  cohorts (40 single-account and 38 multi-account), six successful secret-source cohorts
   (12-word, 24-word, retained 15-word SORA2-only, raw seed, retained keypair-only legacy secret,
   and watch-only), two secret-failure cohorts, and one exact current-schema snapshot cohort, seven isolated production-path cohorts,
   and five ordered encrypted-storage process phases. Record `productionPathCohortCount` as exactly
@@ -61,13 +61,13 @@ This release is fail-closed. A build is not a production candidate while
   encrypted key tuple for every signing source, reject every partial private/public/nonce tuple,
   and reject conflicting mnemonic, raw-seed, keypair, or watch-only evidence for the verified
   source label. Bind
-  the receipt to the full direct migration/crypto/storage/database test closure, all retained Room schemas
-  58–76, build and dependency provenance, reviewed verification metadata and lock files, workflow,
+  the receipt to the full direct migration/crypto/storage/database test closure, released Room 50
+  and retained Room schemas 58–76, build and dependency provenance, reviewed verification metadata and lock files, workflow,
   runner, checklist, and verifier through `qualificationContractSha256`; any source or dependency
   evidence change invalidates the receipt. The receipt has an exact aggregate-only key allowlist and must not carry
   free-form notes, per-wallet rows, addresses, account identifiers, phrases, seeds, private keys,
   signatures, or raw signed payloads.
-- Receipt schema 7 must also record a positive retained release-produced snapshot count and the
+- Receipt schema 8 must also record a positive retained release-produced snapshot count and the
   reviewed SHA-256 of its manifest; the exact executed test-method counts for
   `WalletIdentityMigration75Test`, `WalletUpgradeBackupTest`, `MigrationManagerSafetyTest`,
   `MigrationManagerProductionPathQualificationTest`, `EncryptedWalletMigrationStorageTest`, and
@@ -79,12 +79,12 @@ This release is fail-closed. A build is not a production candidate while
   method inventory, APK identity, report, and transcript. Source inspection, inferred
   counters, shell exit status, or a partial run cannot produce the receipt. Follow
   `docs/modernization/qualification/android-migration-matrix-README.md`.
-- Authenticate schema 7 and evidence-manifest schema 2 with the independently pinned Android migration trust root: a distinct
+- Authenticate receipt schema 8 and evidence-manifest schema 3 with the independently pinned Android migration trust root: a distinct
   device producer and reviewer, role-prefixed P-256 key IDs, the reviewer signature over the exact
   receipt, and producer plus reviewer signatures over the exact evidence manifest. Bind the
   protected source revision, run UUID, monotonic sequence, app-build identity, four fixed-path
   qualified aggregate artifacts, the fixed-path non-authorizing raw-execution artifact, and the
-  seven-day/48-hour/24-hour replay policy. Schema 6/v1 and older wire shapes populated with copied
+  seven-day/48-hour/24-hour replay policy. Receipt schema 7 and evidence-manifest schema 2 or older wire shapes populated with copied
   hashes or true booleans are not evidence and must be rejected.
 - Keep production admission blocked until a separately reviewed protected handoff can materialize
   the signed migration receipt, evidence, trust root, public keys, signatures, and five fixed-path
@@ -137,7 +137,7 @@ This release is fail-closed. A build is not a production candidate while
   `successfulActivationQualified`. Record only aggregate cohort and pass/fail evidence in the
   reviewed receipt; never copy fixture or device wallet material.
 - Do not label SharedPreferences-to-DataStore import as raw storage-file immutability: the
-  authoritative file legitimately changes. Receipt schema 7 must instead record the exact
+  authoritative file legitimately changes. Receipt schema 8 must instead record the exact
   aggregate booleans `verifiedPreImportBackup`, `encryptedSecretCiphertextParity`,
   `wrappedAesKeyParity`, `keystoreAliasContinuity`, and `noCredentialRewrite`, with matching
   qualification checks. An old `encryptedSecretStorageUnchanged` assertion is not acceptable
@@ -954,6 +954,18 @@ This release is fail-closed. A build is not a production candidate while
   task must reject the historical source fallback. Supply the retained keystore only through an
   absolute, canonical, owner-only regular path with no symbolic-link traversal. Passwords and
   private-key material are never written to evidence.
+- Retain the public Play App Signing/upload identity
+  `b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0`. The authenticated Play
+  Console inventory and Play-generated Digital Asset Links statement agree on this fingerprint,
+  but that public agreement is not a substitute for the independently signed continuity admission.
+  Jenkins owns the existing credentials at the pinned shared-library revision through
+  `android_keystore_sora`, `android_keystore_storepass_sora`, `android_keyalias_sora`, and
+  `android_keypass_sora`; never record their values or copy the keystore into source.
+- GitHub qualification must accept keystore bytes only through protected `CI_KEYSTORE_BASE64`,
+  materialize them once at the fixed owner-only
+  `$RUNNER_TEMP/sora-android-production-upload.keystore`, export that path as `CI_KEYSTORE_PATH`,
+  and remove the exact file in an unconditional cleanup step. A secret containing a host-specific
+  `CI_KEYSTORE_PATH` is invalid because that path cannot identify a file on a fresh runner.
 - Build the signed production AAB, signed minified APK, and R8 mapping twice from the same exact
   commit. The second build uses a distinct `git clone --no-local` checkout and distinct
   `GRADLE_USER_HOME`. Require byte-for-byte equality for all three outputs; matching task success

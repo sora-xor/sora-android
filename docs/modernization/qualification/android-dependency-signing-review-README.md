@@ -8,8 +8,9 @@ one from the protected review-evidence producer and one from a distinct independ
 The environment independently pins both P-256 SPKI SHA-256 identities, the exact positive review
 sequence, candidate source revision, and review-contract SHA-256. The contract binds the current
 Gradle dependency-provenance and signing-identity files, verification metadata and its digest,
-vendor provenance and whole-tree manifest, 31-lock/271-configuration identities, and both public
-production certificate fingerprints. A manifest is admitted only when those protected values and
+vendor provenance and whole-tree manifest, 31-lock/566-configuration identities (565 production
+Release configurations plus settings), and both public production certificate fingerprints. A
+manifest is admitted only when those protected values and
 the current checkout projections all agree byte-for-byte.
 
 The signed manifest also carries nonzero SHA-256 identities for the external source-to-binary,
@@ -30,9 +31,26 @@ admission authorizes dependency/signing qualification only; it never signs an ar
 authorizes release or production mutation. The immutable candidate package retains and re-verifies
 the exact manifest, signatures, public keys, and non-authorizing admission receipt.
 
-After the retained Play and upload certificate fingerprints have replaced their deliberate `null`
-placeholders and the reviewed source revision is immutable, compute the exact non-authorizing
-contract digest that the protected manifest and workflow variable must pin:
+The authenticated Play Console inventory for `jp.co.soramitsu.sora` confirms that Play App Signing
+is active and records the same SHA-256 certificate fingerprint for the app-signing and upload
+identities: `b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0`.
+The Play-generated Digital Asset Links statement carries the same public fingerprint, so the public
+identity can be cross-checked without handling the keystore or any password. This observation is
+not the independent continuity admission and does not qualify a bundle by itself.
+
+The retained credentials remain in Jenkins under the pinned
+`jenkins-library@65079bbe356bca4a3d5a1964e360498735afa1f0` pipeline. Its credential IDs are
+`android_keystore_sora`, `android_keystore_storepass_sora`, `android_keyalias_sora`, and
+`android_keypass_sora`; these are bindings, not secret values. No keystore is checked in or present
+locally, and the GitHub qualification secret has not been provisioned. When the protected operator
+provisions it, the workflow accepts the keystore only as `CI_KEYSTORE_BASE64`, decodes it to the
+fixed owner-only `$RUNNER_TEMP/sora-android-production-upload.keystore`, exports only that runtime
+path as `CI_KEYSTORE_PATH`, and removes that exact path in an unconditional cleanup step. Password
+and alias inputs remain step-scoped secrets and are never copied to evidence.
+
+Now that the public fingerprints are populated, an immutable reviewed source revision can be used
+to compute the exact non-authorizing contract digest that the protected manifest and workflow
+variable must pin:
 
 ```sh
 ANDROID_DEPENDENCY_SIGNING_REVIEW_SOURCE_REVISION="$(git rev-parse HEAD)" \
@@ -41,3 +59,31 @@ ANDROID_DEPENDENCY_SIGNING_REVIEW_SOURCE_REVISION="$(git rev-parse HEAD)" \
 
 This mode reads only the checked-in dependency/signing projections and prints their contract hash.
 It does not read a manifest, signatures, keys, or sequence; it cannot produce an admission receipt.
+Release remains blocked until the retained keystore is provisioned, a signed candidate matches the
+upload fingerprint, and distinct protected producer/reviewer authorities admit the signing and
+Play-continuity evidence.
+
+The current materialization reconciliation records 565 production Release configurations plus the
+settings catalog configuration, 566 in total. The signed v1 object shape is unchanged; its exact
+configuration count and current provenance/input hashes reject a receipt for the prior 271-entry
+materialization. Updating these observed identities grants no review or signing authority. Metadata
+and lock statuses remain
+`materialized-unreviewed` until the required independent review and authenticated admission succeed.
+
+The earlier app Release lock selected `org.bouncycastle:bcprov-jdk18on` 1.77 for compile and
+1.78.1 for runtime with `bcutil-jdk18on` 1.71 and JMRTD 0.7.34. Exact-JAR execution reproduced
+`NoSuchMethodError` in both the bcutil CMS parser and JMRTD signed-data parser: each called
+`ASN1TaggedObject.getObject()`, removed from the selected provider. The current app lock selects
+bcprov 1.78.1 for both compile and runtime, bcutil 1.78.1, JMRTD 0.7.42, and its Scuba smartcards
+0.0.20 dependency. The [bounded compatibility qualification](android-bouncycastle-kyc-compatibility-2026-09-25.md)
+records exact artifacts, upstream evidence, preserved IDensic method references, and regression
+coverage. The SDK's direct NFC calls do not establish that its app flow reaches the broken
+signed-data parser; this fix closes the demonstrated library linkage defect without claiming a
+completed KYC run. Protected review and retained-wallet/KYC physical-device evidence remain open.
+
+The vendored provenance inventory still marks the PayWings KYC, OAuth, and IDensic AARs as
+closed-source packages without completed independent binary review. The `xcrypto:1.2.7` AAR
+contains four ABI variants of `libsr25519java_1.so`; its source revision and Cargo lock are
+pinned, but source-to-binary reproduction review is incomplete. Their recorded hashes establish
+which bytes were materialized, not that these binaries correspond to reviewed source. Keep the
+vendor admission blocked until the independent receipts exist.

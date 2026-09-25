@@ -1,8 +1,5 @@
 package jp.co.soramitsu.common.nexus
 
-import java.net.URI
-import jp.co.soramitsu.common.BuildConfig
-
 enum class WalletNetworkId(val wireId: String) {
     SORA2("sora2"),
     MINAMOTO("minamoto"),
@@ -13,27 +10,36 @@ enum class WalletNetworkId(val wireId: String) {
     }
 }
 
-/**
- * Reviewed durable chain identities used to bind pending transaction journals.
- *
- * A wallet network ID is a user-facing routing label and can survive a chain reset. Pending
- * transactions must therefore persist the exact chain identity that was active when they were
- * created. In particular, a manifest-designated current Taira epoch must never be confused with
- * any retained journal from the other known epoch.
- */
+/** Immutable first-release contract for the public SORA Taira testnet. */
+object TairaTestnetContract {
+    const val TORII_ROOT = "https://taira.sora.org"
+    const val MCP_ENDPOINT = "$TORII_ROOT/v1/mcp"
+    const val CHAIN_ID = "fc56984b-2be7-431d-840e-21514d1883f0"
+    const val XOR_ASSET_DEFINITION_ID = "6TEAJqbb8oEPmLncoNiMRbLEK6tw"
+    const val XOR_ASSET_ALIAS = "xor#universal"
+    const val XOR_SCALE = 9
+    const val I105_DISCRIMINANT = 369
+    const val MCP_PROTOCOL_VERSION = "2025-06-18"
+
+    /**
+     * SHA-256 of `taira-v1|<root>|<chain>|<xor-definition>|<scale>`, used to namespace durable
+     * rows without trusting build-time deployment substitutions.
+     */
+    const val CONTRACT_SHA256 =
+        "2bda6642b02735dd0ae287eef4b5e37b8845c8b8b9bd191bc036f808fca02b5d"
+    const val PENDING_JOURNAL_PREFIX = "taira:$CONTRACT_SHA256:"
+}
+
 object WalletNetworkChainIdentity {
     const val SORA2 =
         "0x7e4e32d0feafd4f9c9414b0be86373f9a1efa904809b683453a9af6856d38ad5"
     const val MINAMOTO = "00000000-0000-0000-0000-000000000753"
-    const val TAIRA_EPOCH_A = "809574f5-fee7-5e69-bfcf-52451e42d50f"
-    const val TAIRA_EPOCH_B = "fc56984b-2be7-431d-840e-21514d1883f0"
+    const val TAIRA = TairaTestnetContract.CHAIN_ID
 
     fun require(networkId: WalletNetworkId): String = when (networkId) {
         WalletNetworkId.SORA2 -> SORA2
         WalletNetworkId.MINAMOTO -> MINAMOTO
-        WalletNetworkId.TAIRA -> checkNotNull(TairaDeployment.binding?.currentChainId) {
-            "TAIRA_DEPLOYMENT_MANIFEST_NOT_QUALIFIED"
-        }
+        WalletNetworkId.TAIRA -> TAIRA
     }
 
     fun require(wireId: String): String = require(
@@ -43,200 +49,100 @@ object WalletNetworkChainIdentity {
     )
 }
 
-class TairaDeploymentBinding private constructor(
-    val manifestSha256: String,
-    val manifestSequenceNumber: Long,
-    val currentEpoch: Long,
-    val currentChainId: String,
-    val currentGenesisSha256: String,
-    val currentI105Discriminant: Int,
-    val currentToriiBaseUrl: String,
-    val currentPublicMcpEndpoint: String,
-    val currentExplorerBaseUrl: String,
-    val retiredEpoch: Long,
-    val retiredChainId: String,
-    val retiredGenesisSha256: String,
-    val operatorKeySha256: String,
-    val reviewerKeySha256: String,
+data class NexusDerivationProfile(
+    val id: WalletNetworkId,
+    val chainDiscriminant: Int,
+    val derivationPath: String,
 ) {
-    /**
-     * Durable namespace for pending journals created under this exact signed deployment.
-     *
-     * The two reviewed Taira epochs may legitimately reuse either known chain UUID as the
-     * operator-selected current mapping. A UUID therefore cannot, by itself, prove that an older
-     * schema-77 row belongs to the admitted genesis/epoch. New rows carry the manifest digest in
-     * their existing primary key so retained rows can stay byte-for-byte recovery evidence without
-     * a destructive schema rewrite.
-     */
-    val pendingJournalPrefix: String = "taira:$manifestSha256:"
-
-    fun ownsPendingJournal(localId: String): Boolean =
-        localId.startsWith(pendingJournalPrefix)
-
-    companion object {
-        private val sha256 = Regex("^[0-9a-f]{64}$")
-        private val positiveDecimal = Regex("^[1-9][0-9]{0,11}$")
-        private val knownChains = setOf(
-            WalletNetworkChainIdentity.TAIRA_EPOCH_A,
-            WalletNetworkChainIdentity.TAIRA_EPOCH_B,
-        )
-
-        @Suppress("LongParameterList")
-        fun from(
-            manifestSha256: String,
-            manifestSequenceNumber: String,
-            currentEpoch: String,
-            currentChainId: String,
-            currentGenesisSha256: String,
-            currentI105Discriminant: String,
-            currentToriiBaseUrl: String,
-            currentPublicMcpEndpoint: String,
-            currentExplorerBaseUrl: String,
-            retiredEpoch: String,
-            retiredChainId: String,
-            retiredGenesisSha256: String,
-            operatorKeySha256: String,
-            reviewerKeySha256: String,
-        ): TairaDeploymentBinding? {
-            val sequence = manifestSequenceNumber.canonicalPositiveLong() ?: return null
-            val currentEpochNumber = currentEpoch.canonicalPositiveLong() ?: return null
-            val retiredEpochNumber = retiredEpoch.canonicalPositiveLong() ?: return null
-            val discriminant = currentI105Discriminant.toIntOrNull() ?: return null
-            if (
-                !manifestSha256.nonzeroSha256() ||
-                !currentGenesisSha256.nonzeroSha256() ||
-                !retiredGenesisSha256.nonzeroSha256() ||
-                currentGenesisSha256 == retiredGenesisSha256 ||
-                !operatorKeySha256.nonzeroSha256() ||
-                !reviewerKeySha256.nonzeroSha256() ||
-                operatorKeySha256 == reviewerKeySha256 ||
-                setOf(currentChainId, retiredChainId) != knownChains ||
-                currentChainId == retiredChainId ||
-                currentEpochNumber <= retiredEpochNumber ||
-                discriminant != 369 ||
-                !currentToriiBaseUrl.canonicalHttpsOrigin() ||
-                currentToriiBaseUrl == "https://taira.sora.org" ||
-                currentPublicMcpEndpoint != "$currentToriiBaseUrl/v1/mcp" ||
-                !currentExplorerBaseUrl.canonicalHttpsOrigin()
-            ) {
-                return null
-            }
-            return TairaDeploymentBinding(
-                manifestSha256 = manifestSha256,
-                manifestSequenceNumber = sequence,
-                currentEpoch = currentEpochNumber,
-                currentChainId = currentChainId,
-                currentGenesisSha256 = currentGenesisSha256,
-                currentI105Discriminant = discriminant,
-                currentToriiBaseUrl = currentToriiBaseUrl,
-                currentPublicMcpEndpoint = currentPublicMcpEndpoint,
-                currentExplorerBaseUrl = currentExplorerBaseUrl,
-                retiredEpoch = retiredEpochNumber,
-                retiredChainId = retiredChainId,
-                retiredGenesisSha256 = retiredGenesisSha256,
-                operatorKeySha256 = operatorKeySha256,
-                reviewerKeySha256 = reviewerKeySha256,
-            )
-        }
-
-        private fun String.nonzeroSha256(): Boolean =
-            sha256.matches(this) && any { it != '0' }
-
-        private fun String.canonicalPositiveLong(): Long? =
-            takeIf(positiveDecimal::matches)?.toLongOrNull()
-
-        private fun String.canonicalHttpsOrigin(): Boolean = runCatching {
-            val uri = URI(this)
-            uri.scheme == "https" &&
-                uri.host?.isNotBlank() == true &&
-                uri.host == uri.host.lowercase() &&
-                uri.rawUserInfo == null &&
-                uri.port == -1 &&
-                (uri.rawPath.isNullOrEmpty() || uri.rawPath == "/") &&
-                uri.rawQuery == null &&
-                uri.rawFragment == null &&
-                this == "https://${uri.host}"
-        }.getOrDefault(false)
+    init {
+        require(id != WalletNetworkId.SORA2)
+        require(chainDiscriminant in 1..0xffff)
+        require(derivationPath.startsWith("m/") && derivationPath.endsWith("'"))
     }
 }
 
-object TairaDeployment {
-    val binding: TairaDeploymentBinding? = TairaDeploymentBinding.from(
-        manifestSha256 = BuildConfig.TAIRA_DEPLOYMENT_MANIFEST_SHA256,
-        manifestSequenceNumber = BuildConfig.TAIRA_DEPLOYMENT_MANIFEST_SEQUENCE_NUMBER,
-        currentEpoch = BuildConfig.TAIRA_CURRENT_EPOCH,
-        currentChainId = BuildConfig.TAIRA_CURRENT_CHAIN_ID,
-        currentGenesisSha256 = BuildConfig.TAIRA_CURRENT_GENESIS_SHA256,
-        currentI105Discriminant = BuildConfig.TAIRA_CURRENT_I105_DISCRIMINANT,
-        currentToriiBaseUrl = BuildConfig.TAIRA_CURRENT_TORII_BASE_URL,
-        currentPublicMcpEndpoint = BuildConfig.TAIRA_CURRENT_PUBLIC_MCP_ENDPOINT,
-        currentExplorerBaseUrl = BuildConfig.TAIRA_CURRENT_EXPLORER_BASE_URL,
-        retiredEpoch = BuildConfig.TAIRA_RETIRED_EPOCH,
-        retiredChainId = BuildConfig.TAIRA_RETIRED_CHAIN_ID,
-        retiredGenesisSha256 = BuildConfig.TAIRA_RETIRED_GENESIS_SHA256,
-        operatorKeySha256 = BuildConfig.TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256,
-        reviewerKeySha256 = BuildConfig.TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256,
+object NexusDerivationProfiles {
+    val minamoto = NexusDerivationProfile(
+        id = WalletNetworkId.MINAMOTO,
+        chainDiscriminant = 753,
+        derivationPath = "m/44'/617'/0'/0'",
+    )
+    val taira = NexusDerivationProfile(
+        id = WalletNetworkId.TAIRA,
+        chainDiscriminant = TairaTestnetContract.I105_DISCRIMINANT,
+        derivationPath = "m/44'/617'/1'/0'",
     )
 }
 
 data class NexusNetwork(
-    val id: WalletNetworkId,
+    val derivationProfile: NexusDerivationProfile,
     val displayName: String,
     val chainId: String,
-    val chainDiscriminant: Int,
     val toriiBaseUrl: String,
     val explorerBaseUrl: String,
-    val derivationPath: String,
     val isTestnet: Boolean,
     val enabledByDefault: Boolean,
-    val deploymentManifestSha256: String? = null,
 ) {
+    val id: WalletNetworkId
+        get() = derivationProfile.id
+    val chainDiscriminant: Int
+        get() = derivationProfile.chainDiscriminant
+    val derivationPath: String
+        get() = derivationProfile.derivationPath
+
     init {
         require(id != WalletNetworkId.SORA2)
+        require(chainId.isNotBlank() && chainId != "00000000-0000-0000-0000-000000000000")
         require(toriiBaseUrl.startsWith("https://"))
         require(explorerBaseUrl.startsWith("https://"))
+        if (id == WalletNetworkId.TAIRA) {
+            require(
+                chainId == TairaTestnetContract.CHAIN_ID &&
+                    chainDiscriminant == TairaTestnetContract.I105_DISCRIMINANT &&
+                    toriiBaseUrl == TairaTestnetContract.TORII_ROOT &&
+                    explorerBaseUrl == TairaTestnetContract.TORII_ROOT
+            ) { "TAIRA_CONTRACT_MISMATCH" }
+        }
     }
 }
 
 object NexusNetworks {
-    const val MINAMOTO_DERIVATION_PATH = "m/44'/617'/0'/0'"
-    const val TAIRA_DERIVATION_PATH = "m/44'/617'/1'/0'"
-    private const val UNQUALIFIED_TAIRA_CHAIN_ID =
-        "00000000-0000-0000-0000-000000000000"
-
     val minamoto = NexusNetwork(
-        id = WalletNetworkId.MINAMOTO,
+        derivationProfile = NexusDerivationProfiles.minamoto,
         displayName = "Minamoto",
         chainId = WalletNetworkChainIdentity.MINAMOTO,
-        chainDiscriminant = 753,
         toriiBaseUrl = "https://minamoto.sora.org",
         explorerBaseUrl = "https://minamoto-explorer.sora.org",
-        derivationPath = MINAMOTO_DERIVATION_PATH,
         isTestnet = false,
         enabledByDefault = true,
     )
 
-    private val admittedTaira = TairaDeployment.binding
-
     val taira = NexusNetwork(
-        id = WalletNetworkId.TAIRA,
+        derivationProfile = NexusDerivationProfiles.taira,
         displayName = "Taira Testnet",
-        // This all-zero value is an inert UI/derivation placeholder, never a known epoch choice.
-        // Every Torii route and durable journal write still requires [admittedTaira].
-        chainId = admittedTaira?.currentChainId ?: UNQUALIFIED_TAIRA_CHAIN_ID,
-        chainDiscriminant = admittedTaira?.currentI105Discriminant ?: 369,
-        toriiBaseUrl = admittedTaira?.currentToriiBaseUrl ?: "https://taira.sora.org",
-        explorerBaseUrl = admittedTaira?.currentExplorerBaseUrl
-            ?: "https://taira-explorer.sora.org",
-        derivationPath = TAIRA_DERIVATION_PATH,
+        chainId = TairaTestnetContract.CHAIN_ID,
+        toriiBaseUrl = TairaTestnetContract.TORII_ROOT,
+        explorerBaseUrl = TairaTestnetContract.TORII_ROOT,
         isTestnet = true,
         enabledByDefault = true,
-        deploymentManifestSha256 = admittedTaira?.manifestSha256,
     )
 
-    val all: List<NexusNetwork> = listOf(minamoto, taira)
+    val admitted: List<NexusNetwork> = listOf(minamoto, taira)
+    val admittedIds: Set<WalletNetworkId> = admitted.mapTo(linkedSetOf()) { it.id }
 
-    fun require(networkId: WalletNetworkId): NexusNetwork =
-        all.firstOrNull { it.id == networkId }
-            ?: throw IllegalArgumentException("$networkId is not an Iroha network")
+    fun find(networkId: WalletNetworkId): NexusNetwork? =
+        admitted.firstOrNull { it.id == networkId }
+
+    fun require(networkId: WalletNetworkId): NexusNetwork = find(networkId) ?: when (networkId) {
+        WalletNetworkId.SORA2 -> throw IllegalArgumentException("NEXUS_WRONG_NETWORK")
+        WalletNetworkId.MINAMOTO,
+        WalletNetworkId.TAIRA -> throw IllegalArgumentException("NEXUS_NETWORK_NOT_ADMITTED")
+    }
+
+    /** Rejects forged copies even when they reuse an admitted user-facing network ID. */
+    fun requireAdmitted(network: NexusNetwork): NexusNetwork {
+        val admittedNetwork = find(network.id)
+        require(admittedNetwork == network) { "NEXUS_NETWORK_NOT_ADMITTED" }
+        return checkNotNull(admittedNetwork)
+    }
 }

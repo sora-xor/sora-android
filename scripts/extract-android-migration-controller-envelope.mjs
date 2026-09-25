@@ -2,8 +2,8 @@
 
 import {
   ANDROID_MIGRATION_CONTROLLER_MAXIMUM_BYTES,
-  extractAndroidMigrationControllerEnvelopeV1,
-} from "./lib/android-migration-controller-envelope-v1.mjs";
+  extractAndroidMigrationControllerEnvelopeV2,
+} from "./lib/android-migration-controller-envelope-v2.mjs";
 import { hashStableRegularFile } from "./lib/strict-evidence.mjs";
 
 const required = (name) => {
@@ -24,7 +24,7 @@ if (candidate === null) {
   throw new Error("PRODUCTION_CANDIDATE_AAB_INVALID");
 }
 
-const receipt = extractAndroidMigrationControllerEnvelopeV1({
+const receipt = extractAndroidMigrationControllerEnvelopeV2({
   envelopePath: required("ANDROID_MIGRATION_CONTROLLER_ENVELOPE_PATH"),
   outputRoot: required("ANDROID_MIGRATION_CONTROLLER_EVIDENCE_ROOT"),
   expectedSourceRevision: required("PRODUCTION_CANDIDATE_SOURCE_REVISION"),

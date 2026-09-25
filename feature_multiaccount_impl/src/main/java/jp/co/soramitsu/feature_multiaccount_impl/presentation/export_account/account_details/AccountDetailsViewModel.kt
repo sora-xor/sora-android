@@ -60,7 +60,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateBackupPasswordState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountDetailsScreenState
 import jp.co.soramitsu.ui_core.component.input.InputTextState
-import jp.co.soramitsu.xbackup.BackupService
+import jp.co.soramitsu.common.backup.CloudBackupProvider
 import jp.co.soramitsu.xbackup.domain.exceptions.AuthConsentException
 import jp.co.soramitsu.xbackup.domain.exceptions.FileNotFoundException
 import jp.co.soramitsu.xbackup.domain.exceptions.StorageQuotaExceeded
@@ -81,10 +81,18 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val router: MainRouter,
     private val resourceManager: ResourceManager,
     private val clipboardManager: BasicClipboardManager,
-    private val backupService: BackupService,
+    private val cloudBackupProvider: CloudBackupProvider,
     private val coroutineManager: CoroutineManager,
     @Assisted("address") private val address: String,
 ) : BaseViewModel() {
+
+    private val backupService get() = requireNotNull(cloudBackupProvider.serviceOrNull())
+
+    private fun requireCloudBackup(): Boolean {
+        if (cloudBackupProvider.isAvailable) return true
+        onError(jp.co.soramitsu.common.R.string.wallet_cloud_backup_unavailable)
+        return false
+    }
 
     @AssistedFactory
     interface AccountDetailsViewModelFactory {
@@ -100,6 +108,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
             false,
             false,
             "",
+            isCloudBackupAvailable = cloudBackupProvider.isAvailable,
         )
     )
     val accountDetailsScreenState: LiveData<AccountDetailsScreenState> = _accountDetailsScreenState
@@ -123,9 +132,14 @@ class AccountDetailsViewModel @AssistedInject constructor(
         )
         viewModelScope.launch {
             val isAccountBackedUp = try {
-                backupService.isAccountBackedUp(address)
+                cloudBackupProvider.serviceOrNull()?.isAccountBackedUp(address)
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
+                null
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                onError(R.string.wallet_cloud_backup_failed)
                 null
             }
 
@@ -142,6 +156,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     false,
                     isBackupAvailable = isAccountBackedUp,
                     address,
+                    isCloudBackupAvailable = cloudBackupProvider.isAvailable,
                 )
             }
         }
@@ -271,6 +286,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onBackupPasswordClicked() {
+        if (!requireCloudBackup()) return
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
             viewModelScope.launch(coroutineManager.io) {
@@ -348,7 +364,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     fun onBackupClicked(
         launcher: ActivityResultLauncher<Intent>?
     ) {
-        if (launcher == null) return
+        if (launcher == null || !requireCloudBackup()) return
 
         startBackup()
         viewModelScope.launch {
@@ -379,11 +395,18 @@ class AccountDetailsViewModel @AssistedInject constructor(
             } catch (e: AuthConsentException) {
                 isFromAuthorization = true
                 _consentExceptionHandler.value = e.intent
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                onError(R.string.wallet_cloud_backup_failed)
+            } finally {
+                _accountDetailsScreenState.value = _accountDetailsScreenState.value?.copy(isBackupLoading = false)
             }
         }
     }
 
     fun deleteGoogleBackup() {
+        if (!requireCloudBackup()) return
         _deleteDialogState.value = false
 
         viewModelScope.launch {
@@ -427,6 +450,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onSuccessfulGoogleSignin() {
+        if (!requireCloudBackup()) return
         viewModelScope.launch {
             try {
                 _accountDetailsScreenState.value?.let {

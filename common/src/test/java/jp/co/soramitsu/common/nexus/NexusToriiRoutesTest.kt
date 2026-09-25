@@ -1,5 +1,6 @@
 package jp.co.soramitsu.common.nexus
 
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -11,28 +12,42 @@ import org.junit.Test
 class NexusToriiRoutesTest {
 
     @Test
+    fun `Nexus response admission rejects duplicate escaped and lenient JSON`() {
+        assertEquals(
+            "{\"total\":1,\"has_more\":false}",
+            admitNexusJsonResponse(
+                "{\"total\":1,\"has_more\":false}".encodeToByteArray()
+            ),
+        )
+        listOf(
+            "{\"total\":1,\"total\":2}",
+            "{\"total\":1,\"\\u0074otal\":2}",
+            "{'total':1}",
+            "{total:1}",
+            "{\"total\":1,}",
+            "{\"value\":\"\\uD800\"}",
+            "{\"total\":1.0}",
+            "{\"total\":1e0}",
+            "{\"total\":1E+0}",
+            "{\"total\":-0}",
+            "{\"total\":18446744073709551616}",
+            "{\"total\":-9223372036854775809}",
+        ).forEach { document ->
+            val error = assertThrows(NexusToriiException::class.java) {
+                admitNexusJsonResponse(document.encodeToByteArray())
+            }
+            assertEquals("NEXUS_INVALID_RESPONSE", error.safeCode)
+        }
+        val invalidUtf8 = assertThrows(NexusToriiException::class.java) {
+            admitNexusJsonResponse(byteArrayOf(0x7b, 0x22, 0x78, 0x22, 0x3a, 0xff.toByte(), 0x7d))
+        }
+        assertEquals("NEXUS_INVALID_RESPONSE", invalidUtf8.safeCode)
+    }
+
+    @Test
     fun `qualified network uses exact outer response and typed request media`() {
-        listOf(NexusNetworks.minamoto).forEach { network ->
-            val health = NexusToriiRoutes.health(network)
+        NexusNetworks.admitted.forEach { network ->
             val mcp = NexusToriiRoutes.mcp(network)
-            val submission = NexusToriiRoutes.submitTransaction(network)
-            assertEquals(
-                NexusToriiRoutes.HEALTH_RESPONSE_MEDIA_TYPE,
-                NexusToriiRoutes.responseAccept(health),
-            )
-            assertNull(NexusToriiRoutes.requestContentType("GET", health))
-            assertTrue(
-                NexusToriiRoutes.isExpectedResponseContentType(
-                    health,
-                    "text/plain; charset=UTF-8",
-                )
-            )
-            assertFalse(
-                NexusToriiRoutes.isExpectedResponseContentType(
-                    health,
-                    "application/json",
-                )
-            )
             assertEquals(
                 NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE,
                 NexusToriiRoutes.responseAccept(mcp),
@@ -66,13 +81,43 @@ class NexusToriiRoutesTest {
                     "application/json, text/plain",
                 )
             )
-            assertEquals(
-                NexusToriiRoutes.NORITO_TRANSACTION_REQUEST_MEDIA_TYPE,
-                NexusToriiRoutes.requestContentType("POST", submission),
+        }
+        val health = NexusToriiRoutes.health(NexusNetworks.minamoto)
+        val submission = NexusToriiRoutes.submitTransaction(NexusNetworks.minamoto)
+        assertEquals(
+            NexusToriiRoutes.HEALTH_RESPONSE_MEDIA_TYPE,
+            NexusToriiRoutes.responseAccept(health),
+        )
+        assertNull(NexusToriiRoutes.requestContentType("GET", health))
+        assertTrue(
+            NexusToriiRoutes.isExpectedResponseContentType(
+                health,
+                "text/plain; charset=UTF-8",
             )
+        )
+        assertFalse(
+            NexusToriiRoutes.isExpectedResponseContentType(
+                health,
+                "application/json",
+            )
+        )
+        assertEquals(
+            NexusToriiRoutes.NORITO_TRANSACTION_REQUEST_MEDIA_TYPE,
+            NexusToriiRoutes.requestContentType("POST", submission),
+        )
+        assertEquals(
+            NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE,
+            NexusToriiRoutes.responseAccept(submission),
+        )
+        listOf(
+            { NexusToriiRoutes.health(NexusNetworks.taira) },
+            { NexusToriiRoutes.submitTransaction(NexusNetworks.taira) },
+        ).forEach { rawTairaRoute ->
             assertEquals(
-                NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE,
-                NexusToriiRoutes.responseAccept(submission),
+                "TAIRA_MCP_REQUIRED",
+                assertThrows(IllegalArgumentException::class.java) {
+                    rawTairaRoute()
+                }.message,
             )
         }
         assertThrows(IllegalArgumentException::class.java) {
@@ -87,24 +132,29 @@ class NexusToriiRoutesTest {
     }
 
     @Test
-    fun `Taira routes fail before transport when deployment manifest is absent`() {
+    fun `routes reject a forged copy of an admitted network`() {
+        val forged = NexusNetworks.minamoto.copy(
+            toriiBaseUrl = "https://attacker.invalid",
+        )
+
         val error = assertThrows(IllegalArgumentException::class.java) {
-            NexusToriiRoutes.health(NexusNetworks.taira)
+            NexusToriiRoutes.health(forged)
         }
-        assertEquals("TAIRA_DEPLOYMENT_MANIFEST_NOT_QUALIFIED", error.message)
-        listOf<(NexusNetwork) -> String>(
-            NexusToriiRoutes::mcp,
-            NexusToriiRoutes::submitTransaction,
-            { network -> NexusToriiRoutes.assetDefinitions(network) },
-            { network -> NexusToriiRoutes.assetDefinition(network, "xor#universal") },
-        ).forEach { route ->
-            assertEquals(
-                "TAIRA_DEPLOYMENT_MANIFEST_NOT_QUALIFIED",
-                assertThrows(IllegalArgumentException::class.java) {
-                    route(NexusNetworks.taira)
-                }.message,
-            )
-        }
+        assertEquals("NEXUS_NETWORK_NOT_ADMITTED", error.message)
+    }
+
+    @Test
+    fun `Taira MCP route is immutable and alternate topology is rejected`() {
+        assertEquals(
+            TairaTestnetContract.MCP_ENDPOINT,
+            NexusToriiRoutes.mcp(NexusNetworks.taira),
+        )
+        assertEquals(
+            "TAIRA_CONTRACT_MISMATCH",
+            assertThrows(IllegalArgumentException::class.java) {
+                NexusNetworks.taira.copy(toriiBaseUrl = "https://node-1.taira.sora.org")
+            }.message,
+        )
     }
 
     @Test
@@ -116,23 +166,27 @@ class NexusToriiRoutesTest {
         NexusToriiResponseContract.validateFanout(
             mapOf("x-iroha-routed-by" to "local")::get
         )
-        NexusToriiResponseContract.validateFanout(
-            mapOf(
-                "x-iroha-routed-by" to "proxy",
-                "x-iroha-route-lane-id" to "4294967295",
-                "x-iroha-route-dataspace-id" to "18446744073709551615",
-            )::get
-        )
+        assertThrows(NexusToriiException::class.java) {
+            NexusToriiResponseContract.validateFanout(
+                mapOf(
+                    "x-iroha-routed-by" to "proxy",
+                    "x-iroha-route-lane-id" to "4294967295",
+                    "x-iroha-route-dataspace-id" to "18446744073709551615",
+                )::get
+            )
+        }
         assertEquals(
             "NEXUS_FANOUT_HEADERS_INVALID",
             assertThrows(NexusToriiException::class.java) {
                 NexusToriiResponseContract.validateFanout(
                     mapOf("x-iroha-routed-by" to "Proxy")::get
                 )
+            }.also {
+                assertEquals(NexusToriiFailureCategory.PROTOCOL, it.category)
             }.safeCode,
         )
         assertEquals(
-            "NEXUS_PARTIAL_FANOUT",
+            "NEXUS_FANOUT_EVIDENCE_MISSING",
             assertThrows(NexusToriiException::class.java) {
                 NexusToriiResponseContract.validateFanout(
                     headerValue = { null },
@@ -159,7 +213,7 @@ class NexusToriiRoutesTest {
         )
 
         assertEquals(
-            "NEXUS_PARTIAL_FANOUT",
+            "NEXUS_FANOUT_EVIDENCE_MISSING",
             assertThrows(NexusToriiException::class.java) {
                 NexusToriiResponseContract.validateFanout(
                     headerValue = mapOf("x-iroha-routed-by" to "proxy")::get,
@@ -169,21 +223,32 @@ class NexusToriiRoutesTest {
         )
 
         assertEquals(
-            "NEXUS_PARTIAL_FANOUT",
+            "NEXUS_FANOUT_HEADERS_INVALID",
             assertThrows(NexusToriiException::class.java) {
                 NexusToriiResponseContract.validateFanout(
                     (complete - "x-iroha-routed-by")::get
                 )
             }.safeCode,
         )
+        NexusToriiResponseContract.validateFanout(
+            headerValue = mapOf(
+                "x-iroha-routed-by" to "local",
+                "x-iroha-route-lane-id" to "0",
+                "x-iroha-route-dataspace-id" to "0",
+                "x-iroha-fanout-routes-attempted" to "1",
+                "x-iroha-fanout-routes-succeeded" to "1",
+                "x-iroha-fanout-routes-failed" to "0",
+                "x-iroha-fanout-routes-unavailable" to "0",
+                "x-iroha-fanout-routes-denied" to "0",
+                "x-iroha-fanout-routes-not-found" to "0",
+            )::get,
+            requireFanout = true,
+        )
         assertEquals(
             "NEXUS_FANOUT_HEADERS_INVALID",
             assertThrows(NexusToriiException::class.java) {
                 NexusToriiResponseContract.validateFanout(
-                    (complete + mapOf(
-                        "x-iroha-route-lane-id" to "1",
-                        "x-iroha-route-dataspace-id" to "2",
-                    ))::get
+                    mapOf("x-iroha-route-lane-id" to "1")::get
                 )
             }.safeCode,
         )
@@ -191,7 +256,11 @@ class NexusToriiRoutesTest {
             "NEXUS_FANOUT_HEADERS_INVALID",
             assertThrows(NexusToriiException::class.java) {
                 NexusToriiResponseContract.validateFanout(
-                    mapOf("x-iroha-route-lane-id" to "1")::get
+                    mapOf(
+                        "x-iroha-routed-by" to "local",
+                        "x-iroha-route-lane-id" to "1",
+                        "x-iroha-route-dataspace-id" to "2",
+                    )::get
                 )
             }.safeCode,
         )
@@ -226,14 +295,60 @@ class NexusToriiRoutesTest {
             "x-iroha-fanout-routes-failed" to "2",
             "x-iroha-fanout-routes-unavailable" to "2",
         )
+        val unavailable = assertThrows(NexusToriiException::class.java) {
+            NexusToriiResponseContract.validateFanout(partial::get)
+        }
+        assertEquals("NEXUS_FANOUT_ROUTE_UNAVAILABLE", unavailable.safeCode)
+        assertEquals(NexusToriiFailureCategory.DEPLOYMENT_HEALTH, unavailable.category)
+        assertEquals(NexusFanoutFailureReason.ROUTE_UNAVAILABLE, unavailable.fanoutDiagnostic?.reason)
+        assertEquals(4, unavailable.fanoutDiagnostic?.attemptedRoutes)
+        assertEquals(2, unavailable.fanoutDiagnostic?.succeededRoutes)
+        assertEquals(2, unavailable.fanoutDiagnostic?.unavailableRoutes)
+
+        val inferredUnavailable = assertThrows(NexusToriiException::class.java) {
+            NexusToriiResponseContract.validateFanout(
+                (partial - "x-iroha-fanout-first-failure")::get
+            )
+        }
+        assertEquals("NEXUS_FANOUT_ROUTE_UNAVAILABLE", inferredUnavailable.safeCode)
         assertEquals(
-            "NEXUS_PARTIAL_FANOUT",
-            assertThrows(NexusToriiException::class.java) {
-                NexusToriiResponseContract.validateFanout(partial::get)
-            }.safeCode,
+            NexusFanoutFailureReason.ROUTE_UNAVAILABLE,
+            inferredUnavailable.fanoutDiagnostic?.reason,
         )
+        listOf(
+            Triple("permission_denied", "NEXUS_FANOUT_PERMISSION_DENIED", "denied"),
+            Triple("not_found", "NEXUS_FANOUT_ROUTE_NOT_FOUND", "not-found"),
+            Triple("error", "NEXUS_FANOUT_UPSTREAM_ERROR", "generic"),
+            Triple("new_server_failure", "NEXUS_FANOUT_UNKNOWN_FAILURE", "generic"),
+        ).forEach { (wireReason, safeCode, counter) ->
+            val reasonHeaders = partial.toMutableMap().apply {
+                this["x-iroha-fanout-first-failure"] = wireReason
+                this["x-iroha-fanout-routes-unavailable"] = "0"
+                this["x-iroha-fanout-routes-denied"] = if (counter == "denied") "2" else "0"
+                this["x-iroha-fanout-routes-not-found"] =
+                    if (counter == "not-found") "2" else "0"
+            }
+            val failure = assertThrows(NexusToriiException::class.java) {
+                NexusToriiResponseContract.validateFanout(reasonHeaders::get)
+            }
+            assertEquals(safeCode, failure.safeCode)
+            assertEquals(NexusToriiFailureCategory.DEPLOYMENT_HEALTH, failure.category)
+        }
+        listOf(
+            partial + ("x-iroha-fanout-routes-unavailable" to "0"),
+            partial + ("x-iroha-fanout-first-failure" to "permission_denied"),
+            partial + ("x-iroha-fanout-first-failure" to "not_found"),
+            partial + ("x-iroha-fanout-first-failure" to "error"),
+            partial + ("x-iroha-fanout-first-failure" to "new_server_failure"),
+        ).forEach { contradictory ->
+            val failure = assertThrows(NexusToriiException::class.java) {
+                NexusToriiResponseContract.validateFanout(contradictory::get)
+            }
+            assertEquals("NEXUS_FANOUT_HEADERS_INVALID", failure.safeCode)
+            assertEquals(NexusToriiFailureCategory.PROTOCOL, failure.category)
+        }
         assertEquals(
-            "NEXUS_PARTIAL_FANOUT",
+            "NEXUS_FANOUT_HEADERS_INVALID",
             assertThrows(NexusToriiException::class.java) {
                 NexusToriiResponseContract.validateFanout(
                     mapOf("x-iroha-fanout-routes-attempted" to "4")::get
@@ -258,6 +373,73 @@ class NexusToriiRoutesTest {
                     ))::get
                 )
             }.safeCode,
+        )
+    }
+
+    @Test
+    fun `HTTP error envelope preserves deployment health without fanout headers`() {
+        val json = Json { }
+        val unavailable = NexusToriiHttpErrorContract.deploymentHealthFailure(
+            httpStatus = 503,
+            rejectCode = null,
+            body = """{"code":"route_unavailable","message":"no route"}"""
+                .encodeToByteArray(),
+            json = json,
+        )
+        assertEquals("NEXUS_FANOUT_ROUTE_UNAVAILABLE", unavailable?.safeCode)
+        assertEquals(503, unavailable?.httpStatus)
+        assertEquals(NexusToriiFailureCategory.DEPLOYMENT_HEALTH, unavailable?.category)
+        assertEquals(
+            NexusFanoutFailureReason.ROUTE_UNAVAILABLE,
+            unavailable?.fanoutDiagnostic?.reason,
+        )
+
+        val denied = NexusToriiHttpErrorContract.deploymentHealthFailure(
+            httpStatus = 403,
+            rejectCode = "permission_denied",
+            body = ByteArray(0),
+            json = json,
+        )
+        assertEquals("NEXUS_FANOUT_PERMISSION_DENIED", denied?.safeCode)
+
+        val marker = NexusToriiHttpErrorContract.deploymentHealthFailure(
+            httpStatus = 503,
+            rejectCode = null,
+            body = "route_unavailable".encodeToByteArray(),
+            json = json,
+        )
+        assertEquals("NEXUS_FANOUT_ROUTE_UNAVAILABLE", marker?.safeCode)
+
+        val mismatch = NexusToriiHttpErrorContract.deploymentHealthFailure(
+            httpStatus = 503,
+            rejectCode = "permission_denied",
+            body = """{"code":"route_unavailable","message":"no route"}"""
+                .encodeToByteArray(),
+            json = json,
+        )
+        assertEquals("NEXUS_HTTP_ERROR_IDENTITY_MISMATCH", mismatch?.safeCode)
+        assertEquals(NexusToriiFailureCategory.PROTOCOL, mismatch?.category)
+
+        listOf(502, 503).forEach { status ->
+            val ingress = NexusToriiHttpErrorContract.deploymentHealthFailure(
+                httpStatus = status,
+                rejectCode = null,
+                body = ByteArray(0),
+                json = json,
+            )
+            assertEquals("NEXUS_PUBLIC_INGRESS_UNAVAILABLE", ingress?.safeCode)
+            assertEquals(status, ingress?.httpStatus)
+            assertEquals(NexusToriiFailureCategory.DEPLOYMENT_HEALTH, ingress?.category)
+        }
+
+        assertNull(
+            NexusToriiHttpErrorContract.deploymentHealthFailure(
+                httpStatus = 422,
+                rejectCode = null,
+                body = """{"code":"invalid_request","message":"bad input"}"""
+                    .encodeToByteArray(),
+                json = json,
+            )
         )
     }
 
@@ -322,7 +504,22 @@ class NexusToriiRoutesTest {
             ),
         )
         assertTrue(
-            NexusAssetDefinitionIdentity.isQualifiedXorDefinition(definition)
+            NexusAssetDefinitionIdentity.isQualifiedXorDefinition(
+                definition,
+                NexusNetworks.taira,
+            )
+        )
+        assertTrue(
+            NexusAssetDefinitionIdentity.isQualifiedXorDefinition(
+                NexusAssetDefinition(id = TAIRA_XOR_ASSET_DEFINITION_ID),
+                NexusNetworks.taira,
+            )
+        )
+        assertFalse(
+            NexusAssetDefinitionIdentity.isQualifiedXorDefinition(
+                NexusAssetDefinition(id = "61CtjvNd9T3THAR65GsMVHr82Bjc"),
+                NexusNetworks.taira,
+            )
         )
         assertFalse(
             NexusAssetDefinitionIdentity.isQualifiedXorDefinition(
@@ -330,7 +527,8 @@ class NexusToriiRoutesTest {
                     aliasBinding = definition.aliasBinding?.copy(
                         status = "leased_grace"
                     )
-                )
+                ),
+                NexusNetworks.taira,
             )
         )
     }
@@ -348,10 +546,10 @@ class NexusToriiRoutesTest {
     @Test
     fun `transaction status rejects malformed and all-zero hashes`() {
         assertThrows(IllegalArgumentException::class.java) {
-            NexusToriiRoutes.transactionStatus(NexusNetworks.taira, "not-a-hash")
+            NexusToriiRoutes.transactionStatus(NexusNetworks.minamoto, "not-a-hash")
         }
         assertThrows(IllegalArgumentException::class.java) {
-            NexusToriiRoutes.transactionStatus(NexusNetworks.taira, "0".repeat(64))
+            NexusToriiRoutes.transactionStatus(NexusNetworks.minamoto, "0".repeat(64))
         }
         assertEquals(
             "ab".repeat(32),

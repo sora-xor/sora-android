@@ -28,6 +28,42 @@ class NexusAccountTransactionProofTest {
                 )
             ),
         )
+        val foundBeforeTerminalPage = proof(pageSize = 1)
+        assertEquals(
+            NexusAccountTransactionProofResult.CONTINUE,
+            foundBeforeTerminalPage.accept(page(2, item(hash = TARGET_HASH))),
+        )
+        assertEquals(
+            NexusAccountTransactionProofResult.FOUND,
+            foundBeforeTerminalPage.accept(
+                NexusAccountTransactionPage(
+                    items = listOf(item(hash = OTHER_HASH)),
+                    total = 2,
+                    hasMore = false,
+                    countMode = "exact",
+                )
+            ),
+        )
+        val duplicateTargetAfterMatch = proof(pageSize = 2)
+        assertEquals(
+            NexusAccountTransactionProofResult.CONTINUE,
+            duplicateTargetAfterMatch.accept(
+                page(3, item(hash = TARGET_HASH), item(hash = OTHER_HASH)),
+            ),
+        )
+        assertEquals(
+            "NEXUS_TRANSACTION_HISTORY_DUPLICATE_HASH",
+            assertThrows(IllegalStateException::class.java) {
+                duplicateTargetAfterMatch.accept(
+                    NexusAccountTransactionPage(
+                        items = listOf(item(hash = TARGET_HASH)),
+                        total = 3,
+                        hasMore = false,
+                        countMode = "exact",
+                    )
+                )
+            }.message,
+        )
 
         listOf(
             item(hash = TARGET_HASH, succeeded = false),

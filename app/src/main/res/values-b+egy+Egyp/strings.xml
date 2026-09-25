@@ -1,0 +1,9 @@
+<resources>
+    <string name="wallet_upgrade_recovery_title">𓈖𓎡 𓊪𓂋𓎛𓆓 𓋴𓄿𓅱, 𓇋𓋴 𓐍𓂋 𓂋𓂧𓇋𓇋𓃀</string>
+    <string name="wallet_upgrade_recovery_message">SORA 𓏏𓅓 𓋴𓅓𓄿𓅱 𓈖𓈖𓏏𓏏 𓋴𓏏 𓂋𓐍 𓈖 𓋴𓅓𓈖 𓈖𓃀 𓅱𓈖 𓎛𓋴𓃀. 𓈖𓈖𓐍𓏏 𓂧𓂋 𓂋𓊪𓅱 𓂋𓂧𓇋𓅓𓋴𓏏. 𓅱𓎛𓅓𓇋𓂋, 𓂋𓊪𓅱 𓆓𓂧𓈖 𓋴𓄿 𓅓𓎛𓄿𓏏 𓅱𓎛𓅓𓂋𓂧𓇋 𓂋𓊪𓅱 𓂧𓂋𓋴𓈙𓅱 𓋴𓈙𓂝𓈖𓐍 𓋴𓈙𓅱.</string>
+    <string name="wallet_upgrade_recovery_code">𓈖𓎛𓅓 𓐍𓏏𓅓: %1$s</string>
+    <string name="wallet_upgrade_recovery_retry">𓅱𓎛𓅓𓇋𓂋 𓋴𓅓𓈖</string>
+    <string name="wallet_upgrade_recovery_export">𓂋𓂧𓇋𓂋𓂋𓅱𓏏𓇌 𓋴𓈙𓏏𓄿 𓈖𓎛𓅓 𓊪𓂋𓋴𓈙𓅱</string>
+    <string name="wallet_upgrade_recovery_continue_legacy">𓈙𓅓 𓈙𓂧-𓅱𓂝 𓎛𓈖𓂝 𓅱𓈖 SORA 𓊪𓂋𓎛𓆓 (𓉔𓄿𓃀 𓎛𓈖𓂝 Nexus 𓈖𓇋𓂋)</string>
+    <string name="wallet_upgrade_recovery_support">𓆓𓂧𓈖 SORA 𓋴𓄿</string>
+</resources>

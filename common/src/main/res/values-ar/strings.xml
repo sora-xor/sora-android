@@ -322,6 +322,7 @@
   <string name="more_menu_sora_card_subtitle">إدارة حسابات البطاقات والعملات الورقية</string>
   <string name="more_menu_sora_card_title">بطاقة سورا</string>
   <string name="network_fee">رسوم الشبكة</string>
+  <string name="network_finalized_history">نشاط</string>
   <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">فشل التحقق من صحة URL (عنوان خاطئ)</string>
   <string name="node_details_genesis_validation_failed">يختلف تجزئة نشأة العقدة عن تجزئة تكوين الشبكة</string>
@@ -354,6 +355,10 @@
   <string name="pincode_one_try_left">لديك محاولة أخرى متبقية قبل التبريد</string>
   <string name="pincode_set_your_pin_code">إعداد رمز الواجهة</string>
   <string name="pincode_touch_fingerprint_scanner">إلمس الماسح الضوئي للبصمة</string>
+  <string name="polkamarkt_action_buy">شراء</string>
+  <string name="polkamarkt_outcome_no">لا</string>
+  <string name="polkamarkt_outcome_yes">نعم</string>
+  <string name="polkamarkt_ticket_slippage">انزلاق</string>
   <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
@@ -473,10 +478,10 @@
   <string name="referral_no_available_invitations">لا توجد دعوات متاحة</string>
   <string name="referral_referral_link">رابط المحيل أو عنوانه</string>
   <string name="referral_referrer_address">عنوان المحيل</string>
-  <string name="referral_referrer_description">عندما تقوم بإجراء معاملة ، فإن 10٪ من رسوم الشبكة المدفوعة تذهب إلى المحيل الخاص بك كمكافأة.</string>
+  <string name="referral_referrer_description" formatted="false">عندما تقوم بإجراء معاملة ، فإن 10٪ من رسوم الشبكة المدفوعة تذهب إلى المحيل الخاص بك كمكافأة.</string>
   <string name="referral_start_inviting">ابدأ بالدعوة</string>
-  <string name="referral_subtitle">كلما قامت إحالتك بإجراء معاملة ، فإن 10٪ من رسوم الشبكة المدفوعة تذهب إليك كمكافأة.</string>
-  <string name="referral_title">احصل على 10٪ من رسوم شبكة الإحالات الخاصة بك</string>
+  <string name="referral_subtitle" formatted="false">كلما قامت إحالتك بإجراء معاملة ، فإن 10٪ من رسوم الشبكة المدفوعة تذهب إليك كمكافأة.</string>
+  <string name="referral_title" formatted="false">احصل على 10٪ من رسوم شبكة الإحالات الخاصة بك</string>
   <string name="referral_toolbar_title">برنامج الإحالة</string>
   <string name="referral_total_rewards">إجمالي المكافآت</string>
   <string name="referral_unbond_button_title">فك ربط XOR</string>
@@ -580,10 +585,16 @@
   <string name="wallet_balance_locked">المقفل</string>
   <string name="wallet_balance_reserved">المدخر</string>
   <string name="wallet_bonded">المسند</string>
+  <string name="wallet_connect_account">حساب</string>
+  <string name="wallet_connect_done">تم</string>
+  <string name="wallet_market_refresh">تحديث</string>
+  <string name="wallet_network_activity">نشاط</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">عنواني على شبكة %s لاستلام %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">قم بمسح هذا الرمز الضوئي لإرسال %s إلي. رمز هويتي في %s هو: %s</string>
+  <string name="wallet_receive_xor">استلام XOR</string>
   <string name="wallet_redeemable">قابل للسحب</string>
   <string name="wallet_send_existential_warning_message">ستؤدي عملية التحويل الخاصة بك إلى إزالة الحساب من blockstore لأنها ستجعل الرصيد الإجمالي أقل من الإيداع الموجود.</string>
+  <string name="wallet_status_confirmed">منجز</string>
   <string name="wallet_title">المحفظة</string>
   <string name="wallet_transaction_rejected">المعاملة مرفوضة</string>
   <string name="wallet_transaction_submitted">تم تسجيل المعاملة</string>

@@ -127,8 +127,9 @@ class SwapViewModelTest {
         pswapBalance: BigDecimal = BigDecimal.ONE,
         firstTokenId: String? = null,
         secondTokenId: String? = null,
+        emptyCatalog: Boolean = false,
     ) = runTest {
-        assets = listOf(
+        assets = if (emptyCatalog) emptyList() else listOf(
             TestAssets.xorAsset(xorBalance),
             TestAssets.valAsset(valBalance),
             TestAssets.pswapAsset(pswapBalance)
@@ -179,12 +180,27 @@ class SwapViewModelTest {
         given(swapInteractor.fetchSwapNetworkFee(anyNonNull())).willReturn(networkFee)
         given(swapInteractor.getPolkaswapDisclaimerVisibility()).willReturn(flowOf(true))
         given(resourceManager.getString(R.string.choose_tokens)).willReturn("Choose token")
+        given(resourceManager.getString(R.string.wallet_assets_unavailable)).willReturn("Assets unavailable")
         given(resourceManager.getString(R.string.common_confirm)).willReturn("Confirm")
         given(resourceManager.getString(R.string.common_enter_amount)).willReturn("Enter amount")
         given(resourceManager.getString(R.string.polkaswap_pool_not_created)).willReturn("Pool not created")
         // given(resourceManager.getString(R.string.review)).willReturn("Review")
         given(resourceManager.getString(R.string.polkaswap_insufficient_balance)).willReturn("Insufficient balance")
         given(resourceManager.getString(R.string.polkaswap_insufficient_liqudity)).willReturn("Insufficient liquidity")
+    }
+
+    @Test
+    fun `missing asset catalog keeps swap visible and disabled`() = runTest {
+        initViewModel(emptyCatalog = true)
+        advanceUntilIdle()
+        val state = viewModel.swapMainState.value
+        assertEquals(null, state.tokenFromState)
+        assertEquals(null, state.tokenToState)
+        org.junit.Assert.assertTrue(state.assetCatalogUnavailable)
+        assertEquals("Assets unavailable", state.swapButtonState.text)
+        assertFalse(state.swapButtonState.enabled)
+        assertFalse(state.confirmButtonState.enabled)
+        kVerify(assetsInteractor, org.mockito.kotlin.never()).getAssetOrThrow(any())
     }
 
     @Test

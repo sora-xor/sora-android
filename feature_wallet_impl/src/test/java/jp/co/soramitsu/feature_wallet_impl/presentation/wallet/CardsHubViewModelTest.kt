@@ -87,6 +87,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -166,6 +167,7 @@ class CardsHubViewModelTest {
     private lateinit var nexusTransactionCoordinator: NexusTransactionCoordinator
 
     private lateinit var cardsHubViewModel: CardsHubViewModel
+    private lateinit var favoriteReadFailure: MutableStateFlow<Throwable?>
 
     private val account = SoraAccount("address", "name")
     private val secondAccount = SoraAccount("second-address", "second-name")
@@ -202,11 +204,12 @@ class CardsHubViewModelTest {
                 SubstrateOptionsProvider.feeAssetId,
             )
         } returns secondXorFlow
+        favoriteReadFailure = MutableStateFlow(null)
         every { assetsInteractor.subscribeAssetsFavoriteOfAccount(account) } returns
-            flow {
-                // XOR is deliberately not favorite: the unified network row
-                // must be sourced from the account-bound authoritative asset.
-                emit(listOf(TestAssets.valAsset()))
+            favoriteReadFailure.map { failure ->
+                failure?.let { throw it }
+                // XOR remains deliberately not favorite.
+                listOf(TestAssets.valAsset())
             }
         every { poolsInteractor.subscribePoolsCacheOfAccount(account) } returns
             flow {
@@ -281,6 +284,34 @@ class CardsHubViewModelTest {
             nexusPortfolioRepository,
             nexusTransactionCoordinator,
         )
+    }
+
+    @Test
+    fun `failed downstream holdings read clears previous cards without crashing`() = runTest {
+        advanceUntilIdle()
+        assertTrue(cardsHubViewModel.state.value.cards.isNotEmpty())
+        io.mockk.mockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper)
+        every { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) } just Runs
+        try {
+            favoriteReadFailure.value = IllegalStateException("PI_INDEXER_GRAPHQL_ERROR")
+            advanceUntilIdle()
+            assertTrue(cardsHubViewModel.state.value.cards.isEmpty())
+            assertFalse(cardsHubViewModel.state.value.loading)
+        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper) }
+    }
+
+    @Test
+    fun `cancelled downstream holdings read is not converted to unavailable state`() = runTest {
+        advanceUntilIdle()
+        val before = cardsHubViewModel.state.value
+        io.mockk.mockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper)
+        every { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) } just Runs
+        try {
+            favoriteReadFailure.value = kotlinx.coroutines.CancellationException("stop display subscription")
+            advanceUntilIdle()
+            assertEquals(before, cardsHubViewModel.state.value)
+            io.mockk.verify(exactly = 0) { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) }
+        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper) }
     }
 
     @Test

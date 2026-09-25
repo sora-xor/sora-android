@@ -48,6 +48,7 @@ import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
 import jp.co.soramitsu.sora.databinding.ActivitySplashBinding
+import jp.co.soramitsu.sora.splash.domain.StartupTimeTrace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -67,6 +68,8 @@ class SplashActivity : AppCompatActivity() {
 
     private var isFirstPartFinished = false
     private var isSecondPartStarted = false
+    private var isNavigationRequested = false
+    private var isStartupReadyReported = false
 
     private val animatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
         val progress = it.animatedFraction
@@ -101,11 +104,10 @@ class SplashActivity : AppCompatActivity() {
                 }
                 button.isEnabled = true
                 if (result.isSuccess) {
-                    if (migrationRetry) {
-                        splashViewModel.retryWalletMigration()
-                    } else {
-                        recreate()
-                    }
+                    // Recreating the Activity retains its ViewModel and the completed failed
+                    // migration result. A successful preflight must explicitly replace that result
+                    // and rerun wallet verification before navigation, just like a journal retry.
+                    splashViewModel.retryWalletMigration()
                 } else {
                     showRecovery(
                         code =
@@ -195,12 +197,12 @@ class SplashActivity : AppCompatActivity() {
         ) {
             if (
                 it &&
-                viewBinding.walletRecoveryPanel.visibility != View.VISIBLE &&
-                isFirstPartFinished &&
-                !isSecondPartStarted
+                viewBinding.walletRecoveryPanel.visibility != View.VISIBLE
             ) {
-                isSecondPartStarted = true
-                viewBinding.animationView.resumeAnimation()
+                // Navigation still awaits the wallet migration result in SplashViewModel. Start
+                // that wait after the short launch floor instead of making a completed migration
+                // sit behind 89% of the three-second Lottie animation.
+                goNext()
             }
         }
 
@@ -216,6 +218,7 @@ class SplashActivity : AppCompatActivity() {
         splashViewModel.showMainScreen.observe(this) {
             val backupFailure = WalletUpgradeBackup.blockingFailure()
             if (backupFailure == null) {
+                reportStartupReady()
                 mainStarter.start(this)
             } else {
                 showRecovery(
@@ -225,9 +228,11 @@ class SplashActivity : AppCompatActivity() {
             }
         }
         splashViewModel.showOnBoardingScreen.observe(this) {
+            reportStartupReady()
             multiaccStarter.startOnboardingFlow(this)
         }
         splashViewModel.showMainScreenFromInviteLink.observe(this) {
+            reportStartupReady()
             mainStarter.startWithInvite(this)
             finish()
         }
@@ -251,6 +256,8 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun goNext() {
+        if (isNavigationRequested) return
+        isNavigationRequested = true
         viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
         splashViewModel.nextScreen()
     }
@@ -272,5 +279,12 @@ class SplashActivity : AppCompatActivity() {
             } else {
                 View.GONE
             }
+        reportStartupReady()
+    }
+
+    private fun reportStartupReady() {
+        if (isStartupReadyReported) return
+        isStartupReadyReported = true
+        StartupTimeTrace.end()
     }
 }

@@ -75,6 +75,36 @@ class SoraPreferences(
         }
     }
 
+    /** Publishes metadata only; original encrypted credentials are never rewritten or removed. */
+    suspend fun completeLegacyAccountUpgrade(accountAddress: String) {
+        check(accountAddress.isNotBlank()) { "LEGACY_ACCOUNT_ADDRESS_EMPTY" }
+        dataStore.edit { preferences ->
+            val selectedKey = stringPreferencesKey(WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS)
+            val legacyKey = stringPreferencesKey(WalletPreferenceKeys.LEGACY_ADDRESS)
+            check(preferences[selectedKey].isNullOrBlank() || preferences[selectedKey] == accountAddress) {
+                "LEGACY_ACCOUNT_SELECTION_CONFLICT"
+            }
+            check(preferences[legacyKey].isNullOrBlank() || preferences[legacyKey] == accountAddress) {
+                "LEGACY_ACCOUNT_OWNER_CONFLICT"
+            }
+            check(preferences.asMap().keys.none { key ->
+                WalletPreferenceKeys.scopedEvidencePrefixes.any { prefix ->
+                    key.name.startsWith(prefix) && key.name.length > prefix.length
+                }
+            }) { "LEGACY_ACCOUNT_SCOPED_CREDENTIAL_CONFLICT" }
+            listOf(WalletPreferenceKeys.NEEDS_MIGRATION, WalletPreferenceKeys.IS_MIGRATION_FETCHED)
+                .forEach { prefix ->
+                    val oldKey = booleanPreferencesKey(prefix)
+                    if (preferences.contains(oldKey)) {
+                        preferences[booleanPreferencesKey(prefix + accountAddress)] =
+                            checkNotNull(preferences[oldKey])
+                    }
+                }
+            preferences[legacyKey] = accountAddress
+            preferences[selectedKey] = accountAddress
+        }
+    }
+
     suspend fun clear(field: String) {
         dataStore.edit {
             it.remove(stringPreferencesKey(field))

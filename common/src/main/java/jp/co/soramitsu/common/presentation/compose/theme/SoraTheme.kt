@@ -34,6 +34,8 @@ package jp.co.soramitsu.common.presentation.compose.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.material.MaterialTheme
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NightThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.buttonM
@@ -71,7 +73,18 @@ fun SoraAppTheme(
         darkColors = soraDarkColors,
         typography = soraTypography,
         borderRadius = soraBorderRadius,
-        content = content,
+        content = {
+            // Standard Material inputs/actions use the same wallet palette as the custom components.
+            val palette = MaterialTheme.customColors
+            MaterialTheme(colors = MaterialTheme.colors.copy(
+                primary = palette.accentPrimary, primaryVariant = palette.accentPrimary,
+                secondary = palette.accentSecondary, secondaryVariant = palette.accentSecondary,
+                background = palette.bgPage, surface = palette.bgSurface,
+                onPrimary = palette.fgInverted, onSecondary = palette.fgInverted,
+                onBackground = palette.fgPrimary, onSurface = palette.fgPrimary,
+                error = palette.statusError, isLight = !darkTheme,
+            ), content = content)
+        },
     )
 }
 

@@ -120,7 +120,30 @@ data class NexusSendUiState(
     val prepared: NexusPreparedSend? = null,
     val result: NexusSendResult? = null,
     val errorCode: String? = null,
+    val submissionNeedsCheck: Boolean = false,
+    val scannerPermissionDenied: Boolean = false,
 )
+
+internal fun NexusSendUiState.editableDraft(): NexusSendUiState? =
+    if (!visible || preparing || submitting || result != null || submissionNeedsCheck) null
+    else copy(prepared = null, errorCode = null)
+
+internal fun NexusSendUiState.canConfirmSend(): Boolean =
+    visible && !preparing && !submitting && result == null && !submissionNeedsCheck && prepared != null
+
+internal fun NexusSendUiState.afterSubmissionFailure(error: Throwable): NexusSendUiState = copy(
+    submitting = false, prepared = null, result = null,
+    errorCode = error.message ?: "NEXUS_SUBMISSION_FAILED",
+    submissionNeedsCheck = error !is jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusNotSubmittedException,
+)
+
+internal data class NexusRecipientScan(val generation: Long, val walletId: String, val networkId: jp.co.soramitsu.common.nexus.WalletNetworkId, val address: String)
+
+internal fun NexusSendUiState.acceptsScan(scan: NexusRecipientScan, generation: Long): Boolean =
+    visible && !preparing && !submitting && prepared == null && result == null && !submissionNeedsCheck &&
+        scan.generation == generation && network?.let {
+            it.walletId == scan.walletId && it.networkId == scan.networkId && it.address == scan.address
+        } == true
 
 data class Sora2PortfolioBalance(
     val address: String,
@@ -169,6 +192,7 @@ class CardsHubViewModel @Inject constructor(
 
     private var nexusSendOperation: Job? = null
     private var nexusSendGeneration = 0L
+    private var recipientScan: NexusRecipientScan? = null
     private var selectedPortfolioWalletId: String? = null
 
     private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
@@ -346,6 +370,13 @@ class CardsHubViewModel @Inject constructor(
                     }
                     combine(flows) { it.toList() }
                 }
+                .catch { error ->
+                    if (error is CancellationException) throw error
+                    // A failed balance/pool read must not crash the host or leave another
+                    // wallet's holdings visible. Network rows independently show availability.
+                    jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                    _state.value = _state.value.copy(loading = false, cards = emptyList())
+                }
                 .distinctUntilChanged()
                 .collectLatest { cards ->
                     val usableCards = cards.filterNot {
@@ -375,9 +406,37 @@ class CardsHubViewModel @Inject constructor(
         _nexusSend.value = NexusSendUiState()
     }
 
+    fun editNexusSend() {
+        val current = _nexusSend.value
+        val draft = current.editableDraft() ?: return
+        invalidateNexusSendOperation()
+        _nexusSend.value = draft
+    }
+
+    fun beginNexusRecipientScan(): Boolean {
+        if (recipientScan != null) return false
+        val state = _nexusSend.value
+        val network = state.network?.let(::currentNexusBalance)?.takeIf { it.sendAvailable } ?: return false
+        val scan = NexusRecipientScan(nexusSendGeneration, network.walletId, network.networkId, network.address)
+        if (!state.acceptsScan(scan, nexusSendGeneration)) return false
+        recipientScan = scan
+        return true
+    }
+
+    fun finishNexusRecipientScan(value: String?, cameraPermissionDenied: Boolean = false) {
+        val scan = recipientScan ?: return
+        recipientScan = null
+        val current = _nexusSend.value
+        if (!current.acceptsScan(scan, nexusSendGeneration) ||
+            current.network?.let(::currentNexusBalance)?.sendAvailable != true) return
+        // Scanning only fills this immutable draft. Canonical network/address validation remains in prepare.
+        invalidateNexusSendOperation()
+        _nexusSend.value = current.afterRecipientScan(value, cameraPermissionDenied)
+    }
+
     fun setNexusRecipient(value: String) {
         val current = _nexusSend.value
-        if (!current.visible || current.submitting || current.prepared != null) return
+        if (!current.visible || current.submitting || current.result != null || current.prepared != null || current.submissionNeedsCheck) return
         invalidateNexusSendOperation()
         _nexusSend.value = current.copy(
             recipient = value.trim(),
@@ -390,7 +449,7 @@ class CardsHubViewModel @Inject constructor(
 
     fun setNexusAmount(value: String) {
         val current = _nexusSend.value
-        if (!current.visible || current.submitting || current.prepared != null) return
+        if (!current.visible || current.submitting || current.result != null || current.prepared != null || current.submissionNeedsCheck) return
         if (value.isEmpty() || NexusQuantityContract.isInputQuantity(value)) {
             invalidateNexusSendOperation()
             _nexusSend.value = current.copy(
@@ -409,6 +468,7 @@ class CardsHubViewModel @Inject constructor(
             !current.visible ||
             current.preparing ||
             current.submitting ||
+            current.submissionNeedsCheck || current.result != null ||
             current.prepared != null
         ) return
         val network = current.network
@@ -459,7 +519,7 @@ class CardsHubViewModel @Inject constructor(
 
     fun confirmNexusSend() {
         val current = _nexusSend.value
-        if (!current.visible || current.preparing || current.submitting) return
+        if (!current.canConfirmSend()) return
         val prepared = current.prepared ?: return
         val network = current.network
             ?.let(::currentNexusBalance)
@@ -489,11 +549,7 @@ class CardsHubViewModel @Inject constructor(
                 throw error
             } catch (error: Throwable) {
                 if (!nexusSendOperationIsCurrent(generation, network)) return@launch
-                _nexusSend.value = _nexusSend.value.copy(
-                    submitting = false,
-                    prepared = null,
-                    errorCode = error.message ?: "NEXUS_SUBMISSION_FAILED",
-                )
+                _nexusSend.value = _nexusSend.value.afterSubmissionFailure(error)
             } finally {
                 if (generation == nexusSendGeneration) nexusSendOperation = null
             }
@@ -546,6 +602,7 @@ class CardsHubViewModel @Inject constructor(
 
     private fun invalidateNexusSendOperation() {
         nexusSendGeneration += 1
+        recipientScan = null
         nexusSendOperation?.cancel()
         nexusSendOperation = null
     }
@@ -776,5 +833,14 @@ class CardsHubViewModel @Inject constructor(
                 _launchSoraCardSignIn.value = createSoraCardGateHubContract()
             }
         }
+    }
+}
+
+internal fun NexusSendUiState.afterRecipientScan(value: String?, cameraPermissionDenied: Boolean = false): NexusSendUiState {
+    if (!visible || preparing || submitting || prepared != null || result != null || submissionNeedsCheck) return this
+    return when {
+        value != null -> copy(recipient = value, scannerPermissionDenied = false, errorCode = null)
+        cameraPermissionDenied -> copy(scannerPermissionDenied = true)
+        else -> this
     }
 }

@@ -90,7 +90,17 @@ class AssetsRepositoryImpl @Inject constructor(
 
     init {
         coroutineManager.applicationScope.launch {
-            updateTokens()
+            try {
+                updateTokens()
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                tokensDeferred.completeExceptionally(error)
+                throw error
+            } catch (error: Exception) {
+                // Catalog availability must not terminate the wallet host. Consumers still fail
+                // closed; no unverified runtime, token catalog or balance is substituted.
+                tokensDeferred.completeExceptionally(error)
+                jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+            }
         }
     }
 

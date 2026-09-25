@@ -195,6 +195,43 @@ class CredentialsRepositoryTest {
         }
 
     @Test
+    fun `retained eighteen and twenty one word wallets preserve seed export without writes`() =
+        runTest {
+          listOf(18, 21).forEach { wordCount ->
+            val phrase = List(wordCount) { index -> "legacy$index" }.joinToString(" ")
+            val legacyMnemonic = Mnemonic(
+                phrase,
+                List(wordCount) { index -> "legacy$index" },
+                ByteArray(wordCount / 3 * 4) { index -> index.toByte() },
+            )
+            every { MnemonicCreator.fromWords(phrase) } returns legacyMnemonic
+            whenever(datasource.retrieveSeed("legacy-address")).thenReturn("")
+            whenever(datasource.retrieveMnemonic("legacy-address")).thenReturn(phrase)
+            whenever(datasource.retrieveKeys("")).thenReturn(null)
+
+            assertFalse(credentialsRepository.isMnemonicValid(phrase))
+            assertTrue(
+                runCatching {
+                    credentialsRepository.convertPassphraseToSeed(phrase)
+                }.isFailure
+            )
+            assertEquals(
+                64,
+                credentialsRepository
+                    .convertRetainedSoraPassphraseToSeed(phrase)
+                    .length,
+            )
+            assertEquals(
+                64,
+                credentialsRepository.retrieveSeed(
+                    SoraAccount("legacy-address", "Legacy")
+                ).length,
+            )
+            verify(datasource, never()).saveSeed(any(), any())
+          }
+        }
+
+    @Test
     fun `missing mnemonic never synthesizes or persists a seed`() = runTest {
         val account = SoraAccount("watch-address", "Watch")
         whenever(datasource.retrieveSeed(account.substrateAddress)).thenReturn("")

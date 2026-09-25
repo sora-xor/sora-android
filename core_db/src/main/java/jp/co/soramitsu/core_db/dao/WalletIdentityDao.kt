@@ -10,7 +10,7 @@ import jp.co.soramitsu.common.data.network.dto.PolkamarktPendingAssetId
 import jp.co.soramitsu.common.nexus.NexusAssetDefinitionIdentity
 import jp.co.soramitsu.common.nexus.NexusQuantityContract
 import jp.co.soramitsu.common.nexus.NexusTransactionHash
-import jp.co.soramitsu.common.nexus.TairaDeployment
+import jp.co.soramitsu.common.nexus.TairaTestnetContract
 import jp.co.soramitsu.common.nexus.WalletNetworkChainIdentity
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.core_db.WalletDeletionIntegrity
@@ -561,17 +561,15 @@ interface WalletIdentityDao {
         """
     )
     suspend fun countPendingTransactionsRequiringChainRecoveryForChain(
-        tairaChainId: String?,
+        tairaChainId: String,
         tairaPendingJournalPrefix: String,
     ): Int
 
-    suspend fun countPendingTransactionsRequiringChainRecovery(): Int {
-        val tairaBinding = TairaDeployment.binding
-        return countPendingTransactionsRequiringChainRecoveryForChain(
-            tairaBinding?.currentChainId,
-            tairaBinding?.pendingJournalPrefix.orEmpty(),
+    suspend fun countPendingTransactionsRequiringChainRecovery(): Int =
+        countPendingTransactionsRequiringChainRecoveryForChain(
+            TairaTestnetContract.CHAIN_ID,
+            TairaTestnetContract.PENDING_JOURNAL_PREFIX,
         )
-    }
 
     @Query(
         """
@@ -592,7 +590,7 @@ interface WalletIdentityDao {
         """
     )
     suspend fun countAuthoritativelyTerminalTransactionsInternal(
-        tairaChainId: String?,
+        tairaChainId: String,
         tairaPendingJournalPrefix: String,
     ): Int
 
@@ -618,7 +616,7 @@ interface WalletIdentityDao {
     )
     suspend fun getOldestAuthoritativelyTerminalTransactionsInternal(
         limit: Int,
-        tairaChainId: String?,
+        tairaChainId: String,
         tairaPendingJournalPrefix: String,
     ): List<PendingNetworkTransactionLocal>
 
@@ -643,7 +641,7 @@ interface WalletIdentityDao {
     )
     suspend fun deleteAuthoritativelyTerminalTransactionsInternal(
         localIds: List<String>,
-        tairaChainId: String?,
+        tairaChainId: String,
         tairaPendingJournalPrefix: String,
     ): Int
 
@@ -654,9 +652,8 @@ interface WalletIdentityDao {
      */
     @Transaction
     suspend fun pruneAuthoritativelyTerminalTransactions() {
-        val tairaBinding = TairaDeployment.binding
-        val tairaChainId = tairaBinding?.currentChainId
-        val tairaPendingJournalPrefix = tairaBinding?.pendingJournalPrefix.orEmpty()
+        val tairaChainId = TairaTestnetContract.CHAIN_ID
+        val tairaPendingJournalPrefix = TairaTestnetContract.PENDING_JOURNAL_PREFIX
         var terminalCount = countAuthoritativelyTerminalTransactionsInternal(
             tairaChainId,
             tairaPendingJournalPrefix,
@@ -734,18 +731,16 @@ interface WalletIdentityDao {
     )
     fun observePendingTransactionsForChain(
         walletId: String,
-        tairaChainId: String?,
+        tairaChainId: String,
         tairaPendingJournalPrefix: String,
     ): Flow<List<PendingNetworkTransactionLocal>>
 
-    fun observePendingTransactions(walletId: String): Flow<List<PendingNetworkTransactionLocal>> {
-        val tairaBinding = TairaDeployment.binding
-        return observePendingTransactionsForChain(
+    fun observePendingTransactions(walletId: String): Flow<List<PendingNetworkTransactionLocal>> =
+        observePendingTransactionsForChain(
             walletId,
-            tairaBinding?.currentChainId,
-            tairaBinding?.pendingJournalPrefix.orEmpty(),
+            TairaTestnetContract.CHAIN_ID,
+            TairaTestnetContract.PENDING_JOURNAL_PREFIX,
         )
-    }
 
     @Query(
         """
@@ -770,17 +765,16 @@ interface WalletIdentityDao {
     )
     suspend fun getUnresolvedTransactionsInternal(
         limit: Int,
-        tairaChainId: String?,
+        tairaChainId: String,
         tairaPendingJournalPrefix: String,
     ): List<PendingNetworkTransactionLocal>
 
     @Transaction
     suspend fun getUnresolvedTransactions(): List<PendingNetworkTransactionLocal> {
-        val tairaBinding = TairaDeployment.binding
         val transactions = getUnresolvedTransactionsInternal(
             MAX_ACTIVE_PENDING_TRANSACTIONS + 1,
-            tairaBinding?.currentChainId,
-            tairaBinding?.pendingJournalPrefix.orEmpty(),
+            TairaTestnetContract.CHAIN_ID,
+            TairaTestnetContract.PENDING_JOURNAL_PREFIX,
         )
         check(transactions.size <= MAX_ACTIVE_PENDING_TRANSACTIONS) {
             "PENDING_TRANSACTION_LIMIT_EXCEEDED"
@@ -1238,22 +1232,21 @@ interface WalletIdentityDao {
         }
 
         fun hasCurrentChainIdentity(transaction: PendingNetworkTransactionLocal): Boolean {
-            val tairaBinding = TairaDeployment.binding
             return hasCurrentChainIdentityForBinding(
                 transaction = transaction,
-                tairaChainId = tairaBinding?.currentChainId,
-                tairaPendingJournalPrefix = tairaBinding?.pendingJournalPrefix.orEmpty(),
+                tairaChainId = TairaTestnetContract.CHAIN_ID,
+                tairaPendingJournalPrefix = TairaTestnetContract.PENDING_JOURNAL_PREFIX,
             )
         }
 
         /**
          * Explicit projection used by migration tests and SQL parity checks. Taira authority is
-         * the conjunction of the signed current chain UUID and the exact manifest namespace;
-         * legacy same-UUID rows intentionally fail this predicate.
+         * the conjunction of the fixed first-release chain UUID and its durable journal namespace;
+         * an un-namespaced row intentionally fails this predicate.
          */
         fun hasCurrentChainIdentityForBinding(
             transaction: PendingNetworkTransactionLocal,
-            tairaChainId: String?,
+            tairaChainId: String,
             tairaPendingJournalPrefix: String,
         ): Boolean = when (WalletNetworkId.fromWireId(transaction.networkId)) {
             WalletNetworkId.SORA2 ->
@@ -1261,8 +1254,7 @@ interface WalletIdentityDao {
             WalletNetworkId.MINAMOTO ->
                 transaction.chainId == WalletNetworkChainIdentity.MINAMOTO
             WalletNetworkId.TAIRA ->
-                tairaChainId != null &&
-                    tairaPendingJournalPrefix.isNotEmpty() &&
+                tairaPendingJournalPrefix.isNotEmpty() &&
                     transaction.chainId == tairaChainId &&
                     transaction.localId.startsWith(tairaPendingJournalPrefix)
             null -> false

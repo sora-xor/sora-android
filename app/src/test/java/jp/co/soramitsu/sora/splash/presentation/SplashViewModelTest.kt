@@ -40,6 +40,7 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.sora.splash.domain.PendingRecoveryStartupScheduler
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -76,6 +77,9 @@ class SplashViewModelTest {
     @Mock
     private lateinit var coroutineManager: CoroutineManager
 
+    @Mock
+    private lateinit var pendingRecoveryStartupScheduler: PendingRecoveryStartupScheduler
+
     private lateinit var splashViewModel: SplashViewModel
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -84,7 +88,11 @@ class SplashViewModelTest {
         mockkObject(FirebaseWrapper)
         every { FirebaseWrapper.log(any()) } returns Unit
         whenever(coroutineManager.io).thenReturn(this.coroutineContext[CoroutineDispatcher]!!)
-        splashViewModel = SplashViewModel(interactor, coroutineManager)
+        splashViewModel = SplashViewModel(
+            interactor,
+            coroutineManager,
+            pendingRecoveryStartupScheduler,
+        )
     }
 
     @Test
@@ -95,6 +103,25 @@ class SplashViewModelTest {
         advanceUntilIdle()
         val r = splashViewModel.showMainScreen.getOrAwaitValue()
         assertEquals(Unit, r)
+    }
+
+    @Test
+    fun `nextScreen never navigates before wallet migration completes`() = runTest {
+        val migrationResult = CompletableDeferred<Boolean>()
+        given(interactor.getMigrationDoneAsync()).willReturn(migrationResult)
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+
+        verify(interactor, never()).getRegistrationState()
+
+        migrationResult.complete(true)
+        advanceUntilIdle()
+
+        verify(interactor).getRegistrationState()
+        verify(pendingRecoveryStartupScheduler).scheduleAfterWalletMigration()
+        assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
     }
 
     @Test
@@ -141,6 +168,7 @@ class SplashViewModelTest {
         )
         verify(interactor, never()).getRegistrationState()
         verify(interactor, never()).hasExistingWallet()
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
     }
 
     @Test
@@ -172,14 +200,30 @@ class SplashViewModelTest {
 
     @Test
     fun `explicit retry reruns migration and opens main only after verification`() = runTest {
+        // The same ViewModel survives Activity recreation. A completed preflight failure must
+        // be replaced by retryMigration rather than awaited again through nextScreen.
+        val failedInitialMigration = CompletableDeferred(false)
+        given(interactor.getMigrationDoneAsync()).willReturn(failedInitialMigration)
+        given(interactor.getMigrationFailureCode()).willReturn("INSUFFICIENT_BACKUP_STORAGE")
+        given(interactor.canContinueLegacyWallet()).willReturn(false)
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+        assertEquals(
+            WalletMigrationRecoveryUiState("INSUFFICIENT_BACKUP_STORAGE", false),
+            splashViewModel.showMigrationRecovery.getOrAwaitValue(),
+        )
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
         given(interactor.retryMigration()).willReturn(true)
 
         splashViewModel.retryWalletMigration()
         advanceUntilIdle()
 
         assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+        assertEquals(false, failedInitialMigration.await())
+        verify(interactor).retryMigration()
         verify(interactor, never()).getRegistrationState()
         verify(interactor, never()).hasExistingWallet()
+        verify(pendingRecoveryStartupScheduler).scheduleAfterWalletMigration()
     }
 
     @Test
@@ -200,5 +244,6 @@ class SplashViewModelTest {
         )
         verify(interactor, never()).getRegistrationState()
         verify(interactor, never()).hasExistingWallet()
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
     }
 }

@@ -25,7 +25,7 @@ const RUNTIME_METADATA_SHA256 = "4".repeat(64);
 const CONTROLLER_ID = "synthetic-android-pi-controller";
 const TAIRA = Object.freeze({
   chainId: "fc56984b-2be7-431d-840e-21514d1883f0",
-  toriiEndpoint: "https://node-2.taira.sora.org",
+  toriiEndpoint: "https://taira.sora.org",
   genesisHash: "5".repeat(64),
 });
 

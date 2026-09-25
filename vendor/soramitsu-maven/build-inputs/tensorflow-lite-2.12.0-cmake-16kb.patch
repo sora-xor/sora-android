@@ -1,0 +1,47 @@
+diff --git a/tensorflow/lite/CMakeLists.txt b/tensorflow/lite/CMakeLists.txt
+index c71a3925..3bc86ff9 100644
+--- a/tensorflow/lite/CMakeLists.txt
++++ b/tensorflow/lite/CMakeLists.txt
+@@ -239,6 +239,8 @@ else()
+ endif()
+ if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Android")
+   list(FILTER TFLITE_SRCS EXCLUDE REGEX ".*minimal_logging_android\\.cc$")
++else()
++  list(FILTER TFLITE_SRCS EXCLUDE REGEX ".*minimal_logging_default\\.cc$")
+ endif()
+ if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
+   list(FILTER TFLITE_SRCS EXCLUDE REGEX ".*minimal_logging_ios\\.cc$")
+@@ -654,4 +656,31 @@ target_link_libraries(_pywrap_tensorflow_interpreter_wrapper
+ target_compile_options(_pywrap_tensorflow_interpreter_wrapper
+   PUBLIC ${TFLITE_TARGET_PUBLIC_OPTIONS}
+   PRIVATE ${TFLITE_TARGET_PRIVATE_OPTIONS}
+-)
+\ No newline at end of file
++)
++# Local 16 KB JNI rebuild experiment for the exact TensorFlow Lite 2.12.0 source.
++# This block is not part of the upstream release tag.
++add_library(tensorflowlite_jni_16kb SHARED
++  ${TFLITE_SOURCE_DIR}/profiling/telemetry/telemetry.cc
++  ${TFLITE_SOURCE_DIR}/profiling/telemetry/c/telemetry_setting_internal.cc
++  ${TFLITE_SOURCE_DIR}/core/experimental/acceleration/configuration/c/xnnpack_plugin.cc
++  ${TFLITE_SOURCE_DIR}/core/shims/jni/jni_utils.cc
++  ${TFLITE_SOURCE_DIR}/java/src/main/native/jni_utils.cc
++  ${TFLITE_SOURCE_DIR}/java/src/main/native/nativeinterpreterwrapperexperimental_jni.cc
++  ${TFLITE_SOURCE_DIR}/java/src/main/native/interpreter_factory_impl_jni.cc
++  ${TFLITE_SOURCE_DIR}/java/src/main/native/nativeinterpreterwrapper_jni.cc
++  ${TFLITE_SOURCE_DIR}/java/src/main/native/nativesignaturerunner_jni.cc
++  ${TFLITE_SOURCE_DIR}/java/src/main/native/op_resolver_lazy_delegate_proxy.cc
++  ${TFLITE_SOURCE_DIR}/java/src/main/native/tensor_jni.cc
++  ${TFLITE_SOURCE_DIR}/java/src/main/native/tensorflow_lite_jni.cc
++  ${TFLITE_SOURCE_DIR}/delegates/nnapi/java/src/main/native/nnapi_delegate_impl_jni.cc
++)
++set_target_properties(tensorflowlite_jni_16kb PROPERTIES OUTPUT_NAME tensorflowlite_jni)
++target_include_directories(tensorflowlite_jni_16kb PRIVATE ${TENSORFLOW_SOURCE_DIR})
++target_link_libraries(tensorflowlite_jni_16kb PRIVATE "-Wl,--whole-archive" tensorflow-lite "-Wl,--no-whole-archive")
++target_link_options(tensorflowlite_jni_16kb PRIVATE
++  "-Wl,-z,max-page-size=16384"
++  "-Wl,-z,common-page-size=16384"
++  "-Wl,--no-undefined"
++  "-Wl,--undefined-version"
++  "-Wl,--version-script,${TFLITE_EXPORTS_MAP}"
++)

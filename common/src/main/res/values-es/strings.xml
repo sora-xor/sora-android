@@ -318,6 +318,7 @@
   <string name="more_menu_sora_card_subtitle">Gestión de la cuenta fiat y de la tarjeta</string>
   <string name="more_menu_sora_card_title">Tarjeta SORA</string>
   <string name="network_fee">Comisión de red</string>
+  <string name="network_finalized_history">Actividad</string>
   <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">Failed to validate URL (Wrong address)</string>
   <string name="node_details_genesis_validation_failed">The genesis hash of your node is different than the genesis hash of the network</string>
@@ -350,6 +351,9 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">Configurar código pin</string>
   <string name="pincode_touch_fingerprint_scanner">Toca el sensor de huellas digitales</string>
+  <string name="polkamarkt_action_buy">Comprar</string>
+  <string name="polkamarkt_outcome_no">No</string>
+  <string name="polkamarkt_outcome_yes">Sí</string>
   <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
@@ -449,10 +453,10 @@
   <string name="referral_no_available_invitations">No hay invitaciones disponibles</string>
   <string name="referral_referral_link">Referrer’s link or address</string>
   <string name="referral_referrer_address">Referrer\'s address</string>
-  <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
+  <string name="referral_referrer_description" formatted="false">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
   <string name="referral_start_inviting">Start inviting</string>
-  <string name="referral_subtitle">Whenever your referral makes a transaction, 10% of the network fee paid goes to you as a reward.</string>
-  <string name="referral_title">Get 10% of your referrals’ network fees</string>
+  <string name="referral_subtitle" formatted="false">Whenever your referral makes a transaction, 10% of the network fee paid goes to you as a reward.</string>
+  <string name="referral_title" formatted="false">Get 10% of your referrals’ network fees</string>
   <string name="referral_toolbar_title">Referral program</string>
   <string name="referral_total_rewards">Total rewards</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>
@@ -556,10 +560,16 @@
   <string name="wallet_balance_locked">Bloqueado</string>
   <string name="wallet_balance_reserved">Reservado</string>
   <string name="wallet_bonded">Vinculado</string>
+  <string name="wallet_connect_account">Cuenta</string>
+  <string name="wallet_connect_done">Hecho</string>
+  <string name="wallet_market_refresh">Refrescar</string>
+  <string name="wallet_network_activity">Actividad</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Mi %s dirección de red para recibir %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_receive_xor">Recibir XOR</string>
   <string name="wallet_redeemable">Canjeable</string>
   <string name="wallet_send_existential_warning_message">Su transferencia eliminará la cuenta del blockstore, ya que hará que el saldo total sea menor que el depósito existente</string>
+  <string name="wallet_status_confirmed">Completada</string>
   <string name="wallet_title">Cartera</string>
   <string name="wallet_transaction_rejected">Transacción rechazada</string>
   <string name="wallet_transaction_submitted">Transacción enviada</string>

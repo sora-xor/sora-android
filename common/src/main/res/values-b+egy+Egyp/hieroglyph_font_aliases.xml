@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingDefaultResource">
+    <!--
+      Both the legacy View styles and the Compose theme refer to the Sora/Inter
+      resource IDs directly. Locale-specific aliases make those same IDs resolve
+      to the bundled hieroglyph font only while egy-Egyp is active. The default
+      declarations are files in res/font; lint does not recognize them as the
+      defaults for locale-qualified value aliases.
+    -->
+    <item name="sora_thin" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="sora_extralight" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="sora_light" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="sora_regular" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="sora_semibold" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="sora_bold" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="sora_extrabold" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+
+    <item name="inter_thin" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="inter_extralight" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="inter_light" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="inter_regular" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="inter_semibold" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="inter_bold" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+    <item name="inter_extrabold" type="font">@font/noto_sans_egyptian_hieroglyphs_regular</item>
+</resources>

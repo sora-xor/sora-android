@@ -56,7 +56,7 @@ class IrohaKeyDerivationTest {
     fun `address validation is bound to selected network`() {
         val account = IrohaKeyDerivation.derive(
             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            NexusNetworks.taira,
+            NexusDerivationProfiles.taira,
         )
 
         try {
@@ -105,7 +105,7 @@ class IrohaKeyDerivationTest {
         val vector = loadVectors().single { it["name"].asString == name }
         val mnemonic = vector["mnemonic"].asString
         val minamoto = IrohaKeyDerivation.derive(mnemonic, NexusNetworks.minamoto)
-        val taira = IrohaKeyDerivation.derive(mnemonic, NexusNetworks.taira)
+        val taira = IrohaKeyDerivation.derive(mnemonic, NexusDerivationProfiles.taira)
         try {
             assertDerivedAccount(minamoto, vector.getAsJsonObject("minamoto"))
             assertDerivedAccount(taira, vector.getAsJsonObject("taira"))
