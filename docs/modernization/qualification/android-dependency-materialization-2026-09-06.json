@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "observedAtUtc": "2026-09-24T15:18:38Z",
+  "observedAtUtc": "2026-09-25T04:33:04Z",
   "historicalEvidencePath": "docs/modernization/release-probe-evidence-2026-08-02.json",
   "historicalEvidenceSha256": "8cc5d52691e4f48595c1ce70b945bd23fb3fecc6c6a6cc785b076808cb00e07e",
   "androidSigningIdentity": {
@@ -29,12 +29,12 @@
     "vendorContentsManifestSha256": "2bc1fddb65f0c7e6db98d309804bae1fb43fb24c60e2f88f50a843179c99771f",
     "sourceToBinaryReviewComplete": false,
     "strictVerificationMetadataPresent": true,
-    "verificationMetadataSha256": "993edddc18879e03d14b69ff8d718d7731d380cf2670b29c610cbdcf04f54ccd",
-    "verificationMetadataDigestSha256": "5a396f2cc7f936a284811e4da5251087ac037965b3a6698a9d517c5abfdbd29a",
+    "verificationMetadataSha256": "568c9e4d3fad0872b955e801dc5084dec2bacbab1a42da31a973a6f9305b52eb",
+    "verificationMetadataDigestSha256": "29706737c442f0ff0b6ae6f7c804de80db7c61f01c135607fc4f78470291426d",
     "verificationMetadataReviewed": false,
     "productionReleaseLocksPresent": true,
     "lockFileCount": 31,
-    "lockFileSetSha256": "206ce5977c8f330b00536d1d71767b9bf8ffe88f7b0a6b92584e495451305b03",
+    "lockFileSetSha256": "bf73bee62e3da74dca238607cd3497250c9a34bd51b45a9ed3e01fd403f64593",
     "lockConfigurationCount": 566,
     "productionReleaseLockConfigurationCount": 565,
     "lockConfigurationInventorySha256": "4bc0c68745a3114f0b8caae98556d4205296e10bcf0058909c06d03f80194a00",

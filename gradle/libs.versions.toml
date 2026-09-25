@@ -45,6 +45,8 @@ ktor = "2.3.1"
 ed = "2.0.1"
 xerces = "2.9.0"
 bouncycastle = "1.78.1"
+jmrtd = "0.7.42"
+scubaSmartcards = "0.0.20"
 dagger = "2.59.2"
 hiltCompose = "1.3.0"
 hiltWorkManager = "1.3.0"
@@ -106,6 +108,9 @@ ktorWebSocketDep = { module = "io.ktor:ktor-client-websockets", version.ref = "k
 ed25519Dep = { module = "com.github.warchant:ed25519-sha3-java", version.ref = "ed" }
 xercesDep = { module = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces", version.ref = "xerces" }
 bcprovDep = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+bcutilDep = { module = "org.bouncycastle:bcutil-jdk18on", version.ref = "bouncycastle" }
+jmrtdDep = { module = "org.jmrtd:jmrtd", version.ref = "jmrtd" }
+scubaSmartcardsDep = { module = "net.sf.scuba:scuba-smartcards", version.ref = "scubaSmartcards" }
 timberDep = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 workManagerDep = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }
 insetterDep = { module = "dev.chrisbanes.insetter:insetter", version.ref = "insetter" }

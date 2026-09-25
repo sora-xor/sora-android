@@ -427,6 +427,8 @@ dependencies {
     testImplementation(libs.mockitoKotlinDep)
     testImplementation(libs.archCoreTestDep)
     testImplementation(libs.truthDep)
+    testImplementation(libs.bcutilDep)
+    testImplementation(libs.jmrtdDep)
 
     androidTestImplementation(libs.androidxTestExtJunitDep)
     androidTestImplementation(libs.androidxTestEspressoCoreDep)
