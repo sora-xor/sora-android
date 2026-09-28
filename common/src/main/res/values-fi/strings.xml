@@ -449,10 +449,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Referrer’s link or address</string>
   <string name="referral_referrer_address">Referrer\'s address</string>
-  <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
+  <string name="referral_referrer_description" formatted="false">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
   <string name="referral_start_inviting">Aloita kutsuminen</string>
-  <string name="referral_subtitle">Aina kun suosittelija suorittaa tapahtuman, 10 %% maksetusta verkkomaksusta tulee sinulle palkkiona.</string>
-  <string name="referral_title">Saat 10 %% suosittelemiesi jäsenten verkkomaksuista.</string>
+  <string name="referral_subtitle" formatted="false">Aina kun suosittelija suorittaa tapahtuman, 10 % maksetusta verkkomaksusta tulee sinulle palkkiona.</string>
+  <string name="referral_title" formatted="false">Saat 10 % suosittelemiesi jäsenten verkkomaksuista.</string>
   <string name="referral_toolbar_title">Suositteluohjelma</string>
   <string name="referral_total_rewards">Palkkiot yhteensä</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>
@@ -556,10 +556,13 @@
   <string name="wallet_balance_locked">Lukittu</string>
   <string name="wallet_balance_reserved">Varattu</string>
   <string name="wallet_bonded">Bonded</string>
+  <string name="wallet_connect_done">Tehty</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Minun %s Network address to Receive %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_receive_xor">Vastaanota XOR</string>
   <string name="wallet_redeemable">Lunastettavissa</string>
   <string name="wallet_send_existential_warning_message">Siirtosi poistaa tilin blockstore-kaupasta, koska se tekee kokonaissaldon pienemmäksi kuin olemassa oleva talletus</string>
+  <string name="wallet_status_confirmed">Valmis</string>
   <string name="wallet_title">Lompakko</string>
   <string name="wallet_transaction_rejected">Tapahtuma hylätty</string>
   <string name="wallet_transaction_submitted">Tapahtuma lähetetty</string>
@@ -567,4 +570,7 @@
   <string name="wallet_unbonded">Unbonded</string>
   <string name="wallet_unbonding">Unbonding</string>
   <string name="your_pooled">Your %s pooled</string>
+  <string name="network_finalized_history">Toiminta</string>
+  <string name="wallet_network_activity">Toiminta</string>
+  <string name="wallet_connect_account">Tili</string>
 </resources>

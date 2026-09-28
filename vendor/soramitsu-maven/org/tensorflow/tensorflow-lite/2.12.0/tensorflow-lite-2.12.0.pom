@@ -1,0 +1,61 @@
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.tensorflow</groupId>
+  <artifactId>tensorflow-lite</artifactId>
+  <version>2.12.0</version>
+  <packaging>aar</packaging>
+
+  <name>TensorFlow Lite</name>
+  <url>https://tensorflow.org/lite/</url>
+  <description>A library helps deploy machine learning models on mobile devices</description>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>TensorFlow Authors</name>
+      <organization>TensorFlow</organization>
+      <organizationUrl>https://tensorflow.org</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/tensorflow/tensorflow.git</connection>
+    <developerConnection>scm:git:ssh://github.com:tensorflow/tensorflow.git</developerConnection>
+    <url>https://github.com/tensorflow/tensorflow/tree/master/</url>
+  </scm>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.simpligility.maven.plugins</groupId>
+        <artifactId>android-maven-plugin</artifactId>
+        <version>4.1.0</version>
+        <extensions>true</extensions>
+        <configuration>
+            <sign>
+                <debug>false</debug>
+            </sign>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.tensorflow</groupId>
+      <artifactId>tensorflow-lite-api</artifactId>
+      <version>[2.12.0]</version>
+    </dependency>
+
+  </dependencies>
+</project>

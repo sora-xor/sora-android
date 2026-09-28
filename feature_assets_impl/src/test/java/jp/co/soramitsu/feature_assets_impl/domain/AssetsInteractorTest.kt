@@ -47,6 +47,8 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -203,10 +205,10 @@ class AssetsInteractorTest {
                 any(),
                 capture(walletValidator),
             )
-        } returns ExtrinsicSubmitStatus(false, "", "")
+        } returns ExtrinsicSubmitStatus(true, "txhash", "blockhash")
 
         Assert.assertEquals(
-            "",
+            "txhash",
             interactor.observeTransfer(
                 "to",
                 TestTokens.xorToken,
@@ -229,6 +231,48 @@ class AssetsInteractorTest {
         Assert.assertEquals("SORA2_SELECTED_WALLET_CHANGED", error?.message)
         Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
         Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
+    }
+
+    @Test
+    fun `finalized transfer failure is surfaced to the caller`() = runTest {
+        val kp = Sr25519Keypair(
+            ByteArray(32) { 1 },
+            ByteArray(32) { 2 },
+            ByteArray(32) { 3 },
+        )
+        coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns kp
+        coEvery {
+            assetsRepository.observeTransfer(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } returns ExtrinsicSubmitStatus(false, "txhash", "blockhash")
+
+        val error = runCatching {
+            interactor.observeTransfer(
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                expectedWalletId = "address",
+            )
+        }.exceptionOrNull()
+
+        Assert.assertTrue(error is SoraException)
+        Assert.assertEquals(
+            ResponseCode.BROKEN_TRANSACTION,
+            (error as SoraException).errorResponseCode,
+        )
+        Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
+        Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
+        verify(exactly = 0) {
+            transactionHistoryRepository.saveTransaction(any(), any())
+        }
     }
 
     @Test

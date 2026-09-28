@@ -6,6 +6,7 @@ import javax.inject.Singleton
 import jp.co.soramitsu.common.nexus.IrohaAddressCodec
 import jp.co.soramitsu.common.nexus.NexusNetworks
 import jp.co.soramitsu.common.nexus.NexusQuantityContract
+import jp.co.soramitsu.common.nexus.NexusToriiException
 import jp.co.soramitsu.common.nexus.NexusToriiReadClient
 import jp.co.soramitsu.common.nexus.NexusTransferHistoryItem
 import jp.co.soramitsu.common.nexus.WalletNetworkId
@@ -40,6 +41,7 @@ data class NexusPortfolioBalance(
     val historyErrorCode: String?,
     val errorCode: String?,
     val recoveryPendingTransactions: List<NexusPendingTransaction> = emptyList(),
+    val sendCapabilities: NexusSendCapabilities = NexusSendCapabilities.unavailable(),
 )
 
 data class NexusPendingTransaction(
@@ -103,9 +105,11 @@ class NexusPortfolioRepository @Inject constructor(
                     )
                 PortfolioInputs(
                     accounts = accounts.filter {
+                        val networkId = WalletNetworkId.fromWireId(it.networkId)
                         it.walletId == walletId &&
-                            it.networkId != WalletNetworkId.SORA2.wireId &&
-                            (it.networkId != WalletNetworkId.TAIRA.wireId || tairaVisible)
+                            networkId != null &&
+                            NexusNetworks.find(networkId) != null &&
+                            (networkId != WalletNetworkId.TAIRA || tairaVisible)
                     },
                     pending = if (pendingRecoveryRequired) emptyList() else pending,
                     pendingRecoveryRequired = pendingRecoveryRequired,
@@ -184,12 +188,15 @@ class NexusPortfolioRepository @Inject constructor(
                                     )
                                 } catch (error: CancellationException) {
                                     throw error
-                                } catch (_: Throwable) {
+                                } catch (error: Throwable) {
                                     HistoryResult(
                                         items = emptyList(),
-                                        errorCode = "NEXUS_HISTORY_UNAVAILABLE",
+                                        errorCode = error.diagnosticCode(
+                                            "NEXUS_HISTORY_UNAVAILABLE"
+                                        ),
                                     )
                                 }
+                                val sendCapabilities = sendQualification.capabilitiesFor(network)
                                 NexusPortfolioBalance(
                                     walletId = walletId,
                                     networkId = id,
@@ -200,9 +207,9 @@ class NexusPortfolioRepository @Inject constructor(
                                     assetDefinitionId = canonicalAssetDefinitionId,
                                     explorerBaseUrl = network.explorerBaseUrl,
                                     sendAvailable =
-                                        portfolioAccess.allowsSends &&
+                                            portfolioAccess.allowsSends &&
                                             featureState.nexusSendsAvailable &&
-                                            sendQualification.isQualifiedFor(network),
+                                            sendCapabilities.supportsSend,
                                     pendingTransactions = if (pendingRecoveryRequired) {
                                         emptyList()
                                     } else {
@@ -221,10 +228,11 @@ class NexusPortfolioRepository @Inject constructor(
                                         } else {
                                             recoveryPending
                                         },
+                                    sendCapabilities = sendCapabilities,
                                 )
                             } catch (error: CancellationException) {
                                 throw error
-                            } catch (_: Throwable) {
+                            } catch (error: Throwable) {
                                 NexusPortfolioBalance(
                                     walletId = walletId,
                                     networkId = id,
@@ -237,11 +245,13 @@ class NexusPortfolioRepository @Inject constructor(
                                     sendAvailable = false,
                                     pendingTransactions = emptyList(),
                                     confirmedTransfers = emptyList(),
-                                    historyErrorCode = "NEXUS_HISTORY_UNAVAILABLE",
+                                    historyErrorCode = error.diagnosticCode(
+                                        "NEXUS_HISTORY_UNAVAILABLE"
+                                    ),
                                     errorCode = if (pendingRecoveryRequired) {
                                         "NEXUS_PENDING_RECOVERY_REQUIRED"
                                     } else {
-                                        "NEXUS_BALANCE_UNAVAILABLE"
+                                        error.diagnosticCode("NEXUS_BALANCE_UNAVAILABLE")
                                     },
                                     recoveryPendingTransactions = pending,
                                 )
@@ -273,6 +283,9 @@ class NexusPortfolioRepository @Inject constructor(
         check(decimal.signum() >= 0) { "NEXUS_INVALID_QUANTITY" }
         return decimal.stripTrailingZeros().toPlainString()
     }
+
+    private fun Throwable.diagnosticCode(fallback: String): String =
+        (this as? NexusToriiException)?.safeCode ?: fallback
 
     private companion object {
         const val MAX_PENDING_TRANSACTIONS = 500

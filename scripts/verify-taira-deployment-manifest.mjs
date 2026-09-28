@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
-import { verifyTairaDeploymentManifestV1 } from "./lib/taira-deployment-manifest-v1.mjs";
+import {
+  parseExpectedTairaDeploymentManifestSequenceNumberV1,
+  verifyTairaDeploymentManifestV1,
+} from "./lib/taira-deployment-manifest-v1.mjs";
 
 const fail = (code) => {
   process.stderr.write(`${code}\n`);
@@ -27,6 +30,10 @@ const evaluationEpochSeconds = Number(evaluationRaw);
 if (!Number.isSafeInteger(evaluationEpochSeconds)) {
   fail("TAIRA_DEPLOYMENT_EVALUATION_EPOCH_INVALID");
 }
+const expectedManifestSequenceNumber =
+  parseExpectedTairaDeploymentManifestSequenceNumberV1(
+    required("TAIRA_DEPLOYMENT_EXPECTED_MANIFEST_SEQUENCE_NUMBER"),
+  );
 
 try {
   const receipt = verifyTairaDeploymentManifestV1({
@@ -38,6 +45,7 @@ try {
     expectedOperatorKeySha256: required("TAIRA_DEPLOYMENT_OPERATOR_KEY_SHA256"),
     expectedReviewerKeySha256: required("TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256"),
     evaluationEpochSeconds,
+    expectedManifestSequenceNumber,
   });
   process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
 } catch (error) {

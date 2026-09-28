@@ -317,6 +317,7 @@
   <string name="more_menu_sora_card_subtitle">管理您的卡片和IBAN账户</string>
   <string name="more_menu_sora_card_title">SORA卡</string>
   <string name="network_fee">网络费用</string>
+  <string name="network_finalized_history">活动</string>
   <string name="node_connection_issue">您的账户已成功创建。但是应用程序无法连接到默认节点。请尝试切换到备选节点。</string>
   <string name="node_details_address_validation_failed">验证 URL 失败（地址错误）</string>
   <string name="node_details_genesis_validation_failed">您节点的创世哈希与网络的创世哈希不同</string>
@@ -349,6 +350,9 @@
   <string name="pincode_one_try_left">在冷却之前，您还有一次尝试</string>
   <string name="pincode_set_your_pin_code">设置代码</string>
   <string name="pincode_touch_fingerprint_scanner">触摸指纹识别按键</string>
+  <string name="polkamarkt_action_buy">购买</string>
+  <string name="polkamarkt_outcome_yes">是</string>
+  <string name="polkamarkt_ticket_slippage">滑点</string>
   <string name="polkaswap_farm_title_template">%s农场</string>
   <string name="polkaswap_farming_demeter_power">由Demeter农业提供技术支持</string>
   <string name="polkaswap_farming_pool_in_farming_hint">您的一部分流动池份额已被质押。要访问它，您需要先解除质押。</string>
@@ -443,10 +447,10 @@
   <string name="referral_no_available_invitations">没有可用的邀请</string>
   <string name="referral_referral_link">推荐人的链接或地址</string>
   <string name="referral_referrer_address">推荐人的地址</string>
-  <string name="referral_referrer_description">无论何时，您每做一笔转账，都有10%的网络费给予您的推荐人作为奖励</string>
+  <string name="referral_referrer_description" formatted="false">无论何时，您每做一笔转账，都有10%的网络费给予您的推荐人作为奖励</string>
   <string name="referral_start_inviting">开始邀请</string>
-  <string name="referral_subtitle">每当您的推荐人进行交易时，所支付的网络费用的10%将作为奖励发送给您。</string>
-  <string name="referral_title">获得推荐人网络费用的 10%</string>
+  <string name="referral_subtitle" formatted="false">每当您的推荐人进行交易时，所支付的网络费用的10%将作为奖励发送给您。</string>
+  <string name="referral_title" formatted="false">获得推荐人网络费用的 10%</string>
   <string name="referral_toolbar_title">推荐计划</string>
   <string name="referral_total_rewards">总奖励</string>
   <string name="referral_unbond_button_title">解绑XOR</string>
@@ -550,10 +554,17 @@
   <string name="wallet_balance_locked">已被锁定</string>
   <string name="wallet_balance_reserved">已保留</string>
   <string name="wallet_bonded">已绑定</string>
+  <string name="wallet_connect_account">账户</string>
+  <string name="wallet_connect_done">已完成</string>
+  <string name="wallet_market_refresh">刷新</string>
+  <string name="wallet_network_activity">活动</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">我的%s网络地址要接收%s：</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">扫描此 QR 给我发送%s 。我的%s网络账户 ID： \n %s</string>
+  <string name="wallet_receive_xor">收到XOR</string>
   <string name="wallet_redeemable">可赎回</string>
+  <string name="wallet_scan_qr">扫描二维码</string>
   <string name="wallet_send_existential_warning_message">您的转账将会从区块存储中移除账户，因为这将导致总余额低于现有存款。</string>
+  <string name="wallet_status_confirmed">已完成</string>
   <string name="wallet_title">钱包</string>
   <string name="wallet_transaction_rejected">交易被拒绝</string>
   <string name="wallet_transaction_submitted">交易已提交</string>

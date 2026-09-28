@@ -34,6 +34,24 @@ class Sora2PendingRecoveryBatchPlannerTest {
     }
 
     @Test
+    fun `durable retry offsets rotate after coordinator process restarts`() {
+        val ordered = (0 until 10).toList()
+        val selected = (0L..3L).flatMap { attempt ->
+            val offset = attempt * 3L
+            Sora2PendingRecoveryBatchPlanner.select(
+                ordered = ordered,
+                cursor = Sora2PendingRecoveryBatchPlanner.cursorForOffset(
+                    offset = offset,
+                    rowCount = ordered.size,
+                ),
+                maximum = 3,
+            ).rows
+        }
+
+        assertEquals(ordered, selected.distinct())
+    }
+
+    @Test
     fun `foreground priority does not disable bounded rotation`() {
         val ordered = (0 until 6).toList()
         val first = Sora2PendingRecoveryBatchPlanner.select(

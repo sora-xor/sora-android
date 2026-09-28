@@ -449,10 +449,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Link oder Adresse des Referrers</string>
   <string name="referral_referrer_address">Adresse des Referrers</string>
-  <string name="referral_referrer_description">Jedes Mal, wenn du eine Transaktion durchführst, gehen 10 %% der gezahlten Netzwerkgebühr als Belohnung an deinen Referrer.</string>
+  <string name="referral_referrer_description" formatted="false">Jedes Mal, wenn du eine Transaktion durchführst, gehen 10 % der gezahlten Netzwerkgebühr als Belohnung an deinen Referrer.</string>
   <string name="referral_start_inviting">Beginne mit dem Einladen</string>
-  <string name="referral_subtitle">Jedes Mal, wenn deine Empfehlung eine Transaktion durchführt, erhälst du 10 %% der gezahlten Netzwerkgebühr als Belohnung.</string>
-  <string name="referral_title">Erhalte 10 %% der Netzwerkgebühren für deine Empfehlungen</string>
+  <string name="referral_subtitle" formatted="false">Jedes Mal, wenn deine Empfehlung eine Transaktion durchführt, erhälst du 10 % der gezahlten Netzwerkgebühr als Belohnung.</string>
+  <string name="referral_title" formatted="false">Erhalte 10 % der Netzwerkgebühren für deine Empfehlungen</string>
   <string name="referral_toolbar_title">Empfehlungsprogramm</string>
   <string name="referral_total_rewards">Gesamte Belohnung</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>
@@ -556,10 +556,13 @@
   <string name="wallet_balance_locked">Gesperrt</string>
   <string name="wallet_balance_reserved">Reserviert</string>
   <string name="wallet_bonded">Zugeordnet</string>
+  <string name="wallet_connect_done">Erledigt</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Meine %s Netzwerkadresse %s zum Empfangen:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scanne diesen QR, um mir %s zu senden. Meine %s-Netzwerk-Konto-ID:\n%s</string>
+  <string name="wallet_receive_xor">XOR empfangen</string>
   <string name="wallet_redeemable">Einlösbar</string>
   <string name="wallet_send_existential_warning_message">Durch diesen Transfer wird das Konto aus dem Blockstore entfernt, da der Restbetrag niedriger sein wird als das notwendige existenzielle Guthaben.</string>
+  <string name="wallet_status_confirmed">Abgeschlossen</string>
   <string name="wallet_title">Wallet</string>
   <string name="wallet_transaction_rejected">Transaktion abgelehnt</string>
   <string name="wallet_transaction_submitted">Transaktion übermittelt</string>
@@ -567,4 +570,7 @@
   <string name="wallet_unbonded">Unbonded</string>
   <string name="wallet_unbonding">Unbonding</string>
   <string name="your_pooled">Your %s pooled</string>
+  <string name="network_finalized_history">Aktivität</string>
+  <string name="wallet_network_activity">Aktivität</string>
+  <string name="wallet_connect_account">Konto</string>
 </resources>

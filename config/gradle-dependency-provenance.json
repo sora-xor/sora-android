@@ -29,35 +29,45 @@
         "mavenPom"
       ],
       "exactModules": [
+        "androidx.camera:camera-core",
+        "androidx.graphics:graphics-path",
+        "com.goterl:lazysodium-android",
         "com.paywings.kyc:android-sdk",
         "com.paywings.oauth:android-sdk",
         "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk",
+        "com.scottyab:rootbeer-lib",
         "io.emeraldpay.polkaj:polkaj-scale",
-        "jp.co.soramitsu.xnetworking:lib-android",
         "jp.co.soramitsu:android-foundation",
         "jp.co.soramitsu:android-sora-card",
         "jp.co.soramitsu:ui-core",
         "jp.co.soramitsu:xbackup",
         "jp.co.soramitsu:xcrypto",
-        "jp.co.soramitsu:xsubstrate"
+        "jp.co.soramitsu:xsubstrate",
+        "jp.co.soramitsu.xnetworking:lib-android",
+        "org.tensorflow:tensorflow-lite"
       ],
       "materializedCoordinates": [
+        "androidx.camera:camera-core:1.3.1",
+        "androidx.graphics:graphics-path:1.0.1",
+        "com.goterl:lazysodium-android:5.0.2",
         "com.paywings.kyc:android-sdk:1.2.2",
         "com.paywings.oauth:android-sdk:2.0.0",
         "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3",
+        "com.scottyab:rootbeer-lib:0.1.0",
         "io.emeraldpay.polkaj:polkaj-scale:0.2.3",
-        "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
         "jp.co.soramitsu:android-foundation:0.0.4",
         "jp.co.soramitsu:android-sora-card:1.2.1-K2",
         "jp.co.soramitsu:ui-core:0.2.39",
         "jp.co.soramitsu:xbackup:1.2.3",
         "jp.co.soramitsu:xcrypto:1.2.7",
-        "jp.co.soramitsu:xsubstrate:1.2.7"
+        "jp.co.soramitsu:xsubstrate:1.2.7",
+        "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
+        "org.tensorflow:tensorflow-lite:2.12.0"
       ],
       "sourceProvenancePath": "vendor/soramitsu-maven/SOURCE_PROVENANCE.json",
-      "sourceProvenanceSha256": "39264fee02d09548e04806fbffcdaedebef29ce4715f3aa804093e44b51f5118",
+      "sourceProvenanceSha256": "560b9c7ce80bae57e76dd9c30268e983dbb100cfcee1a2666bfd427d97d7be22",
       "contentsManifestPath": "vendor/soramitsu-maven/CONTENTS.sha256",
-      "contentsManifestSha256": "d632afc3ebbd1d801a41d444d63c2879cb78c7241da3ed259667825a0c366c1f",
+      "contentsManifestSha256": "2bc1fddb65f0c7e6db98d309804bae1fb43fb24c60e2f88f50a843179c99771f",
       "manifestFormat": "sha256-two-space-relative-path-lf",
       "symlinkFree": true,
       "exactRegularFileCoverage": true,
@@ -168,24 +178,29 @@
     "mode": "strict",
     "metadataPath": "gradle/verification-metadata.xml",
     "metadataPresent": true,
-    "metadataSha256": "90b196d775f064b7f80b9520582eec8fc40f874b6f750a49546141a8b793bfab",
+    "metadataSha256": "568c9e4d3fad0872b955e801dc5084dec2bacbab1a42da31a973a6f9305b52eb",
     "metadataDigestPath": "gradle/verification-metadata.sha256",
-    "metadataDigestSha256": "4993f3789151edb393340b1677e7fa2893689c4876d4ae6ebc23bd243bd0ceb2",
+    "metadataDigestSha256": "29706737c442f0ff0b6ae6f7c804de80db7c61f01c135607fc4f78470291426d",
     "verifyMetadata": true,
     "verifySignatures": false,
     "sha256ForEveryResolvedArtifact": true,
     "materializedVendorCoordinates": [
+      "androidx.camera:camera-core:1.3.1",
+      "androidx.graphics:graphics-path:1.0.1",
+      "com.goterl:lazysodium-android:5.0.2",
       "com.paywings.kyc:android-sdk:1.2.2",
       "com.paywings.oauth:android-sdk:2.0.0",
       "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3",
+      "com.scottyab:rootbeer-lib:0.1.0",
       "io.emeraldpay.polkaj:polkaj-scale:0.2.3",
-      "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
       "jp.co.soramitsu:android-foundation:0.0.4",
       "jp.co.soramitsu:android-sora-card:1.2.1-K2",
       "jp.co.soramitsu:ui-core:0.2.39",
       "jp.co.soramitsu:xbackup:1.2.3",
       "jp.co.soramitsu:xcrypto:1.2.7",
-      "jp.co.soramitsu:xsubstrate:1.2.7"
+      "jp.co.soramitsu:xsubstrate:1.2.7",
+      "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
+      "org.tensorflow:tensorflow-lite:2.12.0"
     ],
     "independentlyReviewed": false,
     "trustedArtifactExceptions": []
@@ -232,152 +247,152 @@
         "test_data/gradle.lockfile"
       ],
       "lockFileSetFormat": "sorted-path-nul-file-bytes-nul-sha256",
-      "lockFileSetSha256": "1b91b6168ff2c0ec74e0f239e90ff8125742ae8a8fea3458f2a7cbfe472eb9ea",
+      "lockFileSetSha256": "bf73bee62e3da74dca238607cd3497250c9a34bd51b45a9ed3e01fd403f64593",
       "configurationInventoryFormat": "project-path-colon-configuration-lf-no-terminal-lf-sha256",
-      "configurationInventorySha256": "d35d7512074d387ae71dfad3f52833af70875e3afe4a84d46b667a31e3bbfd1f",
-      "configurationCount": 271,
-      "productionReleaseConfigurationCount": 270
+      "configurationInventorySha256": "4bc0c68745a3114f0b8caae98556d4205296e10bcf0058909c06d03f80194a00",
+      "configurationCount": 566,
+      "productionReleaseConfigurationCount": 565
     },
     "lockFiles": [
       {
         "path": "app/gradle.lockfile",
-        "sha256": "8cf76fb6632d8313699bad089c67857f3aaa1545104557a32e1c24a5a4fef286",
-        "configurationCount": 10
+        "sha256": "16674d9f67f6cab13c7970604d261b2fb399658ec4dc2f8d87ae93d4e4baed70",
+        "configurationCount": 19
       },
       {
         "path": "common/gradle.lockfile",
-        "sha256": "f4f5402c56c868035ffee22721588f78f7d4e9a394326cacc243a2dabe2c14b7",
-        "configurationCount": 9
+        "sha256": "75593d0b65a126138c206a5fe1bf76bde984c24da5cceebed2322206bc545294",
+        "configurationCount": 19
       },
       {
         "path": "common_wallet/gradle.lockfile",
-        "sha256": "23997292b71b17869add33bb7f5813b6cfc5a9b6fd4c9b8534cbee3b38c4014a",
-        "configurationCount": 9
+        "sha256": "15f975c281c8832e7f2de8ae71087c38aa6acee5e4594a7bac344dfc8527f9c2",
+        "configurationCount": 19
       },
       {
         "path": "core_db/gradle.lockfile",
-        "sha256": "bbd2e5f33c217cb245ebbd22baa6a59c992268c70923ea1e19b87a5e473aade6",
-        "configurationCount": 9
+        "sha256": "0f3116c7f08d57dc72b88932aa16ba8ee745a41ac38502b34cf448a0122eddc0",
+        "configurationCount": 19
       },
       {
         "path": "demeter/gradle.lockfile",
-        "sha256": "f09ad941e4b47c38a73c974849b5648cd79d7a5f57d38ca72b568b487620d39c",
-        "configurationCount": 9
+        "sha256": "8fa19652dd6e0b0d1e272d539e241bef832825f65708f50fe918c50ad673d54c",
+        "configurationCount": 19
       },
       {
         "path": "feature_account_api/gradle.lockfile",
-        "sha256": "cf5929dc30b4be2e286163e2e57fefc470d57c79c35c9ace746cf81d31c06470",
-        "configurationCount": 9
+        "sha256": "ab944d2e20b3046bcb4d66783fed4f442b5d68d4d1bc12aa8f496d184aa378c8",
+        "configurationCount": 19
       },
       {
         "path": "feature_account_impl/gradle.lockfile",
-        "sha256": "3df98227967d590c9cd042fb790d6b0ddb420e646e9772a19e7367b161a58be5",
-        "configurationCount": 9
+        "sha256": "983b839e597e3d728033155e5bb4e859e52beddf9638365a1f14cd70a7164ba2",
+        "configurationCount": 19
       },
       {
         "path": "feature_assets_api/gradle.lockfile",
-        "sha256": "d2b6e76bcac89abce6b128cfa244f47df79966c69704bfe33655c3d48fc04acc",
-        "configurationCount": 9
+        "sha256": "d2d301a92d36dec0923d690182cb7ece270492a5444192498ee07b51efa558a8",
+        "configurationCount": 19
       },
       {
         "path": "feature_assets_impl/gradle.lockfile",
-        "sha256": "d2b3c93377b43d03dd0977b31f6512b9b4d700b44c45d949d845af918ae584d9",
-        "configurationCount": 9
+        "sha256": "51ee139bc68fea34d9d5bfac9cf32ca8aae297dbab6091e7c27dc2f88a51b4bb",
+        "configurationCount": 19
       },
       {
         "path": "feature_blockexplorer_api/gradle.lockfile",
-        "sha256": "5d4663bbb147033637ee85aa64b05a9b2556834d35c0445553b0fc49049a4422",
-        "configurationCount": 9
+        "sha256": "e92a604f36706c72e3e3ff6daa6c24481cf5db98af44877e4b360212a96ac62a",
+        "configurationCount": 19
       },
       {
         "path": "feature_blockexplorer_impl/gradle.lockfile",
-        "sha256": "1cc0c1e769a276633295e0d7b665a2e0d39edc26293f1be281235dcf09a12a56",
-        "configurationCount": 9
+        "sha256": "85261b2efb5ec6f81d10984dd2278abafe3990cc61c64831da6e7ed43a4c616f",
+        "configurationCount": 19
       },
       {
         "path": "feature_ecosystem_impl/gradle.lockfile",
-        "sha256": "59a10a89986b760c12273f13b6c80a126e40e82967aebf3efc180f79c94a440d",
-        "configurationCount": 9
+        "sha256": "e5a9bf366eb0a0191f8785a085ca8e75c655e93e21cda5e2c07e8755472a1bc1",
+        "configurationCount": 19
       },
       {
         "path": "feature_ethereum_api/gradle.lockfile",
-        "sha256": "57f93ad2b348adff32d6d545fe9fab06eaa18cf882b798dc1535bd805b561bac",
-        "configurationCount": 9
+        "sha256": "e1ebd4ab84860f28795b97107a8a211e00a248851b32f79bb8208130b650498a",
+        "configurationCount": 19
       },
       {
         "path": "feature_main_api/gradle.lockfile",
-        "sha256": "caf95e77c0ace37fa648108dc0803f0a6d4f8efd1ac6c6e7771afe751abe3ae7",
-        "configurationCount": 9
+        "sha256": "a0ad50a32dac508ed204b2f3298909b82db6027f67f7f2aadcbb056c76b5b911",
+        "configurationCount": 19
       },
       {
         "path": "feature_main_impl/gradle.lockfile",
-        "sha256": "a49a44b3dee004a3792435cd4984dd5e30e3eb4e86da6f3a1e8f24a7c1ab228c",
-        "configurationCount": 9
+        "sha256": "5509f471f8f61d16b49d7cfac9dea2627d8c826f45731cf271054dc2d237eafe",
+        "configurationCount": 19
       },
       {
         "path": "feature_multiaccount_api/gradle.lockfile",
-        "sha256": "c64f31008b376e5eb8b7629361f92d5f1809c032092386186a01611b77ae8c00",
-        "configurationCount": 9
+        "sha256": "f0363e19a1a4dadb5c712ccbc259383c79d83365dfc58c299ed8ca11921730d0",
+        "configurationCount": 19
       },
       {
         "path": "feature_multiaccount_impl/gradle.lockfile",
-        "sha256": "db1484e4f02d074a2e209abd8cacf7feb5bfbdc9ffd392745153adfd833a8a4b",
-        "configurationCount": 9
+        "sha256": "b98746a8c4798684abd0aa2b054ada6f75d171d06fe1541693dd95dd847cce52",
+        "configurationCount": 19
       },
       {
         "path": "feature_polkaswap_api/gradle.lockfile",
-        "sha256": "b9f1b95a70e739e708507e0facfbe7dbd3d831d3c4303b02b27e90c587303dd3",
-        "configurationCount": 9
+        "sha256": "9c3792e9d34044d4bf87cd65dcfbd07acc8804d14ab245d9c92d216a2e79add8",
+        "configurationCount": 19
       },
       {
         "path": "feature_polkaswap_impl/gradle.lockfile",
-        "sha256": "d12377cccb38557a5d2323d3c80335255c12df7c8ea6536b7eccf5bc8e06d064",
-        "configurationCount": 9
+        "sha256": "f8ad0e8afdb65f291352f4093d6b6480697c34848fd8334a19eb54d6b1d24d0d",
+        "configurationCount": 19
       },
       {
         "path": "feature_referral_api/gradle.lockfile",
-        "sha256": "69f88677f405c8ca223790717fc5466c1d01aaca005489274673c27b71128b51",
-        "configurationCount": 9
+        "sha256": "1018c5acc4d981e64ac8602c310f02b22c89fa0954a73e11abe4648029c8c1ad",
+        "configurationCount": 19
       },
       {
         "path": "feature_referral_impl/gradle.lockfile",
-        "sha256": "ea21405acb440ff70262268b454cb16b9f0b177a81cb74ccc1124a4c30c23363",
-        "configurationCount": 9
+        "sha256": "13dd05a4dc25bfa8a1d020a4f731fe81a1d357fa6fb1cd17450758cc6f73f951",
+        "configurationCount": 19
       },
       {
         "path": "feature_select_node_api/gradle.lockfile",
-        "sha256": "4b48532899883fec3d55b855cf33206512251bfba8bb794ab38b74559325827b",
-        "configurationCount": 9
+        "sha256": "3a0fe754bb439d7357db747c588a208910e98adac0cf45819c5895a64d5847ac",
+        "configurationCount": 19
       },
       {
         "path": "feature_select_node_impl/gradle.lockfile",
-        "sha256": "9334dd047abea2151e64b8fb83a3df896a718cae25a6d912387d4b9827ff36ef",
-        "configurationCount": 9
+        "sha256": "1429d552922943fd67cab85445506ac700b6ec71713400b20e7f6beae10f0f60",
+        "configurationCount": 19
       },
       {
         "path": "feature_sora_card_api/gradle.lockfile",
-        "sha256": "5354f471bf8a076e724f39ef84be59366f53481291db7196296a7c444d98a168",
-        "configurationCount": 9
+        "sha256": "f1c2fb5984f7b827d2394cf5011ca32a71c6fbfc591b6abf48d5aba6bac7ca4a",
+        "configurationCount": 19
       },
       {
         "path": "feature_sora_card_impl/gradle.lockfile",
-        "sha256": "b4f30dcf2a5d911e307aaccfc832b1a6798608fd57bf9cbd1c9e913e32b81dde",
-        "configurationCount": 9
+        "sha256": "ea7c447d45c83438ab5c314939f9a044566d15d561a8c88f1c0069bc30f8f2d8",
+        "configurationCount": 19
       },
       {
         "path": "feature_wallet_api/gradle.lockfile",
-        "sha256": "b9f1b95a70e739e708507e0facfbe7dbd3d831d3c4303b02b27e90c587303dd3",
-        "configurationCount": 9
+        "sha256": "9c3792e9d34044d4bf87cd65dcfbd07acc8804d14ab245d9c92d216a2e79add8",
+        "configurationCount": 19
       },
       {
         "path": "feature_wallet_impl/gradle.lockfile",
-        "sha256": "b2130ca80d44bd0cf66e1990040c482ca3254ce214e615722252f53a31c694ce",
-        "configurationCount": 9
+        "sha256": "185c99c62a17d728c3acb389050418fbcf42ec2fe3123e427b56e6bd4cdeab9c",
+        "configurationCount": 19
       },
       {
         "path": "network/gradle.lockfile",
-        "sha256": "f71caf79679140442f535b2701dc0f82113a0cdace26627bd61293da5fc860a9",
-        "configurationCount": 9
+        "sha256": "8e07316a761193cde731dfd695e1dfd3f94904c964a4109d457499a0b8d0ec98",
+        "configurationCount": 17
       },
       {
         "path": "settings-gradle.lockfile",
@@ -386,13 +401,13 @@
       },
       {
         "path": "sorasubstrate/gradle.lockfile",
-        "sha256": "edff9a4c699f61d41bc61ef63bdc84336bf7dd3a77629b36649d1183441f9e3b",
-        "configurationCount": 9
+        "sha256": "d6db21fdf20016dfd1b966230cf9d0872ad456932e48792104ad4fad464b7081",
+        "configurationCount": 19
       },
       {
         "path": "test_data/gradle.lockfile",
-        "sha256": "11d04c331056c9a450587856c5b3dbeb040d0242e38af61a1136452d0b08d770",
-        "configurationCount": 8
+        "sha256": "b9ed713a91f3e9113120c7b0724acddcbe7339c47958303b2757ecaa48cf69b6",
+        "configurationCount": 16
       }
     ]
   },

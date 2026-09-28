@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 2,
-  "contractId": "sora-android-wallet-migration-evidence-v2",
+  "schemaVersion": 3,
+  "contractId": "sora-android-wallet-migration-evidence-v3",
   "platform": "android",
   "status": "blocked-template",
   "runId": null,

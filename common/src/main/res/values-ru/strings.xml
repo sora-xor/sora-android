@@ -321,6 +321,7 @@
   <string name="more_menu_sora_card_subtitle">Управление картами и фиатными счетами</string>
   <string name="more_menu_sora_card_title">SORA Карта</string>
   <string name="network_fee">Комиссия сети</string>
+  <string name="network_finalized_history">Активность</string>
   <string name="node_connection_issue">Ваш аккаунт успешно создан. Но приложение не может подключиться к ноде по-умолчанию. Попробуйте подключиться к другой ноде.</string>
   <string name="node_details_address_validation_failed">Не удалось проверить URL (неверный адрес)</string>
   <string name="node_details_genesis_validation_failed">Генезис хэш вашей ноды отличается от генезис хэша сети</string>
@@ -353,6 +354,10 @@
   <string name="pincode_one_try_left">У вас осталась одна попытка до времени восстановления</string>
   <string name="pincode_set_your_pin_code">Установите пин-код</string>
   <string name="pincode_touch_fingerprint_scanner">Коснитесь сканера отпечатков пальцев</string>
+  <string name="polkamarkt_action_buy">Купить</string>
+  <string name="polkamarkt_outcome_no">Нет</string>
+  <string name="polkamarkt_outcome_yes">Да</string>
+  <string name="polkamarkt_ticket_slippage">Проскальзывание</string>
   <string name="polkaswap_farm_title_template"> %s Ферма</string>
   <string name="polkaswap_farming_demeter_power">Работает на Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Некоторая часть вашей доли в пуле находится в стейкинге. Чтобы получить к ней доступ, вы должны сначала разблокировать ее.</string>
@@ -467,10 +472,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Ссылка или адрес реферера</string>
   <string name="referral_referrer_address">Адрес реферера</string>
-  <string name="referral_referrer_description">Всякий раз, когда вы совершаете транзакцию, 10% от уплаченной комиссии сети переходит вашему рефереру в качестве вознаграждения.</string>
+  <string name="referral_referrer_description" formatted="false">Всякий раз, когда вы совершаете транзакцию, 10% от уплаченной комиссии сети переходит вашему рефереру в качестве вознаграждения.</string>
   <string name="referral_start_inviting">Начать приглашать</string>
-  <string name="referral_subtitle">Всякий раз, когда ваш реферал совершает транзакцию, 10% от уплаченной сетевой комиссии поступает вам в качестве вознаграждения.</string>
-  <string name="referral_title">Получайте 10% от комиссии сети ваших рефералов</string>
+  <string name="referral_subtitle" formatted="false">Всякий раз, когда ваш реферал совершает транзакцию, 10% от уплаченной сетевой комиссии поступает вам в качестве вознаграждения.</string>
+  <string name="referral_title" formatted="false">Получайте 10% от комиссии сети ваших рефералов</string>
   <string name="referral_toolbar_title">Реферальная программа</string>
   <string name="referral_total_rewards">Общее количество вознаграждений</string>
   <string name="referral_unbond_button_title">Вывести из резерва XOR</string>
@@ -574,10 +579,16 @@
   <string name="wallet_balance_locked">Заблокировано</string>
   <string name="wallet_balance_reserved">Резерв</string>
   <string name="wallet_bonded">В обеспечении</string>
+  <string name="wallet_connect_account">Аккаунт</string>
+  <string name="wallet_connect_done">Выполнено</string>
+  <string name="wallet_network_activity">Активность</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Мой адрес в %s для получения %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Отсканируйте этот QR, чтобы отправить мне %s. Мой идентификатор в %s:\n%s</string>
+  <string name="wallet_receive_xor">Получить XOR</string>
   <string name="wallet_redeemable">Можно забрать</string>
+  <string name="wallet_scan_qr">Сканировать QR-код</string>
   <string name="wallet_send_existential_warning_message">Трансфер приведет к удалению аккаунта, так как баланс станет меньше чем existential deposit.</string>
+  <string name="wallet_status_confirmed">Успешно</string>
   <string name="wallet_title">Кошелек</string>
   <string name="wallet_transaction_rejected">Транзакция отклонена</string>
   <string name="wallet_transaction_submitted">Транзакция отправлена</string>

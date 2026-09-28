@@ -317,6 +317,7 @@
   <string name="more_menu_sora_card_subtitle">Pengurusan kad dan akaun fiat</string>
   <string name="more_menu_sora_card_title">Kad SORA</string>
   <string name="network_fee">Yuran Rangkaian</string>
+  <string name="network_finalized_history">Aktiviti</string>
   <string name="node_connection_issue">Akaun anda telah berjaya dibuat. Tetapi apl tidak boleh menyambung ke nod lalai. Cuba beralih kepada alternatif.</string>
   <string name="node_details_address_validation_failed">Gagal mengesahkan URL (Alamat salah)</string>
   <string name="node_details_genesis_validation_failed">Cincang genesis nod anda berbeza daripada cincang genesis rangkaian</string>
@@ -349,6 +350,10 @@
   <string name="pincode_one_try_left">Anda mempunyai satu percubaan lagi sebelum bertenang</string>
   <string name="pincode_set_your_pin_code">Cipta kod pin</string>
   <string name="pincode_touch_fingerprint_scanner">Sentuh pengimbas cap jari</string>
+  <string name="polkamarkt_action_buy">Beli</string>
+  <string name="polkamarkt_outcome_no">Tidak</string>
+  <string name="polkamarkt_outcome_yes">Ya</string>
+  <string name="polkamarkt_ticket_slippage">Gelinciran</string>
   <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
@@ -443,10 +448,10 @@
   <string name="referral_no_available_invitations">Tiada jemputan tersedia</string>
   <string name="referral_referral_link">Pautan perujuk atau alamat </string>
   <string name="referral_referrer_address">Alamat perujuk</string>
-  <string name="referral_referrer_description">Setiap kali anda membuat transaksi, 10% daripada yuran rangkaian yang dibayar pergi kepada perujuk anda sebagai ganjaran.</string>
+  <string name="referral_referrer_description" formatted="false">Setiap kali anda membuat transaksi, 10% daripada yuran rangkaian yang dibayar pergi kepada perujuk anda sebagai ganjaran.</string>
   <string name="referral_start_inviting">Mula menjemput</string>
-  <string name="referral_subtitle">Setiap kali rujukan anda membuat transaksi, 10% daripada bayaran rangkaian yang dibayar akan diberikan kepada anda sebagai ganjaran.</string>
-  <string name="referral_title">Dapatkan 10% daripada yuran rangkaian rujukan anda</string>
+  <string name="referral_subtitle" formatted="false">Setiap kali rujukan anda membuat transaksi, 10% daripada bayaran rangkaian yang dibayar akan diberikan kepada anda sebagai ganjaran.</string>
+  <string name="referral_title" formatted="false">Dapatkan 10% daripada yuran rangkaian rujukan anda</string>
   <string name="referral_toolbar_title">Program rujukan</string>
   <string name="referral_total_rewards">Jumlah ganjaran</string>
   <string name="referral_unbond_button_title">Nyahikat XOR</string>
@@ -550,10 +555,17 @@
   <string name="wallet_balance_locked">Dikunci</string>
   <string name="wallet_balance_reserved">Ditempah</string>
   <string name="wallet_bonded">Terikat</string>
+  <string name="wallet_connect_account">Akaun</string>
+  <string name="wallet_connect_done">Selesai</string>
+  <string name="wallet_market_refresh">Segarkan semula</string>
+  <string name="wallet_network_activity">Aktiviti</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Alamat rangkaian saya %s untuk Menerima %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Imbas QR ini untuk menghantar saya %s. ID Akaun Rangkaian %s saya:\n%s</string>
+  <string name="wallet_receive_xor">Terima XOR</string>
   <string name="wallet_redeemable">Boleh ditebus</string>
+  <string name="wallet_scan_qr">Imbas kod QR</string>
   <string name="wallet_send_existential_warning_message">Pemindahan akan memadamkan akaun anda dari blockstore kerana jumlah baki akan lebih rendah daripada simpanan yang wujud.</string>
+  <string name="wallet_status_confirmed">Selesai</string>
   <string name="wallet_title">Dompet</string>
   <string name="wallet_transaction_rejected">Transaksi ditolak</string>
   <string name="wallet_transaction_submitted">Transaksi dihantar</string>

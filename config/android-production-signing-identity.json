@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "platform": "android",
   "applicationId": "jp.co.soramitsu.sora",
-  "assessedAt": "2026-08-02",
+  "assessedAt": "2026-08-24",
   "status": "blocked",
   "releaseEnabled": false,
   "releaseSigningConfig": "productionRelease",
@@ -15,19 +15,46 @@
     "CI_KEYSTORE_KEY_PASS",
     "CI_BUILD_ID"
   ],
-  "productionAppSigningCertificateSha256": null,
-  "productionUploadCertificateSha256": null,
-  "retainedProductionCertificateMatched": false,
+  "productionAppSigningCertificateSha256": "b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0",
+  "productionUploadCertificateSha256": "b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0",
+  "publicIdentityEvidence": {
+    "authenticatedPlayConsoleInventoryCompleted": true,
+    "playAppSigningActive": true,
+    "playAppSigningCertificateSha256": "b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0",
+    "uploadCertificateSha256": "b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0",
+    "generatedDigitalAssetLinksCertificateSha256": "b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0",
+    "digitalAssetLinksFingerprintPubliclyConfirmable": true,
+    "independentAdmissionCompleted": false
+  },
+  "credentialBindings": {
+    "jenkins": {
+      "sharedLibrarySelector": "jenkins-library@65079bbe356bca4a3d5a1964e360498735afa1f0",
+      "keystoreFileCredentialId": "android_keystore_sora",
+      "storePasswordCredentialId": "android_keystore_storepass_sora",
+      "keyAliasCredentialId": "android_keyalias_sora",
+      "keyPasswordCredentialId": "android_keypass_sora"
+    },
+    "githubQualification": {
+      "keystoreBase64SecretName": "CI_KEYSTORE_BASE64",
+      "runtimeKeystorePathEnvironmentVariable": "CI_KEYSTORE_PATH",
+      "fixedRunnerTempRelativePath": "sora-android-production-upload.keystore",
+      "ownerOnlyMode": "0600",
+      "keystoreSecretProvisioned": false
+    },
+    "localKeystorePresent": false,
+    "privateKeyMaterialRecorded": false,
+    "passwordsRecorded": false
+  },
+  "retainedProductionCertificateMatched": true,
   "signedBundleCertificateMatched": false,
   "playAppSigningContinuityReviewed": false,
   "secretsRecordedInEvidence": false,
   "blocker": {
     "code": "android_production_signing_identity_not_qualified",
-    "reason": "The code now rejects debug-key fallback, but the retained production app-signing and upload certificate SHA-256 identities have not been supplied and independently matched."
+    "reason": "The real Play App Signing and upload certificate SHA-256 identities are recorded and publicly cross-checkable, but no GitHub keystore secret, signed candidate match, or independent dual-authority signing admission has been supplied."
   },
   "exitCriteria": [
-    "obtain the existing production app-signing and upload certificate SHA-256 fingerprints from the authorized release system without copying private keys",
-    "record and independently review both public fingerprints",
+    "provision the retained Jenkins keystore file credential to the protected GitHub CI_KEYSTORE_BASE64 secret without committing or copying it into evidence",
     "supply the authorized canonical positive production version code as CI_BUILD_ID",
     "build the qualified production bundle with a regular non-symlink CI keystore",
     "verify the signed bundle certificate and Play App Signing continuity match the retained production identities",

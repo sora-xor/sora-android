@@ -470,7 +470,7 @@ class RuntimeManager @Inject constructor(
 
     init {
         coroutineManager.applicationScope.launch {
-            getRuntimeSnapshot()
+            prefetchRuntimeForDisplay(onFailure = FirebaseWrapper::recordException) { getRuntimeSnapshot() }
         }
     }
 
@@ -664,7 +664,6 @@ class RuntimeManager @Inject constructor(
                 runtimeVersion = liveRuntimeVersion.specVersion,
                 genesisHash = liveGenesisHash,
             )
-            currentCoroutineContext().ensureActive()
             try {
                 soraPreferences.putInt(RUNTIME_VERSION_PREF, liveRuntimeVersion.specVersion)
             } catch (error: CancellationException) {
@@ -952,7 +951,6 @@ class RuntimeManager @Inject constructor(
                     runtimeVersion = runtimeVersion.specVersion,
                     genesisHash = liveGenesisHash,
                 )
-                currentCoroutineContext().ensureActive()
                 try {
                     soraPreferences.putInt(
                         RUNTIME_VERSION_PREF,

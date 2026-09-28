@@ -350,6 +350,8 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">پین را وارد کنید</string>
   <string name="pincode_touch_fingerprint_scanner">اسکنر اثر انگشت را لمس کنید</string>
+  <string name="polkamarkt_outcome_no">نه</string>
+  <string name="polkamarkt_outcome_yes">بله</string>
   <string name="polkaswap_farm_title_template"> %s Farm</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
@@ -419,7 +421,7 @@
     <item quantity="one">%s ثانیه باقی مانده</item>
     <item quantity="other">%s ثانیه باقی مانده</item>
   </plurals>
-  <string name="project_ended_template">پایان یافت</string>
+  <string name="project_ended_template">پایان یافت %s</string>
   <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">کد QR</string>
   <string name="qr_upload">بارگیری از گالری</string>
@@ -449,10 +451,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Referrer’s link or address</string>
   <string name="referral_referrer_address">Referrer\'s address</string>
-  <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
+  <string name="referral_referrer_description" formatted="false">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
   <string name="referral_start_inviting">شروع به دعوت کنید</string>
-  <string name="referral_subtitle">هر زمان که ارجاع شما معامله ای انجام دهد، 10٪ از کارمزد شبکه پرداختی به عنوان پاداش به شما تعلق می‌گیرد.</string>
-  <string name="referral_title">10٪ از کارمزد شبکه ارجاعات خود را دریافت کنید</string>
+  <string name="referral_subtitle" formatted="false">هر زمان که ارجاع شما معامله ای انجام دهد، 10٪ از کارمزد شبکه پرداختی به عنوان پاداش به شما تعلق می‌گیرد.</string>
+  <string name="referral_title" formatted="false">10٪ از کارمزد شبکه ارجاعات خود را دریافت کنید</string>
   <string name="referral_toolbar_title">برنامه ارجاع</string>
   <string name="referral_total_rewards">مجموع پاداش‌ها</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>
@@ -556,10 +558,14 @@
   <string name="wallet_balance_locked">قفل شده</string>
   <string name="wallet_balance_reserved">رزرو شده</string>
   <string name="wallet_bonded">ادغام شده</string>
+  <string name="wallet_connect_account">حساب</string>
+  <string name="wallet_connect_done">انجام شد</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">آدرس شبکه %s برای دریافت %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">برای ارسال %s این QR را اسکن کنید. شناسه حساب شبکه %s من: \n %s</string>
+  <string name="wallet_receive_xor">دریافت XOR</string>
   <string name="wallet_redeemable">قابل آزاد سازی</string>
   <string name="wallet_send_existential_warning_message">انتقال شما حساب را حذف میکند زیرا کل موجودی را کمتر از سپرده لازم برای ادامه بقا حساب می‌کند.</string>
+  <string name="wallet_status_confirmed">تکمیل شده</string>
   <string name="wallet_title">کیف پول</string>
   <string name="wallet_transaction_rejected">تراکنش برگشت خورد</string>
   <string name="wallet_transaction_submitted">تراکنش در دست اقدام</string>
@@ -567,4 +573,6 @@
   <string name="wallet_unbonded">Unbonded</string>
   <string name="wallet_unbonding">جدا سازی</string>
   <string name="your_pooled">Your %s pooled</string>
+  <string name="network_finalized_history">فعالیت</string>
+  <string name="wallet_network_activity">فعالیت</string>
 </resources>

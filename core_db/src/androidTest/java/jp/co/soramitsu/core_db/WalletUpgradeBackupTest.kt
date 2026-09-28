@@ -1,14 +1,19 @@
 package jp.co.soramitsu.core_db
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.database.sqlite.SQLiteDatabase
 import android.system.ErrnoException
 import android.system.Os
 import android.system.OsConstants
+import androidx.room.Room
+import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -22,6 +27,10 @@ import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletDeletionContract
 import jp.co.soramitsu.core_db.model.WalletDeletionOperationLocal
 import jp.co.soramitsu.core_db.model.WalletIdentityLocal
+import jp.co.soramitsu.core_db.migrations.migration_walletIdentity_73_74
+import jp.co.soramitsu.core_db.migrations.migration_walletDeletionJournal_74_75
+import jp.co.soramitsu.core_db.migrations.migration_sora2PendingSubmission_75_76
+import jp.co.soramitsu.core_db.migrations.migration_pendingNetworkTransactionChain_76_77
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
@@ -29,11 +38,18 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class WalletUpgradeBackupTest {
+
+    @get:Rule
+    val migrationHelper = MigrationTestHelper(
+        InstrumentationRegistry.getInstrumentation(), AppDatabase::class.java,
+        emptyList(), FrameworkSQLiteOpenHelperFactory(),
+    )
 
     private val context: Context = ApplicationProvider.getApplicationContext()
 
@@ -50,6 +66,69 @@ class WalletUpgradeBackupTest {
         // Reset the process-wide gate for the next instrumentation test without exposing a
         // production reset API. An actually empty sandbox is the only state allowed to clear it.
         assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+    }
+
+    @Test
+    fun preMultiaccountRegisteredWalletIsBackedUpWithoutInventingAccountRows() {
+        listOf(50, LEGACY_VERSION).forEach { version ->
+            clearTestStorage()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            val file = context.getDatabasePath(DATABASE_NAME)
+            file.parentFile?.mkdirs()
+            SQLiteDatabase.openOrCreateDatabase(file, null).use { sqlite ->
+                sqlite.execSQL("CREATE TABLE tokens(id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL)")
+                sqlite.execSQL("INSERT INTO tokens VALUES('retained-token', 'Retained cache')")
+                if (version >= 58) {
+                    sqlite.execSQL("CREATE TABLE accounts(substrateAddress TEXT NOT NULL PRIMARY KEY, accountName TEXT NOT NULL)")
+                }
+                sqlite.version = version
+            }
+            val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+            assertTrue(preferences.edit()
+                .putString("registration_state", "REGISTRATION_FINISHED")
+                .putString("prefs_priv_key", "encrypted-private")
+                .putString("prefs_pub_key", "encrypted-public")
+                .putString("prefs_key_nonce", "encrypted-nonce")
+                .putString("prefs_mnemonic", "encrypted-mnemonic")
+                .commit())
+            val before = file.readBytes()
+            val originalPreferences = preferences.all
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            assertArrayEquals(before, file.readBytes())
+            assertEquals(originalPreferences, preferences.all)
+            assertTrue(context.noBackupFilesDir.listFiles().orEmpty().any {
+                it.name.startsWith("wallet-upgrade-backup-v$version-to-") && File(it, ".complete").isFile
+            })
+        }
+    }
+
+    @Test
+    fun preMultiaccountWalletWithIncompleteUnsuffixedKeypairRemainsRecoverable() {
+        createLegacyDatabase(withAccount = false)
+        val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+        assertTrue(preferences.edit()
+            .putString("registration_state", "REGISTRATION_FINISHED")
+            .putString("prefs_priv_key", "encrypted-private")
+            .putString("prefs_pub_key", "encrypted-public")
+            .commit())
+        val before = context.getDatabasePath(DATABASE_NAME).readBytes()
+        assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        assertArrayEquals(before, context.getDatabasePath(DATABASE_NAME).readBytes())
+        assertEquals("encrypted-private", preferences.getString("prefs_priv_key", null))
+    }
+
+    @Test
+    fun applicationAttachContextWithoutApplicationContextCanPrepareEmptyInstall() {
+        clearTestStorage()
+        val attachContext = object : ContextWrapper(context) {
+            override fun getApplicationContext(): Context? = null
+        }
+
+        val result = WalletUpgradeBackup.prepare(attachContext)
+
+        assertTrue(result.isSuccess)
+        assertEquals(null, WalletUpgradeBackup.blockingFailure())
+        assertFalse(context.getDatabasePath(DATABASE_NAME).exists())
     }
 
     @Test
@@ -1442,7 +1521,7 @@ class WalletUpgradeBackupTest {
     }
 
     @Test
-    fun interruptedStagingDirectoryNeverPermitsRoomToOpen() {
+    fun unrecognizedStagingIsPreservedAndNeverPermitsRoomToOpen() {
         createLegacyDatabase(withAccount = true)
         putWalletMarker()
         File(
@@ -1458,6 +1537,117 @@ class WalletUpgradeBackupTest {
         assertTrue(result.isFailure)
         assertEquals("STALE_STAGING", WalletUpgradeBackup.blockingFailure()?.code)
         assertEquals(1, legacyAccountCount())
+        assertEquals("incomplete", File(
+            context.noBackupFilesDir,
+            "$BACKUP_PREFIX$LEGACY_VERSION-to-$CURRENT_VERSION.staging/partial",
+        ).readText())
+    }
+
+    @Test
+    fun interruptedBackupCopiesResumeBeforeRoomAndAcrossRestart() {
+        // Start with a real Room 73 schema and bytes copied by the production backup writer.
+        // Materialize the persisted files at each interruption boundary, then reopen through the
+        // real preflight and Room migration paths. No recovery action rewrites credential bytes.
+        listOf("empty", "directory", "source-prefix", "manifest-prefix", "completion-prefix",
+            "staged", "published-prefix", "published").forEach { boundary ->
+            clearTestStorage()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            migrationHelper.createDatabase(DATABASE_NAME, LEGACY_VERSION).use { sqlite ->
+                sqlite.execSQL("INSERT INTO accounts(substrateAddress, accountName) VALUES(?, ?)",
+                    arrayOf(WALLET_ID, "Retained"))
+            }
+            putWalletMarker()
+            val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+            assertTrue(preferences.edit()
+                .putString("prefs_priv_key$WALLET_ID", "encrypted-private")
+                .putString("prefs_pub_key$WALLET_ID", "encrypted-public")
+                .putString("prefs_key_nonce$WALLET_ID", "encrypted-nonce")
+                .putString("prefs_seed$WALLET_ID", "encrypted-seed").commit())
+            val originalPreferences = preferences.all
+            val installed = context.getDatabasePath(DATABASE_NAME)
+            val originalDatabase = installed.readBytes()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            val published = File(context.noBackupFilesDir,
+                "$BACKUP_PREFIX$LEGACY_VERSION-to-$CURRENT_VERSION")
+            val staging = File(published.parentFile, "${published.name}.staging")
+            assertTrue(published.renameTo(staging))
+            when (boundary) {
+                "empty", "directory" -> {
+                    assertTrue(staging.deleteRecursively())
+                    assertTrue(staging.mkdirs())
+                    if (boundary == "directory") assertTrue(File(staging, "databases").mkdir())
+                }
+                "source-prefix" -> {
+                    assertTrue(staging.deleteRecursively())
+                    val copied = File(staging, "databases/app.db")
+                    assertTrue(copied.parentFile!!.mkdirs())
+                    copied.writeBytes(originalDatabase.copyOf(originalDatabase.size / 2))
+                }
+                "manifest-prefix" -> {
+                    assertTrue(File(staging, ".complete").delete())
+                    val manifest = File(staging, "manifest.json")
+                    manifest.writeBytes(manifest.readBytes().copyOf(37))
+                }
+                "completion-prefix" -> File(staging, ".complete").writeText("ver")
+                "published-prefix" -> {
+                    val copied = File(published, "databases/app.db")
+                    assertTrue(copied.parentFile!!.mkdirs())
+                    copied.writeBytes(originalDatabase.copyOf(originalDatabase.size / 2))
+                }
+                "published" -> assertTrue(staging.copyRecursively(published))
+            }
+            repeat(2) {
+                val result = WalletUpgradeBackup.prepare(context)
+                assertTrue("$boundary: ${result.exceptionOrNull()}", result.isSuccess)
+                assertArrayEquals(originalDatabase, installed.readBytes())
+                assertEquals(originalPreferences, preferences.all)
+                assertFalse(staging.exists())
+                assertEquals("verified", File(published, ".complete").readText())
+            }
+            repeat(2) {
+                assertTrue("$boundary restart", WalletUpgradeBackup.prepare(context).isSuccess)
+                val room = Room.databaseBuilder(context, AppDatabase::class.java, DATABASE_NAME)
+                    .openHelperFactory(WalletUpgradeBackup.gatedOpenHelperFactory())
+                    .addMigrations(migration_walletIdentity_73_74, migration_walletDeletionJournal_74_75,
+                        migration_sora2PendingSubmission_75_76, migration_pendingNetworkTransactionChain_76_77)
+                    .build()
+                try {
+                    val sqlite = room.openHelper.writableDatabase
+                    assertEquals(CURRENT_VERSION, sqlite.version)
+                    sqlite.query("SELECT substrateAddress, accountName FROM accounts").use { rows ->
+                        assertTrue(rows.moveToFirst())
+                        assertEquals(WALLET_ID, rows.getString(0))
+                        assertEquals("Retained", rows.getString(1))
+                        assertFalse(rows.moveToNext())
+                    }
+                } finally {
+                    room.close()
+                }
+                assertEquals(originalPreferences, preferences.all)
+                assertArrayEquals(originalDatabase, File(published, "databases/app.db").readBytes())
+            }
+        }
+    }
+
+    @Test
+    fun changedStagingCopyIsRetainedAcrossRepeatedRetry() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val published = File(context.noBackupFilesDir,
+            "$BACKUP_PREFIX$LEGACY_VERSION-to-$CURRENT_VERSION")
+        val staging = File(published.parentFile, "${published.name}.staging")
+        assertTrue(published.renameTo(staging))
+        val copied = File(staging, "databases/app.db")
+        val modified = copied.readBytes().apply { this[0] = (this[0].toInt() xor 1).toByte() }
+        copied.writeBytes(modified)
+        val originalDatabase = context.getDatabasePath(DATABASE_NAME).readBytes()
+        repeat(2) {
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+            assertArrayEquals(modified, copied.readBytes())
+            assertArrayEquals(originalDatabase, context.getDatabasePath(DATABASE_NAME).readBytes())
+            assertFalse(published.exists())
+        }
     }
 
     @Test

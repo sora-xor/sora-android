@@ -97,6 +97,7 @@ class AppSettingsFragment : SoraBaseFragment<AppSettingsViewModel>() {
                 AppSettingsScreen(
                     checkedSystem = state.systemAppearanceChecked,
                     checkedDark = state.darkModeChecked,
+                    testNetworksAvailable = state.testNetworksAvailable,
                     checkedTestNetworks = state.testNetworksChecked,
                     onSystemToggle = {
                         requireActivity().intent.action = MainActivity.ACTION_DARK_THEME_TOGGLED

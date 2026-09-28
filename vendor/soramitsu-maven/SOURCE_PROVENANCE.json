@@ -16,12 +16,140 @@
   },
   "buildInputs": [
     {
+      "path": "build-inputs/CameraCoreNativeSmoke.java",
+      "sha256": "a0c0411900f07a8de9ea696b04618efd90007b11f185087a5d1df3cfea4fa418"
+    },
+    {
+      "path": "build-inputs/GraphicsPathSmoke.java",
+      "sha256": "0ae2dc21debbaf73360a3d5860649172491341ec0bedba39f70b846df4d472f9"
+    },
+    {
+      "path": "build-inputs/LazysodiumSmoke.java",
+      "sha256": "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68"
+    },
+    {
       "path": "build-inputs/README.md",
-      "sha256": "df1d55a57903fcc1f8b21a1d779a23733f974bd495dddae0f67c1e55995b8ded"
+      "sha256": "97c5309a9af96ca2fd29a2e7c2e15286f079142cfb369082b8a9a1578550650b"
+    },
+    {
+      "path": "build-inputs/TensorFlowLiteCApiSmoke.c",
+      "sha256": "de8536ff1fd38406479f1ff3ed72aff8450ac3b3dab640bf3b88504a43774e60"
+    },
+    {
+      "path": "build-inputs/camera-core-1.3.1-16kb-rebuild.md",
+      "sha256": "4cc7976f13959bfd4d2b8d386ac3d88c8679e1b86500190567084e81e906cfed"
+    },
+    {
+      "path": "build-inputs/camera-core-1.3.1-build-16kb.py",
+      "sha256": "98d41393e2c373f841cb82cb12e7e93d457ad04227e811fa6b3e1d6bbddab531"
+    },
+    {
+      "path": "build-inputs/camera-core-1.3.1-original.aar",
+      "sha256": "6b7ea2da7cc504d6624c3c12a0c2d488dd6635563421dacba0790399507443e8"
+    },
+    {
+      "path": "build-inputs/camera-core-1.3.1-original.module",
+      "sha256": "fe175138941912c5c1ad8ce070a72c56650beceef7bbdfbde49d179ee3dec894"
+    },
+    {
+      "path": "build-inputs/camera-core-1.3.1-release-manifest.xml",
+      "sha256": "8b03ec48a8dc962a921ef333a56f2359e7b4ab41005025ad6e86c20166fe5ec7"
+    },
+    {
+      "path": "build-inputs/camera-core-1.3.1-repack-16kb.py",
+      "sha256": "1baeba74d7045fa4bfc2cc949e78a7a26ac3e81b878c25694e05f425cc631d98"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
+      "sha256": "6f28886b62b5ec6eee6191694c0c78dd36ac1eee06fdd9e57f4d96635bb0ee8a"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-build-16kb.sh",
+      "sha256": "d01272ea5c2be37c64eff6c0f031845efb0071f9704f13a606219a0cd3399e2d"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-original.aar",
+      "sha256": "8ca4032b6d79b351f0b59ad4b580eddbb9423e1652f7c958830687f1eee2ec03"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-original.module",
+      "sha256": "3f6fc7e96f8a1fd21045da7f2e332aef528aa1f56b6455fb8f25043aafa0e1b8"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-repack-16kb.py",
+      "sha256": "d2de5118a37af9d843c9ffc8340f1071d2ecb14fa53d5cb4c144f76b8aff69ac"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-16kb-rebuild.md",
+      "sha256": "0ca566bc11c25409d398214ef1dbb6094cf221ec069cad04917da1a2584e2707"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-build-16kb.sh",
+      "sha256": "43b1e18beec1df8b6562e21319dcdf19b0f1cf27dbc033a509dded51483e36ed"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-original.aar",
+      "sha256": "e38503013e03a3623bd9da01a0fbbf644a87947a35dbeb4df7b35605b71534ad"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-repack-16kb.py",
+      "sha256": "ac39c9d93eb7870e8929f1f37a16e970b5ec99b67ea782f551125aaa6c405c4c"
+    },
+    {
+      "path": "build-inputs/rootbeer-0.1.0-16kb-rebuild.md",
+      "sha256": "513449dc349924781992c703e49a65442457cbc829b5f703f8f043d1e40c847b"
+    },
+    {
+      "path": "build-inputs/rootbeer-0.1.0-build-16kb.sh",
+      "sha256": "88565712d1b3654c2ce35ecf50c26d326400f57a8d1ef81f853feb38a9c7b379"
+    },
+    {
+      "path": "build-inputs/rootbeer-0.1.0-original.aar",
+      "sha256": "6c4d2e20148111a550aa3923c24e9b1360f300f1454117235a4d435e45928ee7"
+    },
+    {
+      "path": "build-inputs/rootbeer-0.1.0-repack-16kb.py",
+      "sha256": "731d0639802a697be0e60f5a18125ee9f54902c2033be5244f86e62fd225ecc4"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-16kb-rebuild.md",
+      "sha256": "07cfcf46a01044b5fb604f91e4aa53eb84459dabdbd6baa34a431583f5a5b5bc"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-build-16kb.sh",
+      "sha256": "b3ab471a35edd00f1473a4a61e7fc9a08b5955344a3613335921601d182b6ef9"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-cmake-16kb.patch",
+      "sha256": "4abb4536df76724a7f7ac908871c3840493e215ee0d38e744efef301dc3059e9"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-exports.lds",
+      "sha256": "03c64a35ebeeac3e55134a174a6afdda456505b764fc03549ae9d6c316a7e503"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-original.aar",
+      "sha256": "002371fefe277e93f1421206062823d04daceb6c9e4e824cb543eab2d3a00c91"
+    },
+    {
+      "path": "build-inputs/tensorflow-lite-2.12.0-repack-16kb.py",
+      "sha256": "dc4d66e58f15aaa48e4ea950438069420a48928d66a7f65c87925c6e6502f086"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
+      "sha256": "9b6eb4495fa8435ed05ce3a7503e1044a5cf1a8c80ccf023925ec1206a792c71"
     },
     {
       "path": "build-inputs/xcrypto-1.2.7-Cargo.lock",
       "sha256": "72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.7-original.aar",
+      "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.7-repack-16kb.py",
+      "sha256": "595d7aa1b4eed24f553e7201ad6510b1ccb0bb1cc9e20a113d8b967e046f317d"
     },
     {
       "path": "build-inputs/xsubstrate-1.2.7-source-normalization.patch",
@@ -29,6 +157,162 @@
     }
   ],
   "modules": [
+    {
+      "coordinate": "androidx.camera:camera-core:1.3.1",
+      "modulePath": "androidx/camera/camera-core/1.3.1",
+      "origin": {
+        "kind": "git-source-build",
+        "repository": "https://android.googlesource.com/platform/frameworks/support",
+        "revision": "ee5fe2aa34dba21365bb402477c32c593ccbecda",
+        "tree": "0ca4c35926f8b22e4e660dee2f6fc807b69c9738",
+        "commitVerification": {
+          "provider": "gitiles",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [
+          "build-inputs/CameraCoreNativeSmoke.java",
+          "build-inputs/camera-core-1.3.1-16kb-rebuild.md",
+          "build-inputs/camera-core-1.3.1-build-16kb.py",
+          "build-inputs/camera-core-1.3.1-original.aar",
+          "build-inputs/camera-core-1.3.1-original.module",
+          "build-inputs/camera-core-1.3.1-release-manifest.xml",
+          "build-inputs/camera-core-1.3.1-repack-16kb.py"
+        ],
+        "semanticTransformations": [],
+        "sourceToBinaryReproductionReviewed": false,
+        "additionalSources": [
+          {
+            "repository": "https://android.googlesource.com/platform/external/libyuv",
+            "revision": "096484820d74c72a6838b3e80743fc7a5d94784b",
+            "tree": "303e8eabb435a80ebec36a19c23ca85744d58fb5",
+            "commitVerification": {
+              "provider": "gitiles",
+              "status": "unsigned",
+              "observedAt": "2026-09-25",
+              "independentlyReviewed": false
+            }
+          },
+          {
+            "repository": "https://android.googlesource.com/platform/manifest",
+            "revision": "2f7e8332eff3d34fdfb1b471f44d654aa6518e41",
+            "tree": "984e5a745f5a677e05e778d6f9c528be9f8d5951",
+            "commitVerification": {
+              "provider": "gitiles",
+              "status": "unsigned",
+              "observedAt": "2026-09-25",
+              "independentlyReviewed": false
+            }
+          }
+        ]
+      },
+      "materializedFiles": [
+        {
+          "name": "camera-core-1.3.1-sources.jar",
+          "sha256": "472945479992c1cfb4f533bea77f21ed9d8f6d3875cc77a6d3336da67ab041f1"
+        },
+        {
+          "name": "camera-core-1.3.1-versionMetadata.json",
+          "sha256": "0ede31562de2947c633cc5260ee594335c66679111e9e71305bf226f54a3002f"
+        },
+        {
+          "name": "camera-core-1.3.1.aar",
+          "sha256": "e42b866b808d12cf69f9477aa902f8ba0934449ca738e97d4ffd341ad4b3ca37"
+        },
+        {
+          "name": "camera-core-1.3.1.module",
+          "sha256": "58b26548d8ddd483f14e1740eae38655333852d5985c7dde84597807af1f1b21"
+        },
+        {
+          "name": "camera-core-1.3.1.pom",
+          "sha256": "0dc9c408f1a7d04915b657f58d845aa9059cbe5da9f0a307720f3ff45a072149"
+        }
+      ]
+    },
+    {
+      "coordinate": "androidx.graphics:graphics-path:1.0.1",
+      "modulePath": "androidx/graphics/graphics-path/1.0.1",
+      "origin": {
+        "kind": "git-source-build",
+        "repository": "https://android.googlesource.com/platform/frameworks/support",
+        "revision": "8a05a22af450d589ef911d772a001a49dcb05b71",
+        "tree": "f1ec6450df09939325e8dbe5cf57b589a673afc3",
+        "commitVerification": {
+          "provider": "gitiles",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [
+          "build-inputs/GraphicsPathSmoke.java",
+          "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
+          "build-inputs/graphics-path-1.0.1-build-16kb.sh",
+          "build-inputs/graphics-path-1.0.1-original.aar",
+          "build-inputs/graphics-path-1.0.1-original.module",
+          "build-inputs/graphics-path-1.0.1-repack-16kb.py"
+        ],
+        "semanticTransformations": [],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "graphics-path-1.0.1-sources.jar",
+          "sha256": "9f1b5995b9577a8876525c3411ebb2a49f9ef0e875f6aec3059e807596dc6ca6"
+        },
+        {
+          "name": "graphics-path-1.0.1-versionMetadata.json",
+          "sha256": "6f54e010c759a56cfe1a2eeb1a0edfd494184791e7b5f370b3ce064e293c2ce1"
+        },
+        {
+          "name": "graphics-path-1.0.1.aar",
+          "sha256": "eb4759c27ae0625d9e81fe95d8ce63d0a3846764a3465363ab195109d6785a71"
+        },
+        {
+          "name": "graphics-path-1.0.1.module",
+          "sha256": "478695824bf314c9d0603ea249e25431b172c485aab20a61856a2cdea6819441"
+        },
+        {
+          "name": "graphics-path-1.0.1.pom",
+          "sha256": "866fb357c7146f5f7678ad44e4bc6c2823d568defce1ed2805bb6c899606b228"
+        }
+      ]
+    },
+    {
+      "coordinate": "com.goterl:lazysodium-android:5.0.2",
+      "modulePath": "com/goterl/lazysodium-android/5.0.2",
+      "origin": {
+        "kind": "git-source-build",
+        "repository": "https://github.com/jedisct1/libsodium.git",
+        "revision": "940ef42797baa0278df6b7fd9e67c7590f87744b",
+        "tree": "a748f0c89c2243e124df3d310915c8a528135582",
+        "commitVerification": {
+          "provider": "github",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [
+          "build-inputs/LazysodiumSmoke.java",
+          "build-inputs/lazysodium-5.0.2-16kb-rebuild.md",
+          "build-inputs/lazysodium-5.0.2-build-16kb.sh",
+          "build-inputs/lazysodium-5.0.2-original.aar",
+          "build-inputs/lazysodium-5.0.2-repack-16kb.py"
+        ],
+        "semanticTransformations": [],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "lazysodium-android-5.0.2.aar",
+          "sha256": "02eb05b96f8236b646f7f642c8e424cdb7f6ad6451d6b3c9eaec0e8c8138f989"
+        },
+        {
+          "name": "lazysodium-android-5.0.2.pom",
+          "sha256": "6ae9391bb9f4200e9a104d60bbc00a4c85a726c87d1ba46485fa7fd3679e6a88"
+        }
+      ]
+    },
     {
       "coordinate": "com.paywings.kyc:android-sdk:1.2.2",
       "modulePath": "com/paywings/kyc/android-sdk/1.2.2",
@@ -144,6 +428,40 @@
       ]
     },
     {
+      "coordinate": "com.scottyab:rootbeer-lib:0.1.0",
+      "modulePath": "com/scottyab/rootbeer-lib/0.1.0",
+      "origin": {
+        "kind": "git-source-build",
+        "repository": "https://github.com/scottyab/rootbeer.git",
+        "revision": "d9057ce490c3481bc9be852e343678c93860e6a8",
+        "tree": "e50696d927e68c68e88520a013d50b481c3a1f8c",
+        "commitVerification": {
+          "provider": "github",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [
+          "build-inputs/rootbeer-0.1.0-16kb-rebuild.md",
+          "build-inputs/rootbeer-0.1.0-build-16kb.sh",
+          "build-inputs/rootbeer-0.1.0-original.aar",
+          "build-inputs/rootbeer-0.1.0-repack-16kb.py"
+        ],
+        "semanticTransformations": [],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "rootbeer-lib-0.1.0.aar",
+          "sha256": "d071cebd41c71d920ebfc445adf237ad3c560aaa3a074534af0393560ad85953"
+        },
+        {
+          "name": "rootbeer-lib-0.1.0.pom",
+          "sha256": "7bdcb8d3aa5a345281663c04653df190adb7382b7266a44cffe63d6fa3a6dd35"
+        }
+      ]
+    },
+    {
       "coordinate": "io.emeraldpay.polkaj:polkaj-scale:0.2.3",
       "modulePath": "io/emeraldpay/polkaj/polkaj-scale/0.2.3",
       "origin": {
@@ -169,6 +487,43 @@
         {
           "name": "polkaj-scale-0.2.3.pom",
           "sha256": "df2700261fe4ba871334746cf840f8b215334b4f4681fca43967116e5eb773c6"
+        }
+      ]
+    },
+    {
+      "coordinate": "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
+      "modulePath": "jp/co/soramitsu/xnetworking/lib-android/1.0.15-K2",
+      "origin": {
+        "kind": "git-source-build",
+        "repository": "https://github.com/soramitsu/x-networking.git",
+        "revision": "fa94a1d1c0b5457b50885ec72727934a2fea12d5",
+        "tree": "56a87310923d615819819d682a945496e40b3dd7",
+        "commitVerification": {
+          "provider": "github",
+          "status": "valid",
+          "observedAt": "2026-08-09",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [],
+        "semanticTransformations": [],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "lib-android-1.0.15-K2-sources.jar",
+          "sha256": "789f5cabe03aad144670b0cbefdd54d9ad6029fa5bd6add0d194e932e803e1b7"
+        },
+        {
+          "name": "lib-android-1.0.15-K2.aar",
+          "sha256": "98f62537ad66eb3eac9940bd58fd6c5511f24e3c988062947548af52e714beac"
+        },
+        {
+          "name": "lib-android-1.0.15-K2.module",
+          "sha256": "30dbc67da2ed55f0dd70c93c0f12ae8ceb244372b9d98b5c51a73e043da5a61b"
+        },
+        {
+          "name": "lib-android-1.0.15-K2.pom",
+          "sha256": "9ec37ddd5af6d7e162be5e4677583a6c060a35f7f903642baf18379420cda887"
         }
       ]
     },
@@ -335,7 +690,10 @@
           "independentlyReviewed": false
         },
         "buildInputs": [
-          "build-inputs/xcrypto-1.2.7-Cargo.lock"
+          "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
+          "build-inputs/xcrypto-1.2.7-Cargo.lock",
+          "build-inputs/xcrypto-1.2.7-original.aar",
+          "build-inputs/xcrypto-1.2.7-repack-16kb.py"
         ],
         "semanticTransformations": [],
         "sourceToBinaryReproductionReviewed": false
@@ -347,11 +705,11 @@
         },
         {
           "name": "xcrypto-1.2.7.aar",
-          "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b"
+          "sha256": "bb2cbb157c36430a7843e8db6900fec1ce36cacd966ff8fe00c6eab524f853ef"
         },
         {
           "name": "xcrypto-1.2.7.module",
-          "sha256": "705f5532c4f9bb0ccfec67b919b0cd52a8854ce228555003fb4cb8ea76b7b731"
+          "sha256": "fc57d285886c08492c180fb84754249f10ff12f6d9327d2a148d2d2d071a4236"
         },
         {
           "name": "xcrypto-1.2.7.pom",
@@ -399,39 +757,39 @@
       ]
     },
     {
-      "coordinate": "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
-      "modulePath": "jp/co/soramitsu/xnetworking/lib-android/1.0.15-K2",
+      "coordinate": "org.tensorflow:tensorflow-lite:2.12.0",
+      "modulePath": "org/tensorflow/tensorflow-lite/2.12.0",
       "origin": {
         "kind": "git-source-build",
-        "repository": "https://github.com/soramitsu/x-networking.git",
-        "revision": "fa94a1d1c0b5457b50885ec72727934a2fea12d5",
-        "tree": "56a87310923d615819819d682a945496e40b3dd7",
+        "repository": "https://github.com/tensorflow/tensorflow.git",
+        "revision": "0db597d0d758aba578783b5bf46c889700a45085",
+        "tree": "e32b1f067af476b65f944fdcc2390178200408d1",
         "commitVerification": {
           "provider": "github",
-          "status": "valid",
-          "observedAt": "2026-08-09",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
           "independentlyReviewed": false
         },
-        "buildInputs": [],
+        "buildInputs": [
+          "build-inputs/TensorFlowLiteCApiSmoke.c",
+          "build-inputs/tensorflow-lite-2.12.0-16kb-rebuild.md",
+          "build-inputs/tensorflow-lite-2.12.0-build-16kb.sh",
+          "build-inputs/tensorflow-lite-2.12.0-cmake-16kb.patch",
+          "build-inputs/tensorflow-lite-2.12.0-exports.lds",
+          "build-inputs/tensorflow-lite-2.12.0-original.aar",
+          "build-inputs/tensorflow-lite-2.12.0-repack-16kb.py"
+        ],
         "semanticTransformations": [],
         "sourceToBinaryReproductionReviewed": false
       },
       "materializedFiles": [
         {
-          "name": "lib-android-1.0.15-K2-sources.jar",
-          "sha256": "789f5cabe03aad144670b0cbefdd54d9ad6029fa5bd6add0d194e932e803e1b7"
+          "name": "tensorflow-lite-2.12.0.aar",
+          "sha256": "4da11c611a69427c4b6742f66fdda7d276d5267b2f7a08528e1b268c4e65ccbd"
         },
         {
-          "name": "lib-android-1.0.15-K2.aar",
-          "sha256": "98f62537ad66eb3eac9940bd58fd6c5511f24e3c988062947548af52e714beac"
-        },
-        {
-          "name": "lib-android-1.0.15-K2.module",
-          "sha256": "30dbc67da2ed55f0dd70c93c0f12ae8ceb244372b9d98b5c51a73e043da5a61b"
-        },
-        {
-          "name": "lib-android-1.0.15-K2.pom",
-          "sha256": "9ec37ddd5af6d7e162be5e4677583a6c060a35f7f903642baf18379420cda887"
+          "name": "tensorflow-lite-2.12.0.pom",
+          "sha256": "5ad01644c105dff937a70c169fddfd670e04cb783927972f6ee100f2d38bd31c"
         }
       ]
     }
