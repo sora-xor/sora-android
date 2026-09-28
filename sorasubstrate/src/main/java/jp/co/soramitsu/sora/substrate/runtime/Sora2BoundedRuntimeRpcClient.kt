@@ -26,7 +26,6 @@ import jp.co.soramitsu.common.network.BoundedHttpTextClient
 import jp.co.soramitsu.sora.substrate.substrate.canonicalExtrinsicHash
 import jp.co.soramitsu.sora.substrate.substrate.extrinsicHash
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.chain.RuntimeVersion
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 
@@ -319,14 +318,10 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
             addProperty(FIELD_METHOD, method)
             add(FIELD_PARAMS, gson.toJsonTree(params))
         }
-        val rawResponse = try {
-            transport.post(
-                requestBody = gson.toJson(request),
-                maximumResponseBytes = maximumResponseBytes,
-            )
-        } catch (error: CancellationException) {
-            throw error
-        }
+        val rawResponse = transport.post(
+            requestBody = gson.toJson(request),
+            maximumResponseBytes = maximumResponseBytes,
+        )
         currentCoroutineContext().ensureActive()
         return requireJsonRpcResult(rawResponse, requestId, resultKind)
     }
