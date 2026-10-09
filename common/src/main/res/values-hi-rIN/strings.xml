@@ -49,9 +49,6 @@
   <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">प्रमाणित करें</string>
   <string name="block_id">ब्लॉक हैश</string>
-  <string name="buy_crypto_buy_xor_banner_title">XOR टोकन खरीदें</string>
-  <string name="buy_crypto_buy_xor_with_fiat_subtitle">यूरो के साथ XOR टोकन खरीदें या बेचें</string>
-  <string name="buy_crypto_buy_xor_with_fiat_title">फिएट के साथ XOR खरीदें</string>
   <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">भाषा बदलें</string>
   <string name="change_pin">पिन बदलिए</string>
@@ -79,8 +76,6 @@
   <string name="common_balance">राशि</string>
   <string name="common_bashkir">बाशकीर</string>
   <string name="common_bridged">Bridged</string>
-  <string name="common_buy">खरीदें</string>
-  <string name="common_buy_xor">XOR खरीदें</string>
   <string name="common_cancel">रद्द करें</string>
   <string name="common_chinese">चीनी</string>
   <string name="common_chinesetaiwan">चीनी (ताइवान)</string>
@@ -288,7 +283,6 @@
   <string name="farm_details_your_rewards">Your rewards</string>
   <string name="farming_details_title">Farming details</string>
   <string name="forget_account">खाता भुल जाना</string>
-  <string name="get_sora_card_title">SORA कार्ड प्राप्त करें</string>
   <string name="global_results">वैश्विक परिणाम</string>
   <string name="hide_zero_balances">जीरो बैलेंस छुपाएं</string>
   <string name="history_referral">रेफ़रल</string>
@@ -315,8 +309,6 @@
   <string name="mnemonic_invalid">अमान्य स्मरक पासफ़्रेज़, कृपया शब्दों के क्रम की एक बार और जाँच करें।</string>
   <string name="mnemonic_invalid_title">अमान्य स्मरणीय पासफ़्रेज़</string>
   <string name="mnemonic_text">बैकअप के लिए गैर डिजिटल तरीके का उपयोग करें, जैसे कि इसे कागज पर लिखें।</string>
-  <string name="more_menu_sora_card_subtitle">कार्ड और फिएट खाता प्रबंधन</string>
-  <string name="more_menu_sora_card_title">सोरा कार्ड</string>
   <string name="network_fee">नेटवर्क शुल्क</string>
   <string name="network_finalized_history">गतिविधि</string>
   <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
@@ -516,21 +508,6 @@
   <string name="show_zero_balances">जीरो बैलेंस दिखाएं</string>
   <string name="slippage">slippage \n</string>
   <string name="something_went_wrong">Something went wrong</string>
-  <string name="sora_card_blacklisted_countires_title">Excluded of application</string>
-  <string name="sora_card_blacklisted_countires_warning">Residents from certain countries can not apply for SORA Card at this moment</string>
-  <string name="sora_card_buy_xor_with_eur">EUR से  XOR खरीदें\n</string>
-  <string name="sora_card_details_title">Card details</string>
-  <string name="sora_card_option_logout">Log out of SORA Card</string>
-  <string name="sora_card_option_logout_description">You are about to log out of SORA Card. You will still have access to the SORA Card standalone app, but the balance will no longer be available to you in the SORA Wallet.</string>
-  <string name="sora_card_see_details">View details</string>
-  <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
-  <string name="sora_card_swap_crypto_for_xor">XOR के लिए क्रिप्टो स्वैप / बदले करें</string>
-  <string name="sora_card_verification_failed">सत्यापन विफल</string>
-  <string name="sora_card_verification_in_progress">सत्यापन प्रगति पर है</string>
-  <string name="sora_card_verification_rejected">सत्यापन अस्वीकृत</string>
-  <string name="sora_card_verification_successful">कार्ड रास्ते में है</string>
-  <string name="sora_card_you_have_enough_xor">मुफ़्त कार्ड के लिए आपके पास पर्याप्त XOR है</string>
-  <string name="sora_card_you_need_xor" formatted="false">आपको %s XOR (€ %s ) चाहिए</string>
   <string name="start_staking">Start staking</string>
   <string name="status_error">त्रुटि</string>
   <string name="status_pending">लंबित</string>

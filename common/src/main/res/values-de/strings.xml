@@ -49,9 +49,6 @@
   <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Authentifizieren</string>
   <string name="block_id">Block-Hash</string>
-  <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
-  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Buy or sell XOR token with euro cash</string>
-  <string name="buy_crypto_buy_xor_with_fiat_title">Buy XOR with fiat</string>
   <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">Change language</string>
   <string name="change_pin">Change PIN</string>
@@ -79,8 +76,6 @@
   <string name="common_balance">Saldo</string>
   <string name="common_bashkir">Baschkirisch</string>
   <string name="common_bridged">Bridged</string>
-  <string name="common_buy">Buy</string>
-  <string name="common_buy_xor">Buy XOR</string>
   <string name="common_cancel">Abbrechen</string>
   <string name="common_chinese">Chinesisch</string>
   <string name="common_chinesetaiwan">Chinesisch (Taiwan)</string>
@@ -288,7 +283,6 @@
   <string name="farm_details_your_rewards">Your rewards</string>
   <string name="farming_details_title">Farming details</string>
   <string name="forget_account">Forget account</string>
-  <string name="get_sora_card_title">Get SORA Card</string>
   <string name="global_results">Global results</string>
   <string name="hide_zero_balances">Hide zero balances</string>
   <string name="history_referral">Referral</string>
@@ -315,8 +309,6 @@
   <string name="mnemonic_invalid">Ungültige mnemonische Passphrase. Bitte überprüfe die Reihenfolge der Wörter noch einmal.</string>
   <string name="mnemonic_invalid_title">Ungültige mnemonische Passphrase</string>
   <string name="mnemonic_text">Wir empfehlen eine nicht-digitale Art zur Sicherung zu verwenden, wie zum Beispiel das Aufschreiben auf Papier.</string>
-  <string name="more_menu_sora_card_subtitle">Manage your card and IBAN account</string>
-  <string name="more_menu_sora_card_title">SORA Card</string>
   <string name="network_fee">Netzwerkgebühr</string>
   <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">Failed to validate URL (Wrong address)</string>
@@ -512,21 +504,6 @@
   <string name="show_zero_balances">Show zero balances</string>
   <string name="slippage">Slippage</string>
   <string name="something_went_wrong">Something went wrong</string>
-  <string name="sora_card_blacklisted_countires_title">Excluded of application</string>
-  <string name="sora_card_blacklisted_countires_warning">Residents from certain countries can not apply for SORA Card at this moment</string>
-  <string name="sora_card_buy_xor_with_eur">Buy XOR with EUR</string>
-  <string name="sora_card_details_title">Card details</string>
-  <string name="sora_card_option_logout">Log out of SORA Card</string>
-  <string name="sora_card_option_logout_description">You are about to log out of SORA Card. You will still have access to the SORA Card standalone app, but the balance will no longer be available to you in the SORA Wallet.</string>
-  <string name="sora_card_see_details">View details</string>
-  <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
-  <string name="sora_card_swap_crypto_for_xor">Swap crypto for XOR</string>
-  <string name="sora_card_verification_failed">Verification failed</string>
-  <string name="sora_card_verification_in_progress">Verification in progress</string>
-  <string name="sora_card_verification_rejected">Verification Rejected</string>
-  <string name="sora_card_verification_successful">Card is on the way</string>
-  <string name="sora_card_you_have_enough_xor">You have enough XOR for a FREE card</string>
-  <string name="sora_card_you_need_xor" formatted="false">You need %s XOR (€%s)</string>
   <string name="start_staking">Start staking</string>
   <string name="status_error">Fehler</string>
   <string name="status_pending">Ausstehend</string>

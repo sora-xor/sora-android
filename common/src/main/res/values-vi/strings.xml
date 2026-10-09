@@ -49,9 +49,6 @@
   <string name="backup_password_title_2">Đặt mật khẩu mã hóa bản sao lưu bản sao lưu Google. Bạn sẽ cần nhập thông tin này khi khôi phục ví của mình.</string>
   <string name="biometric_dialog_title">Xác thực</string>
   <string name="block_id">Block hash</string>
-  <string name="buy_crypto_buy_xor_banner_title">Mua token XOR</string>
-  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Mua hoặc bán XOR bằng euro</string>
-  <string name="buy_crypto_buy_xor_with_fiat_title">Mua XOR bằng tiền pháp định</string>
   <string name="cant_load_balance">Không thể tải số dư</string>
   <string name="change_language">Thay đổi ngôn ngữ</string>
   <string name="change_pin">Thay đổi mã PIN</string>
@@ -79,8 +76,6 @@
   <string name="common_balance">Số dư</string>
   <string name="common_bashkir">Tiếng Bashkir</string>
   <string name="common_bridged">Cầu nối</string>
-  <string name="common_buy">Mua</string>
-  <string name="common_buy_xor">Mua XOR</string>
   <string name="common_cancel">Huỷ bỏ</string>
   <string name="common_chinese">Tiếng Trung Quốc</string>
   <string name="common_chinesetaiwan">Tiếng Trung Quốc (Đài Loan)</string>
@@ -287,7 +282,6 @@
   <string name="farm_details_your_rewards">Phần thưởng của bạn</string>
   <string name="farming_details_title">Chi tiết farm</string>
   <string name="forget_account">Quên tài khoản</string>
-  <string name="get_sora_card_title">Nhận thẻ SORA</string>
   <string name="global_results">Kết quả</string>
   <string name="hide_zero_balances">Ẩn số dư bằng không</string>
   <string name="history_referral">Giới thiệu</string>
@@ -314,8 +308,6 @@
   <string name="mnemonic_invalid">Từ khóa khôi phục ghi nhớ không hợp lệ, vui lòng kiểm tra một lần nữa thứ tự các từ.</string>
   <string name="mnemonic_invalid_title">Chuỗi từ khóa khôi phục không hợp lệ</string>
   <string name="mnemonic_text">Chúng tôi khuyên bạn không nên sao lưu bằng phương tiện kỹ thuật số, chẳng hạn như viết nó xuống giấy.</string>
-  <string name="more_menu_sora_card_subtitle">Quản lý thẻ và tài khoản IBAN của bạn</string>
-  <string name="more_menu_sora_card_title">Thẻ SORA</string>
   <string name="network_fee">Phí mạng</string>
   <string name="network_finalized_history">Hoạt động</string>
   <string name="node_connection_issue">Tài khoản của bạn đã được tạo thành công. Nhưng ứng dụng không thể kết nối với một node mặc định. Cố gắng chuyển sang một node khác.</string>
@@ -511,21 +503,6 @@
   <string name="show_zero_balances">Hiển thị số dư bằng không</string>
   <string name="slippage">Trượt giá</string>
   <string name="something_went_wrong">Đã xảy ra sự cố</string>
-  <string name="sora_card_blacklisted_countires_title">Không bao gồm ứng dụng</string>
-  <string name="sora_card_blacklisted_countires_warning">Cư dân từ một số quốc gia không thể đăng ký Thẻ SORA tại thời điểm này</string>
-  <string name="sora_card_buy_xor_with_eur">Mua XOR bằng EUR</string>
-  <string name="sora_card_details_title">Chi tiết thẻ</string>
-  <string name="sora_card_option_logout">Đăng xuất khỏi SORA Card</string>
-  <string name="sora_card_option_logout_description">Bạn sắp đăng xuất khỏi Thẻ SORA. Bạn sẽ vẫn có quyền truy cập vào ứng dụng độc lập Thẻ SORA, nhưng số dư sẽ không còn khả dụng cho bạn trong Ví SORA.</string>
-  <string name="sora_card_see_details">Xem chi tiết</string>
-  <string name="sora_card_sign_in_required">Đăng ký thẻ hoặc đăng nhập nếu bạn có</string>
-  <string name="sora_card_swap_crypto_for_xor">Hoán đổi tiền điện tử lấy XOR</string>
-  <string name="sora_card_verification_failed">Xác minh không thành công</string>
-  <string name="sora_card_verification_in_progress">Đang xác minh</string>
-  <string name="sora_card_verification_rejected">Xác minh bị từ chối</string>
-  <string name="sora_card_verification_successful">Thẻ đang trên đường đến</string>
-  <string name="sora_card_you_have_enough_xor">Bạn có đủ XOR để nhận thẻ MIỄN PHÍ</string>
-  <string name="sora_card_you_need_xor" formatted="false">Bạn cần %s XOR (€ %s )</string>
   <string name="start_staking">Bắt đầu stake</string>
   <string name="status_error">Lỗi</string>
   <string name="status_pending">Đang chờ xử lý</string>
