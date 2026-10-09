@@ -4,8 +4,8 @@ import { resolve } from "node:path";
 
 import {
   AndroidMigrationRawEvidenceError,
-  collectAndroidMigrationRawEvidenceV1,
-} from "./lib/android-migration-raw-evidence-v1.mjs";
+  collectAndroidMigrationRawEvidenceV2,
+} from "./lib/android-migration-raw-evidence-v2.mjs";
 
 const usage =
   "usage: collect-android-migration-raw-evidence.mjs --raw-run-root /absolute/protected/run/root";
@@ -19,7 +19,7 @@ try {
   ) {
     throw new AndroidMigrationRawEvidenceError(usage);
   }
-  const result = collectAndroidMigrationRawEvidenceV1({
+  const result = collectAndroidMigrationRawEvidenceV2({
     root: process.argv[3],
   });
   process.stdout.write(result.bytes);

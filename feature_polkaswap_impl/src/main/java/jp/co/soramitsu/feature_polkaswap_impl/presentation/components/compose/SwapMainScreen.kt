@@ -42,6 +42,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import jp.co.soramitsu.ui_core.theme.customColors
+import jp.co.soramitsu.ui_core.theme.customTypography
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -140,7 +144,8 @@ internal fun SwapMainScreen(
                             focus1.requestFocus()
                         }
                     }
-                    .size(size = Dimens.x3)
+                    .size(48.dp)
+                    .padding(12.dp)
                     .constrainAs(arrow) {
                         top.linkTo(token1.bottom, (-8).dp)
                         start.linkTo(parent.start)
@@ -148,7 +153,7 @@ internal fun SwapMainScreen(
                     },
                 painter = painterResource(id = R.drawable.ic_round_swap),
                 tint = Color.Unspecified,
-                contentDescription = null
+                contentDescription = stringResource(R.string.wallet_swap_direction)
             )
         }
         Spacer(modifier = Modifier.size(Dimens.x2))
@@ -169,6 +174,14 @@ internal fun SwapMainScreen(
             )
         }
         Spacer(modifier = Modifier.size(Dimens.x2))
+        if (state.assetCatalogUnavailable) {
+            Text(
+                text = stringResource(R.string.wallet_assets_unavailable_details),
+                color = MaterialTheme.customColors.fgPrimary,
+                style = MaterialTheme.customTypography.paragraphS,
+            )
+            Spacer(modifier = Modifier.size(Dimens.x2))
+        }
         LoaderWrapper(
             modifier = Modifier.fillMaxWidth(),
             loading = state.swapButtonState.loading,

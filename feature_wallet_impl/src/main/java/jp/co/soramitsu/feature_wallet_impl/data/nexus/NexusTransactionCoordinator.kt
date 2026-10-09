@@ -13,7 +13,7 @@ import jp.co.soramitsu.common.nexus.NexusQuantityContract
 import jp.co.soramitsu.common.nexus.NexusToriiClient
 import jp.co.soramitsu.common.nexus.NexusToriiException
 import jp.co.soramitsu.common.nexus.NexusTransactionHash
-import jp.co.soramitsu.common.nexus.TairaDeployment
+import jp.co.soramitsu.common.nexus.TairaTestnetContract
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
@@ -110,12 +110,19 @@ class NexusTransactionCoordinator @Inject constructor(
             "NEXUS_FINALITY_READER_NOT_QUALIFIED"
         }
         requirePendingChainRecoveryClear()
+        torii.health(network)
 
         val account = requireActiveAccount(request.walletId, request.networkId)
         val canonicalRecipient =
             IrohaAddressCodec.parse(request.recipient, network.chainDiscriminant).address
         val canonicalAmount = canonicalPositiveQuantity(request.amount)
+        requireNetworkXorQuantity(network, canonicalAmount)
         val xorDefinition = torii.resolveXorDefinition(network)
+        if (network.id == WalletNetworkId.TAIRA) {
+            check(xorDefinition.id == TairaTestnetContract.XOR_ASSET_DEFINITION_ID) {
+                "TAIRA_XOR_ASSET_DEFINITION_MISMATCH"
+            }
+        }
         val balance = torii.getXorBalance(network, account.address)
         check(balance.asset == xorDefinition.id) { "NEXUS_ASSET_DEFINITION_CHANGED" }
 
@@ -130,6 +137,8 @@ class NexusTransactionCoordinator @Inject constructor(
         validateQuote(signingRequest, quote)
         validateQuoteExpiry(network, quote)
         val fee = canonicalPositiveFee(quote.fee)
+        requireNetworkXorQuantity(network, fee)
+        requireNetworkXorQuantity(network, balance.quantity)
         check(canonicalNonNegativeQuantity(balance.quantity).toBigDecimalExact() >=
             canonicalAmount.toBigDecimalExact() + fee.toBigDecimalExact()) {
             "NEXUS_INSUFFICIENT_XOR"
@@ -322,15 +331,21 @@ class NexusTransactionCoordinator @Inject constructor(
                     WalletRecoveryCapabilityGate.requireUserMutationAllowed()
                     requirePendingChainRecoveryClear()
                     transportStarted = true
-                    torii.submit(network, staged.signed.noritoBytes)
+                    torii.submit(
+                        network = network,
+                        signedNorito = staged.signed.noritoBytes,
+                        expectedHash = staged.transactionHash,
+                    )
                 }
                 val receiptHash = canonicalHash(receipt.payload.transactionHash)
-                val entrypointHash = canonicalHash(receipt.payload.entrypointHash)
+                val entrypointHash = receipt.payload.entrypointHash
+                    ?.let(::canonicalHash)
                 val signedReceiptHash = receipt.payload.signedTransactionHash
                     ?.let(::canonicalHash)
                 if (
                     receiptHash != staged.transactionHash ||
-                    entrypointHash != staged.transactionHash ||
+                    (entrypointHash != null &&
+                        entrypointHash != staged.transactionHash) ||
                     (signedReceiptHash != null &&
                         signedReceiptHash != staged.transactionHash) ||
                     receipt.payload.submittedAtMillis <= 0 ||
@@ -400,8 +415,10 @@ class NexusTransactionCoordinator @Inject constructor(
     )
 
     suspend fun submitAndTrack(prepared: NexusPreparedSend): NexusSendResult {
-        val submitted = submit(prepared)
-        return reconcileUntilTerminal(submitted.localId)
+        return submitAndTrackNexus(
+            submit = { submit(prepared) },
+            track = { reconcileUntilTerminal(it.localId) },
+        )
     }
 
     suspend fun recoverAfterRestart(): NexusRecoveryPass =
@@ -483,7 +500,9 @@ class NexusTransactionCoordinator @Inject constructor(
             "NEXUS_QUOTE_ASSET_MISMATCH"
         }
         check(quote.amount == request.amount) { "NEXUS_QUOTE_AMOUNT_MISMATCH" }
-        canonicalPositiveFee(quote.fee)
+        canonicalPositiveFee(quote.fee).also {
+            requireNetworkXorQuantity(request.network, it)
+        }
         check(quote.quoteIdentity.isNotBlank()) { "NEXUS_QUOTE_IDENTITY_MISSING" }
         check(quote.validUntilBlock == null || quote.validUntilBlock >= 0L) {
             "NEXUS_QUOTE_EXPIRY_INVALID"
@@ -505,6 +524,7 @@ class NexusTransactionCoordinator @Inject constructor(
             "NEXUS_RECIPIENT_CHANGED"
         }
         val canonicalAmount = canonicalPositiveQuantity(prepared.canonicalAmount)
+        requireNetworkXorQuantity(network, canonicalAmount)
         check(
             canonicalAmount == prepared.canonicalAmount &&
                 canonicalAmount == prepared.signingRequest.amount
@@ -589,24 +609,14 @@ class NexusTransactionCoordinator @Inject constructor(
         )
     }
 
-    private fun requireNetwork(id: WalletNetworkId) = when (id) {
-        WalletNetworkId.MINAMOTO -> NexusNetworks.minamoto
-        WalletNetworkId.TAIRA -> NexusNetworks.taira
-        WalletNetworkId.SORA2 -> throw IllegalArgumentException("NEXUS_WRONG_NETWORK")
-    }
+    private fun requireNetwork(id: WalletNetworkId) = NexusNetworks.require(id)
 
     private fun durablePendingLocalId(network: jp.co.soramitsu.common.nexus.NexusNetwork): String {
         val nonce = UUID.randomUUID().toString()
         if (network.id != WalletNetworkId.TAIRA) return nonce
 
-        val binding = checkNotNull(TairaDeployment.binding) {
-            "TAIRA_DEPLOYMENT_MANIFEST_NOT_QUALIFIED"
-        }
-        check(
-            network.chainId == binding.currentChainId &&
-                network.deploymentManifestSha256 == binding.manifestSha256
-        ) { "TAIRA_DEPLOYMENT_MANIFEST_NOT_QUALIFIED" }
-        return "${binding.pendingJournalPrefix}$nonce".also {
+        check(network == NexusNetworks.taira) { "TAIRA_CONTRACT_MISMATCH" }
+        return "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}$nonce".also {
             check(it.length <= 128) { "PENDING_TRANSACTION_ID_INVALID" }
         }
     }
@@ -618,7 +628,10 @@ class NexusTransactionCoordinator @Inject constructor(
         check(
             state.nexusAvailable &&
                 state.nexusSendsAvailable &&
-                (networkId != WalletNetworkId.TAIRA || state.tairaVisible)
+                (
+                    networkId != WalletNetworkId.TAIRA ||
+                        (state.tairaAvailable && state.tairaVisible)
+                    )
         ) { "NEXUS_SEND_DISABLED" }
     }
 
@@ -641,6 +654,17 @@ class NexusTransactionCoordinator @Inject constructor(
         val decimal = value.toBigDecimalExact()
         check(decimal.signum() >= 0) { "NEXUS_INVALID_QUANTITY" }
         return decimal.stripTrailingZeros().toPlainString()
+    }
+
+    private fun requireNetworkXorQuantity(
+        network: jp.co.soramitsu.common.nexus.NexusNetwork,
+        value: String,
+    ) {
+        if (network.id == WalletNetworkId.TAIRA) {
+            check(NexusQuantityContract.isTairaXorQuantity(value)) {
+                "TAIRA_XOR_SCALE_INVALID"
+            }
+        }
     }
 
     private fun String.toBigDecimalExact(): BigDecimal =
@@ -683,4 +707,21 @@ class NexusTransactionCoordinator @Inject constructor(
         const val STATUS_POLL_DELAY_MILLIS = 3_000L
         const val SUPPORTED_DERIVATION_VERSION = 1
     }
+}
+
+/** Evidence from the submit stage, never inferred from a later status-read error. */
+class NexusNotSubmittedException internal constructor(cause: NexusToriiException) : IllegalStateException(cause.message, cause)
+
+internal suspend fun submitAndTrackNexus(
+    submit: suspend () -> NexusSendResult,
+    track: suspend (NexusSendResult) -> NexusSendResult,
+): NexusSendResult {
+    val submitted = try {
+        submit()
+    } catch (error: NexusToriiException) {
+        if (!error.submissionMayHaveReachedTorii) throw NexusNotSubmittedException(error)
+        throw error
+    }
+    // A status lookup failure after successful submission can never authorize another send.
+    return track(submitted)
 }

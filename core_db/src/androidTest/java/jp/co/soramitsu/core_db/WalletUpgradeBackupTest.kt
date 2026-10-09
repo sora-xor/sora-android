@@ -1,6 +1,7 @@
 package jp.co.soramitsu.core_db
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.database.sqlite.SQLiteDatabase
 import android.system.ErrnoException
 import android.system.Os
@@ -50,6 +51,69 @@ class WalletUpgradeBackupTest {
         // Reset the process-wide gate for the next instrumentation test without exposing a
         // production reset API. An actually empty sandbox is the only state allowed to clear it.
         assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+    }
+
+    @Test
+    fun preMultiaccountRegisteredWalletIsBackedUpWithoutInventingAccountRows() {
+        listOf(50, LEGACY_VERSION).forEach { version ->
+            clearTestStorage()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            val file = context.getDatabasePath(DATABASE_NAME)
+            file.parentFile?.mkdirs()
+            SQLiteDatabase.openOrCreateDatabase(file, null).use { sqlite ->
+                sqlite.execSQL("CREATE TABLE tokens(id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL)")
+                sqlite.execSQL("INSERT INTO tokens VALUES('retained-token', 'Retained cache')")
+                if (version >= 58) {
+                    sqlite.execSQL("CREATE TABLE accounts(substrateAddress TEXT NOT NULL PRIMARY KEY, accountName TEXT NOT NULL)")
+                }
+                sqlite.version = version
+            }
+            val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+            assertTrue(preferences.edit()
+                .putString("registration_state", "REGISTRATION_FINISHED")
+                .putString("prefs_priv_key", "encrypted-private")
+                .putString("prefs_pub_key", "encrypted-public")
+                .putString("prefs_key_nonce", "encrypted-nonce")
+                .putString("prefs_mnemonic", "encrypted-mnemonic")
+                .commit())
+            val before = file.readBytes()
+            val originalPreferences = preferences.all
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            assertArrayEquals(before, file.readBytes())
+            assertEquals(originalPreferences, preferences.all)
+            assertTrue(context.noBackupFilesDir.listFiles().orEmpty().any {
+                it.name.startsWith("wallet-upgrade-backup-v$version-to-") && File(it, ".complete").isFile
+            })
+        }
+    }
+
+    @Test
+    fun preMultiaccountWalletWithIncompleteUnsuffixedKeypairRemainsRecoverable() {
+        createLegacyDatabase(withAccount = false)
+        val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+        assertTrue(preferences.edit()
+            .putString("registration_state", "REGISTRATION_FINISHED")
+            .putString("prefs_priv_key", "encrypted-private")
+            .putString("prefs_pub_key", "encrypted-public")
+            .commit())
+        val before = context.getDatabasePath(DATABASE_NAME).readBytes()
+        assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        assertArrayEquals(before, context.getDatabasePath(DATABASE_NAME).readBytes())
+        assertEquals("encrypted-private", preferences.getString("prefs_priv_key", null))
+    }
+
+    @Test
+    fun applicationAttachContextWithoutApplicationContextCanPrepareEmptyInstall() {
+        clearTestStorage()
+        val attachContext = object : ContextWrapper(context) {
+            override fun getApplicationContext(): Context? = null
+        }
+
+        val result = WalletUpgradeBackup.prepare(attachContext)
+
+        assertTrue(result.isSuccess)
+        assertEquals(null, WalletUpgradeBackup.blockingFailure())
+        assertFalse(context.getDatabasePath(DATABASE_NAME).exists())
     }
 
     @Test

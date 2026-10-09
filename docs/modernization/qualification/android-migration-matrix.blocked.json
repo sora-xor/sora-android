@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "contractId": "sora-android-wallet-migration-qualification-v7",
+  "schemaVersion": 8,
+  "contractId": "sora-android-wallet-migration-qualification-v8",
   "platform": "android",
   "status": "blocked-template",
   "runId": null,
@@ -33,10 +33,31 @@
     "rawSignedPayloadsIncluded": false,
     "perWalletRecordsIncluded": false
   },
-  "sourceSchemaVersions": [58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76],
+  "sourceSchemaVersions": [
+    50,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76
+  ],
   "targetSchemaVersion": 77,
-  "retainedSchemaCohortCount": 76,
-  "singleAccountCohortCount": 38,
+  "retainedSchemaCohortCount": 78,
+  "singleAccountCohortCount": 40,
   "multiAccountCohortCount": 38,
   "successfulSecretSourceCohortCount": 6,
   "secretFailureCohortCount": 2,
@@ -69,7 +90,12 @@
   "keystoreAliasContinuity": false,
   "noCredentialRewrite": false,
   "sora2SigningParity": false,
-  "roomSchemaSha256": {"74": null, "75": null, "76": null, "77": null},
+  "roomSchemaSha256": {
+    "74": null,
+    "75": null,
+    "76": null,
+    "77": null
+  },
   "qualificationContractSha256": null,
   "qualificationChecks": {
     "singleAccountQualified": false,
@@ -109,5 +135,35 @@
   },
   "blockingReasons": [
     "Template only: no Android wallet-migration qualification receipt may be published before the fixed-path retained-device evidence and non-authorizing raw execution inventory are produced and independently reviewed."
-  ]
+  ],
+  "preAccountUpgrade": {
+    "sourceSchemaVersion": 50,
+    "retainedReleaseTags": [],
+    "releasedSnapshotCount": 0,
+    "journalModes": [
+      "DELETE",
+      "WAL"
+    ],
+    "retainedSchemaCohortCount": 2,
+    "restartPhaseCount": 6,
+    "restartCohortCount": 12,
+    "checks": {
+      "releasedSnapshotProvenanceVerified": false,
+      "originalRegistrationStateVerified": false,
+      "preAccountSelectionAbsentVerified": false,
+      "unsuffixedCredentialCiphertextParity": false,
+      "signingOwnerAndSelectionParity": false,
+      "migrationFlagsParity": false,
+      "cacheTableRowAndIndexParity": false,
+      "verifiedBackupBeforeBridge": false,
+      "transactionRollbackQualified": false,
+      "schemaBridgeRestartQualified": false,
+      "accountInsertRestartQualified": false,
+      "cardInsertRestartQualified": false,
+      "selectionPublishRestartQualified": false,
+      "networkActivationRestartQualified": false,
+      "idempotentRetryQualified": false,
+      "noCredentialRewrite": false
+    }
+  }
 }

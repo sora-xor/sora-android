@@ -54,7 +54,8 @@ data class RecoveryAccountNameState(
 )
 
 data class TutorialScreenState(
-    val isGoogleSigninLoading: Boolean = false
+    val isGoogleSigninLoading: Boolean = false,
+    val isGoogleBackupAvailable: Boolean = true,
 )
 
 data class TermsAndPrivacyState(

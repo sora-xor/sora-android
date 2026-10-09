@@ -40,6 +40,8 @@ import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.BuildUtils
@@ -169,10 +171,13 @@ class AssetsInteractorImpl constructor(
                     ) { "SORA2_SELECTED_WALLET_CHANGED" }
                 },
             )
+            if (!status.success) {
+                throw SoraException.businessError(ResponseCode.BROKEN_TRANSACTION)
+            }
             TransferSubmissionOutcome(
                 transactionHash = status.txHash,
                 blockHash = status.blockHash,
-                keepPending = status.success,
+                keepPending = true,
             )
         } catch (error: Throwable) {
             if (error !is ExtrinsicSubmissionUnknown) throw error

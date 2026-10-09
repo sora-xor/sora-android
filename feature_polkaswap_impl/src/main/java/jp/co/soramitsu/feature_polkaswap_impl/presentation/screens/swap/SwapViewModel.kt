@@ -116,6 +116,7 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     private val assetsList = mutableListOf<Asset>()
+    private var assetCatalogUnavailable = false
     private val feeTokenAsync by viewModelScope.lazyAsync { walletInteractor.getFeeToken() }
     private suspend fun feeToken() = feeTokenAsync.await()
 
@@ -284,6 +285,22 @@ class SwapViewModel @AssistedInject constructor(
             .onEach { assets ->
                 assetsList.clear()
                 assetsList.addAll(assets)
+                assetCatalogUnavailable = assets.isEmpty()
+                _swapMainState.value = _swapMainState.value.copy(assetCatalogUnavailable = assetCatalogUnavailable)
+                if (assetCatalogUnavailable) {
+                    _swapMainState.value = _swapMainState.value.copy(
+                        tokenFromState = null,
+                        tokenToState = null,
+                        swapButtonState = _swapMainState.value.swapButtonState.copy(
+                            text = resourceManager.getString(R.string.wallet_assets_unavailable),
+                            enabled = false,
+                            loading = false,
+                        ),
+                        confirmButtonState = _swapMainState.value.confirmButtonState.copy(enabled = false, loading = false),
+                        confirmResult = null,
+                    )
+                    return@onEach
+                }
 
                 if (_swapMainState.value.tokenFromState == null && token1Id.isNotEmpty()) {
                     assetsInteractor.getAssetOrThrow(token1Id).let { assetFrom ->
@@ -339,6 +356,7 @@ class SwapViewModel @AssistedInject constructor(
 
                 onChangedProperty.set(property.newReloadMarkets(false))
             }
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         swapInteractor.observePoolReserves()
@@ -357,6 +375,11 @@ class SwapViewModel @AssistedInject constructor(
                     onError(it)
                 }
                 .collectLatest {
+                    if (assetCatalogUnavailable) {
+                        toggleSwapButtonStatus()
+                        resetLoading()
+                        return@collectLatest
+                    }
                     if (it.reloadMarkets) {
                         getMarkets()
                         property.reset()
@@ -552,6 +575,7 @@ class SwapViewModel @AssistedInject constructor(
         val ok = isBalanceOk()
 
         val (text, enabled) = when {
+            assetCatalogUnavailable -> resourceManager.getString(R.string.wallet_assets_unavailable) to false
             _swapMainState.value.tokenFromState == null || _swapMainState.value.tokenToState == null -> {
                 resourceManager.getString(R.string.choose_tokens) to false
             }
@@ -588,6 +612,7 @@ class SwapViewModel @AssistedInject constructor(
         }
 
         val (text2, enabled2) = when {
+            assetCatalogUnavailable -> resourceManager.getString(R.string.wallet_assets_unavailable) to false
             ok?.isNotEmpty() == true -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_balance)
                     .format(ok) to false
