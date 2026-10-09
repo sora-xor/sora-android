@@ -42,7 +42,6 @@ import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_impl.TestData
@@ -98,9 +97,6 @@ class WalletRepositoryTest {
     @Mock
     private lateinit var runtimeManager: RuntimeManager
 
-    @Mock
-    private lateinit var soraConfigManager: SoraConfigManager
-
     private val mockedUri = DEFAULT_ICON_URI
 
     // private lateinit var runtime: RuntimeSnapshot
@@ -116,7 +112,6 @@ class WalletRepositoryTest {
             extrinsicManager,
             substrateCalls,
             runtimeManager,
-            soraConfigManager,
         )
     }
 

@@ -36,7 +36,6 @@ import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import jp.co.soramitsu.common.domain.CardHubType
 
 val migration_CardHub_65_66 = object : Migration(65, 66) {
 
@@ -55,18 +54,21 @@ val migration_CardHub_65_66 = object : Migration(65, 66) {
             """.trimIndent()
         )
 
-        CardHubType.values()
-            .filter { !it.boundToAccount }
-            .mapIndexed { _, type ->
-
-                val globalCardValues = ContentValues().apply {
-                    put("cardId", type.hubName)
-                    put("visibility", 1)
-                    put("sortOrder", type.order)
-                    put("collapsed", 0)
-                }
-                database.insert("globalCardsHub", SQLiteDatabase.CONFLICT_REPLACE, globalCardValues)
+        // Frozen rows: this migration must not follow later changes to CardHubType.
+        // "get sora card" and "buy xor token" are no longer shown; CardsHubMapper skips them.
+        listOf(
+            "get sora card" to 0,
+            "buy xor token" to 1,
+            "referral system" to 2,
+        ).forEach { (cardId, sortOrder) ->
+            val globalCardValues = ContentValues().apply {
+                put("cardId", cardId)
+                put("visibility", 1)
+                put("sortOrder", sortOrder)
+                put("collapsed", 0)
             }
+            database.insert("globalCardsHub", SQLiteDatabase.CONFLICT_REPLACE, globalCardValues)
+        }
 
         database.setTransactionSuccessful()
         database.endTransaction()

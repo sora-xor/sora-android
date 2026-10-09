@@ -365,8 +365,6 @@ dependencies {
     implementation(project(":feature_select_node_impl"))
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":feature_blockexplorer_impl"))
-    implementation(project(":feature_sora_card_api"))
-    implementation(project(":feature_sora_card_impl"))
     implementation(project(":feature_ecosystem_impl"))
     implementation(project(":sorasubstrate"))
     implementation(project(":network"))
@@ -467,8 +465,6 @@ dependencies {
     kover(project(":feature_wallet_impl"))
     kover(project(":feature_select_node_api"))
     kover(project(":feature_select_node_impl"))
-    kover(project(":feature_sora_card_api"))
-    kover(project(":feature_sora_card_impl"))
     kover(project(":sorasubstrate"))
     kover(project(":network"))
 }

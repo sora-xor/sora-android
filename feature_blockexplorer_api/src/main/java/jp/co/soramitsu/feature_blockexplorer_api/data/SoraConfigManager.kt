@@ -187,7 +187,6 @@ class SoraConfigManager @Inject constructor(
             genesis = commonConfig.genesis,
             joinUrl = mobileConfig.joinLink,
             substrateTypesUrl = mobileConfig.substrateTypesAndroid,
-            soracard = mobileConfig.soracard,
             currencies = currencies,
             emergencyFlags = EmergencyFeatureFlags(
                 nexusAvailable = mobileConfig.nexusAvailable,
@@ -260,10 +259,6 @@ class SoraConfigManager @Inject constructor(
     suspend fun getNodes(): List<SoraConfigNode> =
         soraConfigFactory.nullableValue(EmptyArgs)
             ?.nodes ?: emptyList()
-
-    suspend fun getSoraCard(): Boolean =
-        soraConfigFactory.nullableValue(EmptyArgs)
-            ?.soracard ?: false
 
     suspend fun getGenesis(prefix: Boolean = false): String =
         soraConfigFactory.nullableValue(EmptyArgs)
@@ -344,8 +339,6 @@ private data class MobileDto(
     val substrateTypesAndroid: String,
     @SerialName("substrate_types_ios")
     val substrateTypesIos: String,
-    @SerialName("soracard")
-    val soracard: Boolean = false,
     @SerialName("currencies")
     val currencies: List<CurrencyDto>,
     @SerialName("nexus_available")

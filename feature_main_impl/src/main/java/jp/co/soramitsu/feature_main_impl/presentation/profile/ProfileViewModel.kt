@@ -32,16 +32,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
@@ -49,17 +43,6 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
-import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
-import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
-import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
-import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
-import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -72,29 +55,19 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val assetsRouter: AssetsRouter,
     interactor: MainInteractor,
     private val polkaswapRouter: PolkaswapRouter,
     private val router: MainRouter,
-    private val walletRouter: WalletRouter,
     private val referralRouter: ReferralRouter,
     private val selectNodeRouter: SelectNodeRouter,
-    private val soraConfigManager: SoraConfigManager,
-    private val soraCardInteractor: SoraCardInteractor,
     private val productionFeatureManager: ProductionFeatureManager,
     nodeManager: NodeManager,
-    private val darkThemeManager: DarkThemeManager,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(
         initialProfileScreenState,
     )
     internal val state = _state.asStateFlow()
-
-    private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
-    val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
-
-    private var currentSoraCardContractData: SoraCardContractData? = null
 
     init {
         viewModelScope.launch {
@@ -117,109 +90,10 @@ class ProfileViewModel @Inject constructor(
                 )
             }
             .launchIn(viewModelScope)
-
-        combine(
-            soraCardInteractor.basicStatus,
-            darkThemeManager.darkModeStatusFlow
-        ) { basicStatus, isDarkTheme ->
-            basicStatus to isDarkTheme
-        }
-            .onEach { (basicStatus, isDarkTheme) ->
-                basicStatus.availabilityInfo?.let { info ->
-                    currentSoraCardContractData = createSoraCardContract(
-                        userAvailableXorAmount = info.xorBalance.toDouble(),
-                        isEnoughXorAvailable = info.enoughXor,
-                        clientDark = isDarkTheme
-                    )
-                }
-                val soraCardStatusStringRes =
-                    if (basicStatus.ibanInfo == null)
-                        when (basicStatus.verification) {
-                            SoraCardCommonVerification.Rejected -> R.string.sora_card_verification_rejected
-                            SoraCardCommonVerification.Pending -> R.string.sora_card_verification_in_progress
-                            SoraCardCommonVerification.Successful -> R.string.more_menu_sora_card_subtitle
-                            else -> R.string.sora_card_sign_in_required
-                        } else R.string.more_menu_sora_card_subtitle
-
-                val soraCardStatusIconDrawableRes =
-                    if (basicStatus.ibanInfo == null)
-                        when (basicStatus.verification) {
-                            SoraCardCommonVerification.Rejected -> R.drawable.ic_status_denied
-                            SoraCardCommonVerification.Pending -> R.drawable.ic_status_pending
-                            else -> null
-                        } else null
-
-                _state.value = _state.value.copy(
-                    soraCardStatusStringRes = soraCardStatusStringRes,
-                    soraCardIbanError = if (basicStatus.ibanInfo?.ibanStatus == IbanStatus.OTHER) basicStatus.ibanInfo?.statusDescription else null,
-                    soraCardStatusIconDrawableRes = soraCardStatusIconDrawableRes,
-                    soraCardEnabled = soraConfigManager.getSoraCard(),
-                    soraCardNeedUpdate = basicStatus.needInstallUpdate,
-                    canStartGatehubOnboarding = basicStatus.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
-                )
-            }
-            .launchIn(viewModelScope)
     }
 
     fun showAccountList() {
         router.showAccountList()
-    }
-
-    fun showSoraCard() {
-        if (soraCardInteractor.basicStatus.value.initialized) {
-            if (soraCardInteractor.basicStatus.value.ibanInfo != null && soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus != IbanStatus.OTHER)
-                router.showSoraCardDetails()
-            else when (soraCardInteractor.basicStatus.value.verification) {
-                SoraCardCommonVerification.NotFound -> {
-                    router.showGetSoraCard()
-                }
-
-                SoraCardCommonVerification.Successful -> {
-                    router.showSoraCardDetails()
-                }
-
-                else -> {
-                    currentSoraCardContractData?.let { contractData ->
-                        _launchSoraCardSignIn.value = contractData
-                    }
-                }
-            }
-        }
-    }
-
-    fun handleSoraCardResult(soraCardResult: SoraCardResult) {
-        when (soraCardResult) {
-            is SoraCardResult.NavigateTo -> {
-                when (soraCardResult.screen) {
-                    OutwardsScreen.DEPOSIT -> walletRouter.openQrCodeFlow()
-                    OutwardsScreen.SWAP -> polkaswapRouter.showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
-                    OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
-                }
-            }
-
-            is SoraCardResult.Success -> {
-                viewModelScope.launch {
-                    soraCardInteractor.setStatus(soraCardResult.status)
-                }
-            }
-
-            is SoraCardResult.Failure -> {
-                viewModelScope.launch {
-                    soraCardInteractor.setStatus(soraCardResult.status)
-                }
-            }
-
-            is SoraCardResult.Canceled -> {}
-            is SoraCardResult.Logout -> {
-                viewModelScope.launch {
-                    soraCardInteractor.setLogout()
-                }
-            }
-        }
-    }
-
-    fun showBuyCrypto() {
-        _launchSoraCardSignIn.value = createSoraCardGateHubContract()
     }
 
     fun showPolkamarkt() {

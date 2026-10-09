@@ -85,7 +85,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.androidfoundation.intent.openGooglePlay
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
@@ -96,15 +95,12 @@ import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BasicBannerCardState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.BuyXorState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -115,10 +111,6 @@ import jp.co.soramitsu.ui_core.theme.customColors
 class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
 
     override val viewModel: CardsHubViewModel by viewModels()
-
-    private val soraCardSignIn = registerForActivityResult(
-        SoraCardContract()
-    ) { viewModel.handleSoraCardResult(it) }
 
     @javax.inject.Inject
     lateinit var qrScannerFactory: jp.co.soramitsu.feature_assets_api.presentation.QrScannerContractFactory
@@ -144,9 +136,6 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).showBottomBar()
-        viewModel.launchSoraCardSignIn.observe { contractData ->
-            soraCardSignIn.launch(contractData)
-        }
     }
 
     override fun NavGraphBuilder.content(
@@ -188,11 +177,6 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     onAssetClick = viewModel::onAssetClick,
                     onPoolClick = viewModel::onPoolClick,
                     onOpenFullCardClick = viewModel::onOpenFullCard,
-                    onSoraCardClick = viewModel::onCardStateClicked,
-                    onSoraCardNeedUpdateClick = { this@CardsHubFragment.context?.openGooglePlay() },
-                    onSoraCardClose = viewModel::onRemoveSoraCard,
-                    onBuyXorClick = viewModel::onBuyCrypto,
-                    onBuyXorClose = viewModel::onRemoveBuyXorToken,
                     onReferralClick = viewModel::onStartReferral,
                     onReferralClose = viewModel::onRemoveReferralCard,
                     onBackupBannerClick = viewModel::onBackupBannerClick,
@@ -219,11 +203,6 @@ private fun CardsMainScreen(
     onAssetClick: (String) -> Unit,
     onPoolClick: (StringPair) -> Unit,
     onOpenFullCardClick: (AssetCardState) -> Unit,
-    onSoraCardClick: () -> Unit,
-    onSoraCardNeedUpdateClick: () -> Unit,
-    onSoraCardClose: () -> Unit,
-    onBuyXorClick: () -> Unit,
-    onBuyXorClose: () -> Unit,
     onReferralClick: () -> Unit,
     onReferralClose: () -> Unit,
     onBackupBannerClick: () -> Unit,
@@ -300,25 +279,10 @@ private fun CardsMainScreen(
                                 onStartClicked = onBackupBannerClick,
                             )
                         }
-                        is BuyXorState -> {
-                            BuyXorCard(
-                                buttonEnabled = cardState.canStartGatehub,
-                                onBuyXorClicked = onBuyXorClick,
-                                onCloseCard = onBuyXorClose,
-                            )
-                        }
                         ReferralState -> {
                             ReferralCard(
                                 onStartClicked = onReferralClick,
                                 onCloseCard = onReferralClose,
-                            )
-                        }
-                        is SoraCardState -> {
-                            SoraCard(
-                                state = cardState,
-                                onCardStateClicked = onSoraCardClick,
-                                onCloseClicked = onSoraCardClose,
-                                onNeedUpdate = onSoraCardNeedUpdateClick,
                             )
                         }
                     }
@@ -353,7 +317,7 @@ private fun PreviewCardsMainScreen() {
                 accountAddress = "",
                 loading = true,
                 cards = listOf(
-                    BuyXorState(true), ReferralState, BackupWalletState,
+                    ReferralState, BackupWalletState,
                 ),
             ),
             sora2Portfolio = Sora2PortfolioBalance(
@@ -366,11 +330,6 @@ private fun PreviewCardsMainScreen() {
             onAssetClick = {},
             onPoolClick = {},
             onOpenFullCardClick = {},
-            onSoraCardClick = {},
-            onSoraCardNeedUpdateClick = {},
-            onSoraCardClose = {},
-            onBuyXorClick = {},
-            onBuyXorClose = {},
             onReferralClick = {},
             onReferralClose = {},
             onBackupBannerClick = {},

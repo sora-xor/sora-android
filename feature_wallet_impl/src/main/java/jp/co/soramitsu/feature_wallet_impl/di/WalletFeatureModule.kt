@@ -47,8 +47,6 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsReposito
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
-import jp.co.soramitsu.feature_wallet_api.data.BuyCryptoDataSource
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BuyCryptoRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
@@ -61,16 +59,13 @@ import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusTransactionSigner
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.UnavailableNexusFinalityReader
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.UnavailableNexusTransactionSigner
 import jp.co.soramitsu.feature_wallet_impl.data.recovery.Sora2PendingRecoveryScheduler
-import jp.co.soramitsu.feature_wallet_impl.data.repository.BuyCryptoRepositoryImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.WalletRepositoryImpl
-import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.BuyCryptoDataSourceImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalletDatasource
 import jp.co.soramitsu.feature_wallet_impl.domain.PoolsFeatureStorageManager
 import jp.co.soramitsu.feature_wallet_impl.domain.WalletInteractorImpl
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingRecoveryKick
 import kotlinx.coroutines.FlowPreview
-import kotlinx.serialization.json.Json
 
 @FlowPreview
 @Module
@@ -123,11 +118,6 @@ class WalletFeatureModule {
     fun provideWalletDatasource(prefsWalletDatasource: PrefsWalletDatasource): WalletDatasource =
         prefsWalletDatasource
 
-    @Provides
-    @Singleton
-    fun provideBuyCryptoDataSource(json: Json): BuyCryptoDataSource =
-        BuyCryptoDataSourceImpl(json)
-
     @Singleton
     @Provides
     fun provideWalletInteractor(
@@ -147,14 +137,6 @@ class WalletFeatureModule {
             runtimeManager,
         )
     }
-
-    @Provides
-    @Singleton
-    fun provideBuyCryptoRepository(
-        dataSource: BuyCryptoDataSource
-    ): BuyCryptoRepository = BuyCryptoRepositoryImpl(
-        dataSource
-    )
 
     @Singleton
     @Provides

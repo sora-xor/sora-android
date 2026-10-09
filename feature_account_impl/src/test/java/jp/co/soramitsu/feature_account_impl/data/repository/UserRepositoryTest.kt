@@ -498,7 +498,6 @@ class UserRepositoryTest {
         coEvery { hubDao.insert(TestData.CARD_HUB_LOCAL) } returns Unit
         mockkStatic("androidx.room.RoomDatabaseKt")
         mockkStatic(CardHubType::class)
-        // every { CardHubType.entries } returns arrayOf(CardHubType.GET_SORA_CARD, CardHubType.ASSETS, CardHubType.POOLS)
         val lambda = slot<suspend () -> R>()
         coEvery { db.withTransaction(capture(lambda)) } coAnswers {
             lambda.captured.invoke()

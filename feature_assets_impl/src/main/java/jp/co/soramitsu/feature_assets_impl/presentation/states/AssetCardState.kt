@@ -59,7 +59,6 @@ internal data class AssetCardStateData(
     val isTransferableBalanceAvailable: Boolean = false,
     val hasTokens: Boolean = false,
     val events: List<EventUiModel>,
-    val buyCryptoAvailable: Boolean,
 )
 
 internal val emptyAssetCardState = AssetCardStateData(
@@ -76,5 +75,4 @@ internal val emptyAssetCardState = AssetCardStateData(
     poolsState = PoolsListState(emptyList()),
     poolsSum = "",
     events = emptyList(),
-    buyCryptoAvailable = false,
 )

@@ -35,7 +35,6 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -43,7 +42,6 @@ import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.format.isZero
-import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -66,15 +64,10 @@ import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetCardState
 import jp.co.soramitsu.feature_assets_impl.presentation.states.FrozenXorDetailsModel
 import jp.co.soramitsu.feature_assets_impl.presentation.states.emptyAssetCardState
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
-import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
-import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -92,9 +85,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
     private val polkaswapRouter: PolkaswapRouter,
     private val transactionHistoryHandler: TransactionHistoryHandler,
     private val resourceManager: ResourceManager,
-    private val soraConfigManager: SoraConfigManager,
     private val coroutineManager: CoroutineManager,
-    private val soraCardInteractor: SoraCardInteractor,
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -105,9 +96,6 @@ class AssetDetailsViewModel @AssistedInject constructor(
     companion object {
         private const val TX_HISTORY_COUNT = 5
     }
-
-    private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
-    val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
 
     internal var state by mutableStateOf(AssetCardState(true, emptyAssetCardState))
         private set
@@ -146,7 +134,6 @@ class AssetDetailsViewModel @AssistedInject constructor(
         )
         viewModelScope.launch {
             tryCatch {
-                val soraCard = soraConfigManager.getSoraCard()
                 val asset = assetsInteractor.getAssetOrThrow(assetId)
                 if (asset.token.id == SubstrateOptionsProvider.feeAssetId) {
                     if (asset.balance.transferable.isZero().not()) {
@@ -197,7 +184,6 @@ class AssetDetailsViewModel @AssistedInject constructor(
                             null
                         },
                         isTransferableBalanceAvailable = asset.balance.transferable > BigDecimal.ZERO,
-                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId) && soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
                     )
                 )
             }
@@ -316,9 +302,5 @@ class AssetDetailsViewModel @AssistedInject constructor(
                 }
             }
         }
-    }
-
-    fun onBuyCrypto() {
-        _launchSoraCardSignIn.value = createSoraCardGateHubContract()
     }
 }

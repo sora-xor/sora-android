@@ -34,9 +34,7 @@ package jp.co.soramitsu.feature_wallet_impl.data.repository
 
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CardHub
-import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
@@ -64,11 +62,7 @@ class WalletRepositoryImpl @Inject constructor(
     private val extrinsicManager: ExtrinsicManager,
     private val substrateCalls: SubstrateCalls,
     private val runtimeManager: RuntimeManager,
-    private val soraConfigManager: SoraConfigManager,
 ) : WalletRepository {
-    private companion object {
-        const val SORA_CARD_ID = "soraCardId"
-    }
 
     override fun observeStorageAccount(address: String): Flow<String> = flow {
         val runtime = runtimeManager.getRuntimeSnapshot()
@@ -124,15 +118,7 @@ class WalletRepositoryImpl @Inject constructor(
 
     override fun subscribeVisibleGlobalCardsHubList(): Flow<List<CardHub>> {
         return db.globalCardsHubDao().getGlobalCardsHubVisible().map {
-            val soraCard = soraConfigManager.getSoraCard()
-            it.mapNotNull { cardLocal ->
-                val card = CardsHubMapper.map(cardLocal)
-                when (card?.cardType) {
-                    CardHubType.GET_SORA_CARD -> if (soraCard) card else null
-                    CardHubType.BUY_XOR_TOKEN -> if (soraCard) card else null
-                    else -> card
-                }
-            }
+            it.mapNotNull { cardLocal -> CardsHubMapper.map(cardLocal) }
         }
     }
 
