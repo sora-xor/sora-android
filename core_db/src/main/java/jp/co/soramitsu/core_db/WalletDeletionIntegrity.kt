@@ -12,8 +12,31 @@ import jp.co.soramitsu.core_db.model.WalletIdentityLocal
  */
 object WalletDeletionIntegrity {
     private val HASH = Regex("^[0-9a-f]{64}$")
+    private const val MAX_WALLET_ID_LENGTH = 256
 
     fun snapshotHash(
+        accounts: List<SoraAccountLocal>,
+        identities: List<WalletIdentityLocal>,
+        networkAccounts: List<NetworkAccountLocal>,
+        selectedWalletId: String,
+        scope: String,
+        targetWalletIds: Set<String>,
+    ): String = snapshotHashOfWallets(
+        // A blank or over-long row (left by an old upgrade that could not derive an address) and
+        // the identity/network rows copied from it hold no wallet. They are ignored here exactly
+        // as by the upgrade gate and account removal, and never deleted.
+        accounts = accounts.filter { isWalletId(it.substrateAddress) },
+        identities = identities.filter { isWalletId(it.walletId) },
+        networkAccounts = networkAccounts.filter { isWalletId(it.walletId) },
+        selectedWalletId = selectedWalletId,
+        scope = scope,
+        targetWalletIds = targetWalletIds,
+    )
+
+    private fun isWalletId(walletId: String): Boolean =
+        walletId.isNotBlank() && walletId.length <= MAX_WALLET_ID_LENGTH
+
+    private fun snapshotHashOfWallets(
         accounts: List<SoraAccountLocal>,
         identities: List<WalletIdentityLocal>,
         networkAccounts: List<NetworkAccountLocal>,
