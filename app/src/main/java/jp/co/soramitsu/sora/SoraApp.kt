@@ -32,8 +32,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.os.Bundle
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
@@ -58,8 +60,10 @@ import timber.log.Timber
 @HiltAndroidApp
 open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
+    // Created when the first activity starts, not in Application.onCreate: a process that
+    // WorkManager starts in the background never opens the node socket or fetches node lists.
     @Inject
-    lateinit var nodeManager: NodeManager
+    lateinit var nodeManager: dagger.Lazy<NodeManager>
 
     @Inject
     lateinit var resourceManager: ResourceManager
@@ -102,6 +106,7 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         initLogger()
 
         registerActivityLifecycleCallbacks(resourceManager)
+        registerActivityLifecycleCallbacks(StartNodeManagerWithFirstActivity())
         val firebaseApp = runCatching { FirebaseApp.initializeApp(this) }
             .onFailure { Timber.e(it) }
             .getOrNull()
@@ -112,6 +117,20 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         OptionsProvider.APPLICATION_ID = BuildConfig.APPLICATION_ID
 
         darkThemeManager.updateUiModeFromCache()
+    }
+
+    private inner class StartNodeManagerWithFirstActivity : ActivityLifecycleCallbacks {
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+            unregisterActivityLifecycleCallbacks(this)
+            nodeManager.get()
+        }
+
+        override fun onActivityStarted(activity: Activity) = Unit
+        override fun onActivityResumed(activity: Activity) = Unit
+        override fun onActivityPaused(activity: Activity) = Unit
+        override fun onActivityStopped(activity: Activity) = Unit
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+        override fun onActivityDestroyed(activity: Activity) = Unit
     }
 
     private fun initLogger() {
