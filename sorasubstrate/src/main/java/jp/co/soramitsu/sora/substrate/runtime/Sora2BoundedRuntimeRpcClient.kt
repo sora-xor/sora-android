@@ -39,16 +39,29 @@ internal fun interface Sora2RuntimeRpcTransport {
 
 private class ManifestBoundSora2RuntimeRpcTransport(
     private val client: BoundedHttpTextClient,
+    private val endpoint: String = Sora2RuntimeContract.RUNTIME_RPC_ENDPOINT,
 ) : Sora2RuntimeRpcTransport {
     override suspend fun post(
         requestBody: String,
         maximumResponseBytes: Int,
     ): String = client.postJsonUtf8(
-        rawUrl = Sora2RuntimeContract.RUNTIME_RPC_ENDPOINT,
+        rawUrl = endpoint,
         requestBody = requestBody,
         maximumBytes = maximumResponseBytes,
     )
 }
+
+/**
+ * The reviewed endpoint answers `4003 ... State already discarded for <hash>` for blocks older
+ * than its state window. Only that answer allows a status read to be repeated on the archive
+ * endpoint; every other error is returned unchanged.
+ */
+internal fun Sora2RuntimeRpcRemoteException.isDiscardedStateError(): Boolean =
+    code == STATE_DISCARDED_ERROR_CODE &&
+        remoteMessage.contains(STATE_DISCARDED_MESSAGE, ignoreCase = true)
+
+private const val STATE_DISCARDED_ERROR_CODE = 4003L
+private const val STATE_DISCARDED_MESSAGE = "State already discarded"
 
 internal data class Sora2FinalizedRuntimeIdentity(
     val genesisHash: String,
@@ -83,6 +96,8 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
     private val transport: Sora2RuntimeRpcTransport,
     private val gson: Gson,
     private val sora2AddressCodec: Sora2AddressCodec = Sora2AddressCodec(),
+    /** Status-only archive reads; see [Sora2RuntimeContract.STATUS_ARCHIVE_RPC_ENDPOINT]. */
+    private val statusArchiveTransport: Sora2RuntimeRpcTransport? = null,
 ) {
     @Inject
     constructor(
@@ -93,6 +108,10 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         transport = ManifestBoundSora2RuntimeRpcTransport(boundedHttpTextClient),
         gson = gson,
         sora2AddressCodec = sora2AddressCodec,
+        statusArchiveTransport = ManifestBoundSora2RuntimeRpcTransport(
+            client = boundedHttpTextClient,
+            endpoint = Sora2RuntimeContract.STATUS_ARCHIVE_RPC_ENDPOINT,
+        ),
     )
 
     private val requestIds = AtomicLong(0)
@@ -137,8 +156,82 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
     }
 
     /** Fetches metadata only at a previously admitted, canonical finalized hash. */
-    suspend fun getMetadataAtFinalized(finalizedHash: String): String {
-        val canonicalFinalizedHash = finalizedHash.requireCanonicalBlockHash(
+    suspend fun getMetadataAtFinalized(finalizedHash: String): String =
+        getMetadataAt(finalizedHash, allowStatusArchive = false)
+
+    /**
+     * Status recovery only: the metadata a pending submission was signed with, read at the exact
+     * block hash journaled with it. The reviewed endpoint is asked first; the archive endpoint
+     * only when the reviewed node has discarded that block's state. Callers must admit the result
+     * by comparing its SHA-256 with the journaled metadata hash.
+     */
+    internal suspend fun getHistoricMetadataForStatus(blockHash: String): String =
+        getMetadataAt(blockHash, allowStatusArchive = true)
+
+    /** Status recovery only: runtime version at an exact block hash (archive as above). */
+    internal suspend fun getHistoricRuntimeVersionForStatus(blockHash: String): RuntimeVersion {
+        val canonicalBlockHash = blockHash.requireCanonicalBlockHash(
+            "SORA2_STATUS_BLOCK_HASH_INVALID"
+        )
+        return execute(
+            method = METHOD_RUNTIME_VERSION,
+            params = listOf(JsonPrimitive(canonicalBlockHash)),
+            maximumResponseBytes = MAXIMUM_RUNTIME_VERSION_RESPONSE_BYTES,
+            resultKind = Sora2RuntimeRpcResultKind.RUNTIME_VERSION,
+            allowStatusArchive = true,
+        ).requireRuntimeVersion(gson)
+    }
+
+    /**
+     * `payment_queryInfo` for exact signed bytes, through the same reviewed endpoint that supplies
+     * the runtime, nonce and submission. The fee no longer depends on the node the app's
+     * WebSocket is connected to.
+     */
+    suspend fun queryPartialFee(encodedExtrinsic: String): BigInteger {
+        if (
+            !HEX_PAYLOAD.matches(encodedExtrinsic) ||
+            (encodedExtrinsic.length - 2) % 2 != 0 ||
+            encodedExtrinsic.length > MAXIMUM_SUBMISSION_EXTRINSIC_HEX_CHARS
+        ) {
+            throw Sora2RuntimeIdentityException("SORA2_FEE_EXTRINSIC_INVALID")
+        }
+        val result = execute(
+            method = METHOD_QUERY_INFO,
+            params = listOf(JsonPrimitive(encodedExtrinsic)),
+            maximumResponseBytes = MAXIMUM_FEE_RESPONSE_BYTES,
+            resultKind = Sora2RuntimeRpcResultKind.STRUCTURED,
+        )
+        val partialFee = result.takeIf { it.isJsonObject }
+            ?.asJsonObject
+            ?.get(FIELD_PARTIAL_FEE)
+            ?.takeIf { it.isJsonPrimitive }
+            ?.asJsonPrimitive
+            ?: throw Sora2RuntimeIdentityException("SORA2_FEE_RESULT_INVALID")
+        // Substrate sends the u128 fee as a decimal string; older nodes sent a JSON number.
+        val raw = if (partialFee.isString) partialFee.asString else partialFee.asBigDecimal
+            .let { number ->
+                try {
+                    number.toBigIntegerExact().toString()
+                } catch (_: ArithmeticException) {
+                    throw Sora2RuntimeIdentityException("SORA2_FEE_RESULT_INVALID")
+                }
+            }
+        if (raw.length > MAXIMUM_FEE_DIGITS || !UNSIGNED_JSON_INTEGER.matches(raw)) {
+            throw Sora2RuntimeIdentityException("SORA2_FEE_RESULT_INVALID")
+        }
+        val fee = BigInteger(raw)
+        if (fee > U128_MAX) {
+            throw Sora2RuntimeIdentityException("SORA2_FEE_RESULT_INVALID")
+        }
+        currentCoroutineContext().ensureActive()
+        return fee
+    }
+
+    private suspend fun getMetadataAt(
+        blockHash: String,
+        allowStatusArchive: Boolean,
+    ): String {
+        val canonicalFinalizedHash = blockHash.requireCanonicalBlockHash(
             "SORA2_RUNTIME_RPC_FINALIZED_INVALID"
         )
         val result = execute(
@@ -146,6 +239,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
             params = listOf(JsonPrimitive(canonicalFinalizedHash)),
             maximumResponseBytes = MAXIMUM_METADATA_RESPONSE_BYTES,
             resultKind = Sora2RuntimeRpcResultKind.STRING,
+            allowStatusArchive = allowStatusArchive,
         )
         if (!result.isJsonPrimitive || !result.asJsonPrimitive.isString) {
             throw Sora2RuntimeIdentityException("SORA2_RUNTIME_RPC_METADATA_INVALID")
@@ -270,7 +364,11 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         )
     }
 
-    /** Returns bounded raw SCALE storage only at an admitted canonical block hash. */
+    /**
+     * Status recovery only: bounded raw SCALE storage at an admitted canonical block hash. When the
+     * reviewed endpoint has discarded that block's state, the same exact read is answered by the
+     * status archive endpoint.
+     */
     internal suspend fun getStorageAt(
         storageKey: String,
         blockHash: String,
@@ -286,6 +384,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
             params = listOf(JsonPrimitive(storageKey.lowercase()), JsonPrimitive(canonicalBlockHash)),
             maximumResponseBytes = MAXIMUM_STORAGE_RESPONSE_BYTES,
             resultKind = Sora2RuntimeRpcResultKind.STRING,
+            allowStatusArchive = true,
         )
         if (!raw.isJsonPrimitive || !raw.asJsonPrimitive.isString) {
             throw Sora2RuntimeIdentityException("SORA2_STATUS_STORAGE_INVALID")
@@ -307,6 +406,25 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         params: List<JsonElement>,
         maximumResponseBytes: Int,
         resultKind: Sora2RuntimeRpcResultKind,
+        allowStatusArchive: Boolean = false,
+    ): JsonElement {
+        return try {
+            executeOn(transport, method, params, maximumResponseBytes, resultKind)
+        } catch (error: Sora2RuntimeRpcRemoteException) {
+            val archive = statusArchiveTransport
+            if (!allowStatusArchive || archive == null || !error.isDiscardedStateError()) {
+                throw error
+            }
+            executeOn(archive, method, params, maximumResponseBytes, resultKind)
+        }
+    }
+
+    private suspend fun executeOn(
+        target: Sora2RuntimeRpcTransport,
+        method: String,
+        params: List<JsonElement>,
+        maximumResponseBytes: Int,
+        resultKind: Sora2RuntimeRpcResultKind,
     ): JsonElement {
         val requestId = requestIds.incrementAndGet()
         if (requestId <= 0) {
@@ -318,7 +436,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
             addProperty(FIELD_METHOD, method)
             add(FIELD_PARAMS, gson.toJsonTree(params))
         }
-        val rawResponse = transport.post(
+        val rawResponse = target.post(
             requestBody = gson.toJson(request),
             maximumResponseBytes = maximumResponseBytes,
         )
@@ -599,6 +717,11 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         private const val METHOD_HEADER = "chain_getHeader"
         private const val METHOD_BLOCK = "chain_getBlock"
         private const val METHOD_STORAGE = "state_getStorage"
+        private const val METHOD_QUERY_INFO = "payment_queryInfo"
+        private const val FIELD_PARTIAL_FEE = "partialFee"
+        private const val MAXIMUM_FEE_RESPONSE_BYTES = 16 * 1024
+        private const val MAXIMUM_FEE_DIGITS = 39
+        private val U128_MAX: BigInteger = BigInteger.ONE.shiftLeft(128).subtract(BigInteger.ONE)
         private const val JSON_RPC_VERSION = "2.0"
         private const val FIELD_JSON_RPC = "jsonrpc"
         private const val FIELD_ID = "id"

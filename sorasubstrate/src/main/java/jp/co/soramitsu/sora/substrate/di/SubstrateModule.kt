@@ -44,7 +44,9 @@ import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.domain.AppStateProvider
+import jp.co.soramitsu.sora.substrate.runtime.Sora2RecoveryRuntimeRetention
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingSubmissionRuntimeRetention
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApiImpl
 import jp.co.soramitsu.sora.substrate.substrate.WsConnectionManager
@@ -105,4 +107,10 @@ class SubstrateModule {
     @Provides
     @Singleton
     fun provideSubstrateApi(api: SubstrateApiImpl): SubstrateApi = api
+
+    @Provides
+    @Singleton
+    fun provideSora2RecoveryRuntimeRetention(
+        retention: Sora2PendingSubmissionRuntimeRetention,
+    ): Sora2RecoveryRuntimeRetention = retention
 }

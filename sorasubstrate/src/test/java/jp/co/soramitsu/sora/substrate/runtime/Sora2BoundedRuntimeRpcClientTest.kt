@@ -513,6 +513,115 @@ class Sora2BoundedRuntimeRpcClientTest {
         }
     }
 
+    @Test
+    fun `fee quote reads partialFee for the exact signed bytes from the reviewed endpoint`() =
+        runTest {
+            val transport = ScriptedTransport(
+                result(
+                    1,
+                    "{\"weight\":{\"ref_time\":7249687304,\"proof_size\":1260290}," +
+                        "\"class\":\"normal\",\"partialFee\":\"100021012589707326\"}",
+                ),
+                result(2, "{\"weight\":1,\"class\":\"normal\",\"partialFee\":7}"),
+                result(3, "{\"weight\":1,\"class\":\"normal\",\"partialFee\":\"-7\"}"),
+                result(4, "{\"weight\":1,\"class\":\"normal\"}"),
+            )
+            val archive = ScriptedTransport()
+            val client = Sora2BoundedRuntimeRpcClient(
+                transport = transport,
+                gson = gson,
+                statusArchiveTransport = archive,
+            )
+
+            assertEquals(BigInteger("100021012589707326"), client.queryPartialFee("0x0102"))
+            assertEquals(BigInteger.valueOf(7), client.queryPartialFee("0x0102"))
+            assertEquals(
+                "SORA2_FEE_RESULT_INVALID",
+                captureFailure { client.queryPartialFee("0x0102") }.message,
+            )
+            assertEquals(
+                "SORA2_FEE_RESULT_INVALID",
+                captureFailure { client.queryPartialFee("0x0102") }.message,
+            )
+            assertEquals(
+                "SORA2_FEE_EXTRINSIC_INVALID",
+                captureFailure { client.queryPartialFee("0x012") }.message,
+            )
+            assertRequest(transport.requests[0], 1, "payment_queryInfo", "[\"0x0102\"]")
+            assertEquals(emptyList<String>(), archive.requests)
+        }
+
+    @Test
+    fun `status reads use the archive endpoint only when the reviewed node discarded the state`() =
+        runTest {
+            val blockHash = "0x${"cd".repeat(32)}"
+            val storageKey = "0x26aa394eea5630e07c48ae0c9558cef780d41e5e16056765bc8461851072c9d7"
+            // Request ids are shared by both endpoints: each reviewed attempt is followed by its
+            // archive retry.
+            val transport = ScriptedTransport(
+                discardedState(1, blockHash),
+                discardedState(3, blockHash),
+                discardedState(5, blockHash),
+                // Any other error is returned as is.
+                remoteError(7, -32603, "Internal error"),
+                // Mutation reads never fall back.
+                discardedState(8, blockHash),
+            )
+            val archive = ScriptedTransport(
+                result(2, gson.toJson("0x0400")),
+                result(4, runtimeVersionResult()),
+                result(6, gson.toJson("0x6d657461")),
+            )
+            val client = Sora2BoundedRuntimeRpcClient(
+                transport = transport,
+                gson = gson,
+                statusArchiveTransport = archive,
+            )
+
+            assertEquals("0x0400", client.getStorageAt(storageKey, blockHash))
+            assertEquals(130, client.getHistoricRuntimeVersionForStatus(blockHash).specVersion)
+            assertEquals("0x6d657461", client.getHistoricMetadataForStatus(blockHash))
+            val other = captureFailure { client.getStorageAt(storageKey, blockHash) }
+            assertEquals(-32603L, (other as Sora2RuntimeRpcRemoteException).code)
+            val mutation = captureFailure { client.getMetadataAtFinalized(blockHash) }
+            assertEquals(4003L, (mutation as Sora2RuntimeRpcRemoteException).code)
+
+            assertRequest(
+                archive.requests[0],
+                2,
+                "state_getStorage",
+                gson.toJson(listOf(storageKey, blockHash)),
+            )
+            assertRequest(
+                archive.requests[1],
+                4,
+                "state_getRuntimeVersion",
+                gson.toJson(listOf(blockHash)),
+            )
+            assertRequest(
+                archive.requests[2],
+                6,
+                "state_getMetadata",
+                gson.toJson(listOf(blockHash)),
+            )
+            assertEquals(3, archive.requests.size)
+            assertEquals(
+                "https://mof2.sora.org",
+                Sora2RuntimeContract.STATUS_ARCHIVE_RPC_ENDPOINT,
+            )
+        }
+
+    private fun discardedState(id: Int, blockHash: String): String =
+        remoteError(
+            id,
+            4003,
+            "Client error: UnknownBlock: State already discarded for $blockHash",
+        )
+
+    private fun remoteError(id: Int, code: Int, message: String): String =
+        "{\"jsonrpc\":\"2.0\",\"id\":$id,\"error\":{\"code\":$code," +
+            "\"message\":\"$message\"}}"
+
     private fun assertRequest(
         raw: String,
         id: Int,
