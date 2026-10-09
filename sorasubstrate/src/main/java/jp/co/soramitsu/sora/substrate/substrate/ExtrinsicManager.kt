@@ -108,7 +108,6 @@ internal fun requireExactSora2TransferFee(
 
 @Singleton
 class ExtrinsicManager @Inject constructor(
-    private val calls: SubstrateCalls,
     private val factory: ExtrinsicBuilderFactory,
     private val runtimeManager: RuntimeManager,
     private val database: AppDatabase,
@@ -148,7 +147,7 @@ class ExtrinsicManager @Inject constructor(
         val builder = contextBoundBuilder.builder
         builder.formExtrinsic()
         val extrinsic = builder.build(useBatchAll)
-        return calls.getExtrinsicFee(extrinsic)
+        return runtimeRpcClient.queryPartialFee(extrinsic)
     }
 
     /**
@@ -169,7 +168,7 @@ class ExtrinsicManager @Inject constructor(
         val builder = contextBoundBuilder.builder
         builder.formExtrinsic()
         val extrinsic = builder.build(useBatchAll)
-        return calls.getExtrinsicFee(extrinsic)
+        return runtimeRpcClient.queryPartialFee(extrinsic)
     }
 
     suspend fun submitExtrinsic(
@@ -544,7 +543,7 @@ class ExtrinsicManager @Inject constructor(
             submitGenericPreparedOnceUnlocked(prepared) {
                 val exactFee = requireExactSora2TransferFee(
                     reviewedFee = reviewedFee,
-                    exactFee = calls.getExtrinsicFee(prepared.encoded),
+                    exactFee = runtimeRpcClient.queryPartialFee(prepared.encoded),
                 )
                 validateBalances(exactFee)
             }

@@ -56,15 +56,11 @@ import jp.co.soramitsu.sora.substrate.request.BlockHashRequest
 import jp.co.soramitsu.sora.substrate.request.BlockRequest
 import jp.co.soramitsu.sora.substrate.request.ChainHeaderRequest
 import jp.co.soramitsu.sora.substrate.request.ChainLastHeaderRequest
-import jp.co.soramitsu.sora.substrate.request.FeeCalculationRequest
-import jp.co.soramitsu.sora.substrate.request.FeeCalculationRequest2
 import jp.co.soramitsu.sora.substrate.request.FinalizedHeadRequest
 import jp.co.soramitsu.sora.substrate.request.StateKeys
 import jp.co.soramitsu.sora.substrate.request.StateKeysPaged
 import jp.co.soramitsu.sora.substrate.request.StateQueryStorageAt
 import jp.co.soramitsu.sora.substrate.response.ChainHeaderResponse
-import jp.co.soramitsu.sora.substrate.response.FeeResponse
-import jp.co.soramitsu.sora.substrate.response.FeeResponse2
 import jp.co.soramitsu.sora.substrate.response.StateQueryResponse
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
@@ -100,7 +96,6 @@ import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.SubscribeStorage
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.SubscribeStorageResult
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.storageChange
 import jp.co.soramitsu.xsubstrate.wsrpc.subscriptionFlow
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
@@ -712,39 +707,6 @@ class SubstrateCalls @Inject constructor(
                 FirebaseWrapper.PrivacySafeErrorClass.FINALIZED_EVENT_READ
             )
             emptyList()
-        }
-    }
-
-    suspend fun getExtrinsicFee(extrinsic: String): BigInteger? {
-        val primaryFailure = try {
-            val request = FeeCalculationRequest(extrinsic)
-            val feeResponse =
-                socketService.executeAsyncMapped(
-                    request = request,
-                    mapper = pojo<FeeResponse>().nonNull()
-                )
-            return feeResponse.partialFee
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Throwable) {
-            error
-        }
-
-        return try {
-            val request = FeeCalculationRequest2(extrinsic)
-            val feeResponse =
-                socketService.executeAsyncMapped(
-                    request = request,
-                    mapper = pojo<FeeResponse2>().nonNull()
-                )
-            feeResponse.inclusionFee.sum
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Throwable) {
-            if (error !== primaryFailure) {
-                error.addSuppressed(primaryFailure)
-            }
-            throw error
         }
     }
 

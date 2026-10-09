@@ -76,7 +76,6 @@ class ExtrinsicManagerSafetyTest {
 
         val error = captureFailure {
             ExtrinsicManager(
-                calls = calls,
                 factory = factory,
                 runtimeManager = runtime,
                 database = database,
@@ -160,7 +159,6 @@ class ExtrinsicManagerSafetyTest {
 
         val error = try {
             ExtrinsicManager(
-                calls = calls,
                 factory = factory,
                 runtimeManager = runtime,
                 database = database,
@@ -411,7 +409,7 @@ class ExtrinsicManagerSafetyTest {
         )
         every { builder.build(false) } returns fixture.prepared.encoded
         coEvery {
-            fixture.calls.getExtrinsicFee(fixture.prepared.encoded)
+            fixture.runtimeRpcClient.queryPartialFee(fixture.prepared.encoded)
         } returns expectedFee
 
         val fee = fixture.manager.calcFee(from = WALLET_ID) {}
@@ -471,7 +469,7 @@ class ExtrinsicManagerSafetyTest {
         )
         every { builder.build(false) } returns fixture.prepared.encoded
         coEvery {
-            fixture.calls.getExtrinsicFee(fixture.prepared.encoded)
+            fixture.runtimeRpcClient.queryPartialFee(fixture.prepared.encoded)
         } returns expectedFee
 
         val fee = fixture.manager.calcPolkamarktFee(
@@ -786,7 +784,6 @@ class ExtrinsicManagerSafetyTest {
 
         return PreparedFixture(
             manager = ExtrinsicManager(
-                calls = calls,
                 factory = factory,
                 runtimeManager = runtimeManager,
                 database = database,
