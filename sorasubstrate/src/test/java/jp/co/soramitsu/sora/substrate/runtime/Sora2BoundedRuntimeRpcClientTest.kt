@@ -335,6 +335,31 @@ class Sora2BoundedRuntimeRpcClientTest {
         val error = captureFailure { client.getMetadataAtFinalized(finalizedHash) }
 
         assertEquals("SORA2_RUNTIME_RPC_REMOTE_ERROR", error.message)
+        assertEquals(-32603L, (error as Sora2RuntimeRpcRemoteException).code)
+        assertEquals(null, error.remoteData)
+        assertEquals(false, error.toString().contains("secret remote detail"))
+    }
+
+    @Test
+    fun `submission rejection keeps the node error code and reason for callers`() = runTest {
+        val transport = ScriptedTransport(
+            "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":{" +
+                "\"code\":1010,\"message\":\"Invalid Transaction\"," +
+                "\"data\":\"Inability to pay some fees (e.g. account balance too low)\"}}",
+        )
+        val client = Sora2BoundedRuntimeRpcClient(transport, gson)
+
+        val error = captureFailure {
+            client.getMetadataAtFinalized(finalizedHash)
+        } as Sora2RuntimeRpcRemoteException
+
+        assertEquals("SORA2_RUNTIME_RPC_REMOTE_ERROR", error.message)
+        assertEquals(1010L, error.code)
+        assertEquals("Invalid Transaction", error.remoteMessage)
+        assertEquals(
+            "Inability to pay some fees (e.g. account balance too low)",
+            error.remoteData,
+        )
     }
 
     @Test
