@@ -95,10 +95,12 @@ class LanguagesHolder {
     private val khmer = Language("km-KH", R.string.common_khmer, R.string.common_khmer_native)
 
     private val availableLanguages =
-        mutableListOf(english, akkadian, egyptian, russian, spanish, french, german, norwegian, chinese, indonesian, turkish)
+        mutableListOf(english, russian, spanish, french, german, norwegian, chinese, indonesian, turkish)
 
+    // Old Akkadian and Middle Egyptian stay available for testing only; they are not offered in
+    // the production app (see common/src/production/res/xml/locale_config.xml).
     private val nonProdLanguages =
-        mutableListOf(arab, hebrew, persian, serbian, vietnamese, malay, hindi, finnish, japanese, chinese_taiwan, azerbaijani, dutch, portuguese)
+        mutableListOf(akkadian, egyptian, arab, hebrew, persian, serbian, vietnamese, malay, hindi, finnish, japanese, chinese_taiwan, azerbaijani, dutch, portuguese)
 
     fun getCurrentLocale(): Locale {
         return AppCompatDelegate.getApplicationLocales()[0] ?: Locale.getDefault()

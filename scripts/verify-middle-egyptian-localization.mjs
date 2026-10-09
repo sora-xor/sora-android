@@ -165,11 +165,20 @@ function validatePair(sourcePath, translatedPath) {
 let checked = 0;
 for (const [sourcePath, translatedPath] of pairs) checked += validatePair(sourcePath, translatedPath);
 
-for (const flavor of ["production", "soralution", "tsting", "develop"]) {
+// Middle Egyptian is a test-only locale: registered for develop and soralution builds, and
+// deliberately absent from the production app's system language list.
+for (const flavor of ["soralution", "develop"]) {
   const localeConfig = path.join(root, `common/src/${flavor}/res/xml/locale_config.xml`);
   const xml = fs.readFileSync(localeConfig, "utf8");
   if (!xml.includes('<locale android:name="egy-Egyp" />')) {
     fail(`${localeConfig}: egy-Egyp is not registered`);
+  }
+}
+{
+  const localeConfig = path.join(root, "common/src/production/res/xml/locale_config.xml");
+  const xml = fs.readFileSync(localeConfig, "utf8");
+  if (xml.includes('android:name="egy-Egyp"') || xml.includes('android:name="akk"')) {
+    fail(`${localeConfig}: test-only locales must not be offered in production`);
   }
 }
 

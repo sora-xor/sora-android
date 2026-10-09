@@ -11,6 +11,4 @@
     <locale android:name="zh-CN" />
     <locale android:name="in" />
     <locale android:name="tr" />
-    <locale android:name="akk" />
-    <locale android:name="egy-Egyp" />
 </locale-config>
