@@ -9,7 +9,6 @@ data class SoraConfig(
     val joinUrl: String,
     val substrateTypesUrl: String,
     val currencies: List<SoraCurrency>,
-    val emergencyFlags: EmergencyFeatureFlags,
 )
 
 data class EmergencyFeatureFlags(

@@ -43,7 +43,6 @@ import jp.co.soramitsu.common.network.BoundedHttpTextClient
 import jp.co.soramitsu.common.network.requireStrictJsonDocumentWithoutDuplicateKeys
 import jp.co.soramitsu.common.util.CachingFactory
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.ConfigExplorerType
-import jp.co.soramitsu.feature_blockexplorer_api.data.models.EmergencyFeatureFlags
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraConfig
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraConfigNode
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraCurrency
@@ -126,14 +125,6 @@ class SoraConfigManager @Inject constructor(
         const val SELECTED_CURRENCY = "selected_currency"
         const val MAX_CONFIG_RESPONSE_BYTES = 1024 * 1024
 
-        val SAFE_DEFAULT_FLAGS = EmergencyFeatureFlags(
-            nexusAvailable = true,
-            nexusSendsAvailable = false,
-            polkamarktVisible = true,
-            polkamarktMutationsAvailable = false,
-            tairaDefaultVisible = true,
-        )
-
         val DEFAULT_SORA_CURRENCY = SoraCurrency(
             code = "USD",
             name = "United States Dollar",
@@ -188,13 +179,6 @@ class SoraConfigManager @Inject constructor(
             joinUrl = mobileConfig.joinLink,
             substrateTypesUrl = mobileConfig.substrateTypesAndroid,
             currencies = currencies,
-            emergencyFlags = EmergencyFeatureFlags(
-                nexusAvailable = mobileConfig.nexusAvailable,
-                nexusSendsAvailable = mobileConfig.nexusSendsAvailable,
-                polkamarktVisible = mobileConfig.polkamarktVisible,
-                polkamarktMutationsAvailable = mobileConfig.polkamarktMutationsAvailable,
-                tairaDefaultVisible = mobileConfig.tairaDefaultVisible,
-            ),
         )
     }
 
@@ -286,10 +270,6 @@ class SoraConfigManager @Inject constructor(
         soraConfigFactory.nullableValue(EmptyArgs)
             ?.indexerUrl ?: OptionsProvider.polkaswapIndexerEndpoint
 
-    suspend fun getEmergencyFeatureFlags(): EmergencyFeatureFlags =
-        soraConfigFactory.nullableValue(EmptyArgs)
-            ?.emergencyFlags ?: SAFE_DEFAULT_FLAGS
-
     private suspend fun getCurrencies(): List<SoraCurrency> =
         soraConfigFactory.nullableValue(EmptyArgs)
             ?.currencies ?: listOf(DEFAULT_SORA_CURRENCY)
@@ -341,16 +321,6 @@ private data class MobileDto(
     val substrateTypesIos: String,
     @SerialName("currencies")
     val currencies: List<CurrencyDto>,
-    @SerialName("nexus_available")
-    val nexusAvailable: Boolean = true,
-    @SerialName("nexus_sends_available")
-    val nexusSendsAvailable: Boolean = false,
-    @SerialName("polkamarkt_visible")
-    val polkamarktVisible: Boolean = true,
-    @SerialName("polkamarkt_mutations_available")
-    val polkamarktMutationsAvailable: Boolean = false,
-    @SerialName("taira_default_visible")
-    val tairaDefaultVisible: Boolean = true,
 )
 
 @Serializable

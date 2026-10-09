@@ -113,7 +113,7 @@ class TairaVisibilityPolicyTest {
     }
 
     @Test
-    fun `missing cache keeps tester default but interrupted cache hides Taira`() {
+    fun `missing cache keeps Taira hidden and interrupted cache hides Taira`() {
         assertThat(
             TairaVisibilityPolicy.resolveCachedSnapshot(
                 cacheComplete = null,
@@ -121,7 +121,15 @@ class TairaVisibilityPolicyTest {
                 cachedRemoteDefaultVisible = null,
                 explicitPreference = null,
             ).visible
-        ).isTrue()
+        ).isFalse()
+        assertThat(
+            TairaVisibilityPolicy.resolveCachedSnapshot(
+                cacheComplete = null,
+                cachedNexusAvailable = null,
+                cachedRemoteDefaultVisible = null,
+                explicitPreference = true,
+            ).visible
+        ).isFalse()
         assertThat(
             TairaVisibilityPolicy.resolveCachedSnapshot(
                 cacheComplete = false,
