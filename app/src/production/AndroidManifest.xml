@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Production builds do not offer IrohaConnect (iroha://connect, irohaconnect://connect) in this
+     release, so no web page or QR code can open it. IrohaConnectActivity also closes itself in
+     production if it is ever started, and the QR scanner does not route those links there. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <activity
+            android:name="jp.co.soramitsu.sora.irohaconnect.IrohaConnectActivity"
+            tools:node="remove" />
+    </application>
+
+</manifest>
