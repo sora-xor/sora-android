@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_account_api.domain.interfaces
 
 import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 
 interface CredentialsRepository {
@@ -42,11 +43,29 @@ interface CredentialsRepository {
 
     suspend fun isRawSeedValid(rawSeed: String): Boolean
 
-    suspend fun generateUserCredentials(accountName: String): SoraAccount
+    /** A new random 24-word wallet held in memory only. Writes nothing. */
+    suspend fun createDraft(accountName: String): WalletDraft
 
-    suspend fun restoreUserCredentialsFromMnemonic(mnemonic: String, accountName: String): SoraAccount
+    /**
+     * Derives the SORA2 wallet for an imported 12-, 15-, 18-, 21- or 24-word phrase in memory.
+     * Writes nothing. Throws [jp.co.soramitsu.common.domain.SoraException] for an invalid phrase.
+     */
+    suspend fun draftFromMnemonic(mnemonic: String, accountName: String): WalletDraft
 
-    suspend fun restoreUserCredentialsFromRawSeed(rawSeed: String, accountName: String): SoraAccount
+    /** Derives the SORA2 wallet for an imported raw seed in memory. Writes nothing. */
+    suspend fun draftFromRawSeed(rawSeed: String, accountName: String): WalletDraft
+
+    /**
+     * Stores the draft's keys for its address. Values already stored for that address are kept
+     * when they decrypt to exactly the same keys (this adopts a key set left by an earlier,
+     * unfinished flow); only absent values are written. If any stored value differs or cannot
+     * be read, nothing is written and `ACCOUNT_STORAGE_CONFLICT` is thrown. The caller adds the
+     * account row afterwards.
+     */
+    suspend fun commitDraft(draft: WalletDraft): SoraAccount
+
+    /** Encrypted polkadot.js JSON for a draft, for a Google Drive backup made before commit. */
+    suspend fun generateJsonForDraft(draft: WalletDraft, password: String): String
 
     suspend fun saveMnemonic(mnemonic: String, soraAccount: SoraAccount)
 

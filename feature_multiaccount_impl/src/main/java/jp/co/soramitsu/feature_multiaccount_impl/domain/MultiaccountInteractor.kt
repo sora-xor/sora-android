@@ -35,11 +35,15 @@ package jp.co.soramitsu.feature_multiaccount_impl.domain
 import android.net.Uri
 import javax.inject.Inject
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.account.WalletMutationCoordinator
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.xcrypto.encryption.Keypair
@@ -72,19 +76,55 @@ class MultiaccountInteractor @Inject constructor(
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
     }
 
-    suspend fun recoverSoraAccountFromMnemonic(input: String, accountName: String) =
-        credentialsRepository.restoreUserCredentialsFromMnemonic(input, accountName)
+    /**
+     * Imports a recovery phrase as one step under the wallet lock: an existing account is
+     * reported as already imported without touching storage; otherwise the keys are stored
+     * (re-using identical keys already on the device, never overwriting different ones) and the
+     * account row is added.
+     */
+    suspend fun importFromMnemonic(input: String, accountName: String): SoraAccount =
+        importDraft { credentialsRepository.draftFromMnemonic(input, accountName) }
 
-    suspend fun recoverSoraAccountFromRawSeed(input: String, accountName: String): SoraAccount {
-        val soraAccount = credentialsRepository.restoreUserCredentialsFromRawSeed(input, accountName)
+    suspend fun importFromRawSeed(input: String, accountName: String): SoraAccount {
+        val soraAccount = importDraft {
+            credentialsRepository.draftFromRawSeed(input, accountName)
+        }
         userRepository.saveNeedsMigration(false, soraAccount)
         userRepository.saveIsMigrationFetched(true, soraAccount)
         return soraAccount
     }
 
-    suspend fun generateUserCredentials(accountName: String): SoraAccount {
-        return credentialsRepository.generateUserCredentials(accountName)
-    }
+    private suspend fun importDraft(createDraft: suspend () -> WalletDraft): SoraAccount =
+        WalletMutationCoordinator.withLock {
+            val draft = createDraft()
+            try {
+                if (userRepository.accountExists(draft.address)) {
+                    throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
+                }
+                val soraAccount = credentialsRepository.commitDraft(draft)
+                continueRecoverFlow(soraAccount)
+                soraAccount
+            } finally {
+                draft.destroy()
+            }
+        }
+
+    /** A new wallet held in memory until [createUserFromDraft]; backing out stores nothing. */
+    suspend fun createDraft(accountName: String): WalletDraft =
+        credentialsRepository.createDraft(accountName)
+
+    /** Stores the draft's keys and adds its account in one step under the wallet lock. */
+    suspend fun createUserFromDraft(draft: WalletDraft): SoraAccount =
+        WalletMutationCoordinator.withLock {
+            check(!userRepository.accountExists(draft.address)) { "WALLET_DRAFT_ALREADY_ACCOUNT" }
+            val soraAccount = credentialsRepository.commitDraft(draft)
+            createUser(soraAccount)
+            saveRegistrationStateFinished()
+            soraAccount
+        }
+
+    suspend fun generateDraftJson(draft: WalletDraft, password: String): String =
+        credentialsRepository.generateJsonForDraft(draft, password)
 
     suspend fun getMnemonic(soraAccount: SoraAccount? = null): String {
         return credentialsRepository.retrieveMnemonic(soraAccount ?: userRepository.getCurSoraAccount())

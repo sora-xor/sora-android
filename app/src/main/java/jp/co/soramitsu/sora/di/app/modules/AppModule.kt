@@ -46,7 +46,6 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasour
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_impl.data.repository.CredentialsRepositoryImpl
 import jp.co.soramitsu.feature_account_impl.data.repository.datasource.PrefsCredentialsDatasource
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 
 @InstallIn(SingletonComponent::class)
 @Module
@@ -57,14 +56,12 @@ class AppModule {
     fun provideCredentialsRepository(
         credentialsDatasource: CredentialsDatasource,
         ca: CryptoAssistant,
-        runtimeManager: RuntimeManager,
         sora2AddressCodec: Sora2AddressCodec,
         jsonAccountsEncoder: JsonAccountsEncoder,
     ): CredentialsRepository =
         CredentialsRepositoryImpl(
             credentialsDatasource,
             ca,
-            runtimeManager,
             sora2AddressCodec,
             jsonAccountsEncoder,
         )

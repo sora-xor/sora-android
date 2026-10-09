@@ -181,4 +181,52 @@ class OnboardingViewModelTest {
         onboardingViewModel.onRecoveryClicked(navController, 0)
         assertNull(onboardingViewModel?.recoveryState?.value)
     }
+
+    @Test
+    fun `backing out after Continue stores no key material`() = runTest {
+        val draft = testDraft()
+        whenever(multiAccInteractor.createDraft(org.mockito.kotlin.any())).thenReturn(draft)
+
+        onboardingViewModel.onCreateAccountContinueClicked(navController)
+        testScheduler.advanceUntilIdle()
+
+        org.mockito.kotlin.verify(multiAccInteractor).createDraft(org.mockito.kotlin.any())
+        org.mockito.kotlin.verify(multiAccInteractor, org.mockito.kotlin.never())
+            .createUserFromDraft(org.mockito.kotlin.any())
+        assertEquals(
+            draft.mnemonicWords,
+            onboardingViewModel.passphraseCardState.value?.mnemonicWords,
+        )
+    }
+
+    @Test
+    fun `finishing the create flow commits the draft once and opens the wallet`() = runTest {
+        val draft = testDraft()
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+        whenever(multiAccInteractor.createDraft(org.mockito.kotlin.any())).thenReturn(draft)
+        whenever(multiAccInteractor.createUserFromDraft(draft))
+            .thenReturn(jp.co.soramitsu.common.account.SoraAccount(draft.address, draft.accountName))
+
+        onboardingViewModel.onCreateAccountContinueClicked(navController)
+        testScheduler.advanceUntilIdle()
+        onboardingViewModel.skipDialogConfirm(context)
+        testScheduler.advanceUntilIdle()
+
+        org.mockito.kotlin.verify(multiAccInteractor).createUserFromDraft(draft)
+        org.mockito.kotlin.verify(mainStarter).start(context)
+    }
+
+    private fun testDraft() = jp.co.soramitsu.feature_account_api.domain.model.WalletDraft(
+        address = "cnDraftWallet",
+        accountName = "",
+        mnemonic = List(24) { "word$it" }.joinToString(" "),
+        seedHex = "00".repeat(32),
+        keypair = jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair(
+            ByteArray(64),
+            ByteArray(32),
+            ByteArray(32),
+        ),
+        source = jp.co.soramitsu.feature_account_api.domain.model.WalletDraft.Source.GENERATED,
+        wipeKeypair = {},
+    )
 }

@@ -42,8 +42,11 @@ import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
 import jp.co.soramitsu.sora.substrate.runtime.Sora2RuntimeContract
 import jp.co.soramitsu.xcrypto.seed.Mnemonic
 import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
@@ -86,9 +89,6 @@ class CredentialsRepositoryTest {
     lateinit var cryptoAssistant: CryptoAssistant
 
     @Mock
-    lateinit var runtimeManager: RuntimeManager
-
-    @Mock
     lateinit var sora2AddressCodec: Sora2AddressCodec
 
     @Mock
@@ -123,7 +123,6 @@ class CredentialsRepositoryTest {
         credentialsRepository = CredentialsRepositoryImpl(
             datasource,
             cryptoAssistant,
-            runtimeManager,
             sora2AddressCodec,
             jsonAccountsEncoder,
         )
@@ -160,7 +159,7 @@ class CredentialsRepositoryTest {
     }
 
     @Test
-    fun `retained fifteen word wallet derives Sora2 seed but public recovery rejects it`() =
+    fun `fifteen word phrase is accepted for SORA2 import and keeps its seed`() =
         runTest {
             val phrase = List(15) { index -> "legacy$index" }.joinToString(" ")
             val legacyMnemonic = Mnemonic(
@@ -173,12 +172,9 @@ class CredentialsRepositoryTest {
             whenever(datasource.retrieveMnemonic("legacy-address")).thenReturn(phrase)
             whenever(datasource.retrieveKeys("")).thenReturn(null)
 
-            assertFalse(credentialsRepository.isMnemonicValid(phrase))
-            assertTrue(
-                runCatching {
-                    credentialsRepository.convertPassphraseToSeed(phrase)
-                }.isFailure
-            )
+            // 3.8.x accepted every BIP39 length for SORA2; SORA v1 phrases have 15 words.
+            assertTrue(credentialsRepository.isMnemonicValid(phrase))
+            assertEquals(64, credentialsRepository.convertPassphraseToSeed(phrase).length)
             assertEquals(
                 64,
                 credentialsRepository
@@ -209,12 +205,8 @@ class CredentialsRepositoryTest {
             whenever(datasource.retrieveMnemonic("legacy-address")).thenReturn(phrase)
             whenever(datasource.retrieveKeys("")).thenReturn(null)
 
-            assertFalse(credentialsRepository.isMnemonicValid(phrase))
-            assertTrue(
-                runCatching {
-                    credentialsRepository.convertPassphraseToSeed(phrase)
-                }.isFailure
-            )
+            assertTrue(credentialsRepository.isMnemonicValid(phrase))
+            assertEquals(64, credentialsRepository.convertPassphraseToSeed(phrase).length)
             assertEquals(
                 64,
                 credentialsRepository
@@ -300,49 +292,143 @@ class CredentialsRepositoryTest {
     }
 
     @Test
-    fun `generate user credentials called`() = runTest {
+    fun `create draft stores nothing until it is committed`() = runTest {
         val mnemonic =
             "airport wish wish loan width country acoustic country ceiling good enact penalty"
-        val entropy = mnemonic.toByteArray()
-        val publicKey = "publicKey".toByteArray()
-        whenever(keypair.publicKey).thenReturn(publicKey)
-        val mnmnc = Mnemonic(mnemonic, mnemonic.split(" "), entropy)
+        val mnmnc = Mnemonic(mnemonic, mnemonic.split(" "), mnemonic.toByteArray())
         every { MnemonicCreator.randomMnemonic(any()) } returns mnmnc
-        whenever(runtimeManager.toSoraAddress(any())).thenReturn(fooaddress)
-        whenever(datasource.retrieveKeys(any())).thenReturn(null)
+        stubDraftKeypair()
 
-        credentialsRepository.generateUserCredentials("")
+        val draft = credentialsRepository.createDraft("Name")
 
-        verify(datasource).saveKeys(keypair, fooaddress)
-        verify(datasource).saveMnemonic(mnemonic, fooaddress)
+        assertEquals(fooaddress, draft.address)
+        verify(datasource, never()).writeCredentialsIfAbsent(any(), any())
+        verify(datasource, never()).saveKeys(any(), any())
+        verify(datasource, never()).saveMnemonic(any(), any())
+
+        whenever(datasource.readStoredCredential(any(), eq(fooaddress)))
+            .thenReturn(StoredCredential.Absent)
+        whenever(datasource.retrieveKeys(fooaddress)).thenReturn(storedCopy())
+
+        assertEquals(SoraAccount(fooaddress, "Name"), credentialsRepository.commitDraft(draft))
+
+        val written = argumentCaptor<Map<CredentialField, String>>()
+        verify(datasource).writeCredentialsIfAbsent(eq(fooaddress), written.capture())
+        assertEquals(
+            setOf(
+                CredentialField.PRIVATE_KEY,
+                CredentialField.PUBLIC_KEY,
+                CredentialField.KEY_NONCE,
+                CredentialField.MNEMONIC,
+            ),
+            written.firstValue.keys,
+        )
+        assertEquals(mnemonic, written.firstValue[CredentialField.MNEMONIC])
+        verify(datasource, never()).saveKeys(any(), any())
     }
 
     @Test
-    fun `restore user credentials from mnemonic called`() = runTest {
+    fun `imported phrase adopts identical retained keys without writing`() = runTest {
         val mnemonic =
             "airport wish wish loan width country acoustic country ceiling good enact penalty"
-        val entropy = mnemonic.toByteArray()
-        val publicKeyBytes = "publicKeyBytespublicKeyBytespublicKeyBytes".toByteArray()
-        whenever(keypair.publicKey).thenReturn(publicKeyBytes)
-        val mnmnc = Mnemonic(mnemonic, mnemonic.split(" "), entropy)
+        val mnmnc = Mnemonic(mnemonic, mnemonic.split(" "), mnemonic.toByteArray())
         every { MnemonicCreator.fromWords(mnemonic) } returns mnmnc
-        whenever(runtimeManager.toSoraAddress(any())).thenReturn(fooaddress)
-        whenever(datasource.retrieveKeys(any())).thenReturn(null)
+        every { FirebaseWrapper.log(any<String>()) } just runs
+        stubDraftKeypair()
+        whenever(datasource.readStoredCredential(eq(CredentialField.PRIVATE_KEY), eq(fooaddress)))
+            .thenReturn(StoredCredential.Present(privateKey.toHex()))
+        whenever(datasource.readStoredCredential(eq(CredentialField.PUBLIC_KEY), eq(fooaddress)))
+            .thenReturn(StoredCredential.Present(publicKey.toHex().uppercase()))
+        whenever(datasource.readStoredCredential(eq(CredentialField.KEY_NONCE), eq(fooaddress)))
+            .thenReturn(StoredCredential.Present(nonce.toHex()))
+        whenever(datasource.readStoredCredential(eq(CredentialField.MNEMONIC), eq(fooaddress)))
+            .thenReturn(StoredCredential.Present("  $mnemonic "))
+        whenever(datasource.readStoredCredential(eq(CredentialField.SEED), eq(fooaddress)))
+            .thenReturn(StoredCredential.Absent)
+        whenever(datasource.retrieveKeys(fooaddress)).thenReturn(storedCopy())
 
-        credentialsRepository.restoreUserCredentialsFromMnemonic(mnemonic, "")
-        verify(datasource).saveMnemonic(mnemonic, fooaddress)
+        val draft = credentialsRepository.draftFromMnemonic(mnemonic, "Restored")
+        assertEquals(SoraAccount(fooaddress, "Restored"), credentialsRepository.commitDraft(draft))
+
+        verify(datasource, never()).writeCredentialsIfAbsent(any(), any())
+        verify(datasource, never()).saveKeys(any(), any())
+        verify(datasource, never()).saveMnemonic(any(), any())
     }
 
     @Test
-    fun `restore user credentials from seed called`() = runTest {
-        val rawSeed = "0xcf0010cf0010cf0010cf0010cf0010cfcf0010cf0010cf0010cf0010cf0010cf"
-        val publicKeyBytes = "publicKeyBytespublicKeyBytespublicKeyBytes".toByteArray()
-        whenever(keypair.publicKey).thenReturn(publicKeyBytes)
-        whenever(runtimeManager.toSoraAddress(any())).thenReturn(fooaddress)
-        whenever(datasource.retrieveKeys(any())).thenReturn(null)
+    fun `imported phrase never overwrites different stored keys`() = runTest {
+        val mnemonic =
+            "airport wish wish loan width country acoustic country ceiling good enact penalty"
+        val mnmnc = Mnemonic(mnemonic, mnemonic.split(" "), mnemonic.toByteArray())
+        every { MnemonicCreator.fromWords(mnemonic) } returns mnmnc
+        stubDraftKeypair()
+        whenever(datasource.readStoredCredential(eq(CredentialField.PRIVATE_KEY), eq(fooaddress)))
+            .thenReturn(StoredCredential.Present("ff".repeat(64)))
 
-        credentialsRepository.restoreUserCredentialsFromRawSeed(rawSeed, "")
-        verify(datasource).saveKeys(keypair, fooaddress)
+        val draft = credentialsRepository.draftFromMnemonic(mnemonic, "Restored")
+        val error = runCatching { credentialsRepository.commitDraft(draft) }.exceptionOrNull()
+
+        assertEquals(
+            ResponseCode.ACCOUNT_STORAGE_CONFLICT,
+            (error as? SoraException)?.errorResponseCode,
+        )
+        verify(datasource, never()).writeCredentialsIfAbsent(any(), any())
+        verify(datasource, never()).saveKeys(any(), any())
+    }
+
+    @Test
+    fun `unreadable stored key refuses the import and writes nothing`() = runTest {
+        val mnemonic =
+            "airport wish wish loan width country acoustic country ceiling good enact penalty"
+        val mnmnc = Mnemonic(mnemonic, mnemonic.split(" "), mnemonic.toByteArray())
+        every { MnemonicCreator.fromWords(mnemonic) } returns mnmnc
+        stubDraftKeypair()
+        whenever(datasource.readStoredCredential(eq(CredentialField.PRIVATE_KEY), eq(fooaddress)))
+            .thenReturn(StoredCredential.Unreadable)
+
+        val draft = credentialsRepository.draftFromMnemonic(mnemonic, "Restored")
+        val error = runCatching { credentialsRepository.commitDraft(draft) }.exceptionOrNull()
+
+        assertEquals(
+            ResponseCode.ACCOUNT_STORAGE_CONFLICT,
+            (error as? SoraException)?.errorResponseCode,
+        )
+        verify(datasource, never()).writeCredentialsIfAbsent(any(), any())
+    }
+
+    @Test
+    fun `raw seed import writes the seed and keys only where absent`() = runTest {
+        val rawSeed = "0xcf0010cf0010cf0010cf0010cf0010cfcf0010cf0010cf0010cf0010cf0010cf"
+        stubDraftKeypair()
+        whenever(datasource.readStoredCredential(any(), eq(fooaddress)))
+            .thenReturn(StoredCredential.Absent)
+        whenever(datasource.retrieveKeys(fooaddress)).thenReturn(storedCopy())
+
+        val draft = credentialsRepository.draftFromRawSeed(rawSeed, "Seed")
+        credentialsRepository.commitDraft(draft)
+
+        val written = argumentCaptor<Map<CredentialField, String>>()
+        verify(datasource).writeCredentialsIfAbsent(eq(fooaddress), written.capture())
+        assertEquals(rawSeed.removePrefix("0x"), written.firstValue[CredentialField.SEED])
+        assertFalse(CredentialField.MNEMONIC in written.firstValue)
+    }
+
+    private val privateKey = ByteArray(64) { 3 }
+    private val publicKey = ByteArray(32) { 4 }
+    private val nonce = ByteArray(32) { 5 }
+
+    private suspend fun stubDraftKeypair() {
+        whenever(datasource.isExplicitWatchOnly(fooaddress)).thenReturn(false)
+        whenever(keypair.privateKey).thenReturn(privateKey)
+        whenever(keypair.publicKey).thenReturn(publicKey)
+        whenever(keypair.nonce).thenReturn(nonce)
+        whenever(sora2AddressCodec.toSoraAddressOrNull(publicKey)).thenReturn(fooaddress)
+    }
+
+    private fun storedCopy() = Sr25519Keypair(privateKey.copyOf(), publicKey.copyOf(), nonce.copyOf())
+
+    private fun ByteArray.toHex(): String = joinToString("") {
+        (it.toInt() and 0xff).toString(16).padStart(2, '0')
     }
 
     @Test

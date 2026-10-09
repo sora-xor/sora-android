@@ -36,7 +36,10 @@ import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
 import jp.co.soramitsu.common.data.WalletPreferenceKeys
+import jp.co.soramitsu.common.util.WalletDecryptionException
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
+import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
 import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -94,6 +97,41 @@ class PrefsCredentialsDatasource constructor(
         return encryptedPreferences.getDecryptedString(PREFS_SEED + suffixAddress)
     }
 
+    override suspend fun readStoredCredential(
+        field: CredentialField,
+        address: String,
+    ): StoredCredential {
+        val key = field.preferenceKey(address)
+        if (soraPreferences.getString(key).isEmpty()) return StoredCredential.Absent
+        return try {
+            val value = encryptedPreferences.getDecryptedString(key)
+            if (value.isEmpty()) StoredCredential.Unreadable else StoredCredential.Present(value)
+        } catch (_: WalletDecryptionException) {
+            StoredCredential.Unreadable
+        }
+    }
+
+    override suspend fun writeCredentialsIfAbsent(
+        address: String,
+        values: Map<CredentialField, String>,
+    ) {
+        require(address.isNotBlank()) { "WALLET_CREDENTIAL_ADDRESS_EMPTY" }
+        if (values.isEmpty()) return
+        val encrypted = values.entries.associate { (field, value) ->
+            require(value.isNotEmpty()) { "WALLET_CREDENTIAL_VALUE_EMPTY" }
+            field.preferenceKey(address) to encryptedPreferences.encrypt(value)
+        }
+        soraPreferences.putStringsIfAbsent(encrypted)
+    }
+
+    private fun CredentialField.preferenceKey(address: String): String = when (this) {
+        CredentialField.PRIVATE_KEY -> PREFS_PRIVATE_KEY
+        CredentialField.PUBLIC_KEY -> PREFS_PUBLIC_KEY
+        CredentialField.KEY_NONCE -> PREFS_KEY_NONCE
+        CredentialField.MNEMONIC -> PREFS_MNEMONIC
+        CredentialField.SEED -> PREFS_SEED
+    } + address
+
     override suspend fun isExplicitWatchOnly(suffixAddress: String): Boolean =
         soraPreferences.getBoolean(PREFS_WATCH_ONLY + suffixAddress)
 
@@ -104,8 +142,13 @@ class PrefsCredentialsDatasource constructor(
     override suspend fun requireWalletPreferenceCoverage(
         walletIds: Set<String>,
         selectedAddress: String,
+        requiredCoverage: Set<String>,
     ) {
-        soraPreferences.requireWalletPreferenceCoverage(walletIds, selectedAddress)
+        soraPreferences.requireWalletPreferenceCoverage(
+            walletIds = walletIds,
+            selectedAddress = selectedAddress,
+            requiredCoverage = requiredCoverage,
+        )
     }
 
     override suspend fun previewWalletDeletionPreferences(
