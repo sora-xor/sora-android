@@ -183,7 +183,12 @@ must be treated as public.
 
 - [ ] The proprietary SORA Card SDK, PayWings OAuth/KYC and Sumsub IDensic
       AARs were deleted from the tree, but they remain in the public git
-      history (for example commit `fccdcf64` and earlier on GitHub). Decide
+      history on GitHub. They were added in commit `6201e7cc` and are still
+      at the tip of the default branch `modernize` (`203d231a`) and of 25
+      other pushed branches, for example `c01b3ba2` on
+      `codex/android-readiness-20260924` and
+      `recovery/20261009/sora-android-release-candidate-20260924` (checked
+      against the local remote-tracking refs on 2026-10-10). Decide
       whether the licence terms require removing them from history. A
       history rewrite changes every later commit id and needs agreement from
       everyone who works on the repository; it is not part of this release.
