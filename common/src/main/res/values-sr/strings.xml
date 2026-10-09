@@ -24,6 +24,7 @@
   <string name="activity_empty_content_title">You will see your activity here once you start transacting</string>
   <string name="activity_error_title">Activity is temporarily unavailable. Your balance is not affected. Tap Refresh to try again.</string>
   <string name="activity_pool_title">Pool</string>
+  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is always up to date.</string>
   <string name="activity_referral_title">Referral joined</string>
   <string name="add_liquidity_alert_text">Накнаде ћете зарадити пропорционално вашем уделу у пулу обезбеђења ликвидности.</string>
   <string name="add_liquidity_confirmation_title">Потврдите снабдевање</string>

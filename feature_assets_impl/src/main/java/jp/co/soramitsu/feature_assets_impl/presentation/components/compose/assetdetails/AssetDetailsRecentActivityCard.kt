@@ -43,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.screen.ReceivedTransfersNote
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.screen.TxHistoryListItem
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
@@ -70,6 +71,9 @@ internal fun AssetDetailsRecentActivityCard(
                     onTxHistoryItemClick = onHistoryItemClick
                 )
             }
+            ReceivedTransfersNote(
+                modifier = Modifier.padding(start = Dimens.x3, end = Dimens.x3, top = Dimens.x2),
+            )
             Spacer(modifier = Modifier.size(Dimens.x2))
             TextButton(
                 modifier = Modifier

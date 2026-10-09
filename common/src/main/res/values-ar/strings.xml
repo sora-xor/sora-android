@@ -24,6 +24,7 @@
   <string name="activity_empty_content_title">سترى نشاطك هنا بمجرد بدء المعاملات</string>
   <string name="activity_error_title">تعذر تحميل نشاطك. حاول تحديث القائمة</string>
   <string name="activity_pool_title">حوض</string>
+  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is always up to date.</string>
   <string name="activity_referral_title">انضم الإحالة</string>
   <string name="add_liquidity_alert_text">ستكسب ارباح من الرسوم حسب نسبة حصتك من اجمالي اسهم حوض توفير السيولة.</string>
   <string name="add_liquidity_confirmation_title">تأكيد العرض</string>

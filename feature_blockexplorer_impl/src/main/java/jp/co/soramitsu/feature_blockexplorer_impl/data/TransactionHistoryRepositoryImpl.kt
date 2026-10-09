@@ -60,6 +60,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @Singleton
@@ -90,18 +92,49 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         synchronized(localPendingTransactionsLock) {
             localPendingTransactions.clear()
         }
+        recentPeers = null
     }
 
-    override suspend fun getContacts(query: String): Set<String> =
-        runCatching {
-            polkaswapIndexerClient.getTransactionPeers(query)
+    private class RecentPeers(
+        val account: String,
+        val loadedAtNanos: Long,
+        val peers: List<String>,
+    )
+
+    private val recentPeersMutex = Mutex()
+
+    @Volatile
+    private var recentPeers: RecentPeers? = null
+
+    /**
+     * The contact screen searches on every keystroke. The account's recent counterparties are
+     * read once (one indexer page) and filtered on the device for a short while.
+     */
+    override suspend fun getContacts(account: String, query: String): Set<String> {
+        val peers = runCatching {
+            recentPeersMutex.withLock {
+                val now = System.nanoTime()
+                recentPeers
+                    ?.takeIf {
+                        it.account == account && now - it.loadedAtNanos < RECENT_PEERS_TTL_NANOS
+                    }
+                    ?.peers
+                    ?: polkaswapIndexerClient.getRecentTransactionPeers(account).also {
+                        recentPeers = RecentPeers(account, now, it)
+                    }
+            }
         }.getOrElse {
             if (it is CancellationException) throw it
             FirebaseWrapper.recordErrorClass(
                 FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_PEERS
             )
-            emptySet()
+            return emptySet()
         }
+        val trimmed = query.trim()
+        return peers.filterTo(linkedSetOf()) {
+            trimmed.isEmpty() || it.contains(trimmed, ignoreCase = true)
+        }
+    }
 
     private fun updateTransactionStatus(txHash: String, status: Boolean, block: String?) {
         val canonicalHash = canonicalLocalPendingHashOrNull(txHash) ?: return
@@ -457,6 +490,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         }
 
     private companion object {
+        const val RECENT_PEERS_TTL_NANOS = 60_000_000_000L
         val CANONICAL_LOCAL_SORA2_TRANSACTION_HASH = Regex("^0x[0-9a-f]{64}$")
         val SORA2_TRANSACTION_HASH = Regex(
             "^0x[0-9a-f]{64}$",

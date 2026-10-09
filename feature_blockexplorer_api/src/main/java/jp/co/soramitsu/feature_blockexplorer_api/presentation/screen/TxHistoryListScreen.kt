@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextAlign
 import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.view.LoadMoreHandler
+import jp.co.soramitsu.feature_blockexplorer_api.data.PiHistoryCoverage
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.ui_core.component.button.FilledButton
@@ -127,6 +128,13 @@ private fun TxHistoryScreen(
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                ReceivedTransfersNote(
+                    modifier = Modifier.padding(
+                        start = Dimens.x3,
+                        end = Dimens.x3,
+                        bottom = Dimens.x1,
+                    ),
+                )
                 if (historyState.hasErrorLoadingNew) {
                     Text(
                         modifier = Modifier.padding(top = Dimens.x2),
@@ -174,15 +182,35 @@ private fun TxHistoryScreen(
                     .padding(horizontal = Dimens.x6),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    textAlign = TextAlign.Center,
-                    text = stringResource(id = R.string.activity_empty_content_title),
-                    style = MaterialTheme.customTypography.paragraphM,
-                    color = MaterialTheme.customColors.fgSecondary
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        textAlign = TextAlign.Center,
+                        text = stringResource(id = R.string.activity_empty_content_title),
+                        style = MaterialTheme.customTypography.paragraphM,
+                        color = MaterialTheme.customColors.fgSecondary
+                    )
+                    ReceivedTransfersNote(modifier = Modifier.padding(top = Dimens.x2))
+                }
             }
         }
     }
+}
+
+/**
+ * The PI indexer lists only operations the account signed ([PiHistoryCoverage]). Say so calmly
+ * wherever account history is shown, so a missing incoming transfer is not mistaken for a lost
+ * payment. Nothing is shown once the indexer lists received transfers.
+ */
+@Composable
+fun ReceivedTransfersNote(modifier: Modifier = Modifier) {
+    if (PiHistoryCoverage.LISTS_RECEIVED_TRANSFERS) return
+    Text(
+        modifier = modifier,
+        textAlign = TextAlign.Center,
+        text = stringResource(id = R.string.activity_received_transfers_note),
+        style = MaterialTheme.customTypography.paragraphS,
+        color = MaterialTheme.customColors.fgSecondary,
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)

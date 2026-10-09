@@ -137,7 +137,12 @@ class WalletInteractorTest {
     @Test
     fun `find other users`() = runTest {
         given(runtimeManager.isAddressOk(anyString())).willReturn(true)
-        given(transactionHistoryRepository.getContacts(anyString())).willReturn(
+        given(
+            transactionHistoryRepository.getContacts(
+                soraAccount.substrateAddress,
+                "use",
+            )
+        ).willReturn(
             setOf(
                 "contact1",
                 "contact2"
