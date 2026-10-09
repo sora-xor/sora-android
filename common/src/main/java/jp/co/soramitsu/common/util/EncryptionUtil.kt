@@ -34,7 +34,9 @@ package jp.co.soramitsu.common.util
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabaseCorruptException
 import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import java.io.File
@@ -44,27 +46,43 @@ import java.security.InvalidKeyException
 import java.security.Key
 import java.security.KeyPairGenerator
 import java.security.KeyStore
+import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.SecureRandom
 import java.util.Calendar
+import javax.crypto.AEADBadTagException
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
 import javax.crypto.IllegalBlockSizeException
 import javax.crypto.KeyGenerator
 import javax.crypto.NoSuchPaddingException
 import javax.crypto.SecretKey
-import javax.crypto.AEADBadTagException
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import javax.security.auth.x500.X500Principal
 import org.bouncycastle.util.Arrays
 import org.bouncycastle.util.encoders.Base64
+import org.bouncycastle.util.encoders.DecoderException
 
-class EncryptionUtil(
-    private val context: Context
+/**
+ * Encrypts wallet preference values with an AES key that is wrapped by the Android Keystore RSA
+ * alias `key_alias` (unchanged since SORA 2.3).
+ *
+ * The Keystore can be briefly unavailable (busy daemon, device still unlocking, low memory). Such
+ * failures are reported as transient [KeyMaterialUnavailableException]s and are never remembered:
+ * every later call probes the Keystore again, with a short bounded retry, so a process recovers as
+ * soon as the Keystore does. A missing alias or a wrapped key that no longer matches it is
+ * reported as non-transient. In that state no new key is ever created while wallet material
+ * exists, because a new key would make the existing encrypted wallet data unreadable.
+ */
+class EncryptionUtil @JvmOverloads constructor(
+    private val context: Context,
+    private val keyStoreFactory: () -> KeyStore = { KeyStore.getInstance(KEY_STORE_PROVIDER) },
+    private val retryDelaysMillis: List<Long> = DEFAULT_RETRY_DELAYS_MILLIS,
+    private val sleeper: (Long) -> Unit = { Thread.sleep(it) },
 ) {
 
     companion object {
@@ -83,86 +101,163 @@ class EncryptionUtil(
         private val WALLET_PREFERENCE_MARKERS =
             WalletPreferenceKeys.encryptedCredentialPrefixes
 
-        private var privateKey: PrivateKey? = null
-        private var publicKey: PublicKey? = null
+        /** First attempt immediately, then two short waits; at most about 0.65 s in total. */
+        private val DEFAULT_RETRY_DELAYS_MILLIS = listOf(0L, 150L, 500L)
 
         private const val SECRET_KEY = "secret_key"
         private val secureRandom = SecureRandom()
-        private var keyStore: KeyStore? = null
+
+        /** Serializes creation of the wrapped AES key across every instance in the process. */
+        private val wrappedKeyCreationLock = Any()
     }
+
+    private class KeystoreKeys(
+        val privateKey: PrivateKey,
+        val publicKey: PublicKey,
+    )
 
     @Volatile
-    private var initializationFailure: Throwable? = null
+    private var keystoreKeys: KeystoreKeys? = null
 
     init {
-        initKeystore()
+        // Warm the alias once for a fresh install. A failure here is deliberately not remembered;
+        // the next encrypt/decrypt probes the Keystore again.
+        runCatching { ensureKeystoreKeys(attempts = 1) }
     }
 
-    private fun getPreferenceAesKey(): Key {
-        initializationFailure?.let {
-            throw KeyMaterialUnavailableException("Android Keystore key is unavailable", it)
+    @Synchronized
+    private fun ensureKeystoreKeys(attempts: Int = retryDelaysMillis.size): KeystoreKeys {
+        keystoreKeys?.let { return it }
+        var lastFailure: KeyMaterialUnavailableException? = null
+        for (attempt in 0 until attempts.coerceIn(1, retryDelaysMillis.size.coerceAtLeast(1))) {
+            val delay = retryDelaysMillis.getOrElse(attempt) { 0L }
+            if (delay > 0L) sleeper(delay)
+            try {
+                return probeKeystore().also { keystoreKeys = it }
+            } catch (error: KeyMaterialUnavailableException) {
+                lastFailure = error
+                if (!error.transient) throw error
+            }
         }
+        throw requireNotNull(lastFailure)
+    }
 
+    private fun probeKeystore(): KeystoreKeys {
+        val keyStore = try {
+            keyStoreFactory().also { it.load(null) }
+        } catch (error: Exception) {
+            throw KeyMaterialUnavailableException(
+                "Android Keystore is temporarily unavailable",
+                error,
+                transient = true,
+            )
+        }
+        val existingKey = try {
+            keyStore.getKey(KEY_ALIAS, null)
+        } catch (error: Exception) {
+            throw KeyMaterialUnavailableException(
+                "Android Keystore alias could not be read",
+                error,
+                transient = true,
+            )
+        }
+        if (existingKey == null) {
+            // Never create a replacement alias while wrapped or encrypted wallet material remains.
+            // Re-checked on every probe: the answer depends only on files and is cheap.
+            if (hasWrappedWalletKey() || hasExistingWalletMaterial()) {
+                throw KeyMaterialUnavailableException(
+                    "Keystore alias is missing while encrypted wallet material still exists",
+                    transient = false,
+                )
+            }
+            try {
+                createKeys()
+            } catch (error: Exception) {
+                throw KeyMaterialUnavailableException(
+                    "Android Keystore could not create the wallet alias",
+                    error,
+                    transient = true,
+                )
+            }
+        }
+        return try {
+            val privateKey = keyStore.getKey(KEY_ALIAS, null) as? PrivateKey
+            val publicKey = keyStore.getCertificate(KEY_ALIAS)?.publicKey
+            if (privateKey == null || publicKey == null) {
+                throw KeyMaterialUnavailableException(
+                    "Android Keystore alias is incomplete",
+                    transient = true,
+                )
+            }
+            KeystoreKeys(privateKey, publicKey)
+        } catch (error: KeyMaterialUnavailableException) {
+            throw error
+        } catch (error: Exception) {
+            throw KeyMaterialUnavailableException(
+                "Android Keystore alias could not be read",
+                error,
+                transient = true,
+            )
+        }
+    }
+
+    private fun hasWrappedWalletKey(): Boolean =
+        context.getSharedPreferences(KEY_ALIAS, Context.MODE_PRIVATE)
+            .getString(SECRET_KEY, "")
+            .isNullOrEmpty()
+            .not()
+
+    private fun getPreferenceAesKey(): Key {
+        val keys = ensureKeystoreKeys()
         val preferences = context.getSharedPreferences(KEY_ALIAS, Context.MODE_PRIVATE)
         val encryptedKey = preferences.getString(SECRET_KEY, "").orEmpty()
-        val secretKey: SecretKey
-        if (encryptedKey.isEmpty()) {
+        if (encryptedKey.isNotEmpty()) {
+            return unwrapAesKey(encryptedKey, keys)
+        }
+        synchronized(wrappedKeyCreationLock) {
+            // Another caller may have created the wrapped key while this one waited. Never replace
+            // a wrapped key: values already encrypted with it would become unreadable.
+            val current = preferences.getString(SECRET_KEY, "").orEmpty()
+            if (current.isNotEmpty()) {
+                return unwrapAesKey(current, keys)
+            }
             if (hasExistingWalletMaterial()) {
                 throw KeyMaterialUnavailableException(
-                    "Wrapped wallet key is missing while existing wallet material remains"
+                    "Wrapped wallet key is missing while existing wallet material remains",
+                    transient = false,
                 )
             }
             val keyGenerator = KeyGenerator.getInstance(AES)
             keyGenerator.init(AES_KEY_LENGTH, secureRandom)
-            secretKey = keyGenerator.generateKey()
+            val secretKey: SecretKey = keyGenerator.generateKey()
             val encodedKey = secretKey.encoded
             val wrappedKey = try {
-                encryptRsa(encodedKey)
+                encryptRsa(encodedKey, keys)
             } finally {
                 encodedKey.fill(0)
             }
             if (wrappedKey.isEmpty()) {
-                throw KeyMaterialUnavailableException("Unable to wrap the wallet encryption key")
+                throw KeyMaterialUnavailableException(
+                    "Unable to wrap the wallet encryption key",
+                    transient = true,
+                )
             }
             if (!preferences.edit().putString(SECRET_KEY, wrappedKey).commit()) {
                 throw KeyMaterialUnavailableException(
-                    "Unable to persist the wrapped wallet encryption key"
+                    "Unable to persist the wrapped wallet encryption key",
+                    transient = true,
                 )
             }
-        } else {
-            val key = decryptRsa(encryptedKey)
-            secretKey = try {
-                SecretKeySpec(key, 0, key.size, AES)
-            } finally {
-                key.fill(0)
-            }
+            return secretKey
         }
-        return secretKey
     }
 
-    private fun initKeystore() {
-        try {
-            keyStore = KeyStore.getInstance(KEY_STORE_PROVIDER)
-            keyStore!!.load(null)
-
-            if (keyStore!!.getKey(KEY_ALIAS, null) == null) {
-                val hasWrappedWalletKey = context
-                    .getSharedPreferences(KEY_ALIAS, Context.MODE_PRIVATE)
-                    .getString(SECRET_KEY, "")
-                    .isNullOrEmpty()
-                    .not()
-                if (hasWrappedWalletKey || hasExistingWalletMaterial()) {
-                    throw KeyMaterialUnavailableException(
-                        "Keystore alias is missing while encrypted wallet material still exists"
-                    )
-                }
-                createKeys()
-            }
-
-            privateKey = keyStore!!.getKey(KEY_ALIAS, null) as PrivateKey
-            publicKey = keyStore!!.getCertificate(KEY_ALIAS).publicKey
-        } catch (e: Exception) {
-            initializationFailure = e
+    private fun unwrapAesKey(encryptedKey: String, keys: KeystoreKeys): Key {
+        val key = decryptRsa(encryptedKey, keys)
+        return try {
+            SecretKeySpec(key, 0, key.size, AES)
+        } finally {
+            key.fill(0)
         }
     }
 
@@ -336,26 +431,50 @@ class EncryptionUtil(
         return cipher.doFinal(Arrays.copyOfRange(encrypted, BLOCK_SIZE, encrypted.size))
     }
 
-    private fun encryptRsa(input: ByteArray): String {
+    private fun encryptRsa(input: ByteArray, keys: KeystoreKeys): String {
         return try {
             val cipher = Cipher.getInstance(TRANSFORMATION)
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey)
+            cipher.init(Cipher.ENCRYPT_MODE, keys.publicKey)
             Base64.toBase64String(cipher.doFinal(input))
         } catch (error: Exception) {
-            throw WalletEncryptionException("Unable to wrap the wallet encryption key", error)
+            keystoreKeys = null
+            throw KeyMaterialUnavailableException(
+                "Unable to wrap the wallet encryption key",
+                error,
+                transient = true,
+            )
         }
     }
 
-    private fun decryptRsa(encrypted: String): ByteArray {
+    private fun decryptRsa(encrypted: String, keys: KeystoreKeys): ByteArray {
+        val wrapped = try {
+            Base64.decode(encrypted)
+        } catch (error: DecoderException) {
+            throw KeyMaterialUnavailableException(
+                "The wrapped wallet encryption key is malformed",
+                error,
+                transient = false,
+            )
+        }
         return try {
             val cipher = Cipher.getInstance(TRANSFORMATION)
-            cipher.init(Cipher.DECRYPT_MODE, privateKey)
-            cipher.doFinal(Base64.decode(encrypted))
+            cipher.init(Cipher.DECRYPT_MODE, keys.privateKey)
+            cipher.doFinal(wrapped)
         } catch (error: Exception) {
+            val permanent = error is BadPaddingException ||
+                error is KeyPermanentlyInvalidatedException ||
+                (error is IllegalBlockSizeException && error.cause !is KeyStoreException)
+            if (!permanent) {
+                // Drop the cached alias handles so the next call probes the Keystore again.
+                keystoreKeys = null
+            }
             throw KeyMaterialUnavailableException(
                 "Unable to unwrap the existing wallet encryption key",
                 error,
+                transient = !permanent,
             )
+        } finally {
+            wrapped.fill(0)
         }
     }
 
@@ -374,11 +493,15 @@ class EncryptionUtil(
         val database = context.getDatabasePath(DATABASE_NAME)
         if (database.isFile && database.length() > 0L) {
             val hasAccounts = runCatching {
+                // Android's default error handler deletes a database it considers corrupt, even
+                // for a read-only open. An unreadable wallet database is recovery material.
                 SQLiteDatabase.openDatabase(
                     database.path,
                     null,
                     SQLiteDatabase.OPEN_READONLY,
-                ).use { sqlite ->
+                ) { _ ->
+                    throw SQLiteDatabaseCorruptException("WALLET_DB_FAIL_CLOSED")
+                }.use { sqlite ->
                     val accountsTableExists = sqlite.rawQuery(
                         "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'accounts' LIMIT 1",
                         null,
@@ -451,9 +574,17 @@ class EncryptionUtil(
     }
 }
 
+/**
+ * The Android Keystore alias or the wrapped AES key cannot be used.
+ *
+ * [transient] is true when the Keystore itself failed (for example it was busy or still starting)
+ * and a later attempt may succeed. Callers must never persist a transient failure as a recovery
+ * state. A non-transient failure means the alias is missing or no longer matches the wrapped key.
+ */
 class KeyMaterialUnavailableException(
     message: String,
-    cause: Throwable? = null
+    cause: Throwable? = null,
+    val transient: Boolean = false,
 ) : IllegalStateException(message, cause)
 
 class WalletEncryptionException(
