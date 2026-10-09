@@ -32,6 +32,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.domain
 
+import io.mockk.coVerifyOrder
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
+import org.junit.Assert.assertTrue
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.coEvery
@@ -95,8 +100,6 @@ class MultiaccountInteractorTest {
         coEvery { userRepository.insertSoraAccount(any(), any()) } returns Unit
         coEvery { userRepository.setCurSoraAccount(any()) } returns Unit
         coEvery { userRepository.saveRegistrationState(any()) } returns Unit
-        coEvery { credentialsRepository.restoreUserCredentialsFromMnemonic(any(), any()) } returns account
-        coEvery { credentialsRepository.restoreUserCredentialsFromRawSeed(any(), any()) } returns account
         coEvery { userRepository.saveNeedsMigration(any(), any()) } returns Unit
         coEvery { userRepository.saveIsMigrationFetched(any(), any()) } returns Unit
         coEvery { userRepository.updateAccountName(any(), any()) } returns Unit
@@ -133,20 +136,96 @@ class MultiaccountInteractorTest {
     }
 
     @Test
-    fun `recoverSoraAccountFromMnemonic is called`() = runTest {
+    fun `import from mnemonic stores keys and adds the account in one step`() = runTest {
         val mnemonic = "mnemonic"
         val accountName = "accountName"
-        multiaccountInteractor.recoverSoraAccountFromMnemonic(mnemonic, accountName)
-        coVerify { credentialsRepository.restoreUserCredentialsFromMnemonic(mnemonic, accountName) }
+        val draft = draft("cnImported", accountName)
+        val imported = SoraAccount("cnImported", accountName)
+        coEvery { credentialsRepository.draftFromMnemonic(mnemonic, accountName) } returns draft
+        coEvery { userRepository.accountExists("cnImported") } returns false
+        coEvery { credentialsRepository.commitDraft(draft) } returns imported
+
+        assertEquals(imported, multiaccountInteractor.importFromMnemonic(mnemonic, accountName))
+
+        coVerifyOrder {
+            credentialsRepository.draftFromMnemonic(mnemonic, accountName)
+            userRepository.accountExists("cnImported")
+            credentialsRepository.commitDraft(draft)
+            userRepository.insertSoraAccount(imported, false)
+            userRepository.setCurSoraAccount(imported)
+            userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+        }
+        assertTrue(draft.isDestroyedForTest())
     }
 
     @Test
-    fun `recoverSoraAccountFromRawSeed is called`() = runTest {
+    fun `importing an existing account reports it and stores nothing`() = runTest {
+        val draft = draft("cnExisting", "Existing")
+        coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+        coEvery { userRepository.accountExists("cnExisting") } returns true
+
+        val error = runCatching {
+            multiaccountInteractor.importFromMnemonic("mnemonic", "Existing")
+        }.exceptionOrNull()
+
+        assertEquals(
+            ResponseCode.ACCOUNT_ALREADY_IMPORTED,
+            (error as? SoraException)?.errorResponseCode,
+        )
+        coVerify(exactly = 0) { credentialsRepository.commitDraft(any()) }
+        coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+    }
+
+    @Test
+    fun `import from raw seed stores keys and adds the account`() = runTest {
         val rawSeed = "seed"
         val accountName = "accountName"
-        multiaccountInteractor.recoverSoraAccountFromRawSeed(rawSeed, accountName)
-        coVerify { credentialsRepository.restoreUserCredentialsFromRawSeed(rawSeed, accountName) }
+        val draft = draft("cnSeed", accountName)
+        val imported = SoraAccount("cnSeed", accountName)
+        coEvery { credentialsRepository.draftFromRawSeed(rawSeed, accountName) } returns draft
+        coEvery { userRepository.accountExists("cnSeed") } returns false
+        coEvery { credentialsRepository.commitDraft(draft) } returns imported
+
+        multiaccountInteractor.importFromRawSeed(rawSeed, accountName)
+
+        coVerify { credentialsRepository.commitDraft(draft) }
+        coVerify { userRepository.insertSoraAccount(imported, false) }
+        coVerify { userRepository.saveNeedsMigration(false, imported) }
     }
+
+    @Test
+    fun `new wallet draft is committed only when the flow finishes`() = runTest {
+        val draft = draft("cnNew", "New")
+        val created = SoraAccount("cnNew", "New")
+        coEvery { credentialsRepository.createDraft("New") } returns draft
+
+        assertEquals(draft, multiaccountInteractor.createDraft("New"))
+        coVerify(exactly = 0) { credentialsRepository.commitDraft(any()) }
+
+        coEvery { userRepository.accountExists("cnNew") } returns false
+        coEvery { credentialsRepository.commitDraft(draft) } returns created
+        multiaccountInteractor.createUserFromDraft(draft)
+
+        coVerifyOrder {
+            credentialsRepository.commitDraft(draft)
+            userRepository.insertSoraAccount(created, true)
+            userRepository.setCurSoraAccount(created)
+            userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+        }
+    }
+
+    private fun draft(address: String, name: String) = WalletDraft(
+        address = address,
+        accountName = name,
+        mnemonic = "word ".repeat(12).trim(),
+        seedHex = "00".repeat(32),
+        keypair = Sr25519Keypair(ByteArray(64), ByteArray(32), ByteArray(32)),
+        source = WalletDraft.Source.MNEMONIC,
+        wipeKeypair = { it.nonce.fill(1) },
+    )
+
+    private fun WalletDraft.isDestroyedForTest(): Boolean =
+        runCatching { keypair }.isFailure
 
     @Test
     fun `createUser is called`() = runTest {

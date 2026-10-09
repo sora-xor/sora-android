@@ -44,11 +44,14 @@ import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.CryptoAssistant
+import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.ext.didToAccountId
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.sora.substrate.runtime.Sora2RuntimeContract
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
@@ -63,7 +66,6 @@ import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
 class CredentialsRepositoryImpl constructor(
     private val credentialsPrefs: CredentialsDatasource,
     private val cryptoAssistant: CryptoAssistant,
-    private val runtimeManager: RuntimeManager,
     private val sora2AddressCodec: Sora2AddressCodec,
     private val jsonSeedEncoder: JsonAccountsEncoder,
 ) : CredentialsRepository {
@@ -79,76 +81,196 @@ class CredentialsRepositoryImpl constructor(
         return runCatching { rawSeed.fromHex().size == 32 }.getOrDefault(false)
     }
 
-    override suspend fun generateUserCredentials(
+    override suspend fun createDraft(accountName: String): WalletDraft =
+        draftFromPhrase(
+            mnemonic = MnemonicCreator.randomMnemonic(Mnemonic.Length.TWENTY_FOUR),
+            accountName = accountName,
+            source = WalletDraft.Source.GENERATED,
+        )
+
+    override suspend fun draftFromMnemonic(mnemonic: String, accountName: String): WalletDraft {
+        if (!hasImportWordCount(mnemonic)) {
+            throw SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID)
+        }
+        val parsed = runCatching { MnemonicCreator.fromWords(mnemonic) }
+            .getOrElse { throw SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID) }
+        return draftFromPhrase(parsed, accountName, WalletDraft.Source.MNEMONIC)
+    }
+
+    override suspend fun draftFromRawSeed(rawSeed: String, accountName: String): WalletDraft {
+        val normalized = rawSeed.removeHexPrefix()
+        if (!isRawSeedValid(normalized)) {
+            throw SoraException.businessError(ResponseCode.RAW_SEED_IS_NOT_VALID)
+        }
+        val seed = normalized.fromHex()
+        try {
+            val keyPair = generateSr25519(seed)
+            return WalletDraft(
+                address = soraAddress(keyPair),
+                accountName = accountName,
+                mnemonic = null,
+                seedHex = normalized,
+                keypair = keyPair,
+                source = WalletDraft.Source.RAW_SEED,
+                wipeKeypair = ::wipe,
+            )
+        } finally {
+            seed.fill(0)
+        }
+    }
+
+    private fun draftFromPhrase(
+        mnemonic: Mnemonic,
         accountName: String,
-    ): SoraAccount = WalletMutationCoordinator.withLock {
-        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
-        val mnemonic = generateMnemonic()
-        val address = generateEntropyAndKeysFromMnemonic(mnemonic)
-        SoraAccount(address, accountName)
+        source: WalletDraft.Source,
+    ): WalletDraft {
+        // Unchanged SORA2 derivation: BIP39 entropy -> PBKDF2 mini-secret -> sr25519, SS58 69.
+        val seed = SubstrateSeedFactory.deriveSeed32(mnemonic.words, null).seed
+        try {
+            val keyPair = generateSr25519(seed)
+            return WalletDraft(
+                address = soraAddress(keyPair),
+                accountName = accountName,
+                mnemonic = mnemonic.words,
+                seedHex = seed.toHexString(),
+                keypair = keyPair,
+                source = source,
+                wipeKeypair = ::wipe,
+            )
+        } finally {
+            seed.fill(0)
+        }
     }
 
-    private suspend fun generateEntropyAndKeysFromMnemonic(mnemonic: Mnemonic): String {
-        val derivationResult = SubstrateSeedFactory.deriveSeed32(mnemonic.words, null)
+    private fun wipe(keyPair: Sr25519Keypair) {
+        keyPair.privateKey.fill(0)
+        keyPair.nonce.fill(0)
+    }
+
+    private fun generateSr25519(seed: ByteArray): Sr25519Keypair {
         val keyPair = SubstrateKeypairFactory.generate(
             SubstrateOptionsProvider.encryptionType,
-            derivationResult.seed,
+            seed,
         )
         require(keyPair is Sr25519Keypair)
-
-        val substrateAddress = runtimeManager.toSoraAddress(keyPair.publicKey)
-
-        if (credentialsPrefs.retrieveKeys(substrateAddress)?.publicKey.contentEquals(keyPair.publicKey)) {
-            throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
-        }
-
-        credentialsPrefs.saveKeys(keyPair, substrateAddress)
-        credentialsPrefs.saveMnemonic(mnemonic.words, substrateAddress)
-        FirebaseWrapper.log("Keys were created")
-        return substrateAddress
+        return keyPair
     }
 
-    private suspend fun generateEntropyAndKeysFromRawSeed(rawSeed: String): String {
-        val keyPair = SubstrateKeypairFactory.generate(
-            SubstrateOptionsProvider.encryptionType,
-            rawSeed.fromHex(),
-        )
-        require(keyPair is Sr25519Keypair)
-
-        val substrateAddress = runtimeManager.toSoraAddress(keyPair.publicKey)
-
-        if (credentialsPrefs.retrieveKeys(substrateAddress)?.publicKey.contentEquals(keyPair.publicKey)) {
-            throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
+    private fun soraAddress(keyPair: Sr25519Keypair): String =
+        requireNotNull(sora2AddressCodec.toSoraAddressOrNull(keyPair.publicKey)) {
+            "SORA_ADDRESS_DERIVATION_FAILED"
         }
 
-        credentialsPrefs.saveKeys(keyPair, substrateAddress)
-        credentialsPrefs.saveSeed(rawSeed, substrateAddress)
-        FirebaseWrapper.log("Keys were created")
-        return substrateAddress
-    }
-
-    private fun generateMnemonic(): Mnemonic =
-        MnemonicCreator.randomMnemonic(Mnemonic.Length.TWENTY_FOUR)
-
-    override suspend fun restoreUserCredentialsFromMnemonic(
-        mnemonic: String,
-        accountName: String
-    ): SoraAccount = WalletMutationCoordinator.withLock {
-        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
-        require(hasImportWordCount(mnemonic)) {
-            "Only 12- or 24-word recovery phrases are supported"
+    override suspend fun commitDraft(draft: WalletDraft): SoraAccount =
+        WalletMutationCoordinator.withLock {
+            WalletRecoveryCapabilityGate.requireUserMutationAllowed()
+            val address = draft.address
+            val keyPair = draft.keypair
+            val mnemonic = draft.mnemonic
+            val desired = buildMap {
+                put(CredentialField.PRIVATE_KEY, keyPair.privateKey.toHexString())
+                put(CredentialField.PUBLIC_KEY, keyPair.publicKey.toHexString())
+                put(CredentialField.KEY_NONCE, keyPair.nonce.toHexString())
+                if (mnemonic != null) {
+                    put(CredentialField.MNEMONIC, mnemonic)
+                } else {
+                    put(CredentialField.SEED, draft.seedHex)
+                }
+            }
+            if (credentialsPrefs.isExplicitWatchOnly(address)) {
+                throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+            }
+            val absent = mutableMapOf<CredentialField, String>()
+            desired.forEach { (field, value) ->
+                when (val stored = credentialsPrefs.readStoredCredential(field, address)) {
+                    StoredCredential.Absent -> absent[field] = value
+                    StoredCredential.Unreadable ->
+                        throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+                    is StoredCredential.Present -> if (!sameCredential(field, stored.value, value)) {
+                        throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+                    }
+                }
+            }
+            // The secret this draft does not write must still agree when it is already stored.
+            requireRetainedSecretAgrees(draft)
+            if (absent.isNotEmpty()) {
+                credentialsPrefs.writeCredentialsIfAbsent(address, absent)
+                FirebaseWrapper.log("Keys were created")
+            } else {
+                FirebaseWrapper.log("Retained keys were adopted")
+            }
+            val stored = credentialsPrefs.retrieveKeys(address)
+                ?: throw IllegalStateException("WALLET_KEYS_READBACK_MISSING")
+            try {
+                check(
+                    stored.publicKey.contentEquals(keyPair.publicKey) &&
+                        stored.privateKey.contentEquals(keyPair.privateKey) &&
+                        stored.nonce.contentEquals(keyPair.nonce)
+                ) { "WALLET_KEYS_READBACK_MISMATCH" }
+            } finally {
+                stored.privateKey.fill(0)
+                stored.nonce.fill(0)
+            }
+            SoraAccount(address, draft.accountName)
         }
-        val address = generateEntropyAndKeysFromMnemonic(MnemonicCreator.fromWords(mnemonic))
-        SoraAccount(address, accountName)
+
+    private suspend fun requireRetainedSecretAgrees(draft: WalletDraft) {
+        if (draft.mnemonic != null) {
+            when (val seed = credentialsPrefs.readStoredCredential(CredentialField.SEED, draft.address)) {
+                StoredCredential.Absent -> Unit
+                StoredCredential.Unreadable ->
+                    throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+                is StoredCredential.Present -> if (!sameHex(seed.value, draft.seedHex)) {
+                    throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+                }
+            }
+        } else {
+            when (
+                val stored = credentialsPrefs.readStoredCredential(
+                    CredentialField.MNEMONIC,
+                    draft.address,
+                )
+            ) {
+                StoredCredential.Absent -> Unit
+                StoredCredential.Unreadable ->
+                    throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+                is StoredCredential.Present -> {
+                    val derived = runCatching { derivePassphraseToSeed(stored.value) }.getOrNull()
+                    if (derived == null || !sameHex(derived, draft.seedHex)) {
+                        throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+                    }
+                }
+            }
+        }
     }
 
-    override suspend fun restoreUserCredentialsFromRawSeed(
-        rawSeed: String,
-        accountName: String
-    ): SoraAccount = WalletMutationCoordinator.withLock {
-        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
-        val address = generateEntropyAndKeysFromRawSeed(rawSeed.removeHexPrefix())
-        SoraAccount(address, accountName)
+    private fun sameCredential(field: CredentialField, stored: String, expected: String): Boolean =
+        when (field) {
+            CredentialField.MNEMONIC ->
+                stored.trim().split(Regex("\\s+")) == expected.trim().split(Regex("\\s+"))
+            else -> sameHex(stored, expected)
+        }
+
+    private fun sameHex(left: String, right: String): Boolean =
+        left.removePrefix("0x").removePrefix("0X")
+            .equals(right.removePrefix("0x").removePrefix("0X"), ignoreCase = true)
+
+    override suspend fun generateJsonForDraft(draft: WalletDraft, password: String): String {
+        val seed = draft.seedHex.fromHex()
+        return try {
+            jsonSeedEncoder.generate(
+                account = JsonAccountsEncoder.ExportAccount(
+                    keypair = draft.keypair,
+                    seed = seed,
+                    name = draft.accountName,
+                    address = draft.address,
+                ),
+                password = password,
+                genesisHash = Sora2RuntimeContract.SORA_MAINNET_GENESIS_HASH,
+            )
+        } finally {
+            seed.fill(0)
+        }
     }
 
     override suspend fun saveMnemonic(
@@ -361,8 +483,9 @@ class CredentialsRepositoryImpl constructor(
     private fun mnemonicWordCount(mnemonic: String): Int =
         mnemonic.trim().split(Regex("\\s+")).count(String::isNotBlank)
 
+    // SORA2 accepts every BIP39 length, as 3.8.x did. Nexus derivation stays 12/24 only.
     private fun hasImportWordCount(mnemonic: String): Boolean =
-        mnemonicWordCount(mnemonic) in setOf(12, 24)
+        mnemonicWordCount(mnemonic) in setOf(12, 15, 18, 21, 24)
 
     private fun hasRetainedSoraWordCount(wordCount: Int): Boolean =
         wordCount in setOf(12, 15, 18, 21, 24)
@@ -373,7 +496,13 @@ class CredentialsRepositoryImpl constructor(
      * re-derives the exact requested SORA2 address.
      */
     private suspend fun legacyEmptySuffixBelongsTo(substrateAddress: String): Boolean {
-        val legacy = credentialsPrefs.retrieveKeys("") ?: return false
+        // An unreadable release-era set cannot belong to any account; a Keystore failure still
+        // propagates.
+        val legacy = try {
+            credentialsPrefs.retrieveKeys("")
+        } catch (_: WalletDecryptionException) {
+            null
+        } ?: return false
         return try {
             sora2AddressCodec.toSoraAddressOrNull(legacy.publicKey) == substrateAddress
         } finally {

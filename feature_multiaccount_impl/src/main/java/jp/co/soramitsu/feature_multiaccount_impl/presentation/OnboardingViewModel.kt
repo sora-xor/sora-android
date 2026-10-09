@@ -64,6 +64,7 @@ import jp.co.soramitsu.common.util.Const.SORA_TERMS_PAGE
 import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
 import jp.co.soramitsu.common.util.ext.trimAccountNameTo32Bytes
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
@@ -152,11 +153,15 @@ class OnboardingViewModel @Inject constructor(
     private val _consentExceptionHandler = SingleLiveEvent<Intent>()
     val consentExceptionHandler: LiveData<Intent> = _consentExceptionHandler
 
-    private var tempAccount: SoraAccount? = null
+    /**
+     * The wallet being created. It lives in memory only until the person finishes the flow, so
+     * backing out at any step leaves no key material on the device.
+     */
+    private var tempDraft: WalletDraft? = null
 
     private var isFromGoogleDrive = false
 
-    private var recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromMnemonic
+    private var recoverSoraAccountMethod = multiaccountInteractor::importFromMnemonic
     private var isValidMethod = multiaccountInteractor::isMnemonicValid
     private var errorMessageCode = ResponseCode.MNEMONIC_IS_NOT_VALID
 
@@ -330,12 +335,10 @@ class OnboardingViewModel @Inject constructor(
                         val valid = isValidMethod(recoveryCardState.recoveryInputState.value.text)
 
                         if (valid) {
-                            val soraAccount = recoverSoraAccountMethod(
+                            // Stores the keys and adds the account in one step.
+                            recoverSoraAccountMethod(
                                 recoveryCardState.recoveryInputState.value.text,
                                 recoverAccountNameState.accountNameInputState.value.text
-                            )
-                            multiaccountInteractor.continueRecoverFlow(
-                                soraAccount,
                             )
                             mainStarter.start(context)
                         } else {
@@ -451,11 +454,12 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             _createAccountCardState.value?.let {
                 val accountName = it.accountNameInputState.value.text
-                val soraAccount = multiaccountInteractor.generateUserCredentials(accountName)
-                val mnemonic = multiaccountInteractor.getMnemonic(soraAccount)
-                tempAccount = soraAccount
+                // Nothing is stored yet: the keys are written only when the flow finishes.
+                val draft = multiaccountInteractor.createDraft(accountName)
+                tempDraft?.destroy()
+                tempDraft = draft
                 _passphraseCardState.value = BackupScreenState(
-                    mnemonicWords = mnemonic.split(" "),
+                    mnemonicWords = draft.mnemonicWords,
                     isCreatingFlow = true,
                     isViaGoogleDrive = isFromGoogleDrive
                 )
@@ -519,7 +523,7 @@ class OnboardingViewModel @Inject constructor(
         _recoveryState.value = when (index) {
             1 -> {
                 isValidMethod = multiaccountInteractor::isMnemonicValid
-                recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromMnemonic
+                recoverSoraAccountMethod = multiaccountInteractor::importFromMnemonic
                 errorMessageCode = ResponseCode.MNEMONIC_IS_NOT_VALID
 
                 RecoveryState(
@@ -533,7 +537,7 @@ class OnboardingViewModel @Inject constructor(
 
             2 -> {
                 isValidMethod = multiaccountInteractor::isRawSeedValid
-                recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromRawSeed
+                recoverSoraAccountMethod = multiaccountInteractor::importFromRawSeed
                 errorMessageCode = ResponseCode.RAW_SEED_IS_NOT_VALID
 
                 RecoveryState(
@@ -553,14 +557,18 @@ class OnboardingViewModel @Inject constructor(
 
     private fun finishCreateAccountProcess(context: Context) {
         viewModelScope.launch {
-            multiaccountInteractor.createUser(
-                soraAccount = requireNotNull(
-                    tempAccount
-                ),
-            )
-            multiaccountInteractor.saveRegistrationStateFinished()
-
-            mainStarter.start(context)
+            try {
+                // Stores the keys and adds the account in one step, only now that the person
+                // has finished the flow.
+                multiaccountInteractor.createUserFromDraft(requireNotNull(tempDraft))
+                tempDraft?.destroy()
+                tempDraft = null
+                mainStarter.start(context)
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                onError(error)
+            }
         }
     }
 
@@ -632,9 +640,9 @@ class OnboardingViewModel @Inject constructor(
             viewModelScope.launch(coroutineManager.io) {
                 try {
                     _passphraseCardState.value?.let { passphraseCardState ->
-                        tempAccount?.let {
-                            val jsonString = multiaccountInteractor.generateSubstrateJsonString(
-                                listOf(it),
+                        tempDraft?.let { draft ->
+                            val jsonString = multiaccountInteractor.generateDraftJson(
+                                draft,
                                 createBackupPasswordState.password.value.text
                             )
 
@@ -648,8 +656,8 @@ class OnboardingViewModel @Inject constructor(
 
                             backupService.saveBackupAccount(
                                 DecryptedBackupAccount(
-                                    name = it.accountName,
-                                    address = it.substrateAddress,
+                                    name = draft.accountName,
+                                    address = draft.address,
                                     mnemonicPhrase = passphrase,
                                     cryptoType = CryptoType.SR25519,
                                     backupAccountType = listOf(
@@ -762,12 +770,8 @@ class OnboardingViewModel @Inject constructor(
                             )
                         }
 
-                        val soraAccount: SoraAccount =
-                            recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount)
-
-                        multiaccountInteractor.continueRecoverFlow(
-                            soraAccount,
-                        )
+                        // Stores the keys and adds the account in one step.
+                        recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount)
 
                         isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()
 
@@ -805,7 +809,7 @@ class OnboardingViewModel @Inject constructor(
                 val isValid = multiaccountInteractor.isMnemonicValid(passphrase)
 
                 if (isValid) {
-                    return multiaccountInteractor.recoverSoraAccountFromMnemonic(
+                    return multiaccountInteractor.importFromMnemonic(
                         passphrase,
                         decryptedBackupAccount.name
                     )
@@ -818,7 +822,7 @@ class OnboardingViewModel @Inject constructor(
                 val isValid = multiaccountInteractor.isRawSeedValid(rawSeed)
 
                 if (isValid) {
-                    return multiaccountInteractor.recoverSoraAccountFromRawSeed(
+                    return multiaccountInteractor.importFromRawSeed(
                         rawSeed,
                         decryptedBackupAccount.name
                     )
@@ -937,6 +941,12 @@ class OnboardingViewModel @Inject constructor(
 
     override fun onAction() {
         _skipDialogState.value = true
+    }
+
+    override fun onCleared() {
+        tempDraft?.destroy()
+        tempDraft = null
+        super.onCleared()
     }
 
     fun skipDialogConfirm(context: Context) {

@@ -35,6 +35,22 @@ package jp.co.soramitsu.feature_account_api.domain.interfaces
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
 
+enum class CredentialField {
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    KEY_NONCE,
+    MNEMONIC,
+    SEED,
+}
+
+sealed interface StoredCredential {
+    data object Absent : StoredCredential
+
+    class Present(val value: String) : StoredCredential
+
+    data object Unreadable : StoredCredential
+}
+
 interface CredentialsDatasource {
 
     suspend fun getAddress(): String
@@ -52,6 +68,20 @@ interface CredentialsDatasource {
     suspend fun retrieveSeed(suffixAddress: String): String
 
     /**
+     * Reads one stored credential for [address] without writing anything. A value that is stored
+     * but cannot be decrypted is reported as [StoredCredential.Unreadable]; a Keystore failure is
+     * thrown, never reported as absence.
+     */
+    suspend fun readStoredCredential(field: CredentialField, address: String): StoredCredential
+
+    /**
+     * Writes [values] for [address] in one atomic preference edit, and only where no value is
+     * stored yet. If any of the fields became non-empty in the meantime, nothing is written and
+     * an [IllegalStateException] with `WALLET_CREDENTIAL_ALREADY_PRESENT` is thrown.
+     */
+    suspend fun writeCredentialsIfAbsent(address: String, values: Map<CredentialField, String>)
+
+    /**
      * A watch-only account must be explicitly marked. Missing or unreadable signing material is
      * never enough to infer this state during a production upgrade.
      */
@@ -59,9 +89,14 @@ interface CredentialsDatasource {
 
     suspend fun setExplicitWatchOnly(suffixAddress: String, watchOnly: Boolean)
 
+    /**
+     * Checks that every id in [requiredCoverage] holds stored credentials and that the selection
+     * is one of [walletIds]. Key sets of other addresses (without an account) are ignored.
+     */
     suspend fun requireWalletPreferenceCoverage(
         walletIds: Set<String>,
         selectedAddress: String,
+        requiredCoverage: Set<String> = walletIds,
     )
 
     /**
