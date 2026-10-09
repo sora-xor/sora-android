@@ -98,17 +98,10 @@ dependencies {
     implementation(libs.svgDep)
     implementation(libs.jdenticonDep)
 
-    api(libs.soramitsu.sora.card) {
-        exclude(group = "com.paywings.onboarding.kyc.android-libs", module = "java-websocket-lib")
-    }
-
-    // IDensic's older JMRTD/bcutil call ASN.1 APIs removed from our wallet's BC provider.
-    // Export the compatible constraints with the card SDK to align every consumer's graph.
+    // xcrypto/xbackup bring bcprov 1.77; keep every consumer on the wallet's BouncyCastle
+    // version (also used by :common for SCrypt, SHA3 and Base64).
     constraints {
         api(libs.bcprovDep)
-        api(libs.bcutilDep)
-        api(libs.jmrtdDep)
-        api(libs.scubaSmartcardsDep)
     }
 
     implementation(libs.daggerDep)

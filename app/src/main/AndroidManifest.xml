@@ -13,11 +13,6 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <queries>
-        <package android:name="com.soracard.wallet.iban"/>
-        <package android:name="com.soracard.wallet.iban.test"/>
-    </queries>
-
     <application
         tools:replace="android:allowBackup"
         android:allowBackup="false"

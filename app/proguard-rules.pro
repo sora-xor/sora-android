@@ -215,30 +215,6 @@
 *;
 }
 
-# Optional Sora Card SDK integrations are not packaged by this app.
--dontwarn com.paywings.kyc.android.sdk.data.enums.KycErrorCode
--dontwarn com.paywings.kyc.android.sdk.data.model.PayWingsUserCredentials
--dontwarn com.paywings.kyc.android.sdk.data.model.PayWingsWhiteLabelCredentials
--dontwarn com.paywings.kyc.android.sdk.initializer.PayWingsKycClient
--dontwarn com.paywings.oauth.android.sdk.data.enums.EnvironmentType
--dontwarn com.paywings.oauth.android.sdk.data.enums.HttpRequestMethod$Companion
--dontwarn com.paywings.oauth.android.sdk.data.enums.HttpRequestMethod
--dontwarn com.paywings.oauth.android.sdk.data.enums.OAuthErrorCode
--dontwarn com.paywings.oauth.android.sdk.data.model.AccessTokenData
--dontwarn com.paywings.oauth.android.sdk.data.model.ErrorData
--dontwarn com.paywings.oauth.android.sdk.data.model.GetNewAuthorizationDataResult
--dontwarn com.paywings.oauth.android.sdk.initializer.OAuthInitializationCallback
--dontwarn com.paywings.oauth.android.sdk.initializer.PayWingsOAuthClient$Companion
--dontwarn com.paywings.oauth.android.sdk.initializer.PayWingsOAuthClient
--dontwarn com.paywings.oauth.android.sdk.service.OAuthService
--dontwarn com.paywings.oauth.android.sdk.service.callback.ChangeUnverifiedEmailCallback
--dontwarn com.paywings.oauth.android.sdk.service.callback.CheckEmailVerifiedCallback
--dontwarn com.paywings.oauth.android.sdk.service.callback.GetUserDataCallback
--dontwarn com.paywings.oauth.android.sdk.service.callback.RegisterUserCallback
--dontwarn com.paywings.oauth.android.sdk.service.callback.SendNewVerificationEmailCallback
--dontwarn com.paywings.oauth.android.sdk.service.callback.SignInWithPhoneNumberRequestOtpCallback
--dontwarn com.paywings.oauth.android.sdk.service.callback.SignInWithPhoneNumberVerifyOtpCallback
-
 # Optional JNDI/LDAP APIs referenced by crypto and HTTP libraries are not
 # available on Android.
 -dontwarn javax.naming.Binding
