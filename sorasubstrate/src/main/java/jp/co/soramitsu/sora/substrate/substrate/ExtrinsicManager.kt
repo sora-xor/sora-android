@@ -39,7 +39,7 @@ import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.core_db.model.WalletMigrationIds
+import jp.co.soramitsu.core_db.WalletSigningGate
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.QualifiedSora2MutationRuntime
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
@@ -557,22 +557,8 @@ class ExtrinsicManager @Inject constructor(
 
     private suspend fun requireSigningWalletAvailable(walletId: String) {
         WalletRecoveryCapabilityGate.requireUserMutationAllowed()
-        val walletDao = database.walletIdentityDao()
-        check(!walletDao.hasActiveDeletionOperation()) {
-            "WALLET_DELETION_ACTIVE"
-        }
-        val migration = walletDao.getMigrationJournal(
-            WalletMigrationIds.NETWORK_ACCOUNTS_V1
-        )
-        val sora2 = walletDao.getNetworkAccount(walletId, "sora2")
-        check(
-            database.accountDao().getAccount(walletId) != null &&
-                walletDao.getWallet(walletId)?.migrationState == "VERIFIED" &&
-                (migration == null || migration.state == "VERIFIED") &&
-                sora2?.let { account ->
-                    account.enabled && account.address == walletId
-                } == true
-        ) { "SIGNING_WALLET_UNAVAILABLE" }
+        // Shared rule: an account whose keys are unavailable is read-only for that account only.
+        WalletSigningGate.unavailableReason(database, walletId)?.let { reason -> error(reason) }
     }
 
 }

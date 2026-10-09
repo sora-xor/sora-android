@@ -128,6 +128,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Builds a separate production-configured database handle (same file, migrations and
+         * upgrade gate) that is not the process singleton. Device tests use it to model an app
+         * restart; production code uses [get].
+         */
+        fun newInstance(context: Context): AppDatabase = buildDatabase(context)
+
         private fun buildDatabase(context: Context): AppDatabase {
             if (
                 WalletUpgradeBackup.blockingFailure() == null &&

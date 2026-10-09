@@ -69,6 +69,18 @@ object WalletUpgradeBackup {
     private const val MAX_WALLET_ID_LENGTH = 256
     private const val MINIMUM_FREE_SPACE_HEADROOM = 16L * 1_024L * 1_024L
     private const val BACKUP_SPACE_MULTIPLIER = 2L
+    // A keys-only backup copies the encrypted preferences and wrapped-key files only. Room still
+    // needs room for its own migration, so the database size is counted twice on top.
+    private const val KEYS_ONLY_MINIMUM_HEADROOM = 1L * 1_024L * 1_024L
+    private const val MAX_KEPT_VERIFIED_BACKUPS = 3
+    private const val BACKUP_KIND_FULL = "full"
+    private const val BACKUP_KIND_KEYS_ONLY = "keys-only"
+    // Renamed-aside names never start with BACKUP_PREFIX, so they leave the scanned namespace.
+    private const val BACKUP_QUARANTINE_PREFIX = "wallet-backup-quarantine-"
+    private const val STORAGE_QUARANTINE_PREFIX = "wallet-quarantine-"
+    private const val CORRUPT_DATABASE_COPY_PREFIX = "wallet-corrupt-quarantine-"
+    private const val AUTO_RETRY_STATE_FILE = "wallet-migration-auto-retry"
+    private const val MAX_AUTOMATIC_MIGRATION_RETRIES = 3
     private const val REGISTRATION_FINISHED = "REGISTRATION_FINISHED"
     private const val BACKUP_PUBLICATION_LOCK = ".wallet-upgrade-publication.lock"
     private const val RECOVERY_PUBLICATION_LOCK = ".wallet-recovery-publication.lock"
@@ -103,13 +115,63 @@ object WalletUpgradeBackup {
     // Later explicit retries must perform the full gate and must not mint another startup token.
     private var applicationAttachPreparationAttempted = false
 
-    data class Failure(val code: String)
+    /** Material that is set aside (never deleted) because no account row owns it. */
+    @Volatile
+    private var quarantine: WalletQuarantine = WalletQuarantine.NONE
+
+    /** A failure that may pass on retry; it is reported in memory only, never journaled. */
+    @Volatile
+    private var transientVerificationFailure: String? = null
+
+    /** Non-blocking problems met during the last preparation (for example a skipped snapshot). */
+    @Volatile
+    private var nonBlockingWarnings: List<String> = emptyList()
+
+    @Volatile
+    private var recoveryFacts: RecoveryFacts = RecoveryFacts()
+
+    @Volatile
+    private var databaseCorruptionCopied = false
+
+    data class Failure(
+        val code: String,
+        val requiredBytes: Long? = null,
+        val availableBytes: Long? = null,
+    )
 
     fun blockingFailure(): Failure? = blockingFailure
 
     fun hasValidatedLegacyRecovery(): Boolean = migrationRecoverySnapshot != null
 
+    /** Key sets and settings that were set aside during the last preparation. */
+    fun quarantine(): WalletQuarantine = quarantine
+
+    fun nonBlockingWarnings(): List<String> = nonBlockingWarnings
+
+    /**
+     * The forward paths available for the current blocking or transient state, or null when the
+     * wallet is usable. Every state offers at least Try again, Restore with recovery phrase and
+     * Contact support.
+     */
+    fun recoveryOptions(): WalletRecoveryOptions? {
+        val failure = blockingFailure
+        val transient = transientVerificationFailure
+        val code = failure?.code ?: transient ?: return null
+        return WalletRecoveryOptions.forState(
+            code = code,
+            transientFailure = failure == null && transient != null,
+            facts = recoveryFacts.copy(
+                hasMigrationRecoverySnapshot = migrationRecoverySnapshot != null,
+            ),
+            requiredBytes = failure?.requiredBytes,
+            availableBytes = failure?.availableBytes,
+        )
+    }
+
     fun canAuthorizeMigrationRetry(): Boolean {
+        if (transientVerificationFailure != null && migrationRecoverySnapshot == null) {
+            return false
+        }
         if (
             blockingFailure?.code?.let {
                 it != "WALLET_MIGRATION_RECOVERY_REQUIRED"
@@ -139,6 +201,26 @@ object WalletUpgradeBackup {
             context = context,
             availableBackupBytesOverride = null,
             retainStartupAdmission = retainStartupAdmission,
+        )
+    }
+
+    /**
+     * User-requested "Try again". Re-runs every startup check and, for an interrupted or failed
+     * wallet verification, authorizes one more verification run regardless of the automatic retry
+     * budget. Never deletes or rewrites wallet material.
+     */
+    @Synchronized
+    fun retry(context: Context): Result<Unit> {
+        transientVerificationFailure = null
+        if (migrationRecoverySnapshot != null && canAuthorizeMigrationRetry()) {
+            val authorized = authorizeMigrationRetry(context)
+            if (authorized.isSuccess) return authorized
+        }
+        return prepareWithCapacityOverride(
+            context = context,
+            availableBackupBytesOverride = null,
+            retainStartupAdmission = false,
+            userInitiatedRetry = true,
         )
     }
 
@@ -181,8 +263,11 @@ object WalletUpgradeBackup {
         availableBackupBytesOverride: Long?,
         beforeFinalSourceValidationForTest: (() -> Unit)? = null,
         retainStartupAdmission: Boolean,
+        userInitiatedRetry: Boolean = false,
     ): Result<Unit> {
         preparedAdmission = null
+        transientVerificationFailure = null
+        nonBlockingWarnings = emptyList()
         // Application.attachBaseContext is intentionally the earliest caller so no injected
         // database consumer can race this gate. Android may not expose applicationContext until
         // that lifecycle method returns, even though the supplied Application is already backed
@@ -195,7 +280,13 @@ object WalletUpgradeBackup {
                 beforeFinalSourceValidationForTest = beforeFinalSourceValidationForTest,
             )
         }
-        val failure = result.exceptionOrNull()?.let { Failure(it.safeCode()) }
+        val failure = result.exceptionOrNull()?.let { error ->
+            Failure(
+                code = error.safeCode(),
+                requiredBytes = (error as? WalletUpgradeBackupException)?.requiredBytes,
+                availableBytes = (error as? WalletUpgradeBackupException)?.availableBytes,
+            )
+        }
         val recovery = if (failure?.code == "WALLET_MIGRATION_RECOVERY_REQUIRED") {
             runCatching { inspectMigrationRecovery(applicationContext) }.getOrNull()
         } else {
@@ -203,6 +294,22 @@ object WalletUpgradeBackup {
         }
         migrationRecoverySnapshot = recovery
         blockingFailure = failure
+        if (
+            failure != null &&
+            recovery != null &&
+            claimMigrationRetry(applicationContext, userInitiatedRetry)
+        ) {
+            // An interrupted or failed wallet verification is retried automatically (at most
+            // MAX_AUTOMATIC_MIGRATION_RETRIES times in a row) before the recovery options are
+            // shown. The retry only re-runs the copy-on-write verification; account rows and
+            // encrypted preferences are never changed by it.
+            WalletRecoveryCapabilityGate.enterBlocked()
+            if (authorizeMigrationRetry(applicationContext).isSuccess) {
+                return Result.success(Unit)
+            }
+            blockingFailure = failure
+            migrationRecoverySnapshot = recovery
+        }
         if (failure == null) {
             WalletRecoveryCapabilityGate.enterNormal()
             // A failed metadata capture only forfeits the shortcut; the already-completed
@@ -238,7 +345,7 @@ object WalletUpgradeBackup {
                 "LEGACY_RECOVERY_AUTHORIZATION_NOT_AVAILABLE"
             )
         }
-        val current = inspectMigrationRecovery(context.applicationContext)
+        val current = inspectMigrationRecovery(context.applicationContext ?: context)
         migrationRecoverySnapshot?.let { expected ->
             if (expected.token != current.token) {
                 throw WalletUpgradeBackupException("RECOVERY_SOURCE_CHANGED")
@@ -264,7 +371,7 @@ object WalletUpgradeBackup {
                 "MIGRATION_RETRY_AUTHORIZATION_NOT_AVAILABLE"
             )
         }
-        val applicationContext = context.applicationContext
+        val applicationContext = context.applicationContext ?: context
         val expected = inspectMigrationRecovery(applicationContext)
         migrationRecoverySnapshot?.let { previous ->
             if (previous.token != expected.token) {
@@ -387,8 +494,95 @@ object WalletUpgradeBackup {
         preparedAdmission = null
         migrationRecoverySnapshot = null
         blockingFailure = null
+        transientVerificationFailure = null
         WalletRecoveryCapabilityGate.enterNormal()
     }
+
+    /**
+     * Routes to read-only access without changing any wallet data.
+     *
+     * Room is admitted read-only (wallet tables guarded) only when the installed database is
+     * already at the current schema and passes `PRAGMA quick_check`; opening Room on an older
+     * schema would run a migration. Otherwise the caller must use a Room-free view.
+     */
+    @Synchronized
+    fun authorizeSafeReadOnly(context: Context): Result<SafeReadOnlyRoute> = runCatching {
+        preparedAdmission = null
+        val mode = WalletRecoveryCapabilityGate.mode()
+        if (
+            mode == WalletRecoveryCapabilityGate.Mode.NORMAL &&
+            blockingFailure == null &&
+            transientVerificationFailure == null
+        ) {
+            return@runCatching SafeReadOnlyRoute.NORMAL_ACCESS
+        }
+        if (migrationRecoverySnapshot != null) {
+            authorizeLegacyReadOnly(context).getOrThrow()
+            return@runCatching SafeReadOnlyRoute.ROOM_READ_ONLY
+        }
+        val applicationContext = context.applicationContext ?: context
+        val database = applicationContext.getDatabasePath(DATABASE_NAME)
+        val readable = database.isRegularFileNoFollow() && runCatching {
+            readVersion(database) == CURRENT_DATABASE_VERSION &&
+                database.passesSqliteQuickCheck() &&
+                readWalletDatabaseInventory(database, CURRENT_DATABASE_VERSION).let { true }
+        }.getOrDefault(false)
+        if (!readable) return@runCatching SafeReadOnlyRoute.VAULT_ONLY
+        if (mode == WalletRecoveryCapabilityGate.Mode.NORMAL ||
+            mode == WalletRecoveryCapabilityGate.Mode.MIGRATION_RETRY_AUTHORIZED
+        ) {
+            WalletRecoveryCapabilityGate.enterBlocked()
+        }
+        WalletRecoveryCapabilityGate.enterLegacyReadOnly()
+        blockingFailure = null
+        SafeReadOnlyRoute.ROOM_READ_ONLY
+    }
+
+    enum class SafeReadOnlyRoute {
+        /** No recovery is active; continue normally. */
+        NORMAL_ACCESS,
+
+        /** The existing database is open read-only; signing and wallet changes are disabled. */
+        ROOM_READ_ONLY,
+
+        /** The database cannot be opened safely; show addresses and phrases without Room. */
+        VAULT_ONLY,
+    }
+
+    /**
+     * Called when SQLite reports corruption on an open Room connection. The database file is kept
+     * exactly as it is; a copy is placed in no-backup storage for support.
+     */
+    @Synchronized
+    fun noteDatabaseCorruption(context: Context?) {
+        preparedAdmission = null
+        if (context != null && !databaseCorruptionCopied) {
+            databaseCorruptionCopied = runCatching { copyCorruptDatabaseForSupport(context) }
+                .isSuccess
+        }
+        blockingFailure = Failure("DATABASE_CORRUPT")
+        migrationRecoverySnapshot = null
+        WalletRecoveryCapabilityGate.enterBlocked()
+    }
+
+    /**
+     * Wallet verification met a transient failure (busy Keystore, full disk, I/O). Nothing was
+     * journaled. This process stays read-only until a retry succeeds; the next start retries.
+     */
+    @Synchronized
+    fun noteTransientVerificationFailure(code: String) {
+        preparedAdmission = null
+        transientVerificationFailure = code
+        if (blockingFailure == null) {
+            migrationRecoverySnapshot = null
+            WalletRecoveryCapabilityGate.enterInspectedRecovery()
+        } else {
+            WalletRecoveryCapabilityGate.enterBlocked()
+        }
+    }
+
+    /** True while the last wallet verification in this process failed transiently. */
+    fun transientVerificationFailure(): String? = transientVerificationFailure
 
     @Synchronized
     fun noteMigrationRecoveryRequired() {
@@ -461,7 +655,23 @@ object WalletUpgradeBackup {
         delegate: SupportSQLiteOpenHelper.Factory,
         beforeGuardAdmissionForTest: (() -> Unit)?,
     ): SupportSQLiteOpenHelper.Factory = SupportSQLiteOpenHelper.Factory { configuration ->
-        val openHelper = delegate.create(configuration)
+        // Room's callback inherits SupportSQLiteOpenHelper.Callback.onCorruption, whose default
+        // deletes the database file. Wrap it so corruption keeps every byte and routes startup to
+        // recovery, and never allow the framework helper to delete the file on a failed open.
+        val openHelper = delegate.create(
+            SupportSQLiteOpenHelper.Configuration.builder(configuration.context)
+                .name(configuration.name)
+                .callback(
+                    NonDestructiveCorruptionCallback(
+                        delegate = configuration.callback,
+                        context = configuration.context.applicationContext
+                            ?: configuration.context,
+                    )
+                )
+                .noBackupDirectory(configuration.useNoBackupDirectory)
+                .allowDataLossOnRecovery(false)
+                .build()
+        )
         object : SupportSQLiteOpenHelper by openHelper {
             private var walletWriteGuardsEnabled: Boolean? = null
 
@@ -506,6 +716,60 @@ object WalletUpgradeBackup {
                 database
             }
         }
+    }
+
+    private class NonDestructiveCorruptionCallback(
+        private val delegate: SupportSQLiteOpenHelper.Callback,
+        private val context: Context,
+    ) : SupportSQLiteOpenHelper.Callback(delegate.version) {
+        override fun onConfigure(db: SupportSQLiteDatabase) = delegate.onConfigure(db)
+
+        override fun onCreate(db: SupportSQLiteDatabase) = delegate.onCreate(db)
+
+        override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) =
+            delegate.onUpgrade(db, oldVersion, newVersion)
+
+        override fun onDowngrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) =
+            delegate.onDowngrade(db, oldVersion, newVersion)
+
+        override fun onOpen(db: SupportSQLiteDatabase) = delegate.onOpen(db)
+
+        override fun onCorruption(db: SupportSQLiteDatabase) {
+            // Deliberately never calls super.onCorruption(): that deletes app.db.
+            noteDatabaseCorruption(context)
+            runCatching { db.close() }
+            throw WalletUpgradeBackupException("DATABASE_CORRUPT")
+        }
+    }
+
+    /** Copies (never moves) the corrupt database and its sidecars for support. */
+    private fun copyCorruptDatabaseForSupport(context: Context) {
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val sources = listOf(
+            database,
+            File("${database.path}-wal"),
+            File("${database.path}-shm"),
+            File("${database.path}-journal"),
+        ).filter { it.isRegularFileNoFollow() }
+        if (sources.isEmpty()) return
+        val destination = uniqueSiblingName(
+            parent = context.noBackupFilesDir,
+            baseName = "$CORRUPT_DATABASE_COPY_PREFIX${System.currentTimeMillis()}",
+        )
+        createDirectoryExclusive(destination, "CORRUPT_DATABASE_COPY_FAILED")
+        sources.forEach { source -> copyDurably(source, File(destination, source.name)) }
+        fsyncDirectory(destination)
+        fsyncDirectory(context.noBackupFilesDir)
+    }
+
+    private fun uniqueSiblingName(parent: File, baseName: String): File {
+        var candidate = File(parent, baseName)
+        var suffix = 1
+        while (candidate.existsNoFollow()) {
+            candidate = File(parent, "$baseName-$suffix")
+            suffix += 1
+        }
+        return candidate
     }
 
     /**
@@ -949,24 +1213,35 @@ object WalletUpgradeBackup {
         beforeFinalSourceValidationForTest: (() -> Unit)?,
     ) {
         val database = context.getDatabasePath(DATABASE_NAME)
+        quarantine = WalletQuarantine.NONE
+        recoveryFacts = RecoveryFacts(
+            hasWalletFiles = runCatching {
+                knownWalletFiles(context, database).any { it.existsNoFollow() }
+            }.getOrDefault(true),
+        )
         val preferenceInventory = walletPreferenceInventory(context)
+        recoveryFacts = recoveryFacts.copy(
+            hasRecoveryPhraseOrSeed = preferenceInventory.hasRecoveryPhraseOrSeed,
+        )
         if (!database.existsNoFollow()) {
-            val retainedBackupEvidence = context.noBackupFilesDir.listFiles()
+            // A missing database with retained keys is a reinstall-style state, not an error.
+            // Keys stay untouched; Room creates an empty current-schema database and the person
+            // can restore or adopt the retained wallets. Database sidecars without their
+            // database are set aside (renamed, never deleted) so a new database cannot replay a
+            // stale write-ahead log.
+            val setAside = setAsideOrphanedDatabaseSidecars(context, database)
+            val retainedBackup = context.noBackupFilesDir.listFiles()
                 ?.any { it.name.startsWith(BACKUP_PREFIX) }
-                ?: throw WalletUpgradeBackupException("BACKUP_NAMESPACE_INVALID")
-            val orphanedDatabaseSidecar = listOf(
-                File("${database.path}-wal"),
-                File("${database.path}-shm"),
-                File("${database.path}-journal"),
-            ).any { it.existsNoFollow() }
-            if (
-                retainedBackupEvidence ||
-                orphanedDatabaseSidecar ||
-                preferenceInventory.hasWalletMaterial ||
-                preferenceInventory.hasWrappedWalletKeyEvidence
-            ) {
-                throw WalletUpgradeBackupException("ORPHANED_WALLET_STORAGE")
-            }
+                ?: false
+            quarantine = computeQuarantine(
+                database = WalletDatabaseInventory(accounts = emptyList()),
+                preferences = preferenceInventory,
+            ).copy(
+                retainedBackupWithoutDatabase = retainedBackup,
+                setAsidePaths = setAside,
+                retainedWrappedKeyWithoutDatabase =
+                    preferenceInventory.hasWrappedWalletKeyEvidence,
+            )
             return
         }
         if (!database.isRegularFileNoFollow()) {
@@ -983,6 +1258,9 @@ object WalletUpgradeBackup {
         if (sourceVersion > CURRENT_DATABASE_VERSION) {
             throw WalletUpgradeBackupException("DATABASE_DOWNGRADE_UNSUPPORTED")
         }
+        recoveryFacts = recoveryFacts.copy(
+            databaseAtCurrentVersion = sourceVersion == CURRENT_DATABASE_VERSION,
+        )
         val databaseInventory = readWalletDatabaseInventory(database, sourceVersion)
         if (
             database.regularFileIdentityNoFollow(
@@ -994,76 +1272,32 @@ object WalletUpgradeBackup {
         val legacyWalletIds = databaseInventory.accounts
             .map(SoraAccountLocal::substrateAddress)
             .toSet()
-        recoverInterruptedBackup(
-            context, database, sourceVersion, databaseInventory,
-            preferenceInventory, legacyWalletIds,
-        )
+        quarantine = computeQuarantine(databaseInventory, preferenceInventory)
+        runCatching {
+            recoverInterruptedBackup(
+                context, database, sourceVersion, databaseInventory,
+                preferenceInventory, legacyWalletIds,
+            )
+        }.onFailure {
+            // An interrupted copy that cannot be proven redundant is evidence, not a blocker:
+            // rename it aside (same filesystem, never deleted) and continue.
+            setAsideInterruptedStaging(context)
+        }
         if (sourceVersion == CURRENT_DATABASE_VERSION) {
+            // No Room schema migration is pending. The checks below are cheap; the snapshot and
+            // pruning work is best effort and never blocks startup.
             val validation = runCatching {
                 validateWalletStorageCoherence(databaseInventory, preferenceInventory)
             }
-            if (validation.isSuccess) {
-                // Some production cohorts can already have Room's current schema before this
-                // release. They still need one verified immutable database/settings snapshot.
-                // Match on the authoritative legacy wallet inventory instead of the SQLite
-                // sidecar bytes so opening a WAL database cannot manufacture repeat backups.
-                val needsCurrentSchemaSnapshot =
-                    !hasVerifiedCurrentSchemaSnapshot(
-                        context = context,
-                        legacyWalletIds = legacyWalletIds,
-                        selectedWalletId = preferenceInventory.selectedWalletId,
-                    )
-                if (needsCurrentSchemaSnapshot) {
-                    publishVerifiedSnapshotBackup(
-                        context = context,
-                        database = database,
-                        sourceVersion = sourceVersion,
-                        databaseInventory = databaseInventory,
-                        preferenceInventory = preferenceInventory,
-                        legacyWalletIds = legacyWalletIds,
-                        availableBackupBytesOverride = availableBackupBytesOverride,
-                        beforeFinalSourceValidationForTest =
-                            beforeFinalSourceValidationForTest,
-                    )
-                } else {
-                    val currentSchemaSourceSnapshot = createSourceSnapshot(
-                        context = context,
-                        sources = knownWalletFiles(context, database)
-                            .filter { it.existsNoFollow() },
-                        legacyWalletIds = legacyWalletIds,
-                        selectedWalletId = preferenceInventory.selectedWalletId,
-                    )
-                    beforeFinalSourceValidationForTest?.invoke()
-                    requireInstalledSourceUnchanged(
-                        context = context,
-                        database = database,
-                        sourceVersion = sourceVersion,
-                        databaseInventory = databaseInventory,
-                        preferenceInventory = preferenceInventory,
-                        legacyWalletIds = legacyWalletIds,
-                        sourceSnapshot = currentSchemaSourceSnapshot,
-                    )
-                }
-                return
-            }
             val failure = validation.exceptionOrNull()
-                ?: throw WalletUpgradeBackupException("IO")
             if (
+                failure != null &&
                 (failure as? WalletUpgradeBackupException)?.code !=
                 "WALLET_MIGRATION_RECOVERY_REQUIRED"
             ) {
                 throw failure
             }
-
-            // A previous process may already have completed Room's schema step while the
-            // copy-on-write wallet namespace is still pending or interrupted. Back up that
-            // current-schema database and encrypted settings before any application migration can
-            // activate it. Only the exact pristine migration output may continue automatically.
-            requireLegacyRecoveryPreferenceCoherence(
-                database = databaseInventory,
-                preferences = preferenceInventory,
-            )
-            publishVerifiedSnapshotBackup(
+            maintainBackupsBestEffort(
                 context = context,
                 database = database,
                 sourceVersion = sourceVersion,
@@ -1073,67 +1307,288 @@ object WalletUpgradeBackup {
                 availableBackupBytesOverride = availableBackupBytesOverride,
                 beforeFinalSourceValidationForTest = beforeFinalSourceValidationForTest,
             )
-            if (isPristineCurrentSchemaNamespace(databaseInventory)) return
-            throw failure
+            if (failure != null) throw failure
+            resetAutomaticMigrationRetries(context)
+            return
         }
 
+        // Room will migrate this database. Keep the authors' rule: never without a verified
+        // pre-migration backup. When storage is too low for a full copy, a keys-only backup of
+        // the encrypted preferences and wrapped key (the database holds no secrets) is made.
         validateWalletStorageCoherence(databaseInventory, preferenceInventory)
-        publishVerifiedSnapshotBackup(
-            context = context,
-            database = database,
+        withPublicationLock(
+            directory = context.noBackupFilesDir,
+            lockName = BACKUP_PUBLICATION_LOCK,
+            failureCode = "BACKUP_PUBLICATION_LOCK_FAILED",
+        ) {
+            val inventory = pruneBackupsUnderLock(cheapBackupInventoryUnderLock(context))
+            publishVerifiedSnapshotBackupUnderLock(
+                context = context,
+                database = database,
+                sourceVersion = sourceVersion,
+                databaseInventory = databaseInventory,
+                preferenceInventory = preferenceInventory,
+                legacyWalletIds = legacyWalletIds,
+                availableBackupBytesOverride = availableBackupBytesOverride,
+                beforeFinalSourceValidationForTest = beforeFinalSourceValidationForTest,
+                inventory = inventory,
+            )
+        }
+    }
+
+    /**
+     * Current schema: keep at least one verified current-schema snapshot and prune old snapshots.
+     * Every step is optional; a failure is recorded as a warning and never blocks startup.
+     */
+    private fun maintainBackupsBestEffort(
+        context: Context,
+        database: File,
+        sourceVersion: Int,
+        databaseInventory: WalletDatabaseInventory,
+        preferenceInventory: WalletPreferenceInventory,
+        legacyWalletIds: Set<String>,
+        availableBackupBytesOverride: Long?,
+        beforeFinalSourceValidationForTest: (() -> Unit)?,
+    ) {
+        val hasWalletState = legacyWalletIds.isNotEmpty() || preferenceInventory.hasWalletMaterial
+        runCatching {
+            withPublicationLock(
+                directory = context.noBackupFilesDir,
+                lockName = BACKUP_PUBLICATION_LOCK,
+                failureCode = "BACKUP_PUBLICATION_LOCK_FAILED",
+            ) {
+                val inventory = pruneBackupsUnderLock(cheapBackupInventoryUnderLock(context))
+                if (
+                    hasWalletState &&
+                    inventory.none { it.targetVersion == CURRENT_DATABASE_VERSION }
+                ) {
+                    publishVerifiedSnapshotBackupUnderLock(
+                        context = context,
+                        database = database,
+                        sourceVersion = sourceVersion,
+                        databaseInventory = databaseInventory,
+                        preferenceInventory = preferenceInventory,
+                        legacyWalletIds = legacyWalletIds,
+                        availableBackupBytesOverride = availableBackupBytesOverride,
+                        beforeFinalSourceValidationForTest = beforeFinalSourceValidationForTest,
+                        inventory = inventory,
+                    )
+                }
+            }
+        }.onFailure { error ->
+            nonBlockingWarnings = nonBlockingWarnings + error.safeCode()
+        }
+    }
+
+    /** Renames `app.db-wal`, `-shm` and `-journal` aside when `app.db` itself is missing. */
+    private fun setAsideOrphanedDatabaseSidecars(
+        context: Context,
+        database: File,
+    ): List<String> {
+        val sidecars = listOf(
+            File("${database.path}-wal"),
+            File("${database.path}-shm"),
+            File("${database.path}-journal"),
+        ).filter { it.existsNoFollow() }
+        if (sidecars.isEmpty()) return emptyList()
+        val destination = uniqueSiblingName(
+            parent = context.noBackupFilesDir,
+            baseName = "$STORAGE_QUARANTINE_PREFIX${System.currentTimeMillis()}",
+        )
+        createDirectoryExclusive(destination, "DATABASE_SIDECAR_QUARANTINE_FAILED")
+        return sidecars.map { sidecar ->
+            val target = File(destination, sidecar.name)
+            try {
+                Os.rename(sidecar.absolutePath, target.absolutePath)
+            } catch (_: Exception) {
+                throw WalletUpgradeBackupException("DATABASE_SIDECAR_QUARANTINE_FAILED")
+            }
+            target.absolutePath
+        }.also {
+            fsyncDirectory(destination)
+            runCatching { fsyncDirectory(requireNotNull(database.parentFile)) }
+            fsyncDirectory(context.noBackupFilesDir)
+        }
+    }
+
+    /** Renames every interrupted staging directory aside. Its bytes are kept for support. */
+    private fun setAsideInterruptedStaging(context: Context) {
+        runCatching {
+            withPublicationLock(
+                directory = context.noBackupFilesDir,
+                lockName = BACKUP_PUBLICATION_LOCK,
+                failureCode = "BACKUP_PUBLICATION_LOCK_FAILED",
+            ) {
+                context.noBackupFilesDir.listFiles().orEmpty()
+                    .filter { it.name.startsWith(BACKUP_PREFIX) && it.name.endsWith(".staging") }
+                    .forEach { setAsideBackupEntryUnderLock(context, it) }
+            }
+        }.onFailure { error ->
+            nonBlockingWarnings = nonBlockingWarnings + error.safeCode()
+        }
+    }
+
+    private fun setAsideBackupEntryUnderLock(context: Context, entry: File): String {
+        val target = uniqueSiblingName(
+            parent = context.noBackupFilesDir,
+            baseName = "$BACKUP_QUARANTINE_PREFIX${System.currentTimeMillis()}-${entry.name}",
+        )
+        try {
+            Os.rename(entry.absolutePath, target.absolutePath)
+        } catch (_: Exception) {
+            throw WalletUpgradeBackupException("BACKUP_QUARANTINE_FAILED")
+        }
+        fsyncDirectory(context.noBackupFilesDir)
+        quarantine = quarantine.copy(setAsidePaths = quarantine.setAsidePaths + target.absolutePath)
+        return target.absolutePath
+    }
+
+    /**
+     * Cheap startup inventory: directory type, completion marker, manifest shape and name only.
+     * No hashing, copying or SQLite. An entry that fails is renamed aside (never deleted), so an
+     * invalid or foreign backup can no longer block startup.
+     */
+    private fun cheapBackupInventoryUnderLock(context: Context): List<BackupInventoryEntry> {
+        val entries = context.noBackupFilesDir.listFiles()
+            ?.filter { it.name.startsWith(BACKUP_PREFIX) && !it.name.endsWith(".staging") }
+            ?.sortedBy(File::getName)
+            ?: throw WalletUpgradeBackupException("BACKUP_NAMESPACE_INVALID")
+        val valid = mutableListOf<BackupInventoryEntry>()
+        entries.forEach { entry ->
+            val inspected = runCatching { inspectBackupCheaply(entry) }.getOrNull()
+            if (inspected == null) {
+                runCatching { setAsideBackupEntryUnderLock(context, entry) }
+                    .onFailure { error ->
+                        nonBlockingWarnings = nonBlockingWarnings + error.safeCode()
+                    }
+            } else {
+                valid += inspected
+            }
+        }
+        return valid
+    }
+
+    private fun inspectBackupCheaply(directory: File): BackupInventoryEntry {
+        if (!directory.isDirectoryNoFollow()) {
+            throw WalletUpgradeBackupException("BACKUP_NAMESPACE_INVALID")
+        }
+        val completion = File(directory, ".complete").readBoundedUtf8NoFollow(
+            minimumBytes = 1,
+            maximumBytes = 32,
+            failureCode = "BACKUP_NAMESPACE_INVALID",
+        )
+        if (completion != "verified") {
+            throw WalletUpgradeBackupException("BACKUP_NAMESPACE_INVALID")
+        }
+        val manifest = JSONObject(
+            File(directory, "manifest.json").readBoundedUtf8NoFollow(
+                minimumBytes = 1,
+                maximumBytes = MAX_MANIFEST_BYTES,
+                failureCode = "BACKUP_NAMESPACE_INVALID",
+            )
+        )
+        val generation = manifest.getLong("backupGeneration")
+        val sourceVersion = manifest.getInt("sourceDatabaseVersion")
+        val targetVersion = manifest.getInt("targetDatabaseVersion")
+        val fingerprint = manifest.getString("sourceFingerprint")
+        val kind = manifest.optString("kind", BACKUP_KIND_FULL)
+        if (
+            manifest.getInt("formatVersion") != BACKUP_FORMAT_VERSION ||
+            generation <= 0L ||
+            targetVersion !in
+            OLDEST_RECOVERABLE_BACKUP_TARGET_VERSION..CURRENT_DATABASE_VERSION ||
+            sourceVersion !in 1..targetVersion ||
+            !SHA256.matches(fingerprint) ||
+            kind !in setOf(BACKUP_KIND_FULL, BACKUP_KIND_KEYS_ONLY) ||
+            directory.name != backupDirectoryName(
+                sourceVersion = sourceVersion,
+                targetVersion = targetVersion,
+                generation = generation,
+                fingerprint = fingerprint,
+            )
+        ) {
+            throw WalletUpgradeBackupException("BACKUP_NAMESPACE_INVALID")
+        }
+        return BackupInventoryEntry(
+            directory = directory,
+            generation = generation,
             sourceVersion = sourceVersion,
-            databaseInventory = databaseInventory,
-            preferenceInventory = preferenceInventory,
-            legacyWalletIds = legacyWalletIds,
-            availableBackupBytesOverride = availableBackupBytesOverride,
-            beforeFinalSourceValidationForTest = beforeFinalSourceValidationForTest,
+            targetVersion = targetVersion,
+            kind = kind,
         )
     }
 
-    private fun hasVerifiedCurrentSchemaSnapshot(
-        context: Context,
-        legacyWalletIds: Set<String>,
-        selectedWalletId: String?,
-    ): Boolean {
-        val expectedWalletIdsHash = sha256Text(
-            legacyWalletIds.sorted().joinToString(separator = "\n")
+    /**
+     * Keeps the newest [MAX_KEPT_VERIFIED_BACKUPS] backups and every backup taken before a schema
+     * migration (source older than the current schema). Older current-schema snapshots are copies
+     * of an already migrated wallet whose live files remain authoritative; they are removed only
+     * through the exact-tree checks used for owned staging cleanup. Best effort.
+     */
+    private fun pruneBackupsUnderLock(
+        inventory: List<BackupInventoryEntry>,
+    ): List<BackupInventoryEntry> {
+        if (inventory.size <= MAX_KEPT_VERIFIED_BACKUPS) return inventory
+        val newestFirst = inventory.sortedWith(
+            compareByDescending<BackupInventoryEntry> { it.generation }
+                .thenByDescending { it.directory.name }
         )
-        val expectedSelectionHash = selectedWalletId?.let(::sha256Text)
-        val candidates = runCatching {
-            verifiedBackupNamespace(
-                context = context,
-                stagingFailureCode = "BACKUP_NAMESPACE_INVALID",
-                invalidFailureCode = "BACKUP_NAMESPACE_INVALID",
-            )
-        }.getOrNull() ?: return false
-        return candidates.any { candidate ->
-                runCatching {
-                    val manifest = JSONObject(
-                        File(candidate.directory, "manifest.json")
-                            .readBoundedUtf8NoFollow(
-                                minimumBytes = 1,
-                                maximumBytes = MAX_MANIFEST_BYTES,
-                                failureCode = "BACKUP_NAMESPACE_INVALID",
-                            )
-                    )
-                    manifest.getInt("sourceDatabaseVersion") ==
-                        CURRENT_DATABASE_VERSION &&
-                        manifest.getInt("targetDatabaseVersion") ==
-                        CURRENT_DATABASE_VERSION &&
-                        manifest.getInt("legacyAccountCount") ==
-                        legacyWalletIds.size &&
-                        manifest.getString("legacyWalletIdsSha256") ==
-                        expectedWalletIdsHash &&
-                        (
-                            if (expectedSelectionHash == null) {
-                                manifest.isNull("selectedWalletIdSha256")
-                            } else {
-                                manifest.getString("selectedWalletIdSha256") ==
-                                    expectedSelectionHash
-                            }
-                            )
-                }.getOrDefault(false)
+        val kept = newestFirst.take(MAX_KEPT_VERIFIED_BACKUPS).toMutableList()
+        newestFirst.drop(MAX_KEPT_VERIFIED_BACKUPS).forEach { candidate ->
+            val removable = candidate.sourceVersion == CURRENT_DATABASE_VERSION &&
+                candidate.targetVersion == CURRENT_DATABASE_VERSION
+            val removed = removable && runCatching {
+                val tree = captureExactBackupTree(candidate.directory)
+                removeExactOwnedBackupTree(candidate.directory, tree)
+                fsyncDirectory(requireNotNull(candidate.directory.parentFile))
+            }.isSuccess
+            if (!removed) kept += candidate
+        }
+        return kept
+    }
+
+    private fun automaticRetryStateFile(context: Context): File =
+        File(context.noBackupFilesDir, AUTO_RETRY_STATE_FILE)
+
+    /**
+     * Claims one automatic verification retry. A user-requested retry always proceeds. Automatic
+     * retries stop after [MAX_AUTOMATIC_MIGRATION_RETRIES] consecutive attempts, after which the
+     * recovery options are shown; the count resets once the wallet verifies.
+     */
+    private fun claimMigrationRetry(context: Context, userInitiated: Boolean): Boolean {
+        if (userInitiated) return true
+        val file = automaticRetryStateFile(context)
+        val used = if (file.existsNoFollow()) {
+            runCatching {
+                file.readBoundedUtf8NoFollow(1, 16, "AUTO_RETRY_STATE_INVALID").trim().toInt()
+            }.getOrDefault(MAX_AUTOMATIC_MIGRATION_RETRIES)
+        } else {
+            0
+        }
+        if (used >= MAX_AUTOMATIC_MIGRATION_RETRIES) return false
+        return runCatching {
+            val staging = File(context.noBackupFilesDir, ".$AUTO_RETRY_STATE_FILE.tmp")
+            if (staging.existsNoFollow()) Os.remove(staging.absolutePath)
+            writeDurably(staging, (used + 1).toString())
+            Os.rename(staging.absolutePath, file.absolutePath)
+            fsyncDirectory(context.noBackupFilesDir)
+        }.isSuccess
+    }
+
+    private fun resetAutomaticMigrationRetries(context: Context) {
+        val file = automaticRetryStateFile(context)
+        if (file.existsNoFollow()) {
+            runCatching {
+                Os.remove(file.absolutePath)
+                fsyncDirectory(context.noBackupFilesDir)
             }
+        }
+    }
+
+    /** Number of automatic verification retries used since the wallet last verified. */
+    internal fun automaticMigrationRetriesUsedForTest(context: Context): Int {
+        val file = automaticRetryStateFile(context.applicationContext ?: context)
+        if (!file.existsNoFollow()) return 0
+        return file.readBoundedUtf8NoFollow(1, 16, "AUTO_RETRY_STATE_INVALID").trim().toInt()
     }
 
     private fun verifiedBackupNamespace(
@@ -1165,14 +1620,10 @@ object WalletUpgradeBackup {
                     ),
             )
         }
-        val generations = candidates
-            .map(VerifiedBackupCandidate::generation)
-            .sorted()
-        if (
-            generations.withIndex().any { (index, generation) ->
-                generation != index.toLong() + 1L
-            }
-        ) {
+        // Generations must be unique. Gaps are expected once invalid backups are set aside or old
+        // current-schema snapshots are pruned.
+        val generations = candidates.map(VerifiedBackupCandidate::generation)
+        if (generations.toSet().size != generations.size) {
             throw WalletUpgradeBackupException(invalidFailureCode)
         }
         return candidates
@@ -1212,15 +1663,15 @@ object WalletUpgradeBackup {
             val destination = File(staging.parentFile, staging.name.removeSuffix(".staging"))
             val generation = backupGenerationFromValidatedName(destination.name)
                 ?: throw WalletUpgradeBackupException("STALE_STAGING")
-            if (generation !in 1L..MAX_PUBLISHED_BACKUPS.toLong() ||
+            if (generation < 1L ||
                 destination.name != backupDirectoryName(
                     sourceVersion, CURRENT_DATABASE_VERSION, generation, source.fingerprint,
-                ) || namespace.size > MAX_PUBLISHED_BACKUPS + 1
+                )
             ) throw WalletUpgradeBackupException("STALE_STAGING")
             val previous = namespace.filter { it != staging && it != destination }
-            if (previous.any { !isCompleteAndValid(context, it) } ||
-                previous.map { backupGenerationFromValidatedName(it.name) }.sortedBy { it }
-                    != (1L until generation).toList()
+            val previousGenerations = previous.map { backupGenerationFromValidatedName(it.name) }
+            if (previousGenerations.any { it == null || it >= generation } ||
+                previousGenerations.toSet().size != previousGenerations.size
             ) throw WalletUpgradeBackupException("STALE_STAGING")
 
             val manifest = backupManifest(source, sourceVersion, generation).toByteArray(Charsets.UTF_8)
@@ -1304,6 +1755,7 @@ object WalletUpgradeBackup {
         source: BackupSourceSnapshot,
         sourceVersion: Int,
         generation: Long,
+        keysOnlyAccounts: List<SoraAccountLocal>? = null,
     ): String = JSONObject()
         .put("formatVersion", BACKUP_FORMAT_VERSION)
         .put("backupGeneration", generation)
@@ -1318,36 +1770,23 @@ object WalletUpgradeBackup {
                 put(JSONObject().put("name", it.name).put("size", it.size).put("sha256", it.sha256))
             }
         })
-        .toString()
-
-    private fun publishVerifiedSnapshotBackup(
-        context: Context,
-        database: File,
-        sourceVersion: Int,
-        databaseInventory: WalletDatabaseInventory,
-        preferenceInventory: WalletPreferenceInventory,
-        legacyWalletIds: Set<String>,
-        availableBackupBytesOverride: Long?,
-        beforeFinalSourceValidationForTest: (() -> Unit)?,
-    ) {
-        withPublicationLock(
-            directory = context.noBackupFilesDir,
-            lockName = BACKUP_PUBLICATION_LOCK,
-            failureCode = "BACKUP_PUBLICATION_LOCK_FAILED",
-        ) {
-            publishVerifiedSnapshotBackupUnderLock(
-                context = context,
-                database = database,
-                sourceVersion = sourceVersion,
-                databaseInventory = databaseInventory,
-                preferenceInventory = preferenceInventory,
-                legacyWalletIds = legacyWalletIds,
-                availableBackupBytesOverride = availableBackupBytesOverride,
-                beforeFinalSourceValidationForTest =
-                    beforeFinalSourceValidationForTest,
-            )
+        .apply {
+            // A keys-only backup carries the account list (addresses and names only; the
+            // database never holds secrets) so the account rows can be rebuilt if needed.
+            if (keysOnlyAccounts != null) {
+                put("kind", BACKUP_KIND_KEYS_ONLY)
+                put("accounts", JSONArray().apply {
+                    keysOnlyAccounts.sortedBy(SoraAccountLocal::substrateAddress).forEach {
+                        put(
+                            JSONObject()
+                                .put("address", it.substrateAddress)
+                                .put("name", it.accountName)
+                        )
+                    }
+                })
+            }
         }
-    }
+        .toString()
 
     private fun publishVerifiedSnapshotBackupUnderLock(
         context: Context,
@@ -1358,6 +1797,7 @@ object WalletUpgradeBackup {
         legacyWalletIds: Set<String>,
         availableBackupBytesOverride: Long?,
         beforeFinalSourceValidationForTest: (() -> Unit)?,
+        inventory: List<BackupInventoryEntry>,
     ) {
         val sources = knownWalletFiles(context, database)
             .filter { it.existsNoFollow() }
@@ -1370,9 +1810,16 @@ object WalletUpgradeBackup {
         ) {
             throw WalletUpgradeBackupException("DATABASE_MISSING")
         }
-        val sourceSnapshot = createSourceSnapshot(
+        val keySources = sources.filterNot { it.isDatabaseFile(database) }
+        val fullSnapshot = createSourceSnapshot(
             context = context,
             sources = sources,
+            legacyWalletIds = legacyWalletIds,
+            selectedWalletId = preferenceInventory.selectedWalletId,
+        )
+        val keysSnapshot = createSourceSnapshot(
+            context = context,
+            sources = keySources,
             legacyWalletIds = legacyWalletIds,
             selectedWalletId = preferenceInventory.selectedWalletId,
         )
@@ -1382,21 +1829,18 @@ object WalletUpgradeBackup {
         ) {
             throw WalletUpgradeBackupException("SOURCE_CHANGED")
         }
-        val backupParent = context.noBackupFilesDir
-        val existingBackups = verifiedBackupNamespace(
-            context = context,
-            stagingFailureCode = "STALE_STAGING",
-            invalidFailureCode = "EXISTING_BACKUP_INVALID",
-        )
-        if (
-            existingBackups.any {
-                matchesSourceSnapshot(
-                    directory = it.directory,
-                    snapshot = sourceSnapshot,
-                    sourceVersion = sourceVersion,
-                )
+        // Reuse an existing backup of exactly this source only after it is deeply verified.
+        val reusable = inventory.firstNotNullOfOrNull { entry ->
+            val snapshot = when {
+                matchesSourceSnapshot(entry.directory, fullSnapshot, sourceVersion) ->
+                    fullSnapshot
+                matchesSourceSnapshot(entry.directory, keysSnapshot, sourceVersion) ->
+                    keysSnapshot
+                else -> null
             }
-        ) {
+            snapshot?.takeIf { isCompleteAndValid(context, entry.directory) }
+        }
+        if (reusable != null) {
             beforeFinalSourceValidationForTest?.invoke()
             requireInstalledSourceUnchanged(
                 context = context,
@@ -1405,25 +1849,46 @@ object WalletUpgradeBackup {
                 databaseInventory = databaseInventory,
                 preferenceInventory = preferenceInventory,
                 legacyWalletIds = legacyWalletIds,
-                sourceSnapshot = sourceSnapshot,
+                sourceSnapshot = reusable,
+                keysOnly = reusable === keysSnapshot,
             )
             return
         }
-        if (existingBackups.size >= MAX_PUBLISHED_BACKUPS) {
-            throw WalletUpgradeBackupException("BACKUP_RETENTION_LIMIT")
-        }
         val backupGeneration = try {
-            Math.addExact(
-                existingBackups.maxOfOrNull(
-                    VerifiedBackupCandidate::generation
-                ) ?: 0L,
-                1L,
-            )
+            Math.addExact(inventory.maxOfOrNull(BackupInventoryEntry::generation) ?: 0L, 1L)
         } catch (_: ArithmeticException) {
             throw WalletUpgradeBackupException("BACKUP_GENERATION_EXHAUSTED")
         }
+        val available = availableBackupBytesOverride ?: runCatching {
+            StatFs(context.noBackupFilesDir.absolutePath).availableBytes
+        }.getOrElse {
+            throw WalletUpgradeBackupException("STORAGE_CAPACITY_UNAVAILABLE")
+        }
+        val fullRequired = requiredBackupBytes(
+            sources = sources,
+            headroom = MINIMUM_FREE_SPACE_HEADROOM,
+            extra = 0L,
+        )
+        val keysOnly = available < fullRequired
+        if (keysOnly) {
+            val databaseBytes = sources.filter { it.isDatabaseFile(database) }
+                .fold(0L) { total, file -> saturatingAdd(total, file.length()) }
+            val keysRequired = requiredBackupBytes(
+                sources = keySources,
+                headroom = KEYS_ONLY_MINIMUM_HEADROOM,
+                extra = saturatingMultiply(databaseBytes, BACKUP_SPACE_MULTIPLIER),
+            )
+            if (keySources.isEmpty() || available < keysRequired) {
+                throw WalletUpgradeBackupException(
+                    code = "INSUFFICIENT_BACKUP_STORAGE",
+                    requiredBytes = if (keySources.isEmpty()) fullRequired else keysRequired,
+                    availableBytes = available,
+                )
+            }
+        }
+        val sourceSnapshot = if (keysOnly) keysSnapshot else fullSnapshot
         val destination = File(
-            backupParent,
+            context.noBackupFilesDir,
             backupDirectoryName(
                 sourceVersion = sourceVersion,
                 targetVersion = CURRENT_DATABASE_VERSION,
@@ -1434,11 +1899,6 @@ object WalletUpgradeBackup {
         if (destination.existsNoFollow()) {
             throw WalletUpgradeBackupException("EXISTING_BACKUP_INVALID")
         }
-        requireBackupCapacity(
-            directory = context.noBackupFilesDir,
-            sources = sources,
-            availableBytesOverride = availableBackupBytesOverride,
-        )
 
         val staging = File(destination.parentFile, "${destination.name}.staging")
         if (staging.existsNoFollow()) {
@@ -1449,77 +1909,111 @@ object WalletUpgradeBackup {
             failureCode = "CREATE_STAGING",
         )
 
-        try {
-            sourceSnapshot.files.forEach { sourceRecord ->
-                val source = sourceRecord.source
-                val destinationFile = File(staging, sourceRecord.name)
-                val parent = requireNotNull(destinationFile.parentFile)
-                ensureDirectoryTreeExclusive(
-                    root = staging,
-                    directory = parent,
-                    failureCode = "CREATE_BACKUP_DIRECTORY",
-                )
-                copyDurably(source, destinationFile)
-                if (
-                    !source.isRegularFileNoFollow() ||
-                    !destinationFile.isRegularFileNoFollow() ||
-                    source.length() != sourceRecord.size ||
-                    sourceRecord.size != destinationFile.length()
-                ) {
-                    throw WalletUpgradeBackupException("SIZE_MISMATCH")
-                }
-                val sourceHashAfterCopy = source.sha256(
+        sourceSnapshot.files.forEach { sourceRecord ->
+            val source = sourceRecord.source
+            val destinationFile = File(staging, sourceRecord.name)
+            val parent = requireNotNull(destinationFile.parentFile)
+            ensureDirectoryTreeExclusive(
+                root = staging,
+                directory = parent,
+                failureCode = "CREATE_BACKUP_DIRECTORY",
+            )
+            copyDurably(source, destinationFile)
+            if (
+                !source.isRegularFileNoFollow() ||
+                !destinationFile.isRegularFileNoFollow() ||
+                source.length() != sourceRecord.size ||
+                sourceRecord.size != destinationFile.length()
+            ) {
+                throw WalletUpgradeBackupException("SIZE_MISMATCH")
+            }
+            val sourceHashAfterCopy = source.sha256(
+                expectedSize = sourceRecord.size
+            )
+            if (
+                sourceHashAfterCopy != sourceRecord.sha256 ||
+                sourceRecord.sha256 != destinationFile.sha256(
                     expectedSize = sourceRecord.size
                 )
-                if (
-                    sourceHashAfterCopy != sourceRecord.sha256 ||
-                    sourceRecord.sha256 != destinationFile.sha256(
-                        expectedSize = sourceRecord.size
-                    )
-                ) {
-                    throw WalletUpgradeBackupException("HASH_MISMATCH")
-                }
+            ) {
+                throw WalletUpgradeBackupException("HASH_MISMATCH")
             }
-            sourceSnapshot.files.forEach { sourceRecord ->
-                if (
-                    !sourceRecord.source.isRegularFileNoFollow() ||
-                    sourceRecord.source.length() != sourceRecord.size ||
-                    sourceRecord.source.sha256(
-                        expectedSize = sourceRecord.size
-                    ) != sourceRecord.sha256
-                ) {
-                    throw WalletUpgradeBackupException("SOURCE_CHANGED")
-                }
-            }
-
-            writeDurably(
-                File(staging, "manifest.json"),
-                backupManifest(sourceSnapshot, sourceVersion, backupGeneration),
-            )
-            writeDurably(File(staging, ".complete"), "verified")
-            publishVerifiedBackupTreeNoReplace(
-                context = context,
-                staging = staging,
-                destination = destination,
-                sourceSnapshot = sourceSnapshot,
-                sourceVersion = sourceVersion,
-            )
-            beforeFinalSourceValidationForTest?.invoke()
-            requireInstalledSourceUnchanged(
-                context = context,
-                database = database,
-                sourceVersion = sourceVersion,
-                databaseInventory = databaseInventory,
-                preferenceInventory = preferenceInventory,
-                legacyWalletIds = legacyWalletIds,
-                sourceSnapshot = sourceSnapshot,
-            )
-        } catch (error: Throwable) {
-            // Preserve partial output as evidence/recovery material. Startup remains fail-closed
-            // until it is inspected or exported by an explicit recovery flow.
-            throw error
         }
+        sourceSnapshot.files.forEach { sourceRecord ->
+            if (
+                !sourceRecord.source.isRegularFileNoFollow() ||
+                sourceRecord.source.length() != sourceRecord.size ||
+                sourceRecord.source.sha256(
+                    expectedSize = sourceRecord.size
+                ) != sourceRecord.sha256
+            ) {
+                throw WalletUpgradeBackupException("SOURCE_CHANGED")
+            }
+        }
+
+        val manifestText = backupManifest(
+            source = sourceSnapshot,
+            sourceVersion = sourceVersion,
+            generation = backupGeneration,
+            keysOnlyAccounts = if (keysOnly) databaseInventory.accounts else null,
+        )
+        if (manifestText.toByteArray(Charsets.UTF_8).size > MAX_MANIFEST_BYTES) {
+            throw WalletUpgradeBackupException("BACKUP_MANIFEST_TOO_LARGE")
+        }
+        writeDurably(File(staging, "manifest.json"), manifestText)
+        writeDurably(File(staging, ".complete"), "verified")
+        publishVerifiedBackupTreeNoReplace(
+            context = context,
+            staging = staging,
+            destination = destination,
+            sourceSnapshot = sourceSnapshot,
+            sourceVersion = sourceVersion,
+            requireDatabase = !keysOnly,
+        )
+        if (keysOnly) {
+            nonBlockingWarnings = nonBlockingWarnings + "KEYS_ONLY_BACKUP"
+        }
+        beforeFinalSourceValidationForTest?.invoke()
+        requireInstalledSourceUnchanged(
+            context = context,
+            database = database,
+            sourceVersion = sourceVersion,
+            databaseInventory = databaseInventory,
+            preferenceInventory = preferenceInventory,
+            legacyWalletIds = legacyWalletIds,
+            sourceSnapshot = sourceSnapshot,
+            keysOnly = keysOnly,
+        )
     }
+
+    private fun File.isDatabaseFile(database: File): Boolean {
+        val path = absoluteFile.toPath().normalize()
+        return listOf(
+            database,
+            File("${database.path}-wal"),
+            File("${database.path}-shm"),
+            File("${database.path}-journal"),
+        ).any { it.absoluteFile.toPath().normalize() == path }
+    }
+
+    private fun requiredBackupBytes(sources: List<File>, headroom: Long, extra: Long): Long =
+        sources.fold(saturatingAdd(headroom, extra)) { total, source ->
+            saturatingAdd(total, saturatingMultiply(source.length(), BACKUP_SPACE_MULTIPLIER))
+        }
+
+    private fun saturatingAdd(left: Long, right: Long): Long =
+        try {
+            Math.addExact(left, right)
+        } catch (_: ArithmeticException) {
+            Long.MAX_VALUE
+        }
+
+    private fun saturatingMultiply(left: Long, right: Long): Long =
+        try {
+            Math.multiplyExact(left, right)
+        } catch (_: ArithmeticException) {
+            Long.MAX_VALUE
+        }
 
     private fun publishVerifiedBackupTreeNoReplace(
         context: Context,
@@ -1527,6 +2021,7 @@ object WalletUpgradeBackup {
         destination: File,
         sourceSnapshot: BackupSourceSnapshot,
         sourceVersion: Int,
+        requireDatabase: Boolean,
     ) {
         fsyncDirectoryTreeBottomUp(staging)
         val stagedTree = captureExactBackupTree(staging)
@@ -1538,7 +2033,7 @@ object WalletUpgradeBackup {
         )
         val stagedNames = stagedTree.files.map(BackupTreeFile::relativeName).toSet()
         if (
-            REQUIRED_DATABASE_BACKUP !in stagedNames ||
+            (REQUIRED_DATABASE_BACKUP in stagedNames) != requireDatabase ||
             "manifest.json" !in stagedNames ||
             ".complete" !in stagedNames
         ) {
@@ -1685,13 +2180,16 @@ object WalletUpgradeBackup {
         preferenceInventory: WalletPreferenceInventory,
         legacyWalletIds: Set<String>,
         sourceSnapshot: BackupSourceSnapshot,
+        keysOnly: Boolean = false,
     ) {
+        fun currentSources(): List<File> = knownWalletFiles(context, database)
+            .filter { it.existsNoFollow() }
+            .filter { !keysOnly || !it.isDatabaseFile(database) }
         val inventoryBefore = readWalletDatabaseInventory(database, sourceVersion)
         val preferencesBefore = walletPreferenceInventory(context)
         val snapshotBefore = createSourceSnapshot(
             context = context,
-            sources = knownWalletFiles(context, database)
-                .filter { it.existsNoFollow() },
+            sources = currentSources(),
             legacyWalletIds = legacyWalletIds,
             selectedWalletId = preferenceInventory.selectedWalletId,
         )
@@ -1699,8 +2197,7 @@ object WalletUpgradeBackup {
         val preferencesAfter = walletPreferenceInventory(context)
         val snapshotAfter = createSourceSnapshot(
             context = context,
-            sources = knownWalletFiles(context, database)
-                .filter { it.existsNoFollow() },
+            sources = currentSources(),
             legacyWalletIds = legacyWalletIds,
             selectedWalletId = preferenceInventory.selectedWalletId,
         )
@@ -3053,6 +3550,7 @@ object WalletUpgradeBackup {
         sqlite: SQLiteDatabase,
         sourceVersion: Int,
     ): WalletDatabaseInventory {
+        var blankRows = 0
         return sqlite.let { database ->
             if (!database.tableExists("accounts")) {
                 // Multi-account storage did not exist in these release schemas. Keys remain
@@ -3070,6 +3568,7 @@ object WalletUpgradeBackup {
                 """.trimIndent(),
                 null,
             ).use { cursor ->
+                var ignoredRows = 0
                 buildList {
                     val ids = mutableSetOf<String>()
                     while (cursor.moveToNext()) {
@@ -3078,9 +3577,10 @@ object WalletUpgradeBackup {
                             walletId.isNullOrBlank() ||
                             walletId.length > MAX_WALLET_ID_LENGTH
                         ) {
-                            throw WalletUpgradeBackupException(
-                                "LEGACY_ACCOUNT_ID_INVALID"
-                            )
+                            // A blank row (written by a 2.x upgrade that could not derive an
+                            // address) cannot hold a wallet. It is ignored, never deleted.
+                            ignoredRows += 1
+                            continue
                         }
                         if (!ids.add(walletId)) {
                             throw WalletUpgradeBackupException(
@@ -3089,11 +3589,17 @@ object WalletUpgradeBackup {
                         }
                         add(SoraAccountLocal(walletId, cursor.getString(1)))
                     }
-                }
+                } to ignoredRows
+            }.let { (rows, ignored) ->
+                blankRows = ignored
+                rows
             }
 
             if (sourceVersion < CURRENT_DATABASE_VERSION) {
-                return@let WalletDatabaseInventory(accounts = accounts)
+                return@let WalletDatabaseInventory(
+                    accounts = accounts,
+                    blankAccountRows = blankRows,
+                )
             }
             val requiredTables = setOf(
                 "walletIdentities",
@@ -3278,6 +3784,7 @@ object WalletUpgradeBackup {
                 deletionOperations = operations,
                 deletionTargets = deletionTargets,
                 migrationJournals = migrationJournals,
+                blankAccountRows = blankRows,
             )
         }
     }
@@ -3318,7 +3825,9 @@ object WalletUpgradeBackup {
                     "WALLET_DELETION_JOURNAL_INVALID"
                 )
             }
-            requireStrictWalletCoherence(database, preferences)
+            // Key sets without an account row, a stale selection or a stale release-era owner
+            // are set aside by computeQuarantine(); per-account problems are classified by the
+            // wallet verification. None of them blocks startup.
             return
         }
 
@@ -3466,7 +3975,6 @@ object WalletUpgradeBackup {
 
         when (operation.phase) {
             WalletDeletionContract.PHASE_CONFIRMED -> {
-                requireStrictWalletCoherence(database, preferences)
                 if (preferences.fingerprint != operation.beforePreferencesHash) {
                     throw WalletUpgradeBackupException(
                         "WALLET_DELETION_PREFERENCES_MISMATCH"
@@ -3474,30 +3982,9 @@ object WalletUpgradeBackup {
                 }
             }
             WalletDeletionContract.PHASE_DATABASE_COMMITTED -> {
-                val orphanedScopedIds =
-                    preferences.scopedWalletIds - legacyWalletIds
-                if (
-                    orphanedScopedIds.any { it !in targets } ||
-                    (
-                        preferences.selectedWalletId != null &&
-                            preferences.selectedWalletId !in legacyWalletIds &&
-                            preferences.selectedWalletId !in targets
-                        ) ||
-                    (
-                        preferences.legacyPureAddress != null &&
-                            preferences.legacyPureAddress !in legacyWalletIds &&
-                            preferences.legacyPureAddress !in targets
-                        ) ||
-                    (
-                        legacyWalletIds.isEmpty() &&
-                            operation.scope != WalletDeletionContract.SCOPE_ALL &&
-                            preferences.hasWalletMaterial
-                        )
-                ) {
-                    throw WalletUpgradeBackupException(
-                        "ORPHANED_WALLET_STORAGE"
-                    )
-                }
+                // Unrelated key sets without an account row are unchanged bytes; they are set
+                // aside, never a reason to block. The exact preference fingerprint still binds the
+                // journal to the previewed state.
                 if (
                     preferences.fingerprint !in setOf(
                         operation.beforePreferencesHash,
@@ -3510,7 +3997,6 @@ object WalletUpgradeBackup {
                 }
             }
             WalletDeletionContract.PHASE_PREFERENCES_COMMITTED -> {
-                requireStrictWalletCoherence(database, preferences)
                 val targetKeys = targets.flatMap { walletId ->
                     WalletPreferenceKeys.scopedStringKeys(walletId) +
                         WalletPreferenceKeys.scopedBooleanKeys(walletId)
@@ -3525,11 +4011,7 @@ object WalletUpgradeBackup {
                         ) ||
                     preferences.fingerprint != operation.afterPreferencesHash ||
                     preferences.selectedWalletId.orEmpty() !=
-                    operation.selectedAfter ||
-                    (
-                        operation.scope == WalletDeletionContract.SCOPE_ALL &&
-                            preferences.allKeys.isNotEmpty()
-                        )
+                    operation.selectedAfter
                 ) {
                     throw WalletUpgradeBackupException(
                         "WALLET_DELETION_PREFERENCES_MISMATCH"
@@ -3550,12 +4032,10 @@ object WalletUpgradeBackup {
                 "WALLET_MIGRATION_JOURNAL_INVALID"
             )
         }
-        if (journal == null) {
-            if (database.identities.any { it.migrationState != "VERIFIED" }) {
-                throw WalletUpgradeBackupException(
-                    "WALLET_MIGRATION_RECOVERY_REQUIRED"
-                )
-            }
+        // Without account rows there is nothing to verify; the wallet verification clears a stale
+        // journal. Without a journal, identities that are not verified yet (for example the
+        // untouched output of the 73 -> 74 schema step) are verified by the next run.
+        if (journal == null || database.accounts.isEmpty()) {
             return
         }
         if (
@@ -3589,8 +4069,8 @@ object WalletUpgradeBackup {
         // A VERIFIED journal is the last fully verified wallet checkpoint, not a requirement that
         // the live wallet inventory remain immutable. Explicit post-migration account creation,
         // renaming, selection, and removal legitimately change the current count/hash/selection.
-        // requireStrictWalletCoherence() validates the live dual-read model below; MigrationManager
-        // then re-verifies every secret/model and advances the exact prior checkpoint by CAS.
+        // MigrationManager re-verifies every secret/model on each start, classifies problems per
+        // account and advances the exact prior checkpoint by CAS.
     }
 
     private fun inspectMigrationRecovery(context: Context): MigrationRecoverySnapshot {
@@ -3610,73 +4090,6 @@ object WalletUpgradeBackup {
         return validatedMigrationRecovery(inventory, preferencesAfter)
     }
 
-    private fun requireLegacyRecoveryPreferenceCoherence(
-        database: WalletDatabaseInventory,
-        preferences: WalletPreferenceInventory,
-    ) {
-        val legacyWalletIds = database.accounts
-            .map(SoraAccountLocal::substrateAddress)
-            .toSet()
-        val coveredWalletIds =
-            preferences.mnemonicWalletIds +
-                preferences.rawSeedWalletIds +
-                preferences.keyPairWalletIds +
-                preferences.watchOnlyWalletIds
-        if (
-            legacyWalletIds.isEmpty() ||
-            preferences.selectedWalletId == null ||
-            preferences.selectedWalletId !in legacyWalletIds ||
-            !coveredWalletIds.containsAll(legacyWalletIds) ||
-            preferences.scopedWalletIds.any { it !in legacyWalletIds } ||
-            (
-                preferences.legacyPureAddress != null &&
-                    preferences.legacyPureAddress !in legacyWalletIds
-                )
-        ) {
-            throw WalletUpgradeBackupException(
-                "MIGRATION_RECOVERY_SNAPSHOT_INVALID"
-            )
-        }
-    }
-
-    private fun isPristineCurrentSchemaNamespace(
-        database: WalletDatabaseInventory,
-    ): Boolean {
-        val accounts = database.accounts.associateBy(SoraAccountLocal::substrateAddress)
-        if (
-            database.migrationJournals.isNotEmpty() ||
-            database.pendingWalletIds.isNotEmpty() ||
-            database.deletionOperations.isNotEmpty() ||
-            database.deletionTargets.isNotEmpty() ||
-            database.identities.size != accounts.size ||
-            database.networkAccounts.size != accounts.size
-        ) {
-            return false
-        }
-        val identities = database.identities.associateBy(WalletIdentityLocal::walletId)
-        if (identities.keys != accounts.keys) return false
-        if (
-            identities.any { (walletId, identity) ->
-                identity.displayName != accounts.getValue(walletId).accountName ||
-                    identity.secretSource != "UNKNOWN" ||
-                    identity.migrationState != "PENDING_VERIFICATION" ||
-                    identity.derivationVersion != 1
-            }
-        ) {
-            return false
-        }
-        val networks = database.networkAccounts.associateBy(NetworkAccountLocal::walletId)
-        return networks.keys == accounts.keys &&
-            networks.values.all { account ->
-                account.networkId == "sora2" &&
-                    account.publicKey.isEmpty() &&
-                    account.address == account.walletId &&
-                    account.derivationPath.isEmpty() &&
-                    account.derivationVersion == 1 &&
-                    !account.enabled
-            }
-    }
-
     /**
      * Recovery deliberately validates only the immutable legacy authority plus the journal.
      * Partially written walletIdentities/networkAccounts are allowed because they are the
@@ -3691,11 +4104,6 @@ object WalletUpgradeBackup {
         val legacyWalletIds = database.accounts
             .map(SoraAccountLocal::substrateAddress)
             .toSet()
-        val coveredWalletIds =
-            preferences.mnemonicWalletIds +
-                preferences.rawSeedWalletIds +
-                preferences.keyPairWalletIds +
-                preferences.watchOnlyWalletIds
         val stateFieldsValid = when (journal.state) {
             "VERIFYING" ->
                 journal.failureCode == null &&
@@ -3705,21 +4113,17 @@ object WalletUpgradeBackup {
                     journal.completedAt != null
             else -> false
         }
+        // The recorded counts, selection and hash may be stale (an earlier build recorded some
+        // failures without a selection). A retry re-verifies everything from the account rows and
+        // encrypted preferences, so only the journal's own shape is required here. Key sets without
+        // an account row and rows without secrets are classified per account by the retry.
         if (
             journal.migrationId != WalletMigrationIds.NETWORK_ACCOUNTS_V1 ||
             !stateFieldsValid ||
-            journal.legacyAccountCount <= 0 ||
-            journal.legacyAccountCount != database.accounts.size ||
-            journal.verifiedAccountCount !in 0..journal.legacyAccountCount ||
-            journal.selectedWalletId.isBlank() ||
+            legacyWalletIds.isEmpty() ||
+            journal.legacyAccountCount < 0 ||
             journal.selectedWalletId.length > MAX_WALLET_ID_LENGTH ||
-            journal.selectedWalletId != preferences.selectedWalletId ||
-            journal.selectedWalletId !in legacyWalletIds ||
-            journal.integrityHash !=
-            WalletMigrationIntegrity.snapshotHash(
-                database.accounts,
-                journal.selectedWalletId,
-            ) ||
+            !SHA256.matches(journal.integrityHash) && journal.integrityHash.isNotEmpty() ||
             journal.startedAt <= 0L ||
             (
                 journal.completedAt != null &&
@@ -3727,16 +4131,7 @@ object WalletUpgradeBackup {
                 ) ||
             (journal.failureCode?.length ?: 0) > 128 ||
             database.deletionOperations.isNotEmpty() ||
-            database.deletionTargets.isNotEmpty() ||
-            database.identities.any { it.walletId !in legacyWalletIds } ||
-            database.networkAccounts.any { it.walletId !in legacyWalletIds } ||
-            database.pendingWalletIds.any { it !in legacyWalletIds } ||
-            !coveredWalletIds.containsAll(legacyWalletIds) ||
-            preferences.scopedWalletIds.any { it !in legacyWalletIds } ||
-            (
-                preferences.legacyPureAddress != null &&
-                    preferences.legacyPureAddress !in legacyWalletIds
-                )
+            database.deletionTargets.isNotEmpty()
         ) {
             throw WalletUpgradeBackupException(
                 "MIGRATION_RECOVERY_SNAPSHOT_INVALID"
@@ -3847,77 +4242,30 @@ object WalletUpgradeBackup {
             database.deletionOperations.isEmpty() &&
             database.deletionTargets.isEmpty()
 
-    private fun requireStrictWalletCoherence(
+    /**
+     * Describes key material that no account row owns. Nothing here is written, renamed or
+     * deleted: the material stays byte-identical, is ignored for the active wallet set, and can be
+     * adopted later when its owner proves it (for example by importing the matching phrase).
+     */
+    private fun computeQuarantine(
         database: WalletDatabaseInventory,
         preferences: WalletPreferenceInventory,
-    ) {
-        val legacyWalletIds = database.accounts
-            .map(SoraAccountLocal::substrateAddress)
-            .toSet()
-        val coveredWalletIds =
-            preferences.mnemonicWalletIds +
-                preferences.rawSeedWalletIds +
-                preferences.keyPairWalletIds +
-                preferences.watchOnlyWalletIds
-        val currentIdentityMismatch =
-            if (database.identities.isEmpty()) {
-                !coveredWalletIds.containsAll(legacyWalletIds)
-            } else {
-                database.identities.size != legacyWalletIds.size ||
-                    database.identities
-                        .map(WalletIdentityLocal::walletId)
-                        .toSet() != legacyWalletIds ||
-                    database.identities.any { identity ->
-                        identity.migrationState != "VERIFIED" ||
-                            when (identity.secretSource) {
-                                "MNEMONIC", "MNEMONIC_UNSUPPORTED" ->
-                                    identity.walletId !in preferences.mnemonicWalletIds ||
-                                        identity.walletId !in preferences.keyPairWalletIds ||
-                                        identity.walletId in preferences.watchOnlyWalletIds
-                                "RAW_SEED" ->
-                                    identity.walletId !in preferences.rawSeedWalletIds ||
-                                        identity.walletId !in preferences.keyPairWalletIds ||
-                                        identity.walletId in preferences.mnemonicWalletIds ||
-                                        identity.walletId in preferences.watchOnlyWalletIds
-                                "LEGACY_SECRET" ->
-                                    identity.walletId !in preferences.keyPairWalletIds ||
-                                        identity.walletId in preferences.mnemonicWalletIds ||
-                                        identity.walletId in preferences.rawSeedWalletIds ||
-                                        identity.walletId in preferences.watchOnlyWalletIds
-                                "WATCH_ONLY" ->
-                                    identity.walletId !in preferences.watchOnlyWalletIds ||
-                                        identity.walletId in preferences.keyPairWalletIds ||
-                                        identity.walletId in preferences.mnemonicWalletIds ||
-                                        identity.walletId in preferences.rawSeedWalletIds
-                                else -> true
-                            }
-                    }
-            }
-        if (
-            preferences.incompleteKeyPairWalletIds.isNotEmpty() ||
-            (legacyWalletIds.isEmpty() && preferences.hasWalletMaterial) ||
-            (
-                legacyWalletIds.isNotEmpty() &&
-                    (
-                        preferences.selectedWalletId == null ||
-                            currentIdentityMismatch
-                        )
-                ) ||
-            preferences.scopedWalletIds.any { it !in legacyWalletIds } ||
-            (
-                preferences.selectedWalletId != null &&
-                    preferences.selectedWalletId !in legacyWalletIds
-                ) ||
-            (
-                preferences.legacyPureAddress != null &&
-                    preferences.legacyPureAddress !in legacyWalletIds
-                )
-        ) {
-            // Missing rows or secrets never imply user authorization. Only a
-            // fully validated active deletion journal can grant the narrow
-            // crash-recovery exception above.
-            throw WalletUpgradeBackupException("ORPHANED_WALLET_STORAGE")
-        }
+    ): WalletQuarantine {
+        val rows = database.accounts.map(SoraAccountLocal::substrateAddress).toSet()
+        val pendingLegacyUpgrade = isPendingLegacySingleAccountUpgrade(database, preferences)
+        val legacyOwner = preferences.legacyPureAddress
+        return WalletQuarantine(
+            unlinkedWalletIds = preferences.scopedWalletIds - rows,
+            incompleteKeySetWalletIds = preferences.incompleteKeyPairWalletIds,
+            unlinkedLegacyOwner = legacyOwner?.takeIf {
+                it !in rows && !pendingLegacyUpgrade
+            },
+            unscopedMaterialWithoutRecordedOwner = preferences.hasUnscopedCredential &&
+                !pendingLegacyUpgrade &&
+                (legacyOwner == null || legacyOwner !in rows),
+            staleSelection = preferences.selectedWalletId?.takeIf { it !in rows },
+            blankAccountRows = database.blankAccountRows,
+        )
     }
 
     private fun walletPreferenceInventory(context: Context): WalletPreferenceInventory {
@@ -4063,6 +4411,17 @@ object WalletUpgradeBackup {
             }
         }.toSet()
         return WalletPreferenceInventory(
+            hasRecoveryPhraseOrSeed = entries.any { entry ->
+                !entry.stringValue.isNullOrBlank() &&
+                    (
+                        entry.key.startsWith(WalletPreferenceKeys.MNEMONIC) ||
+                            entry.key.startsWith(WalletPreferenceKeys.SEED)
+                        )
+            },
+            hasUnscopedCredential = entries.any { entry ->
+                entry.key in WalletPreferenceKeys.encryptedCredentialPrefixes &&
+                    !entry.stringValue.isNullOrBlank()
+            },
             hasWalletMaterial = walletEntries.isNotEmpty(),
             hasWrappedWalletKeyEvidence = false,
             hasUnscopedRegisteredKeyPair =
@@ -4560,6 +4919,11 @@ object WalletUpgradeBackup {
                 return@runCatching false
             }
             val sourceFingerprint = manifest.getString("sourceFingerprint")
+            val kind = manifest.optString("kind", BACKUP_KIND_FULL)
+            if (kind != BACKUP_KIND_FULL && kind != BACKUP_KIND_KEYS_ONLY) {
+                return@runCatching false
+            }
+            val keysOnly = kind == BACKUP_KIND_KEYS_ONLY
             val legacyWalletIdsSha256 =
                 manifest.getString("legacyWalletIdsSha256")
             val selectedWalletIdSha256 =
@@ -4682,7 +5046,7 @@ object WalletUpgradeBackup {
                 actualNames += directoryPath.relativize(filePath).toString()
                     .replace(File.separatorChar, '/')
             }
-            REQUIRED_DATABASE_BACKUP in names &&
+            (REQUIRED_DATABASE_BACKUP in names) != keysOnly &&
                 actualNames == names + setOf("manifest.json", ".complete") &&
                 directory.name == backupDirectoryName(
                     sourceVersion = sourceDatabaseVersion,
@@ -4723,12 +5087,18 @@ object WalletUpgradeBackup {
                             "${it.name}\u0000${it.size}\u0000${it.sha256}"
                         }
                 ) &&
-                validateCopiedWalletInventory(
-                    context = context,
-                    directory = directory,
-                    manifest = manifest,
-                    names = names,
-                ) &&
+                (
+                    if (keysOnly) {
+                        validateKeysOnlyInventory(directory, manifest)
+                    } else {
+                        validateCopiedWalletInventory(
+                            context = context,
+                            directory = directory,
+                            manifest = manifest,
+                            names = names,
+                        )
+                    }
+                    ) &&
                 hasExactRegularLinkInventory(
                     directory = directory,
                     expected = confirmedLinkIdentities,
@@ -4766,6 +5136,36 @@ object WalletUpgradeBackup {
             fingerprints == expectedFingerprints &&
             linksAfter.values.all { it.linkCount == expectedLinkCount }
     }.getOrDefault(false)
+
+    private fun validateKeysOnlyInventory(
+        directory: File,
+        manifest: JSONObject,
+    ): Boolean {
+        val accounts = manifest.getJSONArray("accounts")
+        val walletIds = (0 until accounts.length()).map { index ->
+            accounts.getJSONObject(index).getString("address")
+        }
+        if (
+            walletIds.toSet().size != walletIds.size ||
+            walletIds.any { it.isBlank() || it.length > MAX_WALLET_ID_LENGTH }
+        ) {
+            return false
+        }
+        val preferences = walletPreferenceInventory(
+            dataStore = File(directory, "files/datastore/sora_prefs_datastore.preferences_pb"),
+            sharedPreferences = File(directory, "shared_prefs/sora_prefs.xml"),
+            sharedPreferencesBackup = File(directory, "shared_prefs/sora_prefs.xml.bak"),
+        )
+        val selectedHash = preferences.selectedWalletId?.let(::sha256Text)
+        return walletIds.size == manifest.getInt("legacyAccountCount") &&
+            sha256Text(walletIds.sorted().joinToString(separator = "\n")) ==
+            manifest.getString("legacyWalletIdsSha256") &&
+            if (manifest.isNull("selectedWalletIdSha256")) {
+                selectedHash == null
+            } else {
+                selectedHash == manifest.getString("selectedWalletIdSha256")
+            }
+    }
 
     private fun validateCopiedWalletInventory(
         context: Context,
@@ -4837,19 +5237,16 @@ object WalletUpgradeBackup {
                     "shared_prefs/sora_prefs.xml.bak",
                 ),
             )
-            val storageCoherent =
-                runCatching {
-                    validateWalletStorageCoherence(inventory, preferences)
-                }.isSuccess ||
-                    (
-                        sourceVersion == CURRENT_DATABASE_VERSION &&
-                            runCatching {
-                                requireLegacyRecoveryPreferenceCoherence(
-                                    inventory,
-                                    preferences,
-                                )
-                            }.isSuccess
-                        )
+            // A copy of a wallet whose verification was interrupted is still a valid backup.
+            val coherence = runCatching {
+                validateWalletStorageCoherence(inventory, preferences)
+            }
+            val storageCoherent = coherence.isSuccess ||
+                (
+                    sourceVersion == CURRENT_DATABASE_VERSION &&
+                        (coherence.exceptionOrNull() as? WalletUpgradeBackupException)?.code ==
+                        "WALLET_MIGRATION_RECOVERY_REQUIRED"
+                    )
             if (!storageCoherent) return false
             val walletIds = inventory.accounts
                 .map(SoraAccountLocal::substrateAddress)
@@ -4871,6 +5268,20 @@ object WalletUpgradeBackup {
             )
         }
     }
+
+    private fun File.passesSqliteQuickCheck(): Boolean =
+        SQLiteDatabase.openDatabase(
+            path,
+            null,
+            SQLiteDatabase.OPEN_READONLY,
+            FAIL_CLOSED_DATABASE_ERROR_HANDLER,
+        ).use { sqlite ->
+            sqlite.rawQuery("PRAGMA quick_check", null).use { cursor ->
+                cursor.moveToFirst() &&
+                    cursor.getString(0).equals("ok", ignoreCase = true) &&
+                    !cursor.moveToNext()
+            }
+        }
 
     private fun File.passesSqliteIntegrityCheck(): Boolean =
         SQLiteDatabase.openDatabase(
@@ -5293,6 +5704,8 @@ object WalletUpgradeBackup {
     )
 
     private data class WalletPreferenceInventory(
+        val hasRecoveryPhraseOrSeed: Boolean,
+        val hasUnscopedCredential: Boolean,
         val hasWalletMaterial: Boolean,
         val hasWrappedWalletKeyEvidence: Boolean,
         val hasUnscopedRegisteredKeyPair: Boolean,
@@ -5331,6 +5744,15 @@ object WalletUpgradeBackup {
         val deletionOperations: List<WalletDeletionOperationLocal> = emptyList(),
         val deletionTargets: List<Pair<String, String>> = emptyList(),
         val migrationJournals: List<WalletMigrationJournalLocal> = emptyList(),
+        val blankAccountRows: Int = 0,
+    )
+
+    private data class BackupInventoryEntry(
+        val directory: File,
+        val generation: Long,
+        val sourceVersion: Int,
+        val targetVersion: Int,
+        val kind: String,
     )
 
     private data class PreferenceEntry(
@@ -5360,4 +5782,10 @@ object WalletUpgradeBackup {
     )
 }
 
-class WalletUpgradeBackupException(val code: String) : IllegalStateException(code)
+class WalletUpgradeBackupException(
+    val code: String,
+    /** For INSUFFICIENT_BACKUP_STORAGE: free bytes needed to continue the upgrade. */
+    val requiredBytes: Long? = null,
+    /** For INSUFFICIENT_BACKUP_STORAGE: free bytes found. */
+    val availableBytes: Long? = null,
+) : IllegalStateException(code)
