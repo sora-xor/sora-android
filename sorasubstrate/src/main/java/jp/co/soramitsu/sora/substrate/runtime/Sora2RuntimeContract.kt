@@ -179,6 +179,15 @@ class Sora2RuntimeContract @Inject constructor(
         const val RUNTIME_RPC_ENDPOINT = "https://ws.mof.sora.org"
         /** Exact selected WebSocket counterpart permitted to carry reviewed SORA2 mutations. */
         const val RUNTIME_WS_ENDPOINT = "wss://ws.mof.sora.org"
+        /**
+         * Archive node (one of the default SORA mainnet nodes) used only for status recovery
+         * reads at exact, already-admitted block hashes once [RUNTIME_RPC_ENDPOINT] has discarded
+         * that block's state (it keeps about 256 blocks): System events of the inclusion block,
+         * and the runtime version and metadata a pending submission was signed with (the metadata
+         * is admitted only when its SHA-256 equals the one journaled at signing). It never serves
+         * signing, nonces, fees or submission.
+         */
+        const val STATUS_ARCHIVE_RPC_ENDPOINT = "https://mof2.sora.org"
         /** Runtime of the packaged fixture; not a signing requirement (see the class KDoc). */
         const val SPEC_VERSION = 130
         /** Transaction version of the packaged fixture; not a signing requirement. */

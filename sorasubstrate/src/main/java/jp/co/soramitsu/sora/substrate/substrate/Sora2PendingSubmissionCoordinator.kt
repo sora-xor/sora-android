@@ -395,41 +395,33 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         check(finalizedHeight >= 0L) { "SORA2_RECOVERY_FINALIZED_HEIGHT_INVALID" }
         val fixtures = mutableMapOf<RecoveryFixtureKey, RuntimeSnapshot?>()
         val fixtureKeyByLocalId = mutableMapOf<String, RecoveryFixtureKey>()
-        val snapshotByLocalId = mutableMapOf<String, RuntimeSnapshot>()
         var unavailableFixtures = 0
         selected.forEach { row ->
             check(row.genesisHash == liveGenesisHash) {
                 "SORA2_RECOVERY_GENESIS_MISMATCH"
             }
-            val key = row.recoveryFixtureKey()
-            fixtureKeyByLocalId[row.localId] = key
-            val snapshot = if (fixtures.containsKey(key)) {
-                fixtures[key]
-            } else {
-                runtimeManager.getReviewedRecoveryRuntimeSnapshotOrNull(
-                    genesisHash = key.genesisHash,
-                    specVersion = key.specVersion,
-                    transactionVersion = key.transactionVersion,
-                    metadataSha256 = key.metadataSha256,
-                    typesSha256 = key.typesSha256,
-                ).also { fixtures[key] = it }
-            }
-            if (snapshot == null) {
-                unavailableFixtures += 1
-            } else {
-                snapshotByLocalId[row.localId] = snapshot
-            }
+            fixtureKeyByLocalId[row.localId] = row.recoveryFixtureKey()
         }
-        val admitted = selected.filter { it.localId in snapshotByLocalId }
-        if (admitted.isEmpty()) {
-            return Sora2PendingRecoveryPass(
-                examined = selected.size,
-                resolved = 0,
-                unresolved = 0,
-                failures = unavailableFixtures,
-                remainingUnattempted = all.size - selected.size,
-            )
+
+        /**
+         * The runtime a row was signed with, looked up only for a row found in a block. Finding
+         * (or not finding) the exact transaction hash in the canonical blocks of its mortal era
+         * needs no runtime, so a row whose signing runtime is unavailable still reaches
+         * EXPIRED_NOT_INCLUDED once its era has passed.
+         */
+        suspend fun signingSnapshotOrNull(row: Sora2PendingSubmissionLocal): RuntimeSnapshot? {
+            val key = fixtureKeyByLocalId.getValue(row.localId)
+            if (fixtures.containsKey(key)) return fixtures[key]
+            return runtimeManager.getReviewedRecoveryRuntimeSnapshotOrNull(
+                genesisHash = key.genesisHash,
+                specVersion = key.specVersion,
+                transactionVersion = key.transactionVersion,
+                metadataSha256 = key.metadataSha256,
+                typesSha256 = key.typesSha256,
+                eraBirthBlockHash = row.eraBirthBlockHash,
+            ).also { fixtures[key] = it }
         }
+        val admitted = selected
 
         val heights = linkedSetOf<Long>()
         admitted.forEach { row ->
@@ -496,7 +488,7 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         admitted.forEach { row ->
             val inclusion = inclusions[row.transactionHash] ?: return@forEach
             currentCoroutineContext().ensureActive()
-            val snapshot = snapshotByLocalId.getValue(row.localId)
+            val snapshot = signingSnapshotOrNull(row) ?: return@forEach
             val fixtureKey = fixtureKeyByLocalId.getValue(row.localId)
             val decodeKey = inclusion.block.blockHash to fixtureKey
             val outcomes = decodedEvents[decodeKey] ?: run {
@@ -524,11 +516,19 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         )
 
         val resolutions = mutableListOf<Resolution>()
+        val undecodedInclusions = mutableSetOf<String>()
         var unresolved = 0
         admitted.forEach { row ->
             val inclusion = inclusions[row.transactionHash]
-            if (inclusion != null) {
-                val success = eventOutcomes.getValue(row.localId)
+            val outcomes = eventOutcomes[row.localId]
+            if (inclusion != null && outcomes == null) {
+                // Included, but the runtime that can decode its events is unavailable in this
+                // pass. The row stays unresolved and is retried; it is never guessed. Its scan
+                // restarts at the era birth next time so the inclusion is found again.
+                unavailableFixtures += 1
+                undecodedInclusions += row.localId
+            } else if (inclusion != null) {
+                val success = checkNotNull(outcomes)
                     .getValue(inclusion.extrinsicIndex.toLong())
                 resolutions += Resolution(
                     row = row,
@@ -575,7 +575,15 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
             }
             scannedThroughBlockExclusive.remove(resolution.row.recoveryCacheKey())
         }
-        admitted.filterNot { row -> resolutions.any { it.row.localId == row.localId } }
+        undecodedInclusions.forEach { localId ->
+            admitted.firstOrNull { it.localId == localId }?.let { row ->
+                scannedThroughBlockExclusive.remove(row.recoveryCacheKey())
+            }
+        }
+        admitted.filterNot { row ->
+            row.localId in undecodedInclusions ||
+                resolutions.any { it.row.localId == row.localId }
+        }
             .forEach { row ->
                 val lastScanned = minOf(
                     finalizedHeight,
