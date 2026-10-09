@@ -108,13 +108,17 @@ class PolkaswapIndexerClientTest {
         assertThat(request.contentType).isEqualTo(RestClient.ContentType.JSON)
         assertThat(request.query).contains("historyElements")
         assertThat(request.query).contains("blockHeight")
-        assertThat(request.query).contains("calls(first: 100)")
+        // The deployed indexer's HistoryCallConnection has no arguments and no totalCount.
+        assertThat(request.query).contains("calls { nodes { module method data } }")
+        assertThat(request.query).doesNotContain("calls(")
         assertThat(request.query).doesNotContain("offset")
         assertThat(request.variables.toString()).contains("\"first\":25")
         assertThat(request.variables.toString()).contains("\"after\":null")
-        assertThat(request.variables.toString()).contains("\"dataFrom\":{\"equalTo\":\"cnAccount\"}")
-        assertThat(request.variables.toString()).contains("\"dataTo\":{\"equalTo\":\"cnAccount\"}")
-        assertThat(request.variables.toString()).contains("\"address\":{\"equalTo\":\"cnAccount\"}")
+        // Its only timestamp-ordered account plan is an exact `address` (the signer).
+        assertThat(request.variables.toString())
+            .contains("\"filter\":{\"address\":{\"equalTo\":\"cnAccount\"}}")
+        assertThat(request.variables.toString()).doesNotContain("dataFrom")
+        assertThat(request.variables.toString()).doesNotContain("dataTo")
     }
 
     @Test
@@ -602,6 +606,27 @@ class PolkaswapIndexerClientTest {
     }
 
     @Test
+    fun `assets info splits long id lists into indexer sized requests`() = runTest {
+        val ids = (1..150).map { "asset-$it" }
+        fun page(chunk: List<String>) = chunk.joinToString(
+            prefix = """{ "data": { "assets": { "edges": [""",
+            postfix = """], "pageInfo": { "hasNextPage": false }, "totalCount": ${chunk.size} } } }""",
+        ) { """{ "node": { "id": "$it", "priceUSD": "1", "liquidity": "1", "priceChangeDay": 0 } }""" }
+        restClient.enqueue(page(ids.take(100)))
+        restClient.enqueue(page(ids.drop(100)))
+
+        val result = client.getAssetsInfo(ids)
+
+        assertThat(result.map { it.id }).containsExactlyElementsIn(ids).inOrder()
+        assertThat(restClient.requests).hasSize(2)
+        assertThat(restClient.requests[0].variables.toString()).contains("\"first\":100")
+        assertThat(restClient.requests[0].variables.toString()).contains("\"asset-100\"")
+        assertThat(restClient.requests[0].variables.toString()).doesNotContain("\"asset-101\"")
+        assertThat(restClient.requests[1].variables.toString()).contains("\"first\":50")
+        assertThat(restClient.requests[1].variables.toString()).contains("\"asset-150\"")
+    }
+
+    @Test
     fun `assets info sends id in filter and decodes null market fields`() = runTest {
         restClient.enqueue(
             """
@@ -894,11 +919,9 @@ class PolkaswapIndexerClientTest {
             }
             """
         )
-        val truncatedCalls = runCatching {
-            client.getLastTransactions("cnAccount", 1)
-        }.exceptionOrNull()
-        assertThat(truncatedCalls).hasMessageThat()
-            .isEqualTo("PI_INDEXER_HISTORY_CALLS_TRUNCATED")
+        // A leftover totalCount from another schema is ignored; every returned call is kept.
+        val calls = client.getLastTransactions("cnAccount", 1).single().nestedData
+        assertThat(calls).hasSize(1)
     }
 
     @Test
@@ -1694,32 +1717,88 @@ class PolkaswapIndexerClientTest {
     }
 
     @Test
-    fun `production read rejects checkpoint drift across its response`() = runTest {
-        val qualifiedRestClient = CapturingRestClient()
+    fun `production read follows indexer progress but rejects a checkpoint that goes back`() =
+        runTest {
+            val qualifiedRestClient = CapturingRestClient()
+            val qualifiedClient = PolkaswapIndexerClient(
+                restClient = qualifiedRestClient,
+                json = testJson,
+                enforceResponseCheckpointPostflight = true,
+            )
+            val now = System.currentTimeMillis() / 1_000
+            qualifiedRestClient.enqueue(healthResponse(indexedAt = now))
+            qualifiedRestClient.enqueue(historyResponse("cnAccount", blockHeight = HEALTH_BLOCK + 1))
+            qualifiedRestClient.enqueue(
+                healthResponse(
+                    indexedAt = now,
+                    workerIndexedBlock = HEALTH_BLOCK + 1,
+                )
+            )
+
+            // A block indexed while the response was produced is normal progress. The row from
+            // that block is accepted because the read is attributed to the later checkpoint.
+            val advanced = qualifiedClient.getLastTransactionsQualified(
+                address = "cnAccount",
+                count = 10,
+            )
+            assertThat(advanced.value).hasSize(1)
+            assertThat(advanced.health.workerLatestIndexedBlock)
+                .isEqualTo((HEALTH_BLOCK + 1).toString())
+
+            qualifiedRestClient.enqueue(healthResponse(indexedAt = now))
+            qualifiedRestClient.enqueue(emptyHistoryResponse(hasNextPage = false))
+            qualifiedRestClient.enqueue(
+                healthResponse(
+                    indexedAt = now,
+                    workerIndexedBlock = HEALTH_BLOCK - 1,
+                )
+            )
+
+            val error = runCatching {
+                qualifiedClient.getLastTransactionsQualified(
+                    address = "cnAccount",
+                    count = 10,
+                )
+            }.exceptionOrNull()
+
+            assertThat(error).hasMessageThat()
+                .isEqualTo("PI_INDEXER_RESPONSE_CHECKPOINT_CHANGED")
+        }
+
+    @Test
+    fun `live catalog pages may span successive checkpoints but not a rollback`() = runTest {
+        val rest = CapturingRestClient()
         val qualifiedClient = PolkaswapIndexerClient(
-            restClient = qualifiedRestClient,
+            restClient = rest,
             json = testJson,
             enforceResponseCheckpointPostflight = true,
         )
         val now = System.currentTimeMillis() / 1_000
-        qualifiedRestClient.enqueue(healthResponse(indexedAt = now))
-        qualifiedRestClient.enqueue(emptyHistoryResponse(hasNextPage = false))
-        qualifiedRestClient.enqueue(
-            healthResponse(
-                indexedAt = now,
-                workerIndexedBlock = HEALTH_BLOCK + 1,
-            )
-        )
+        fun poolPage(id: String, hasNext: Boolean) =
+            """
+            { "data": { "poolXYKs": { "edges": [
+              { "cursor": "$id", "node": { "id": "$id", "strategicBonusApy": null } }
+            ], "pageInfo": { "hasNextPage": $hasNext, "endCursor": ${if (hasNext) "\"cursor-$id\"" else "null"} }, "totalCount": 2 } } }
+            """
+        rest.enqueue(healthResponse(indexedAt = now))
+        rest.enqueue(poolPage("pool-1", hasNext = true))
+        rest.enqueue(healthResponse(indexedAt = now))
+        rest.enqueue(healthResponse(indexedAt = now, workerIndexedBlock = HEALTH_BLOCK + 2))
+        rest.enqueue(poolPage("pool-2", hasNext = false))
+        rest.enqueue(healthResponse(indexedAt = now, workerIndexedBlock = HEALTH_BLOCK + 2))
 
-        val error = runCatching {
-            qualifiedClient.getLastTransactionsQualified(
-                address = "cnAccount",
-                count = 10,
-            )
-        }.exceptionOrNull()
+        assertThat(qualifiedClient.getPoolApys().map { it.id })
+            .containsExactly("pool-1", "pool-2").inOrder()
 
-        assertThat(error).hasMessageThat()
-            .isEqualTo("PI_INDEXER_RESPONSE_CHECKPOINT_CHANGED")
+        rest.enqueue(healthResponse(indexedAt = now, workerIndexedBlock = HEALTH_BLOCK + 2))
+        rest.enqueue(poolPage("pool-1", hasNext = true))
+        rest.enqueue(healthResponse(indexedAt = now, workerIndexedBlock = HEALTH_BLOCK + 2))
+        rest.enqueue(healthResponse(indexedAt = now))
+        rest.enqueue(poolPage("pool-2", hasNext = false))
+        rest.enqueue(healthResponse(indexedAt = now))
+
+        val rollback = runCatching { qualifiedClient.getPoolApys() }.exceptionOrNull()
+        assertThat(rollback).hasMessageThat().isEqualTo("PI_INDEXER_PAGE_CHECKPOINT_CHANGED")
     }
 
     @Test
@@ -1753,6 +1832,130 @@ class PolkaswapIndexerClientTest {
         assertThat(config.tairaDefaultVisible).isTrue()
         assertThat(config.nexusSendsAvailable).isFalse()
         assertThat(config.typedAccountBalancesAvailable).isFalse()
+    }
+
+    @Test
+    fun `mobile config falls back to the deployed schema and turns capabilities off`() = runTest {
+        restClient.enqueue(unknownMobileConfigFieldsResponse(LIVE_REJECTED_FIELDS))
+        restClient.enqueue(legacyMobileConfigResponse())
+        restClient.enqueue(legacyMobileConfigResponse())
+
+        val first = client.getMobileConfig()
+        val second = client.getMobileConfig()
+
+        for (config in listOf(first, second)) {
+            assertThat(config.substrateTypesUrl).isEqualTo("https://example.org/types.json")
+            assertThat(config.nodes.single().address).isEqualTo("wss://mof2.sora.org")
+            assertThat(config.nexusAvailable).isFalse()
+            assertThat(config.nexusSendsAvailable).isFalse()
+            assertThat(config.polkamarktVisible).isFalse()
+            assertThat(config.polkamarktMutationsAvailable).isFalse()
+            assertThat(config.tairaDefaultVisible).isFalse()
+            assertThat(config.typedAccountBalancesAvailable).isFalse()
+        }
+        assertThat(restClient.requests).hasSize(3)
+        assertThat(restClient.requests[0].query).contains("nexusAvailable")
+        // The schema choice is remembered for the process: no second rejected request.
+        for (request in restClient.requests.drop(1)) {
+            LIVE_REJECTED_FIELDS.forEach { field ->
+                assertThat(request.query).doesNotContain(field)
+            }
+            assertThat(request.query).contains("substrateTypesUrl")
+        }
+    }
+
+    @Test
+    fun `required mobile config accepts the deployed schema after a fresh health check`() =
+        runTest {
+            restClient.enqueue(healthResponse(indexedAt = System.currentTimeMillis() / 1_000))
+            restClient.enqueue(unknownMobileConfigFieldsResponse(listOf("nexusAvailable")))
+            restClient.enqueue(legacyMobileConfigResponse())
+
+            val config = client.requireMobileConfig()
+
+            assertThat(config.blockExplorerUrl).contains("{transaction}")
+            assertThat(config.nexusAvailable).isFalse()
+            assertThat(config.tairaDefaultVisible).isFalse()
+        }
+
+    @Test
+    fun `mobile config does not hide other schema rejections`() = runTest {
+        restClient.enqueue(unknownMobileConfigFieldsResponse(listOf("blockExplorerUrl")))
+        val requiredField = runCatching { client.getMobileConfig() }.exceptionOrNull()
+        assertThat(requiredField).isInstanceOf(PiIndexerSchemaUnsupportedException::class.java)
+        assertThat(requiredField).hasMessageThat().isEqualTo("PI_INDEXER_SCHEMA_UNSUPPORTED")
+
+        restClient.enqueue(
+            """
+            { "errors": [
+              { "message": "Cannot query field \"nexusAvailable\" on type \"MobileConfig\".", "extensions": { "code": "GRAPHQL_VALIDATION_FAILED" } },
+              { "message": "Syntax Error: Unexpected Name", "extensions": { "code": "GRAPHQL_PARSE_FAILED" } }
+            ] }
+            """
+        )
+        val mixedCodes = runCatching { client.getMobileConfig() }.exceptionOrNull()
+        assertThat(mixedCodes).hasMessageThat().isEqualTo("PI_INDEXER_GRAPHQL_ERROR")
+
+        restClient.enqueue(
+            """
+            { "data": { "mobileConfig": {
+                "blockExplorerUrl": "https://sorametrics.org/sorav2?tab=extrinsics&q={transaction}",
+                "soracard": false,
+                "nodes": [{ "name": "Sora", "address": "wss://mof2.sora.org" }],
+                "nexusAvailable": true,
+                "nexusSendsAvailable": false,
+                "polkamarktVisible": true,
+                "polkamarktMutationsAvailable": false,
+                "tairaDefaultVisible": true
+              } }, "errors": [
+              { "message": "Cannot query field \"nexusAvailable\" on type \"MobileConfig\".", "extensions": { "code": "GRAPHQL_VALIDATION_FAILED" } }
+            ] }
+            """
+        )
+        val withData = runCatching { client.getMobileConfig() }.exceptionOrNull()
+        assertThat(withData).hasMessageThat().isEqualTo("PI_INDEXER_GRAPHQL_ERROR")
+        assertThat(restClient.requests).hasSize(3)
+        assertThat(restClient.requests.all { it.query.contains("nexusAvailable") }).isTrue()
+    }
+
+    @Test
+    fun `query plan rejection is reported as an unsupported schema without server text`() =
+        runTest {
+            restClient.enqueue(
+                """
+                { "errors": [ {
+                  "message": "historyElements filter/orderBy combination is not backed by a bounded public storage plan",
+                  "extensions": { "code": "BAD_USER_INPUT" }
+                } ], "data": null }
+                """
+            )
+
+            val error = runCatching {
+                client.getLastTransactions("cnAccount", 10)
+            }.exceptionOrNull()
+
+            assertThat(error).isInstanceOf(PiIndexerSchemaUnsupportedException::class.java)
+            assertThat(error).hasMessageThat().doesNotContain("storage plan")
+            assertThat((error as PiIndexerSchemaUnsupportedException).unknownMobileConfigFields)
+                .isEmpty()
+            assertThat(PiIndexerOfflineFallbackPolicy.allows(error)).isFalse()
+        }
+
+    @Test
+    fun `referral rewards use the id order that the deployed indexer serves`() = runTest {
+        restClient.enqueue(
+            """
+            { "data": { "referrerRewards": { "edges": [
+              { "node": { "id": "reward-1", "referrer": "cnReferrer", "referral": "cnReferral", "blockHeight": "27973450", "amount": "0" } }
+            ], "pageInfo": { "hasNextPage": false }, "totalCount": 1 } } }
+            """
+        )
+
+        assertThat(client.getReferralRewards("cnReferrer"))
+            .containsExactly(IndexerReferralReward("cnReferral", "0"))
+        val query = restClient.singleRequest().query
+        assertThat(query).contains("orderBy: [ID_ASC]")
+        assertThat(query).doesNotContain("TIMESTAMP")
     }
 
     @Test
@@ -3211,6 +3414,28 @@ class PolkaswapIndexerClientTest {
         }
         """
 
+    private fun unknownMobileConfigFieldsResponse(fields: List<String>) =
+        fields.joinToString(
+            prefix = """{ "errors": [""",
+            postfix = "] }",
+        ) { field ->
+            """{ "message": "Cannot query field \"$field\" on type \"MobileConfig\".", "locations": [{ "line": 1, "column": 2 }], "extensions": { "code": "GRAPHQL_VALIDATION_FAILED" } }"""
+        }
+
+    private fun legacyMobileConfigResponse() =
+        """
+        {
+          "data": {
+            "mobileConfig": {
+              "blockExplorerUrl": "https://sorametrics.org/sorav2?tab=extrinsics&q={transaction}",
+              "substrateTypesUrl": "https://example.org/types.json",
+              "soracard": false,
+              "nodes": [{ "name": "Sora", "address": "wss://mof2.sora.org" }]
+            }
+          }
+        }
+        """
+
     private fun mobileConfigResponse() =
         """
         {
@@ -3384,6 +3609,13 @@ class PolkaswapIndexerClientTest {
     private companion object {
         const val HEALTH_NOW = 1_800_000_000L
         const val HEALTH_BLOCK = 26_000_001L
+        val LIVE_REJECTED_FIELDS = listOf(
+            "nexusAvailable",
+            "nexusSendsAvailable",
+            "polkamarktVisible",
+            "polkamarktMutationsAvailable",
+            "tairaDefaultVisible",
+        )
 
         val testJson = Json {
             isLenient = true
