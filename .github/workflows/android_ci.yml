@@ -1,0 +1,116 @@
+name: Android CI
+
+# Lean pull-request and push checks. They need no secrets:
+# unit tests, a production-flavor debug build, lint, and the 16 KB native page check.
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - modernize
+      - develop
+      - "release/**"
+  workflow_dispatch:
+
+concurrency:
+  group: android-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+  GRADLE_FLAGS: --dependency-verification=strict --stacktrace
+
+jobs:
+  unit-tests:
+    name: Unit tests (productionDebug)
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          packages: platform-tools platforms;android-36 build-tools;36.0.0
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: Run unit tests
+        run: ./gradlew $GRADLE_FLAGS testProductionDebugUnitTest
+
+      - name: Test release helper scripts
+        run: |
+          python3 scripts/test-android-native-16kb.py
+          python3 scripts/test-verify-release-signing.py
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: unit-test-reports
+          path: "**/build/reports/tests/"
+          retention-days: 14
+
+  build-and-lint:
+    name: Build, lint and 16 KB check
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          packages: platform-tools platforms;android-36 build-tools;36.0.0
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: Build productionDebug APK
+        run: ./gradlew $GRADLE_FLAGS :app:assembleProductionDebug
+
+      - name: Check 16 KB native page alignment
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          apks=(app/build/outputs/apk/production/debug/*.apk)
+          if [[ ${#apks[@]} -ne 1 ]]; then
+            echo "Expected one productionDebug APK, found ${#apks[@]}" >&2
+            exit 1
+          fi
+          python3 scripts/verify-android-native-16kb.py "${apks[0]}"
+
+      - name: Lint (productionDebug)
+        run: ./gradlew $GRADLE_FLAGS :app:lintProductionDebug
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-productionDebug.*
+          if-no-files-found: ignore
+          retention-days: 14
