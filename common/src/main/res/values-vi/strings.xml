@@ -22,6 +22,8 @@
   <string name="account_options">Tùy chọn tài khoản</string>
   <string name="account_options_backup_google">Sao lưu vào Google</string>
   <string name="account_options_delete_backup">Xóa bản sao lưu của Google</string>
+  <string name="account_repair_needs_removal">This account can\'t be repaired as it is</string>
+  <string name="account_repair_needs_removal_description">Some keys saved for this account can\'t be read on this phone, so nothing was changed. Your funds are safe on the blockchain. To use this account here again, remove it from this phone, then import the same recovery phrase.</string>
   <string name="activity_data_not_up_to_date_title">Một số dữ liệu chưa được cập nhật</string>
   <string name="activity_empty_content_title">Bạn sẽ thấy hoạt động của mình ở đây khi bạn bắt đầu giao dịch</string>
   <string name="activity_error_title">Không thể tải hoạt động của bạn. Cố gắng làm mới danh sách</string>
@@ -115,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Bạn đã áp dụng một mã mời khác</string>
   <string name="common_error_invitation_code_not_found">Mã lời mời không hợp lệ</string>
   <string name="common_error_inviter_registered_after_invitee">Không thể áp dụng mã lời mời đã cung cấp vì mã này từ người dùng đã đăng ký sau bạn</string>
-  <string name="common_error_mnemonic_word_count">A passphrase has 12, 15, 18, 21 or 24 words.</string>
-  <string name="common_error_mnemonic_word_count_invalid">Please make sure your passphrase has 12, 15, 18, 21 or 24 words and that every word is spelled correctly.</string>
+  <string name="common_error_mnemonic_is_not_valid">Hãy kiểm tra, chuỗi từ khóa khôi phục của bạn gồm 12, 15, 18, 21 hoặc 24 từ được nhập chính xác.</string>
+  <string name="common_error_mnemonic_length_error">Chuỗi từ khóa khôi phục gồm 12, 15, 18, 21 hoặc 24 từ</string>
   <string name="common_error_network">Vui lòng kiểm tra kết nối internet và thử lại sau.</string>
   <string name="common_error_no_browser_error">Vui lòng cài đặt trình duyệt để mở liên kết</string>
   <string name="common_error_not_enough_invitations">Xin lỗi, nhưng bạn không có bất kỳ lời mời nào để chia sẻ</string>
@@ -553,4 +555,6 @@
   <string name="wallet_unbonded">Unbond</string>
   <string name="wallet_unbonding">Hủy liên kết</string>
   <string name="your_pooled">%s pool của bạn</string>
+  <string name="wallet_keys_unavailable">This phone can\'t unlock the saved wallet data</string>
+  <string name="wallet_keys_unavailable_description">The wallet data on this phone can\'t be unlocked here, for example because it was copied from another phone. Nothing was changed, and your funds are safe on the blockchain. Close and reopen the app to see your recovery options, or contact support.</string>
 </resources>

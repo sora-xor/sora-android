@@ -22,6 +22,8 @@
   <string name="account_options">Account options</string>
   <string name="account_options_backup_google">Backup to Google</string>
   <string name="account_options_delete_backup">Delete Google backup</string>
+  <string name="account_repair_needs_removal">This account can\'t be repaired as it is</string>
+  <string name="account_repair_needs_removal_description">Some keys saved for this account can\'t be read on this phone, so nothing was changed. Your funds are safe on the blockchain. To use this account here again, remove it from this phone, then import the same recovery phrase.</string>
   <string name="activity_data_not_up_to_date_title">Some data is not up to date</string>
   <string name="activity_empty_content_title">You will see your activity here once you start transacting</string>
   <string name="activity_error_title">Activity is temporarily unavailable. Your balance is not affected. Tap Refresh to try again.</string>
@@ -115,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Du hast bereits einen anderen Einladungscode verwendet</string>
   <string name="common_error_invitation_code_not_found">Der Einladungscode ist ungültig</string>
   <string name="common_error_inviter_registered_after_invitee">Der angegebene Einladungscode kann nicht angewendet werden, da er von einem Benutzer stammt, der sich nach dir registriert hat</string>
-  <string name="common_error_mnemonic_word_count">A passphrase has 12, 15, 18, 21 or 24 words.</string>
-  <string name="common_error_mnemonic_word_count_invalid">Please make sure your passphrase has 12, 15, 18, 21 or 24 words and that every word is spelled correctly.</string>
+  <string name="common_error_mnemonic_is_not_valid">Bitte stell sicher, dass die Passphrase aus 12, 15, 18, 21 oder 24 Wörtern besteht und dass sie alle korrekt sind.</string>
+  <string name="common_error_mnemonic_length_error">Die Passphrase muss 12, 15, 18, 21 oder 24 Wörter enthalten</string>
   <string name="common_error_network">Bitte überprüfe die Internetverbindung und versuche es später noch einmal.</string>
   <string name="common_error_no_browser_error">Bitte installiere einen Browser, um den Link zu öffnen</string>
   <string name="common_error_not_enough_invitations">Tut uns leid, Du hast keine Einladungen zum Teilen</string>
@@ -553,4 +555,6 @@
   <string name="network_finalized_history">Aktivität</string>
   <string name="wallet_network_activity">Aktivität</string>
   <string name="wallet_connect_account">Konto</string>
+  <string name="wallet_keys_unavailable">This phone can\'t unlock the saved wallet data</string>
+  <string name="wallet_keys_unavailable_description">The wallet data on this phone can\'t be unlocked here, for example because it was copied from another phone. Nothing was changed, and your funds are safe on the blockchain. Close and reopen the app to see your recovery options, or contact support.</string>
 </resources>

@@ -22,6 +22,8 @@
   <string name="account_options">アカウントのオプション</string>
   <string name="account_options_backup_google">Backup to Google</string>
   <string name="account_options_delete_backup">Delete Google backup</string>
+  <string name="account_repair_needs_removal">このアカウントはこのままでは修復できません</string>
+  <string name="account_repair_needs_removal_description">このアカウントに保存されている鍵の一部をこの端末で読み取れないため、何も変更していません。資産はブロックチェーン上で安全です。この端末で再び使うには、このアカウントを端末から削除してから、同じリカバリーフレーズをインポートしてください。</string>
   <string name="activity_data_not_up_to_date_title">一部のデータが最新ではありません</string>
   <string name="activity_empty_content_title">取引を開始すると、ここに履歴が表示されます</string>
   <string name="activity_error_title">履歴は一時的に表示できません。残高には影響ありません。「更新」をタップしてもう一度お試しください。</string>
@@ -115,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">あなたは既に別の招待コードを利用しています</string>
   <string name="common_error_invitation_code_not_found">招待コードが無効です</string>
   <string name="common_error_inviter_registered_after_invitee">あなたの後に登録を行ったユーザーのものなので、この招待コードは利用できません</string>
-  <string name="common_error_mnemonic_word_count">パスフレーズは12・15・18・21・24個のいずれかの単語でできています。</string>
-  <string name="common_error_mnemonic_word_count_invalid">パスフレーズが12・15・18・21・24個のいずれかの単語でできていて、すべての単語のつづりが正しいか確認してください。</string>
+  <string name="common_error_mnemonic_is_not_valid">パスフレーズが12・15・18・21・24個のいずれかの単語でできていて、すべての単語のつづりが正しいか確認してください。</string>
+  <string name="common_error_mnemonic_length_error">パスフレーズは12・15・18・21・24個のいずれかの単語でできています。</string>
   <string name="common_error_network">インターネット接続を確認し、後でもう一度やり直してください</string>
   <string name="common_error_no_browser_error">リンクを開くにはブラウザをインストールしてください</string>
   <string name="common_error_not_enough_invitations">申し訳ありませんが、共有できる招待枠がありません</string>
@@ -552,4 +554,6 @@
   <string name="wallet_unbonding">ボンド解除中</string>
   <string name="your_pooled">%sがプールされました</string>
   <string name="wallet_connect_account">アカウント</string>
+  <string name="wallet_keys_unavailable">この端末では保存済みのウォレットデータを開けません</string>
+  <string name="wallet_keys_unavailable_description">この端末にあるウォレットデータは、別の端末からコピーされた場合などに、ここでは開けないことがあります。何も変更しておらず、資産はブロックチェーン上で安全です。アプリを閉じてもう一度開くと復旧方法が表示されます。サポートにお問い合わせいただくこともできます。</string>
 </resources>
