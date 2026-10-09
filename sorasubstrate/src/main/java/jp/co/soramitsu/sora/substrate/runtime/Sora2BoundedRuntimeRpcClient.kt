@@ -336,6 +336,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         var result: JsonElement? = null
         var hasResult = false
         var hasError = false
+        var remoteError: Sora2RuntimeRpcRemoteException? = null
         val fields = mutableSetOf<String>()
         try {
             JsonReader(StringReader(rawResponse)).use { reader ->
@@ -360,7 +361,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
                         }
                         FIELD_ERROR -> {
                             hasError = true
-                            readStrictJsonRpcError(reader)
+                            remoteError = readStrictJsonRpcError(reader)
                         }
                         else -> {
                             reader.skipValue()
@@ -391,7 +392,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
             throw Sora2RuntimeIdentityException("SORA2_RUNTIME_RPC_ID_MISMATCH")
         }
         if (hasError) {
-            throw Sora2RuntimeIdentityException("SORA2_RUNTIME_RPC_REMOTE_ERROR")
+            throw remoteError ?: Sora2RuntimeIdentityException("SORA2_RUNTIME_RPC_REMOTE_ERROR")
         }
         return result ?: throw Sora2RuntimeIdentityException(
             "SORA2_RUNTIME_RPC_RESULT_MISSING"
@@ -518,10 +519,11 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         if (tokenCount[0] > MAXIMUM_STRUCTURED_JSON_TOKENS) invalidResponse()
     }
 
-    private fun readStrictJsonRpcError(reader: JsonReader) {
+    private fun readStrictJsonRpcError(reader: JsonReader): Sora2RuntimeRpcRemoteException {
         if (reader.peek() != JsonToken.BEGIN_OBJECT) invalidResponse()
         var code: String? = null
         var message: String? = null
+        var data: String? = null
         val fields = mutableSetOf<String>()
         reader.beginObject()
         while (reader.hasNext()) {
@@ -536,7 +538,11 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
                     if (reader.peek() != JsonToken.STRING) invalidResponse()
                     message = reader.nextString()
                 }
-                FIELD_ERROR_DATA -> reader.skipValue()
+                FIELD_ERROR_DATA -> if (reader.peek() == JsonToken.STRING) {
+                    data = reader.nextString().take(MAXIMUM_ERROR_MESSAGE_CHARS)
+                } else {
+                    reader.skipValue()
+                }
                 else -> {
                     reader.skipValue()
                     invalidResponse()
@@ -550,7 +556,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         ) {
             invalidResponse()
         }
-        requireCanonicalJsonIntegerRaw(
+        val admittedCode = requireCanonicalJsonIntegerRaw(
             raw = code ?: invalidResponse(),
             errorCode = "SORA2_RUNTIME_RPC_RESPONSE_INVALID",
             allowNegative = true,
@@ -562,6 +568,11 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         ) {
             invalidResponse()
         }
+        return Sora2RuntimeRpcRemoteException(
+            code = admittedCode.toLong(),
+            remoteMessage = admittedMessage,
+            remoteData = data,
+        )
     }
 
     private fun invalidResponse(): Nothing {

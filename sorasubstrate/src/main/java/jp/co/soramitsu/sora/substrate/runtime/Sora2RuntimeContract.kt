@@ -102,8 +102,14 @@ internal fun reviewedSora2WebSocketEndpointOrNull(observed: String?): String? =
     }?.removeSuffix("/")
 
 /**
- * Release contract generated from the reviewed sora2-network source revision. Mutations fail
- * closed on runtime drift while read-only discovery remains available.
+ * Release contract generated from the reviewed sora2-network source revision.
+ *
+ * [SPEC_VERSION], [TRANSACTION_VERSION], [METADATA_FILE_SHA256] and [TYPES_FILE_SHA256] describe
+ * the runtime fixture packaged with the app (`sora2_metadata`, runtime 130). They identify that
+ * fixture and pin the Polkamarkt mutation path, which stays off in this release. Ordinary
+ * transfers, swaps, liquidity, referral and claim transactions are not pinned to them: they are
+ * signed with the live mainnet runtime that [RuntimeManager.getMutationRuntimeContext] validates
+ * (canonical genesis, SS58 prefix, and spec version and metadata read at one finalized block).
  */
 @Singleton
 class Sora2RuntimeContract @Inject constructor(
@@ -173,7 +179,9 @@ class Sora2RuntimeContract @Inject constructor(
         const val RUNTIME_RPC_ENDPOINT = "https://ws.mof.sora.org"
         /** Exact selected WebSocket counterpart permitted to carry reviewed SORA2 mutations. */
         const val RUNTIME_WS_ENDPOINT = "wss://ws.mof.sora.org"
+        /** Runtime of the packaged fixture; not a signing requirement (see the class KDoc). */
         const val SPEC_VERSION = 130
+        /** Transaction version of the packaged fixture; not a signing requirement. */
         const val TRANSACTION_VERSION = 130
         const val POLKAMARKT_PALLET = "Polkamarkt"
         const val SORA_MAINNET_GENESIS_HASH =
