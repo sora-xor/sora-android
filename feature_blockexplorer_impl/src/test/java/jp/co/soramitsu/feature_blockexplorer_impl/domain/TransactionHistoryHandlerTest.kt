@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_impl.domain
 
+import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.androidfoundation.format.unsafeCast
@@ -48,8 +49,11 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryReposito
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionMappers
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionsInfo
 import jp.co.soramitsu.feature_blockexplorer_impl.presentation.txhistory.TransactionMappersImpl
 import jp.co.soramitsu.feature_blockexplorer_impl.testdata.TestTransactions
@@ -73,6 +77,8 @@ import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.never
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -313,5 +319,133 @@ class TransactionHistoryHandlerTest {
             TestTransactions.sendSuccessfulTx,
             transactionHistoryHandler.getTransaction(txHash)
         )
+    }
+
+    private fun transfer(n: Int) = Transaction.Transfer(
+        TransactionBase(
+            "0x" + n.toString(16).padStart(64, '0'),
+            "blockHash",
+            BigDecimal.ONE,
+            TransactionStatus.COMMITTED,
+            2_679_918_013L - n,
+        ),
+        BigDecimal.TEN,
+        "cnRuoXdU9t5bv5EQAiXT2gQozAvrVawqZkT2AQS1Msr8T8ZZu",
+        TransactionTransferType.OUTGOING,
+        TestTokens.valToken,
+    )
+
+    private fun stubHistoryPage(page: Long, info: TransactionsInfo) {
+        transactionHistoryRepository.stub {
+            onBlocking {
+                getTransactionHistory(eq(page), anyOrNull(), anyOrNull(), anyOrNull())
+            } doReturn info
+        }
+    }
+
+    private fun listedTxHashes(): List<String> =
+        transactionHistoryHandler.historyState.value
+            .unsafeCast<HistoryState.History>()
+            .events
+            .filterIsInstance<EventUiModel.EventTxUiModel>()
+            .map { it.txHash }
+
+    @Test
+    fun `load more skips rows that shifted into the next page after a new row was indexed`() = runTest {
+        advanceUntilIdle()
+        // Page 1 was read before the indexer added a new row for this account.
+        stubHistoryPage(1L, TransactionsInfo(listOf(transfer(1), transfer(2), transfer(3)), false))
+        transactionHistoryHandler.refreshHistoryEvents()
+        advanceUntilIdle()
+        assertEquals(
+            listOf(transfer(1), transfer(2), transfer(3)).map { it.base.txHash },
+            listedTxHashes(),
+        )
+
+        // The indexer has since indexed a new row, so the re-read page 2 starts with the last
+        // row of the old page 1.
+        stubHistoryPage(2L, TransactionsInfo(listOf(transfer(3), transfer(4)), true))
+        transactionHistoryHandler.onMoreHistoryEventsRequested()
+        advanceUntilIdle()
+
+        val hashes = listedTxHashes()
+        assertEquals(listOf(transfer(1), transfer(2), transfer(3), transfer(4)).map { it.base.txHash }, hashes)
+        assertEquals(hashes.size, hashes.toSet().size)
+        assertTrue(transactionHistoryHandler.historyState.value.unsafeCast<HistoryState.History>().endReached)
+    }
+
+    @Test
+    fun `load more treats differently cased hashes as the same transaction`() = runTest {
+        advanceUntilIdle()
+        val upper = Transaction.Transfer(
+            TransactionBase(
+                transfer(3).base.txHash.uppercase().replace("0X", "0x"),
+                "blockHash",
+                BigDecimal.ONE,
+                TransactionStatus.COMMITTED,
+                transfer(3).base.timestamp,
+            ),
+            BigDecimal.TEN,
+            "cnRuoXdU9t5bv5EQAiXT2gQozAvrVawqZkT2AQS1Msr8T8ZZu",
+            TransactionTransferType.OUTGOING,
+            TestTokens.valToken,
+        )
+        stubHistoryPage(1L, TransactionsInfo(listOf(transfer(1), transfer(3)), false))
+        stubHistoryPage(2L, TransactionsInfo(listOf(upper, transfer(4)), true))
+        transactionHistoryHandler.refreshHistoryEvents()
+        advanceUntilIdle()
+        transactionHistoryHandler.onMoreHistoryEventsRequested()
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(transfer(1), transfer(3), transfer(4)).map { it.base.txHash },
+            listedTxHashes(),
+        )
+    }
+
+    @Test
+    fun `a page with no new rows reads the next page instead of stalling`() = runTest {
+        advanceUntilIdle()
+        stubHistoryPage(1L, TransactionsInfo(listOf(transfer(1), transfer(2)), false))
+        stubHistoryPage(2L, TransactionsInfo(listOf(transfer(2)), false))
+        stubHistoryPage(3L, TransactionsInfo(listOf(transfer(5)), true))
+        transactionHistoryHandler.refreshHistoryEvents()
+        advanceUntilIdle()
+        transactionHistoryHandler.onMoreHistoryEventsRequested()
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(transfer(1), transfer(2), transfer(5)).map { it.base.txHash },
+            listedTxHashes(),
+        )
+    }
+
+    @Test
+    fun `pages with no new rows are skipped only a bounded number of times`() = runTest {
+        advanceUntilIdle()
+        stubHistoryPage(1L, TransactionsInfo(listOf(transfer(1)), false))
+        stubHistoryPage(2L, TransactionsInfo(listOf(transfer(1)), false))
+        stubHistoryPage(3L, TransactionsInfo(listOf(transfer(1)), false))
+        stubHistoryPage(4L, TransactionsInfo(listOf(transfer(1)), false))
+        transactionHistoryHandler.refreshHistoryEvents()
+        advanceUntilIdle()
+        transactionHistoryHandler.onMoreHistoryEventsRequested()
+        advanceUntilIdle()
+
+        verify(transactionHistoryRepository).getTransactionHistory(
+            eq(4L),
+            anyOrNull(),
+            anyOrNull(),
+            anyOrNull(),
+        )
+        verify(transactionHistoryRepository, never()).getTransactionHistory(
+            eq(5L),
+            anyOrNull(),
+            anyOrNull(),
+            anyOrNull(),
+        )
+        val state = transactionHistoryHandler.historyState.value.unsafeCast<HistoryState.History>()
+        assertEquals(listOf(transfer(1).base.txHash), listedTxHashes())
+        assertTrue(!state.endReached)
     }
 }

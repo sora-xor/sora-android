@@ -52,6 +52,7 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -221,6 +222,7 @@ private fun TxHistoryList(
     onItemClick: (String) -> Unit,
 ) {
     val listState = rememberLazyListState()
+    val keys = remember(listItems) { historyListKeys(listItems) }
 
     LazyColumn(
         state = listState,
@@ -228,13 +230,13 @@ private fun TxHistoryList(
             .background(color = MaterialTheme.customColors.bgSurface)
             .fillMaxSize(),
     ) {
-        listItems.forEach { event ->
+        listItems.forEachIndexed { index, event ->
             if (event is EventUiModel.EventTimeSeparatorUiModel) {
-                stickyHeader(key = event.title) {
+                stickyHeader(key = keys[index]) {
                     EventUiModelItem(event = event, onItemClick = onItemClick, modifier = Modifier)
                 }
             } else {
-                item(key = if (event is EventUiModel.EventTxUiModel) event.txHash else 0) {
+                item(key = keys[index]) {
                     EventUiModelItem(
                         event = event,
                         onItemClick = onItemClick,
