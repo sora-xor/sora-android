@@ -12,13 +12,13 @@ const lockPath = join(projectDir, "gradle.lockfile");
 const buildPath = join(projectDir, "build.gradle");
 const checker = join(root, "scripts/verify-production-release-lock-coverage.gradle");
 
-function run() {
+function run(task = "verifyProductionReleaseLockCoverage") {
   const result = spawnSync(
     "./gradlew",
     [
       "-p", fixture,
       "-I", checker,
-      "verifyProductionReleaseLockCoverage",
+      task,
       "--offline", "--no-daemon", "--no-parallel",
     ],
     { cwd: root, encoding: "utf8", timeout: 120_000 },
@@ -68,6 +68,44 @@ configurations.create('hiltAnnotationProcessorProductionReleaseUnitTest') { canB
   result = run();
   assert.notEqual(result.status, 0, result.output);
   assert.match(result.output, /No resolvable productionRelease configurations exist in the Gradle model/);
+
+  // resolveReleaseDependencyLocks: lock contents must match what the configuration resolves.
+  const library = join(fixture, "repo/com/example/lib/1.0");
+  mkdirSync(library, { recursive: true });
+  writeFileSync(join(library, "lib-1.0.pom"), `<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>lib</artifactId>
+  <version>1.0</version>
+  <packaging>pom</packaging>
+</project>
+`);
+  writeFileSync(buildPath, `
+repositories { maven { url = rootProject.file('repo').toURI() } }
+dependencyLocking { lockMode = LockMode.STRICT }
+configurations.create('productionReleaseRuntimeClasspath') {
+    canBeResolved = true
+    resolutionStrategy.activateDependencyLocking()
+}
+dependencies { productionReleaseRuntimeClasspath 'com.example:lib:1.0' }
+`);
+  writeFileSync(lockPath, "com.example:lib:1.0=productionReleaseRuntimeClasspath\nempty=\n");
+  result = run("resolveReleaseDependencyLocks");
+  assert.equal(result.status, 0, result.output);
+  assert.match(result.output, /:prod: 1 productionRelease configurations match gradle\.lockfile/);
+
+  // A dependency added without --write-locks.
+  writeFileSync(lockPath, "empty=productionReleaseRuntimeClasspath\n");
+  result = run("resolveReleaseDependencyLocks");
+  assert.notEqual(result.status, 0, result.output);
+  assert.match(result.output, /Resolved 'com\.example:lib:1\.0' which is not part of the dependency lock state/);
+
+  // A dependency removed without --write-locks.
+  writeFileSync(lockPath, "com.example:gone:1.0=productionReleaseRuntimeClasspath\ncom.example:lib:1.0=productionReleaseRuntimeClasspath\nempty=\n");
+  result = run("resolveReleaseDependencyLocks");
+  assert.notEqual(result.status, 0, result.output);
+  assert.match(result.output, /Did not resolve 'com\.example:gone:1\.0' which is part of the dependency lock state/);
 
   console.log("Production release lock coverage mutation tests passed");
 } finally {

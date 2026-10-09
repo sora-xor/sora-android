@@ -1,7 +1,8 @@
 name: Android CI
 
 # Lean pull-request and push checks. They need no secrets:
-# unit tests, a production-flavor debug build, lint, and the 16 KB native page check.
+# release dependency locks, unit tests, a production-flavor debug build, lint, and the
+# 16 KB native page check.
 on:
   pull_request:
   push:
@@ -48,6 +49,14 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
 
+      - name: Check release dependency locks
+        # Dependency locking is STRICT only for productionRelease configurations, which the
+        # debug build and tests never resolve. This resolves all of them, so a dependency change
+        # without an updated gradle.lockfile fails here instead of in the release build.
+        run: >-
+          ./gradlew $GRADLE_FLAGS -I scripts/verify-production-release-lock-coverage.gradle
+          verifyProductionReleaseLockCoverage resolveReleaseDependencyLocks
+
       - name: Run unit tests
         run: ./gradlew $GRADLE_FLAGS testProductionDebugUnitTest
 
@@ -55,6 +64,7 @@ jobs:
         run: |
           python3 scripts/test-android-native-16kb.py
           python3 scripts/test-verify-release-signing.py
+          node scripts/test-production-release-lock-coverage.mjs
 
       - name: Upload test reports
         if: failure()

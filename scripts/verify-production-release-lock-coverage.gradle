@@ -1,8 +1,68 @@
-// Run with: ./gradlew -I scripts/verify-production-release-lock-coverage.gradle verifyProductionReleaseLockCoverage
-// This uses Gradle's evaluated model rather than a frozen list of configuration names. It does
-// not resolve dependencies or write locks, so a newly introduced configuration cannot be hidden
-// by the existing lock snapshot.
+// Run with:
+//   ./gradlew -I scripts/verify-production-release-lock-coverage.gradle \
+//     verifyProductionReleaseLockCoverage resolveReleaseDependencyLocks
+//
+// verifyProductionReleaseLockCoverage uses Gradle's evaluated model rather than a frozen list of
+// configuration names. It does not resolve dependencies or write locks, so a newly introduced
+// configuration cannot be hidden by the existing lock snapshot.
+//
+// resolveReleaseDependencyLocks resolves every productionRelease configuration of each project.
+// Dependency locking is STRICT for those configurations (root build.gradle.kts), so a dependency
+// change that was not written to gradle.lockfile fails here, without release signing secrets,
+// instead of failing later in bundleProductionRelease. The task name must not contain
+// "productionRelease": app/build.gradle.kts makes every such task depend on the signing check.
+// After an intended dependency change, add --write-locks to the same command and commit the
+// updated gradle.lockfile files.
 gradle.projectsEvaluated {
+    gradle.rootProject.allprojects { project ->
+        def projectPath = project.path
+        def releaseConfigurations = project.configurations.matching {
+            it.canBeResolved && it.name.toLowerCase(Locale.ROOT).contains('productionrelease')
+        }
+        if (releaseConfigurations.isEmpty()) {
+            return
+        }
+        project.tasks.register('resolveReleaseDependencyLocks') {
+            group = 'verification'
+            description = 'Resolve every productionRelease configuration against gradle.lockfile'
+
+            doLast {
+                def failures = []
+                def names = releaseConfigurations.collect { it.name }.sort()
+                names.each { name ->
+                    try {
+                        releaseConfigurations.getByName(name).resolvedConfiguration.rethrowFailure()
+                    } catch (Exception failure) {
+                        // Gradle reports several problems (lock mismatch, missing module) as one
+                        // exception with many causes; list every distinct message.
+                        def messages = new LinkedHashSet<String>()
+                        def seen = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>())
+                        def pending = new ArrayDeque<Throwable>([failure])
+                        while (!pending.isEmpty()) {
+                            Throwable cause = pending.removeFirst()
+                            if (!seen.add(cause)) {
+                                continue
+                            }
+                            if (cause.message) {
+                                messages.add(cause.message.trim())
+                            }
+                            def children = cause.metaClass.respondsTo(cause, 'getCauses') ? cause.causes : [cause.cause]
+                            children.findAll { it != null }.each { pending.addLast(it) }
+                        }
+                        failures << "${name}: ${messages.join(' | ')}"
+                    }
+                }
+                if (!failures.isEmpty()) {
+                    throw new GradleException(
+                        "${projectPath}: productionRelease dependencies could not be resolved against gradle.lockfile:\n - " +
+                            failures.join('\n - ')
+                    )
+                }
+                logger.lifecycle("${projectPath}: ${names.size()} productionRelease configurations match gradle.lockfile")
+            }
+        }
+    }
+
     gradle.rootProject.tasks.register('verifyProductionReleaseLockCoverage') {
         group = 'verification'
         description = 'Require a lock entry for every resolvable productionRelease configuration'
