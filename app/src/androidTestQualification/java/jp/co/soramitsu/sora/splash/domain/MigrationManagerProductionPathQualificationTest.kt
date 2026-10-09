@@ -49,7 +49,8 @@ import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositorySr2551
 import jp.co.soramitsu.feature_account_impl.data.repository.datasource.PrefsCredentialsDatasource
 import jp.co.soramitsu.feature_account_impl.data.repository.datasource.PrefsUserDatasource
 import jp.co.soramitsu.sora.BuildConfig
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationManager
+import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationSr25519Crypto
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xcrypto.util.toHexString
@@ -311,17 +312,15 @@ class MigrationManagerProductionPathQualificationTest {
             val credentialsDatasource = PrefsCredentialsDatasource(encryptedPreferences, soraPreferences)
             val userDatasource = PrefsUserDatasource(soraPreferences, encryptedPreferences)
             val codec = Sora2AddressCodec()
-            val runtime = mockk<RuntimeManager>(relaxed = true)
-            every { runtime.toSoraAddressOrNull(any()) } answers { codec.toSoraAddressOrNull(firstArg()) }
             val coroutineManager = mockk<CoroutineManager>()
             every { coroutineManager.applicationScope } returns repositoryScope
             val credentialsRepository = CredentialsRepositoryImpl(credentialsDatasource,
-                mockk<CryptoAssistant>(relaxed = true), runtime, codec,
+                mockk<CryptoAssistant>(relaxed = true), codec,
                 mockk<JsonAccountsEncoder>(relaxed = true))
             if (!restarted) assertEquals("", userDatasource.getCurAccountAddress())
             val journalBefore = database.walletIdentityDao().getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
             val userRepository = UserRepositoryImpl(userDatasource, credentialsDatasource, database,
-                coroutineManager, LanguagesHolder(), runtime, UserRepositorySr25519Crypto())
+                coroutineManager, LanguagesHolder(), codec, UserRepositorySr25519Crypto())
             awaitRepositoryInitialization(repositoryJob, initializationFailure)
             assertNull(initializationFailure.get())
             assertEquals(SoraAccount(PINNED_TWELVE_WORD_ADDRESS, PRE_MULTIACCOUNT_NAME), userRepository.getCurSoraAccount())
@@ -424,7 +423,6 @@ class MigrationManagerProductionPathQualificationTest {
         val credentialsRepository = CredentialsRepositoryImpl(
             credentialsPrefs = credentialsDatasource,
             cryptoAssistant = mockk<CryptoAssistant>(relaxed = true),
-            runtimeManager = mockk<RuntimeManager>(relaxed = true),
             sora2AddressCodec = sora2AddressCodec,
             jsonSeedEncoder = mockk<JsonAccountsEncoder>(relaxed = true),
         )
@@ -568,7 +566,7 @@ class MigrationManagerProductionPathQualificationTest {
                 db = database,
                 coroutineManager = coroutineManager,
                 languagesHolder = LanguagesHolder(),
-                runtimeManager = mockk<RuntimeManager>(relaxed = true),
+                sora2AddressCodec = sora2AddressCodec,
                 userRepositorySr25519Crypto = UserRepositorySr25519Crypto(),
             )
             verify(exactly = 1) { coroutineManager.applicationScope }

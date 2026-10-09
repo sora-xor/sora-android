@@ -66,7 +66,7 @@ import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionTarget
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -130,7 +130,7 @@ class UserRepositoryTest {
     lateinit var languagesHolder: LanguagesHolder
 
     @MockK
-    lateinit var runtimeManager: RuntimeManager
+    lateinit var runtimeManager: Sora2AddressCodec
 
     @MockK
     lateinit var userRepositorySr25519Crypto: UserRepositorySr25519Crypto
@@ -178,7 +178,7 @@ class UserRepositoryTest {
                 )
         }
         coEvery {
-            credentialsDatasource.requireWalletPreferenceCoverage(any(), any())
+            credentialsDatasource.requireWalletPreferenceCoverage(any(), any(), any())
         } returns Unit
         coEvery {
             credentialsDatasource.previewWalletDeletionPreferences(
@@ -308,8 +308,13 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `get sora accounts count called`() = runTest {
-        coEvery { accountDao.getAccountsCount() } returns 3
+    fun `get sora accounts count ignores blank rows`() = runTest {
+        coEvery { accountDao.getAccounts() } returns listOf(
+            SoraAccountLocal("first", "First"),
+            SoraAccountLocal("", "Blank row written by an old upgrade"),
+            SoraAccountLocal("second", "Second"),
+            SoraAccountLocal("third", "Third"),
+        )
 
         assertEquals(3, userRepository.getSoraAccountsCount())
     }

@@ -42,6 +42,7 @@ import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.PendingRecoveryStartupScheduler
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
@@ -52,6 +53,8 @@ import kotlinx.coroutines.withContext
 data class WalletMigrationRecoveryUiState(
     val code: String,
     val canContinueLegacyWallet: Boolean,
+    /** Forward paths for this state; Safe Mode renders them. Never empty of exits. */
+    val options: WalletRecoveryOptions? = null,
 )
 
 @HiltViewModel
@@ -94,18 +97,22 @@ class SplashViewModel @Inject constructor(
             val migrationDone = interactor.getMigrationDoneAsync().await()
             FirebaseWrapper.log("Splash next screen $migrationDone")
             if (!migrationDone) {
-                showMigrationRecovery.value = WalletMigrationRecoveryUiState(
-                    code =
-                        interactor.getMigrationFailureCode()
-                            ?: "WALLET_VERIFICATION_FAILED",
-                    canContinueLegacyWallet = interactor.canContinueLegacyWallet(),
+                showMigrationRecovery.value = recoveryState(
+                    code = interactor.getMigrationFailureCode() ?: "WALLET_VERIFICATION_FAILED",
                 )
                 return@launch
             }
             pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()
             when (val state = interactor.getRegistrationState()) {
                 OnboardingState.REGISTRATION_FINISHED -> {
-                    showMainScreen.trigger()
+                    // Registration finished but no account row remains (for example the database
+                    // was lost while the keys were kept): onboarding offers restore instead of an
+                    // empty main screen.
+                    if (interactor.hasExistingWallet()) {
+                        showMainScreen.trigger()
+                    } else {
+                        showOnBoardingScreen.value = OnboardingState.INITIAL
+                    }
                 }
                 OnboardingState.INITIAL -> {
                     if (interactor.hasExistingWallet()) {
@@ -123,10 +130,9 @@ class SplashViewModel @Inject constructor(
             if (interactor.canContinueLegacyWallet()) {
                 showMainScreen.trigger()
             } else {
-                showMigrationRecovery.value = WalletMigrationRecoveryUiState(
-                    code =
-                        interactor.getMigrationFailureCode()
-                            ?: "LEGACY_WALLET_SELECTION_UNAVAILABLE",
+                showMigrationRecovery.value = recoveryState(
+                    code = interactor.getMigrationFailureCode()
+                        ?: "LEGACY_WALLET_SELECTION_UNAVAILABLE",
                     canContinueLegacyWallet = false,
                 )
             }
@@ -142,13 +148,23 @@ class SplashViewModel @Inject constructor(
                 pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()
                 showMainScreen.trigger()
             } else {
-                showMigrationRecovery.value = WalletMigrationRecoveryUiState(
-                    code =
-                        interactor.getMigrationFailureCode()
-                            ?: "WALLET_VERIFICATION_FAILED",
-                    canContinueLegacyWallet = interactor.canContinueLegacyWallet(),
+                showMigrationRecovery.value = recoveryState(
+                    code = interactor.getMigrationFailureCode() ?: "WALLET_VERIFICATION_FAILED",
                 )
             }
         }
+    }
+
+    private suspend fun recoveryState(
+        code: String,
+        canContinueLegacyWallet: Boolean? = null,
+    ): WalletMigrationRecoveryUiState {
+        val options = interactor.recoveryOptions(code)
+        return WalletMigrationRecoveryUiState(
+            code = code,
+            canContinueLegacyWallet = canContinueLegacyWallet
+                ?: (options.canReadOnly && interactor.canContinueLegacyWallet()),
+            options = options,
+        )
     }
 }

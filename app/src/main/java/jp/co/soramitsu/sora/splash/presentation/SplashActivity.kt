@@ -93,14 +93,10 @@ class SplashActivity : AppCompatActivity() {
         viewBinding.retryWalletMigrationButton.setOnClickListener { button ->
             button.isEnabled = false
             lifecycleScope.launch {
-                val migrationRetry =
-                    WalletUpgradeBackup.canAuthorizeMigrationRetry()
+                // Re-runs the startup checks and, for an interrupted wallet verification,
+                // authorizes one more run. Never deletes or rewrites wallet data.
                 val result = withContext(Dispatchers.IO) {
-                    if (migrationRetry) {
-                        WalletUpgradeBackup.authorizeMigrationRetry(applicationContext)
-                    } else {
-                        WalletUpgradeBackup.prepare(applicationContext)
-                    }
+                    WalletUpgradeBackup.retry(applicationContext)
                 }
                 button.isEnabled = true
                 if (result.isSuccess) {
@@ -134,10 +130,14 @@ class SplashActivity : AppCompatActivity() {
             button.isEnabled = false
             lifecycleScope.launch {
                 val result = withContext(Dispatchers.IO) {
-                    WalletUpgradeBackup.authorizeLegacyReadOnly(applicationContext)
+                    WalletUpgradeBackup.authorizeSafeReadOnly(applicationContext)
                 }
                 button.isEnabled = true
-                if (result.isSuccess) {
+                val route = result.getOrNull()
+                if (
+                    route == WalletUpgradeBackup.SafeReadOnlyRoute.ROOM_READ_ONLY ||
+                    route == WalletUpgradeBackup.SafeReadOnlyRoute.NORMAL_ACCESS
+                ) {
                     splashViewModel.continueLegacyWallet()
                 } else {
                     showRecovery(
@@ -250,7 +250,7 @@ class SplashActivity : AppCompatActivity() {
             showRecovery(
                 code = startupFailure.code,
                 canContinueLegacyWallet =
-                    WalletUpgradeBackup.hasValidatedLegacyRecovery(),
+                    WalletUpgradeBackup.recoveryOptions()?.canReadOnly == true,
             )
         }
     }
