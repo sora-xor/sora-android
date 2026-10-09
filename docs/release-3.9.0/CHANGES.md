@@ -23,15 +23,25 @@ Each section covers one release task: what changed, why, and what users see.
 
 - `.github/workflows/android_ci.yml` (pull requests; pushes to `master`,
   `modernize`, `develop`, `release/**`). Two jobs, JDK 17, no secrets:
-  - "Unit tests (productionDebug)": `testProductionDebugUnitTest`, plus the
-    tests of the two release helper scripts.
+  - "Unit tests (productionDebug)": first the release dependency lock check
+    (`verifyProductionReleaseLockCoverage` and the new
+    `resolveReleaseDependencyLocks` from
+    `scripts/verify-production-release-lock-coverage.gradle`), then
+    `testProductionDebugUnitTest`, plus the tests of the release helper
+    scripts and of the lock check. Dependency locking is STRICT only for
+    `productionRelease` configurations, which debug builds and tests never
+    resolve; without this step a dependency change with a stale
+    `gradle.lockfile` would first fail in the release run.
   - "Build, lint and 16 KB check": `:app:assembleProductionDebug`, the 16 KB
     native page check on that APK, and `:app:lintProductionDebug`.
-- `.github/workflows/android_release.yml` (manual `workflow_dispatch` with a
-  `version_code` input, or a pushed `android/v*` tag). One job in the
-  `production` environment:
-  1. Fails early, with a named list, when a release secret is missing or the
-     version code is not a whole number above 122.
+- `.github/workflows/android_release.yml` (manual `workflow_dispatch` with
+  `version_code` and `version_name` inputs, or a pushed `android/v*` tag,
+  whose name gives the version name). One job in the `production`
+  environment:
+  1. Fails early, with a named list, when a release secret is missing, the
+     version code is not a whole number above 122, the version name is not
+     like `3.9.0`, or `appVersionName` in `app/build.gradle.kts` differs from
+     the expected version name.
   2. Writes the upload keystore from `CI_KEYSTORE_BASE64` to an owner-only
      file in the runner's temp directory and checks password and alias with
      `keytool`. Writes `app/google-services.json` from `GOOGLE_SERVICES_JSON`
@@ -42,14 +52,16 @@ Each section covers one release task: what changed, why, and what users see.
      `:app:assembleProductionRelease` and `:app:bundleProductionRelease`:
      minified, signed, strict dependency verification, Gradle cache off, and
      AGP's blocking release `lintVital` checks.
-  4. Checks the APK's package name and that its versionCode equals the
-     requested one.
+  4. Checks the APK's package name, and that its versionCode and versionName
+     equal the requested ones, so a release commit without the version bump
+     cannot produce a green run.
   5. Checks that the AAB and APK are signed by the upload certificate pinned
      in `config/android-production-signing-identity.json` (`b35dfe16…`, the
      certificate of 3.8.6.3 on Google Play).
   6. Runs the 16 KB native page check on the AAB and the APK.
-  7. Uploads the AAB, APK, R8 mapping, lint report and `SHA256SUMS.txt` (kept
-     90 days), then deletes the keystore and `google-services.json`.
+  7. Uploads the AAB, APK, R8 mapping, lint report and `SHA256SUMS.txt` as
+     `sora-android-release-<versionName>-<versionCode>` (kept 90 days), then
+     deletes the keystore and `google-services.json`.
   It does not publish to Google Play.
 - `Jenkinsfile`: also runs `testProductionDebugUnitTest`.
 
@@ -100,7 +112,16 @@ script, the SORA2 metadata and Middle Egyptian localization tools, the
 and the wallet-upgrade device test runners. `scripts/README.md` lists what
 each remaining script does. The connected-device runner no longer calls the
 deleted verifier, and the signed-APK smoke script checks the certificate pin
-with `verify-release-signing.py`.
+with `verify-release-signing.py`. The connected-device runner now stops
+unless the device is an emulator (`ro.boot.qemu` / `ro.kernel.qemu`):
+`:app:connectedProductionDebugAndroidTest` installs and then uninstalls
+`jp.co.soramitsu.sora`, which would delete a developer's wallet data on a
+phone.
+
+The open credential action that only the verifier tracked
+(`GRADLE_CREDENTIAL_INCIDENT_NOT_CLOSED`: revoke the JitPack auth token that
+was committed through 3.8.6.3 and rotate its replacement) is now an item in
+`RELEASE-CHECKLIST.md`.
 
 `feature_polkaswap_impl/src/test/resources/polkamarkt_web_contract.json` still
 names `scripts/qualify-polkamarkt-extrinsic-receipts.mjs` as the receipt
@@ -145,3 +166,26 @@ it was left as recorded.
   fails here because `org.hamcrest:hamcrest-library:1.3` and
   `androidx.tracing:tracing:1.1.0` are not in the local Gradle cache. The only
   change to them is the removed verifier call.
+- Review fixes (lock check, versionName check, emulator guard), offline:
+  - `verifyProductionReleaseLockCoverage`: 565 configurations in 30 projects.
+    `resolveReleaseDependencyLocks`: 29 of 30 projects match their lockfile;
+    `:network` cannot be resolved offline here for the same missing
+    `lifecycle-common:2.3.1` metadata noted above (its checksum is in
+    `gradle/verification-metadata.xml`; CI resolves it online).
+  - Removing one `app/gradle.lockfile` entry, or adding a stale one, makes
+    `:app:resolveReleaseDependencyLocks` fail with Gradle's lock message;
+    `:app:dependencies` stays green in the same state (it only prints
+    `FAILED`). Adding `--write-locks` restored the removed entry byte for
+    byte. `node scripts/test-production-release-lock-coverage.mjs` covers
+    both tasks and passes.
+  - The release workflow's input and badging steps, run locally: the
+    current source (`appVersionName` 3.8.6.3) with `version_name` 3.9.0
+    stops early; tag/input mismatches, a missing or malformed name, and an
+    injected newline are rejected; the debug APK (`3.8.6.3-debug`) fails the
+    versionName check.
+  - Emulator guard: passes on the SORA-Api36-16k emulator
+    (`ro.boot.qemu=1`), stops when both properties are empty, and stops
+    when the serial is not found.
+  - `:app:assembleProductionDebug` succeeded; `testProductionDebugUnitTest`
+    (all up to date, no test inputs changed): 1,056 tests, 0 failures,
+    6 skipped; the two Python script tests pass (11 each).
