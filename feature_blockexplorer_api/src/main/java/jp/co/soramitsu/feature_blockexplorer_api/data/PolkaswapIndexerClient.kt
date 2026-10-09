@@ -159,6 +159,17 @@ data class IndexerReferralReward(
     val amount: String,
 )
 
+/**
+ * The indexer answered with only schema or query-plan rejections (GraphQL codes
+ * `GRAPHQL_VALIDATION_FAILED` or `BAD_USER_INPUT`) and no data: the deployed indexer does not
+ * serve this query shape. The message is a fixed code; server text is never exposed.
+ * [unknownMobileConfigFields] lists `MobileConfig` fields the server reported as unknown.
+ */
+class PiIndexerSchemaUnsupportedException internal constructor(
+    val unknownMobileConfigFields: Set<String>,
+    val onlyUnknownMobileConfigFields: Boolean,
+) : IllegalStateException("PI_INDEXER_SCHEMA_UNSUPPORTED")
+
 @Singleton
 class PolkaswapIndexerClient private constructor(
     private val graphQlTransport: GraphQlTransport,
@@ -257,6 +268,9 @@ class PolkaswapIndexerClient private constructor(
 
     @Volatile
     private var lastQualifiedHealth: PiIndexerCacheQualification? = null
+
+    @Volatile
+    private var mobileConfigUsesLegacySchema = false
 
     suspend fun getTransactionPeers(query: String): Set<String> {
         val trimmed = query.trim()
@@ -380,7 +394,14 @@ class PolkaswapIndexerClient private constructor(
                 },
             )
             val historyPage = qualifiedPage.value
-            check(expectedHealth == null || expectedHealth == qualifiedPage.health) {
+            check(
+                expectedHealth == null ||
+                    isConsistentPageCheckpoint(
+                        previous = checkNotNull(expectedHealth),
+                        current = qualifiedPage.health,
+                        fromCache = qualifiedPage.fromCache,
+                    )
+            ) {
                 "PI_INDEXER_HISTORY_CHECKPOINT_CHANGED"
             }
             check(
@@ -497,7 +518,14 @@ class PolkaswapIndexerClient private constructor(
                 responseIdentityValidator = responseIdentityValidator,
             )
             val page = qualifiedPage.value
-            check(expectedHealth == null || expectedHealth == qualifiedPage.health) {
+            check(
+                expectedHealth == null ||
+                    isConsistentPageCheckpoint(
+                        previous = checkNotNull(expectedHealth),
+                        current = qualifiedPage.health,
+                        fromCache = qualifiedPage.fromCache,
+                    )
+            ) {
                 "PI_INDEXER_HISTORY_CHECKPOINT_CHANGED"
             }
             check(
@@ -605,25 +633,26 @@ class PolkaswapIndexerClient private constructor(
 
     suspend fun getAssetsInfo(tokenIds: List<String>): List<IndexerAssetInfo> {
         if (tokenIds.isEmpty()) return emptyList()
-        require(tokenIds.size <= DEFAULT_CONNECTION_LIMIT) { "PI_INDEXER_ASSET_LIMIT_EXCEEDED" }
+        require(tokenIds.size <= MAX_ASSET_INFO_IDS) { "PI_INDEXER_ASSET_LIMIT_EXCEEDED" }
         val canonicalTokenIds = tokenIds.map(::validatedIdentifier)
-        require(canonicalTokenIds.distinct().size == canonicalTokenIds.size) {
+        val requestedIds = canonicalTokenIds.toSet()
+        require(requestedIds.size == canonicalTokenIds.size) {
             "PI_INDEXER_DUPLICATE_ASSET"
         }
-        val expectedTokenIds = canonicalTokenIds.toSet()
-        val pageSize = minOf(MAX_CURSOR_PAGE_SIZE, canonicalTokenIds.size)
-        val maximumPages =
-            (canonicalTokenIds.size + pageSize - 1) / pageSize
-        val assets = collectAssetsQualified(
-            filter = fieldFilter("id", "in", canonicalTokenIds),
-            pageSize = pageSize,
-            maxPages = maximumPages,
-            expectedTokenIds = expectedTokenIds,
-        ).value
+        // The indexer rejects filter arrays longer than MAX_FILTER_ARRAY_SIZE ("filter contains
+        // an oversized array"), so larger requests are sent as several bounded single-page reads.
+        val assets = canonicalTokenIds.chunked(MAX_FILTER_ARRAY_SIZE).flatMap { chunk ->
+            collectAssetsQualified(
+                filter = fieldFilter("id", "in", chunk),
+                pageSize = chunk.size,
+                maxPages = 1,
+                expectedTokenIds = chunk.toSet(),
+            ).value
+        }
         check(
             assets.size <= canonicalTokenIds.size &&
                 assets.map { it.id }.distinct().size == assets.size &&
-                assets.all { it.id in expectedTokenIds }
+                assets.all { it.id in requestedIds }
         ) { "PI_INDEXER_ASSET_IDENTITY_MISMATCH" }
         return assets
     }
@@ -786,12 +815,38 @@ class PolkaswapIndexerClient private constructor(
             deserializer = HealthData.serializer(),
         ) { it.health.toModel() }
 
-    suspend fun getMobileConfig(): PiMobileConfig =
-        execute(
-            query = MOBILE_CONFIG_QUERY,
+    /**
+     * Reads `mobileConfig`. The deployed indexer predates the capability flags and rejects a
+     * query that names them (HTTP 200, `GRAPHQL_VALIDATION_FAILED`, no data). When every error
+     * names one of [OPTIONAL_MOBILE_CONFIG_FIELDS], the client asks again without them and treats
+     * those capabilities as off. Any other rejection is still an error. The choice lasts for this
+     * process only, so an indexer upgrade is picked up on the next launch.
+     */
+    suspend fun getMobileConfig(): PiMobileConfig {
+        if (!mobileConfigUsesLegacySchema) {
+            try {
+                return execute(
+                    query = MOBILE_CONFIG_QUERY,
+                    variables = buildJsonObject { },
+                    deserializer = MobileConfigData.serializer(),
+                ) { it.mobileConfig.toModel() }
+            } catch (error: PiIndexerSchemaUnsupportedException) {
+                if (
+                    !error.onlyUnknownMobileConfigFields ||
+                    error.unknownMobileConfigFields.isEmpty() ||
+                    !OPTIONAL_MOBILE_CONFIG_FIELDS.containsAll(error.unknownMobileConfigFields)
+                ) {
+                    throw error
+                }
+                mobileConfigUsesLegacySchema = true
+            }
+        }
+        return execute(
+            query = MOBILE_CONFIG_LEGACY_QUERY,
             variables = buildJsonObject { },
-            deserializer = MobileConfigData.serializer(),
-        ) { it.mobileConfig.toModel() }
+            deserializer = LegacyMobileConfigData.serializer(),
+        ) { it.mobileConfig.toLegacyModel() }
+    }
 
     suspend fun requireMobileConfig(): PiMobileConfig {
         // Feature capabilities can authorize production mutations after local
@@ -1230,10 +1285,16 @@ class PolkaswapIndexerClient private constructor(
         }
     }
 
-    private suspend fun requireStableResponseCheckpoint(
+    /**
+     * Postflight for one response. The same indexer (service, chain, schema and endpoint) must
+     * still be serving it, and its checkpoint may only move forward. A forward move is normal
+     * indexing progress; the response is then attributed to the later checkpoint. A checkpoint
+     * that went backwards means another or a rolled-back indexer answered, and is rejected.
+     */
+    private suspend fun requireSettledResponseCheckpoint(
         qualification: PiIndexerCacheQualification,
-    ) {
-        if (!enforceResponseCheckpointPostflight) return
+    ): PiIndexerCacheQualification {
+        if (!enforceResponseCheckpointPostflight) return qualification
         val before = qualification.health
         val after = requireHealthyInternal(
             expectedChainId = PI_CHAIN_ID,
@@ -1241,17 +1302,47 @@ class PolkaswapIndexerClient private constructor(
             nowEpochSeconds = nowEpochMillis() / 1_000,
             recordQualification = false,
         )
-        check(
-            before.workerLatestIndexedBlock == after.workerLatestIndexedBlock &&
-                before.latestIndexedBlock == after.latestIndexedBlock &&
-                before.latestIndexedBlockHash.equalsNullableHash(
-                    after.latestIndexedBlockHash
-                ) &&
-                before.workerLastSuccessfulIndexTimestamp ==
-                after.workerLastSuccessfulIndexTimestamp &&
-                before.latestIndexedAt == after.latestIndexedAt
-        ) { "PI_INDEXER_RESPONSE_CHECKPOINT_CHANGED" }
+        if (before == after) return qualification
+        check(isSameIndexerAtOrAfter(before, after)) {
+            "PI_INDEXER_RESPONSE_CHECKPOINT_CHANGED"
+        }
+        return PiIndexerCacheQualification(
+            health = after,
+            qualifiedAtEpochMillis = nowEpochMillis(),
+        )
     }
+
+    /**
+     * Pages of one live read may come from successive checkpoints of the same indexer while it
+     * keeps indexing. Pages replayed from the offline cache must all come from one checkpoint,
+     * so a catalog is never stitched together from different sessions.
+     */
+    private fun isConsistentPageCheckpoint(
+        previous: PiIndexerHealth,
+        current: PiIndexerHealth,
+        fromCache: Boolean,
+    ): Boolean =
+        previous == current || (!fromCache && isSameIndexerAtOrAfter(previous, current))
+
+    private fun isSameIndexerAtOrAfter(
+        before: PiIndexerHealth,
+        after: PiIndexerHealth,
+    ): Boolean {
+        val beforeHeight = before.indexedHeightOrNull() ?: return false
+        val afterHeight = after.indexedHeightOrNull() ?: return false
+        return before.service == after.service &&
+            before.serviceId == after.serviceId &&
+            before.publicBaseUrl == after.publicBaseUrl &&
+            before.schemaVersion == after.schemaVersion &&
+            before.ecosystem == after.ecosystem &&
+            before.network == after.network &&
+            before.chainId.equals(after.chainId, ignoreCase = true) &&
+            before.genesisHash.equalsNullableHash(after.genesisHash) &&
+            afterHeight >= beforeHeight
+    }
+
+    private fun PiIndexerHealth.indexedHeightOrNull(): Long? =
+        (latestIndexedBlock ?: workerLatestIndexedBlock)?.toLongOrNull()
 
     private fun String?.equalsNullableHash(other: String?): Boolean =
         when {
@@ -1358,7 +1449,14 @@ class PolkaswapIndexerClient private constructor(
         repeat(maxPages) {
             val qualifiedPage = load(after, pageSize)
             val page = qualifiedPage.value
-            check(expectedHealth == null || expectedHealth == qualifiedPage.health) {
+            check(
+                expectedHealth == null ||
+                    isConsistentPageCheckpoint(
+                        previous = checkNotNull(expectedHealth),
+                        current = qualifiedPage.health,
+                        fromCache = qualifiedPage.fromCache,
+                    )
+            ) {
                 "PI_INDEXER_PAGE_CHECKPOINT_CHANGED"
             }
             check(
@@ -1526,7 +1624,7 @@ class PolkaswapIndexerClient private constructor(
         val cacheKey = requestCacheKey(query, variables)
 
         try {
-            val qualification =
+            val preflight =
                 requireResponsePreflight() ?: testBypassQualification()
             val (value, encodedResponse) = executeLive(
                 query = query,
@@ -1534,13 +1632,16 @@ class PolkaswapIndexerClient private constructor(
                 deserializer = deserializer,
                 transform = transform,
             )
+            // The indexer keeps indexing new blocks (about one every six seconds) while a
+            // response is produced. The response is attributed to the checkpoint observed after
+            // it, which bounds every row it can contain.
+            val qualification = requireSettledResponseCheckpoint(preflight)
             // Validate the exact returned payload before it is eligible for
             // persistent offline caching. The Unit-tagged parser constructor
             // deliberately bypasses chain qualification and this validation.
             if (enforceChainIdentityPreflight) {
                 responseValidator(value, qualification.health)
             }
-            requireStableResponseCheckpoint(qualification)
             if (cacheAllowed && enforceChainIdentityPreflight && encodedResponse != null) {
                 val savedAt = nowEpochMillis()
                 val earliestQualification =
@@ -1619,6 +1720,24 @@ class PolkaswapIndexerClient private constructor(
             body = GraphQlBody(query = query, variables = variables),
             responseSerializer = responseSerializer,
         )
+        if (
+            response.errors.isNotEmpty() &&
+            response.data == null &&
+            response.errors.all { it.extensions?.code in SCHEMA_REJECTION_CODES }
+        ) {
+            // The deployed indexer does not serve this query shape. Callers that have a
+            // schema-compatible fallback catch this; for everyone else it is still an
+            // IllegalStateException and is never eligible for the offline cache.
+            val unknownFields = response.errors.map { error ->
+                error.message
+                    ?.takeIf { error.extensions?.code == GRAPHQL_VALIDATION_FAILED }
+                    ?.let(::unknownMobileConfigFieldOrNull)
+            }
+            throw PiIndexerSchemaUnsupportedException(
+                unknownMobileConfigFields = unknownFields.filterNotNullTo(mutableSetOf()),
+                onlyUnknownMobileConfigFields = unknownFields.all { it != null },
+            )
+        }
         check(response.errors.isEmpty()) { "PI_INDEXER_GRAPHQL_ERROR" }
         val value = transform(checkNotNull(response.data))
         return value to admittedResponse
@@ -1762,12 +1881,9 @@ class PolkaswapIndexerClient private constructor(
             ?.takeIf { it in 0L..Long.MAX_VALUE / 1_000L }
             ?.toString()
             ?: throw IllegalStateException("PI_INDEXER_HISTORY_TIMESTAMP_INVALID")
-        val nestedCalls = calls?.also { connection ->
-            check(
-                connection.totalCount in 0..MAX_HISTORY_CALLS_PER_TRANSACTION &&
-                    connection.nodes.size == connection.totalCount
-            ) { "PI_INDEXER_HISTORY_CALLS_TRUNCATED" }
-        }?.nodes.orEmpty()
+        // The indexer returns every nested call of a batch (its HistoryCallConnection has no
+        // paging arguments); the response itself is bounded by MAXIMUM_LIVE_RESPONSE_BYTES.
+        val nestedCalls = calls?.nodes.orEmpty()
         return IndexerHistoryElement(
             // General PI history also contains bounded synthetic event
             // identifiers (for example `<bridge-request>-mint`). Exact
@@ -1854,6 +1970,19 @@ class PolkaswapIndexerClient private constructor(
         polkamarktVisible = polkamarktVisible,
         polkamarktMutationsAvailable = polkamarktMutationsAvailable,
         tairaDefaultVisible = tairaDefaultVisible,
+        typedAccountBalancesAvailable = false,
+    )
+
+    private fun LegacyMobileConfigDto.toLegacyModel() = PiMobileConfig(
+        blockExplorerUrl = blockExplorerUrl,
+        substrateTypesUrl = substrateTypesUrl,
+        soracard = soracard,
+        nodes = nodes.map { PiMobileChainNode(it.name, it.address) },
+        nexusAvailable = false,
+        nexusSendsAvailable = false,
+        polkamarktVisible = false,
+        polkamarktMutationsAvailable = false,
+        tairaDefaultVisible = false,
         typedAccountBalancesAvailable = false,
     )
 
@@ -2495,6 +2624,12 @@ class PolkaswapIndexerClient private constructor(
     @Serializable
     private data class GraphQlError(
         val message: String? = null,
+        val extensions: GraphQlErrorExtensions? = null,
+    )
+
+    @Serializable
+    private data class GraphQlErrorExtensions(
+        val code: String? = null,
     )
 
     @Serializable
@@ -2591,6 +2726,20 @@ class PolkaswapIndexerClient private constructor(
         val polkamarktVisible: Boolean,
         val polkamarktMutationsAvailable: Boolean,
         val tairaDefaultVisible: Boolean,
+    )
+
+    @Serializable
+    private data class LegacyMobileConfigData(
+        val mobileConfig: LegacyMobileConfigDto,
+    )
+
+    /** `mobileConfig` as served by the deployed indexer, without the capability flags. */
+    @Serializable
+    private data class LegacyMobileConfigDto(
+        val blockExplorerUrl: String,
+        val substrateTypesUrl: String? = null,
+        val soracard: Boolean,
+        val nodes: List<MobileChainNodeDto> = emptyList(),
     )
 
     @Serializable
@@ -2797,7 +2946,6 @@ class PolkaswapIndexerClient private constructor(
     @Serializable
     private data class HistoryCallConnection(
         val nodes: List<HistoryCallDto>,
-        val totalCount: Int,
     )
 
     @Serializable
@@ -2848,7 +2996,8 @@ class PolkaswapIndexerClient private constructor(
     )
 
     private companion object {
-        const val DEFAULT_CONNECTION_LIMIT = 500
+        const val MAX_ASSET_INFO_IDS = 1_000
+        const val MAX_FILTER_ARRAY_SIZE = 100
         const val TRANSACTION_PEER_PAGE_SIZE = 50
         const val POLKAMARKT_PAGE_SIZE = 50
         const val POLKAMARKT_MAX_PAGES = 20
@@ -2861,7 +3010,6 @@ class PolkaswapIndexerClient private constructor(
         const val MAXIMUM_CACHED_RESPONSE_BYTES = 4 * 1_024 * 1_024
         const val MAXIMUM_LIVE_RESPONSE_BYTES = 8 * 1_024 * 1_024
         const val MAX_HISTORY_PAGE_SIZE = 100
-        const val MAX_HISTORY_CALLS_PER_TRANSACTION = 100
         const val MAX_CURSOR_LENGTH = 2_048
         const val MAX_PENDING_TRANSACTION_LOOKUP = 100
         const val HASH_HEX_LENGTH = 64
@@ -2876,6 +3024,23 @@ class PolkaswapIndexerClient private constructor(
         const val MAX_CAPABILITY_NODE_NAME_LENGTH = 256
         const val MAX_CAPABILITY_URL_LENGTH = 2_048
         const val PI_SCHEMA_VERSION = 1
+        const val GRAPHQL_VALIDATION_FAILED = "GRAPHQL_VALIDATION_FAILED"
+        const val BAD_USER_INPUT = "BAD_USER_INPUT"
+        val SCHEMA_REJECTION_CODES = setOf(GRAPHQL_VALIDATION_FAILED, BAD_USER_INPUT)
+
+        /** Capability fields the deployed (older) indexer does not have. They default to off. */
+        val OPTIONAL_MOBILE_CONFIG_FIELDS = setOf(
+            "nexusAvailable",
+            "nexusSendsAvailable",
+            "polkamarktVisible",
+            "polkamarktMutationsAvailable",
+            "tairaDefaultVisible",
+        )
+        private val UNKNOWN_MOBILE_CONFIG_FIELD =
+            Regex("^Cannot query field \"([A-Za-z0-9_]{1,64})\" on type \"MobileConfig\"\\.?$")
+
+        fun unknownMobileConfigFieldOrNull(message: String): String? =
+            UNKNOWN_MOBILE_CONFIG_FIELD.matchEntire(message.take(256))?.groupValues?.get(1)
         const val PI_SERVICE = "polkaswap-indexer"
         const val PI_SERVICE_ID = "pi.soramitsu.io"
         const val PI_CHAIN_ID = "sora:mainnet"
@@ -2945,6 +3110,17 @@ class PolkaswapIndexerClient private constructor(
                 polkamarktVisible
                 polkamarktMutationsAvailable
                 tairaDefaultVisible
+              }
+            }
+        """
+
+        val MOBILE_CONFIG_LEGACY_QUERY = """
+            query MobileConfig {
+              mobileConfig {
+                blockExplorerUrl
+                substrateTypesUrl
+                soracard
+                nodes { name address }
               }
             }
         """
@@ -3168,10 +3344,7 @@ class PolkaswapIndexerClient private constructor(
                     networkFee
                     execution
                     data
-                    calls(first: $MAX_HISTORY_CALLS_PER_TRANSACTION) {
-                      totalCount
-                      nodes { module method data }
-                    }
+                    calls { nodes { module method data } }
                   }
                 }
               }
@@ -3198,7 +3371,7 @@ class PolkaswapIndexerClient private constructor(
 
         val REFERRER_REWARDS_QUERY = """
             query ReferrerRewards(${'$'}first: Int!, ${'$'}after: Cursor, ${'$'}filter: ReferrerRewardFilter) {
-              referrerRewards(first: ${'$'}first, after: ${'$'}after, orderBy: [TIMESTAMP_DESC, ID_DESC], filter: ${'$'}filter) {
+              referrerRewards(first: ${'$'}first, after: ${'$'}after, orderBy: [ID_ASC], filter: ${'$'}filter) {
                 edges { cursor node { id referrer referral blockHeight amount } }
                 pageInfo { hasNextPage endCursor }
                 totalCount
@@ -3216,12 +3389,14 @@ class PolkaswapIndexerClient private constructor(
             }
         """
 
+        /**
+         * Account history as the indexer can serve it: timestamp-ordered pages need an exact
+         * `address` (the signer of the extrinsic). An `or` over `dataFrom`/`dataTo` has no
+         * bounded storage plan and is rejected with `BAD_USER_INPUT`, so transfers received from
+         * other accounts are not listed until the indexer adds a recipient plan.
+         */
         fun accountHistoryFilter(address: String): JsonObject =
-            orFilter(
-                fieldFilter("dataFrom", "equalTo", address),
-                fieldFilter("dataTo", "equalTo", address),
-                fieldFilter("address", "equalTo", address),
-            )
+            fieldFilter("address", "equalTo", address)
 
         fun orFilter(vararg filters: JsonObject): JsonObject =
             buildJsonObject {

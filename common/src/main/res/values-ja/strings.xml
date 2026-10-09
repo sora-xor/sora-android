@@ -22,7 +22,7 @@
   <string name="account_options_delete_backup">Delete Google backup</string>
   <string name="activity_data_not_up_to_date_title">一部のデータが最新ではありません</string>
   <string name="activity_empty_content_title">取引を開始すると、ここに履歴が表示されます</string>
-  <string name="activity_error_title">履歴を読み込めませんでした。リストを更新してみてください</string>
+  <string name="activity_error_title">履歴は一時的に表示できません。残高には影響ありません。「更新」をタップしてもう一度お試しください。</string>
   <string name="activity_pool_title">プール</string>
   <string name="activity_referral_title">紹介者が参加しました</string>
   <string name="add_liquidity_alert_text">流動性を供給して、プールシェアに比例した手数料を獲得できます</string>
