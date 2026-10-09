@@ -230,6 +230,11 @@ every candidate:
 - [ ] On a real phone with 3.8.6.3 and a funded wallet, install the release
       build over it and send a small XOR transfer and a small swap: the fee is
       shown, both finalize, and Activity lists them.
+- [ ] On a test device, with a team test wallet that has more than 100 signed
+      operations (never a customer's recovery phrase), open Activity, make a small
+      transfer, wait a minute, then scroll Activity and a token's history to
+      the end. Expect no crash and no transaction listed twice (round-3
+      review fix for "load more").
 
 ### PI indexer (backend team)
 
