@@ -208,3 +208,170 @@ it was left as recorded.
     describe shipping libraries (xcrypto, lazysodium, graphics-path) and
     which libraries were removed with SORA Card (camera-core, rootbeer,
     tensorflow-lite).
+
+## a2: SORA Card, PayWings/KYC and X1 removed
+
+### Why
+
+- SORA Card is no longer offered in SORA Wallet. The integration brought in
+  proprietary PayWings and Sumsub (IDensic) binaries (audit blocker 7), a
+  KYC stack with location, microphone, NFC, storage and media permissions,
+  a SORA Card backend and PayWings request on every app start, and SORA
+  Card / PayWings KYC credentials compiled into `BuildConfig`, where anyone
+  can read them from the APK.
+- The X1 "Buy crypto" screen could only be opened from SORA Card results and
+  used the SORA Card backend, so it went with the card.
+
+### What changed
+
+**Features and screens**
+
+- Deleted the `:feature_sora_card_api` and `:feature_sora_card_impl` modules
+  (Get SORA Card, card details, interactor, navigation graph, tests).
+- More (Profile): the "SORA Card" and "Buy XOR with fiat" rows are gone.
+- Wallet hub: the "SORA Card" and "Buy XOR" banners are gone; the hub no
+  longer reads the remote config each time its card list changes.
+- Asset details: the XOR "Buy" button is gone.
+- Swap: the unused "launched from SORA Card" argument is gone. What happens
+  after a swap is unchanged (transaction details, or back).
+- Deleted the X1 screen, its repository, WebSocket data source and payment
+  models, the unused EUR rate request (`SoraCoin`), the debug-menu X1 and
+  SORA Card backend entries, `BuildConfigWrapper` (it held only card and X1
+  URLs) and the SORA Card network client in `:common_wallet`.
+- `MainViewModel` no longer starts the SORA Card SDK at app start.
+- The `soracard` flag in the remote `mobile.json` is no longer read (the
+  config JSON ignores unknown keys). The `soracard` field of the PI indexer
+  `mobileConfig` query is left as it is; nothing reads it, and the indexer
+  schema work owns that query.
+
+**Stored data (no change)**
+
+- Room stays at version 77; no schema change, no new migration.
+- Migrations 65→66 and 66→67 no longer read the live `CardHubType` enum.
+  They write the same rows as before from fixed values ("get sora card",
+  "buy xor token", "referral system"), so a user upgrading from a very old
+  version gets the same database as before.
+- Existing "get sora card" / "buy xor token" rows in `globalCardsHub` stay
+  where they are. `CardsHubMapper` skips ids it does not know, as before,
+  so they are not shown and not deleted.
+- Files that old SDK versions wrote are left in place and never read:
+  `files/datastore/sora_card_data_store.preferences_pb`, the PayWings
+  encrypted DataStore, the androidx.security keyset preferences and its
+  AndroidKeyStore master key. Nothing deletes files or Keystore entries.
+  The wallet's own key storage (encrypted preferences, `key_alias.xml`,
+  AndroidKeyStore alias `key_alias`, `app.db` accounts) is not touched;
+  no module that stores, derives or signs with keys depended on SORA Card.
+
+**Build and dependencies**
+
+- `:common_wallet` no longer exports `jp.co.soramitsu:android-sora-card`,
+  and with it PayWings OAuth/KYC, IDensic, CameraX, TensorFlow Lite,
+  RootBeer, JMRTD/SCUBA, `bcutil`, Koin, Retrofit, Picasso, Markwon,
+  reCAPTCHA, Play Integrity, Tink, androidx.security and the `osipxd`
+  encrypted DataStore adapters. The app's `osipxd` runtime dependency and
+  the `bcutil`/`jmrtd` test dependencies are removed, with the two tests
+  that only checked the KYC and PayWings storage formats
+  (`BouncyCastleKycCompatibilityTest`, `EncryptedPreferencesCompatibilityTest`).
+- BouncyCastle stays: `bcprov-jdk18on` 1.78.1 is still on every runtime
+  classpath. The `bcprov` constraint in `:common_wallet` is kept because
+  xcrypto and xbackup ask for 1.77.
+- Vendored repository: removed `android-sora-card`, PayWings `oauth` and
+  `kyc`, `idensic-mobile-sdk`, `camera-core`, `tensorflow-lite` and
+  `rootbeer-lib` with their 16 KB rebuild inputs (16 → 9 modules).
+  CameraX, TensorFlow Lite and RootBeer were used only by IDensic: the
+  wallet's QR scanner uses zxing (journeyapps), and no source file imports
+  `androidx.camera`, TensorFlow or RootBeer. `settings.gradle.kts` vendor
+  filter, version catalog, `SOURCE_PROVENANCE.json` and `CONTENTS.sha256`
+  (still passes `shasum -c`) are updated.
+- `gradle.properties`: removed `android.uniquePackageNames=false`; it was
+  needed only for the TensorFlow Lite duplicate namespace. Builds pass with
+  the AGP default.
+- Lockfiles: 20 regenerated offline, the two card-module lockfiles deleted.
+  Reviewed line by line against the start of this task: only SDK-only
+  modules disappeared, and no kept library changed version.
+  `auto-value-annotations` 1.6.3 (annotations only; it came with CameraX)
+  left the runtime classpaths and stays on the KSP processor classpaths.
+  `gradle/verification-metadata.xml` is unchanged.
+- `common/build.gradle.kts`: removed the `X1_ENDPOINT_URL`, `X1_WIDGET_ID`,
+  `SORACARD_BACKEND_URL` and `SORA_CARD_*` `BuildConfig` fields and the
+  environment / `local.properties` values they read. `GOOGLE_API_TOKEN`
+  (Google Drive backup) is unchanged.
+- R8: removed the PayWings `-dontwarn` rules.
+- Manifest: removed the `<queries>` entries for the SORA Card IBAN app. The
+  merged manifest no longer contains `ACCESS_FINE_LOCATION`,
+  `ACCESS_COARSE_LOCATION`, `RECORD_AUDIO`, `NFC` (and the NFC feature),
+  `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`, `READ_MEDIA_IMAGES`,
+  `WRITE_SETTINGS`, `READ_ASSISTANT_APP_SEARCH_DATA`, the Sumsub activity
+  and file provider, the CameraX metadata service or `CardActivity`. The
+  productionDebug merged manifest now asks for `INTERNET`,
+  `ACCESS_NETWORK_STATE`, `CAMERA` (QR scanner), `USE_BIOMETRIC`,
+  `USE_FINGERPRINT` (androidx.biometric), `VIBRATE`, `POST_NOTIFICATIONS`,
+  `WAKE_LOCK`, `RECEIVE_BOOT_COMPLETED` and `FOREGROUND_SERVICE`
+  (WorkManager), plus the app's own signature-level
+  `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`.
+- Play publisher `releaseName` now follows `appVersionName` instead of
+  "3.8.6.5 - SORA Card Improvements".
+
+**Resources and dead code**
+
+- Removed 23 strings used only by the card, X1 and "Buy XOR" screens from
+  the default locale and all 23 translations (including Japanese), in one
+  commit so lint `ExtraTranslation` stays clean. No new strings.
+- Removed 5 drawables used only by those screens (`ic_buy_crypto`,
+  `ic_buy_xor_banner_sora`, `ic_sora_on_card`, `ic_status_denied`,
+  `ic_status_pending`). `ic_settings_buy_crypto` stays (Polkamarkt row).
+- Removed helpers only the card code used: `OptionsProvider.euroSign`,
+  `String.splitVersions()`, `compareByTotal()`.
+- Not in this change: the `:network` module (WebSocket helpers) is now
+  unused by app code; removing it is a possible follow-up.
+
+### User-visible effects
+
+- No SORA Card row in More, no SORA Card or "Buy XOR" banner on the wallet
+  hub, and no "Buy" button on XOR asset details.
+- Card accounts, IBAN balances and card funds are held by the card issuer,
+  not by the wallet; this release does not change them. Wallet keys,
+  accounts, addresses and balances are unchanged.
+- The app asks Android for fewer permissions (no location, microphone, NFC,
+  storage or photo access) and makes no SORA Card or PayWings requests.
+
+### Verification
+
+All offline, on this branch after the last a2 commit:
+
+- `:app:assembleProductionDebug`: succeeded. The 16 KB check on the APK
+  passed with 10 64-bit native libraries; arm64 now ships only
+  `libsr25519java`, `libsodium`, `libjnidispatch`, `libandroidx.graphics.path`
+  and `libdatastore_shared_counter` (no TensorFlow Lite, CameraX or RootBeer
+  libraries).
+- `testProductionDebugUnitTest`: 1,038 tests in 15 modules, 0 failures,
+  6 skipped.
+- `:app:lintProductionDebug`: passed (no errors outside the existing
+  baseline; baseline not changed).
+- `verifyProductionReleaseLockCoverage` (527 configurations in 28 projects)
+  and `resolveReleaseDependencyLocks` (all 28 projects match their
+  lockfile), with `--dependency-verification=strict`.
+- `scripts/test-android-native-16kb.py`, `scripts/test-production-release-lock-coverage.mjs`
+  and `scripts/verify-middle-egyptian-localization.mjs`: passed.
+- `vendor/soramitsu-maven/CONTENTS.sha256`: `shasum -a 256 -c` passes and
+  lists every vendored file (51).
+- Emulator (SORA-Api36-16k, Android 16, 16 KB pages): the debug APK
+  installs and opens on the onboarding screen. With a new test wallet, the
+  wallet hub, More and the debug menu show no SORA Card, X1 or "Buy XOR"
+  entries. After adding the old "get sora card" and "buy xor token" rows to
+  `globalCardsHub` by hand (as a 3.8.6.3 database has them), the app opens
+  without errors, the rows are not shown, and they are still in the
+  database. Screenshots: `screens/android/a2-remove-soracard/` in the
+  release scratchpad.
+- R8: `:app:minifyProductionBenchmarkReleaseWithR8` (release rules,
+  minified, local `cidebug` signing; `SORA_GOOGLE_TOKEN_PROD` set to a
+  placeholder) succeeded with no missing-class errors after the PayWings
+  `-dontwarn` rules were removed.
+- Seen during the emulator check, not caused by this change: on mainnet the
+  wallet hub's asset and pool cards do not appear because
+  `DemeterFarmingRepositoryImpl.getDemeter` fails while encoding the
+  `DemeterFarming.UserInfos` storage key (`EncodeDecodeException`), and the
+  hub's error handler then shows no cards. `:demeter` is not changed by this
+  task. Reported for a separate fix.
+- Not done here: an upgrade from the Play 3.8.6.3 build (no 3.8.6.3 APK on
+  this machine; see `RELEASE-CHECKLIST.md`).
