@@ -12,6 +12,8 @@ name: Android Release
 #   SORA_GOOGLE_TOKEN_PROD  Google Drive backup OAuth client; must be the same client as 3.8.6.3
 #   GOOGLE_SERVICES_JSON    base64 of app/google-services.json for jp.co.soramitsu.sora
 # Version code: the version_code input, else the SORA_VERSION_CODE variable or secret.
+# Version name: the version_name input, or the tag name after "android/v". The built APK must
+# carry exactly that versionName, so a release commit without the version bump fails.
 on:
   workflow_dispatch:
     inputs:
@@ -19,9 +21,14 @@ on:
         description: "Play versionCode (digits only, higher than every code already uploaded; 3.9.0: 3090001)"
         required: false
         type: string
+      version_name:
+        description: "Expected versionName of the build, for example 3.9.0"
+        required: true
+        type: string
   push:
     # A tag push uses the workflow file at the tagged commit, so it also works before this
-    # file reaches the default branch. Tag builds take the version code from SORA_VERSION_CODE.
+    # file reaches the default branch. Tag builds take the version code from SORA_VERSION_CODE
+    # and the version name from the tag (android/v3.9.0 expects versionName 3.9.0).
     tags:
       - "android/v*"
 
@@ -79,6 +86,7 @@ jobs:
           CI_KEYSTORE_KEY_PASS: ${{ secrets.CI_KEYSTORE_KEY_PASS }}
           SORA_GOOGLE_TOKEN_PROD: ${{ secrets.SORA_GOOGLE_TOKEN_PROD }}
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          VERSION_NAME_INPUT: ${{ inputs.version_name }}
         run: |
           set -euo pipefail
           missing=()
@@ -98,7 +106,34 @@ jobs:
             echo "::error::Version code $SORA_VERSION_CODE is not higher than the live 3.8.6.3 code (122)."
             exit 1
           fi
-          echo "Release inputs are present. versionCode=$SORA_VERSION_CODE"
+          expected_version_name="$VERSION_NAME_INPUT"
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            tag_version_name="${GITHUB_REF_NAME#android/v}"
+            if [[ -n "$expected_version_name" && "$expected_version_name" != "$tag_version_name" ]]; then
+              echo "::error::version_name $expected_version_name does not match the tag $GITHUB_REF_NAME."
+              exit 1
+            fi
+            expected_version_name="$tag_version_name"
+          fi
+          if [[ ! "$expected_version_name" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
+            echo "::error::Set the version_name input (for example 3.9.0), or push a tag named android/v<versionName>."
+            exit 1
+          fi
+          # Fail before the long build when the source still has another version name. The
+          # APK check after the build is the authoritative one.
+          source_version_name=""
+          while IFS= read -r line; do
+            if [[ "$line" =~ ^val\ appVersionName\ =\ \"([^\"]*)\"$ ]]; then
+              source_version_name="${BASH_REMATCH[1]}"
+              break
+            fi
+          done < app/build.gradle.kts
+          if [[ -n "$source_version_name" && "$source_version_name" != "$expected_version_name" ]]; then
+            echo "::error::app/build.gradle.kts has versionName $source_version_name, but this run expects $expected_version_name."
+            exit 1
+          fi
+          echo "EXPECTED_VERSION_NAME=$expected_version_name" >> "$GITHUB_ENV"
+          echo "Release inputs are present. versionName=$expected_version_name versionCode=$SORA_VERSION_CODE"
 
       - name: Write upload keystore
         shell: bash
@@ -185,7 +220,8 @@ jobs:
             echo "::error::Unexpected package name"; exit 1; }
           [[ "$package_line" == *"versionCode='$SORA_VERSION_CODE'"* ]] || {
             echo "::error::APK versionCode does not match $SORA_VERSION_CODE"; exit 1; }
-          [[ "$package_line" != *"-debug'"* ]] || { echo "::error::APK has a debug versionName"; exit 1; }
+          [[ "$package_line" == *"versionName='$EXPECTED_VERSION_NAME'"* ]] || {
+            echo "::error::APK versionName is not $EXPECTED_VERSION_NAME"; exit 1; }
 
       - name: Check signing certificate against the pinned upload certificate
         run: python3 scripts/verify-release-signing.py "$AAB_PATH" "$APK_PATH"
@@ -204,7 +240,7 @@ jobs:
       - name: Upload release artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: sora-android-release-${{ env.SORA_VERSION_CODE }}
+          name: sora-android-release-${{ env.EXPECTED_VERSION_NAME }}-${{ env.SORA_VERSION_CODE }}
           path: |
             app/build/outputs/bundle/productionRelease/app-production-release.aab
             app/build/outputs/apk/production/release/app-production-release.apk
