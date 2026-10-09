@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_account_api.domain.interfaces
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_api.domain.model.UnavailableWalletOptions
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
 import jp.co.soramitsu.feature_account_api.domain.model.WalletMutationSnapshot
@@ -141,8 +142,9 @@ interface UserRepository {
 
     /**
      * Adds the account row for a key set that is already stored on this device without an account
-     * (for example left by an unfinished create-account flow). The stored keys are verified to
-     * derive [address] first; no key material is written.
+     * (for example left by an unfinished create-account flow, or the release-era unsuffixed keys
+     * of an account removed in an older version). The stored keys are verified to derive
+     * [address] first; no key material is written.
      */
     suspend fun adoptRetainedWallet(address: String, accountName: String): SoraAccount
 
@@ -151,4 +153,18 @@ interface UserRepository {
      * and show balances, but cannot sign; other accounts are unaffected.
      */
     suspend fun unavailableWalletIds(): Set<String>
+
+    /**
+     * The forward paths for an account in [unavailableWalletIds], or null when the account can
+     * sign. Reads stored values only.
+     */
+    suspend fun unavailableWalletOptions(address: String): UnavailableWalletOptions?
+
+    /**
+     * Makes a read-only account usable again after its missing key values were added from its
+     * recovery phrase (`CredentialsRepository.commitDraft`, add-only). Verifies the stored keys
+     * exactly like the upgrade does and records the account as verified. Account rows and key
+     * values are not changed here. Throws when the stored keys still do not verify.
+     */
+    suspend fun completeUnavailableWallet(address: String): SoraAccount
 }

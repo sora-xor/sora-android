@@ -163,6 +163,7 @@ class MultiaccountInteractorTest {
         val draft = draft("cnExisting", "Existing")
         coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
         coEvery { userRepository.accountExists("cnExisting") } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns emptySet()
 
         val error = runCatching {
             multiaccountInteractor.importFromMnemonic("mnemonic", "Existing")
@@ -175,6 +176,59 @@ class MultiaccountInteractorTest {
         coVerify(exactly = 0) { credentialsRepository.commitDraft(any()) }
         coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
     }
+
+    @Test
+    fun `importing the phrase of a read-only account completes its keys and makes it usable`() =
+        runTest {
+            val draft = draft("cnReadOnly", "Imported name")
+            val stored = SoraAccount("cnReadOnly", "Imported name")
+            val repaired = SoraAccount("cnReadOnly", "Partial")
+            coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+            coEvery { userRepository.accountExists("cnReadOnly") } returns true
+            coEvery { userRepository.unavailableWalletIds() } returns setOf("cnReadOnly")
+            coEvery { credentialsRepository.commitDraft(draft) } returns stored
+            coEvery { userRepository.completeUnavailableWallet("cnReadOnly") } returns repaired
+            coEvery { userRepository.setCurSoraAccount(repaired) } returns Unit
+            coEvery {
+                userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+            } returns Unit
+
+            assertEquals(
+                repaired,
+                multiaccountInteractor.importFromMnemonic("mnemonic", "Imported name"),
+            )
+
+            coVerifyOrder {
+                // Add-only commit (it proves every stored value matches), then verification.
+                credentialsRepository.commitDraft(draft)
+                userRepository.completeUnavailableWallet("cnReadOnly")
+                userRepository.setCurSoraAccount(repaired)
+            }
+            // The existing account row is kept as it is (no insert, no rename).
+            coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+        }
+
+    @Test
+    fun `read-only account with unreadable stored keys asks for removal and writes nothing`() =
+        runTest {
+            val draft = draft("cnUnreadable", "Name")
+            coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+            coEvery { userRepository.accountExists("cnUnreadable") } returns true
+            coEvery { userRepository.unavailableWalletIds() } returns setOf("cnUnreadable")
+            coEvery { credentialsRepository.commitDraft(draft) } throws
+                SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+
+            val error = runCatching {
+                multiaccountInteractor.importFromMnemonic("mnemonic", "Name")
+            }.exceptionOrNull()
+
+            assertEquals(
+                ResponseCode.ACCOUNT_REPAIR_NEEDS_REMOVAL,
+                (error as? SoraException)?.errorResponseCode,
+            )
+            coVerify(exactly = 0) { userRepository.completeUnavailableWallet(any()) }
+            coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+        }
 
     @Test
     fun `import from raw seed stores keys and adds the account`() = runTest {

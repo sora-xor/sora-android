@@ -90,6 +90,13 @@ interface CredentialsDatasource {
     suspend fun setExplicitWatchOnly(suffixAddress: String, watchOnly: Boolean)
 
     /**
+     * Proves that the key material already stored on this device can be unlocked (the Keystore
+     * alias and the wrapped AES key match). Writes and creates nothing. Throws a
+     * `KeyMaterialUnavailableException` (transient or not) otherwise.
+     */
+    suspend fun requireKeyMaterialReadable()
+
+    /**
      * Checks that every id in [requiredCoverage] holds stored credentials and that the selection
      * is one of [walletIds]. Key sets of other addresses (without an account) are ignored.
      */

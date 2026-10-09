@@ -44,8 +44,10 @@ import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.CryptoAssistant
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.ext.didToAccountId
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
@@ -81,14 +83,19 @@ class CredentialsRepositoryImpl constructor(
         return runCatching { rawSeed.fromHex().size == 32 }.getOrDefault(false)
     }
 
-    override suspend fun createDraft(accountName: String): WalletDraft =
-        draftFromPhrase(
+    // A draft can only be stored while normal wallet access is allowed. Checking before a phrase
+    // is shown means nobody writes down, confirms or backs up a wallet that cannot be added.
+    override suspend fun createDraft(accountName: String): WalletDraft {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
+        return draftFromPhrase(
             mnemonic = MnemonicCreator.randomMnemonic(Mnemonic.Length.TWENTY_FOUR),
             accountName = accountName,
             source = WalletDraft.Source.GENERATED,
         )
+    }
 
     override suspend fun draftFromMnemonic(mnemonic: String, accountName: String): WalletDraft {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
         if (!hasImportWordCount(mnemonic)) {
             throw SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID)
         }
@@ -98,6 +105,7 @@ class CredentialsRepositoryImpl constructor(
     }
 
     override suspend fun draftFromRawSeed(rawSeed: String, accountName: String): WalletDraft {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
         val normalized = rawSeed.removeHexPrefix()
         if (!isRawSeedValid(normalized)) {
             throw SoraException.businessError(ResponseCode.RAW_SEED_IS_NOT_VALID)
@@ -164,55 +172,73 @@ class CredentialsRepositoryImpl constructor(
     override suspend fun commitDraft(draft: WalletDraft): SoraAccount =
         WalletMutationCoordinator.withLock {
             WalletRecoveryCapabilityGate.requireUserMutationAllowed()
-            val address = draft.address
-            val keyPair = draft.keypair
-            val mnemonic = draft.mnemonic
-            val desired = buildMap {
-                put(CredentialField.PRIVATE_KEY, keyPair.privateKey.toHexString())
-                put(CredentialField.PUBLIC_KEY, keyPair.publicKey.toHexString())
-                put(CredentialField.KEY_NONCE, keyPair.nonce.toHexString())
-                if (mnemonic != null) {
-                    put(CredentialField.MNEMONIC, mnemonic)
-                } else {
-                    put(CredentialField.SEED, draft.seedHex)
-                }
-            }
-            if (credentialsPrefs.isExplicitWatchOnly(address)) {
-                throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
-            }
-            val absent = mutableMapOf<CredentialField, String>()
-            desired.forEach { (field, value) ->
-                when (val stored = credentialsPrefs.readStoredCredential(field, address)) {
-                    StoredCredential.Absent -> absent[field] = value
-                    StoredCredential.Unreadable ->
-                        throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
-                    is StoredCredential.Present -> if (!sameCredential(field, stored.value, value)) {
-                        throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
-                    }
-                }
-            }
-            // The secret this draft does not write must still agree when it is already stored.
-            requireRetainedSecretAgrees(draft)
-            if (absent.isNotEmpty()) {
-                credentialsPrefs.writeCredentialsIfAbsent(address, absent)
-                FirebaseWrapper.log("Keys were created")
-            } else {
-                FirebaseWrapper.log("Retained keys were adopted")
-            }
-            val stored = credentialsPrefs.retrieveKeys(address)
-                ?: throw IllegalStateException("WALLET_KEYS_READBACK_MISSING")
             try {
-                check(
-                    stored.publicKey.contentEquals(keyPair.publicKey) &&
-                        stored.privateKey.contentEquals(keyPair.privateKey) &&
-                        stored.nonce.contentEquals(keyPair.nonce)
-                ) { "WALLET_KEYS_READBACK_MISMATCH" }
-            } finally {
-                stored.privateKey.fill(0)
-                stored.nonce.fill(0)
+                commitDraftLocked(draft)
+            } catch (error: KeyMaterialUnavailableException) {
+                if (error.transient) throw error
+                // This phone cannot unlock the key material already stored here (for example the
+                // app files came from another phone, whose Keystore key never moves). New keys
+                // could not be stored either. Record the state so the recovery options (set up
+                // this device again, keeping the old data aside) are offered.
+                WalletUpgradeBackup.noteKeyMaterialUnavailable()
+                throw SoraException.businessError(ResponseCode.WALLET_KEYS_UNAVAILABLE)
             }
-            SoraAccount(address, draft.accountName)
         }
+
+    override suspend fun requireKeyMaterialReadable() {
+        credentialsPrefs.requireKeyMaterialReadable()
+    }
+
+    private suspend fun commitDraftLocked(draft: WalletDraft): SoraAccount {
+        val address = draft.address
+        val keyPair = draft.keypair
+        val mnemonic = draft.mnemonic
+        val desired = buildMap {
+            put(CredentialField.PRIVATE_KEY, keyPair.privateKey.toHexString())
+            put(CredentialField.PUBLIC_KEY, keyPair.publicKey.toHexString())
+            put(CredentialField.KEY_NONCE, keyPair.nonce.toHexString())
+            if (mnemonic != null) {
+                put(CredentialField.MNEMONIC, mnemonic)
+            } else {
+                put(CredentialField.SEED, draft.seedHex)
+            }
+        }
+        if (credentialsPrefs.isExplicitWatchOnly(address)) {
+            throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+        }
+        val absent = mutableMapOf<CredentialField, String>()
+        desired.forEach { (field, value) ->
+            when (val stored = credentialsPrefs.readStoredCredential(field, address)) {
+                StoredCredential.Absent -> absent[field] = value
+                StoredCredential.Unreadable ->
+                    throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+                is StoredCredential.Present -> if (!sameCredential(field, stored.value, value)) {
+                    throw SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+                }
+            }
+        }
+        // The secret this draft does not write must still agree when it is already stored.
+        requireRetainedSecretAgrees(draft)
+        if (absent.isNotEmpty()) {
+            credentialsPrefs.writeCredentialsIfAbsent(address, absent)
+            FirebaseWrapper.log("Keys were created")
+        } else {
+            FirebaseWrapper.log("Retained keys were adopted")
+        }
+        val stored = credentialsPrefs.retrieveKeys(address)
+            ?: throw IllegalStateException("WALLET_KEYS_READBACK_MISSING")
+        try {
+            check(
+                stored.publicKey.contentEquals(keyPair.publicKey) &&
+                    stored.privateKey.contentEquals(keyPair.privateKey) &&
+                    stored.nonce.contentEquals(keyPair.nonce)
+            ) { "WALLET_KEYS_READBACK_MISMATCH" }
+        } finally {
+            stored.privateKey.fill(0)
+            stored.nonce.fill(0)
+        }
+        return SoraAccount(address, draft.accountName)
+    }
 
     private suspend fun requireRetainedSecretAgrees(draft: WalletDraft) {
         if (draft.mnemonic != null) {

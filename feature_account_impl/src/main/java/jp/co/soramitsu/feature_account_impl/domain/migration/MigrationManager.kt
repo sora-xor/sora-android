@@ -152,8 +152,25 @@ class MigrationManager @Inject constructor(
             .getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
         if (legacyAccounts.isEmpty()) {
             // Nothing to verify: a new install, every account removed, or the database was lost
-            // while keys were kept (those keys are set aside and offered for restore). A journal
-            // left by an earlier build protects no account and would only block later accounts.
+            // while keys were kept (those keys are set aside and offered for restore). Onboarding
+            // must still be able to store keys, which is impossible when this phone cannot unlock
+            // the key material kept here (for example app files copied from another phone without
+            // their Keystore key). Prove that first, reading only: nothing is created or written.
+            try {
+                credentialsRepository.requireKeyMaterialReadable()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                if (
+                    WalletStorageFailures.isKeyMaterialUnavailable(error) ||
+                    WalletStorageFailures.isTransient(error)
+                ) {
+                    return abortWithoutWrites(Preparation.Abort.from(error), accountsReadable = false)
+                }
+                throw error
+            }
+            // A journal left by an earlier build protects no account and would only block later
+            // accounts.
             if (existingJournal != null) {
                 database.walletIdentityDao().deleteMigrationJournal()
             }
@@ -320,7 +337,8 @@ class MigrationManager @Inject constructor(
                         selectedWalletId = selectedWalletId,
                         integrityHash = integrityHash,
                         startedAt = migrationStartedAt,
-                        completedAt = System.currentTimeMillis(),
+                        // Never before the start, even if the clock moved back meanwhile.
+                        completedAt = maxOf(System.currentTimeMillis(), migrationStartedAt),
                     ) == 1
                 ) { "MIGRATION_JOURNAL_ACTIVATION_MISMATCH" }
             }
@@ -346,8 +364,11 @@ class MigrationManager @Inject constructor(
         return MigrationOutcome.Verified
     }
 
-    private fun abortWithoutWrites(abort: Preparation.Abort): MigrationOutcome {
-        WalletUpgradeBackup.noteTransientVerificationFailure(abort.code)
+    private fun abortWithoutWrites(
+        abort: Preparation.Abort,
+        accountsReadable: Boolean = true,
+    ): MigrationOutcome {
+        WalletUpgradeBackup.noteTransientVerificationFailure(abort.code, accountsReadable)
         return if (abort.keysUnavailable) {
             MigrationOutcome.KeysUnavailable(abort.code)
         } else {
