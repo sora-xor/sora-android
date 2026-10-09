@@ -31,6 +31,8 @@ import {
 
 const EVALUATION = 1_800_000_000;
 const SOURCE_REVISION = "a".repeat(40);
+const PRODUCTION_CERTIFICATE_SHA256 =
+  "b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0";
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const canonical = (value) => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -68,7 +70,7 @@ const contractSha256 = androidDependencySigningReviewContractSha256V1({
 const qualification = Object.fromEntries(
   ANDROID_DEPENDENCY_SIGNING_REVIEW_QUALIFICATION_KEYS.map((key, index) => [
     key,
-    index === 0 ? 11 : index === 1 ? 31 : index === 2 ? 271 : true,
+    index === 0 ? 11 : index === 1 ? 31 : index === 2 ? 272 : true,
   ]),
 );
 const manifest = () => ({
@@ -176,6 +178,40 @@ const rejects = (name, mutate, expected) => {
 };
 
 try {
+  const productionSigningIdentity = JSON.parse(
+    readFileSync("config/android-production-signing-identity.json", "utf8"),
+  );
+  assert.equal(productionSigningIdentity.status, "blocked");
+  assert.equal(productionSigningIdentity.releaseEnabled, false);
+  assert.equal(
+    productionSigningIdentity.productionAppSigningCertificateSha256,
+    PRODUCTION_CERTIFICATE_SHA256,
+  );
+  assert.equal(
+    productionSigningIdentity.productionUploadCertificateSha256,
+    PRODUCTION_CERTIFICATE_SHA256,
+  );
+  assert.equal(
+    productionSigningIdentity.publicIdentityEvidence
+      .generatedDigitalAssetLinksCertificateSha256,
+    PRODUCTION_CERTIFICATE_SHA256,
+  );
+  assert.equal(
+    productionSigningIdentity.publicIdentityEvidence
+      .digitalAssetLinksFingerprintPubliclyConfirmable,
+    true,
+  );
+  assert.equal(
+    productionSigningIdentity.publicIdentityEvidence
+      .independentAdmissionCompleted,
+    false,
+  );
+  assert.equal(productionSigningIdentity.signedBundleCertificateMatched, false);
+  assert.equal(
+    productionSigningIdentity.playAppSigningContinuityReviewed,
+    false,
+  );
+
   const blockedManifest = JSON.parse(
     readFileSync(
       "docs/modernization/qualification/android-dependency-signing-review-manifest.blocked.json",
@@ -220,13 +256,9 @@ try {
       },
     },
   );
-  assert.equal(printContract.status, 1);
-  assert.equal(
-    printContract.stderr,
-    "ANDROID_DEPENDENCY_SIGNING_REVIEW_CONTRACT_INPUT_INVALID\n",
-  );
-  assert.equal(printContract.stdout, "");
-  mutations += 1;
+  assert.equal(printContract.status, 0);
+  assert.match(printContract.stdout, /^contractSha256=[0-9a-f]{64}\n$/);
+  assert.equal(printContract.stderr, "");
 
   const receipt = verify(makeBundle());
   assert.equal(receipt.status, "admitted-for-dependency-signing-gate");
@@ -258,6 +290,14 @@ try {
   rejects("configuration count drift", (value) => {
     value.qualification.lockConfigurationCountReviewed = 270;
   }, "SHAPE_INVALID");
+  rejects("previous materialization configuration count", (value) => {
+    value.qualification.lockConfigurationCountReviewed = 271;
+  }, "SHAPE_INVALID");
+  for (const key of ["verificationMetadataReviewed", "productionReleaseLocksReviewed"]) {
+    rejects(`materialized without required ${key}`, (value) => {
+      value.qualification[key] = false;
+    }, "SHAPE_INVALID");
+  }
   rejects("review incomplete", (value) => {
     value.qualification.sbomReviewed = false;
   }, "SHAPE_INVALID");

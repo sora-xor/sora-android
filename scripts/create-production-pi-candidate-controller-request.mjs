@@ -10,7 +10,10 @@ import {
   containsPrivacySensitiveField,
   validateProductionPiRawLiveReceipt,
 } from "./lib/production-pi-receipt.mjs";
-import { verifyTairaDeploymentManifestV1 } from "./lib/taira-deployment-manifest-v1.mjs";
+import {
+  parseExpectedTairaDeploymentManifestSequenceNumberV1,
+  verifyTairaDeploymentManifestV1,
+} from "./lib/taira-deployment-manifest-v1.mjs";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
 const MAXIMUM_AAB_BYTES = 512 * 1024 * 1024;
@@ -90,6 +93,10 @@ try {
       "TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256",
     ),
     evaluationEpochSeconds: requestedAtEpochSeconds,
+    expectedManifestSequenceNumber:
+      parseExpectedTairaDeploymentManifestSequenceNumberV1(
+        required("TAIRA_DEPLOYMENT_EXPECTED_MANIFEST_SEQUENCE_NUMBER"),
+      ),
   });
 } catch {
   fail("PI_CANDIDATE_REQUEST_TAIRA_DEPLOYMENT_NOT_QUALIFIED");

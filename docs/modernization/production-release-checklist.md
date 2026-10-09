@@ -954,6 +954,18 @@ This release is fail-closed. A build is not a production candidate while
   task must reject the historical source fallback. Supply the retained keystore only through an
   absolute, canonical, owner-only regular path with no symbolic-link traversal. Passwords and
   private-key material are never written to evidence.
+- Retain the public Play App Signing/upload identity
+  `b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0`. The authenticated Play
+  Console inventory and Play-generated Digital Asset Links statement agree on this fingerprint,
+  but that public agreement is not a substitute for the independently signed continuity admission.
+  Jenkins owns the existing credentials at the pinned shared-library revision through
+  `android_keystore_sora`, `android_keystore_storepass_sora`, `android_keyalias_sora`, and
+  `android_keypass_sora`; never record their values or copy the keystore into source.
+- GitHub qualification must accept keystore bytes only through protected `CI_KEYSTORE_BASE64`,
+  materialize them once at the fixed owner-only
+  `$RUNNER_TEMP/sora-android-production-upload.keystore`, export that path as `CI_KEYSTORE_PATH`,
+  and remove the exact file in an unconditional cleanup step. A secret containing a host-specific
+  `CI_KEYSTORE_PATH` is invalid because that path cannot identify a file on a fresh runner.
 - Build the signed production AAB, signed minified APK, and R8 mapping twice from the same exact
   commit. The second build uses a distinct `git clone --no-local` checkout and distinct
   `GRADLE_USER_HOME`. Require byte-for-byte equality for all three outputs; matching task success

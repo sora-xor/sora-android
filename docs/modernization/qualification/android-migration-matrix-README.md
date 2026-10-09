@@ -5,10 +5,10 @@ Do not create it from source inspection, inferred counters, logs from a partiall
 an older source tree. Publish it only after an independently reviewed qualification run over every
 retained production Room snapshot and the exact current release candidate.
 
-The receipt uses schema version 7 and contains aggregate evidence only. Schema 7 authenticates the
+The receipt uses schema version 8 and contains aggregate evidence only. Schema 8 authenticates the
 retained-device run, four qualified aggregate artifacts, one explicitly non-authorizing raw-run
-inventory artifact, the exact release source/app build, and an independent review. Schema 6 and all
-earlier receipts, plus evidence-manifest schema 1 and earlier, are operationally rejected. It must never
+inventory artifact, the exact release source/app build, and an independent review. Schema 7 and all
+earlier receipts, plus evidence-manifest schema 2 and earlier, are operationally rejected. It must never
 contain a wallet or account identifier, address, device identifier, phrase, seed, private or public
 key, signature, signed payload, ciphertext, wrapped key, Keystore material, or a per-wallet row.
 
@@ -21,12 +21,12 @@ them. Do not rename a blocked template or populate it from source inspection.
 
 The GitHub-hosted release workflow now has a source-side protected handoff. It uploads the exact
 candidate AAB once to an independently configured, TLS-SPKI-pinned controller and accepts only the
-exact `sora-android-migration-controller-envelope-v1` response. The strict envelope contains 13
+exact `sora-android-migration-controller-envelope-v2` response. The strict envelope contains 13
 base64-encoded files: the qualified receipt, evidence manifest, trust root, five aggregate-only
 artifacts, three detached signatures, and two public keys. It binds the candidate AAB hash/size,
 source revision, protected run UUID, monotonic sequence, and app-build identity. The extractor
 rejects duplicate/unknown/missing fields, non-canonical base64, duplicate-key or invalid JSON,
-stale v6/v1 wire contracts, internal artifact/hash drift, aliases, unsafe modes, and changed input.
+stale v7/v2 receipts/manifests and v1 envelopes, internal artifact/hash drift, aliases, unsafe modes, and changed input.
 It creates a fresh owner-only output root and emits a non-authorizing extraction receipt.
 
 The controller deployment, TLS pin, bearer token, retained snapshots/devices, producer/reviewer
@@ -37,7 +37,7 @@ the immutable candidate package so every later cohort revalidates the same deliv
 
 `scripts/verify-android-migration-qualification.mjs --verify-qualified` is the standalone
 authenticator. Release admission calls the same standard-library module. Audit mode only lints the
-blocked templates; release mode requires an authenticated v7 receipt and v2 evidence manifest. The protected production
+blocked templates; release mode requires an authenticated v8 receipt and v3 evidence manifest. The protected production
 environment must provide the exact `PRODUCTION_CANDIDATE_SOURCE_REVISION`, plus:
 
 - `ANDROID_MIGRATION_QUALIFICATION_RUN_ID` and a positive, monotonically advanced
@@ -83,14 +83,14 @@ expires after seven days.
 `scripts/collect-android-migration-raw-evidence.mjs` implements the source-side raw-run inventory
 contract. It accepts only a canonical absolute protected run root containing
 `raw-run-index.json`, verifies every indexed input as a stable bounded regular non-symlink file,
-requires method-inventory, report, and transcript evidence for all six named suites plus at least
+requires method-inventory, report, and transcript evidence for all seven named suites plus at least
 two APK-identity artifacts, rejects unindexed files, aliases, hard links, special files, and any
 group/world-accessible entry, then re-inventories and re-hashes the complete owner-only tree before
 emitting aggregate hashes and counts to standard output. The emitted
 artifact deliberately carries `status: collected-unreviewed`, three false authorization fields,
 and a blocking warning. It never emits raw paths or contents and cannot authorize qualification,
-release, or mutation by itself. The distinct reviewer-signed v7 receipt and producer/reviewer-signed
-v2 evidence manifest must bind its exact hash, raw-index hash, and raw-result bundle hash.
+release, or mutation by itself. The distinct reviewer-signed v8 receipt and producer/reviewer-signed
+v3 evidence manifest must bind its exact hash, raw-index hash, and raw-result bundle hash.
 
 The collector closes the repository contract, not the external execution gap. A protected immutable
 producer namespace must retain the indexed bytes for independent review, and the controller handoff
@@ -100,8 +100,8 @@ substitute for execution evidence.
 
 Required execution evidence includes:
 
-- Every retained Room schema from 58 through 76 migrated to target schema 77 for both exact
-  single-account and exact multi-account cohorts, plus the direct 73-to-74, 74-to-75, 75-to-76,
+- Released pre-multiaccount Room 50 and every retained Room schema from 58 through 76 migrated to target schema 77. Room 50 requires a single-account cohort in DELETE and WAL modes;
+  schemas 58–76 require both exact single-account and exact multi-account cohorts in both modes, plus the direct 73-to-74, 74-to-75, 75-to-76,
   76-to-77, and current 77-to-77 safety contracts. The 76-to-77 copy must retain every pending
   transaction field, set only the new chain ID column to null, and never infer a current chain for
   a historical row.
@@ -123,9 +123,10 @@ Required execution evidence includes:
   keypair-only cohort must remain `LEGACY_SECRET`, bind its stored public key to the unchanged
   SORA2 address, sign and verify a fixed challenge with the retained keypair, preserve the exact
   encrypted private/public/nonce fields, retain blank mnemonic and seed fields, and create no
-  Minamoto or Taira child. The retained 15-word cohort must remain
-  `MNEMONIC_UNSUPPORTED`, produce only the existing SORA2 network account, reject public recovery
-  import, preserve ciphertext and signing parity, and create no Minamoto or Taira child. Record
+  Minamoto or Taira child. The retained 15-word cohort now also contains independently keyed
+  18- and 21-word wallets. Every wallet in that cohort must remain `MNEMONIC_UNSUPPORTED`,
+  produce only its existing SORA2 network account, reject public recovery import, preserve
+  ciphertext and signing parity, and create no Minamoto or Taira child. Record
   `successfulSecretSourceCohortCount` as exactly 6, `legacySecretQualified` as true only after the
   keypair-only cohort passes, and `retainedFifteenWordMnemonicQualified` as true only after its
   cohort passes. Current-schema admission must also reject every incomplete private/public/nonce
@@ -159,11 +160,79 @@ Required execution evidence includes:
 - Exact SHA-256 identities for the canonical generated Room 74, 75, 76, and 77 schemas and every true
   aggregate parity/qualification field required by `verify-production-modernization.mjs`.
 
+
+## Pre-multiaccount production coverage (v8)
+
+The source schema list is exactly `[50, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68,
+69, 70, 71, 72, 73, 74, 75, 76]`. There are 78 retained schema cohorts: 40 single-account
+and 38 multi-account. Do not manufacture a multi-account Room 50 fixture or snapshots for
+unproven release versions 15–49 or 51–57 merely because the runtime accepts those cache versions.
+
+The retained Room 50 source must have release provenance from at least one of:
+
+- `release/sora/2.3.2`, commit `0011066db0865bd1f43dcad6c4d09c40499651d0`;
+- `release/sora/2.3.3`, commit `2dc0a751025aef8a9f852a791bdaa2275fd3848b`.
+
+`preAccountUpgrade` is an exact, mandatory aggregate object in the v8 receipt and in the
+v2 retained-snapshot, encrypted-storage, and device-execution artifacts. All four copies must
+match. The test-result artifact keeps v1; the manifest is v3; raw index and collected evidence
+are v2. `scripts/lib/android-migration-coverage-v1.mjs` fixes the field inventory and supported
+release tags. A blocked template has no release tags, zero released snapshots, and false checks;
+a qualified run requires a positive released snapshot count, known nonduplicated release tags,
+both journal modes, two source cohorts, six restart phases, twelve restart cohorts, and every
+check true. The total retained snapshot count must also cover the other 19 source schemas.
+
+For each original snapshot, independently verify the released APK provenance/signing identity,
+registered single-account state with no selected-account preference and no `accounts` table,
+and the complete encrypted unsuffixed private/public/nonce tuple. Preserve every original
+mnemonic/seed/legacy Iroha field, wrapped key, Keystore alias, username, and migration flag when
+present. Sign with the retained key, prove its public key/address, and verify exact final owner,
+selection and flag parity. Archives must retain every original cache table, row and explicit index;
+the verified immutable backup must precede the bridge. Derived keys or source-inspected column
+fixtures do not count as release-produced snapshots.
+
+Execute all six boundaries independently in **both DELETE and WAL** modes:
+
+| Raw evidence phase | Required interruption/retry proof |
+| --- | --- |
+| `schema-transaction` | Forced stop before the Room transaction commits leaves the original schema/rows recoverable; retry completes from the immutable original backup. |
+| `schema-committed` | Stop after the bridge commits, before repository promotion; restart recognizes the same unsuffixed wallet. |
+| `account-inserted` | Stop after its account row is inserted; retry does not replace or duplicate that account. |
+| `cards-inserted` | Stop after missing cards are inserted, before selection publication; retry preserves card choices. |
+| `selection-published` | Stop after atomic owner/selection/flag publication; restart reads the original credentials for that owner. |
+| `network-activated` | Stop after wallet/network activation; restart verifies the same account and signing key with no duplicate child or key rewrite. |
+
+The v2 raw index adds the mandatory `legacy-pre-account-upgrade` suite, with its own method
+inventory, report and transcript. In that suite, index at least one stable owner-only artifact
+for **each** category exported by `ANDROID_PRE_ACCOUNT_EVIDENCE_CATEGORIES`: one
+`retained-room50-provenance` artifact, plus `pre-account-<phase>-delete` and
+`pre-account-<phase>-wal` for each of the six phases above. Missing any category fails collection;
+placing it under another suite also fails. The public raw artifact publishes only their total
+count and `allPreAccountEvidencePresent`; paths and contents remain in the protected namespace.
+This is a seventh external retained-device execution suite, not an inferred seventh Kotlin test
+class. The existing six Kotlin method counts and seven native production-path cohorts remain
+separate requirements. Collection remains non-authorizing; distinct authorities must review
+these exact indexed bytes and sign the v8 receipt/v3 manifest.
+
+The producer handoff requests `/v2/android/migration-qualification/evidence-envelope` with
+`X-SORA-Contract: sora-android-migration-controller-v2` and
+`Accept: application/vnd.sora.android-migration-envelope-v2+json`. A producer must deliver the
+exact v2 envelope and the newly versioned signed artifacts; an old delivery cannot be promoted
+by changing its filename or outer version.
+
 `qualificationContractSha256` binds the ordered path and bytes of the full migration,
 cryptography, encrypted-storage, database, build, dependency-provenance, workflow, runner,
-checklist, v7/v2 templates/authenticator, non-authorizing raw collector and contract tests,
+checklist, v8/v3 templates/authenticator, non-authorizing raw collector and contract tests,
 retained-schema, and legacy Iroha-claim closure listed by the verifier. The
 claim closure includes its wallet APIs, preferences, interactor/repository implementations and
 tests, plus the purpose-tagged durable SORA2 submission/recovery boundary. Any bound source or
 dependency-evidence change invalidates the receipt and requires a complete rerun. Never copy a
 receipt forward between release candidates.
+
+The digest also binds post-migration recovery startup and its failure/cancellation tests,
+the actual relocated Nexus/SORA2 portfolio UI and shared recovery/history components, and
+`test-android-wallet-continuity-source-contract.mjs`. That test executes the verifier's current
+predicates against their actual source readers and deliberate in-memory mutations; moving a call
+must preserve migration ordering, independent recovery availability, exact account/network scope,
+recovery presentation, authoritative balances and production identity. This source-binding change
+invalidates old evidence without changing the v8 receipt or v2 controller object shapes.

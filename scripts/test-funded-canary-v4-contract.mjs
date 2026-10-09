@@ -84,8 +84,8 @@ const TAIRA_CHAIN_B = "fc56984b-2be7-431d-840e-21514d1883f0";
 const tairaNetwork = (chainId) => ({
   chainId,
   i105Discriminant: 369,
-  toriiBaseUrl: "https://node-2.taira.sora.org",
-  explorerBaseUrl: "https://taira-explorer.sora.org",
+  toriiBaseUrl: "https://taira.sora.org",
+  explorerBaseUrl: "https://taira.sora.org",
   isTestnet: true,
 });
 

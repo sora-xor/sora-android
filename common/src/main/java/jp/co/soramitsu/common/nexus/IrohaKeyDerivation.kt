@@ -44,6 +44,12 @@ object IrohaKeyDerivation {
         mnemonic: String,
         network: NexusNetwork,
         passphrase: String = "",
+    ): DerivedAccount = derive(mnemonic, network.derivationProfile, passphrase)
+
+    fun derive(
+        mnemonic: String,
+        profile: NexusDerivationProfile,
+        passphrase: String = "",
     ): DerivedAccount {
         val words = mnemonic.trim().split(Regex("\\s+")).filter(String::isNotBlank)
         require(words.size == 12 || words.size == 24) {
@@ -66,15 +72,15 @@ object IrohaKeyDerivation {
             .generateSecret(spec)
             .encoded
         return try {
-            val derived = derivePrivateKey(seed, network.derivationPath)
+            val derived = derivePrivateKey(seed, profile.derivationPath)
             val publicKey = Ed25519PrivateKeyParameters(derived.first, 0).generatePublicKey().encoded
             DerivedAccount(
-                network = network.id,
-                derivationPath = network.derivationPath,
+                network = profile.id,
+                derivationPath = profile.derivationPath,
                 privateKeySeed = derived.first,
                 chainCode = derived.second,
                 publicKey = publicKey,
-                address = IrohaAddressCodec.encode(publicKey, network.chainDiscriminant),
+                address = IrohaAddressCodec.encode(publicKey, profile.chainDiscriminant),
             )
         } finally {
             seed.fill(0)

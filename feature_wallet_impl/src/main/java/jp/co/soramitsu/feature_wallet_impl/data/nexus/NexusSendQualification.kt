@@ -9,8 +9,30 @@ import jp.co.soramitsu.common.nexus.NexusNetwork
  * checkpoint capabilities. The mutation coordinator remains the only UI-reachable owner of the
  * complete signer and finality-reader pair.
  */
+enum class NexusCapabilityStatus {
+    QUALIFIED,
+    UNAVAILABLE,
+    ERROR,
+}
+
+data class NexusSendCapabilities(
+    val signing: NexusCapabilityStatus,
+    val finality: NexusCapabilityStatus,
+) {
+    val supportsSend: Boolean
+        get() = signing == NexusCapabilityStatus.QUALIFIED &&
+            finality == NexusCapabilityStatus.QUALIFIED
+
+    companion object {
+        fun unavailable(): NexusSendCapabilities = NexusSendCapabilities(
+            signing = NexusCapabilityStatus.UNAVAILABLE,
+            finality = NexusCapabilityStatus.UNAVAILABLE,
+        )
+    }
+}
+
 interface NexusSendQualification {
-    fun isQualifiedFor(network: NexusNetwork): Boolean
+    fun capabilitiesFor(network: NexusNetwork): NexusSendCapabilities
 }
 
 /**
@@ -24,11 +46,17 @@ class DefaultNexusSendQualification(
     private val signer: NexusTransactionSigner,
     private val finalityReader: NexusFinalityReader,
 ) : NexusSendQualification {
-    override fun isQualifiedFor(network: NexusNetwork): Boolean = try {
-        signer.isQualifiedFor(network) && finalityReader.isQualifiedFor(network)
+    override fun capabilitiesFor(network: NexusNetwork): NexusSendCapabilities =
+        NexusSendCapabilities(
+            signing = qualification { signer.isQualifiedFor(network) },
+            finality = qualification { finalityReader.isQualifiedFor(network) },
+        )
+
+    private inline fun qualification(block: () -> Boolean): NexusCapabilityStatus = try {
+        if (block()) NexusCapabilityStatus.QUALIFIED else NexusCapabilityStatus.UNAVAILABLE
     } catch (_: Exception) {
-        false
+        NexusCapabilityStatus.ERROR
     } catch (_: LinkageError) {
-        false
+        NexusCapabilityStatus.ERROR
     }
 }
