@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.screens.scan
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -194,11 +195,16 @@ class QRCodeScannerActivity : AppCompatActivity() {
         if (!shouldOpenScannedConnect(recipientOnly, uri.scheme, uri.host)) {
             return false
         }
-        startActivity(
-            Intent(Intent.ACTION_VIEW, uri)
-                .setPackage(packageName),
-        )
-        return true
+        return try {
+            startActivity(
+                Intent(Intent.ACTION_VIEW, uri)
+                    .setPackage(packageName),
+            )
+            true
+        } catch (_: ActivityNotFoundException) {
+            // No IrohaConnect screen in this build: hand the text back like any other scan.
+            false
+        }
     }
 
     private inner class IrohaAwareCaptureManager(
