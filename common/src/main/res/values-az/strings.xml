@@ -49,9 +49,6 @@
   <string name="backup_password_title_2">Parolun təyin edilməsi Google ehtiyat nüsxənizi şifrələyəcək. Pul kisəsini bərpa edərkən bunu daxil etməlisiniz.</string>
   <string name="biometric_dialog_title">Doğrulayın</string>
   <string name="block_id">Qarışığı blok edin</string>
-  <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
-  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Nağd avro ilə XOR tokenini alın və ya satın</string>
-  <string name="buy_crypto_buy_xor_with_fiat_title">Buy XOR with fiat</string>
   <string name="cant_load_balance">Balansı yükləmək mümkün deyil</string>
   <string name="change_language">Change language</string>
   <string name="change_pin">Change PIN</string>
@@ -79,8 +76,6 @@
   <string name="common_balance">Balans</string>
   <string name="common_bashkir">Başqırd dili</string>
   <string name="common_bridged">Körpülü</string>
-  <string name="common_buy">Buy</string>
-  <string name="common_buy_xor">Buy XOR</string>
   <string name="common_cancel">Ləğv edin</string>
   <string name="common_chinese">Çin dili</string>
   <string name="common_chinesetaiwan">Çin (Tayvan) dili</string>
@@ -288,7 +283,6 @@
   <string name="farm_details_your_rewards">Mükafatlarınız</string>
   <string name="farming_details_title">Əkinçilik təfərrüatları</string>
   <string name="forget_account">Forget account</string>
-  <string name="get_sora_card_title">Get SORA Card</string>
   <string name="global_results">Global results</string>
   <string name="hide_zero_balances">Hide zero balances</string>
   <string name="history_referral">İstinad</string>
@@ -315,8 +309,6 @@
   <string name="mnemonic_invalid">Yanlış mnemonik parol, lütfən sözlər qaydasını bir dəfə daha yoxlayın.</string>
   <string name="mnemonic_invalid_title">Yanlış mnemonik parol</string>
   <string name="mnemonic_text">Yedəkləmə üçün rəqəmsal olmayan yolu istifadə edin, məsələn, kağıza yazmaq.</string>
-  <string name="more_menu_sora_card_subtitle">Manage your card and IBAN account</string>
-  <string name="more_menu_sora_card_title">SORA Card</string>
   <string name="network_fee">Şəbəkə haqqı</string>
   <string name="network_finalized_history">Fəaliyyət</string>
   <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
@@ -515,21 +507,6 @@
   <string name="show_zero_balances">Show zero balances</string>
   <string name="slippage">Slippage</string>
   <string name="something_went_wrong">Nəsə xəta baş verdi</string>
-  <string name="sora_card_blacklisted_countires_title">Excluded of application</string>
-  <string name="sora_card_blacklisted_countires_warning">Residents from certain countries can not apply for SORA Card at this moment</string>
-  <string name="sora_card_buy_xor_with_eur">Buy XOR with EUR</string>
-  <string name="sora_card_details_title">Kart təfərrüatları</string>
-  <string name="sora_card_option_logout">SORA Kartından çıxın</string>
-  <string name="sora_card_option_logout_description">Siz SORA Card-dan çıxmaq üzrəsiniz. Siz hələ də SORA Card müstəqil proqramına çıxışınız olacaq, lakin balans artıq SORA Pulqabıda sizin üçün əlçatan olmayacaq.</string>
-  <string name="sora_card_see_details">Detallara baxın</string>
-  <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
-  <string name="sora_card_swap_crypto_for_xor">Swap crypto for XOR</string>
-  <string name="sora_card_verification_failed">Verification failed</string>
-  <string name="sora_card_verification_in_progress">Verification in progress</string>
-  <string name="sora_card_verification_rejected">Verification Rejected</string>
-  <string name="sora_card_verification_successful">Card is on the way</string>
-  <string name="sora_card_you_have_enough_xor">You have enough XOR for a FREE card</string>
-  <string name="sora_card_you_need_xor" formatted="false">You need %s XOR (€%s)</string>
   <string name="start_staking">Staking başlayın</string>
   <string name="status_error">Xəta</string>
   <string name="status_pending">Gözlənilir</string>

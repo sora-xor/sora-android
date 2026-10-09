@@ -49,9 +49,6 @@
   <string name="backup_password_title_2">设置密码将加密您的Google备份。在恢复钱包时，您需要输入此密码。</string>
   <string name="biometric_dialog_title">身份验证</string>
   <string name="block_id">区块哈希</string>
-  <string name="buy_crypto_buy_xor_banner_title">购买XOR代币</string>
-  <string name="buy_crypto_buy_xor_with_fiat_subtitle">用欧元购买或出售XOR代币</string>
-  <string name="buy_crypto_buy_xor_with_fiat_title">用法币购买XOR</string>
   <string name="cant_load_balance">无法加载余额</string>
   <string name="change_language">更改语言</string>
   <string name="change_pin">更改PIN码</string>
@@ -79,8 +76,6 @@
   <string name="common_balance">余额</string>
   <string name="common_bashkir">巴什基尔语</string>
   <string name="common_bridged">跨链</string>
-  <string name="common_buy">购买</string>
-  <string name="common_buy_xor">购买XOR</string>
   <string name="common_cancel">取消</string>
   <string name="common_chinese">中文</string>
   <string name="common_chinesetaiwan">中文（台湾）</string>
@@ -287,7 +282,6 @@
   <string name="farm_details_your_rewards">你的奖励</string>
   <string name="farming_details_title">农业细节</string>
   <string name="forget_account">忘记账户</string>
-  <string name="get_sora_card_title">获取SORA卡</string>
   <string name="global_results">全局结果</string>
   <string name="hide_zero_balances">隐藏零余额</string>
   <string name="history_referral">被推荐人</string>
@@ -314,8 +308,6 @@
   <string name="mnemonic_invalid">助记词密码无效，请再检查一次单词顺序。</string>
   <string name="mnemonic_invalid_title">无效的助记词口令</string>
   <string name="mnemonic_text">我们建议使用非数字方式进行备份，例如将其写在纸上。</string>
-  <string name="more_menu_sora_card_subtitle">管理您的卡片和IBAN账户</string>
-  <string name="more_menu_sora_card_title">SORA卡</string>
   <string name="network_fee">网络费用</string>
   <string name="network_finalized_history">活动</string>
   <string name="node_connection_issue">您的账户已成功创建。但是应用程序无法连接到默认节点。请尝试切换到备选节点。</string>
@@ -510,21 +502,6 @@
   <string name="show_zero_balances">显示零余额</string>
   <string name="slippage">滑点</string>
   <string name="something_went_wrong">出了点问题</string>
-  <string name="sora_card_blacklisted_countires_title">应用程序排除</string>
-  <string name="sora_card_blacklisted_countires_warning">来自某些国家的居民目前无法申请SORA卡。</string>
-  <string name="sora_card_buy_xor_with_eur">用欧元购买XOR</string>
-  <string name="sora_card_details_title">卡片详情</string>
-  <string name="sora_card_option_logout">退出SORA卡</string>
-  <string name="sora_card_option_logout_description">您即将退出 SORA Card。您仍然可以使用 SORA Card 独立应用程序，但余额将不再在 SORA 钱包中可用。</string>
-  <string name="sora_card_see_details">查看详情</string>
-  <string name="sora_card_sign_in_required">如果您已经有卡，请登录；否则请申请一张新卡。</string>
-  <string name="sora_card_swap_crypto_for_xor">用加密货币兑换XOR</string>
-  <string name="sora_card_verification_failed">验证失败</string>
-  <string name="sora_card_verification_in_progress">验证进行中</string>
-  <string name="sora_card_verification_rejected">验证被拒绝</string>
-  <string name="sora_card_verification_successful">卡片已经寄出</string>
-  <string name="sora_card_you_have_enough_xor">您已经拥有足够的XOR来获得一张免费卡</string>
-  <string name="sora_card_you_need_xor" formatted="false">你需要%sXOR(€%s)</string>
   <string name="start_staking">开始质押</string>
   <string name="status_error">错误</string>
   <string name="status_pending">等待确认</string>

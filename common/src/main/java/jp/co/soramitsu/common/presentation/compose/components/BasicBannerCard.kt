@@ -218,7 +218,7 @@ private fun PreviewBasicBannerCard12() {
 @Composable
 private fun PreviewBasicBannerCard2() {
     BasicBannerCard(
-        imageContent = R.drawable.ic_buy_xor_banner_sora,
+        imageContent = R.drawable.ic_banner_backup,
         title = "Title",
         description = "Description",
         button = "Button",

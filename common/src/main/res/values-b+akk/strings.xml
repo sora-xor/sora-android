@@ -49,9 +49,6 @@
   <string name="backup_password_title_2">Awāt pītim ṭuppam šanâm ša Google ukattam. Ana turrim ša bīt kaspika tašakkanši</string>
   <string name="biometric_dialog_title">Šumam kun</string>
   <string name="block_id">Kunuk libittim</string>
-  <string name="buy_crypto_buy_xor_banner_title">Kaspam XOR šâmum</string>
-  <string name="buy_crypto_buy_xor_with_fiat_subtitle">Kaspam XOR ina kaspim EUR šâmum u nadānum</string>
-  <string name="buy_crypto_buy_xor_with_fiat_title">XOR ina kaspim mātim šâmum</string>
   <string name="cant_load_balance">Kaspam ša ibassi ul ušēṣi</string>
   <string name="change_language">Lišānam šanûm</string>
   <string name="change_pin">PIN šanûm</string>
@@ -80,8 +77,6 @@
   <string name="common_balance">Kaspum ša ibassi</string>
   <string name="common_bashkir">Lišān Bašqirim</string>
   <string name="common_bridged">Ina titurrim šūbul</string>
-  <string name="common_buy">Šâmum</string>
-  <string name="common_buy_xor">XOR šâmum</string>
   <string name="common_cancel">Ezēbum</string>
   <string name="common_chinese">Lišān Ṣīnim</string>
   <string name="common_chinesetaiwan">Lišān Ṣīnim ša Taiwan</string>
@@ -289,7 +284,6 @@
   <string name="farm_details_your_rewards">Qīšātūka</string>
   <string name="farming_details_title">Ṭēm errešūtim</string>
   <string name="forget_account">Nikkassam mašûm</string>
-  <string name="get_sora_card_title">SORA Card leqûm</string>
   <string name="global_results">Namerāt kiššat mātim</string>
   <string name="hide_zero_balances">Kaspī ša lā bašêm katāmum</string>
   <string name="history_referral">Mubbilum</string>
@@ -316,8 +310,6 @@
   <string name="mnemonic_invalid">Ṣerret awāt zikrim ul kīnam; seder awātim šanītam bāri</string>
   <string name="mnemonic_invalid_title">Ṣerret awāt zikrim ul kīnam</string>
   <string name="mnemonic_text">Ṭuppam lā ša minâtim ana ṭuppim šanîm niqabbi, kīma eli kanīkim šaṭārum u ina maṣṣartim naṣārum</string>
-  <string name="more_menu_sora_card_subtitle">SORA Card-ka u nikkassam IBAN paqādum</string>
-  <string name="more_menu_sora_card_title">SORA Card</string>
   <string name="network_fee">Miksu ḫarrānim</string>
   <string name="node_connection_issue">Nikkassuka damqiš banû. Ṭuppum ana bābim kīnim ul irakkas. Ana bābim šanîm šanûm</string>
   <string name="node_details_address_validation_failed">URL ul ukīn: ašrum ul kīnum</string>
@@ -512,22 +504,7 @@
   <string name="show_more">Mādam kullum</string>
   <string name="show_zero_balances">Kaspī lā bašûti kullum</string>
   <string name="slippage">Šanīt šīmim</string>
-  <string name="sora_card_details_title">Ṭēm SORA Card</string>
   <string name="something_went_wrong">Mimma lemniš illik</string>
-  <string name="sora_card_option_logout">Ištu SORA Card waṣûm</string>
-  <string name="sora_card_blacklisted_countires_title">Ana erēbim ul nadin</string>
-  <string name="sora_card_blacklisted_countires_warning">Wašbū mātātim šanîtim inanna SORA Card ul lišʾalū</string>
-  <string name="sora_card_buy_xor_with_eur">XOR ina EUR šâmum</string>
-  <string name="sora_card_option_logout_description">Ištu SORA Card taṣṣī. Ana ṭuppim SORA Card ša ramānišu taṭarrad, u kaspum ina bīt kaspim SORA ul innamir</string>
-  <string name="sora_card_see_details">Ṭēmam amārum</string>
-  <string name="sora_card_sign_in_required">SORA Card šuālum ū, šumma išûka, erēbum</string>
-  <string name="sora_card_swap_crypto_for_xor">Kaspam niṣirtim ana XOR šanûm</string>
-  <string name="sora_card_verification_failed">Kunuk šumim ul ikšud</string>
-  <string name="sora_card_verification_in_progress">Kunuk šumim illak</string>
-  <string name="sora_card_verification_rejected">Kunuk šumim nadû</string>
-  <string name="sora_card_verification_successful">SORA Card ina ḫarrānim</string>
-  <string name="sora_card_you_have_enough_xor">XOR-ka ana SORA Card balum kaspim mādu</string>
-  <string name="sora_card_you_need_xor" formatted="false">%s XOR, €%s, tašakkan</string>
   <string name="start_staking">Rakāsam šurrûm</string>
   <string name="status_error">Ḫiṭītum</string>
   <string name="status_pending">Ul gamir</string>
