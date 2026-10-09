@@ -15,6 +15,8 @@
   <string name="account_address">Adresse du compte</string>
   <string name="account_already_imported">Déjà importé</string>
   <string name="account_already_imported_description">Ce portefeuille est déjà importé</string>
+  <string name="account_storage_conflict">This wallet can\'t be added here</string>
+  <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
   <string name="account_confirmation_title">Confirmez le code mnémonique</string>
   <string name="account_confirmation_title_v2">Confirmer la phrase de sécurité</string>
   <string name="account_options">Options du compte</string>
@@ -113,8 +115,8 @@
   <string name="common_error_invitation_already_accepted">Vous avez déjà appliqué un autre code d\'invitation</string>
   <string name="common_error_invitation_code_not_found">Le code d\'invitation est invalide.</string>
   <string name="common_error_inviter_registered_after_invitee">Le code d\'invitation fourni ne peut pas être appliqué car il provient d\'un utilisateur qui s\'est inscrit après vous.</string>
-  <string name="common_error_mnemonic_is_not_valid">Veuillez vous assurer que votre phrase secrète contient 12 ou 24 mots et qu\'ils sont tous corrects.</string>
-  <string name="common_error_mnemonic_length_error">La phrase secrète doit contenir 12 ou 24 mots</string>
+  <string name="common_error_mnemonic_word_count">A passphrase has 12, 15, 18, 21 or 24 words.</string>
+  <string name="common_error_mnemonic_word_count_invalid">Please make sure your passphrase has 12, 15, 18, 21 or 24 words and that every word is spelled correctly.</string>
   <string name="common_error_network">Veuillez vérifier votre connexion Internet et réessayer plus tard.</string>
   <string name="common_error_no_browser_error">Veuillez installer un navigateur pour ouvrir le lien</string>
   <string name="common_error_not_enough_invitations">Désolé, vous n\'avez aucune invitation à partager</string>

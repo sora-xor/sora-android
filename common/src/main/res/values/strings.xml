@@ -15,6 +15,8 @@
   <string name="account_address">Account address</string>
   <string name="account_already_imported">Already imported</string>
   <string name="account_already_imported_description">This wallet is already imported</string>
+  <string name="account_storage_conflict">This wallet can\'t be added here</string>
+  <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
   <string name="account_confirmation_title">Confirm mnemonic</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="account_options">Account options</string>
@@ -115,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">You have already applied another invitation code</string>
   <string name="common_error_invitation_code_not_found">Invitation code is invalid</string>
   <string name="common_error_inviter_registered_after_invitee">Provided invitation code cannot be applied because it is from the user who registered after you</string>
-  <string name="common_error_mnemonic_is_not_valid">Please, make sure that your passphrase consists of 12 or 24 words and they are all correct.</string>
-  <string name="common_error_mnemonic_length_error">Passphrase must contain 12 or 24 words</string>
+  <string name="common_error_mnemonic_word_count">A passphrase has 12, 15, 18, 21 or 24 words.</string>
+  <string name="common_error_mnemonic_word_count_invalid">Please make sure your passphrase has 12, 15, 18, 21 or 24 words and that every word is spelled correctly.</string>
   <string name="common_error_network">Please, check internet connection and try again later.</string>
   <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">Sorry, but you don\'t have any invitations to share</string>

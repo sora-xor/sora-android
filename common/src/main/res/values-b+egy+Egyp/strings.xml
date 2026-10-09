@@ -15,6 +15,8 @@
   <string name="account_address">𓎛𓋴𓃀 𓋴𓏏𓈖𓎛𓋴𓃀</string>
   <string name="account_already_imported">𓅓𓎛𓄿𓏏 𓇋𓈖𓇋𓅓𓄡𓈖𓅱</string>
   <string name="account_already_imported_description">𓊪𓈖 𓊪𓂋𓎛𓆓 𓅓𓎛𓄿𓏏 𓇋𓈖𓇋𓅓𓄡𓈖𓅱</string>
+  <string name="account_storage_conflict">This wallet can\'t be added here</string>
+  <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
   <string name="account_confirmation_title">𓋴𓅓𓈖 𓋴𓐍𓄿</string>
   <string name="account_confirmation_title_v2">𓋴𓅓𓈖 𓅓𓂧𓅱𓋴𓐍𓄿</string>
   <string name="account_options">𓎛𓋴𓃀 𓋴𓏏𓊪𓅱</string>
@@ -114,8 +116,8 @@
   <string name="common_error_invitation_already_accepted">𓈖𓏏𓎡 𓅓𓎛𓄿𓏏 𓇋𓂋 𓎡𓇌 𓇋𓄿𓋴𓏏 𓐍𓏏𓅓</string>
   <string name="common_error_invitation_code_not_found">𓇋𓄿𓋴𓏏 𓐍𓏏𓅓 𓈖𓅓𓄿𓂝</string>
   <string name="common_error_inviter_registered_after_invitee">𓂋𓂧𓇋 𓇋𓄿𓋴𓏏 𓐍𓏏𓅓 𓈖𓂋𓐍 𓇋𓂋 𓈖𓈖𓏏𓏏 𓋴𓏏 𓅓 𓇋𓂋𓇋𓅱 𓈖𓏏𓇋 𓂋𓂧𓇋𓂋𓈖 𓅓𓐍𓏏 𓈖𓏏𓎡</string>
-  <string name="common_error_mnemonic_is_not_valid">𓋴𓅓𓈖𓅓𓂧𓅱𓋴𓐍𓄿12𓂋𓊪𓅱24𓅓𓂧𓅱𓈖𓃀𓅓𓄿𓂝</string>
-  <string name="common_error_mnemonic_length_error">𓅓𓂧𓅱𓋴𓐍𓄿𓅱𓆓12𓂋𓊪𓅱24𓅓𓂧𓅱</string>
+  <string name="common_error_mnemonic_word_count">A passphrase has 12, 15, 18, 21 or 24 words.</string>
+  <string name="common_error_mnemonic_word_count_invalid">Please make sure your passphrase has 12, 15, 18, 21 or 24 words and that every word is spelled correctly.</string>
   <string name="common_error_network">𓅓𓎛𓏏𓊪, 𓋴𓅓𓈖 𓇋𓄿𓂧𓏏𓈖𓅓𓂧𓅱 𓂧𓅓𓆓𓏏 𓎛𓈖𓂝 𓇋𓂋 𓅓𓅓𓄿𓅱 𓅓𓐍𓏏.</string>
   <string name="common_error_no_browser_error">𓅓𓎛𓏏𓊪 𓂋𓂧𓇋 𓊪𓂋𓅓𓄿𓄿 𓂋 𓅱𓈖 𓅱𓄿𓏏</string>
   <string name="common_error_not_enough_invitations">𓅓𓎛𓏏𓊪, 𓇋𓋴 𓈖𓏏𓎡 𓈖 𓈖𓃀 𓇋𓄿𓋴𓅱𓏏 𓂋 𓊪𓋴𓈙</string>
