@@ -52,6 +52,11 @@ android {
         }
     }
 
+    // The wallet-upgrade device tests build released Room databases from the exported schemas.
+    sourceSets {
+        getByName("androidTest").assets.directories.add(file("../core_db/schemas").absolutePath)
+    }
+
     packaging {
         resources {
             excludes += listOf(
@@ -93,4 +98,9 @@ dependencies {
     androidTestImplementation(libs.androidxTestExtJunitDep)
     androidTestImplementation(libs.androidxTestEspressoCoreDep)
     androidTestImplementation(libs.coroutineTestDep)
+    // Already used by :app device tests; stands in for CryptoAssistant/JsonAccountsEncoder,
+    // which the upgrade scenarios never call.
+    androidTestImplementation(libs.mockkAndroidDep)
+    // Same Preferences DataStore as :common; the tests write it like the released apps did.
+    androidTestImplementation(libs.datastoreDep)
 }

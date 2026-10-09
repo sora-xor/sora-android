@@ -24,6 +24,14 @@ fi
   -Pandroid.testInstrumentationRunnerArguments.class=jp.co.soramitsu.core_db.WalletIdentityMigration75Test,jp.co.soramitsu.core_db.WalletUpgradeBackupTest \
   --stacktrace --no-daemon --no-parallel
 
+# Upgrade scenarios written with the storage writers of released 3.8.6.3 and 2.3.3 (abandoned
+# creates, dangling selection, partial key sets, an undecryptable account, low storage,
+# interrupted migration, busy Keystore). Runs in the isolated feature_account_impl test APK.
+./gradlew \
+  :feature_account_impl:connectedProductionDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=jp.co.soramitsu.feature_account_impl.upgrade.WalletUpgradeScenarioTest \
+  --stacktrace --no-daemon --no-parallel
+
 ./gradlew \
   :app:connectedProductionDebugAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.class=jp.co.soramitsu.sora.ux.CryptoRuntimeCompatibilityTest \
