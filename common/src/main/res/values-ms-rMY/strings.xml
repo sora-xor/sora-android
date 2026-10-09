@@ -24,6 +24,7 @@
   <string name="activity_empty_content_title">Anda akan melihat aktiviti anda di sini sebaik sahaja anda mula berurus niaga</string>
   <string name="activity_error_title">Tidak dapat memuatkan aktiviti anda. Cuba segarkan semula senarai</string>
   <string name="activity_pool_title">Kolam</string>
+  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is always up to date.</string>
   <string name="activity_referral_title">Rujukan menyertai</string>
   <string name="add_liquidity_alert_text">Anda akan memperoleh yuran yang berkadar dengan bahagian kumpulan anda daripada peruntukan kecairan.</string>
   <string name="add_liquidity_confirmation_title">Sahkan bekalan</string>

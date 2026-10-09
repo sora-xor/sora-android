@@ -102,8 +102,8 @@ class WalletInteractorImpl(
     override suspend fun getContacts(query: String): List<String>? {
         val curAccount = userRepository.getCurSoraAccount().substrateAddress
         if (curAccount == query) return null
-        val contacts = transactionHistoryRepository.getContacts(query).filter {
-            it != curAccount && it != query
+        val contacts = transactionHistoryRepository.getContacts(curAccount, query).filter {
+            it != curAccount && it != query && runtimeManager.isAddressOk(it)
         }
         return buildList {
             if (runtimeManager.isAddressOk(query) && query != curAccount) {

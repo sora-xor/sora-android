@@ -24,6 +24,7 @@
   <string name="activity_empty_content_title">Vous verrez la liste de votre activité une fois que vous aurez commencé à effectuer des transactions</string>
   <string name="activity_error_title">Impossible de charger votre activité. Essayez de rafraîchir la liste</string>
   <string name="activity_pool_title">Pool</string>
+  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is always up to date.</string>
   <string name="activity_referral_title">Nouveau parrainé</string>
   <string name="add_liquidity_alert_text">Vous percevrez des commissions proportionnelles à votre part du pool provenant de la fourniture de liquidité.</string>
   <string name="add_liquidity_confirmation_title">Confirmer l\'approvisionnement</string>

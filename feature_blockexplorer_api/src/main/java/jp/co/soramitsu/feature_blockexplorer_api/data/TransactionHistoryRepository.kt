@@ -41,7 +41,11 @@ import kotlinx.coroutines.flow.Flow
 interface TransactionHistoryRepository {
     val state: Flow<Boolean>
     fun onSoraAccountChange()
-    suspend fun getContacts(query: String): Set<String>
+    /**
+     * Past counterparties of [account] whose address contains [query] (all of them, newest
+     * first, for a blank query).
+     */
+    suspend fun getContacts(account: String, query: String): Set<String>
     suspend fun getTransactionHistory(
         page: Long,
         tokens: List<Token>,

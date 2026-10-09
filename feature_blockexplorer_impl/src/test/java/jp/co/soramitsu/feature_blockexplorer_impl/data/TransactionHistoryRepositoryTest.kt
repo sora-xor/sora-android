@@ -110,7 +110,7 @@ class TransactionHistoryRepositoryTest {
 
     private val mockedUri = Mockito.mock(Uri::class.java)
 
-    private val peersList = listOf("1", "2")
+    private val peersList = listOf("cnPeerOne", "cnPeerTwo")
 
     private lateinit var transactionHistoryRepository: TransactionHistoryRepository
 
@@ -144,7 +144,11 @@ class TransactionHistoryRepositoryTest {
         } answers {
             watchingListener = firstArg()
         }
-        coEvery { polkaswapIndexerClient.getTransactionPeers("query") } returns peersList.toSet()
+        coEvery {
+            polkaswapIndexerClient.getRecentTransactionPeers(
+                TestAccounts.soraAccount.substrateAddress,
+            )
+        } returns peersList
 
         coEvery {
             polkaswapIndexerClient.getLastTransactionsQualified(
@@ -172,10 +176,23 @@ class TransactionHistoryRepositoryTest {
     }
 
     @Test
-    fun `getContacts() called`() = runTest {
-        val result = transactionHistoryRepository.getContacts("query")
+    fun `getContacts() filters recent counterparties on the device`() = runTest {
+        val account = TestAccounts.soraAccount.substrateAddress
 
-        assertEquals(result, peersList.toSet())
+        assertEquals(
+            peersList.toSet(),
+            transactionHistoryRepository.getContacts(account, ""),
+        )
+        assertEquals(
+            setOf("cnPeerTwo"),
+            transactionHistoryRepository.getContacts(account, " TWO "),
+        )
+        assertEquals(
+            emptySet<String>(),
+            transactionHistoryRepository.getContacts(account, "nobody"),
+        )
+        // One indexer read serves the whole search session.
+        coVerify(exactly = 1) { polkaswapIndexerClient.getRecentTransactionPeers(account) }
     }
 
     @Test
@@ -235,10 +252,10 @@ class TransactionHistoryRepositoryTest {
     @Test
     fun `getContacts returns empty set when indexer fails`() = runTest {
         coEvery {
-            polkaswapIndexerClient.getTransactionPeers("bad query")
+            polkaswapIndexerClient.getRecentTransactionPeers("cnBadAccount")
         } throws IllegalStateException("indexer down")
 
-        val result = transactionHistoryRepository.getContacts("bad query")
+        val result = transactionHistoryRepository.getContacts("cnBadAccount", "bad query")
 
         assertEquals(emptySet<String>(), result)
         verify {

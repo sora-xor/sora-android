@@ -160,6 +160,16 @@ data class IndexerReferralReward(
 )
 
 /**
+ * What account history the deployed PI indexer can list. Its only timestamp-ordered account plan
+ * is "extrinsics this account signed" (an exact `address` filter), so transfers received from
+ * other accounts are not listed until the indexer adds a recipient plan. Screens that show
+ * account history say so; balances always come from the chain and are not affected.
+ */
+object PiHistoryCoverage {
+    const val LISTS_RECEIVED_TRANSFERS = false
+}
+
+/**
  * The indexer answered with only schema or query-plan rejections (GraphQL codes
  * `GRAPHQL_VALIDATION_FAILED` or `BAD_USER_INPUT`) and no data: the deployed indexer does not
  * serve this query shape. The message is a fixed code; server text is never exposed.
@@ -272,29 +282,29 @@ class PolkaswapIndexerClient private constructor(
     @Volatile
     private var mobileConfigUsesLegacySchema = false
 
-    suspend fun getTransactionPeers(query: String): Set<String> {
-        val trimmed = query.trim()
-        if (trimmed.isEmpty()) return emptySet()
-        require(trimmed.length <= MAX_INDEXER_IDENTIFIER_LENGTH) {
-            "PI_INDEXER_IDENTIFIER_TOO_LONG"
-        }
-
-        return getAllHistoryElementsQualified(
-            filter = orFilter(
-                fieldFilter("dataFrom", "includesInsensitive", trimmed),
-                fieldFilter("dataTo", "includesInsensitive", trimmed),
-                fieldFilter("address", "includesInsensitive", trimmed),
-            ),
-            pageSize = TRANSACTION_PEER_PAGE_SIZE,
-            maxPages = MAX_CURSOR_PAGES,
-        ).value
+    /**
+     * Counterparties of the newest operations [address] signed (one page of up to
+     * [MAX_HISTORY_PAGE_SIZE] rows), newest first and without duplicates or the account itself.
+     * The deployed indexer serves account history only by signer ([PiHistoryCoverage]); a
+     * substring search across every account's history has no storage plan and is rejected, so
+     * contact search filters this list on the device instead.
+     */
+    suspend fun getRecentTransactionPeers(address: String): List<String> {
+        val canonicalAddress = validatedIdentifier(address)
+        return getLastTransactionsQualified(canonicalAddress, MAX_HISTORY_PAGE_SIZE).value
+            .asSequence()
             .flatMap { item ->
-                item.data.orEmpty()
-                    .filter { it.paramName == "from" || it.paramName == "to" }
-                    .map { it.paramValue } + listOfNotNull(item.dataFrom, item.dataTo, item.addressParam())
+                val params = item.data.orEmpty() +
+                    item.nestedData.orEmpty().flatMap { nested -> nested.data }
+                sequenceOf(item.dataTo, item.dataFrom) + params.asSequence()
+                    .filter { it.paramName == "to" || it.paramName == "from" }
+                    .map { it.paramValue }
             }
-            .filter { it.contains(trimmed, ignoreCase = true) }
-            .toSet()
+            .filterNotNull()
+            .map(String::trim)
+            .filter { it.isNotEmpty() && it != canonicalAddress }
+            .distinct()
+            .toList()
     }
 
     suspend fun getTransaction(txHash: String): List<IndexerHistoryElement> =
@@ -2998,7 +3008,6 @@ class PolkaswapIndexerClient private constructor(
     private companion object {
         const val MAX_ASSET_INFO_IDS = 1_000
         const val MAX_FILTER_ARRAY_SIZE = 100
-        const val TRANSACTION_PEER_PAGE_SIZE = 50
         const val POLKAMARKT_PAGE_SIZE = 50
         const val POLKAMARKT_MAX_PAGES = 20
         const val MAX_POLKAMARKT_BATCH_MARKETS = 24
@@ -3393,7 +3402,8 @@ class PolkaswapIndexerClient private constructor(
          * Account history as the indexer can serve it: timestamp-ordered pages need an exact
          * `address` (the signer of the extrinsic). An `or` over `dataFrom`/`dataTo` has no
          * bounded storage plan and is rejected with `BAD_USER_INPUT`, so transfers received from
-         * other accounts are not listed until the indexer adds a recipient plan.
+         * other accounts are not listed until the indexer adds a recipient plan
+         * ([PiHistoryCoverage]; change both together).
          */
         fun accountHistoryFilter(address: String): JsonObject =
             fieldFilter("address", "equalTo", address)

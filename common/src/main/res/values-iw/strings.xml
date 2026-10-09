@@ -24,6 +24,7 @@
   <string name="activity_empty_content_title">אתה תראה את הפעילות שלך כאן ברגע שתתחיל לבצע טרנזקציות</string>
   <string name="activity_error_title">לא היתה אפשרות לטעון את הפעילות שלך. נסה לרענן את הרשימה</string>
   <string name="activity_pool_title">מאגר</string>
+  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is always up to date.</string>
   <string name="activity_referral_title">הפניה הצטרפה</string>
   <string name="add_liquidity_alert_text">אתה תרוויח עמלות באופן יחסי לחלק שלך במאגר מאספקת נזילות.</string>
   <string name="add_liquidity_confirmation_title">אשר אספקה</string>

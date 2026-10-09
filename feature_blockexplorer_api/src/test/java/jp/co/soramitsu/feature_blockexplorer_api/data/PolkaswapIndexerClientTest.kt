@@ -473,15 +473,7 @@ class PolkaswapIndexerClientTest {
     }
 
     @Test
-    fun `blank transaction peer query skips network`() = runTest {
-        val result = client.getTransactionPeers(" \n\t ")
-
-        assertThat(result).isEmpty()
-        assertThat(restClient.requests).isEmpty()
-    }
-
-    @Test
-    fun `transaction peers include dataFrom dataTo address and from-to params without duplicates`() = runTest {
+    fun `recent peers come from the account's own signed history, newest first`() = runTest {
         restClient.enqueue(
             """
             {
@@ -490,10 +482,10 @@ class PolkaswapIndexerClientTest {
                   "totalCount": 4,
                   "pageInfo": { "hasNextPage": false },
                   "edges": [
-                    { "node": { "id": "0x1111111111111111111111111111111111111111111111111111111111111111", "timestamp": 1, "networkFee": "0", "execution": { "success": true }, "dataFrom": "AliceABC", "dataTo": "", "address": "", "data": {} } },
-                    { "node": { "id": "0x2222222222222222222222222222222222222222222222222222222222222222", "timestamp": 1, "networkFee": "0", "execution": { "success": true }, "dataFrom": "miss", "dataTo": "xxABCxx", "address": "xxABCxx", "data": {} } },
-                    { "node": { "id": "0x3333333333333333333333333333333333333333333333333333333333333333", "timestamp": 1, "networkFee": "0", "execution": { "success": true }, "dataFrom": "AliceABC", "dataTo": "", "address": null, "data": { "from": "otherABC", "to": "no-match" } } },
-                    { "node": { "id": "0x4444444444444444444444444444444444444444444444444444444444444444", "timestamp": 1, "networkFee": "0", "execution": { "success": true }, "address": null, "data": { "from": "abcDEF", "memo": "abc should not be used" } } }
+                    { "node": { "id": "0x1111111111111111111111111111111111111111111111111111111111111111", "timestamp": 4, "networkFee": "0", "execution": { "success": true }, "address": "cnAccount", "dataFrom": "cnAccount", "dataTo": "cnBob", "data": {} } },
+                    { "node": { "id": "0x2222222222222222222222222222222222222222222222222222222222222222", "timestamp": 3, "networkFee": "0", "execution": { "success": true }, "address": "cnAccount", "dataFrom": "cnAccount", "dataTo": "cnCarol", "data": { "to": "cnCarol" } } },
+                    { "node": { "id": "0x3333333333333333333333333333333333333333333333333333333333333333", "timestamp": 2, "networkFee": "0", "execution": { "success": true }, "address": "cnAccount", "dataFrom": "cnAccount", "dataTo": "cnBob", "data": { "memo": "cnMemo", "amount": "1" } } },
+                    { "node": { "id": "0x4444444444444444444444444444444444444444444444444444444444444444", "timestamp": 1, "networkFee": "0", "execution": { "success": true }, "address": "cnAccount", "data": { "from": "cnAccount", "to": "cnDave" } } }
                   ]
                 }
               }
@@ -501,74 +493,21 @@ class PolkaswapIndexerClientTest {
             """
         )
 
-        val result = client.getTransactionPeers("abc")
+        val result = client.getRecentTransactionPeers("cnAccount")
 
-        assertThat(result).containsExactly(
-            "AliceABC",
-            "xxABCxx",
-            "otherABC",
-            "abcDEF",
-        )
+        assertThat(result).containsExactly("cnBob", "cnCarol", "cnDave").inOrder()
         val request = restClient.singleRequest()
-        assertThat(request.variables.toString()).contains("\"includesInsensitive\":\"abc\"")
+        // The signer plan the deployed indexer serves; never a substring scan of every account.
+        assertThat(request.variables.toString()).contains("\"address\":{\"equalTo\":\"cnAccount\"}")
+        assertThat(request.variables.toString()).doesNotContain("includesInsensitive")
+        assertThat(request.variables.toString()).contains("\"first\":100")
     }
 
     @Test
-    fun `transaction peer search walks bounded cursors without truncating contacts`() = runTest {
-        restClient.enqueue(
-            """
-            { "data": { "historyElements": {
-              "totalCount": 2,
-              "pageInfo": { "hasNextPage": true, "endCursor": "peer-cursor-1" },
-              "edges": [ { "node": {
-                "id": "0x${"11".repeat(32)}", "timestamp": 1,
-                "networkFee": "0", "execution": { "success": true },
-                "dataFrom": "firstABC"
-              } } ]
-            } } }
-            """
-        )
-        restClient.enqueue(
-            """
-            { "data": { "historyElements": {
-              "totalCount": 2,
-              "pageInfo": { "hasNextPage": false },
-              "edges": [ { "node": {
-                "id": "0x${"22".repeat(32)}", "timestamp": 1,
-                "networkFee": "0", "execution": { "success": true },
-                "dataTo": "secondABC"
-              } } ]
-            } } }
-            """
-        )
+    fun `recent peers are empty for an account without signed history`() = runTest {
+        restClient.enqueue(emptyHistoryResponse(hasNextPage = false))
 
-        assertThat(client.getTransactionPeers("abc"))
-            .containsExactly("firstABC", "secondABC")
-        assertThat(restClient.requests).hasSize(2)
-        assertThat(restClient.requests[0].variables.toString()).contains("\"after\":null")
-        assertThat(restClient.requests[1].variables.toString())
-            .contains("\"after\":\"peer-cursor-1\"")
-    }
-
-    @Test
-    fun `transaction peers ignore matches from unrelated data fields`() = runTest {
-        restClient.enqueue(
-            """
-            {
-              "data": {
-                "historyElements": {
-                  "totalCount": 1,
-                  "pageInfo": { "hasNextPage": false },
-                  "edges": [
-                    { "node": { "id": "0x1111111111111111111111111111111111111111111111111111111111111111", "timestamp": 1, "networkFee": "0", "execution": { "success": true }, "address": null, "data": { "memo": "abc", "amount": "abc" } } }
-                  ]
-                }
-              }
-            }
-            """
-        )
-
-        assertThat(client.getTransactionPeers("abc")).isEmpty()
+        assertThat(client.getRecentTransactionPeers("cnAccount")).isEmpty()
     }
 
     @Test

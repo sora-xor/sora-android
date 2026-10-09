@@ -24,6 +24,7 @@
   <string name="activity_empty_content_title">一旦您开始交易，您将在此处看到您的活动。</string>
   <string name="activity_error_title">无法加载您的活动。请尝试刷新列表。</string>
   <string name="activity_pool_title">流动池</string>
+  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is always up to date.</string>
   <string name="activity_referral_title">被推荐人加入</string>
   <string name="add_liquidity_alert_text">您将从流动性提供中赚取与您在流动池中的份额成比例的费用。</string>
   <string name="add_liquidity_confirmation_title">确认供应</string>

@@ -24,6 +24,7 @@
   <string name="activity_empty_content_title">लेन-देन शुरू करने के बाद आप यहां अपनी गतिविधि देखेंगे</string>
   <string name="activity_error_title">आपकी गतिविधि लोड नहीं की जा सकी. सूची को ताज़ा करने का प्रयास करें</string>
   <string name="activity_pool_title">pool</string>
+  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is always up to date.</string>
   <string name="activity_referral_title">रेफरल शामिल हुए</string>
   <string name="add_liquidity_alert_text">आप Liquidity प्रावधान से पूल के अपने हिस्से के अनुपात में शुल्क अर्जित करेंगे।</string>
   <string name="add_liquidity_confirmation_title">आपूर्ति की पुष्टि करें</string>
