@@ -192,3 +192,69 @@ must be treated as public.
       whether the licence terms require removing them from history. A
       history rewrite changes every later commit id and needs agreement from
       everyone who works on the repository; it is not part of this release.
+
+## a3: Live-runtime signing, indexer tolerance, flags, version
+
+### Build inputs (now enforced by Gradle)
+
+A `productionRelease` build stops before compiling, with a list of what is
+missing, unless all of these are present:
+
+- [ ] `SORA_VERSION_CODE` (the "Android Release" workflow sets it from the
+      `version_code` input or the `SORA_VERSION_CODE` variable). For 3.9.0 it
+      must be within `3090000..3090099` and above 122; use `3090001` for the
+      first upload and `3090002`, `3090003`, … for re-uploads. `CI_BUILD_ID`
+      is no longer used for Play builds.
+- [ ] `SORA_GOOGLE_TOKEN_PROD`: the same Google Drive backup OAuth client that
+      3.8.6.3 used (same Google Cloud project). A different client builds
+      fine but hides every existing Drive backup from users.
+- [ ] `app/google-services.json` for `jp.co.soramitsu.sora` (the workflow
+      writes it from `GOOGLE_SERVICES_JSON`); without it Crashlytics is off.
+- [ ] Signing credentials (unchanged).
+
+### Before each release candidate (mainnet changes often)
+
+SORA mainnet upgraded its runtime three times in 19 days. The app now signs
+for whatever runtime the chain runs, but check it against the live chain for
+every candidate:
+
+- [ ] On an emulator (never a phone with real wallets), run the zero-cost live
+      signing test. It must pass with "Inability to pay some fees":
+      `ANDROID_SERIAL=emulator-5580 ./gradlew :sorasubstrate:connectedProductionDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.soraLiveNetwork=true -Pandroid.testInstrumentationRunnerArguments.class=jp.co.soramitsu.sora.substrate.live.MainnetLiveSigningTest`
+      (`adb logcat -s SoraLiveSigning` shows the runtime version, fee and the
+      node's answer).
+- [ ] Run the live indexer contract test:
+      `RUN_LIVE_PI_CLIENT_TESTS=true ./gradlew :feature_blockexplorer_api:testProductionDebugUnitTest --tests '*PolkaswapIndexerClientLiveContractTest*'`.
+- [ ] On a real phone with 3.8.6.3 and a funded wallet, install the release
+      build over it and send a small XOR transfer and a small swap: the fee is
+      shown, both finalize, and Activity lists them.
+
+### PI indexer (backend team)
+
+- [ ] The indexer was upgraded on 2026-10-10 and now reports `nexusAvailable`,
+      `polkamarktVisible` and `tairaDefaultVisible` as true (its built-in
+      defaults). 3.9.0 production ignores these three (they are off in the
+      store build), but develop/Soralution builds follow them. Set
+      `POLKASWAP_MOBILE_CONFIG_*` deliberately for production rather than
+      relying on the defaults, because a later app release may honour them.
+- [ ] Ask the indexer team for an account-history plan that covers received
+      transfers (for example a timestamp-ordered plan on `dataTo`, or an
+      account-participant index). Until then Activity lists only operations
+      the account signed; incoming transfers are missing (balances are
+      correct). Consider a release-note line: "Activity may not list
+      transfers you received; your balance is always up to date."
+- [ ] Keep the indexer's filter-array limit (100) and the history `calls`
+      shape stable, or tell the mobile team before changing them.
+
+### Product decisions to confirm
+
+- [ ] Sending requires the selected node to be `wss://ws.mof.sora.org` (the
+      reviewed transport; unchanged by this release). Users who picked mof2 or
+      mof3 in 3.8.6.3 see an error on send until they select the first node in
+      More > Nodes. Decide whether 3.9.0 should switch them automatically or
+      explain it in the error, and test it on an upgraded install.
+- [ ] Taira, the Nexus (Minamoto) portfolio, Polkamarkt and IrohaConnect are
+      off in the production app regardless of remote configuration. Turning
+      any of them on for production is a code change
+      (`ReleaseSurfacePolicy`) and, for Polkamarkt, a Google Play
+      prediction-market policy review; for IrohaConnect, a security review.
