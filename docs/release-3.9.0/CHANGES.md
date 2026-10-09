@@ -375,3 +375,218 @@ All offline, on this branch after the last a2 commit:
   task. Reported for a separate fix.
 - Not done here: an upgrade from the Play 3.8.6.3 build (no 3.8.6.3 APK on
   this machine; see `RELEASE-CHECKLIST.md`).
+
+## a3: Live-runtime signing, indexer tolerance, flags, version
+
+### Why
+
+- No SORA2 transaction could be signed on mainnet. Production builds required
+  runtime spec 130 / transaction version 130 and the packaged metadata hash
+  for every fee estimate, transfer, swap, liquidity, referral and claim, but
+  mainnet runs spec 133 / transaction version 131 (three runtime upgrades
+  since 20 September).
+- The runtime refresh fetched its type aliases through the PI indexer's
+  `mobileConfig`, which the deployed indexer rejected, so balances and other
+  runtime reads failed on every online start once the chain moved past 130.
+  The URL it pointed to is also the iOS aliases file (numeric lookup ids),
+  which Android cannot use.
+- Several PI queries did not match the indexer that is actually deployed:
+  `mobileConfig` capability fields, the history `calls(first:)`/`totalCount`
+  shape and its `or` account filter, the referral `TIMESTAMP` order, and
+  filter arrays over 100 ids. Multi-page reads (prices, liquidity, pool APYs)
+  also failed whenever the indexer indexed a block during the read.
+- The Taira testnet, the Nexus (Minamoto) portfolio and Polkamarkt were
+  visible in production, and IrohaConnect could be opened by any web page or
+  QR code. Old Akkadian and Middle Egyptian were offered as production
+  languages.
+- The app still said 3.8.6.3, a release build could fall back to versionCode
+  122, and missing release secrets silently became empty strings.
+
+### What changed
+
+**Signing on the live runtime** (`sorasubstrate`)
+
+- `RuntimeManager.getMutationRuntimeContext()` no longer checks a fixed spec
+  version, transaction version or packaged metadata hash. It still:
+  requires the connected node to be the reviewed `wss://ws.mof.sora.org`;
+  pins the canonical mainnet genesis; checks the SS58 prefix 69 from the
+  metadata; and reads runtime version and metadata from the node at one
+  finalized block and requires the snapshot that encodes the call to have the
+  same spec version, genesis and metadata hash (`requireMutationRuntimeIdentity`).
+  The signed payload uses the node's live spec and transaction version. The
+  pre-transport check (`requireSameSora2MutationRuntimeIdentity`) is
+  unchanged. All fee, transfer, swap, liquidity, referral and claim paths go
+  through this context (`ExtrinsicManager`).
+- Type aliases for live metadata come from the remote config file
+  `substrate_types_android` (the file 3.8.6.3 used; byte-identical to the
+  packaged `types_scalecodec_mobile.json` today). If it cannot be fetched or
+  does not produce a valid SORA2 snapshot, the packaged file is used. The PI
+  indexer is no longer involved in the runtime.
+- Pending-submission recovery can decode a submission signed with the live
+  runtime: it accepts the active snapshot or the published runtime cache when
+  genesis, spec version, metadata hash and types hash all match the recorded
+  values, and still never fetches metadata for this.
+- `Sora2RuntimeContract.SPEC_VERSION`/`TRANSACTION_VERSION` and the hashes now
+  only describe the packaged fixture and the Polkamarkt pin (Polkamarkt
+  mutations stay compiled off).
+- A JSON-RPC error from the node keeps its code and reason in a typed
+  exception (`Sora2RuntimeRpcRemoteException`); the message stays the fixed
+  code `SORA2_RUNTIME_RPC_REMOTE_ERROR`.
+- Address derivation, key storage, SS58 prefix, genesis pin and the reviewed
+  transport are unchanged.
+
+**PI indexer** (`PolkaswapIndexerClient`)
+
+- A response that carries only `GRAPHQL_VALIDATION_FAILED` / `BAD_USER_INPUT`
+  errors and no data becomes `PiIndexerSchemaUnsupportedException` (still an
+  `IllegalStateException`, never served from the offline cache; no server
+  text in the message).
+- `mobileConfig`: when every error names one of the five capability fields,
+  the client asks again without them and treats those capabilities as off
+  (remembered for the process). Other rejections still fail.
+- History: the query uses the shape every indexer branch serves
+  (`calls { nodes { module method data } }`) and the account filter
+  `address equalTo <account>`, the only timestamp-ordered account plan the
+  indexer has. Lookups by transaction hash are unchanged.
+- Referral rewards are read in `ID_ASC` order (the indexer has no timestamp
+  plan for them; the app sums all rows anyway).
+- Asset prices and liquidity for many tokens are requested in batches of at
+  most 100 ids (the indexer rejects longer filter arrays).
+- A live read now follows indexer progress: the response is attributed to the
+  checkpoint seen after it, and pages of one live read may come from
+  successive checkpoints of the same indexer. A checkpoint that goes back, a
+  different indexer identity, or cached pages from different checkpoints are
+  still rejected.
+- The Activity error state now reads "Activity is temporarily unavailable.
+  Your balance is not affected. Tap Refresh to try again." (Japanese
+  translated; locales that held the English text get the new English text).
+  It is an inline state with a Refresh button, never a dialog.
+
+**Feature flags**
+
+- New `ReleaseSurfacePolicy` (`:common`). In the production flavor test
+  networks (Taira), the Nexus portfolio, Polkamarkt and IrohaConnect are off
+  regardless of remote configuration. Develop and Soralution builds keep them
+  and follow the indexer flags.
+- `ProductionFeatureManager` never throws for an indexer problem: an offline
+  read keeps the last complete flag set, anything else turns the features off.
+  `SAFE_DEFAULT_FLAGS` and the missing-cache Taira default are now off.
+- The unused remote-config feature flags (`SoraConfig.emergencyFlags`,
+  `MobileDto` flag fields) were removed.
+- `NexusNetwork` admission and stored network accounts are unchanged.
+- During this task the deployed PI indexer was upgraded and now reports
+  `nexusAvailable`, `polkamarktVisible` and `tairaDefaultVisible` as true
+  (its defaults). The production gate keeps all three off in 3.9.0; this was
+  checked on the emulator against the upgraded indexer.
+
+**IrohaConnect**
+
+- `app/src/production/AndroidManifest.xml` removes `IrohaConnectActivity`
+  from production builds, so `iroha://connect` and `irohaconnect://connect`
+  resolve to nothing.
+- The activity closes itself in production if it is ever started; the QR
+  scanner no longer routes those links in production and hands the text back
+  like any other scan; a missing activity cannot crash the scanner.
+
+**Languages**
+
+- Old Akkadian and Middle Egyptian are no longer in the production language
+  picker or the production `locale_config.xml` (Android's per-app language
+  list). Develop and Soralution keep them; the resource folders stay, so lint
+  baselines are unchanged.
+- Deleted the orphan `common/src/tsting` source set (no `tsting` flavor
+  exists). `scripts/verify-middle-egyptian-localization.mjs` now checks that
+  production does not register the two test locales.
+
+**Version and release inputs** (`app/build.gradle.kts`)
+
+- versionName `3.9.0`.
+- versionCode: `SORA_VERSION_CODE` (Gradle property or environment), else
+  `CI_BUILD_ID` for Jenkins develop builds, else `3090000` for local builds.
+- `verifyProductionReleaseSigning` (runs before every `productionRelease`
+  task) now lists every missing input and stops: signing credentials;
+  `SORA_VERSION_CODE` (required; must be above 122 and within
+  `3090000..3090099` for 3.9.0); `app/google-services.json`;
+  `SORA_GOOGLE_TOKEN_PROD`.
+- Play `releaseName` is `3.9.0 (<versionCode>)`.
+- The release workflow no longer mirrors the code into `CI_BUILD_ID`.
+
+**Background work**
+
+- The SORA2 and Nexus pending-recovery workers stop (success) instead of
+  retrying while the wallet is in recovery or upgrade mode, and stop after 10
+  attempts; the journal is durable and the next app start schedules them
+  again.
+- On app start they are scheduled only when the journal has unresolved rows
+  (or cannot be read).
+- `SoraApp` creates `NodeManager` when the first activity is created instead
+  of in `Application.onCreate`, so a process started only for WorkManager
+  does not open the node socket or fetch node lists.
+
+### User-visible effects
+
+- Transfers, swaps, liquidity, referral bonding and claims can be signed and
+  fees shown again on mainnet (runtime 133), and keep working after future
+  runtime upgrades without an app update.
+- Balances and other runtime reads work online again.
+- Activity lists the account's own transactions from the indexer; prices,
+  liquidity and pool APYs load reliably.
+- No Taira, Minamoto or Polkamarkt entries and no IrohaConnect in the store
+  app. No ancient languages in the language list.
+- Known limitation: the deployed indexer can only list operations the account
+  signed, so transfers received from other accounts do not appear in Activity
+  yet (balances are correct). See `RELEASE-CHECKLIST.md`.
+- Known limitation (unchanged by this task): sending requires the selected
+  node to be `wss://ws.mof.sora.org` (the reviewed transport). A user who
+  selected mof2 or mof3 in 3.8.6.3 gets an error when sending until they
+  select the first node again.
+
+### Verification
+
+- **Live mainnet signing** (`MainnetLiveSigningTest`, opt-in instrumented
+  test, emulator SORA-Api36-16k, Android 16, 16 KB pages, arm64 native
+  `libsr25519java`), 2026-10-10 03:02 JST: throwaway key from a new random
+  phrase; live runtime spec 133 / tx 131, metadata SHA-256 `ab22a2d4…`, types
+  `e87760d7…` (remote config file), finalized block 27,973,878;
+  `payment_queryInfo` partialFee 100018412589707326 (~0.1 XOR);
+  `author_submitExtrinsic` rejected with 1010 "Invalid Transaction" /
+  "Inability to pay some fees (e.g. account balance too low)", so the
+  signature and signed extensions were accepted. Nothing was included in a
+  block. Without the opt-in argument the test is skipped.
+- **Live indexer contract** (`PolkaswapIndexerClientLiveContractTest`, opt-in
+  JVM test, real client with health preflight and postflight): capabilities,
+  prices (957 assets, 10 pages), 150-id price lookup, pool APYs (5 pages),
+  account history pages 1 and 2, last transactions and referral rewards all
+  pass against `pi.soramitsu.io`.
+- Unit tests: `testProductionDebugUnitTest`, 1,064 tests in 15 modules,
+  0 failures, 9 skipped (the 6 skipped before plus the 3 opt-in live indexer
+  tests). New: live-runtime `RuntimeManager` tests with the real packaged
+  metadata (spec 133/140, remote and fallback aliases, recovery lookup),
+  schema fallback, history/referral query shapes, checkpoint progress, id
+  batching, node error details, `ProductionFeatureManager`, IrohaConnect
+  routing and startup scheduling.
+- `:sorasubstrate:connectedProductionDebugAndroidTest` without the opt-in
+  argument: `RuntimeCacheAtomicRecoveryTest` (5) passes and the live test is
+  skipped.
+- `verifyProductionReleaseSigning` without inputs lists the four missing
+  inputs; `SORA_VERSION_CODE=122` and `3100001` are rejected; `3090001` is
+  accepted.
+- `:app:assembleProductionDebug`, `:app:lintProductionDebug` (no new errors;
+  baseline unchanged), `verifyProductionReleaseLockCoverage` and
+  `resolveReleaseDependencyLocks` (28 projects) pass. The only lockfile change
+  is `feature_blockexplorer_api/gradle.lockfile`: its unit-test compile
+  classpath now lists mockk 1.13.11 (already on its other classpaths and in
+  `gradle/verification-metadata.xml`); shipped classpaths are unchanged.
+- Emulator, new test wallet: wallet hub shows assets and fiat values; Explore
+  shows prices and TVL; Activity loads (empty state for a new account); with
+  the upgraded indexer reporting all capabilities on, the hub lists only
+  SORA2, More has no Polkamarkt row and App settings has no test-network
+  toggle; the system per-app language list offers en, de, es, fr, in, nb, tr,
+  ru, zh-CN; `iroha://connect` and `irohaconnect://connect` do not resolve.
+  Screenshots: `screens/android/a3-release-correctness/` in the release
+  scratchpad (screens that showed a recovery phrase were deleted).
+- The a2 note about missing hub cards (`DemeterFarming.UserInfos`
+  `EncodeDecodeException`) did not reproduce: with the runtime refreshed to
+  133 the hub's asset card appears and the log has no
+  `EncodeDecodeException`. (The new test wallet has no pools, so the pool card
+  itself was not exercised.)
