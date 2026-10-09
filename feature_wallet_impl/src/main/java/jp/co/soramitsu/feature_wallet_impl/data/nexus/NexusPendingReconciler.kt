@@ -62,12 +62,12 @@ class NexusPendingReconciler @Inject constructor(
         }
         check(!submissionActivity.isActive(localId)) { "NEXUS_SUBMISSION_HANDOFF_ACTIVE" }
         val networkId = checkNotNull(WalletNetworkId.fromWireId(pending.networkId))
-        val network = requireNetwork(networkId)
         // A network label can survive a chain reset. Historical/unbound rows are immutable
         // recovery evidence and must never be interpreted against the currently configured Torii.
         check(WalletIdentityDao.hasCurrentChainIdentity(pending)) {
             "PENDING_TRANSACTION_CHAIN_IDENTITY_RECOVERY_REQUIRED"
         }
+        val network = requireNetwork(networkId)
         val hash = canonicalHash(checkNotNull(pending.transactionHash) {
             "NEXUS_AMBIGUOUS_WITHOUT_HASH"
         })
@@ -162,19 +162,21 @@ class NexusPendingReconciler @Inject constructor(
         )
         check(readBack.asset == pending.assetId) { "NEXUS_PENDING_ASSET_MISMATCH" }
 
-        val exactHistoryMatches = torii.committedXorTransfers(
+        val transfersForSignedHash = torii.committedXorTransfers(
             network = network,
             accountId = account.address,
             assetDefinitionId = pending.assetId,
-        ).count { transfer ->
-            canonicalHash(transfer.transactionHash) == hash &&
-                transfer.sender == account.address &&
+        ).filter { transfer ->
+            canonicalHash(transfer.transactionHash) == hash
+        }
+        val exactHistoryMatch = transfersForSignedHash.singleOrNull()?.let { transfer ->
+            transfer.sender == account.address &&
                 transfer.receiver == pending.recipient &&
                 transfer.amount.toBigDecimalExact().compareTo(
                     pending.amount.toBigDecimalExact()
                 ) == 0
-        }
-        if (exactHistoryMatches != 1) {
+        } == true
+        if (!exactHistoryMatch) {
             val stillPending = update(
                 pending.localId,
                 hash,
@@ -198,7 +200,7 @@ class NexusPendingReconciler @Inject constructor(
         var result: NexusSendResult? = null
         repeat(maxAttempts) { attempt ->
             result = reconcile(localId)
-            if (result?.state in TERMINAL_STATES || attempt == maxAttempts - 1) {
+            if (result.state in TERMINAL_STATES || attempt == maxAttempts - 1) {
                 return checkNotNull(result)
             }
             if (pollDelayMillis > 0) delay(pollDelayMillis)
@@ -220,8 +222,7 @@ class NexusPendingReconciler @Inject constructor(
         require(startOffset >= 0)
         val candidates = database.walletIdentityDao().getUnresolvedTransactions()
             .filter {
-                WalletNetworkId.fromWireId(it.networkId) in
-                    setOf(WalletNetworkId.MINAMOTO, WalletNetworkId.TAIRA)
+                WalletNetworkId.fromWireId(it.networkId) in NexusNetworks.admittedIds
             }
         val normalizedOffset = if (candidates.isEmpty()) {
             0
@@ -349,11 +350,7 @@ class NexusPendingReconciler @Inject constructor(
         )
     }
 
-    private fun requireNetwork(id: WalletNetworkId): NexusNetwork = when (id) {
-        WalletNetworkId.MINAMOTO -> NexusNetworks.minamoto
-        WalletNetworkId.TAIRA -> NexusNetworks.taira
-        WalletNetworkId.SORA2 -> throw IllegalArgumentException("NEXUS_WRONG_NETWORK")
-    }
+    private fun requireNetwork(id: WalletNetworkId): NexusNetwork = NexusNetworks.require(id)
 
     private fun canonicalPositiveQuantity(value: String): String {
         check(NexusQuantityContract.isWireQuantity(value)) { "NEXUS_INVALID_QUANTITY" }

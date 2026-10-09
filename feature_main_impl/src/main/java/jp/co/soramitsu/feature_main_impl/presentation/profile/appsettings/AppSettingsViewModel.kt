@@ -58,7 +58,8 @@ class AppSettingsViewModel @Inject constructor(
         AppSettingsState(
             systemAppearanceChecked = false,
             darkModeChecked = false,
-            testNetworksChecked = true,
+            testNetworksAvailable = false,
+            testNetworksChecked = false,
         )
     )
         private set
@@ -79,8 +80,10 @@ class AppSettingsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             tryCatch {
+                val productionState = productionFeatureManager.getState()
                 state = state.copy(
-                    testNetworksChecked = productionFeatureManager.getState().tairaVisible,
+                    testNetworksAvailable = productionState.tairaAvailable,
+                    testNetworksChecked = productionState.tairaVisible,
                 )
             }
         }
@@ -113,6 +116,7 @@ class AppSettingsViewModel @Inject constructor(
     }
 
     fun toggleTestNetworks(checked: Boolean) {
+        if (!state.testNetworksAvailable) return
         viewModelScope.launch {
             tryCatch {
                 productionFeatureManager.setTairaVisible(checked)

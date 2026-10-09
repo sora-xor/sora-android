@@ -56,6 +56,12 @@ internal data class Sora2PendingRecoveryBatch<T>(
 
 /** Pure bounded rotation used so an unavailable old fixture cannot starve later witnesses. */
 internal object Sora2PendingRecoveryBatchPlanner {
+    fun cursorForOffset(offset: Long, rowCount: Int): Int {
+        require(offset >= 0L && rowCount >= 0) { "SORA2_RECOVERY_CURSOR_INVALID" }
+        if (rowCount == 0) return 0
+        return (offset % rowCount.toLong()).toInt()
+    }
+
     fun <T> select(
         ordered: List<T>,
         cursor: Int,
@@ -268,10 +274,19 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         kickBestEffort()
     }
 
+    /**
+     * [startOffset] lets a durable scheduler resume bounded rotation after process death. Foreground
+     * callers omit it and retain the coordinator's in-memory cursor.
+     */
     suspend fun recoverStatusOnly(
         maximumTransactions: Int = MAXIMUM_TRANSACTIONS_PER_PASS,
+        startOffset: Long? = null,
     ): Sora2PendingRecoveryPass = recoveryMutex.withLock {
-        recoverStatusOnlyLocked(maximumTransactions, priorityLocalId = null)
+        recoverStatusOnlyLocked(
+            maximumTransactions = maximumTransactions,
+            priorityLocalId = null,
+            startOffset = startOffset,
+        )
     }
 
     /** Waits only for status; it never retries submission and returns only terminal chain proof. */
@@ -290,6 +305,7 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
                 recoverStatusOnlyLocked(
                     maximumTransactions = 1,
                     priorityLocalId = staged.localId,
+                    startOffset = null,
                 )
             }
             val current = database.walletIdentityDao()
@@ -325,6 +341,7 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
     private suspend fun recoverStatusOnlyLocked(
         maximumTransactions: Int,
         priorityLocalId: String?,
+        startOffset: Long?,
     ): Sora2PendingRecoveryPass {
         check(maximumTransactions in 1..MAXIMUM_TRANSACTIONS_PER_PASS) {
             "SORA2_RECOVERY_BATCH_INVALID"
@@ -352,14 +369,19 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
                 )
             exact
         }
+        val selectionCursor = startOffset?.let { offset ->
+            Sora2PendingRecoveryBatchPlanner.cursorForOffset(offset, ordered.size)
+        } ?: recoveryBatchCursor
         val batch = Sora2PendingRecoveryBatchPlanner.select(
             ordered = ordered,
-            cursor = recoveryBatchCursor,
+            cursor = selectionCursor,
             maximum = maximumTransactions,
             priority = priority,
         )
         val selected = batch.rows
-        recoveryBatchCursor = batch.nextCursor
+        if (startOffset == null) {
+            recoveryBatchCursor = batch.nextCursor
+        }
         if (selected.isEmpty()) {
             return Sora2PendingRecoveryPass(0, 0, 0, 0, 0)
         }
@@ -637,9 +659,12 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         records.filterIsInstance<Struct.Instance>().forEach { record ->
             val phase = record.get<DictEnum.Entry<*>>("phase")
             if (phase?.name != "ApplyExtrinsic") return@forEach
-            val number = (phase.value as? BigInteger)?.longValueExact()
+            val phaseNumber = phase.value as? BigInteger
                 ?: throw IllegalStateException("SORA2_RECOVERY_EVENT_PHASE_INVALID")
-            check(number >= 0L) { "SORA2_RECOVERY_EVENT_PHASE_INVALID" }
+            check(phaseNumber.signum() >= 0 && phaseNumber <= BigInteger.valueOf(Long.MAX_VALUE)) {
+                "SORA2_RECOVERY_EVENT_PHASE_INVALID"
+            }
+            val number = phaseNumber.toLong()
             val generic = record.get<GenericEvent.Instance>("event")
             val numericIdentity = generic?.let {
                 it.module.index.toInt() to it.event.index.second

@@ -639,7 +639,7 @@ class MigrationManager @Inject constructor(
                 )
             )
             if (secret.source == "MNEMONIC") {
-                listOf(NexusNetworks.minamoto, NexusNetworks.taira).forEach { network ->
+                NexusNetworks.admitted.forEach { network ->
                     val derived = IrohaKeyDerivation.derive(mnemonic, network)
                     try {
                         networkAccounts += NetworkAccountLocal(

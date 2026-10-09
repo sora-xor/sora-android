@@ -88,4 +88,27 @@ class StrictJsonDocumentAdmissionTest {
         assertEquals("BOUNDED_HTTP_JSON_COMPLEXITY", depthError.safeCode)
         assertEquals("BOUNDED_HTTP_JSON_COMPLEXITY", tokenError.safeCode)
     }
+
+    @Test
+    fun `Nexus admission accepts only canonical 64 bit integer number tokens`() {
+        requireStrictNexusJsonDocument(
+            """{"signed":-9223372036854775808,"unsigned":18446744073709551615}"""
+        )
+        listOf(
+            "\uFEFF{\"value\":0}",
+            """{"value":1.0}""",
+            """{"value":1e0}""",
+            """{"value":1E+0}""",
+            """{"value":-0}""",
+            """{"value":18446744073709551616}""",
+            """{"value":-9223372036854775809}""",
+        ).forEach { document ->
+            assertEquals(
+                "BOUNDED_HTTP_JSON_INVALID",
+                assertThrows(BoundedHttpTextException::class.java) {
+                    requireStrictNexusJsonDocument(document)
+                }.safeCode,
+            )
+        }
+    }
 }

@@ -220,6 +220,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                 route = OnboardingFeatureRoutes.TUTORIAL
             ) {
                 val recoveryDialog = viewModel.recoveryDialog.collectAsStateWithLifecycle()
+                val tutorialScreenState = viewModel.tutorialScreenState.observeAsState().value
                 if (recoveryDialog.value) {
                     AlertDialog(
                         backgroundColor = MaterialTheme.customColors.bgPage,
@@ -242,18 +243,20 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                                 verticalArrangement = Arrangement.spacedBy(Dimens.x1),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                jp.co.soramitsu.ui_core.component.button.TextButton(
-                                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                                    size = Size.Small,
-                                    order = Order.TERTIARY,
-                                    text = stringResource(id = R.string.common_google),
-                                    onClick = {
-                                        viewModel.onGoogleSignin(
-                                            navController,
-                                            launcher
-                                        )
-                                    },
-                                )
+                                if (tutorialScreenState?.isGoogleBackupAvailable == true) {
+                                    jp.co.soramitsu.ui_core.component.button.TextButton(
+                                        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                                        size = Size.Small,
+                                        order = Order.TERTIARY,
+                                        text = stringResource(id = R.string.common_google),
+                                        onClick = {
+                                            viewModel.onGoogleSignin(
+                                                navController,
+                                                launcher
+                                            )
+                                        },
+                                    )
+                                }
                                 jp.co.soramitsu.ui_core.component.button.TextButton(
                                     modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                                     size = Size.Small,
@@ -283,7 +286,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                     )
                 }
 
-                viewModel.tutorialScreenState.observeAsState().value?.let {
+                tutorialScreenState?.let {
                     Box(
                         contentAlignment = Alignment.BottomCenter
                     ) {

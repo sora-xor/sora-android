@@ -43,6 +43,7 @@ import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.sora.splash.domain.PendingRecoveryStartupScheduler
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -57,6 +58,7 @@ data class WalletMigrationRecoveryUiState(
 class SplashViewModel @Inject constructor(
     private val interactor: SplashInteractor,
     private val coroutineManager: CoroutineManager,
+    private val pendingRecoveryStartupScheduler: PendingRecoveryStartupScheduler,
 ) : BaseViewModel() {
 
     private val _runtimeInitiated = MutableLiveData<Boolean>()
@@ -100,6 +102,7 @@ class SplashViewModel @Inject constructor(
                 )
                 return@launch
             }
+            pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()
             when (val state = interactor.getRegistrationState()) {
                 OnboardingState.REGISTRATION_FINISHED -> {
                     showMainScreen.trigger()
@@ -136,6 +139,7 @@ class SplashViewModel @Inject constructor(
                 interactor.retryMigration()
             }
             if (migrationDone) {
+                pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()
                 showMainScreen.trigger()
             } else {
                 showMigrationRecovery.value = WalletMigrationRecoveryUiState(

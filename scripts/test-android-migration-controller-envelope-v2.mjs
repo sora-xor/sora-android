@@ -18,8 +18,8 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {
   ANDROID_MIGRATION_CONTROLLER_FILES,
-  extractAndroidMigrationControllerEnvelopeV1,
-} from "./lib/android-migration-controller-envelope-v1.mjs";
+  extractAndroidMigrationControllerEnvelopeV2,
+} from "./lib/android-migration-controller-envelope-v2.mjs";
 
 const SOURCE_REVISION = "1".repeat(40);
 const CANDIDATE_SHA256 = "2".repeat(64);
@@ -58,8 +58,8 @@ const buildPayloads = () => {
     rawExecutionEvidence: "android-migration-raw-execution-evidence.json",
   };
   payloads["android-migration-evidence.json"] = jsonBytes({
-    schemaVersion: 2,
-    contractId: "sora-android-wallet-migration-evidence-v2",
+    schemaVersion: 3,
+    contractId: "sora-android-wallet-migration-evidence-v3",
     platform: "android",
     status: "qualified",
     runId: RUN_ID,
@@ -78,8 +78,8 @@ const buildPayloads = () => {
     ),
   });
   payloads["android-migration-matrix.json"] = jsonBytes({
-    schemaVersion: 7,
-    contractId: "sora-android-wallet-migration-qualification-v7",
+    schemaVersion: 8,
+    contractId: "sora-android-wallet-migration-qualification-v8",
     platform: "android",
     status: "qualified",
     runId: RUN_ID,
@@ -93,8 +93,8 @@ const buildPayloads = () => {
 };
 
 const buildEnvelope = (payloads = buildPayloads()) => ({
-  schemaVersion: 1,
-  contractId: "sora-android-migration-controller-envelope-v1",
+  schemaVersion: 2,
+  contractId: "sora-android-migration-controller-envelope-v2",
   status: "delivered-unreviewed",
   platform: "android",
   sourceRevision: SOURCE_REVISION,
@@ -125,7 +125,7 @@ const createFixture = () => {
 };
 
 const extract = (fixture) =>
-  extractAndroidMigrationControllerEnvelopeV1({
+  extractAndroidMigrationControllerEnvelopeV2({
     envelopePath: fixture.envelopePath,
     outputRoot: fixture.outputRoot,
     expectedSourceRevision: SOURCE_REVISION,
@@ -161,6 +161,18 @@ try {
 }
 
 const mutations = [
+  ["stale-envelope-v1", "ANDROID_MIGRATION_CONTROLLER_ENVELOPE_SHAPE_INVALID", (fixture) => {
+    fixture.envelope.schemaVersion = 1;
+    fixture.envelope.contractId = "sora-android-migration-controller-envelope-v1";
+    rewrite(fixture);
+  }],
+  ["stale-evidence-v2", "ANDROID_MIGRATION_CONTROLLER_ENVELOPE_QUALIFICATION_SHAPE_INVALID", (fixture) => {
+    const evidence = JSON.parse(Buffer.from(fixture.envelope.files["android-migration-evidence.json"], "base64").toString("utf8"));
+    evidence.schemaVersion = 2;
+    evidence.contractId = "sora-android-wallet-migration-evidence-v2";
+    fixture.envelope.files["android-migration-evidence.json"] = jsonBytes(evidence).toString("base64");
+    rewrite(fixture);
+  }],
   [
     "missing-file",
     "ANDROID_MIGRATION_CONTROLLER_ENVELOPE_INVENTORY_INVALID",
@@ -263,8 +275,8 @@ const mutations = [
           "base64",
         ).toString("utf8"),
       );
-      receipt.schemaVersion = 6;
-      receipt.contractId = "sora-android-wallet-migration-qualification-v6";
+      receipt.schemaVersion = 7;
+      receipt.contractId = "sora-android-wallet-migration-qualification-v7";
       fixture.envelope.files["android-migration-matrix.json"] =
         jsonBytes(receipt).toString("base64");
       rewrite(fixture);
@@ -312,5 +324,5 @@ for (const [name, expectedCode, mutate] of mutations) {
 }
 
 process.stdout.write(
-  `Android migration controller envelope v1: positive extraction and ${mutations.length} fail-closed mutations passed.\n`,
+  `Android migration controller envelope v2: positive extraction and ${mutations.length} fail-closed mutations passed.\n`,
 );

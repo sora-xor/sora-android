@@ -48,6 +48,10 @@ class LanguagesHolder {
 
     private val russian = Language("ru", R.string.common_russian, R.string.common_russian_native)
     private val english = Language("en", R.string.common_english, R.string.common_english_native)
+    private val akkadian =
+        Language("akk", R.string.common_akkadian, R.string.common_akkadian_native)
+    private val egyptian =
+        Language("egy-Egyp", R.string.common_egyptian, R.string.common_egyptian_native)
     private val spanish = Language("es", R.string.common_spanish, R.string.common_spanish_native)
     private val french = Language("fr", R.string.common_french, R.string.common_french_native)
     private val german = Language("de", R.string.common_german, R.string.common_german_native)
@@ -91,7 +95,7 @@ class LanguagesHolder {
     private val khmer = Language("km-KH", R.string.common_khmer, R.string.common_khmer_native)
 
     private val availableLanguages =
-        mutableListOf(english, russian, spanish, french, german, norwegian, chinese, indonesian, turkish)
+        mutableListOf(english, akkadian, egyptian, russian, spanish, french, german, norwegian, chinese, indonesian, turkish)
 
     private val nonProdLanguages =
         mutableListOf(arab, hebrew, persian, serbian, vietnamese, malay, hindi, finnish, japanese, chinese_taiwan, azerbaijani, dutch, portuguese)

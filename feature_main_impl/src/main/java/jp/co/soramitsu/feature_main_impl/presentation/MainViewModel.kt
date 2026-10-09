@@ -108,10 +108,17 @@ class MainViewModel @Inject constructor(
             assetsInteractor.flowCurSoraAccount()
                 .catch { onError(it) }
                 .collectLatest {
-                    assetsInteractor.updateWhitelistBalances()
-                    poolsUpdateSubscription.updateBasicPools()
-                    assetsInteractor.getTokensList().map { it.id }.also { tokens ->
-                        blockExplorerManager.getTokensLiquidity(tokens)
+                    try {
+                        assetsInteractor.updateWhitelistBalances()
+                        poolsUpdateSubscription.updateBasicPools()
+                        assetsInteractor.getTokensList().map { it.id }.also { tokens ->
+                            blockExplorerManager.getTokensLiquidity(tokens)
+                        }
+                    } catch (error: kotlinx.coroutines.CancellationException) {
+                        throw error
+                    } catch (error: Exception) {
+                        jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                        _badConnectionVisibilityLiveData.postValue(true)
                     }
                 }
         }

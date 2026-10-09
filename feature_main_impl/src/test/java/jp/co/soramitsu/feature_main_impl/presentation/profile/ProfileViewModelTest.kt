@@ -171,6 +171,7 @@ class ProfileViewModelTest {
             nexusSendsAvailable = false,
             polkamarktVisible = true,
             polkamarktMutationsAvailable = false,
+            tairaAvailable = true,
             tairaVisible = true,
             tairaPreferenceIsExplicit = false,
         )

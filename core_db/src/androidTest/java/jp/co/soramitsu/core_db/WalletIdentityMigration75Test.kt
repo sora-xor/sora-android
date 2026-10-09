@@ -1,6 +1,7 @@
 package jp.co.soramitsu.core_db
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
@@ -15,6 +16,7 @@ import java.io.File
 import jp.co.soramitsu.common.nexus.NexusQuantityContract
 import jp.co.soramitsu.common.nexus.WalletNetworkChainIdentity
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
+import jp.co.soramitsu.core_db.migrations.legacyCacheMigrationsTo58
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_63_64
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_65_66
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_66_67
@@ -66,6 +68,67 @@ class WalletIdentityMigration75Test {
     fun removeTestDatabases() {
         databases.forEach(context::deleteDatabase)
         clearProductionWalletStorage()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+    }
+
+    @Test
+    fun preMultiaccountRoom50KeepsArchivedRowsAndEncryptedWalletThroughCurrentSchema() {
+        clearProductionWalletStorage()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        databases += PRODUCTION_DATABASE_NAME
+        val file = context.getDatabasePath(PRODUCTION_DATABASE_NAME)
+        file.parentFile?.mkdirs()
+        SQLiteDatabase.openOrCreateDatabase(file, null).use { sqlite ->
+            // Token columns match release/sora/2.3.3's Room 50 TokenLocal. There was no
+            // accounts table: the signing wallet was retained in unsuffixed preferences.
+            sqlite.execSQL("CREATE TABLE tokens(id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, symbol TEXT NOT NULL, precision INTEGER NOT NULL, isMintable INTEGER NOT NULL, whitelistName TEXT NOT NULL, isHidable INTEGER NOT NULL)")
+            sqlite.execSQL("INSERT INTO tokens VALUES('retained-token','Retained','XOR',18,0,'whitelist',0)")
+            // A synthetic explicit index exercises collision with a later migration's name.
+            // Keep its uniqueness/data association while freeing the canonical Room name.
+            sqlite.execSQL("CREATE UNIQUE INDEX `index_cardsHub_accountAddress` ON tokens(name)")
+            sqlite.version = 50
+        }
+        val preferences = context.getSharedPreferences(PRODUCTION_PREFERENCES_NAME, Context.MODE_PRIVATE)
+        assertTrue(preferences.edit()
+            .putString("registration_state", "REGISTRATION_FINISHED")
+            .putString("prefs_priv_key", "encrypted-private")
+            .putString("prefs_pub_key", "encrypted-public")
+            .putString("prefs_key_nonce", "encrypted-nonce")
+            .commit())
+        val expectedPreferences = preferences.all
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val upgraded = Room.databaseBuilder(context, AppDatabase::class.java, PRODUCTION_DATABASE_NAME)
+            .openHelperFactory(WalletUpgradeBackup.gatedOpenHelperFactory())
+            .addMigrations(*legacyCacheMigrationsTo58)
+            .addMigrations(*EXPLICIT_MIGRATIONS)
+            .build()
+        try {
+            val sqlite = upgraded.openHelper.writableDatabase
+            assertEquals(CURRENT_SCHEMA_VERSION, sqlite.version)
+            sqlite.query("SELECT id, name, symbol FROM legacy_v50_tokens").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("retained-token", cursor.getString(0))
+                assertEquals("Retained", cursor.getString(1))
+                assertEquals("XOR", cursor.getString(2))
+                assertTrue(!cursor.moveToNext())
+            }
+            sqlite.query("SELECT tbl_name FROM sqlite_master WHERE type = 'index' AND name = 'legacy_v50_index_cardsHub_accountAddress'").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("legacy_v50_tokens", cursor.getString(0))
+            }
+            sqlite.query("SELECT tbl_name FROM sqlite_master WHERE type = 'index' AND name = 'index_cardsHub_accountAddress'").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("cardsHub", cursor.getString(0))
+            }
+            sqlite.query("SELECT count(*) FROM accounts").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(0, cursor.getInt(0))
+            }
+        } finally {
+            upgraded.close()
+        }
+        assertEquals(expectedPreferences, preferences.all)
+        // A kill after Room migration but before authenticated account promotion must retry.
         assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
     }
 
