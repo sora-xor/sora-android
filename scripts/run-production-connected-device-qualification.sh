@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Wallet-upgrade device tests on a connected device or emulator. With more than one
-# device attached, set ANDROID_SERIAL first (adb and Gradle both honour it).
+# Wallet-upgrade device tests. Emulator only; never on a phone with wallets.
+# :app:connectedProductionDebugAndroidTest installs the production package ID
+# (jp.co.soramitsu.sora) and uninstalls it after the tests, which deletes that app's data,
+# wallets included. With more than one device attached, set ANDROID_SERIAL to the emulator
+# first (adb and Gradle both honour it).
 # These are optional manual checks before a release; CI does not run them.
-# The emulator runner executes each script input line in a fresh shell, so keep every
-# command in this script where `set -e` stops at the first failure.
+
+emulator_flags="$(adb shell 'getprop ro.boot.qemu; getprop ro.kernel.qemu' | tr -d '\r')"
+if [[ "$emulator_flags" != *1* ]]; then
+  echo "error: this script runs only on an Android emulator. Start an emulator and set ANDROID_SERIAL to it." >&2
+  exit 1
+fi
+
 ./gradlew \
   :common:connectedProductionDebugAndroidTest \
   :sorasubstrate:connectedProductionDebugAndroidTest \
