@@ -119,6 +119,7 @@ dependencies {
     testImplementation(libs.coroutineTestDep)
     testImplementation(libs.junitDep)
     testImplementation(libs.truthDep)
+    testImplementation(libs.mockkDep)
 
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.composeUiTestJunit4Dep)
