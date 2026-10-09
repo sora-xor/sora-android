@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.splash.domain
 
+import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
@@ -74,12 +75,15 @@ class SplashInteractorTest {
     @Mock
     private lateinit var migrationManager: MigrationManager
 
+    @Mock
+    private lateinit var context: Context
+
     private lateinit var splashInteractor: SplashInteractor
 
     @Before
     fun setUp() {
         WalletRecoveryCapabilityGate.enterNormal()
-        splashInteractor = SplashInteractor(userRepository, migrationManager)
+        splashInteractor = SplashInteractor(userRepository, migrationManager, context)
     }
 
     @After
