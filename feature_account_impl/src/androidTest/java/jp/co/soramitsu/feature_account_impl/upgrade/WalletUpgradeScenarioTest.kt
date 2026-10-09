@@ -11,6 +11,11 @@ import io.mockk.mockk
 import java.io.File
 import java.security.KeyStore
 import java.security.KeyStoreException
+import java.security.PrivateKey
+import javax.crypto.Cipher
+import javax.crypto.IllegalBlockSizeException
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.account.SoraAccount
@@ -402,8 +407,16 @@ class WalletUpgradeScenarioTest {
         // Killed right after the first journal write (VERIFYING, nothing staged yet).
         writeJournal(state = "VERIFYING", accounts = listOf(wallet.address to "Main"), selected = wallet.address)
 
+        // Background starts (workers, boot) prepare only: they never use the retry budget.
+        repeat(3) {
+            candidate { launch ->
+                assertTrue(launch.prepare.isFailure)
+                assertEquals(0, WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context))
+            }
+        }
         candidate { launch ->
-            assertTrue(launch.prepare.isSuccess)
+            assertTrue(launch.prepare.isFailure)
+            assertTrue(launch.startScreens())
             assertEquals(1, WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context))
             assertEquals(
                 WalletRecoveryCapabilityGate.Mode.MIGRATION_RETRY_AUTHORIZED,
@@ -441,7 +454,8 @@ class WalletUpgradeScenarioTest {
             "UPDATE walletMigrationJournal SET state = 'VERIFYING', completedAt = NULL"
         )
         candidate { launch ->
-            assertTrue(launch.prepare.isSuccess)
+            assertTrue(launch.prepare.isFailure)
+            assertTrue(launch.startScreens())
             assertEquals(MigrationOutcome.Verified, launch.verify())
             launch.assertUsable(listOf(first, second), selected = second)
         }
@@ -464,7 +478,8 @@ class WalletUpgradeScenarioTest {
             failureCode = "KEYSTORE_UNAVAILABLE",
         )
         candidate { launch ->
-            assertTrue(launch.prepare.isSuccess)
+            assertTrue(launch.prepare.isFailure)
+            assertTrue(launch.startScreens())
             assertEquals(MigrationOutcome.Verified, launch.verify())
             launch.assertUsable(listOf(wallet), selected = wallet)
         }
@@ -480,15 +495,18 @@ class WalletUpgradeScenarioTest {
             launch.database.openHelper.writableDatabase
         }
         writeJournal(state = "VERIFYING", accounts = listOf(wallet.address to "Main"), selected = wallet.address)
-        // Three starts are each interrupted before the retried verification finishes.
+        // Three starts of the app's screens are each interrupted before the retried
+        // verification finishes.
         repeat(3) { attempt ->
             candidate { launch ->
-                assertTrue(launch.prepare.isSuccess)
+                assertTrue(launch.prepare.isFailure)
+                assertTrue(launch.startScreens())
                 assertEquals(attempt + 1, WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context))
             }
         }
         candidate { launch ->
             assertTrue(launch.prepare.isFailure)
+            assertFalse(launch.startScreens())
             assertEquals(
                 "WALLET_MIGRATION_RECOVERY_REQUIRED",
                 WalletUpgradeBackup.blockingFailure()?.code,
@@ -578,6 +596,349 @@ class WalletUpgradeScenarioTest {
         }
     }
 
+    @Test
+    fun partialKeyTripleIsCompletedByImportingItsPhrase() = runBlocking {
+        val main = phraseWallet(TWELVE_WORDS)
+        val partial = phraseWallet(TWENTY_FOUR_WORDS)
+        val before = release3863 {
+            created(main)
+            finishedAccount(main)
+            select(main)
+            registrationFinished()
+            // Killed between the 2nd and 3rd edit of saveKeys: no nonce.
+            keysWithoutNonce(partial)
+            credentials.saveMnemonic(partial.mnemonic!!, partial.address)
+        }
+        room(73, main to "Main", partial to "Partial")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(main), unavailable = listOf(partial.address), selected = main)
+            val options = requireNotNull(launch.userRepository.unavailableWalletOptions(partial.address))
+            assertTrue(options.canRepairWithPhrase && options.canShowPhraseAfterPin && options.canReadOnly)
+
+            // The person imports the account's own phrase: only the missing nonce is added.
+            launch.importPhrase(TWENTY_FOUR_WORDS, "Typed name")
+            launch.assertUsable(listOf(main, partial), selected = partial)
+            launch.assertCiphertextsKept(before)
+            assertEquals("Partial", launch.userRepository.getCurSoraAccount().accountName)
+            assertNull(launch.userRepository.unavailableWalletOptions(partial.address))
+        }
+        // The next start verifies it like every other account.
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(main, partial), selected = partial)
+        }
+    }
+
+    @Test
+    fun undecryptableAccountCanBeRemovedAndImportedAgain() = runBlocking {
+        val first = phraseWallet(TWELVE_WORDS)
+        val broken = phraseWallet(TWENTY_FOUR_WORDS)
+        val before = release3863 {
+            created(first)
+            created(broken)
+            finishedAccount(first)
+            finishedAccount(broken)
+            select(first)
+            registrationFinished()
+            prefs.putString("prefs_priv_key${broken.address}", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
+        }
+        room(73, first to "First", broken to "Broken")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(first), unavailable = listOf(broken.address), selected = first)
+            val options = requireNotNull(launch.userRepository.unavailableWalletOptions(broken.address))
+            // A value that cannot be read can never be compared, so it cannot be completed in place.
+            assertFalse(options.canRepairWithPhrase)
+            assertTrue(options.canRemoveAndImport)
+            val refused = runCatching { launch.importPhrase(TWENTY_FOUR_WORDS, "Broken") }
+                .exceptionOrNull()
+            assertEquals(
+                ResponseCode.ACCOUNT_STORAGE_CONFLICT,
+                (refused as? SoraException)?.errorResponseCode,
+            )
+            launch.assertCiphertextsKept(before)
+
+            // The person confirms removing the read-only account. A copy of the old encrypted
+            // preferences is kept first.
+            launch.remove(broken.address)
+            val copy = context.noBackupFilesDir.listFiles().orEmpty()
+                .single { it.name.startsWith("wallet-quarantine-") && it.name.endsWith("-removed-unavailable-account") }
+            assertTrue(File(copy, "sora_prefs_datastore.preferences_pb").readBytes().isNotEmpty())
+            launch.assertUsable(listOf(first), selected = first)
+
+            launch.importPhrase(TWENTY_FOUR_WORDS, "Broken again")
+            launch.assertUsable(listOf(first, broken), selected = broken)
+        }
+    }
+
+    @Test
+    fun accountWhoseKeysAnInterruptedRemovalClearedCanBeRestoredOrRemoved() = runBlocking {
+        val kept = phraseWallet(TWELVE_WORDS)
+        val cleared = phraseWallet(TWENTY_FOUR_WORDS)
+        val other = rawSeedWallet(RAW_SEED)
+        release3863 {
+            created(kept)
+            created(cleared)
+            importedSeed(other)
+            listOf(kept, cleared, other).forEach { finishedAccount(it) }
+            select(kept)
+            registrationFinished()
+        }
+        room(73, kept to "Kept", cleared to "Cleared", other to "Other")
+        // 3.8.6.3 "Remove account" killed after the preferences edit, before the row delete.
+        releasedRemoval(cleared.address, killedAfterPreferences = true)
+        // A second account in the same state, removed by the person after the upgrade.
+        releasedRemoval(other.address, killedAfterPreferences = true)
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(
+                listOf(kept),
+                unavailable = listOf(cleared.address, other.address),
+                selected = kept,
+            )
+            val options = requireNotNull(launch.userRepository.unavailableWalletOptions(cleared.address))
+            assertTrue(options.canRepairWithPhrase)
+            assertFalse(options.canShowPhraseAfterPin)
+
+            launch.importPhrase(TWENTY_FOUR_WORDS, "Cleared")
+            launch.remove(other.address)
+            launch.assertUsable(listOf(kept, cleared), selected = cleared)
+        }
+    }
+
+    @Test
+    fun phoneTransferWithoutTheKeystoreKeyAndOnlyLeftoverKeysSetsUpAgain() = runBlocking {
+        val leftover = phraseWallet(TWENTY_FOUR_WORDS)
+        // An unfinished create-account flow in 3.8.6.3 left keys without an account.
+        release3863 { created(leftover) }
+        room(73)
+        // "Copy apps & data" to a new phone copies the files but never the Keystore key.
+        deleteKeystoreAlias()
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(
+                MigrationOutcome.KeysUnavailable("KEYSTORE_KEY_UNAVAILABLE"),
+                launch.verify(),
+            )
+            val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+            assertEquals(WalletRecoveryKind.KEYS_UNAVAILABLE, options.kind)
+            assertFalse(options.canReadOnly)
+            assertFalse(options.canShowPhraseAfterPin)
+            assertTrue(options.canSetUpAgain && options.canRestoreFromPhrase && options.restoreNeedsSetUpAgain)
+            assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        }
+        val oldPreferences = dataStoreFile().readBytes()
+
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            // The old files were renamed aside, byte for byte; nothing was deleted.
+            assertArrayEquals(
+                oldPreferences,
+                File(setUpAgainDirectory(), "files/datastore/sora_prefs_datastore.preferences_pb").readBytes(),
+            )
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            launch.importPhrase(TWENTY_FOUR_WORDS, "Restored")
+            launch.assertUsable(listOf(leftover), selected = leftover)
+        }
+    }
+
+    @Test
+    fun phoneTransferWithoutTheKeystoreKeyKeepsBalancesReadOnlyAndSetsUpAgain() = runBlocking {
+        val first = phraseWallet(TWELVE_WORDS)
+        val second = rawSeedWallet(RAW_SEED)
+        release3863 {
+            created(first)
+            importedSeed(second)
+            finishedAccount(first)
+            finishedAccount(second)
+            select(first)
+            registrationFinished()
+        }
+        room(73, first to "First", second to "Second")
+        deleteKeystoreAlias()
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(
+                MigrationOutcome.KeysUnavailable("KEYSTORE_KEY_UNAVAILABLE"),
+                launch.verify(),
+            )
+            val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+            assertTrue(options.canReadOnly && options.canSetUpAgain)
+            assertEquals(
+                WalletUpgradeBackup.SafeReadOnlyRoute.ROOM_READ_ONLY,
+                WalletUpgradeBackup.authorizeSafeReadOnly(context).getOrThrow(),
+            )
+            assertEquals(2, launch.database.accountDao().getAccounts().size)
+            assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        }
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertTrue(File(setUpAgainDirectory(), "databases/app.db").isFile)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.importPhrase(TWELVE_WORDS, "First")
+            launch.assertUsable(listOf(first), selected = first)
+        }
+    }
+
+    @Test
+    fun release240MultiAccountLayoutUpgradesAndSigns() = runBlocking {
+        val wallet = phraseWallet(TWELVE_WORDS)
+        val legacy = release233 { install(wallet, name = "Main wallet") }
+        // 2.4.0 rebuilt the database at Room 58 (destructive fallback) and its MigrationManager
+        // copied the unsuffixed keys to address-suffixed ones and added the account.
+        room(58)
+        val copied = release240 { migrate() }
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertTrue(backups().any { it.name == "wallet-upgrade-backup-v58-to-77" })
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+            assertEquals("Main wallet", launch.userRepository.getCurSoraAccount().accountName)
+            launch.assertCiphertextsKept(legacy + copied)
+        }
+    }
+
+    @Test
+    fun release240OwnerRemovedLaterIsSetAsideAndCanBeRestored() = runBlocking {
+        val original = phraseWallet(TWELVE_WORDS)
+        val added = phraseWallet(TWENTY_FOUR_WORDS)
+        val legacy = release233 { install(original, name = "Original") }
+        room(58)
+        release240 { migrate() }
+        // A later release added a second account and removed the original one: its suffixed
+        // keys and row are gone, the unsuffixed keys and prefs_address_pure remain.
+        val before = release3863 {
+            created(added)
+            finishedAccount(added)
+            select(added)
+        }
+        HistoricalRoom.insertAccounts(context, listOf(added.address to "Added"))
+        releasedRemoval(original.address)
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(original.address, WalletUpgradeBackup.quarantine().unlinkedLegacyOwner)
+            assertTrue(original.address in WalletUpgradeBackup.quarantine().retainedWalletIds)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(added), selected = added)
+
+            // "Restore wallets found on this phone": the unsuffixed keys are proven to derive the
+            // address and used as they are; nothing is written.
+            launch.userRepository.adoptRetainedWallet(original.address, "Original")
+            launch.assertUsable(listOf(original, added), selected = original)
+            // The removal in the later release legitimately deleted the suffixed copies.
+            launch.assertCiphertextsKept(
+                legacy + before.filterKeys { !it.endsWith(original.address) }
+            )
+        }
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(original, added), selected = original)
+        }
+    }
+
+    @Test
+    fun blankAccountRowNeverBlocksRemovingAccounts() = runBlocking {
+        val first = phraseWallet(TWELVE_WORDS)
+        val second = rawSeedWallet(RAW_SEED)
+        release3863 {
+            created(first)
+            importedSeed(second)
+            finishedAccount(first)
+            finishedAccount(second)
+            select(second)
+            registrationFinished()
+        }
+        room(73, first to "First", second to "Second")
+        // A 2.x upgrade that could not derive an address inserted a blank row.
+        HistoricalRoom.insertAccounts(context, listOf("" to "Unnamed"))
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(1, WalletUpgradeBackup.quarantine().blankAccountRows)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(first, second), selected = second)
+            launch.remove(second.address)
+            launch.assertUsable(listOf(first), selected = first)
+        }
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.remove(first.address)
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            // The blank row itself is never deleted.
+            assertEquals(listOf(""), launch.database.accountDao().getAccounts().map { it.substrateAddress })
+        }
+    }
+
+    @Test
+    fun clockMovedBackDuringAnInterruptedVerificationNeverBlocks() = runBlocking {
+        val wallet = phraseWallet(TWELVE_WORDS)
+        release3863Wallet(wallet)
+        room(73, wallet to "Main")
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            launch.database.openHelper.writableDatabase
+        }
+        // Started while the clock was an hour ahead; network time has corrected it since.
+        writeJournal(
+            state = "VERIFYING",
+            accounts = listOf(wallet.address to "Main"),
+            selected = wallet.address,
+            startedAt = System.currentTimeMillis() + 60 * 60 * 1_000L,
+        )
+        candidate { launch ->
+            assertTrue(launch.prepare.isFailure)
+            assertTrue(launch.startScreens())
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+        }
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+        }
+    }
+
+    @Test
+    fun keystoreFailureWhileUnwrappingTheKeyIsRetriedWithinTheSameCheck() = runBlocking {
+        val wallet = phraseWallet(TWELVE_WORDS)
+        release3863Wallet(wallet)
+        room(73, wallet to "Main")
+        var failures = 2
+        val flakyUnwrap = { key: PrivateKey, wrapped: ByteArray ->
+            if (failures > 0) {
+                failures -= 1
+                throw IllegalBlockSizeException().apply {
+                    initCause(java.security.ProviderException("Keystore operation failed"))
+                }
+            }
+            Cipher.getInstance("RSA/ECB/PKCS1Padding").run {
+                init(Cipher.DECRYPT_MODE, key)
+                doFinal(wrapped)
+            }
+        }
+        candidate(rsaDecryptor = flakyUnwrap) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            assertEquals(0, failures)
+            assertNull(WalletUpgradeBackup.recoveryOptions())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+        }
+    }
+
     // ---- Released app processes -------------------------------------------------------------
 
     private suspend fun release3863Wallet(wallet: Fixture) {
@@ -610,6 +971,58 @@ class WalletUpgradeScenarioTest {
             process.snapshot()
         } finally {
             process.end()
+        }
+    }
+
+    private suspend fun release240(
+        block: suspend Release240Process.() -> Unit,
+    ): Map<String, Any> {
+        val process = Release240Process()
+        return try {
+            process.block()
+            process.snapshot()
+        } finally {
+            process.end()
+        }
+    }
+
+    /** "Remove account" in 3.8.6.3, optionally killed between its two steps. */
+    private suspend fun releasedRemoval(address: String, killedAfterPreferences: Boolean = false) {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        try {
+            Release3863AccountRemoval(context, historicalDataStore(context, scope))
+                .clearAccountData(address, killedAfterPreferences)
+        } finally {
+            scope.coroutineContext.job.cancelAndJoin()
+            delay(DATASTORE_RELEASE_DELAY_MS)
+        }
+    }
+
+    private inner class Release240Process {
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        private val dataStore = historicalDataStore(context, scope)
+        private val prefs = Release240SoraPreferences(dataStore)
+        private val encrypted = Release240EncryptedPreferences(prefs, Release3863EncryptionUtil(context))
+        private val manager = Release240MigrationManager(
+            userRepository = Release240UserRepository(context, Release240PrefsUserDatasource(prefs)),
+            credentialsRepository = Release240CredentialsRepository(
+                Release240PrefsCredentialsDatasource(encrypted, prefs),
+                toSoraAddress = { publicKey -> requireNotNull(codec.toSoraAddressOrNull(publicKey)) },
+            ),
+        )
+
+        /** The first start of 2.4.0 after the update from 2.3.x (Splash's MigrationManager). */
+        suspend fun migrate() {
+            assertTrue(manager.start())
+        }
+
+        suspend fun snapshot(): Map<String, Any> =
+            dataStore.data.first().asMap().mapKeys { it.key.name }
+
+        suspend fun end() {
+            scope.coroutineContext.job.cancelAndJoin()
+            context.getSharedPreferences("key_alias", Context.MODE_PRIVATE).edit().commit()
+            delay(DATASTORE_RELEASE_DELAY_MS)
         }
     }
 
@@ -703,9 +1116,16 @@ class WalletUpgradeScenarioTest {
     private suspend fun candidate(
         prepareFirst: Boolean = true,
         keyStoreFactory: (() -> KeyStore)? = null,
+        rsaDecryptor: ((PrivateKey, ByteArray) -> ByteArray)? = null,
+        newProcess: Boolean = false,
         block: suspend (CandidateProcess) -> Unit,
     ) {
-        val process = CandidateProcess(prepareFirst, keyStoreFactory)
+        if (newProcess) {
+            // HARNESS: a new OS process has no SharedPreferences cache and runs the first
+            // preparation of the process (where a "set up again" request is carried out).
+            WalletUpgradeBackup.simulateProcessStartForTest()
+        }
+        val process = CandidateProcess(prepareFirst, keyStoreFactory, rsaDecryptor)
         try {
             block(process)
         } finally {
@@ -716,17 +1136,25 @@ class WalletUpgradeScenarioTest {
     private inner class CandidateProcess(
         prepareFirst: Boolean,
         keyStoreFactory: (() -> KeyStore)?,
+        rsaDecryptor: ((PrivateKey, ByteArray) -> ByteArray)?,
     ) {
         // Application.attachBaseContext
         val prepare: Result<Unit> =
             if (prepareFirst) WalletUpgradeBackup.prepare(context) else Result.success(Unit)
+        init {
+            forgetWrappedKeyCacheIfFileIsGone()
+        }
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val dataStore: DataStore<Preferences> = SoraPreferences.createDataStore(context, scope)
         val soraPreferences = SoraPreferences(dataStore)
-        private val encryptionUtil = if (keyStoreFactory == null) {
-            EncryptionUtil(context)
-        } else {
-            EncryptionUtil(context, keyStoreFactory)
+        private val encryptionUtil = when {
+            rsaDecryptor != null -> EncryptionUtil(
+                context = context,
+                keyStoreFactory = keyStoreFactory ?: { KeyStore.getInstance("AndroidKeyStore") },
+                rsaDecryptor = rsaDecryptor,
+            )
+            keyStoreFactory != null -> EncryptionUtil(context, keyStoreFactory)
+            else -> EncryptionUtil(context)
         }
         private val encryptedPreferences = EncryptedPreferences(soraPreferences, encryptionUtil)
         val credentialsDatasource = PrefsCredentialsDatasource(encryptedPreferences, soraPreferences)
@@ -765,18 +1193,38 @@ class WalletUpgradeScenarioTest {
 
         suspend fun verify(): MigrationOutcome = migrationManager.startWithOutcome()
 
+        /** SplashInteractor.checkMigration: the app's screens start the verification. */
+        fun startScreens(): Boolean = WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context)
+
+        /** The confirmed "Remove account" flow (preview, then confirm). */
+        suspend fun remove(vararg addresses: String) {
+            val preview = userRepository.createWalletDeletionPreview(addresses.toList())
+            userRepository.confirmAndExecuteWalletDeletion(preview)
+        }
+
         suspend fun identity(wallet: Fixture) =
             requireNotNull(database.walletIdentityDao().getWallet(wallet.address))
 
-        /** MultiaccountInteractor.importFromMnemonic, step for step. */
-        suspend fun importPhrase(phrase: String, name: String) {
+        /** MultiaccountInteractor.importFromMnemonic (importDraft), step for step. */
+        suspend fun importPhrase(phrase: String, name: String): SoraAccount {
             val draft = credentials.draftFromMnemonic(phrase, name)
             try {
-                assertFalse(userRepository.accountExists(draft.address))
+                if (userRepository.accountExists(draft.address)) {
+                    check(draft.address in userRepository.unavailableWalletIds()) {
+                        "ACCOUNT_ALREADY_IMPORTED"
+                    }
+                    // A read-only account: complete its keys (add-only), then verify it.
+                    credentials.commitDraft(draft)
+                    val repaired = userRepository.completeUnavailableWallet(draft.address)
+                    userRepository.setCurSoraAccount(repaired)
+                    userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+                    return repaired
+                }
                 val account = credentials.commitDraft(draft)
                 userRepository.insertSoraAccount(account, false)
                 userRepository.setCurSoraAccount(account)
                 userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+                return account
             } finally {
                 draft.destroy()
             }
@@ -789,7 +1237,9 @@ class WalletUpgradeScenarioTest {
         ) {
             assertEquals(
                 (expected.map(Fixture::address) + unavailable).toSet(),
-                database.accountDao().getAccounts().map(SoraAccountLocal::substrateAddress).toSet(),
+                database.accountDao().getAccounts().map(SoraAccountLocal::substrateAddress)
+                    .filter(String::isNotBlank)
+                    .toSet(),
             )
             assertEquals(unavailable.toSet(), userRepository.unavailableWalletIds())
             expected.forEach { wallet ->
@@ -878,6 +1328,28 @@ class WalletUpgradeScenarioTest {
     private fun backups(): List<File> = context.noBackupFilesDir.listFiles().orEmpty()
         .filter { it.name.startsWith("wallet-upgrade-backup-v") }
 
+    /**
+     * HARNESS: models a new OS process. Android caches SharedPreferences per process; when the
+     * wrapped-key file was renamed aside, a new process starts without it.
+     */
+    private fun forgetWrappedKeyCacheIfFileIsGone() {
+        val file = File(context.applicationInfo.dataDir, "shared_prefs/key_alias.xml")
+        if (!file.exists()) {
+            context.getSharedPreferences("key_alias", Context.MODE_PRIVATE).edit().clear().commit()
+            file.delete()
+        }
+    }
+
+    private fun deleteKeystoreAlias() {
+        KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry("key_alias")
+    }
+
+    private fun dataStoreFile(): File =
+        File(context.filesDir, "datastore/sora_prefs_datastore.preferences_pb")
+
+    private fun setUpAgainDirectory(): File = context.noBackupFilesDir.listFiles().orEmpty()
+        .single { it.name.startsWith("wallet-quarantine-") && it.name.endsWith("-set-up-again") }
+
     private fun databaseVersion(): Int = SQLiteDatabase.openDatabase(
         context.getDatabasePath("app.db").path,
         null,
@@ -897,8 +1369,8 @@ class WalletUpgradeScenarioTest {
         accounts: List<Pair<String, String>>,
         selected: String,
         failureCode: String? = null,
+        startedAt: Long = System.currentTimeMillis(),
     ) {
-        val startedAt = System.currentTimeMillis()
         SQLiteDatabase.openDatabase(
             context.getDatabasePath("app.db").path,
             null,

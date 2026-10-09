@@ -39,6 +39,8 @@ import javax.security.auth.x500.X500Principal
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import org.bouncycastle.util.Arrays
 import org.bouncycastle.util.encoders.Base64
 import org.json.JSONObject
@@ -59,6 +61,22 @@ import org.json.JSONObject
  * 2.3.3 = release/sora/2.3.3
  *   common/.../credentials/repository/datasource/PrefsCredentialsDatasource.kt  -> [Release233PrefsCredentialsDatasource]
  *   feature_account_impl/.../datasource/PrefsUserDatasource.kt                  -> [Release233PrefsUserDatasource]
+ *
+ * 2.4.0 = release/sora/2.4.0 (first multi-account release, Room 58)
+ *   app/src/main/java/jp/co/soramitsu/sora/splash/domain/MigrationManager.kt    -> [Release240MigrationManager]
+ *   common/.../credentials/repository/CredentialsRepositoryImpl.kt (migration functions)
+ *                                                                               -> [Release240CredentialsRepository]
+ *   common/.../credentials/repository/datasource/PrefsCredentialsDatasource.kt  -> [Release240PrefsCredentialsDatasource]
+ *   feature_account_impl/.../repository/UserRepositoryImpl.kt (migration functions)
+ *                                                                               -> [Release240UserRepository]
+ *   feature_account_impl/.../datasource/PrefsUserDatasource.kt                  -> [Release240PrefsUserDatasource]
+ *   common/src/main/java/jp/co/soramitsu/common/data/EncryptedPreferences.kt and SoraPreferences.kt
+ *   (read halves)                                                               -> [Release240EncryptedPreferences], [Release240SoraPreferences]
+ *   EncryptionUtil at 2.4.0 is byte-identical to 2.3.3 ([Release3863EncryptionUtil]).
+ *
+ * 3.8.6.3 account removal (b7b0f0fc): PrefsCredentialsDatasource.clearAllDataForAddress,
+ *   EncryptedPreferences.clear, SoraPreferences.clear and AccountDao.clearAccount
+ *                                                                               -> [Release3863AccountRemoval]
  *   common/src/main/java/jp/co/soramitsu/common/util/EncryptionUtil.kt differs from the 3.8.6.3
  *   file only in imports (spongycastle Arrays/Base64 instead of bouncycastle, same encodings), the
  *   Hilt annotations and line wrapping, so both releases share [Release3863EncryptionUtil].
@@ -464,6 +482,323 @@ class Release233PrefsUserDatasource(
 
     suspend fun saveIsMigrationFetched(it: Boolean) {
         soraPreferences.putBoolean(KEY_IS_MIGRATION_FETCHED, it)
+    }
+}
+
+/** Read half of `SoraPreferences` at release/sora/2.4.0. HARNESS: name, DataStore passed in. */
+class Release240SoraPreferences(
+    private val dataStore: DataStore<Preferences>,
+) {
+
+    suspend fun putString(field: String, value: String) {
+        dataStore.edit {
+            it[stringPreferencesKey(field)] = value
+        }
+    }
+
+    suspend fun getString(field: String): String =
+        dataStore.data.map {
+            it[stringPreferencesKey(field)] ?: ""
+        }.first()
+
+    suspend fun getBoolean(field: String, defaultValue: Boolean = false): Boolean =
+        dataStore.data.map {
+            it[booleanPreferencesKey(field)] ?: defaultValue
+        }.first()
+
+    suspend fun putBoolean(field: String, value: Boolean) {
+        dataStore.edit {
+            it[booleanPreferencesKey(field)] = value
+        }
+    }
+}
+
+/** `EncryptedPreferences` at release/sora/2.4.0. HARNESS: names. */
+class Release240EncryptedPreferences(
+    private val soraPreferences: Release240SoraPreferences,
+    private val encryptionUtil: Release3863EncryptionUtil
+) {
+
+    suspend fun putEncryptedString(field: String, value: String) {
+        soraPreferences.putString(field, encryptionUtil.encrypt(value))
+    }
+
+    suspend fun getDecryptedString(field: String): String {
+        val encryptedString = soraPreferences.getString(field)
+
+        return if (encryptedString.isEmpty()) "" else encryptionUtil.decrypt(encryptedString)
+    }
+}
+
+/** `PrefsCredentialsDatasource` at release/sora/2.4.0. HARNESS: name, no interface, Hex. */
+class Release240PrefsCredentialsDatasource constructor(
+    private val encryptedPreferences: Release240EncryptedPreferences,
+    private val soraPreferences: Release240SoraPreferences,
+) {
+
+    companion object {
+        private const val PREFS_PRIVATE_KEY = "prefs_priv_key"
+        private const val PREFS_PUBLIC_KEY = "prefs_pub_key"
+        private const val PREFS_KEY_NONCE = "prefs_key_nonce"
+        private const val PREFS_MNEMONIC = "prefs_mnemonic"
+        private const val PREFS_ADDRESS = "prefs_address_pure"
+    }
+
+    suspend fun getAddress(): String {
+        return soraPreferences.getString(PREFS_ADDRESS)
+    }
+
+    suspend fun saveKeys(keyPair: Sr25519Keypair, suffixAddress: String) {
+        encryptedPreferences.putEncryptedString(PREFS_PRIVATE_KEY + suffixAddress, Hex.toHexString(keyPair.privateKey))
+        encryptedPreferences.putEncryptedString(PREFS_PUBLIC_KEY + suffixAddress, Hex.toHexString(keyPair.publicKey))
+        encryptedPreferences.putEncryptedString(PREFS_KEY_NONCE + suffixAddress, Hex.toHexString(keyPair.nonce))
+    }
+
+    suspend fun retrieveKeys(suffixAddress: String): Sr25519Keypair? {
+        val privateKeyBytes = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_PRIVATE_KEY + suffixAddress))
+        val publicKeyBytes = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_PUBLIC_KEY + suffixAddress))
+        val nonce = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_KEY_NONCE + suffixAddress))
+
+        return if (privateKeyBytes.isEmpty() || publicKeyBytes.isEmpty()) null else Sr25519Keypair(privateKeyBytes, publicKeyBytes, nonce)
+    }
+
+    suspend fun saveMnemonic(mnemonic: String, suffixAddress: String) {
+        encryptedPreferences.putEncryptedString(PREFS_MNEMONIC + suffixAddress, mnemonic)
+    }
+
+    suspend fun retrieveMnemonic(suffixAddress: String): String {
+        return encryptedPreferences.getDecryptedString(PREFS_MNEMONIC + suffixAddress)
+    }
+
+    /** HARNESS: spongycastle `Hex` (lower-case, no prefix). */
+    private object Hex {
+        fun toHexString(bytes: ByteArray): String =
+            bytes.joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
+
+        fun decode(value: String): ByteArray =
+            value.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+    }
+}
+
+/** `PrefsUserDatasource` at release/sora/2.4.0 (migration functions). HARNESS: name. */
+class Release240PrefsUserDatasource(
+    private val soraPreferences: Release240SoraPreferences,
+) {
+
+    companion object {
+        private const val PREFS_REGISTRATION_STATE = "registration_state"
+        private const val KEY_ACCOUNT_NAME = "key_account_name"
+        private const val KEY_NEEDS_MIGRATION = "needs_migration"
+        private const val KEY_IS_MIGRATION_FETCHED = "is_migration_fetched"
+        private const val KEY_CUR_ACCOUNT_ADDRESS = "cur_account_address"
+    }
+
+    suspend fun setCurAccountAddress(accountAddress: String) =
+        soraPreferences.putString(KEY_CUR_ACCOUNT_ADDRESS, accountAddress)
+
+    // HARNESS: OnboardingState is compared by its enum name.
+    suspend fun retrieveRegistratrionState(): String =
+        soraPreferences.getString(PREFS_REGISTRATION_STATE).ifEmpty { "INITIAL" }
+
+    suspend fun getAccountName(): String {
+        return soraPreferences.getString(KEY_ACCOUNT_NAME)
+    }
+
+    suspend fun saveNeedsMigration(it: Boolean, suffixAddress: String) {
+        soraPreferences.putBoolean(KEY_NEEDS_MIGRATION + suffixAddress, it)
+    }
+
+    suspend fun needsMigration(suffixAddress: String): Boolean {
+        return soraPreferences.getBoolean(KEY_NEEDS_MIGRATION + suffixAddress)
+    }
+
+    suspend fun saveIsMigrationFetched(it: Boolean, suffixAddress: String) {
+        soraPreferences.putBoolean(KEY_IS_MIGRATION_FETCHED + suffixAddress, it)
+    }
+
+    suspend fun isMigrationStatusFetched(suffixAddress: String): Boolean {
+        return soraPreferences.getBoolean(KEY_IS_MIGRATION_FETCHED + suffixAddress, false)
+    }
+}
+
+/**
+ * The migration functions of `CredentialsRepositoryImpl` at release/sora/2.4.0.
+ * HARNESS: `toSoraAddress()` (SS58, prefix 69) is [toSoraAddress]; `SoraAccount` is a pair.
+ */
+class Release240CredentialsRepository(
+    private val credentialsPrefs: Release240PrefsCredentialsDatasource,
+    private val toSoraAddress: (ByteArray) -> String,
+) {
+
+    suspend fun saveMnemonic(mnemonic: String, soraAccount: Pair<String, String>) {
+        credentialsPrefs.saveMnemonic(mnemonic, soraAccount.first)
+    }
+
+    suspend fun retrieveMnemonic(soraAccount: Pair<String, String>): String {
+        return credentialsPrefs.retrieveMnemonic(soraAccount.first)
+    }
+
+    suspend fun retrieveKeyPair(soraAccount: Pair<String, String>): Sr25519Keypair {
+        return credentialsPrefs.retrieveKeys(soraAccount.first)
+            ?: throw IllegalStateException("Keypair not found")
+    }
+
+    suspend fun saveKeyPair(key: Sr25519Keypair, soraAccount: Pair<String, String>) {
+        credentialsPrefs.saveKeys(key, soraAccount.first)
+    }
+
+    suspend fun getAddressForMigration(): String {
+        var address = credentialsPrefs.getAddress()
+        if (address.isEmpty()) {
+            address =
+                credentialsPrefs.retrieveKeys("")?.publicKey?.let(toSoraAddress).orEmpty()
+        }
+        return address
+    }
+}
+
+/**
+ * The migration functions of `UserRepositoryImpl` at release/sora/2.4.0.
+ * HARNESS: the Room DAO calls are the same SQL on the 2.4.0 `accounts` table
+ * (`@Insert(onConflict = REPLACE)` and `select count(*) from accounts`).
+ */
+class Release240UserRepository(
+    private val context: Context,
+    private val userDatasource: Release240PrefsUserDatasource,
+) {
+
+    suspend fun getRegistrationState(): String = userDatasource.retrieveRegistratrionState()
+
+    fun getSoraAccountsCount(): Int =
+        SQLiteDatabase.openDatabase(
+            context.getDatabasePath("app.db").path,
+            null,
+            SQLiteDatabase.OPEN_READONLY,
+        ).use { db ->
+            db.rawQuery("select count(*) from accounts", null).use { it.moveToFirst(); it.getInt(0) }
+        }
+
+    fun insertSoraAccount(soraAccount: Pair<String, String>) {
+        SQLiteDatabase.openDatabase(
+            context.getDatabasePath("app.db").path,
+            null,
+            SQLiteDatabase.OPEN_READWRITE,
+        ).use { db ->
+            db.execSQL(
+                "INSERT OR REPLACE INTO `accounts` (`substrateAddress`,`accountName`) VALUES (?,?)",
+                arrayOf(soraAccount.first, soraAccount.second),
+            )
+        }
+    }
+
+    suspend fun setCurSoraAccount(soraAccount: Pair<String, String>) {
+        userDatasource.setCurAccountAddress(soraAccount.first)
+    }
+
+    suspend fun getAccountNameForMigration(): String {
+        return userDatasource.getAccountName()
+    }
+
+    suspend fun saveNeedsMigration(it: Boolean, soraAccount: Pair<String, String>) {
+        userDatasource.saveNeedsMigration(it, soraAccount.first)
+    }
+
+    suspend fun needsMigration(soraAccount: Pair<String, String>): Boolean {
+        return userDatasource.needsMigration(soraAccount.first)
+    }
+
+    suspend fun saveIsMigrationFetched(it: Boolean, soraAccount: Pair<String, String>) {
+        userDatasource.saveIsMigrationFetched(it, soraAccount.first)
+    }
+
+    suspend fun isMigrationFetched(soraAccount: Pair<String, String>): Boolean {
+        return userDatasource.isMigrationStatusFetched(soraAccount.first) &&
+            !userDatasource.needsMigration(soraAccount.first)
+    }
+}
+
+/** `MigrationManager.start` at release/sora/2.4.0, verbatim. HARNESS: types above. */
+class Release240MigrationManager(
+    private val userRepository: Release240UserRepository,
+    private val credentialsRepository: Release240CredentialsRepository,
+) {
+
+    suspend fun start(): Boolean {
+        if (userRepository.getRegistrationState() == "REGISTRATION_FINISHED") {
+            if (userRepository.getSoraAccountsCount() == 0) {
+                val emptySoraAccount = "" to ""
+                val address = credentialsRepository.getAddressForMigration()
+                val name = userRepository.getAccountNameForMigration()
+                val soraAccount = address to name
+                val needsIrohaMigration = userRepository.needsMigration(emptySoraAccount)
+                val isIrohaFetched = userRepository.isMigrationFetched(emptySoraAccount)
+                userRepository.saveNeedsMigration(needsIrohaMigration, soraAccount)
+                userRepository.saveIsMigrationFetched(isIrohaFetched, soraAccount)
+                val mnemonic = credentialsRepository.retrieveMnemonic(emptySoraAccount)
+                credentialsRepository.saveMnemonic(mnemonic, soraAccount)
+                val soraKeys = credentialsRepository.retrieveKeyPair(emptySoraAccount)
+                credentialsRepository.saveKeyPair(soraKeys, soraAccount)
+                userRepository.insertSoraAccount(soraAccount)
+                userRepository.setCurSoraAccount(soraAccount)
+            }
+        }
+        return true
+    }
+}
+
+/**
+ * Account removal at b7b0f0fc (Play 3.8.6.3): `UserRepositoryImpl.clearAccountData` ->
+ * `PrefsCredentialsDatasource.clearAllDataForAddress` (one DataStore edit) and
+ * `AccountDao.clearAccount` + `ReferralsDao.clearTable` in a Room transaction.
+ * HARNESS: the DAO calls are the same SQL; [killedAfterPreferences] stops where a process kill
+ * between the two steps would.
+ */
+class Release3863AccountRemoval(
+    private val context: Context,
+    private val dataStore: DataStore<Preferences>,
+) {
+
+    companion object {
+        private const val PREFS_PRIVATE_KEY = "prefs_priv_key"
+        private const val PREFS_PUBLIC_KEY = "prefs_pub_key"
+        private const val PREFS_KEY_NONCE = "prefs_key_nonce"
+        private const val PREFS_MNEMONIC = "prefs_mnemonic"
+        private const val PREFS_SEED = "prefs_seed"
+        private const val PREFS_ADDRESS = "prefs_address_pure"
+    }
+
+    suspend fun clearAccountData(address: String, killedAfterPreferences: Boolean = false) {
+        clearAllDataForAddress(address)
+        if (killedAfterPreferences) return
+        SQLiteDatabase.openDatabase(
+            context.getDatabasePath("app.db").path,
+            null,
+            SQLiteDatabase.OPEN_READWRITE,
+        ).use { db ->
+            db.beginTransaction()
+            try {
+                db.execSQL("delete from accounts where substrateAddress = ?", arrayOf(address))
+                if (db.rawQuery("SELECT 1 FROM sqlite_master WHERE name = 'referrals'", null)
+                        .use { it.moveToFirst() }
+                ) {
+                    db.execSQL("delete from referrals")
+                }
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
+            }
+        }
+    }
+
+    private suspend fun clearAllDataForAddress(suffixAddress: String) {
+        val fields =
+            listOf(PREFS_ADDRESS, PREFS_PRIVATE_KEY, PREFS_PUBLIC_KEY, PREFS_KEY_NONCE, PREFS_MNEMONIC, PREFS_SEED)
+                .map { it + suffixAddress }
+        dataStore.edit {
+            fields.forEach { field ->
+                it.remove(stringPreferencesKey(field))
+            }
+        }
     }
 }
 
