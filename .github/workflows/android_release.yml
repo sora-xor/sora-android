@@ -115,8 +115,11 @@ jobs:
           chmod 600 "$keystore"
           test -s "$keystore"
           # Fails early, with a clear message, when the password or alias is wrong.
-          "$JAVA_HOME/bin/keytool" -list -keystore "$keystore" -storepass:env CI_KEYSTORE_PASS \
-            -alias "$CI_KEYSTORE_KEY_ALIAS" > /dev/null
+          if ! "$JAVA_HOME/bin/keytool" -list -keystore "$keystore" -storepass:env CI_KEYSTORE_PASS \
+              -alias "$CI_KEYSTORE_KEY_ALIAS" > /dev/null 2>&1; then
+            echo "::error::CI_KEYSTORE_PASS does not open the keystore, or it has no key named CI_KEYSTORE_KEY_ALIAS."
+            exit 1
+          fi
           echo "CI_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
 
       - name: Write google-services.json
@@ -139,8 +142,10 @@ jobs:
           print("google-services.json is valid for jp.co.soramitsu.sora")
           EOF
 
-      - name: Unit tests
-        run: ./gradlew $GRADLE_FLAGS testProductionDebugUnitTest
+      - name: Unit tests and lint
+        # The same checks as android_ci.yml, so a tag build of an unchecked commit is still
+        # checked. assembleProductionRelease also runs AGP's lintVital checks for release.
+        run: ./gradlew $GRADLE_FLAGS testProductionDebugUnitTest :app:lintProductionDebug
 
       - name: Build signed productionRelease AAB and APK
         env:
@@ -153,7 +158,6 @@ jobs:
           export CI_BUILD_ID="$SORA_VERSION_CODE"
           ./gradlew $GRADLE_FLAGS \
             :app:verifyProductionReleaseSigning \
-            :app:lintProductionRelease \
             :app:assembleProductionRelease \
             :app:bundleProductionRelease
 
@@ -164,12 +168,14 @@ jobs:
           for artifact in "$AAB_PATH" "$APK_PATH" "$MAPPING_PATH"; do
             [[ -s "$artifact" && ! -L "$artifact" ]] || { echo "::error::Missing $artifact"; exit 1; }
           done
-          badging="$("$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging "$APK_PATH" | head -n 1)"
-          echo "$badging"
-          [[ "$badging" == *"name='jp.co.soramitsu.sora'"* ]] || { echo "::error::Unexpected package name"; exit 1; }
-          [[ "$badging" == *"versionCode='$SORA_VERSION_CODE'"* ]] || {
+          badging="$("$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging "$APK_PATH")"
+          package_line="$(grep -m 1 '^package:' <<< "$badging")"
+          echo "$package_line"
+          [[ "$package_line" == *"name='jp.co.soramitsu.sora'"* ]] || {
+            echo "::error::Unexpected package name"; exit 1; }
+          [[ "$package_line" == *"versionCode='$SORA_VERSION_CODE'"* ]] || {
             echo "::error::APK versionCode does not match $SORA_VERSION_CODE"; exit 1; }
-          [[ "$badging" != *"-debug'"* ]] || { echo "::error::APK has a debug versionName"; exit 1; }
+          [[ "$package_line" != *"-debug'"* ]] || { echo "::error::APK has a debug versionName"; exit 1; }
 
       - name: Check signing certificate against the pinned upload certificate
         run: python3 scripts/verify-release-signing.py "$AAB_PATH" "$APK_PATH"
@@ -193,7 +199,7 @@ jobs:
             app/build/outputs/bundle/productionRelease/app-production-release.aab
             app/build/outputs/apk/production/release/app-production-release.apk
             app/build/outputs/mapping/productionRelease/mapping.txt
-            app/build/reports/lint-results-productionRelease.html
+            app/build/reports/lint-results-productionDebug.html
             SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 90
