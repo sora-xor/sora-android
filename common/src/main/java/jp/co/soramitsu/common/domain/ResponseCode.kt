@@ -42,9 +42,9 @@ enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.str
 
     DID_NOT_FOUND(R.string.common_error_user_not_found),
 
-    MNEMONIC_LENGTH_ERROR(R.string.common_error_mnemonic_length_error),
+    MNEMONIC_LENGTH_ERROR(R.string.common_error_mnemonic_word_count),
 
-    MNEMONIC_IS_NOT_VALID(R.string.common_error_mnemonic_is_not_valid, R.string.mnemonic_invalid_title),
+    MNEMONIC_IS_NOT_VALID(R.string.common_error_mnemonic_word_count_invalid, R.string.mnemonic_invalid_title),
 
     RAW_SEED_IS_NOT_VALID(R.string.common_error_seed_is_not_valid, R.string.common_error_seed_is_not_valid_title),
 
@@ -115,6 +115,9 @@ enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.str
     BOUND_ETH_ADDRESS_NOT_FOUND(0),
 
     ACCOUNT_ALREADY_IMPORTED(R.string.account_already_imported_description, R.string.account_already_imported),
+
+    /** Different keys are already stored for the imported address; nothing was written. */
+    ACCOUNT_STORAGE_CONFLICT(R.string.account_storage_conflict_description, R.string.account_storage_conflict),
 
     GOOGLE_LOGIN_FAILED(R.string.common_google_authorization_error),
 

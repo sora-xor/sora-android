@@ -15,6 +15,8 @@
   <string name="account_address">アカウントアドレス</string>
   <string name="account_already_imported">インポート済み</string>
   <string name="account_already_imported_description">このウォレットは既にインポートされています</string>
+  <string name="account_storage_conflict">このウォレットはここに追加できません</string>
+  <string name="account_storage_conflict_description">この端末には、このウォレットの別の鍵がすでに保存されているため、何も変更していません。資産はブロックチェーン上で安全です。サポートにお問い合わせください。</string>
   <string name="account_confirmation_title">ニーモニックパスフレーズを確認する</string>
   <string name="account_confirmation_title_v2">パスフレーズの確認</string>
   <string name="account_options">アカウントのオプション</string>
@@ -113,8 +115,8 @@
   <string name="common_error_invitation_already_accepted">あなたは既に別の招待コードを利用しています</string>
   <string name="common_error_invitation_code_not_found">招待コードが無効です</string>
   <string name="common_error_inviter_registered_after_invitee">あなたの後に登録を行ったユーザーのものなので、この招待コードは利用できません</string>
-  <string name="common_error_mnemonic_is_not_valid">お手数ですが、パスフレーズが12単語または24単語で、全て正しいか確認してください</string>
-  <string name="common_error_mnemonic_length_error">パスフレーズは12個または24個の単語を含めてください</string>
+  <string name="common_error_mnemonic_word_count">パスフレーズは12・15・18・21・24個のいずれかの単語でできています。</string>
+  <string name="common_error_mnemonic_word_count_invalid">パスフレーズが12・15・18・21・24個のいずれかの単語でできていて、すべての単語のつづりが正しいか確認してください。</string>
   <string name="common_error_network">インターネット接続を確認し、後でもう一度やり直してください</string>
   <string name="common_error_no_browser_error">リンクを開くにはブラウザをインストールしてください</string>
   <string name="common_error_not_enough_invitations">申し訳ありませんが、共有できる招待枠がありません</string>

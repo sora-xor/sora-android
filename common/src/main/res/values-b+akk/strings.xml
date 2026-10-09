@@ -15,6 +15,8 @@
   <string name="account_address">Ašar nikkassim</string>
   <string name="account_already_imported">Šūrub ša pānim</string>
   <string name="account_already_imported_description">Bīt kaspim annûm šūrub ša pānim</string>
+  <string name="account_storage_conflict">This wallet can\'t be added here</string>
+  <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
   <string name="account_confirmation_title">Awāt zikrim kunnûm</string>
   <string name="account_confirmation_title_v2">Ṣerret awātim kunnûm</string>
   <string name="account_options">Tērtū nikkassim</string>
@@ -114,8 +116,8 @@
   <string name="common_error_invitation_already_accepted">Kunuk qerītim šanîm taleqqe ša pānim</string>
   <string name="common_error_invitation_code_not_found">Kunuk qerītim ul kīnum</string>
   <string name="common_error_inviter_registered_after_invitee">Kunuk qerītim annûm ul leqûm, aššum qērûka warki kāša šumam iškun</string>
-  <string name="common_error_mnemonic_is_not_valid">Ṣerret awātika 12 ū 24 awātim liškun; awātū kalāšina kīnāt liššakin</string>
-  <string name="common_error_mnemonic_length_error">Ṣerret awātim 12 ū 24 awātim liškun</string>
+  <string name="common_error_mnemonic_word_count">A passphrase has 12, 15, 18, 21 or 24 words.</string>
+  <string name="common_error_mnemonic_word_count_invalid">Please make sure your passphrase has 12, 15, 18, 21 or 24 words and that every word is spelled correctly.</string>
   <string name="common_error_network">Rikis ḫarrānim rabîm bāri u arki šanītam epuš</string>
   <string name="common_error_no_browser_error">Pātiḫ ḫarrānim ana petê rikissim šukni</string>
   <string name="common_error_not_enough_invitations">Qerītū ana nadānim ul mādu</string>
