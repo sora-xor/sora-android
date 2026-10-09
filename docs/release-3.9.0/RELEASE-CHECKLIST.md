@@ -366,3 +366,70 @@ Play 3.8.6.3:
       `no_backup/wallet-quarantine-*` and
       `no_backup/wallet-corrupt-quarantine-*`. A later release may offer a
       confirmed cleanup.
+
+### a4 review fixes: actions
+
+Before each release candidate:
+
+- [ ] Same emulator run as above; `WalletUpgradeScenarioTest` now has 26
+      scenarios (adds read-only repair and removal, phone transfer without
+      the Keystore key, the 2.4.0 layout, blank rows, clock skew and a busy
+      Keystore during the key unwrap). Also run the ordered
+      `EncryptedWalletMigrationStorageTest` phases with
+      `scripts/run-encrypted-wallet-upgrade-qualification.sh` (they depend on
+      process restarts between phases and fail when run all at once).
+
+Real-device QA (test phones and team test wallets only):
+
+- [ ] Partial key set: on 3.8.6.3, force-stop the app during "Import" right
+      after Continue (repeat until an account shows without working keys, or
+      use the emulator scenario as reference). After the upgrade that account
+      is read-only; importing its phrase again makes it sign; other accounts
+      unaffected.
+- [ ] Device-to-device transfer (Pixel "Copy apps & data") of a 3.8.6.3
+      install, then the release build: the recovery panel must appear (not
+      onboarding that always fails); record what it offers. Once the Safe
+      Mode task wires "Set up this device again", confirm that after it the
+      app starts as new, the phrase restores the same address and the old
+      files are under `no_backup/wallet-quarantine-*-set-up-again/`.
+- [ ] Kill the app during the first start after an upgrade, then let a
+      background job start the app (for example wait for a scheduled
+      worker or reboot) before opening it: opening the app must still retry
+      the verification automatically.
+
+Follow-up (Safe Mode task, required before release):
+
+- [ ] Wire `WalletUpgradeBackup.requestSetUpAgain()` to a "Set up this
+      device again (keeps old data)" action with a typed confirmation, then
+      restart the app process (start the launcher activity with
+      `FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK` and end the
+      process). Offer it when `recoveryOptions().canSetUpAgain`; when
+      `restoreNeedsSetUpAgain` is true, "Restore with recovery phrase" and
+      "Restore from Google Drive" go through it.
+- [ ] For each read-only account, show `UserRepository.unavailableWalletOptions()`:
+      "Import this account's phrase" when `canRepairWithPhrase`, otherwise
+      "Remove this account, then import its phrase" (`canRemoveAndImport`),
+      and the phrase reveal when `canShowPhraseAfterPin`.
+- [ ] Show the onboarding error `WALLET_KEYS_UNAVAILABLE` with a direct link
+      to the recovery options.
+
+Product decisions to confirm:
+
+- [ ] "Set up this device again" renames (never deletes) the database,
+      preference files and wrapped-key file into `no_backup`; they stay on
+      the phone until a later release offers a confirmed cleanup.
+- [ ] Removing a read-only account keeps a copy of the encrypted preference
+      files in `no_backup/wallet-quarantine-*-removed-unavailable-account/`
+      first; without that copy (for example a full disk) the removal is
+      refused.
+- [ ] Old current-schema backup snapshots are removed (not only set aside)
+      when the newest three pass full validation and every wallet in the
+      snapshot is a live account whose keys verified on this phone.
+
+Support:
+
+- [ ] New messages: "This account can't be repaired as it is" (remove the
+      account and import its phrase again; funds are safe) and "This phone
+      can't unlock the saved wallet data" (typically a phone-to-phone
+      transfer; restore with the recovery phrase; never ask them to
+      reinstall or clear data).

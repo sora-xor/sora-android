@@ -950,10 +950,10 @@ reinstall or clear data.
 
 **Strings** (`common/src/main/res/values*/strings.xml`)
 
-- The passphrase-length errors name every accepted length:
-  `common_error_mnemonic_word_count` ("A passphrase has 12, 15, 18, 21 or
-  24 words.") and `common_error_mnemonic_word_count_invalid` replace
-  `common_error_mnemonic_length_error` / `common_error_mnemonic_is_not_valid`.
+- The passphrase-length errors name every accepted length (12, 15, 18, 21
+  or 24 words). (Review round: the original keys
+  `common_error_mnemonic_length_error` / `common_error_mnemonic_is_not_valid`
+  and every translation are kept; only the numbers changed. See below.)
 - New `account_storage_conflict` ("This wallet can't be added here") and
   `account_storage_conflict_description` ("This phone already holds
   different keys for this wallet, so nothing was changed. Your funds are
@@ -980,7 +980,7 @@ started with this candidate (device tests below unless noted):
 | Killed during upgrade (after schema, during verification, after staging, journal from an earlier build) | Resumes or retries automatically; signs. Four interruptions in a row: options shown, Try again works. |
 | Interrupted backup copy | Cleaned up or renamed aside; upgrade continues. |
 | Busy Keystore at start | Not remembered or journaled; next attempt verifies and signs. |
-| 2.4–3.3 (Room 58–72) | Same layout as 3.x; the Room chain from 58 is covered by the existing `core_db` migration tests (schemas 58–77). |
+| 2.4–3.3 (Room 58–72) | Same layout as 3.x; the Room chain from 58 is covered by the existing `core_db` migration tests (schemas 58–77). Review round: 2.4.0 layout device-tested (see below). |
 | SORA v1 (Iroha, Room 15–40), believed ~0 installs | Not device-tested. Unscoped Ed25519 keys are ignored (no SORA2 address can come from them); the 15-word phrase stays stored and can be imported. Showing it needs the Safe Mode task. |
 
 ### Not in this task
@@ -1051,3 +1051,200 @@ started with this candidate (device tests below unless noted):
   `:app:compileQualificationDebugAndroidTestKotlin` pass;
   `:app:lintProductionDebug` reports 864 warnings, 1 hint and 180 baselined
   errors (baseline unchanged).
+
+### Review fixes (a4, round 1)
+
+Reviewers found states where the first a4 round still left people without a
+working way forward, a Keystore classification gap, and smaller issues. The
+rules above are unchanged: no key value, wrapped key, Keystore alias or
+account row is deleted, overwritten or moved automatically.
+
+**Keystore: busy during the key unwrap** (`EncryptionUtil`)
+
+- The Keystore reports a busy backend, a system error or a pruned operation
+  handle while unwrapping the AES key as `IllegalBlockSizeException` with an
+  `android.security.KeyStoreException` cause. The first round treated that
+  as permanent ("this phone cannot unlock the keys"). Now only a padding
+  failure, a permanently invalidated alias, a wrong-length wrapped key and
+  the cause-less pre-Android 12 length error are permanent; everything else
+  is transient.
+- The alias probe and the unwrap run together in the bounded retry (0, 150,
+  500 ms), so a single busy moment no longer fails the verification.
+- A wrapped key whose first write to disk failed (full disk) is written again
+  before anything is encrypted with it; before, the in-memory copy could be
+  used and the next start would have found encrypted data without its key.
+- New read-only probe `requireKeyMaterialReadable()`: proves stored key
+  material can be unlocked without creating anything (nothing to prove on a
+  new install).
+
+**Read-only accounts can be used again** (`MultiaccountInteractor`,
+`UserRepositoryImpl`)
+
+- Importing the phrase (or raw seed) of a read-only (UNAVAILABLE) account no
+  longer says "already imported". It completes the account in place: only
+  missing values are added (for example the nonce lost when 3.8.6.3 was
+  killed inside its three-step key save, or every value when an interrupted
+  3.8.6.3 removal cleared them), every stored value must match, then the
+  account is verified like the upgrade does and can sign. The account row
+  and its name are kept.
+- If a stored value cannot be read (left by 3.8.6.3 key regeneration),
+  nothing is written and the new message `account_repair_needs_removal`
+  explains the path: remove the account (confirmed by the person; a copy of
+  the encrypted preference files is kept first in
+  `no_backup/wallet-quarantine-<time>-removed-unavailable-account/`), then
+  import the phrase again.
+- Removing a read-only account is no longer refused
+  (`WALLET_DELETION_WALLET_NOT_VERIFIED`); there is nothing to prove for it.
+- `UserRepository.unavailableWalletOptions(address)` reports per account
+  `canRepairWithPhrase`, `canRemoveAndImport`, `canShowPhraseAfterPin` and
+  `canReadOnly`; `completeUnavailableWallet(address)` is the verification
+  step after the add-only commit.
+- Accounts restored from 2.3.x keep only unsuffixed keys. Account removal and
+  adoption now read them by the same rule as signing (the unsuffixed keys
+  count only when their public key derives exactly that address), so such
+  accounts can be removed, and "Restore wallets found on this phone" can
+  restore a 2.x account that a later version removed (the first round
+  listed it but adoption always failed). Nothing is written by adoption.
+
+**This phone cannot unlock the stored keys** (phone-to-phone transfer;
+`WalletUpgradeBackup`, `MigrationManager`, `CredentialsRepositoryImpl`)
+
+- Android 12+ "Copy apps & data" copies the app files but never the Keystore
+  key. With no account rows (only leftover keys), the first round sent the
+  person to onboarding, where every create or import failed. Now the
+  verification runs the read-only probe first and reports
+  `KeysUnavailable` (`KEYSTORE_KEY_UNAVAILABLE`); with accounts it already
+  did. Nothing is written.
+- New `WalletUpgradeBackup.requestSetUpAgain()` ("Set up this device again,
+  keeps old data"): records the request; the next app process, before
+  anything opens the wallet files, renames `app.db*`, the DataStore file,
+  `sora_prefs.xml*` and `key_alias.xml*` into
+  `no_backup/wallet-quarantine-<time>-set-up-again/` (renamed, never copied
+  and deleted, never removed; the Keystore alias is not touched). The app
+  then starts as a new install and the person restores with the recovery
+  phrase or Google Drive. The caller restarts the process (Safe Mode task).
+- A create or import that fails because stored keys cannot be unlocked now
+  shows `wallet_keys_unavailable` instead of a generic error and records the
+  state for the recovery options.
+
+**Recovery options match the actions that work** (`WalletRecoveryOptions`)
+
+- New `canSetUpAgain` and `restoreNeedsSetUpAgain`. Wallet writes are
+  disabled in every recovery state, so a phrase or Drive restore from there
+  runs after "Set up this device again" and a restart; the flags now say so
+  instead of implying a direct restore.
+- `canReadOnly` uses the same checks as `authorizeSafeReadOnly()` (current
+  schema, `PRAGMA quick_check`, readable wallet tables, at least one
+  account), so the button is never offered and then refused. A damaged
+  database or no accounts: not offered.
+- The existing recovery panel keeps "Continue read-only" after a failed Try
+  again or read-only attempt when it is still available (it was hidden).
+
+**Automatic retry only when the app's screens start** (`SplashInteractor`,
+`SplashActivity`)
+
+- The first round claimed an automatic retry in `Application.attachBaseContext`,
+  which also runs for WorkManager, boot and receiver starts. Three background
+  starts could use up the budget before the person opened the app. The retry
+  is now claimed in `SplashInteractor.checkMigration`, right before the
+  verification runs; the splash waits for it instead of showing the
+  recovery panel first.
+- Activating a verification records `completedAt` no earlier than
+  `startedAt`, and a VERIFIED receipt that finished "before" it started (the
+  clock moved back) is retried instead of blocking every start.
+- Recovery read-only mode on Android 14 and older: Room reads through pooled
+  read-only connections, where SQLite refuses the TEMP triggers that make
+  wallet tables read-only. Such a connection cannot write, so it is skipped;
+  the writer connection still gets the triggers before any write. Before,
+  the first read in recovery mode failed.
+
+**Backups** (`WalletUpgradeBackup`)
+
+- Pruning keeps the newest 3 backups that pass the full validation and
+  every pre-migration backup. An older current-schema snapshot is removed
+  only when every wallet in it (rows, key sets, 2.x owner) is a live account
+  whose keys verified on this phone; it is first renamed out of the backup
+  namespace, then exactly the validated files are removed. A newer snapshot
+  that only looks complete can no longer cause a valid older one to be
+  removed. The decision is remembered, so unchanged backups are not
+  validated again at every start.
+- The current-schema snapshot (no migration is pending, so it protects
+  nothing a later migration would not back up itself) is made only when its
+  sources are at most 16 MiB and space is clearly enough. Space is checked
+  before anything is hashed, and a failure waits a day before the next try,
+  so a nearly full phone no longer hashes `app.db` on the main thread at
+  every start.
+- Keys-only backup when space is short needs the key files twice plus 1 MiB
+  and room for one rewrite of up to 32 MiB of the database, instead of two
+  copies of the whole database. Room's schema steps run in one SQLite
+  transaction, so if space still runs out the database is unchanged and the
+  storage options are shown.
+- The "database missing" check uses `lstat` and treats only "no such file"
+  as missing. Any other error (for example an I/O error) is reported as a
+  transient `DATABASE_PATH_UNREADABLE` instead of setting aside a live
+  write-ahead log.
+
+**Smaller fixes**
+
+- Blank account rows are ignored by account removal too (preview, commit,
+  resume and the deletion hashes), so "Remove account" and "Remove all"
+  work on phones with such a row. The blank row is never deleted.
+- Creating, importing or restoring a phrase is refused before any phrase is
+  shown while wallet changes are disabled, so nobody writes down or backs up
+  a wallet that cannot be added.
+- 2.x unsuffixed keys that cannot be verified are listed in the quarantine
+  (`unrestorableLegacyOwner`) so the recovery screens can offer their phrase.
+- Passphrase-length errors: the first round replaced 21 translations with
+  English. The original keys and every translation are back, with only the
+  numbers changed (Japanese uses the reviewed wording). Middle Egyptian keeps
+  its generated text.
+
+**User-visible effects**
+
+- A read-only account becomes usable again by importing its own phrase, or
+  can be removed and imported again; other accounts are unaffected.
+- A phone that cannot unlock its transferred wallet data shows recovery
+  options instead of an onboarding that always fails.
+- New messages (English, Japanese; other locales show English):
+  `account_repair_needs_removal` ("This account can't be repaired as it
+  is"), `wallet_keys_unavailable` ("This phone can't unlock the saved wallet
+  data").
+
+**Verification**
+
+- New device scenarios (`WalletUpgradeScenarioTest`, now 26): partial key
+  set completed by its phrase; undecryptable account removed and imported
+  again; keys cleared by an interrupted 3.8.6.3 removal (restored and
+  removed); phone transfer without the Keystore key, with only leftover keys
+  and with accounts (read-only, then set up again, then import and sign);
+  2.4.0 layout written by the 2.4.0 MigrationManager (Room 58); 2.x owner
+  removed in a later release, then restored; blank row with removal; clock
+  moved back during an interrupted verification; busy Keystore during the
+  unwrap. New historical writers: the 2.4.0 MigrationManager with its
+  readers and the 3.8.6.3 account removal (copied from the release tags).
+- `core_db` `WalletUpgradeBackupTest` (now 108 with
+  `WalletIdentityMigration75Test`'s 18 = 126): background starts do not use
+  the retry budget; pruning keeps valid snapshots behind damaged ones and
+  never prunes an unverified wallet's copy; set up again renames every file
+  with identical bytes and only in a new process; low-storage snapshot skip
+  and back-off; read-only offered exactly when the route works; VERIFIED
+  receipt clock skew; keys-only margin with a 40 MiB database; unreadable
+  database directory is not "missing".
+- `common` `EncryptionUtilKeySafetyTest` (now 9): unwrap retried within one
+  call, persistent busy unwrap is transient and not remembered, wrong wrapped
+  key is permanent and not retried, classification table, probe touches
+  nothing on a new install and reports a missing alias without creating one.
+- JVM: `MigrationManagerSafetyTest` (no rows with keys this phone cannot
+  unlock, busy probe), `MultiaccountInteractorTest` (read-only account
+  completed; unreadable values ask for removal), `CredentialsRepositoryTest`
+  (keys unavailable at commit; no draft while writes are disabled).
+- Results. SORA-Api36-16k: `common` 14/14, `core_db` 126/126,
+  `WalletUpgradeScenarioTest` 26/26, encrypted-wallet upgrade phases 5/5 (run
+  in order with process restarts; the phase class fails by design when run
+  all at once). SORA-Api34: `common` 14/14, `core_db` 126/126,
+  `WalletUpgradeScenarioTest` 26/26, MigrationManager production-path
+  qualification 7/7. The Android 14 run found the read-only-connection
+  problem in recovery mode described above; it passes after the fix.
+- `testProductionDebugUnitTest`: 1,103 tests in 15 modules, 0 failures,
+  9 skipped. `:app:assembleProductionDebug` passes. `:app:lintProductionDebug`:
+  866 warnings, 1 hint, 180 baselined errors (baseline unchanged).
