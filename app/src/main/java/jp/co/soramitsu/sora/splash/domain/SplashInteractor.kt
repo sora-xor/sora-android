@@ -34,8 +34,10 @@ package jp.co.soramitsu.sora.splash.domain
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -82,6 +84,15 @@ class SplashInteractor @Inject constructor(
     fun getMigrationDoneAsync(): Deferred<Boolean> = migrationsDone
 
     suspend fun getMigrationFailureCode(): String? = migrationManager.failureCode()
+
+    /** Forward paths for the current recovery state (never null while recovery is shown). */
+    fun recoveryOptions(code: String): WalletRecoveryOptions =
+        WalletUpgradeBackup.recoveryOptions()
+            ?: WalletRecoveryOptions.forState(
+                code = code,
+                transientFailure = false,
+                facts = jp.co.soramitsu.core_db.RecoveryFacts(databaseAtCurrentVersion = true),
+            )
 
     suspend fun getRegistrationState() = userRepository.getRegistrationState()
 

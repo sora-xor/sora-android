@@ -3,7 +3,7 @@ package jp.co.soramitsu.sora.ux
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import jp.co.soramitsu.common.nexus.IrohaKeyDerivation
 import jp.co.soramitsu.common.nexus.NexusDerivationProfiles
-import jp.co.soramitsu.sora.splash.domain.MigrationSr25519Crypto
+import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationSr25519Crypto
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

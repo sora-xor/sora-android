@@ -39,6 +39,8 @@ import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.core_db.RecoveryFacts
+import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.PendingRecoveryStartupScheduler
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
@@ -99,6 +101,7 @@ class SplashViewModelTest {
     fun `nextScreen with REGISTRATION_FINISHED`() = runTest {
         given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
         given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+        given(interactor.hasExistingWallet()).willReturn(true)
         splashViewModel.nextScreen()
         advanceUntilIdle()
         val r = splashViewModel.showMainScreen.getOrAwaitValue()
@@ -110,6 +113,7 @@ class SplashViewModelTest {
         val migrationResult = CompletableDeferred<Boolean>()
         given(interactor.getMigrationDoneAsync()).willReturn(migrationResult)
         given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+        given(interactor.hasExistingWallet()).willReturn(true)
 
         splashViewModel.nextScreen()
         advanceUntilIdle()
@@ -123,6 +127,23 @@ class SplashViewModelTest {
         verify(pendingRecoveryStartupScheduler).scheduleAfterWalletMigration()
         assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
     }
+
+    @Test
+    fun `finished registration without any account opens onboarding instead of an empty wallet`() =
+        runTest {
+            given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+            given(interactor.getRegistrationState())
+                .willReturn(OnboardingState.REGISTRATION_FINISHED)
+            given(interactor.hasExistingWallet()).willReturn(false)
+
+            splashViewModel.nextScreen()
+            advanceUntilIdle()
+
+            assertEquals(
+                OnboardingState.INITIAL,
+                splashViewModel.showOnBoardingScreen.getOrAwaitValue(),
+            )
+        }
 
     @Test
     fun `nextScreen with INITIAL`() = runTest {
@@ -155,6 +176,8 @@ class SplashViewModelTest {
         given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(false))
         given(interactor.getMigrationFailureCode()).willReturn("SECRET_DECRYPTION_FAILED")
         given(interactor.canContinueLegacyWallet()).willReturn(true)
+        given(interactor.recoveryOptions("SECRET_DECRYPTION_FAILED"))
+            .willReturn(options("SECRET_DECRYPTION_FAILED"))
 
         splashViewModel.nextScreen()
         advanceUntilIdle()
@@ -163,6 +186,7 @@ class SplashViewModelTest {
             WalletMigrationRecoveryUiState(
                 code = "SECRET_DECRYPTION_FAILED",
                 canContinueLegacyWallet = true,
+                options = options("SECRET_DECRYPTION_FAILED"),
             ),
             splashViewModel.showMigrationRecovery.getOrAwaitValue(),
         )
@@ -185,6 +209,8 @@ class SplashViewModelTest {
     fun `legacy continuation selection race stays on recovery screen`() = runTest {
         given(interactor.canContinueLegacyWallet()).willReturn(false)
         given(interactor.getMigrationFailureCode()).willReturn("SELECTED_ACCOUNT_MISMATCH")
+        given(interactor.recoveryOptions("SELECTED_ACCOUNT_MISMATCH"))
+            .willReturn(options("SELECTED_ACCOUNT_MISMATCH"))
 
         splashViewModel.continueLegacyWallet()
         advanceUntilIdle()
@@ -193,6 +219,7 @@ class SplashViewModelTest {
             WalletMigrationRecoveryUiState(
                 code = "SELECTED_ACCOUNT_MISMATCH",
                 canContinueLegacyWallet = false,
+                options = options("SELECTED_ACCOUNT_MISMATCH"),
             ),
             splashViewModel.showMigrationRecovery.getOrAwaitValue(),
         )
@@ -206,10 +233,16 @@ class SplashViewModelTest {
         given(interactor.getMigrationDoneAsync()).willReturn(failedInitialMigration)
         given(interactor.getMigrationFailureCode()).willReturn("INSUFFICIENT_BACKUP_STORAGE")
         given(interactor.canContinueLegacyWallet()).willReturn(false)
+        given(interactor.recoveryOptions("INSUFFICIENT_BACKUP_STORAGE"))
+            .willReturn(options("INSUFFICIENT_BACKUP_STORAGE"))
         splashViewModel.nextScreen()
         advanceUntilIdle()
         assertEquals(
-            WalletMigrationRecoveryUiState("INSUFFICIENT_BACKUP_STORAGE", false),
+            WalletMigrationRecoveryUiState(
+                "INSUFFICIENT_BACKUP_STORAGE",
+                false,
+                options("INSUFFICIENT_BACKUP_STORAGE"),
+            ),
             splashViewModel.showMigrationRecovery.getOrAwaitValue(),
         )
         verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
@@ -231,6 +264,7 @@ class SplashViewModelTest {
         given(interactor.retryMigration()).willReturn(false)
         given(interactor.getMigrationFailureCode()).willReturn("KEY_UNAVAILABLE")
         given(interactor.canContinueLegacyWallet()).willReturn(true)
+        given(interactor.recoveryOptions("KEY_UNAVAILABLE")).willReturn(options("KEY_UNAVAILABLE"))
 
         splashViewModel.retryWalletMigration()
         advanceUntilIdle()
@@ -239,6 +273,7 @@ class SplashViewModelTest {
             WalletMigrationRecoveryUiState(
                 code = "KEY_UNAVAILABLE",
                 canContinueLegacyWallet = true,
+                options = options("KEY_UNAVAILABLE"),
             ),
             splashViewModel.showMigrationRecovery.getOrAwaitValue(),
         )
@@ -246,4 +281,33 @@ class SplashViewModelTest {
         verify(interactor, never()).hasExistingWallet()
         verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
     }
+
+    @Test
+    fun `every recovery state offers retry, phrase restore and support`() = runTest {
+        listOf(
+            "KEYSTORE_UNAVAILABLE",
+            "KEYSTORE_KEY_UNAVAILABLE",
+            "INSUFFICIENT_BACKUP_STORAGE",
+            "WALLET_MIGRATION_RECOVERY_REQUIRED",
+            "WALLET_DELETION_JOURNAL_INVALID",
+        ).forEach { code ->
+            val options = options(code)
+            assertEquals(true, options.canRetry)
+            assertEquals(true, options.canRestoreFromPhrase)
+            assertEquals(true, options.canRestoreFromDrive)
+            assertEquals(true, options.canContactSupport)
+        }
+        assertEquals(false, options("KEYSTORE_KEY_UNAVAILABLE").canShowPhraseAfterPin)
+        assertEquals(true, options("KEYSTORE_UNAVAILABLE").retryAutomatically)
+    }
+
+    private fun options(code: String) = WalletRecoveryOptions.forState(
+        code = code,
+        transientFailure = false,
+        facts = RecoveryFacts(
+            hasWalletFiles = true,
+            hasRecoveryPhraseOrSeed = true,
+            databaseAtCurrentVersion = true,
+        ),
+    )
 }

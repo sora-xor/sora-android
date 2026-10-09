@@ -48,7 +48,7 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositoryImpl
 import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositorySr25519Crypto
 import jp.co.soramitsu.feature_account_impl.data.repository.datasource.PrefsUserDatasource
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.common.account.Sora2AddressCodec
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -62,7 +62,7 @@ class AccountFeatureModule {
         cd: CredentialsDatasource,
         cm: CoroutineManager,
         lh: LanguagesHolder,
-        runtimeManager: RuntimeManager,
+        sora2AddressCodec: Sora2AddressCodec,
         userRepositorySr25519Crypto: UserRepositorySr25519Crypto,
     ): UserRepository =
         UserRepositoryImpl(
@@ -71,7 +71,7 @@ class AccountFeatureModule {
             db,
             cm,
             lh,
-            runtimeManager,
+            sora2AddressCodec,
             userRepositorySr25519Crypto,
         )
 

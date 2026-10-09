@@ -38,6 +38,7 @@ import java.security.MessageDigest
 import java.util.UUID
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.CardHubType
@@ -46,6 +47,7 @@ import jp.co.soramitsu.common.nexus.NexusNetworks
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.WalletSelectionPolicy
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.core_db.WalletDeletionIntegrity
 import jp.co.soramitsu.core_db.model.CardHubLocal
@@ -58,6 +60,7 @@ import jp.co.soramitsu.core_db.model.WalletDeletionTargetLocal
 import jp.co.soramitsu.core_db.model.WalletIdentityLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
 import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
+import jp.co.soramitsu.common.util.WalletStorageFailures
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -67,7 +70,6 @@ import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionTarget
 import jp.co.soramitsu.feature_account_api.domain.model.WalletMutationSnapshot
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
@@ -123,7 +125,7 @@ class UserRepositoryImpl(
     private val db: AppDatabase,
     coroutineManager: CoroutineManager,
     private val languagesHolder: LanguagesHolder,
-    private val runtimeManager: RuntimeManager,
+    private val sora2AddressCodec: Sora2AddressCodec,
     private val userRepositorySr25519Crypto: UserRepositorySr25519Crypto,
 ) : UserRepository {
 
@@ -132,6 +134,7 @@ class UserRepositoryImpl(
         val LEGACY_SORA_MNEMONIC_WORD_COUNTS = setOf(15, 18, 21)
         const val LEGACY_SECRET_SIGNING_CHALLENGE =
             "sora-wallet-legacy-secret-self-consistency-v1"
+        val SELECTABLE_STATES = setOf("VERIFIED", "UNAVAILABLE")
     }
 
     private val currentSoraAccount = MutableStateFlow<SoraAccount?>(null)
@@ -164,7 +167,7 @@ class UserRepositoryImpl(
 
     private suspend fun initCurSoraAccount() {
         var curAddress = userDatasource.getCurAccountAddress()
-        var accounts = db.accountDao().getAccounts()
+        var accounts = walletAccounts()
         if (curAddress.isEmpty() &&
             userDatasource.retrieveRegistratrionState() == OnboardingState.REGISTRATION_FINISHED
         ) {
@@ -174,15 +177,37 @@ class UserRepositoryImpl(
             }
         }
         if (accounts.isEmpty()) {
-            check(curAddress.isEmpty()) { "SELECTED_WALLET_WITHOUT_ACCOUNT" }
+            // A selection that names no account (for example after the database was lost) is
+            // ignored; the retained keys are set aside and onboarding offers to restore them.
             currentSoraAccount.value = null
             return
         }
-        check(curAddress.isNotEmpty()) { "SELECTED_WALLET_MISSING" }
-        val selected = accounts.singleOrNull {
-            it.substrateAddress == curAddress
-        } ?: error("SELECTED_WALLET_MISMATCH")
+        val selected = accounts.firstOrNull { it.substrateAddress == curAddress }
+            ?: fallbackSelection(accounts)
         currentSoraAccount.value = SoraAccountMapper.map(selected)
+    }
+
+    /** Account rows that can hold a wallet. A blank row is ignored, never deleted. */
+    private suspend fun walletAccounts(): List<SoraAccountLocal> =
+        db.accountDao().getAccounts().filter { it.substrateAddress.isNotBlank() }
+
+    /**
+     * The stored selection is empty or names no account (for example a crash between deleting an
+     * account and selecting the next one in an older release). Select a deterministic existing
+     * account. The choice is saved only while normal wallet access is allowed; it is not key
+     * material.
+     */
+    private suspend fun fallbackSelection(accounts: List<SoraAccountLocal>): SoraAccountLocal {
+        val legacyOwner = runCatching { credentialsDatasource.getAddress() }.getOrNull()
+        val fallback = WalletSelectionPolicy.fallback(
+            walletIds = accounts.map(SoraAccountLocal::substrateAddress),
+            legacyOwner = legacyOwner,
+        )
+        val selected = accounts.first { it.substrateAddress == fallback }
+        if (WalletRecoveryCapabilityGate.mode() == WalletRecoveryCapabilityGate.Mode.NORMAL) {
+            userDatasource.setCurAccountAddress(selected.substrateAddress)
+        }
+        return selected
     }
 
     /**
@@ -196,23 +221,25 @@ class UserRepositoryImpl(
         if (accounts.size > 1 || db.walletIdentityDao().getWallets().isNotEmpty() ||
             db.walletIdentityDao().getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1) != null
         ) return null
-        val keys = credentialsDatasource.retrieveKeys("") ?: return null
+        val keys = retainedLegacyStep { credentialsDatasource.retrieveKeys("") } ?: return null
         try {
-            val address = runtimeManager.toSoraAddressOrNull(keys.publicKey)
-                ?: error("LEGACY_ACCOUNT_ADDRESS_INVALID")
+            // Release-era material that does not verify is set aside untouched (not restored);
+            // the person can still restore that wallet from its recovery phrase. A transient
+            // Keystore or storage failure is rethrown so the next attempt can restore it.
+            val address = sora2AddressCodec.toSoraAddressOrNull(keys.publicKey) ?: return null
             val recordedAddress = credentialsDatasource.getAddress()
-            check(recordedAddress.isBlank() || recordedAddress == address) {
-                "LEGACY_ACCOUNT_OWNER_CONFLICT"
+            if (recordedAddress.isNotBlank() && recordedAddress != address) return null
+            if (accounts.isNotEmpty() && accounts.single().substrateAddress != address) {
+                return null
             }
-            check(accounts.isEmpty() || accounts.single().substrateAddress == address) {
-                "LEGACY_ACCOUNT_ROW_CONFLICT"
-            }
-            val mnemonic = credentialsDatasource.retrieveMnemonic("")
-            val seed = credentialsDatasource.retrieveSeed("")
-            if (mnemonic.isNotBlank() || seed.isNotBlank()) {
-                verifyStoredSigningKey(keys, mnemonic, seed)
-            }
-            verifyLegacySecretSigningKey(keys)
+            retainedLegacyStep {
+                val mnemonic = credentialsDatasource.retrieveMnemonic("")
+                val seed = credentialsDatasource.retrieveSeed("")
+                if (mnemonic.isNotBlank() || seed.isNotBlank()) {
+                    verifyStoredSigningKey(keys, mnemonic, seed)
+                }
+                verifyLegacySecretSigningKey(keys)
+            } ?: return null
             val account = accounts.singleOrNull()
                 ?: SoraAccountLocal(address, userDatasource.getAccountName())
             if (accounts.isEmpty()) {
@@ -238,6 +265,20 @@ class UserRepositoryImpl(
             keys.privateKey.fill(0)
             keys.nonce.fill(0)
         }
+    }
+
+    /** Runs [block]; returns null for a deterministic failure and rethrows a transient one. */
+    private suspend fun <T> retainedLegacyStep(block: suspend () -> T): T? = try {
+        block()
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Throwable) {
+        if (WalletStorageFailures.isTransient(error) ||
+            WalletStorageFailures.isKeyMaterialUnavailable(error)
+        ) {
+            throw error
+        }
+        null
     }
 
     override suspend fun getCurSoraAccount(): SoraAccount = mutex.withLock {
@@ -284,10 +325,12 @@ class UserRepositoryImpl(
         mutex.withLock {
             WalletRecoveryCapabilityGate.requireUserMutationAllowed()
             resumePendingWalletDeletionLocked()
+            // An account whose keys are unavailable on this device may still be selected; it is
+            // read-only (signing checks its own identity state).
             check(
                 db.accountDao().getAccount(soraAccount.substrateAddress) != null &&
                     db.walletIdentityDao().getWallet(soraAccount.substrateAddress)
-                        ?.migrationState == "VERIFIED"
+                        ?.migrationState in SELECTABLE_STATES
             ) { "SELECTED_WALLET_NOT_VERIFIED" }
             userDatasource.setCurAccountAddress(soraAccount.substrateAddress)
             currentSoraAccount.value = soraAccount
@@ -304,7 +347,7 @@ class UserRepositoryImpl(
 
     override fun flowSoraAccountsList(): Flow<List<SoraAccount>> =
         db.accountDao().flowAccounts().map { list ->
-            list.map {
+            list.filter { it.substrateAddress.isNotBlank() }.map {
                 SoraAccountMapper.map(it)
             }
         }
@@ -312,14 +355,14 @@ class UserRepositoryImpl(
     override suspend fun soraAccountsList(): List<SoraAccount> =
         mutex.withLock {
             resumePendingWalletDeletionIfAllowed()
-            db.accountDao().getAccounts().map {
+            walletAccounts().map {
                 SoraAccountMapper.map(it)
             }
         }
 
     override suspend fun getSoraAccountsCount(): Int = mutex.withLock {
         resumePendingWalletDeletionIfAllowed()
-        db.accountDao().getAccountsCount()
+        walletAccounts().size
     }
 
     override suspend fun insertSoraAccount(
@@ -346,7 +389,7 @@ class UserRepositoryImpl(
                 check(keyPair == null && mnemonic.isBlank() && rawSeed.isBlank()) {
                     "WATCH_ONLY_SECRET_CONFLICT"
                 }
-                runtimeManager.soraPublicKeyOrNull(soraAccount.substrateAddress)
+                sora2AddressCodec.soraPublicKeyOrNull(soraAccount.substrateAddress)
                     ?: error("WATCH_ONLY_ADDRESS_INVALID")
             } else {
                 null
@@ -354,7 +397,7 @@ class UserRepositoryImpl(
             val verifiedPublicKey = keyPair?.publicKey ?: watchOnlyPublicKey
             if (verifiedPublicKey != null) {
                 check(
-                    runtimeManager.toSoraAddressOrNull(verifiedPublicKey) ==
+                    sora2AddressCodec.toSoraAddressOrNull(verifiedPublicKey) ==
                         soraAccount.substrateAddress
                 ) { "SORA_ADDRESS_MISMATCH" }
             }
@@ -467,7 +510,7 @@ class UserRepositoryImpl(
             }
             check(
                 db.walletIdentityDao().getWallet(soraAccount.substrateAddress)
-                    ?.migrationState == "VERIFIED"
+                    ?.migrationState in SELECTABLE_STATES
             ) { "SELECTED_WALLET_NOT_VERIFIED" }
             val updated = soraAccount.copy(accountName = newName)
             userDatasource.setCurAccountAddress(updated.substrateAddress)
@@ -533,10 +576,11 @@ class UserRepositoryImpl(
         if (currentSoraAccount.value == null) initCurSoraAccount()
         val selectedBefore = requireNotNull(currentSoraAccount.value).substrateAddress
         check(selectedBefore in installedIds) { "WALLET_DELETION_SELECTION_INVALID" }
-        requireDeletionWalletSecrets(accounts)
+        requireDeletionWalletSecrets(accounts, targetIds)
         requireDeletionPreferenceCoverage(
             walletIds = installedIds,
             selectedAddress = selectedBefore,
+            targetIds = targetIds,
         )
         val selectedAfter = when {
             scope == WalletDeletionScope.ALL -> ""
@@ -548,10 +592,9 @@ class UserRepositoryImpl(
                 .first()
                 .substrateAddress
         }
+        // A release-era owner that is not an account is a set-aside key set: it is neither a
+        // deletion target nor a reason to refuse deleting the accounts the person chose.
         val legacyAddress = credentialsDatasource.getAddress()
-        check(legacyAddress.isBlank() || legacyAddress in installedIds) {
-            "WALLET_DELETION_LEGACY_OWNER_UNKNOWN"
-        }
         val scopeWire = scope.toWire()
         val snapshotHash = walletDeletionSnapshotHash(
             selectedWalletId = selectedBefore,
@@ -854,10 +897,11 @@ class UserRepositoryImpl(
         expectedTargets: Set<String>,
     ) {
         val currentAccounts = db.accountDao().getAccounts()
-        requireDeletionWalletSecrets(currentAccounts)
+        requireDeletionWalletSecrets(currentAccounts, expectedTargets)
         requireDeletionPreferenceCoverage(
             walletIds = currentAccounts.map(SoraAccountLocal::substrateAddress).toSet(),
             selectedAddress = expectedOperation.selectedBefore,
+            targetIds = expectedTargets,
         )
         val preferenceHashes =
             deletionPreferenceHashes(
@@ -1116,11 +1160,18 @@ class UserRepositoryImpl(
     private suspend fun requireDeletionPreferenceCoverage(
         walletIds: Set<String>,
         selectedAddress: String,
+        targetIds: Set<String>,
     ) {
         try {
+            val unavailable = db.walletIdentityDao().getWallets()
+                .filter { it.migrationState == "UNAVAILABLE" }
+                .map(WalletIdentityLocal::walletId)
+                .toSet()
             credentialsDatasource.requireWalletPreferenceCoverage(
                 walletIds = walletIds,
                 selectedAddress = selectedAddress,
+                requiredCoverage = walletIds.filter { it in targetIds || it !in unavailable }
+                    .toSet(),
             )
         } catch (error: CancellationException) {
             throw error
@@ -1133,6 +1184,7 @@ class UserRepositoryImpl(
 
     private suspend fun requireDeletionWalletSecrets(
         accounts: List<SoraAccountLocal>,
+        targetIds: Set<String>,
     ) {
         try {
             val identities = db.walletIdentityDao().getWallets()
@@ -1146,6 +1198,14 @@ class UserRepositoryImpl(
             )
             accounts.sortedBy(SoraAccountLocal::substrateAddress).forEach { account ->
                 val identity = requireNotNull(identities[account.substrateAddress])
+                if (
+                    identity.migrationState == "UNAVAILABLE" &&
+                    account.substrateAddress !in targetIds
+                ) {
+                    // Another account whose keys are unavailable on this device is untouched by
+                    // this deletion and must not prevent removing the chosen account.
+                    return@forEach
+                }
                 deletionRequire(
                     identity.migrationState == "VERIFIED",
                     "WALLET_DELETION_WALLET_NOT_VERIFIED",
@@ -1170,7 +1230,7 @@ class UserRepositoryImpl(
                                     keyPair == null &&
                                     mnemonic.isBlank() &&
                                     rawSeed.isBlank() &&
-                                    runtimeManager.soraPublicKeyOrNull(
+                                    sora2AddressCodec.soraPublicKeyOrNull(
                                         account.substrateAddress
                                     ) != null,
                                 "WALLET_DELETION_WATCH_ONLY_MISMATCH",
@@ -1240,7 +1300,7 @@ class UserRepositoryImpl(
                                 "WALLET_DELETION_LEGACY_SECRET_MISMATCH",
                             )
                             deletionRequire(
-                                runtimeManager.toSoraAddressOrNull(
+                                sora2AddressCodec.toSoraAddressOrNull(
                                     signingKey.publicKey
                                 ) == account.substrateAddress,
                                 "WALLET_DELETION_SORA_ADDRESS_MISMATCH",
@@ -1274,7 +1334,7 @@ class UserRepositoryImpl(
         rawSeed: String,
     ) {
         deletionRequire(
-            runtimeManager.toSoraAddressOrNull(keyPair.publicKey) ==
+            sora2AddressCodec.toSoraAddressOrNull(keyPair.publicKey) ==
                 account.substrateAddress,
             "WALLET_DELETION_SORA_ADDRESS_MISMATCH",
         )
@@ -1415,6 +1475,44 @@ class UserRepositoryImpl(
 
     override suspend fun resetTriesUsed() {
         userDatasource.resetPinTriesUsed()
+    }
+
+    override suspend fun adoptRetainedWallet(
+        address: String,
+        accountName: String,
+    ): SoraAccount = mutex.withLock {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
+        resumePendingWalletDeletionLocked()
+        check(db.accountDao().getAccount(address) == null) { "RETAINED_WALLET_ALREADY_ACCOUNT" }
+        val keys = credentialsDatasource.retrieveKeys(address)
+            ?: error("RETAINED_WALLET_KEYS_MISSING")
+        try {
+            check(sora2AddressCodec.toSoraAddressOrNull(keys.publicKey) == address) {
+                "RETAINED_WALLET_ADDRESS_MISMATCH"
+            }
+        } finally {
+            keys.privateKey.fill(0)
+            keys.nonce.fill(0)
+        }
+        val account = SoraAccount(address, accountName)
+        // Verifies the stored key pair and secret before adding the row; writes no key material.
+        insertSoraAccountLocked(account, newAccount = false)
+        check(
+            db.walletIdentityDao().getWallet(address)?.migrationState == "VERIFIED"
+        ) { "RETAINED_WALLET_NOT_VERIFIED" }
+        userDatasource.setCurAccountAddress(address)
+        userDatasource.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+        currentSoraAccount.value = account
+        account
+    }
+
+    override suspend fun unavailableWalletIds(): Set<String> {
+        val identities = db.walletIdentityDao().getWallets()
+            .associateBy(WalletIdentityLocal::walletId)
+        return walletAccounts()
+            .map(SoraAccountLocal::substrateAddress)
+            .filter { identities[it]?.migrationState != "VERIFIED" }
+            .toSet()
     }
 
     private fun ByteArray.toHex(): String = joinToString("") {

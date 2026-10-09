@@ -16,7 +16,6 @@ import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -47,7 +46,7 @@ class LegacySingleAccountUpgradeTest {
         val user = mockk<UserDatasource>(relaxed = true)
         val credentials = mockk<CredentialsDatasource>(relaxed = true)
         val crypto = mockk<UserRepositorySr25519Crypto>()
-        val runtime = mockk<RuntimeManager>()
+        val runtime = mockk<Sora2AddressCodec>()
         val coroutineManager = mockk<CoroutineManager>()
         every { coroutineManager.applicationScope } returns backgroundScope
         every { db.accountDao() } returns accountDao

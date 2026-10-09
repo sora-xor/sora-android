@@ -38,6 +38,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest

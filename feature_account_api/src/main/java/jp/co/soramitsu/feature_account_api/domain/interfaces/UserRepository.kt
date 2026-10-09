@@ -138,4 +138,17 @@ interface UserRepository {
     suspend fun resetTimerStartedTimestamp()
 
     suspend fun accountExists(address: String): Boolean
+
+    /**
+     * Adds the account row for a key set that is already stored on this device without an account
+     * (for example left by an unfinished create-account flow). The stored keys are verified to
+     * derive [address] first; no key material is written.
+     */
+    suspend fun adoptRetainedWallet(address: String, accountName: String): SoraAccount
+
+    /**
+     * Accounts whose keys are missing, incomplete or unreadable on this device. They stay listed
+     * and show balances, but cannot sign; other accounts are unaffected.
+     */
+    suspend fun unavailableWalletIds(): Set<String>
 }

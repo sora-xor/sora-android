@@ -1,8 +1,9 @@
-package jp.co.soramitsu.sora.splash.domain
+package jp.co.soramitsu.feature_account_impl.domain.migration
 
 import androidx.room.withTransaction
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -33,7 +34,6 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.WalletMutationSnapshot
 import jp.co.soramitsu.feature_account_impl.data.repository.CredentialsRepositoryImpl
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
 import jp.co.soramitsu.xcrypto.util.fromHex
@@ -161,13 +161,11 @@ class MigrationManagerSafetyTest {
 
     @Test
     fun `twelve and twenty four word mnemonics preserve Sora2 identity`() = runTest {
-        val runtime = mockk<RuntimeManager>()
         val sora2AddressCodec = Sora2AddressCodec()
         val datasource = mockk<CredentialsDatasource>()
         val credentials = CredentialsRepositoryImpl(
             datasource,
             mockk<CryptoAssistant>(),
-            runtime,
             sora2AddressCodec,
             mockk<JsonAccountsEncoder>(),
         )
@@ -254,13 +252,11 @@ class MigrationManagerSafetyTest {
     @Test
     fun `retained fifteen word mnemonic remains verified Sora2 only without rewrite`() =
         runTest {
-            val runtime = mockk<RuntimeManager>()
             val sora2AddressCodec = Sora2AddressCodec()
             val datasource = mockk<CredentialsDatasource>()
             val credentials = CredentialsRepositoryImpl(
                 datasource,
                 mockk<CryptoAssistant>(),
-                runtime,
                 sora2AddressCodec,
                 mockk<JsonAccountsEncoder>(),
             )
@@ -289,7 +285,8 @@ class MigrationManagerSafetyTest {
                 LEGACY_FIFTEEN_WORD_MNEMONIC
             coEvery { datasource.retrieveSeed(vector.address) } returns ""
 
-            assertFalse(credentials.isMnemonicValid(LEGACY_FIFTEEN_WORD_MNEMONIC))
+            // SORA2 imports every BIP39 length again (3.8.x behaviour); Nexus stays 12/24 only.
+            assertTrue(credentials.isMnemonicValid(LEGACY_FIFTEEN_WORD_MNEMONIC))
             val manager = MigrationManager(
                 userRepository = userRepository,
                 credentialsRepository = credentials,
@@ -319,13 +316,11 @@ class MigrationManagerSafetyTest {
             List(17) { "abandon" }.plus("agent").joinToString(" "),
             List(20) { "abandon" }.plus("admit").joinToString(" "),
           ).forEach { phrase ->
-            val runtime = mockk<RuntimeManager>()
             val sora2AddressCodec = Sora2AddressCodec()
             val datasource = mockk<CredentialsDatasource>()
             val credentials = CredentialsRepositoryImpl(
                 datasource,
                 mockk<CryptoAssistant>(),
-                runtime,
                 sora2AddressCodec,
                 mockk<JsonAccountsEncoder>(),
             )
@@ -354,7 +349,7 @@ class MigrationManagerSafetyTest {
                 phrase
             coEvery { datasource.retrieveSeed(vector.address) } returns ""
 
-            assertFalse(credentials.isMnemonicValid(phrase))
+            assertTrue(credentials.isMnemonicValid(phrase))
             val manager = MigrationManager(
                 userRepository = userRepository,
                 credentialsRepository = credentials,
@@ -502,34 +497,28 @@ class MigrationManagerSafetyTest {
         }
 
     @Test
-    fun `verified legacy secret cannot be reclassified as raw seed during migration`() =
+    fun `verified legacy secret seen as raw seed becomes read-only for that wallet only`() =
         runTest {
-            assertActiveSecretSourceReclassificationFailsClosed(
+            assertActiveSecretSourceReclassificationIsReadOnly(
                 activeSecretSource = "LEGACY_SECRET",
                 retainedSeed = RAW_SEED,
             )
         }
 
     @Test
-    fun `verified raw seed cannot be reclassified as legacy secret during migration`() =
+    fun `verified raw seed seen as legacy secret becomes read-only for that wallet only`() =
         runTest {
-            assertActiveSecretSourceReclassificationFailsClosed(
+            assertActiveSecretSourceReclassificationIsReadOnly(
                 activeSecretSource = "RAW_SEED",
                 retainedSeed = "",
             )
         }
 
     @Test
-    fun `missing and corrupt secret sources fail closed`() = runTest {
-        assertFirstMigrationSecretFailure(
-            mode = SecretFailureMode.MISSING_SOURCE,
-            expectedFailureCode = "SECRET_MISSING",
-        )
+    fun `missing and corrupt secrets make only that wallet read-only`() = runTest {
+        assertSecretFailureIsolated(SecretFailureMode.MISSING_SOURCE)
         WalletRecoveryCapabilityGate.enterNormal()
-        assertFirstMigrationSecretFailure(
-            mode = SecretFailureMode.DECRYPTION_FAILURE,
-            expectedFailureCode = "SECRET_DECRYPTION_FAILED",
-        )
+        assertSecretFailureIsolated(SecretFailureMode.DECRYPTION_FAILURE)
     }
 
     @Test
@@ -585,108 +574,172 @@ class MigrationManagerSafetyTest {
     }
 
     @Test
-    fun `unreadable keystore stops activation and preserves legacy account`() = runTest {
+    fun `unreadable keystore is never journaled and leaves the wallet untouched`() = runTest {
+        val legacy = SoraAccountLocal(WALLET_ID, "Primary")
+        val storage = successfulMigrationStorage(listOf(legacy))
         val userRepository = mockk<UserRepository>()
         val credentials = mockk<CredentialsRepository>()
-        val runtime = mockk<Sora2AddressCodec>()
-        val database = mockk<AppDatabase>()
-        val accountDao = mockk<AccountDao>()
-        val walletDao = mockk<WalletIdentityDao>()
-        val journals = mutableListOf<WalletMigrationJournalLocal>()
-        val journalSlot = slot<WalletMigrationJournalLocal>()
-        val failureJournal = slot<WalletMigrationJournalLocal>()
-        val legacy = SoraAccountLocal(WALLET_ID, "Primary")
-
-        every { database.accountDao() } returns accountDao
-        every { database.walletIdentityDao() } returns walletDao
-        coEvery { userRepository.resumePendingWalletDeletion() } returns Unit
-        coEvery { userRepository.getRegistrationState() } returns
-            OnboardingState.REGISTRATION_FINISHED
-        coEvery { accountDao.getAccounts() } returns listOf(legacy)
-        coEvery { userRepository.getCurSoraAccount() } returns SoraAccount(WALLET_ID, "Primary")
         stubWalletMutationLock(
             userRepository = userRepository,
             selectedAccount = SoraAccount(WALLET_ID, "Primary"),
             onboardingState = OnboardingState.REGISTRATION_FINISHED,
         )
-        coEvery { userRepository.getSoraAccount(WALLET_ID) } returns
-            SoraAccount(WALLET_ID, "Primary")
         coEvery { credentials.isExplicitWatchOnly(any()) } returns false
-        coEvery { walletDao.getMigrationJournal(any()) } returns null
-        coEvery { walletDao.upsertMigrationJournal(capture(journalSlot)) } answers {
-            journals += journalSlot.captured
-        }
-        coEvery {
-            walletDao.recordMigrationFailure(capture(failureJournal))
-        } returns true
         coEvery { credentials.retrieveKeyPair(any()) } throws
-            KeyMaterialUnavailableException("keystore unavailable")
+            KeyMaterialUnavailableException("keystore alias missing", transient = false)
 
         val manager = MigrationManager(
             userRepository = userRepository,
             credentialsRepository = credentials,
-            sora2AddressCodec = runtime,
-            database = database,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
             migrationSr25519Crypto = testMigrationSr25519Crypto,
         )
 
         assertFalse(manager.start())
-        assertEquals(listOf("VERIFYING"), journals.map { it.state })
-        assertEquals("RECOVERY_REQUIRED", failureJournal.captured.state)
-        assertEquals("KEYSTORE_UNAVAILABLE", failureJournal.captured.failureCode)
-        coVerify(exactly = 0) { accountDao.deleteAccountsForJournal(any()) }
+        assertEquals(
+            MigrationOutcome.KeysUnavailable("KEYSTORE_KEY_UNAVAILABLE"),
+            manager.lastOutcome,
+        )
+        // Secrets are read before anything is written: no journal, no identity, no failure.
+        assertTrue(storage.journals.isEmpty())
+        assertTrue(storage.wallets.isEmpty())
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+        coVerify(exactly = 0) { storage.accountDao.deleteAccountsForJournal(any()) }
         coVerify(exactly = 0) { credentials.saveMnemonic(any(), any()) }
         coVerify(exactly = 0) { credentials.saveKeyPair(any(), any()) }
+        assertEquals(
+            WalletRecoveryCapabilityGate.Mode.RECOVERY_INSPECTED,
+            WalletRecoveryCapabilityGate.mode(),
+        )
+    }
+
+    @Test
+    fun `transient keystore failure is not journaled and the next run verifies`() = runTest {
+        val vector = soraVector(RAW_SEED)
+        val legacy = SoraAccountLocal(vector.address, "Primary")
+        val storage = successfulMigrationStorage(listOf(legacy))
+        val userRepository = mockk<UserRepository>()
+        val credentials = mockk<CredentialsRepository>()
+        stubWalletMutationLock(
+            userRepository = userRepository,
+            selectedAccount = SoraAccount(vector.address, "Primary"),
+            onboardingState = OnboardingState.REGISTRATION_FINISHED,
+        )
+        var keystoreBusy = true
+        coEvery { credentials.isExplicitWatchOnly(any()) } returns false
+        coEvery { credentials.retrieveKeyPair(any()) } answers {
+            if (keystoreBusy) {
+                throw KeyMaterialUnavailableException("keystore busy", transient = true)
+            }
+            sr25519KeyPair(vector.seed)
+        }
+        coEvery { credentials.retrieveMnemonic(any()) } returns ""
+        coEvery { credentials.retrieveStoredSeed(any()) } returns vector.seed
+        coEvery { credentials.isRawSeedValid(vector.seed) } returns true
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = credentials,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+
+        assertFalse(manager.start())
+        assertEquals(MigrationOutcome.Transient("KEYSTORE_UNAVAILABLE"), manager.lastOutcome)
+        assertTrue(storage.journals.isEmpty())
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+
+        // The Keystore recovers: the same process verifies without a restart.
+        keystoreBusy = false
+        WalletRecoveryCapabilityGate.enterNormal()
+        assertTrue(manager.start())
+        assertEquals("VERIFIED", storage.wallets.getValue(vector.address).migrationState)
+        assertEquals("RAW_SEED", storage.wallets.getValue(vector.address).secretSource)
+    }
+
+    @Test
+    fun `full disk while staging is transient and never recorded as recovery`() = runTest {
+        val vector = soraVector(RAW_SEED)
+        val legacy = SoraAccountLocal(vector.address, "Primary")
+        val storage = successfulMigrationStorage(listOf(legacy))
+        val userRepository = mockk<UserRepository>()
+        val credentials = mockk<CredentialsRepository>()
+        stubWalletMutationLock(
+            userRepository = userRepository,
+            selectedAccount = SoraAccount(vector.address, "Primary"),
+            onboardingState = OnboardingState.REGISTRATION_FINISHED,
+        )
+        stubRawSeedWallet(credentials, vector)
+        coEvery { storage.walletDao.upsertWallet(any()) } throws
+            android.database.sqlite.SQLiteFullException("database or disk is full")
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = credentials,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+
+        assertFalse(manager.start())
+        assertEquals(MigrationOutcome.Transient("STORAGE_FULL"), manager.lastOutcome)
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+        // Only the VERIFYING start marker exists; the next start retries automatically.
+        assertEquals(listOf("VERIFYING"), storage.journals.map { it.state })
+    }
+
+    @Test
+    fun `every secret is read before the verification journal is written`() = runTest {
+        val vector = soraVector(RAW_SEED)
+        val legacy = SoraAccountLocal(vector.address, "Primary")
+        val storage = successfulMigrationStorage(listOf(legacy))
+        val userRepository = mockk<UserRepository>()
+        val credentials = mockk<CredentialsRepository>()
+        stubWalletMutationLock(
+            userRepository = userRepository,
+            selectedAccount = SoraAccount(vector.address, "Primary"),
+            onboardingState = OnboardingState.REGISTRATION_FINISHED,
+        )
+        stubRawSeedWallet(credentials, vector)
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = credentials,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+
+        assertTrue(manager.start())
+        coVerifyOrder {
+            credentials.retrieveKeyPair(any())
+            credentials.retrieveStoredSeed(any())
+            storage.walletDao.upsertMigrationJournal(any())
+        }
     }
 
     @Test
     fun `missing onboarding preference cannot hide an existing legacy account`() = runTest {
+        val vector = soraVector(RAW_SEED)
+        val legacy = SoraAccountLocal(vector.address, "Primary")
+        val storage = successfulMigrationStorage(listOf(legacy))
         val userRepository = mockk<UserRepository>()
         val credentials = mockk<CredentialsRepository>()
-        val runtime = mockk<Sora2AddressCodec>()
-        val database = mockk<AppDatabase>()
-        val accountDao = mockk<AccountDao>()
-        val walletDao = mockk<WalletIdentityDao>()
-        val journals = mutableListOf<WalletMigrationJournalLocal>()
-        val journalSlot = slot<WalletMigrationJournalLocal>()
-        val failureJournal = slot<WalletMigrationJournalLocal>()
-        val legacy = SoraAccountLocal(WALLET_ID, "Primary")
-
-        every { database.accountDao() } returns accountDao
-        every { database.walletIdentityDao() } returns walletDao
-        coEvery { userRepository.resumePendingWalletDeletion() } returns Unit
-        coEvery { userRepository.getRegistrationState() } returns OnboardingState.INITIAL
-        coEvery { accountDao.getAccounts() } returns listOf(legacy)
-        coEvery { userRepository.getCurSoraAccount() } returns SoraAccount(WALLET_ID, "Primary")
         stubWalletMutationLock(
             userRepository = userRepository,
-            selectedAccount = SoraAccount(WALLET_ID, "Primary"),
+            selectedAccount = SoraAccount(vector.address, "Primary"),
             onboardingState = OnboardingState.INITIAL,
         )
-        coEvery { userRepository.getSoraAccount(WALLET_ID) } returns
-            SoraAccount(WALLET_ID, "Primary")
-        coEvery { credentials.isExplicitWatchOnly(any()) } returns false
-        coEvery { walletDao.getMigrationJournal(any()) } returns null
-        coEvery { walletDao.upsertMigrationJournal(capture(journalSlot)) } answers {
-            journals += journalSlot.captured
-        }
-        coEvery {
-            walletDao.recordMigrationFailure(capture(failureJournal))
-        } returns true
-        coEvery { credentials.retrieveKeyPair(any()) } throws
-            KeyMaterialUnavailableException("keystore unavailable")
-
+        stubRawSeedWallet(credentials, vector)
         val manager = MigrationManager(
             userRepository = userRepository,
             credentialsRepository = credentials,
-            sora2AddressCodec = runtime,
-            database = database,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
             migrationSr25519Crypto = testMigrationSr25519Crypto,
         )
 
-        assertFalse(manager.start())
-        assertEquals(listOf("VERIFYING"), journals.map { it.state })
-        assertEquals("RECOVERY_REQUIRED", failureJournal.captured.state)
+        assertTrue(manager.start())
+        assertEquals("VERIFIED", storage.wallets.getValue(vector.address).migrationState)
     }
 
     @Test
@@ -743,116 +796,49 @@ class MigrationManagerSafetyTest {
     }
 
     @Test
-    fun `verified journal rechecks every derived child and fails closed on tampering`() = runTest {
-        val userRepository = mockk<UserRepository>()
-        val credentials = mockk<CredentialsRepository>()
-        val runtime = mockk<Sora2AddressCodec>()
-        val database = mockk<AppDatabase>()
-        val accountDao = mockk<AccountDao>()
-        val walletDao = mockk<WalletIdentityDao>()
-        val legacy = SoraAccountLocal(WALLET_ID, "Primary")
-        val seed = RAW_SEED.fromHex()
-        val keyPair = testSr25519Keypair(seed)
-        seed.fill(0)
-        val soraPublicKey = keyPair.publicKey.toHex()
-        val minamoto = IrohaKeyDerivation.derive(MNEMONIC, NexusNetworks.minamoto)
-        val taira = IrohaKeyDerivation.derive(MNEMONIC, NexusDerivationProfiles.taira)
-        val failureJournal = slot<WalletMigrationJournalLocal>()
-
-        every { database.accountDao() } returns accountDao
-        every { database.walletIdentityDao() } returns walletDao
-        coEvery { userRepository.resumePendingWalletDeletion() } returns Unit
-        coEvery { userRepository.getRegistrationState() } returns
-            OnboardingState.REGISTRATION_FINISHED
-        coEvery { accountDao.getAccounts() } returns listOf(legacy)
-        coEvery { userRepository.getCurSoraAccount() } returns SoraAccount(WALLET_ID, "Primary")
-        stubWalletMutationLock(
-            userRepository = userRepository,
-            selectedAccount = SoraAccount(WALLET_ID, "Primary"),
-            onboardingState = OnboardingState.REGISTRATION_FINISHED,
-        )
-        coEvery { userRepository.getSoraAccount(WALLET_ID) } returns
-            SoraAccount(WALLET_ID, "Primary")
-        coEvery { credentials.isExplicitWatchOnly(any()) } returns false
-        coEvery { credentials.retrieveKeyPair(any()) } returns keyPair
-        coEvery { credentials.retrieveMnemonic(any()) } returns MNEMONIC
-        coEvery { credentials.retrieveStoredSeed(any()) } returns ""
-        every {
-            credentials.convertRetainedSoraPassphraseToSeed(MNEMONIC)
-        } returns RAW_SEED
-        every { runtime.toSoraAddressOrNull(keyPair.publicKey) } returns WALLET_ID
-        coEvery {
-            walletDao.getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
-        } returns WalletMigrationJournalLocal(
-            migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
-            state = "VERIFIED",
-            legacyAccountCount = 1,
-            verifiedAccountCount = 1,
-            selectedWalletId = WALLET_ID,
-            integrityHash = integrityHash(WALLET_ID, "Primary"),
-            failureCode = null,
-            startedAt = 1,
-            completedAt = 2,
-        )
-        coEvery { walletDao.getWallets() } returns listOf(
-            WalletIdentityLocal(
-                walletId = WALLET_ID,
-                displayName = "Primary",
-                secretSource = "MNEMONIC",
-                migrationState = "VERIFIED",
-                derivationVersion = 1,
+    fun `verified journal re-derives a tampered network child from the verified phrase`() =
+        runTest {
+            val vector = soraVector(PINNED_TWELVE_WORD_SORA2_SEED)
+            val legacy = SoraAccountLocal(vector.address, "Primary")
+            val journal = verifiedJournal(listOf(legacy), vector.address)
+            val storage = successfulMigrationStorage(listOf(legacy), journal = journal)
+            val userRepository = mockk<UserRepository>()
+            val credentials = mockk<CredentialsRepository>()
+            stubWalletMutationLock(
+                userRepository = userRepository,
+                selectedAccount = SoraAccount(vector.address, "Primary"),
+                onboardingState = OnboardingState.REGISTRATION_FINISHED,
             )
-        )
-        coEvery { walletDao.getNetworkAccounts(WALLET_ID) } returns listOf(
-            NetworkAccountLocal(
-                walletId = WALLET_ID,
-                networkId = "sora2",
-                publicKey = soraPublicKey,
-                address = WALLET_ID,
-                derivationPath = "",
-                derivationVersion = 1,
-                enabled = true,
-            ),
-            NetworkAccountLocal(
-                walletId = WALLET_ID,
-                networkId = NexusNetworks.minamoto.id.wireId,
-                publicKey = minamoto.publicKey.toHex(),
-                address = minamoto.address,
-                derivationPath = NexusNetworks.minamoto.derivationPath,
-                derivationVersion = 1,
-                enabled = true,
-            ),
-            NetworkAccountLocal(
-                walletId = WALLET_ID,
-                networkId = NexusDerivationProfiles.taira.id.wireId,
-                publicKey = taira.publicKey.toHex(),
-                address = "tampered-cross-network-child",
-                derivationPath = NexusDerivationProfiles.taira.derivationPath,
-                derivationVersion = 1,
-                enabled = true,
-            ),
-        )
-        coEvery {
-            walletDao.recordMigrationFailure(capture(failureJournal))
-        } returns true
+            coEvery { credentials.isExplicitWatchOnly(any()) } returns false
+            coEvery { credentials.retrieveKeyPair(any()) } answers { sr25519KeyPair(vector.seed) }
+            coEvery { credentials.retrieveMnemonic(any()) } returns MNEMONIC
+            coEvery { credentials.retrieveStoredSeed(any()) } returns ""
+            every { credentials.convertRetainedSoraPassphraseToSeed(MNEMONIC) } returns vector.seed
+            val manager = MigrationManager(
+                userRepository = userRepository,
+                credentialsRepository = credentials,
+                sora2AddressCodec = Sora2AddressCodec(),
+                database = storage.database,
+                migrationSr25519Crypto = testMigrationSr25519Crypto,
+            )
+            // First run verifies and stores the exact model.
+            storage.journal = null
+            assertTrue(manager.start())
+            val expected = storage.networkAccounts.getValue(vector.address)
+            // Tamper with a derived (non-secret) row while the receipt stays VERIFIED.
+            storage.journal = journal
+            storage.networkAccounts[vector.address] = expected.map {
+                if (it.networkId == "sora2") it else it.copy(address = "tampered-child")
+            }
 
-        val manager = MigrationManager(
-            userRepository = userRepository,
-            credentialsRepository = credentials,
-            sora2AddressCodec = runtime,
-            database = database,
-            migrationSr25519Crypto = testMigrationSr25519Crypto,
-        )
-
-        try {
-            assertFalse(manager.start())
-            assertEquals("RECOVERY_REQUIRED", failureJournal.captured.state)
-            assertEquals("ACTIVATED_MODEL_MISMATCH", failureJournal.captured.failureCode)
-        } finally {
-            minamoto.destroy()
-            taira.destroy()
+            assertTrue(manager.start())
+            assertEquals(
+                expected.sortedBy(NetworkAccountLocal::networkId),
+                storage.networkAccounts.getValue(vector.address)
+                    .sortedBy(NetworkAccountLocal::networkId),
+            )
+            coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
         }
-    }
 
     @Test
     fun `changing selected wallet refreshes the verified checkpoint after full verification`() = runTest {
@@ -1174,178 +1160,98 @@ class MigrationManagerSafetyTest {
     }
 
     @Test
-    fun `lifecycle drift with tampered model fails closed before checkpoint refresh`() = runTest {
-        val userRepository = mockk<UserRepository>()
-        val credentials = mockk<CredentialsRepository>()
-        val runtime = mockk<Sora2AddressCodec>()
-        val database = mockk<AppDatabase>()
-        val accountDao = mockk<AccountDao>()
-        val walletDao = mockk<WalletIdentityDao>()
-        val account = SoraAccountLocal(WALLET_ID, "Renamed wallet")
-        val removedAccount = SoraAccountLocal("cnRemovedWallet", "Removed")
-        val publicKey = ByteArray(32) { index -> (index + 1).toByte() }
-        val receiptHash = integrityHash(
-            listOf(
-                SoraAccountLocal(WALLET_ID, "Primary"),
-                removedAccount,
-            ),
-            WALLET_ID,
-        )
-        val currentHash = integrityHash(listOf(account), WALLET_ID)
+    fun `lifecycle drift repairs a tampered derived row before the checkpoint refresh`() =
+        runTest {
+            val publicKey = ByteArray(32) { index -> (index + 1).toByte() }
+            val walletId = publicKey.toAddress(SORA2_PREFIX)
+            val account = SoraAccountLocal(walletId, "Renamed wallet")
+            val removedAccount = SoraAccountLocal("cnRemovedWallet", "Removed")
+            val receipt = verifiedJournal(
+                listOf(SoraAccountLocal(walletId, "Primary"), removedAccount),
+                walletId,
+            )
+            val storage = successfulMigrationStorage(listOf(account), journal = receipt)
+            storage.wallets[walletId] = watchOnlyIdentity(account)
+            storage.networkAccounts[walletId] = listOf(
+                watchOnlyNetworkAccount(account, publicKey, address = "tampered-sora2-address")
+            )
+            val userRepository = mockk<UserRepository>()
+            val credentials = mockk<CredentialsRepository>()
+            stubWalletMutationLock(
+                userRepository = userRepository,
+                selectedAccount = SoraAccount(walletId, account.accountName),
+                onboardingState = OnboardingState.REGISTRATION_FINISHED,
+            )
+            coEvery { credentials.isExplicitWatchOnly(any()) } returns true
+            coEvery { credentials.retrieveKeyPairOrNull(any()) } returns null
+            coEvery { credentials.retrieveMnemonic(any()) } returns ""
+            coEvery { credentials.retrieveStoredSeed(any()) } returns ""
+            val manager = MigrationManager(
+                userRepository = userRepository,
+                credentialsRepository = credentials,
+                sora2AddressCodec = Sora2AddressCodec(),
+                database = storage.database,
+                migrationSr25519Crypto = testMigrationSr25519Crypto,
+            )
 
-        every { database.accountDao() } returns accountDao
-        every { database.walletIdentityDao() } returns walletDao
-        coEvery { accountDao.getAccounts() } returns listOf(account)
-        stubWalletMutationLock(
-            userRepository = userRepository,
-            selectedAccount = SoraAccount(WALLET_ID, account.accountName),
-            onboardingState = OnboardingState.REGISTRATION_FINISHED,
-        )
-        stubWatchOnlyVerification(
-            credentials = credentials,
-            runtime = runtime,
-            publicKeys = mapOf(WALLET_ID to publicKey),
-        )
-        coEvery {
-            walletDao.getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
-        } returns WalletMigrationJournalLocal(
-            migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
-            state = "VERIFIED",
-            legacyAccountCount = 2,
-            verifiedAccountCount = 2,
-            selectedWalletId = WALLET_ID,
-            integrityHash = receiptHash,
-            failureCode = null,
-            startedAt = 1,
-            completedAt = 2,
-        )
-        coEvery { walletDao.getWallets() } returns listOf(watchOnlyIdentity(account))
-        coEvery { walletDao.getNetworkAccounts(WALLET_ID) } returns listOf(
-            watchOnlyNetworkAccount(
-                account = account,
-                publicKey = publicKey,
-                address = "tampered-sora2-address",
+            assertTrue(manager.start())
+            assertEquals(
+                listOf(watchOnlyNetworkAccount(account, publicKey)),
+                storage.networkAccounts.getValue(walletId),
             )
-        )
-        stubRoomUnitTransaction(database)
-        coEvery {
-            walletDao.refreshVerifiedMigrationJournal(
-                migrationId = any(),
-                receiptAccountCount = any(),
-                receiptVerifiedAccountCount = any(),
-                receiptSelectedWalletId = any(),
-                receiptIntegrityHash = any(),
-                receiptStartedAt = any(),
-                receiptCompletedAt = any(),
-                currentAccountCount = any(),
-                currentSelectedWalletId = any(),
-                currentIntegrityHash = any(),
-                refreshedAt = any(),
-            )
-        } returns 1
-        coEvery {
-            walletDao.markActivatedMigrationRecoveryRequired(
-                migrationId = any(),
-                legacyAccountCount = any(),
-                receiptVerifiedAccountCount = any(),
-                receiptSelectedWalletId = any(),
-                receiptIntegrityHash = any(),
-                startedAt = any(),
-                receiptCompletedAt = any(),
-                currentAccountCount = any(),
-                currentSelectedWalletId = any(),
-                currentIntegrityHash = any(),
-                failureCode = any(),
-                completedAt = any(),
-            )
-        } returns 1
-        coEvery { walletDao.markWalletsRecoveryRequired(listOf(WALLET_ID)) } returns 1
-
-        val manager = MigrationManager(
-            userRepository = userRepository,
-            credentialsRepository = credentials,
-            sora2AddressCodec = runtime,
-            database = database,
-            migrationSr25519Crypto = testMigrationSr25519Crypto,
-        )
-
-        assertFalse(manager.start())
-        coVerify(exactly = 0) {
-            walletDao.refreshVerifiedMigrationJournal(
-                migrationId = any(),
-                receiptAccountCount = any(),
-                receiptVerifiedAccountCount = any(),
-                receiptSelectedWalletId = any(),
-                receiptIntegrityHash = any(),
-                receiptStartedAt = any(),
-                receiptCompletedAt = any(),
-                currentAccountCount = any(),
-                currentSelectedWalletId = any(),
-                currentIntegrityHash = any(),
-                refreshedAt = any(),
-            )
+            coVerify(exactly = 1) {
+                storage.walletDao.refreshVerifiedMigrationJournal(
+                    migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
+                    receiptAccountCount = 2,
+                    receiptVerifiedAccountCount = 2,
+                    receiptSelectedWalletId = walletId,
+                    receiptIntegrityHash = receipt.integrityHash,
+                    receiptStartedAt = receipt.startedAt,
+                    receiptCompletedAt = requireNotNull(receipt.completedAt),
+                    currentAccountCount = 1,
+                    currentSelectedWalletId = walletId,
+                    currentIntegrityHash = integrityHash(listOf(account), walletId),
+                    refreshedAt = any(),
+                )
+            }
+            coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+            assertEquals(WalletRecoveryCapabilityGate.Mode.NORMAL, WalletRecoveryCapabilityGate.mode())
         }
-        coVerify(exactly = 1) {
-            walletDao.markActivatedMigrationRecoveryRequired(
-                migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
-                legacyAccountCount = 2,
-                receiptVerifiedAccountCount = 2,
-                receiptSelectedWalletId = WALLET_ID,
-                receiptIntegrityHash = receiptHash,
-                startedAt = 1,
-                receiptCompletedAt = 2,
-                currentAccountCount = 1,
-                currentSelectedWalletId = WALLET_ID,
-                currentIntegrityHash = currentHash,
-                failureCode = "ACTIVATED_MODEL_MISMATCH",
-                completedAt = any(),
-            )
-        }
-        assertFalse(WalletRecoveryCapabilityGate.mode() == WalletRecoveryCapabilityGate.Mode.NORMAL)
-    }
 
     @Test
-    fun `selection change records model failure with an exact receipt transition`() = runTest {
+    fun `keystore failure during re-verification is never journaled`() = runTest {
         val userRepository = mockk<UserRepository>()
         val credentials = mockk<CredentialsRepository>()
-        val runtime = mockk<Sora2AddressCodec>()
-        val database = mockk<AppDatabase>()
-        val accountDao = mockk<AccountDao>()
-        val walletDao = mockk<WalletIdentityDao>()
         val primaryId = "cnPrimaryWallet"
         val secondaryId = "cnSecondaryWallet"
         val accounts = listOf(
             SoraAccountLocal(primaryId, "Primary"),
             SoraAccountLocal(secondaryId, "Secondary"),
         )
-        val receiptHash = integrityHash(accounts, primaryId)
-        val currentHash = integrityHash(accounts, secondaryId)
-
-        every { database.accountDao() } returns accountDao
-        every { database.walletIdentityDao() } returns walletDao
-        coEvery { accountDao.getAccounts() } returns accounts
+        val storage = successfulMigrationStorage(
+            accounts,
+            journal = verifiedJournal(accounts, primaryId),
+        )
         stubWalletMutationLock(
             userRepository = userRepository,
             selectedAccount = SoraAccount(secondaryId, "Secondary"),
             onboardingState = OnboardingState.REGISTRATION_FINISHED,
         )
-        coEvery {
-            walletDao.getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
-        } returns WalletMigrationJournalLocal(
-            migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
-            state = "VERIFIED",
-            legacyAccountCount = 2,
-            verifiedAccountCount = 2,
-            selectedWalletId = primaryId,
-            integrityHash = receiptHash,
-            failureCode = null,
-            startedAt = 1,
-            completedAt = 2,
-        )
         coEvery { credentials.isExplicitWatchOnly(any()) } throws
-            KeyMaterialUnavailableException("credential boundary unavailable")
-        coEvery {
-            walletDao.markActivatedMigrationRecoveryRequired(
+            KeyMaterialUnavailableException("credential boundary unavailable", transient = true)
+
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = credentials,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+
+        assertFalse(manager.start())
+        assertEquals(MigrationOutcome.Transient("KEYSTORE_UNAVAILABLE"), manager.lastOutcome)
+        coVerify(exactly = 0) {
+            storage.walletDao.markActivatedMigrationRecoveryRequired(
                 migrationId = any(),
                 legacyAccountCount = any(),
                 receiptVerifiedAccountCount = any(),
@@ -1359,36 +1265,9 @@ class MigrationManagerSafetyTest {
                 failureCode = any(),
                 completedAt = any(),
             )
-        } returns 1
-        coEvery { walletDao.markWalletsRecoveryRequired(any()) } returns 2
-
-        val manager = MigrationManager(
-            userRepository = userRepository,
-            credentialsRepository = credentials,
-            sora2AddressCodec = runtime,
-            database = database,
-            migrationSr25519Crypto = testMigrationSr25519Crypto,
-        )
-
-        assertFalse(manager.start())
-        coVerify(exactly = 1) {
-            walletDao.markActivatedMigrationRecoveryRequired(
-                migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
-                legacyAccountCount = 2,
-                receiptVerifiedAccountCount = 2,
-                receiptSelectedWalletId = primaryId,
-                receiptIntegrityHash = receiptHash,
-                startedAt = 1,
-                receiptCompletedAt = 2,
-                currentAccountCount = 2,
-                currentSelectedWalletId = secondaryId,
-                currentIntegrityHash = currentHash,
-                failureCode = "ACTIVATED_MODEL_MISMATCH",
-                completedAt = any(),
-            )
         }
-        coVerify(exactly = 0) { walletDao.upsertMigrationJournal(any()) }
-        coVerify(exactly = 0) { walletDao.recordMigrationFailure(any()) }
+        coVerify(exactly = 0) { storage.walletDao.upsertMigrationJournal(any()) }
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
     }
 
     @Test
@@ -1552,41 +1431,58 @@ class MigrationManagerSafetyTest {
     }
 
     @Test
-    fun `post journal cancellation closes the live process mutation gate`() = runTest {
+    fun `cancellation before any write propagates and writes nothing`() = runTest {
+        val storage = successfulMigrationStorage(listOf(SoraAccountLocal(WALLET_ID, "Primary")))
         val userRepository = mockk<UserRepository>()
         val credentials = mockk<CredentialsRepository>()
-        val runtime = mockk<Sora2AddressCodec>()
-        val database = mockk<AppDatabase>()
-        val accountDao = mockk<AccountDao>()
-        val walletDao = mockk<WalletIdentityDao>()
-        val journal = slot<WalletMigrationJournalLocal>()
-
-        every { database.accountDao() } returns accountDao
-        every { database.walletIdentityDao() } returns walletDao
-        coEvery { accountDao.getAccounts() } returns
-            listOf(SoraAccountLocal(WALLET_ID, "Primary"))
         stubWalletMutationLock(
             userRepository = userRepository,
             selectedAccount = SoraAccount(WALLET_ID, "Primary"),
             onboardingState = OnboardingState.REGISTRATION_FINISHED,
         )
-        coEvery { walletDao.getMigrationJournal(any()) } returns null
-        coEvery { walletDao.upsertMigrationJournal(capture(journal)) } returns Unit
         coEvery { credentials.isExplicitWatchOnly(any()) } throws
-            CancellationException("screen stopped after journal")
-
+            CancellationException("screen stopped while reading keys")
         val manager = MigrationManager(
             userRepository = userRepository,
             credentialsRepository = credentials,
-            sora2AddressCodec = runtime,
-            database = database,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
             migrationSr25519Crypto = testMigrationSr25519Crypto,
         )
 
         val error = runCatching { manager.start() }.exceptionOrNull()
 
         assertTrue(error is CancellationException)
-        assertEquals("VERIFYING", journal.captured.state)
+        assertTrue(storage.journals.isEmpty())
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+    }
+
+    @Test
+    fun `post journal cancellation closes the live process mutation gate`() = runTest {
+        val vector = soraVector(RAW_SEED)
+        val storage = successfulMigrationStorage(listOf(SoraAccountLocal(vector.address, "Primary")))
+        val userRepository = mockk<UserRepository>()
+        val credentials = mockk<CredentialsRepository>()
+        stubWalletMutationLock(
+            userRepository = userRepository,
+            selectedAccount = SoraAccount(vector.address, "Primary"),
+            onboardingState = OnboardingState.REGISTRATION_FINISHED,
+        )
+        stubRawSeedWallet(credentials, vector)
+        coEvery { storage.walletDao.upsertWallet(any()) } throws
+            CancellationException("screen stopped after journal")
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = credentials,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+
+        val error = runCatching { manager.start() }.exceptionOrNull()
+
+        assertTrue(error is CancellationException)
+        assertEquals(listOf("VERIFYING"), storage.journals.map { it.state })
         assertEquals(
             WalletRecoveryCapabilityGate.Mode.RECOVERY_INSPECTED,
             WalletRecoveryCapabilityGate.mode(),
@@ -1597,47 +1493,44 @@ class MigrationManagerSafetyTest {
                 WalletRecoveryCapabilityGate.requireUserMutationAllowed()
             }.exceptionOrNull()?.message,
         )
-        coVerify(exactly = 0) { walletDao.recordMigrationFailure(any()) }
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
     }
 
     @Test
     fun `failure journal write exception still closes the live process mutation gate`() =
         runTest {
+            val vector = soraVector(RAW_SEED)
+            val storage = successfulMigrationStorage(
+                listOf(SoraAccountLocal(vector.address, "Primary"))
+            )
             val userRepository = mockk<UserRepository>()
             val credentials = mockk<CredentialsRepository>()
-            val runtime = mockk<Sora2AddressCodec>()
-            val database = mockk<AppDatabase>()
-            val accountDao = mockk<AccountDao>()
-            val walletDao = mockk<WalletIdentityDao>()
-
-            every { database.accountDao() } returns accountDao
-            every { database.walletIdentityDao() } returns walletDao
-            coEvery { accountDao.getAccounts() } returns
-                listOf(SoraAccountLocal(WALLET_ID, "Primary"))
             stubWalletMutationLock(
                 userRepository = userRepository,
-                selectedAccount = SoraAccount(WALLET_ID, "Primary"),
+                selectedAccount = SoraAccount(vector.address, "Primary"),
                 onboardingState = OnboardingState.REGISTRATION_FINISHED,
             )
-            coEvery { walletDao.getMigrationJournal(any()) } returns null
-            coEvery { walletDao.upsertMigrationJournal(any()) } returns Unit
-            coEvery { credentials.isExplicitWatchOnly(any()) } returns false
-            coEvery { credentials.retrieveKeyPair(any()) } throws
-                KeyMaterialUnavailableException("keystore unavailable")
-            coEvery { walletDao.recordMigrationFailure(any()) } throws
-                IllegalStateException("simulated low storage")
-
+            stubRawSeedWallet(credentials, vector)
+            coEvery {
+                storage.walletDao.activateMigrationJournal(
+                    any(), any(), any(), any(), any(), any(), any(),
+                )
+            } returns 0
+            coEvery { storage.walletDao.recordMigrationFailure(any()) } throws
+                IllegalStateException("simulated failure journal write")
             val manager = MigrationManager(
                 userRepository = userRepository,
                 credentialsRepository = credentials,
-                sora2AddressCodec = runtime,
-                database = database,
+                sora2AddressCodec = Sora2AddressCodec(),
+                database = storage.database,
                 migrationSr25519Crypto = testMigrationSr25519Crypto,
             )
 
-            val error = runCatching { manager.start() }.exceptionOrNull()
-
-            assertEquals("simulated low storage", error?.message)
+            assertFalse(manager.start())
+            assertEquals(
+                MigrationOutcome.Recovery("MIGRATION_JOURNAL_ACTIVATION_MISMATCH"),
+                manager.lastOutcome,
+            )
             assertEquals(
                 WalletRecoveryCapabilityGate.Mode.RECOVERY_INSPECTED,
                 WalletRecoveryCapabilityGate.mode(),
@@ -1649,6 +1542,148 @@ class MigrationManagerSafetyTest {
                 }.exceptionOrNull()?.message,
             )
         }
+
+    @Test
+    fun `one undecryptable account is isolated and the others verify`() = runTest {
+        val good = soraVector(RAW_SEED)
+        val brokenPublicKey = ByteArray(32) { index -> (index + 90).toByte() }
+        val brokenId = brokenPublicKey.toAddress(SORA2_PREFIX)
+        val accounts = listOf(
+            SoraAccountLocal(good.address, "Good"),
+            SoraAccountLocal(brokenId, "Broken"),
+        )
+        val storage = successfulMigrationStorage(accounts)
+        val userRepository = mockk<UserRepository>()
+        val credentials = mockk<CredentialsRepository>()
+        stubWalletMutationLock(
+            userRepository = userRepository,
+            selectedAccount = SoraAccount(brokenId, "Broken"),
+            onboardingState = OnboardingState.REGISTRATION_FINISHED,
+        )
+        stubRawSeedWallet(credentials, good)
+        coEvery {
+            credentials.retrieveKeyPair(match { it.substrateAddress == brokenId })
+        } throws WalletDecryptionException("ciphertext does not decrypt")
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = credentials,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+
+        assertTrue(manager.start())
+        assertEquals("VERIFIED", storage.wallets.getValue(good.address).migrationState)
+        assertEquals("UNAVAILABLE", storage.wallets.getValue(brokenId).migrationState)
+        assertEquals("SECRET_UNAVAILABLE", storage.wallets.getValue(brokenId).secretSource)
+        assertEquals(
+            listOf("sora2"),
+            storage.networkAccounts.getValue(brokenId).map { it.networkId },
+        )
+        assertEquals(brokenPublicKey.toHex(), storage.networkAccounts.getValue(brokenId).single().publicKey)
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+        assertEquals(WalletRecoveryCapabilityGate.Mode.NORMAL, WalletRecoveryCapabilityGate.mode())
+    }
+
+    @Test
+    fun `unavailable wallet becomes verified again when its keys verify`() = runTest {
+        val vector = soraVector(RAW_SEED)
+        val account = SoraAccountLocal(vector.address, "Primary")
+        val storage = successfulMigrationStorage(
+            listOf(account),
+            journal = verifiedJournal(listOf(account), vector.address),
+        )
+        storage.wallets[vector.address] = WalletIdentityLocal(
+            walletId = vector.address,
+            displayName = "Primary",
+            secretSource = "SECRET_UNAVAILABLE",
+            migrationState = "UNAVAILABLE",
+            derivationVersion = 1,
+        )
+        val userRepository = mockk<UserRepository>()
+        val credentials = mockk<CredentialsRepository>()
+        stubWalletMutationLock(
+            userRepository = userRepository,
+            selectedAccount = SoraAccount(vector.address, "Primary"),
+            onboardingState = OnboardingState.REGISTRATION_FINISHED,
+        )
+        stubRawSeedWallet(credentials, vector)
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = credentials,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+
+        assertTrue(manager.start())
+        assertEquals("VERIFIED", storage.wallets.getValue(vector.address).migrationState)
+        assertEquals("RAW_SEED", storage.wallets.getValue(vector.address).secretSource)
+    }
+
+    @Test
+    fun `blank account rows are ignored and never verified or deleted`() = runTest {
+        val vector = soraVector(RAW_SEED)
+        val accounts = listOf(
+            SoraAccountLocal("", "Blank"),
+            SoraAccountLocal(vector.address, "Primary"),
+        )
+        val storage = successfulMigrationStorage(accounts)
+        val userRepository = mockk<UserRepository>()
+        val credentials = mockk<CredentialsRepository>()
+        stubWalletMutationLock(
+            userRepository = userRepository,
+            selectedAccount = SoraAccount(vector.address, "Primary"),
+            onboardingState = OnboardingState.REGISTRATION_FINISHED,
+        )
+        stubRawSeedWallet(credentials, vector)
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = credentials,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+
+        assertTrue(manager.start())
+        assertEquals(setOf(vector.address), storage.wallets.keys)
+        coVerify(exactly = 0) { storage.accountDao.deleteAccountsForJournal(any()) }
+    }
+
+    @Test
+    fun `no account rows clears a stale journal and needs no recovery`() = runTest {
+        val storage = successfulMigrationStorage(
+            emptyList(),
+            journal = WalletMigrationJournalLocal(
+                migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
+                state = "RECOVERY_REQUIRED",
+                legacyAccountCount = 0,
+                verifiedAccountCount = 0,
+                selectedWalletId = "",
+                integrityHash = "",
+                failureCode = "REGISTERED_WITHOUT_ACCOUNTS",
+                startedAt = 1,
+                completedAt = 2,
+            ),
+        )
+        val userRepository = mockk<UserRepository>()
+        stubWalletMutationLock(
+            userRepository = userRepository,
+            selectedAccount = null,
+            onboardingState = OnboardingState.REGISTRATION_FINISHED,
+        )
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = mockk(),
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+
+        assertTrue(manager.start())
+        coVerify(exactly = 1) { storage.walletDao.deleteMigrationJournal() }
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+    }
 
     @Test
     fun `lifecycle cancellation never becomes recovery failure or a wallet mutation`() = runTest {
@@ -1667,7 +1702,7 @@ class MigrationManagerSafetyTest {
         coEvery { accountDao.getAccounts() } returns
             listOf(SoraAccountLocal(WALLET_ID, "Primary"))
         coEvery {
-            userRepository.withWalletMigrationLocked<Boolean>(any())
+            userRepository.withWalletMigrationLocked<MigrationOutcome>(any())
         } throws
             CancellationException("activity stopped")
 
@@ -1693,11 +1728,13 @@ class MigrationManagerSafetyTest {
 
     private fun successfulMigrationStorage(
         accounts: List<SoraAccountLocal>,
+        journal: WalletMigrationJournalLocal? = null,
     ): SuccessfulMigrationStorage {
         val storage = SuccessfulMigrationStorage(
             database = mockk(),
             accountDao = mockk(),
             walletDao = mockk(),
+            journal = journal,
         )
         roomTransactionsMocked = true
         mockkStatic("androidx.room.RoomDatabaseKt")
@@ -1707,14 +1744,18 @@ class MigrationManagerSafetyTest {
         coEvery { storage.accountDao.getAccounts() } returns accounts
         coEvery {
             storage.walletDao.getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
-        } returns null
+        } coAnswers { storage.journal }
         coEvery { storage.walletDao.upsertWallet(any()) } coAnswers {
             val wallet = firstArg<WalletIdentityLocal>()
             storage.wallets[wallet.walletId] = wallet
         }
         coEvery { storage.walletDao.upsertNetworkAccounts(any()) } coAnswers {
             val networkAccounts = firstArg<List<NetworkAccountLocal>>()
-            storage.networkAccounts[networkAccounts.first().walletId] = networkAccounts
+            val walletId = networkAccounts.first().walletId
+            val replaced = networkAccounts.map(NetworkAccountLocal::networkId).toSet()
+            storage.networkAccounts[walletId] =
+                storage.networkAccounts[walletId].orEmpty()
+                    .filter { it.networkId !in replaced } + networkAccounts
         }
         coEvery { storage.walletDao.getWallets() } coAnswers {
             storage.wallets.values.toList()
@@ -1723,8 +1764,15 @@ class MigrationManagerSafetyTest {
             storage.networkAccounts[firstArg<String>()].orEmpty()
         }
         coEvery { storage.walletDao.upsertMigrationJournal(any()) } coAnswers {
-            storage.journals += firstArg<WalletMigrationJournalLocal>()
+            val written = firstArg<WalletMigrationJournalLocal>()
+            storage.journals += written
+            storage.journal = written
         }
+        coEvery { storage.walletDao.deleteMigrationJournal() } coAnswers {
+            storage.journal = null
+        }
+        coEvery { storage.walletDao.recordMigrationFailure(any()) } returns true
+        coEvery { storage.walletDao.markWalletsRecoveryRequired(any()) } returns 1
         coEvery {
             storage.walletDao.activateMigrationJournal(
                 migrationId = any(),
@@ -1733,6 +1781,43 @@ class MigrationManagerSafetyTest {
                 selectedWalletId = any(),
                 integrityHash = any(),
                 startedAt = any(),
+                completedAt = any(),
+            )
+        } coAnswers {
+            storage.journal = storage.journal?.copy(
+                state = "VERIFIED",
+                completedAt = arg(6),
+            )
+            1
+        }
+        coEvery {
+            storage.walletDao.refreshVerifiedMigrationJournal(
+                migrationId = any(),
+                receiptAccountCount = any(),
+                receiptVerifiedAccountCount = any(),
+                receiptSelectedWalletId = any(),
+                receiptIntegrityHash = any(),
+                receiptStartedAt = any(),
+                receiptCompletedAt = any(),
+                currentAccountCount = any(),
+                currentSelectedWalletId = any(),
+                currentIntegrityHash = any(),
+                refreshedAt = any(),
+            )
+        } returns 1
+        coEvery {
+            storage.walletDao.markActivatedMigrationRecoveryRequired(
+                migrationId = any(),
+                legacyAccountCount = any(),
+                receiptVerifiedAccountCount = any(),
+                receiptSelectedWalletId = any(),
+                receiptIntegrityHash = any(),
+                startedAt = any(),
+                receiptCompletedAt = any(),
+                currentAccountCount = any(),
+                currentSelectedWalletId = any(),
+                currentIntegrityHash = any(),
+                failureCode = any(),
                 completedAt = any(),
             )
         } returns 1
@@ -1767,40 +1852,27 @@ class MigrationManagerSafetyTest {
         }
     }
 
-    private suspend fun assertActiveSecretSourceReclassificationFailsClosed(
+    private suspend fun assertActiveSecretSourceReclassificationIsReadOnly(
         activeSecretSource: String,
         retainedSeed: String,
     ) {
         val vector = soraVector(RAW_SEED)
         val account = SoraAccountLocal(vector.address, "Retained wallet")
-        val userRepository = mockk<UserRepository>()
-        val credentials = mockk<CredentialsRepository>()
-        val database = mockk<AppDatabase>()
-        val accountDao = mockk<AccountDao>()
-        val walletDao = mockk<WalletIdentityDao>()
-        val verifyingJournal = slot<WalletMigrationJournalLocal>()
-        val recoveryJournal = slot<WalletMigrationJournalLocal>()
-        val activeIdentity = WalletIdentityLocal(
+        val storage = successfulMigrationStorage(listOf(account))
+        storage.wallets[vector.address] = WalletIdentityLocal(
             walletId = vector.address,
             displayName = account.accountName,
             secretSource = activeSecretSource,
             migrationState = "VERIFIED",
             derivationVersion = 1,
         )
-
-        every { database.accountDao() } returns accountDao
-        every { database.walletIdentityDao() } returns walletDao
-        coEvery { accountDao.getAccounts() } returns listOf(account)
+        val userRepository = mockk<UserRepository>()
+        val credentials = mockk<CredentialsRepository>()
         stubWalletMutationLock(
             userRepository = userRepository,
             selectedAccount = SoraAccount(vector.address, account.accountName),
             onboardingState = OnboardingState.REGISTRATION_FINISHED,
         )
-        coEvery { walletDao.getMigrationJournal(any()) } returns null
-        coEvery { walletDao.upsertMigrationJournal(capture(verifyingJournal)) } returns Unit
-        coEvery { walletDao.getWallets() } returns listOf(activeIdentity)
-        coEvery { walletDao.recordMigrationFailure(capture(recoveryJournal)) } returns true
-        coEvery { walletDao.markWalletsRecoveryRequired(listOf(vector.address)) } returns 1
         coEvery { credentials.isExplicitWatchOnly(any()) } returns false
         coEvery { credentials.retrieveKeyPair(any()) } answers {
             sr25519KeyPair(vector.seed)
@@ -1808,47 +1880,21 @@ class MigrationManagerSafetyTest {
         coEvery { credentials.retrieveMnemonic(any()) } returns ""
         coEvery { credentials.retrieveStoredSeed(any()) } returns retainedSeed
         coEvery { credentials.isRawSeedValid(any()) } returns true
-        stubRoomUnitTransaction(database)
 
         val manager = MigrationManager(
             userRepository = userRepository,
             credentialsRepository = credentials,
             sora2AddressCodec = Sora2AddressCodec(),
-            database = database,
+            database = storage.database,
             migrationSr25519Crypto = testMigrationSr25519Crypto,
         )
 
-        assertFalse(manager.start())
-        assertEquals("VERIFYING", verifyingJournal.captured.state)
-        assertEquals(0, verifyingJournal.captured.verifiedAccountCount)
-        assertEquals("RECOVERY_REQUIRED", recoveryJournal.captured.state)
-        assertEquals(
-            "ACTIVE_SECRET_SOURCE_MISMATCH",
-            recoveryJournal.captured.failureCode,
-        )
-        assertEquals(0, recoveryJournal.captured.verifiedAccountCount)
-        assertEquals(
-            WalletRecoveryCapabilityGate.Mode.RECOVERY_INSPECTED,
-            WalletRecoveryCapabilityGate.mode(),
-        )
-        coVerify(exactly = 1) { walletDao.upsertMigrationJournal(any()) }
-        coVerify(exactly = 1) { walletDao.recordMigrationFailure(any()) }
-        coVerify(exactly = 1) {
-            walletDao.markWalletsRecoveryRequired(listOf(vector.address))
-        }
-        coVerify(exactly = 0) { walletDao.upsertWallet(any()) }
-        coVerify(exactly = 0) { walletDao.upsertNetworkAccounts(any()) }
-        coVerify(exactly = 0) {
-            walletDao.activateMigrationJournal(
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-            )
-        }
+        assertTrue(manager.start())
+        assertEquals("UNAVAILABLE", storage.wallets.getValue(vector.address).migrationState)
+        assertEquals("SECRET_UNAVAILABLE", storage.wallets.getValue(vector.address).secretSource)
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+        coVerify(exactly = 0) { credentials.saveMnemonic(any(), any()) }
+        coVerify(exactly = 0) { credentials.saveKeyPair(any(), any()) }
     }
 
     private fun watchOnlyIdentity(account: SoraAccountLocal) = WalletIdentityLocal(
@@ -1873,79 +1919,78 @@ class MigrationManagerSafetyTest {
         enabled = true,
     )
 
-    private suspend fun assertFirstMigrationSecretFailure(
-        mode: SecretFailureMode,
-        expectedFailureCode: String,
-    ) {
-        val vector = soraVector(RAW_SEED)
-        val account = SoraAccountLocal(vector.address, "Recovery wallet")
+    private suspend fun assertSecretFailureIsolated(mode: SecretFailureMode) {
+        val good = soraVector(RAW_SEED)
+        val brokenPublicKey = ByteArray(32) { index -> (index + 120).toByte() }
+        val brokenId = brokenPublicKey.toAddress(SORA2_PREFIX)
+        val accounts = listOf(
+            SoraAccountLocal(good.address, "Good"),
+            SoraAccountLocal(brokenId, "Recovery wallet"),
+        )
+        val storage = successfulMigrationStorage(accounts)
         val userRepository = mockk<UserRepository>()
         val credentials = mockk<CredentialsRepository>()
-        val runtime = mockk<Sora2AddressCodec>()
-        val database = mockk<AppDatabase>()
-        val accountDao = mockk<AccountDao>()
-        val walletDao = mockk<WalletIdentityDao>()
-        val journals = mutableListOf<WalletMigrationJournalLocal>()
-        val failure = slot<WalletMigrationJournalLocal>()
-
-        every { database.accountDao() } returns accountDao
-        every { database.walletIdentityDao() } returns walletDao
-        coEvery { accountDao.getAccounts() } returns listOf(account)
         stubWalletMutationLock(
             userRepository = userRepository,
-            selectedAccount = SoraAccount(account.substrateAddress, account.accountName),
+            selectedAccount = SoraAccount(good.address, "Good"),
             onboardingState = OnboardingState.REGISTRATION_FINISHED,
         )
-        coEvery { walletDao.getMigrationJournal(any()) } returns null
-        coEvery { walletDao.upsertMigrationJournal(any()) } coAnswers {
-            journals += firstArg<WalletMigrationJournalLocal>()
-        }
-        coEvery { walletDao.recordMigrationFailure(capture(failure)) } returns true
-        coEvery { walletDao.markWalletsRecoveryRequired(listOf(vector.address)) } returns 1
-        coEvery { credentials.isExplicitWatchOnly(any()) } returns false
+        stubRawSeedWallet(credentials, good)
         when (mode) {
             SecretFailureMode.MISSING_SOURCE -> {
-                coEvery { credentials.retrieveKeyPair(any()) } throws
-                    IllegalStateException("retained signing key is missing")
+                coEvery {
+                    credentials.retrieveKeyPair(match { it.substrateAddress == brokenId })
+                } throws IllegalStateException("Keypair not found")
             }
             SecretFailureMode.DECRYPTION_FAILURE -> {
-                coEvery { credentials.retrieveKeyPair(any()) } throws
-                    WalletDecryptionException("encrypted wallet cannot be decrypted")
+                coEvery {
+                    credentials.retrieveKeyPair(match { it.substrateAddress == brokenId })
+                } throws WalletDecryptionException("encrypted wallet cannot be decrypted")
             }
         }
 
         val manager = MigrationManager(
             userRepository = userRepository,
             credentialsRepository = credentials,
-            sora2AddressCodec = runtime,
-            database = database,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
             migrationSr25519Crypto = testMigrationSr25519Crypto,
         )
 
-        assertFalse(manager.start())
-        assertEquals(listOf("VERIFYING"), journals.map { it.state })
-        assertEquals("RECOVERY_REQUIRED", failure.captured.state)
-        assertEquals(expectedFailureCode, failure.captured.failureCode)
-        assertEquals(0, failure.captured.verifiedAccountCount)
-        assertEquals(
-            WalletRecoveryCapabilityGate.Mode.RECOVERY_INSPECTED,
-            WalletRecoveryCapabilityGate.mode(),
-        )
-        coVerify(exactly = 0) {
-            walletDao.activateMigrationJournal(
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-            )
-        }
-        coVerify(exactly = 0) { walletDao.upsertWallet(any()) }
+        assertTrue(manager.start())
+        assertEquals("VERIFIED", storage.wallets.getValue(good.address).migrationState)
+        assertEquals("UNAVAILABLE", storage.wallets.getValue(brokenId).migrationState)
+        assertEquals(listOf("VERIFYING", "VERIFYING"), storage.journals.map { it.state })
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
         coVerify(exactly = 0) { credentials.saveMnemonic(any(), any()) }
         coVerify(exactly = 0) { credentials.saveKeyPair(any(), any()) }
+        assertEquals(WalletRecoveryCapabilityGate.Mode.NORMAL, WalletRecoveryCapabilityGate.mode())
     }
+
+    private fun stubRawSeedWallet(credentials: CredentialsRepository, vector: SoraVector) {
+        coEvery { credentials.isExplicitWatchOnly(any()) } returns false
+        coEvery {
+            credentials.retrieveKeyPair(match { it.substrateAddress == vector.address })
+        } answers { sr25519KeyPair(vector.seed) }
+        coEvery { credentials.retrieveMnemonic(any()) } returns ""
+        coEvery { credentials.retrieveStoredSeed(any()) } returns vector.seed
+        coEvery { credentials.isRawSeedValid(any()) } returns true
+    }
+
+    private fun verifiedJournal(
+        accounts: List<SoraAccountLocal>,
+        selectedWalletId: String,
+    ) = WalletMigrationJournalLocal(
+        migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
+        state = "VERIFIED",
+        legacyAccountCount = accounts.size,
+        verifiedAccountCount = accounts.size,
+        selectedWalletId = selectedWalletId,
+        integrityHash = integrityHash(accounts, selectedWalletId),
+        failureCode = null,
+        startedAt = 1,
+        completedAt = 2,
+    )
 
     private fun assertMnemonicNetworkAccounts(
         vector: SoraVector,
@@ -2038,9 +2083,9 @@ class MigrationManagerSafetyTest {
             onboardingState = onboardingState,
         )
         coEvery {
-            userRepository.withWalletMigrationLocked<Boolean>(any())
+            userRepository.withWalletMigrationLocked<MigrationOutcome>(any())
         } coAnswers {
-            firstArg<suspend (WalletMutationSnapshot) -> Boolean>().invoke(snapshot)
+            firstArg<suspend (WalletMutationSnapshot) -> MigrationOutcome>().invoke(snapshot)
         }
     }
 
@@ -2077,6 +2122,7 @@ class MigrationManagerSafetyTest {
         val wallets: MutableMap<String, WalletIdentityLocal> = linkedMapOf(),
         val networkAccounts: MutableMap<String, List<NetworkAccountLocal>> = linkedMapOf(),
         val journals: MutableList<WalletMigrationJournalLocal> = mutableListOf(),
+        var journal: WalletMigrationJournalLocal? = null,
     )
 
     private data class SoraVector(
