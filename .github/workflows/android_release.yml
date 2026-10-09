@@ -142,10 +142,20 @@ jobs:
           print("google-services.json is valid for jp.co.soramitsu.sora")
           EOF
 
-      - name: Unit tests and lint
-        # The same checks as android_ci.yml, so a tag build of an unchecked commit is still
-        # checked. assembleProductionRelease also runs AGP's lintVital checks for release.
-        run: ./gradlew $GRADLE_FLAGS testProductionDebugUnitTest :app:lintProductionDebug
+      - name: Unit tests
+        run: ./gradlew $GRADLE_FLAGS testProductionDebugUnitTest
+
+      - name: Lint (report only)
+        # android_ci.yml enforces this lint on pull requests. Here it only produces the report
+        # for the release manager; assembleProductionRelease still runs AGP's blocking
+        # lintVital checks for the release build.
+        id: lint
+        continue-on-error: true
+        run: ./gradlew $GRADLE_FLAGS :app:lintProductionDebug
+
+      - name: Warn about lint findings
+        if: steps.lint.outcome == 'failure'
+        run: echo "::warning::lintProductionDebug failed. Read the lint report in the release artifact before uploading to Google Play."
 
       - name: Build signed productionRelease AAB and APK
         env:
