@@ -137,7 +137,7 @@
     },
     {
       "path": "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
-      "sha256": "9b6eb4495fa8435ed05ce3a7503e1044a5cf1a8c80ccf023925ec1206a792c71"
+      "sha256": "04ceea236a739b81000b2702a26221f91fb945b8e796d0085623d549fe6e65bb"
     },
     {
       "path": "build-inputs/xcrypto-1.2.7-Cargo.lock",
