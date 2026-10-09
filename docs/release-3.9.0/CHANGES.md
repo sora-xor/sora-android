@@ -772,3 +772,282 @@ emulator SORA-Api34: it passes, and with the previous list code it fails with
 9 skipped (the opt-in live tests and earlier skips).
 `:app:assembleProductionDebug` passes; `:app:lintProductionDebug` reports
 863 warnings, 1 hint and 180 baselined errors (baseline unchanged).
+
+## a4: Key safety and lockout fixes (core)
+
+### Why
+
+The 3.9.0 candidate protected keys well, but several common 3.8.6.3 states
+stopped the app at every start, with no way forward except reinstalling
+(which would have deleted the keys). The keys were never at risk; the app
+just refused to open. The audit's fix map (F1–F12) lists them; the main
+ones:
+
+- **Abandoned account creation (the most common case).** 3.8.6.3 saved the
+  new keys and phrase when the person tapped Continue on the name screen and
+  wrote the account row only at the end. Backing out left a key set with no
+  account. The candidate's upgrade gate treated any such set as
+  `ORPHANED_WALLET_STORAGE` and blocked startup forever, also when it was
+  the first account (the person never even reached onboarding).
+- **Other leftovers** blocked the same way: a selection that points at a
+  deleted account, a stale 2.x `prefs_address_pure` after the original 2.x
+  account was deleted, a partial key set (3.8.6.3 saved keys in three
+  separate edits), an account row whose keys were removed, a blank address
+  row, and a missing `app.db` with keys still present.
+- **One bad account locked out every account.** A missing, incomplete or
+  undecryptable key set for one account failed the whole wallet
+  verification (3.8.6.3 had quietly tolerated undecryptable fields).
+- **Busy Keystore became permanent.** `EncryptionUtil` remembered the first
+  Keystore failure for the life of the process, and the wallet verification
+  then wrote it down as `RECOVERY_REQUIRED`, which needed manual recovery.
+  Full disk and I/O errors were written down the same way.
+- **Backups.** Every cold start re-hashed and integrity-checked every backup
+  on the main thread; a new full snapshot was made for every change of
+  account set or selection; an invalid, interrupted or old-format backup,
+  more than 64 backups, a gap in generations, or too little free space for
+  a full copy blocked startup.
+- **Data deletion by Android.** `EncryptionUtil.hasExistingWalletMaterial`
+  opened `app.db` with Android's default error handler, and Room's default
+  corruption callback is the same handler: both delete a database that
+  SQLite reports as corrupt (F7, F8).
+- **Phrase length.** SORA2 import accepted only 12 and 24 words, so 15, 18
+  and 21-word phrases (3.8.x accepted them; SORA v1 phrases have 15 words)
+  could not be restored (F9).
+- **Onboarding kept creating orphans** (keys written at Continue), and
+  importing the phrase of such an orphan failed with "already imported"
+  (F10).
+- **Remove all accounts** wiped key sets that no account owns, and the
+  deletion preview refused to run while such a set existed (F12).
+
+### What changed
+
+Rules kept everywhere: key material (`prefs_priv_key*`, `prefs_pub_key*`,
+`prefs_key_nonce*`, `prefs_mnemonic*`, `prefs_seed*`, the unsuffixed 2.x
+keys, `user_pin_code`, `key_alias.xml`/`secret_key`, the Keystore alias
+`key_alias`, account rows) is never deleted, overwritten, re-encrypted or
+moved automatically. Addresses, derivation (sr25519, SS58 69), the genesis
+pin and production signing are unchanged. Nothing tells the person to
+reinstall or clear data.
+
+**Keystore and encryption** (`EncryptionUtil`, new `WalletStorageFailures`)
+
+- No remembered failure: every encrypt/decrypt probes the Keystore again,
+  up to three attempts (0, 150, 500 ms). Busy, I/O and provider errors are a
+  transient `KeyMaterialUnavailableException`; a missing alias while wallet
+  data exists, or a wrapped key that no longer matches the alias, is
+  non-transient.
+- A new alias or wrapped AES key is still never created while encrypted
+  wallet material exists. Creating the wrapped key is serialized across the
+  process, so two callers cannot replace each other's key.
+- `hasExistingWalletMaterial` opens `app.db` with a handler that refuses
+  instead of deleting (F7).
+- `WalletStorageFailures.isTransient` classifies busy Keystore, full disk,
+  I/O, locked database and low memory as transient; the verification code
+  uses it so these are never written down.
+
+**Upgrade gate** (`WalletUpgradeBackup`, new `WalletRecoveryOptions.kt`,
+`WalletSelectionPolicy.kt`)
+
+- Leftovers are no longer errors. Key sets without an account row, partial
+  key sets without a row, a stale selection, a stale `prefs_address_pure`,
+  unsuffixed material without a recorded owner and blank account rows are
+  recorded in an in-memory `WalletQuarantine` (`quarantine()`) and ignored.
+  Nothing is written, renamed or deleted.
+- Missing `app.db` with keys present (a reinstall-style state): Room
+  creates an empty database and the keys stay for restore. Stale
+  `-wal`/`-shm`/`-journal` files are renamed aside to
+  `no_backup/wallet-quarantine-<time>/` so a new database cannot replay
+  them.
+- Backups (F3, F4 tier 1):
+  - Startup does a cheap inventory only (directory, completion marker,
+    manifest shape and name; no hashing, copying or SQLite). An entry that
+    fails is renamed aside to `no_backup/wallet-backup-quarantine-*`, never
+    deleted and never blocking. Interrupted staging copies are cleaned up
+    when provably redundant, otherwise renamed aside the same way.
+  - Generation gaps are allowed; the 64-backup limit is gone. Old
+    current-schema snapshots are pruned (the newest 3 and every backup taken
+    before a schema migration are kept); removal uses the existing
+    exact-tree checks.
+  - At the current schema, one verified snapshot is made only if none
+    targets the current schema; every backup step there is best effort and
+    only reported (`nonBlockingWarnings()`).
+  - Before a schema migration a verified backup is still required (the
+    original authors' rule). With too little space for a full copy, a
+    keys-only backup is made (encrypted preferences, wrapped key and the
+    account list; the database holds no secrets; manifest `kind:
+    "keys-only"`). With too little space even for that,
+    `INSUFFICIENT_BACKUP_STORAGE` carries the bytes needed and available.
+- Interrupted or failed wallet verification is retried automatically up to
+  3 times in a row (counter `no_backup/wallet-migration-auto-retry`, reset
+  once the wallet verifies); then the recovery options are shown. Try again
+  (`retry()`) always works. A recovery journal no longer has to match the
+  earlier snapshot exactly; the retry re-reads and verifies everything.
+- Room corruption (F8): the gated open helper wraps Room's callback; on
+  corruption it keeps `app.db`, copies it (and its sidecars) to
+  `no_backup/wallet-corrupt-quarantine-<time>/`, sets `DATABASE_CORRUPT` and
+  routes to recovery. `allowDataLossOnRecovery(false)`.
+- Forward paths for the later Safe Mode task: `recoveryOptions()` returns,
+  for each blocking or transient state, `canRetry`, `retryAutomatically`,
+  `canRestoreFromPhrase`, `canRestoreFromDrive`, `canShowPhraseAfterPin`,
+  `canReadOnly`, `canExport`, `canContactSupport` and the storage numbers.
+  `authorizeSafeReadOnly()` opens Room read-only only at the current schema
+  after `PRAGMA quick_check` (otherwise "vault only").
+- `WalletSigningGate`: one signing rule (account VERIFIED and no deletion
+  running) used by `ExtrinsicManager`.
+
+**Per-account isolation** (`MigrationManager`, now in
+`feature_account_impl/.../domain/migration`; `UserRepositoryImpl`)
+
+- `MigrationManager` moved from `:app` so device tests can run the real
+  verification in a plain test process. It reads and checks every account's
+  keys before writing anything.
+- A transient failure is not journaled: the outcome is `Transient`, this
+  process stays read-only and the next start or Try again verifies again. A
+  Keystore that cannot unlock any key is `KeysUnavailable`, also not
+  journaled.
+- A missing, incomplete, unreadable or mismatching key set makes only that
+  account `UNAVAILABLE` (read-only, address kept, can be selected and
+  renamed, cannot sign). The other accounts verify and sign. When valid keys
+  appear later the account becomes VERIFIED again.
+- No account rows: nothing to verify. `REGISTERED_WITHOUT_ACCOUNTS`,
+  `SELECTED_ACCOUNT_MISSING` and `SELECTED_ACCOUNT_MISMATCH` are no longer
+  written; a journal left by an earlier build is cleared. Splash opens
+  onboarding when registration finished but no account remains.
+- An empty or dangling selection falls back to an existing account (the
+  2.x owner if it has a row, else the lowest address); it is saved only in
+  normal mode. Blank rows are ignored. Unsuffixed 2.x keys that do not
+  verify are set aside instead of failing startup.
+- Deleting an account is no longer refused because another, untouched
+  account is unavailable or because the 2.x owner is stale.
+- For Safe Mode: `UserRepository.adoptRetainedWallet()` and
+  `unavailableWalletIds()`.
+
+**Onboarding and import** (F9, F10; `CredentialsRepository`,
+`MultiaccountInteractor`, `OnboardingViewModel`)
+
+- Create: the new wallet is a `WalletDraft` held in memory. Keys and phrase
+  are stored only when the flow finishes, together with the account row,
+  under the wallet lock. Backing out stores nothing. The Google Drive backup
+  made during creation uses the draft. The draft is wiped when the screen
+  goes away.
+- Import (phrase, raw seed, Drive): one step under the wallet lock. An
+  existing account is reported as already imported without touching
+  storage. Otherwise only absent values are written, in one atomic edit
+  (`SoraPreferences.putStringsIfAbsent`). Values already stored for the
+  address are kept when they decrypt to exactly the same keys; this adopts a
+  key set left by an unfinished flow. A different or unreadable stored value
+  is never overwritten: nothing is written and the new
+  `ACCOUNT_STORAGE_CONFLICT` message is shown.
+- SORA2 phrase import accepts 12, 15, 18, 21 and 24 words. Nexus derivation
+  stays 12/24.
+- Addresses are derived with `Sora2AddressCodec` (SS58 69, the value the
+  runtime validates) instead of waiting for the runtime.
+
+**Remove all accounts** (F12; `SoraPreferences`)
+
+- Key sets that no account row owns are kept; everything else is cleared as
+  before. Deletion coverage ignores them and a stale 2.x owner.
+
+**Strings** (`common/src/main/res/values*/strings.xml`)
+
+- The passphrase-length errors name every accepted length:
+  `common_error_mnemonic_word_count` ("A passphrase has 12, 15, 18, 21 or
+  24 words.") and `common_error_mnemonic_word_count_invalid` replace
+  `common_error_mnemonic_length_error` / `common_error_mnemonic_is_not_valid`.
+- New `account_storage_conflict` ("This wallet can't be added here") and
+  `account_storage_conflict_description` ("This phone already holds
+  different keys for this wallet, so nothing was changed. Your funds are
+  safe on the blockchain. Please contact support.").
+- Japanese is translated; the other locales carry the English text. No lint
+  baseline change.
+
+### Historical storage generations
+
+Each released layout, written by that release's own storage code, then
+started with this candidate (device tests below unless noted):
+
+| Generation | Result |
+|---|---|
+| 3.8.6.3 (Room 73), several accounts: 12, 15, 21, 24-word phrases and a raw seed | Upgrades; same addresses; every account signs. |
+| 2.3.3 (Room 50), single unsuffixed account | Upgrades through 50→58→77; same address; signs. |
+| Abandoned first create (keys, no row) | Starts at onboarding; importing the same phrase adopts the stored keys unchanged; signs. |
+| Abandoned add-account | Existing wallet unaffected and signs; the leftover set is kept. |
+| Selection pointing at a deleted account | Falls back to an existing account; all sign. |
+| Partial key set (row or no row) | That account is read-only; the others sign. |
+| Stale 2.x owner after its account was deleted in 2.4+ | Ignored; current wallet signs. |
+| One undecryptable account among several | That account is read-only; the others sign. |
+| Low storage | Keys-only backup and upgrade; or "needs N bytes" with retry. |
+| Killed during upgrade (after schema, during verification, after staging, journal from an earlier build) | Resumes or retries automatically; signs. Four interruptions in a row: options shown, Try again works. |
+| Interrupted backup copy | Cleaned up or renamed aside; upgrade continues. |
+| Busy Keystore at start | Not remembered or journaled; next attempt verifies and signs. |
+| 2.4–3.3 (Room 58–72) | Same layout as 3.x; the Room chain from 58 is covered by the existing `core_db` migration tests (schemas 58–77). |
+| SORA v1 (Iroha, Room 15–40), believed ~0 installs | Not device-tested. Unscoped Ed25519 keys are ignored (no SORA2 address can come from them); the 15-word phrase stays stored and can be imported. Showing it needs the Safe Mode task. |
+
+### Not in this task
+
+- Safe Mode screens and escape hatches (F11, fix map §4): the flags above
+  are exposed, and the existing recovery panel still works (Try again;
+  Continue read-only when `canReadOnly`; recovery export). A "Restore with
+  phrase" button, phrase reveal after PIN, adoption banner and live network
+  in read-only mode are the next task.
+- F4 tier 2 (running preparation off the main thread). Tier 1 is done:
+  startup at the current schema no longer hashes, copies or opens backups.
+
+### Notes
+
+- `mockk-android` and `datastore-preferences` were added to
+  `feature_account_impl` **androidTest only**. Both are already in the
+  version catalog and used by other modules; release dependency locks are
+  unaffected.
+- `AppDatabase.newInstance()`, `SoraPreferences.createDataStore(context,
+  scope)`, `WalletUpgradeBackup.prepareWithAvailableBackupBytesForTest()` and
+  `automaticMigrationRetriesUsedForTest()` exist for device tests that model
+  app restarts.
+- Observation (unchanged behaviour, also in 3.8.6.3): SORA2 derives the
+  mini-seed with PBKDF2 over the phrase entropy, and HMAC pads short keys
+  with zeros, so two phrases whose entropies differ only by trailing zero
+  bytes give the same address (for example the all-zero 12 and 15-word test
+  phrases). Random phrases are not affected in practice; changing it would
+  change addresses. Test vectors use non-zero entropy.
+
+### Verification
+
+- New `feature_account_impl/src/androidTest/.../upgrade/`:
+  `HistoricalWalletWriters.kt` holds the storage writers copied from
+  released 3.8.6.3 (`b7b0f0fc`: `EncryptionUtil`, `SoraPreferences`,
+  `EncryptedPreferences`, `PrefsCredentialsDatasource`,
+  `PrefsUserDatasource`) and 2.3.3 (unsuffixed credentials, `saveAddress`),
+  plus Room 50 (reconstructed 2.3.3 SQL) and Room 58+ from the exported
+  schemas. `WalletUpgradeScenarioTest` (16 tests, the table above) runs each
+  scenario through the production path and ends with identical addresses and
+  a verified sr25519 signature per usable account.
+- `core_db` `WalletUpgradeBackupTest` (99 tests) and
+  `WalletIdentityMigration75Test` (18): tests that expected a block for the
+  states above now expect admission with bytes unchanged; new tests for
+  sidecar set-aside, automatic retry limit, pruning, gaps, keys-only backup,
+  and the corruption callback keeping `app.db`.
+- `common` `EncryptionUtilKeySafetyTest` (3): an unreadable `app.db` without
+  alias is kept and no key is created; a wrapped key without alias is never
+  replaced; a busy Keystore is retried and not remembered.
+- JVM: new and updated tests in `MigrationManagerSafetyTest` (moved),
+  `CredentialsRepositoryTest`, `UserRepositoryTest`,
+  `LegacySingleAccountUpgradeTest`, `MultiaccountInteractorTest`,
+  `OnboardingViewModelTest`, `SplashViewModelTest`.
+- `MigrationManagerProductionPathQualificationTest` (`:app`
+  androidTestQualification) expected 15/18/21-word phrases to be rejected for
+  import; it now expects them to be accepted with the same seed as before.
+- `scripts/run-production-connected-device-qualification.sh` now also runs
+  `WalletUpgradeScenarioTest`.
+- Results. Emulator SORA-Api36-16k (16 KB pages): `common` 8/8, `core_db`
+  117/117, `WalletUpgradeScenarioTest` 16/16, encrypted-wallet upgrade
+  qualification 5/5 phases. Emulator SORA-Api34: the same suites pass, plus
+  `CryptoRuntimeCompatibilityTest` 2/2 and the MigrationManager
+  production-path qualification 7/7 phases. (On the 16 KB emulator that
+  qualification cannot start: mockk-android's JVMTI agent library is 4 KB
+  aligned. This is the test tool, not the app.)
+- `testProductionDebugUnitTest`: 1,097 tests in 15 modules, 0 failures,
+  9 skipped (the opt-in live tests and earlier skips).
+  `:app:assembleProductionDebug` and
+  `:app:compileQualificationDebugAndroidTestKotlin` pass;
+  `:app:lintProductionDebug` reports 864 warnings, 1 hint and 180 baselined
+  errors (baseline unchanged).
