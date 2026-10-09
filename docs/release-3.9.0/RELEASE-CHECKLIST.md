@@ -283,3 +283,86 @@ every candidate:
       any of them on for production is a code change
       (`ReleaseSurfacePolicy`) and, for Polkamarkt, a Google Play
       prediction-market policy review; for IrohaConnect, a security review.
+
+## a4: Key safety and lockout fixes (core)
+
+### Before each release candidate
+
+- [ ] On an emulator (never a phone with real wallets), run
+      `bash scripts/run-production-connected-device-qualification.sh` with
+      `ANDROID_SERIAL` set to the emulator. It now includes
+      `WalletUpgradeScenarioTest` (3.8.6.3 and 2.3.3 storage upgraded through
+      the production path; 16 scenarios, each ends with a signature). Use an
+      emulator with 4 KB pages (for example SORA-Api34): on 16 KB-page
+      emulators the MigrationManager qualification step cannot load
+      mockk-android's test agent.
+
+### Real-device upgrade QA (test phones and team test wallets only)
+
+The device tests write storage with the released apps' own code on an
+emulator. Confirm on real phones, installing the release build over Google
+Play 3.8.6.3:
+
+- [ ] Clean multi-account wallet (a 12-word, a 24-word and, if available, a
+      15-word account): all addresses unchanged, a small transfer signs.
+- [ ] Abandoned create: in 3.8.6.3 start "Create account", enter a name, tap
+      Continue, then back out; upgrade. Expect the app to open (existing
+      wallet unchanged, or onboarding when it was the first account), and
+      importing that phrase to work.
+- [ ] Abandoned add-account on a phone that already has a wallet: the
+      existing wallet opens and signs.
+- [ ] A phone that came from 2.x and deleted its original account in 2.4+:
+      opens; current accounts sign.
+- [ ] Low storage (fill the phone's storage almost completely before the
+      first start): the upgrade either continues with a keys-only backup or
+      stops with the storage message and the amount needed; after freeing
+      space, Try again continues.
+- [ ] Kill the app (swipe away) during the first start after the upgrade,
+      several times: it resumes and the wallet signs.
+- [ ] Device-to-device transfer (Pixel "Copy apps & data") of a 3.8.6.3
+      install to a new phone, then the release build: note what is shown.
+      The Keystore alias does not transfer, so the keys cannot be decrypted;
+      the person must restore with their phrase. Until the Safe Mode task
+      lands the recovery panel offers Try again and export only. Record the
+      result for the Safe Mode task.
+- [ ] Import a 15, 18 or 21-word SORA2 phrase from a team test wallet: the
+      address matches 3.8.6.3.
+
+### Follow-up work required before release
+
+- [ ] Safe Mode screens (fix map F11 and §4) must land: "Restore with
+      phrase", phrase reveal after PIN, adoption of set-aside key sets,
+      "Free up some space" with Check again, live network in read-only
+      mode, and a support action that cannot crash without an email app.
+      This task only exposes the flags (`WalletUpgradeBackup.recoveryOptions()`,
+      `quarantine()`, `UserRepository.adoptRetainedWallet()`,
+      `unavailableWalletIds()`).
+- [ ] Accounts shown as read-only (`UNAVAILABLE`) need a visible label and an
+      explanation in the account list (Safe Mode task).
+
+### Product decisions to confirm
+
+- [ ] Automatic retry of an interrupted wallet check: 3 times in a row, then
+      the options are shown (Try again always works).
+- [ ] Backup pruning: keep the newest 3 verified backups and every backup
+      taken before a schema migration.
+- [ ] Keys-only backup when storage is low (encrypted preferences, wrapped
+      key and account list; no database copy).
+- [ ] New accounts are kept in memory until the create flow finishes; the
+      Google Drive backup made during creation may therefore exist for an
+      account the person then abandoned on the phone (it can be restored
+      from Drive).
+- [ ] An account whose keys are incomplete or unreadable is shown read-only
+      instead of blocking the app.
+
+### Support
+
+- [ ] New message for support: "This wallet can't be added here" (an import
+      whose address already holds different keys; nothing was changed).
+      Prepare an answer: the person's funds are safe; ask for the recovery
+      export, do not ask them to reinstall.
+- [ ] Set-aside files are never deleted automatically and count towards the
+      app's storage: `no_backup/wallet-backup-quarantine-*`,
+      `no_backup/wallet-quarantine-*` and
+      `no_backup/wallet-corrupt-quarantine-*`. A later release may offer a
+      confirmed cleanup.
