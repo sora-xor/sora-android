@@ -99,11 +99,13 @@ Each section covers one release task: what changed, why, and what users see.
 
 **Moved**: `docs/modernization/` and `config/gradle-dependency-provenance.json`
 are now under `docs/history/modernization/`, unchanged.
-`docs/history/README.md` explains them. The 16 KB rebuild notes there still
-describe the vendored native libraries that ship. The one vendor note that
+`docs/history/README.md` explains them. The 16 KB rebuild notes there for
+xcrypto, lazysodium and graphics-path still describe vendored native libraries
+that ship; the camera-core, rootbeer and tensorflow-lite notes describe
+libraries that the SORA Card removal later dropped. The one vendor note that
 links to them points at the new path. `vendor/soramitsu-maven/CONTENTS.sha256`
 and `SOURCE_PROVENANCE.json` were updated for that one-line edit and still
-verify with `shasum -c`. No vendored artifact changed.
+verify with `shasum -c`. This task changed no vendored artifact.
 
 **Kept**: dependency lockfiles, `gradle/verification-metadata.*`, the
 `vendor/` repository, the 16 KB check and its test, the lock-coverage init
@@ -189,3 +191,20 @@ it was left as recorded.
   - `:app:assembleProductionDebug` succeeded; `testProductionDebugUnitTest`
     (all up to date, no test inputs changed): 1,056 tests, 0 failures,
     6 skipped; the two Python script tests pass (11 each).
+- Re-checked on 2026-10-10, after the SORA Card removal commits landed on
+  the branch (offline):
+  - `verifyProductionReleaseLockCoverage`: 527 configurations in 28
+    projects. `resolveReleaseDependencyLocks`: all 28 projects match their
+    lockfile, `:network` included (its metadata now resolves offline).
+  - `:app:assembleProductionDebug` succeeded; the 16 KB check passed on the
+    APK (10 64-bit native libraries).
+  - `testProductionDebugUnitTest` with no exclusions: 1,038 tests in 15
+    modules, 0 failures, 6 skipped.
+  - `scripts/test-android-native-16kb.py` (11), `scripts/test-verify-release-signing.py`
+    (11, with `JAVA_HOME` and `ANDROID_HOME` set; without them its four
+    tool tests skip) and `scripts/test-production-release-lock-coverage.mjs`:
+    passed.
+  - `docs/history/README.md` now says which 16 KB rebuild reports still
+    describe shipping libraries (xcrypto, lazysodium, graphics-path) and
+    which libraries were removed with SORA Card (camera-core, rootbeer,
+    tensorflow-lite).
