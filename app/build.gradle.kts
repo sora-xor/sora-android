@@ -315,7 +315,7 @@ androidComponents {
         variant.outputs.forEach { output ->
             output.outputFileName.set(
                 if (variant.name == "productionRelease") {
-                    // The protected workflow verifies and reproduces this exact APK path.
+                    // .github/workflows/android_release.yml checks and uploads this exact APK path.
                     "app-production-release.apk"
                 } else {
                     "SORA_Wallet_${appVersionName}_${appVersionCode}_${variant.flavorName}_${variant.buildType}.apk"
