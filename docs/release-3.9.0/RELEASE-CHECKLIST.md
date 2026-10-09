@@ -117,3 +117,73 @@ now, so it is listed here.
 - [ ] Staged rollout in the Play Console (for example 1%, 5%, 25%, 100%),
       watching Crashlytics crash and ANR rates between steps. The retired
       `verifyProductionRollout` gate no longer does this.
+
+## a2: SORA Card, PayWings/KYC and X1 removed
+
+### Credentials shipped in older builds (security)
+
+Every build up to and including 3.8.6.3 compiled these values into
+`BuildConfig`, so anyone can read them from a downloaded APK. 3.9.0 no
+longer contains them, but the old APKs stay in circulation, so the values
+must be treated as public.
+
+- [ ] Ask PayWings / the SORA Card operator to revoke or rotate the KYC
+      username and password (`SORA_CARD_KYC_USERNAME_*`,
+      `SORA_CARD_KYC_PASSWORD_*`), the SORA Card API key
+      (`SORA_CARD_API_KEY_*`), the reCAPTCHA key
+      (`SORA_ANDROID_RECAPTCHA_KEY_*`) and the platform id
+      (`SORA_ANDROID_PLATFORM_ID_*`), for both TEST and PROD. Record the
+      date and who did it here: `____-__-__`, `________`.
+- [ ] Delete the secrets that no build reads any more from Jenkins (and any
+      CI or developer `local.properties`): `SORA_CARD_*`, `X1_ENDPOINT_URL_*`,
+      `X1_WIDGET_ID_*`, `SORA_BACKEND_*`, `SORA_ANDROID_RECAPTCHA_KEY_*`,
+      `SORA_ANDROID_PLATFORM_ID_*`. Keep `SORA_GOOGLE_TOKEN_*` (Google Drive
+      backup).
+
+### Google Play Console
+
+- [ ] Data safety form: the app no longer includes the PayWings / Sumsub
+      KYC SDKs. Remove the data types that only they collected (for
+      example identity documents and photos, face/biometric data for
+      liveness, precise and approximate location, audio, and the name,
+      email, phone and address used for card sign-up) and the SORA Card
+      purposes. Check the final form against the 3.9.0 build before
+      publishing it.
+- [ ] Permission declarations: 3.9.0 no longer requests
+      `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `RECORD_AUDIO`,
+      `NFC`, `READ_MEDIA_IMAGES`, `READ_EXTERNAL_STORAGE`,
+      `WRITE_EXTERNAL_STORAGE`, `WRITE_SETTINGS` or
+      `READ_ASSISTANT_APP_SEARCH_DATA`. Remove any declaration for them (for
+      example the photo and video permissions declaration). Before
+      submitting, confirm the permission list that Play Console shows for
+      the uploaded AAB.
+- [ ] Store listing, screenshots, feature graphic and privacy policy: remove
+      mentions of SORA Card, IBAN, "Buy XOR with fiat" and KYC.
+- [ ] Release notes: tell card holders that SORA Card has moved out of the
+      wallet. Draft (confirm the wording and where card holders should go
+      with the SORA Card team first):
+      - EN: "SORA Card is no longer part of SORA Wallet. Your wallet,
+        recovery phrase and balances are not affected. To manage your card,
+        use the SORA Card app or contact SORA Card support."
+      - JA: 「SORA Wallet から SORA Card の機能を削除しました。ウォレット、
+        リカバリーフレーズ、残高に影響はありません。カードの管理は
+        SORA Card アプリ、または SORA Card サポートをご利用ください。」
+
+### Device check before rollout
+
+- [ ] On a phone with Play 3.8.6.3 and a wallet, where the SORA Card banner
+      was visible (and, if possible, one that was signed in to SORA Card),
+      install the 3.9.0 release build over it. Check: the app opens with the
+      same accounts and addresses; the wallet hub, More and XOR asset
+      details show no SORA Card or "Buy" items; Edit view of the hub lists
+      no card items; a swap completes and returns to the wallet; the
+      recovery phrase can still be shown after PIN.
+
+### Legal
+
+- [ ] The proprietary SORA Card SDK, PayWings OAuth/KYC and Sumsub IDensic
+      AARs were deleted from the tree, but they remain in the public git
+      history (for example commit `fccdcf64` and earlier on GitHub). Decide
+      whether the licence terms require removing them from history. A
+      history rewrite changes every later commit id and needs agreement from
+      everyone who works on the repository; it is not part of this release.
