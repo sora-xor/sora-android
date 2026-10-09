@@ -219,7 +219,9 @@ for whatever runtime the chain runs, but check it against the live chain for
 every candidate:
 
 - [ ] On an emulator (never a phone with real wallets), run the zero-cost live
-      signing test. It must pass with "Inability to pay some fees":
+      signing test. Both tests must pass (signing ends with "Inability to pay
+      some fees"; the second reads a 20,000-block-old block through the
+      status archive node):
       `ANDROID_SERIAL=emulator-5580 ./gradlew :sorasubstrate:connectedProductionDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.soraLiveNetwork=true -Pandroid.testInstrumentationRunnerArguments.class=jp.co.soramitsu.sora.substrate.live.MainnetLiveSigningTest`
       (`adb logcat -s SoraLiveSigning` shows the runtime version, fee and the
       node's answer).
@@ -241,18 +243,36 @@ every candidate:
       transfers (for example a timestamp-ordered plan on `dataTo`, or an
       account-participant index). Until then Activity lists only operations
       the account signed; incoming transfers are missing (balances are
-      correct). Consider a release-note line: "Activity may not list
-      transfers you received; your balance is always up to date."
+      correct). The app says so on Activity and asset history ("Transfers
+      you received may not be listed here yet. Your balance is always up to
+      date."). When the plan ships, change `accountHistoryFilter` and
+      `PiHistoryCoverage.LISTS_RECEIVED_TRANSFERS` together. Consider the same
+      line in the release notes.
 - [ ] Keep the indexer's filter-array limit (100) and the history `calls`
       shape stable, or tell the mobile team before changing them.
 
+### SORA nodes (ops)
+
+- [ ] Keep `mof2.sora.org` an archive node with HTTPS JSON-RPC (it is in the
+      default node list). The app asks it for System events, metadata and
+      runtime version at exact old block hashes when `ws.mof.sora.org` has
+      discarded that state (it keeps about 256 blocks), so pending
+      transactions older than ~25 minutes can still be resolved. If mof2
+      stops serving old state, those transactions stay "pending" in the app
+      (nothing is lost; deleting that wallet and its legacy claim wait). Tell
+      the mobile team before moving or pruning it.
+- [ ] `ws.mof.sora.org` (HTTPS) is the only endpoint for fee quotes, nonces,
+      runtime reads and submission. While it is down, nobody can send, even
+      though balances still load from mof2/mof3. Monitor it as a release
+      dependency.
+
 ### Product decisions to confirm
 
-- [ ] Sending requires the selected node to be `wss://ws.mof.sora.org` (the
-      reviewed transport; unchanged by this release). Users who picked mof2 or
-      mof3 in 3.8.6.3 see an error on send until they select the first node in
-      More > Nodes. Decide whether 3.9.0 should switch them automatically or
-      explain it in the error, and test it on an upgraded install.
+- [ ] Sending no longer depends on the node selected in More > Nodes (fees,
+      runtime, nonce and submission all use the reviewed
+      `https://ws.mof.sora.org`). Decide whether a second reviewed signing
+      endpoint is wanted for outages of that node; that is a code change in
+      `Sora2RuntimeContract` and needs a security review.
 - [ ] Taira, the Nexus (Minamoto) portfolio, Polkamarkt and IrohaConnect are
       off in the production app regardless of remote configuration. Turning
       any of them on for production is a code change

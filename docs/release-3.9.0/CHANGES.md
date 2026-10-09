@@ -407,12 +407,14 @@ All offline, on this branch after the last a2 commit:
 **Signing on the live runtime** (`sorasubstrate`)
 
 - `RuntimeManager.getMutationRuntimeContext()` no longer checks a fixed spec
-  version, transaction version or packaged metadata hash. It still:
-  requires the connected node to be the reviewed `wss://ws.mof.sora.org`;
-  pins the canonical mainnet genesis; checks the SS58 prefix 69 from the
-  metadata; and reads runtime version and metadata from the node at one
-  finalized block and requires the snapshot that encodes the call to have the
-  same spec version, genesis and metadata hash (`requireMutationRuntimeIdentity`).
+  version, transaction version or packaged metadata hash. It still: pins the
+  canonical mainnet genesis; checks the SS58 prefix 69 from the metadata; and
+  reads runtime version and metadata from the reviewed endpoint
+  (`https://ws.mof.sora.org`) at one finalized block and requires the snapshot
+  that encodes the call to have the same spec version, genesis and metadata
+  hash (`requireMutationRuntimeIdentity`). Since the review round (below),
+  every mutation-authorizing read and the submission use that endpoint
+  whichever node the app's WebSocket is connected to.
   The signed payload uses the node's live spec and transaction version. The
   pre-transport check (`requireSameSora2MutationRuntimeIdentity`) is
   unchanged. All fee, transfer, swap, liquidity, referral and claim paths go
@@ -423,9 +425,8 @@ All offline, on this branch after the last a2 commit:
   does not produce a valid SORA2 snapshot, the packaged file is used. The PI
   indexer is no longer involved in the runtime.
 - Pending-submission recovery can decode a submission signed with the live
-  runtime: it accepts the active snapshot or the published runtime cache when
-  genesis, spec version, metadata hash and types hash all match the recorded
-  values, and still never fetches metadata for this.
+  runtime, including after later runtime upgrades (see "Review fixes" below
+  for how the signing runtime stays available).
 - `Sora2RuntimeContract.SPEC_VERSION`/`TRANSACTION_VERSION` and the hashes now
   only describe the packaged fixture and the Polkamarkt pin (Polkamarkt
   mutations stay compiled off).
@@ -433,7 +434,7 @@ All offline, on this branch after the last a2 commit:
   exception (`Sora2RuntimeRpcRemoteException`); the message stays the fixed
   code `SORA2_RUNTIME_RPC_REMOTE_ERROR`.
 - Address derivation, key storage, SS58 prefix, genesis pin and the reviewed
-  transport are unchanged.
+  HTTPS endpoint are unchanged.
 
 **PI indexer** (`PolkaswapIndexerClient`)
 
@@ -519,9 +520,9 @@ All offline, on this branch after the last a2 commit:
   again.
 - On app start they are scheduled only when the journal has unresolved rows
   (or cannot be read).
-- `SoraApp` creates `NodeManager` when the first activity is created instead
-  of in `Application.onCreate`, so a process started only for WorkManager
-  does not open the node socket or fetch node lists.
+- `SoraApp` starts `NodeManager` with the first activity (once the upgrade
+  gate is clear) instead of in `Application.onCreate`, so a process started
+  only for WorkManager does not open the node socket or fetch node lists.
 
 ### User-visible effects
 
@@ -535,11 +536,10 @@ All offline, on this branch after the last a2 commit:
   app. No ancient languages in the language list.
 - Known limitation: the deployed indexer can only list operations the account
   signed, so transfers received from other accounts do not appear in Activity
-  yet (balances are correct). See `RELEASE-CHECKLIST.md`.
-- Known limitation (unchanged by this task): sending requires the selected
-  node to be `wss://ws.mof.sora.org` (the reviewed transport). A user who
-  selected mof2 or mof3 in 3.8.6.3 gets an error when sending until they
-  select the first node again.
+  yet (balances are correct). Activity and asset history now say so (see
+  "Review fixes"). See `RELEASE-CHECKLIST.md`.
+- Fees and sending work whichever node is selected in More > Nodes (see
+  "Review fixes").
 
 ### Verification
 
@@ -590,3 +590,134 @@ All offline, on this branch after the last a2 commit:
   133 the hub's asset card appears and the log has no
   `EncodeDecodeException`. (The new test wallet has no pools, so the pool card
   itself was not exercised.)
+
+### Review fixes (a3, round 2)
+
+Adversarial review found three dead ends and two gaps. All were confirmed in
+the code; one more was found while fixing them.
+
+**Pending submissions signed before a runtime upgrade** (blocker)
+
+- Problem: recovery could only decode a submission with the active runtime,
+  the one runtime-cache generation the manifest pointed to, or the packaged
+  130 fixture. The next mainnet upgrade pruned the old generation, so a row
+  signed on 133 and unresolved when 134 arrived stayed unresolved forever.
+  That permanently blocked deleting that wallet (or all wallets), the legacy
+  claim for it, and left a "pending" item in Activity.
+- Found while fixing: the reviewed node `ws.mof.sora.org` keeps only about
+  256 blocks (~25 minutes) of state (`4003 State already discarded`). The
+  System events of an inclusion block older than that could never be read
+  there, so the same dead end happened without any upgrade once a row was
+  older than 25 minutes. Block bodies are kept.
+- `RuntimeManager` cache pruning now keeps every generation that an
+  unresolved journal row names (`Sora2RecoveryRuntimeRetention`, read-only
+  journal query). Nothing is pruned while the upgrade gate is closed or the
+  journal cannot be read. Pruning runs after the runtime lock is released.
+- Recovery looks up the exact content-addressed generation
+  (`<spec>-<genesis>-<metadataSha256>-<typesSha256>`), not only the
+  manifest's. If it is gone (the OS may clear the cache directory), it is
+  rebuilt from the chain: runtime version and metadata at the row's
+  era-birth block, admitted only when spec/transaction version and the
+  metadata SHA-256 equal the journaled values, with the cached, packaged or
+  remote-config type file whose SHA-256 equals the journaled one. The rebuilt
+  generation is saved for later passes. The download runs outside the
+  runtime lock.
+- Status-only reads at historic block hashes (System events, metadata and
+  runtime version) are asked of the reviewed endpoint first and, only on
+  `4003 State already discarded`, of the archive node `https://mof2.sora.org`
+  (one of the three default SORA nodes; `STATUS_ARCHIVE_RPC_ENDPOINT`). The
+  block hash always comes from the reviewed endpoint, and the metadata is
+  hash-checked. Signing, nonces, fees and submission never use it.
+- The recovery pass scans the blocks of every selected row, with or without
+  its runtime. A row whose hash is absent from all blocks of its mortal era
+  becomes `EXPIRED_NOT_INCLUDED` without any runtime. The signing runtime is
+  looked up only for a row found in a block; if it is still unavailable the
+  row stays unresolved, is never guessed, and its scan restarts at the era
+  birth so the inclusion is found again.
+- No journal row is deleted or rewritten by any of this; only states the
+  chain proves are written.
+
+**Sending blocked when the app was on mof2 or mof3** (3 majors)
+
+- Problem: every fee quote and signature required the WebSocket to be
+  connected to exactly `wss://ws.mof.sora.org`. `NodeManager` auto-switches
+  (and saves) mof2/mof3 after a few failed reconnects, and 3.8.6.3 users
+  could already have them selected, so a short outage blocked all sending
+  with an unexplained error until the user found More > Nodes.
+- The runtime context, nonce and submission already went through the
+  reviewed HTTPS endpoint; only the binding check and the fee quote used the
+  socket. The binding check is removed from `getMutationRuntimeContext()`
+  and the fee (`payment_queryInfo`) now also goes through the reviewed HTTPS
+  endpoint (`Sora2BoundedRuntimeRpcClient.queryPartialFee`). Every value that
+  authorizes a mutation and the one submission attempt therefore come from
+  the reviewed endpoint whichever node shows balances; the genesis pin,
+  SS58 check and runtime identity checks are unchanged. The unused WebSocket
+  fee code (`SubstrateCalls.getExtrinsicFee`, `FeeCalculationRequest`,
+  `FeeResponse*`) was removed. Auto-switching itself is unchanged.
+- If `ws.mof.sora.org` itself is unreachable, fee quotes and sending wait
+  for it (as before); nothing latches.
+
+**No node connection after in-process recovery** (major)
+
+- Problem: `NodeManagerImpl` checked the upgrade gate once in `init`. If the
+  first activity was created while the gate was closed (low storage,
+  interrupted migration), recovery on the splash screen (Try again, Check
+  again, Continue read-only) opened the wallet in the same process with no
+  SORA2 socket until the app was force-closed.
+- `NodeManager.ensureStarted()` starts the connection once the gate is
+  clear and is idempotent; `SoraApp` calls it on every activity creation and
+  resume until it has started.
+
+**Activity silently missing received transfers** (2 majors)
+
+- The deployed indexer still has no plan for `dataTo`/`dataFrom` (checked in
+  its `query-policy.ts`, read-only). Activity (list and empty state) and the
+  asset page's recent activity now show: "Transfers you received may not be
+  listed here yet. Your balance is always up to date." (Japanese:
+  「受け取った送金は、まだここに表示されないことがあります。残高は常に最新です。」;
+  other locales carry the English text, as they do for the neighbouring
+  Activity strings, so lint baselines are unchanged). The switch is
+  `PiHistoryCoverage.LISTS_RECEIVED_TRANSFERS`, next to the history filter.
+
+**Smaller fixes**
+
+- A failed save of a refreshed runtime (for example a full disk) no longer
+  fails runtime reads or signing: the validated runtime is used in memory and
+  saving is retried at the next refresh.
+- Contact search on the Send screen used a substring filter over every
+  account's history that the indexer rejects, so it never found anything. It
+  now reads the account's newest 100 signed operations once (cached for a
+  minute), lists their counterparties (newest first; also as "Recent
+  recipients" for an empty query) and filters on the device; only valid SORA
+  addresses are offered.
+
+**Verification (round 2)**
+
+- New unit tests: runtime signed at 133 is still decoded after 134 is
+  published and the cache pruned; an evicted runtime is rebuilt from the
+  chain and saved; rebuilt runtimes with the wrong version or metadata hash,
+  or an unreachable node, are rejected; no pruning when the journal is
+  unreadable; full disk during a required refresh; a never-included row
+  expires with no runtime; an included row without its runtime is never
+  marked expired and is rescanned; fee parsing; archive fallback only on
+  discarded state and only for status reads; `NodeManager` starts after the
+  gate clears; contact peers. Mutation checks: removing the retention or the
+  rescan makes the new tests fail.
+- `testProductionDebugUnitTest`: 1,074 tests in 15 modules, 0 failures,
+  9 skipped (the same opt-in live tests and earlier skips).
+  `:app:assembleProductionDebug` passes; `:app:lintProductionDebug` reports
+  the same counts as before (no new errors; baseline unchanged).
+- `MainnetLiveSigningTest` on SORA-Api36-16k (2026-10-10 04:27 JST), now
+  with the fee through the HTTPS client and no WebSocket at all: spec 133 /
+  tx 131, metadata `ab22a2d4…`, partialFee 100018412589707326,
+  `author_submitExtrinsic` rejected with 1010 "Inability to pay some fees".
+  New `statusReadsForOldBlocksAreAnsweredByTheArchiveEndpoint`: runtime
+  version, metadata (623,617 bytes) and System events at a block 20,000
+  blocks old are served through the archive fallback. Both pass.
+- Emulator SORA-Api34, production debug build, wallet imported from the
+  public BIP39 test vector: with `wss://mof2.sora.org/` selected and the app
+  restarted (socket connected to mof2 per log), the swap screen shows
+  "Network fee 0.10002071 XOR". Activity's empty state shows the
+  received-transfers note in English and Japanese. (This AVD returns black
+  screenshots, so the evidence is the accessibility dump:
+  `screens/android/a3fix/` in the release scratchpad.)
