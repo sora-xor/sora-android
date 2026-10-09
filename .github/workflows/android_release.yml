@@ -199,8 +199,8 @@ jobs:
           CI_KEYSTORE_KEY_PASS: ${{ secrets.CI_KEYSTORE_KEY_PASS }}
           SORA_GOOGLE_TOKEN_PROD: ${{ secrets.SORA_GOOGLE_TOKEN_PROD }}
         run: |
-          # CI_BUILD_ID mirrors SORA_VERSION_CODE for build scripts that still read the old name.
-          export CI_BUILD_ID="$SORA_VERSION_CODE"
+          # The build reads SORA_VERSION_CODE (set for the whole job above). Gradle refuses a
+          # productionRelease build without it, below 123, or outside 3090000..3090099 for 3.9.0.
           ./gradlew $GRADLE_FLAGS \
             :app:verifyProductionReleaseSigning \
             :app:assembleProductionRelease \
