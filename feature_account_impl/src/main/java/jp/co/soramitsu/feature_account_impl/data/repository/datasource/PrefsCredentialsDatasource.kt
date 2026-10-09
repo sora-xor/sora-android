@@ -132,6 +132,10 @@ class PrefsCredentialsDatasource constructor(
         CredentialField.SEED -> PREFS_SEED
     } + address
 
+    override suspend fun requireKeyMaterialReadable() {
+        encryptedPreferences.requireKeyMaterialReadable()
+    }
+
     override suspend fun isExplicitWatchOnly(suffixAddress: String): Boolean =
         soraPreferences.getBoolean(PREFS_WATCH_ONLY + suffixAddress)
 

@@ -77,10 +77,14 @@ class MultiaccountInteractor @Inject constructor(
     }
 
     /**
-     * Imports a recovery phrase as one step under the wallet lock: an existing account is
-     * reported as already imported without touching storage; otherwise the keys are stored
-     * (re-using identical keys already on the device, never overwriting different ones) and the
-     * account row is added.
+     * Imports a recovery phrase as one step under the wallet lock.
+     * - A usable account with this address is reported as already imported; nothing is touched.
+     * - A read-only account with this address (its keys are missing or incomplete on this phone)
+     *   is completed from the phrase: only missing key values are added, every stored value must
+     *   match, and the account can sign again. If a stored value cannot be read, nothing is
+     *   written and ACCOUNT_REPAIR_NEEDS_REMOVAL explains the remaining path.
+     * - Otherwise the keys are stored (re-using identical keys already on the device, never
+     *   overwriting different ones) and the account row is added.
      */
     suspend fun importFromMnemonic(input: String, accountName: String): SoraAccount =
         importDraft { credentialsRepository.draftFromMnemonic(input, accountName) }
@@ -99,7 +103,10 @@ class MultiaccountInteractor @Inject constructor(
             val draft = createDraft()
             try {
                 if (userRepository.accountExists(draft.address)) {
-                    throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
+                    if (draft.address !in userRepository.unavailableWalletIds()) {
+                        throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
+                    }
+                    return@withLock completeUnavailableAccount(draft)
                 }
                 val soraAccount = credentialsRepository.commitDraft(draft)
                 continueRecoverFlow(soraAccount)
@@ -108,6 +115,21 @@ class MultiaccountInteractor @Inject constructor(
                 draft.destroy()
             }
         }
+
+    private suspend fun completeUnavailableAccount(draft: WalletDraft): SoraAccount {
+        try {
+            credentialsRepository.commitDraft(draft)
+        } catch (error: SoraException) {
+            if (error.errorResponseCode == ResponseCode.ACCOUNT_STORAGE_CONFLICT) {
+                throw SoraException.businessError(ResponseCode.ACCOUNT_REPAIR_NEEDS_REMOVAL)
+            }
+            throw error
+        }
+        val repaired = userRepository.completeUnavailableWallet(draft.address)
+        userRepository.setCurSoraAccount(repaired)
+        userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+        return repaired
+    }
 
     /** A new wallet held in memory until [createUserFromDraft]; backing out stores nothing. */
     suspend fun createDraft(accountName: String): WalletDraft =

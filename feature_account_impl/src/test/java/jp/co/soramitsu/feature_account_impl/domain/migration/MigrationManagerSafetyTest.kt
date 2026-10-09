@@ -21,6 +21,8 @@ import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.WalletRecoveryKind
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.core_db.dao.AccountDao
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.model.NetworkAccountLocal
@@ -1672,16 +1674,84 @@ class MigrationManagerSafetyTest {
             selectedAccount = null,
             onboardingState = OnboardingState.REGISTRATION_FINISHED,
         )
+        val credentials = mockk<CredentialsRepository>()
+        coEvery { credentials.requireKeyMaterialReadable() } returns Unit
         val manager = MigrationManager(
             userRepository = userRepository,
-            credentialsRepository = mockk(),
+            credentialsRepository = credentials,
             sora2AddressCodec = Sora2AddressCodec(),
             database = storage.database,
             migrationSr25519Crypto = testMigrationSr25519Crypto,
         )
 
         assertTrue(manager.start())
+        coVerify(exactly = 1) { credentials.requireKeyMaterialReadable() }
         coVerify(exactly = 1) { storage.walletDao.deleteMigrationJournal() }
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+    }
+
+    @Test
+    fun `no account rows with keys this phone cannot unlock offers recovery and writes nothing`() =
+        runTest {
+            val storage = successfulMigrationStorage(emptyList())
+            val userRepository = mockk<UserRepository>()
+            stubWalletMutationLock(
+                userRepository = userRepository,
+                selectedAccount = null,
+                onboardingState = OnboardingState.INITIAL,
+            )
+            val credentials = mockk<CredentialsRepository>()
+            // For example app files copied from another phone without their Keystore key.
+            coEvery { credentials.requireKeyMaterialReadable() } throws
+                KeyMaterialUnavailableException("alias missing", transient = false)
+            val manager = MigrationManager(
+                userRepository = userRepository,
+                credentialsRepository = credentials,
+                sora2AddressCodec = Sora2AddressCodec(),
+                database = storage.database,
+                migrationSr25519Crypto = testMigrationSr25519Crypto,
+            )
+
+            assertEquals(
+                MigrationOutcome.KeysUnavailable("KEYSTORE_KEY_UNAVAILABLE"),
+                manager.startWithOutcome(),
+            )
+            val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+            assertEquals(WalletRecoveryKind.KEYS_UNAVAILABLE, options.kind)
+            // No account to show read-only; the forward path is setting the device up again
+            // (keeping the old files) and restoring with the recovery phrase.
+            assertFalse(options.canReadOnly)
+            assertFalse(options.canShowPhraseAfterPin)
+            assertTrue(options.canSetUpAgain && options.canRestoreFromPhrase && options.canRetry)
+            coVerify(exactly = 0) { storage.walletDao.deleteMigrationJournal() }
+            coVerify(exactly = 0) { storage.walletDao.upsertMigrationJournal(any()) }
+            coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+        }
+
+    @Test
+    fun `no account rows with a busy keystore is transient and writes nothing`() = runTest {
+        val storage = successfulMigrationStorage(emptyList())
+        val userRepository = mockk<UserRepository>()
+        stubWalletMutationLock(
+            userRepository = userRepository,
+            selectedAccount = null,
+            onboardingState = OnboardingState.INITIAL,
+        )
+        val credentials = mockk<CredentialsRepository>()
+        coEvery { credentials.requireKeyMaterialReadable() } throws
+            KeyMaterialUnavailableException("busy", transient = true)
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = credentials,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+
+        assertEquals(MigrationOutcome.Transient("KEYSTORE_UNAVAILABLE"), manager.startWithOutcome())
+        assertEquals(WalletRecoveryKind.TRANSIENT, WalletUpgradeBackup.recoveryOptions()?.kind)
+        assertEquals(true, WalletUpgradeBackup.recoveryOptions()?.retryAutomatically)
+        coVerify(exactly = 0) { storage.walletDao.upsertMigrationJournal(any()) }
         coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
     }
 

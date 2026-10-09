@@ -43,6 +43,12 @@ interface CredentialsRepository {
 
     suspend fun isRawSeedValid(rawSeed: String): Boolean
 
+    /**
+     * Proves that the key material already stored on this device can be unlocked here, without
+     * creating or writing anything. Throws `KeyMaterialUnavailableException` (transient or not).
+     */
+    suspend fun requireKeyMaterialReadable()
+
     /** A new random 24-word wallet held in memory only. Writes nothing. */
     suspend fun createDraft(accountName: String): WalletDraft
 
@@ -60,7 +66,8 @@ interface CredentialsRepository {
      * when they decrypt to exactly the same keys (this adopts a key set left by an earlier,
      * unfinished flow); only absent values are written. If any stored value differs or cannot
      * be read, nothing is written and `ACCOUNT_STORAGE_CONFLICT` is thrown. The caller adds the
-     * account row afterwards.
+     * account row afterwards. When this phone cannot unlock the key material stored here,
+     * `WALLET_KEYS_UNAVAILABLE` is thrown and nothing is written.
      */
     suspend fun commitDraft(draft: WalletDraft): SoraAccount
 

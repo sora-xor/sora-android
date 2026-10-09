@@ -39,11 +39,15 @@ import io.mockk.runs
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.Sora2AddressCodec
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.core_db.WalletRecoveryKind
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
@@ -394,6 +398,50 @@ class CredentialsRepositoryTest {
             (error as? SoraException)?.errorResponseCode,
         )
         verify(datasource, never()).writeCredentialsIfAbsent(any(), any())
+    }
+
+    @Test
+    fun `a phone that cannot unlock its stored keys refuses the commit and records recovery`() =
+        runTest {
+            val mnemonic =
+                "airport wish wish loan width country acoustic country ceiling good enact penalty"
+            val mnmnc = Mnemonic(mnemonic, mnemonic.split(" "), mnemonic.toByteArray())
+            every { MnemonicCreator.fromWords(mnemonic) } returns mnmnc
+            stubDraftKeypair()
+            whenever(datasource.readStoredCredential(any(), eq(fooaddress)))
+                .thenThrow(KeyMaterialUnavailableException("alias missing", transient = false))
+
+            val draft = credentialsRepository.draftFromMnemonic(mnemonic, "Restored")
+            val error = runCatching { credentialsRepository.commitDraft(draft) }.exceptionOrNull()
+
+            assertEquals(
+                ResponseCode.WALLET_KEYS_UNAVAILABLE,
+                (error as? SoraException)?.errorResponseCode,
+            )
+            assertEquals(
+                WalletRecoveryKind.KEYS_UNAVAILABLE,
+                WalletUpgradeBackup.recoveryOptions()?.kind,
+            )
+            assertEquals(true, WalletUpgradeBackup.recoveryOptions()?.canSetUpAgain)
+            verify(datasource, never()).writeCredentialsIfAbsent(any(), any())
+            WalletUpgradeBackup.noteMigrationVerified()
+        }
+
+    @Test
+    fun `no phrase is created or derived while wallet changes are disabled`() = runTest {
+        WalletRecoveryCapabilityGate.enterInspectedRecovery()
+        try {
+            listOf<suspend () -> Unit>(
+                { credentialsRepository.createDraft("New") },
+                { credentialsRepository.draftFromMnemonic("words", "Imported") },
+                { credentialsRepository.draftFromRawSeed("00", "Seed") },
+            ).forEach { start ->
+                val error = runCatching { start() }.exceptionOrNull()
+                assertEquals("WALLET_RECOVERY_READ_ONLY", error?.message)
+            }
+        } finally {
+            WalletRecoveryCapabilityGate.enterNormal()
+        }
     }
 
     @Test
