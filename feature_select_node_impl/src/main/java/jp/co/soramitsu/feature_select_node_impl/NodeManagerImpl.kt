@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_select_node_impl
 
+import java.util.concurrent.atomic.AtomicBoolean
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
@@ -60,8 +61,11 @@ internal class NodeManagerImpl(
     private val selectNodeRepository: SelectNodeRepository,
     private val coroutineManager: CoroutineManager,
     private val autoSwitch: Boolean,
-    appDatabase: AppDatabase,
+    private val appDatabase: AppDatabase,
     private val soraConfigManager: SoraConfigManager,
+    private val walletDatabaseReady: () -> Boolean = {
+        WalletUpgradeBackup.blockingFailure() == null
+    },
 ) : NodeManager {
 
     private companion object {
@@ -85,45 +89,62 @@ internal class NodeManagerImpl(
     private var autoSwitchingStarted: Boolean = false
     private val attemptedNodes = mutableListOf<ChainNode>()
 
+    private val started = AtomicBoolean(false)
+
     init {
-        if (WalletUpgradeBackup.blockingFailure() == null) {
-            coroutineManager.applicationScope.launch {
-                val address =
-                    appDatabase.nodeDao().getSelectedNode()?.address
-                        ?: FlavorOptionsProvider.wsHostUrl
-                connectionManager.setAddress(address)
-                connectionManager.observeAppState()
+        ensureStarted()
+    }
 
-                selectNodeRepository.fetchDefaultNodes()
-            }
+    /**
+     * The node address is stored in the wallet database, which stays closed while the upgrade
+     * gate blocks startup. Recovery can clear the gate in the same process (Try again, Check
+     * again, Continue read-only), so a blocked start is not final: the next call starts it.
+     */
+    override fun ensureStarted(): Boolean {
+        if (started.get()) return true
+        if (!walletDatabaseReady()) return false
+        if (!started.compareAndSet(false, true)) return true
+        start()
+        return true
+    }
 
-            connectionManager.networkState
-                .onEach {
-                    if (stateObserverEnabled) {
-                        handleState(it)
-                    }
-                    if (blockHashCheckObserverEnabled) {
-                        handleConnectionStateForBlockHashCheck(it)
-                    }
-                    autoSwitch(it)
-                }
-                .launchIn(coroutineManager.applicationScope)
+    private fun start() {
+        coroutineManager.applicationScope.launch {
+            val address =
+                appDatabase.nodeDao().getSelectedNode()?.address
+                    ?: FlavorOptionsProvider.wsHostUrl
+            connectionManager.setAddress(address)
+            connectionManager.observeAppState()
 
-            selectNodeRepository.getNodes()
-                .distinctUntilChanged()
-                .onEach {
-                    availableNodes = it
-                }
-                .launchIn(coroutineManager.applicationScope)
-
-            selectNodeRepository.getSelectedNode()
-                .distinctUntilChanged()
-                .filterNotNull()
-                .onEach {
-                    selectedNode = it
-                }
-                .launchIn(coroutineManager.applicationScope)
+            selectNodeRepository.fetchDefaultNodes()
         }
+
+        connectionManager.networkState
+            .onEach {
+                if (stateObserverEnabled) {
+                    handleState(it)
+                }
+                if (blockHashCheckObserverEnabled) {
+                    handleConnectionStateForBlockHashCheck(it)
+                }
+                autoSwitch(it)
+            }
+            .launchIn(coroutineManager.applicationScope)
+
+        selectNodeRepository.getNodes()
+            .distinctUntilChanged()
+            .onEach {
+                availableNodes = it
+            }
+            .launchIn(coroutineManager.applicationScope)
+
+        selectNodeRepository.getSelectedNode()
+            .distinctUntilChanged()
+            .filterNotNull()
+            .onEach {
+                selectedNode = it
+            }
+            .launchIn(coroutineManager.applicationScope)
     }
 
     override fun tryToConnect(node: ChainNode) {

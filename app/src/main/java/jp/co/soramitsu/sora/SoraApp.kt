@@ -60,8 +60,9 @@ import timber.log.Timber
 @HiltAndroidApp
 open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
-    // Created when the first activity starts, not in Application.onCreate: a process that
-    // WorkManager starts in the background never opens the node socket or fetches node lists.
+    // Started with the first activity once the wallet upgrade gate is clear, not in
+    // Application.onCreate: a process that WorkManager starts in the background never opens the
+    // node socket or fetches node lists.
     @Inject
     lateinit var nodeManager: dagger.Lazy<NodeManager>
 
@@ -106,7 +107,7 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         initLogger()
 
         registerActivityLifecycleCallbacks(resourceManager)
-        registerActivityLifecycleCallbacks(StartNodeManagerWithFirstActivity())
+        registerActivityLifecycleCallbacks(StartNodeManagerWhenWalletReady())
         val firebaseApp = runCatching { FirebaseApp.initializeApp(this) }
             .onFailure { Timber.e(it) }
             .getOrNull()
@@ -119,14 +120,25 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         darkThemeManager.updateUiModeFromCache()
     }
 
-    private inner class StartNodeManagerWithFirstActivity : ActivityLifecycleCallbacks {
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-            unregisterActivityLifecycleCallbacks(this)
-            nodeManager.get()
+    /**
+     * While the upgrade gate blocks startup, the wallet database stays closed and the node cannot
+     * be started. Recovery on the splash screen (Try again, Check again, Continue read-only) can
+     * clear the gate without a restart, so every later activity creation or resume tries again
+     * until the node connection has started.
+     */
+    private inner class StartNodeManagerWhenWalletReady : ActivityLifecycleCallbacks {
+        private fun startWhenReady() {
+            if (WalletUpgradeBackup.blockingFailure() != null) return
+            if (nodeManager.get().ensureStarted()) {
+                unregisterActivityLifecycleCallbacks(this)
+            }
         }
 
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) =
+            startWhenReady()
+
         override fun onActivityStarted(activity: Activity) = Unit
-        override fun onActivityResumed(activity: Activity) = Unit
+        override fun onActivityResumed(activity: Activity) = startWhenReady()
         override fun onActivityPaused(activity: Activity) = Unit
         override fun onActivityStopped(activity: Activity) = Unit
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
