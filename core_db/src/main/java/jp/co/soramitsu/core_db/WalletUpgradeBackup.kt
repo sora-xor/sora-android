@@ -10,6 +10,7 @@ import android.system.ErrnoException
 import android.system.Os
 import android.system.OsConstants
 import android.util.Xml
+import androidx.annotation.VisibleForTesting
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
@@ -232,8 +233,9 @@ object WalletUpgradeBackup {
      * pre-migration path fails closed before creating a staging directory or changing the
      * installed database/settings when the capacity probe reports insufficient space.
      */
+    @VisibleForTesting
     @Synchronized
-    internal fun prepareWithAvailableBackupBytesForTest(
+    fun prepareWithAvailableBackupBytesForTest(
         context: Context,
         availableBackupBytes: Long,
     ): Result<Unit> {
@@ -573,6 +575,8 @@ object WalletUpgradeBackup {
     fun noteTransientVerificationFailure(code: String) {
         preparedAdmission = null
         transientVerificationFailure = code
+        // Wallet verification runs only on an open current-schema database.
+        recoveryFacts = recoveryFacts.copy(databaseAtCurrentVersion = true)
         if (blockingFailure == null) {
             migrationRecoverySnapshot = null
             WalletRecoveryCapabilityGate.enterInspectedRecovery()
@@ -1585,7 +1589,8 @@ object WalletUpgradeBackup {
     }
 
     /** Number of automatic verification retries used since the wallet last verified. */
-    internal fun automaticMigrationRetriesUsedForTest(context: Context): Int {
+    @VisibleForTesting
+    fun automaticMigrationRetriesUsedForTest(context: Context): Int {
         val file = automaticRetryStateFile(context.applicationContext ?: context)
         if (!file.existsNoFollow()) return 0
         return file.readBoundedUtf8NoFollow(1, 16, "AUTO_RETRY_STATE_INVALID").trim().toInt()
