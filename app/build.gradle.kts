@@ -333,7 +333,7 @@ play {
     serviceAccountCredentials = file(System.getenv("CI_PLAY_KEY") ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.8.6.5 - SORA Card Improvements"
+    releaseName = appVersionName
     defaultToAppBundles = true
 }
 

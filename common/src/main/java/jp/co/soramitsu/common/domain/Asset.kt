@@ -124,14 +124,6 @@ fun compareByTransferable(old: Asset?, new: Asset?): Boolean = if (old == null &
     old.token.id == new.token.id && old.balance.transferable.equalTo(new.balance.transferable)
 }
 
-fun compareByTotal(old: Asset?, new: Asset?): Boolean = if (old == null && new == null) {
-    true
-} else if (old == null || new == null) {
-    false
-} else {
-    old.token.id == new.token.id && old.balance.total.equalTo(new.balance.total)
-}
-
 fun List<Token>.getByIdOrEmpty(id: String): Token =
     this.find {
         it.id == id

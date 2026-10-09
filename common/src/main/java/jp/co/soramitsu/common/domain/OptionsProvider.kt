@@ -52,7 +52,6 @@ object OptionsProvider {
     const val nameByteLimit = 32
     const val fiatSymbol = "$"
     const val nbspace = Typography.nbsp
-    const val euroSign = '€'
 
     const val website = "https://sora.org"
     const val sourceLink = "https://github.com/sora-xor/Sora-Android"
