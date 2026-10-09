@@ -338,9 +338,6 @@ play {
 }
 
 dependencies {
-    // PayWings uses this serializer entry point. The old 1.0 adapter is binary-incompatible
-    // with DataStore 1.1's Okio serializer; retain the same encrypted preferences format.
-    runtimeOnly("io.github.osipxd:security-crypto-datastore-preferences:1.1.1-beta03")
     // implementation(libs.fileTree(dir: 'libs', include: ['*.jar'])
     implementation(project(":common"))
     implementation(project(":common_wallet"))
@@ -425,8 +422,6 @@ dependencies {
     testImplementation(libs.mockitoKotlinDep)
     testImplementation(libs.archCoreTestDep)
     testImplementation(libs.truthDep)
-    testImplementation(libs.bcutilDep)
-    testImplementation(libs.jmrtdDep)
 
     androidTestImplementation(libs.androidxTestExtJunitDep)
     androidTestImplementation(libs.androidxTestEspressoCoreDep)
@@ -434,7 +429,6 @@ dependencies {
     androidTestImplementation(libs.junitDep)
     androidTestImplementation(libs.mockkAndroidDep)
     androidTestImplementation(libs.roomTestHelpersDep)
-    androidTestImplementation("io.github.osipxd:security-crypto-datastore-preferences:1.1.1-beta03")
     androidTestImplementation(libs.zXingCoreDep)
     androidTestImplementation(libs.zXingEmbeddedDep)
 

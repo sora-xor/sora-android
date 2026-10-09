@@ -21,25 +21,15 @@ dependencyResolutionManagement {
                 }
             }
             filter {
-                includeModule("androidx.camera", "camera-core")
                 includeModule("androidx.graphics", "graphics-path")
                 includeModule("jp.co.soramitsu", "android-foundation")
-                includeModule("jp.co.soramitsu", "android-sora-card")
                 includeModule("jp.co.soramitsu", "ui-core")
                 includeModule("jp.co.soramitsu", "xbackup")
                 includeModule("jp.co.soramitsu", "xcrypto")
                 includeModule("jp.co.soramitsu", "xsubstrate")
                 includeModule("jp.co.soramitsu.xnetworking", "lib-android")
                 includeModule("io.emeraldpay.polkaj", "polkaj-scale")
-                includeModule("com.paywings.oauth", "android-sdk")
-                includeModule("com.paywings.kyc", "android-sdk")
                 includeModule("com.goterl", "lazysodium-android")
-                includeModule("com.scottyab", "rootbeer-lib")
-                includeModule("org.tensorflow", "tensorflow-lite")
-                includeModule(
-                    "com.paywings.onboarding.kyc.android-libs",
-                    "idensic-mobile-sdk",
-                )
             }
         }
         google()
