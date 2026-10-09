@@ -32,19 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.BuildUtils
 
 internal data class ProfileScreenState(
     val nodeName: String,
     val nodeConnected: Boolean,
     val isDebugMenuAvailable: Boolean,
-    val soraCardEnabled: Boolean,
-    val soraCardNeedUpdate: Boolean,
-    val soraCardStatusStringRes: Int,
-    val soraCardIbanError: String?,
-    val soraCardStatusIconDrawableRes: Int?,
-    val canStartGatehubOnboarding: Boolean,
     val polkamarktVisible: Boolean,
 )
 
@@ -53,11 +46,5 @@ internal val initialProfileScreenState =
         nodeName = "",
         nodeConnected = false,
         isDebugMenuAvailable = BuildUtils.isPlayMarket().not(),
-        soraCardEnabled = false,
-        soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
-        soraCardStatusIconDrawableRes = null,
-        soraCardNeedUpdate = false,
-        soraCardIbanError = null,
-        canStartGatehubOnboarding = false,
         polkamarktVisible = false,
     )

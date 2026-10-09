@@ -48,7 +48,6 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardSt
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapViewModel
@@ -112,9 +111,6 @@ class SwapViewModelTest {
     @Mock
     private lateinit var assetsRouter: AssetsRouter
 
-    @Mock
-    private lateinit var mainRouter: MainRouter
-
     private val networkFee = BigDecimal.TEN
 
     private val assetsListItems: List<AssetItemCardState> by lazy {
@@ -149,11 +145,9 @@ class SwapViewModelTest {
             swapInteractor,
             numbersFormatter,
             resourceManager,
-            mainRouter,
             assetsRouter,
             firstTokenId ?: TestAssets.xorAsset().token.id,
             secondTokenId ?: "",
-            isLaunchedFromSoraCard = false,
         )
     }
 

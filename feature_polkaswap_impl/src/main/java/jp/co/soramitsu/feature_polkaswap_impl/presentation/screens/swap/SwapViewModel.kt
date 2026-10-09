@@ -68,7 +68,6 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
@@ -99,11 +98,9 @@ class SwapViewModel @AssistedInject constructor(
     private val swapInteractor: SwapInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
-    private val mainRouter: MainRouter,
     private val assetsRouter: AssetsRouter,
     @Assisted("idfrom") private val token1Id: String,
     @Assisted("idto") private val token2Id: String,
-    @Assisted("isLaunchedFromSoraCard") private val isLaunchedFromSoraCard: Boolean
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -111,7 +108,6 @@ class SwapViewModel @AssistedInject constructor(
         fun create(
             @Assisted("idfrom") idFrom: String,
             @Assisted("idto") idTo: String,
-            @Assisted("isLaunchedFromSoraCard") isLaunchedFromSoraCard: Boolean
         ): SwapViewModel
     }
 
@@ -971,10 +967,6 @@ class SwapViewModel @AssistedInject constructor(
                             )
                             if (swapResult.isNotEmpty())
                                 assetsRouter.showTxDetails(swapResult, true)
-                            else if (isLaunchedFromSoraCard)
-                                mainRouter.showGetSoraCard(
-                                    shouldStartSignIn = true
-                                )
                             else _navigationPop.trigger()
                         }
                     }

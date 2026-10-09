@@ -75,12 +75,10 @@ internal fun AssetDetailsBalanceCard(
     frozenAmount: String? = null,
     frozenAmountFiat: String? = null,
     isTransferableAmountAvailable: Boolean = false,
-    buyCryptoAvailable: Boolean = false,
     onSendClick: () -> Unit,
     onReceiveClick: () -> Unit,
     onSwapClick: () -> Unit,
     onBalanceClick: () -> Unit,
-    onBuyCryptoClick: (() -> Unit)? = null
 ) {
     ContentCard(
         modifier = Modifier
@@ -203,15 +201,6 @@ internal fun AssetDetailsBalanceCard(
                     enabled = true,
                     onClick = onSwapClick,
                 )
-
-                if (buyCryptoAvailable && onBuyCryptoClick != null) {
-                    AmountCardIcon(
-                        res = R.drawable.ic_buy_crypto,
-                        text = stringResource(id = R.string.common_buy),
-                        enabled = true,
-                        onClick = onBuyCryptoClick,
-                    )
-                }
             }
         }
     }
@@ -258,12 +247,10 @@ private fun PreviewAssetDetailsBalanceCard() {
         amountFiat = "$4 923.34",
         frozenAmount = "12.3 XOR",
         frozenAmountFiat = "$ 1000.1",
-        buyCryptoAvailable = true,
         isTransferableAmountAvailable = true,
         onSendClick = { },
         onReceiveClick = { },
         onSwapClick = { },
         onBalanceClick = { },
-        onBuyCryptoClick = { }
     )
 }

@@ -82,7 +82,6 @@ dependencies {
     implementation(project(":feature_multiaccount_api"))
     implementation(project(":feature_referral_api"))
     implementation(project(":feature_select_node_api"))
-    implementation(project(":feature_sora_card_api"))
     implementation(project(":sorasubstrate"))
 
     implementation(libs.appcompatDep)

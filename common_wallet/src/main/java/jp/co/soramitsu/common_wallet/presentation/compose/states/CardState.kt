@@ -44,7 +44,6 @@ import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 
 data class CardsState(
     val accountAddress: String,
@@ -124,16 +123,6 @@ fun mapAssetsToCardState(
         )
     }
 }
-
-data class SoraCardState(
-    val success: Boolean,
-    val needUpdate: Boolean,
-    val ibanBalance: IbanInfo?,
-    val kycStatus: String?,
-    override val loading: Boolean,
-) : BasicBannerCardState(loading)
-
-data class BuyXorState(val canStartGatehub: Boolean) : BasicBannerCardState(false)
 
 data object ReferralState : BasicBannerCardState(false)
 

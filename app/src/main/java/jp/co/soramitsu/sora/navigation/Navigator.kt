@@ -40,7 +40,6 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
 import jp.co.soramitsu.common.presentation.args.address
 import jp.co.soramitsu.common.presentation.args.addresses
-import jp.co.soramitsu.common.presentation.args.isLaunchedFromSoraCard
 import jp.co.soramitsu.common.presentation.args.tokenFromId
 import jp.co.soramitsu.common.presentation.args.tokenFromNullable
 import jp.co.soramitsu.common.presentation.args.tokenId
@@ -74,7 +73,6 @@ import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeAddress
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeName
 import jp.co.soramitsu.feature_select_node_impl.presentation.pinCodeChecked
-import jp.co.soramitsu.feature_sora_card_impl.presentation.GetSoraCardFragment
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.R
 
@@ -264,15 +262,6 @@ class Navigator :
         navController?.navigate(R.id.editCardsHub)
     }
 
-    override fun showBuyCrypto(isLaunchedFromSoraCard: Boolean) {
-        navController?.navigate(
-            R.id.buyCryptoFragment,
-            withArgs {
-                this.isLaunchedFromSoraCard = isLaunchedFromSoraCard
-            }
-        )
-    }
-
     override fun showInformation() {
         navController?.navigate(R.id.informationFragment)
     }
@@ -285,13 +274,12 @@ class Navigator :
         navController?.navigate(R.id.loginSecurityFragment)
     }
 
-    override fun showSwap(tokenFromId: String?, tokenToId: String?, isLaunchedFromSoraCard: Boolean) {
+    override fun showSwap(tokenFromId: String?, tokenToId: String?) {
         navController?.navigate(
             R.id.swapFragment,
             withArgs {
                 this.tokenFromId = tokenFromId ?: ""
                 this.tokenToId = tokenToId ?: ""
-                this.isLaunchedFromSoraCard = isLaunchedFromSoraCard
             },
         )
     }
@@ -420,20 +408,6 @@ class Navigator :
                 this.url = url
             },
         )
-    }
-
-    override fun showGetSoraCard(shouldStartSignIn: Boolean, shouldStartSignUp: Boolean) {
-        navController?.navigate(
-            R.id.sora_card_nav_graph,
-            GetSoraCardFragment.createBundle(
-                shouldStartSignIn,
-                shouldStartSignUp
-            )
-        )
-    }
-
-    override fun showSoraCardDetails() {
-        navController?.navigate(R.id.soraCardDetailsFragment)
     }
 
     override fun showSelectNode() {

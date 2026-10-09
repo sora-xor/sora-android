@@ -41,7 +41,7 @@ class MainRefreshFailureTest {
             override suspend fun repeat(block: suspend () -> Unit) = Unit
         }
         try {
-            val vm = MainViewModel(assets, node, pin, global, mockk(relaxed = true), manager, pools, mockk(relaxed = true))
+            val vm = MainViewModel(assets, node, pin, global, mockk(relaxed = true), manager, pools)
             advanceUntilIdle()
             assertTrue(vm.badConnectionVisibilityLiveData.value == true)
             vm.showPinFragment()

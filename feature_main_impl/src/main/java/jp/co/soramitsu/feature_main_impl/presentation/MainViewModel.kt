@@ -48,7 +48,6 @@ import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscription
 import jp.co.soramitsu.feature_select_node_api.NodeManager
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -66,7 +65,6 @@ class MainViewModel @Inject constructor(
     private val blockExplorerManager: BlockExplorerManager,
     private val coroutineManager: CoroutineManager,
     private val poolsUpdateSubscription: PoolsUpdateSubscription,
-    private val soraCardInteractor: SoraCardInteractor,
 ) : BaseViewModel() {
 
     private val _showInviteErrorTimeIsUpLiveData = SingleLiveEvent<Unit>()
@@ -100,9 +98,6 @@ class MainViewModel @Inject constructor(
                         _badConnectionVisibilityLiveData.setValueIfNew(!it)
                     }
             }
-        }
-        viewModelScope.launch(coroutineManager.io) {
-            soraCardInteractor.initialize()
         }
         viewModelScope.launch(coroutineManager.io) {
             assetsInteractor.flowCurSoraAccount()

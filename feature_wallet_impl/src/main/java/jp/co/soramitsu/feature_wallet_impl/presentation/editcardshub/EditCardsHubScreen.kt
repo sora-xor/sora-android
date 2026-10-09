@@ -197,7 +197,7 @@ private fun PreviewEditCardsHubScreen() {
                 HubCardState(
                     "a",
                     HubCardVisibility.VISIBLE_AND_ENABLED,
-                    CardHubType.BUY_XOR_TOKEN.userName,
+                    CardHubType.REFERRAL_SYSTEM.userName,
                 )
             ),
             disabledCards = listOf(
