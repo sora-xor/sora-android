@@ -53,6 +53,18 @@ object WalletPreferenceKeys {
     val legacyUnsuffixedStringKeys =
         listOf(LEGACY_ADDRESS) + encryptedCredentialPrefixes
 
+    /**
+     * Key material that "Remove all accounts" leaves in place when it does not belong to one of
+     * the removed accounts: credentials and watch-only markers of key sets with no account row
+     * (for example a create-account flow abandoned in an older release) and the release-era
+     * unsuffixed set when its owner is not being removed. These sets are invisible in the app,
+     * so removing every account must not silently delete them.
+     */
+    fun isRetainedKeyMaterial(key: String): Boolean =
+        key == LEGACY_ADDRESS ||
+            encryptedCredentialPrefixes.any { prefix -> key.startsWith(prefix) } ||
+            (key.length > WATCH_ONLY.length && key.startsWith(WATCH_ONLY))
+
     fun isWalletStateKey(key: String): Boolean =
         key in generalEvidenceKeys ||
             key in legacyUnsuffixedStringKeys ||

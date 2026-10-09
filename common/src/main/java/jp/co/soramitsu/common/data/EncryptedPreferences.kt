@@ -43,6 +43,9 @@ class EncryptedPreferences(
         soraPreferences.putString(field, encryptionUtil.encrypt(value))
     }
 
+    /** Encrypts [value] for storage without writing it. */
+    fun encrypt(value: String): String = encryptionUtil.encrypt(value)
+
     suspend fun getDecryptedString(field: String): String {
         val encryptedString = soraPreferences.getString(field)
 
