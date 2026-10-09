@@ -59,7 +59,7 @@ Expected SHA-256: arm64-v8a
 Cargo target-directory build yielded byte-identical native outputs. Both rebuilt ELF files pass
 the repository's 16 KB `inspect_elf` check, including `PT_LOAD` and `GNU_RELRO` alignment.
 
-The [isolated experiment report](../../../docs/modernization/qualification/xcrypto-16kb-rebuild-2026-09-24.md)
+The [isolated experiment report](../../../docs/history/modernization/qualification/xcrypto-16kb-rebuild-2026-09-24.md)
 records the 16 KB arm64 emulator JNI smoke and comparison with the original library on a 4 KB
 emulator. This materialization remains `materialized-unreviewed` and is **not** a release
 qualification. The rest of the app's native libraries and signed APK/AAB still require their

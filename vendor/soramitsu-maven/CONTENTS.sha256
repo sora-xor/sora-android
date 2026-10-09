@@ -1,4 +1,4 @@
-560b9c7ce80bae57e76dd9c30268e983dbb100cfcee1a2666bfd427d97d7be22  SOURCE_PROVENANCE.json
+eec88363849b767e148977c9aeac6d560387d6e11464c6b71acffce0df5c3eaa  SOURCE_PROVENANCE.json
 472945479992c1cfb4f533bea77f21ed9d8f6d3875cc77a6d3336da67ab041f1  androidx/camera/camera-core/1.3.1/camera-core-1.3.1-sources.jar
 0ede31562de2947c633cc5260ee594335c66679111e9e71305bf226f54a3002f  androidx/camera/camera-core/1.3.1/camera-core-1.3.1-versionMetadata.json
 e42b866b808d12cf69f9477aa902f8ba0934449ca738e97d4ffd341ad4b3ca37  androidx/camera/camera-core/1.3.1/camera-core-1.3.1.aar
@@ -39,7 +39,7 @@ b3ab471a35edd00f1473a4a61e7fc9a08b5955344a3613335921601d182b6ef9  build-inputs/t
 03c64a35ebeeac3e55134a174a6afdda456505b764fc03549ae9d6c316a7e503  build-inputs/tensorflow-lite-2.12.0-exports.lds
 002371fefe277e93f1421206062823d04daceb6c9e4e824cb543eab2d3a00c91  build-inputs/tensorflow-lite-2.12.0-original.aar
 dc4d66e58f15aaa48e4ea950438069420a48928d66a7f65c87925c6e6502f086  build-inputs/tensorflow-lite-2.12.0-repack-16kb.py
-9b6eb4495fa8435ed05ce3a7503e1044a5cf1a8c80ccf023925ec1206a792c71  build-inputs/xcrypto-1.2.7-16kb-rebuild.md
+04ceea236a739b81000b2702a26221f91fb945b8e796d0085623d549fe6e65bb  build-inputs/xcrypto-1.2.7-16kb-rebuild.md
 72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395  build-inputs/xcrypto-1.2.7-Cargo.lock
 a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b  build-inputs/xcrypto-1.2.7-original.aar
 595d7aa1b4eed24f553e7201ad6510b1ccb0bb1cc9e20a113d8b967e046f317d  build-inputs/xcrypto-1.2.7-repack-16kb.py
