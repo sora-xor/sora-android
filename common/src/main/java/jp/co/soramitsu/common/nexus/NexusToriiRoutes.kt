@@ -6,12 +6,12 @@ import java.net.URLEncoder
 object NexusToriiRoutes {
     const val DEFAULT_PAGE_SIZE = 100
     const val MAX_PAGE_SIZE = 500
-    const val XOR_ASSET_ALIAS = "xor#universal"
+    const val XOR_ASSET_ALIAS = TairaTestnetContract.XOR_ASSET_ALIAS
     const val JSON_RESPONSE_MEDIA_TYPE = "application/json"
     const val HEALTH_RESPONSE_MEDIA_TYPE = "text/plain"
     const val NORITO_TRANSACTION_REQUEST_MEDIA_TYPE = "application/x-norito"
 
-    fun health(network: NexusNetwork): String = "${base(network)}/health"
+    fun health(network: NexusNetwork): String = "${directBase(network)}/health"
 
     /**
      * Torii's liveness route is deliberately plain text and rejects a JSON-only Accept header.
@@ -67,7 +67,7 @@ object NexusToriiRoutes {
     fun isHealthyResponse(payload: String): Boolean = payload == "Healthy"
 
     fun account(network: NexusNetwork, accountId: String): String =
-        "${base(network)}/v1/accounts/${pathSegment(canonicalAccount(network, accountId))}"
+        "${directBase(network)}/v1/accounts/${pathSegment(canonicalAccount(network, accountId))}"
 
     fun accountAssets(
         network: NexusNetwork,
@@ -95,12 +95,12 @@ object NexusToriiRoutes {
     ): String {
         require(limit in 1..MAX_PAGE_SIZE) { "NEXUS_INVALID_PAGE_SIZE" }
         require(offset >= 0) { "NEXUS_INVALID_OFFSET" }
-        return "${base(network)}/v1/assets/definitions" +
+        return "${directBase(network)}/v1/assets/definitions" +
             "?limit=$limit&offset=$offset&count_mode=bounded"
     }
 
     fun assetDefinition(network: NexusNetwork, selector: String): String =
-        "${base(network)}/v1/assets/definitions/${pathSegment(canonicalAssetSelector(selector))}"
+        "${directBase(network)}/v1/assets/definitions/${pathSegment(canonicalAssetSelector(selector))}"
 
     fun accountTransactions(
         network: NexusNetwork,
@@ -121,29 +121,23 @@ object NexusToriiRoutes {
     }
 
     fun submitTransaction(network: NexusNetwork): String =
-        "${base(network)}/v1/pipeline/transactions"
+        "${directBase(network)}/v1/pipeline/transactions"
 
     fun transactionStatus(network: NexusNetwork, hash: String): String =
-        "${base(network)}/v1/pipeline/transactions/status" +
+        "${directBase(network)}/v1/pipeline/transactions/status" +
             "?hash=${canonicalHash(hash)}&scope=global"
 
-    fun mcp(network: NexusNetwork): String = "${base(network)}/v1/mcp"
+    fun mcp(network: NexusNetwork): String = "${base(network)}/v1/mcp".also { endpoint ->
+        if (network.id == WalletNetworkId.TAIRA) {
+            require(endpoint == TairaTestnetContract.MCP_ENDPOINT) { "TAIRA_MCP_ENDPOINT_MISMATCH" }
+        }
+    }
 
     fun canonicalAccount(network: NexusNetwork, accountId: String): String =
         IrohaAddressCodec.parse(accountId, network.chainDiscriminant).address
 
     private fun base(network: NexusNetwork): String {
-        if (network.id == WalletNetworkId.TAIRA) {
-            val binding = TairaDeployment.binding
-            require(
-                binding != null &&
-                    network.chainId == binding.currentChainId &&
-                    network.chainDiscriminant == binding.currentI105Discriminant &&
-                    network.toriiBaseUrl == binding.currentToriiBaseUrl &&
-                    network.explorerBaseUrl == binding.currentExplorerBaseUrl &&
-                    network.deploymentManifestSha256 == binding.manifestSha256
-            ) { "TAIRA_DEPLOYMENT_MANIFEST_NOT_QUALIFIED" }
-        }
+        NexusNetworks.requireAdmitted(network)
         val normalized = network.toriiBaseUrl.trim().trimEnd('/')
         val uri = runCatching { URI(normalized) }
             .getOrElse { throw IllegalArgumentException("NEXUS_INVALID_TORII_URL") }
@@ -155,6 +149,11 @@ object NexusToriiRoutes {
                 uri.fragment == null
         ) { "NEXUS_INVALID_TORII_URL" }
         return normalized
+    }
+
+    private fun directBase(network: NexusNetwork): String {
+        require(network.id != WalletNetworkId.TAIRA) { "TAIRA_MCP_REQUIRED" }
+        return base(network)
     }
 
     private fun canonicalAssetSelector(value: String): String {

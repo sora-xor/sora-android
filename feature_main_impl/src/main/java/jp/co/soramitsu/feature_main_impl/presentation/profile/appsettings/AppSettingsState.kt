@@ -35,5 +35,6 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile.appsettings
 data class AppSettingsState(
     val systemAppearanceChecked: Boolean,
     val darkModeChecked: Boolean,
+    val testNetworksAvailable: Boolean,
     val testNetworksChecked: Boolean,
 )

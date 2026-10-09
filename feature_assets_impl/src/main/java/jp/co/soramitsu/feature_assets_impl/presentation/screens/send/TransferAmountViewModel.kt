@@ -50,6 +50,8 @@ import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.subtractFee
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
@@ -338,26 +340,57 @@ class TransferAmountViewModel @AssistedInject constructor(
             )
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
-            if (request.matchesCurrent()) onError(error)
+            if (request.matchesCurrent()) {
+                finishFeePreviewWithError(
+                    request,
+                    if (error is SoraException) {
+                        error
+                    } else {
+                        SoraException.unexpectedError(error)
+                    },
+                )
+            }
             return
         }
         if (!request.matchesCurrent()) return
-        fee = calculatedFee
-        feeWalletId = calculatedFee?.let { walletId }
-        if (calculatedFee != null) {
-            _sendState.value = _sendState.value.copy(
-                feeLoading = false,
-                fee = feeAsset.token.printBalance(
-                    calculatedFee,
-                    numbersFormatter,
-                    AssetHolder.ROUNDING,
-                ),
-                feeFiat = feeAsset.token.printFiat(calculatedFee, numbersFormatter),
-                input = _sendState.value.input?.copy(
-                    enabled = true,
-                ),
+        if (calculatedFee == null) {
+            finishFeePreviewWithError(
+                request,
+                SoraException.businessError(ResponseCode.FEE_RATE_NOT_AVAILABLE),
             )
+            return
         }
+        fee = calculatedFee
+        feeWalletId = walletId
+        _sendState.value = _sendState.value.copy(
+            feeLoading = false,
+            fee = feeAsset.token.printBalance(
+                calculatedFee,
+                numbersFormatter,
+                AssetHolder.ROUNDING,
+            ),
+            feeFiat = feeAsset.token.printFiat(calculatedFee, numbersFormatter),
+            input = _sendState.value.input?.copy(
+                enabled = true,
+            ),
+        )
+    }
+
+    private fun finishFeePreviewWithError(
+        request: Sora2TransferFeePreviewRequest,
+        error: SoraException,
+    ) {
+        if (!request.matchesCurrent()) return
+        fee = null
+        feeWalletId = null
+        _sendState.value = _sendState.value.copy(
+            feeLoading = false,
+            fee = "",
+            feeFiat = "",
+            reviewEnabled = false,
+            input = _sendState.value.input?.copy(enabled = true),
+        )
+        onError(error)
     }
 
     private fun Sora2TransferFeePreviewRequest.matchesCurrent(): Boolean = matches(
@@ -385,26 +418,32 @@ class TransferAmountViewModel @AssistedInject constructor(
             _sendState.value = _sendState.value.copy(
                 inProgress = true
             )
-            var success = ""
+            var transactionHash: String? = null
             try {
-                success = interactor.observeTransfer(
+                transactionHash = interactor.observeTransfer(
                     recipientId,
                     curAsset.token,
                     amount,
                     fee,
                     expectedWalletId,
                 )
-                if (success.isNotEmpty()) _transactionSuccessEvent.trigger()
+                if (transactionHash.isNullOrEmpty()) {
+                    throw SoraException.businessError(ResponseCode.BROKEN_TRANSACTION)
+                }
+                _transactionSuccessEvent.trigger()
             } catch (t: Throwable) {
-                onError(t)
+                if (t is CancellationException) throw t
+                onError(
+                    t.takeIf { it is SoraException }
+                        ?: SoraException.unexpectedError(t)
+                )
+                transactionHash = null
             } finally {
                 _sendState.value = _sendState.value.copy(
                     inProgress = false
                 )
-                if (success.isNotEmpty())
-                    assetsRouter.showTxDetails(success, true)
-                else walletRouter.returnToHubFragment()
             }
+            transactionHash?.let { assetsRouter.showTxDetails(it, true) }
         }
     }
 

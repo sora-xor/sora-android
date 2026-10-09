@@ -1,0 +1,74 @@
+[
+  {
+    "source": "ANDROID-BOUNCYCASTLE-LINKAGE-AUDIT-20260924.md",
+    "destination": "sora-android/docs/workspace-cleanup-20261009/reports/ANDROID-BOUNCYCASTLE-LINKAGE-AUDIT-20260924.md",
+    "sha256": "d3bb59883a6244ed5e9f064e5f97ef7f3d249445ea3b26c33aaa0e8c0b9a1f6b",
+    "storage": "tracked"
+  },
+  {
+    "source": "ANDROID-BOUNCYCASTLE-LINKAGE-AUDIT-20260924.py",
+    "destination": "sora-android/docs/workspace-cleanup-20261009/reports/ANDROID-BOUNCYCASTLE-LINKAGE-AUDIT-20260924.py",
+    "sha256": "14716d2a9963d6ce0e2d30ee5964df775008cf376f9b0e10418bbf52ae4ed8e4",
+    "storage": "tracked"
+  },
+  {
+    "source": "ANDROID-XCRYPTO-16KB-EXPERIMENT-20260924.md",
+    "destination": "sora-android/docs/workspace-cleanup-20261009/reports/ANDROID-XCRYPTO-16KB-EXPERIMENT-20260924.md",
+    "sha256": "5302a4e275ca9e9d6967bd3b166e5f6c16fd035da13cc686fba197a708d86170",
+    "storage": "tracked"
+  },
+  {
+    "source": "PRODUCTION-READINESS-EVIDENCE/android-bouncycastle-kyc-20260925",
+    "destination": "sora-android/.local/workspace-cleanup-20261009/production-readiness-evidence/android-bouncycastle-kyc-20260925",
+    "sha256": null,
+    "storage": "local-evidence"
+  },
+  {
+    "source": "PRODUCTION-READINESS-EVIDENCE/sora-android-16kb-smoke-2aa1a378",
+    "destination": "sora-android/.local/workspace-cleanup-20261009/production-readiness-evidence/sora-android-16kb-smoke-2aa1a378",
+    "sha256": null,
+    "storage": "local-evidence"
+  },
+  {
+    "source": "sora-android/.local/workspace-cleanup-20261009/production-readiness-evidence/android-bouncycastle-kyc-20260925/audit.py",
+    "destination": "sora-android/docs/workspace-cleanup-20261009/historical-tools/android-bouncycastle-kyc-20260925/audit.py",
+    "sha256": "bfc3f170c06fd3f7d523c94735350d44f30aa5cd6275bfd4c07d9fae18c5cc82",
+    "storage": "tracked",
+    "note": "Promoted historical source; original local evidence copy retained."
+  },
+  {
+    "source": "sora-android/.local/workspace-cleanup-20261009/production-readiness-evidence/android-bouncycastle-kyc-20260925/compare_variants.py",
+    "destination": "sora-android/docs/workspace-cleanup-20261009/historical-tools/android-bouncycastle-kyc-20260925/compare_variants.py",
+    "sha256": "2e56ae2b6890534c78143f9deeaacd958e44c83d65509920f29f7c14b375ca33",
+    "storage": "tracked",
+    "note": "Promoted historical source; original local evidence copy retained."
+  },
+  {
+    "source": "sora-android/.local/workspace-cleanup-20261009/production-readiness-evidence/android-bouncycastle-kyc-20260925/BcCompatibilityProbe.java",
+    "destination": "sora-android/docs/workspace-cleanup-20261009/historical-tools/android-bouncycastle-kyc-20260925/BcCompatibilityProbe.java",
+    "sha256": "b31ff2979841a4cabe0645df7609f18def345568434b126045ad65d08742cad9",
+    "storage": "tracked",
+    "note": "Promoted historical source; original local evidence copy retained."
+  },
+  {
+    "source": "sora-android/.local/workspace-cleanup-20261009/production-readiness-evidence/android-bouncycastle-kyc-20260925/BouncyCastleKycCompatibilityTest.kt",
+    "destination": "sora-android/docs/workspace-cleanup-20261009/historical-tools/android-bouncycastle-kyc-20260925/BouncyCastleKycCompatibilityTest.kt",
+    "sha256": "a85b1c710acd6471cbe74b2fb7ebfb52f3050007f5aeedcb726f43a1f14e7ddf",
+    "storage": "tracked",
+    "note": "Promoted historical source; original local evidence copy retained."
+  },
+  {
+    "source": "sora-android/.local/workspace-cleanup-20261009/production-readiness-evidence/android-bouncycastle-kyc-20260925/classpath.init.gradle",
+    "destination": "sora-android/docs/workspace-cleanup-20261009/historical-tools/android-bouncycastle-kyc-20260925/classpath.init.gradle",
+    "sha256": "92484a7c53860804d65d7a0a8e36db209cd5b10059f00ee0f7013ec91476630f",
+    "storage": "tracked",
+    "note": "Promoted historical source; original local evidence copy retained."
+  },
+  {
+    "source": "sora-android/.local/workspace-cleanup-20261009/production-readiness-evidence/android-bouncycastle-kyc-20260925/materialize.init.gradle",
+    "destination": "sora-android/docs/workspace-cleanup-20261009/historical-tools/android-bouncycastle-kyc-20260925/materialize.init.gradle",
+    "sha256": "57b24da00012b92cdbf6e0d9023fb4b6734bff47b7a822f7041ded83987f52a8",
+    "storage": "tracked",
+    "note": "Promoted historical source; original local evidence copy retained."
+  }
+]

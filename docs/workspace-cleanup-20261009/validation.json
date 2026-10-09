@@ -1,0 +1,338 @@
+{
+  "schema_version": 1,
+  "validated_at_utc": "2026-10-09T12:15:29.051238+00:00",
+  "branch": "modernize",
+  "baseline_recovery_ref": "recovery/20261009/sora-android",
+  "node_checks": {
+    "count": 16,
+    "passed": 16,
+    "checks": [
+      {
+        "command": [
+          "node",
+          "scripts/test-android-candidate-signing-verification-v1.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 2.26,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-android-candidate-signing-verification-v1.log",
+        "log_sha256": "5a68f37ba1aeaca46339701ce937b914f14fd65cb74eab5a908ba2fbacebadbc",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-android-dependency-signing-review-v1.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.28,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-android-dependency-signing-review-v1-recheck.log",
+        "log_sha256": "4f75ecc48e24a875d1e3c3de9fd52681cc31ba068cb28d31fee42b31491037c6",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-android-migration-controller-envelope-v2.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.43,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-android-migration-controller-envelope-v2.log",
+        "log_sha256": "b4c4448c3e3997fa97f310b0fb3d1e88b3e4bafa355612162b79762f08623ba7",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-android-migration-qualification-v8-contract.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 2.62,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-android-migration-qualification-v8-contract.log",
+        "log_sha256": "8f76ca814064857d47f40c57eb6077ff92de6904841bda6f806728203482eee3",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-android-migration-raw-evidence-v2.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 2.03,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-android-migration-raw-evidence-v2.log",
+        "log_sha256": "ab26e5110539e29d6af4d8374d6ba8a2be0c1144abe729d8ee6bcbb6662dd6eb",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-android-production-lock-inventory-v1.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.24,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-android-production-lock-inventory-v1.log",
+        "log_sha256": "0350cea01a56aec1391591746677a56da4ee4414d49e38185955db8ea5774c39",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-android-qualified-candidate-package-v1.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.92,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-android-qualified-candidate-package-v1-recheck.log",
+        "log_sha256": "b7b87fee3963f4d73fbce207b216e042e56d4b964301115bc5ff4aba24a2939a",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-android-wallet-continuity-source-contract.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.95,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-android-wallet-continuity-source-contract.log",
+        "log_sha256": "a01254262c1efd25afc9766a6d2332e21902eebc3b7f7f20ced5cb4a3e84d58e",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-funded-canary-controller-bundle-v1.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.16,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-funded-canary-controller-bundle-v1.log",
+        "log_sha256": "ff0cc036e2c9bf9f23fbd8f2afa93d3022f0e5166b22e0d392c7e81d5decbf2d",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-funded-canary-v4-contract.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.14,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-funded-canary-v4-contract.log",
+        "log_sha256": "08f0470d9c3e9da79065d6e8737ae8077d5495348634705fb21fbac366ce2de3",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-polkamarkt-extrinsic-qualification.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.37,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-polkamarkt-extrinsic-qualification.log",
+        "log_sha256": "a1883f7910cab363b4d06650fd2b5a9fce3de8fd58f03aa4127ae6bd157e3367",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-production-pi-receipt-v3.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.12,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-production-pi-receipt-v3.log",
+        "log_sha256": "36cec11bf422827a53dd1c87c17e6bfa3189e52a6bbbe809b82de043944e7313",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-production-rollout-v3-contract.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.11,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-production-rollout-v3-contract.log",
+        "log_sha256": "c59fd0b4ed24f0566d847d8ed860fa01661876845388ee1ef7aad72878422f2d",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-taira-deployment-manifest-v1.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.49,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/test-taira-deployment-manifest-v1.log",
+        "log_sha256": "923bf623274ded8966d2103e9c098370f7c29b8684dfff81ee44ca53de5dee9b",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/verify-middle-egyptian-localization.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.13,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/verify-middle-egyptian-localization-recheck.log",
+        "log_sha256": "63184904def4cb90b5f40ba7295576e740a22cf232c06ec54a279a60397ef2d1",
+        "status": "passed"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/verify-production-modernization.mjs"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 9.11,
+        "log": ".local/workspace-cleanup-20261009/validation-logs/verify-production-modernization.log",
+        "log_sha256": "a4ed33775fa1225107ba46be4973c9ecda0e8fdf05cb07095bcaba37d2781046",
+        "status": "passed"
+      }
+    ],
+    "affected_check_details": {
+      "dependency_signing_review_fail_closed_mutations": 29,
+      "qualified_candidate_package_fail_closed_mutations": 30,
+      "middle_egyptian_messages": 747
+    }
+  },
+  "consistency_fixes": [
+    {
+      "path": "scripts/test-android-dependency-signing-review-v1.mjs",
+      "change": "Updated fixture lockConfigurationCountReviewed from 272 to the reviewed inventory count 464; production validator unchanged."
+    },
+    {
+      "path": "scripts/test-android-qualified-candidate-package-v1.mjs",
+      "change": "Updated fixture lockConfigurationCountReviewed from 272 to the reviewed inventory count 464; production validator unchanged."
+    },
+    {
+      "path": "common/src/main/res/raw/noto_sans_egyptian_hieroglyphs_ofl.txt",
+      "change": "Restored the exact pinned upstream OFL license from recovery/20261009/android-staging-retry; the difference was one trailing space on line 21. Font bytes exactly match that recovery snapshot.",
+      "license_sha256": "dc8114a49f5bb53bad3d99ee52cbb245e98076438d59428a258720258494de68",
+      "font_sha256": "38a33a230624671eebedce95bd4237f7b3b2bb1fa25688ff959bed4070a1ea95",
+      "preserve_upstream_whitespace": true
+    }
+  ],
+  "promoted_historical_tools": {
+    "directory": "docs/workspace-cleanup-20261009/historical-tools/android-bouncycastle-kyc-20260925",
+    "count": 6,
+    "hash_manifest": "docs/workspace-cleanup-20261009/relocated-files.json",
+    "original_local_evidence_copies_retained": true
+  },
+  "secret_scan": {
+    "scope": "261 changed/new text files including promoted historical tools",
+    "method": "Local pattern scan; credential values never emitted",
+    "high_confidence_matches": 0,
+    "literal_candidates_reviewed": 3,
+    "candidate_disposition": "Two synthetic unit-test literals and one localization dictionary entry.",
+    "limitation": "Heuristic scan, not a full repository-history security audit."
+  },
+  "gradle": {
+    "command": [
+      "./gradlew",
+      "--dependency-verification=strict",
+      ":common:testProductionDebugUnitTest",
+      ":core_db:testProductionDebugUnitTest",
+      ":feature_wallet_impl:testProductionDebugUnitTest",
+      ":app:testProductionDebugUnitTest",
+      "--stacktrace",
+      "--no-daemon",
+      "--no-parallel"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 262.82,
+    "log": ".local/workspace-cleanup-20261009/validation-logs/gradle-production-targeted-online.log",
+    "log_sha256": "26d9f34c8dd6cfb16a276f1eb0df57142e1ebba08e0866d5a5bb1963c82574a3",
+    "status": "passed",
+    "dependency_verification": "strict",
+    "actionable_tasks": {
+      "total": 592,
+      "executed": 132,
+      "up_to_date": 460
+    },
+    "unit_test_results": [
+      {
+        "module": "common",
+        "status": "passed",
+        "xml_reports": 38,
+        "tests": 178,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "core_db",
+        "status": "no-source",
+        "xml_reports": 0,
+        "tests": 0,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "feature_wallet_impl",
+        "status": "passed",
+        "xml_reports": 16,
+        "tests": 83,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "app",
+        "status": "passed",
+        "xml_reports": 4,
+        "tests": 49,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "limitations": [
+      "core_db:testProductionDebugUnitTest has no local test sources; core_db instrumented tests were not run.",
+      "This run covers production-debug local unit tests for common, feature_wallet_impl, and app; device/emulator, release artifact, and deployment qualification were not run.",
+      "Initial offline attempt could not resolve the uncached com.android.test 9.2.1 plugin marker; normal dependency resolution subsequently succeeded with strict verification."
+    ]
+  },
+  "production_source_audit": {
+    "status": "passed",
+    "failures": [],
+    "release_qualification_blocker_count": 33,
+    "release_qualification_blockers": [
+      "ANDROID_DEPENDENCY_SIGNING_REVIEW_ADMISSION_NOT_QUALIFIED",
+      "ANDROID_FUNDED_CANARY_TRUST_ROOT_NOT_QUALIFIED",
+      "ANDROID_NATIVE_CANARY_QUALIFICATION_RECEIPT_MISSING",
+      "ANDROID_NEXUS_SEND_LOCAL_QUALIFICATION_MISSING",
+      "ANDROID_NEXUS_SIGNER_FAIL_CLOSED",
+      "ANDROID_POLKAMARKT_LOCAL_QUALIFICATION_MISSING",
+      "ANDROID_PRODUCTION_SIGNING_IDENTITY_NOT_QUALIFIED",
+      "ANDROID_SIGNING_RELEASE_EVIDENCE_NOT_QUALIFIED",
+      "FUNDED_CANARY_CROSS_NETWORK_PAIR_NOT_QUALIFIED",
+      "GRADLE_CREDENTIAL_INCIDENT_NOT_CLOSED",
+      "GRADLE_DEPENDENCY_PROVENANCE_NOT_QUALIFIED",
+      "GRADLE_DEPENDENCY_RELEASE_EVIDENCE_NOT_QUALIFIED",
+      "GRADLE_PRODUCTION_LOCKS_NOT_INDEPENDENTLY_REVIEWED",
+      "GRADLE_VERIFICATION_METADATA_NOT_INDEPENDENTLY_REVIEWED",
+      "IDENSIC_TENSORFLOW_NAMESPACE_WORKAROUND_NOT_REVIEWED",
+      "IROHA_ANDROID_CURRENT_ARTIFACT_NOT_REVIEWED",
+      "IROHA_ANDROID_RELEASE_EVIDENCE_NOT_QUALIFIED",
+      "IROHA_ANDROID_SDK_NOT_SEND_QUALIFIED",
+      "LIVE_PI_PRODUCTION_PROBE_RECEIPT_MISSING_OR_INVALID",
+      "MINAMOTO_FUNDED_CANARY_NOT_QUALIFIED",
+      "MINAMOTO_TORII_NOT_HEALTHY",
+      "PI_HISTORY_CHECKPOINT_CONTRACT_NOT_QUALIFIED",
+      "PI_INDEXER_CHAIN_IDENTITY_NOT_QUALIFIED",
+      "PI_MOBILE_CONFIG_CAPABILITIES_NOT_DEPLOYED",
+      "PI_PRODUCTION_PROBE_EVIDENCE_STALE_OR_INVALID",
+      "PI_TYPED_ACCOUNT_BALANCES_NOT_QUALIFIED",
+      "POLKAMARKT_WEB_RUNTIME_EXTRINSIC_PARITY_UNQUALIFIED",
+      "PRODUCTION_ROLLOUT_TRUST_ROOT_NOT_QUALIFIED",
+      "PRODUCTION_ROLLOUT_TRUST_ROOT_PROTECTED_PIN_MISSING_OR_MISMATCHED",
+      "TAIRA_DEPLOYMENT_MANIFEST_NOT_QUALIFIED",
+      "TAIRA_FUNDED_CANARY_NOT_QUALIFIED",
+      "TAIRA_TORII_NOT_HEALTHY",
+      "VENDORED_DEPENDENCY_REVIEW_NOT_COMPLETE"
+    ],
+    "note": "Source audit success does not constitute release/deployment qualification; release gates remain fail-closed."
+  },
+  "source_files_changed_from_recovery": [
+    "common/src/main/res/raw/noto_sans_egyptian_hieroglyphs_ofl.txt",
+    "scripts/test-android-dependency-signing-review-v1.mjs",
+    "scripts/test-android-qualified-candidate-package-v1.mjs"
+  ],
+  "files_stable_for_commit": true
+}

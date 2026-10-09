@@ -38,7 +38,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -141,7 +141,8 @@ internal fun TutorialScreen(
                     onCreateAccount = onCreateAccount,
                     onRecoveryAccount = onImportAccount,
                     onGoogleSignin = onGoogleSignin,
-                    isGoogleSignInLoading = state.isGoogleSigninLoading
+                    isGoogleSignInLoading = state.isGoogleSigninLoading,
+                    isGoogleBackupAvailable = state.isGoogleBackupAvailable
                 )
 
                 val annotatedLinkString: AnnotatedString = buildAnnotatedString {
@@ -242,6 +243,7 @@ private fun TutorialButtons(
     onGoogleSignin: () -> Unit,
     onRecoveryAccount: () -> Unit,
     isGoogleSignInLoading: Boolean = false,
+    isGoogleBackupAvailable: Boolean = true,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -258,7 +260,7 @@ private fun TutorialButtons(
             Button(
                 modifier = modifier
                     .testTagAsId("GoogleSignin")
-                    .height(Dimens.x7)
+                    .heightIn(min = Dimens.x7)
                     .fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color(0xFF3579F7),
@@ -266,6 +268,7 @@ private fun TutorialButtons(
                 ),
                 shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
                 onClick = onGoogleSignin,
+                enabled = isGoogleBackupAvailable && !isGoogleSignInLoading,
             ) {
                 Image(
                     modifier = Modifier.padding(end = Dimens.x1),
@@ -279,6 +282,8 @@ private fun TutorialButtons(
             }
         }
 
+        ChoiceExplanation(if (isGoogleBackupAvailable) R.string.wallet_google_explanation else R.string.wallet_cloud_backup_unavailable)
+
         OutlinedButton(
             modifier = Modifier
                 .testTagAsId("CreateNewAccount")
@@ -290,6 +295,8 @@ private fun TutorialButtons(
             order = Order.PRIMARY
         )
 
+        ChoiceExplanation(R.string.wallet_create_explanation)
+
         TextButton(
             modifier = Modifier
                 .testTagAsId("ImportAccount")
@@ -300,7 +307,15 @@ private fun TutorialButtons(
             size = Size.Large,
             order = Order.PRIMARY
         )
+        ChoiceExplanation(R.string.wallet_import_explanation)
     }
+}
+
+@Composable
+private fun ChoiceExplanation(resource: Int) {
+    Text(stringResource(resource), style = MaterialTheme.customTypography.paragraphS,
+        color = MaterialTheme.customColors.fgPrimary, textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(top = Dimens.x1, bottom = Dimens.x2))
 }
 
 @OptIn(ExperimentalUnitApi::class)

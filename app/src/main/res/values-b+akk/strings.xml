@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="wallet_upgrade_recovery_title">Bīt kaspika šalim, akīam uznam ibaʾi</string>
+    <string name="wallet_upgrade_recovery_message">SORA edēšam iprus aššum nikkassī kalāšunu ša bašûti ul ukīn. Mimma ul innasiḫ u ul ištanî. Šanītam epuš, ū lāma ṭuppam šanītam tašakkan u ṭuppī unūtim tuḫallaq itti rēṣūt SORA nâmur</string>
+    <string name="wallet_upgrade_recovery_code">Kunuk turrim: %1$s</string>
+    <string name="wallet_upgrade_recovery_retry">Kunuk šumim šanītam epēšum</string>
+    <string name="wallet_upgrade_recovery_export">Bīt ṭuppī turrim katimam šūṣûm</string>
+    <string name="wallet_upgrade_recovery_continue_legacy">Itti bīt kaspim SORA labīrim šasâm balum šapārim alākum; Nexus paṭir</string>
+    <string name="wallet_upgrade_recovery_support">Rēṣūt SORA šuālum</string>
+</resources>

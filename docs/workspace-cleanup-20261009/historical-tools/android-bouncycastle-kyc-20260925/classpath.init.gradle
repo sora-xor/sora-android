@@ -1,0 +1,16 @@
+gradle.afterProject { project ->
+ if (project.path == ':app') {
+  project.tasks.register('bcAuditClasspath') {
+   doLast {
+    ['productionReleaseCompileClasspath','productionReleaseRuntimeClasspath'].each { name ->
+     project.configurations.getByName(name).incoming.artifactView {
+      componentFilter { it instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier }
+      attributes { attribute(org.gradle.api.attributes.Attribute.of('artifactType', String), 'android-classes-jar') }
+     }.artifacts.artifacts.each { a ->
+      println('BC_AUDIT\t' + name + '\t' + a.id.componentIdentifier.displayName + '\t' + a.file.absolutePath)
+     }
+    }
+   }
+  }
+ }
+}
