@@ -681,8 +681,15 @@ class MigrationManagerProductionPathQualificationTest {
                     .split(Regex("\\s+"))
                     .filter(String::isNotBlank)
                 assertTrue(retainedWords.size in RETAINED_SORA_MNEMONIC_WORD_COUNTS)
-                assertFalse(credentialsRepository.isMnemonicValid(secret.words))
-                credentialsRepository.convertRetainedSoraPassphraseToSeed(secret.words)
+                // 15, 18 and 21-word phrases can be imported again (as in 3.8.x), and the import
+                // derives exactly the seed the retained phrase had.
+                assertTrue(credentialsRepository.isMnemonicValid(secret.words))
+                credentialsRepository.convertRetainedSoraPassphraseToSeed(secret.words).also {
+                    assertOpaqueStringEquals(
+                        it,
+                        credentialsRepository.convertPassphraseToSeed(secret.words),
+                    )
+                }
             }
             val pinnedVector = if (secret.nexusCapable) {
                 pinnedMnemonicVector(secret.words)
