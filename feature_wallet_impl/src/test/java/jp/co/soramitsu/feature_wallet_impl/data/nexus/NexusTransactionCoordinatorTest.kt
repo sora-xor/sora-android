@@ -21,7 +21,6 @@ import jp.co.soramitsu.common.nexus.NexusToriiException
 import jp.co.soramitsu.common.nexus.NexusTransactionStatus
 import jp.co.soramitsu.common.nexus.NexusTransactionStatusValue
 import jp.co.soramitsu.common.nexus.NexusTransferHistoryItem
-import jp.co.soramitsu.common.nexus.TairaDeployment
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
@@ -76,7 +75,7 @@ class NexusTransactionCoordinatorTest {
     fun `restart recovery rotates bounded passes so failed exact hashes cannot starve later rows`() =
         runTest {
             val first = unresolvedTransaction("first", WalletNetworkId.MINAMOTO)
-            val second = unresolvedTransaction("second", WalletNetworkId.TAIRA)
+            val second = unresolvedTransaction("second", WalletNetworkId.MINAMOTO)
             every { database.walletIdentityDao() } returns dao
             coEvery { dao.getUnresolvedTransactions() } returns listOf(first, second)
             coEvery { dao.getPendingTransaction("second") } returns null
@@ -109,7 +108,9 @@ class NexusTransactionCoordinatorTest {
 
     @Test
     fun `unbound and retired Taira journals remain immutable without Torii calls`() = runTest {
-        val retained = unresolvedTransaction("retained", WalletNetworkId.TAIRA)
+        val retained = unresolvedTransaction("retained", WalletNetworkId.MINAMOTO).copy(
+            networkId = WalletNetworkId.TAIRA.wireId,
+        )
         val chainIds = listOf(
             null,
             "809574f5-fee7-5e69-bfcf-52451e42d50f",
@@ -163,7 +164,7 @@ class NexusTransactionCoordinatorTest {
         coVerify(exactly = 0) { torii.getXorBalance(any(), any()) }
         coVerify(exactly = 0) { signer.quote(any()) }
         coVerify(exactly = 0) { signer.sign(any(), any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -233,7 +234,7 @@ class NexusTransactionCoordinatorTest {
         coVerify(exactly = 0) { signer.quote(any()) }
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { torii.resolveXorDefinition(any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -284,11 +285,11 @@ class NexusTransactionCoordinatorTest {
         )
 
         assertEquals("COMMITTED_PENDING_RECONCILIATION", result.state)
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
-    fun `duplicate exact transfer history cannot finalize a committed send`() = runTest {
+    fun `conflicting transfer under the signed hash cannot finalize a committed send`() = runTest {
         val hash = "cf".repeat(32)
         val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
         every { database.walletIdentityDao() } returns dao
@@ -330,7 +331,10 @@ class NexusTransactionCoordinatorTest {
                 account.address,
                 XOR_DEFINITION_ID,
             )
-        } returns listOf(duplicate, duplicate.copy(timestampMillis = 2))
+        } returns listOf(
+            duplicate,
+            duplicate.copy(timestampMillis = 2, amount = "2", receiver = "conflicting"),
+        )
         coEvery {
             dao.updatePendingTransaction(any(), any(), any(), any(), any())
         } returns Unit
@@ -338,7 +342,7 @@ class NexusTransactionCoordinatorTest {
         val result = coordinator.reconcile("local")
 
         assertEquals("COMMITTED_PENDING_RECONCILIATION", result.state)
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -368,7 +372,7 @@ class NexusTransactionCoordinatorTest {
             finalityReader.finalizedCheckpoint(NexusNetworks.minamoto)
         } returns NexusFinalityCheckpoint(
             networkId = WalletNetworkId.TAIRA,
-            chainId = NexusNetworks.taira.chainId,
+            chainId = TEST_TAIRA_NETWORK.chainId,
             finalizedBlockHeight = 10,
             finalizedBlockHash = "ab".repeat(32),
         )
@@ -379,7 +383,7 @@ class NexusTransactionCoordinatorTest {
         coVerify(exactly = 0) { torii.getAssetBalanceByDefinition(any(), any(), any()) }
         coVerify(exactly = 0) { torii.committedXorTransfers(any(), any(), any()) }
         coVerify(exactly = 0) { signer.sign(any(), any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -416,7 +420,7 @@ class NexusTransactionCoordinatorTest {
         coVerify(exactly = 0) { torii.getXorBalance(any(), any()) }
         coVerify(exactly = 0) { torii.getAssetBalanceByDefinition(any(), any(), any()) }
         coVerify(exactly = 0) { torii.committedXorTransfers(any(), any(), any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -498,7 +502,7 @@ class NexusTransactionCoordinatorTest {
             assertEquals("FINALIZED", staleResult.state)
             assertEquals("FINALIZED", persisted.state)
             coVerify(exactly = 0) { userRepository.getCurSoraAccount() }
-            coVerify(exactly = 0) { torii.submit(any(), any()) }
+            coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
         }
 
     @Test
@@ -542,7 +546,7 @@ class NexusTransactionCoordinatorTest {
         assertTrue(error is NexusToriiException)
         assertEquals("UNKNOWN", persisted.state)
         assertTrue(persisted.submissionIsAmbiguous)
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -590,7 +594,7 @@ class NexusTransactionCoordinatorTest {
                 updatedAt = arg(4),
             )
         }
-        coEvery { torii.submit(network, any()) } coAnswers {
+        coEvery { torii.submit(network, any(), any()) } coAnswers {
             transportEntered.complete(Unit)
             releaseTransport.await()
             NexusSubmissionReceipt(
@@ -638,7 +642,7 @@ class NexusTransactionCoordinatorTest {
         assertEquals("SUBMITTED", result.state)
         assertEquals("SUBMITTED", postHandoff.state)
         coVerify(exactly = 1) { torii.transactionStatus(network, hash) }
-        coVerify(exactly = 1) { torii.submit(network, any()) }
+        coVerify(exactly = 1) { torii.submit(network, any(), any()) }
     }
 
     @Test
@@ -650,7 +654,7 @@ class NexusTransactionCoordinatorTest {
         every { signer.isQualifiedFor(NexusNetworks.minamoto) } returns true
         val tairaRecipient = IrohaAddressCodec.encode(
             ByteArray(32) { 2 },
-            NexusNetworks.taira.chainDiscriminant,
+            TEST_TAIRA_NETWORK.chainDiscriminant,
         )
 
         val error = runCatching {
@@ -670,7 +674,7 @@ class NexusTransactionCoordinatorTest {
             (error as IrohaAddressCodec.AddressException).code,
         )
         coVerify(exactly = 0) { torii.resolveXorDefinition(any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -695,46 +699,7 @@ class NexusTransactionCoordinatorTest {
         assertEquals("NEXUS_SEND_DISABLED", error?.message)
         coVerify(exactly = 0) { torii.resolveXorDefinition(any()) }
         coVerify(exactly = 0) { signer.quote(any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
-    }
-
-    @Test
-    fun `Taira cannot sign or journal without an admitted deployment manifest`() = runTest {
-        if (TairaDeployment.binding != null) return@runTest
-
-        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
-        val network = NexusNetworks.taira
-        val quote = NexusTransferFeeQuote(
-            networkId = WalletNetworkId.TAIRA.wireId,
-            authority = account.address,
-            recipient = account.address,
-            assetDefinitionId = XOR_DEFINITION_ID,
-            amount = "1",
-            fee = "0.1",
-            quoteIdentity = "quote-unqualified-taira",
-            validUntilBlock = 20,
-        )
-        every { database.walletIdentityDao() } returns dao
-        stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
-        coEvery { torii.getXorBalance(network, account.address) } returns
-            NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
-        coEvery { signer.quote(any()) } returns quote
-
-        val prepared = coordinator.prepare(
-            NexusSendRequest(
-                walletId = WALLET_ID,
-                networkId = WalletNetworkId.TAIRA,
-                recipient = account.address,
-                amount = "1",
-            )
-        )
-        val error = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
-
-        assertEquals("TAIRA_DEPLOYMENT_MANIFEST_NOT_QUALIFIED", error?.message)
-        coVerify(exactly = 0) { signer.sign(any(), any()) }
-        coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -760,7 +725,7 @@ class NexusTransactionCoordinatorTest {
         assertEquals("NEXUS_NETWORK_ACCOUNT_KEY_MISMATCH", error?.message)
         coVerify(exactly = 0) { torii.resolveXorDefinition(any()) }
         coVerify(exactly = 0) { signer.quote(any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -830,7 +795,7 @@ class NexusTransactionCoordinatorTest {
 
         assertEquals("NEXUS_FEE_NOT_POSITIVE", error?.message)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -870,7 +835,7 @@ class NexusTransactionCoordinatorTest {
         assertEquals("NEXUS_FEE_NOT_POSITIVE", error?.message)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -911,7 +876,7 @@ class NexusTransactionCoordinatorTest {
         assertEquals("NEXUS_FEE_NOT_POSITIVE", error?.message)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -945,7 +910,7 @@ class NexusTransactionCoordinatorTest {
         every { signer.isQualifiedFor(NexusNetworks.minamoto) } returns true
         every { finalityReader.isQualifiedFor(NexusNetworks.minamoto) } returns true
         val signingRequest = NexusTransferSigningRequest(
-            network = NexusNetworks.taira,
+            network = TEST_TAIRA_NETWORK,
             account = account,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -983,7 +948,7 @@ class NexusTransactionCoordinatorTest {
         coVerify(exactly = 0) { userRepository.getCurSoraAccount() }
         coVerify(exactly = 0) { signer.quote(any()) }
         coVerify(exactly = 0) { signer.sign(any(), any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -1031,7 +996,7 @@ class NexusTransactionCoordinatorTest {
         coVerify(exactly = 0) { userRepository.getCurSoraAccount() }
         coVerify(exactly = 0) { signer.quote(any()) }
         coVerify(exactly = 0) { signer.sign(any(), any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -1072,7 +1037,7 @@ class NexusTransactionCoordinatorTest {
         assertEquals("NEXUS_SEND_DISABLED", error?.message)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -1124,7 +1089,7 @@ class NexusTransactionCoordinatorTest {
                 updatedAt = arg(4),
             )
         }
-        coEvery { torii.submit(network, any()) } coAnswers {
+        coEvery { torii.submit(network, any(), any()) } coAnswers {
             transportEntered.complete(Unit)
             yield()
             assertFalse(competingMutationEntered.isCompleted)
@@ -1166,11 +1131,11 @@ class NexusTransactionCoordinatorTest {
         coVerifyOrder {
             signer.sign(any(), any())
             dao.insertPendingTransaction(any())
-            torii.submit(network, any())
+            torii.submit(network, any(), any())
         }
         coVerify(exactly = 1) { signer.sign(any(), any()) }
         coVerify(exactly = 1) { dao.insertPendingTransaction(any()) }
-        coVerify(exactly = 1) { torii.submit(network, any()) }
+        coVerify(exactly = 1) { torii.submit(network, any(), any()) }
     }
 
     @Test
@@ -1235,7 +1200,7 @@ class NexusTransactionCoordinatorTest {
         assertFalse(persisted?.submissionIsAmbiguous ?: true)
         assertTrue(signedBytes.all { it == 0.toByte() })
         coVerify(exactly = 1) { signer.sign(any(), any()) }
-        coVerify(exactly = 0) { torii.submit(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
@@ -1279,7 +1244,7 @@ class NexusTransactionCoordinatorTest {
                 updatedAt = arg(4),
             )
         }
-        coEvery { torii.submit(network, any()) } throws NexusToriiException(
+        coEvery { torii.submit(network, any(), any()) } throws NexusToriiException(
             safeCode = "NEXUS_SUBMISSION_IO",
             submissionMayHaveReachedTorii = true,
         )
@@ -1302,7 +1267,7 @@ class NexusTransactionCoordinatorTest {
         assertTrue(signedBytes.all { it == 0.toByte() })
         assertEquals("NEXUS_CONFIRMATION_ALREADY_SUBMITTED", replayError?.message)
         coVerify(exactly = 1) { signer.sign(any(), any()) }
-        coVerify(exactly = 1) { torii.submit(network, any()) }
+        coVerify(exactly = 1) { torii.submit(network, any(), any()) }
         verify(exactly = 1) { pendingRecoveryScheduler.kickAfterJournal() }
     }
 
@@ -1336,6 +1301,7 @@ class NexusTransactionCoordinatorTest {
         )
         coEvery { dao.hasActiveDeletionOperation() } returns false
         coEvery { dao.countPendingTransactionsRequiringChainRecovery() } returns 0
+        coEvery { torii.health(network) } returns "Healthy"
         coEvery { torii.resolveXorDefinition(network) } returns qualifiedXorDefinition()
         coEvery {
             torii.hasAuthoritativeCommittedTransaction(
@@ -1422,6 +1388,7 @@ class NexusTransactionCoordinatorTest {
         nexusSendsAvailable = true,
         polkamarktVisible = true,
         polkamarktMutationsAvailable = true,
+        tairaAvailable = true,
         tairaVisible = true,
         tairaPreferenceIsExplicit = true,
     )

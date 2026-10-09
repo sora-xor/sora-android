@@ -781,7 +781,8 @@ class PolkamarktTraderRepository @Inject constructor(
             ) { "POLKAMARKT_CLAIMABLE_INVALID" }
         }
         val authoritativeMarket = catalogMarket.copy(
-            closeBlock = authoritative.closeBlock.longValueExact(),
+            // The bound checked above is within Long, so this conversion is exact on API 26.
+            closeBlock = authoritative.closeBlock.toLong(),
             status = authoritative.status,
             mechanism = runtimeState.mechanism,
             virtualDepth = runtimeState.virtualDepth.toString(),

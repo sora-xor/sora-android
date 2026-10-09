@@ -83,7 +83,8 @@ internal fun AccountDetailsScreenBasic(
         onShowPassphrase = onShowPassphrase,
         onShowRawSeed = onShowRawSeed,
         onExportJson = onExportJson,
-        onBackupGoogle = onBackupClicked
+        onBackupGoogle = onBackupClicked,
+        isCloudBackupAvailable = state.isCloudBackupAvailable,
     )
     Spacer(modifier = Modifier.size(Dimens.x2))
     TonalButton(

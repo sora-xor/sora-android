@@ -643,7 +643,11 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
                 throw Sora2RuntimeIdentityException("SORA2_STATUS_HEADER_INVALID")
             }
             return try {
-                BigInteger(number.asString.removePrefix("0x"), 16).longValueExact()
+                val parsed = BigInteger(number.asString.removePrefix("0x"), 16)
+                if (parsed > BigInteger.valueOf(Long.MAX_VALUE)) {
+                    throw ArithmeticException("Header number exceeds Long range")
+                }
+                parsed.toLong()
             } catch (_: ArithmeticException) {
                 throw Sora2RuntimeIdentityException("SORA2_STATUS_HEADER_INVALID")
             } catch (_: NumberFormatException) {

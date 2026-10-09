@@ -2,6 +2,7 @@
 
 import { resolve } from "node:path";
 import { validateDownloadedAndroidQualifiedCandidatePackageV1 } from "./lib/android-qualified-candidate-package-v1.mjs";
+import { parseExpectedTairaDeploymentManifestSequenceNumberV1 } from "./lib/taira-deployment-manifest-v1.mjs";
 
 const required = (name) => {
   const value = process.env[name] ?? "";
@@ -19,6 +20,10 @@ const result = validateDownloadedAndroidQualifiedCandidatePackageV1({
   expectedTairaDeploymentReviewerKeySha256: required(
     "TAIRA_DEPLOYMENT_REVIEWER_KEY_SHA256",
   ),
+  expectedTairaDeploymentManifestSequenceNumber:
+    parseExpectedTairaDeploymentManifestSequenceNumberV1(
+      required("TAIRA_DEPLOYMENT_EXPECTED_MANIFEST_SEQUENCE_NUMBER"),
+    ),
   expectedDependencySigningReviewProducerKeySha256: required(
     "ANDROID_DEPENDENCY_SIGNING_REVIEW_PRODUCER_KEY_SHA256",
   ),

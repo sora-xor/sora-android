@@ -1,0 +1,16 @@
+gradle.projectsEvaluated {
+ gradle.rootProject.tasks.register('materializeBcCompatibilityLocks') {
+  doLast {
+   int count = 0
+   gradle.rootProject.allprojects.sort { it.path }.each { project ->
+    project.configurations.findAll { it.canBeResolved && it.name.toLowerCase(Locale.ROOT).contains('productionrelease') }.sort { it.name }.each { configuration ->
+     configuration.incoming.resolutionResult.allComponents.each { ignored -> }
+     def failures = configuration.incoming.resolutionResult.allDependencies.findAll { it instanceof org.gradle.api.artifacts.result.UnresolvedDependencyResult }
+     if (!failures.isEmpty()) throw new GradleException(project.path + ':' + configuration.name + ': ' + failures.collect { it.failure.message }.join('\n'))
+     count++
+    }
+   }
+   logger.lifecycle('Resolved production Release configurations: ' + count)
+  }
+ }
+}

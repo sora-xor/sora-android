@@ -56,6 +56,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "passport-android"
 include(":app")
+include(":baselineprofile")
 include(":common")
 include(":common_wallet")
 include(":core_db")

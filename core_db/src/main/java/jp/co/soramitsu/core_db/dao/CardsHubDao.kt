@@ -34,6 +34,7 @@ package jp.co.soramitsu.core_db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import jp.co.soramitsu.core_db.model.CardHubLocal
 import kotlinx.coroutines.flow.Flow
@@ -52,4 +53,7 @@ interface CardsHubDao {
 
     @Insert
     suspend fun insert(cards: List<CardHubLocal>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertMissing(cards: List<CardHubLocal>)
 }

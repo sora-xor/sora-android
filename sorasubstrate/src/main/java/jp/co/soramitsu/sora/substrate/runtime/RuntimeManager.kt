@@ -470,7 +470,7 @@ class RuntimeManager @Inject constructor(
 
     init {
         coroutineManager.applicationScope.launch {
-            getRuntimeSnapshot()
+            prefetchRuntimeForDisplay(onFailure = FirebaseWrapper::recordException) { getRuntimeSnapshot() }
         }
     }
 
