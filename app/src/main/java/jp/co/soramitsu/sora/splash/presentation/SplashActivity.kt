@@ -112,7 +112,8 @@ class SplashActivity : AppCompatActivity() {
                                 ?.code
                                 ?: WalletUpgradeBackup.blockingFailure()?.code
                                 ?: "BACKUP_RETRY_FAILED",
-                        canContinueLegacyWallet = false,
+                        canContinueLegacyWallet =
+                            WalletUpgradeBackup.recoveryOptions()?.canReadOnly == true,
                     )
                 }
             }
@@ -146,7 +147,8 @@ class SplashActivity : AppCompatActivity() {
                                 jp.co.soramitsu.core_db.WalletUpgradeBackupException)
                                 ?.code
                                 ?: "LEGACY_RECOVERY_AUTHORIZATION_FAILED",
-                        canContinueLegacyWallet = false,
+                        canContinueLegacyWallet =
+                            WalletUpgradeBackup.recoveryOptions()?.canReadOnly == true,
                     )
                 }
             }
@@ -243,7 +245,9 @@ class SplashActivity : AppCompatActivity() {
             )
         }
 
-        val startupFailure = WalletUpgradeBackup.blockingFailure()
+        // An interrupted verification is retried automatically first (SplashInteractor); the
+        // recovery options appear only if that retry does not succeed.
+        val startupFailure = WalletUpgradeBackup.startupFailureToShow(applicationContext)
         if (startupFailure == null) {
             viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
         } else {

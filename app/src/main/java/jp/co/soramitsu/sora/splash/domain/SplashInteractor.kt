@@ -32,6 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.splash.domain
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.core_db.WalletRecoveryOptions
@@ -45,13 +47,18 @@ import kotlinx.coroutines.Deferred
 @Singleton
 class SplashInteractor @Inject constructor(
     private val userRepository: UserRepository,
-    private val migrationManager: MigrationManager
+    private val migrationManager: MigrationManager,
+    @param:ApplicationContext private val context: Context,
 ) {
 
     @Volatile
     private var migrationsDone = CompletableDeferred<Boolean>()
 
     suspend fun checkMigration() {
+        // The app's screens are starting and will run the wallet verification now: an
+        // interrupted verification may use one of its automatic retries. Background process
+        // starts never get here, so they cannot use up that budget.
+        runCatching { WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context) }
         checkMigration(migrationsDone)
     }
 
@@ -91,7 +98,13 @@ class SplashInteractor @Inject constructor(
             ?: WalletRecoveryOptions.forState(
                 code = code,
                 transientFailure = false,
-                facts = jp.co.soramitsu.core_db.RecoveryFacts(databaseAtCurrentVersion = true),
+                // The verification ran on the open current-schema database, which holds the
+                // accounts it recorded a recovery for; read-only is still checked against the
+                // current selection by canContinueLegacyWallet().
+                facts = jp.co.soramitsu.core_db.RecoveryFacts(
+                    databaseAtCurrentVersion = true,
+                    accountsReadableReadOnly = true,
+                ),
             )
 
     suspend fun getRegistrationState() = userRepository.getRegistrationState()

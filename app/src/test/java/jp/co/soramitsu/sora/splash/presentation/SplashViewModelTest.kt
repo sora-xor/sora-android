@@ -308,6 +308,7 @@ class SplashViewModelTest {
             hasWalletFiles = true,
             hasRecoveryPhraseOrSeed = true,
             databaseAtCurrentVersion = true,
+            accountsReadableReadOnly = true,
         ),
     )
 }
