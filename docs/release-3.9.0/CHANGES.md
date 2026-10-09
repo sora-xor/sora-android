@@ -721,3 +721,54 @@ the code; one more was found while fixing them.
   received-transfers note in English and Japanese. (This AVD returns black
   screenshots, so the evidence is the accessibility dump:
   `screens/android/a3fix/` in the release scratchpad.)
+
+### Review fixes (a3, round 3)
+
+**Activity crashed on "load more" after a new row was indexed** (blocker)
+
+- Problem: once a3 made the history query work, Activity's "load more" path
+  became reachable. To load page N, the indexer adapter re-reads pages 1..N
+  with cursors (100 rows a page), and the handler appended page N to the rows
+  it already listed without removing repeats. If one new row for the account
+  was indexed between two loads (for example a swap that was still only in
+  the local overlay when page 1 was read), every older row shifted down by
+  one, so the new page 2 started with the last row of the old page 1. The
+  Activity list keys each item by transaction hash, so Compose threw
+  "Key ... was already used" and the Activity tab (and the per-token
+  history) crashed. Wallets with more than 100 signed operations were
+  affected.
+- `TransactionHistoryHandlerImpl` now appends only rows whose transaction
+  hash (compared case-insensitively) is not already listed. Rows are never
+  lost: a new row only pushes older rows down, so a repeat is the only
+  effect; a refresh re-reads from page 1 as before.
+- If a page brings no new rows (all repeats, or none matching a token
+  filter), the handler reads the next page itself, at most two extra pages
+  per request, so the list never waits on a "load more" that the scroll
+  position cannot trigger again.
+- Safety net in the list itself: `historyListKeys` gives every LazyColumn
+  item a unique key (transaction hash or header title; only a repeat gets a
+  numbered suffix). This also covers a second date header with the same
+  title, which can happen when a pending transaction from an earlier day is
+  listed first.
+- Considered and not done: continuing from the last page's cursor instead
+  of re-reading pages 1..N. The re-read validates the indexer checkpoint
+  across all pages in one read; keeping a cursor across user actions would
+  lose that check and change the repository paging API late in the release.
+  Removing repeats fixes the crash without it.
+
+User-visible effect: no crash when scrolling Activity or a token's history;
+each transaction is listed once.
+
+Verification: new unit tests in `TransactionHistoryHandlerTest` (the indexer
+gains a row between the page-1 and page-2 loads; differently cased hashes;
+a page with only repeats reads the next page; the extra reads are bounded)
+and `HistoryListKeysTest` (unique keys for repeated transactions and
+headers). The four handler tests fail on the previous handler and pass now.
+New instrumented Compose test `TxHistoryListRepeatedItemsTest` renders the
+real Activity list with a repeated transaction and a repeated date header on
+emulator SORA-Api34: it passes, and with the previous list code it fails with
+`IllegalArgumentException: Key "Oct 7" was already used`.
+`testProductionDebugUnitTest`: 1,081 tests in 15 modules, 0 failures,
+9 skipped (the opt-in live tests and earlier skips).
+`:app:assembleProductionDebug` passes; `:app:lintProductionDebug` reports
+863 warnings, 1 hint and 180 baselined errors (baseline unchanged).
