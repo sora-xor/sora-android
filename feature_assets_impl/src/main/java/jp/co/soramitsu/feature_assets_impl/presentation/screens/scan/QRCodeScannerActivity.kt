@@ -44,7 +44,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
@@ -56,6 +55,7 @@ import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.androidfoundation.format.retrieveString
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.feature_assets_impl.databinding.QrCodeScannerLayoutBinding
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.scan.QrCodeScannerScreen
@@ -137,7 +137,9 @@ class QRCodeScannerActivity : AppCompatActivity() {
         binding.screenContent.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                MaterialTheme {
+                // The scanner always uses the dark SORA Neon palette: its surface is the camera
+                // under a dark scrim, where light-theme text would be unreadable.
+                SoraAppTheme(darkTheme = true) {
                     QrCodeScannerScreen(
                         onNavIconClick = ::finish,
                         onUploadFromGalleryClick = ::selectQrFromGallery,

@@ -38,6 +38,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -48,6 +50,8 @@ import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,6 +60,9 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import jp.co.soramitsu.androidfoundation.format.TextValue
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.theme.neon.FxTier
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.FilledButton
@@ -94,7 +101,13 @@ fun QrCodeScannerScreen(
             uploadFromGalleryButton, showUserQrButton
         ) = createRefs()
 
-        val blurCameraBackground = remember { Color(color = 0x2818183D) }
+        // Design spec 7.19: the camera stays full-bleed under a #000 @ 55% scrim outside the
+        // viewfinder, framed by cyan corner brackets.
+        val blurCameraBackground = remember { Color.Black.copy(alpha = .55f) }
+        val neon = MaterialTheme.neon
+        val fx = LocalFx.current
+        val bracketColor = neon.cyan
+        val bracketGlow = fx.glows && fx.tier != FxTier.MINIMAL
 
         Box(
             modifier = Modifier
@@ -109,6 +122,9 @@ fun QrCodeScannerScreen(
                         width = Dimension.fillToConstraints
                     }
                 )
+                // Edge to edge: keep the title and close button clear of the status bar.
+                .background(blurCameraBackground)
+                .statusBarsPadding()
         ) {
             SoramitsuToolbar(
                 state = SoramitsuToolbarState(
@@ -118,7 +134,7 @@ fun QrCodeScannerScreen(
                     ),
                     type = SoramitsuToolbarType.SmallCentered()
                 ),
-                backgroundColor = blurCameraBackground,
+                backgroundColor = Color.Transparent,
                 elevation = 0.dp,
                 onNavigate = onNavIconClick,
             )
@@ -186,6 +202,15 @@ fun QrCodeScannerScreen(
                         )
                     }
 
+                    val brackets = viewfinderBrackets(
+                        width = size.width,
+                        height = size.height,
+                        radius = Dimens.x4.toPx(),
+                        length = 24.dp.toPx(),
+                    )
+                    val bracketStroke = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+                    val glowStroke = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round)
+
                     onDrawBehind {
                         drawPath(
                             path = Path.combine(
@@ -195,6 +220,10 @@ fun QrCodeScannerScreen(
                             ),
                             color = blurCameraBackground
                         )
+                        if (bracketGlow) {
+                            drawPath(brackets, bracketColor.copy(alpha = .25f), style = glowStroke)
+                        }
+                        drawPath(brackets, bracketColor, style = bracketStroke)
                     }
                 }
         )
@@ -277,6 +306,34 @@ fun QrCodeScannerScreen(
             text = stringResource(id = R.string.scan_qr_show_my_qr),
             onClick = onShowUserQrClick
         )
+    }
+}
+
+/** Four L-brackets that follow the rounded corners of the viewfinder. */
+private fun viewfinderBrackets(width: Float, height: Float, radius: Float, length: Float): Path {
+    val r = radius
+    val w = width
+    val h = height
+    return Path().apply {
+        moveTo(0f, r + length)
+        lineTo(0f, r)
+        arcTo(Rect(0f, 0f, 2 * r, 2 * r), 180f, 90f, false)
+        lineTo(r + length, 0f)
+
+        moveTo(w - r - length, 0f)
+        lineTo(w - r, 0f)
+        arcTo(Rect(w - 2 * r, 0f, w, 2 * r), 270f, 90f, false)
+        lineTo(w, r + length)
+
+        moveTo(w, h - r - length)
+        lineTo(w, h - r)
+        arcTo(Rect(w - 2 * r, h - 2 * r, w, h), 0f, 90f, false)
+        lineTo(w - r - length, h)
+
+        moveTo(r + length, h)
+        lineTo(r, h)
+        arcTo(Rect(0f, h - 2 * r, 2 * r, h), 90f, 90f, false)
+        lineTo(0f, h - r - length)
     }
 }
 
