@@ -820,6 +820,89 @@ emulator SORA-Api34: it passes, and with the previous list code it fails with
 `:app:assembleProductionDebug` passes; `:app:lintProductionDebug` reports
 863 warnings, 1 hint and 180 baselined errors (baseline unchanged).
 
+### Re-verification after a4-a6 and the a2 follow-up (2026-10-10 17:30 JST)
+
+The a3 task was run again on `68ccfcf1`, after the key-safety (a4), SORA
+Neon (a5), Safe Mode (a6) and a2 follow-up commits. Nothing needed to
+change: every a3 item is still in place, and the later commits touched a3
+code only in ways that keep its behaviour (`ExtrinsicManager` now asks the
+shared `WalletSigningGate` whether an account can sign; the `soracard` field
+is no longer requested from `mobileConfig`). No app code, strings or lint
+baselines changed in this run.
+
+One documentation fix: the documented command for the opt-in live indexer
+test (`RELEASE-CHECKLIST.md` and the test's KDoc) now ends with `--rerun`.
+`RUN_LIVE_PI_CLIENT_TESTS` is not a Gradle task input. Without `--rerun`, an
+up-to-date test task is skipped and nothing is checked against the indexer,
+but the build still says it succeeded. This happened during this run.
+
+Checked in the code at `68ccfcf1`:
+
+- Signing: `getMutationRuntimeContext()` has no fixed spec, transaction
+  version or metadata hash. It keeps the mainnet genesis pin, the SS58
+  prefix 69 check and `requireMutationRuntimeIdentity`. The fixed values
+  are used only for the packaged 130 fixture and the Polkamarkt pin. Fee,
+  sign and submit in `ExtrinsicManager` all use that context.
+- Types come from the `substrate_types_android` remote-config file, with the
+  packaged file as fallback. The PI indexer is not used for types.
+- The PI `mobileConfig` fallback, the history and referral query shapes,
+  and `ProductionFeatureManager` (never throws; production surfaces off)
+  are unchanged.
+- The production manifest removes `IrohaConnectActivity`. The production
+  `locale_config.xml` has no `akk`/`egy`. versionName is 3.9.0. Workers are
+  limited to 10 attempts and stop in recovery mode. `NodeManager` starts
+  lazily.
+
+Results:
+
+- **Live mainnet signing** (`MainnetLiveSigningTest`, emulator
+  SORA-Api36-16k, Android 16, arm64, 16 KB pages, packaged native
+  `libsr25519java`), 17:31 JST. Both tests pass. A throwaway key made from a
+  new random phrase signed a 1-planck XOR transfer to itself on live runtime
+  spec 133 / tx 131. Details:
+  - metadata SHA-256 `ab22a2d4…`, types `e87760d7…`, finalized block
+    27,982,561;
+  - `payment_queryInfo` partialFee 100018412589707326 (about 0.1 XOR);
+  - `author_submitExtrinsic` was rejected with 1010 "Invalid Transaction" /
+    "Inability to pay some fees (e.g. account balance too low)", so the node
+    accepted the signature and signed extensions. Nothing was included in a
+    block;
+  - the archive read at block 27,962,562 (20,000 blocks back) returned spec
+    133, 623,617 bytes of metadata and the System events.
+- **Live indexer contract** (`RUN_LIVE_PI_CLIENT_TESTS=true`,
+  `PolkaswapIndexerClientLiveContractTest`): 3 of 3 pass against
+  `pi.soramitsu.io`. A direct read-only probe showed that the deployed
+  indexer now accepts both the full and the fallback `mobileConfig` query.
+  It reports `nexusAvailable`, `polkamarktVisible` and `tairaDefaultVisible`
+  as true; production ignores them.
+- **Unit tests:** `testProductionDebugUnitTest` reports 1,180 tests in 15
+  modules, 0 failures, 9 skipped (the opt-in live tests).
+  - Run again with `--rerun`: `sorasubstrate`, `feature_blockexplorer_api`
+    (with the live indexer tests on), `feature_wallet_impl`, `common`,
+    `feature_assets_impl`, `feature_main_impl` and `app`. That is 744
+    tests, 0 failures; the only 6 skipped are the opt-in SoraMetrics tests.
+- **Build and lint:** `:app:assembleProductionDebug` passes.
+  `:app:lintProductionDebug` reports 0 errors, 945 warnings and 179 errors
+  filtered by the baseline (baseline unchanged).
+- **Release gate:** `verifyProductionReleaseSigning` with no inputs lists the
+  four missing inputs. With `SORA_VERSION_CODE=122` it rejects the version
+  code; with `3090001` it accepts it.
+- **Emulator smoke test** (SORA-Api36-16k, production debug APK 3.9.0
+  (3090000), wallet imported from the public BIP39 test vector):
+  - the home screen lists only SORA2 MAINNET, with assets and fiat values;
+  - the XOR→VAL swap quote shows "Network fee 0.10002071 XOR";
+  - Activity shows its empty state with the received-transfers note;
+  - More has no Polkamarkt row, and App settings has no test-network toggle;
+  - `iroha://connect` and `irohaconnect://connect` resolve to no activity
+    in `jp.co.soramitsu.sora`;
+  - the packaged `locale_config` lists en, ru, es, fr, de, nb, zh-CN, in
+    and tr;
+  - no crash and no runtime or indexer errors in logcat.
+
+  Screenshots, the test XML and the logcat are saved in
+  `screens/android/a3-release-correctness/retry-20261010/` in the release
+  scratchpad. No saved screen shows a recovery phrase.
+
 ## a4: Key safety and lockout fixes (core)
 
 ### Why
