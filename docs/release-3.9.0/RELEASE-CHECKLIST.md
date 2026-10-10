@@ -486,3 +486,50 @@ Product decisions to confirm:
 - [ ] Removing an account removes the release-era (2.x) keys only when they
       are proven to be that verified account's own. Otherwise they stay on
       the phone, and the account can be restored from there.
+
+## a5: SORA Neon UI foundation (Android)
+
+### Design and product sign-off
+
+- [ ] Design reviews the light and dark screenshots
+      (`scratchpad/screens/android/a5-ui-foundation/`) and the debug parity
+      screen (More → Debug Menu → "SORA Neon components") on a real phone.
+      Calibrate the single blur factor `DESIGN_BLUR_FACTOR` (0.87) against an
+      iOS screenshot if glows look too tight.
+- [ ] Support and product approve the new recovery panel text, which no
+      longer mentions reinstalling or clearing data: "SORA paused the upgrade
+      because it could not check every existing account yet. Nothing was
+      deleted or replaced, and your funds stay safe on the blockchain. Try
+      again, or contact support for help."
+- [ ] Product decision: should new installs default to dark (spec principle
+      9)? Not implemented; existing users keep their stored theme either way.
+- [ ] Product decision: the Android 12+ system starting window follows the
+      system theme, so a person who chose dark inside the app but uses a
+      light phone sees a light launch window for a moment (the splash
+      activity after it is dark). Fixing it needs
+      `UiModeManager.setApplicationNightMode` on API 31+, which changes how
+      "System appearance" is detected; decide in the splash task.
+
+### QA before release (real devices)
+
+- [ ] Body text grew by 1 sp. Check fixed-height rows for clipping at font
+      scale 1.0, 1.3 and 2.0, and in ja, ar and hi.
+- [ ] Light and dark on API 26/27 (MINIMAL tier), API 28–30 (REDUCED) and
+      API 31+ (FULL); turn on battery saver, "Remove animations" and the new
+      "Reduce effects" switch, and confirm nothing animates on idle screens.
+- [ ] Dialogs (PIN errors, invite dialogs, node alerts) show the sheet colour,
+      rounded corners and cyan actions in both themes.
+- [ ] QR scanner: title clear of the status bar, brackets visible, scanning
+      works with the darker 55% scrim.
+- [ ] Regenerate the baseline profile after the screen migration task
+      (`baselineprofile/`).
+
+### Translations
+
+- [ ] Translate `appearance_reduce_effects`,
+      `appearance_reduce_effects_description` and `common_loading` (English
+      placeholders in every locale except Japanese).
+- [ ] `scripts/verify-middle-egyptian-localization.mjs` (manual) already
+      failed before this task on the a4 English placeholders; it now also
+      lists these three keys and `wallet_upgrade_recovery_message`. Middle
+      Egyptian is a test-only locale and not offered in production.
