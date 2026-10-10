@@ -476,6 +476,10 @@ dependencies {
     testImplementation(libs.truthDep)
 
     androidTestImplementation(libs.androidxTestExtJunitDep)
+    // Compose UI tests of the Safe Mode screens (test-only; the ui-test manifest is already in
+    // every debug app through feature_blockexplorer_api).
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.composeUiTestJunit4Dep)
     androidTestImplementation(libs.androidxTestEspressoCoreDep)
     androidTestImplementation(libs.coroutineTestDep)
     androidTestImplementation(libs.junitDep)
