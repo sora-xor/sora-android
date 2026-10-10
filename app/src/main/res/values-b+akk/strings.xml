@@ -7,4 +7,10 @@
     <string name="wallet_upgrade_recovery_export">Bīt ṭuppī turrim katimam šūṣûm</string>
     <string name="wallet_upgrade_recovery_continue_legacy">Itti bīt kaspim SORA labīrim šasâm balum šapārim alākum; Nexus paṭir</string>
     <string name="wallet_upgrade_recovery_support">Rēṣūt SORA šuālum</string>
+    <string name="wallet_upgrade_recovery_keep_installed">Please don\'t uninstall SORA or clear its storage. Your keys are stored on this device.</string>
+    <string name="wallet_upgrade_recovery_working">Working…</string>
+    <string name="wallet_upgrade_recovery_still_working">Still working… this can take up to a minute on some devices.</string>
+    <string name="wallet_upgrade_recovery_details_show">Show technical details</string>
+    <string name="wallet_upgrade_recovery_details_hide">Hide technical details</string>
+    <string name="wallet_upgrade_recovery_support_no_email">No email app is set up. You can write to %1$s.</string>
 </resources>

@@ -48,6 +48,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.button.MaterialButton
 import java.io.File
 import jp.co.soramitsu.sora.databinding.ActivitySplashBinding
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -57,7 +58,8 @@ import jp.co.soramitsu.common.R as CommonR
  * The splash recovery panel must be readable in both themes. Before SORA Neon the night panel
  * drew #2D2926 text on #26262D (1.04:1) and its buttons fell back to Material purple. This
  * inflates the real layout under the app theme in light and dark, checks every text colour
- * against the colour it sits on, and saves a rendering for review.
+ * against the colour it sits on (including the keep-installed callout and the "Working…" state of
+ * a running action), checks that disabled actions look disabled, and saves renderings for review.
  */
 @RunWith(AndroidJUnit4::class)
 class SplashRecoveryPanelThemeTest {
@@ -92,43 +94,83 @@ class SplashRecoveryPanelThemeTest {
         else -> emptyList()
     }
 
+    private fun readability(binding: ActivitySplashBinding, ctx: Context, label: String): List<String> {
+        val surface = ContextCompat.getColor(ctx, CommonR.color.neon_surface)
+        val callout = ContextCompat.getColor(ctx, CommonR.color.neon_info_container)
+        return textViews(binding.walletRecoveryPanel).filter { it.isEnabled }.mapNotNull { view ->
+            val background = when {
+                (view.parent as? View)?.id == jp.co.soramitsu.sora.R.id.walletRecoveryKeepInstalledCallout -> callout
+                else -> (view as? MaterialButton)?.backgroundTintList
+                    ?.getColorForState(view.drawableState, surface)
+                    ?.takeIf { Color.alpha(it) == 255 }
+                    ?: surface
+            }
+            val ratio = contrast(view.currentTextColor, background)
+            if (ratio < 4.5) "$label '${view.text}' is %.2f:1".format(ratio) else null
+        }
+    }
+
+    private fun render(binding: ActivitySplashBinding, name: String) {
+        val width = 1080
+        val height = 2400
+        val root = binding.root
+        root.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
+        )
+        root.layout(0, 0, width, height)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        root.draw(Canvas(bitmap))
+        target.getExternalFilesDir("neon-review")?.let { dir ->
+            File(dir, "$name.png").outputStream().use {
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+            }
+        }
+    }
+
     private fun check(night: Boolean) {
         val label = if (night) "dark" else "light"
-        var failures = emptyList<String>()
+        val failures = mutableListOf<String>()
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             val ctx = themed(night)
             val binding = ActivitySplashBinding.inflate(LayoutInflater.from(ctx))
             binding.animationView.visibility = View.GONE
             binding.walletRecoveryPanel.visibility = View.VISIBLE
             binding.continueLegacyWalletButton.visibility = View.VISIBLE
+            binding.walletRecoveryCodeTextView.visibility = View.VISIBLE
             binding.walletRecoveryCodeTextView.text =
                 ctx.getString(jp.co.soramitsu.sora.R.string.wallet_upgrade_recovery_code, "SOURCE_CHANGED")
 
-            val surface = ContextCompat.getColor(ctx, CommonR.color.neon_surface)
-            failures = textViews(binding.walletRecoveryPanel).mapNotNull { view ->
-                val background = (view as? MaterialButton)?.backgroundTintList
-                    ?.getColorForState(view.drawableState, surface)
-                    ?.takeIf { Color.alpha(it) == 255 }
-                    ?: surface
-                val ratio = contrast(view.currentTextColor, background)
-                if (ratio < 4.5) "$label '${view.text}' is %.2f:1".format(ratio) else null
-            }
+            // The keep-installed callout is part of the panel (design spec 9.1-3).
+            assertEquals(View.VISIBLE, binding.walletRecoveryKeepInstalledCallout.visibility)
+            failures += readability(binding, ctx, label)
+            render(binding, "splash-recovery-panel-$label")
 
-            val width = 1080
-            val height = 2400
-            val root = binding.root
-            root.measure(
-                View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
-            )
-            root.layout(0, 0, width, height)
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            root.draw(Canvas(bitmap))
-            target.getExternalFilesDir("neon-review")?.let { dir ->
-                File(dir, "splash-recovery-panel-$label.png").outputStream().use {
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+            // A running action: the tapped button keeps its look and reads "Working…"; the other
+            // actions are disabled and must look it (cta.disabled fill, text.disabled label).
+            val running = binding.retryWalletMigrationButton
+            running.setText(jp.co.soramitsu.sora.R.string.wallet_upgrade_recovery_working)
+            listOf(running, binding.exportWalletRecoveryButton, binding.continueLegacyWalletButton)
+                .forEach { button ->
+                    button.isEnabled = false
+                    button.isActivated = button === running
                 }
+            binding.walletRecoveryProgressBar.visibility = View.VISIBLE
+            binding.walletRecoveryStatusTextView.visibility = View.VISIBLE
+
+            val runningFill = running.backgroundTintList!!.getColorForState(running.drawableState, 0)
+            val runningRatio = contrast(running.currentTextColor, runningFill)
+            if (runningRatio < 4.5) failures += "$label running label is %.2f:1".format(runningRatio)
+
+            val disabledFill = ContextCompat.getColor(ctx, CommonR.color.neon_cta_disabled)
+            val disabledLabel = ContextCompat.getColor(ctx, CommonR.color.neon_text_disabled)
+            for (button in listOf(binding.exportWalletRecoveryButton, binding.continueLegacyWalletButton)) {
+                val fill = button.backgroundTintList!!.getColorForState(button.drawableState, 0)
+                if (fill != disabledFill) failures += "$label disabled '${button.text}' keeps its enabled fill"
+                if (button.currentTextColor != disabledLabel) failures += "$label disabled '${button.text}' keeps its enabled label"
             }
+            failures += readability(binding, ctx, "$label working")
+            render(binding, "splash-recovery-panel-working-$label")
         }
         assertTrue(failures.joinToString("\n"), failures.isEmpty())
     }

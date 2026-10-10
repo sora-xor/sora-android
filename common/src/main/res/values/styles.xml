@@ -171,17 +171,21 @@
         <item name="android:stateListAnimator">@null</item>
     </style>
 
-    <!--  Safe Mode CTA: mint (dark) / green (light), ink or white label. Never red.  -->
+    <!--
+      Safe Mode CTA: mint (dark) / green (light), ink or white label. Never red.
+      Colours are state lists (res/color/neon_button_*): disabled shows cta.disabled and
+      text.disabled; a running action (activated + disabled) keeps the enabled look.
+    -->
     <style name="Widget.Sora.Button.Safe">
-        <item name="backgroundTint">@color/neon_safe_start</item>
-        <item name="android:textColor">@color/neon_on_accent</item>
+        <item name="backgroundTint">@color/neon_button_safe_bg</item>
+        <item name="android:textColor">@color/neon_button_safe_label</item>
         <item name="rippleColor">@color/neon_hairline</item>
     </style>
 
     <style name="Widget.Sora.Button.Secondary">
-        <item name="backgroundTint">@color/neon_button_secondary</item>
-        <item name="android:textColor">@color/neon_text_primary</item>
-        <item name="strokeColor">@color/neon_border_input</item>
+        <item name="backgroundTint">@color/neon_button_secondary_bg</item>
+        <item name="android:textColor">@color/neon_button_secondary_label</item>
+        <item name="strokeColor">@color/neon_button_secondary_stroke</item>
         <item name="strokeWidth">1dp</item>
         <item name="rippleColor">@color/neon_hairline</item>
     </style>
@@ -193,7 +197,7 @@
         <item name="android:textAllCaps">false</item>
         <item name="android:fontFamily">@font/sora_semibold</item>
         <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/neon_link</item>
+        <item name="android:textColor">@color/neon_button_tertiary_label</item>
         <item name="android:letterSpacing">0.0125</item>
         <item name="cornerRadius">28dp</item>
         <item name="rippleColor">@color/neon_hairline</item>

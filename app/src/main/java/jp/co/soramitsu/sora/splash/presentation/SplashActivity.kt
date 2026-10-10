@@ -33,23 +33,29 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.splash.presentation
 
 import android.animation.ValueAnimator
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
+import jp.co.soramitsu.sora.R
 import jp.co.soramitsu.sora.databinding.ActivitySplashBinding
 import jp.co.soramitsu.sora.splash.domain.StartupTimeTrace
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -71,6 +77,14 @@ class SplashActivity : AppCompatActivity() {
     private var isNavigationRequested = false
     private var isStartupReadyReported = false
 
+    /** Code of the recovery state on screen; shown under Technical details and sent to support. */
+    private var recoveryCode: String? = null
+
+    /** One recovery action at a time; the running one reads "Working…". */
+    private var isRecoveryActionRunning = false
+    private var runningButtonLabel: CharSequence? = null
+    private var runningButtonMinHeight = 0
+
     private val animatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
         val progress = it.animatedFraction
         if (progress >= 0.8 && !isFirstPartFinished) {
@@ -90,15 +104,13 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(ActivitySplashBinding.inflate(layoutInflater).also { viewBinding = it }.root)
 
-        viewBinding.retryWalletMigrationButton.setOnClickListener { button ->
-            button.isEnabled = false
-            lifecycleScope.launch {
+        viewBinding.retryWalletMigrationButton.setOnClickListener {
+            runRecoveryAction(
+                button = viewBinding.retryWalletMigrationButton,
                 // Re-runs the startup checks and, for an interrupted wallet verification,
                 // authorizes one more run. Never deletes or rewrites wallet data.
-                val result = withContext(Dispatchers.IO) {
-                    WalletUpgradeBackup.retry(applicationContext)
-                }
-                button.isEnabled = true
+                work = { WalletUpgradeBackup.retry(applicationContext) },
+            ) { result ->
                 if (result.isSuccess) {
                     // Recreating the Activity retains its ViewModel and the completed failed
                     // migration result. A successful preflight must explicitly replace that result
@@ -118,22 +130,23 @@ class SplashActivity : AppCompatActivity() {
                 }
             }
         }
-        viewBinding.contactWalletSupportButton.setOnClickListener {
-            startActivity(
-                Intent(
-                    Intent.ACTION_SENDTO,
-                    Uri.parse("mailto:support@sora.org?subject=SORA%20wallet%20upgrade%20recovery")
-                )
+        viewBinding.contactWalletSupportButton.setOnClickListener { contactSupport() }
+        viewBinding.walletRecoveryDetailsButton.setOnClickListener {
+            val show = viewBinding.walletRecoveryCodeTextView.visibility != View.VISIBLE
+            viewBinding.walletRecoveryCodeTextView.visibility = if (show) View.VISIBLE else View.GONE
+            viewBinding.walletRecoveryDetailsButton.setText(
+                if (show) {
+                    R.string.wallet_upgrade_recovery_details_hide
+                } else {
+                    R.string.wallet_upgrade_recovery_details_show
+                }
             )
         }
         viewBinding.continueLegacyWalletButton.setOnClickListener {
-            val button = viewBinding.continueLegacyWalletButton
-            button.isEnabled = false
-            lifecycleScope.launch {
-                val result = withContext(Dispatchers.IO) {
-                    WalletUpgradeBackup.authorizeSafeReadOnly(applicationContext)
-                }
-                button.isEnabled = true
+            runRecoveryAction(
+                button = viewBinding.continueLegacyWalletButton,
+                work = { WalletUpgradeBackup.authorizeSafeReadOnly(applicationContext) },
+            ) { result ->
                 val route = result.getOrNull()
                 if (
                     route == WalletUpgradeBackup.SafeReadOnlyRoute.ROOM_READ_ONLY ||
@@ -153,13 +166,11 @@ class SplashActivity : AppCompatActivity() {
                 }
             }
         }
-        viewBinding.exportWalletRecoveryButton.setOnClickListener { button ->
-            button.isEnabled = false
-            lifecycleScope.launch {
-                val result = withContext(Dispatchers.IO) {
-                    WalletUpgradeBackup.createRecoveryArchive(applicationContext)
-                }
-                button.isEnabled = true
+        viewBinding.exportWalletRecoveryButton.setOnClickListener {
+            runRecoveryAction(
+                button = viewBinding.exportWalletRecoveryButton,
+                work = { WalletUpgradeBackup.createRecoveryArchive(applicationContext) },
+            ) { result ->
                 result.onSuccess { archive ->
                     val uri = FileProvider.getUriForFile(
                         this@SplashActivity,
@@ -178,9 +189,7 @@ class SplashActivity : AppCompatActivity() {
                                 )
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             },
-                            getString(
-                                jp.co.soramitsu.sora.R.string.wallet_upgrade_recovery_export,
-                            ),
+                            getString(R.string.wallet_upgrade_recovery_export),
                         )
                     )
                 }.onFailure {
@@ -275,8 +284,9 @@ class SplashActivity : AppCompatActivity() {
         viewBinding.loadingDisclaimerTextView.visibility = View.GONE
         viewBinding.loadingProgressBar.visibility = View.GONE
         viewBinding.walletRecoveryPanel.visibility = View.VISIBLE
+        recoveryCode = code
         viewBinding.walletRecoveryCodeTextView.text =
-            getString(jp.co.soramitsu.sora.R.string.wallet_upgrade_recovery_code, code)
+            getString(R.string.wallet_upgrade_recovery_code, code)
         viewBinding.continueLegacyWalletButton.visibility =
             if (canContinueLegacyWallet) {
                 View.VISIBLE
@@ -286,9 +296,89 @@ class SplashActivity : AppCompatActivity() {
         reportStartupReady()
     }
 
+    /**
+     * Runs one recovery action off the main thread. While it runs, the tapped button keeps its
+     * colours and reads "Working…", the other actions are disabled (greyed), a thin progress line
+     * shows, and after 10 s a "Still working…" line appears (design spec 7.1, 9.1-5). Contact
+     * support and Technical details stay available.
+     */
+    private fun <T> runRecoveryAction(
+        button: MaterialButton,
+        work: () -> T,
+        onDone: (T) -> Unit,
+    ) {
+        if (isRecoveryActionRunning) return
+        isRecoveryActionRunning = true
+        showRecoveryActionRunning(button, running = true)
+        lifecycleScope.launch {
+            val stillWorking = launch {
+                delay(STILL_WORKING_AFTER_MILLIS)
+                viewBinding.walletRecoveryStatusTextView.visibility = View.VISIBLE
+            }
+            val result = try {
+                withContext(Dispatchers.IO) { work() }
+            } finally {
+                stillWorking.cancel()
+                showRecoveryActionRunning(button, running = false)
+                isRecoveryActionRunning = false
+            }
+            onDone(result)
+        }
+    }
+
+    private fun showRecoveryActionRunning(button: MaterialButton, running: Boolean) {
+        val actions = listOf(
+            viewBinding.retryWalletMigrationButton,
+            viewBinding.exportWalletRecoveryButton,
+            viewBinding.continueLegacyWalletButton,
+        )
+        if (running) {
+            runningButtonLabel = button.text
+            runningButtonMinHeight = button.minHeight
+            // Keep the height, so a two-line label does not make the panel jump.
+            button.minHeight = button.height
+            button.setText(R.string.wallet_upgrade_recovery_working)
+        } else {
+            runningButtonLabel?.let { button.text = it }
+            button.minHeight = runningButtonMinHeight
+            runningButtonLabel = null
+        }
+        actions.forEach { action ->
+            action.isEnabled = !running
+            action.isActivated = running && action === button
+        }
+        viewBinding.walletRecoveryProgressBar.visibility =
+            if (running) View.VISIBLE else View.INVISIBLE
+        if (!running) viewBinding.walletRecoveryStatusTextView.visibility = View.GONE
+    }
+
+    private fun contactSupport() {
+        val body = recoveryCode?.let { getString(R.string.wallet_upgrade_recovery_code, it) }
+        val mailto = buildString {
+            append("mailto:").append(SUPPORT_EMAIL)
+            append("?subject=").append(Uri.encode("SORA wallet upgrade recovery"))
+            if (body != null) append("&body=").append(Uri.encode(body))
+        }
+        try {
+            startActivity(Intent(Intent.ACTION_SENDTO, mailto.toUri()))
+        } catch (e: ActivityNotFoundException) {
+            // No email app: show the address instead of failing silently or crashing.
+            Toast.makeText(
+                this,
+                getString(R.string.wallet_upgrade_recovery_support_no_email, SUPPORT_EMAIL),
+                Toast.LENGTH_LONG,
+            ).show()
+        }
+    }
+
     private fun reportStartupReady() {
         if (isStartupReadyReported) return
         isStartupReadyReported = true
         StartupTimeTrace.end()
+    }
+
+    private companion object {
+        const val SUPPORT_EMAIL = "support@sora.org"
+        const val STILL_WORKING_AFTER_MILLIS = 10_000L
     }
 }

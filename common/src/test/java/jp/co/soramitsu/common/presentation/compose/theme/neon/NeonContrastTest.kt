@@ -270,4 +270,66 @@ class NeonContrastTest {
         assertEquals(NeonLight.toast, xmlColors("values")["neon_toast"])
     }
 
+    @Test
+    fun `recovery callout is readable in both themes`() {
+        for (dir in listOf("values", "values-night")) {
+            val c = xmlColors(dir)
+            fun col(name: String) = requireNotNull(c[name]) { "$dir has no $name" }
+            assertContrast("$dir callout text", col("neon_text_primary"), col("neon_info_container"), 4.5)
+            assertContrast("$dir callout shield", col("neon_cyan"), col("neon_info_container"), 3.0)
+        }
+        assertEquals(NeonDark.infoContainer, xmlColors("values-night")["neon_info_container"])
+        assertEquals(NeonLight.infoContainer, xmlColors("values")["neon_info_container"])
+    }
+
+    private fun selector(name: String): Map<String, String> {
+        val text = File(res, "color/$name.xml").readText()
+        return Regex("""<item android:color="@(?:android:)?color/([a-z_]+)"(?: android:state_([a-z]+)="([a-z]+)")? />""")
+            .findAll(text)
+            .associate { m ->
+                val state = m.groupValues[2].takeIf { it.isNotEmpty() }?.let { "$it=${m.groupValues[3]}" } ?: "default"
+                state to m.groupValues[1]
+            }
+    }
+
+    private fun styleItem(style: String, item: String): String {
+        val text = File(res, "values/styles.xml").readText()
+        val body = Regex("""<style name="${Regex.escape(style)}"[^>]*>(.*?)</style>""", RegexOption.DOT_MATCHES_ALL)
+            .find(text)?.groupValues?.get(1)
+        requireNotNull(body) { "styles.xml has no $style" }
+        val m = Regex("""<item name="$item">@color/([a-z_]+)</item>""").find(body)
+        return requireNotNull(m) { "$style has no @color $item" }.groupValues[1]
+    }
+
+    @Test
+    fun `xml recovery buttons look disabled when disabled and keep their look while running`() {
+        val buttons = listOf(
+            Triple("Widget.Sora.Button.Safe", "neon_safe_start", "neon_on_accent"),
+            Triple("Widget.Sora.Button.Secondary", "neon_button_secondary", "neon_text_primary"),
+        )
+        for ((style, fill, label) in buttons) {
+            val bg = selector(styleItem(style, "backgroundTint"))
+            val fg = selector(styleItem(style, "android:textColor"))
+            assertEquals("$style fill", fill, bg["default"])
+            assertEquals("$style running fill", fill, bg["activated=true"])
+            assertEquals("$style disabled fill", "neon_cta_disabled", bg["enabled=false"])
+            assertEquals("$style label", label, fg["default"])
+            assertEquals("$style running label", label, fg["activated=true"])
+            assertEquals("$style disabled label", "neon_text_disabled", fg["enabled=false"])
+        }
+        val stroke = selector(styleItem("Widget.Sora.Button.Secondary", "strokeColor"))
+        assertEquals("transparent", stroke["enabled=false"])
+        val tertiary = selector(styleItem("Widget.Sora.Button.Tertiary", "android:textColor"))
+        assertEquals("neon_link", tertiary["default"])
+        assertEquals("neon_text_disabled", tertiary["enabled=false"])
+        for (dir in listOf("values", "values-night")) {
+            val c = xmlColors(dir)
+            fun col(name: String) = requireNotNull(c[name]) { "$dir has no $name" }
+            // The disabled fill must differ visibly from both enabled fills.
+            val panel = col("neon_surface")
+            val disabled = over(col("neon_cta_disabled"), panel)
+            assertTrue("$dir disabled vs safe", ratio(disabled, col("neon_safe_start")) > 1.5)
+            assertTrue("$dir disabled label vs secondary label", col("neon_text_disabled") != col("neon_text_primary"))
+        }
+    }
 }
