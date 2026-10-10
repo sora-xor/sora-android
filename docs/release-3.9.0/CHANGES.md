@@ -701,8 +701,11 @@ the code; one more was found while fixing them.
   SS58 check and runtime identity checks are unchanged. The unused WebSocket
   fee code (`SubstrateCalls.getExtrinsicFee`, `FeeCalculationRequest`,
   `FeeResponse*`) was removed. Auto-switching itself is unchanged.
-- If `ws.mof.sora.org` itself is unreachable, fee quotes and sending wait
-  for it (as before); nothing latches.
+- If `ws.mof.sora.org` itself is unreachable, fee quotes and sending fail
+  until it is reachable again; nothing latches. Unlike 3.8.6.3, the node
+  selected in More > Nodes (including mof2, mof3 or a custom node) is no
+  longer used for sending, so choosing another node does not help (see
+  round 4 below and the release checklist).
 
 **No node connection after in-process recovery** (major)
 
@@ -720,8 +723,9 @@ the code; one more was found while fixing them.
 - The deployed indexer still has no plan for `dataTo`/`dataFrom` (checked in
   its `query-policy.ts`, read-only). Activity (list and empty state) and the
   asset page's recent activity now show: "Transfers you received may not be
-  listed here yet. Your balance is always up to date." (Japanese:
-  「受け取った送金は、まだここに表示されないことがあります。残高は常に最新です。」;
+  listed here yet. Your balance is not affected." (Japanese:
+  「受け取った送金は、まだここに表示されないことがあります。残高には影響ありません。」;
+  the second sentence was changed in round 4;
   other locales carry the English text, as they do for the neighbouring
   Activity strings, so lint baselines are unchanged). The switch is
   `PiHistoryCoverage.LISTS_RECEIVED_TRANSFERS`, next to the history filter.
@@ -902,6 +906,143 @@ Results:
   Screenshots, the test XML and the logcat are saved in
   `screens/android/a3-release-correctness/retry-20261010/` in the release
   scratchpad. No saved screen shows a recovery phrase.
+
+### Review fixes (a3, round 4)
+
+Four minor findings from adversarial review. All four were confirmed in
+the code and fixed.
+
+**Sending regression for users who relied on another node** (minor; docs
+and UX)
+
+- The round-2 notes said that fee quotes and sending "wait for" an
+  unreachable `ws.mof.sora.org` "as before". That was wrong. 3.8.6.3 built
+  and submitted transactions over the WebSocket of the selected node
+  (`calls.submitExtrinsic` in `release/sora/3.8.6.3`), including mof2,
+  mof3 or a custom node. 3.9.0 uses only the reviewed HTTPS endpoint. A
+  3.8.6.3 user whose network cannot reach `ws.mof.sora.org` but could send
+  through another node loses sending after the upgrade (balances still
+  load; keys and funds are not affected; nothing latches). The round-2
+  text is corrected, and RELEASE-CHECKLIST.md now lists this under
+  "Product decisions to confirm". The fix would be a second reviewed
+  signing endpoint, which needs a security review. Not added here.
+- What the user sees in that case is now clear. Before:
+  - Send showed the generic "Something went wrong / An unexpected error
+    has occured…" dialog after every amount change.
+  - Swap's fee request threw inside the balance subscription and ended
+    it without a message. Balances on the swap screen then stopped
+    updating, and the button said "Insufficient liquidity".
+- Now both screens show a calm notice under the fee with a **Try again**
+  button. Review/Swap stay disabled ("Network fee unavailable") until a
+  fee is known:
+  - transport failures: "The network fee can't be checked because the
+    SORA network can't be reached right now. Check your internet
+    connection and try again. Your funds are safe on the blockchain."
+  - anything else: "The network fee can't be checked right now. Try
+    again in a moment. Your funds are safe on the blockchain."
+  - Errors that carry their own message (business errors, such as "fee
+    rate not available") still show it. Fee failures are recorded only
+    through the privacy-safe crash channel.
+  - The swap balance subscription survives a fee failure. The fee is
+    asked for again on the next balance update, the next quote, or Try
+    again.
+  - `NetworkFeeUnavailable` (common) classifies a failure as "network"
+    when any cause is an `IOException`. `NetworkFeeUnavailableNotice` is
+    the shared composable.
+  - Liquidity add/remove still use their existing error handling.
+
+**"Your balance is always up to date"** (minor)
+
+- The received-transfers note on Activity and asset history said "Your
+  balance is always up to date." That is not true offline, when cached
+  history is shown, or next to the "Some data is not up to date" banner.
+  It now says "Your balance is not affected." (Japanese:
+  「残高には影響ありません。」), the same wording as `activity_error_title`.
+  The change is in every locale file that carries the English copy.
+
+**No RuntimeManager test from a 3.8.6.3 cache** (minor)
+
+- `RuntimeManagerLiveRuntimeTest` now starts from what a 3.8.6.3 phone
+  has on disk: unversioned `sora2_metadata` and
+  `types_scalecodec_mobile.json` that are not the packaged pair, no v2
+  manifest, and `last_used_runtime_version=133`. The tests check:
+  - offline: the packaged 130 pair is used, not the old files or the
+    stored 133; signing is refused; the old files are left untouched;
+  - online: the read runtime and the signing context move to live 133,
+    a v2 manifest is published, and the next process starts from it
+    even offline;
+  - a legacy pair equal to the packaged pair is admitted, and no
+    mismatch is reported;
+  - oversize, unreadable, evicted, empty and non-hex legacy files, and
+    packaged metadata with foreign types: the packaged pair is used, and
+    the runtime still reaches live 133 once online.
+- Mutation check: admitting the legacy pair with the stored version, or
+  rethrowing an unreadable legacy file, fails three of the new tests.
+  `RuntimeManager` itself is unchanged.
+
+**The live indexer gate did not use the production transport** (minor)
+
+- `PolkaswapIndexerClientLiveContractTest` used the test-only RestClient
+  transport: lenient JSON, no duplicate-key check, no response size
+  limit. It also skipped history validation and the offline cache, so it
+  proved that the schema accepts the queries, but not that the shipped
+  app can decode the responses.
+- A new internal `PolkaswapIndexerClient` constructor gives the
+  production wire path with a caller-supplied cache:
+  `BoundedGraphQlTransport` over `BoundedHttpTextClient`, strict JSON,
+  health preflight and checkpoint postflight. The live test uses it with
+  the app's `Json` and the production `FilePiIndexerResponseCache` in a
+  temporary directory. It now also:
+  - checks a 100-row history page and the last 10 transactions against
+    canonical mainnet block hashes with `PiHistoryCheckpointValidator`
+    (`chain_getBlockHash` on the reviewed endpoint), as
+    `TransactionHistoryRepositoryImpl` does;
+  - reads one transaction by hash;
+  - reads the same history page back from the cache with every HTTPS
+    request failing (`fromCache = true`, same rows,
+    `validatePersisted` passes);
+  - reads referral rewards for a referrer found on the indexer, so real
+    reward rows go through strict decoding.
+- RELEASE-CHECKLIST.md: the indexer step now expects 4 tests. The
+  existing device step (a team test wallet with signed history opens
+  Activity) now says that the rows must appear, and that "Activity is
+  temporarily unavailable" there stops the rollout.
+
+User-visible effects: Send and Swap explain an unreachable SORA network
+calmly and offer Try again instead of a generic error dialog or a wrong
+"Insufficient liquidity" label. The Activity note no longer promises an
+always-current balance.
+
+**Verification (round 4, 2026-10-10)**
+
+- Unit tests (new and changed): `RuntimeManagerLiveRuntimeTest` 13 of 13;
+  `TransferAmountViewModelTest` 10 of 10 (the unreachable endpoint names
+  the cause, shows no dialog, and Try again recovers);
+  `SwapViewModelTest` 13 of 13 (the notice appears, the button says
+  "Network fee unavailable", and Try again recovers);
+  `NetworkFeeUnavailableTest` 3 of 3. Full `testProductionDebugUnitTest`:
+  1,190 tests in 15 modules, 0 failures, 10 skipped (the opt-in live
+  tests, now including the fourth indexer contract test).
+- Live indexer contract (`RUN_LIVE_PI_CLIENT_TESTS=true`, `--rerun`),
+  18:13 JST: 4 of 4 pass against `pi.soramitsu.io` through the
+  production transport.
+- `:app:assembleProductionDebug` passes. `:app:lintProductionDebug`
+  reports 0 errors and 947 warnings (2 new: the usual "material and
+  material3" import warning on the new composable); the baseline is
+  unchanged. ktlint on the changed files reports nothing new.
+- Emulator SORA-Api36-16k, production debug build, wallet imported from
+  the public BIP39 test vector:
+  - in airplane mode, Swap shows the notice and Try again;
+  - back online, Try again clears the notice;
+  - XOR→VAL shows "Network fee 0.10002071 XOR";
+  - no crash in logcat.
+
+  Screens are in `screens/android/a3-release-correctness/round4/` in the
+  release scratchpad. No saved screen shows a recovery phrase. Send has
+  no entry point with a zero balance, so it was checked by unit test
+  only. It uses the same composable.
+- `MainnetLiveSigningTest` was not re-run: signing code did not change
+  in this round. It last passed at 17:31 JST.
 
 ## a4: Key safety and lockout fixes (core)
 
