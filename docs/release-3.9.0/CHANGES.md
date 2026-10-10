@@ -1877,12 +1877,14 @@ signing still goes through `requireUserMutationAllowed()`.
 
 **Main screens**:
 
-- U9 read-only mode (any gate mode but NORMAL): the wallet home shows the
+- U9 read-only mode: in read-only browsing (`LEGACY_READ_ONLY`, or
+  `RECOVERY_INSPECTED`, where wallet reads work) the wallet home shows the
   read-only chip and banner ("You can view balances and history. Sending is
   off until the upgrade finishes.") with Try upgrade again (opens the
   launcher, which runs Try again with the progress screen) and Learn more.
   Send and Swap on the asset screen, Review on the send form and the swap
-  button are disabled with "Sending is off in read-only mode".
+  button are disabled with "Sending is off in read-only mode" in every mode
+  where the signer refuses (any mode but NORMAL).
 - U11 "Welcome to the new SORA Wallet": once per updated install
   (first install time differs from last update time), only after the PIN
   and never in read-only mode. Ticks for the account on this device, the PIN
@@ -1982,7 +1984,15 @@ panel, `bg_neon_safe_panel` and `bg_neon_info_callout`.
 - `:app:assembleProductionDebug`, `testProductionDebugUnitTest` and
   `:app:lintProductionDebug` (no errors; the baseline is unchanged; the new
   warnings are the known `UsingMaterialAndMaterial3Libraries` on Material 2
-  imports) pass. Numbers in the final summary below.
+  imports) pass:
+  - `testProductionDebugUnitTest`: 1,159 tests in 15 modules, 0 failures,
+    9 skipped (26 new).
+  - `:app:lintProductionDebug`: no errors; 945 warnings, 1 hint and 179
+    baselined errors (one fewer: the removed `wallet_issue_recovery`). The
+    baseline file is unchanged.
+  - Device: app `SafeModeScreensTest`, `NeonToastThemeTest` and
+    `QrScannerSystemBarsTest` 9/9 on SORA-Api36-16k and on SORA-Api34;
+    `feature_assets_impl` `ReadOnlySendTest` 2/2 on both.
 - Known, not caused by this task: `WalletUxAcceptanceTest` (app device
   tests) fails on API 34 because it reflects on `OnboardingViewModel
   .tempAccount`, removed in a4, and on a send-field accessibility step; on

@@ -98,6 +98,17 @@ fun rememberWalletReadOnly(): Boolean {
 }
 
 /**
+ * True in read-only browsing (Continue in read-only mode, or a check that failed for a moment):
+ * wallet reads work and wallet changes are off, so the read-only banner's text is true.
+ */
+@Composable
+fun rememberReadOnlyBrowsing(): Boolean {
+    val mode by WalletRecoveryCapabilityGate.modeFlow.collectAsState()
+    return mode == WalletRecoveryCapabilityGate.Mode.LEGACY_READ_ONLY ||
+        mode == WalletRecoveryCapabilityGate.Mode.RECOVERY_INSPECTED
+}
+
+/**
  * Whether the wallet was unlocked with the PIN in this process. The upgrade-complete sheet (U11)
  * waits for it, so it is never stacked over the PIN screen.
  */
