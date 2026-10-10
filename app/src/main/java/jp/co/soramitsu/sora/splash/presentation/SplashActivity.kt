@@ -37,32 +37,58 @@ import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.biometric.BiometricPrompt
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.button.MaterialButton
+import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 import javax.inject.Inject
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.common.domain.DarkThemeManager
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.TechnicalDetail
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
+import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.sora.R
 import jp.co.soramitsu.sora.databinding.ActivitySplashBinding
 import jp.co.soramitsu.sora.splash.domain.StartupTimeTrace
-import kotlinx.coroutines.Dispatchers
+import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeCallbacks
+import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeEvent
+import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeViewModel
+import jp.co.soramitsu.sora.splash.presentation.recovery.SafeSheetKind
+import jp.co.soramitsu.sora.splash.presentation.recovery.SplashSafeMode
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
+/**
+ * The launcher screen: the start animation, the wallet verification, and Safe Mode (design spec
+ * 9) when the upgrade needs the person: the upgrade progress (U1, U5), the storage screen (U4)
+ * and the recovery options (U6), hosted in the `walletRecoveryCompose` view.
+ */
 @AndroidEntryPoint
 class SplashActivity : AppCompatActivity() {
 
     private val splashViewModel: SplashViewModel by viewModels()
+    private val safeModeViewModel: SafeModeViewModel by viewModels()
 
     private lateinit var viewBinding: ActivitySplashBinding
 
@@ -72,18 +98,18 @@ class SplashActivity : AppCompatActivity() {
     @Inject
     lateinit var mainStarter: MainStarter
 
+    @Inject
+    lateinit var darkThemeManager: DarkThemeManager
+
+    @Inject
+    lateinit var nodeManager: dagger.Lazy<NodeManager>
+
     private var isFirstPartFinished = false
     private var isSecondPartStarted = false
     private var isNavigationRequested = false
     private var isStartupReadyReported = false
-
-    /** Code of the recovery state on screen; shown under Technical details and sent to support. */
-    private var recoveryCode: String? = null
-
-    /** One recovery action at a time; the running one reads "Working…". */
-    private var isRecoveryActionRunning = false
-    private var runningButtonLabel: CharSequence? = null
-    private var runningButtonMinHeight = 0
+    private var isSplashViewModelBound = false
+    private var progressWatchdog: Job? = null
 
     private val animatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
         val progress = it.animatedFraction
@@ -103,156 +129,18 @@ class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(ActivitySplashBinding.inflate(layoutInflater).also { viewBinding = it }.root)
+        setUpSafeMode()
 
-        viewBinding.retryWalletMigrationButton.setOnClickListener {
-            runRecoveryAction(
-                button = viewBinding.retryWalletMigrationButton,
-                // Re-runs the startup checks and, for an interrupted wallet verification,
-                // authorizes one more run. Never deletes or rewrites wallet data.
-                work = { WalletUpgradeBackup.retry(applicationContext) },
-            ) { result ->
-                if (result.isSuccess) {
-                    // Recreating the Activity retains its ViewModel and the completed failed
-                    // migration result. A successful preflight must explicitly replace that result
-                    // and rerun wallet verification before navigation, just like a journal retry.
-                    splashViewModel.retryWalletMigration()
-                } else {
-                    showRecovery(
-                        code =
-                            (result.exceptionOrNull() as?
-                                jp.co.soramitsu.core_db.WalletUpgradeBackupException)
-                                ?.code
-                                ?: WalletUpgradeBackup.blockingFailure()?.code
-                                ?: "BACKUP_RETRY_FAILED",
-                        canContinueLegacyWallet =
-                            WalletUpgradeBackup.recoveryOptions()?.canReadOnly == true,
-                    )
-                }
-            }
+        if (savedInstanceState == null && isRetryFromHome()) {
+            // "Try upgrade again" from the read-only home screen: the same action as Try again
+            // on the recovery screen, with the progress screen from the start. The splash view
+            // model (which starts a verification) is bound only once the checks have passed.
+            hideStartAnimation()
+            isNavigationRequested = true
+            safeModeViewModel.startRetryFromHome()
+            return
         }
-        viewBinding.contactWalletSupportButton.setOnClickListener { contactSupport() }
-        viewBinding.walletRecoveryDetailsButton.setOnClickListener {
-            val show = viewBinding.walletRecoveryCodeTextView.visibility != View.VISIBLE
-            viewBinding.walletRecoveryCodeTextView.visibility = if (show) View.VISIBLE else View.GONE
-            viewBinding.walletRecoveryDetailsButton.setText(
-                if (show) {
-                    R.string.wallet_upgrade_recovery_details_hide
-                } else {
-                    R.string.wallet_upgrade_recovery_details_show
-                }
-            )
-        }
-        viewBinding.continueLegacyWalletButton.setOnClickListener {
-            runRecoveryAction(
-                button = viewBinding.continueLegacyWalletButton,
-                work = { WalletUpgradeBackup.authorizeSafeReadOnly(applicationContext) },
-            ) { result ->
-                val route = result.getOrNull()
-                if (
-                    route == WalletUpgradeBackup.SafeReadOnlyRoute.ROOM_READ_ONLY ||
-                    route == WalletUpgradeBackup.SafeReadOnlyRoute.NORMAL_ACCESS
-                ) {
-                    splashViewModel.continueLegacyWallet()
-                } else {
-                    showRecovery(
-                        code =
-                            (result.exceptionOrNull() as?
-                                jp.co.soramitsu.core_db.WalletUpgradeBackupException)
-                                ?.code
-                                ?: "LEGACY_RECOVERY_AUTHORIZATION_FAILED",
-                        canContinueLegacyWallet =
-                            WalletUpgradeBackup.recoveryOptions()?.canReadOnly == true,
-                    )
-                }
-            }
-        }
-        viewBinding.exportWalletRecoveryButton.setOnClickListener {
-            runRecoveryAction(
-                button = viewBinding.exportWalletRecoveryButton,
-                work = { WalletUpgradeBackup.createRecoveryArchive(applicationContext) },
-            ) { result ->
-                result.onSuccess { archive ->
-                    val uri = FileProvider.getUriForFile(
-                        this@SplashActivity,
-                        "$packageName.soraFileProvider",
-                        archive,
-                    )
-                    startActivity(
-                        Intent.createChooser(
-                            Intent(Intent.ACTION_SEND).apply {
-                                type = "application/zip"
-                                putExtra(Intent.EXTRA_STREAM, uri)
-                                clipData = ClipData.newUri(
-                                    contentResolver,
-                                    "SORA encrypted recovery archive",
-                                    uri,
-                                )
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            },
-                            getString(R.string.wallet_upgrade_recovery_export),
-                        )
-                    )
-                }.onFailure {
-                    showRecovery(
-                        code =
-                            (it as? jp.co.soramitsu.core_db.WalletUpgradeBackupException)?.code
-                                ?: "RECOVERY_EXPORT_FAILED",
-                        canContinueLegacyWallet = false,
-                    )
-                }
-            }
-        }
-
-        splashViewModel.runtimeInitiated.observe(
-            this
-        ) {
-            if (
-                it &&
-                viewBinding.walletRecoveryPanel.visibility != View.VISIBLE
-            ) {
-                // Navigation still awaits the wallet migration result in SplashViewModel. Start
-                // that wait after the short launch floor instead of making a completed migration
-                // sit behind 89% of the three-second Lottie animation.
-                goNext()
-            }
-        }
-
-        splashViewModel.loadingTextVisiblity.observe(
-            this
-        ) {
-            if (viewBinding.walletRecoveryPanel.visibility != View.VISIBLE) {
-                viewBinding.loadingDisclaimerTextView.visibility = View.VISIBLE
-                viewBinding.loadingProgressBar.visibility = View.VISIBLE
-            }
-        }
-
-        splashViewModel.showMainScreen.observe(this) {
-            val backupFailure = WalletUpgradeBackup.blockingFailure()
-            if (backupFailure == null) {
-                reportStartupReady()
-                mainStarter.start(this)
-            } else {
-                showRecovery(
-                    code = backupFailure.code,
-                    canContinueLegacyWallet = false,
-                )
-            }
-        }
-        splashViewModel.showOnBoardingScreen.observe(this) {
-            reportStartupReady()
-            multiaccStarter.startOnboardingFlow(this)
-        }
-        splashViewModel.showMainScreenFromInviteLink.observe(this) {
-            reportStartupReady()
-            mainStarter.startWithInvite(this)
-            finish()
-        }
-        splashViewModel.showMigrationRecovery.observe(this) { recovery ->
-            showRecovery(
-                code = recovery.code,
-                canContinueLegacyWallet = recovery.canContinueLegacyWallet,
-            )
-        }
+        bindSplashViewModel()
 
         // An interrupted verification is retried automatically first (SplashInteractor); the
         // recovery options appear only if that retry does not succeed.
@@ -260,11 +148,158 @@ class SplashActivity : AppCompatActivity() {
         if (startupFailure == null) {
             viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
         } else {
-            showRecovery(
-                code = startupFailure.code,
-                canContinueLegacyWallet =
-                    WalletUpgradeBackup.recoveryOptions()?.canReadOnly == true,
-            )
+            showRecovery(startupFailure.code)
+        }
+    }
+
+    /** Only while a recovery state is active; a stray intent cannot start anything else. */
+    private fun isRetryFromHome(): Boolean =
+        intent?.getBooleanExtra(WalletUpgradeRetry.EXTRA_RETRY_UPGRADE, false) == true &&
+            (
+                WalletRecoveryCapabilityGate.mode() != WalletRecoveryCapabilityGate.Mode.NORMAL ||
+                    WalletUpgradeBackup.recoveryOptions() != null
+                )
+
+    private fun bindSplashViewModel() {
+        if (isSplashViewModelBound) return
+        isSplashViewModelBound = true
+        splashViewModel.runtimeInitiated.observe(this) {
+            if (it && !isSafeModeVisible()) {
+                // Navigation still awaits the wallet migration result in SplashViewModel. Start
+                // that wait after the short launch floor instead of making a completed migration
+                // sit behind 89% of the three-second Lottie animation.
+                goNext()
+            }
+        }
+        splashViewModel.loadingTextVisiblity.observe(this) {
+            if (!isSafeModeVisible()) {
+                viewBinding.loadingDisclaimerTextView.visibility = View.VISIBLE
+                viewBinding.loadingProgressBar.visibility = View.VISIBLE
+            }
+        }
+        splashViewModel.showMainScreen.observe(this) {
+            val backupFailure = WalletUpgradeBackup.blockingFailure()
+            if (backupFailure == null) {
+                afterVerification {
+                    // F11: read-only and a successful retry need the live node connection.
+                    runCatching { nodeManager.get().ensureStarted() }
+                    reportStartupReady()
+                    mainStarter.start(this)
+                }
+            } else {
+                showRecovery(backupFailure.code)
+            }
+        }
+        splashViewModel.showOnBoardingScreen.observe(this) {
+            afterVerification {
+                reportStartupReady()
+                multiaccStarter.startOnboardingFlow(this)
+            }
+        }
+        splashViewModel.showMainScreenFromInviteLink.observe(this) {
+            afterVerification {
+                runCatching { nodeManager.get().ensureStarted() }
+                reportStartupReady()
+                mainStarter.startWithInvite(this)
+                finish()
+            }
+        }
+        splashViewModel.showMigrationRecovery.observe(this) { recovery ->
+            showRecovery(recovery.code, recovery.options)
+        }
+    }
+
+    private fun setUpSafeMode() {
+        viewBinding.walletRecoveryCompose.setContent {
+            val dark by darkThemeManager.darkModeStatusFlow.collectAsStateWithLifecycle()
+            val state by safeModeViewModel.state.collectAsStateWithLifecycle()
+            SoraAppTheme(darkTheme = dark) {
+                if (state.visible) {
+                    val labels = detailLabels()
+                    val details = safeModeViewModel.technicalDetails().map { (key, value) ->
+                        TechnicalDetail(labels[key] ?: key, value)
+                    }
+                    SplashSafeMode(
+                        state = state,
+                        details = details,
+                        callbacks = SafeModeCallbacks(
+                            onAction = safeModeViewModel::onAction,
+                            onCopyDetail = { safeModeViewModel.copyToClipboard(it.label, it.value) },
+                            onCloseSheet = safeModeViewModel::closeSheet,
+                            onConfirmReadOnly = safeModeViewModel::confirmReadOnly,
+                            onConfirmRestore = safeModeViewModel::confirmRestore,
+                            onCreateExport = safeModeViewModel::createExport,
+                            onEmailSupport = { safeModeViewModel.emailSupport(labels) },
+                            onCopySupport = {
+                                safeModeViewModel.copyToClipboard(
+                                    "SORA support details",
+                                    safeModeViewModel.supportText(labels),
+                                )
+                            },
+                            onGetHelp = { safeModeViewModel.openSheet(SafeSheetKind.SUPPORT) },
+                            onPinDigit = safeModeViewModel::pinDigit,
+                            onPinDelete = safeModeViewModel::pinDelete,
+                            onBiometric = safeModeViewModel::requestBiometric,
+                            onRetryAuth = safeModeViewModel::retryAuthCheck,
+                            onOpenEntry = { safeModeViewModel.openEntry(it) },
+                            onReveal = safeModeViewModel::setRevealed,
+                            onRevealBack = safeModeViewModel::backFromReveal,
+                            onRevealClose = safeModeViewModel::closeReveal,
+                        ),
+                    )
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                safeModeViewModel.state.collect { state ->
+                    viewBinding.walletRecoveryCompose.visibility =
+                        if (state.visible) View.VISIBLE else View.GONE
+                    if (state.visible) hideStartAnimation()
+                    setSecureWindow(state.reveal != null)
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                safeModeViewModel.events.collect(::onSafeModeEvent)
+            }
+        }
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun detailLabels(): Map<String, String> = mapOf(
+        SafeModeViewModel.DETAIL_CODE to stringResource(R.string.recovery_detail_code),
+        SafeModeViewModel.DETAIL_VERSION to stringResource(R.string.recovery_detail_version),
+        SafeModeViewModel.DETAIL_TIME to stringResource(R.string.recovery_detail_time),
+        SafeModeViewModel.DETAIL_ANDROID to stringResource(R.string.recovery_detail_android),
+    )
+
+    private fun onSafeModeEvent(event: SafeModeEvent) {
+        when (event) {
+            SafeModeEvent.RetryReady -> {
+                // The startup checks passed: run the wallet verification again and route like a
+                // normal start (Recreating the Activity retains its ViewModel and the completed
+                // failed migration result; a retry explicitly replaces that result).
+                bindSplashViewModel()
+                splashViewModel.retryWalletMigration()
+            }
+
+            SafeModeEvent.ReadOnlyReady -> {
+                bindSplashViewModel()
+                runCatching { nodeManager.get().ensureStarted() }
+                splashViewModel.continueLegacyWallet()
+            }
+
+            is SafeModeEvent.ShareExport -> shareExport(event.file)
+            SafeModeEvent.RestartForRestore -> restartApp()
+            SafeModeEvent.OpenStorageSettings -> openStorageSettings()
+            is SafeModeEvent.Email -> emailSupport(event.subject, event.body)
+            SafeModeEvent.Copied -> if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                Toast.makeText(this, R.string.recovery_support_copied, Toast.LENGTH_SHORT).show()
+            }
+
+            is SafeModeEvent.Authenticate -> authenticate(event.deviceCredential)
         }
     }
 
@@ -273,102 +308,152 @@ class SplashActivity : AppCompatActivity() {
         isNavigationRequested = true
         viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
         splashViewModel.nextScreen()
+        // U0: a verification that finishes within 1.5 s stays silent; after that the progress
+        // screen shows its real phases (U1, or U5 when resuming an interrupted one).
+        progressWatchdog?.cancel()
+        progressWatchdog = lifecycleScope.launch {
+            delay(SafeModeViewModel.SILENT_UPGRADE_MILLIS)
+            if (!isFinishing && safeModeViewModel.state.value.panel == null) {
+                safeModeViewModel.showStartupProgress()
+            }
+        }
     }
 
-    private fun showRecovery(
-        code: String,
-        canContinueLegacyWallet: Boolean,
-    ) {
+    /**
+     * Navigation after a verification: when the progress screen is showing, its last row gets
+     * its tick first (design spec 9.3), then the next screen opens.
+     */
+    private fun afterVerification(navigate: () -> Unit) {
+        progressWatchdog?.cancel()
+        safeModeViewModel.onVerificationRouted()
+        if (safeModeViewModel.markProgressFinished()) {
+            lifecycleScope.launch {
+                delay(FINISH_TICK_MILLIS)
+                navigate()
+            }
+        } else {
+            navigate()
+        }
+    }
+
+    private fun isSafeModeVisible(): Boolean = safeModeViewModel.state.value.visible
+
+    private fun hideStartAnimation() {
         viewBinding.animationView.cancelAnimation()
         viewBinding.animationView.visibility = View.GONE
         viewBinding.loadingDisclaimerTextView.visibility = View.GONE
         viewBinding.loadingProgressBar.visibility = View.GONE
-        viewBinding.walletRecoveryPanel.visibility = View.VISIBLE
-        recoveryCode = code
-        viewBinding.walletRecoveryCodeTextView.text =
-            getString(R.string.wallet_upgrade_recovery_code, code)
-        viewBinding.continueLegacyWalletButton.visibility =
-            if (canContinueLegacyWallet) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
+    }
+
+    private fun showRecovery(
+        code: String,
+        options: jp.co.soramitsu.core_db.WalletRecoveryOptions? = null,
+    ) {
+        progressWatchdog?.cancel()
+        hideStartAnimation()
+        safeModeViewModel.showPanel(code, options ?: WalletUpgradeBackup.recoveryOptions()?.takeIf { it.code == code })
         reportStartupReady()
     }
 
-    /**
-     * Runs one recovery action off the main thread. While it runs, the tapped button keeps its
-     * colours and reads "Working…", the other actions are disabled (greyed), a thin progress line
-     * shows, and after 10 s a "Still working…" line appears (design spec 7.1, 9.1-5). Contact
-     * support and Technical details stay available.
-     */
-    private fun <T> runRecoveryAction(
-        button: MaterialButton,
-        work: () -> T,
-        onDone: (T) -> Unit,
-    ) {
-        if (isRecoveryActionRunning) return
-        isRecoveryActionRunning = true
-        showRecoveryActionRunning(button, running = true)
-        lifecycleScope.launch {
-            val stillWorking = launch {
-                delay(STILL_WORKING_AFTER_MILLIS)
-                viewBinding.walletRecoveryStatusTextView.visibility = View.VISIBLE
-            }
-            val result = try {
-                withContext(Dispatchers.IO) { work() }
-            } finally {
-                stillWorking.cancel()
-                showRecoveryActionRunning(button, running = false)
-                isRecoveryActionRunning = false
-            }
-            onDone(result)
-        }
+    override fun onResume() {
+        super.onResume()
+        safeModeViewModel.onResumed()
     }
 
-    private fun showRecoveryActionRunning(button: MaterialButton, running: Boolean) {
-        val actions = listOf(
-            viewBinding.retryWalletMigrationButton,
-            viewBinding.exportWalletRecoveryButton,
-            viewBinding.continueLegacyWalletButton,
-        )
-        if (running) {
-            runningButtonLabel = button.text
-            runningButtonMinHeight = button.minHeight
-            // Keep the height, so a two-line label does not make the panel jump.
-            button.minHeight = button.height
-            button.setText(R.string.wallet_upgrade_recovery_working)
+    override fun onStop() {
+        // A revealed recovery phrase never outlives the screen.
+        if (!isChangingConfigurations) safeModeViewModel.onStopped()
+        super.onStop()
+    }
+
+    private fun setSecureWindow(secure: Boolean) {
+        if (secure) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         } else {
-            runningButtonLabel?.let { button.text = it }
-            button.minHeight = runningButtonMinHeight
-            runningButtonLabel = null
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
-        actions.forEach { action ->
-            action.isEnabled = !running
-            action.isActivated = running && action === button
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(!secure)
         }
-        viewBinding.walletRecoveryProgressBar.visibility =
-            if (running) View.VISIBLE else View.INVISIBLE
-        if (!running) viewBinding.walletRecoveryStatusTextView.visibility = View.GONE
     }
 
-    private fun contactSupport() {
-        val body = recoveryCode?.let { getString(R.string.wallet_upgrade_recovery_code, it) }
+    private fun authenticate(deviceCredential: Boolean) {
+        val prompt = BiometricPrompt(
+            this,
+            ContextCompat.getMainExecutor(this),
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    safeModeViewModel.onAuthenticated()
+                }
+            },
+        )
+        val info = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(R.string.recovery_auth_title))
+            .apply {
+                if (deviceCredential) {
+                    setAllowedAuthenticators(SafeModeViewModel.DEVICE_CREDENTIAL_AUTHENTICATORS)
+                } else {
+                    setAllowedAuthenticators(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                    setNegativeButtonText(getString(jp.co.soramitsu.common.R.string.common_cancel))
+                }
+            }
+            .build()
+        runCatching { prompt.authenticate(info) }
+    }
+
+    private fun shareExport(archive: File) {
+        runCatching {
+            val uri = FileProvider.getUriForFile(this, "$packageName.soraFileProvider", archive)
+            startActivity(
+                Intent.createChooser(
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = "application/zip"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        clipData = ClipData.newUri(contentResolver, "SORA recovery file", uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    },
+                    getString(R.string.recovery_export),
+                ),
+            )
+        }
+    }
+
+    /** Never crashes: without an email app the address is shown in the sheet instead. */
+    private fun emailSupport(subject: String, body: String) {
         val mailto = buildString {
-            append("mailto:").append(SUPPORT_EMAIL)
-            append("?subject=").append(Uri.encode("SORA wallet upgrade recovery"))
-            if (body != null) append("&body=").append(Uri.encode(body))
+            append("mailto:").append(SafeModeViewModel.SUPPORT_EMAIL)
+            append("?subject=").append(Uri.encode(subject))
+            append("&body=").append(Uri.encode(body))
         }
         try {
             startActivity(Intent(Intent.ACTION_SENDTO, mailto.toUri()))
-        } catch (e: ActivityNotFoundException) {
-            // No email app: show the address instead of failing silently or crashing.
-            Toast.makeText(
-                this,
-                getString(R.string.wallet_upgrade_recovery_support_no_email, SUPPORT_EMAIL),
-                Toast.LENGTH_LONG,
-            ).show()
+        } catch (_: ActivityNotFoundException) {
+            safeModeViewModel.onNoEmailApp()
+        } catch (_: SecurityException) {
+            safeModeViewModel.onNoEmailApp()
         }
+    }
+
+    /** U4: the system storage screen. Never "Clear app data". */
+    private fun openStorageSettings() {
+        val opened = runCatching {
+            startActivity(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS))
+        }.isSuccess
+        if (!opened) runCatching { startActivity(Intent(Settings.ACTION_SETTINGS)) }
+    }
+
+    /**
+     * "Set up this device again" was recorded; the next process sets the old files aside (kept,
+     * never deleted) before anything opens them. Start the launcher in a new task, then end this
+     * process so nothing still holds the old files.
+     */
+    private fun restartApp() {
+        val launch = packageManager.getLaunchIntentForPackage(packageName)
+            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            ?: return
+        startActivity(launch)
+        finishAffinity()
+        Runtime.getRuntime().exit(0)
     }
 
     private fun reportStartupReady() {
@@ -378,7 +463,6 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private companion object {
-        const val SUPPORT_EMAIL = "support@sora.org"
-        const val STILL_WORKING_AFTER_MILLIS = 10_000L
+        const val FINISH_TICK_MILLIS = 300L
     }
 }
