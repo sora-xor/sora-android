@@ -42,6 +42,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -203,6 +205,7 @@ fun ReadOnlyChip(modifier: Modifier = Modifier) {
  * U9 (design spec 9.2): the read-only chip and an info banner on the wallet home. Balances and
  * history stay visible; the actions are "Try upgrade again" and "Learn more".
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ReadOnlyBanner(
     onTryAgain: () -> Unit,
@@ -241,10 +244,11 @@ fun ReadOnlyBanner(
             color = n.textSecondary,
         )
         Spacer(Modifier.size(12.dp))
-        Row(
+        // Wraps to a second line when both labels do not fit (long translations, large fonts).
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             NeonButton(
                 size = ButtonSize.Small,

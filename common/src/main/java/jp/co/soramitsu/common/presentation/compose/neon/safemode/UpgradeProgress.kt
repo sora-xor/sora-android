@@ -197,3 +197,55 @@ fun UpgradeProgressContent(
         }
     }
 }
+
+/**
+ * After unlocking, the wallet checks the account (an older SORA balance to claim). Silent for
+ * 1.5 s (U0); then the progress screen with its real steps (U1). Offline it waits for the
+ * network (U2) and offers "Change node"; the caller continues by itself once connected.
+ * [silentMillis] 0 shows it at once (previews and tests).
+ */
+@Composable
+fun AccountCheckProgress(
+    connected: Boolean,
+    onSwitchNode: () -> Unit,
+    onGetHelp: () -> Unit,
+    silentMillis: Long = SILENT_CHECK_MILLIS,
+    fixedElapsedMillis: Long? = null,
+) {
+    var visible by remember { mutableStateOf(!connected || silentMillis <= 0) }
+    LaunchedEffect(Unit) {
+        delay(silentMillis)
+        visible = true
+    }
+    if (!visible && connected) return
+    SafeModeScreen {
+        UpgradeProgressContent(
+            title = stringResource(R.string.safe_mode_checking_title),
+            body = stringResource(
+                if (connected) R.string.safe_mode_checking_body else R.string.safe_mode_waiting_network_body,
+            ),
+            steps = listOf(
+                SafeStep(stringResource(R.string.safe_mode_step_unlocked), SafeStepState.DONE),
+                if (connected) {
+                    SafeStep(stringResource(R.string.safe_mode_step_network), SafeStepState.DONE)
+                } else {
+                    SafeStep(stringResource(R.string.safe_mode_step_network_waiting), SafeStepState.NEEDS_ACTION)
+                },
+                SafeStep(
+                    stringResource(R.string.safe_mode_step_account_check),
+                    if (connected) SafeStepState.RUNNING else SafeStepState.WAITING,
+                ),
+            ),
+            stepAction = if (connected) {
+                null
+            } else {
+                ProgressAction(stringResource(R.string.safe_mode_change_node), onSwitchNode)
+            },
+            onGetHelp = onGetHelp,
+            fixedElapsedMillis = fixedElapsedMillis,
+        )
+    }
+}
+
+/** U0: a check that finishes within this time shows no progress screen. */
+const val SILENT_CHECK_MILLIS = 1_500L

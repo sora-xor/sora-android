@@ -364,6 +364,11 @@ class SplashActivity : AppCompatActivity() {
         safeModeViewModel.onResumed()
     }
 
+    override fun onPause() {
+        safeModeViewModel.onPaused()
+        super.onPause()
+    }
+
     override fun onStop() {
         // A revealed recovery phrase never outlives the screen.
         if (!isChangingConfigurations) safeModeViewModel.onStopped()
@@ -389,6 +394,10 @@ class SplashActivity : AppCompatActivity() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     safeModeViewModel.onAuthenticated()
                 }
+
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    safeModeViewModel.onAuthenticationEnded()
+                }
             },
         )
         val info = BiometricPrompt.PromptInfo.Builder()
@@ -402,7 +411,7 @@ class SplashActivity : AppCompatActivity() {
                 }
             }
             .build()
-        runCatching { prompt.authenticate(info) }
+        runCatching { prompt.authenticate(info) }.onFailure { safeModeViewModel.onAuthenticationEnded() }
     }
 
     private fun shareExport(archive: File) {

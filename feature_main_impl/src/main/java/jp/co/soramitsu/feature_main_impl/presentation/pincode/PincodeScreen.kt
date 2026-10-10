@@ -49,31 +49,20 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountCheckProgress
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LegacyPinUpgradePanel
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.ProgressAction
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeScreen
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeStep
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeStepState
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeProgressContent
 import jp.co.soramitsu.common.util.ext.shake
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
-import kotlinx.coroutines.delay
-import jp.co.soramitsu.common.R as CommonR
 
 @Composable
 internal fun PincodeScreen(
@@ -143,52 +132,6 @@ internal fun PincodeScreen(
     }
 }
 
-/**
- * After unlocking, the wallet checks the account (an older SORA balance to claim). Silent for
- * 1.5 s (U0); then the progress screen (U1) with its real steps. Offline it waits for the
- * network (U2) and offers "Change node"; it continues by itself once connected.
- */
-@Composable
-private fun AccountCheckProgress(
-    connected: Boolean,
-    onSwitchNode: () -> Unit,
-    onGetHelp: () -> Unit,
-) {
-    var visible by remember { mutableStateOf(!connected) }
-    LaunchedEffect(Unit) {
-        delay(SILENT_CHECK_MILLIS)
-        visible = true
-    }
-    if (!visible && connected) return
-    SafeModeScreen {
-        UpgradeProgressContent(
-            title = stringResource(CommonR.string.safe_mode_checking_title),
-            body = stringResource(
-                if (connected) CommonR.string.safe_mode_checking_body else CommonR.string.safe_mode_waiting_network_body,
-            ),
-            steps = listOf(
-                SafeStep(stringResource(CommonR.string.safe_mode_step_unlocked), SafeStepState.DONE),
-                if (connected) {
-                    SafeStep(stringResource(CommonR.string.safe_mode_step_network), SafeStepState.DONE)
-                } else {
-                    SafeStep(stringResource(CommonR.string.safe_mode_step_network_waiting), SafeStepState.NEEDS_ACTION)
-                },
-                SafeStep(
-                    stringResource(CommonR.string.safe_mode_step_account_check),
-                    if (connected) SafeStepState.RUNNING else SafeStepState.WAITING,
-                ),
-            ),
-            stepAction = if (connected) {
-                null
-            } else {
-                ProgressAction(stringResource(CommonR.string.safe_mode_change_node), onSwitchNode)
-            },
-            onGetHelp = onGetHelp,
-        )
-    }
-}
-
-private const val SILENT_CHECK_MILLIS = 1_500L
 
 @Composable
 private fun DotsProgress(modifier: Modifier = Modifier, maxDotsCount: Int, checkedDotsCount: Int) {
