@@ -405,7 +405,8 @@ Follow-up (Safe Mode task, required before release):
       `FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK` and end the
       process). Offer it when `recoveryOptions().canSetUpAgain`; when
       `restoreNeedsSetUpAgain` is true, "Restore with recovery phrase" and
-      "Restore from Google Drive" go through it.
+      "Restore from Google Drive" go through it. (Round 2: not offered for
+      transient or storage states; see `setUpAgainScope` below.)
 - [ ] For each read-only account, show `UserRepository.unavailableWalletOptions()`:
       "Import this account's phrase" when `canRepairWithPhrase`, otherwise
       "Remove this account, then import its phrase" (`canRemoveAndImport`),
@@ -415,9 +416,11 @@ Follow-up (Safe Mode task, required before release):
 
 Product decisions to confirm:
 
-- [ ] "Set up this device again" renames (never deletes) the database,
-      preference files and wrapped-key file into `no_backup`; they stay on
-      the phone until a later release offers a confirmed cleanup.
+- [ ] "Set up this device again" renames (never deletes) files into
+      `no_backup`: only the database for database and verification
+      problems, and also the preference files and wrapped key when this
+      phone cannot use them (round 2). They stay on the phone until a later
+      release offers a confirmed cleanup.
 - [ ] Removing a read-only account keeps a copy of the encrypted preference
       files in `no_backup/wallet-quarantine-*-removed-unavailable-account/`
       first; without that copy (for example a full disk) the removal is
@@ -433,3 +436,53 @@ Support:
       can't unlock the saved wallet data" (typically a phone-to-phone
       transfer; restore with the recovery phrase; never ask them to
       reinstall or clear data).
+
+### a4 review fixes, round 2: actions
+
+Before each release candidate:
+
+- [ ] Same emulator run; `WalletUpgradeScenarioTest` now has 30 scenarios.
+      It adds: set up again after a damaged database, the 2.4.0 account with
+      an undecryptable copy, release-era keys of another address, and a
+      retry whose counter cannot be saved.
+
+Real-device QA (test phones and team test wallets only):
+
+- [ ] Device-to-device transfer (Pixel "Copy apps & data") of a 3.8.6.3
+      install with two accounts, then the release build. The recovery panel
+      must not show "Continue read-only", and no button may crash the app.
+      Try again and Contact support must work.
+- [ ] On a nearly full phone, kill the app during the first start after
+      the upgrade. The next start must show the recovery options or open
+      the wallet, never crash repeatedly.
+
+Follow-up (Safe Mode task, required before release):
+
+- [ ] Read `recoveryOptions().setUpAgainScope` before confirming "Set up
+      this device again":
+      - `DATABASE_ONLY`: every stored key set stays on the phone. After the
+        restart, offer "Restore wallets found on this phone"
+        (`WalletUpgradeBackup.quarantine().retainedWalletIds` with
+        `UserRepository.adoptRetainedWallet`) next to the phrase and Drive
+        restore.
+      - `ALL_WALLET_FILES`: the app cannot read the old keys afterwards.
+        When `canShowPhraseAfterPin` is true, offer "Show my recovery
+        phrase" first, and ask the person to confirm that every phrase is
+        written down.
+      - Never offer set-up-again or restore when the scope is `NONE`
+        (transient or storage states).
+- [ ] Per read-only account (`unavailableWalletOptions()`):
+      - When `showPhraseBeforeRemoval` is true, show the phrase (after PIN)
+        and ask for confirmation before "Remove this account".
+      - When `hasReleaseEraCopy` is true, tell the person that removing the
+        account keeps its older keys, so it can be restored from the phone
+        afterwards.
+
+Product decisions to confirm:
+
+- [ ] Set-up-again moves key material only when this phone cannot use it
+      (missing Keystore key, unreadable preference files). Every other
+      recovery state sets aside the database only.
+- [ ] Removing an account removes the release-era (2.x) keys only when they
+      are proven to be that verified account's own. Otherwise they stay on
+      the phone, and the account can be restored from there.

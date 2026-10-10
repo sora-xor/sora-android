@@ -1248,3 +1248,184 @@ account row is deleted, overwritten or moved automatically.
 - `testProductionDebugUnitTest`: 1,103 tests in 15 modules, 0 failures,
   9 skipped. `:app:assembleProductionDebug` passes. `:app:lintProductionDebug`:
   866 warnings, 1 hint, 180 baselined errors (baseline unchanged).
+
+### Review fixes (a4, round 2)
+
+Five more review findings, all fixed. As before, nothing deletes,
+overwrites or moves key material automatically.
+
+**"Set up this device again" keeps every usable key in place**
+(`WalletRecoveryOptions`, `WalletUpgradeBackup`)
+
+- Round 1 offered set-up-again in every recovery state and always moved the
+  encrypted preferences (every account's keys, phrases and seeds) and the
+  wrapped key aside, where no in-app path can read them. Restoring one
+  wallet after a damaged database or an interrupted check could therefore
+  strand the keys of every other wallet, for example one imported from a
+  raw seed whose owner never wrote it down.
+- New `WalletRecoveryOptions.setUpAgainScope`, recorded with the request
+  and applied at the next start:
+  - `DATABASE_ONLY` for database and verification problems (`MIGRATION`
+    and `INTEGRITY` states, for example `DATABASE_CORRUPT` or an
+    interrupted check). Only `app.db` and its sidecars move; the database
+    holds no secrets. The encrypted preferences and `key_alias.xml` stay
+    exactly where they are, so after the restart every key set is listed as
+    a retained wallet. Importing its phrase re-uses it after proving it
+    matches, and "Restore wallets found on this phone"
+    (`adoptRetainedWallet`) restores the others.
+  - `ALL_WALLET_FILES` only when the keys cannot be used here at all: the
+    Keystore key is missing (`KEYSTORE_KEY_UNAVAILABLE`, for example after
+    a phone-to-phone transfer) or the preference files cannot be read
+    (`PREFERENCES_INVENTORY_INVALID`). The files are still only renamed.
+  - `NONE` for transient and storage states (busy Keystore, I/O, low
+    storage). They are retried automatically, or the storage options are
+    shown. `requestSetUpAgain()` refuses them with
+    `SET_UP_AGAIN_NOT_AVAILABLE`.
+- `canRestoreFromPhrase`, `canRestoreFromDrive` and
+  `restoreNeedsSetUpAgain` are now true exactly where set-up-again is
+  offered.
+- A request that is unreadable or was written by an earlier test build
+  moves only the database. A waiting `ALL_WALLET_FILES` request is never
+  narrowed.
+
+**Removing a read-only account keeps its release-era keys**
+(`UserRepositoryImpl`, `CredentialsRepositoryImpl`)
+
+- Round 1 allowed removing a read-only account and, if `prefs_address_pure`
+  named it, also removed the release-era (unsuffixed) key set and phrase.
+  That set could be the only readable copy. For example, 2.4.0 copied it to
+  address-scoped values that later stopped decrypting. Removal now deletes
+  the unsuffixed set only when the target is verified and the set is proven
+  to be its own (its keys decrypt and derive exactly that address, or it
+  holds no secret at all). A read-only target, an unreadable set, or a set
+  whose keys derive another address is kept. "Restore wallets found on this
+  phone" can then adopt it. The confirm step recomputes the same rule.
+- `unavailableWalletOptions()`:
+  - `canShowPhraseAfterPin` now also counts a release-era phrase or seed
+    whose keys derive the address.
+  - `canRemoveAndImport` is offered only when removal loses no readable
+    secret, or when that secret is a phrase or seed that the person is
+    shown first.
+  - New `showPhraseBeforeRemoval` and `hasReleaseEraCopy`.
+- Showing the phrase (`retrieveMnemonic`, `retrieveStoredSeed`): when the
+  account's own value cannot be decrypted and the release-era keys derive
+  the address, the release-era value is returned (reading only). Otherwise
+  the error is reported as before.
+- The derived-seed cache in `retrieveSeed` is now add-only, so it can never
+  replace a stored seed value, even an unreadable one.
+
+**No read-only route while the wallet key cannot be used**
+(`WalletRecoveryOptions`, `WalletUpgradeBackup`, `MainViewModel`,
+`PinCodeViewModel`)
+
+- After a phone-to-phone transfer, round 1 offered "Continue read-only".
+  The main screen then decrypted the app PIN with the missing key and the
+  app crashed every time. `canReadOnly` is now false for
+  `KEYSTORE_KEY_UNAVAILABLE` and for a busy Keystore
+  (`KEYSTORE_UNAVAILABLE`) until a retry succeeds.
+  `authorizeSafeReadOnly()` returns `VAULT_ONLY` in those states, so the
+  existing panel hides the button.
+- Defence in depth:
+  - `MainViewModel.showPinFragment` no longer crashes when the PIN cannot be
+    read.
+  - The PIN screen keeps asking for the stored PIN when the wallet key is
+    busy or missing. It used to switch to "Set your PIN code", which would
+    have replaced the stored PIN.
+
+**Try again with no account opens onboarding** (`SplashViewModel`)
+
+- A retry that verifies a phone with no account row (for example retained
+  keys only, after a busy Keystore on the first start) used to open an
+  empty main screen, which then failed. Retry now uses the same routing as
+  a normal start.
+
+**A blocked automatic retry can no longer crash every start**
+(`WalletUpgradeBackup`, `MigrationManager`, `SplashInteractor`,
+`SplashViewModel`)
+
+- If the automatic retry of an interrupted check could not be authorized
+  (its counter could not be saved on a full disk, or the journal changed),
+  the splash waited for it. It then looked up the failure code through the
+  database, which is closed while startup is blocked. The uncaught error
+  crashed the app on every start, and no recovery screen was ever shown.
+- Now:
+  - `MigrationManager.failureCode()` returns the blocking code without
+    opening the database and never throws.
+  - `SplashInteractor` and `SplashViewModel` fall back to the code known in
+    memory.
+  - Any unexpected error while routing shows the recovery options.
+  - A failed automatic attempt is remembered for the process, so
+    `startupFailureToShow()` shows the options at once.
+
+**User-visible effects**
+
+- After a damaged database or an interrupted check, "Set up this device
+  again" no longer hides the other wallets' keys. After the restart they
+  can be restored from the phone, even those without a written phrase.
+- A phone that received its data from another phone no longer crashes on
+  "Continue read-only". That button is not shown there.
+- Removing an account that cannot sign no longer removes older keys it
+  shares with the phone. That account can be restored from the phone
+  afterwards.
+- No more crash loop on a nearly full phone after an interrupted upgrade.
+  The recovery options appear.
+- No new strings.
+
+**Verification**
+
+- JVM:
+  - `SplashViewModelTest`:
+    - retry with no account opens onboarding;
+    - a failure-code lookup that throws still shows recovery;
+    - an unexpected routing error shows recovery;
+    - set-up-again scope per state and code;
+    - read-only never offered while the key cannot be used;
+    - restore offered exactly with set-up-again.
+  - `SplashInteractorTest`: in-memory fallback.
+  - `MigrationManagerSafetyTest`: the failure code while blocked does not
+    open the database, and an unreadable code falls back to memory.
+  - `CredentialsRepositoryTest`: release-era phrase fallback, the error is
+    kept when no copy belongs to the wallet, and the seed cache is add-only.
+  - `MainViewModelTest`: the PIN check failure does not crash.
+  - `PinCodeViewModelTest`: an unusable key keeps asking for the stored PIN
+    and never saves a new one.
+- Device:
+  - `core_db` `WalletUpgradeBackupTest`:
+    - set-up-again with keys unavailable moves every file byte for byte;
+    - set-up-again for a damaged database moves only the database and
+      leaves the keys byte-identical and listed;
+    - set-up-again is refused for transient, storage and no-recovery
+      states;
+    - an automatic retry whose counter cannot be saved shows the options
+      at once, and Try again still works.
+  - New `WalletUpgradeScenarioTest` scenarios (30 now):
+    - Damaged database, then set-up-again. The 12-word wallet comes back
+      through import, and the raw-seed wallet through "Restore wallets
+      found on this phone"; both sign.
+    - 2.4.0 account with an undecryptable scoped copy. The release-era
+      phrase is shown; removal keeps the release-era keys; adoption
+      restores it and it signs.
+    - `prefs_address_pure` naming an account whose unsuffixed keys belong
+      to another wallet. Removal keeps them, and that wallet is adopted and
+      signs.
+    - Interrupted check whose retry cannot be saved, with real gated Room.
+      The failure code is read without opening the database, and the
+      options appear; Try again verifies and signs.
+  - Updated scenarios:
+    - Phone transfer: read-only is not offered, `retrievePin` fails with
+      `KeyMaterialUnavailableException`, and the route is `VAULT_ONLY`.
+    - Busy Keystore: no read-only and no set-up-again.
+    - Low storage: no set-up-again.
+- Results:
+
+  | Suite | SORA-Api36-16k | SORA-Api34 |
+  |---|---|---|
+  | `core_db` | 129/129 | 129/129 |
+  | `WalletUpgradeScenarioTest` | 30/30 | 30/30 |
+  | Ordered encrypted-wallet phases (process restart between phases) | 5/5 | not run |
+
+  - `testProductionDebugUnitTest`: 1,117 tests in 15 modules, 0 failures,
+    9 skipped.
+  - `:app:assembleProductionDebug` passes.
+  - `:app:lintProductionDebug`: 866 warnings, 1 hint and 180 baselined
+    errors. The baseline is unchanged.
