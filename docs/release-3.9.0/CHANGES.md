@@ -1661,3 +1661,119 @@ layout in both themes and checks every rendered text colour.
   blur-behind call sites, and the Compose Safe Mode screens of spec §9.
 - "Dark only for new installs" (spec principle 9) is not implemented; the
   default stays as it was.
+
+### Review fixes (a5, round 1)
+
+Adversarial review found eleven issues (three duplicated); all were real and
+all are fixed. No wallet keys, accounts, addresses, derivation or signing
+code changed; the recovery panel calls the same `WalletUpgradeBackup`
+functions with the same arguments.
+
+**Recovery panel (splash, Safe Mode)**
+
+- **Keep-installed callout (major).** a5 removed the old "before
+  reinstalling or clearing app data" clause and left nothing about
+  uninstalling. On Android the keys exist only on this device
+  (`allowBackup=false`, no device transfer), so uninstalling or clearing
+  storage without a phrase backup loses them. The panel now shows the spec
+  §9.1-3 info callout: "Please don't uninstall SORA or clear its storage.
+  Your keys are stored on this device." It uses `infoContainer`, a cyan
+  shield and `text.primary`; no caps, bold or warning colour.
+- **Disabled and running states (major).** `Widget.Sora.Button.Safe`,
+  `.Secondary` and `.Tertiary` used single colours, so a disabled button
+  looked enabled while Retry, Export or Continue read-only ran on IO.
+  They now use colour state lists (`common/src/main/res/color/
+  neon_button_*.xml`): disabled = `cta.disabled` fill and `text.disabled`
+  label (Secondary loses its border). While an action runs, its button
+  keeps its colours and reads "Working…" (height locked so a two-line
+  label does not jump), the other actions are disabled, a thin cyan
+  progress line shows, and after 10 s "Still working… this can take up to
+  a minute on some devices." appears (spec §7.1, §9.1-5). Only one action
+  runs at a time. Contact support and Technical details stay available.
+- **Technical details.** The recovery code left the body (spec §7.17,
+  §9.1-4) for a "Show technical details" toggle. The support email now
+  carries "Recovery code: …" in its body, so support still gets it. If no
+  email app is set up, a toast shows the support address; before, the
+  button would have crashed the recovery screen.
+- **Japanese (minor).** The app module had no `values-ja`, so the panel
+  was English for Japanese users. `app/src/main/res/values-ja/strings.xml`
+  translates every panel string. Other production locales still fall back
+  to English (see the release checklist).
+
+New strings (app module): `wallet_upgrade_recovery_keep_installed`,
+`_working`, `_still_working`, `_details_show`, `_details_hide`,
+`_support_no_email`. Japanese is translated; the akk/egy test locales
+carry the English text. The lint baseline is unchanged.
+
+**Toast (major).** a5 mapped `balanceColorDefault` (the toast's text
+appearance colour) to the theme-aware `text.primary`, but the toast card
+(`?attr/flatAboveBackground`) stayed `#FAF6F6` in both themes. The
+"Transaction submitted" toast after a send drew `#F5F6FB` on `#FAF6F6`
+(1.01:1) in dark mode. The card is now `bg.toast` (`#222233` dark,
+`#14141F` light, spec §7.13) with its own text colour (`neon_on_toast`,
+14.47:1 / 18.27:1), radius 16 and a 1 dp hairline. `flatAboveBackground`
+has no other user. I also checked the other attributes that stayed fixed
+in the one DayNight theme against the XML layouts still in use; this was
+the only fixed background paired with a now theme-aware text colour.
+
+**QR scanner (minor).** The scanner is always dark, but its window used
+AppTheme's light-mode bar flags: dark status-bar icons on the dark scrim
+on Android 15+ (about 1.3–1.5:1), and a light status-bar strip above the
+scanner before Android 15. `QRCodeScannerActivity` now calls
+`enableEdgeToEdge(SystemBarStyle.dark(TRANSPARENT), …)` on every API
+level (light icons, transparent bars); the "Show my QR code" button keeps
+clear of the navigation bar.
+
+**Compose foundation (minor)**
+
+- `NeonButton` and its ui-core drop-ins: the click now covers a
+  `minimumInteractiveComponentSize()` box, so Small (40) and ExtraSmall
+  (32) buttons keep the 48 dp touch target and layout of the ui-core
+  Material buttons (spec §6, §10.1).
+- Text fields: ui-core `InputText` draws its unfocused border with
+  `fgOutline`, the divider colour (1.24:1 dark, 1.37:1 light). New
+  `compose.neon.InputText` has the same signature and gives the field
+  `border.input` (3.67:1 dark, 3.80:1 light on the surface). ui-core keeps
+  its colour local private, so the wrapper repeats the current ui-core
+  theme with only that slot changed. The nine `InputText` screens (restore
+  with phrase, create/import/backup passwords, account name, JSON backup,
+  node details, referrer, contacts) swap the import. The slippage field's
+  own border uses `border.input`. Dividers keep `fgOutline`.
+- High contrast (API 34+ system contrast): `text.tertiary` maps to
+  `text.secondary` and hairline alphas double, both in the ui-core slots
+  and in `MaterialTheme.neon` (spec §4.0). `FxPolicy` already made glass
+  opaque, turned glows off and doubled border widths.
+
+**Contrast (cc.py, 27 new pairs, all pass)**
+
+| Pair | Dark | Light |
+|---|---:|---:|
+| callout text on `infoContainer` | 15.41 | 17.64 |
+| callout shield (cyan) on `infoContainer` | 10.99 | 5.16 |
+| toast text on `bg.toast` (before: 1.01 dark) | 14.47 | 18.27 |
+| running Safe / Secondary label ("Working…") | 13.82 / 15.61 | 6.11 / 17.60 |
+| "Still working" line on the panel | 9.18 | 8.77 |
+| field border on surface (before: 1.24 / 1.37) | 3.67 | 3.80 |
+| tertiary text under high contrast on surface | 9.18 | 8.77 |
+| scanner status icons on the scrim over a mid-grey scene (before: 1.45) | 11.37 | 11.37 |
+
+**Verification**
+
+- `:app:assembleProductionDebug` and `:app:assembleProductionDebugAndroidTest`
+  pass.
+- `testProductionDebugUnitTest`: 1,133 tests in 15 modules, 0 failures,
+  9 skipped. `NeonContrastTest` grew from 7 to 11 tests (high contrast,
+  toast, callout, button state lists).
+- `:app:lintProductionDebug`: no errors; 916 warnings, 1 hint, 180
+  baselined errors. The baseline is unchanged.
+- Device tests on `SORA-Api36-16k` (API 36) and `SORA-Api34` (API 34),
+  5 of 5 pass on each: `SplashRecoveryPanelThemeTest` (now also the
+  callout, the running label and the disabled colours), the new
+  `NeonToastThemeTest` and the new `QrScannerSystemBarsTest`, which
+  launches the real scanner in the light theme and checks the bar
+  appearance.
+- Screenshots: `scratchpad/screens/android/a5-ui-foundation/fix1/`
+  (recovery panel at rest and while working, light and dark; toast light
+  and dark; scanner in the light theme on API 36 and 34). The API 34 AVD
+  is an automated-test image without a system UI, so its scanner
+  screenshot has no status bar; the bar appearance assertion still runs.

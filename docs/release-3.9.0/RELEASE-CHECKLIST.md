@@ -533,3 +533,35 @@ Product decisions to confirm:
       failed before this task on the a4 English placeholders; it now also
       lists these three keys and `wallet_upgrade_recovery_message`. Middle
       Egyptian is a test-only locale and not offered in production.
+
+### a5 review fixes: actions
+
+- [ ] Support and product approve the recovery panel callout ("Please
+      don't uninstall SORA or clear its storage. Your keys are stored on
+      this device."), the "Working…" / "Still working…" lines and the
+      "Show technical details" toggle. The callout's "Your keys are stored
+      on this device" needs the engineering sign-off of spec §9.1-2. Note
+      for the reviewer: the panel appears only after the upgrade stopped
+      without changing wallet data, and nothing on this path deletes key
+      material, so the (possibly unreadable) keys are still on the device
+      whenever it shows.
+- [ ] Support: the upgrade-recovery email now arrives with "Recovery code:
+      …" in its body. The code is also under "Show technical details" on
+      the panel.
+- [ ] Translations (release blocker per spec §9.1-6): translate the
+      recovery panel strings in every production locale. Today only English
+      and Japanese exist (`app/src/main/res/values*/strings.xml`); other
+      locales show English. Keys: `wallet_upgrade_recovery_title`,
+      `_message`, `_code`, `_retry`, `_export`, `_continue_legacy`,
+      `_support`, `_keep_installed`, `_working`, `_still_working`,
+      `_details_show`, `_details_hide`, `_support_no_email`.
+- [ ] QA (real device, light theme): open Scan on Android 14 and on 15+;
+      the clock and icons are white over the camera and no light strip
+      shows above the scanner.
+- [ ] QA (real device, dark theme): send a small test transfer and check
+      that the "Transaction submitted" toast is readable.
+- [ ] QA: on the recovery panel (team test phone with a forced recovery
+      state), tap Retry and Export and check the "Working…" state, the
+      greyed other actions and the "Still working…" line after 10 s.
+- [ ] QA with Settings → Accessibility → Contrast raised (Android 14+):
+      captions use the secondary text colour.
