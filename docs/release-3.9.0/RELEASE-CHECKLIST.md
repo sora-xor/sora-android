@@ -237,8 +237,11 @@ every candidate:
       `RUN_LIVE_PI_CLIENT_TESTS=true ./gradlew :feature_blockexplorer_api:testProductionDebugUnitTest --tests '*PolkaswapIndexerClientLiveContractTest*' --rerun`.
       Keep `--rerun`: Gradle does not see the environment variable as an
       input. Without it, an up-to-date test task is skipped and nothing runs
-      against the indexer. Check that the report lists 3 tests and 0 skipped.
-      Last passed on 2026-10-10 at 17:48 JST.
+      against the indexer. Check that the report lists 4 tests and 0 skipped.
+      Since round 4 it uses the production transport (strict JSON, size
+      limit, checkpoint checks, file cache) and checks history rows against
+      mainnet block hashes, so a pass also means the app decodes the real
+      responses. Last passed on 2026-10-10 at 18:13 JST.
 - [ ] On a real phone with 3.8.6.3 and a funded wallet, install the release
       build over it and send a small XOR transfer and a small swap: the fee is
       shown, both finalize, and Activity lists them.
@@ -246,7 +249,11 @@ every candidate:
       operations (never a customer's recovery phrase), open Activity, make a small
       transfer, wait a minute, then scroll Activity and a token's history to
       the end. Expect no crash and no transaction listed twice (round-3
-      review fix for "load more").
+      review fix for "load more"). The rows must actually appear: if Activity
+      says "Activity is temporarily unavailable" for this wallet, the shipped
+      app rejects the indexer's real history responses; stop the rollout.
+      (The live contract test covers the same decoding on a public account;
+      this step covers the screen.)
 
 ### PI indexer (backend team)
 
@@ -261,8 +268,8 @@ every candidate:
       account-participant index). Until then Activity lists only operations
       the account signed; incoming transfers are missing (balances are
       correct). The app says so on Activity and asset history ("Transfers
-      you received may not be listed here yet. Your balance is always up to
-      date."). When the plan ships, change `accountHistoryFilter` and
+      you received may not be listed here yet. Your balance is not
+      affected."). When the plan ships, change `accountHistoryFilter` and
       `PiHistoryCoverage.LISTS_RECEIVED_TRANSFERS` together. Consider the same
       line in the release notes.
 - [ ] Keep the indexer's filter-array limit (100) and the history `calls`
@@ -281,7 +288,9 @@ every candidate:
 - [ ] `ws.mof.sora.org` (HTTPS) is the only endpoint for fee quotes, nonces,
       runtime reads and submission. While it is down, nobody can send, even
       though balances still load from mof2/mof3. Monitor it as a release
-      dependency.
+      dependency. Send and Swap then show "The network fee can't be checked
+      because the SORA network can't be reached right now…" with Try again
+      (round 4); support can point users to that message.
 
 ### Product decisions to confirm
 
@@ -290,11 +299,31 @@ every candidate:
       `https://ws.mof.sora.org`). Decide whether a second reviewed signing
       endpoint is wanted for outages of that node; that is a code change in
       `Sora2RuntimeContract` and needs a security review.
+- [ ] Accept, or fix before rollout, a regression for one group of upgrading
+      users: 3.8.6.3 signed and sent over the WebSocket of the selected node,
+      so a user whose network cannot reach `ws.mof.sora.org` (regional or
+      corporate block) but who used mof2, mof3 or a custom node could send
+      on 3.8.6.3. After upgrading to 3.9.0 their balances still load, but
+      every fee quote and send fails, and changing the node does not help.
+      Keys and funds are not affected and nothing latches; the screens say
+      the SORA network can't be reached and offer Try again. The fix is the
+      second reviewed signing endpoint above (mof2 is already an HTTPS
+      archive endpoint for status reads). If accepted, mention it in the
+      release notes and the support FAQ.
 - [ ] Taira, the Nexus (Minamoto) portfolio, Polkamarkt and IrohaConnect are
       off in the production app regardless of remote configuration. Turning
       any of them on for production is a code change
       (`ReleaseSurfacePolicy`) and, for Polkamarkt, a Google Play
       prediction-market policy review; for IrohaConnect, a security review.
+
+### Translations (round 4)
+
+- [ ] New strings `network_fee_unreachable`, `network_fee_unavailable`,
+      `network_fee_unavailable_short` and `common_try_again` are in English
+      and Japanese; the other locales carry the English text (no lint
+      baseline change). Send them with the other 3.9.0 strings for
+      translation. The changed `activity_received_transfers_note` ("Your
+      balance is not affected.") needs the same.
 
 ## a4: Key safety and lockout fixes (core)
 
