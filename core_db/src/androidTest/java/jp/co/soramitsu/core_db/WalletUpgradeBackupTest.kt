@@ -2332,13 +2332,26 @@ class WalletUpgradeBackupTest {
     }
 
     @Test
-    fun setUpAgainRenamesEveryWalletFileAsideAtTheNextProcessStartAndKeepsTheBytes() {
+    fun setUpAgainWhenThisPhoneCannotUnlockTheKeysSetsAsideEveryWalletFileAndKeepsTheBytes() {
         createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Retained")))
         assertTrue(
             context.getSharedPreferences(KEYSTORE_PREFERENCES_NAME, Context.MODE_PRIVATE)
                 .edit().putString(WRAPPED_AES_KEY, "wrapped-key-from-another-phone").commit()
         )
         putDataStoreStringMarker("prefs_mnemonic$WALLET_ID")
+        // The wallet check found that this phone has no Keystore key for the stored keys.
+        WalletUpgradeBackup.noteTransientVerificationFailure(
+            WalletRecoveryOptions.KEYSTORE_KEY_UNAVAILABLE,
+            accountsReadable = true,
+        )
+        val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+        assertEquals(SetUpAgainScope.ALL_WALLET_FILES, options.setUpAgainScope)
+        // The main screen would have to decrypt the app PIN: read-only is not offered.
+        assertFalse(options.canReadOnly)
+        assertEquals(
+            WalletUpgradeBackup.SafeReadOnlyRoute.VAULT_ONLY,
+            WalletUpgradeBackup.authorizeSafeReadOnly(context).getOrThrow(),
+        )
         val dataDir = File(context.applicationInfo.dataDir)
         val originals = mapOf(
             "databases/app.db" to context.getDatabasePath(DATABASE_NAME),
@@ -2351,6 +2364,10 @@ class WalletUpgradeBackupTest {
 
         assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
         assertTrue(WalletUpgradeBackup.isSetUpAgainRequested(context))
+        assertEquals(
+            SetUpAgainScope.ALL_WALLET_FILES,
+            WalletUpgradeBackup.pendingSetUpAgainScope(context),
+        )
         // Nothing moves in the process that asked: its DataStore and Room may be open.
         assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
         originals.values.forEach { assertTrue(it.path, it.isFile) }
@@ -2368,6 +2385,139 @@ class WalletUpgradeBackupTest {
         // The app now starts like a new install; nothing blocks onboarding.
         assertEquals(null, WalletUpgradeBackup.blockingFailure())
         assertFalse(WalletUpgradeBackup.quarantine().hasRetainedMaterial)
+    }
+
+    @Test
+    fun setUpAgainForADamagedDatabaseMovesOnlyTheDatabaseAndKeepsEveryKeyInPlace() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Retained")))
+        assertTrue(
+            context.getSharedPreferences(KEYSTORE_PREFERENCES_NAME, Context.MODE_PRIVATE)
+                .edit().putString(WRAPPED_AES_KEY, "wrapped-key-of-this-phone").commit()
+        )
+        putDataStoreStringMarker("prefs_mnemonic$WALLET_ID")
+        // SQLite reported corruption on the open database.
+        WalletUpgradeBackup.noteDatabaseCorruption(context)
+        val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+        assertEquals(WalletRecoveryKind.INTEGRITY, options.kind)
+        assertEquals(SetUpAgainScope.DATABASE_ONLY, options.setUpAgainScope)
+        assertTrue(options.canSetUpAgain && options.canRestoreFromPhrase)
+        val dataDir = File(context.applicationInfo.dataDir)
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val databaseBytes = database.readBytes()
+        val kept = listOf(
+            File(context.filesDir, "datastore/sora_prefs_datastore.preferences_pb"),
+            File(dataDir, "shared_prefs/key_alias.xml"),
+        ).associateWith { it.readBytes() }
+
+        assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        assertEquals(
+            SetUpAgainScope.DATABASE_ONLY,
+            WalletUpgradeBackup.pendingSetUpAgainScope(context),
+        )
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+
+        assertFalse(WalletUpgradeBackup.isSetUpAgainRequested(context))
+        assertFalse(database.exists())
+        val aside = context.noBackupFilesDir.listFiles().orEmpty()
+            .single { it.name.startsWith("wallet-quarantine-") && it.name.endsWith("-set-up-again") }
+        assertArrayEquals(databaseBytes, File(aside, "databases/app.db").readBytes())
+        assertFalse(File(aside, "files").exists())
+        assertFalse(File(aside, "shared_prefs").exists())
+        // Every key stays exactly where it was and is offered again.
+        kept.forEach { (file, content) -> assertArrayEquals(file.path, content, file.readBytes()) }
+        val quarantine = WalletUpgradeBackup.quarantine()
+        assertTrue(WALLET_ID in quarantine.unlinkedWalletIds)
+        assertTrue(quarantine.retainedWrappedKeyWithoutDatabase)
+        assertEquals(null, WalletUpgradeBackup.blockingFailure())
+    }
+
+    @Test
+    fun setUpAgainIsNotOfferedWhileAStateCanPassOnItsOwnOrNeedsSpace() {
+        // No recovery state at all.
+        assertEquals(null, WalletUpgradeBackup.recoveryOptions())
+        assertEquals(
+            "SET_UP_AGAIN_NOT_AVAILABLE",
+            (
+                WalletUpgradeBackup.requestSetUpAgain(context).exceptionOrNull()
+                    as? WalletUpgradeBackupException
+                )?.code,
+        )
+        // A busy Keystore: Try again (automatic) is the forward path.
+        WalletUpgradeBackup.noteTransientVerificationFailure(
+            WalletRecoveryOptions.KEYSTORE_TRANSIENT,
+            accountsReadable = true,
+        )
+        val transient = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+        assertFalse(transient.canSetUpAgain || transient.canRestoreFromPhrase || transient.canReadOnly)
+        assertTrue(transient.canRetry && transient.retryAutomatically)
+        assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isFailure)
+        assertFalse(WalletUpgradeBackup.isSetUpAgainRequested(context))
+        WalletUpgradeBackup.noteMigrationVerified()
+        // Low storage before a schema step: free space and check again.
+        clearTestStorage()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(
+            WalletUpgradeBackup.prepareWithAvailableBackupBytesForTest(context, 0L).isFailure
+        )
+        val storage = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+        assertEquals(WalletRecoveryKind.STORAGE, storage.kind)
+        assertEquals(SetUpAgainScope.NONE, storage.setUpAgainScope)
+        assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isFailure)
+        assertFalse(WalletUpgradeBackup.isSetUpAgainRequested(context))
+        assertTrue(context.getDatabasePath(DATABASE_NAME).isFile)
+    }
+
+    @Test
+    fun automaticRetryThatCannotBeSavedShowsTheRecoveryOptionsAtOnce() {
+        val account = SoraAccountLocal(WALLET_ID, "Retained")
+        createCurrentDatabase(listOf(account))
+        updateCurrentDatabase(
+            """
+            INSERT INTO walletMigrationJournal(
+                migrationId, state, legacyAccountCount, verifiedAccountCount,
+                selectedWalletId, integrityHash, failureCode, startedAt, completedAt
+            ) VALUES(
+                'wallet-network-v1', 'VERIFYING', 1, 0,
+                '$WALLET_ID', '${WalletMigrationIntegrity.snapshotHash(listOf(account), WALLET_ID)}',
+                NULL, 1, NULL
+            )
+            """.trimIndent()
+        )
+        // The retry counter cannot be saved (as on a full disk): its staging path is occupied.
+        val blocker = File(context.noBackupFilesDir, ".wallet-migration-auto-retry.tmp")
+        assertTrue(blocker.mkdirs() && File(blocker, "occupied").createNewFile())
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+            // The budget is unused, so the first screen waits for the automatic retry...
+            assertEquals(null, WalletUpgradeBackup.startupFailureToShow(context))
+            assertFalse(WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context))
+            assertEquals(0, WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context))
+            // ...which could not happen, so the options are shown now, not after a crash.
+            assertEquals(
+                "WALLET_MIGRATION_RECOVERY_REQUIRED",
+                WalletUpgradeBackup.startupFailureToShow(context)?.code,
+            )
+            assertFalse(WalletUpgradeBackup.isAutomaticMigrationRetryAvailable(context))
+            assertEquals(
+                WalletRecoveryCapabilityGate.Mode.BLOCKED,
+                WalletRecoveryCapabilityGate.mode(),
+            )
+            val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+            assertTrue(options.canRetry && options.canReadOnly)
+            // Try again does not need the counter.
+            assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+            assertEquals(
+                WalletRecoveryCapabilityGate.Mode.MIGRATION_RETRY_AUTHORIZED,
+                WalletRecoveryCapabilityGate.mode(),
+            )
+            assertEquals(1, legacyAccountCount())
+        } finally {
+            blocker.deleteRecursively()
+        }
     }
 
     @Test
@@ -3988,7 +4138,9 @@ class WalletUpgradeBackupTest {
                     it.name.startsWith("wallet-quarantine-") ||
                     it.name.startsWith("wallet-corrupt-quarantine-") ||
                     it.name == "wallet-migration-auto-retry" ||
+                    it.name == ".wallet-migration-auto-retry.tmp" ||
                     it.name == "wallet-set-up-again-requested" ||
+                    it.name == ".wallet-set-up-again-requested.tmp" ||
                     it.name == "wallet-snapshot-backoff" ||
                     it.name == "wallet-backup-prune-state"
             }
