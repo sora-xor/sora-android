@@ -33,9 +33,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.splash.domain
 
 import android.content.Context
+import android.os.SystemClock
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import jp.co.soramitsu.core_db.SetUpAgainScope
 import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -67,7 +69,17 @@ class SplashInteractor @Inject constructor(
     /** The real phases of the running verification, for the upgrade progress screen. */
     val migrationProgress: StateFlow<MigrationProgress> get() = migrationManager.progress
 
+    /**
+     * When the latest verification started ([SystemClock.elapsedRealtime]), so the progress
+     * screen counts its 10 s and 60 s prompts from the start of the work, not from when the
+     * screen appeared. Null before the first run.
+     */
+    @Volatile
+    var verificationStartedAtElapsed: Long? = null
+        private set
+
     suspend fun checkMigration() {
+        verificationStartedAtElapsed = SystemClock.elapsedRealtime()
         // The app's screens are starting and will run the wallet verification now: an
         // interrupted verification may use one of its automatic retries. Background process
         // starts never get here, so they cannot use up that budget.
@@ -78,6 +90,7 @@ class SplashInteractor @Inject constructor(
     }
 
     suspend fun retryMigration(): Boolean {
+        verificationStartedAtElapsed = SystemClock.elapsedRealtime()
         val retry = CompletableDeferred<Boolean>()
         synchronized(this) {
             migrationsDone = retry
@@ -119,20 +132,35 @@ class SplashInteractor @Inject constructor(
         WalletUpgradeBackup.blockingFailure()?.code
             ?: WalletUpgradeBackup.transientVerificationFailure()
 
-    /** Forward paths for the current recovery state (never null while recovery is shown). */
+    /**
+     * Forward paths for the current recovery state (never null while recovery is shown). They
+     * come from the same state the actions use ([WalletUpgradeBackup.recoveryOptions]), so every
+     * action offered works. Only when no recovery state is recorded at all (for example an
+     * unexpected error while routing) are they built here, from the facts gathered at startup and
+     * without "Set up this device again" or a restore: [WalletUpgradeBackup.requestSetUpAgain]
+     * refuses those without a recorded state.
+     */
     fun recoveryOptions(code: String): WalletRecoveryOptions =
         WalletUpgradeBackup.recoveryOptions()
             ?: WalletRecoveryOptions.forState(
                 code = code,
                 transientFailure = false,
-                // The verification ran on the open current-schema database, which holds the
-                // accounts it recorded a recovery for; read-only is still checked against the
-                // current selection by canContinueLegacyWallet().
-                facts = jp.co.soramitsu.core_db.RecoveryFacts(
+                // The verification runs on the open current-schema database; read-only is
+                // checked again by authorizeSafeReadOnly and against the current selection by
+                // canContinueLegacyWallet().
+                facts = WalletUpgradeBackup.recoveryFacts().copy(
                     databaseAtCurrentVersion = true,
                     accountsReadableReadOnly = true,
                 ),
-            )
+            ).withoutSetUpAgain()
+
+    private fun WalletRecoveryOptions.withoutSetUpAgain(): WalletRecoveryOptions = copy(
+        canRestoreFromPhrase = false,
+        canRestoreFromDrive = false,
+        canSetUpAgain = false,
+        restoreNeedsSetUpAgain = false,
+        setUpAgainScope = SetUpAgainScope.NONE,
+    )
 
     suspend fun getRegistrationState() = userRepository.getRegistrationState()
 

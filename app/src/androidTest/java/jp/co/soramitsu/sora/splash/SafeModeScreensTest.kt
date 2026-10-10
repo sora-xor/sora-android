@@ -35,6 +35,7 @@ package jp.co.soramitsu.sora.splash
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -85,11 +86,12 @@ class SafeModeScreensTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     private val blockingStates = listOf(
-        SafeModePreviewData.recovery,
-        SafeModePreviewData.transient,
-        SafeModePreviewData.keysUnavailable,
-        SafeModePreviewData.removal,
-        SafeModePreviewData.storage,
+        SafeModePreviewData.panelState(SafeModePreviewData.recovery),
+        SafeModePreviewData.panelState(SafeModePreviewData.transient),
+        SafeModePreviewData.panelState(SafeModePreviewData.keysUnavailable),
+        SafeModePreviewData.panelState(SafeModePreviewData.removal),
+        SafeModePreviewData.panelState(SafeModePreviewData.storage),
+        SafeModePreviewData.panelState(SafeModePreviewData.restorePending, restorePending = true),
     )
 
     @Test
@@ -102,22 +104,22 @@ class SafeModeScreensTest {
                 SplashSafeMode(state, SafeModePreviewData.details, SafeModeCallbacks(onAction = { clicked += it }))
             }
         }
-        for (theme in listOf(true, false)) for (options in blockingStates) {
+        for (theme in listOf(true, false)) for (panelState in blockingStates) {
             dark = theme
-            state = SafeModePreviewData.panelState(options)
+            state = panelState
             rule.waitForIdle()
             val model = state.panel!!
             rule.onNodeWithTag(SafeModeTags.PANEL).assertExists()
             rule.onNodeWithTag(RecoveryTags.action(RecoveryAction.TRY_AGAIN)).performScrollTo().assertIsEnabled()
-            assertTrue(options.code, model.forwardActionsBesidesRetry.isNotEmpty())
+            assertTrue(model.code, model.forwardActionsBesidesRetry.isNotEmpty())
             model.forwardActionsBesidesRetry.forEach { action ->
                 clicked.clear()
                 rule.onNodeWithTag(RecoveryTags.action(action)).performScrollTo().assertIsDisplayed().assertIsEnabled()
                     .performClick()
-                assertEquals("${options.code} $action", listOf(action), clicked)
+                assertEquals("${model.code} $action", listOf(action), clicked)
             }
             // The recovery code is only under Technical details, never in the title or body.
-            rule.onAllNodesWithText(options.code, substring = true).assertCountEquals(0)
+            rule.onAllNodesWithText(model.code, substring = true).assertCountEquals(0)
         }
     }
 
@@ -211,6 +213,77 @@ class SafeModeScreensTest {
         rule.onNodeWithText(context.getString(CommonR.string.safe_mode_step_network_waiting)).assertExists()
         rule.onNode(hasText(context.getString(CommonR.string.safe_mode_change_node)).and(hasClickAction()))
             .performScrollTo().assertIsEnabled()
+    }
+
+    @Test
+    fun aRestoreWaitingForARestartOffersTheRestartAndNoOtherRestore() {
+        rule.setContent {
+            SoraAppTheme(darkTheme = true) {
+                SafeModePreview(SafeModePreviewState.U6_RESTORE_PENDING)
+            }
+        }
+        rule.onNodeWithText(context.getString(R.string.recovery_restore_pending_title)).assertExists()
+        rule.onNodeWithTag(RecoveryTags.action(RecoveryAction.TRY_AGAIN)).performScrollTo()
+            .assertIsEnabled()
+            .assert(hasText(context.getString(R.string.recovery_restart_continue)))
+        rule.onNode(hasTestTag(RecoveryTags.action(RecoveryAction.RESTORE_PHRASE))).assertDoesNotExist()
+        rule.onNode(hasTestTag(RecoveryTags.action(RecoveryAction.READ_ONLY))).assertDoesNotExist()
+        rule.onNodeWithTag(RecoveryTags.action(RecoveryAction.CONTACT_SUPPORT)).performScrollTo().assertIsEnabled()
+        // The old "usually passes in a moment" wording is not used for this state.
+        rule.onNodeWithText(context.getString(R.string.recovery_transient_body)).assertDoesNotExist()
+    }
+
+    @Test
+    fun aSheetActionThatFailedSaysSoAndKeepsAWayOut() {
+        var preview by mutableStateOf(SafeModePreviewState.U6_READ_ONLY_UNAVAILABLE)
+        rule.setContent {
+            SoraAppTheme(darkTheme = true) {
+                SafeModePreview(preview)
+            }
+        }
+        rule.onNodeWithText(context.getString(R.string.recovery_sheet_read_only_unavailable)).assertExists()
+        // Confirming again would not help: only Close remains.
+        rule.onNode(hasTestTag(RecoveryTags.CONFIRM_READ_ONLY)).assertDoesNotExist()
+        rule.onNode(hasText(context.getString(CommonR.string.common_close)).and(hasClickAction()))
+            .performScrollTo().assertIsEnabled()
+
+        preview = SafeModePreviewState.U6_EXPORT_FAILED
+        rule.waitForIdle()
+        rule.onNodeWithText(context.getString(R.string.recovery_sheet_export_failed)).assertExists()
+        rule.onNode(hasText(context.getString(R.string.recovery_export_create)).and(hasClickAction()))
+            .performScrollTo().assertIsEnabled()
+
+        preview = SafeModePreviewState.U6_RESTORE_FAILED
+        rule.waitForIdle()
+        rule.onNodeWithText(context.getString(R.string.recovery_sheet_restore_failed)).assertExists()
+        rule.onNode(hasText(context.getString(R.string.recovery_restore_confirm)).and(hasClickAction()))
+            .performScrollTo().assertIsEnabled()
+    }
+
+    @Test
+    fun aPhraseNotProvenForThisWalletSaysSo() {
+        rule.setContent {
+            SoraAppTheme(darkTheme = true) {
+                SafeModePreview(SafeModePreviewState.U6_REVEAL_UNCHECKED)
+            }
+        }
+        rule.onNodeWithText(context.getString(R.string.recovery_wallet_older)).assertExists()
+        rule.onNodeWithText(context.getString(R.string.recovery_phrase_unchecked)).assertExists()
+        // Still veiled until tapped.
+        rule.onAllNodesWithText(SafeModePreviewData.samplePhrase.first(), substring = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun offlineCheckOnThePhoneNeverSaysItWaitsForTheNetwork() {
+        rule.setContent {
+            SoraAppTheme(darkTheme = true) {
+                SafeModePreview(SafeModePreviewState.U1_PIN_CHECK_OFFLINE)
+            }
+        }
+        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_checking_title)).assertExists()
+        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_step_network_waiting)).assertDoesNotExist()
+        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_waiting_network_body)).assertDoesNotExist()
+        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_change_node)).assertDoesNotExist()
     }
 
     @Test

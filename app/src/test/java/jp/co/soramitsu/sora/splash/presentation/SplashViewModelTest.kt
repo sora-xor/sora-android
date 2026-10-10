@@ -61,6 +61,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -97,6 +98,17 @@ class SplashViewModelTest {
             coroutineManager,
             pendingRecoveryStartupScheduler,
         )
+    }
+
+    @Test
+    fun `the verification starts only when asked, and only once`() = runTest {
+        // A screen opened for "Try upgrade again" or read-only never starts one of its own.
+        advanceUntilIdle()
+        verify(interactor, never()).checkMigration()
+        splashViewModel.start()
+        splashViewModel.start()
+        advanceUntilIdle()
+        verify(interactor, times(1)).checkMigration()
     }
 
     @Test

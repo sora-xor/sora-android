@@ -47,8 +47,11 @@ import java.text.DateFormat
 import java.util.Date
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
+import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.backup.CloudBackupProvider
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeStepState
+import jp.co.soramitsu.core_db.RecoveryFacts
+import jp.co.soramitsu.core_db.SetUpAgainScope
 import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.core_db.WalletUpgradeBackupException
@@ -56,9 +59,10 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasour
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationProgress
+import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationSr25519Crypto
 import jp.co.soramitsu.sora.BuildConfig
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
-import kotlinx.coroutines.CancellationException
+import jp.co.soramitsu.xcrypto.util.fromHex
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -86,6 +90,15 @@ data class ProgressUi(
 )
 
 enum class SafeSheetKind { READ_ONLY, RESTORE_PHRASE, RESTORE_DRIVE, EXPORT, SUPPORT }
+
+/** Why the action in the open sheet did not complete; the sheet stays open and says so. */
+enum class SheetFailure {
+    /** Read-only cannot open this wallet's data right now (Room-free view only). */
+    READ_ONLY_UNAVAILABLE,
+    READ_ONLY_FAILED,
+    EXPORT_FAILED,
+    RESTORE_FAILED,
+}
 
 enum class AuthError { WRONG, LOCKED, UNAVAILABLE, NO_SCREEN_LOCK }
 
@@ -126,6 +139,9 @@ data class SafeModeUiState(
     val exportCreated: Boolean = false,
     val supportNoEmail: Boolean = false,
     val reveal: RevealUi? = null,
+    val sheetFailure: SheetFailure? = null,
+    /** The code of the last action that did not complete (support details), if any. */
+    val lastAttemptCode: String? = null,
 )
 
 sealed interface SafeModeEvent {
@@ -164,6 +180,8 @@ class SafeModeViewModel @Inject constructor(
     private val userDatasource: UserDatasource,
     private val cloudBackupProvider: CloudBackupProvider,
     private val coroutineManager: CoroutineManager,
+    private val migrationSr25519Crypto: MigrationSr25519Crypto,
+    private val sora2AddressCodec: Sora2AddressCodec,
 ) : ViewModel() {
 
     private val mutableState = MutableStateFlow(SafeModeUiState())
@@ -172,7 +190,8 @@ class SafeModeViewModel @Inject constructor(
     private val eventChannel = Channel<SafeModeEvent>(Channel.BUFFERED)
     val events = eventChannel.receiveAsFlow()
 
-    private val pinAttempts = SafeModePinAttempts(File(context.noBackupFilesDir, SafeModePinAttempts.FILE_NAME))
+    private val pinAttempts =
+        SafeModePinAttempts.shared(File(context.noBackupFilesDir, SafeModePinAttempts.FILE_NAME))
     private val enteredPin = StringBuilder()
     private var progressJob: Job? = null
     private var progressDelayJob: Job? = null
@@ -180,27 +199,75 @@ class SafeModeViewModel @Inject constructor(
     private var automaticAttempts = 0
     private var awaitingNewRun = false
 
+    /** When the running Try again started (uptime), for the progress screen's prompts. */
+    private var workStartedAtElapsed: Long? = null
+
+    /**
+     * False once read-only was found not to work here (the current account does not resolve, or
+     * only the Room-free view can open): offering it again would only come back to this screen.
+     */
+    private var readOnlyAvailable = true
+
     // ---- panel ------------------------------------------------------------------------------
 
-    /** Shows the recovery options for [code] (U4 or U6). */
-    fun showPanel(code: String, options: WalletRecoveryOptions? = null) {
-        val resolved = options ?: runCatching { interactor.recoveryOptions(code) }.getOrNull()
-            ?: WalletRecoveryOptions.forState(code, false, jp.co.soramitsu.core_db.RecoveryFacts())
-        val model = RecoveryPanels.model(resolved, driveAvailable = cloudBackupProvider.isAvailable)
+    /**
+     * Shows the recovery options for [code] (U4 or U6). [canContinueLegacyWallet] is false when
+     * the current account was found not to resolve (read-only would only come back here); null
+     * keeps what is known.
+     */
+    fun showPanel(
+        code: String,
+        options: WalletRecoveryOptions? = null,
+        canContinueLegacyWallet: Boolean? = null,
+    ) {
+        canContinueLegacyWallet?.let { readOnlyAvailable = it }
+        val resolved = (options ?: resolveOptions(code)).let {
+            if (readOnlyAvailable) it else it.copy(canReadOnly = false)
+        }
+        val model = RecoveryPanels.model(
+            options = resolved,
+            driveAvailable = cloudBackupProvider.isAvailable,
+            restorePending = isRestorePending(code) || isRestorePending(resolved.code),
+        )
         stopProgress()
         mutableState.update {
             it.copy(
                 visible = true,
                 progress = null,
                 panel = model,
-                shownAtMillis = System.currentTimeMillis(),
+                shownAtMillis = if (it.panel?.code == model.code) it.shownAtMillis else System.currentTimeMillis(),
                 running = null,
                 runningLong = false,
                 autoRetrying = false,
+                lastAttemptCode = if (it.panel?.code == model.code) it.lastAttemptCode else null,
             )
         }
         scheduleAutomaticRetry(model)
     }
+
+    /**
+     * The options every action handler uses ([SplashInteractor.recoveryOptions]). Its last
+     * resort never offers "Set up this device again" or a restore: nothing records a state that
+     * [WalletUpgradeBackup.requestSetUpAgain] would accept.
+     */
+    private fun resolveOptions(code: String): WalletRecoveryOptions =
+        runCatching { interactor.recoveryOptions(code) }.getOrNull()
+            ?: WalletRecoveryOptions.forState(code, false, RecoveryFacts()).copy(
+                canRestoreFromPhrase = false,
+                canRestoreFromDrive = false,
+                canSetUpAgain = false,
+                restoreNeedsSetUpAgain = false,
+                setUpAgainScope = SetUpAgainScope.NONE,
+            )
+
+    /**
+     * A confirmed "Set up this device again" waits for the next app start (or that start could
+     * not finish it). Only a new process may set the old files aside, so Try again restarts the
+     * app instead of checking them again here.
+     */
+    private fun isRestorePending(code: String?): Boolean =
+        code == SET_UP_AGAIN_INCOMPLETE ||
+            runCatching { WalletUpgradeBackup.pendingSetUpAgainScope(context) != null }.getOrDefault(false)
 
     /**
      * Transient states are retried automatically, up to three times with growing pauses
@@ -208,6 +275,7 @@ class SafeModeViewModel @Inject constructor(
      */
     private fun scheduleAutomaticRetry(model: RecoveryPanelModel) {
         autoRetryJob?.cancel()
+        // RESTORE_PENDING never retries by itself: its Try again restarts the app.
         if (model.kind != RecoveryPanelKind.TRANSIENT || !model.retryAutomatically) return
         if (automaticAttempts >= AUTOMATIC_RETRY_DELAYS.size) return
         val pause = AUTOMATIC_RETRY_DELAYS[automaticAttempts]
@@ -271,18 +339,31 @@ class SafeModeViewModel @Inject constructor(
 
     fun openSheet(kind: SafeSheetKind) {
         autoRetryJob?.cancel()
-        mutableState.update { it.copy(sheet = kind, exportCreated = false, supportNoEmail = false) }
+        mutableState.update {
+            it.copy(sheet = kind, exportCreated = false, supportNoEmail = false, sheetFailure = null)
+        }
     }
 
     fun closeSheet() {
         if (state.value.running != null && state.value.sheet != SafeSheetKind.SUPPORT) return
-        mutableState.update { it.copy(sheet = null) }
+        mutableState.update { it.copy(sheet = null, sheetFailure = null) }
+        // A state that retries by itself continues to do so once the sheet is closed.
+        state.value.panel?.takeIf { state.value.running == null && state.value.reveal == null }
+            ?.let(::scheduleAutomaticRetry)
     }
 
     private fun runTryAgain(automatic: Boolean) {
+        if (isRestorePending(state.value.panel?.code)) {
+            // The restore the person confirmed is finished by a new app process, before anything
+            // opens the old files. Never automatically: a restart that fails again must not loop.
+            autoRetryJob?.cancel()
+            if (!automatic) eventChannel.trySend(SafeModeEvent.RestartForRestore)
+            return
+        }
+        workStartedAtElapsed = SystemClock.elapsedRealtime()
         runAction(RecoveryAction.TRY_AGAIN, automatic) {
             // Re-runs the startup checks and, for an interrupted verification, authorizes one
-            // more run. Never deletes or rewrites wallet data.
+            // more run. Never deletes or rewrites wallet data. Refused while a restore waits.
             WalletUpgradeBackup.retry(context)
         }
     }
@@ -329,12 +410,14 @@ class SafeModeViewModel @Inject constructor(
                     )
                 }
                 eventChannel.trySend(SafeModeEvent.RetryReady)
+                val startedAt = workStartedAtElapsed ?: SystemClock.elapsedRealtime()
                 progressDelayJob?.cancel()
                 progressDelayJob = viewModelScope.launch {
                     delay(SILENT_UPGRADE_MILLIS)
-                    showProgress(ProgressTitle.FINISHING, checkingDataDone = true)
+                    showProgress(ProgressTitle.FINISHING, checkingDataDone = true, startedAtElapsed = startedAt)
                 }
             } else {
+                // Try again re-ran the checks: the panel now shows the state they found.
                 showPanel(failureCode(error, "BACKUP_RETRY_FAILED"))
             }
 
@@ -346,37 +429,58 @@ class SafeModeViewModel @Inject constructor(
                             route == WalletUpgradeBackup.SafeReadOnlyRoute.NORMAL_ACCESS
                         )
                 ) {
-                    mutableState.update { it.copy(sheet = null) }
+                    mutableState.update { it.copy(sheet = null, sheetFailure = null) }
                     eventChannel.trySend(SafeModeEvent.ReadOnlyReady)
+                } else if (error == null && route == WalletUpgradeBackup.SafeReadOnlyRoute.VAULT_ONLY) {
+                    readOnlyAvailable = false
+                    failSheetAction(SheetFailure.READ_ONLY_UNAVAILABLE, READ_ONLY_NOT_AVAILABLE)
                 } else {
-                    mutableState.update { it.copy(sheet = null) }
-                    showPanel(failureCode(error, "LEGACY_RECOVERY_AUTHORIZATION_FAILED"))
+                    failSheetAction(
+                        SheetFailure.READ_ONLY_FAILED,
+                        attemptCode(error, "LEGACY_RECOVERY_AUTHORIZATION_FAILED"),
+                    )
                 }
             }
 
             RecoveryAction.EXPORT -> {
                 val file = value as? File
                 if (error == null && file != null) {
-                    mutableState.update { it.copy(running = null, runningLong = false, exportCreated = true) }
+                    mutableState.update {
+                        it.copy(running = null, runningLong = false, exportCreated = true, sheetFailure = null)
+                    }
                     eventChannel.trySend(SafeModeEvent.ShareExport(file))
                 } else {
-                    mutableState.update { it.copy(sheet = null) }
-                    showPanel(failureCode(error, "RECOVERY_EXPORT_FAILED"))
+                    failSheetAction(SheetFailure.EXPORT_FAILED, attemptCode(error, "RECOVERY_EXPORT_FAILED"))
                 }
             }
 
             RecoveryAction.RESTORE_PHRASE,
             RecoveryAction.RESTORE_DRIVE -> if (error == null) {
-                mutableState.update { it.copy(running = null) }
+                mutableState.update { it.copy(running = null, sheetFailure = null) }
                 eventChannel.trySend(SafeModeEvent.RestartForRestore)
             } else {
-                mutableState.update { it.copy(sheet = null) }
-                showPanel(failureCode(error, "SET_UP_AGAIN_REQUEST_FAILED"))
+                failSheetAction(SheetFailure.RESTORE_FAILED, attemptCode(error, "SET_UP_AGAIN_REQUEST_FAILED"))
             }
 
             else -> mutableState.update { it.copy(running = null, runningLong = false) }
         }
     }
+
+    /**
+     * The action in the open sheet did not complete. The sheet stays open and says so; the panel
+     * keeps the code of the state it shows (the attempt's own code goes to the support details)
+     * and is rebuilt from the current state, so an action that no longer works disappears.
+     */
+    private fun failSheetAction(failure: SheetFailure, attemptCode: String) {
+        val panelCode = state.value.panel?.code ?: attemptCode
+        showPanel(panelCode)
+        mutableState.update {
+            it.copy(sheetFailure = failure, lastAttemptCode = attemptCode, exportCreated = false)
+        }
+    }
+
+    private fun attemptCode(error: Throwable?, default: String): String =
+        (error as? WalletUpgradeBackupException)?.code ?: default
 
     private fun failureCode(error: Throwable?, default: String): String =
         (error as? WalletUpgradeBackupException)?.code
@@ -413,13 +517,16 @@ class SafeModeViewModel @Inject constructor(
 
     fun technicalDetails(): List<Pair<String, String>> {
         val current = state.value
-        return listOf(
-            DETAIL_CODE to (current.panel?.code ?: "-"),
-            DETAIL_VERSION to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-            DETAIL_TIME to DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
-                .format(Date(current.shownAtMillis.takeIf { it > 0 } ?: System.currentTimeMillis())),
-            DETAIL_ANDROID to "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
-        )
+        return buildList {
+            add(DETAIL_CODE to (current.panel?.code ?: "-"))
+            current.lastAttemptCode?.let { add(DETAIL_LAST_ATTEMPT to it) }
+            add(DETAIL_VERSION to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+            add(
+                DETAIL_TIME to DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
+                    .format(Date(current.shownAtMillis.takeIf { it > 0 } ?: System.currentTimeMillis())),
+            )
+            add(DETAIL_ANDROID to "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+        }
     }
 
     /** Support details: the code, versions and time. Never an address, a name or a secret. */
@@ -449,7 +556,11 @@ class SafeModeViewModel @Inject constructor(
      * once the startup checks have passed (they ran before the first screen, or Try again
      * finished them).
      */
-    fun showProgress(title: ProgressTitle, checkingDataDone: Boolean) {
+    fun showProgress(
+        title: ProgressTitle,
+        checkingDataDone: Boolean,
+        startedAtElapsed: Long = SystemClock.elapsedRealtime(),
+    ) {
         if (state.value.progress != null) return
         mutableState.update {
             it.copy(
@@ -459,7 +570,7 @@ class SafeModeViewModel @Inject constructor(
                     checkingData = if (checkingDataDone) SafeStepState.DONE else SafeStepState.RUNNING,
                     phase = interactor.migrationProgress.value,
                     awaitingNewRun = awaitingNewRun,
-                    startedAtElapsed = SystemClock.elapsedRealtime(),
+                    startedAtElapsed = startedAtElapsed,
                 ),
             )
         }
@@ -487,7 +598,14 @@ class SafeModeViewModel @Inject constructor(
 
     /** "Try upgrade again" from the read-only home: the progress shows from the start. */
     fun startRetryFromHome() {
-        showProgress(ProgressTitle.FINISHING, checkingDataDone = false)
+        if (isRestorePending(null)) {
+            // A confirmed restore waits for a new app process: say so instead of retrying here.
+            showPanel(SET_UP_AGAIN_INCOMPLETE)
+            return
+        }
+        val startedAt = SystemClock.elapsedRealtime()
+        workStartedAtElapsed = startedAt
+        showProgress(ProgressTitle.FINISHING, checkingDataDone = false, startedAtElapsed = startedAt)
         runAction(RecoveryAction.TRY_AGAIN) { WalletUpgradeBackup.retry(context) }
     }
 
@@ -496,6 +614,9 @@ class SafeModeViewModel @Inject constructor(
         showProgress(
             title = if (interactor.resumingInterruptedUpgrade) ProgressTitle.FINISHING else ProgressTitle.UPDATING,
             checkingDataDone = true,
+            // The 10 s and 60 s prompts count from the start of the verification.
+            startedAtElapsed = interactor.verificationStartedAtElapsed
+                ?: (SystemClock.elapsedRealtime() - SILENT_UPGRADE_MILLIS),
         )
     }
 
@@ -577,10 +698,9 @@ class SafeModeViewModel @Inject constructor(
     fun pinDigit(digit: Char) {
         val auth = state.value.reveal as? RevealUi.Auth ?: return
         if (auth.loading || auth.checking || auth.noPin || !digit.isDigit()) return
-        if (pinAttempts.lockRemainingMillis() > 0) {
-            mutableState.update {
-                it.copy(reveal = auth.copy(error = AuthError.LOCKED, lockedForMillis = pinAttempts.lockRemainingMillis()))
-            }
+        val lock = pinAttempts.lockRemainingMillis()
+        if (lock > 0) {
+            mutableState.update { it.copy(reveal = auth.copy(error = AuthError.LOCKED, lockedForMillis = lock)) }
             return
         }
         if (enteredPin.length >= auth.pinLength) return
@@ -612,8 +732,10 @@ class SafeModeViewModel @Inject constructor(
                     onAuthenticated()
                 }
                 else -> {
-                    val after = withContext(coroutineManager.io) { pinAttempts.recordFailure() }
-                    val lock = (after.lockedUntilMillis - System.currentTimeMillis()).coerceAtLeast(0)
+                    val lock = withContext(coroutineManager.io) {
+                        pinAttempts.recordFailure()
+                        pinAttempts.lockRemainingMillis()
+                    }
                     mutableState.update {
                         it.copy(
                             reveal = auth.copy(
@@ -656,10 +778,36 @@ class SafeModeViewModel @Inject constructor(
                     legacyOwner = WalletUpgradeBackup.recoveryFacts().legacyOwner,
                     credentialsRepository = credentialsRepository,
                     credentialsDatasource = credentialsDatasource,
+                    addressOf = ::derivedAddress,
                 )
             }
             if (state.value.reveal == null) return@launch
             mutableState.update { it.copy(reveal = RevealUi.Shown(entry, secret, canGoBack = canGoBack)) }
+        }
+    }
+
+    /**
+     * The SORA address a phrase or seed derives (sr25519, SS58 prefix 69), computed in memory
+     * with the same derivation the upgrade check uses. Nothing is written; key bytes are zeroed.
+     */
+    private fun derivedAddress(secret: RevealedSecret): String? {
+        val seedHex = when (secret) {
+            is RevealedSecret.Phrase ->
+                credentialsRepository.convertRetainedSoraPassphraseToSeed(secret.words.joinToString(" "))
+            is RevealedSecret.Seed -> secret.value
+            else -> return null
+        }
+        val seed = seedHex.removePrefix("0x").removePrefix("0X").fromHex()
+        val keypair = try {
+            migrationSr25519Crypto.generateKeypair(seed)
+        } finally {
+            seed.fill(0)
+        } ?: return null
+        return try {
+            sora2AddressCodec.toSoraAddressOrNull(keypair.publicKey)
+        } finally {
+            keypair.privateKey.fill(0)
+            keypair.nonce.fill(0)
         }
     }
 
@@ -695,6 +843,9 @@ class SafeModeViewModel @Inject constructor(
 
     companion object {
         const val DETAIL_CODE = "code"
+        const val DETAIL_LAST_ATTEMPT = "lastAttempt"
+        const val SET_UP_AGAIN_INCOMPLETE = "SET_UP_AGAIN_INCOMPLETE"
+        const val READ_ONLY_NOT_AVAILABLE = "READ_ONLY_NOT_AVAILABLE"
         const val DETAIL_VERSION = "version"
         const val DETAIL_TIME = "time"
         const val DETAIL_ANDROID = "android"

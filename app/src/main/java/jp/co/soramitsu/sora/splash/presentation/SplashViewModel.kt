@@ -88,6 +88,19 @@ class SplashViewModel @Inject constructor(
                 loadingTextVisiblity.trigger()
             }
         }
+    }
+
+    private var verificationStarted = false
+
+    /**
+     * Starts the wallet verification of a normal app start (once per view model, so a recreated
+     * Activity does not start a second one). Not called when the screen opened for "Try upgrade
+     * again" or read-only access: those run their own action and must not race a second
+     * verification that could change the recovery mode the person just confirmed.
+     */
+    fun start() {
+        if (verificationStarted) return
+        verificationStarted = true
         viewModelScope.launch(coroutineManager.io) {
             interactor.checkMigration()
         }

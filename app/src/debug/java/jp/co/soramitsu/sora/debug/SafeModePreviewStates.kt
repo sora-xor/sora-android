@@ -62,6 +62,7 @@ import jp.co.soramitsu.sora.splash.presentation.recovery.RevealedSecret
 import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeCallbacks
 import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeUiState
 import jp.co.soramitsu.sora.splash.presentation.recovery.SafeSheetKind
+import jp.co.soramitsu.sora.splash.presentation.recovery.SheetFailure
 import jp.co.soramitsu.sora.splash.presentation.recovery.SplashSafeMode
 
 /**
@@ -73,6 +74,7 @@ enum class SafeModePreviewState {
     U1_STILL_WORKING,
     U1_GET_HELP,
     U1_PIN_CHECK,
+    U1_PIN_CHECK_OFFLINE,
     U2_WAITING_FOR_NETWORK,
     U4_FREE_SPACE,
     U5_FINISHING,
@@ -80,15 +82,21 @@ enum class SafeModePreviewState {
     U6_TRANSIENT,
     U6_KEYS_UNAVAILABLE,
     U6_REMOVAL_INTERRUPTED,
+    U6_RESTORE_PENDING,
     U6_READ_ONLY_SHEET,
     U6_RESTORE_SHEET,
     U6_EXPORT_SHEET,
     U6_SUPPORT_SHEET,
+    U6_READ_ONLY_UNAVAILABLE,
+    U6_EXPORT_FAILED,
+    U6_RESTORE_FAILED,
     U6_REVEAL_PIN,
     U6_REVEAL_WRONG_PIN,
     U6_REVEAL_WALLETS,
     U6_REVEAL_VEILED,
     U6_REVEAL_SHOWN,
+    U6_REVEAL_UNCHECKED,
+    U6_REVEAL_UNREADABLE,
     U9_READ_ONLY_HOME,
     U9_LEARN_MORE,
     U10_NEW_PIN,
@@ -127,9 +135,20 @@ object SafeModePreviewData {
         availableBytes = 40L * 1_024 * 1_024,
     )
 
-    fun panelState(options: WalletRecoveryOptions, driveAvailable: Boolean = true) = SafeModeUiState(
+    /** The start that should finish a confirmed restore could not set the old files aside. */
+    val restorePending = WalletRecoveryOptions.forState(
+        code = "SET_UP_AGAIN_INCOMPLETE",
+        transientFailure = false,
+        facts = RecoveryFacts(hasWalletFiles = true),
+    )
+
+    fun panelState(
+        options: WalletRecoveryOptions,
+        driveAvailable: Boolean = true,
+        restorePending: Boolean = false,
+    ) = SafeModeUiState(
         visible = true,
-        panel = RecoveryPanels.model(options, driveAvailable),
+        panel = RecoveryPanels.model(options, driveAvailable, restorePending),
         shownAtMillis = 1_791_590_400_000L,
     )
 
@@ -170,6 +189,19 @@ object SafeModePreviewData {
         SafeModePreviewState.U6_TRANSIENT -> panelState(transient).copy(autoRetrying = true, running = null)
         SafeModePreviewState.U6_KEYS_UNAVAILABLE -> panelState(keysUnavailable)
         SafeModePreviewState.U6_REMOVAL_INTERRUPTED -> panelState(removal)
+        SafeModePreviewState.U6_RESTORE_PENDING -> panelState(restorePending, restorePending = true)
+        SafeModePreviewState.U6_READ_ONLY_UNAVAILABLE -> panelState(recovery).copy(
+            sheet = SafeSheetKind.READ_ONLY,
+            sheetFailure = SheetFailure.READ_ONLY_UNAVAILABLE,
+        )
+        SafeModePreviewState.U6_EXPORT_FAILED -> panelState(recovery).copy(
+            sheet = SafeSheetKind.EXPORT,
+            sheetFailure = SheetFailure.EXPORT_FAILED,
+        )
+        SafeModePreviewState.U6_RESTORE_FAILED -> panelState(recovery).copy(
+            sheet = SafeSheetKind.RESTORE_PHRASE,
+            sheetFailure = SheetFailure.RESTORE_FAILED,
+        )
         SafeModePreviewState.U6_READ_ONLY_SHEET -> panelState(recovery).copy(sheet = SafeSheetKind.READ_ONLY)
         SafeModePreviewState.U6_RESTORE_SHEET -> panelState(recovery).copy(sheet = SafeSheetKind.RESTORE_PHRASE)
         SafeModePreviewState.U6_EXPORT_SHEET -> panelState(recovery).copy(sheet = SafeSheetKind.EXPORT, exportCreated = true)
@@ -187,6 +219,17 @@ object SafeModePreviewData {
         SafeModePreviewState.U6_REVEAL_SHOWN -> panelState(recovery).copy(
             reveal = RevealUi.Shown(entries[0], RevealedSecret.Phrase(samplePhrase), revealed = true, canGoBack = true),
         )
+        SafeModePreviewState.U6_REVEAL_UNCHECKED -> panelState(recovery).copy(
+            reveal = RevealUi.Shown(
+                entries[0],
+                RevealedSecret.Phrase(samplePhrase, checked = false),
+                revealed = false,
+                canGoBack = true,
+            ),
+        )
+        SafeModePreviewState.U6_REVEAL_UNREADABLE -> panelState(recovery).copy(
+            reveal = RevealUi.Shown(entries[1], RevealedSecret.Unreadable, canGoBack = true),
+        )
         else -> SafeModeUiState()
     }
 }
@@ -197,6 +240,15 @@ fun SafeModePreview(preview: SafeModePreviewState, callbacks: SafeModeCallbacks 
     when (preview) {
         SafeModePreviewState.U1_PIN_CHECK -> AccountCheckProgress(
             connected = true,
+            onSwitchNode = {},
+            onGetHelp = {},
+            silentMillis = 0,
+            fixedElapsedMillis = 0,
+        )
+        // Offline, but this account is checked on the phone: no network copy (design spec 9.1-2).
+        SafeModePreviewState.U1_PIN_CHECK_OFFLINE -> AccountCheckProgress(
+            connected = false,
+            needsNetwork = false,
             onSwitchNode = {},
             onGetHelp = {},
             silentMillis = 0,

@@ -110,6 +110,7 @@ class SplashActivity : AppCompatActivity() {
     private var isNavigationRequested = false
     private var isStartupReadyReported = false
     private var isSplashViewModelBound = false
+    private var openedForRetry = false
     private var progressWatchdog: Job? = null
 
     private val animatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
@@ -132,16 +133,27 @@ class SplashActivity : AppCompatActivity() {
         setContentView(ActivitySplashBinding.inflate(layoutInflater).also { viewBinding = it }.root)
         setUpSafeMode()
 
-        if (savedInstanceState == null && isRetryFromHome()) {
+        val retryInProgress = savedInstanceState?.getBoolean(STATE_OPENED_FOR_RETRY) == true &&
+            safeModeViewModel.state.value.visible
+        if (retryInProgress || (savedInstanceState == null && isRetryFromHome())) {
             // "Try upgrade again" from the read-only home screen: the same action as Try again
             // on the recovery screen, with the progress screen from the start. The splash view
-            // model (which starts a verification) is bound only once the checks have passed.
+            // model never starts a verification of its own here: it only runs the retry (or
+            // read-only access) that Safe Mode hands to it.
+            openedForRetry = true
             hideStartAnimation()
             isNavigationRequested = true
-            safeModeViewModel.startRetryFromHome()
+            if (!retryInProgress) {
+                safeModeViewModel.startRetryFromHome()
+            } else if (savedInstanceState.getBoolean(STATE_SPLASH_BOUND)) {
+                // Recreated (for example a theme change) while the retained view model works on
+                // the retry: observe its result again.
+                bindSplashViewModel()
+            }
             return
         }
         bindSplashViewModel()
+        splashViewModel.start()
 
         // An interrupted verification is retried automatically first (SplashInteractor); the
         // recovery options appear only if that retry does not succeed.
@@ -206,7 +218,7 @@ class SplashActivity : AppCompatActivity() {
             }
         }
         splashViewModel.showMigrationRecovery.observe(this) { recovery ->
-            showRecovery(recovery.code, recovery.options)
+            showRecovery(recovery.code, recovery.options, recovery.canContinueLegacyWallet)
         }
     }
 
@@ -271,6 +283,7 @@ class SplashActivity : AppCompatActivity() {
     @androidx.compose.runtime.Composable
     private fun detailLabels(): Map<String, String> = mapOf(
         SafeModeViewModel.DETAIL_CODE to stringResource(R.string.recovery_detail_code),
+        SafeModeViewModel.DETAIL_LAST_ATTEMPT to stringResource(R.string.recovery_detail_last_attempt),
         SafeModeViewModel.DETAIL_VERSION to stringResource(R.string.recovery_detail_version),
         SafeModeViewModel.DETAIL_TIME to stringResource(R.string.recovery_detail_time),
         SafeModeViewModel.DETAIL_ANDROID to stringResource(R.string.recovery_detail_android),
@@ -349,11 +362,24 @@ class SplashActivity : AppCompatActivity() {
     private fun showRecovery(
         code: String,
         options: jp.co.soramitsu.core_db.WalletRecoveryOptions? = null,
+        canContinueLegacyWallet: Boolean? = null,
     ) {
         progressWatchdog?.cancel()
         hideStartAnimation()
-        safeModeViewModel.showPanel(code, options ?: WalletUpgradeBackup.recoveryOptions()?.takeIf { it.code == code })
+        safeModeViewModel.showPanel(
+            code = code,
+            options = options ?: WalletUpgradeBackup.recoveryOptions()?.takeIf { it.code == code },
+            // False when the current account cannot be resolved: read-only would only come
+            // back to this screen, so it is not offered.
+            canContinueLegacyWallet = canContinueLegacyWallet,
+        )
         reportStartupReady()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_OPENED_FOR_RETRY, openedForRetry)
+        outState.putBoolean(STATE_SPLASH_BOUND, isSplashViewModelBound)
     }
 
     override fun onResume() {
@@ -469,5 +495,7 @@ class SplashActivity : AppCompatActivity() {
 
     private companion object {
         const val FINISH_TICK_MILLIS = 300L
+        const val STATE_OPENED_FOR_RETRY = "safeModeOpenedForRetry"
+        const val STATE_SPLASH_BOUND = "safeModeSplashBound"
     }
 }

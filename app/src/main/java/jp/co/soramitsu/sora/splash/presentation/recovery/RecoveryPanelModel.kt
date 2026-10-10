@@ -61,6 +61,13 @@ enum class RecoveryPanelKind {
 
     /** U4: not enough free space to finish the upgrade safely. */
     STORAGE,
+
+    /**
+     * U6 variant: a restore the person confirmed ("Set up this device again") waits for the app
+     * to restart, or the last start could not finish setting the old files aside. Try again
+     * restarts the app; it never retries by itself.
+     */
+    RESTORE_PENDING,
 }
 
 /**
@@ -96,16 +103,28 @@ object RecoveryPanels {
 
     private const val MEBIBYTE = 1_024L * 1_024L
 
-    fun model(options: WalletRecoveryOptions, driveAvailable: Boolean): RecoveryPanelModel {
-        val kind = when (options.kind) {
-            WalletRecoveryKind.STORAGE -> RecoveryPanelKind.STORAGE
-            WalletRecoveryKind.TRANSIENT -> RecoveryPanelKind.TRANSIENT
-            WalletRecoveryKind.KEYS_UNAVAILABLE -> RecoveryPanelKind.KEYS_UNAVAILABLE
-            WalletRecoveryKind.MIGRATION,
-            WalletRecoveryKind.INTEGRITY -> RecoveryPanelKind.RECOVERY
+    /**
+     * [restorePending]: a confirmed "Set up this device again" waits for a new app process; the
+     * panel then offers no restore (one is already on its way) and no read-only access (the old
+     * files are about to be set aside), and Try again restarts the app.
+     */
+    fun model(
+        options: WalletRecoveryOptions,
+        driveAvailable: Boolean,
+        restorePending: Boolean = false,
+    ): RecoveryPanelModel {
+        val kind = when {
+            restorePending -> RecoveryPanelKind.RESTORE_PENDING
+            else -> when (options.kind) {
+                WalletRecoveryKind.STORAGE -> RecoveryPanelKind.STORAGE
+                WalletRecoveryKind.TRANSIENT -> RecoveryPanelKind.TRANSIENT
+                WalletRecoveryKind.KEYS_UNAVAILABLE -> RecoveryPanelKind.KEYS_UNAVAILABLE
+                WalletRecoveryKind.MIGRATION,
+                WalletRecoveryKind.INTEGRITY -> RecoveryPanelKind.RECOVERY
+            }
         }
         val secondary = buildList {
-            if (kind != RecoveryPanelKind.STORAGE) {
+            if (kind != RecoveryPanelKind.STORAGE && kind != RecoveryPanelKind.RESTORE_PENDING) {
                 if (options.canRestoreFromPhrase) add(RecoveryAction.RESTORE_PHRASE)
                 if (options.canRestoreFromDrive && driveAvailable) add(RecoveryAction.RESTORE_DRIVE)
             }
@@ -113,7 +132,7 @@ object RecoveryPanels {
         val tertiary = buildList {
             if (kind == RecoveryPanelKind.STORAGE) add(RecoveryAction.OPEN_STORAGE)
             if (options.canShowPhraseAfterPin) add(RecoveryAction.SHOW_PHRASE)
-            if (options.canReadOnly) add(RecoveryAction.READ_ONLY)
+            if (options.canReadOnly && kind != RecoveryPanelKind.RESTORE_PENDING) add(RecoveryAction.READ_ONLY)
             // An export needs free space as well, so it is not offered while space is short.
             if (options.canExport && kind != RecoveryPanelKind.STORAGE) add(RecoveryAction.EXPORT)
             // Always offered: contacting support works in every state (crash-safe, see
@@ -134,8 +153,8 @@ object RecoveryPanels {
             } else {
                 null
             },
-            retryAutomatically = options.retryAutomatically,
-            setUpAgainScope = options.setUpAgainScope,
+            retryAutomatically = options.retryAutomatically && kind != RecoveryPanelKind.RESTORE_PENDING,
+            setUpAgainScope = if (kind == RecoveryPanelKind.RESTORE_PENDING) SetUpAgainScope.NONE else options.setUpAgainScope,
             canShowPhrase = options.canShowPhraseAfterPin,
             interruptedRemoval = options.code.startsWith("WALLET_DELETION_"),
         )

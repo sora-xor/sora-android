@@ -37,6 +37,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.core_db.SetUpAgainScope
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
@@ -164,6 +165,27 @@ class SplashInteractorTest {
             WalletRecoveryCapabilityGate.Mode.NORMAL,
             WalletRecoveryCapabilityGate.mode(),
         )
+    }
+
+    @Test
+    fun `recovery options follow the recorded state, and never offer a restore it would refuse`() {
+        WalletUpgradeBackup.noteMigrationVerified()
+        try {
+            // Nothing recorded (for example an unexpected error while routing): no restore.
+            val fallback = splashInteractor.recoveryOptions("WALLET_VERIFICATION_FAILED")
+            assertFalse(fallback.canRestoreFromPhrase || fallback.canRestoreFromDrive || fallback.canSetUpAgain)
+            assertEquals(SetUpAgainScope.NONE, fallback.setUpAgainScope)
+            assertTrue(fallback.canRetry && fallback.canContactSupport)
+
+            // A verification that failed in this process: the same options requestSetUpAgain reads.
+            WalletUpgradeBackup.noteMigrationRecoveryRequired("POST_MIGRATION_MISMATCH")
+            val recorded = splashInteractor.recoveryOptions("POST_MIGRATION_MISMATCH")
+            assertEquals(WalletUpgradeBackup.recoveryOptions(), recorded)
+            assertEquals(SetUpAgainScope.DATABASE_ONLY, recorded.setUpAgainScope)
+            assertTrue(recorded.canRestoreFromPhrase)
+        } finally {
+            WalletUpgradeBackup.noteMigrationVerified()
+        }
     }
 
     @Test

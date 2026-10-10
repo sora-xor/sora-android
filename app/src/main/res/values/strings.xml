@@ -37,8 +37,6 @@
     <string name="recovery_read_only_confirm">Continue read-only</string>
     <!-- recovery_restore_sheet_body: verified: WalletUpgradeBackup.requestSetUpAgain renames files into no_backup/wallet-quarantine-*-set-up-again/ at the next start; nothing is deleted; the Keystore key is untouched -->
     <string name="recovery_restore_sheet_body">SORA will restart like a new install so you can restore your wallet. The wallet data on this phone is kept, and nothing is deleted.</string>
-    <!-- recovery_restore_sheet_keys_kept: verified: SetUpAgainScope.DATABASE_ONLY moves only app.db; import adopts a stored key set only when it decrypts to the same keys -->
-    <string name="recovery_restore_sheet_keys_kept">Keys saved on this phone stay where they are. Restoring the same wallet reuses them after SORA checks that they match.</string>
     <string name="recovery_restore_sheet_keys_unavailable">This phone can\'t unlock the old data, so have your recovery phrase or Google Drive password ready.</string>
     <string name="recovery_restore_sheet_write_down">If you haven\'t written down your recovery phrase yet, show it and write it down first.</string>
     <string name="recovery_restore_confirm">Restart and restore</string>
@@ -82,4 +80,24 @@
     <string name="recovery_phrase_none">No recovery phrase or seed is saved for this wallet on this phone.</string>
     <string name="recovery_done">Done</string>
     <string name="recovery_back">Back</string>
+    <!-- recovery_restore_sheet_keys_kept: verified: SetUpAgainScope.DATABASE_ONLY moves only app.db; import adopts a stored key set only when it decrypts to the same keys; WalletUpgradeBackup.quarantine().retainedWalletIds lists key sets without an account and LoginSecurityViewModel.findRetainedWallets shows them (adoptRetainedWallet) -->
+    <string name="recovery_restore_sheet_keys_kept">Keys saved on this phone stay where they are. Restoring the same wallet reuses them after SORA checks that they match. Other wallets whose keys are saved on this phone are then listed in Login &amp; Security, under \"Wallets found on this phone\", so you can restore them one by one.</string>
+    <string name="recovery_restore_pending_title">Finishing the restore you started</string>
+    <!-- recovery_restore_pending_body: verified: WalletUpgradeBackup.performPendingSetUpAgain runs only in a new process (prepare, first preparation) and renames files into no_backup/wallet-quarantine-*-set-up-again (Os.rename, never delete); retry() refuses while the marker is pending; SafeModeViewModel.runTryAgain sends RestartForRestore -->
+    <string name="recovery_restore_pending_body">SORA is setting aside the old wallet data so you can restore. It needs to restart to finish this. The old data stays on this phone, and nothing is deleted. If it keeps stopping here, check that your phone has some free space, or contact support.</string>
+    <string name="recovery_restart_continue">Restart and continue</string>
+    <string name="recovery_detail_last_attempt">Last attempt</string>
+    <!-- recovery_sheet_read_only_unavailable: verified: authorizeSafeReadOnly returns VAULT_ONLY before changing the gate or any file; SafeModeViewModel drops READ_ONLY from the panel afterwards -->
+    <string name="recovery_sheet_read_only_unavailable">Read-only mode can\'t open your wallet data on this phone right now. Nothing was changed. Close this and choose another option.</string>
+    <!-- recovery_sheet_read_only_failed: verified: authorizeLegacyReadOnly/authorizeSafeReadOnly throw before entering LEGACY_READ_ONLY; they write no wallet file -->
+    <string name="recovery_sheet_read_only_failed">SORA couldn\'t open read-only mode. Nothing was changed. Try again, or contact support.</string>
+    <!-- recovery_sheet_export_failed: verified: createRecoveryArchive only reads wallet files and publishes a new archive file; it never writes them -->
+    <string name="recovery_sheet_export_failed">SORA couldn\'t create the file. Your wallet data was not changed. Try again, or contact support.</string>
+    <!-- recovery_sheet_restore_failed: verified: requestSetUpAgain only writes the no_backup marker; files move only at the next start after it succeeded -->
+    <string name="recovery_sheet_restore_failed">SORA couldn\'t prepare the restore. Nothing was moved or deleted. Try again, or contact support.</string>
+    <!-- recovery_phrase_unchecked: verified: SafeModeVault.reveal marks the unsuffixed value checked=false unless SafeModeViewModel.derivedAddress derives exactly this address -->
+    <string name="recovery_phrase_unchecked">An older SORA version saved this phrase. SORA couldn\'t confirm that it belongs to this wallet.</string>
+    <string name="recovery_seed_unchecked">An older SORA version saved this seed. SORA couldn\'t confirm that it belongs to this wallet.</string>
+    <!-- recovery_phrase_unreadable: verified: SafeModeVault returns Unreadable only for WalletDecryptionException or a non-transient KeyMaterialUnavailableException on every stored value -->
+    <string name="recovery_phrase_unreadable">This phone can\'t unlock the saved phrase, so trying again won\'t help. If you wrote it down or backed it up to Google Drive, you can still restore with it.</string>
 </resources>
