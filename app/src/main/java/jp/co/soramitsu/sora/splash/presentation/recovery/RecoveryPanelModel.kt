@@ -1,0 +1,145 @@
+/*
+This file is part of the SORA network and Polkaswap app.
+
+Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
+SPDX-License-Identifier: BSD-4-Clause
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+All advertising materials mentioning features or use of this software must display
+the following acknowledgement: This product includes software developed by Polka Biome
+Ltd., SORA, and Polkaswap.
+
+Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
+to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+package jp.co.soramitsu.sora.splash.presentation.recovery
+
+import jp.co.soramitsu.core_db.SetUpAgainScope
+import jp.co.soramitsu.core_db.WalletRecoveryKind
+import jp.co.soramitsu.core_db.WalletRecoveryOptions
+
+/** Every action the recovery screen can offer (design spec 9.2 U4, U6). */
+enum class RecoveryAction {
+    TRY_AGAIN,
+    RESTORE_PHRASE,
+    RESTORE_DRIVE,
+    SHOW_PHRASE,
+    READ_ONLY,
+    EXPORT,
+    OPEN_STORAGE,
+    CONTACT_SUPPORT,
+}
+
+/** Which title and body the panel shows. Each wording is true for its states only. */
+enum class RecoveryPanelKind {
+    /** U6: an interrupted or failed check, or stored data the app does not expect. */
+    RECOVERY,
+
+    /** U6 variant: a busy Keystore, I/O or a locked database; it usually passes on its own. */
+    TRANSIENT,
+
+    /** U6 variant: this phone cannot unlock the stored keys (for example after a transfer). */
+    KEYS_UNAVAILABLE,
+
+    /** U4: not enough free space to finish the upgrade safely. */
+    STORAGE,
+}
+
+/**
+ * What the recovery screen shows for one state: the actions in the design spec 9.2 order, each
+ * offered only when its flag in [WalletRecoveryOptions] says it works here.
+ */
+data class RecoveryPanelModel(
+    val kind: RecoveryPanelKind,
+    val code: String,
+    val primary: RecoveryAction,
+    val secondary: List<RecoveryAction>,
+    val tertiary: List<RecoveryAction>,
+    /** U4: free space needed in MB (rounded up), when known. */
+    val requiredMegabytes: Long? = null,
+    /** U4: how much more space is needed in MB (rounded up), when known. */
+    val missingMegabytes: Long? = null,
+    val retryAutomatically: Boolean = false,
+    val setUpAgainScope: SetUpAgainScope = SetUpAgainScope.NONE,
+    val canShowPhrase: Boolean = false,
+    /** A removal the person confirmed was interrupted (its journal needs attention). */
+    val interruptedRemoval: Boolean = false,
+) {
+    /** Every action on screen, in order. */
+    val actions: List<RecoveryAction>
+        get() = listOf(primary) + secondary + tertiary
+
+    /** Actions that move the person forward other than trying the same thing again. */
+    val forwardActionsBesidesRetry: List<RecoveryAction>
+        get() = actions.filter { it != RecoveryAction.TRY_AGAIN }
+}
+
+object RecoveryPanels {
+
+    private const val MEBIBYTE = 1_024L * 1_024L
+
+    fun model(options: WalletRecoveryOptions, driveAvailable: Boolean): RecoveryPanelModel {
+        val kind = when (options.kind) {
+            WalletRecoveryKind.STORAGE -> RecoveryPanelKind.STORAGE
+            WalletRecoveryKind.TRANSIENT -> RecoveryPanelKind.TRANSIENT
+            WalletRecoveryKind.KEYS_UNAVAILABLE -> RecoveryPanelKind.KEYS_UNAVAILABLE
+            WalletRecoveryKind.MIGRATION,
+            WalletRecoveryKind.INTEGRITY -> RecoveryPanelKind.RECOVERY
+        }
+        val secondary = buildList {
+            if (kind != RecoveryPanelKind.STORAGE) {
+                if (options.canRestoreFromPhrase) add(RecoveryAction.RESTORE_PHRASE)
+                if (options.canRestoreFromDrive && driveAvailable) add(RecoveryAction.RESTORE_DRIVE)
+            }
+        }
+        val tertiary = buildList {
+            if (kind == RecoveryPanelKind.STORAGE) add(RecoveryAction.OPEN_STORAGE)
+            if (options.canShowPhraseAfterPin) add(RecoveryAction.SHOW_PHRASE)
+            if (options.canReadOnly) add(RecoveryAction.READ_ONLY)
+            // An export needs free space as well, so it is not offered while space is short.
+            if (options.canExport && kind != RecoveryPanelKind.STORAGE) add(RecoveryAction.EXPORT)
+            // Always offered: contacting support works in every state (crash-safe, see
+            // SplashActivity.contactSupport).
+            add(RecoveryAction.CONTACT_SUPPORT)
+        }
+        val required = options.requiredBytes?.takeIf { it > 0 }
+        val available = options.availableBytes?.takeIf { it >= 0 }
+        return RecoveryPanelModel(
+            kind = kind,
+            code = options.code,
+            primary = RecoveryAction.TRY_AGAIN,
+            secondary = secondary,
+            tertiary = tertiary,
+            requiredMegabytes = required?.let(::ceilMegabytes),
+            missingMegabytes = if (required != null && available != null && required > available) {
+                ceilMegabytes(required - available)
+            } else {
+                null
+            },
+            retryAutomatically = options.retryAutomatically,
+            setUpAgainScope = options.setUpAgainScope,
+            canShowPhrase = options.canShowPhraseAfterPin,
+            interruptedRemoval = options.code.startsWith("WALLET_DELETION_"),
+        )
+    }
+
+    private fun ceilMegabytes(bytes: Long): Long = (bytes + MEBIBYTE - 1) / MEBIBYTE
+}
