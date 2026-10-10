@@ -308,7 +308,13 @@ class CredentialsRepositoryImpl constructor(
     }
 
     override suspend fun retrieveMnemonic(soraAccount: SoraAccount): String {
-        val current = credentialsPrefs.retrieveMnemonic(soraAccount.substrateAddress)
+        val current = try {
+            credentialsPrefs.retrieveMnemonic(soraAccount.substrateAddress)
+        } catch (error: WalletDecryptionException) {
+            return releaseEraValueOrThrow(soraAccount.substrateAddress, error) {
+                credentialsPrefs.retrieveMnemonic("")
+            }
+        }
         if (current.isNotEmpty()) return current
         return if (legacyEmptySuffixBelongsTo(soraAccount.substrateAddress)) {
             credentialsPrefs.retrieveMnemonic("")
@@ -336,7 +342,14 @@ class CredentialsRepositoryImpl constructor(
                     WalletRecoveryCapabilityGate.Mode.NORMAL &&
                     retainedWordCount in setOf(12, 24)
                 ) {
-                    credentialsPrefs.saveSeed(seed, soraAccount.substrateAddress)
+                    // A cache of the derived seed: added only where no seed value is stored
+                    // (an unreadable stored value is never replaced).
+                    runCatching {
+                        credentialsPrefs.writeCredentialsIfAbsent(
+                            soraAccount.substrateAddress,
+                            mapOf(CredentialField.SEED to seed),
+                        )
+                    }
                 }
             }
         }
@@ -345,7 +358,13 @@ class CredentialsRepositoryImpl constructor(
     }
 
     override suspend fun retrieveStoredSeed(soraAccount: SoraAccount): String {
-        val current = credentialsPrefs.retrieveSeed(soraAccount.substrateAddress)
+        val current = try {
+            credentialsPrefs.retrieveSeed(soraAccount.substrateAddress)
+        } catch (error: WalletDecryptionException) {
+            return releaseEraValueOrThrow(soraAccount.substrateAddress, error) {
+                credentialsPrefs.retrieveSeed("")
+            }
+        }
         if (current.isNotEmpty()) return current
         return if (legacyEmptySuffixBelongsTo(soraAccount.substrateAddress)) {
             credentialsPrefs.retrieveSeed("")
@@ -521,6 +540,23 @@ class CredentialsRepositoryImpl constructor(
      * compatibility input for this release and are accepted only when the stored public key
      * re-derives the exact requested SORA2 address.
      */
+    /**
+     * This account's own value cannot be decrypted. A non-empty release-era (unsuffixed) value
+     * belongs to the same wallet when the release-era keys derive this address, so it is returned
+     * instead; otherwise the original error is rethrown. Reads only.
+     */
+    private suspend fun releaseEraValueOrThrow(
+        substrateAddress: String,
+        error: WalletDecryptionException,
+        read: suspend () -> String,
+    ): String {
+        if (legacyEmptySuffixBelongsTo(substrateAddress)) {
+            val value = read()
+            if (value.isNotEmpty()) return value
+        }
+        throw error
+    }
+
     private suspend fun legacyEmptySuffixBelongsTo(substrateAddress: String): Boolean {
         // An unreadable release-era set cannot belong to any account; a Keystore failure still
         // propagates.

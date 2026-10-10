@@ -47,11 +47,27 @@ data class UnavailableWalletOptions(
     /**
      * Removing this account (after the person confirms) and importing its phrase again. Used when
      * a stored value cannot be read, so the account cannot be completed in place. A copy of the
-     * old preference files is kept on the device first.
+     * old preference files is kept on the device first. Offered only when removal loses no
+     * readable secret, or when that secret is a phrase or seed shown first
+     * ([showPhraseBeforeRemoval]). A release-era copy ([hasReleaseEraCopy]) is never removed.
      */
     val canRemoveAndImport: Boolean,
-    /** A stored recovery phrase or seed for this account decrypts and can be shown after PIN. */
+    /**
+     * A stored recovery phrase or seed for this account decrypts and can be shown after PIN
+     * (the account's own value, or a release-era value whose keys derive this address).
+     */
     val canShowPhraseAfterPin: Boolean,
     /** Balances and history stay visible; only signing is off for this account. */
     val canReadOnly: Boolean = true,
+    /**
+     * Removal would delete a readable phrase or seed of this account: show it (after PIN) and
+     * ask the person to confirm they have written it down before removing the account.
+     */
+    val showPhraseBeforeRemoval: Boolean = false,
+    /**
+     * Release-era keys that derive this address are stored on the phone. Removing the account
+     * keeps them, and "Restore wallets found on this phone" (`adoptRetainedWallet`) makes the
+     * account usable again from them without the phrase.
+     */
+    val hasReleaseEraCopy: Boolean = false,
 )
