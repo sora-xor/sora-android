@@ -90,7 +90,8 @@
         <item name="tintTitles">@color/neu_tint_titles_light</item>
         <item name="disabledColor">@color/neon_text_disabled</item>
         <item name="titleColor">@color/neon_text_disabled</item>
-        <item name="flatAboveBackground">@color/neu_color_200</item>
+        <!-- Toast card (custom_toast.xml): bg.toast, with @color/neon_on_toast text. -->
+        <item name="flatAboveBackground">@color/neon_toast</item>
         <item name="backgroundInfo">@color/neu_background_info</item>
         <item name="statusColor">@color/neu_status</item>
         <item name="statusWarningColor">@color/neu_status_warning_day</item>

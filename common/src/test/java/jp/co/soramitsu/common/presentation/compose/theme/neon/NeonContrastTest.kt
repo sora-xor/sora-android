@@ -247,4 +247,27 @@ class NeonContrastTest {
         assertEquals(DayThemeColors.FgSecondary, soraLightColorsHighContrast.fgTertiary)
     }
 
+    private fun layoutColorRef(file: String, attr: String): String {
+        val text = File(res, file).readText()
+        val m = Regex("""$attr="([@?][a-z]+/[A-Za-z0-9_]+)"""").find(text)
+        return requireNotNull(m) { "$file has no $attr" }.groupValues[1]
+    }
+
+    @Test
+    fun `transaction toast is readable in both themes`() {
+        // a5 made the toast text follow the theme while its card stayed #FAF6F6: 1.01:1 in dark.
+        val text = layoutColorRef("layout/custom_toast.xml", "android:textColor")
+        val fill = layoutColorRef("drawable/rounded_toast_bg.xml", "android:color")
+        assertTrue("toast text must be a fixed neon colour, was $text", text.startsWith("@color/"))
+        assertTrue("toast fill must be a theme attribute, was $fill", fill.startsWith("?attr/"))
+        val fillColor = themeAttr(fill.substringAfter("/"))
+        for (dir in listOf("values", "values-night")) {
+            val c = xmlColors(dir)
+            fun col(name: String) = requireNotNull(c[name]) { "$dir has no $name" }
+            assertContrast("$dir toast text", col(text.substringAfter("/")), col(fillColor), 4.5)
+        }
+        assertEquals(NeonDark.toast, xmlColors("values-night")["neon_toast"])
+        assertEquals(NeonLight.toast, xmlColors("values")["neon_toast"])
+    }
+
 }
