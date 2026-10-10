@@ -97,6 +97,7 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeComplete
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeWelcome
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberReadOnlyBrowsing
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common.util.StringPair
@@ -323,7 +324,7 @@ private fun CardsMainScreen(
  */
 @Composable
 private fun ReadOnlyHomeBanner() {
-    if (!rememberWalletReadOnly()) return
+    if (!rememberReadOnlyBrowsing()) return
     val context = LocalContext.current
     var learnMore by remember { mutableStateOf(false) }
     ReadOnlyBanner(
