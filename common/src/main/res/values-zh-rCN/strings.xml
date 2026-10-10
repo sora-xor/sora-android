@@ -37,6 +37,8 @@
   <string name="address_not_found_1">未找到接收人</string>
   <string name="amount_error_no_funds">很抱歉，您没有足够的资金来转账指定的金额。</string>
   <string name="appearance_title">外观</string>
+  <string name="appearance_reduce_effects">Reduce effects</string>
+  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">在农业中，APR代表参与DeFi流动性提供或质押活动的年化投资回报率。</string>
   <string name="ask_biometry_message">您想使用生物特征识别进行认证吗？</string>
   <string name="asset_details_asset_id">资产ID</string>
@@ -164,6 +166,7 @@
   <string name="common_japanese">日语</string>
   <string name="common_khmer">高棉语</string>
   <string name="common_korean">韩语</string>
+  <string name="common_loading">Loading</string>
   <string name="common_malay">马来语</string>
   <string name="common_max">最大</string>
   <string name="common_min">分</string>

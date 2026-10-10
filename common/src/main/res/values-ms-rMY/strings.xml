@@ -37,6 +37,8 @@
   <string name="address_not_found_1">Penerima tidak ditemui</string>
   <string name="amount_error_no_funds">Maaf, anda tidak mempunyai dana yang cukup untuk memindahkan jumlah yang ditetapkan.</string>
   <string name="appearance_title">Penampilan</string>
+  <string name="appearance_reduce_effects">Reduce effects</string>
+  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Adakah anda ingin menggunakan biometri untuk pengesahan?</string>
   <string name="asset_details_asset_id">ID Aset</string>
@@ -164,6 +166,7 @@
   <string name="common_japanese">Bahasa Jepun</string>
   <string name="common_khmer">Orang Khmer</string>
   <string name="common_korean">Orang Korea</string>
+  <string name="common_loading">Loading</string>
   <string name="common_malay">Bahasa Melayu</string>
   <string name="common_max">max</string>
   <string name="common_min">min</string>

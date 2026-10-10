@@ -37,6 +37,8 @@
   <string name="address_not_found_1">Qəbul edənlər tapılmadı</string>
   <string name="amount_error_no_funds">Bağışlayın, göstərilən məbləği köçürmək üçün kifayət qədər vəsaitiniz yoxdur.</string>
   <string name="appearance_title">Appearance</string>
+  <string name="appearance_reduce_effects">Reduce effects</string>
+  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">Fermerçilikdə APR, DeFi likvidliyinin təmin edilməsində və ya stakeinq fəaliyyətlərində iştirak üçün investisiyanın illik gəlirini ifadə edir.</string>
   <string name="ask_biometry_message">Doğrulama üçün biometriyadan istifadə etmək istərdinizmi?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -165,6 +167,7 @@
   <string name="common_japanese">Yapon dili</string>
   <string name="common_khmer">Xmer dili</string>
   <string name="common_korean">Koreya dili</string>
+  <string name="common_loading">Loading</string>
   <string name="common_malay">Malay dili</string>
   <string name="common_max">maks</string>
   <string name="common_min">dəqiqə</string>

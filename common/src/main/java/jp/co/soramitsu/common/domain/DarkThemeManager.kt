@@ -35,11 +35,13 @@ package jp.co.soramitsu.common.domain
 import android.content.Context
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -49,6 +51,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Singleton
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -92,6 +95,7 @@ class DarkThemeManager @Inject constructor(
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                     else
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    mirrorNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
 
                     AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
                 } else {
@@ -100,6 +104,10 @@ class DarkThemeManager @Inject constructor(
                         our application
                      */
                     val currentAppUiMode = AppCompatDelegate.getDefaultNightMode()
+                    mirrorNightMode(
+                        if (isDarkModeEnabled) AppCompatDelegate.MODE_NIGHT_YES
+                        else AppCompatDelegate.MODE_NIGHT_NO
+                    )
 
                     when {
                         currentAppUiMode == AppCompatDelegate.MODE_NIGHT_YES && isDarkModeEnabled -> {
@@ -144,7 +152,19 @@ class DarkThemeManager @Inject constructor(
                 .equals(AppCompatDelegate.MODE_NIGHT_YES)
         )
 
+    /**
+     * The in-app "Reduce effects" switch (SORA Neon). Stored under its own key; the theme keys
+     * above are never touched by it.
+     */
+    val reduceEffectsFlow: StateFlow<Boolean> = NeonEffectsPreference.reduceEffects
+
     fun updateUiModeFromCache() {
+        coroutineManager.applicationScope.launch {
+            runCatching {
+                soraPreferences.getBoolean(field = NeonEffectsPreference.KEY, defaultValue = false)
+            }.onSuccess(NeonEffectsPreference::update)
+                .onFailure { Timber.w(it, "Could not read the reduce effects setting") }
+        }
         coroutineManager.applicationScope.launch {
             mutableDarkThemeSharedFlow.emit(
                 value = DarkModeSettings(
@@ -193,8 +213,49 @@ class DarkThemeManager @Inject constructor(
         )
     }
 
-    private companion object {
-        const val KEY_DARK_THEME_ENABLED = "KEY_DARK_THEME_ENABLED"
-        const val KEY_SYSTEM_DRIVEN_UI_ENABLED = "KEY_SYSTEM_DRIVEN_UI_ENABLED"
+    suspend fun setReduceEffects(enabled: Boolean) {
+        soraPreferences.putBoolean(NeonEffectsPreference.KEY, enabled)
+        NeonEffectsPreference.update(
+            soraPreferences.getBoolean(NeonEffectsPreference.KEY, false) // double check, as above
+        )
+    }
+
+    /**
+     * Copies the resolved night mode into a tiny synchronous file, so the next cold start can
+     * apply it before the first Activity (the splash) is drawn. The stored theme settings above
+     * stay the source of truth and are never changed here.
+     */
+    private fun mirrorNightMode(mode: Int) {
+        runCatching {
+            context.getSharedPreferences(NIGHT_MODE_MIRROR_FILE, Context.MODE_PRIVATE).edit {
+                putInt(KEY_NIGHT_MODE_MIRROR, mode)
+            }
+        }.onFailure { Timber.w(it, "Could not mirror the night mode") }
+    }
+
+    companion object {
+        private const val KEY_DARK_THEME_ENABLED = "KEY_DARK_THEME_ENABLED"
+        private const val KEY_SYSTEM_DRIVEN_UI_ENABLED = "KEY_SYSTEM_DRIVEN_UI_ENABLED"
+        private const val NIGHT_MODE_MIRROR_FILE = "sora_night_mode_mirror"
+        private const val KEY_NIGHT_MODE_MIRROR = "night_mode"
+
+        /**
+         * Applies the night mode mirrored on the previous run, before any Activity exists, so a
+         * dark-theme user does not see a light splash first. Does nothing on the first run after
+         * install or upgrade (the asynchronous [updateUiModeFromCache] still decides then).
+         */
+        fun applyCachedNightMode(context: Context) {
+            runCatching {
+                val mode = context.getSharedPreferences(NIGHT_MODE_MIRROR_FILE, Context.MODE_PRIVATE)
+                    .getInt(KEY_NIGHT_MODE_MIRROR, AppCompatDelegate.MODE_NIGHT_UNSPECIFIED)
+                if (
+                    mode == AppCompatDelegate.MODE_NIGHT_YES ||
+                    mode == AppCompatDelegate.MODE_NIGHT_NO ||
+                    mode == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                ) {
+                    AppCompatDelegate.setDefaultNightMode(mode)
+                }
+            }.onFailure { Timber.w(it, "Could not apply the mirrored night mode") }
+        }
     }
 }

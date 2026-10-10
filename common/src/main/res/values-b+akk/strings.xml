@@ -37,6 +37,8 @@
   <string name="address_not_found_1">Maḫirū ul innamrū</string>
   <string name="amount_error_no_funds">Kaspūka ana šūbil šīmim annîm ul mādu</string>
   <string name="appearance_title">Siknum</string>
+  <string name="appearance_reduce_effects">Reduce effects</string>
+  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR ina errešūtim šīm namāʾim ša šattim ana nadān mê kaspim u rakās makkūrim ušakkan</string>
   <string name="ask_biometry_message">Kunuk zumrika ana kunnî šumim tašakkan?</string>
   <string name="asset_details_asset_id">Šum makkūrim</string>
@@ -166,6 +168,7 @@
   <string name="common_japanese">Lišān Yāpānim</string>
   <string name="common_khmer">Lišān Ḫimirim</string>
   <string name="common_korean">Lišān Kurîm</string>
+  <string name="common_loading">Loading</string>
   <string name="common_malay">Lišān Malayim</string>
   <string name="common_max">rabûm</string>
   <string name="common_min">ṣeḫrum</string>

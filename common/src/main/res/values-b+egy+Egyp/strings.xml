@@ -37,6 +37,8 @@
   <string name="address_not_found_1">𓈙𓋴𓊪𓅱 𓈖 𓎼𓅓</string>
   <string name="amount_error_no_funds">𓅓𓎛𓏏𓊪, 𓈖𓏏𓎡 𓈖 𓈖 𓂝𓈙𓄿 𓐍𓏏𓅱 𓂋 𓉔𓄿𓃀𓐍𓏏 𓊪𓈖 𓂝𓈙𓄿𓏏.</string>
   <string name="appearance_title">𓈎𓂧</string>
+  <string name="appearance_reduce_effects">Reduce effects</string>
+  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR 𓅓 𓋴𓎡𓄿𓐍𓏏 𓋴𓈙𓅓 𓈖𓂋𓈖𓊪𓏏 𓇋𓋴𓅱 𓅓 𓂋𓂧𓇋𓏏𓐍𓏏 𓈖 𓂧𓅓𓆓𓅓 𓅓 DeFi 𓐍𓏏𓅱𓈙𓅓𓅱 𓂋𓂧𓇋𓏏 𓂋𓊪𓅱 𓍿𓋴𓐍𓏏 𓇋𓂋𓅱𓏏.</string>
   <string name="ask_biometry_message">𓂋 𓈖𓏏𓎡 𓅓𓂋𓇌 𓂋 𓇋𓂋𓅓 𓐍𓄿𓇋𓈖𓄡𓏏 𓈖 𓋴𓅓𓈖𓂋𓈖?</string>
   <string name="asset_details_asset_id">𓇋𓐍𓏏 𓂋𓈖</string>
@@ -166,6 +168,7 @@
   <string name="common_japanese">𓂋𓄿𓈖𓇋𓊪𓅱𓈖</string>
   <string name="common_khmer">𓂋𓄿𓈖𓐍𓅓𓂋</string>
   <string name="common_korean">𓂋𓄿𓈖𓎡𓅱𓂋𓇋</string>
+  <string name="common_loading">Loading</string>
   <string name="common_malay">𓂋𓄿𓈖𓅓𓂋𓄿𓇋</string>
   <string name="common_max">𓅱𓂋</string>
   <string name="common_min">𓈖𓆓𓋴</string>

@@ -56,6 +56,8 @@ internal fun AppSettingsScreen(
     onSystemToggle: (Boolean) -> Unit,
     onDarkToggle: (Boolean) -> Unit,
     onTestNetworksToggle: (Boolean) -> Unit,
+    checkedReduceEffects: Boolean = false,
+    onReduceEffectsToggle: (Boolean) -> Unit = {},
 ) {
     ContentCard {
         Column(
@@ -82,6 +84,19 @@ internal fun AppSettingsScreen(
                 available = true,
                 checked = checkedDark,
                 onClick = onDarkToggle,
+            )
+            OptionSwitch(
+                icon = null,
+                label = stringResource(id = R.string.appearance_reduce_effects),
+                bottomDivider = false,
+                available = true,
+                checked = checkedReduceEffects,
+                onClick = onReduceEffectsToggle,
+            )
+            Text(
+                text = stringResource(id = R.string.appearance_reduce_effects_description),
+                style = MaterialTheme.customTypography.paragraphXS,
+                color = MaterialTheme.customColors.fgSecondary,
             )
             if (testNetworksAvailable) {
                 Text(

@@ -37,6 +37,8 @@
   <string name="address_not_found_1">प्राप्तकर्ता नहीं मिले</string>
   <string name="amount_error_no_funds">क्षमा करें, आपके पास निर्दिष्ट राशि स्थानांतरित करने के लिए पर्याप्त धन नहीं है।</string>
   <string name="appearance_title">उपस्थिति</string>
+  <string name="appearance_reduce_effects">Reduce effects</string>
+  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">क्या आप प्रमाणीकरण के लिए बायोमेट्री का उपयोग करना चाहेंगे?</string>
   <string name="asset_details_asset_id">संपत्ति आईडी</string>
@@ -165,6 +167,7 @@
   <string name="common_japanese">जापानी</string>
   <string name="common_khmer">खमेर</string>
   <string name="common_korean">कोरियाई</string>
+  <string name="common_loading">Loading</string>
   <string name="common_malay">मलायी</string>
   <string name="common_max">max</string>
   <string name="common_min">मिनट</string>

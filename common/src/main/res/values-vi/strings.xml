@@ -37,6 +37,8 @@
   <string name="address_not_found_1">Không tìm thấy người nhận</string>
   <string name="amount_error_no_funds">Xin lỗi, bạn không có đủ tiền để chuyển số tiền đã chỉ định.</string>
   <string name="appearance_title">Hiện thị</string>
+  <string name="appearance_reduce_effects">Reduce effects</string>
+  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR trong farm biểu thị lợi tức đầu tư hàng năm khi tham gia vào các hoạt động cung cấp thanh khoản DeFi hoặc đặt cược.</string>
   <string name="ask_biometry_message">Bạn có muốn sử dụng sinh trắc học để xác thực không?</string>
   <string name="asset_details_asset_id">ID Tài sản</string>
@@ -164,6 +166,7 @@
   <string name="common_japanese">Tiếng Nhật</string>
   <string name="common_khmer">Tiếng Khmer</string>
   <string name="common_korean">Tiếng Hàn Quốc</string>
+  <string name="common_loading">Loading</string>
   <string name="common_malay">Tiếng Mã Lai</string>
   <string name="common_max">tối đa</string>
   <string name="common_min">phút</string>
