@@ -240,9 +240,9 @@ it was left as recorded.
   URLs) and the SORA Card network client in `:common_wallet`.
 - `MainViewModel` no longer starts the SORA Card SDK at app start.
 - The `soracard` flag in the remote `mobile.json` is no longer read (the
-  config JSON ignores unknown keys). The `soracard` field of the PI indexer
-  `mobileConfig` query is left as it is; nothing reads it, and the indexer
-  schema work owns that query.
+  config JSON ignores unknown keys). The PI indexer `mobileConfig` queries
+  no longer ask for `soracard` either (added in the a2 follow-up review
+  below, after the indexer schema work had landed).
 
 **Stored data (no change)**
 
@@ -375,6 +375,53 @@ All offline, on this branch after the last a2 commit:
   task. Reported for a separate fix.
 - Not done here: an upgrade from the Play 3.8.6.3 build (no 3.8.6.3 APK on
   this machine; see `RELEASE-CHECKLIST.md`).
+
+### Follow-up review (a2, re-run on the branch tip)
+
+The a2 commits were checked again, item by item against the removal map,
+on the branch tip after a3-a6 had landed (`2b07853e`). Everything in the map
+is in place: both card modules and all entry points are gone, Room is still
+at 77 with the frozen 65→66 / 66→67 rows, the 7 vendored modules and their
+rebuild inputs are gone (`CONTENTS.sha256` passes for all 51 files), no
+source file, build file, manifest, R8 rule, workflow or string resource
+mentions SORA Card, PayWings, IDensic, X1 or the removed secrets. Lockfiles
+from the task start (`fccdcf64`) to the dependency commit (`320bf611`): no
+kept library changed version; only SDK-only modules disappeared, and
+`bcprov-jdk18on` is 1.78.1 on every runtime classpath.
+
+Changed in this review:
+
+- The PI indexer `mobileConfig` queries (full and fallback) no longer ask
+  for `soracard`, and `PiMobileConfig` no longer has the field. Nothing read
+  it, but it was a required field: if the indexer team removed the retired
+  flag from the schema, every `mobileConfig` request would fail validation
+  and the optional develop/Soralution features (Nexus, Polkamarkt, Taira)
+  would stay off. Asking for fewer fields is valid against every indexer
+  version, old or new. Production behaviour is unchanged.
+- New tests: `CardHubMigrationRowsTest` (device) pins the rows migrations
+  65→66 and 66→67 write to what 3.8.x wrote, including that 66→67 leaves a
+  user's other hub choices alone; `WalletRepositoryTest` checks that the
+  "get sora card" / "buy xor token" rows a 3.8.x database still holds are
+  skipped and only the referral card is returned;
+  `PolkaswapIndexerClientTest` checks that no `mobileConfig` request names
+  `soracard`.
+
+No user-visible change. Verification on the branch tip after these commits,
+all offline:
+
+- `:app:assembleProductionDebug`: succeeded. The merged manifest still asks
+  only for `INTERNET`, `ACCESS_NETWORK_STATE`, `CAMERA`, `USE_BIOMETRIC`,
+  `USE_FINGERPRINT`, `VIBRATE`, `POST_NOTIFICATIONS`, `WAKE_LOCK`,
+  `RECEIVE_BOOT_COMPLETED`, `FOREGROUND_SERVICE` and the app's own
+  `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`.
+- `testProductionDebugUnitTest`: 1,180 tests in 15 modules, 0 failures,
+  9 skipped.
+- `:app:lintProductionDebug`: passed; baseline not changed.
+- `:core_db:connectedProductionDebugAndroidTest` with
+  `CardHubMigrationRowsTest` on SORA-Api36-16k: 2/2 passed.
+- Emulator (SORA-Api36-16k): the debug APK installs over the previous build
+  and opens on the onboarding screen with no crash
+  (`screens/android/a2-remove-soracard/09-retry-launch-aafbe84e.png`).
 
 ## a3: Live-runtime signing, indexer tolerance, flags, version
 

@@ -179,6 +179,13 @@ must be treated as public.
       no card items; a swap completes and returns to the wallet; the
       recovery phrase can still be shown after PIN.
 
+### PI indexer (backend team)
+
+- [ ] Android 3.9.0 no longer asks the indexer for `mobileConfig.soracard`
+      (Android 3.8.6.3 did not use the indexer's `mobileConfig` at all).
+      Before removing `soracard` from the indexer schema, confirm that no
+      shipped iOS build asks for it; until then keep it (always `false`).
+
 ### Legal
 
 - [ ] The proprietary SORA Card SDK, PayWings OAuth/KYC and Sumsub IDensic
