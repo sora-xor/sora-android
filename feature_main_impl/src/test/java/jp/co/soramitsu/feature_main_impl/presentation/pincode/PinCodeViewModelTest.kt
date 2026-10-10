@@ -37,6 +37,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
@@ -65,6 +66,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.verifyNoInteractions
 import org.mockito.Mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
@@ -386,6 +388,26 @@ class PinCodeViewModelTest {
         verify(interactor).checkPin(anyString())
         verify(mainRouter).showBackupPassphrase("address")
     }
+
+    @Test
+    fun `unusable wallet key keeps asking for the stored pin and never offers a new one`() =
+        runTest {
+            // The PIN is stored but cannot be decrypted right now (busy or missing Keystore key).
+            given(interactor.isCodeSet())
+                .willThrow(KeyMaterialUnavailableException("busy", transient = true))
+            given(interactor.checkPin(anyString())).willReturn(true)
+
+            pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
+            advanceUntilIdle()
+
+            assertEquals(enterPincode, pinCodeViewModel.state.toolbarTitleString)
+            repeat(6) { pinCodeViewModel.pinCodeNumberClicked("1") }
+            advanceUntilIdle()
+
+            // The typed PIN is checked against the stored one, not saved as a new PIN.
+            verify(interactor).checkPin(anyString())
+            verify(interactor, never()).savePin(anyString())
+        }
 
     @Test
     fun `pin code entered correct with TIMEOUT_CHECK action`() = runTest {
