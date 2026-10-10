@@ -218,6 +218,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
                     onAmountChangeTo = viewModel::onToAmountChange,
                     onTokenSwapClick = viewModel::onTokensSwapClick,
                     onSwapClick = onSwapReview,
+                    onRetryFee = viewModel::onRetryFee,
                 )
             }
         }

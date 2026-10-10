@@ -185,6 +185,7 @@
   <string name="common_received">受け取った</string>
   <string name="common_recipient">受信者</string>
   <string name="common_refresh">更新</string>
+  <string name="common_try_again">もう一度試す</string>
   <string name="common_remove">削除</string>
   <string name="common_request">Request</string>
   <string name="common_rewrite">Rewrite</string>
@@ -317,6 +318,9 @@
   <string name="mnemonic_invalid_title">ニーモニックパスフレーズが無効です</string>
   <string name="mnemonic_text">紙に書き留めて安全に保管するなど、デジタル以外の方法でバックアップすることをお勧めします</string>
   <string name="network_fee">ネットワーク手数料</string>
+  <string name="network_fee_unavailable">現在、ネットワーク手数料を確認できません。しばらくしてからもう一度お試しください。資産はブロックチェーン上で安全です。</string>
+  <string name="network_fee_unavailable_short">ネットワーク手数料を確認できません</string>
+  <string name="network_fee_unreachable">SORAネットワークに接続できないため、ネットワーク手数料を確認できません。インターネット接続を確認して、もう一度お試しください。資産はブロックチェーン上で安全です。</string>
   <string name="network_finalized_history">履歴</string>
   <string name="node_details_address_validation_failed">URLの検証に失敗しました (アドレスが間違っています)</string>
   <string name="node_details_genesis_validation_failed">あなたのノードのジェネシスハッシュが、ネットワークのジェネシスハッシュと異なっています</string>

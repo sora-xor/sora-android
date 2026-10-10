@@ -189,6 +189,7 @@
   <string name="common_received">Получено</string>
   <string name="common_recipient">Получатель</string>
   <string name="common_refresh">Refresh</string>
+  <string name="common_try_again">Try again</string>
   <string name="common_remove">Удалить</string>
   <string name="common_request">Запрос</string>
   <string name="common_rewrite">Rewrite</string>
@@ -321,6 +322,9 @@
   <string name="mnemonic_invalid_title">Неверная мнемоническая кодовая фраза</string>
   <string name="mnemonic_text">Используйте нецифровой носитель для сохранения, например, выпишите слова на бумагу.</string>
   <string name="network_fee">Комиссия сети</string>
+  <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
+  <string name="network_fee_unavailable_short">Network fee unavailable</string>
+  <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="network_finalized_history">Активность</string>
   <string name="node_details_address_validation_failed">Не удалось проверить URL (неверный адрес)</string>
   <string name="node_details_genesis_validation_failed">Генезис хэш вашей ноды отличается от генезис хэша сети</string>

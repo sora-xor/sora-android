@@ -186,6 +186,7 @@
   <string name="common_received">Ontvangen</string>
   <string name="common_recipient">Ontvanger</string>
   <string name="common_refresh">Refresh</string>
+  <string name="common_try_again">Try again</string>
   <string name="common_remove">Verwijder</string>
   <string name="common_request">Request</string>
   <string name="common_rewrite">Rewrite</string>
@@ -318,6 +319,9 @@
   <string name="mnemonic_invalid_title">Ongeldige wachtwoordzin</string>
   <string name="mnemonic_text">Wij bevelen aan om gebruik te maken van een niet-digitale manier om een back-up op te slaan, zoals het opschrijven op papier.</string>
   <string name="network_fee">Netwerkvergoeding</string>
+  <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
+  <string name="network_fee_unavailable_short">Network fee unavailable</string>
+  <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="node_details_address_validation_failed">URL niet gevalideerd (verkeerd adres)</string>
   <string name="node_details_genesis_validation_failed">De genesis-hash van uw node is anders dan de genesis-hash van het netwerk</string>
   <string name="node_details_node_already_added" formatted="false">Deze node is al toegevoegd: %s\nVerbinding tot stand gebracht met node %s</string>

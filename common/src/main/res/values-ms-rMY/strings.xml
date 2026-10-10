@@ -185,6 +185,7 @@
   <string name="common_received">Menerima</string>
   <string name="common_recipient">Penerima</string>
   <string name="common_refresh">Segarkan semula</string>
+  <string name="common_try_again">Try again</string>
   <string name="common_remove">Mengalih keluar</string>
   <string name="common_request">Permintaan</string>
   <string name="common_rewrite">Rewrite</string>
@@ -317,6 +318,9 @@
   <string name="mnemonic_invalid_title">Frasa laluan mnemonik tidak sah</string>
   <string name="mnemonic_text">Kami mengesyorkan untuk menggunakan cara bukan digital untuk membuat sandaran, seperti menulisnya di atas kertas.</string>
   <string name="network_fee">Yuran Rangkaian</string>
+  <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
+  <string name="network_fee_unavailable_short">Network fee unavailable</string>
+  <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="network_finalized_history">Aktiviti</string>
   <string name="node_details_address_validation_failed">Gagal mengesahkan URL (Alamat salah)</string>
   <string name="node_details_genesis_validation_failed">Cincang genesis nod anda berbeza daripada cincang genesis rangkaian</string>

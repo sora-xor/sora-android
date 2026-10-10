@@ -186,6 +186,7 @@
   <string name="common_received">Alınan</string>
   <string name="common_recipient">Alıcı</string>
   <string name="common_refresh">Refresh</string>
+  <string name="common_try_again">Try again</string>
   <string name="common_remove">Kaldırmak</string>
   <string name="common_request">Request</string>
   <string name="common_rewrite">Rewrite</string>
@@ -318,6 +319,9 @@
   <string name="mnemonic_invalid_title">Geçersiz anımsatıcı cümle</string>
   <string name="mnemonic_text">Yedeklemek için kağıda yazmak ve onu güvenli bir ortamda saklamak gibi dijital olmayan bir yöntem öneriyoruz.</string>
   <string name="network_fee">Ağ Ücreti</string>
+  <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
+  <string name="network_fee_unavailable_short">Network fee unavailable</string>
+  <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="node_details_address_validation_failed">Failed to validate URL (Wrong address)</string>
   <string name="node_details_genesis_validation_failed">The genesis hash of your node is different than the genesis hash of the network</string>
   <string name="node_details_node_already_added" formatted="false">This node is already added: %s\nConnection established with node %s</string>
