@@ -1793,7 +1793,18 @@ network forever with a dialog, read-only mode had no visible sign, and the
 ### What changed
 
 Rules kept everywhere: no key material, wrapped key, Keystore alias or
-account row is deleted, overwritten, re-encrypted or moved by any of this.
+account row is deleted, overwritten or re-encrypted by any of this, and
+nothing is moved automatically. The only movement is on the confirmed
+"Restore with recovery phrase" / "Restore from Google Drive" actions
+("Restart and restore", invariant 7): at the next start the files are
+renamed, never deleted, into `no_backup/wallet-quarantine-*-set-up-again/`
+(`WalletUpgradeBackup.requestSetUpAgain` / `performPendingSetUpAgain`).
+In `DATABASE_ONLY` scope that is `app.db` and its sidecars, which hold the
+account rows (every key stays in place and is offered again in Login &
+Security); in `ALL_WALLET_FILES` scope (KEYSTORE_KEY_UNAVAILABLE,
+PREFERENCES_INVENTORY_INVALID: keys this phone cannot use) the encrypted
+preference files and the wrapped key (`key_alias.xml`) move too, and the
+app cannot read keys from there. The Keystore alias is never touched.
 Every action calls the existing `WalletUpgradeBackup` /
 `UserRepository` functions from the key-safety task (a4). Nothing tells the
 person to reinstall or clear data. No new dependencies (the Compose UI test
@@ -2004,3 +2015,141 @@ panel, `bg_neon_safe_panel` and `bg_neon_info_callout`.
   account whose keys are unavailable (a4 follow-up): the signer still
   refuses it, but the screen does not explain why yet.
 - iOS-only states (U3, U7).
+
+### Review fixes (a6, round 1)
+
+Adversarial review reported eighteen issues (four majors, several
+duplicated). All were real; all are fixed. No wallet address, public key,
+derivation, signing or key value changed. Nothing new deletes, overwrites,
+re-encrypts or moves wallet data; the only movement is still the confirmed
+restore described above.
+
+**Recovery state and the actions it offers (majors)**
+
+- **A wallet check that fails in the running app** (MigrationManager records
+  a failure after the startup checks passed: VERIFIED_RECEIPT_INVALID,
+  POST_MIGRATION_MISMATCH, ACTIVATED_MODEL_MISMATCH, …) left
+  `WalletUpgradeBackup.recoveryOptions()` empty. The panel then used a
+  fallback with blank facts: it offered "Restore with recovery phrase" and
+  "Restore from Google Drive", which `requestSetUpAgain` always refused
+  (SET_UP_AGAIN_NOT_AVAILABLE, then the same panel again, forever), and it
+  hid "Show my recovery phrase" and "Export" although both work there.
+  Now `noteMigrationRecoveryRequired(code)` keeps the code in memory, so the
+  panel and `requestSetUpAgain` read the same state (the scope the next start
+  would use, DATABASE_ONLY for these codes) and the facts gathered at startup
+  (phrases, files). Read-only access keeps the lifted code the same way. When
+  no state is recorded at all, the fallback uses the startup facts and never
+  offers a restore.
+- **A confirmed restore waiting for a restart.** When the next start could
+  not finish setting the old files aside (SET_UP_AGAIN_INCOMPLETE), the panel
+  said "This usually passes in a moment" and retried by itself in the same
+  process; a passing check let the app run normally with the request still
+  pending, and a later cold start set the database aside without warning.
+  Now `WalletUpgradeBackup.retry()` refuses while a request is pending, the
+  panel shows "Finishing the restore you started" (no restore, no read-only),
+  and its primary action "Restart and continue" restarts the app so a new
+  process finishes the set-aside. It never retries or restarts by itself.
+- **Read-only loops.** The panel ignored "the current account does not
+  resolve" (SplashViewModel's `canContinueLegacyWallet`), and VAULT_ONLY came
+  back as a silent redraw. Read-only is now dropped in both cases, and the
+  sheet says why.
+
+**Feedback and wording**
+
+- Export, read-only and restore failures stay on their sheet with a calm
+  message ("SORA couldn't create the file. Your wallet data was not
+  changed.", …). The panel keeps the code of the state it shows; the
+  attempt's code is listed as "Last attempt" under Technical details.
+- The restore sheet (database-only scope) now says that other wallets whose
+  keys are on the phone are listed afterwards in Login & Security, under
+  "Wallets found on this phone".
+- Restoring a wallet there no longer switches the selected account
+  (`adoptRetainedWallet(makeCurrent = false)`); it is added to the accounts.
+- The a6 summary above claimed nothing is ever moved. It now states the
+  confirmed restore's renames precisely (database only, or also the
+  preference files and the wrapped key in ALL_WALLET_FILES scope).
+
+**Show my recovery phrase**
+
+- The phrase and the seed are read separately: an undecryptable phrase no
+  longer hides a readable seed. A value this phone cannot decrypt
+  (WalletDecryptionException, missing Keystore key) says trying again won't
+  help; a busy Keystore still says "try again in a moment".
+- The release-era (unsuffixed) phrase or seed shown for the 2.x owner is
+  checked in memory against the owner's address (same sr25519 / SS58 69
+  derivation as the upgrade check; nothing written). If it does not derive
+  that address it is titled "Phrase saved by an older SORA version" with
+  "SORA couldn't confirm that it belongs to this wallet."
+- PIN lock: the count and lock are also kept in memory for the process (a
+  full disk can no longer reset them), timed with the uptime clock (changing
+  the date does not lift it), and never longer than the current step (a
+  clock set back cannot latch it for years).
+
+**Splash and PIN screen**
+
+- SplashViewModel no longer starts a verification when the screen opened for
+  "Try upgrade again" or read-only (`start()` is called only on a normal
+  start, once per view model; a recreated retry screen re-binds without
+  starting one). Before, a second run raced the retry, and after "Continue in
+  read-only mode" it could discard the inspected snapshot.
+- The progress prompts (10 s / 60 s) count from the start of the work, also
+  after the screen is recreated.
+- PIN screen: the "proceed" guard is set before the first suspension (no
+  double navigation); "Waiting for network" appears only for a check that
+  needs the network (an offline 12/24-word unlock shows the normal check, and
+  only after 1.5 s); only the keypad and dots are pinned left-to-right, so
+  U2 and U10 follow RTL layouts.
+
+New strings are in English and Japanese; `values-b+akk` and
+`values-b+egy+Egyp` (not production languages) carry the English text. No
+lint baseline change.
+
+**Verification (round 1)**
+
+- Unit (JVM), `testProductionDebugUnitTest`: 1,179 tests in 15 modules, 0
+  failures, 9 skipped (20 new). New: `SafeModeViewModelTest` (a pending
+  restore restarts and never retries by itself; an in-process failure
+  offers the restore `requestSetUpAgain` accepts; no restore without a
+  recorded state; refused restore / failed export / VAULT_ONLY stay on the
+  sheet with the panel code kept; read-only hidden when the account does not
+  resolve; progress start time), `SafeModeVaultTest` (unreadable phrase does
+  not hide a seed; permanent vs busy; release-era phrase checked against the
+  address; clock set back or forward; lock holds when the file cannot be
+  written), `RecoveryPanelModelTest` (RESTORE_PENDING for every code),
+  `SplashViewModelTest` (verification starts only from `start()`, once),
+  `SplashInteractorTest` (fallback never offers a restore; in-process code
+  gives the recorded options), `PinCodeAccountCheckTest` (no double
+  navigation; no network copy for an on-phone check; waits and continues for
+  a network check), `MigrationManagerSafetyTest` (a recorded failure yields
+  DATABASE_ONLY options), `LoginSecurityViewModelTest` (restores with
+  `makeCurrent = false`).
+- Device, on SORA-Api36-16k and SORA-Api34: app `SafeModeScreensTest` 10/10
+  (adds the restore-pending panel, the failed-sheet messages, the unchecked
+  phrase and the offline on-phone check; the restore-pending panel is part
+  of the both-themes forward-action sweep); `core_db`
+  `WalletUpgradeBackupTest` 111/111 (new: an in-process failure's restore is
+  accepted and Try again is refused while it waits; the existing set-up-again
+  test now expects that refusal); `feature_account_impl`
+  `WalletUpgradeScenarioTest` 30/30 (a found wallet is restored without
+  changing the selected one).
+- Real app on SORA-Api36-16k (debug build, test phrase): with the VERIFIED
+  journal made to end before it started, the app shows U6 with
+  VERIFIED_RECEIPT_INVALID and offers Try again, Restore with recovery
+  phrase, Show my recovery phrase, read-only, Export and support (before the
+  fix, the restore looped and the phrase and export were hidden). "Restart
+  and restore" restarted into the welcome screen; `app.db` and its WAL are in
+  `no_backup/wallet-quarantine-*-set-up-again/databases/` with the same
+  SHA-256, and `key_alias.xml` and the DataStore file are unchanged. With a
+  pending request whose set-aside cannot run (the publication lock path
+  replaced by a folder), the app shows "Finishing the restore you started",
+  stays put for 20 s, and "Restart and continue" restarts the process (new
+  pid) into the same panel; once the blocker is gone the next restart
+  finishes the set-aside and opens the welcome screen.
+- `:app:assembleProductionDebug` passes; `:app:lintProductionDebug`: no
+  errors, 945 warnings, 1 hint, 179 baselined (unchanged; baseline file not
+  touched).
+- Screenshots (dark and light) of every Safe Mode state, including the new
+  ones (`U6_RESTORE_PENDING`, `U6_READ_ONLY_UNAVAILABLE`, `U6_EXPORT_FAILED`,
+  `U6_RESTORE_FAILED`, `U6_REVEAL_UNCHECKED`, `U6_REVEAL_UNREADABLE`,
+  `U1_PIN_CHECK_OFFLINE`): `scratchpad/screens/android/a6-safe-mode/fix1/`,
+  real-app run in `fix1/real/`.

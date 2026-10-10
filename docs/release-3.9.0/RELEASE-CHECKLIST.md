@@ -636,3 +636,35 @@ Product decisions to confirm:
       `OnboardingViewModel.tempAccount`, removed in a4).
 - [ ] Regenerate the baseline profile once the screen migration lands (the
       splash now has a Compose view; `animation_view` is unchanged).
+
+### a6 review fixes (round 1)
+
+- [ ] Engineering owner signs off the new "verified:" strings in
+      `app/src/main/res/values/strings.xml`: `recovery_restore_pending_body`,
+      `recovery_sheet_*`, `recovery_phrase_unchecked`,
+      `recovery_phrase_unreadable` and the extended
+      `recovery_restore_sheet_keys_kept` (other wallets are listed in Login &
+      Security after a database-only restore).
+- [ ] Translations: the strings above and `recovery_restore_pending_title`,
+      `recovery_restart_continue`, `recovery_detail_last_attempt`,
+      `recovery_seed_unchecked` are English-only outside Japanese (same
+      release blocker as the rest of Safe Mode).
+- [ ] QA (team test phone, debug build): force a wallet-check failure after
+      startup by making the VERIFIED journal finish before it started
+      (`run-as jp.co.soramitsu.sora sqlite3 databases/app.db "update
+      walletMigrationJournal set completedAt = startedAt - 1000"`, as after
+      a clock change). The panel shows VERIFIED_RECEIPT_INVALID and offers
+      Restore with recovery phrase, Show my recovery phrase, read-only and
+      Export; "Restart and restore" restarts into the welcome screen with
+      the database in `no_backup/wallet-quarantine-*-set-up-again/`.
+- [ ] QA: with a restore requested but not finished (fill the phone so the
+      set-aside cannot create its folder, then restart), the panel says
+      "Finishing the restore you started", does not retry by itself, and
+      "Restart and continue" restarts the app; after freeing space the
+      restore finishes.
+- [ ] QA: on a 3-account phone, restore one wallet with its phrase, then
+      Login & Security → "Wallets found on this phone" restores the others
+      without changing the selected account.
+- [ ] QA (RTL, Arabic or Hebrew system language): the PIN screen's
+      "Choose a new 6-digit PIN" panel and the account check follow RTL;
+      the keypad keeps its order.
