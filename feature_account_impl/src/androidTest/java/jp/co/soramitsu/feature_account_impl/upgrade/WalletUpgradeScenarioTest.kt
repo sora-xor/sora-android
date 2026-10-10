@@ -24,7 +24,9 @@ import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.EncryptionUtil
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.SetUpAgainScope
 import jp.co.soramitsu.core_db.WalletMigrationIntegrity
 import jp.co.soramitsu.core_db.WalletRecoveryKind
 import jp.co.soramitsu.core_db.WalletSigningGate
@@ -356,7 +358,9 @@ class WalletUpgradeScenarioTest {
         assertEquals(0L, failure.availableBytes)
         val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
         assertEquals(WalletRecoveryKind.STORAGE, options.kind)
-        assertTrue(options.canRetry && options.retryAutomatically && options.canRestoreFromPhrase)
+        assertTrue(options.canRetry && options.retryAutomatically)
+        // Freeing space and checking again is the way forward; nothing is set aside.
+        assertFalse(options.canSetUpAgain || options.canRestoreFromPhrase)
         assertFalse(options.canReadOnly)
         assertEquals(73, databaseVersion())
         assertTrue(backups().isEmpty())
@@ -582,7 +586,14 @@ class WalletUpgradeScenarioTest {
             )
             val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
             assertEquals(WalletRecoveryKind.TRANSIENT, options.kind)
-            assertTrue(options.retryAutomatically && options.canReadOnly)
+            assertTrue(options.retryAutomatically)
+            // Nothing decrypts while the Keystore is busy (the main screen's PIN check
+            // included), and nothing is set aside for a state that passes on its own.
+            assertFalse(options.canReadOnly || options.canSetUpAgain)
+            assertEquals(
+                WalletUpgradeBackup.SafeReadOnlyRoute.VAULT_ONLY,
+                WalletUpgradeBackup.authorizeSafeReadOnly(context).getOrThrow(),
+            )
 
             // The Keystore recovers. Try again in the same process, without a restart.
             assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
@@ -753,7 +764,7 @@ class WalletUpgradeScenarioTest {
     }
 
     @Test
-    fun phoneTransferWithoutTheKeystoreKeyKeepsBalancesReadOnlyAndSetsUpAgain() = runBlocking {
+    fun phoneTransferWithoutTheKeystoreKeyNeverOpensTheMainScreenAndSetsUpAgain() = runBlocking {
         val first = phraseWallet(TWELVE_WORDS)
         val second = rawSeedWallet(RAW_SEED)
         release3863 {
@@ -773,12 +784,20 @@ class WalletUpgradeScenarioTest {
                 MigrationOutcome.KeysUnavailable("KEYSTORE_KEY_UNAVAILABLE"),
                 launch.verify(),
             )
+            // The main screen opens with the PIN check, which decrypts the stored PIN. On this
+            // phone that cannot work, so read-only is not offered (it would crash there).
+            val pinError = runCatching { launch.userRepository.retrievePin() }.exceptionOrNull()
+            assertTrue(pinError is KeyMaterialUnavailableException)
             val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
-            assertTrue(options.canReadOnly && options.canSetUpAgain)
+            assertFalse(options.canReadOnly)
+            assertFalse(options.canShowPhraseAfterPin)
             assertEquals(
-                WalletUpgradeBackup.SafeReadOnlyRoute.ROOM_READ_ONLY,
+                WalletUpgradeBackup.SafeReadOnlyRoute.VAULT_ONLY,
                 WalletUpgradeBackup.authorizeSafeReadOnly(context).getOrThrow(),
             )
+            // Forward paths: Try again, support, and setting the phone up again.
+            assertTrue(options.canRetry && options.canContactSupport && options.canSetUpAgain)
+            assertEquals(SetUpAgainScope.ALL_WALLET_FILES, options.setUpAgainScope)
             assertEquals(2, launch.database.accountDao().getAccounts().size)
             assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
         }
@@ -790,6 +809,118 @@ class WalletUpgradeScenarioTest {
             launch.assertUsable(listOf(first), selected = first)
         }
     }
+
+    @Test
+    fun damagedDatabaseSetUpAgainKeepsEveryKeyAndBothWalletsComeBack() = runBlocking {
+        val first = phraseWallet(TWELVE_WORDS)
+        // Imported from a raw seed: no phrase was ever written down.
+        val second = rawSeedWallet(RAW_SEED)
+        val before = release3863 {
+            created(first)
+            importedSeed(second)
+            finishedAccount(first)
+            finishedAccount(second)
+            select(first)
+            registrationFinished()
+        }
+        room(73, first to "First", second to "Second")
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(first, second), selected = first)
+        }
+        val keyFiles = listOf(
+            dataStoreFile(),
+            File(context.applicationInfo.dataDir, "shared_prefs/key_alias.xml"),
+        )
+        val keyBytes = keyFiles.associateWith { it.readBytes() }
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            // SQLite reports corruption on the open database.
+            WalletUpgradeBackup.noteDatabaseCorruption(context)
+            val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+            assertEquals(WalletRecoveryKind.INTEGRITY, options.kind)
+            // Only the database (no secrets in it) is set aside; the keys stay in place.
+            assertEquals(SetUpAgainScope.DATABASE_ONLY, options.setUpAgainScope)
+            assertTrue(options.canRestoreFromPhrase && options.restoreNeedsSetUpAgain)
+            assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        }
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertTrue(File(setUpAgainDirectory(), "databases/app.db").isFile)
+            assertFalse(File(setUpAgainDirectory(), "files").exists())
+            keyBytes.forEach { (file, bytes) -> assertArrayEquals(file.path, bytes, file.readBytes()) }
+            // Both wallets are offered again.
+            assertEquals(
+                setOf(first.address, second.address),
+                WalletUpgradeBackup.quarantine().retainedWalletIds,
+            )
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+
+            // The written-down phrase re-uses the stored keys after proving they match...
+            launch.importPhrase(TWELVE_WORDS, "First")
+            // ...and the seed wallet, whose phrase was never written down, is restored from the
+            // keys kept on this phone ("Restore wallets found on this phone").
+            launch.userRepository.adoptRetainedWallet(second.address, "Second")
+            launch.assertUsable(listOf(first, second), selected = second)
+            launch.assertCiphertextsKept(before)
+        }
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(first, second), selected = second)
+        }
+    }
+
+    @Test
+    fun interruptedVerificationWhoseRetryCannotBeSavedShowsRecoveryWithoutOpeningTheDatabase() =
+        runBlocking {
+            val wallet = phraseWallet(TWELVE_WORDS)
+            release3863Wallet(wallet)
+            room(73, wallet to "Main")
+            candidate { launch ->
+                assertTrue(launch.prepare.isSuccess)
+                launch.database.openHelper.writableDatabase
+            }
+            // Killed while verifying on a nearly full phone: the VERIFYING journal remains.
+            writeJournal(
+                state = "VERIFYING",
+                accounts = listOf(wallet.address to "Main"),
+                selected = wallet.address,
+            )
+            // The automatic retry's counter cannot be saved (as with no free space left).
+            val blocker = File(context.noBackupFilesDir, ".wallet-migration-auto-retry.tmp")
+            assertTrue(blocker.mkdirs() && File(blocker, "occupied").createNewFile())
+
+            candidate(newProcess = true) { launch ->
+                assertTrue(launch.prepare.isFailure)
+                // SplashActivity: the automatic retry is still expected...
+                assertNull(WalletUpgradeBackup.startupFailureToShow(context))
+                // ...SplashInteractor: it cannot be authorized.
+                assertFalse(launch.startScreens())
+                // The database stays closed to every reader.
+                assertTrue(runCatching { launch.verify() }.isFailure)
+                assertTrue(
+                    runCatching { launch.database.walletIdentityDao().getWallets() }.isFailure
+                )
+                // The recovery screen's code is read without opening the database (this used to
+                // crash the app on every start), and the options are shown at once.
+                assertEquals("WALLET_MIGRATION_RECOVERY_REQUIRED", launch.failureCode())
+                assertEquals(
+                    "WALLET_MIGRATION_RECOVERY_REQUIRED",
+                    WalletUpgradeBackup.startupFailureToShow(context)?.code,
+                )
+                assertTrue(requireNotNull(WalletUpgradeBackup.recoveryOptions()).canRetry)
+
+                // Try again does not need the counter.
+                assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+                assertEquals(MigrationOutcome.Verified, launch.verify())
+                launch.assertUsable(listOf(wallet), selected = wallet)
+            }
+            assertTrue(blocker.deleteRecursively())
+        }
 
     @Test
     fun release240MultiAccountLayoutUpgradesAndSigns() = runBlocking {
@@ -847,6 +978,90 @@ class WalletUpgradeScenarioTest {
             assertTrue(launch.prepare.isSuccess)
             assertEquals(MigrationOutcome.Verified, launch.verify())
             launch.assertUsable(listOf(original, added), selected = original)
+        }
+    }
+
+    @Test
+    fun release240AccountWithUnreadableCopyKeepsItsReleaseEraKeysWhenRemoved() = runBlocking {
+        val original = phraseWallet(TWELVE_WORDS)
+        val added = phraseWallet(TWENTY_FOUR_WORDS)
+        val legacy = release233 { install(original, name = "Original") }
+        room(58)
+        // 2.4.0 copied the unsuffixed keys and phrase to address-scoped values and kept the
+        // unsuffixed ones with prefs_address_pure = the address.
+        release240 { migrate() }
+        release3863 {
+            created(added)
+            finishedAccount(added)
+            // The address-scoped private key and phrase no longer decrypt.
+            prefs.putString("prefs_priv_key${original.address}", UNDECRYPTABLE)
+            prefs.putString("prefs_mnemonic${original.address}", UNDECRYPTABLE)
+        }
+        HistoricalRoom.insertAccounts(context, listOf(added.address to "Added"))
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(added), unavailable = listOf(original.address))
+            val options =
+                requireNotNull(launch.userRepository.unavailableWalletOptions(original.address))
+            assertFalse(options.canRepairWithPhrase)
+            // The release-era phrase belongs to this account (its keys derive the address).
+            assertTrue(options.canShowPhraseAfterPin)
+            assertTrue(options.hasReleaseEraCopy)
+            assertTrue(options.canRemoveAndImport)
+            assertFalse(options.showPhraseBeforeRemoval)
+            assertEquals(
+                original.mnemonic,
+                launch.credentials.retrieveMnemonic(SoraAccount(original.address, "")),
+            )
+
+            // The person removes the read-only account. Its release-era keys are kept.
+            launch.remove(original.address)
+            launch.assertUsable(listOf(added), selected = added)
+            launch.assertCiphertextsKept(legacy)
+            assertEquals(original.address, launch.credentialsDatasource.getAddress())
+
+            // "Restore wallets found on this phone" brings it back without the phrase.
+            launch.userRepository.adoptRetainedWallet(original.address, "Original")
+            launch.assertUsable(listOf(original, added), selected = original)
+            launch.assertCiphertextsKept(legacy)
+        }
+    }
+
+    @Test
+    fun removingAnAccountKeepsReleaseEraKeysThatBelongToAnotherAddress() = runBlocking {
+        val stale = phraseWallet(TWELVE_WORDS)
+        val first = phraseWallet(TWENTY_FOUR_WORDS)
+        val second = rawSeedWallet(RAW_SEED)
+        // 2.3.3 left unsuffixed keys of one wallet...
+        val legacy = release233 { install(stale, name = "Old") }
+        // ...and prefs_address_pure later named a different account.
+        release3863 {
+            created(first)
+            importedSeed(second)
+            finishedAccount(first)
+            finishedAccount(second)
+            select(first)
+            registrationFinished()
+            prefs.putString("prefs_address_pure", first.address)
+        }
+        room(73, first to "First", second to "Second")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(first, second), selected = first)
+
+            launch.remove(first.address)
+            launch.assertUsable(listOf(second), selected = second)
+            // The unsuffixed keys derive another address: they were not the removed account's
+            // and are kept byte for byte.
+            launch.assertCiphertextsKept(
+                legacy.filterKeys { it != "prefs_address_pure" && it != "user_pin_code" }
+            )
+            launch.userRepository.adoptRetainedWallet(stale.address, "Old")
+            launch.assertUsable(listOf(stale, second), selected = stale)
         }
     }
 
@@ -1193,6 +1408,9 @@ class WalletUpgradeScenarioTest {
 
         suspend fun verify(): MigrationOutcome = migrationManager.startWithOutcome()
 
+        /** SplashInteractor.getMigrationFailureCode: the code for the recovery screen. */
+        suspend fun failureCode(): String? = migrationManager.failureCode()
+
         /** SplashInteractor.checkMigration: the app's screens start the verification. */
         fun startScreens(): Boolean = WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context)
 
@@ -1416,5 +1634,7 @@ class WalletUpgradeScenarioTest {
             "adapt explain ecology dinner glare old unfair empty expect road off suggest dash " +
                 "dolphin captain version oval census uncover inform apology"
         const val RAW_SEED = "cf0010cf0010cf0010cf0010cf0010cfcf0010cf0010cf0010cf0010cf0010cf"
+        /** Valid Base64 of the right shape that no key decrypts (an authentication failure). */
+        const val UNDECRYPTABLE = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
     }
 }
