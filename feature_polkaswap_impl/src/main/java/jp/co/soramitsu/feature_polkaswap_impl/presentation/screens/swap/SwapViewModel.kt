@@ -49,6 +49,7 @@ import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
@@ -571,6 +572,9 @@ class SwapViewModel @AssistedInject constructor(
         val ok = isBalanceOk()
 
         val (text, enabled) = when {
+            // U9: swapping signs a transaction, which is off in read-only mode.
+            WalletRecoveryCapabilityGate.isUserMutationBlocked() ->
+                resourceManager.getString(R.string.safe_mode_read_only_send_off) to false
             assetCatalogUnavailable -> resourceManager.getString(R.string.wallet_assets_unavailable) to false
             _swapMainState.value.tokenFromState == null || _swapMainState.value.tokenToState == null -> {
                 resourceManager.getString(R.string.choose_tokens) to false
@@ -608,6 +612,8 @@ class SwapViewModel @AssistedInject constructor(
         }
 
         val (text2, enabled2) = when {
+            WalletRecoveryCapabilityGate.isUserMutationBlocked() ->
+                resourceManager.getString(R.string.safe_mode_read_only_send_off) to false
             assetCatalogUnavailable -> resourceManager.getString(R.string.wallet_assets_unavailable) to false
             ok?.isNotEmpty() == true -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_balance)

@@ -71,6 +71,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -89,6 +90,14 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyBanner
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyLearnMoreSheet
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteChecks
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteSheet
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeWelcome
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
@@ -167,6 +176,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     onRecovery = viewModel::onBackupBannerClick,
                     onScan = ::scanNexusRecipient,
                 )
+                UpgradeSheets(state = state, onBackUpNow = viewModel::onBackupBannerClick)
                 CardsMainScreen(
                     scrollState = scrollState,
                     state = state,
@@ -226,6 +236,7 @@ private fun CardsMainScreen(
             .padding(horizontal = Dimens.x2),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        ReadOnlyHomeBanner()
         if (state.loading) {
             CircularProgressIndicator(
                 color = MaterialTheme.customColors.fgPrimary,
@@ -304,6 +315,62 @@ private fun CardsMainScreen(
                 onClick = onEdit,
             )
     }
+}
+
+/**
+ * U9 (design spec 9.2): in read-only mode the home shows the chip and banner. Balances and
+ * history stay visible; Send and Swap are off with their reason on their own screens.
+ */
+@Composable
+private fun ReadOnlyHomeBanner() {
+    if (!rememberWalletReadOnly()) return
+    val context = LocalContext.current
+    var learnMore by remember { mutableStateOf(false) }
+    ReadOnlyBanner(
+        modifier = Modifier.padding(bottom = 16.dp),
+        onTryAgain = { WalletUpgradeRetry.launch(context) },
+        onLearnMore = { learnMore = true },
+    )
+    if (learnMore) {
+        ReadOnlyLearnMoreSheet(
+            onTryAgain = {
+                learnMore = false
+                WalletUpgradeRetry.launch(context)
+            },
+            onClose = { learnMore = false },
+        )
+    }
+}
+
+/**
+ * U11 (design spec 9.2, 9.1-7): once, after the upgrade succeeded, after the PIN and never in
+ * read-only mode. Each tick is a real check: the selected account exists on this device, the
+ * wallet was unlocked with the PIN, and the balance list has loaded.
+ */
+@Composable
+private fun UpgradeSheets(state: CardsState, onBackUpNow: () -> Unit) {
+    val context = LocalContext.current
+    var pending by remember { mutableStateOf(UpgradeWelcome.isPending(context)) }
+    val unlocked by WalletSessionState.unlocked.collectAsStateWithLifecycle()
+    val readOnly = rememberWalletReadOnly()
+    if (!pending || !unlocked || readOnly || state.accountAddress.isBlank()) return
+    UpgradeCompleteSheet(
+        checks = UpgradeCompleteChecks(
+            accountsOnDevice = true,
+            protectedByPin = true,
+            balancesLoaded = !state.loading,
+            needsBackup = state.cards.any { it is BackupWalletState },
+        ),
+        onBackUpNow = {
+            UpgradeWelcome.markDone(context)
+            pending = false
+            onBackUpNow()
+        },
+        onClose = {
+            UpgradeWelcome.markDone(context)
+            pending = false
+        },
+    )
 }
 
 @Composable

@@ -44,6 +44,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.Option
 import jp.co.soramitsu.common.presentation.compose.components.OptionSwitch
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.DeviceTransferNotice
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 
@@ -54,33 +55,41 @@ internal fun LoginSecurityScreen(
     onChangePinClick: () -> Unit,
     onToggle: (Boolean) -> Unit,
 ) {
-    ContentCard(
-        modifier = Modifier
-            .padding(horizontal = Dimens.x2)
-            .fillMaxWidth()
-            .wrapContentHeight()
-    ) {
-        Column(
+    Column {
+        ContentCard(
             modifier = Modifier
-                .padding(vertical = Dimens.x1, horizontal = Dimens.x3)
+                .padding(horizontal = Dimens.x2)
                 .fillMaxWidth()
                 .wrapContentHeight()
         ) {
-            Option(
-                icon = painterResource(id = R.drawable.ic_keyboard_digital_24),
-                label = stringResource(id = R.string.change_pin),
-                bottomDivider = true,
-                onClick = onChangePinClick,
-            )
-            OptionSwitch(
-                icon = painterResource(id = R.drawable.ic_face_24),
-                label = stringResource(id = R.string.profile_biometry_title),
-                bottomDivider = false,
-                available = bioAvailable,
-                checked = bioEnabled,
-                onClick = onToggle,
-            )
+            Column(
+                modifier = Modifier
+                    .padding(vertical = Dimens.x1, horizontal = Dimens.x3)
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+            ) {
+                Option(
+                    icon = painterResource(id = R.drawable.ic_keyboard_digital_24),
+                    label = stringResource(id = R.string.change_pin),
+                    bottomDivider = true,
+                    onClick = onChangePinClick,
+                )
+                OptionSwitch(
+                    icon = painterResource(id = R.drawable.ic_face_24),
+                    label = stringResource(id = R.string.profile_biometry_title),
+                    bottomDivider = false,
+                    available = bioAvailable,
+                    checked = bioEnabled,
+                    onClick = onToggle,
+                )
+            }
         }
+        // U12: app data never moves to a new phone (deny_data_extraction.xml).
+        DeviceTransferNotice(
+            modifier = Modifier
+                .padding(horizontal = Dimens.x2)
+                .padding(top = Dimens.x2),
+        )
     }
 }
 

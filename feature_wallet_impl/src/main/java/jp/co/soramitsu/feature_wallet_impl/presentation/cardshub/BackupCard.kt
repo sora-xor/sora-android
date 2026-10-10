@@ -32,7 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.DeviceTransferNotice
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
@@ -42,15 +47,19 @@ import jp.co.soramitsu.common.presentation.compose.components.BasicBannerCard
 fun BackupCard(
     onStartClicked: () -> Unit,
 ) {
-    BasicBannerCard(
-        imageContent = R.drawable.ic_banner_backup,
-        title = stringResource(id = R.string.wallet_backup),
-        description = stringResource(id = R.string.protect_loss_access_funds),
-        button = stringResource(id = R.string.backup_now),
-        closeEnabled = false,
-        onButtonClicked = onStartClicked,
-        onCloseCard = {},
-    )
+    Column {
+        BasicBannerCard(
+            imageContent = R.drawable.ic_banner_backup,
+            title = stringResource(id = R.string.wallet_backup),
+            description = stringResource(id = R.string.protect_loss_access_funds),
+            button = stringResource(id = R.string.backup_now),
+            closeEnabled = false,
+            onButtonClicked = onStartClicked,
+            onCloseCard = {},
+        )
+        // U12: app data never moves to a new phone (deny_data_extraction.xml).
+        DeviceTransferNotice(modifier = Modifier.padding(top = 8.dp))
+    }
 }
 
 @Preview
