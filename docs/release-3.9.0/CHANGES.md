@@ -1777,3 +1777,220 @@ clear of the navigation bar.
   and dark; scanner in the light theme on API 36 and 34). The API 34 AVD
   is an automated-test image without a system UI, so its scanner
   screenshot has no status bar; the bar appearance assertion still runs.
+
+## a6: Safe Mode recovery and upgrade screens (Android)
+
+### Why
+
+People upgrading from any earlier version must see at most one calm screen,
+with one obvious action and at least one safe way forward (design spec §9,
+fix map §4 and F11). Before this task the splash showed an XML panel with
+Try again, export and (sometimes) read-only; restoring, showing the phrase,
+freeing space and support had no screen, the PIN screen could wait for the
+network forever with a dialog, read-only mode had no visible sign, and the
+"node offline" and 4-digit PIN prompts were plain alerts.
+
+### What changed
+
+Rules kept everywhere: no key material, wrapped key, Keystore alias or
+account row is deleted, overwritten, re-encrypted or moved by any of this.
+Every action calls the existing `WalletUpgradeBackup` /
+`UserRepository` functions from the key-safety task (a4). Nothing tells the
+person to reinstall or clear data. No new dependencies (the Compose UI test
+library, already in the catalog, is used by tests only).
+
+**Safe Mode kit** (`common/.../compose/neon/safemode/`, design spec 7.16,
+7.17, 7.18, 9.3, 9.4): shield emblem (glow.safe, breathing at most five
+cycles while work runs, FULL tier only), opaque SafeCard and SafetyPanel,
+reassurance callout, StepList (done / running / waiting / needs action; a
+tick only after the real check finished), Technical details disclosure with
+a Copy button per item, opaque bottom sheet, the read-only chip, banner and
+reason, the 6-digit PIN panel, the upgrade-complete sheet, the
+device-transfer notice, the pending-check card and the veiled phrase grid
+(always LTR, words not composed until tapped).
+`WalletRecoveryCapabilityGate.modeFlow` lets screens show read-only mode;
+signing still goes through `requireUserMutationAllowed()`.
+
+**Splash** (`SplashActivity`, new `splash/presentation/recovery/`): the XML
+`walletRecoveryPanel` is replaced by the Compose view `walletRecoveryCompose`
+(`animation_view` and the loading line keep their ids).
+
+- U1 / U5 upgrade progress: shown when the wallet check is still running
+  after 1.5 s (U0 stays silent). Rows map to real phases reported by the new
+  `MigrationManager.progress`: checking wallet data (the startup checks),
+  updating wallet storage (opening Room, where schema steps run), checking
+  accounts (n of m) and finishing up. Title "Finishing your update" when the
+  start resumes an interrupted check. After 10 s "Still working…"; after 60 s
+  Keep waiting and Get help. Back is disabled. The last row is ticked before
+  the next screen opens.
+- U4 "Free up some space": the MB needed (from the backup space check), a
+  StepList row "Free space needed" with the MB still missing, Check again
+  (also automatically when the person comes back from Settings), Open storage
+  settings, Show my recovery phrase (when available), Get help. Never "clear
+  data", and no export (it needs space too).
+- U6 "We paused to keep your wallet safe", in the spec order, each action
+  only when its a4 flag says it works: Try again; Restore with recovery
+  phrase and Restore from Google Drive (both run "Set up this device again",
+  which renames the old files aside, then restart the app into the restore
+  screen; Drive only when Google services are configured); Show my recovery
+  phrase; Continue in read-only mode (explainer sheet); Export recovery file
+  (sheet listing what is and is never included; it is labelled as a file for
+  support, not a backup); Contact support (sheet with the details, email
+  that falls back to showing the address instead of crashing, Copy details);
+  Technical details (code, app version, time, Android version). Variants:
+  busy storage (TRANSIENT: retried automatically 3 times, after 1, 3 and
+  10 s), "This phone can't unlock your wallet" (KEYS_UNAVAILABLE) and an
+  interrupted removal the person started (WALLET_DELETION_*).
+- Show my recovery phrase: the app PIN (or biometrics when enabled; the
+  phone's screen lock when no app PIN exists), a wallet list from the
+  preference key names and the account names read at startup (new
+  `RecoveryFacts.phraseWalletIds`, `accountNames`, `legacyOwner`), then the
+  veiled phrase or raw seed. It reads through `CredentialsRepository`
+  (`retrieveMnemonic`, `retrieveStoredSeed`; never the seed cache) and works
+  without Room. A release-era phrase that no address owns is listed as
+  "Phrase saved by an older SORA version". FLAG_SECURE (and no recents
+  screenshot on API 33+) while it shows; the phrase is dropped when the app
+  goes to the background or after the flow closes; the veil returns after
+  60 s. A phrase is read only after confirmation in that flow. Wrong PINs
+  lock like the PIN screen (3 tries: 1 minute, then 5, 15, 30); the counter
+  lives in `no_backup/safe-mode-pin-attempts`, never in the wallet
+  preferences.
+- F11: Continue read-only and a successful retry call
+  `NodeManager.ensureStarted()` before the main screen opens (the lifecycle
+  hook from a3 stays as a second path).
+- "Restart and restore" uses the app's existing restart helper
+  (`restartApplication`, the same as after removing every account).
+
+**PIN screen** (`feature_main_impl/.../pincode/`):
+
+- U10: after unlocking with a 4-digit PIN, "Choose a new 6-digit PIN"
+  (SafetyPanel) replaces the old alert, then the 6-dot setup.
+- U1 / U2: the post-unlock account check (an older SORA v1 balance to claim)
+  replaces the progress dialog and the "node offline" alert with the
+  progress screen (silent for 1.5 s). Only an unchecked 15-word legacy
+  phrase needs the network for that check; every other account is checked
+  on the phone, so being offline no longer keeps people at the PIN screen.
+  Offline it shows "Waiting for network" with Change node and continues by
+  itself once connected (before, only after leaving and returning). A
+  failing check is logged and skipped (it runs again at the next unlock)
+  instead of a progress dialog that never closed.
+
+**Main screens**:
+
+- U9 read-only mode (any gate mode but NORMAL): the wallet home shows the
+  read-only chip and banner ("You can view balances and history. Sending is
+  off until the upgrade finishes.") with Try upgrade again (opens the
+  launcher, which runs Try again with the progress screen) and Learn more.
+  Send and Swap on the asset screen, Review on the send form and the swap
+  button are disabled with "Sending is off in read-only mode".
+- U11 "Welcome to the new SORA Wallet": once per updated install
+  (first install time differs from last update time), only after the PIN
+  and never in read-only mode. Ticks for the account on this device, the PIN
+  unlock and loaded balances; "Back up your recovery phrase" with Back up now
+  / Later while the backup card is open. Opening onboarding (a wallet set up
+  on this version) marks it done. Kept in its own small preferences file.
+- U12: the backup card and Login & Security say the wallet won't move to a
+  new phone automatically (true: `deny_data_extraction.xml`,
+  `allowBackup=false`).
+- U13: a pending-check state (`walletIssue == RECOVERY`) is an info card
+  with the cyan "Wallet and backup options" link instead of red error text.
+- U8 / restore: Login & Security lists "Wallets found on this phone" (key
+  sets no account uses, `WalletUpgradeBackup.quarantine().retainedWalletIds`)
+  with "Restore this wallet", which calls `UserRepository.adoptRetainedWallet`
+  (proves the keys derive the address first; writes no key material). This
+  is how a wallet without a phrase (raw seed) comes back after "Restore with
+  recovery phrase" set the database aside.
+
+**Copy**: every assurance in the new strings states only what is true for
+that state; a "verified:" note next to the string key names the code that
+makes it true. Titles never say error, failed, lost or deleted. No red, no
+pulse, no caps.
+
+**Strings**: new `safe_mode_*` (common) and `recovery_*` (app) strings in
+English and Japanese. Other production locales carry the English text
+(release checklist). Removed strings that became unused (old splash panel,
+4-digit PIN alert, node-offline alert, red pending-check text). No lint
+baseline change.
+
+**Simplification**: deleted `PincodeNodeConnection.kt`, the XML recovery
+panel, `bg_neon_safe_panel` and `bg_neon_info_callout`.
+
+### User-visible effects
+
+- Upgrades that take longer than 1.5 s show real progress instead of a
+  frozen animation; nothing changes for fast upgrades.
+- Every recovery state shows calm, specific text and at least one way
+  forward besides Try again; the recovery phrase can be shown from there.
+- Low storage shows how much space is needed and checks again on return.
+- Read-only mode is visible on the home screen, and money actions say why
+  they are off.
+- Offline unlock works for every account except an unchecked 15-word v1
+  phrase, which waits with a Change node option.
+- People upgrading see a one-time summary after unlocking.
+- Wallets left on the phone (for example by an unfinished account setup)
+  can be restored from Login & Security.
+
+### Contrast (`scratchpad/tools/cc.py`, 28 new pairs, all pass)
+
+| Pair | Dark | Light |
+|---|---:|---:|
+| panel body (secondary) on SafeCard | 9.18 | 8.77 |
+| tertiary action label (link) on SafeCard | 12.07 | 5.70 |
+| callout text on `infoContainer` | 15.41 | 17.64 |
+| read-only chip border (steel) on `infoContainer` | 9.39 | 5.50 |
+| step waiting ring (`borderInput`) on surface | 3.67 | 3.80 |
+| step needs-action dot (`warning`) on surface (the `warningFill` amber would be 1.6 in light) | 10.40 | 6.56 |
+| phrase index (tertiary) on opaque cell | 6.65 | 6.01 |
+| empty PIN dot ring on canvas | 4.07 | 3.43 |
+
+### Verification
+
+- Unit (JVM): `RecoveryPanelModelTest` (every code × fact combination has a
+  forward action besides Try again and Contact support; flags, order, MB
+  rounding), `SafeModeVaultTest` (reads only, no seed cache, release-era
+  fallback, PIN attempts ladder in `no_backup`), `SafeModeViewModelTest` (no
+  phrase is read before the PIN; lock after 3 wrong PINs survives closing;
+  closing forgets the confirmation; progress rows follow real phases),
+  `ProgressPromptTest` (10 / 60 s rule; read-only display equals the signing
+  gate in every mode), `LoginSecurityViewModelTest` (only unused key sets,
+  adopted through the repository, nothing offered in read-only).
+- Device (Compose UI tests), on SORA-Api36-16k and SORA-Api34:
+  `SafeModeScreensTest` 6/6 (every blocking state shows an enabled forward
+  action in both themes and each action reaches its handler; only Contact
+  support stays enabled while an action runs; phrase needs confirmation and
+  is not composed before the veil is tapped; 10 / 60 s rules; Change node;
+  the storage screen never offers clearing data or reinstalling) and
+  `ReadOnlySendTest` 2/2 (`feature_assets_impl`: Send, Swap and Review
+  disabled with the reason, following the gate).
+- Real app on SORA-Api36-16k (debug build): a damaged `app.db` shows U6 with
+  DATABASE_CORRUPT under Technical details; Try again keeps the panel;
+  Export opens the share sheet and reports the export; "Restore with
+  recovery phrase" restarts into the welcome screen with the damaged
+  database renamed to `no_backup/wallet-quarantine-*-set-up-again/` byte
+  for byte. With an imported test wallet: Show my recovery phrase asks for
+  the PIN, refuses a wrong one, shows the veiled grid with the window
+  marked SECURE (screenshots come out black), and drops the phrase when the
+  app goes to the background. After the restore, the earlier wallet is
+  listed under Login & Security and "Restore this wallet" brings it back
+  with the same address. The upgrade-complete sheet appears once after the
+  PIN and not again.
+- Screenshots of every state in dark and light (debug-only
+  `SafeModePreviewActivity`, `adb shell am start -n
+  jp.co.soramitsu.sora/.debug.SafeModePreviewActivity --es state <STATE>
+  --ez dark <true|false>`), plus the real-app run:
+  `scratchpad/screens/android/a6-safe-mode/` and `.../real/`.
+- `:app:assembleProductionDebug`, `testProductionDebugUnitTest` and
+  `:app:lintProductionDebug` (no errors; the baseline is unchanged; the new
+  warnings are the known `UsingMaterialAndMaterial3Libraries` on Material 2
+  imports) pass. Numbers in the final summary below.
+- Known, not caused by this task: `WalletUxAcceptanceTest` (app device
+  tests) fails on API 34 because it reflects on `OnboardingViewModel
+  .tempAccount`, removed in a4, and on a send-field accessibility step; on
+  the 16 KB emulator mockk-android cannot load. Follow-up task suggested.
+
+### Not in this task
+
+- A per-account read-only label in the account list and on the home for an
+  account whose keys are unavailable (a4 follow-up): the signer still
+  refuses it, but the screen does not explain why yet.
+- iOS-only states (U3, U7).
