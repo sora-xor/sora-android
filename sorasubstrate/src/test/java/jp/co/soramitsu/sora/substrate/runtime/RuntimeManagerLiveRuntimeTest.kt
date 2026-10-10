@@ -5,11 +5,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
+import io.mockk.verify
 import java.io.File
 import java.io.IOException
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.io.FileManager
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.network.BoundedHttpTextClient
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.chain.RuntimeVersion
@@ -21,6 +25,7 @@ import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Before
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -68,9 +73,16 @@ class RuntimeManagerLiveRuntimeTest {
         coEvery { it.getSubstrateTypesUrl() } returns CONFIG_TYPES_URL
     }
 
+    @Before
+    fun setUp() {
+        // Spy only: calls still pass through, so tests can check what was recorded.
+        mockkObject(FirebaseWrapper)
+    }
+
     @After
     fun tearDown() {
         scope.cancel()
+        unmockkObject(FirebaseWrapper)
     }
 
     private fun TestScope.runtimeManager(): RuntimeManager {
@@ -325,7 +337,162 @@ class RuntimeManagerLiveRuntimeTest {
         coVerify(exactly = 2) { rpc.getMetadataAtFinalized(FINALIZED_HASH) }
     }
 
+    // ---- Upgrading from 3.8.6.3 ----
+    // 3.8.6.3 kept the runtime it last used in two unversioned cache files plus an int preference,
+    // and saved whatever the node served. A phone that was online in October 2026 therefore holds
+    // spec-133 metadata and types that 3.9.0 has no reviewed hash for, and no v2 manifest.
+
+    /** Stand-ins for what 3.8.6.3 saved: valid hex / JSON, but not the packaged pair. */
+    private val legacyMetadata = bundledMetadata.trimEnd() + "0000\n"
+    private val legacyTypes = bundledTypes.trimEnd() + "\n\n"
+
+    private fun seed3863Cache(
+        metadata: String? = legacyMetadata,
+        types: String? = legacyTypes,
+        storedRuntimeVersion: Int = 133,
+    ) {
+        metadata?.let { cache[LEGACY_METADATA_FILE] = it }
+        types?.let { cache[LEGACY_TYPES_FILE] = it }
+        coEvery { preferences.getInt(RUNTIME_VERSION_PREF, any()) } returns storedRuntimeVersion
+    }
+
+    private fun offlineChain() {
+        coEvery { rpc.getFinalizedIdentity() } throws IOException("offline")
+    }
+
+    private fun verifyLegacyMismatchRecorded(times: Int) {
+        verify(exactly = times) {
+            FirebaseWrapper.recordException(
+                match { it.message == "SORA2_RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH" }
+            )
+        }
+    }
+
+    private suspend fun RuntimeManager.assertPackagedRuntime(case: String = "") {
+        getRuntimeSnapshot()
+        assertEquals(case, Sora2RuntimeContract.SPEC_VERSION, getRuntimeSpecVersion())
+        assertEquals(case, bundledMetadata.runtimeMetadataSha256(), getRuntimeMetadataSha256())
+        assertEquals(case, bundledTypes.rawSha256(), getRuntimeTypesSha256())
+    }
+
+    @Test
+    fun `offline after upgrading from 3_8_6_3 the packaged runtime is used, not the old cache`() =
+        runTest {
+            seed3863Cache()
+            offlineChain()
+            val manager = runtimeManager()
+
+            // Neither the old files nor the stored "133" are trusted for decoding.
+            manager.assertPackagedRuntime()
+            verifyLegacyMismatchRecorded(times = 1)
+            // Offline, the packaged runtime is never signing authority.
+            val signing = runCatching { manager.getMutationRuntimeContext() }
+            assertTrue(signing.exceptionOrNull() is IOException)
+            // 3.8.6.3's files are left exactly as they were; no manifest is invented.
+            assertEquals(legacyMetadata, cache[LEGACY_METADATA_FILE])
+            assertEquals(legacyTypes, cache[LEGACY_TYPES_FILE])
+            assertNull(cache[MANIFEST_FILE])
+        }
+
+    @Test
+    fun `online after upgrading from 3_8_6_3 the runtime refreshes to live 133 and signs`() =
+        runTest {
+            seed3863Cache()
+            liveChain(specVersion = 133, transactionVersion = 131)
+            coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+            val manager = runtimeManager()
+
+            // App start: the read runtime moves from the packaged 130 to the live 133.
+            manager.getRuntimeSnapshot()
+            assertEquals(133, manager.getRuntimeSpecVersion())
+            val manifest = checkNotNull(cache[MANIFEST_FILE]) { "no v2 manifest published" }
+            assertTrue(manifest.contains("-133-"))
+            coVerify { preferences.putInt(RUNTIME_VERSION_PREF, 133) }
+
+            // First send: the live-validated context, reusing the refreshed snapshot.
+            val context = manager.getMutationRuntimeContext()
+            assertEquals(133, context.runtimeVersion.specVersion)
+            assertEquals(131, context.runtimeVersion.transactionVersion)
+            assertEquals(Sora2RuntimeContract.SORA_MAINNET_GENESIS_HASH, context.genesisHash)
+            assertEquals(bundledMetadata.runtimeMetadataSha256(), context.metadataSha256)
+            coVerify(exactly = 1) { http.getUtf8(CONFIG_TYPES_URL, any()) }
+            assertEquals(legacyMetadata, cache[LEGACY_METADATA_FILE])
+            assertEquals(legacyTypes, cache[LEGACY_TYPES_FILE])
+
+            // The next process starts from the v2 generation even offline.
+            offlineChain()
+            val restarted = runtimeManager()
+            restarted.getRuntimeSnapshot()
+            assertEquals(133, restarted.getRuntimeSpecVersion())
+            assertEquals(context.typesSha256, restarted.getRuntimeTypesSha256())
+        }
+
+    @Test
+    fun `a 3_8_6_3 cache that equals the packaged pair is admitted`() = runTest {
+        // 3.8.6.3 wrote the metadata without the trailing newline; the canonical hash is equal.
+        seed3863Cache(
+            metadata = bundledMetadata.trimEnd(),
+            types = bundledTypes,
+            storedRuntimeVersion = Sora2RuntimeContract.SPEC_VERSION,
+        )
+        offlineChain()
+
+        runtimeManager().assertPackagedRuntime()
+
+        verify { fileManager.readInternalCacheFile(LEGACY_METADATA_FILE, any()) }
+        verify { fileManager.readInternalCacheFile(LEGACY_TYPES_FILE, any()) }
+        verifyLegacyMismatchRecorded(times = 0)
+    }
+
+    @Test
+    fun `a damaged 3_8_6_3 cache falls back to the packaged pair and still reaches live 133`() =
+        runTest {
+            val damage: List<Pair<String, () -> Unit>> = listOf(
+                "oversize metadata" to {
+                    every { fileManager.readInternalCacheFile(LEGACY_METADATA_FILE, any()) } throws
+                        IOException("UTF8_PAYLOAD_TOO_LARGE:$LEGACY_METADATA_FILE")
+                },
+                "unreadable types" to {
+                    every { fileManager.readInternalCacheFile(LEGACY_TYPES_FILE, any()) } throws
+                        IOException("INTERNAL_CACHE_FILE_NOT_REGULAR:$LEGACY_TYPES_FILE")
+                },
+                "types evicted" to { cache.remove(LEGACY_TYPES_FILE) },
+                "empty types" to { cache[LEGACY_TYPES_FILE] = "" },
+                "metadata is not hex" to { cache[LEGACY_METADATA_FILE] = "<html>busy</html>" },
+                "packaged metadata with foreign types" to {
+                    cache[LEGACY_METADATA_FILE] = bundledMetadata
+                },
+            )
+            damage.forEach { (case, apply) ->
+                cache.clear()
+                every { fileManager.readInternalCacheFile(any(), any()) } answers {
+                    cache[firstArg()]
+                }
+                seed3863Cache()
+                apply()
+
+                offlineChain()
+                runtimeManager().assertPackagedRuntime(case)
+
+                liveChain(specVersion = 133, transactionVersion = 131)
+                coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+                val online = runtimeManager()
+                online.getRuntimeSnapshot()
+                assertEquals(case, 133, online.getRuntimeSpecVersion())
+                assertEquals(
+                    case,
+                    133,
+                    online.getMutationRuntimeContext().runtimeVersion.specVersion,
+                )
+                assertNotNull(case, cache[MANIFEST_FILE])
+            }
+        }
+
     private companion object {
+        const val LEGACY_METADATA_FILE = "sora2_metadata"
+        const val LEGACY_TYPES_FILE = "types_scalecodec_mobile.json"
+        const val MANIFEST_FILE = "sora2_runtime_cache_manifest_v2.json"
+        const val RUNTIME_VERSION_PREF = "last_used_runtime_version"
         val UPGRADED_HASH = "0x${"6b".repeat(32)}"
         const val CONFIG_TYPES_URL =
             "https://config.polkaswap2.io/prod/substrate_types_mobile_android.json"
