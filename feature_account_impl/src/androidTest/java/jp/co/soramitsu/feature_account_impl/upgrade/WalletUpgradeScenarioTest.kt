@@ -862,15 +862,16 @@ class WalletUpgradeScenarioTest {
             // The written-down phrase re-uses the stored keys after proving they match...
             launch.importPhrase(TWELVE_WORDS, "First")
             // ...and the seed wallet, whose phrase was never written down, is restored from the
-            // keys kept on this phone ("Restore wallets found on this phone").
-            launch.userRepository.adoptRetainedWallet(second.address, "Second")
-            launch.assertUsable(listOf(first, second), selected = second)
+            // keys kept on this phone ("Restore wallets found on this phone" in Login & Security,
+            // which keeps the wallet the person is using selected).
+            launch.userRepository.adoptRetainedWallet(second.address, "Second", makeCurrent = false)
+            launch.assertUsable(listOf(first, second), selected = first)
             launch.assertCiphertextsKept(before)
         }
         candidate { launch ->
             assertTrue(launch.prepare.isSuccess)
             assertEquals(MigrationOutcome.Verified, launch.verify())
-            launch.assertUsable(listOf(first, second), selected = second)
+            launch.assertUsable(listOf(first, second), selected = first)
         }
     }
 

@@ -109,6 +109,7 @@ object RecoveryTags {
     const val WALLET_LIST = "recoveryWalletList"
     const val SHEET_FAILURE = "recoverySheetFailure"
     const val CONFIRM_READ_ONLY = "recoveryConfirmReadOnly"
+    const val SHEET_DISMISS = "recoverySheetDismiss"
     fun action(action: RecoveryAction) = "recoveryAction_${action.name}"
     fun pinKey(digit: Char) = "recoveryPinKey_$digit"
 }
@@ -386,6 +387,7 @@ private fun ReadOnlySheet(state: SafeModeUiState, callbacks: SafeModeCallbacks) 
                 )
             }
             SafeAction(
+                modifier = Modifier.testTag(RecoveryTags.SHEET_DISMISS),
                 text = stringResource(if (unavailable) CommonR.string.common_close else CommonR.string.common_cancel),
                 variant = NeonVariant.Tertiary,
                 enabled = !running,
