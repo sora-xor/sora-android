@@ -90,7 +90,19 @@ class SplashInteractor @Inject constructor(
 
     fun getMigrationDoneAsync(): Deferred<Boolean> = migrationsDone
 
-    suspend fun getMigrationFailureCode(): String? = migrationManager.failureCode()
+    /** The code for the recovery screen. Never throws (startup may have closed the database). */
+    suspend fun getMigrationFailureCode(): String? = try {
+        migrationManager.failureCode()
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Throwable) {
+        currentRecoveryCode()
+    }
+
+    /** The blocking or transient code known in memory, without opening the database. */
+    fun currentRecoveryCode(): String? =
+        WalletUpgradeBackup.blockingFailure()?.code
+            ?: WalletUpgradeBackup.transientVerificationFailure()
 
     /** Forward paths for the current recovery state (never null while recovery is shown). */
     fun recoveryOptions(code: String): WalletRecoveryOptions =

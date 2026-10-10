@@ -1691,6 +1691,48 @@ class MigrationManagerSafetyTest {
     }
 
     @Test
+    fun `failure code while startup is blocked never opens the database`() = runTest {
+        // The automatic retry could not be authorized (for example a full disk), so the database
+        // refuses every reader. The recovery screen still gets its code.
+        val userRepository = mockk<UserRepository>()
+        val database = mockk<AppDatabase>()
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = mockk(),
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+        WalletUpgradeBackup.noteDatabaseCorruption(null)
+        try {
+            assertEquals("DATABASE_CORRUPT", manager.failureCode())
+            coVerify(exactly = 0) { userRepository.walletDeletionFailureCode() }
+        } finally {
+            WalletUpgradeBackup.noteMigrationVerified()
+        }
+    }
+
+    @Test
+    fun `failure code that cannot be read returns the code known in memory`() = runTest {
+        val userRepository = mockk<UserRepository>()
+        coEvery { userRepository.walletDeletionFailureCode() } throws
+            IllegalStateException("database unavailable")
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = mockk(),
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = mockk(),
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+        WalletUpgradeBackup.noteTransientVerificationFailure("STORAGE_IO")
+        try {
+            assertEquals("STORAGE_IO", manager.failureCode())
+        } finally {
+            WalletUpgradeBackup.noteMigrationVerified()
+        }
+    }
+
+    @Test
     fun `no account rows with keys this phone cannot unlock offers recovery and writes nothing`() =
         runTest {
             val storage = successfulMigrationStorage(emptyList())

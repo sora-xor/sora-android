@@ -559,12 +559,29 @@ class MigrationManager @Inject constructor(
         return MigrationOutcome.Recovery(code)
     }
 
-    suspend fun failureCode(): String? =
-        userRepository.walletDeletionFailureCode()
+    /**
+     * The code to show on the recovery screen. Never throws: while startup is blocked the
+     * database is closed to every reader, so the blocking code is returned without opening it,
+     * and a database that cannot be read falls back to the codes known in memory.
+     */
+    suspend fun failureCode(): String? {
+        WalletUpgradeBackup.blockingFailure()?.let { return it.code }
+        val stored = try {
+            userRepository.walletDeletionFailureCode()
+                ?: lastOutcome?.code
+                ?: database.walletIdentityDao()
+                    .getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
+                    ?.failureCode
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            null
+        }
+        return stored
             ?: lastOutcome?.code
-            ?: database.walletIdentityDao()
-                .getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
-                ?.failureCode
+            ?: WalletUpgradeBackup.blockingFailure()?.code
+            ?: WalletUpgradeBackup.transientVerificationFailure()
+    }
 
     private suspend fun recordFailure(
         startedAt: Long,

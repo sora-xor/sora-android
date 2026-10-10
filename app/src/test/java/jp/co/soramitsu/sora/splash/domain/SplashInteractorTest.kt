@@ -37,6 +37,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationManager
@@ -118,6 +119,21 @@ class SplashInteractorTest {
             }.exceptionOrNull()?.message,
         )
     }
+
+    @Test
+    fun `failure code that cannot be read from the database falls back to the code in memory`() =
+        runTest {
+            // While startup is blocked the database refuses every reader.
+            WalletUpgradeBackup.noteTransientVerificationFailure("KEYSTORE_UNAVAILABLE")
+            try {
+                given(migrationManager.failureCode())
+                    .willThrow(IllegalStateException("WALLET_UPGRADE_BACKUP_BLOCKED"))
+
+                assertEquals("KEYSTORE_UNAVAILABLE", splashInteractor.getMigrationFailureCode())
+            } finally {
+                WalletUpgradeBackup.noteMigrationVerified()
+            }
+        }
 
     @Test
     fun `explicit retry replaces the completed failure decision`() = runTest {
