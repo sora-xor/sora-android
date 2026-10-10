@@ -37,6 +37,8 @@
   <string name="address_not_found_1">Получатели не найдены</string>
   <string name="amount_error_no_funds">Извините, у вас недостаточно средств для осуществления перевода.</string>
   <string name="appearance_title">Внешний вид</string>
+  <string name="appearance_reduce_effects">Reduce effects</string>
+  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR в фарминге обозначает годовую доходность инвестиций за участие в предоставлении ликвидности DeFi или стейкинге.</string>
   <string name="ask_biometry_message">Хотите ли Вы использовать биометрию для входа в приложение?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -168,6 +170,7 @@
   <string name="common_japanese">Японский</string>
   <string name="common_khmer">Кхмерский</string>
   <string name="common_korean">Корейский</string>
+  <string name="common_loading">Loading</string>
   <string name="common_malay">Малайзийский</string>
   <string name="common_max">max</string>
   <string name="common_min">мин</string>

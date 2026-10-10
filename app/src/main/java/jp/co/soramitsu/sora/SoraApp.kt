@@ -87,6 +87,9 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         // Hilt injects eager singletons before this class's onCreate body. Prepare the immutable
         // wallet backup first so no injected database consumer can race the upgrade gate.
         WalletUpgradeBackup.prepare(this)
+        // Apply last run's light/dark choice before the splash is drawn (no light flash for
+        // dark-theme users). Reads one tiny preferences file; never touches wallet data.
+        DarkThemeManager.applyCachedNightMode(this)
     }
 
     override fun newImageLoader(): ImageLoader {

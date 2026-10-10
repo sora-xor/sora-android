@@ -37,6 +37,8 @@
   <string name="address_not_found_1">לא נמצאו נמענים</string>
   <string name="amount_error_no_funds">אנחנו מצטערים, אין לך מספיק כספים כדי להעביר את הסכום שצויין</string>
   <string name="appearance_title">מראה חיצוני</string>
+  <string name="appearance_reduce_effects">Reduce effects</string>
+  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">האם ברצונך להשתמש בביומטריה לאימות?</string>
   <string name="asset_details_asset_id">כתובת הנכס</string>
@@ -167,6 +169,7 @@
   <string name="common_japanese">יפנית</string>
   <string name="common_khmer">קאמרית</string>
   <string name="common_korean">קוריאנית</string>
+  <string name="common_loading">Loading</string>
   <string name="common_malay">מלאית</string>
   <string name="common_max">max</string>
   <string name="common_min">דק\'</string>

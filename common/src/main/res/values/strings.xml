@@ -37,6 +37,8 @@
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_error_no_funds">Sorry, you don\' t have enough funds to transfer specified amount.</string>
   <string name="appearance_title">Appearance</string>
+  <string name="appearance_reduce_effects">Reduce effects</string>
+  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Would you like to use biometry for authentication?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -167,6 +169,7 @@
   <string name="common_japanese">Japanese</string>
   <string name="common_khmer">Khmer</string>
   <string name="common_korean">Korean</string>
+  <string name="common_loading">Loading</string>
   <string name="common_malay">Malay</string>
   <string name="common_max">max</string>
   <string name="common_min">min</string>

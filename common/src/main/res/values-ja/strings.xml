@@ -37,6 +37,8 @@
   <string name="address_not_found_1">受信者が見つかりません</string>
   <string name="amount_error_no_funds">指定された金額を送金するための十分な残高がありません</string>
   <string name="appearance_title">外観</string>
+  <string name="appearance_reduce_effects">エフェクトを減らす</string>
+  <string name="appearance_reduce_effects_description">光彩、ガラス、動きの効果をオフにします。古いスマートフォンやバッテリーの節約に役立ちます。</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">認証に生体認証を使用しますか？</string>
   <string name="asset_details_asset_id">アセットID</string>
@@ -164,6 +166,7 @@
   <string name="common_japanese">日本語</string>
   <string name="common_khmer">クメール語</string>
   <string name="common_korean">韓国語</string>
+  <string name="common_loading">読み込み中</string>
   <string name="common_malay">マレー語</string>
   <string name="common_max">max</string>
   <string name="common_min">分</string>
