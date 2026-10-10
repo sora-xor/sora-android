@@ -205,6 +205,25 @@ class PolkaswapIndexerClient private constructor(
         nowMonotonicNanos = System::nanoTime,
     )
 
+    /**
+     * The production wire path (bounded HTTPS, strict JSON without duplicate keys, the response
+     * size limit, health preflight and checkpoint postflight) with a caller-supplied response
+     * cache instead of the app's no-backup directory. Used by the opt-in live contract test.
+     */
+    internal constructor(
+        boundedHttpTextClient: BoundedHttpTextClient,
+        json: Json,
+        responseCache: PiIndexerResponseCache,
+    ) : this(
+        graphQlTransport = BoundedGraphQlTransport(boundedHttpTextClient, json),
+        json = json,
+        enforceChainIdentityPreflight = true,
+        enforceResponseCheckpointPostflight = true,
+        responseCache = responseCache,
+        nowEpochMillis = System::currentTimeMillis,
+        nowMonotonicNanos = System::nanoTime,
+    )
+
     internal constructor(
         restClient: RestClient,
         json: Json,
