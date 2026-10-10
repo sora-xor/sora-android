@@ -58,6 +58,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -79,6 +81,7 @@ internal fun AssetDetailsBalanceCard(
     onReceiveClick: () -> Unit,
     onSwapClick: () -> Unit,
     onBalanceClick: () -> Unit,
+    readOnly: Boolean = rememberWalletReadOnly(),
 ) {
     ContentCard(
         modifier = Modifier
@@ -185,7 +188,7 @@ internal fun AssetDetailsBalanceCard(
                     AmountCardIcon(
                         res = R.drawable.ic_new_arrow_up_24,
                         text = stringResource(id = R.string.common_send),
-                        enabled = true,
+                        enabled = !readOnly,
                         onClick = onSendClick,
                     )
                 }
@@ -198,8 +201,16 @@ internal fun AssetDetailsBalanceCard(
                 AmountCardIcon(
                     res = R.drawable.ic_refresh_24,
                     text = stringResource(id = R.string.polkaswap_swap_title),
-                    enabled = true,
+                    enabled = !readOnly,
                     onClick = onSwapClick,
+                )
+            }
+            if (readOnly) {
+                // U9: Send and Swap are off in read-only mode, with the reason.
+                ReadOnlyReason(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(start = Dimens.x3, end = Dimens.x3, bottom = Dimens.x3),
                 )
             }
         }

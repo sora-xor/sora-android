@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.WalletIssue
 import jp.co.soramitsu.common.presentation.WalletTransactionStatus
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.PendingCheckCard
 import jp.co.soramitsu.common.presentation.walletIssue
 import jp.co.soramitsu.common.presentation.walletTransactionStatus
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -27,10 +28,16 @@ fun walletStatusLabel(state: String, ambiguous: Boolean = false): String = strin
 @Composable
 fun WalletErrorMessage(code: String, onRetry: (() -> Unit)? = null, onRecovery: (() -> Unit)? = null) {
     val issue = walletIssue(code)
+    if (issue == WalletIssue.RECOVERY) {
+        // U13 (design spec 9.2): an earlier transaction is still being checked. Information,
+        // not an error: sending is paused so nothing is sent twice.
+        PendingCheckCard(onOptions = onRecovery)
+        return
+    }
     var details by remember(code) { mutableStateOf(false) }
     Column {
         Text(stringResource(when (issue) {
-            WalletIssue.RECOVERY -> R.string.wallet_issue_recovery
+            WalletIssue.RECOVERY -> R.string.safe_mode_pending_check
             WalletIssue.ADDRESS -> R.string.wallet_issue_address
             WalletIssue.AMOUNT -> R.string.wallet_issue_amount
             WalletIssue.BALANCE -> R.string.wallet_issue_balance
@@ -38,9 +45,7 @@ fun WalletErrorMessage(code: String, onRetry: (() -> Unit)? = null, onRecovery: 
             WalletIssue.UNAVAILABLE -> R.string.wallet_issue_unavailable
             WalletIssue.CONNECTION -> R.string.wallet_issue_connection
         }), color = MaterialTheme.customColors.statusError, style = MaterialTheme.customTypography.paragraphS)
-        if (issue == WalletIssue.RECOVERY && onRecovery != null) {
-            TextButton(onClick = onRecovery) { Text(stringResource(R.string.wallet_backup_options)) }
-        } else if (onRetry != null) {
+        if (onRetry != null) {
             TextButton(onClick = onRetry) { Text(stringResource(R.string.wallet_check_again)) }
         }
         TextButton(onClick = { details = !details }) {

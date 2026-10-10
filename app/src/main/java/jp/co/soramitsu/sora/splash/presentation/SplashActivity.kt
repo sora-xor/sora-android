@@ -58,9 +58,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.intent.restartApplication
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.TechnicalDetail
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeWelcome
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
@@ -192,6 +194,8 @@ class SplashActivity : AppCompatActivity() {
         }
         splashViewModel.showOnBoardingScreen.observe(this) {
             afterVerification {
+                // A wallet set up on this version never needs the upgrade-complete sheet (U11).
+                UpgradeWelcome.markDone(applicationContext)
                 reportStartupReady()
                 multiaccStarter.startOnboardingFlow(this)
             }
@@ -444,16 +448,11 @@ class SplashActivity : AppCompatActivity() {
 
     /**
      * "Set up this device again" was recorded; the next process sets the old files aside (kept,
-     * never deleted) before anything opens them. Start the launcher in a new task, then end this
-     * process so nothing still holds the old files.
+     * never deleted) before anything opens them. The same restart as after removing every
+     * account: the launcher in a new task, then this process ends so nothing holds the old files.
      */
     private fun restartApp() {
-        val launch = packageManager.getLaunchIntentForPackage(packageName)
-            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            ?: return
-        startActivity(launch)
-        finishAffinity()
-        Runtime.getRuntime().exit(0)
+        applicationContext.restartApplication()
     }
 
     private fun reportStartupReady() {

@@ -60,6 +60,8 @@ import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.ui_core.component.button.FilledButton
@@ -87,6 +89,7 @@ internal fun SendScreen(
     feeLoading: Boolean,
     reviewEnabled: Boolean,
     shouldTransactionReminderInsufficientWarningBeShown: Boolean,
+    readOnly: Boolean = rememberWalletReadOnly(),
 ) {
     SendScreenAddress(
         address = address,
@@ -125,11 +128,15 @@ internal fun SendScreen(
         )
     }
     Divider(thickness = Dimens.x3, color = Color.Transparent)
+    if (readOnly) {
+        // U9: sending is off in read-only mode; the reason sits above the disabled button.
+        ReadOnlyReason(modifier = Modifier.padding(bottom = Dimens.x2))
+    }
     FilledButton(
         modifier = Modifier
             .testTagAsId("ReviewButton")
             .fillMaxWidth(),
-        enabled = reviewEnabled,
+        enabled = reviewEnabled && !readOnly,
         text = stringResource(id = R.string.review),
         size = Size.Large,
         order = Order.PRIMARY,
