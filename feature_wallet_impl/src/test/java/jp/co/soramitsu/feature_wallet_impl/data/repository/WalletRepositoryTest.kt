@@ -36,11 +36,13 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.model.AssetLocal
+import jp.co.soramitsu.core_db.model.GlobalCardHubLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
@@ -53,6 +55,7 @@ import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -170,6 +173,26 @@ class WalletRepositoryTest {
         walletRepository.subscribeVisibleGlobalCardsHubList()
 
         verify(globalCardsHubDao).getGlobalCardsHubVisible()
+    }
+
+    @Test
+    fun `retired SORA Card and Buy XOR hub rows from older versions are skipped`() = runTest {
+        // Databases written by 3.8.x keep these rows (migrations 65->66 and 66->67).
+        // 3.9.0 leaves them in place and must simply not show them.
+        given(globalCardsHubDao.getGlobalCardsHubVisible()).willReturn(
+            flowOf(
+                listOf(
+                    GlobalCardHubLocal("get sora card", visibility = true, sortOrder = 0, collapsed = false),
+                    GlobalCardHubLocal("buy xor token", visibility = true, sortOrder = 1, collapsed = false),
+                    GlobalCardHubLocal("referral system", visibility = true, sortOrder = 2, collapsed = false),
+                )
+            )
+        )
+
+        val cards = walletRepository.subscribeVisibleGlobalCardsHubList().first()
+
+        assertEquals(listOf(CardHubType.REFERRAL_SYSTEM), cards.map { it.cardType })
+        assertEquals(2, cards.single().sortOrder)
     }
 
     @Test
