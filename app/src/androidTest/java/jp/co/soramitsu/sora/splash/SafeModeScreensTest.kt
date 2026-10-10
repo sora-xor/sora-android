@@ -244,7 +244,8 @@ class SafeModeScreensTest {
         rule.onNodeWithText(context.getString(R.string.recovery_sheet_read_only_unavailable)).assertExists()
         // Confirming again would not help: only Close remains.
         rule.onNode(hasTestTag(RecoveryTags.CONFIRM_READ_ONLY)).assertDoesNotExist()
-        rule.onNode(hasText(context.getString(CommonR.string.common_close)).and(hasClickAction()))
+        rule.onNodeWithTag(RecoveryTags.SHEET_DISMISS)
+            .assert(hasText(context.getString(CommonR.string.common_close)))
             .performScrollTo().assertIsEnabled()
 
         preview = SafeModePreviewState.U6_EXPORT_FAILED
