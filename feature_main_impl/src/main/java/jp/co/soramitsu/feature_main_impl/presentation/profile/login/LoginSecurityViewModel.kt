@@ -105,6 +105,9 @@ class LoginSecurityViewModel @Inject constructor(
                 userRepository.adoptRetainedWallet(
                     address = address,
                     accountName = resourceManager.getString(R.string.safe_mode_restored_wallet_name),
+                    // Restoring here adds the account; the wallet the person is using stays
+                    // selected ("It is now in your accounts").
+                    makeCurrent = false,
                 )
             }
             state = if (result.isSuccess) {
