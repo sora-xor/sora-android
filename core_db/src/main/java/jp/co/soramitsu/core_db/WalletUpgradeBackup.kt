@@ -38,6 +38,8 @@ import java.nio.file.LinkOption
 import java.security.MessageDigest
 import java.util.ArrayDeque
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
@@ -191,6 +193,25 @@ object WalletUpgradeBackup {
     /** The application context of the last preparation (for support copies made later). */
     @Volatile
     private var preparedContext: Context? = null
+
+    /**
+     * Counts the expensive steps of a preparation: full backup validations, bytes hashed and files
+     * copied. Device tests use it to prove that a start with no pending migration stays on the
+     * cheap path (directory listings, small manifest reads, two small SQLite reads). Counting
+     * only; nothing reads it to make a decision.
+     */
+    @VisibleForTesting
+    internal object WorkCountersForTest {
+        val fullBackupValidations = AtomicInteger()
+        val hashedBytes = AtomicLong()
+        val copiedFiles = AtomicInteger()
+
+        fun reset() {
+            fullBackupValidations.set(0)
+            hashedBytes.set(0L)
+            copiedFiles.set(0)
+        }
+    }
 
     data class Failure(
         val code: String,
@@ -2028,12 +2049,18 @@ object WalletUpgradeBackup {
             compareByDescending<BackupInventoryEntry> { it.generation }
                 .thenByDescending { it.directory.name }
         )
+        // Only a current-schema snapshot older than the newest [MAX_KEPT_VERIFIED_BACKUPS] can
+        // ever be removed. When there is none (for example one pre-migration backup and the
+        // snapshots of earlier 3.9.0 builds were already pruned), nothing is validated: this runs
+        // on the main thread at app start.
+        if (newestFirst.drop(MAX_KEPT_VERIFIED_BACKUPS).none(::isPrunableKind)) {
+            return inventory
+        }
         val kept = mutableListOf<BackupInventoryEntry>()
         var verified = 0
         val candidates = mutableListOf<Pair<BackupInventoryEntry, Set<String>>>()
         newestFirst.forEach { entry ->
-            val removableKind = entry.sourceVersion == CURRENT_DATABASE_VERSION &&
-                entry.targetVersion == CURRENT_DATABASE_VERSION
+            val removableKind = isPrunableKind(entry)
             if (verified < MAX_KEPT_VERIFIED_BACKUPS || !removableKind) {
                 kept += entry
                 if (
@@ -2080,6 +2107,11 @@ object WalletUpgradeBackup {
         }
         return kept
     }
+
+    /** A current-schema snapshot; a backup taken before a schema migration is never pruned. */
+    private fun isPrunableKind(entry: BackupInventoryEntry): Boolean =
+        entry.sourceVersion == CURRENT_DATABASE_VERSION &&
+            entry.targetVersion == CURRENT_DATABASE_VERSION
 
     private fun automaticRetryStateFile(context: Context): File =
         File(context.noBackupFilesDir, AUTO_RETRY_STATE_FILE)
@@ -2905,6 +2937,7 @@ object WalletUpgradeBackup {
         failureCode: String,
         destinationExistsFailureCode: String? = null,
     ) {
+        WorkCountersForTest.copiedFiles.incrementAndGet()
         requireRegularLinkCount(
             file = source,
             expectedIdentity = expectedSourceIdentity,
@@ -5558,6 +5591,7 @@ object WalletUpgradeBackup {
         expectedRegularLinkCount: Long = 1L,
         walletIdsOut: MutableSet<String>? = null,
     ): Boolean {
+        WorkCountersForTest.fullBackupValidations.incrementAndGet()
         if (expectedRegularLinkCount <= 0L) return false
         if (!directory.isDirectoryNoFollow()) return false
         val strictFiles = runCatching {
@@ -6028,6 +6062,7 @@ object WalletUpgradeBackup {
                     digest.update(buffer, 0, count)
                     bytesRead = Math.addExact(bytesRead, count.toLong())
                 }
+                WorkCountersForTest.hashedBytes.addAndGet(bytesRead)
                 if (
                     bytesRead != opened.size ||
                     Os.fstat(input.fd).st_size != opened.size
@@ -6119,6 +6154,7 @@ object WalletUpgradeBackup {
         MessageDigest.getInstance("SHA-256").digest(this).toLowerHex()
 
     private fun copyDurably(source: File, destination: File) {
+        WorkCountersForTest.copiedFiles.incrementAndGet()
         source.openRegularNoFollow(
             "BACKUP_SOURCE_INVALID"
         ).use { openedSource ->

@@ -3,9 +3,11 @@ package jp.co.soramitsu.core_db
 import android.content.Context
 import android.content.ContextWrapper
 import android.database.sqlite.SQLiteDatabase
+import android.os.SystemClock
 import android.system.ErrnoException
 import android.system.Os
 import android.system.OsConstants
+import android.util.Log
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -408,6 +410,90 @@ class WalletUpgradeBackupTest {
         )
         assertEquals(1, legacyAccountCount())
         assertTrue(WalletUpgradeBackup.nonBlockingWarnings().isEmpty())
+    }
+
+    /**
+     * Application.attachBaseContext runs prepare() on the main thread in every process. With no
+     * schema migration pending it must stay on the cheap path: no backup is fully validated, no
+     * file is hashed or copied, also when the accounts change.
+     */
+    @Test
+    fun startupWithNoPendingMigrationHashesCopiesAndValidatesNothing() {
+        createCurrentDatabase(
+            listOf(SoraAccountLocal(WALLET_ID, "Retained"))
+        )
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val first = File(
+            context.noBackupFilesDir,
+            "$BACKUP_PREFIX$CURRENT_VERSION-to-$CURRENT_VERSION",
+        )
+        assertTrue(first.isDirectory)
+        // Left by earlier builds: the pre-migration backup and four current-schema snapshots.
+        copyBackupAs(first, generation = 2L, sourceVersion = LEGACY_VERSION)
+        (3L..6L).forEach { copyBackupAs(first, it, CURRENT_VERSION) }
+        // The first start after that prunes once (full validation of the candidates only).
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val kept = backupDirectories()
+        assertEquals(4, kept.size)
+
+        val timings = mutableListOf<Long>()
+        fun startApp() {
+            WalletUpgradeBackup.WorkCountersForTest.reset()
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            val started = SystemClock.elapsedRealtime()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            timings += SystemClock.elapsedRealtime() - started
+            assertEquals(0, WalletUpgradeBackup.WorkCountersForTest.fullBackupValidations.get())
+            assertEquals(0L, WalletUpgradeBackup.WorkCountersForTest.hashedBytes.get())
+            assertEquals(0, WalletUpgradeBackup.WorkCountersForTest.copiedFiles.get())
+        }
+        repeat(3) { startApp() }
+
+        // A second verified account changes the pruning decision. Every backup beyond the
+        // newest three is a pre-migration backup, which is never pruned, so nothing is validated.
+        addVerifiedAccount(PARTIAL_WALLET_ID, "Second")
+        repeat(2) { startApp() }
+
+        assertEquals(kept, backupDirectories())
+        assertTrue(WalletUpgradeBackup.nonBlockingWarnings().isEmpty())
+        Log.i(
+            "WalletUpgradeBackupTest",
+            "steady-state prepare() in ms: ${timings.joinToString()}",
+        )
+    }
+
+    private fun backupDirectories(): List<String> = context.noBackupFilesDir.listFiles().orEmpty()
+        .map(File::getName)
+        .filter { it.startsWith(BACKUP_PREFIX) }
+        .sorted()
+
+    /** Adds an account row with a verified identity and its (marker) key set, as 3.9.0 would. */
+    private fun addVerifiedAccount(address: String, name: String) {
+        updateCurrentDatabase(
+            "INSERT INTO accounts(substrateAddress, accountName) VALUES('$address', '$name')"
+        )
+        updateCurrentDatabase(
+            """
+            INSERT INTO walletIdentities(
+                walletId, displayName, secretSource, migrationState, derivationVersion
+            ) VALUES('$address', '$name', 'MNEMONIC', 'VERIFIED', 1)
+            """.trimIndent()
+        )
+        updateCurrentDatabase(
+            """
+            INSERT INTO networkAccounts(
+                walletId, networkId, publicKey, address, derivationPath, derivationVersion, enabled
+            ) VALUES('$address', 'sora2', '', '$address', '', 1, 1)
+            """.trimIndent()
+        )
+        assertTrue(
+            context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
+                .putString("prefs_priv_key$address", "encrypted-private-$address")
+                .putString("prefs_pub_key$address", "encrypted-public-$address")
+                .putString("prefs_key_nonce$address", "encrypted-nonce-$address")
+                .putString("prefs_mnemonic$address", "encrypted-$address")
+                .commit()
+        )
     }
 
     @Test
