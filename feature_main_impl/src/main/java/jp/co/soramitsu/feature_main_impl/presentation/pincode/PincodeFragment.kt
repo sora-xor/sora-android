@@ -40,9 +40,6 @@ import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.ScrollState
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -215,18 +212,18 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         composable(
             route = theOnlyRoute,
         ) {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                PincodeScreen(
-                    pinCodeScreenState = viewModel.state,
-                    onNumClick = viewModel::pinCodeNumberClicked,
-                    onBiometricClick = fingerprintWrapper::toggleScanner,
-                    onDeleteClick = viewModel::pinCodeDeleteClicked,
-                    onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd,
-                    onSwitchNode = viewModel::onSwitchNode,
-                    onNewPinContinue = viewModel::setNewLengthPinCodeClicked,
-                    onGetHelp = ::contactSupport,
-                )
-            }
+            // Only the keypad and dots are pinned left-to-right (inside PincodeScreen); the
+            // Safe Mode panels on this screen follow the device's layout direction.
+            PincodeScreen(
+                pinCodeScreenState = viewModel.state,
+                onNumClick = viewModel::pinCodeNumberClicked,
+                onBiometricClick = fingerprintWrapper::toggleScanner,
+                onDeleteClick = viewModel::pinCodeDeleteClicked,
+                onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd,
+                onSwitchNode = viewModel::onSwitchNode,
+                onNewPinContinue = viewModel::setNewLengthPinCodeClicked,
+                onGetHelp = ::contactSupport,
+            )
         }
     }
 }
