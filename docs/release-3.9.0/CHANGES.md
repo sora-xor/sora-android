@@ -1429,3 +1429,235 @@ overwrites or moves key material automatically.
   - `:app:assembleProductionDebug` passes.
   - `:app:lintProductionDebug`: 866 warnings, 1 hint and 180 baselined
     errors. The baseline is unchanged.
+
+## a5: SORA Neon UI foundation (Android)
+
+### Why
+
+The owner asked for the "SORA Neon" look (design spec §2–§7: cyberpunk glow,
+glassmorphism, neumorphism). Before any screen can move to it, the app needs
+one set of tokens, effects and components that every screen can read. The
+current theme also had real defects that hurt the 40,000 people upgrading:
+
+- **Release blocker:** in dark mode the splash recovery panel drew `#2D2926`
+  text on `#26262D` (1.04:1), and its buttons fell back to Material purple
+  because the XML theme never set `colorPrimary`. In light mode the splash
+  "loading" line was 1.04:1. People who reach this panel during an upgrade
+  could not read it.
+- Light theme: `fgOutline` equalled the page colour (1.0:1, invisible
+  dividers and input borders); `fgSecondary` was 3.56:1 on white; the
+  warning colour was 2.14:1 on white. Dark theme: every `*Container` colour
+  was a light pastel on the purple canvas; `fgTertiary` was 3.12:1.
+- The onboarding activity decoded a full-screen `bg_image` PNG (about
+  19.5 MB in memory at xxxhdpi, 4.2 MB of PNGs in the APK) in light mode.
+- The QR scanner ignored the app theme (`MaterialTheme {}` with defaults).
+- Material controls and dialogs used Roboto and 4 dp corners.
+
+### What changed
+
+Nothing in this task reads, writes or moves wallet key material, accounts,
+addresses or signing code. The stored theme choice (`KEY_DARK_THEME_ENABLED`,
+`KEY_SYSTEM_DRIVEN_UI_ENABLED`) is never changed.
+
+**Tokens** (`common/.../compose/theme/`)
+
+- `tokens/NightThemeColors.kt`, `tokens/DayThemeColors.kt`: the ui-core
+  colour slots now hold the SORA Neon palette (spec §2.3), including the
+  `elevation` slot (`#0B0C14 @ 8%` in light, none in dark). Every screen
+  that reads `MaterialTheme.customColors` recolours with no call-site change.
+  `fgInverted` is the dark "ink" in dark mode, so legacy filled buttons get a
+  5.64:1 label. `tokens/Colors.kt`, `FontFamilies.kt` and `FontWeights.kt`
+  are gone (only the old palette used them).
+- `neon/NeonTokens.kt`: `NeonTokens` (`NeonDark`, `NeonLight`) with every
+  token that has no slot: aurora, glass fills and sheen, gradient hairlines,
+  CTA gradients, status containers, glow specs, neumorphic shadows,
+  skeleton colours. Read with `MaterialTheme.neon` (`LocalNeon`).
+  `designBlur()` keeps the one blur conversion factor (0.87).
+- `neon/Fx.kt`: effect tiers `FULL` / `REDUCED` / `MINIMAL` decided from API
+  level, `isLowRamDevice`, total memory, power-save mode and the new
+  "Reduce effects" setting; plus reduce motion (system animator scale) and
+  high contrast (API 34+). `LocalFx` carries the policy. One process-wide
+  power-save receiver refreshes it, and it is re-read on every resume. The
+  tier rule is a pure function with unit tests.
+- `tokens/TextStyles.kt`: the spec type scale (§5.3) with line heights and
+  tracking, bundled Sora and Inter, SemiBold where the spec asks. Body text
+  grows by 1 sp (15→16, 13→14, 11→12) to match iOS. New `NeonType` styles:
+  `displayHero` (tabular figures), `eyebrow`, `amountM`/`amountS` (tabular),
+  `mono` (platform monospace for addresses and codes), `phraseWord`,
+  `pinDigit`. The ui-core bold slots are now filled too.
+- `SoraTheme.kt`: `SoraAppTheme` provides `LocalNeon`, `LocalFx` and
+  `LocalContentColor`, and gives Material controls the app type scale and
+  16/24/28 dp corners. Disabled controls use 8% fill and 36% label instead
+  of 4%/16%, so disabled labels stay visible on dark.
+
+**Effects** (`common/.../compose/neon/`, no new dependencies, no RenderEffect)
+
+- `NeonEffects.kt`: `Modifier.neonAurora` / `NeonBackground` (static
+  radial washes plus a 4% grain generated once from a fixed seed, no image
+  asset), `neonGrid` (hero surfaces only), `neonGlass` (fake glass: fill,
+  sheen, gradient hairline; opaque on MINIMAL and high contrast; soft shadow
+  in light), `neonBorder` (2 dp under high contrast), `neonChrome` (bar tint
+  after scroll), `ChamferShape` (HeroCard cut), and
+  `Window.applyNeonBlurBehind` (cross-window blur behind dialogs on API 31+
+  FULL tier only, SDK-guarded; a plain dim otherwise).
+- `NeonGlow.kt`: `NeonGlow` (cached `dropShadow` bitmap; only the layer
+  alpha animates; a 1.5 dp ring on MINIMAL; nothing under high contrast),
+  `rememberCtaPulse` (exactly 3 cycles, FULL tier only, never under reduce
+  motion), motion tokens.
+- `Neumorphic.kt`: `NeumorphicSurface` for keys and discs (outer and inner
+  cached shadows; press = inset, 0.96 scale, cyan ring; flat face on
+  MINIMAL).
+- `Skeleton.kt`: one shimmer clock per screen and `Modifier.skeleton`
+  (static under reduce motion and MINIMAL).
+
+**Drop-in components** (`common/.../compose/neon/`)
+
+- `GlassCard.kt`: `GlassCard`, plus `ContentCard` and `ContentCardEndless`
+  with the ui-core parameter names and order. An explicit
+  `backgroundColor` still renders opaque (white QR plates keep working).
+  They remove ui-core's grey 10 dp shadow, which follows the system rather
+  than the in-app dark mode.
+- `NeonButton.kt`: `NeonButton` with Primary, Secondary (glass), Tertiary,
+  Swap, Safe and Destructive variants, a disabled style, a 3-bar loading
+  state with a "Loading" state description, and a focus ring. Shims with the
+  ui-core signatures: `FilledButton`, `FilledPolkaswapButton`,
+  `TonalButton`, `BleachedButton`, `OutlinedButton`, `TextButton`.
+- Screens migrate later by swapping imports. This task migrates no call
+  site except the ones below.
+- `NeonGallery.kt`: a debug-menu parity screen (spec §11.3) that shows the
+  tokens, glows, neumorphic key, PIN dots (4 and 6), glass card, HeroCard,
+  buttons, skeletons and type styles in the current theme and tier.
+  Reached from More → Debug Menu → "SORA Neon components" (not in Play
+  builds, where the debug menu is hidden).
+
+**XML theme** (`common/src/main/res/`)
+
+- `values/neon_colors.xml` and `values-night/neon_colors.xml`: the XML
+  mirrors of the palette. `values/styles.xml` now has one DayNight
+  `AppTheme`; every colour that differs between themes comes from these
+  files, and `values-night/styles.xml` is deleted. The theme sets
+  `colorPrimary` / `colorOnPrimary` / `colorSurface` / `colorError` /
+  control colours, text colours, and dialog themes (opaque sheet colour,
+  24 dp corners, hairline, cyan actions) for AppCompat, framework and
+  Material dialogs. Legacy attributes are remapped (spec §2.4); for example
+  night `contentPrimary` is now `#F5F6FB` (16.93:1 on the panel).
+- `AppTheme.Onboarding`: transparent bars without the translucent-bar
+  scrim, so the aurora shows behind the status and navigation bars instead
+  of a grey band.
+- New `bg_neon_safe_panel` (SafeCard: opaque surface, mint-to-cyan
+  hairline), `bg_neon_dialog`, `ic_neon_shield_safe`, and
+  `Widget.Sora.Button.{Safe,Secondary,Tertiary}` for XML buttons.
+
+**Splash and recovery panel** (`app/src/main/res/layout/activity_splash.xml`)
+
+- The slow-start line is `text.secondary` on the canvas (was 1.04:1) with a
+  thin cyan line instead of a spinner.
+- The recovery panel is a SafeCard with a mint shield, readable title and
+  body, a monospace selectable recovery code, a mint "Retry verification"
+  button, glass secondary buttons and a cyan support link. It scrolls, so it
+  works at large font sizes. Button ids, handlers and the `animation_view`
+  id are unchanged.
+- The panel message no longer mentions reinstalling or clearing app data
+  (hard rule 3): "SORA paused the upgrade because it could not check every
+  existing account yet. Nothing was deleted or replaced, and your funds stay
+  safe on the blockchain. Try again, or contact support for help." The
+  Akkadian and Middle Egyptian test locales carry the English text.
+- The Safe Mode screens of spec §9 (Compose) replace this panel in a later
+  task.
+
+**Cold start in dark mode** (`DarkThemeManager`, `SoraApp`)
+
+- The resolved night mode is mirrored into a tiny private preferences file
+  (`sora_night_mode_mirror`) and applied in `SoraApp.attachBaseContext`, so
+  a dark-theme user's splash and first screen open dark instead of flashing
+  light. The first launch after the upgrade behaves as before (the mirror
+  does not exist yet). The Android 12+ system starting window still follows
+  the system theme (see the release checklist).
+
+**Other**
+
+- `SoraBaseActivity` (onboarding) and `ClaimFragment` draw `NeonBackground`
+  in both themes; `bg_image.png` (6 densities, 4.2 MB) is deleted. The
+  unused CPU blur `Blur.kt` is deleted.
+- QR scanner: `SoraAppTheme` (always the dark palette, because its surface
+  is the camera), a `#000 @ 55%` scrim outside the viewfinder, cyan corner
+  brackets with a soft glow, the toolbar kept below the status bar, and a
+  black (not white) placeholder before the camera starts.
+- `OptionSwitch`: cyan track when on; a grey (`border.input`) thumb when
+  off, so the off state is not white-on-white.
+- Settings → App settings → Appearance: new "Reduce effects" switch with a
+  short explanation. Stored under its own key `neon_reduce_effects`.
+
+**Strings** (`common/src/main/res/values*/strings.xml`)
+
+- New `appearance_reduce_effects` ("Reduce effects"),
+  `appearance_reduce_effects_description` ("Turns off glow, glass and motion
+  effects. Useful on older phones or to save battery.") and `common_loading`
+  ("Loading"). Japanese is translated; the other locales carry the English
+  text. No lint baseline change.
+
+### User-visible effects
+
+- Dark mode is the SORA Neon near-black canvas with calm cards and cyan,
+  mint and red accents; light mode is the "Daylight" palette. Text is
+  readable everywhere (see the contrast table below).
+- The upgrade recovery panel is readable in both themes and says nothing
+  about reinstalling.
+- Dark-theme users no longer see a light splash after the first run.
+- Onboarding shows a soft aurora behind the content in both themes.
+- Body text is 1 sp larger; Material dialogs and controls use the app fonts
+  and rounded corners.
+- New "Reduce effects" switch.
+- Most screens keep their current layout and components until the next UI
+  task migrates them (cards, buttons, bottom navigation, PIN keypad).
+
+### Contrast (WCAG 2.x, `scratchpad/tools/cc.py`)
+
+174 token pairs from `neon_colors.xml` (both themes, on canvas, surface,
+surface variant, sheet, glass, pressed glass and the navigation chrome)
+pass: 4.5:1 for text, 3:1 for UI parts. Selected values:
+
+| Pair | Dark | Light |
+|---|---:|---:|
+| text primary / secondary / tertiary on canvas | 18.73 / 10.16 / 7.36 | 17.60 / 7.92 / 5.42 |
+| text tertiary on pressed glass | 5.98 | 5.14 |
+| label on brand red (legacy primary button) | 5.64 | 5.89 |
+| label on Safe CTA | 13.82 | 6.11 |
+| CTA gradient labels (min of both ends) | 5.24 | 5.24 |
+| input border on canvas / surface | 4.07 / 3.67 | 3.43 / 3.80 |
+| recovery panel body text on panel | 9.18 | 8.77 |
+| before: night recovery panel, light splash text | 1.04, 1.04 | |
+
+The same pairs are enforced by unit tests (`NeonContrastTest`) and, on a
+device, by `SplashRecoveryPanelThemeTest`, which inflates the real splash
+layout in both themes and checks every rendered text colour.
+
+### Verification
+
+- `:app:assembleProductionDebug` and `:app:assembleProductionDebugAndroidTest`
+  pass.
+- `testProductionDebugUnitTest`: 1,129 tests in 15 modules, 0 failures,
+  9 skipped (12 new: `NeonContrastTest`, `FxPolicyTest`).
+- `SplashRecoveryPanelThemeTest` (new device test, `:app`): 2 of 2 pass on
+  `SORA-Api36-16k`.
+- `:app:lintProductionDebug`: no errors; 914 warnings, 1 hint and 180
+  baselined errors. The baseline is unchanged. The new warnings are mostly
+  `UsingMaterialAndMaterial3Libraries` on the Material 2 imports of the new
+  files (the app also declares an unused Material 3 dependency).
+- Emulator `SORA-Api36-16k` (API 36, 16 KB pages, productionDebug), light and
+  dark: splash (system starting window and splash activity), welcome, wallet
+  home, More, App settings, QR scanner, the recovery panel (rendered by the
+  device test) and the debug parity screen. Screenshots:
+  `scratchpad/screens/android/a5-ui-foundation/`. Before this task, the
+  recovery panel left on that emulator by the a4 tests showed purple
+  all-caps buttons (`before/launch.png`). The emulator reports the REDUCED
+  tier (it has less than 3.5 GiB of memory).
+
+### Not in this task (next UI task)
+
+- Migrating screens to `GlassCard` / `NeonButton` (import swaps),
+  `NeonBackground` in `SoraBaseFragment` with a transparent toolbar, the
+  bottom navigation chrome and swap disc, the PIN keypad, sheets and
+  blur-behind call sites, and the Compose Safe Mode screens of spec §9.
+- "Dark only for new installs" (spec principle 9) is not implemented; the
+  default stays as it was.
