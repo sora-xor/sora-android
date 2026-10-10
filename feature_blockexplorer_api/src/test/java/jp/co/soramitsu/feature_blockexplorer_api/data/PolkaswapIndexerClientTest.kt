@@ -1752,7 +1752,6 @@ class PolkaswapIndexerClientTest {
                 "mobileConfig": {
                   "blockExplorerUrl": "https://sorametrics.org/sorav2?tab=extrinsics&q={transaction}",
                   "substrateTypesUrl": "https://example.org/types.json",
-                  "soracard": false,
                   "nodes": [{ "name": "Sora", "address": "wss://mof2.sora.org" }],
                   "nexusAvailable": true,
                   "nexusSendsAvailable": false,
@@ -1801,6 +1800,10 @@ class PolkaswapIndexerClientTest {
             }
             assertThat(request.query).contains("substrateTypesUrl")
         }
+        // SORA Card is gone: neither query depends on the indexer still serving its flag.
+        restClient.requests.forEach { request ->
+            assertThat(request.query).doesNotContain("soracard")
+        }
     }
 
     @Test
@@ -1839,7 +1842,6 @@ class PolkaswapIndexerClientTest {
             """
             { "data": { "mobileConfig": {
                 "blockExplorerUrl": "https://sorametrics.org/sorav2?tab=extrinsics&q={transaction}",
-                "soracard": false,
                 "nodes": [{ "name": "Sora", "address": "wss://mof2.sora.org" }],
                 "nexusAvailable": true,
                 "nexusSendsAvailable": false,
@@ -1909,7 +1911,6 @@ class PolkaswapIndexerClientTest {
                 "mobileConfig": {
                   "blockExplorerUrl": "https://sorametrics.org/sorav2?tab=extrinsics&q={transaction}",
                   "substrateTypesUrl": null,
-                  "soracard": false,
                   "nodes": [{ "name": "Sora", "address": "wss://mof2.sora.org" }],
                   "nexusAvailable": true,
                   "nexusSendsAvailable": false,
@@ -3368,7 +3369,6 @@ class PolkaswapIndexerClientTest {
             "mobileConfig": {
               "blockExplorerUrl": "https://sorametrics.org/sorav2?tab=extrinsics&q={transaction}",
               "substrateTypesUrl": "https://example.org/types.json",
-              "soracard": false,
               "nodes": [{ "name": "Sora", "address": "wss://mof2.sora.org" }]
             }
           }
@@ -3382,7 +3382,6 @@ class PolkaswapIndexerClientTest {
             "mobileConfig": {
               "blockExplorerUrl": "https://sorametrics.org/sorav2?tab=extrinsics&q={transaction}",
               "substrateTypesUrl": "https://example.org/types.json",
-              "soracard": false,
               "nodes": [{ "name": "Sora", "address": "wss://mof2.sora.org" }],
               "nexusAvailable": true,
               "nexusSendsAvailable": false,

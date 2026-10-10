@@ -1973,7 +1973,6 @@ class PolkaswapIndexerClient private constructor(
     private fun MobileConfigDto.toModel() = PiMobileConfig(
         blockExplorerUrl = blockExplorerUrl,
         substrateTypesUrl = substrateTypesUrl,
-        soracard = soracard,
         nodes = nodes.map { PiMobileChainNode(it.name, it.address) },
         nexusAvailable = nexusAvailable,
         nexusSendsAvailable = nexusSendsAvailable,
@@ -1986,7 +1985,6 @@ class PolkaswapIndexerClient private constructor(
     private fun LegacyMobileConfigDto.toLegacyModel() = PiMobileConfig(
         blockExplorerUrl = blockExplorerUrl,
         substrateTypesUrl = substrateTypesUrl,
-        soracard = soracard,
         nodes = nodes.map { PiMobileChainNode(it.name, it.address) },
         nexusAvailable = false,
         nexusSendsAvailable = false,
@@ -2729,7 +2727,6 @@ class PolkaswapIndexerClient private constructor(
     private data class MobileConfigDto(
         val blockExplorerUrl: String,
         val substrateTypesUrl: String? = null,
-        val soracard: Boolean,
         val nodes: List<MobileChainNodeDto> = emptyList(),
         val nexusAvailable: Boolean,
         val nexusSendsAvailable: Boolean,
@@ -2748,7 +2745,6 @@ class PolkaswapIndexerClient private constructor(
     private data class LegacyMobileConfigDto(
         val blockExplorerUrl: String,
         val substrateTypesUrl: String? = null,
-        val soracard: Boolean,
         val nodes: List<MobileChainNodeDto> = emptyList(),
     )
 
@@ -3112,7 +3108,6 @@ class PolkaswapIndexerClient private constructor(
               mobileConfig {
                 blockExplorerUrl
                 substrateTypesUrl
-                soracard
                 nodes { name address }
                 nexusAvailable
                 nexusSendsAvailable
@@ -3128,7 +3123,6 @@ class PolkaswapIndexerClient private constructor(
               mobileConfig {
                 blockExplorerUrl
                 substrateTypesUrl
-                soracard
                 nodes { name address }
               }
             }
