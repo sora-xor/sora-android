@@ -528,6 +528,41 @@ Product decisions to confirm:
       are proven to be that verified account's own. Otherwise they stay on
       the phone, and the account can be restored from there.
 
+### a4 retry: actions
+
+Before each release candidate:
+
+- [ ] Same emulator run. `WalletUpgradeScenarioTest` now has 34 scenarios.
+      It adds SORA v1 1.6.1, the 2021 SORA2 builds 2.1.0 and 3.0.0 (plain
+      SharedPreferences) and a new install importing 12, 15, 18, 21 and
+      24-word phrases. `core_db` adds the startup check
+      (`startupWithNoPendingMigrationHashesCopiesAndValidatesNothing`).
+
+Real-device QA (team test phones and team test wallets only):
+
+- [ ] If the team still has an APK of a 2021 SORA build (2.1.0 or 3.0.0),
+      install it on a test phone and restore a team test wallet. Then
+      install the release build over it. Expect the same address and a
+      small transfer that signs. Do the same with a SORA v1 APK if one
+      exists. Expect the app to open at onboarding, and the same phrase to
+      restore the SORA2 account. Without such APKs, the emulator scenarios
+      (written with those builds' own storage code) are the evidence;
+      record that here.
+- [ ] Cold start on a low-end test phone that has the 3.8.6.3 wallet
+      upgraded (second start and later): no visible delay before the splash
+      compared with 3.8.6.3. Check Android vitals "slow cold start" after
+      the staged rollout starts.
+
+Engineering decision to confirm:
+
+- [ ] 2021 builds stored keys in `sora_prefs.xml`. As in every release since
+      2.3.2, the DataStore's `SharedPreferencesMigration` copies those
+      values unchanged into the DataStore on its first read, then removes
+      the XML file. 3.9.0 keeps this. The verified pre-migration backup
+      (always made, because those databases need a schema migration) holds
+      the original file byte for byte. The engineering owner confirms that
+      this is acceptable under the "never move key material" rule.
+
 ## a5: SORA Neon UI foundation (Android)
 
 ### Design and product sign-off
