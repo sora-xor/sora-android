@@ -16,7 +16,10 @@ import org.junit.Test
  * part of CI; run it with:
  *
  *     RUN_LIVE_PI_CLIENT_TESTS=true ./gradlew :feature_blockexplorer_api:testProductionDebugUnitTest \
- *       --tests '*PolkaswapIndexerClientLiveContractTest*'
+ *       --tests '*PolkaswapIndexerClientLiveContractTest*' --rerun
+ *
+ * Keep `--rerun`: the environment variable is not a Gradle task input, so an up-to-date test
+ * task would otherwise be skipped without contacting the indexer.
  *
  * It checks that every query the app sends is one the deployed schema serves.
  */

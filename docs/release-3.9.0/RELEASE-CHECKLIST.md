@@ -231,9 +231,14 @@ every candidate:
       status archive node):
       `ANDROID_SERIAL=emulator-5580 ./gradlew :sorasubstrate:connectedProductionDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.soraLiveNetwork=true -Pandroid.testInstrumentationRunnerArguments.class=jp.co.soramitsu.sora.substrate.live.MainnetLiveSigningTest`
       (`adb logcat -s SoraLiveSigning` shows the runtime version, fee and the
-      node's answer).
+      node's answer). Last passed on 2026-10-10 at 17:31 JST against spec 133 /
+      tx 131.
 - [ ] Run the live indexer contract test:
-      `RUN_LIVE_PI_CLIENT_TESTS=true ./gradlew :feature_blockexplorer_api:testProductionDebugUnitTest --tests '*PolkaswapIndexerClientLiveContractTest*'`.
+      `RUN_LIVE_PI_CLIENT_TESTS=true ./gradlew :feature_blockexplorer_api:testProductionDebugUnitTest --tests '*PolkaswapIndexerClientLiveContractTest*' --rerun`.
+      Keep `--rerun`: Gradle does not see the environment variable as an
+      input. Without it, an up-to-date test task is skipped and nothing runs
+      against the indexer. Check that the report lists 3 tests and 0 skipped.
+      Last passed on 2026-10-10 at 17:48 JST.
 - [ ] On a real phone with 3.8.6.3 and a funded wallet, install the release
       build over it and send a small XOR transfer and a small swap: the fee is
       shown, both finalize, and Activity lists them.
