@@ -321,12 +321,10 @@
   <string name="mnemonic_text">אנו ממליצים להשתמש בדרך לא דיגיטלית לגיבוי, כגון כתיבה על נייר ואחסון בטוח.</string>
   <string name="network_fee">עמלת רשת</string>
   <string name="network_finalized_history">פעילות</string>
-  <string name="node_connection_issue">החשבון שלך נוצר בהצלחה. אך האפליקציה אינה יכולה להתחבר לצומת ברירת מחדל. נסה לעבור לחלופה אחרת.</string>
   <string name="node_details_address_validation_failed">נכשל אימות כתובת האתר (כתובת שגויה)</string>
   <string name="node_details_genesis_validation_failed">ההאש הראשון של הצומת שלך שונה מההאש הראשון של הרשת</string>
   <string name="node_details_node_already_added" formatted="false">הצומת הזה כבר נוסף: %s \n נוצר חיבור עם הצומת %s</string>
   <string name="node_details_protocol_validation_failed">לא הצליח לאמת כתובת האתר (פרוטוקול URL שגוי)</string>
-  <string name="node_offline">צומת במצב לא מקוון</string>
   <string name="onboarding_continue_with_google">המשך עם גוגל</string>
   <string name="onboarding_create_account_description">הזן שם עבור החשבון החדש שלך וכיצד הוא יופיע תחת הכתובת שלך. עם זהות ברשת, ניתן להפוך אותה לזמינה לאחרים.</string>
   <string name="onboarding_create_account_subtitle">גלוי רק עבורך ומאוחסן באופן מקומי</string>
@@ -347,9 +345,6 @@
   <string name="pincode_enter_current_pin_code">הזן קוד PIN נוכחי</string>
   <string name="pincode_enter_new_pin_code">הזן קוד PIN חדש</string>
   <string name="pincode_enter_pin_code">הזן קוד PIN</string>
-  <string name="pincode_length_info_button_text">הגדר קוד PIN חדש</string>
-  <string name="pincode_length_info_message">מדיניות האבטחה של סורה שופרה להגנתך. קוד PIN בן 4 ספרות אינו נתמך עוד. הגדר קוד PIN חדש בן 6 ספרות.</string>
-  <string name="pincode_length_info_title">אנא הגדר קוד PIN בן 6 ספרות</string>
   <string name="pincode_one_try_left">נשאר לך עוד ניסיון אחד לפני ההתקררות</string>
   <string name="pincode_set_your_pin_code">הגדר קוד PIN</string>
   <string name="pincode_touch_fingerprint_scanner">גע בסורק טביעת האצבע</string>
@@ -538,7 +533,6 @@
   <string name="succesfully_imported_account_title">ייבאת חשבון בהצלחה</string>
   <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">ודא שנותרו לך %s לאחר עסקה זו. אחרת, לא תוכל לבצע עסקה אחרת.</string>
-  <string name="switch_node">החלף צומת</string>
   <string name="system_appearance">מראה חיצוני של המערכת</string>
   <string name="tabbar_parliament_title">פרלמנט</string>
   <string name="tabbar_polkaswap_title">פולקסוואפ</string>

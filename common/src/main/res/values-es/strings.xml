@@ -319,12 +319,10 @@
   <string name="mnemonic_text">Recomendamos usar formas no digitales para hacer copias de seguridad, como escribirlo en una hoja de papel.</string>
   <string name="network_fee">Comisión de red</string>
   <string name="network_finalized_history">Actividad</string>
-  <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">Failed to validate URL (Wrong address)</string>
   <string name="node_details_genesis_validation_failed">The genesis hash of your node is different than the genesis hash of the network</string>
   <string name="node_details_node_already_added" formatted="false">This node is already added: %s\nConnection established with node %s</string>
   <string name="node_details_protocol_validation_failed">No se pudo validar la URL (protocolo de URL incorrecto)</string>
-  <string name="node_offline">Node offline</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">Ingrese el nombre de su nueva cuenta y cómo aparecerá debajo de su dirección. Con una identidad en cadena, puede estar disponible para otros.</string>
   <string name="onboarding_create_account_subtitle">Visible solo para ti y almacenado localmente</string>
@@ -345,9 +343,6 @@
   <string name="pincode_enter_current_pin_code">Ingrese el código PIN actual</string>
   <string name="pincode_enter_new_pin_code">Ingrese un nuevo código PIN</string>
   <string name="pincode_enter_pin_code">Ingrese su código PIN</string>
-  <string name="pincode_length_info_button_text">Establecer nuevo código PIN</string>
-  <string name="pincode_length_info_message">La política de seguridad de SORA ha sido mejorada para tu protección. El código PIN de 4 dígitos ya no está soportado. Por favor establezca un nuevo PIN de 6 dígitos</string>
-  <string name="pincode_length_info_title">Por favor establezca un código PIN de 6 dígitos</string>
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">Configurar código pin</string>
   <string name="pincode_touch_fingerprint_scanner">Toca el sensor de huellas digitales</string>
@@ -525,7 +520,6 @@
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
-  <string name="switch_node">Switch node</string>
   <string name="system_appearance">System appearance</string>
   <string name="tabbar_parliament_title">Parlamento</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

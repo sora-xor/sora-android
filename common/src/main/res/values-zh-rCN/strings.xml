@@ -318,12 +318,10 @@
   <string name="mnemonic_text">我们建议使用非数字方式进行备份，例如将其写在纸上。</string>
   <string name="network_fee">网络费用</string>
   <string name="network_finalized_history">活动</string>
-  <string name="node_connection_issue">您的账户已成功创建。但是应用程序无法连接到默认节点。请尝试切换到备选节点。</string>
   <string name="node_details_address_validation_failed">验证 URL 失败（地址错误）</string>
   <string name="node_details_genesis_validation_failed">您节点的创世哈希与网络的创世哈希不同</string>
   <string name="node_details_node_already_added" formatted="false">此节点已被添加：%s/n与节点%s建立了连接</string>
   <string name="node_details_protocol_validation_failed">验证 URL 失败（错误的 URL 协议）</string>
-  <string name="node_offline">节点离线</string>
   <string name="onboarding_continue_with_google">继续使用 Google</string>
   <string name="onboarding_create_account_description">输入您的新账户名称以及它在地址下的显示方式。有了链上身份，它可以被分享给其他人。</string>
   <string name="onboarding_create_account_subtitle">仅对您可见并本地存储</string>
@@ -344,9 +342,6 @@
   <string name="pincode_enter_current_pin_code">请输入当前的PIN码</string>
   <string name="pincode_enter_new_pin_code">输入新的 PIN 码</string>
   <string name="pincode_enter_pin_code">输入密码</string>
-  <string name="pincode_length_info_button_text">设置新的PIN码</string>
-  <string name="pincode_length_info_message">SORA的安全策略已经得到改进，以保护您的安全。不再支持4位数字密码，请设置一个新的6位数字密码。</string>
-  <string name="pincode_length_info_title">请设置一个6位数的PIN码</string>
   <string name="pincode_one_try_left">在冷却之前，您还有一次尝试</string>
   <string name="pincode_set_your_pin_code">设置代码</string>
   <string name="pincode_touch_fingerprint_scanner">触摸指纹识别按键</string>
@@ -519,7 +514,6 @@
   <string name="succesfully_imported_account_title">您已成功导入一个账户</string>
   <string name="support_chat">支持聊天</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">确保在此事务之后还剩下 %s。否则，您将无法进行其他交易。</string>
-  <string name="switch_node">切换节点</string>
   <string name="system_appearance">系统外观</string>
   <string name="tabbar_parliament_title">议会</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

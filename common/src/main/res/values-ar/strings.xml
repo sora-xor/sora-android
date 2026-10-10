@@ -323,12 +323,10 @@
   <string name="mnemonic_text">استخدم وسائل غير رقمية لحفظ بيانات الاسترجاع، كأن تكتبها على ورقة خارجية وتحفظ في مكان آمن.</string>
   <string name="network_fee">رسوم الشبكة</string>
   <string name="network_finalized_history">نشاط</string>
-  <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">فشل التحقق من صحة URL (عنوان خاطئ)</string>
   <string name="node_details_genesis_validation_failed">يختلف تجزئة نشأة العقدة عن تجزئة تكوين الشبكة</string>
   <string name="node_details_node_already_added" formatted="false">تمت إضافة هذه العقدة مسبقا: %s \n تم الاتصال بالعقدة %s</string>
   <string name="node_details_protocol_validation_failed">فشل التحقق من صحة URL (بروتوكول URL خاطئ)</string>
-  <string name="node_offline">Node offline</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">أدخل اسم حسابك الجديد وكيف سيظهر تحت عنوانك. من خلال هوية على السلسلة ، يمكن إتاحتها للآخرين.</string>
   <string name="onboarding_create_account_subtitle">مرئي لك فقط ومخزن محليًا</string>
@@ -349,9 +347,6 @@
   <string name="pincode_enter_current_pin_code">أدخل رمز الواجهة الحالي</string>
   <string name="pincode_enter_new_pin_code">أدخل  رمز الواجهة الجديد</string>
   <string name="pincode_enter_pin_code">أدخل الرمز السري</string>
-  <string name="pincode_length_info_button_text">قم بتعيين رمز PIN جديد</string>
-  <string name="pincode_length_info_message">تم تحسين سياسة أمان SORA لحمايتك. لم يعد رقم التعريف الشخصي المكون من 4 أرقام مدعومًا. يرجى إعداد رقم تعريف شخصي جديد مكون من 6 أرقام.</string>
-  <string name="pincode_length_info_title">يرجى إعداد رمز PIN المكون من 6 أرقام</string>
   <string name="pincode_one_try_left">لديك محاولة أخرى متبقية قبل التبريد</string>
   <string name="pincode_set_your_pin_code">إعداد رمز الواجهة</string>
   <string name="pincode_touch_fingerprint_scanner">إلمس الماسح الضوئي للبصمة</string>
@@ -550,7 +545,6 @@
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
-  <string name="switch_node">Switch node</string>
   <string name="system_appearance">مظهر النظام</string>
   <string name="tabbar_parliament_title">البرلمان</string>
   <string name="tabbar_polkaswap_title">بولكاسواب</string>

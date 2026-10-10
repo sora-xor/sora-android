@@ -319,12 +319,10 @@
   <string name="mnemonic_text">Yedəkləmə üçün rəqəmsal olmayan yolu istifadə edin, məsələn, kağıza yazmaq.</string>
   <string name="network_fee">Şəbəkə haqqı</string>
   <string name="network_finalized_history">Fəaliyyət</string>
-  <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">URL-i doğrulamaq alınmadı (Yanlış ünvan)</string>
   <string name="node_details_genesis_validation_failed">Düyününüzün genezis hashı şəbəkənin genezis hashından fərqlidir</string>
   <string name="node_details_node_already_added" formatted="false">Bu qovşaq artıq əlavə olunub: %s\n %s node ilə əlaqə quruldu</string>
   <string name="node_details_protocol_validation_failed">URL-i doğrulamaq alınmadı (Yanlış URL protokolu)</string>
-  <string name="node_offline">Node offline</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">Enter name for your new account and how it will appear under your address. With an on-chain identity, it can be made available to others.</string>
   <string name="onboarding_create_account_subtitle">Visible only for you and stored locally</string>
@@ -345,9 +343,6 @@
   <string name="pincode_enter_current_pin_code">Cari pin kodu daxil edin</string>
   <string name="pincode_enter_new_pin_code">Yeni pin kodu daxil edin</string>
   <string name="pincode_enter_pin_code">PİN kodu daxil edin</string>
-  <string name="pincode_length_info_button_text">Set new PIN code</string>
-  <string name="pincode_length_info_message">SORA\'s security policy has been improved for your protection. A 4-digit PIN is no longer supported. Please set up a new 6-digit PIN.</string>
-  <string name="pincode_length_info_title">Please set up a 6-digit PIN code</string>
   <string name="pincode_one_try_left">Soyumağa qədər daha bir cəhdiniz qalıb</string>
   <string name="pincode_set_your_pin_code">Pin kodu qurun</string>
   <string name="pincode_touch_fingerprint_scanner">Barmaq izi skanerinə toxunun</string>
@@ -524,7 +519,6 @@
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="support_chat">Dəstək söhbəti</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Bu əməliyyatdan sonra %s qaldığınıza əmin olun. Əks halda, başqa sövdələşmə edə bilməyəcəksiniz.</string>
-  <string name="switch_node">Switch node</string>
   <string name="system_appearance">System appearance</string>
   <string name="tabbar_parliament_title">Parlament</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

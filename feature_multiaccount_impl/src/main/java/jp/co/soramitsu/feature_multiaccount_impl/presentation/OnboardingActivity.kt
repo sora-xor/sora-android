@@ -69,6 +69,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeWelcome
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
@@ -145,6 +146,9 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Setting up a wallet on this version (first start, after "set up this device again", or
+        // adding an account after the first unlock) never needs the upgrade-complete sheet.
+        UpgradeWelcome.markDone(applicationContext)
 
         viewModel.consentExceptionHandler.observe(this) {
             consentHandlerLauncher.launch(it)

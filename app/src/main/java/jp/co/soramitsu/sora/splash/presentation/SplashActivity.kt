@@ -62,7 +62,6 @@ import jp.co.soramitsu.androidfoundation.intent.restartApplication
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.TechnicalDetail
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeWelcome
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
@@ -194,8 +193,6 @@ class SplashActivity : AppCompatActivity() {
         }
         splashViewModel.showOnBoardingScreen.observe(this) {
             afterVerification {
-                // A wallet set up on this version never needs the upgrade-complete sheet (U11).
-                UpgradeWelcome.markDone(applicationContext)
                 reportStartupReady()
                 multiaccStarter.startOnboardingFlow(this)
             }

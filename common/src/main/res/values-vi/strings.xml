@@ -318,12 +318,10 @@
   <string name="mnemonic_text">Chúng tôi khuyên bạn không nên sao lưu bằng phương tiện kỹ thuật số, chẳng hạn như viết nó xuống giấy.</string>
   <string name="network_fee">Phí mạng</string>
   <string name="network_finalized_history">Hoạt động</string>
-  <string name="node_connection_issue">Tài khoản của bạn đã được tạo thành công. Nhưng ứng dụng không thể kết nối với một node mặc định. Cố gắng chuyển sang một node khác.</string>
   <string name="node_details_address_validation_failed">Không xác thực được URL (Địa chỉ sai)</string>
   <string name="node_details_genesis_validation_failed">Hàm băm genesis của nút của bạn khác với hàm băm genesis của mạng</string>
   <string name="node_details_node_already_added" formatted="false">Nút này đã được thêm vào: %s \n Kết nối được thiết lập với nút %s</string>
   <string name="node_details_protocol_validation_failed">Không thể xác thực URL (URL sai)</string>
-  <string name="node_offline">Node ngoại tuyến</string>
   <string name="onboarding_continue_with_google">Tiếp tục với Google</string>
   <string name="onboarding_create_account_description">Nhập tên cho tài khoản mới của bạn và cách nó sẽ xuất hiện dưới địa chỉ của bạn. Với danh tính trên chuỗi, nó có thể được cung cấp cho những người khác.</string>
   <string name="onboarding_create_account_subtitle">Chỉ hiển thị cho bạn và được lưu trữ cục bộ</string>
@@ -344,9 +342,6 @@
   <string name="pincode_enter_current_pin_code">Nhập mã pin hiện tại</string>
   <string name="pincode_enter_new_pin_code">Nhập mã pin mới</string>
   <string name="pincode_enter_pin_code">Nhập mã PIN</string>
-  <string name="pincode_length_info_button_text">Đặt mã PIN mới</string>
-  <string name="pincode_length_info_message">Chính sách bảo mật của SORA đã được cải thiện để bảo vệ bạn. Mã PIN gồm 4 chữ số không còn được hỗ trợ. Vui lòng thiết lập mã PIN mới gồm 6 chữ số.</string>
-  <string name="pincode_length_info_title">Vui lòng thiết lập mã PIN gồm 6 chữ số</string>
   <string name="pincode_one_try_left">Bạn còn một lần thử nữa</string>
   <string name="pincode_set_your_pin_code">Thiết lập mã pin</string>
   <string name="pincode_touch_fingerprint_scanner">Chạm vào máy quét vân tay</string>
@@ -520,7 +515,6 @@
   <string name="succesfully_imported_account_title">Bạn đã nhập thành công một tài khoản</string>
   <string name="support_chat">Trò chuyện với hỗ trợ</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Đảm bảo rằng bạn còn %s sau giao dịch này. Nếu không, bạn sẽ không thể thực hiện một giao dịch khác.</string>
-  <string name="switch_node">Chuyển node</string>
   <string name="system_appearance">Hệ thống hiển thị</string>
   <string name="tabbar_parliament_title">Nghị viện</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

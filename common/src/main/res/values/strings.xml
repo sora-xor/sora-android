@@ -320,12 +320,10 @@
   <string name="mnemonic_invalid_title">Invalid mnemonic passphrase</string>
   <string name="mnemonic_text">We recommend using a non-digital way to backup, such as writing down on paper and storing it safely.</string>
   <string name="network_fee">Network fee</string>
-  <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">Failed to validate URL (Wrong address)</string>
   <string name="node_details_genesis_validation_failed">The genesis hash of your node is different than the genesis hash of the network</string>
   <string name="node_details_node_already_added" formatted="false">This node is already added: %s\nConnection established with node %s</string>
   <string name="node_details_protocol_validation_failed">Failed to validate URL (Wrong URL protocol)</string>
-  <string name="node_offline">Node offline</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">Choose a name to help you recognize this wallet on this device.</string>
   <string name="onboarding_create_account_subtitle">This name is stored on this device and is not published on the network.</string>
@@ -346,9 +344,6 @@
   <string name="pincode_enter_current_pin_code">Enter current pin code</string>
   <string name="pincode_enter_new_pin_code">Enter new pin code</string>
   <string name="pincode_enter_pin_code">Enter pin code</string>
-  <string name="pincode_length_info_button_text">Set new PIN code</string>
-  <string name="pincode_length_info_message">SORA\'s security policy has been improved for your protection. A 4-digit PIN is no longer supported. Please set up a new 6-digit PIN.</string>
-  <string name="pincode_length_info_title">Please set up a 6-digit PIN code</string>
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">Setup pin code</string>
   <string name="pincode_touch_fingerprint_scanner">Touch the fingerprint scanner</string>
@@ -523,7 +518,6 @@
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
-  <string name="switch_node">Switch node</string>
   <string name="system_appearance">System appearance</string>
   <string name="tabbar_parliament_title">Parliament</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -595,7 +589,6 @@
   <string name="wallet_status_failed">Not completed</string>
   <string name="wallet_status_pending">Pending confirmation</string>
   <string name="wallet_status_checking">Checking transaction status</string>
-  <string name="wallet_issue_recovery">A previous transaction still needs to be checked. Sending is paused to avoid a duplicate. Keep this wallet until its status is resolved.</string>
   <string name="wallet_issue_address">Check the recipient address and make sure it belongs to the selected network.</string>
   <string name="wallet_issue_amount">Enter a valid amount greater than zero using the supported number of decimal places.</string>
   <string name="wallet_issue_balance">There are not enough available funds for this amount and the network fee. Adjust the amount or add funds.</string>
