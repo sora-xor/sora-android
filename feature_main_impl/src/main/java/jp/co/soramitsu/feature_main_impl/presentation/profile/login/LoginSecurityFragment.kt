@@ -37,6 +37,7 @@ import android.view.View
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
@@ -66,12 +67,19 @@ class LoginSecurityFragment : SoraBaseFragment<LoginSecurityViewModel>() {
             route = theOnlyRoute,
         ) {
             val state = viewModel.state
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
                 LoginSecurityScreen(
                     bioAvailable = state.bioAvailable,
                     bioEnabled = state.bioEnabled,
                     onChangePinClick = viewModel::changePin,
                     onToggle = viewModel::toggleBio,
+                    retained = RetainedWalletsUi(
+                        addresses = state.retainedWallets,
+                        restoring = state.restoring,
+                        restored = state.restored,
+                        notRestorable = state.notRestorable,
+                    ),
+                    onRestoreRetained = viewModel::restoreRetainedWallet,
                 )
             }
         }

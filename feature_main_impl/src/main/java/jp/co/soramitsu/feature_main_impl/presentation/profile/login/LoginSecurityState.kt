@@ -35,4 +35,10 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile.login
 data class LoginSecurityState(
     val bioAvailable: Boolean,
     val bioEnabled: Boolean,
+    /** Complete key sets on this phone that no account uses ("Wallets found on this phone"). */
+    val retainedWallets: List<String> = emptyList(),
+    val restoring: String? = null,
+    val restored: List<String> = emptyList(),
+    /** Addresses whose keys could not be proven to match; the phrase import is the way back. */
+    val notRestorable: List<String> = emptyList(),
 )
