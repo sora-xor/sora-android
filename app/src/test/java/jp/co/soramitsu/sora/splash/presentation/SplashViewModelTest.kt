@@ -40,6 +40,8 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.core_db.RecoveryFacts
+import jp.co.soramitsu.core_db.SetUpAgainScope
+import jp.co.soramitsu.core_db.WalletRecoveryKind
 import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.PendingRecoveryStartupScheduler
@@ -247,6 +249,8 @@ class SplashViewModelTest {
         )
         verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
         given(interactor.retryMigration()).willReturn(true)
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+        given(interactor.hasExistingWallet()).willReturn(true)
 
         splashViewModel.retryWalletMigration()
         advanceUntilIdle()
@@ -254,10 +258,72 @@ class SplashViewModelTest {
         assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
         assertEquals(false, failedInitialMigration.await())
         verify(interactor).retryMigration()
-        verify(interactor, never()).getRegistrationState()
-        verify(interactor, never()).hasExistingWallet()
         verify(pendingRecoveryStartupScheduler).scheduleAfterWalletMigration()
     }
+
+    @Test
+    fun `retry that verifies a phone with no account opens onboarding, not an empty wallet`() =
+        runTest {
+            // For example only retained keys were found and the Keystore was busy on the first
+            // start; Try again succeeds but there is still no account row.
+            given(interactor.retryMigration()).willReturn(true)
+            given(interactor.getRegistrationState())
+                .willReturn(OnboardingState.REGISTRATION_FINISHED)
+            given(interactor.hasExistingWallet()).willReturn(false)
+
+            splashViewModel.retryWalletMigration()
+            advanceUntilIdle()
+
+            assertEquals(
+                OnboardingState.INITIAL,
+                splashViewModel.showOnBoardingScreen.getOrAwaitValue(),
+            )
+            assertEquals(null, splashViewModel.showMainScreen.value)
+            verify(pendingRecoveryStartupScheduler).scheduleAfterWalletMigration()
+        }
+
+    @Test
+    fun `failure code lookup that cannot open the database still shows the recovery options`() =
+        runTest {
+            // Startup is blocked, so the database refuses every reader. The code known in memory
+            // is shown instead of crashing the app.
+            given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(false))
+            given(interactor.getMigrationFailureCode())
+                .willThrow(IllegalStateException("WALLET_MIGRATION_RECOVERY_REQUIRED"))
+            given(interactor.currentRecoveryCode())
+                .willReturn("WALLET_MIGRATION_RECOVERY_REQUIRED")
+            given(interactor.canContinueLegacyWallet()).willReturn(false)
+            given(interactor.recoveryOptions("WALLET_MIGRATION_RECOVERY_REQUIRED"))
+                .willReturn(options("WALLET_MIGRATION_RECOVERY_REQUIRED"))
+
+            splashViewModel.nextScreen()
+            advanceUntilIdle()
+
+            val recovery = splashViewModel.showMigrationRecovery.getOrAwaitValue()
+            assertEquals("WALLET_MIGRATION_RECOVERY_REQUIRED", recovery.code)
+            assertEquals(true, recovery.options?.canRetry)
+            verify(interactor, never()).getRegistrationState()
+        }
+
+    @Test
+    fun `unexpected error while routing shows the recovery options instead of crashing`() =
+        runTest {
+            given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+            given(interactor.getRegistrationState())
+                .willThrow(IllegalStateException("DATASTORE_UNREADABLE"))
+            given(interactor.currentRecoveryCode()).willReturn(null)
+            given(interactor.canContinueLegacyWallet()).willReturn(false)
+            given(interactor.recoveryOptions("WALLET_VERIFICATION_FAILED"))
+                .willReturn(options("WALLET_VERIFICATION_FAILED"))
+
+            splashViewModel.nextScreen()
+            advanceUntilIdle()
+
+            assertEquals(
+                "WALLET_VERIFICATION_FAILED",
+                splashViewModel.showMigrationRecovery.getOrAwaitValue().code,
+            )
+        }
 
     @Test
     fun `failed explicit retry remains recovery and preserves legacy option`() = runTest {
@@ -283,22 +349,89 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `every recovery state offers retry, phrase restore and support`() = runTest {
+    fun `every recovery state offers retry and support`() = runTest {
         listOf(
             "KEYSTORE_UNAVAILABLE",
             "KEYSTORE_KEY_UNAVAILABLE",
             "INSUFFICIENT_BACKUP_STORAGE",
+            "STORAGE_IO",
             "WALLET_MIGRATION_RECOVERY_REQUIRED",
             "WALLET_DELETION_JOURNAL_INVALID",
+            "DATABASE_CORRUPT",
+            "PREFERENCES_INVENTORY_INVALID",
         ).forEach { code ->
             val options = options(code)
-            assertEquals(true, options.canRetry)
-            assertEquals(true, options.canRestoreFromPhrase)
-            assertEquals(true, options.canRestoreFromDrive)
-            assertEquals(true, options.canContactSupport)
+            assertEquals(code, true, options.canRetry)
+            assertEquals(code, true, options.canContactSupport)
+            // Restore is offered exactly where set-up-again makes it possible.
+            assertEquals(code, options.canSetUpAgain, options.canRestoreFromPhrase)
+            assertEquals(code, options.canSetUpAgain, options.canRestoreFromDrive)
+            assertEquals(code, options.canSetUpAgain, options.restoreNeedsSetUpAgain)
         }
         assertEquals(false, options("KEYSTORE_KEY_UNAVAILABLE").canShowPhraseAfterPin)
         assertEquals(true, options("KEYSTORE_UNAVAILABLE").retryAutomatically)
+    }
+
+    @Test
+    fun `set up again is not offered for states that pass on their own or need space`() =
+        runTest {
+            listOf("KEYSTORE_UNAVAILABLE", "STORAGE_IO", "DATABASE_LOCKED").forEach { code ->
+                val options = options(code)
+                assertEquals(code, WalletRecoveryKind.TRANSIENT, options.kind)
+                assertEquals(code, false, options.canSetUpAgain)
+                assertEquals(code, SetUpAgainScope.NONE, options.setUpAgainScope)
+                assertEquals(code, true, options.retryAutomatically)
+            }
+            listOf("INSUFFICIENT_BACKUP_STORAGE", "STORAGE_FULL").forEach { code ->
+                val options = options(code)
+                assertEquals(code, WalletRecoveryKind.STORAGE, options.kind)
+                assertEquals(code, false, options.canSetUpAgain)
+                assertEquals(code, SetUpAgainScope.NONE, options.setUpAgainScope)
+            }
+        }
+
+    @Test
+    fun `set up again keeps every key in place unless this phone cannot use them`() = runTest {
+        // Database and verification problems: only the database is set aside, so every stored
+        // key set stays adoptable.
+        listOf(
+            "WALLET_MIGRATION_RECOVERY_REQUIRED",
+            "MIGRATION_RECOVERY_SNAPSHOT_INVALID",
+            "DATABASE_CORRUPT",
+            "WALLET_DELETION_JOURNAL_INVALID",
+            "DATABASE_DOWNGRADE_UNSUPPORTED",
+        ).forEach { code ->
+            assertEquals(code, SetUpAgainScope.DATABASE_ONLY, options(code).setUpAgainScope)
+        }
+        // Keys that cannot be used here, or preference files that cannot be read.
+        listOf("KEYSTORE_KEY_UNAVAILABLE", "PREFERENCES_INVENTORY_INVALID").forEach { code ->
+            assertEquals(code, SetUpAgainScope.ALL_WALLET_FILES, options(code).setUpAgainScope)
+        }
+    }
+
+    @Test
+    fun `read only is never offered while the wallet key cannot be used`() = runTest {
+        // The main screen decrypts the app PIN as soon as it opens.
+        assertEquals(false, options("KEYSTORE_KEY_UNAVAILABLE").canReadOnly)
+        assertEquals(false, options("KEYSTORE_UNAVAILABLE").canReadOnly)
+        val transientKeystore = WalletRecoveryOptions.forState(
+            code = "KEYSTORE_UNAVAILABLE",
+            transientFailure = true,
+            facts = RecoveryFacts(accountsReadableReadOnly = true),
+        )
+        assertEquals(false, transientKeystore.canReadOnly)
+        val blockedWhileKeyMissing = WalletRecoveryOptions.forState(
+            code = "WALLET_MIGRATION_RECOVERY_REQUIRED",
+            transientFailure = false,
+            facts = RecoveryFacts(
+                hasMigrationRecoverySnapshot = true,
+                keyMaterialUnavailable = true,
+            ),
+        )
+        assertEquals(false, blockedWhileKeyMissing.canReadOnly)
+        // A readable database with a usable key: read-only works.
+        assertEquals(true, options("STORAGE_IO").canReadOnly)
+        assertEquals(true, options("WALLET_MIGRATION_RECOVERY_REQUIRED").canReadOnly)
     }
 
     private fun options(code: String) = WalletRecoveryOptions.forState(

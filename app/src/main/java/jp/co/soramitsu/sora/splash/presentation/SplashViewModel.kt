@@ -46,6 +46,7 @@ import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.PendingRecoveryStartupScheduler
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -94,32 +95,46 @@ class SplashViewModel @Inject constructor(
 
     fun nextScreen() {
         viewModelScope.launch {
-            val migrationDone = interactor.getMigrationDoneAsync().await()
-            FirebaseWrapper.log("Splash next screen $migrationDone")
-            if (!migrationDone) {
-                showMigrationRecovery.value = recoveryState(
-                    code = interactor.getMigrationFailureCode() ?: "WALLET_VERIFICATION_FAILED",
-                )
-                return@launch
-            }
-            pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()
-            when (val state = interactor.getRegistrationState()) {
-                OnboardingState.REGISTRATION_FINISHED -> {
-                    // Registration finished but no account row remains (for example the database
-                    // was lost while the keys were kept): onboarding offers restore instead of an
-                    // empty main screen.
-                    if (interactor.hasExistingWallet()) {
-                        showMainScreen.trigger()
-                    } else {
-                        showOnBoardingScreen.value = OnboardingState.INITIAL
-                    }
+            try {
+                val migrationDone = interactor.getMigrationDoneAsync().await()
+                FirebaseWrapper.log("Splash next screen $migrationDone")
+                if (!migrationDone) {
+                    showMigrationRecovery.value = recoveryState(
+                        code = failureCode("WALLET_VERIFICATION_FAILED"),
+                    )
+                    return@launch
                 }
-                OnboardingState.INITIAL -> {
-                    if (interactor.hasExistingWallet()) {
-                        showMainScreen.trigger()
-                    } else {
-                        showOnBoardingScreen.value = state
-                    }
+                routeAfterVerifiedWallet()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Throwable) {
+                // Startup never crashes into a loop: anything unexpected shows the recovery
+                // options (Try again, support) instead.
+                showRecoveryAfterUnexpectedError("WALLET_VERIFICATION_FAILED")
+            }
+        }
+    }
+
+    /**
+     * The wallet verified. Registration finished without any account row (for example the
+     * database was lost or set aside while the keys were kept, or every account was removed)
+     * opens onboarding, which offers restore, instead of an empty main screen.
+     */
+    private suspend fun routeAfterVerifiedWallet() {
+        pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()
+        when (val state = interactor.getRegistrationState()) {
+            OnboardingState.REGISTRATION_FINISHED -> {
+                if (interactor.hasExistingWallet()) {
+                    showMainScreen.trigger()
+                } else {
+                    showOnBoardingScreen.value = OnboardingState.INITIAL
+                }
+            }
+            OnboardingState.INITIAL -> {
+                if (interactor.hasExistingWallet()) {
+                    showMainScreen.trigger()
+                } else {
+                    showOnBoardingScreen.value = state
                 }
             }
         }
@@ -127,31 +142,64 @@ class SplashViewModel @Inject constructor(
 
     fun continueLegacyWallet() {
         viewModelScope.launch {
-            if (interactor.canContinueLegacyWallet()) {
-                showMainScreen.trigger()
-            } else {
-                showMigrationRecovery.value = recoveryState(
-                    code = interactor.getMigrationFailureCode()
-                        ?: "LEGACY_WALLET_SELECTION_UNAVAILABLE",
-                    canContinueLegacyWallet = false,
-                )
+            try {
+                if (interactor.canContinueLegacyWallet()) {
+                    showMainScreen.trigger()
+                } else {
+                    showMigrationRecovery.value = recoveryState(
+                        code = failureCode("LEGACY_WALLET_SELECTION_UNAVAILABLE"),
+                        canContinueLegacyWallet = false,
+                    )
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Throwable) {
+                showRecoveryAfterUnexpectedError("LEGACY_WALLET_SELECTION_UNAVAILABLE")
             }
         }
     }
 
     fun retryWalletMigration() {
         viewModelScope.launch {
-            val migrationDone = withContext(coroutineManager.io) {
-                interactor.retryMigration()
+            try {
+                val migrationDone = withContext(coroutineManager.io) {
+                    interactor.retryMigration()
+                }
+                if (migrationDone) {
+                    // The same routing as a normal start: a retry that verifies a phone with no
+                    // account (for example after a busy Keystore with only retained keys) opens
+                    // onboarding, never an empty main screen.
+                    routeAfterVerifiedWallet()
+                } else {
+                    showMigrationRecovery.value = recoveryState(
+                        code = failureCode("WALLET_VERIFICATION_FAILED"),
+                    )
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Throwable) {
+                showRecoveryAfterUnexpectedError("WALLET_VERIFICATION_FAILED")
             }
-            if (migrationDone) {
-                pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()
-                showMainScreen.trigger()
-            } else {
-                showMigrationRecovery.value = recoveryState(
-                    code = interactor.getMigrationFailureCode() ?: "WALLET_VERIFICATION_FAILED",
-                )
-            }
+        }
+    }
+
+    private suspend fun failureCode(default: String): String =
+        try {
+            interactor.getMigrationFailureCode()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            null
+        } ?: interactor.currentRecoveryCode() ?: default
+
+    private suspend fun showRecoveryAfterUnexpectedError(default: String) {
+        val code = interactor.currentRecoveryCode() ?: default
+        showMigrationRecovery.value = try {
+            recoveryState(code)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            WalletMigrationRecoveryUiState(code = code, canContinueLegacyWallet = false)
         }
     }
 
