@@ -49,6 +49,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
@@ -226,7 +227,18 @@ class PinCodeViewModel @Inject constructor(
                         }
                     } catch (t: Throwable) {
                         onError(t)
-                        action = PinCodeAction.CREATE_PIN_CODE
+                        if (t is KeyMaterialUnavailableException) {
+                            // The stored PIN exists but the wallet key cannot be used right now
+                            // (busy or missing Keystore key). Keep asking for the existing PIN;
+                            // offering to create a new one would replace the stored PIN.
+                            state = state.copy(
+                                toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
+                                isBackButtonVisible = false
+                            )
+                            showFingerPrintEventLiveData.value = isBiometryEnabled
+                        } else {
+                            action = PinCodeAction.CREATE_PIN_CODE
+                        }
                     }
                 }
             }

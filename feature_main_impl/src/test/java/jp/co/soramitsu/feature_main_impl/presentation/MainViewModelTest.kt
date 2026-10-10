@@ -40,6 +40,7 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.domain.RepeatStrategy
 import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
@@ -135,5 +136,27 @@ class MainViewModelTest {
         verify(assetsInteractor).updateWhitelistBalances()
         verify(blockExplorerManager, times(3)).updateFiat()
         assertFalse(mainViewModel.badConnectionVisibilityLiveData.getOrAwaitValue())
+    }
+
+    @Test
+    fun `pin screen opens without crashing when the wallet key cannot be used`() = runTest {
+        // For example the Keystore key did not move with a phone-to-phone transfer: reading the
+        // stored PIN fails. The PIN screen still opens (and checks again there).
+        whenever(pinCodeInteractor.isPincodeUpdateNeeded())
+            .thenThrow(KeyMaterialUnavailableException("alias missing", transient = false))
+        mainViewModel = MainViewModel(
+            assetsInteractor,
+            nodeManager,
+            pinCodeInteractor,
+            globalSubscriptionManager,
+            blockExplorerManager,
+            coroutineManager,
+            poolUpdateSubscription,
+        )
+
+        mainViewModel.showPinFragment()
+        advanceTimeBy(42000)
+
+        assertFalse(mainViewModel.isPincodeUpdateNeeded.getOrAwaitValue())
     }
 }
