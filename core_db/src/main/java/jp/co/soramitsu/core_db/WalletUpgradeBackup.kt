@@ -150,6 +150,12 @@ object WalletUpgradeBackup {
     // Later explicit retries must perform the full gate and must not mint another startup token.
     private var applicationAttachPreparationAttempted = false
 
+    // An automatic verification retry was tried in this process and could not be authorized
+    // (for example its counter could not be saved on a full disk). The recovery options are then
+    // shown at once instead of waiting for a retry that cannot happen.
+    @Volatile
+    private var automaticRetryFailedInProcess = false
+
     /** Material that is set aside (never deleted) because no account row owns it. */
     @Volatile
     private var quarantine: WalletQuarantine = WalletQuarantine.NONE
@@ -193,8 +199,8 @@ object WalletUpgradeBackup {
 
     /**
      * The forward paths available for the current blocking or transient state, or null when the
-     * wallet is usable. Every state offers at least Try again, Restore with recovery phrase and
-     * Contact support.
+     * wallet is usable. Every state offers at least Try again and Contact support; the other
+     * paths are offered only where they work (see [WalletRecoveryOptions]).
      */
     fun recoveryOptions(): WalletRecoveryOptions? {
         val failure = blockingFailure
@@ -205,11 +211,17 @@ object WalletUpgradeBackup {
             transientFailure = failure == null && transient != null,
             facts = recoveryFacts.copy(
                 hasMigrationRecoverySnapshot = migrationRecoverySnapshot != null,
+                keyMaterialUnavailable = isWalletKeyUnavailable(),
             ),
             requiredBytes = failure?.requiredBytes,
             availableBytes = failure?.availableBytes,
         )
     }
+
+    /** The wallet key cannot be used right now (missing Keystore key or busy Keystore). */
+    private fun isWalletKeyUnavailable(): Boolean =
+        WalletRecoveryOptions.isKeyMaterialUnavailable(blockingFailure?.code) ||
+            WalletRecoveryOptions.isKeyMaterialUnavailable(transientVerificationFailure)
 
     fun canAuthorizeMigrationRetry(): Boolean {
         if (transientVerificationFailure != null && migrationRecoverySnapshot == null) {
@@ -243,6 +255,7 @@ object WalletUpgradeBackup {
         val firstInProcess = retainStartupAdmission || processStartForTest
         processStartForTest = false
         if (firstInProcess) {
+            automaticRetryFailedInProcess = false
             // Only the first preparation of a process may set wallet files aside: nothing has
             // opened the DataStore or Room yet, so no open handle can write the old data back.
             val applicationContext = context.applicationContext ?: context
@@ -314,13 +327,24 @@ object WalletUpgradeBackup {
         val failure = blockingFailure ?: return false
         if (
             failure.code != "WALLET_MIGRATION_RECOVERY_REQUIRED" ||
-            migrationRecoverySnapshot == null
+            migrationRecoverySnapshot == null ||
+            automaticRetryFailedInProcess
         ) {
             return false
         }
         val applicationContext = context.applicationContext ?: context
-        if (!claimMigrationRetry(applicationContext)) return false
+        if (automaticMigrationRetriesUsed(applicationContext) >= MAX_AUTOMATIC_MIGRATION_RETRIES) {
+            return false
+        }
+        // From here on this process has tried. If the counter cannot be saved or the retry
+        // cannot be authorized, the recovery options are shown now rather than after a retry
+        // that cannot happen.
+        if (!claimMigrationRetry(applicationContext)) {
+            automaticRetryFailedInProcess = true
+            return false
+        }
         if (authorizeMigrationRetry(applicationContext).isSuccess) return true
+        automaticRetryFailedInProcess = true
         blockingFailure = failure
         WalletRecoveryCapabilityGate.enterBlocked()
         return false
@@ -329,7 +353,8 @@ object WalletUpgradeBackup {
     /** True when [authorizeAutomaticMigrationRetry] would retry. Reads one small file. */
     @Synchronized
     fun isAutomaticMigrationRetryAvailable(context: Context): Boolean =
-        blockingFailure?.code == "WALLET_MIGRATION_RECOVERY_REQUIRED" &&
+        !automaticRetryFailedInProcess &&
+            blockingFailure?.code == "WALLET_MIGRATION_RECOVERY_REQUIRED" &&
             migrationRecoverySnapshot != null &&
             automaticMigrationRetriesUsed(context.applicationContext ?: context) <
             MAX_AUTOMATIC_MIGRATION_RETRIES
@@ -346,22 +371,79 @@ object WalletUpgradeBackup {
     }
 
     /**
-     * "Set up this device again (keeps old data)". Records the request durably; the next app
-     * process, before anything opens the wallet files, renames the database, the preference
-     * files and the wrapped-key file into `no_backup/wallet-quarantine-<time>-set-up-again/`
+     * "Set up this device again (keeps old data)", offered when
+     * [WalletRecoveryOptions.canSetUpAgain]. Records the request and its
+     * [WalletRecoveryOptions.setUpAgainScope] durably; the next app process, before anything opens
+     * the wallet files, renames them into `no_backup/wallet-quarantine-<time>-set-up-again/`
      * (renamed, never copied and deleted, never removed). The Android Keystore key is not touched.
+     *
+     * - [SetUpAgainScope.DATABASE_ONLY]: only the database moves. Every stored key set stays in
+     *   place and is offered again (import adopts a matching key set; "Restore wallets found on
+     *   this phone" adopts the others).
+     * - [SetUpAgainScope.ALL_WALLET_FILES]: the preference files and the wrapped key move too,
+     *   because this phone cannot use them (missing Keystore key, unreadable preference files).
+     *
      * The app then starts like a new install, and the person restores with a recovery phrase or a
-     * Google Drive backup. The caller restarts the app process after this succeeds.
+     * Google Drive backup. The caller restarts the app process after this succeeds. Refused
+     * (SET_UP_AGAIN_NOT_AVAILABLE) when no recovery state offers it.
      */
     @Synchronized
     fun requestSetUpAgain(context: Context): Result<Unit> = runCatching {
-        val applicationContext = context.applicationContext ?: context
-        val marker = File(applicationContext.noBackupFilesDir, SET_UP_AGAIN_MARKER)
-        if (!marker.existsNoFollowOrThrow("SET_UP_AGAIN_REQUEST_FAILED")) {
-            writeDurably(marker, "requested")
-            fsyncDirectory(applicationContext.noBackupFilesDir)
+        val scope = recoveryOptions()?.setUpAgainScope ?: SetUpAgainScope.NONE
+        if (scope == SetUpAgainScope.NONE) {
+            throw WalletUpgradeBackupException("SET_UP_AGAIN_NOT_AVAILABLE")
         }
+        val applicationContext = context.applicationContext ?: context
+        val noBackup = applicationContext.noBackupFilesDir
+        val marker = File(noBackup, SET_UP_AGAIN_MARKER)
+        if (
+            marker.existsNoFollowOrThrow("SET_UP_AGAIN_REQUEST_FAILED") &&
+            pendingSetUpAgainScope(marker) == SetUpAgainScope.ALL_WALLET_FILES
+        ) {
+            // A wider request is already waiting; never narrow it silently.
+            return@runCatching
+        }
+        // Written beside the marker, then renamed over it: a crash leaves the old request or the
+        // new one, never a half-written scope.
+        val staging = File(noBackup, ".$SET_UP_AGAIN_MARKER.tmp")
+        if (staging.existsNoFollowOrThrow("SET_UP_AGAIN_REQUEST_FAILED")) {
+            Os.remove(staging.absolutePath)
+        }
+        writeDurably(staging, scope.name)
+        try {
+            Os.rename(staging.absolutePath, marker.absolutePath)
+        } catch (_: ErrnoException) {
+            throw WalletUpgradeBackupException("SET_UP_AGAIN_REQUEST_FAILED")
+        }
+        fsyncDirectory(noBackup)
     }
+
+    /** The set-up-again request waiting for the next app start, or null when there is none. */
+    fun pendingSetUpAgainScope(context: Context): SetUpAgainScope? =
+        runCatching {
+            val marker = File(
+                (context.applicationContext ?: context).noBackupFilesDir,
+                SET_UP_AGAIN_MARKER,
+            )
+            if (marker.existsNoFollowOrThrow("SET_UP_AGAIN_REQUEST_FAILED")) {
+                pendingSetUpAgainScope(marker)
+            } else {
+                null
+            }
+        }.getOrNull()
+
+    /**
+     * Reads a request's scope. Anything that is not exactly [SetUpAgainScope.ALL_WALLET_FILES]
+     * (an unreadable marker, or one written by an earlier 3.9.0 test build) moves only the
+     * database: the scope that leaves every key in place.
+     */
+    private fun pendingSetUpAgainScope(marker: File): SetUpAgainScope =
+        runCatching {
+            marker.readBoundedUtf8NoFollow(1, 64, "SET_UP_AGAIN_INCOMPLETE").trim()
+        }.getOrNull()
+            ?.takeIf { it == SetUpAgainScope.ALL_WALLET_FILES.name }
+            ?.let { SetUpAgainScope.ALL_WALLET_FILES }
+            ?: SetUpAgainScope.DATABASE_ONLY
 
     /** True while a set-up-again request waits for the next app start. */
     fun isSetUpAgainRequested(context: Context): Boolean =
@@ -452,6 +534,7 @@ object WalletUpgradeBackup {
             )
         }
         if (failure == null) {
+            automaticRetryFailedInProcess = false
             WalletRecoveryCapabilityGate.enterNormal()
             // A failed metadata capture only forfeits the shortcut; the already-completed
             // preparation remains valid and requirePrepared() will conservatively run it again.
@@ -636,6 +719,7 @@ object WalletUpgradeBackup {
         migrationRecoverySnapshot = null
         blockingFailure = null
         transientVerificationFailure = null
+        automaticRetryFailedInProcess = false
         WalletRecoveryCapabilityGate.enterNormal()
     }
 
@@ -656,6 +740,11 @@ object WalletUpgradeBackup {
             transientVerificationFailure == null
         ) {
             return@runCatching SafeReadOnlyRoute.NORMAL_ACCESS
+        }
+        if (isWalletKeyUnavailable()) {
+            // The main screen decrypts the app PIN as soon as it opens; with no usable wallet key
+            // that fails. Only the Room-free view works until a retry succeeds.
+            return@runCatching SafeReadOnlyRoute.VAULT_ONLY
         }
         if (migrationRecoverySnapshot != null) {
             authorizeLegacyReadOnly(context).getOrThrow()
@@ -3513,15 +3602,18 @@ object WalletUpgradeBackup {
 
     /**
      * Carries out a [requestSetUpAgain] request at the start of a new process, before anything
-     * opens the wallet files. Each existing wallet file is renamed (same filesystem, atomic) into
-     * `no_backup/wallet-quarantine-<time>-set-up-again/`, keeping its relative path; nothing is
-     * copied, rewritten or deleted, and the Android Keystore key is not touched. If a rename fails
-     * the request stays recorded and the next start finishes it; files already moved stay moved.
+     * opens the wallet files. Each file in the request's scope is renamed (same filesystem,
+     * atomic) into `no_backup/wallet-quarantine-<time>-set-up-again/`, keeping its relative path;
+     * nothing is copied, rewritten or deleted, and the Android Keystore key is not touched. For
+     * [SetUpAgainScope.DATABASE_ONLY] the encrypted preferences and the wrapped key stay exactly
+     * where they are. If a rename fails the request stays recorded and the next start finishes
+     * it; files already moved stay moved.
      */
     private fun performPendingSetUpAgain(context: Context) {
         val noBackup = context.noBackupFilesDir
         val marker = File(noBackup, SET_UP_AGAIN_MARKER)
         if (!marker.existsNoFollowOrThrow("SET_UP_AGAIN_INCOMPLETE")) return
+        val scope = pendingSetUpAgainScope(marker)
         withPublicationLock(
             directory = noBackup,
             lockName = BACKUP_PUBLICATION_LOCK,
@@ -3530,22 +3622,28 @@ object WalletUpgradeBackup {
             val dataDir = File(context.applicationInfo.dataDir)
             val database = context.getDatabasePath(DATABASE_NAME)
             val dataStoreDirectory = File(context.filesDir, "datastore")
-            val groups = listOf(
-                "databases" to listOf(
-                    database,
-                    File("${database.path}-wal"),
-                    File("${database.path}-shm"),
-                    File("${database.path}-journal"),
-                ),
-                "files/datastore" to dataStoreDirectory.listFiles().orEmpty()
-                    .filter { it.name.startsWith("sora_prefs_datastore.preferences_pb") },
-                "shared_prefs" to listOf(
-                    "sora_prefs.xml",
-                    "sora_prefs.xml.bak",
-                    "key_alias.xml",
-                    "key_alias.xml.bak",
-                ).map { File(dataDir, "shared_prefs/$it") },
-            ).map { (folder, files) ->
+            val databaseGroup = "databases" to listOf(
+                database,
+                File("${database.path}-wal"),
+                File("${database.path}-shm"),
+                File("${database.path}-journal"),
+            )
+            val keyGroups = if (scope == SetUpAgainScope.ALL_WALLET_FILES) {
+                listOf(
+                    "files/datastore" to dataStoreDirectory.listFiles().orEmpty()
+                        .filter { it.name.startsWith("sora_prefs_datastore.preferences_pb") },
+                    "shared_prefs" to listOf(
+                        "sora_prefs.xml",
+                        "sora_prefs.xml.bak",
+                        "key_alias.xml",
+                        "key_alias.xml.bak",
+                    ).map { File(dataDir, "shared_prefs/$it") },
+                )
+            } else {
+                // The database holds no secrets; every key set stays in place and adoptable.
+                emptyList()
+            }
+            val groups = (listOf(databaseGroup) + keyGroups).map { (folder, files) ->
                 folder to files.filter { it.existsNoFollowOrThrow("SET_UP_AGAIN_INCOMPLETE") }
             }.filter { (_, files) -> files.isNotEmpty() }
             if (groups.isNotEmpty()) {
@@ -3579,6 +3677,8 @@ object WalletUpgradeBackup {
                     runCatching { fsyncDirectory(requireNotNull(File(destination, folder).parentFile)) }
                 }
             }
+            // The old verification journal moved with the database; its retry count goes too.
+            resetAutomaticMigrationRetries(context)
             Os.remove(marker.absolutePath)
             fsyncDirectory(noBackup)
         }
