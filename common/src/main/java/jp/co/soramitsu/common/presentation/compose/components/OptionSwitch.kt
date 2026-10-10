@@ -49,12 +49,14 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -109,12 +111,15 @@ fun OptionSwitch(
                     checked = checked,
                     enabled = available,
                     onCheckedChange = onClick,
+                    // SORA Neon toggle (design spec 7.8): cyan track when on; when off, a grey
+                    // thumb (border.input, 3:1 on the card) so the state never relies on a
+                    // white-on-white thumb.
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.customColors.bgSurface,
-                        checkedTrackColor = MaterialTheme.customColors.accentPrimary,
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = MaterialTheme.neon.cyan,
                         checkedTrackAlpha = 1f,
-                        uncheckedThumbColor = MaterialTheme.customColors.bgSurface,
-                        uncheckedTrackColor = MaterialTheme.customColors.accentSecondaryContainer,
+                        uncheckedThumbColor = MaterialTheme.neon.borderInput,
+                        uncheckedTrackColor = MaterialTheme.neon.divider,
                         uncheckedTrackAlpha = 1f,
                     )
                 )
