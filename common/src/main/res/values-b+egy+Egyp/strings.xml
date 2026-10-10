@@ -28,7 +28,7 @@
   <string name="activity_empty_content_title">𓈖𓏏𓎡 𓂋 𓅓𓄿𓄿 𓈖𓎡 𓇋𓂋𓅱𓏏 𓅓𓋴𓏏𓏏𓈖 𓋴𓊪𓅱𓂝 𓈖𓏏𓎡 𓈙𓂝 𓇋𓂋𓏏𓋴𓅱𓈖𓏏</string>
   <string name="activity_error_title">𓂋𓐍 𓈖 𓇋𓈖𓇋 𓈖𓎡 𓇋𓂋𓅱𓏏. 𓇋𓂋 𓂋 𓋴𓅓𓄿𓅱 𓋴𓈙𓅱</string>
   <string name="activity_pool_title">𓈙</string>
-  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is always up to date.</string>
+  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is not affected.</string>
   <string name="activity_referral_title">𓇋𓄿𓋴𓏏 𓂧𓅓𓆓</string>
   <string name="add_liquidity_alert_text">𓈖𓏏𓎡 𓂋 𓈙𓋴𓊪 𓃀𓄿𓎡𓅱 𓅓𓇋𓊪𓋴𓈙𓏏 𓂋 𓈖𓎡 𓊪𓋴𓈙 𓈖 𓈙 𓅓 𓐍𓏏𓅱𓈙𓅓𓅱 𓂋𓂧𓇋𓏏.</string>
   <string name="add_liquidity_confirmation_title">𓋴𓅓𓈖 𓂋𓂧𓇋</string>

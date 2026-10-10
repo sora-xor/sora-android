@@ -28,7 +28,7 @@
   <string name="activity_empty_content_title">Bạn sẽ thấy hoạt động của mình ở đây khi bạn bắt đầu giao dịch</string>
   <string name="activity_error_title">Không thể tải hoạt động của bạn. Cố gắng làm mới danh sách</string>
   <string name="activity_pool_title">Pool</string>
-  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is always up to date.</string>
+  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is not affected.</string>
   <string name="activity_referral_title">Đã tham gia giới thiệu</string>
   <string name="add_liquidity_alert_text">Bạn sẽ kiếm được tương ứng với tỷ lệ chia sẻ của bạn trong pool từ việc cung cấp thanh khoản.</string>
   <string name="add_liquidity_confirmation_title">Xác nhận cung cấp</string>
