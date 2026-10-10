@@ -74,6 +74,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -87,6 +88,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -101,6 +103,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
@@ -636,11 +640,13 @@ private fun StepGlyph(state: SafeStepState) {
             modifier = Modifier.size(24.dp),
             contentAlignment = Alignment.Center,
         ) {
+            // Amber, the only "needs action" colour in Safe Mode. `warning` (not the light
+            // `warningFill`) keeps 3:1 against the surface in both themes.
             Box(
                 Modifier
                     .size(14.dp)
                     .clip(CircleShape)
-                    .background(n.warningFill),
+                    .background(n.warning),
             )
         }
     }
@@ -670,6 +676,17 @@ fun SafeSheet(
             dismissOnClickOutside = dismissEnabled,
         ),
     ) {
+        // The dialog window draws behind the system bars: keep their icons readable on the scrim.
+        val view = LocalView.current
+        val dark = n.isDark
+        SideEffect {
+            (view.parent as? DialogWindowProvider)?.window?.let { window ->
+                WindowCompat.getInsetsController(window, view).apply {
+                    isAppearanceLightStatusBars = !dark
+                    isAppearanceLightNavigationBars = !dark
+                }
+            }
+        }
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()

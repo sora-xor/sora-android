@@ -46,6 +46,7 @@ import java.io.File
 import java.text.DateFormat
 import java.util.Date
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.backup.CloudBackupProvider
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeStepState
 import jp.co.soramitsu.core_db.WalletRecoveryOptions
@@ -58,7 +59,6 @@ import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationProgress
 import jp.co.soramitsu.sora.BuildConfig
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -163,6 +163,7 @@ class SafeModeViewModel @Inject constructor(
     private val credentialsDatasource: CredentialsDatasource,
     private val userDatasource: UserDatasource,
     private val cloudBackupProvider: CloudBackupProvider,
+    private val coroutineManager: CoroutineManager,
 ) : ViewModel() {
 
     private val mutableState = MutableStateFlow(SafeModeUiState())
@@ -219,10 +220,23 @@ class SafeModeViewModel @Inject constructor(
         }
     }
 
+    private var pausedSincePanel = false
+    private var authenticating = false
+
+    /** Set only by a confirmed PIN, biometrics or screen lock; cleared when the flow closes. */
+    private var authenticated = false
+
+    fun onPaused() {
+        pausedSincePanel = true
+    }
+
     /** The storage screen checks again when the person comes back (for example from Settings). */
     fun onResumed() {
+        val returned = pausedSincePanel
+        pausedSincePanel = false
         val current = state.value
         if (
+            returned &&
             current.visible &&
             current.progress == null &&
             current.panel?.kind == RecoveryPanelKind.STORAGE &&
@@ -233,9 +247,12 @@ class SafeModeViewModel @Inject constructor(
         }
     }
 
-    /** The person left the app: drop any revealed phrase (the flow starts again with the PIN). */
+    /**
+     * The person left the app: drop any revealed phrase (the flow starts again with the PIN).
+     * The phone's own screen-lock confirmation also stops this screen; that one is expected.
+     */
     fun onStopped() {
-        if (state.value.reveal != null) closeReveal()
+        if (state.value.reveal != null && !authenticating) closeReveal()
     }
 
     fun onAction(action: RecoveryAction) {
@@ -283,7 +300,7 @@ class SafeModeViewModel @Inject constructor(
                 mutableState.update { it.copy(runningLong = true) }
             }
             val result = try {
-                withContext(Dispatchers.IO) { runCatching { work() } }
+                withContext(coroutineManager.io) { runCatching { work() } }
             } finally {
                 long.cancel()
             }
@@ -510,11 +527,12 @@ class SafeModeViewModel @Inject constructor(
     fun startReveal() {
         autoRetryJob?.cancel()
         enteredPin.clear()
+        authenticated = false
         mutableState.update { it.copy(reveal = RevealUi.Auth(loading = true)) }
         viewModelScope.launch {
             val lock = pinAttempts.lockRemainingMillis()
-            val stored = withContext(Dispatchers.IO) { runCatching { userDatasource.retrievePin() } }
-            val biometryEnabled = withContext(Dispatchers.IO) {
+            val stored = withContext(coroutineManager.io) { runCatching { userDatasource.retrievePin() } }
+            val biometryEnabled = withContext(coroutineManager.io) {
                 runCatching { userDatasource.isBiometryEnabled() }.getOrDefault(false)
             }
             val pin = stored.getOrNull()
@@ -547,7 +565,13 @@ class SafeModeViewModel @Inject constructor(
     fun requestBiometric() {
         val auth = state.value.reveal as? RevealUi.Auth ?: return
         if (auth.error == AuthError.LOCKED) return
+        authenticating = true
         eventChannel.trySend(SafeModeEvent.Authenticate(deviceCredential = auth.noPin))
+    }
+
+    /** The system prompt closed without success (cancelled or failed). */
+    fun onAuthenticationEnded() {
+        authenticating = false
     }
 
     fun pinDigit(digit: Char) {
@@ -577,18 +601,18 @@ class SafeModeViewModel @Inject constructor(
         enteredPin.clear()
         mutableState.update { it.copy(reveal = auth.copy(checking = true)) }
         viewModelScope.launch {
-            val stored = withContext(Dispatchers.IO) { runCatching { userDatasource.retrievePin() } }
+            val stored = withContext(coroutineManager.io) { runCatching { userDatasource.retrievePin() } }
             val pin = stored.getOrNull()
             when {
                 stored.isFailure || pin == null -> mutableState.update {
                     it.copy(reveal = auth.copy(entered = 0, checking = false, error = AuthError.UNAVAILABLE))
                 }
                 SafeModeVault.pinMatches(pin, entered) -> {
-                    withContext(Dispatchers.IO) { pinAttempts.reset() }
+                    withContext(coroutineManager.io) { pinAttempts.reset() }
                     onAuthenticated()
                 }
                 else -> {
-                    val after = withContext(Dispatchers.IO) { pinAttempts.recordFailure() }
+                    val after = withContext(coroutineManager.io) { pinAttempts.recordFailure() }
                     val lock = (after.lockedUntilMillis - System.currentTimeMillis()).coerceAtLeast(0)
                     mutableState.update {
                         it.copy(
@@ -607,7 +631,9 @@ class SafeModeViewModel @Inject constructor(
 
     /** PIN, biometrics or the phone's screen lock confirmed the person. */
     fun onAuthenticated() {
+        authenticating = false
         if (state.value.reveal !is RevealUi.Auth) return
+        authenticated = true
         val entries = SafeModeVault.entries(WalletUpgradeBackup.recoveryFacts())
         if (entries.size == 1) {
             openEntry(entries.single(), canGoBack = false)
@@ -617,12 +643,14 @@ class SafeModeViewModel @Inject constructor(
     }
 
     fun openEntry(entry: PhraseEntry, canGoBack: Boolean = true) {
+        // A phrase is read only after the person was confirmed in this flow.
+        if (!authenticated) return
         val current = state.value.reveal
         if (current is RevealUi.Wallets) {
             mutableState.update { it.copy(reveal = current.copy(loading = entry)) }
         }
         viewModelScope.launch {
-            val secret = withContext(Dispatchers.IO) {
+            val secret = withContext(coroutineManager.io) {
                 SafeModeVault.reveal(
                     entry = entry,
                     legacyOwner = WalletUpgradeBackup.recoveryFacts().legacyOwner,
@@ -655,6 +683,8 @@ class SafeModeViewModel @Inject constructor(
 
     fun closeReveal() {
         enteredPin.clear()
+        authenticated = false
+        authenticating = false
         mutableState.update { it.copy(reveal = null) }
     }
 
