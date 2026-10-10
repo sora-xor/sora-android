@@ -59,6 +59,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -191,7 +192,20 @@ fun NeonButton(
         Modifier.requiredHeightIn(min = size)
     }
     Box(
-        modifier = modifier.then(sizeModifier),
+        // The touch target (and the layout) is at least 48 x 48 dp even when the pill is Small
+        // (40) or ExtraSmall (32), as with the ui-core Material buttons (design spec 6, 10.1).
+        // clickable comes before minimumInteractiveComponentSize, so it covers the whole 48 dp.
+        modifier = modifier
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = enabled && !loading,
+                role = Role.Button,
+                onClick = onClick,
+            )
+            .semantics { if (loading) stateDescription = loadingLabel }
+            .minimumInteractiveComponentSize()
+            .then(sizeModifier),
         contentAlignment = Alignment.Center,
         propagateMinConstraints = true,
     ) {
@@ -229,15 +243,7 @@ fun NeonButton(
                     if (pressed && style.pressedOverlay != null) drawRect(style.pressedOverlay)
                 }
                 .then(if (style.edge != null) Modifier.neonBorder(shape, style.edge, fx) else Modifier)
-                .then(if (focused) Modifier.border(2.dp, n.focusRing, shape) else Modifier)
-                .clickable(
-                    interactionSource = interaction,
-                    indication = null,
-                    enabled = enabled && !loading,
-                    role = Role.Button,
-                    onClick = onClick,
-                )
-                .semantics { if (loading) stateDescription = loadingLabel },
+                .then(if (focused) Modifier.border(2.dp, n.focusRing, shape) else Modifier),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {

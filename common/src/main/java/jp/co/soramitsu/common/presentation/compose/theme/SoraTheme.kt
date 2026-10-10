@@ -45,8 +45,10 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalNeon
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonDark
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonDarkHighContrast
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonLight
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonLightHighContrast
 import jp.co.soramitsu.common.presentation.compose.theme.neon.rememberFxPolicy
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
@@ -94,6 +96,8 @@ import jp.co.soramitsu.ui_core.theme.opacities
  * - `MaterialTheme.neon` ([LocalNeon]) carries the tokens that have no slot (glass, glow,
  *   aurora, neumorphic shadows).
  * - [LocalFx] carries the effect tier for this device and the "Reduce effects" setting.
+ * - Under the system high-contrast setting (API 34+), tertiary text uses the secondary colour
+ *   and hairlines are twice as strong, in the ui-core slots and the neon tokens alike.
  */
 @Composable
 fun SoraAppTheme(
@@ -102,10 +106,11 @@ fun SoraAppTheme(
     content: @Composable () -> Unit,
 ) {
     val fx = rememberFxPolicy(reduceEffects)
+    val highContrast = fx.highContrast
     AppTheme(
         darkTheme = darkTheme,
-        lightColors = soraLightColors,
-        darkColors = soraDarkColors,
+        lightColors = if (highContrast) soraLightColorsHighContrast else soraLightColors,
+        darkColors = if (highContrast) soraDarkColorsHighContrast else soraDarkColors,
         typography = soraTypography,
         opacity = soraOpacity,
         borderRadius = soraBorderRadius,
@@ -126,7 +131,12 @@ fun SoraAppTheme(
                 shapes = soraMaterialShapes,
             ) {
                 CompositionLocalProvider(
-                    LocalNeon provides if (darkTheme) NeonDark else NeonLight,
+                    LocalNeon provides when {
+                        darkTheme && highContrast -> NeonDarkHighContrast
+                        darkTheme -> NeonDark
+                        highContrast -> NeonLightHighContrast
+                        else -> NeonLight
+                    },
                     LocalFx provides fx,
                     LocalContentColor provides palette.fgPrimary,
                     content = content,
@@ -185,6 +195,11 @@ private val soraDarkColors = darkColors(
     statusErrorContainer = NightThemeColors.StatusErrorContainer,
     elevation = NightThemeColors.Elevation,
 )
+
+/** Design spec 4.0 `highContrast`: `text.tertiary` → `text.secondary`. */
+internal val soraLightColorsHighContrast = soraLightColors.copy(fgTertiary = soraLightColors.fgSecondary)
+
+internal val soraDarkColorsHighContrast = soraDarkColors.copy(fgTertiary = soraDarkColors.fgSecondary)
 
 private val soraTypography: CustomTypography = defaultCustomTypography(
     displayL = displayL,
