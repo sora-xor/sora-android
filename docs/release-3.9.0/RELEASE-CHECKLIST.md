@@ -565,3 +565,74 @@ Product decisions to confirm:
       greyed other actions and the "Still working…" line after 10 s.
 - [ ] QA with Settings → Accessibility → Contrast raised (Android 14+):
       captions use the secondary text colour.
+
+## a6: Safe Mode recovery and upgrade screens
+
+### Sign-off (spec §9.1-2: every assurance needs an engineering owner)
+
+- [ ] Engineering owner signs off the assurance strings marked "verified:"
+      in `common/src/main/res/values/strings.xml` (`safe_mode_*`) and
+      `app/src/main/res/values/strings.xml` (`recovery_*`). Each note names
+      the code that makes the sentence true for its state.
+- [ ] Support and product approve the U6 copy, the Export sheet (it is a
+      file for support, not a backup), and the Contact support details
+      (code, app version, time, Android version; no addresses).
+- [ ] Support: confirm `support@sora.org` is the right address and whether
+      an official support web page should be added as a fallback (fix map
+      F11.2 open question).
+
+### Translations (release blocker per spec §9.1-6)
+
+- [ ] Translate every `safe_mode_*` (common) and `recovery_*` (app) string
+      into all production locales (ar, az, de, es, fa, fi, fr, hi, in, iw,
+      ms, nb, nl, pt, ru, sr, tr, vi, zh-CN, zh-TW). English and Japanese
+      are done; the other locale files carry the English text so nothing is
+      missing at runtime. The app module has no other production locale
+      folders: add `values-<locale>` there for the `recovery_*` strings.
+
+### QA (team test phones only, never a phone with real funds)
+
+- [ ] Damaged database (debug build): `adb shell run-as jp.co.soramitsu.sora`
+      and replace `databases/app.db` with any text, then open the app.
+      Expect U6 with `DATABASE_CORRUPT` under Technical details. Check Try
+      again, Export (share sheet), Contact support with and without an email
+      app, and "Restore with recovery phrase" (restarts into the welcome
+      screen; the old database is in `no_backup/wallet-quarantine-*`).
+- [ ] With a wallet that has a PIN, repeat the step above and use Show my
+      recovery phrase: wrong PIN refused, three wrong PINs lock for a
+      minute, the phrase stays veiled until tapped, a screenshot or the
+      recents screen shows nothing, and going home drops it.
+- [ ] After "Restore with recovery phrase", import a different phrase, then
+      More → Login & Security shows "Wallets found on this phone"; restore
+      it and check the address in Crypto Accounts.
+- [ ] Low storage (fill the phone before upgrading from 3.8.6.3 with a
+      database below the current schema): "Free up some space" shows the MB
+      needed, Open storage settings opens Settings, and coming back checks
+      again by itself.
+- [ ] Slow upgrade (a phone with many accounts, or an API 26 device): the
+      progress screen appears after 1.5 s, "Still working…" after 10 s,
+      Keep waiting / Get help after 60 s; Back does nothing while it runs.
+- [ ] 4-digit PIN from an old install: unlock shows "Choose a new 6-digit
+      PIN", then the 6-dot setup; afterwards "Welcome to the new SORA
+      Wallet" appears once.
+- [ ] Offline unlock (airplane mode): a 12/24-word wallet opens directly; an
+      unchecked 15-word v1 wallet shows "Waiting for network" with Change
+      node and continues when the network returns.
+- [ ] Read-only mode (Continue in read-only mode from U6): the home shows the
+      banner; Send / Swap are disabled with the reason; Try upgrade again
+      runs the check with the progress screen; balances refresh (the node
+      connection starts).
+- [ ] TalkBack on the U6 panel, the progress screen (live "Still working"
+      line), the PIN dots ("2 of 6 digits entered") and the phrase grid.
+- [ ] Font scale 200% on U4, U6 and the phrase grid: no clipping, the panel
+      scrolls.
+
+### Follow-ups
+
+- [ ] A per-account read-only label (account list and home) for accounts
+      whose keys are unavailable on this phone (a4 follow-up). Signing is
+      already refused for them.
+- [ ] Fix `WalletUxAcceptanceTest` (stale reflection on
+      `OnboardingViewModel.tempAccount`, removed in a4).
+- [ ] Regenerate the baseline profile once the screen migration lands (the
+      splash now has a Compose view; `animation_view` is unchanged).
