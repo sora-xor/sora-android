@@ -153,7 +153,7 @@ class PinCodeViewModel @Inject constructor(
                     isConnected = it
                 )
                 // U2: "We'll continue as soon as you're back online" - continue by itself.
-                if (reconnected && state.migrating) {
+                if (reconnected && state.migrating && state.checkNeedsNetwork) {
                     viewModelScope.launch { tryCatch { proceed() } }
                 }
             }
@@ -622,21 +622,25 @@ class PinCodeViewModel @Inject constructor(
      * checked on the phone, so being offline never keeps the person at this screen (U2).
      */
     private suspend fun proceed() {
+        // Set before the first suspension: a second trigger (reconnect, resume, biometrics
+        // dialog) while this one waits must not navigate a second time.
         if (proceeding || proceeded) return
-        state = state.copy(
-            migrating = true
-        )
-        val needsNetwork = try {
-            interactor.migrationCheckNeedsNetwork()
-        } catch (error: CancellationException) {
-            throw error
-        } catch (_: Throwable) {
-            // Unreadable right now: the optional check below is skipped, never waited for.
-            false
-        }
-        if (state.isConnected || !needsNetwork) {
-            proceeding = true
-            try {
+        proceeding = true
+        try {
+            val needsNetwork = try {
+                interactor.migrationCheckNeedsNetwork()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Throwable) {
+                // Unreadable right now: the optional check below is skipped, never waited for.
+                false
+            }
+            // Only a check that needs the network ever says it waits for it (U2).
+            state = state.copy(
+                migrating = true,
+                checkNeedsNetwork = needsNetwork,
+            )
+            if (state.isConnected || !needsNetwork) {
                 val needs = try {
                     interactor.needsMigration()
                 } catch (error: CancellationException) {
@@ -648,7 +652,8 @@ class PinCodeViewModel @Inject constructor(
                     false
                 }
                 state = state.copy(
-                    migrating = false
+                    migrating = false,
+                    checkNeedsNetwork = false,
                 )
                 proceeded = true
                 WalletSessionState.markUnlocked()
@@ -657,9 +662,10 @@ class PinCodeViewModel @Inject constructor(
                 } else {
                     mainRouter.popBackStack()
                 }
-            } finally {
-                proceeding = false
             }
+            // Otherwise it waits for the network; the reconnect handler calls this again.
+        } finally {
+            proceeding = false
         }
     }
 

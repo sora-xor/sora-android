@@ -48,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -116,7 +117,8 @@ fun UpgradeProgressContent(
     BackHandler(enabled = blockBack) { /* Back is disabled while a step is running. */ }
     val startedAt = remember { SystemClock.elapsedRealtime() - initialElapsedMillis }
     var elapsed by remember { mutableLongStateOf(fixedElapsedMillis ?: initialElapsedMillis) }
-    var keepWaitingAt by remember { mutableStateOf<Long?>(null) }
+    // Kept across a recreated screen, like the start time the caller passes in.
+    var keepWaitingAt by rememberSaveable { mutableStateOf<Long?>(null) }
     LaunchedEffect(startedAt, fixedElapsedMillis) {
         if (fixedElapsedMillis != null) {
             elapsed = fixedElapsedMillis
@@ -200,9 +202,10 @@ fun UpgradeProgressContent(
 
 /**
  * After unlocking, the wallet checks the account (an older SORA balance to claim). Silent for
- * 1.5 s (U0); then the progress screen with its real steps (U1). Offline it waits for the
- * network (U2) and offers "Change node"; the caller continues by itself once connected.
- * [silentMillis] 0 shows it at once (previews and tests).
+ * 1.5 s (U0); then the progress screen with its real steps (U1). Only a check that
+ * [needsNetwork] mentions the network: offline it waits for it (U2, shown at once) and offers
+ * "Change node"; the caller continues by itself once connected. A check that runs on the phone
+ * never says it waits for the network. [silentMillis] 0 shows it at once (previews and tests).
  */
 @Composable
 fun AccountCheckProgress(
@@ -211,35 +214,41 @@ fun AccountCheckProgress(
     onGetHelp: () -> Unit,
     silentMillis: Long = SILENT_CHECK_MILLIS,
     fixedElapsedMillis: Long? = null,
+    needsNetwork: Boolean = true,
 ) {
-    var visible by remember { mutableStateOf(!connected || silentMillis <= 0) }
+    val waiting = needsNetwork && !connected
+    var visible by remember { mutableStateOf(waiting || silentMillis <= 0) }
     LaunchedEffect(Unit) {
         delay(silentMillis)
         visible = true
     }
-    if (!visible && connected) return
+    if (!visible && !waiting) return
     SafeModeScreen {
         UpgradeProgressContent(
             title = stringResource(R.string.safe_mode_checking_title),
             body = stringResource(
-                if (connected) R.string.safe_mode_checking_body else R.string.safe_mode_waiting_network_body,
+                if (waiting) R.string.safe_mode_waiting_network_body else R.string.safe_mode_checking_body,
             ),
-            steps = listOf(
-                SafeStep(stringResource(R.string.safe_mode_step_unlocked), SafeStepState.DONE),
-                if (connected) {
-                    SafeStep(stringResource(R.string.safe_mode_step_network), SafeStepState.DONE)
-                } else {
-                    SafeStep(stringResource(R.string.safe_mode_step_network_waiting), SafeStepState.NEEDS_ACTION)
-                },
-                SafeStep(
-                    stringResource(R.string.safe_mode_step_account_check),
-                    if (connected) SafeStepState.RUNNING else SafeStepState.WAITING,
-                ),
-            ),
-            stepAction = if (connected) {
-                null
-            } else {
+            steps = buildList {
+                add(SafeStep(stringResource(R.string.safe_mode_step_unlocked), SafeStepState.DONE))
+                when {
+                    !needsNetwork -> Unit
+                    connected -> add(SafeStep(stringResource(R.string.safe_mode_step_network), SafeStepState.DONE))
+                    else -> add(
+                        SafeStep(stringResource(R.string.safe_mode_step_network_waiting), SafeStepState.NEEDS_ACTION),
+                    )
+                }
+                add(
+                    SafeStep(
+                        stringResource(R.string.safe_mode_step_account_check),
+                        if (waiting) SafeStepState.WAITING else SafeStepState.RUNNING,
+                    ),
+                )
+            },
+            stepAction = if (waiting) {
                 ProgressAction(stringResource(R.string.safe_mode_change_node), onSwitchNode)
+            } else {
+                null
             },
             onGetHelp = onGetHelp,
             fixedElapsedMillis = fixedElapsedMillis,

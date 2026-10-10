@@ -49,11 +49,14 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountCheckProgress
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LegacyPinUpgradePanel
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeScreen
@@ -105,26 +108,33 @@ internal fun PincodeScreen(
                     style = MaterialTheme.customTypography.headline2
                 )
 
-                DotsProgress(
-                    modifier = Modifier.shake(
-                        enabled = pinCodeScreenState.enableShakeAnimation,
-                        onAnimationEnd = onWrongPinAnimationEnd
-                    ),
-                    maxDotsCount = pinCodeScreenState.maxDotsCount,
-                    checkedDotsCount = pinCodeScreenState.checkedDotsCount
+                // The dots and digits keep their positions in RTL locales (design spec 7.9);
+                // the text and the Safe Mode panels follow the device's direction.
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    DotsProgress(
+                        modifier = Modifier.shake(
+                            enabled = pinCodeScreenState.enableShakeAnimation,
+                            onAnimationEnd = onWrongPinAnimationEnd
+                        ),
+                        maxDotsCount = pinCodeScreenState.maxDotsCount,
+                        checkedDotsCount = pinCodeScreenState.checkedDotsCount
+                    )
+                }
+            }
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                PincodeInputView(
+                    onNumClick = onNumClick,
+                    isDeleteVisible = pinCodeScreenState.isBackButtonVisible,
+                    onDeleteClick = onDeleteClick,
+                    isBiometricVisible = pinCodeScreenState.isBiometricButtonVisible,
+                    onBiometricClick = onBiometricClick,
                 )
             }
-            PincodeInputView(
-                onNumClick = onNumClick,
-                isDeleteVisible = pinCodeScreenState.isBackButtonVisible,
-                onDeleteClick = onDeleteClick,
-                isBiometricVisible = pinCodeScreenState.isBiometricButtonVisible,
-                onBiometricClick = onBiometricClick,
-            )
         }
         if (pinCodeScreenState.migrating) {
             AccountCheckProgress(
                 connected = pinCodeScreenState.isConnected,
+                needsNetwork = pinCodeScreenState.checkNeedsNetwork,
                 onSwitchNode = onSwitchNode,
                 onGetHelp = onGetHelp,
             )
