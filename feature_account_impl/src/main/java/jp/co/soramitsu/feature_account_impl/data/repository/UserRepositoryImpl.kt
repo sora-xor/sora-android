@@ -708,15 +708,13 @@ class UserRepositoryImpl(
         }
         // A release-era owner that is not an account is a set-aside key set: it is neither a
         // deletion target nor a reason to refuse deleting the accounts the person chose.
-        val legacyAddress = credentialsDatasource.getAddress()
         val scopeWire = scope.toWire()
         val snapshotHash = walletDeletionSnapshotHash(
             selectedWalletId = selectedBefore,
             scope = scopeWire,
             targetWalletIds = targetIds,
         )
-        val removeLegacyUnsuffixed = legacyAddress.isNotBlank() &&
-            legacyAddress in targetIds
+        val removeLegacyUnsuffixed = releaseEraSetRemovableWith(targetIds)
         val preferenceHashes =
             deletionPreferenceHashes(
                 walletIds = targetIds,
@@ -770,10 +768,8 @@ class UserRepositoryImpl(
                 currentSoraAccount.value?.substrateAddress == preview.selectedBefore,
             "WALLET_DELETION_SELECTION_CHANGED",
         )
-        val legacyAddress = credentialsDatasource.getAddress()
         deletionRequire(
-            (legacyAddress.isNotBlank() && legacyAddress in targetIds) ==
-                preview.removeLegacyUnsuffixed,
+            releaseEraSetRemovableWith(targetIds) == preview.removeLegacyUnsuffixed,
             "WALLET_DELETION_LEGACY_OWNER_CHANGED",
         )
         val confirmedPreferenceHashes =
@@ -1311,6 +1307,30 @@ class UserRepositoryImpl(
         }
     }
 
+    /**
+     * Whether removing [targetIds] also removes the release-era (unsuffixed) key set. Only when
+     * that set is proven to belong to a verified target: `prefs_address_pure` names the target,
+     * its keys decrypt and derive exactly that address (or it holds no secret value at all, just
+     * the address). A read-only target, an unreadable set or a set whose keys derive another
+     * address is kept; it stays on the device as a retained key set ("Restore wallets found on
+     * this phone" adopts it after proving it derives the address).
+     */
+    private suspend fun releaseEraSetRemovableWith(targetIds: Set<String>): Boolean = try {
+        val owner = credentialsDatasource.getAddress()
+        when {
+            owner.isBlank() || owner !in targetIds -> false
+            db.walletIdentityDao().getWallet(owner)?.migrationState != "VERIFIED" -> false
+            CredentialField.entries.all { field ->
+                credentialsDatasource.readStoredCredential(field, "") == StoredCredential.Absent
+            } -> true
+            else -> releaseEraOwnerIs(owner)
+        }
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Throwable) {
+        throw WalletDeletionInvariantException("WALLET_DELETION_LEGACY_OWNER_UNVERIFIED")
+    }
+
     private suspend fun requireDeletionWalletSecrets(
         accounts: List<SoraAccountLocal>,
         targetIds: Set<String>,
@@ -1655,15 +1675,33 @@ class UserRepositoryImpl(
         }
         val unreadable = stored.values.any { it == StoredCredential.Unreadable }
         val watchOnly = credentialsDatasource.isExplicitWatchOnly(address)
+        val scopedPhraseOrSeed =
+            stored[CredentialField.MNEMONIC] is StoredCredential.Present ||
+                stored[CredentialField.SEED] is StoredCredential.Present
+        // Removing the account deletes its address-scoped values. A readable private key, phrase
+        // or seed among them would be lost from the app.
+        val removalDeletesReadableSecret = scopedPhraseOrSeed ||
+            stored[CredentialField.PRIVATE_KEY] is StoredCredential.Present
+        // A release-era (unsuffixed) copy whose keys derive this address. Removing a read-only
+        // account never removes it, so it can be adopted again afterwards.
+        val releaseEraCopy = releaseEraOwnerIs(address)
+        val releaseEraPhraseOrSeed = releaseEraCopy && listOf(
+            CredentialField.MNEMONIC,
+            CredentialField.SEED,
+        ).any { field ->
+            credentialsDatasource.readStoredCredential(field, "") is StoredCredential.Present
+        }
         UnavailableWalletOptions(
             walletId = address,
             // Completing in place adds only missing values; a value that cannot be read can
             // never be compared, so that case needs removal (confirmed) and a fresh import.
             canRepairWithPhrase = !unreadable && !watchOnly,
-            canRemoveAndImport = true,
-            canShowPhraseAfterPin =
-                stored[CredentialField.MNEMONIC] is StoredCredential.Present ||
-                    stored[CredentialField.SEED] is StoredCredential.Present,
+            // Offered only when removal loses nothing readable, or when the readable secret is a
+            // phrase or seed the person is shown first.
+            canRemoveAndImport = !removalDeletesReadableSecret || scopedPhraseOrSeed,
+            canShowPhraseAfterPin = scopedPhraseOrSeed || releaseEraPhraseOrSeed,
+            showPhraseBeforeRemoval = scopedPhraseOrSeed,
+            hasReleaseEraCopy = releaseEraCopy,
         )
     }
 

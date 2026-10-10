@@ -43,6 +43,7 @@ import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
+import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
@@ -142,6 +143,59 @@ class CredentialsRepositoryTest {
         val seed = credentialsRepository.retrieveSeed(SoraAccount("address", "name"))
         assertEquals(64, seed.length)
     }
+
+    @Test
+    fun `derived seed is cached only where no seed is stored`() = runTest {
+        whenever(datasource.retrieveSeed("address")).thenReturn("")
+        whenever(datasource.retrieveMnemonic("address")).thenReturn(
+            "airport wish wish loan width country acoustic country ceiling good enact penalty"
+        )
+        every { MnemonicCreator.fromWords(any()) } returns mn
+        WalletRecoveryCapabilityGate.enterNormal()
+
+        credentialsRepository.retrieveSeed(SoraAccount("address", "name"))
+
+        // Add-only: an existing (even unreadable) seed value is never replaced.
+        verify(datasource).writeCredentialsIfAbsent(eq("address"), any())
+        verify(datasource, never()).saveSeed(any(), any())
+    }
+
+    @Test
+    fun `unreadable own phrase shows the release-era phrase of the same wallet`() = runTest {
+        // 2.4.0 copied the unsuffixed keys and phrase to address-scoped values; the scoped copy
+        // no longer decrypts, the release-era copy does and its keys derive this address.
+        val releaseEraKeys = Sr25519Keypair(ByteArray(64) { 1 }, ByteArray(32) { 2 }, ByteArray(32) { 3 })
+        whenever(datasource.retrieveMnemonic("address"))
+            .thenThrow(WalletDecryptionException("WALLET_DECRYPTION_FAILED"))
+        whenever(datasource.retrieveKeys("")).thenReturn(releaseEraKeys)
+        whenever(sora2AddressCodec.toSoraAddressOrNull(releaseEraKeys.publicKey))
+            .thenReturn("address")
+        whenever(datasource.retrieveMnemonic("")).thenReturn("release era words")
+
+        assertEquals(
+            "release era words",
+            credentialsRepository.retrieveMnemonic(SoraAccount("address", "name")),
+        )
+        verify(datasource, never()).saveMnemonic(any(), any())
+    }
+
+    @Test
+    fun `unreadable own phrase is reported when no release-era copy belongs to the wallet`() =
+        runTest {
+            val otherKeys = Sr25519Keypair(ByteArray(64) { 4 }, ByteArray(32) { 5 }, ByteArray(32) { 6 })
+            whenever(datasource.retrieveMnemonic("address"))
+                .thenThrow(WalletDecryptionException("WALLET_DECRYPTION_FAILED"))
+            whenever(datasource.retrieveKeys("")).thenReturn(otherKeys)
+            whenever(sora2AddressCodec.toSoraAddressOrNull(otherKeys.publicKey))
+                .thenReturn("another-address")
+
+            val error = runCatching {
+                credentialsRepository.retrieveMnemonic(SoraAccount("address", "name"))
+            }.exceptionOrNull()
+
+            assertTrue(error is WalletDecryptionException)
+            verify(datasource, never()).retrieveMnemonic("")
+        }
 
     @Test
     fun `is mnemonic valid returns true`() = runTest {
