@@ -28,7 +28,7 @@
   <string name="activity_empty_content_title">Kīma tērtam teppušu, epšētīka annakam tammar</string>
   <string name="activity_error_title">Epšētīka ul uštēṣi. Ṭuppī šanītam uddeš</string>
   <string name="activity_pool_title">Būrtum</string>
-  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is always up to date.</string>
+  <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is not affected.</string>
   <string name="activity_referral_title">Mubbilum irtakas</string>
   <string name="add_liquidity_alert_text">Ina nadān mê kaspim miksī ana zittika teleqqe</string>
   <string name="add_liquidity_confirmation_title">Nadānam kunnûm</string>
