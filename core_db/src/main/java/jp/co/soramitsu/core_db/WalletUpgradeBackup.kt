@@ -164,6 +164,16 @@ object WalletUpgradeBackup {
     @Volatile
     private var transientVerificationFailure: String? = null
 
+    /**
+     * The wallet verification failed in this process after the startup checks had passed
+     * ([noteMigrationRecoveryRequired]). Kept in memory only, so the recovery options (and
+     * [requestSetUpAgain]) describe the same state the recovery screen shows. Unlike
+     * [blockingFailure] it does not close database access: the process is already read-only
+     * through [WalletRecoveryCapabilityGate].
+     */
+    @Volatile
+    private var inSessionRecoveryCode: String? = null
+
     /** Non-blocking problems met during the last preparation (for example a skipped snapshot). */
     @Volatile
     private var nonBlockingWarnings: List<String> = emptyList()
@@ -211,7 +221,7 @@ object WalletUpgradeBackup {
     fun recoveryOptions(): WalletRecoveryOptions? {
         val failure = blockingFailure
         val transient = transientVerificationFailure
-        val code = failure?.code ?: transient ?: return null
+        val code = failure?.code ?: transient ?: inSessionRecoveryCode ?: return null
         return WalletRecoveryOptions.forState(
             code = code,
             transientFailure = failure == null && transient != null,
@@ -293,10 +303,18 @@ object WalletUpgradeBackup {
      * User-requested "Try again". Re-runs every startup check and, for an interrupted or failed
      * wallet verification, authorizes one more verification run regardless of the automatic retry
      * budget. Never deletes or rewrites wallet material.
+     *
+     * Refused (SET_UP_AGAIN_INCOMPLETE, nothing checked or changed) while a confirmed "Set up
+     * this device again" waits for the next app start: only a new process may set the old files
+     * aside, so the app must not verify and open them in this one. The caller restarts instead.
      */
     @Synchronized
     fun retry(context: Context): Result<Unit> {
+        if (isSetUpAgainRequested(context)) {
+            return Result.failure(WalletUpgradeBackupException("SET_UP_AGAIN_INCOMPLETE"))
+        }
         transientVerificationFailure = null
+        inSessionRecoveryCode = null
         if (migrationRecoverySnapshot != null && canAuthorizeMigrationRetry()) {
             val authorized = authorizeMigrationRetry(context)
             if (authorized.isSuccess) return authorized
@@ -503,6 +521,7 @@ object WalletUpgradeBackup {
     ): Result<Unit> {
         preparedAdmission = null
         transientVerificationFailure = null
+        inSessionRecoveryCode = null
         nonBlockingWarnings = emptyList()
         // Application.attachBaseContext is intentionally the earliest caller so no injected
         // database consumer can race this gate. Android may not expose applicationContext until
@@ -583,7 +602,17 @@ object WalletUpgradeBackup {
         }
         migrationRecoverySnapshot = current
         WalletRecoveryCapabilityGate.enterLegacyReadOnly()
+        keepCodeForRecoveryScreen()
         blockingFailure = null
+    }
+
+    /**
+     * Read-only access lifts the blocking failure (Room may open, guarded) but the state still
+     * needs recovery: its code stays in memory so the recovery screen, if it shows again in this
+     * process, offers the same actions and [requestSetUpAgain] accepts them.
+     */
+    private fun keepCodeForRecoveryScreen() {
+        blockingFailure?.code?.let { inSessionRecoveryCode = it }
     }
 
     /**
@@ -717,6 +746,7 @@ object WalletUpgradeBackup {
         migrationRecoverySnapshot = authorized
         WalletRecoveryCapabilityGate.authorizeMigrationRetry()
         blockingFailure = null
+        inSessionRecoveryCode = null
     }
 
     @Synchronized
@@ -725,6 +755,7 @@ object WalletUpgradeBackup {
         migrationRecoverySnapshot = null
         blockingFailure = null
         transientVerificationFailure = null
+        inSessionRecoveryCode = null
         automaticRetryFailedInProcess = false
         WalletRecoveryCapabilityGate.enterNormal()
     }
@@ -767,6 +798,7 @@ object WalletUpgradeBackup {
             WalletRecoveryCapabilityGate.enterBlocked()
         }
         WalletRecoveryCapabilityGate.enterLegacyReadOnly()
+        keepCodeForRecoveryScreen()
         blockingFailure = null
         SafeReadOnlyRoute.ROOM_READ_ONLY
     }
@@ -902,10 +934,26 @@ object WalletUpgradeBackup {
         destination.absolutePath
     }
 
+    /**
+     * The wallet verification in this process needs recovery. [code] (the recorded failure) is
+     * kept in memory so [recoveryOptions] and [requestSetUpAgain] describe this state, exactly as
+     * they would after the next start reads it from the journal. A null [code] (an interrupted
+     * run) keeps whatever was known.
+     */
     @Synchronized
-    fun noteMigrationRecoveryRequired() {
+    fun noteMigrationRecoveryRequired(code: String? = null) {
         preparedAdmission = null
         migrationRecoverySnapshot = null
+        if (code != null) {
+            inSessionRecoveryCode = code
+            // The verification ran on the open current-schema database and read at least one
+            // account. authorizeSafeReadOnly checks it again (quick_check, wallet tables) before
+            // admitting read-only, and reports VAULT_ONLY otherwise.
+            recoveryFacts = recoveryFacts.copy(
+                databaseAtCurrentVersion = true,
+                accountsReadableReadOnly = true,
+            )
+        }
         WalletRecoveryCapabilityGate.enterInspectedRecovery()
     }
 

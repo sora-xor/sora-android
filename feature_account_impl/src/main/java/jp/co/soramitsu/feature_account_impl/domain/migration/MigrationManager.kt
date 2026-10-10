@@ -589,7 +589,7 @@ class MigrationManager @Inject constructor(
         } catch (_: Throwable) {
             // The process gate below still closes; the next start inspects the journal again.
         } finally {
-            WalletUpgradeBackup.noteMigrationRecoveryRequired()
+            WalletUpgradeBackup.noteMigrationRecoveryRequired(code)
         }
         return MigrationOutcome.Recovery(code)
     }
@@ -661,7 +661,8 @@ class MigrationManager @Inject constructor(
         } finally {
             // The in-memory gate must close even when the journal write itself fails or a
             // committed suspend call reports cancellation. A restart will re-inspect durability.
-            WalletUpgradeBackup.noteMigrationRecoveryRequired()
+            // The code lets the recovery screen offer exactly what the next start would offer.
+            WalletUpgradeBackup.noteMigrationRecoveryRequired(code)
         }
         return MigrationOutcome.Recovery(code)
     }
