@@ -45,7 +45,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
@@ -56,6 +59,7 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.presentation.compose.neon.NeonGallery
 import jp.co.soramitsu.common.util.ext.getOsName
 import jp.co.soramitsu.common.util.ext.getSize
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -95,7 +99,18 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
                 activity?.getSize()
             }
 
+            var showNeonGallery by remember { mutableStateOf(false) }
+            if (showNeonGallery) {
+                NeonGallery(onClose = { showNeonGallery = false })
+                return@composable
+            }
             Column(modifier = Modifier.fillMaxSize()) {
+                Button(onClick = { showNeonGallery = true }) {
+                    Text(
+                        color = MaterialTheme.customColors.fgPrimary,
+                        text = "SORA Neon components"
+                    )
+                }
                 Text(
                     color = MaterialTheme.customColors.fgPrimary,
                     text = "%s %.3f".format("Density", dm?.first ?: 0.0)
