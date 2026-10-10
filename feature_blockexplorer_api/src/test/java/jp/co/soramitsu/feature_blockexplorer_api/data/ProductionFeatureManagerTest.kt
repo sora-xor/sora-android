@@ -29,7 +29,6 @@ class ProductionFeatureManagerTest {
     private fun config(enabled: Boolean) = PiMobileConfig(
         blockExplorerUrl = "https://sorametrics.org/sorav2?tab=extrinsics&q={transaction}",
         substrateTypesUrl = null,
-        soracard = false,
         nodes = listOf(PiMobileChainNode("Sora", "wss://mof2.sora.org")),
         nexusAvailable = enabled,
         nexusSendsAvailable = false,
