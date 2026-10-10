@@ -33,10 +33,23 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.presentation.compose.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
-import jp.co.soramitsu.ui_core.theme.customColors
+import androidx.compose.material.Shapes
+import androidx.compose.material.Typography
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalNeon
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonDark
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonLight
+import jp.co.soramitsu.common.presentation.compose.theme.neon.rememberFxPolicy
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NightThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.buttonM
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.displayL
@@ -47,43 +60,78 @@ import jp.co.soramitsu.common.presentation.compose.theme.tokens.headline2
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.headline3
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.headline4
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.paragraphL
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.paragraphLBold
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.paragraphM
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.paragraphMBold
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.paragraphS
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.paragraphSBold
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.paragraphXS
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.paragraphXSBold
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.textL
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.textLBold
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.textM
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.textMBold
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.textS
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.textSBold
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.textXS
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.textXSBold
 import jp.co.soramitsu.ui_core.theme.AppTheme
 import jp.co.soramitsu.ui_core.theme.BorderRadius
 import jp.co.soramitsu.ui_core.theme.CustomTypography
+import jp.co.soramitsu.ui_core.theme.Opacity
 import jp.co.soramitsu.ui_core.theme.borderRadiuses
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.darkColors
 import jp.co.soramitsu.ui_core.theme.defaultCustomTypography
 import jp.co.soramitsu.ui_core.theme.lightColors
+import jp.co.soramitsu.ui_core.theme.opacities
 
+/**
+ * The one theme for every Compose host (SORA Neon, design spec 2-7).
+ *
+ * - ui-core slots ([MaterialTheme.customColors], typography, radii) carry the remapped palette,
+ *   so existing screens recolour without call-site changes.
+ * - `MaterialTheme.neon` ([LocalNeon]) carries the tokens that have no slot (glass, glow,
+ *   aurora, neumorphic shadows).
+ * - [LocalFx] carries the effect tier for this device and the "Reduce effects" setting.
+ */
 @Composable
 fun SoraAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    reduceEffects: Boolean = NeonEffectsPreference.reduceEffects.collectAsState().value,
     content: @Composable () -> Unit,
 ) {
+    val fx = rememberFxPolicy(reduceEffects)
     AppTheme(
         darkTheme = darkTheme,
         lightColors = soraLightColors,
         darkColors = soraDarkColors,
         typography = soraTypography,
+        opacity = soraOpacity,
         borderRadius = soraBorderRadius,
         content = {
-            // Standard Material inputs/actions use the same wallet palette as the custom components.
+            // Standard Material inputs/actions use the same wallet palette, type and shapes as
+            // the custom components (no Roboto labels or 4 dp corners on Material controls).
             val palette = MaterialTheme.customColors
-            MaterialTheme(colors = MaterialTheme.colors.copy(
-                primary = palette.accentPrimary, primaryVariant = palette.accentPrimary,
-                secondary = palette.accentSecondary, secondaryVariant = palette.accentSecondary,
-                background = palette.bgPage, surface = palette.bgSurface,
-                onPrimary = palette.fgInverted, onSecondary = palette.fgInverted,
-                onBackground = palette.fgPrimary, onSurface = palette.fgPrimary,
-                error = palette.statusError, isLight = !darkTheme,
-            ), content = content)
+            MaterialTheme(
+                colors = MaterialTheme.colors.copy(
+                    primary = palette.accentPrimary, primaryVariant = palette.accentPrimary,
+                    secondary = palette.accentSecondary, secondaryVariant = palette.accentSecondary,
+                    background = palette.bgPage, surface = palette.bgSurface,
+                    onPrimary = palette.fgInverted, onSecondary = palette.fgInverted,
+                    onBackground = palette.fgPrimary, onSurface = palette.fgPrimary,
+                    error = palette.statusError, onError = palette.fgInverted, isLight = !darkTheme,
+                ),
+                typography = soraMaterialTypography,
+                shapes = soraMaterialShapes,
+            ) {
+                CompositionLocalProvider(
+                    LocalNeon provides if (darkTheme) NeonDark else NeonLight,
+                    LocalFx provides fx,
+                    LocalContentColor provides palette.fgPrimary,
+                    content = content,
+                )
+            }
         },
     )
 }
@@ -109,7 +157,8 @@ private val soraLightColors = lightColors(
     statusWarning = DayThemeColors.StatusWarning,
     statusWarningContainer = DayThemeColors.StatusWarningContainer,
     statusError = DayThemeColors.StatusError,
-    statusErrorContainer = DayThemeColors.StatusErrorContainer
+    statusErrorContainer = DayThemeColors.StatusErrorContainer,
+    elevation = DayThemeColors.Elevation,
 )
 
 private val soraDarkColors = darkColors(
@@ -133,7 +182,8 @@ private val soraDarkColors = darkColors(
     statusWarning = NightThemeColors.StatusWarning,
     statusWarningContainer = NightThemeColors.StatusWarningContainer,
     statusError = NightThemeColors.StatusError,
-    statusErrorContainer = NightThemeColors.StatusErrorContainer
+    statusErrorContainer = NightThemeColors.StatusErrorContainer,
+    elevation = NightThemeColors.Elevation,
 )
 
 private val soraTypography: CustomTypography = defaultCustomTypography(
@@ -148,11 +198,49 @@ private val soraTypography: CustomTypography = defaultCustomTypography(
     textM = textM,
     textS = textS,
     textXS = textXS,
+    textLBold = textLBold,
+    textMBold = textMBold,
+    textSBold = textSBold,
+    textXSBold = textXSBold,
     paragraphL = paragraphL,
     paragraphM = paragraphM,
     paragraphS = paragraphS,
     paragraphXS = paragraphXS,
-    buttonM = buttonM
+    paragraphLBold = paragraphLBold,
+    paragraphMBold = paragraphMBold,
+    paragraphSBold = paragraphSBold,
+    paragraphXSBold = paragraphXSBold,
+    buttonM = buttonM,
+)
+
+/**
+ * Disabled controls: a visible fill (8%) and a label near `text.disabled` (36%). The ui-core
+ * defaults (4% / 16%) made disabled labels almost invisible on the dark canvas.
+ */
+private val soraOpacity: Opacity = opacities(
+    actionBgDisabled = 0.08f,
+    actionFgDisabled = 0.36f,
+)
+
+private val soraMaterialTypography = Typography(
+    defaultFontFamily = Inter,
+    h4 = displayL,
+    h5 = headline1,
+    h6 = headline2,
+    subtitle1 = textM,
+    subtitle2 = textSBold,
+    body1 = textM,
+    body2 = textS,
+    button = buttonM,
+    caption = textXS,
+    overline = NeonType.eyebrow,
+)
+
+/** Text fields 16, cards and dialogs 24, sheets 28 (design spec 6). */
+private val soraMaterialShapes = Shapes(
+    small = RoundedCornerShape(16.dp),
+    medium = RoundedCornerShape(24.dp),
+    large = RoundedCornerShape(28.dp),
 )
 
 private val soraBorderRadius: BorderRadius = borderRadiuses(
