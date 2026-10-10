@@ -369,3 +369,17 @@ val NeonLight = NeonTokens(
     skeletonBase = a(0x0B0C14, .06f),
     skeletonHighlight = a(0xFFFFFF, .70f),
 )
+
+/**
+ * The tokens under the system high-contrast setting (design spec 4.0 `highContrast`): tertiary
+ * text reads as secondary and 1 dp hairlines are twice as strong. [FxPolicy] covers the rest
+ * (2 dp borders, no glow, opaque glass).
+ */
+fun NeonTokens.forHighContrast(): NeonTokens = copy(
+    textTertiary = textSecondary,
+    hairline = hairline.copy(alpha = (hairline.alpha * 2f).coerceAtMost(1f)),
+)
+
+val NeonDarkHighContrast: NeonTokens = NeonDark.forHighContrast()
+
+val NeonLightHighContrast: NeonTokens = NeonLight.forHighContrast()

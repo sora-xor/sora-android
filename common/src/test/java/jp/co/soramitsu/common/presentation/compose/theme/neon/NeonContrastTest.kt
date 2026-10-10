@@ -34,6 +34,8 @@ package jp.co.soramitsu.common.presentation.compose.theme.neon
 
 import androidx.compose.ui.graphics.Color
 import java.io.File
+import jp.co.soramitsu.common.presentation.compose.theme.soraDarkColorsHighContrast
+import jp.co.soramitsu.common.presentation.compose.theme.soraLightColorsHighContrast
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NightThemeColors
 import kotlin.math.pow
@@ -233,4 +235,16 @@ class NeonContrastTest {
             )
         }
     }
+
+    @Test
+    fun `high contrast maps tertiary text to secondary and strengthens hairlines`() {
+        for ((base, hc) in listOf(NeonDark to NeonDarkHighContrast, NeonLight to NeonLightHighContrast)) {
+            assertEquals(base.textSecondary, hc.textTertiary)
+            assertEquals((base.hairline.alpha * 2f).coerceAtMost(1f), hc.hairline.alpha, 0.001f)
+            assertEquals(base.textPrimary, hc.textPrimary)
+        }
+        assertEquals(NightThemeColors.FgSecondary, soraDarkColorsHighContrast.fgTertiary)
+        assertEquals(DayThemeColors.FgSecondary, soraLightColorsHighContrast.fgTertiary)
+    }
+
 }

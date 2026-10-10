@@ -72,7 +72,10 @@ object DayThemeColors {
 
     val FgInverted = Color(0xFFFFFFFF)
 
-    /** Dividers and decorative outlines. Input borders use NeonTokens.borderInput (3:1). */
+    /**
+     * Dividers and decorative outlines only. Text fields use NeonTokens.borderInput (3:1) through
+     * compose.neon.InputText, which replaces this slot for the field border.
+     */
     val FgOutline = Color(0xFFDADCE5)
 
     val StatusSuccess = Color(0xFF08704D)
