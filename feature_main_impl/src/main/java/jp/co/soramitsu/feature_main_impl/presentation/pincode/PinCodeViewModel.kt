@@ -51,6 +51,7 @@ import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.vibration.DeviceVibrator
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
@@ -105,9 +106,6 @@ class PinCodeViewModel @Inject constructor(
     private val _closeAppLiveData = SingleLiveEvent<Unit>()
     val closeAppLiveData: LiveData<Unit> = _closeAppLiveData
 
-    private val _pincodeLengthInfoAlertLiveData = SingleLiveEvent<Unit>()
-    val pincodeLengthInfoAlertLiveData: LiveData<Unit> = _pincodeLengthInfoAlertLiveData
-
     private val _fingerPrintCanceledFromPromptEvent = SingleLiveEvent<Unit>()
     val fingerPrintCanceledFromPromptEvent: LiveData<Unit> = _fingerPrintCanceledFromPromptEvent
 
@@ -150,9 +148,14 @@ class PinCodeViewModel @Inject constructor(
         connectionManager.connectionState
             .catch { onError(it) }
             .onEach {
+                val reconnected = it && !state.isConnected
                 state = state.copy(
                     isConnected = it
                 )
+                // U2: "We'll continue as soon as you're back online" - continue by itself.
+                if (reconnected && state.migrating) {
+                    viewModelScope.launch { tryCatch { proceed() } }
+                }
             }
             .launchIn(viewModelScope)
 
@@ -170,6 +173,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun startAuth(pinCodeAction: PinCodeAction) {
+        if (pinCodeAction == PinCodeAction.TIMEOUT_CHECK) WalletSessionState.markLocked()
         viewModelScope.launch {
             action = pinCodeAction
             when (action) {
@@ -195,6 +199,8 @@ class PinCodeViewModel @Inject constructor(
 
                 PinCodeAction.CHANGE_PIN_CODE -> {
                     isPincodeUpdateNeeded = interactor.isPincodeUpdateNeeded()
+                    // The forced 4-to-6 digit change replaces the unlock (U10).
+                    if (isPincodeUpdateNeeded) WalletSessionState.markLocked()
                     val maxDotsLength = if (isPincodeUpdateNeeded) {
                         PinCodeInteractor.OLD_PINCODE_LENGTH
                     } else {
@@ -326,6 +332,7 @@ class PinCodeViewModel @Inject constructor(
                 interactor.savePin(inputedCode)
                 if (isChanging) {
                     _pincodeChangedEvent.trigger()
+                    WalletSessionState.markUnlocked()
                     mainRouter.popBackStack()
                 } else {
                     val available = interactor.isBiometryAvailable()
@@ -606,19 +613,52 @@ class PinCodeViewModel @Inject constructor(
         selectNodeRouter.showSelectNode()
     }
 
+    private var proceeding = false
+    private var proceeded = false
+
+    /**
+     * After unlocking: checks whether the account still has an older SORA balance to claim.
+     * Only an unchecked 15-word legacy phrase needs the network for that; every other account is
+     * checked on the phone, so being offline never keeps the person at this screen (U2).
+     */
     private suspend fun proceed() {
+        if (proceeding || proceeded) return
         state = state.copy(
             migrating = true
         )
-        if (state.isConnected) {
-            val needs = interactor.needsMigration()
-            state = state.copy(
-                migrating = false
-            )
-            if (needs) {
-                mainRouter.showClaim()
-            } else {
-                mainRouter.popBackStack()
+        val needsNetwork = try {
+            interactor.migrationCheckNeedsNetwork()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            // Unreadable right now: the optional check below is skipped, never waited for.
+            false
+        }
+        if (state.isConnected || !needsNetwork) {
+            proceeding = true
+            try {
+                val needs = try {
+                    interactor.needsMigration()
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Throwable) {
+                    // The claim check is optional: it runs again at the next unlock (nothing was
+                    // recorded). It never keeps the person out of the wallet.
+                    jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                    false
+                }
+                state = state.copy(
+                    migrating = false
+                )
+                proceeded = true
+                WalletSessionState.markUnlocked()
+                if (needs) {
+                    mainRouter.showClaim()
+                } else {
+                    mainRouter.popBackStack()
+                }
+            } finally {
+                proceeding = false
             }
         }
     }
@@ -627,7 +667,6 @@ class PinCodeViewModel @Inject constructor(
         viewModelScope.launch {
             action = PinCodeAction.CREATE_PIN_CODE
             if (state.maxDotsCount != PinCodeInteractor.PINCODE_LENGTH) {
-                _pincodeLengthInfoAlertLiveData.trigger()
                 state = state.copy(
                     maxDotsCount = PinCodeInteractor.PINCODE_LENGTH,
                     isLengthInfoAlertVisible = true

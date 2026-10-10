@@ -32,8 +32,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.presentation.compose.neon.safemode
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -77,6 +79,9 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
 import jp.co.soramitsu.ui_core.theme.customTypography
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * True while wallet changes and signing are off (read-only or recovery mode). Display only: the
@@ -86,6 +91,68 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 fun rememberWalletReadOnly(): Boolean {
     val mode by WalletRecoveryCapabilityGate.modeFlow.collectAsState()
     return WalletRecoveryCapabilityGate.isUserMutationBlocked(mode)
+}
+
+/**
+ * Whether the wallet was unlocked with the PIN in this process. The upgrade-complete sheet (U11)
+ * waits for it, so it is never stacked over the PIN screen.
+ */
+object WalletSessionState {
+    private val unlockedState = MutableStateFlow(false)
+    val unlocked: StateFlow<Boolean> = unlockedState.asStateFlow()
+
+    fun markUnlocked() {
+        unlockedState.value = true
+    }
+
+    fun markLocked() {
+        unlockedState.value = false
+    }
+}
+
+/**
+ * The upgrade-complete sheet (U11) is shown once per install, only to people who updated from an
+ * earlier version. Kept in its own small preferences file, never in the wallet preferences.
+ */
+object UpgradeWelcome {
+    private const val FILE = "sora_upgrade_welcome"
+    private const val KEY_DONE = "upgrade_welcome_3_9_done"
+
+    /** True when this install was updated from an earlier version and the sheet was not shown. */
+    fun isPending(context: Context): Boolean = runCatching {
+        val prefs = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+        if (prefs.getBoolean(KEY_DONE, false)) return@runCatching false
+        val info = context.packageManager.getPackageInfo(context.packageName, 0)
+        // A fresh install has equal times; an update from an earlier version does not.
+        info.firstInstallTime != info.lastUpdateTime
+    }.getOrDefault(false)
+
+    /** Shown, or not needed (a new wallet set up on this version). */
+    fun markDone(context: Context) {
+        runCatching {
+            context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().putBoolean(KEY_DONE, true).apply()
+        }
+    }
+}
+
+/** Contacting support from Safe Mode surfaces. Never crashes without an email app. */
+object SafeModeSupport {
+    const val EMAIL = "support@sora.org"
+
+    /** Opens an email to support; false when no email app can take it. */
+    fun email(context: Context, subject: String, body: String): Boolean {
+        val mailto = "mailto:$EMAIL?subject=${Uri.encode(subject)}&body=${Uri.encode(body)}"
+        return try {
+            context.startActivity(
+                Intent(Intent.ACTION_SENDTO, Uri.parse(mailto)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        } catch (_: SecurityException) {
+            false
+        }
+    }
 }
 
 /**
