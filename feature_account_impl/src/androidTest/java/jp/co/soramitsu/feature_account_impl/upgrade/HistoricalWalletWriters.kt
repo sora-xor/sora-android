@@ -1,6 +1,7 @@
 package jp.co.soramitsu.feature_account_impl.upgrade
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import android.security.KeyPairGeneratorSpec
@@ -19,6 +20,7 @@ import java.math.BigInteger
 import java.security.InvalidAlgorithmParameterException
 import java.security.InvalidKeyException
 import java.security.Key
+import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.NoSuchAlgorithmException
@@ -802,14 +804,290 @@ class Release3863AccountRemoval(
     }
 }
 
+/*
+ * Releases before the DataStore (2020-2021). They have no release tag; the commits are:
+ *
+ *   d9e84dfb (2020-09-22, "updated to 1.6.1")  SORA v1 (Iroha). Room 33.
+ *     feature_did_impl/.../datasource/PrefsDidDatasource.kt                   -> [Release161PrefsDidDatasource]
+ *     feature_account_impl/.../datasource/PrefsUserDatasource.kt             -> [Release161PrefsUserDatasource]
+ *   5011848c (2021-06-10, "version/2.1", appVersionName 2.1.0)  first SORA2 builds. Room 40.
+ *     common/.../credentials/repository/datasource/PrefsCredentialsDatasource.kt
+ *                                                                             -> [Release210PrefsCredentialsDatasource]
+ *   c8f87a48 (2021-08-30, "version/3.0.0", appVersionName 3.0.0). Room 44.
+ *     common/.../credentials/repository/datasource/PrefsCredentialsDatasource.kt
+ *                                                                             -> [Release300PrefsCredentialsDatasource]
+ *     feature_account_impl/.../datasource/PrefsUserDatasource.kt             -> [Release300PrefsUserDatasource]
+ *       (identical at 5011848c)
+ *
+ * All three wrote plain SharedPreferences `sora_prefs` through `Preferences` and
+ * `EncryptedPreferences`, which are identical in all three commits ([Release300Preferences],
+ * [Release300EncryptedPreferences]). `EncryptionUtil` differs from [Release3863EncryptionUtil] only
+ * in formatting, imports and Dagger annotations (`git diff d9e84dfb c8f87a48` and
+ * `git diff c8f87a48 b7b0f0fc` on common/src/main/java/jp/co/soramitsu/common/util/EncryptionUtil.kt),
+ * so the same wrapped key in `key_alias.xml` and the same `IV || AES/CBC` values result.
+ *
+ * HARNESS (in addition to the rules at the top of this file): fearless_utils' `Keypair` is not on
+ * the test classpath. [FearlessKeypair] carries the same fields, so the copied method bodies read
+ * unchanged. The Iroha Ed25519 keys are passed as the same `java.security.KeyPair`.
+ */
+
+/** Stand-in for fearless_utils `Keypair(privateKey, publicKey, nonce: ByteArray?)`. HARNESS. */
+class FearlessKeypair(
+    val privateKey: ByteArray,
+    val publicKey: ByteArray,
+    val nonce: ByteArray? = null,
+)
+
+/** HARNESS: spongycastle `Hex.toHexString` (lower-case, no prefix). */
+private object SpongyHex {
+    fun toHexString(bytes: ByteArray): String =
+        bytes.joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
+}
+
+/** Write half of `Preferences` at c8f87a48 (identical at 5011848c and d9e84dfb). HARNESS: name. */
+class Release300Preferences(
+    private val preferences: SharedPreferences
+) {
+
+    fun putString(field: String, value: String) {
+        preferences
+            .edit()
+            .putString(field, value)
+            .apply()
+    }
+
+    fun putBoolean(field: String, value: Boolean) {
+        preferences.edit().putBoolean(field, value).apply()
+    }
+}
+
+/** Write half of `EncryptedPreferences` at c8f87a48 (identical at 5011848c and d9e84dfb). HARNESS: names. */
+class Release300EncryptedPreferences(
+    private val preferences: Release300Preferences,
+    private val encryptionUtil: Release3863EncryptionUtil
+) {
+
+    fun putEncryptedString(field: String, value: String) {
+        preferences.putString(field, encryptionUtil.encrypt(value))
+    }
+}
+
+/** Write half of `PrefsCredentialsDatasource` at c8f87a48 (SORA 3.0.0). HARNESS: name, no interface, Hex. */
+class Release300PrefsCredentialsDatasource(
+    private val encryptedPreferences: Release300EncryptedPreferences,
+    private val preferences: Release300Preferences,
+) {
+
+    companion object {
+        private const val PREFS_PRIVATE_KEY = "prefs_priv_key"
+        private const val PREFS_PUBLIC_KEY = "prefs_pub_key"
+        private const val PREFS_IROHA_PRIVATE_KEY = "prefs_iroha_priv_key"
+        private const val PREFS_IROHA_PUBLIC_KEY = "prefs_iroha_pub_key"
+        private const val PREFS_KEY_NONCE = "prefs_key_nonce"
+        private const val PREFS_MNEMONIC = "prefs_mnemonic"
+        private const val PREFS_ADDRESS = "prefs_address_pure"
+        private const val PREFS_IROHA_ADDRESS = "prefs_iroha_address"
+        private const val PREFS_SIGNATURE = "prefs_signature"
+    }
+
+    private val Hex = SpongyHex
+
+    fun saveAddress(address: String) {
+        preferences.putString(PREFS_ADDRESS, address)
+    }
+
+    fun saveKeys(keyPair: FearlessKeypair) {
+        encryptedPreferences.putEncryptedString(PREFS_PRIVATE_KEY, Hex.toHexString(keyPair.privateKey))
+        encryptedPreferences.putEncryptedString(PREFS_PUBLIC_KEY, Hex.toHexString(keyPair.publicKey))
+        keyPair.nonce?.let {
+            if (it.isNotEmpty()) {
+                encryptedPreferences.putEncryptedString(PREFS_KEY_NONCE, Hex.toHexString(it))
+            }
+        }
+    }
+
+    fun saveMnemonic(mnemonic: String) {
+        encryptedPreferences.putEncryptedString(PREFS_MNEMONIC, mnemonic)
+    }
+
+    fun saveIrohaKeys(keyPair: KeyPair) {
+        encryptedPreferences.putEncryptedString(PREFS_IROHA_PRIVATE_KEY, Hex.toHexString(keyPair.private.encoded))
+        encryptedPreferences.putEncryptedString(PREFS_IROHA_PUBLIC_KEY, Hex.toHexString(keyPair.public.encoded))
+    }
+
+    fun saveIrohaAddress(address: String) {
+        encryptedPreferences.putEncryptedString(PREFS_IROHA_ADDRESS, address)
+    }
+
+    fun saveSignature(signature: ByteArray) {
+        encryptedPreferences.putEncryptedString(PREFS_SIGNATURE, Hex.toHexString(signature))
+    }
+}
+
+/**
+ * Write half of `PrefsCredentialsDatasource` at 5011848c (SORA 2.1.0). The only difference from
+ * 3.0.0: the address is stored encrypted under `prefs_address`, and the class has no plain
+ * `Preferences`. HARNESS: name, no interface, Hex.
+ */
+class Release210PrefsCredentialsDatasource(
+    private val encryptedPreferences: Release300EncryptedPreferences,
+) {
+
+    companion object {
+        private const val PREFS_PRIVATE_KEY = "prefs_priv_key"
+        private const val PREFS_PUBLIC_KEY = "prefs_pub_key"
+        private const val PREFS_IROHA_PRIVATE_KEY = "prefs_iroha_priv_key"
+        private const val PREFS_IROHA_PUBLIC_KEY = "prefs_iroha_pub_key"
+        private const val PREFS_KEY_NONCE = "prefs_key_nonce"
+        private const val PREFS_MNEMONIC = "prefs_mnemonic"
+        private const val PREFS_ADDRESS = "prefs_address"
+        private const val PREFS_IROHA_ADDRESS = "prefs_iroha_address"
+        private const val PREFS_SIGNATURE = "prefs_signature"
+    }
+
+    private val Hex = SpongyHex
+
+    fun saveAddress(address: String) {
+        encryptedPreferences.putEncryptedString(PREFS_ADDRESS, address)
+    }
+
+    fun saveKeys(keyPair: FearlessKeypair) {
+        encryptedPreferences.putEncryptedString(PREFS_PRIVATE_KEY, Hex.toHexString(keyPair.privateKey))
+        encryptedPreferences.putEncryptedString(PREFS_PUBLIC_KEY, Hex.toHexString(keyPair.publicKey))
+        keyPair.nonce?.let {
+            if (it.isNotEmpty()) {
+                encryptedPreferences.putEncryptedString(PREFS_KEY_NONCE, Hex.toHexString(it))
+            }
+        }
+    }
+
+    fun saveMnemonic(mnemonic: String) {
+        encryptedPreferences.putEncryptedString(PREFS_MNEMONIC, mnemonic)
+    }
+
+    fun saveIrohaKeys(keyPair: KeyPair) {
+        encryptedPreferences.putEncryptedString(PREFS_IROHA_PRIVATE_KEY, Hex.toHexString(keyPair.private.encoded))
+        encryptedPreferences.putEncryptedString(PREFS_IROHA_PUBLIC_KEY, Hex.toHexString(keyPair.public.encoded))
+    }
+
+    fun saveIrohaAddress(address: String) {
+        encryptedPreferences.putEncryptedString(PREFS_IROHA_ADDRESS, address)
+    }
+
+    fun saveSignature(signature: ByteArray) {
+        encryptedPreferences.putEncryptedString(PREFS_SIGNATURE, Hex.toHexString(signature))
+    }
+}
+
+/** Write half of `PrefsUserDatasource` at c8f87a48 (identical at 5011848c). HARNESS: name, no interface. */
+class Release300PrefsUserDatasource(
+    private val preferences: Release300Preferences,
+    private val encryptedPreferences: Release300EncryptedPreferences
+) {
+
+    companion object {
+        private const val PREFS_PIN_CODE = "user_pin_code"
+        private const val PREFS_REGISTRATION_STATE = "registration_state"
+
+        private const val KEY_ACCOUNT_NAME = "key_account_name"
+        private const val KEY_NEEDS_MIGRATION = "needs_migration"
+        private const val KEY_IS_MIGRATION_FETCHED = "is_migration_fetched"
+    }
+
+    fun savePin(pin: String) {
+        encryptedPreferences.putEncryptedString(PREFS_PIN_CODE, pin)
+    }
+
+    // HARNESS: the released signature takes OnboardingState; its toString() is the enum name.
+    fun saveRegistrationState(onboardingState: String) {
+        preferences.putString(PREFS_REGISTRATION_STATE, onboardingState.toString())
+    }
+
+    fun saveAccountName(accountName: String) {
+        return preferences.putString(KEY_ACCOUNT_NAME, accountName)
+    }
+
+    fun saveNeedsMigration(it: Boolean) {
+        preferences.putBoolean(KEY_NEEDS_MIGRATION, it)
+    }
+
+    fun saveIsMigrationFetched(it: Boolean) {
+        preferences.putBoolean(KEY_IS_MIGRATION_FETCHED, it)
+    }
+}
+
+/**
+ * Write half of `PrefsDidDatasource` at d9e84dfb (SORA v1 1.6.1): the Iroha Ed25519 DID keys
+ * (no nonce, no address), the DDO and the 15-word phrase, all unsuffixed.
+ * HARNESS: name, no interface, Hex; `saveDdo` takes the JSON that `ddoToJson(ddo)` produced.
+ */
+class Release161PrefsDidDatasource(
+    private val encryptedPreferences: Release300EncryptedPreferences,
+) {
+
+    companion object {
+        private const val PREFS_DDO = "prefs_ddo"
+        private const val PREFS_PRIVATE_KEY = "prefs_priv_key"
+        private const val PREFS_PUBLIC_KEY = "prefs_pub_key"
+        private const val PREFS_MNEMONIC = "prefs_mnemonic"
+    }
+
+    private val Hex = SpongyHex
+
+    fun saveKeys(keyPair: KeyPair) {
+        encryptedPreferences.putEncryptedString(PREFS_PRIVATE_KEY, Hex.toHexString(keyPair.private.encoded))
+        encryptedPreferences.putEncryptedString(PREFS_PUBLIC_KEY, Hex.toHexString(keyPair.public.encoded))
+    }
+
+    fun saveDdo(ddoJson: String) {
+        encryptedPreferences.putEncryptedString(PREFS_DDO, ddoJson)
+    }
+
+    fun saveMnemonic(mnemonic: String) {
+        encryptedPreferences.putEncryptedString(PREFS_MNEMONIC, mnemonic)
+    }
+}
+
+/**
+ * Write half of `PrefsUserDatasource` at d9e84dfb (SORA v1 1.6.1). HARNESS: name, no interface;
+ * the released constructor's `Serializer` is not used by these two methods.
+ */
+class Release161PrefsUserDatasource(
+    private val preferences: Release300Preferences,
+    private val encryptedPreferences: Release300EncryptedPreferences
+) {
+
+    companion object {
+        private const val PREFS_PIN_CODE = "user_pin_code"
+        private const val PREFS_REGISTRATION_STATE = "registration_state"
+    }
+
+    fun savePin(pin: String) {
+        encryptedPreferences.putEncryptedString(PREFS_PIN_CODE, pin)
+    }
+
+    // HARNESS: the released signature takes OnboardingState; its toString() is the enum name.
+    fun saveRegistrationState(onboardingState: String) {
+        preferences.putString(PREFS_REGISTRATION_STATE, onboardingState.toString())
+    }
+}
+
 /**
  * Creates `app.db` at a released Room version.
  *
  * Versions 58 and later come from the exported schemas in `core_db/schemas` (the same JSON that
  * Room's MigrationTestHelper reads): every entity `createSql`, index and setup query, then
- * `user_version`. Version 50 (2.3.x) predates exported schemas; its tables are reproduced from the
- * `@Entity` classes at release/sora/2.3.3 (tokens, assets, pools, extrinsics, extrinsic_params,
- * BigDecimal stored as TEXT through BigDecimalConverter, enums as INTEGER).
+ * `user_version`. Earlier versions predate exported schemas; their tables are reproduced with
+ * Room's `createSql` rules from the `@Entity` classes at the release commit (BigDecimal stored as
+ * TEXT through the BigDecimal/Amount converters, enums and booleans as INTEGER):
+ * - 50 (release/sora/2.3.3): tokens, assets, pools, extrinsics, extrinsic_params.
+ * - 44 (c8f87a48, SORA 3.0.0): extrinsic_params, extrinsics, assets (with `showMainBalance`),
+ *   tokens: every entity of that release.
+ * - 40 (5011848c, SORA 2.1.0): transfer_transactions, assets: every entity of that release.
+ * - 33 (d9e84dfb, SORA v1 1.6.1): transfer_transactions and assets only. HARNESS: the other nine
+ *   v1 cache tables (activity feed, projects, votes and so on) are left out. The 3.9.0 migration
+ *   to Room 58 renames every table of a 15..57 database to an archive name without reading it, so
+ *   their columns do not affect the upgrade; wallet keys never lived in Room before 58.
  */
 object HistoricalRoom {
 
@@ -818,8 +1096,9 @@ object HistoricalRoom {
         file.parentFile?.mkdirs()
         check(!file.exists()) { "app.db already exists" }
         SQLiteDatabase.openOrCreateDatabase(file, null).use { sqlite ->
-            if (version == 50) {
-                room50Statements.forEach(sqlite::execSQL)
+            val legacy = legacyStatements[version]
+            if (legacy != null) {
+                legacy.forEach(sqlite::execSQL)
             } else {
                 schemaStatements(instrumentationContext, version).forEach(sqlite::execSQL)
             }
@@ -877,6 +1156,43 @@ object HistoricalRoom {
             val setup = database.getJSONArray("setupQueries")
             for (index in 0 until setup.length()) add(setup.getString(index))
         }
+    }
+
+    private val room33Statements = listOf(
+        "CREATE TABLE IF NOT EXISTS `transfer_transactions` (`txHash` TEXT NOT NULL, `status` INTEGER NOT NULL, `assetId` TEXT, `details` TEXT NOT NULL, `myAddress` TEXT NOT NULL, `peerName` TEXT NOT NULL, `amount` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `peerId` TEXT, `reason` TEXT, `type` INTEGER NOT NULL, `fee` TEXT NOT NULL, PRIMARY KEY(`txHash`))",
+        "CREATE TABLE IF NOT EXISTS `assets` (`id` TEXT NOT NULL, `assetFirstName` TEXT NOT NULL, `assetLastName` TEXT NOT NULL, `displayAsset` INTEGER NOT NULL, `hidingAllowed` INTEGER NOT NULL, `position` INTEGER NOT NULL, `state` INTEGER NOT NULL, `roundingPrecision` INTEGER NOT NULL, `balance` TEXT, PRIMARY KEY(`id`))",
+        "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+        "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'sora-v1-1.6.1-room-33')",
+        "INSERT INTO assets VALUES('xor#sora', 'SORA', 'XOR', 1, 0, 0, 0, 2, '12.5')",
+        "INSERT INTO transfer_transactions VALUES('0xv1tx', 1, 'xor#sora', '', 'did_sora_v1@sora', 'Peer', '1.5', 1600000000000, 'did_sora_peer@sora', NULL, 1, '0.01')",
+    )
+
+    private val room40Statements = listOf(
+        "CREATE TABLE IF NOT EXISTS `transfer_transactions` (`txHash` TEXT NOT NULL, `status` INTEGER NOT NULL, `assetId` TEXT NOT NULL, `myAddress` TEXT NOT NULL, `amount` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `peerId` TEXT NOT NULL, `type` INTEGER NOT NULL, `fee` TEXT NOT NULL, `blockHash` TEXT, `eventSuccess` INTEGER, PRIMARY KEY(`txHash`))",
+        "CREATE TABLE IF NOT EXISTS `assets` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `symbol` TEXT NOT NULL, `displayAsset` INTEGER NOT NULL, `position` INTEGER NOT NULL, `precision` INTEGER NOT NULL, `isMintable` INTEGER NOT NULL, `free` TEXT NOT NULL, `reserved` TEXT NOT NULL, `miscFrozen` TEXT NOT NULL, `feeFrozen` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+        "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'sora-2.1.0-room-40')",
+        "INSERT INTO assets VALUES('0x0200000000000000000000000000000000000000000000000000000000000000', 'SORA', 'XOR', 1, 0, 18, 1, '3.25', '0', '0', '0')",
+    )
+
+    private val room44Statements = listOf(
+        "CREATE TABLE IF NOT EXISTS `extrinsic_params` (`extrinsicId` TEXT NOT NULL, `paramName` TEXT NOT NULL, `paramValue` TEXT NOT NULL, PRIMARY KEY(`extrinsicId`, `paramName`), FOREIGN KEY(`extrinsicId`) REFERENCES `extrinsics`(`txHash`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "CREATE TABLE IF NOT EXISTS `extrinsics` (`txHash` TEXT NOT NULL, `blockHash` TEXT, `fee` TEXT NOT NULL, `status` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `type` INTEGER NOT NULL, `eventSuccess` INTEGER, `localPending` INTEGER NOT NULL, PRIMARY KEY(`txHash`))",
+        "CREATE TABLE IF NOT EXISTS `assets` (`tokenId` TEXT NOT NULL, `accountAddress` TEXT NOT NULL, `displayAsset` INTEGER NOT NULL, `showMainBalance` INTEGER NOT NULL, `position` INTEGER NOT NULL, `free` TEXT NOT NULL, `reserved` TEXT NOT NULL, `miscFrozen` TEXT NOT NULL, `feeFrozen` TEXT NOT NULL, `bonded` TEXT NOT NULL, `redeemable` TEXT NOT NULL, `unbonding` TEXT NOT NULL, PRIMARY KEY(`tokenId`, `accountAddress`), FOREIGN KEY(`tokenId`) REFERENCES `tokens`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "CREATE INDEX IF NOT EXISTS `index_assets_accountAddress` ON `assets` (`accountAddress`)",
+        "CREATE TABLE IF NOT EXISTS `tokens` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `symbol` TEXT NOT NULL, `precision` INTEGER NOT NULL, `isMintable` INTEGER NOT NULL, `whitelistName` TEXT NOT NULL, `isHidable` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+        "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'sora-3.0.0-room-44')",
+        "INSERT INTO tokens VALUES('0x0200000000000000000000000000000000000000000000000000000000000000', 'SORA', 'XOR', 18, 1, 'whitelist', 0)",
+    )
+
+    private val legacyStatements: Map<Int, List<String>> by lazy {
+        mapOf(
+            33 to room33Statements,
+            40 to room40Statements,
+            44 to room44Statements,
+            50 to room50Statements,
+        )
     }
 
     private val room50Statements = listOf(
