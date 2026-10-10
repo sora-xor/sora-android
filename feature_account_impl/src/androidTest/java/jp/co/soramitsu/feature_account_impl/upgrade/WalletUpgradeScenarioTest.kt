@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.mockk.mockk
 import java.io.File
+import java.security.KeyPair
 import java.security.KeyStore
 import java.security.KeyStoreException
 import java.security.PrivateKey
@@ -28,6 +29,7 @@ import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.SetUpAgainScope
 import jp.co.soramitsu.core_db.WalletMigrationIntegrity
+import jp.co.soramitsu.core_db.WalletQuarantine
 import jp.co.soramitsu.core_db.WalletRecoveryKind
 import jp.co.soramitsu.core_db.WalletSigningGate
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
@@ -1155,6 +1157,153 @@ class WalletUpgradeScenarioTest {
         }
     }
 
+    @Test
+    fun release300SharedPreferencesWalletUpgradesAndSigns() = runBlocking {
+        val wallet = phraseWallet(TWELVE_WORDS)
+        // SORA 3.0.0 (Aug 2021): plain SharedPreferences, address in prefs_address_pure, Room 44.
+        val before = release2021 { restored(wallet, name = "Main wallet", plainAddress = true) }
+        val originalPreferences = soraPrefsXml().readBytes()
+        room(44)
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(WalletQuarantine.NONE, WalletUpgradeBackup.quarantine())
+            // The released preference file is in the pre-migration backup, byte for byte, before
+            // anything opens the DataStore or Room.
+            assertArrayEquals(
+                originalPreferences,
+                File(preMigrationBackup(44), "shared_prefs/sora_prefs.xml").readBytes(),
+            )
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+            assertEquals(
+                listOf(SoraAccountLocal(wallet.address, "Main wallet")),
+                launch.database.accountDao().getAccounts(),
+            )
+            launch.assertCiphertextsKept(before)
+        }
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+            launch.assertCiphertextsKept(before)
+        }
+    }
+
+    @Test
+    fun release210SharedPreferencesWalletWithEncryptedAddressUpgradesAndSigns() = runBlocking {
+        val wallet = phraseWallet(TWENTY_FOUR_WORDS)
+        // SORA 2.1.0 (Jun 2021): the address is stored encrypted under prefs_address, no account
+        // name was ever saved, Room 40.
+        val before = release2021 { restored(wallet, name = null, plainAddress = false) }
+        val originalPreferences = soraPrefsXml().readBytes()
+        room(40)
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(WalletQuarantine.NONE, WalletUpgradeBackup.quarantine())
+            assertArrayEquals(
+                originalPreferences,
+                File(preMigrationBackup(40), "shared_prefs/sora_prefs.xml").readBytes(),
+            )
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+            assertEquals(
+                listOf(wallet.address),
+                launch.database.accountDao().getAccounts().map(SoraAccountLocal::substrateAddress),
+            )
+            launch.assertCiphertextsKept(before)
+        }
+    }
+
+    @Test
+    fun soraV1IrohaWalletOpensAtOnboardingKeepsItsPhraseAndTheSamePhraseImports() = runBlocking {
+        // SORA v1 (Iroha, 1.6.1): unsuffixed Ed25519 DID keys without a nonce, a 15-word phrase,
+        // no SORA2 address, Room 33. No SORA2 account can be made from these keys.
+        assertEquals(32, V1_DID_KEY_PAIR.private.encoded.size)
+        assertEquals(32, V1_DID_KEY_PAIR.public.encoded.size)
+        val before = release161 { registered(FIFTEEN_WORDS) }
+        assertFalse("v1 stored no nonce", "prefs_key_nonce" in before)
+        val originalPreferences = soraPrefsXml().readBytes()
+        room(33)
+        val irohaAddressLookalike = requireNotNull(codec.toSoraAddressOrNull(V1_DID_PUBLIC_KEY))
+        val sora2 = phraseWallet(FIFTEEN_WORDS)
+
+        candidate { launch ->
+            // Never blocked: the v1 material is set aside, untouched, and the backup holds it.
+            assertTrue(launch.prepare.isSuccess)
+            assertTrue(WalletUpgradeBackup.quarantine().unscopedMaterialWithoutRecordedOwner)
+            assertTrue(WalletUpgradeBackup.quarantine().retainedWalletIds.isEmpty())
+            assertTrue(WalletUpgradeBackup.recoveryFacts().hasUnscopedPhraseOrSeed)
+            assertNull(WalletUpgradeBackup.recoveryFacts().legacyOwner)
+            assertArrayEquals(
+                originalPreferences,
+                File(preMigrationBackup(33), "shared_prefs/sora_prefs.xml").readBytes(),
+            )
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            // Registration had finished in v1, but there is no SORA2 account: onboarding.
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            assertEquals(
+                OnboardingState.REGISTRATION_FINISHED,
+                launch.userDatasource.retrieveRegistratrionState(),
+            )
+            launch.assertCiphertextsKept(before)
+
+            // "Restore wallets found on this phone" cannot turn the Ed25519 key into a SORA2
+            // account: refused, nothing written, no crash.
+            val adoption = runCatching {
+                launch.userRepository.adoptRetainedWallet(irohaAddressLookalike, "v1", true)
+            }
+            assertEquals("SORA_SIGNING_KEY_MISMATCH", adoption.exceptionOrNull()?.message)
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            launch.assertCiphertextsKept(before)
+
+            // Safe Mode's "Show my recovery phrase" reads the v1 phrase (read only).
+            assertEquals(FIFTEEN_WORDS, launch.credentialsDatasource.retrieveMnemonic(""))
+
+            // Importing that phrase gives its SORA2 account (as 3.8.6.3 did), which signs.
+            launch.importPhrase(FIFTEEN_WORDS, "Restored")
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(sora2), selected = sora2)
+            launch.assertCiphertextsKept(before)
+        }
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(sora2), selected = sora2)
+            launch.assertCiphertextsKept(before)
+        }
+    }
+
+    @Test
+    fun everySora2PhraseLengthImportsOnANewInstallAndSigns() = runBlocking {
+        val phrases = listOf(
+            TWELVE_WORDS,
+            FIFTEEN_WORDS,
+            EIGHTEEN_WORDS,
+            TWENTY_ONE_WORDS,
+            TWENTY_FOUR_WORDS,
+        )
+        val wallets = phrases.map(::phraseWallet)
+        assertEquals(listOf(12, 15, 18, 21, 24), phrases.map { it.split(" ").size })
+        assertEquals(phrases.size, wallets.map(Fixture::address).toSet().size)
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            phrases.forEachIndexed { index, phrase ->
+                launch.importPhrase(phrase, "Imported ${phrase.split(" ").size}")
+                assertEquals(wallets[index].address, launch.userRepository.getCurSoraAccount().substrateAddress)
+            }
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(wallets, selected = wallets.last())
+            // Nexus derivation stays 12/24 only; the other lengths are SORA2 only.
+            listOf(1, 2, 3).forEach { index ->
+                assertEquals("MNEMONIC_UNSUPPORTED", launch.identity(wallets[index]).secretSource)
+            }
+        }
+    }
+
     // ---- Released app processes -------------------------------------------------------------
 
     private suspend fun release3863Wallet(wallet: Fixture) {
@@ -1194,6 +1343,26 @@ class WalletUpgradeScenarioTest {
         block: suspend Release240Process.() -> Unit,
     ): Map<String, Any> {
         val process = Release240Process()
+        return try {
+            process.block()
+            process.snapshot()
+        } finally {
+            process.end()
+        }
+    }
+
+    private fun release2021(block: Release2021Process.() -> Unit): Map<String, Any> {
+        val process = Release2021Process()
+        return try {
+            process.block()
+            process.snapshot()
+        } finally {
+            process.end()
+        }
+    }
+
+    private fun release161(block: Release161Process.() -> Unit): Map<String, Any> {
+        val process = Release161Process()
         return try {
             process.block()
             process.snapshot()
@@ -1258,6 +1427,80 @@ class WalletUpgradeScenarioTest {
             // asynchronous write reaches disk.
             context.getSharedPreferences("key_alias", Context.MODE_PRIVATE).edit().commit()
             delay(DATASTORE_RELEASE_DELAY_MS)
+        }
+    }
+
+    /** A release that wrote plain SharedPreferences `sora_prefs` (1.6.1, 2.1.0, 3.0.0). */
+    private open inner class SharedPreferencesProcess {
+        private val shared = context.getSharedPreferences("sora_prefs", Context.MODE_PRIVATE)
+        val prefs = Release300Preferences(shared)
+        val encryption = Release3863EncryptionUtil(context)
+        val encrypted = Release300EncryptedPreferences(prefs, encryption)
+
+        fun snapshot(): Map<String, Any> =
+            shared.all.filterValues { it != null }.mapValues { (_, value) -> value as Any }
+
+        fun end() {
+            // The released code wrote with apply(); a process ends after those writes reach disk.
+            shared.edit().commit()
+            context.getSharedPreferences("key_alias", Context.MODE_PRIVATE).edit().commit()
+        }
+    }
+
+    private inner class Release2021Process : SharedPreferencesProcess() {
+        val user = Release300PrefsUserDatasource(prefs, encrypted)
+
+        /**
+         * CredentialsRepositoryImpl.restoreUserCredentials at c8f87a48 / 5011848c
+         * (generateEntropyAndKeys, then generateAndSaveClaimData), then the PIN and the finished
+         * registration. [plainAddress] picks the 3.0.0 or the 2.1.0 credentials datasource.
+         */
+        fun restored(wallet: Fixture, name: String?, plainAddress: Boolean) {
+            val keypair = FearlessKeypair(
+                wallet.keypair.privateKey,
+                wallet.keypair.publicKey,
+                wallet.keypair.nonce,
+            )
+            val claimKeys = V1_DID_KEY_PAIR
+            if (plainAddress) {
+                Release300PrefsCredentialsDatasource(encrypted, prefs).apply {
+                    saveAddress(wallet.address)
+                    saveKeys(keypair)
+                    saveMnemonic(requireNotNull(wallet.mnemonic))
+                    saveIrohaAddress(V1_IROHA_ACCOUNT_ID)
+                    saveIrohaKeys(claimKeys)
+                    saveSignature(ByteArray(64) { it.toByte() })
+                }
+            } else {
+                Release210PrefsCredentialsDatasource(encrypted).apply {
+                    saveAddress(wallet.address)
+                    saveKeys(keypair)
+                    saveMnemonic(requireNotNull(wallet.mnemonic))
+                    saveIrohaAddress(V1_IROHA_ACCOUNT_ID)
+                    saveIrohaKeys(claimKeys)
+                    saveSignature(ByteArray(64) { it.toByte() })
+                }
+            }
+            name?.let(user::saveAccountName)
+            user.savePin("135790")
+            user.saveRegistrationState("REGISTRATION_FINISHED")
+            // PinCodeInteractor after the v1 migration check.
+            user.saveNeedsMigration(false)
+            user.saveIsMigrationFetched(true)
+        }
+    }
+
+    private inner class Release161Process : SharedPreferencesProcess() {
+        val did = Release161PrefsDidDatasource(encrypted)
+        val user = Release161PrefsUserDatasource(prefs, encrypted)
+
+        /** DidRepositoryImpl.registerUserDdo at d9e84dfb, then the PIN and the finished registration. */
+        fun registered(phrase: String) {
+            did.saveDdo(V1_DDO_JSON)
+            did.saveKeys(V1_DID_KEY_PAIR)
+            did.saveMnemonic(phrase)
+            user.savePin("135790")
+            user.saveRegistrationState("REGISTRATION_FINISHED")
         }
     }
 
@@ -1547,6 +1790,13 @@ class WalletUpgradeScenarioTest {
     private fun backups(): List<File> = context.noBackupFilesDir.listFiles().orEmpty()
         .filter { it.name.startsWith("wallet-upgrade-backup-v") }
 
+    /** The one backup made before Room migrated a database of [sourceVersion]. */
+    private fun preMigrationBackup(sourceVersion: Int): File =
+        backups().single { it.name.startsWith("wallet-upgrade-backup-v$sourceVersion-to-77") }
+
+    private fun soraPrefsXml(): File =
+        File(context.applicationInfo.dataDir, "shared_prefs/sora_prefs.xml")
+
     /**
      * HARNESS: models a new OS process. Android caches SharedPreferences per process; when the
      * wrapped-key file was renamed aside, a new process starts without it.
@@ -1634,7 +1884,33 @@ class WalletUpgradeScenarioTest {
         const val TWENTY_ONE_WORDS =
             "adapt explain ecology dinner glare old unfair empty expect road off suggest dash " +
                 "dolphin captain version oval census uncover inform apology"
+
+        /** Entropy 0x5a xor (37 i + 11), 24 bytes (generated with MnemonicCreator.fromEntropy). */
+        const val EIGHTEEN_WORDS =
+            "fabric expire sight menu twenty pretty piano eager weasel unit name submit buffalo " +
+                "lemon drift prefer glide cat"
         const val RAW_SEED = "cf0010cf0010cf0010cf0010cf0010cfcf0010cf0010cf0010cf0010cf0010cf"
+
+        /**
+         * The Iroha Ed25519 DID key pair as SORA v1 stored it (`KeyPair.private/public.encoded`),
+         * made by the same library (`Ed25519Sha3.generateKeypair(seed)`; `encoded` is the raw
+         * 32-byte seed and public key). HARNESS: the library is a runtime-only dependency of
+         * `common`, so it is called by reflection; v1 derived the seed with scrypt from its phrase
+         * entropy, here it is a fixed value. 3.9.0 never derives anything from these keys.
+         */
+        val V1_DID_KEY_PAIR: KeyPair by lazy {
+            val library = Class.forName("jp.co.soramitsu.crypto.ed25519.Ed25519Sha3")
+            val ed25519 = library.getDeclaredConstructor().newInstance()
+            library.getMethod("generateKeypair", ByteArray::class.java)
+                .invoke(ed25519, ByteArray(32) { (it * 7 + 3).toByte() }) as KeyPair
+        }
+        val V1_DID_PUBLIC_KEY: ByteArray get() = V1_DID_KEY_PAIR.public.encoded
+        const val V1_IROHA_ACCOUNT_ID = "did_sora_a0a1a2a3a4a5a6a7a8a9@sora"
+        const val V1_DDO_JSON =
+            "{\"@context\":\"https://www.w3.org/2019/did/v1\",\"id\":\"did:sora:a0a1a2a3a4a5a6a7a8a9\"," +
+                "\"publicKey\":[{\"id\":\"did:sora:a0a1a2a3a4a5a6a7a8a9#keys-1\"," +
+                "\"type\":\"Ed25519Sha3VerificationKey\"}]}"
+
         /** Valid Base64 of the right shape that no key decrypts (an authentication failure). */
         const val UNDECRYPTABLE = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
     }
