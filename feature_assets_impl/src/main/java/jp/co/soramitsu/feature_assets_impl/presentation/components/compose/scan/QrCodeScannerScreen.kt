@@ -36,8 +36,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -108,6 +111,9 @@ fun QrCodeScannerScreen(
         val fx = LocalFx.current
         val bracketColor = neon.cyan
         val bracketGlow = fx.glows && fx.tier != FxTier.MINIMAL
+        // Edge to edge: keep the bottom button above the navigation bar; the scrim still fills it.
+        val navigationBarBottom =
+            WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
         Box(
             modifier = Modifier
@@ -295,7 +301,7 @@ fun QrCodeScannerScreen(
                         end.linkTo(anchor = viewPort.end)
                         bottom.linkTo(
                             anchor = parent.bottom,
-                            margin = Dimens.x4
+                            margin = Dimens.x4 + navigationBarBottom
                         )
 
                         width = Dimension.fillToConstraints
