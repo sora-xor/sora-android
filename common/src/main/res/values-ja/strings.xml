@@ -610,4 +610,5 @@
   <string name="safe_mode_pending_check">以前のトランザクションを確認しています。二重に送金されないよう、送金を一時停止しています。</string>
   <string name="safe_mode_tap_to_reveal">タップして表示</string>
   <string name="safe_mode_reveal_privacy">周りから画面が見えないことを確認してください。</string>
+  <string name="safe_mode_support_no_email">メールアプリが設定されていません。%1$s までご連絡ください。</string>
 </resources>

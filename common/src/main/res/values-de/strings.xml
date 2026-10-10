@@ -611,4 +611,5 @@
   <string name="safe_mode_pending_check">A previous transaction is still being checked. Sending is paused so nothing is sent twice.</string>
   <string name="safe_mode_tap_to_reveal">Tap to reveal</string>
   <string name="safe_mode_reveal_privacy">Make sure no one can see your screen.</string>
+  <string name="safe_mode_support_no_email">No email app is set up. You can write to %1$s.</string>
 </resources>

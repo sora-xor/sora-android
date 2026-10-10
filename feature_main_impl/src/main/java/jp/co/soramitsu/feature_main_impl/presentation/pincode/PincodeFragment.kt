@@ -54,6 +54,7 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.io.MainThreadExecutor
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeSupport
 import jp.co.soramitsu.common.presentation.args.addresses
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.ext.runDelayed
@@ -184,15 +185,16 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
             (activity as? MainActivity)?.checkInviteAction()
         }
 
-        viewModel.pincodeLengthInfoAlertLiveData.observe {
-            AlertDialog.Builder(requireActivity())
-                .setTitle(R.string.pincode_length_info_title)
-                .setMessage(R.string.pincode_length_info_message)
-                .setPositiveButton(R.string.pincode_length_info_button_text) { _, _ ->
-                    viewModel.setNewLengthPinCodeClicked()
-                }
-                .setCancelable(false)
-                .show()
+    }
+
+    private fun contactSupport() {
+        val context = context ?: return
+        if (!SafeModeSupport.email(context, "SORA wallet check", "")) {
+            Toast.makeText(
+                context,
+                getString(jp.co.soramitsu.common.R.string.safe_mode_support_no_email, SafeModeSupport.EMAIL),
+                Toast.LENGTH_LONG,
+            ).show()
         }
     }
 
@@ -221,6 +223,8 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
                     onDeleteClick = viewModel::pinCodeDeleteClicked,
                     onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd,
                     onSwitchNode = viewModel::onSwitchNode,
+                    onNewPinContinue = viewModel::setNewLengthPinCodeClicked,
+                    onGetHelp = ::contactSupport,
                 )
             }
         }

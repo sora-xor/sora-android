@@ -86,6 +86,20 @@ class PinCodeInteractor @Inject constructor(
         return userRepository.isBiometryEnabled()
     }
 
+    /**
+     * True only when [needsMigration] has to ask the network: an account not checked before whose
+     * phrase has the legacy 15 words. Reads only.
+     */
+    suspend fun migrationCheckNeedsNetwork(): Boolean {
+        val soraAccount = userRepository.getCurSoraAccount()
+        if (userRepository.isMigrationFetched(soraAccount)) return false
+        val retainedWordCount = credentialsRepository.retrieveMnemonic(soraAccount)
+            .trim()
+            .split(Regex("\\s+"))
+            .count(String::isNotBlank)
+        return retainedWordCount == LEGACY_SORA_MNEMONIC_WORD_COUNT
+    }
+
     suspend fun needsMigration(): Boolean {
         val soraAccount = userRepository.getCurSoraAccount()
         val isFetched = userRepository.isMigrationFetched(soraAccount)
