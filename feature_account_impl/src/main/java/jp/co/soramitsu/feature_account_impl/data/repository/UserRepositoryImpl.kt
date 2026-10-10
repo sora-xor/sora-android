@@ -1625,6 +1625,7 @@ class UserRepositoryImpl(
     override suspend fun adoptRetainedWallet(
         address: String,
         accountName: String,
+        makeCurrent: Boolean,
     ): SoraAccount = mutex.withLock {
         WalletRecoveryCapabilityGate.requireUserMutationAllowed()
         resumePendingWalletDeletionLocked()
@@ -1646,9 +1647,17 @@ class UserRepositoryImpl(
         check(
             db.walletIdentityDao().getWallet(address)?.migrationState == "VERIFIED"
         ) { "RETAINED_WALLET_NOT_VERIFIED" }
-        userDatasource.setCurAccountAddress(address)
+        // The current selection is kept when asked and it still names an account; otherwise
+        // the restored wallet becomes the selected one (there is nothing else to show).
+        val keepSelection = !makeCurrent &&
+            userDatasource.getCurAccountAddress().let { current ->
+                current.isNotBlank() && current != address && db.accountDao().getAccount(current) != null
+            }
+        if (!keepSelection) {
+            userDatasource.setCurAccountAddress(address)
+            currentSoraAccount.value = account
+        }
         userDatasource.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
-        currentSoraAccount.value = account
         account
     }
 

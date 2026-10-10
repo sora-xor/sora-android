@@ -144,9 +144,14 @@ interface UserRepository {
      * Adds the account row for a key set that is already stored on this device without an account
      * (for example left by an unfinished create-account flow, or the release-era unsuffixed keys
      * of an account removed in an older version). The stored keys are verified to derive
-     * [address] first; no key material is written.
+     * [address] first; no key material is written. With [makeCurrent] false the current
+     * selection is kept (when it still names an account).
      */
-    suspend fun adoptRetainedWallet(address: String, accountName: String): SoraAccount
+    suspend fun adoptRetainedWallet(
+        address: String,
+        accountName: String,
+        makeCurrent: Boolean = true,
+    ): SoraAccount
 
     /**
      * Accounts whose keys are missing, incomplete or unreadable on this device. They stay listed

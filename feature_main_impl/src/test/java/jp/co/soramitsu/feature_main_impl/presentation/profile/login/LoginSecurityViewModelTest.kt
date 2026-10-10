@@ -57,8 +57,8 @@ class LoginSecurityViewModelTest {
         coEvery { users.accountExists("cnUsed") } returns true
         coEvery { users.accountExists("cnA") } returns false
         coEvery { users.accountExists("cnB") } returns false
-        coEvery { users.adoptRetainedWallet("cnA", "Restored wallet") } returns SoraAccount("cnA", "Restored wallet")
-        coEvery { users.adoptRetainedWallet("cnB", any()) } throws IllegalStateException("RETAINED_WALLET_ADDRESS_MISMATCH")
+        coEvery { users.adoptRetainedWallet("cnA", "Restored wallet", false) } returns SoraAccount("cnA", "Restored wallet")
+        coEvery { users.adoptRetainedWallet("cnB", any(), any()) } throws IllegalStateException("RETAINED_WALLET_ADDRESS_MISMATCH")
 
         val vm = LoginSecurityViewModel(mockk(relaxed = true), interactor, users, resources)
         advanceUntilIdle()
@@ -70,7 +70,7 @@ class LoginSecurityViewModelTest {
         advanceUntilIdle()
         assertEquals(listOf("cnA"), vm.state.restored)
         assertEquals(listOf("cnB"), vm.state.notRestorable)
-        coVerify(exactly = 1) { users.adoptRetainedWallet("cnA", "Restored wallet") }
+        coVerify(exactly = 1) { users.adoptRetainedWallet("cnA", "Restored wallet", false) }
     }
 
     @Test
