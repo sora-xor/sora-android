@@ -6,5 +6,11 @@
     <string name="wallet_upgrade_recovery_export">Export encrypted recovery archive</string>
     <string name="wallet_upgrade_recovery_continue_legacy">Continue read-only with existing SORA wallet (sending and Nexus disabled)</string>
     <string name="wallet_upgrade_recovery_support">Contact SORA support</string>
+    <string name="wallet_upgrade_recovery_keep_installed">Please don\'t uninstall SORA or clear its storage. Your keys are stored on this device.</string>
+    <string name="wallet_upgrade_recovery_working">Working…</string>
+    <string name="wallet_upgrade_recovery_still_working">Still working… this can take up to a minute on some devices.</string>
+    <string name="wallet_upgrade_recovery_details_show">Show technical details</string>
+    <string name="wallet_upgrade_recovery_details_hide">Hide technical details</string>
+    <string name="wallet_upgrade_recovery_support_no_email">No email app is set up. You can write to %1$s.</string>
     <string name="splash_from" translatable="false">from</string>
 </resources>

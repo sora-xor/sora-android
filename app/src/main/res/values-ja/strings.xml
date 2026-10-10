@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Safe Mode recovery panel (splash). Keep in sync with values/strings.xml. -->
+<resources>
+    <string name="wallet_upgrade_recovery_title">ウォレットは安全ですが、確認が必要です</string>
+    <string name="wallet_upgrade_recovery_message">既存のすべてのアカウントをまだ確認できなかったため、SORAはアップグレードを一時停止しました。何も削除・置き換えされておらず、資産はブロックチェーン上で安全です。もう一度お試しいただくか、サポートにお問い合わせください。</string>
+    <string name="wallet_upgrade_recovery_code">リカバリーコード: %1$s</string>
+    <string name="wallet_upgrade_recovery_retry">もう一度確認する</string>
+    <string name="wallet_upgrade_recovery_export">暗号化されたリカバリーアーカイブをエクスポート</string>
+    <string name="wallet_upgrade_recovery_continue_legacy">既存のSORAウォレットを閲覧専用で続ける（送金とNexusは無効）</string>
+    <string name="wallet_upgrade_recovery_support">SORAサポートに問い合わせる</string>
+    <string name="wallet_upgrade_recovery_keep_installed">SORAをアンインストールしたり、ストレージを消去したりしないでください。鍵はこの端末に保存されています。</string>
+    <string name="wallet_upgrade_recovery_working">処理中…</string>
+    <string name="wallet_upgrade_recovery_still_working">まだ処理中です… 端末によっては最大1分ほどかかることがあります。</string>
+    <string name="wallet_upgrade_recovery_details_show">技術的な詳細を表示</string>
+    <string name="wallet_upgrade_recovery_details_hide">技術的な詳細を隠す</string>
+    <string name="wallet_upgrade_recovery_support_no_email">メールアプリが設定されていません。%1$s までご連絡ください。</string>
+</resources>

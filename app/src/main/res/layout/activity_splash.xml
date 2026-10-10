@@ -108,23 +108,72 @@
                     android:textColor="?attr/contentSecondary"
                     android:textSize="16sp" />
 
-                <TextView
-                    android:id="@+id/walletRecoveryCodeTextView"
+                <!--
+                  Reassurance callout (design spec 9.1-3, 7.17): info, not a warning. On Android the
+                  keys exist only on this device (no cloud or device-transfer backup of app data).
+                -->
+                <LinearLayout
+                    android:id="@+id/walletRecoveryKeepInstalledCallout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/x2"
-                    android:fontFamily="monospace"
+                    android:background="@drawable/bg_neon_info_callout"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/x1_5">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginTop="1dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_neon_shield_safe"
+                        android:tint="@color/neon_cyan"
+                        tools:ignore="UseAppTint" />
+
+                    <TextView
+                        android:id="@+id/walletRecoveryKeepInstalledTextView"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/x1_5"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/inter_regular"
+                        android:lineSpacingExtra="2sp"
+                        android:text="@string/wallet_upgrade_recovery_keep_installed"
+                        android:textColor="?attr/contentPrimary"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <!-- Shown while an action runs (the running button reads "Working…"). -->
+                <ProgressBar
+                    android:id="@+id/walletRecoveryProgressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="@dimen/x2"
+                    android:importantForAccessibility="no"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/neon_cyan"
+                    android:visibility="invisible" />
+
+                <!-- After 10 s of work (design spec 9.1-5). Announced politely. -->
+                <TextView
+                    android:id="@+id/walletRecoveryStatusTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/x1"
+                    android:accessibilityLiveRegion="polite"
+                    android:fontFamily="@font/inter_regular"
+                    android:text="@string/wallet_upgrade_recovery_still_working"
                     android:textColor="?attr/contentSecondary"
-                    android:textIsSelectable="true"
-                    android:textSize="13sp"
-                    tools:text="Recovery code: SECRET_DECRYPTION_FAILED" />
+                    android:textSize="14sp"
+                    android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/retryWalletMigrationButton"
                     style="@style/Widget.Sora.Button.Safe"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginTop="@dimen/x1"
                     android:text="@string/wallet_upgrade_recovery_retry" />
 
                 <com.google.android.material.button.MaterialButton
@@ -151,6 +200,28 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/x1"
                     android:text="@string/wallet_upgrade_recovery_support" />
+
+                <!-- Technical details (design spec 7.17): the recovery code stays out of the body. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/walletRecoveryDetailsButton"
+                    style="@style/Widget.Sora.Button.Tertiary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/wallet_upgrade_recovery_details_show" />
+
+                <TextView
+                    android:id="@+id/walletRecoveryCodeTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/x1"
+                    android:fontFamily="monospace"
+                    android:gravity="center_horizontal"
+                    android:textColor="?attr/contentSecondary"
+                    android:textIsSelectable="true"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    tools:text="Recovery code: SECRET_DECRYPTION_FAILED"
+                    tools:visibility="visible" />
             </LinearLayout>
         </FrameLayout>
     </ScrollView>

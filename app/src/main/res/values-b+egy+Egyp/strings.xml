@@ -6,4 +6,10 @@
     <string name="wallet_upgrade_recovery_export">𓂋𓂧𓇋𓂋𓂋𓅱𓏏𓇌 𓋴𓈙𓏏𓄿 𓈖𓎛𓅓 𓊪𓂋𓋴𓈙𓅱</string>
     <string name="wallet_upgrade_recovery_continue_legacy">𓈙𓅓 𓈙𓂧-𓅱𓂝 𓎛𓈖𓂝 𓅱𓈖 SORA 𓊪𓂋𓎛𓆓 (𓉔𓄿𓃀 𓎛𓈖𓂝 Nexus 𓈖𓇋𓂋)</string>
     <string name="wallet_upgrade_recovery_support">𓆓𓂧𓈖 SORA 𓋴𓄿</string>
+    <string name="wallet_upgrade_recovery_keep_installed">Please don\'t uninstall SORA or clear its storage. Your keys are stored on this device.</string>
+    <string name="wallet_upgrade_recovery_working">Working…</string>
+    <string name="wallet_upgrade_recovery_still_working">Still working… this can take up to a minute on some devices.</string>
+    <string name="wallet_upgrade_recovery_details_show">Show technical details</string>
+    <string name="wallet_upgrade_recovery_details_hide">Hide technical details</string>
+    <string name="wallet_upgrade_recovery_support_no_email">No email app is set up. You can write to %1$s.</string>
 </resources>
