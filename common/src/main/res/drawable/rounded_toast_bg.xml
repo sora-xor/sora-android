@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Toast card: bg.toast (?attr/flatAboveBackground), radius 16 and a 1 dp hairline so the card edge
+  shows on the dark canvas (design spec 7.13).
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:id="@+id/background" >
         <shape android:shape="rectangle">
             <solid android:color="?attr/flatAboveBackground"/>
-            <corners
-                android:topLeftRadius="@dimen/x3"
-                android:bottomLeftRadius="@dimen/x3"
-                android:bottomRightRadius="@dimen/x3"
-                android:topRightRadius="@dimen/x3" />
+            <corners android:radius="16dp" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/neon_hairline" />
         </shape>
     </item>
 

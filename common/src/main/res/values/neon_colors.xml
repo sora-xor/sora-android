@@ -42,4 +42,7 @@
     <color name="neon_safe_border_end">#6600708A</color>
     <!-- Glass button fill and pressed fill on the opaque XML surfaces -->
     <color name="neon_button_secondary">#F2F3F8</color>
+    <!-- bg.toast (inverted in light, design spec 7.13) and its text -->
+    <color name="neon_toast">#14141F</color>
+    <color name="neon_on_toast">#FFFFFF</color>
 </resources>
