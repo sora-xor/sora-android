@@ -198,6 +198,12 @@ object WalletUpgradeBackup {
     fun nonBlockingWarnings(): List<String> = nonBlockingWarnings
 
     /**
+     * What the last preparation learned about the stored wallet data (key names, account names,
+     * the release-era owner), for the recovery screens. Nothing in it is secret.
+     */
+    fun recoveryFacts(): RecoveryFacts = recoveryFacts
+
+    /**
      * The forward paths available for the current blocking or transient state, or null when the
      * wallet is usable. Every state offers at least Try again and Contact support; the other
      * paths are offered only where they work (see [WalletRecoveryOptions]).
@@ -1537,6 +1543,11 @@ object WalletUpgradeBackup {
         val preferenceInventory = walletPreferenceInventory(context)
         recoveryFacts = recoveryFacts.copy(
             hasRecoveryPhraseOrSeed = preferenceInventory.hasRecoveryPhraseOrSeed,
+            phraseWalletIds = (
+                preferenceInventory.mnemonicWalletIds + preferenceInventory.rawSeedWalletIds
+                ).sorted(),
+            legacyOwner = preferenceInventory.legacyPureAddress,
+            hasUnscopedPhraseOrSeed = preferenceInventory.hasUnscopedPhraseOrSeed,
         )
         // Only "no such file" means missing. Any other lstat error is reported as a transient
         // failure: treating it as missing would set aside a live write-ahead log.
@@ -1586,6 +1597,11 @@ object WalletUpgradeBackup {
         ) {
             throw WalletUpgradeBackupException("SOURCE_CHANGED")
         }
+        recoveryFacts = recoveryFacts.copy(
+            accountNames = databaseInventory.accounts
+                .filter { it.substrateAddress.isNotBlank() }
+                .associate { it.substrateAddress to it.accountName },
+        )
         val legacyWalletIds = databaseInventory.accounts
             .map(SoraAccountLocal::substrateAddress)
             .toSet()
@@ -5026,6 +5042,10 @@ object WalletUpgradeBackup {
                 entry.key in WalletPreferenceKeys.encryptedCredentialPrefixes &&
                     !entry.stringValue.isNullOrBlank()
             },
+            hasUnscopedPhraseOrSeed = entries.any { entry ->
+                (entry.key == WalletPreferenceKeys.MNEMONIC || entry.key == WalletPreferenceKeys.SEED) &&
+                    !entry.stringValue.isNullOrBlank()
+            },
             hasWalletMaterial = walletEntries.isNotEmpty(),
             hasWrappedWalletKeyEvidence = false,
             hasUnscopedRegisteredKeyPair =
@@ -6340,6 +6360,8 @@ object WalletUpgradeBackup {
 
     private data class WalletPreferenceInventory(
         val hasRecoveryPhraseOrSeed: Boolean,
+        /** A release-era phrase or seed is stored without an address suffix. */
+        val hasUnscopedPhraseOrSeed: Boolean = false,
         val hasUnscopedCredential: Boolean,
         val hasWalletMaterial: Boolean,
         val hasWrappedWalletKeyEvidence: Boolean,
