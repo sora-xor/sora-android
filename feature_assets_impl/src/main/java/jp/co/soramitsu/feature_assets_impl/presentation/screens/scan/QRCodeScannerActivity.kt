@@ -39,6 +39,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
 import android.widget.Toast
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -100,6 +102,14 @@ class QRCodeScannerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // The scanner is always dark (camera under a dark scrim), whatever the app theme: draw
+        // edge to edge on every API level with transparent bars and light status/navigation
+        // icons. AppTheme would give dark icons in light mode (and a light bar strip before
+        // Android 15), which are unreadable over the camera.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         setContentView(binding.root)
 
         initScreen(savedInstanceState)
