@@ -21,6 +21,7 @@ import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.SetUpAgainScope
 import jp.co.soramitsu.core_db.WalletRecoveryKind
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.core_db.dao.AccountDao
@@ -788,6 +789,8 @@ class MigrationManagerSafetyTest {
             migrationSr25519Crypto = testMigrationSr25519Crypto,
         )
 
+        // Start from a usable state (the recovery state is process-wide).
+        WalletUpgradeBackup.noteMigrationVerified()
         assertFalse(manager.start())
         assertEquals("RECOVERY_REQUIRED", capturedFailure.captured.state)
         assertEquals("VERIFIED_RECEIPT_INVALID", capturedFailure.captured.failureCode)
@@ -795,6 +798,21 @@ class MigrationManagerSafetyTest {
         coVerify(exactly = 0) { walletDao.upsertMigrationJournal(any()) }
         coVerify(exactly = 0) { credentials.isExplicitWatchOnly(any()) }
         coVerify(exactly = 0) { credentials.retrieveKeyPair(any()) }
+        try {
+            // The recovery screen in this process offers what the next start would offer, so
+            // the restore it shows is accepted (requestSetUpAgain reads these same options).
+            val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+            assertEquals("VERIFIED_RECEIPT_INVALID", options.code)
+            assertEquals(SetUpAgainScope.DATABASE_ONLY, options.setUpAgainScope)
+            assertTrue(options.canSetUpAgain && options.canRestoreFromPhrase && options.canReadOnly)
+            assertEquals(
+                WalletRecoveryCapabilityGate.Mode.RECOVERY_INSPECTED,
+                WalletRecoveryCapabilityGate.mode(),
+            )
+        } finally {
+            WalletUpgradeBackup.noteMigrationVerified()
+        }
+        assertEquals(null, WalletUpgradeBackup.recoveryOptions())
     }
 
     @Test

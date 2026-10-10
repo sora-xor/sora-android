@@ -2368,8 +2368,14 @@ class WalletUpgradeBackupTest {
             SetUpAgainScope.ALL_WALLET_FILES,
             WalletUpgradeBackup.pendingSetUpAgainScope(context),
         )
-        // Nothing moves in the process that asked: its DataStore and Room may be open.
-        assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+        // Nothing moves in the process that asked: its DataStore and Room may be open. Try again
+        // in this process is refused (the app restarts instead), so the files are not verified
+        // and opened while they wait to be set aside.
+        assertEquals(
+            "SET_UP_AGAIN_INCOMPLETE",
+            (WalletUpgradeBackup.retry(context).exceptionOrNull() as? WalletUpgradeBackupException)?.code,
+        )
+        assertTrue(WalletUpgradeBackup.isSetUpAgainRequested(context))
         originals.values.forEach { assertTrue(it.path, it.isFile) }
 
         WalletUpgradeBackup.simulateProcessStartForTest()
@@ -2468,6 +2474,40 @@ class WalletUpgradeBackupTest {
         assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isFailure)
         assertFalse(WalletUpgradeBackup.isSetUpAgainRequested(context))
         assertTrue(context.getDatabasePath(DATABASE_NAME).isFile)
+    }
+
+    @Test
+    fun aVerificationThatFailsInTheRunningAppOffersTheRestoreItShows() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Retained")))
+        putDataStoreStringMarker("prefs_mnemonic$WALLET_ID")
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertEquals(null, WalletUpgradeBackup.recoveryOptions())
+        // The startup checks passed; MigrationManager then recorded a failure for this run.
+        WalletUpgradeBackup.noteMigrationRecoveryRequired("POST_MIGRATION_MISMATCH")
+        val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+        assertEquals("POST_MIGRATION_MISMATCH", options.code)
+        assertEquals(SetUpAgainScope.DATABASE_ONLY, options.setUpAgainScope)
+        // The facts gathered at startup still apply: the phrase can be shown and exported.
+        assertTrue(options.canRestoreFromPhrase && options.canShowPhraseAfterPin && options.canExport)
+        val databaseBytes = context.getDatabasePath(DATABASE_NAME).readBytes()
+
+        // The restore it offers is accepted, and only the request is written.
+        assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        assertEquals(
+            SetUpAgainScope.DATABASE_ONLY,
+            WalletUpgradeBackup.pendingSetUpAgainScope(context),
+        )
+        assertArrayEquals(databaseBytes, context.getDatabasePath(DATABASE_NAME).readBytes())
+        // Try again in this process waits for the restart that sets the database aside.
+        assertEquals(
+            "SET_UP_AGAIN_INCOMPLETE",
+            (WalletUpgradeBackup.retry(context).exceptionOrNull() as? WalletUpgradeBackupException)?.code,
+        )
+        assertTrue(WalletUpgradeBackup.isSetUpAgainRequested(context))
+
+        // A verified run forgets the in-memory state.
+        WalletUpgradeBackup.noteMigrationVerified()
+        assertEquals(null, WalletUpgradeBackup.recoveryOptions())
     }
 
     @Test
