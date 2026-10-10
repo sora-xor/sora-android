@@ -38,9 +38,14 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
+import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
@@ -49,7 +54,9 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class LoginSecurityViewModel @Inject constructor(
     private val mainRouter: MainRouter,
-    private val mainInteractor: MainInteractor
+    private val mainInteractor: MainInteractor,
+    private val userRepository: UserRepository,
+    private val resourceManager: ResourceManager,
 ) : BaseViewModel() {
 
     internal var state by mutableStateOf(LoginSecurityState(false, false))
@@ -62,10 +69,50 @@ class LoginSecurityViewModel @Inject constructor(
         viewModelScope.launch {
             val available = mainInteractor.isBiometryAvailable()
             val enabled = mainInteractor.isBiometryEnabled()
-            state = LoginSecurityState(
+            state = state.copy(
                 bioAvailable = available,
                 bioEnabled = enabled && available,
             )
+        }
+        viewModelScope.launch {
+            tryCatch {
+                state = state.copy(retainedWallets = findRetainedWallets())
+            }
+        }
+    }
+
+    /**
+     * Key sets found at startup that no account uses (an unfinished account setup, an account
+     * removed in an older version, or keys kept by "Set up this device again"). Only offered in
+     * normal mode, where adding an account is allowed.
+     */
+    private suspend fun findRetainedWallets(): List<String> {
+        if (WalletRecoveryCapabilityGate.isUserMutationBlocked()) return emptyList()
+        return WalletUpgradeBackup.quarantine().retainedWalletIds
+            .filter { !userRepository.accountExists(it) }
+            .sorted()
+    }
+
+    /**
+     * Restores one wallet found on this phone. The repository proves the stored keys derive this
+     * address before it adds the account; no key material is written, moved or deleted.
+     */
+    fun restoreRetainedWallet(address: String) {
+        if (state.restoring != null) return
+        state = state.copy(restoring = address)
+        viewModelScope.launch {
+            val result = runCatching {
+                userRepository.adoptRetainedWallet(
+                    address = address,
+                    accountName = resourceManager.getString(R.string.safe_mode_restored_wallet_name),
+                )
+            }
+            state = if (result.isSuccess) {
+                state.copy(restoring = null, restored = state.restored + address)
+            } else {
+                result.exceptionOrNull()?.let { FirebaseWrapper.recordException(it) }
+                state.copy(restoring = null, notRestorable = state.notRestorable + address)
+            }
         }
     }
 

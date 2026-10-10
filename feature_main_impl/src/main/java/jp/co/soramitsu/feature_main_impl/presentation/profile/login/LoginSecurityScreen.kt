@@ -36,7 +36,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,9 +50,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.Option
 import jp.co.soramitsu.common.presentation.compose.components.OptionSwitch
+import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.DeviceTransferNotice
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeAction
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeCard
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
 internal fun LoginSecurityScreen(
@@ -54,6 +66,8 @@ internal fun LoginSecurityScreen(
     bioEnabled: Boolean,
     onChangePinClick: () -> Unit,
     onToggle: (Boolean) -> Unit,
+    retained: RetainedWalletsUi = RetainedWalletsUi(),
+    onRestoreRetained: (String) -> Unit = {},
 ) {
     Column {
         ContentCard(
@@ -90,6 +104,78 @@ internal fun LoginSecurityScreen(
                 .padding(horizontal = Dimens.x2)
                 .padding(top = Dimens.x2),
         )
+        if (retained.addresses.isNotEmpty()) {
+            RetainedWallets(
+                modifier = Modifier
+                    .padding(horizontal = Dimens.x2)
+                    .padding(top = Dimens.x2),
+                retained = retained,
+                onRestore = onRestoreRetained,
+            )
+        }
+    }
+}
+
+/** The "Wallets found on this phone" section: addresses and what happened to each. */
+internal data class RetainedWalletsUi(
+    val addresses: List<String> = emptyList(),
+    val restoring: String? = null,
+    val restored: List<String> = emptyList(),
+    val notRestorable: List<String> = emptyList(),
+)
+
+/**
+ * Key sets kept on this phone that no account uses (U8: an unfinished account setup is kept
+ * safely; also keys left by an older version or by "Set up this device again"). Restoring one
+ * adds the account only after its keys are proven to belong to the address.
+ */
+@Composable
+private fun RetainedWallets(
+    retained: RetainedWalletsUi,
+    onRestore: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val n = MaterialTheme.neon
+    SafeCard(modifier = modifier) {
+        Text(
+            modifier = Modifier.semantics { heading() },
+            text = stringResource(R.string.safe_mode_retained_title),
+            style = MaterialTheme.customTypography.headline2,
+            color = n.textPrimary,
+        )
+        Spacer(Modifier.size(Dimens.x1))
+        Text(
+            text = stringResource(R.string.safe_mode_retained_body),
+            style = MaterialTheme.customTypography.paragraphS,
+            color = n.textSecondary,
+        )
+        retained.addresses.forEach { address ->
+            Spacer(Modifier.size(Dimens.x2))
+            Text(
+                text = if (address.length > 16) "${address.take(8)}…${address.takeLast(8)}" else address,
+                style = NeonType.mono,
+                color = n.textPrimary,
+            )
+            when (address) {
+                in retained.restored -> Text(
+                    text = stringResource(R.string.safe_mode_retained_restored),
+                    style = MaterialTheme.customTypography.textS,
+                    color = n.textSecondary,
+                )
+                in retained.notRestorable -> Text(
+                    text = stringResource(R.string.safe_mode_retained_not_restorable),
+                    style = MaterialTheme.customTypography.textS,
+                    color = n.textSecondary,
+                )
+                else -> SafeAction(
+                    text = stringResource(R.string.safe_mode_retained_restore),
+                    variant = NeonVariant.Secondary,
+                    enabled = retained.restoring == null,
+                    loading = retained.restoring == address,
+                    onClick = { onRestore(address) },
+                )
+            }
+        }
     }
 }
 

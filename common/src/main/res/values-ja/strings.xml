@@ -605,4 +605,10 @@
   <string name="safe_mode_tap_to_reveal">タップして表示</string>
   <string name="safe_mode_reveal_privacy">周りから画面が見えないことを確認してください。</string>
   <string name="safe_mode_support_no_email">メールアプリが設定されていません。%1$s までご連絡ください。</string>
+  <string name="safe_mode_retained_title">この端末で見つかったウォレット</string>
+  <string name="safe_mode_retained_body">どのアカウントにも使われていないウォレットの鍵がこの端末で見つかりました（完了しなかったアカウント作成など）。鍵は保持されており、何も削除されていません。ここで復元できます。</string>
+  <string name="safe_mode_retained_restore">このウォレットを復元</string>
+  <string name="safe_mode_retained_restored">復元しました。アカウント一覧に追加されています。</string>
+  <string name="safe_mode_retained_not_restorable">この端末の鍵からはこのウォレットを復元できません。代わりにリカバリーフレーズまたはシードをインポートしてください。</string>
+  <string name="safe_mode_restored_wallet_name">復元したウォレット</string>
 </resources>

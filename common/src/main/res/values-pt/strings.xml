@@ -608,4 +608,10 @@
   <string name="safe_mode_tap_to_reveal">Tap to reveal</string>
   <string name="safe_mode_reveal_privacy">Make sure no one can see your screen.</string>
   <string name="safe_mode_support_no_email">No email app is set up. You can write to %1$s.</string>
+  <string name="safe_mode_retained_title">Wallets found on this phone</string>
+  <string name="safe_mode_retained_body">SORA found wallet keys on this phone that no account uses, for example from an account setup that was not finished. They were kept and nothing was deleted. You can restore them here.</string>
+  <string name="safe_mode_retained_restore">Restore this wallet</string>
+  <string name="safe_mode_retained_restored">Restored. It is now in your accounts.</string>
+  <string name="safe_mode_retained_not_restorable">This wallet can\'t be restored from the keys on this phone. Import its recovery phrase or seed instead.</string>
+  <string name="safe_mode_restored_wallet_name">Restored wallet</string>
 </resources>
