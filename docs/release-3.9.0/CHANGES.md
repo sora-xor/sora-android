@@ -1252,7 +1252,7 @@ started with this candidate (device tests below unless noted):
 | Interrupted backup copy | Cleaned up or renamed aside; upgrade continues. |
 | Busy Keystore at start | Not remembered or journaled; next attempt verifies and signs. |
 | 2.4–3.3 (Room 58–72) | Same layout as 3.x; the Room chain from 58 is covered by the existing `core_db` migration tests (schemas 58–77). Review round: 2.4.0 layout device-tested (see below). |
-| SORA v1 (Iroha, Room 15–40), believed ~0 installs | Not device-tested. Unscoped Ed25519 keys are ignored (no SORA2 address can come from them); the 15-word phrase stays stored and can be imported. Showing it needs the Safe Mode task. |
+| SORA v1 (Iroha, Room 15–40), believed ~0 installs | Unscoped Ed25519 keys are ignored (no SORA2 address can come from them); the 15-word phrase stays stored and can be imported. Device-tested in the a4 retry (see below), together with the pre-DataStore SORA2 builds 2.1.0 and 3.0.0. |
 
 ### Not in this task
 
@@ -1700,6 +1700,144 @@ overwrites or moves key material automatically.
   - `:app:assembleProductionDebug` passes.
   - `:app:lintProductionDebug`: 866 warnings, 1 hint and 180 baselined
     errors. The baseline is unchanged.
+
+### a4 retry (2026-10-10, after a5, a6 and the a3 rounds)
+
+The a4 task was run again on the current branch. Its earlier rounds were
+re-checked against the task list after the later tasks changed the same
+files, and the gaps found are closed below. No key value, wrapped key,
+Keystore alias or account row is deleted, overwritten, re-encrypted or
+moved by anything in this round. Addresses, derivation (sr25519, SS58 69),
+the genesis pin and production signing are unchanged.
+
+**Re-check at the current tree (before any change)**
+
+- `testProductionDebugUnitTest`: 1,190 tests in 15 modules, 0 failures,
+  10 skipped.
+- SORA-Api36-16k: `common` 14/14, `core_db` 132/132,
+  `WalletUpgradeScenarioTest` 30/30. The later tasks (Safe Mode,
+  restore-found-wallets, verification progress) did not break any a4
+  scenario.
+
+**Every historical storage generation, now including the oldest ones**
+(fix map §2)
+
+The table above left SORA v1 untested, and the first SORA2 builds of 2021
+(G0b in the fix map) were not covered at all. Those builds have no release
+tag and stored everything in plain SharedPreferences (`sora_prefs.xml`), not
+the DataStore. New verbatim writers in `HistoricalWalletWriters.kt`, copied
+with `git show` from the release commits:
+
+- SORA v1 1.6.1 (`d9e84dfb`, 2020): `PrefsDidDatasource` (the Iroha Ed25519
+  DID keys, without nonce or address, the DDO and the 15-word phrase, all
+  unsuffixed) and `PrefsUserDatasource`.
+- SORA 2.1.0 (`5011848c`, June 2021): `PrefsCredentialsDatasource` with the
+  address encrypted under `prefs_address`.
+- SORA 3.0.0 (`c8f87a48`, August 2021): `PrefsCredentialsDatasource`
+  (address in `prefs_address_pure`, sr25519 keys with the nonce written only
+  when non-empty, the Iroha claim keys, address and signature) and
+  `PrefsUserDatasource`.
+- `Preferences` and `EncryptedPreferences` (identical in all three) write
+  `sora_prefs.xml` with `apply()`. `EncryptionUtil` in these builds differs
+  from 3.8.6.3 only in formatting and imports, so the same wrapped key and
+  `IV || AES/CBC` values result.
+- The Iroha Ed25519 keys come from the same library the app ships
+  (`Ed25519Sha3.generateKeypair`, called by reflection because it is a
+  runtime-only dependency of `common`).
+- Room 44 (3.0.0) and 40 (2.1.0) are rebuilt from every `@Entity` of those
+  commits. Room 33 (v1) has its asset and transfer tables only; the 3.9.0
+  migration to Room 58 renames every table of a 15..57 database without
+  reading it, and no key was ever stored in Room before 58.
+
+New device scenarios (`WalletUpgradeScenarioTest`, now 34):
+
+| Generation | Result |
+|---|---|
+| SORA 3.0.0 (Room 44, SharedPreferences, plain address) | Upgrades through 44→58→77; the pre-migration backup holds `sora_prefs.xml` byte for byte; same address, account name kept; signs; a second start verifies again and signs. |
+| SORA 2.1.0 (Room 40, SharedPreferences, encrypted address, no account name) | Upgrades; same address; signs. |
+| SORA v1 1.6.1 (Room 33, Ed25519 DID keys without nonce, 15-word phrase) | Never blocked. Opens at onboarding (no SORA2 account can come from those keys). Every v1 value is kept unchanged and is in the pre-migration backup. "Restore wallets found on this phone" does not offer the v1 keys, and adopting their look-alike address is refused without writing anything. The stored phrase can be read for "Show my recovery phrase". Importing it gives its SORA2 account, which signs. |
+| New install: 12, 15, 18, 21 and 24-word phrases | Each imports with its own address and signs; 15/18/21 are SORA2-only (`MNEMONIC_UNSUPPORTED`), as the product decision says. The 18-word import had no device test before. |
+
+Note on the 2021 builds: the DataStore that 2.3.2 introduced is created with
+`SharedPreferencesMigration("sora_prefs")`. On its first read it copies every
+value into the DataStore, commits that, and only then removes
+`sora_prefs.xml`. This is how every release since 2.3.2 has worked, and
+3.9.0 keeps it: without it the app could not see these keys. The values are
+copied unchanged (the scenarios compare every ciphertext). The upgrade gate
+first makes the verified pre-migration backup of the original file, because
+a Room 33-44 database always needs a schema migration. The scenarios check
+that backup byte for byte before the DataStore is opened. The release
+checklist asks the engineering owner to confirm this.
+
+**Startup with no migration pending stays cheap** (F4,
+`WalletUpgradeBackup`)
+
+- Backup pruning no longer validates anything when nothing can be pruned.
+  Before, a phone with a pre-migration backup and three current-schema
+  snapshots fully validated (hashed, copied and integrity-checked) those
+  three snapshots on the main thread after every account change. Now the
+  check is skipped when every backup beyond the newest three is a
+  pre-migration backup, which is never pruned. What is kept is unchanged.
+- New test-only counters (`WalletUpgradeBackup.WorkCountersForTest`:
+  full backup validations, bytes hashed, files copied). They only count;
+  nothing reads them to decide anything.
+- New `core_db` device test
+  `startupWithNoPendingMigrationHashesCopiesAndValidatesNothing`: after the
+  one-time pruning, five app starts (also after a second verified account
+  is added) validate no backup, hash no byte and copy no file. Measured
+  steady-state `prepare()` on SORA-Api36-16k: 9, 2, 3, 3 and 2 ms. The
+  test asserts the counters, not the times: without hashing or copying, the
+  cost no longer depends on the size of the database or the backups.
+- Not changed, and why: the first start after an install makes one
+  current-schema snapshot when none exists, and only when its sources are at
+  most 16 MiB and space is clearly enough (a4 round 1). A schema
+  migration still needs its verified backup before Room opens, on the main
+  thread (the authors' rule; moving it off the main thread is the fix map's
+  tier 2 and needs the splash screen to wait for it).
+
+**Checked, no change needed**
+
+- Malformed key material cannot crash the process. The sr25519 native
+  library reports a wrong-length secret as a Java exception and a
+  wrong-length public key as `false`. Device probe: "Provided private key is
+  invalid." Every startup path that signs with stored keys catches it: the
+  wallet check makes that account read-only, and release-era keys are
+  marked "not restorable". So malformed keys never stop the app from
+  starting.
+- Room 12/13 (2019, probably never shipped) still stops at the upgrade
+  gate (`LEGACY_ACCOUNTS_TABLE_MISSING`). Safe Mode offers the exits.
+  Nothing is changed or deleted. Read in the code, not device-tested.
+
+**Verification (a4 retry)**
+
+| Suite | SORA-Api36-16k | SORA-Api34 |
+|---|---|---|
+| `common` (`EncryptionUtilKeySafetyTest` and others) | 14/14 | 14/14 |
+| `core_db` (`WalletUpgradeBackupTest` 112, `WalletIdentityMigration75Test` 18, card-hub and asset tests 3) | 133/133 | 133/133 |
+| `WalletUpgradeScenarioTest` | 34/34 | 34/34 |
+
+- `testProductionDebugUnitTest`: 1,190 tests in 15 modules, 0 failures,
+  10 skipped (re-run after the change).
+- `:app:assembleProductionDebug` passes. `:app:lintProductionDebug`:
+  0 errors, 947 warnings and 1 hint (179 baselined errors). The same as
+  before this round; the lint baseline is unchanged.
+- ktlint on the changed files reports nothing new (one finding fewer than
+  before in `WalletUpgradeScenarioTest.kt`).
+- Not run in this round: the ordered `EncryptedWalletMigrationStorageTest`
+  phases and the qualification scripts (retired by a1). Nothing they
+  cover changed: this round adds one early return in backup pruning,
+  test-only counters, and device tests.
+
+**User-visible effects**
+
+- No change for wallets. The new scenarios passed against the existing
+  code, so this round adds proof, not new behaviour. People who kept a 2021
+  SORA build upgrade with the same address, and their wallet signs. People
+  who still have SORA v1 see onboarding and can restore with their 15-word
+  phrase, and their old keys stay on the phone.
+- Phones with several upgrade backups from test builds no longer re-check
+  them at start-up after every account change.
+- No new strings, no UI change.
 
 ## a5: SORA Neon UI foundation (Android)
 
