@@ -318,12 +318,10 @@
   <string name="mnemonic_invalid_title">Ongeldige wachtwoordzin</string>
   <string name="mnemonic_text">Wij bevelen aan om gebruik te maken van een niet-digitale manier om een back-up op te slaan, zoals het opschrijven op papier.</string>
   <string name="network_fee">Netwerkvergoeding</string>
-  <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">URL niet gevalideerd (verkeerd adres)</string>
   <string name="node_details_genesis_validation_failed">De genesis-hash van uw node is anders dan de genesis-hash van het netwerk</string>
   <string name="node_details_node_already_added" formatted="false">Deze node is al toegevoegd: %s\nVerbinding tot stand gebracht met node %s</string>
   <string name="node_details_protocol_validation_failed">URL niet gevalideerd (verkeerd URL-protocol)</string>
-  <string name="node_offline">Node offline</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">Enter name for your new account and how it will appear under your address. With an on-chain identity, it can be made available to others.</string>
   <string name="onboarding_create_account_subtitle">Visible only for you and stored locally</string>
@@ -344,9 +342,6 @@
   <string name="pincode_enter_current_pin_code">Voer de huidige pincode in</string>
   <string name="pincode_enter_new_pin_code">Voer een nieuwe pincode in</string>
   <string name="pincode_enter_pin_code">Voer de pincode in</string>
-  <string name="pincode_length_info_button_text">Nieuwe PIN-code instellen</string>
-  <string name="pincode_length_info_message">Het beveiligingsbeleid van SORA is verbeterd voor uw bescherming. Een 4-cijferige PIN wordt niet langer ondersteund. Gelieve een nieuwe 6-cijferige PIN in te stellen.</string>
-  <string name="pincode_length_info_title">Stel een 6-cijferige PIN-code in</string>
   <string name="pincode_one_try_left">Je hebt nog één poging voor de cooldown.</string>
   <string name="pincode_set_your_pin_code">Stel uw pincode in</string>
   <string name="pincode_touch_fingerprint_scanner">Raak de vingerafdrukscanner aan</string>
@@ -523,7 +518,6 @@
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
-  <string name="switch_node">Switch node</string>
   <string name="system_appearance">Systeem verschijning</string>
   <string name="tabbar_parliament_title">Parlement</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

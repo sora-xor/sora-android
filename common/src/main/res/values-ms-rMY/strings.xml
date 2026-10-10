@@ -318,12 +318,10 @@
   <string name="mnemonic_text">Kami mengesyorkan untuk menggunakan cara bukan digital untuk membuat sandaran, seperti menulisnya di atas kertas.</string>
   <string name="network_fee">Yuran Rangkaian</string>
   <string name="network_finalized_history">Aktiviti</string>
-  <string name="node_connection_issue">Akaun anda telah berjaya dibuat. Tetapi apl tidak boleh menyambung ke nod lalai. Cuba beralih kepada alternatif.</string>
   <string name="node_details_address_validation_failed">Gagal mengesahkan URL (Alamat salah)</string>
   <string name="node_details_genesis_validation_failed">Cincang genesis nod anda berbeza daripada cincang genesis rangkaian</string>
   <string name="node_details_node_already_added" formatted="false">Nod ini telah ditambah: %s \n Sambungan diwujudkan dengan nod %s</string>
   <string name="node_details_protocol_validation_failed">Gagal mengesahkan URL (Protokol URL salah)</string>
-  <string name="node_offline">Nod luar talian</string>
   <string name="onboarding_continue_with_google">Teruskan dengan Google</string>
   <string name="onboarding_create_account_description">Masukkan nama untuk akaun baharu anda dan bagaimana ia akan dipaparkan di bawah alamat anda. Dengan identiti dalam rantaian, ia boleh disediakan kepada orang lain.</string>
   <string name="onboarding_create_account_subtitle">Boleh dilihat hanya untuk anda dan disimpan secara setempat</string>
@@ -344,9 +342,6 @@
   <string name="pincode_enter_current_pin_code">Masukkan kod pin semasa</string>
   <string name="pincode_enter_new_pin_code">Masukkan kod pin baru</string>
   <string name="pincode_enter_pin_code">Masukkan kod pin</string>
-  <string name="pincode_length_info_button_text">Tetapkan kod PIN baharu</string>
-  <string name="pincode_length_info_message">Dasar keselamatan SOLA telah dipertingkatkan untuk perlindungan anda. PIN 4 digit tidak lagi disokong. Sila sediakan PIN 6 digit baharu.</string>
-  <string name="pincode_length_info_title">Sila sediakan kod PIN 6 digit</string>
   <string name="pincode_one_try_left">Anda mempunyai satu percubaan lagi sebelum bertenang</string>
   <string name="pincode_set_your_pin_code">Cipta kod pin</string>
   <string name="pincode_touch_fingerprint_scanner">Sentuh pengimbas cap jari</string>
@@ -520,7 +515,6 @@
   <string name="succesfully_imported_account_title">Anda telah berjaya mengimport akaun</string>
   <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Pastikan anda mempunyai %s yang tersisa selepas transaksi ini. Jika tidak, anda tidak akan dapat melakukan transaksi lain.</string>
-  <string name="switch_node">Tukar nod</string>
   <string name="system_appearance">Penampilan sistem</string>
   <string name="tabbar_parliament_title">Parlimen</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

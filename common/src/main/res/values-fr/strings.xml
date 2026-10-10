@@ -319,12 +319,10 @@
   <string name="mnemonic_text">Nous recommandons d\'utiliser un moyen physique pour conserver vos données, comme l\'écrire sur papier.</string>
   <string name="network_fee">Frais de réseau</string>
   <string name="network_finalized_history">Activité</string>
-  <string name="node_connection_issue">Votre compte a été créé avec succès. Mais l\'application n\'a pas pu se connecter à un nœud par défaut. Veuillez essayer de vous connecter à un autre nœud.</string>
   <string name="node_details_address_validation_failed">Impossible de valider l\'URL (Mauvaise adresse)</string>
   <string name="node_details_genesis_validation_failed">Le hash de genèse de votre nœud est différent du hash de genèse du réseau</string>
   <string name="node_details_node_already_added" formatted="false">Ce nœud est déjà ajouté: %s \n Connexion établie avec le nœud %s</string>
   <string name="node_details_protocol_validation_failed">Échec de la validation de l\'URL (Protocole d\'URL incorrect)</string>
-  <string name="node_offline">Nœud hors ligne</string>
   <string name="onboarding_continue_with_google">Continuer avec Google</string>
   <string name="onboarding_create_account_description">Entrez un nom pour votre compte et la manière dont il apparaîtra sous votre adresse. En définissant une identité on-chain, celui-ci peut être visible aux autres participants du réseau.</string>
   <string name="onboarding_create_account_subtitle">Visible seulement pour vous et stocké localement</string>
@@ -345,9 +343,6 @@
   <string name="pincode_enter_current_pin_code">Entrez le code PIN actuel</string>
   <string name="pincode_enter_new_pin_code">Entrez le nouveau code PIN</string>
   <string name="pincode_enter_pin_code">Entrez le code PIN</string>
-  <string name="pincode_length_info_button_text">Définir un nouveau PIN</string>
-  <string name="pincode_length_info_message">Les conditions de sécurité de SORA ont été améliorées pour votre protection. Les PIN de 4 chiffes ne sont plus supportés. Veuillez définir un nouveau PIN de 6 chiffres.</string>
-  <string name="pincode_length_info_title">Veuillez définir un PIN de 6 chiffres</string>
   <string name="pincode_one_try_left">Vous avez encore un essai avant le délai de réutilisation</string>
   <string name="pincode_set_your_pin_code">Choisissez un code PIN</string>
   <string name="pincode_touch_fingerprint_scanner">Touchez le scanner d\'empreintes digitales</string>
@@ -526,7 +521,6 @@
   <string name="succesfully_imported_account_title">Vous avez importé votre compte avec succès</string>
   <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Assurez-vous qu’il vous reste %s après cette transaction. Sinon, vous ne pourrez pas effectuer une autre transaction.</string>
-  <string name="switch_node">Changer de nœud</string>
   <string name="system_appearance">Apparence du système</string>
   <string name="tabbar_parliament_title">Parlement</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

@@ -319,12 +319,10 @@
   <string name="mnemonic_invalid_title">Ṣerret awāt zikrim ul kīnam</string>
   <string name="mnemonic_text">Ṭuppam lā ša minâtim ana ṭuppim šanîm niqabbi, kīma eli kanīkim šaṭārum u ina maṣṣartim naṣārum</string>
   <string name="network_fee">Miksu ḫarrānim</string>
-  <string name="node_connection_issue">Nikkassuka damqiš banû. Ṭuppum ana bābim kīnim ul irakkas. Ana bābim šanîm šanûm</string>
   <string name="node_details_address_validation_failed">URL ul ukīn: ašrum ul kīnum</string>
   <string name="node_details_genesis_validation_failed">Kunuk rēštim ša bābika itti kunuk rēštim ša ḫarrānim ul mitḫur</string>
   <string name="node_details_node_already_added" formatted="false">Bābum annûm šaknum ša pānim: %s\nRiksum itti bābim %s kīnum</string>
   <string name="node_details_protocol_validation_failed">URL ul ukīn: dīn ḫarrānim ul kīnum</string>
-  <string name="node_offline">Bābum ištu ḫarrānim paṭir</string>
   <string name="onboarding_continue_with_google">Itti Google alākum</string>
   <string name="onboarding_create_account_description">Šumam ana nikkassika eššim u kīma šapl ašrika innamru šukni. Šumma šumum ina ḫarrānim šaknum, awīlū šanûtum immarūšu</string>
   <string name="onboarding_create_account_subtitle">Atta balāṭa tammaršu u ina ašrika naṣir</string>
@@ -345,9 +343,6 @@
   <string name="pincode_enter_current_pin_code">Kunuk PIN ša inanna šuknum</string>
   <string name="pincode_enter_new_pin_code">Kunuk PIN eššam šuknum</string>
   <string name="pincode_enter_pin_code">Kunuk PIN šuknum</string>
-  <string name="pincode_length_info_button_text">Kunuk PIN eššam šakānum</string>
-  <string name="pincode_length_info_message">Dīn maṣṣarti SORA ana naṣārika udduš. PIN ša 4 minâtim ul immaḫḫar. PIN eššam ša 6 minâtim šukni</string>
-  <string name="pincode_length_info_title">Kunuk PIN ša 6 minâtim šukni</string>
   <string name="pincode_one_try_left">Nissatum ištēt adi nūḫim teššu</string>
   <string name="pincode_set_your_pin_code">Kunuk PIN šakānum</string>
   <string name="pincode_touch_fingerprint_scanner">Bāqir kunuk ubānim lapātum</string>
@@ -522,7 +517,6 @@
   <string name="succesfully_imported_account_title">Nikkassam damqiš tušērib</string>
   <string name="support_chat">Qabû rēṣūtim</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Bāri kī %s warki tērtim annītim teššu. Ullā tērtam šanîtam ul teppušu</string>
-  <string name="switch_node">Bābam šanûm</string>
   <string name="system_appearance">Siknum ša unūtim</string>
   <string name="tabbar_parliament_title">Puḫrum</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

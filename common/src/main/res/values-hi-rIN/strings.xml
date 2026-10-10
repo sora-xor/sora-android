@@ -319,12 +319,10 @@
   <string name="mnemonic_text">बैकअप के लिए गैर डिजिटल तरीके का उपयोग करें, जैसे कि इसे कागज पर लिखें।</string>
   <string name="network_fee">नेटवर्क शुल्क</string>
   <string name="network_finalized_history">गतिविधि</string>
-  <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">URL सत्यापित करने में विफल (गलत पता)</string>
   <string name="node_details_genesis_validation_failed">आपके नोड का जेनेसिस हैश नेटवर्क के जेनेसिस हैश से अलग है</string>
   <string name="node_details_node_already_added" formatted="false">यह नोड पहले से ही जोड़ा गया है: %s\nConnection नोड %s के साथ स्थापित</string>
   <string name="node_details_protocol_validation_failed">URL सत्यापित करने में विफल (गलत URL प्रोटोकॉल)</string>
-  <string name="node_offline">Node offline</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">अपने नए खाते के लिए नाम दर्ज करें और यह आपके पते के तहत कैसे दिखाई देगा। ऑन-चेन पहचान के साथ, इसे दूसरों के लिए उपलब्ध कराया जा सकता है।</string>
   <string name="onboarding_create_account_subtitle">केवल आपके लिए दृश्यमान और स्थानीय रूप से संग्रहीत</string>
@@ -345,9 +343,6 @@
   <string name="pincode_enter_current_pin_code">वर्तमान पिन कोड दर्ज करें</string>
   <string name="pincode_enter_new_pin_code">नया पिन कोड डालें</string>
   <string name="pincode_enter_pin_code">पिन कोड दर्ज करें</string>
-  <string name="pincode_length_info_button_text">नया पिन कोड सेट करें</string>
-  <string name="pincode_length_info_message">आपकी सुरक्षा के लिए SORA की सुरक्षा नीति में सुधार किया गया है। 4 अंकों का पिन अब समर्थित नहीं है। कृपया एक नया 6-अंकीय पिन सेट करें।</string>
-  <string name="pincode_length_info_title">कृपया 6 अंकों का पिन कोड सेट करें</string>
   <string name="pincode_one_try_left">कूलडाउन से पहले आपके पास एक और कोशिश बाकी है</string>
   <string name="pincode_set_your_pin_code">पिन कोड सेट करें</string>
   <string name="pincode_touch_fingerprint_scanner">अंगुली-चिह्न स्कैनर को टच करें</string>
@@ -525,7 +520,6 @@
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
-  <string name="switch_node">Switch node</string>
   <string name="system_appearance">सिस्टम स्थिति</string>
   <string name="tabbar_parliament_title">संसद</string>
   <string name="tabbar_polkaswap_title">पोल्कास्वैप</string>

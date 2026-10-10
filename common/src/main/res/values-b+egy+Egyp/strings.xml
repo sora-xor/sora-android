@@ -319,12 +319,10 @@
   <string name="mnemonic_invalid_title">𓈖𓅓𓄿𓂝 𓋴𓐍𓄿 𓅓𓂧𓅱𓋴𓐍𓄿</string>
   <string name="mnemonic_text">𓇋𓈖𓈖 𓋴𓐍𓂋 𓇋𓂋𓅓 𓈖-𓈖𓏏𓇋𓏏𓅱𓎛𓋴𓃀 𓅱𓄿𓏏 𓂋 𓋴𓈙𓋴𓈖𓈖𓅱, 𓅓𓇋 𓅓𓇋 𓋴𓈙 𓋴𓈙 𓅓 𓈙𓂝𓏏 𓎛𓈖𓂝 𓋴𓄿𓅱 𓋴𓏏 𓅓𓋴𓄿𓅱.</string>
   <string name="network_fee">𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓃀𓄿𓎡𓅱</string>
-  <string name="node_connection_issue">𓈖𓎡 𓎛𓋴𓃀 𓈖𓆑𓂋 𓇋𓂋. 𓇋𓋴 𓋴𓈙𓂝𓈖𓐍 𓂋𓐍 𓈖 𓂧𓅓𓆓 𓂋 𓏏𓊪𓇋 𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏. 𓇋𓂋 𓂋 𓎡𓇌 𓂋 𓎡𓇌.</string>
   <string name="node_details_address_validation_failed">𓈖𓐍𓊪𓂋 𓂋 𓋴𓅓𓈖 URL (𓈖𓅓𓄿𓂝 𓋴𓏏𓈖𓎛𓋴𓃀)</string>
   <string name="node_details_genesis_validation_failed">𓏏𓊪𓇋 𓐍𓏏𓅓 𓈖 𓈖𓎡 𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏 𓎡𓇌 𓂋 𓏏𓊪𓇋 𓐍𓏏𓅓 𓈖 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏</string>
   <string name="node_details_node_already_added" formatted="false">𓊪𓈖 𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏 𓅓𓎛𓄿𓏏 𓅱𓄿𓎛: %s\n𓂧𓅓𓆓𓏏 𓋴𓅓𓈖 𓎛𓈖𓂝 𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏 %s</string>
   <string name="node_details_protocol_validation_failed">𓈖𓐍𓊪𓂋 𓂋 𓋴𓅓𓈖 URL (𓈖𓅓𓄿𓂝 URL 𓅱𓆓𓅱𓈖𓇋𓂋𓏏)</string>
-  <string name="node_offline">𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏 𓈖𓈖𓂧𓅓𓆓</string>
   <string name="onboarding_continue_with_google">𓈙𓅓 𓎛𓈖𓂝 Google</string>
   <string name="onboarding_create_account_description">𓋴𓏏𓊪 𓂋𓈖 𓂋 𓋴𓄿 𓈖𓏏𓎡 𓂋𓐍 𓊪𓈖 𓊪𓂋𓎛𓆓 𓅓 𓊪𓈖 𓐍𓏏𓈖𓇋𓂋𓏏.</string>
   <string name="onboarding_create_account_subtitle">𓊪𓈖 𓂋𓈖 𓋴𓄿𓅱 𓅓 𓊪𓈖 𓐍𓏏𓈖𓇋𓂋𓏏 𓎛𓈖𓂝 𓈖 𓋴𓐍𓂝 𓅓 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏.</string>
@@ -345,9 +343,6 @@
   <string name="pincode_enter_current_pin_code">𓂋𓂧𓇋𓅓𓄡𓈖𓅱 𓅓𓏏𓂋𓊪𓈖 𓎛𓋴𓃀𓋴𓈙𓏏𓄿 𓐍𓏏𓅓</string>
   <string name="pincode_enter_new_pin_code">𓂋𓂧𓇋𓅓𓄡𓈖𓅱 𓅓𓄿𓅱 𓎛𓋴𓃀𓋴𓈙𓏏𓄿 𓐍𓏏𓅓</string>
   <string name="pincode_enter_pin_code">𓂋𓂧𓇋𓅓𓄡𓈖𓅱 𓎛𓋴𓃀𓋴𓈙𓏏𓄿 𓐍𓏏𓅓</string>
-  <string name="pincode_length_info_button_text">𓋴𓅓𓈖 𓅓𓄿𓅱 PIN 𓐍𓏏𓅓</string>
-  <string name="pincode_length_info_message">𓉔𓊪𓋴𓄿𓅱𓈖 SORA 𓋴𓅓𓄿𓅱𓈖𓋴𓄿𓅱𓎡. 4 𓏏𓇋𓏏𓅱𓈖 PIN 𓈖𓇋𓂋. 𓋴𓅓𓈖 PIN 𓅓𓄿𓅱6𓏏𓇋𓏏𓅱</string>
-  <string name="pincode_length_info_title">𓋴𓅓𓈖 PIN 6𓏏𓇋𓏏𓅱𓐍𓏏𓅓</string>
   <string name="pincode_one_try_left">𓈖𓏏𓎡 𓅱𓂝 𓂝𓈙𓄿 𓇋𓂋 𓋴𓊪 𓅓𓎛𓄿𓏏 𓏏𓂋𓈎𓃀𓃀</string>
   <string name="pincode_set_your_pin_code">𓋴𓅓𓈖 𓎛𓋴𓃀𓋴𓈙𓏏𓄿 𓐍𓏏𓅓</string>
   <string name="pincode_touch_fingerprint_scanner">𓂧𓅱𓈖𓆓𓂋𓏏 𓐍𓏏𓅓𓆓𓃀𓂝 𓐍𓏏𓈙𓂧𓏏𓇋𓏏</string>
@@ -522,7 +517,6 @@
   <string name="succesfully_imported_account_title">𓈖𓏏𓎡 𓈖𓆑𓂋 𓇋𓈖𓇋𓅓𓄡𓈖𓅱 𓎛𓋴𓃀</string>
   <string name="support_chat">𓋴𓄿 𓆓𓂧𓅱𓏏</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">𓋴𓅓𓈖 𓈖𓏏𓏏 𓈖𓏏𓎡 %s 𓋴𓊪 𓅓𓐍𓏏 𓊪𓈖 𓇋𓂋𓏏𓋴𓅱𓈖𓏏. 𓎡𓇌, 𓈖𓏏𓎡 𓂋 𓈖 𓂋𓐍 𓂋 𓇋𓂋 𓎡𓇌 𓇋𓂋𓏏𓋴𓅱𓈖𓏏.</string>
-  <string name="switch_node">𓎡𓇌 𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏</string>
   <string name="system_appearance">𓋴𓐍𓂋 𓈎𓂧</string>
   <string name="tabbar_parliament_title">𓈎𓈖𓃀𓏏</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -594,7 +588,6 @@
   <string name="wallet_status_failed">𓈖 𓏏𓅓</string>
   <string name="wallet_status_pending">𓎛𓂋𓅱𓄿𓎛 𓋴𓅓𓈖</string>
   <string name="wallet_status_checking">𓎛𓂋𓋴𓅓𓈖 𓇋𓂋𓏏𓋴𓅱𓈖𓏏 𓅱𓈖𓈖</string>
-  <string name="wallet_issue_recovery">𓅓𓎛𓄿𓏏 𓇋𓂋𓏏𓋴𓅱𓈖𓏏 𓋴𓊪 𓐍𓂋 𓂋 𓋴𓅓𓈖. 𓉔𓄿𓃀 𓅱𓄿𓎛 𓂋 𓐍𓋴𓆑 𓋴𓈖𓅱𓅓𓇋𓏏𓏏. 𓋴𓄿𓅱 𓊪𓈖 𓊪𓂋𓎛𓆓 𓂋𓏏𓂋 𓈖𓋴𓏏 𓅱𓈖𓈖 𓂧𓂋𓇋𓋴𓆑𓏏.</string>
   <string name="wallet_issue_address">𓋴𓅓𓈖 𓈙𓋴𓊪𓅱 𓋴𓏏𓈖𓎛𓋴𓃀 𓎛𓈖𓂝 𓇋𓂋 𓋴𓅓𓈖 𓋴𓏏 𓈖 𓂋 𓋴𓏏𓊪 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏.</string>
   <string name="wallet_issue_amount">𓂋𓂧𓇋𓅓𓄡𓈖𓅱 𓅓𓄿𓂝 𓂝𓈙𓄿𓏏 𓅱𓂋𓂋 𓂋 𓈖𓈖 𓇋𓂋𓅓 𓋴𓄿 𓎛𓋴𓃀 𓈖 𓎛𓋴𓃀𓈖𓊪𓋴𓈙𓏏 𓋴𓏏𓅱.</string>
   <string name="wallet_issue_balance">𓅓𓋴𓏏𓊪𓆑 𓈖 𓂝𓈙𓄿 𓅱𓈖 𓐍𓏏𓅱 𓈖 𓊪𓈖 𓂝𓈙𓄿𓏏 𓎛𓈖𓂝 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓃀𓄿𓎡𓅱. 𓎡𓆓𓅓𓅓𓄿𓅱 𓂝𓈙𓄿𓏏 𓂋𓊪𓅱 𓅱𓄿𓎛 𓐍𓏏𓅱.</string>

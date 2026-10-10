@@ -318,12 +318,10 @@
   <string name="mnemonic_text">紙に書き留めて安全に保管するなど、デジタル以外の方法でバックアップすることをお勧めします</string>
   <string name="network_fee">ネットワーク手数料</string>
   <string name="network_finalized_history">履歴</string>
-  <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">URLの検証に失敗しました (アドレスが間違っています)</string>
   <string name="node_details_genesis_validation_failed">あなたのノードのジェネシスハッシュが、ネットワークのジェネシスハッシュと異なっています</string>
   <string name="node_details_node_already_added" formatted="false">このノードは既に追加されています: %s\nノード %s との接続が確立されました</string>
   <string name="node_details_protocol_validation_failed">URLの検証に失敗しました (URLプロトコルが間違っています)</string>
-  <string name="node_offline">Node offline</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">新しいアカウントの名前と、アドレスの下にどのように表示されるかを入力してください。オンチェーンIDは、他の人に公開することができます</string>
   <string name="onboarding_create_account_subtitle">自分だけ見ることができ、ローカルに保存されます</string>
@@ -344,9 +342,6 @@
   <string name="pincode_enter_current_pin_code">現在のPINコードを入力してください</string>
   <string name="pincode_enter_new_pin_code">新しいPINコードを入力してください</string>
   <string name="pincode_enter_pin_code">PINコードを入力する</string>
-  <string name="pincode_length_info_button_text">新しいPINコードの設定</string>
-  <string name="pincode_length_info_message">SORAのセキュリティポリシーは、利用者保護のために強化されました。4桁のPINを廃止し、新しい6桁のPINコードを設定してください</string>
-  <string name="pincode_length_info_title">6桁のPINコードを設定してください</string>
   <string name="pincode_one_try_left">クールダウンまであと1回だけ試せます</string>
   <string name="pincode_set_your_pin_code">PINコードの設定</string>
   <string name="pincode_touch_fingerprint_scanner">指紋スキャナーに触れてください</string>
@@ -520,7 +515,6 @@
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
-  <string name="switch_node">Switch node</string>
   <string name="system_appearance">システム外観</string>
   <string name="tabbar_parliament_title">議会</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

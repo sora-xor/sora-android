@@ -70,6 +70,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
@@ -132,7 +134,7 @@ object UpgradeWelcome {
     /** Shown, or not needed (a new wallet set up on this version). */
     fun markDone(context: Context) {
         runCatching {
-            context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().putBoolean(KEY_DONE, true).apply()
+            context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit { putBoolean(KEY_DONE, true) }
         }
     }
 }
@@ -146,7 +148,7 @@ object SafeModeSupport {
         val mailto = "mailto:$EMAIL?subject=${Uri.encode(subject)}&body=${Uri.encode(body)}"
         return try {
             context.startActivity(
-                Intent(Intent.ACTION_SENDTO, Uri.parse(mailto)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                Intent(Intent.ACTION_SENDTO, mailto.toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             )
             true
         } catch (_: ActivityNotFoundException) {
