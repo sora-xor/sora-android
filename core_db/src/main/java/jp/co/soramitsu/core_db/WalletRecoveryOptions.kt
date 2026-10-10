@@ -80,6 +80,18 @@ data class RecoveryFacts(
      * read-only browsing is not offered until a retry succeeds.
      */
     val keyMaterialUnavailable: Boolean = false,
+    /**
+     * Addresses with a stored recovery phrase or raw seed (address-scoped, plus the release-era
+     * owner when an unsuffixed phrase or seed exists), for "Show my recovery phrase". Read from
+     * the preference key names only; nothing is decrypted to build it.
+     */
+    val phraseWalletIds: List<String> = emptyList(),
+    /** Account names by address, when the database could be read. */
+    val accountNames: Map<String, String> = emptyMap(),
+    /** The release-era owner address recorded by 2.x (`prefs_address_pure`), if any. */
+    val legacyOwner: String? = null,
+    /** A release-era phrase or seed is stored without an address suffix. */
+    val hasUnscopedPhraseOrSeed: Boolean = false,
 )
 
 /**

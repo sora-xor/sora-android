@@ -35,6 +35,9 @@ import jp.co.soramitsu.xsubstrate.encrypt.SignWrapper
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.SubstrateKeypairFactory
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -87,6 +90,24 @@ sealed interface MigrationOutcome {
     data class Recovery(override val code: String) : MigrationOutcome
 }
 
+/** The real phases of one verification run, shown by the upgrade progress screen. */
+sealed interface MigrationProgress {
+    /** No run in this process yet. */
+    data object Idle : MigrationProgress
+
+    /** Opening the wallet database; any pending schema step runs here. */
+    data object OpeningStorage : MigrationProgress
+
+    /** Reading and checking each account's keys ([checked] of [total] done). */
+    data class CheckingAccounts(val checked: Int, val total: Int) : MigrationProgress
+
+    /** Every account was read; the derived records and the journal are being saved. */
+    data object Saving : MigrationProgress
+
+    /** The run ended (with any outcome). */
+    data object Finished : MigrationProgress
+}
+
 /**
  * Verifies every wallet's stored keys before the multi-network records become active.
  *
@@ -123,19 +144,29 @@ class MigrationManager @Inject constructor(
     var lastOutcome: MigrationOutcome? = null
         private set
 
+    private val progressState = MutableStateFlow<MigrationProgress>(MigrationProgress.Idle)
+
+    /** Progress of the current run. Reporting only: nothing reads it to make a decision. */
+    val progress: StateFlow<MigrationProgress> = progressState.asStateFlow()
+
     /** Returns true when the wallet is usable (possibly with some accounts read-only). */
     suspend fun start(): Boolean = startWithOutcome() == MigrationOutcome.Verified
 
     suspend fun startWithOutcome(): MigrationOutcome = migrationMutex.withLock {
-        val outcome = userRepository.withWalletMigrationLocked { snapshot ->
-            startLocked(
-                registrationFinished =
-                    snapshot.onboardingState == OnboardingState.REGISTRATION_FINISHED,
-                selectedAccount = snapshot.selectedAccount,
-            )
+        progressState.value = MigrationProgress.OpeningStorage
+        try {
+            val outcome = userRepository.withWalletMigrationLocked { snapshot ->
+                startLocked(
+                    registrationFinished =
+                        snapshot.onboardingState == OnboardingState.REGISTRATION_FINISHED,
+                    selectedAccount = snapshot.selectedAccount,
+                )
+            }
+            lastOutcome = outcome
+            outcome
+        } finally {
+            progressState.value = MigrationProgress.Finished
         }
-        lastOutcome = outcome
-        outcome
     }
 
     /** The code of the last unsuccessful run in this process, if any. */
@@ -230,13 +261,17 @@ class MigrationManager @Inject constructor(
 
         // 1. Read and verify every wallet. Pure reads and crypto: nothing is written yet.
         val preparedWallets = mutableListOf<PreparedWallet>()
+        progressState.value = MigrationProgress.CheckingAccounts(0, legacyAccounts.size)
         for (legacy in legacyAccounts) {
             when (val result = prepareWalletClassified(legacy)) {
                 is Preparation.Abort -> return abortWithoutWrites(result)
                 is Preparation.Ready -> preparedWallets += result.wallet
             }
+            progressState.value =
+                MigrationProgress.CheckingAccounts(preparedWallets.size, legacyAccounts.size)
         }
         val classifiedWallets = applySecretSourceContinuity(preparedWallets)
+        progressState.value = MigrationProgress.Saving
 
         // 2. Already verified: re-stage only what changed and advance the checkpoint.
         if (verifiedReceipt != null) {

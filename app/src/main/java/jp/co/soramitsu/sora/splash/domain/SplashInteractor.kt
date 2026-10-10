@@ -40,9 +40,11 @@ import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationManager
+import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationProgress
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.flow.StateFlow
 
 @Singleton
 class SplashInteractor @Inject constructor(
@@ -54,11 +56,24 @@ class SplashInteractor @Inject constructor(
     @Volatile
     private var migrationsDone = CompletableDeferred<Boolean>()
 
+    /**
+     * True when this start resumes an interrupted verification (automatic retry), so the
+     * progress screen says "Finishing your update" instead of "Updating your wallet".
+     */
+    @Volatile
+    var resumingInterruptedUpgrade: Boolean = false
+        private set
+
+    /** The real phases of the running verification, for the upgrade progress screen. */
+    val migrationProgress: StateFlow<MigrationProgress> get() = migrationManager.progress
+
     suspend fun checkMigration() {
         // The app's screens are starting and will run the wallet verification now: an
         // interrupted verification may use one of its automatic retries. Background process
         // starts never get here, so they cannot use up that budget.
-        runCatching { WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context) }
+        resumingInterruptedUpgrade =
+            runCatching { WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context) }
+                .getOrDefault(false)
         checkMigration(migrationsDone)
     }
 
