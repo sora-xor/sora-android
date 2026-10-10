@@ -48,8 +48,10 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.network.BoundedHttpTextException
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -65,6 +67,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -169,10 +172,11 @@ class TransferAmountViewModelTest {
             R.string.common_error_general_title to R.string.common_error_fee_rate_not_available,
             transferAmountViewModel.errorFromResourceLiveData.value,
         )
+        assertEquals(NetworkFeeUnavailable.OTHER, state.feeUnavailable)
     }
 
     @Test
-    fun `fee preview exception stops loading and shows retryable error`() = runTest {
+    fun `fee preview exception shows the calm fee notice instead of an error dialog`() = runTest {
         coEvery {
             assetsInteractor.calcTransactionFee(
                 recipientId,
@@ -189,10 +193,43 @@ class TransferAmountViewModelTest {
         assertFalse(state.feeLoading)
         assertFalse(state.reviewEnabled)
         assertTrue(state.input?.enabled == true)
-        assertEquals(
-            R.string.something_went_wrong to R.string.unexpected_error,
-            transferAmountViewModel.errorFromResourceLiveData.value,
+        assertEquals(NetworkFeeUnavailable.OTHER, state.feeUnavailable)
+        assertNull(transferAmountViewModel.errorFromResourceLiveData.value)
+    }
+
+    @Test
+    fun `unreachable SORA endpoint names the cause and Try again recovers`() = runTest {
+        // 3.9.0 sends fee quotes to the reviewed endpoint only; the selected node does not help.
+        coEvery {
+            assetsInteractor.calcTransactionFee(recipientId, any(), any(), any())
+        } throws IllegalStateException(
+            "SORA2_RUNTIME_REFRESH_FAILED",
+            BoundedHttpTextException("BOUNDED_HTTP_IO"),
         )
+
+        initViewModel(BigDecimal.TEN)
+        advanceUntilIdle()
+        transferAmountViewModel.amountChanged(BigDecimal.ONE)
+        advanceUntilIdle()
+
+        var state = transferAmountViewModel.sendState.value
+        assertEquals(NetworkFeeUnavailable.NETWORK_UNREACHABLE, state.feeUnavailable)
+        assertFalse(state.reviewEnabled)
+        assertFalse(state.feeLoading)
+        assertNull(transferAmountViewModel.errorFromResourceLiveData.value)
+
+        // The endpoint is back.
+        coEvery {
+            assetsInteractor.calcTransactionFee(recipientId, any(), any(), any())
+        } returns networkFee
+        transferAmountViewModel.onRetryFee()
+        advanceUntilIdle()
+
+        state = transferAmountViewModel.sendState.value
+        assertNull(state.feeUnavailable)
+        assertFalse(state.feeLoading)
+        assertTrue(state.fee.isNotEmpty())
+        assertTrue(state.reviewEnabled)
     }
 
     @Test

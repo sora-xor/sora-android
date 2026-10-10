@@ -186,6 +186,7 @@
   <string name="common_received">प्राप्त किया था</string>
   <string name="common_recipient">प्राप्तकर्ता</string>
   <string name="common_refresh">ताज़ा करना</string>
+  <string name="common_try_again">Try again</string>
   <string name="common_remove">हटाये</string>
   <string name="common_request">Request</string>
   <string name="common_rewrite">Rewrite</string>
@@ -318,6 +319,9 @@
   <string name="mnemonic_invalid_title">अमान्य स्मरणीय पासफ़्रेज़</string>
   <string name="mnemonic_text">बैकअप के लिए गैर डिजिटल तरीके का उपयोग करें, जैसे कि इसे कागज पर लिखें।</string>
   <string name="network_fee">नेटवर्क शुल्क</string>
+  <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
+  <string name="network_fee_unavailable_short">Network fee unavailable</string>
+  <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="network_finalized_history">गतिविधि</string>
   <string name="node_details_address_validation_failed">URL सत्यापित करने में विफल (गलत पता)</string>
   <string name="node_details_genesis_validation_failed">आपके नोड का जेनेसिस हैश नेटवर्क के जेनेसिस हैश से अलग है</string>

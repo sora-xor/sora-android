@@ -190,6 +190,7 @@
   <string name="common_received">تم الاستلام</string>
   <string name="common_recipient">المستلم</string>
   <string name="common_refresh">تحديث</string>
+  <string name="common_try_again">Try again</string>
   <string name="common_remove">إزالة</string>
   <string name="common_request">Request</string>
   <string name="common_rewrite">Rewrite</string>
@@ -322,6 +323,9 @@
   <string name="mnemonic_invalid_title">الكلمات الاولية للمرور غير صالحة</string>
   <string name="mnemonic_text">استخدم وسائل غير رقمية لحفظ بيانات الاسترجاع، كأن تكتبها على ورقة خارجية وتحفظ في مكان آمن.</string>
   <string name="network_fee">رسوم الشبكة</string>
+  <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
+  <string name="network_fee_unavailable_short">Network fee unavailable</string>
+  <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="network_finalized_history">نشاط</string>
   <string name="node_details_address_validation_failed">فشل التحقق من صحة URL (عنوان خاطئ)</string>
   <string name="node_details_genesis_validation_failed">يختلف تجزئة نشأة العقدة عن تجزئة تكوين الشبكة</string>

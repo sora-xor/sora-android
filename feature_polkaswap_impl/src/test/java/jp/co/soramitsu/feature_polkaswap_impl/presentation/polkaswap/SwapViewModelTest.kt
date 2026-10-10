@@ -41,7 +41,9 @@ import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.PoolDex
+import jp.co.soramitsu.common.network.BoundedHttpTextException
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
@@ -113,6 +115,9 @@ class SwapViewModelTest {
 
     private val networkFee = BigDecimal.TEN
 
+    /** When set, the fee query fails with it (for example while the SORA endpoint is down). */
+    private var feeFailure: Throwable? = null
+
     private val assetsListItems: List<AssetItemCardState> by lazy {
         mapAssetsToCardState(assets, numbersFormatter)
     }
@@ -171,7 +176,10 @@ class SwapViewModelTest {
             given(assetsInteractor.getAssetOrThrow(it.token.id)).willReturn(it)
         }
         given(walletInteractor.getFeeToken()).willReturn(TestTokens.xorToken)
-        given(swapInteractor.fetchSwapNetworkFee(anyNonNull())).willReturn(networkFee)
+        given(swapInteractor.fetchSwapNetworkFee(anyNonNull())).willAnswer {
+            feeFailure?.let { throw it }
+            networkFee
+        }
         given(swapInteractor.getPolkaswapDisclaimerVisibility()).willReturn(flowOf(true))
         given(resourceManager.getString(R.string.choose_tokens)).willReturn("Choose token")
         given(resourceManager.getString(R.string.wallet_assets_unavailable)).willReturn("Assets unavailable")
@@ -453,4 +461,59 @@ class SwapViewModelTest {
                 networkFeeInXor = networkFee,
             )
         }
+
+    @Test
+    fun `unreachable SORA endpoint shows the fee notice and Try again recovers`() = runTest {
+        // 3.9.0 asks the reviewed endpoint for fees; the node chosen in More > Nodes is not used.
+        feeFailure = IllegalStateException(
+            "SORA2_RUNTIME_REFRESH_FAILED",
+            BoundedHttpTextException("BOUNDED_HTTP_IO"),
+        )
+        given(resourceManager.getString(R.string.network_fee_unavailable_short))
+            .willReturn("Network fee unavailable")
+        initViewModel(xorBalance = 100.toBigDecimal())
+        given(
+            swapInteractor.fetchAvailableSources(
+                assetsListItems.first().tokenId,
+                assetsListItems.last().tokenId,
+            )
+        ).willReturn(setOf(Market.SMART))
+        advanceUntilIdle()
+        // The balance subscription survived the failure and the cause is named calmly.
+        assertEquals(
+            NetworkFeeUnavailable.NETWORK_UNREACHABLE,
+            viewModel.swapMainState.value.feeUnavailable,
+        )
+
+        viewModel.fromAssetSelected(assetsListItems.first().tokenId)
+        advanceUntilIdle()
+        viewModel.toAssetSelected(assetsListItems.last().tokenId)
+        advanceUntilIdle()
+        viewModel.onFromAmountChange(BigDecimal.ONE)
+        advanceUntilIdle()
+
+        var state = viewModel.swapMainState.value
+        assertEquals(NetworkFeeUnavailable.NETWORK_UNREACHABLE, state.feeUnavailable)
+        assertEquals("Network fee unavailable", state.swapButtonState.text)
+        assertFalse(state.swapButtonState.enabled)
+        assertFalse(state.swapButtonState.loading)
+        assertEquals(null, viewModel.errorFromResourceLiveData.value)
+
+        // The endpoint is back.
+        feeFailure = null
+        viewModel.onRetryFee()
+        advanceUntilIdle()
+
+        state = viewModel.swapMainState.value
+        assertEquals(null, state.feeUnavailable)
+        org.junit.Assert.assertNotEquals("Network fee unavailable", state.swapButtonState.text)
+        kVerify(swapInteractor, atLeastOnce()).calcDetails(
+            anyNonNull(),
+            anyNonNull(),
+            anyNonNull(),
+            anyNonNull(),
+            anyNonNull(),
+            anyDouble(),
+        )
+    }
 }

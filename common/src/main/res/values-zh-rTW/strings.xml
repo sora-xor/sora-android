@@ -185,6 +185,7 @@
   <string name="common_received">已收到</string>
   <string name="common_recipient">接收者</string>
   <string name="common_refresh">Refresh</string>
+  <string name="common_try_again">Try again</string>
   <string name="common_remove">消除</string>
   <string name="common_request">Request</string>
   <string name="common_rewrite">Rewrite</string>
@@ -317,6 +318,9 @@
   <string name="mnemonic_invalid_title">無效的助記密碼</string>
   <string name="mnemonic_text">我們建議使用非數字方式進行備份，例如將其寫在紙上。</string>
   <string name="network_fee">網絡費用</string>
+  <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
+  <string name="network_fee_unavailable_short">Network fee unavailable</string>
+  <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="network_finalized_history">活動</string>
   <string name="node_details_address_validation_failed">驗證 URL 失敗（地址錯誤）</string>
   <string name="node_details_genesis_validation_failed">您節點的創世哈希與網絡的創世哈希不同</string>

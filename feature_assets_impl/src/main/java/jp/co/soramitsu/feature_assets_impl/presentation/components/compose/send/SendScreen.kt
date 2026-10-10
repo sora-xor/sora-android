@@ -55,9 +55,11 @@ import androidx.compose.ui.unit.dp
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.presentation.compose.components.AccountWithIcon
 import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
+import jp.co.soramitsu.common.presentation.compose.components.NetworkFeeUnavailableNotice
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
@@ -89,6 +91,8 @@ internal fun SendScreen(
     feeLoading: Boolean,
     reviewEnabled: Boolean,
     shouldTransactionReminderInsufficientWarningBeShown: Boolean,
+    feeUnavailable: NetworkFeeUnavailable? = null,
+    onRetryFee: () -> Unit = {},
     readOnly: Boolean = rememberWalletReadOnly(),
 ) {
     SendScreenAddress(
@@ -114,6 +118,13 @@ internal fun SendScreen(
         fiat = feeFiat,
         loading = feeLoading,
     )
+    if (feeUnavailable != null && !feeLoading) {
+        NetworkFeeUnavailableNotice(
+            modifier = Modifier.padding(top = Dimens.x2),
+            reason = feeUnavailable,
+            onRetry = onRetryFee,
+        )
+    }
     if (shouldTransactionReminderInsufficientWarningBeShown) {
         Divider(
             modifier = Modifier.fillMaxWidth(),

@@ -50,10 +50,12 @@ import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.subtractFee
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -341,14 +343,7 @@ class TransferAmountViewModel @AssistedInject constructor(
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
             if (request.matchesCurrent()) {
-                finishFeePreviewWithError(
-                    request,
-                    if (error is SoraException) {
-                        error
-                    } else {
-                        SoraException.unexpectedError(error)
-                    },
-                )
+                finishFeePreviewWithError(request, error)
             }
             return
         }
@@ -376,9 +371,16 @@ class TransferAmountViewModel @AssistedInject constructor(
         )
     }
 
+    /**
+     * The fee could not be checked. Review stays off and the screen says why, with Try again.
+     * Since 3.9.0 the fee, nonce, runtime and submission go to the reviewed SORA endpoint, not to
+     * the node chosen in More > Nodes; when it can't be reached this names that calmly instead of
+     * showing the generic "unexpected error" dialog on every amount change. Errors with their own
+     * message (business errors) still show it.
+     */
     private fun finishFeePreviewWithError(
         request: Sora2TransferFeePreviewRequest,
-        error: SoraException,
+        error: Throwable,
     ) {
         if (!request.matchesCurrent()) return
         fee = null
@@ -387,10 +389,25 @@ class TransferAmountViewModel @AssistedInject constructor(
             feeLoading = false,
             fee = "",
             feeFiat = "",
+            feeUnavailable = NetworkFeeUnavailable.from(error),
             reviewEnabled = false,
             input = _sendState.value.input?.copy(enabled = true),
         )
-        onError(error)
+        if (error is SoraException && error.kind == SoraException.Kind.BUSINESS) {
+            onError(error)
+        } else {
+            FirebaseWrapper.recordException(error)
+        }
+    }
+
+    /** Try again on the fee notice: checks the fee for the current token and amount. */
+    fun onRetryFee() {
+        val feeAsset = feeAsset ?: return
+        val amount = _sendState.value.input?.amount.orZero()
+        viewModelScope.launch {
+            calcTransactionFee(feeAsset, amount)
+            checkEnteredAmount(amount)
+        }
     }
 
     private fun Sora2TransferFeePreviewRequest.matchesCurrent(): Boolean = matches(
@@ -566,6 +583,7 @@ class TransferAmountViewModel @AssistedInject constructor(
         feeWalletId = null
         _sendState.value = _sendState.value.copy(
             feeLoading = true,
+            feeUnavailable = null,
             reviewEnabled = false,
         )
         return feeReviewRevision

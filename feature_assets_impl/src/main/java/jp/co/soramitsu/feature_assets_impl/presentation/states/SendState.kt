@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_assets_impl.presentation.states
 
 import android.graphics.drawable.Drawable
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SearchTokenFilter
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 
@@ -46,6 +47,8 @@ internal data class SendState(
     val fee: String = "",
     val feeFiat: String = "",
     val feeLoading: Boolean = true,
+    /** Set when the fee preview failed; the screen shows why and offers Try again. */
+    val feeUnavailable: NetworkFeeUnavailable? = null,
     val searchFilter: SearchTokenFilter = emptySearchTokenFilter,
     val shouldTransactionReminderInsufficientWarningBeShown: Boolean = false,
 )

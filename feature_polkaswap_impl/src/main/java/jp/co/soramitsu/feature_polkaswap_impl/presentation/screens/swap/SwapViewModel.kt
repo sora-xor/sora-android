@@ -55,9 +55,11 @@ import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.subtractFee
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -78,6 +80,7 @@ import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -348,7 +351,9 @@ class SwapViewModel @AssistedInject constructor(
                 }
 
                 if (networkFee == null) {
-                    networkFee = swapInteractor.fetchSwapNetworkFee(feeToken())
+                    // A failure here must not end this balance subscription; the fee is asked
+                    // again with the next balance update, the next quote or Try again.
+                    refreshNetworkFee()
                 }
 
                 onChangedProperty.set(property.newReloadMarkets(false))
@@ -568,6 +573,39 @@ class SwapViewModel @AssistedInject constructor(
         onChangedProperty.set(property.newReloadMarkets(true))
     }
 
+    /**
+     * Gets the swap network fee. Returns false, and shows the calm fee notice with Try again,
+     * when it can't be checked (for example while the reviewed SORA endpoint can't be reached).
+     */
+    private suspend fun refreshNetworkFee(): Boolean = try {
+        networkFee = swapInteractor.fetchSwapNetworkFee(feeToken())
+        if (_swapMainState.value.feeUnavailable != null) {
+            _swapMainState.value = _swapMainState.value.copy(feeUnavailable = null)
+        }
+        true
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        FirebaseWrapper.recordException(error)
+        _swapMainState.value = _swapMainState.value.copy(
+            feeUnavailable = NetworkFeeUnavailable.from(error),
+        )
+        false
+    }
+
+    /** Try again on the fee notice. */
+    fun onRetryFee() {
+        viewModelScope.launch {
+            setSwapButtonLoading(true)
+            if (networkFee != null || refreshNetworkFee()) {
+                onChangedProperty.set(property.newReloadMarkets(false))
+            } else {
+                toggleSwapButtonStatus()
+                resetLoading()
+            }
+        }
+    }
+
     private fun toggleSwapButtonStatus() {
         val ok = isBalanceOk()
 
@@ -590,6 +628,10 @@ class SwapViewModel @AssistedInject constructor(
 
             _swapMainState.value.tokenToState != null && amountTo.isZero() && desired == WithDesired.OUTPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
+            }
+
+            _swapMainState.value.feeUnavailable != null -> {
+                resourceManager.getString(R.string.network_fee_unavailable_short) to false
             }
 
             ok?.isEmpty() == true -> {
@@ -615,6 +657,8 @@ class SwapViewModel @AssistedInject constructor(
             WalletRecoveryCapabilityGate.isUserMutationBlocked() ->
                 resourceManager.getString(R.string.safe_mode_read_only_send_off) to false
             assetCatalogUnavailable -> resourceManager.getString(R.string.wallet_assets_unavailable) to false
+            _swapMainState.value.feeUnavailable != null ->
+                resourceManager.getString(R.string.network_fee_unavailable_short) to false
             ok?.isNotEmpty() == true -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_balance)
                     .format(ok) to false
@@ -725,6 +769,12 @@ class SwapViewModel @AssistedInject constructor(
             _swapMainState.value.tokenToState?.let { toAsset ->
                 val amountToCalc = if (desired == WithDesired.INPUT) amountFrom else amountTo
                 if (amountToCalc > BigDecimal.ZERO) {
+                    if (networkFee == null && !refreshNetworkFee()) {
+                        // Without a fee there is no quote to review; the notice explains why.
+                        swapDetails = null
+                        updateDetailsView()
+                        return
+                    }
                     tryCatchFinally(
                         finally = {},
                         block = {

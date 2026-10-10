@@ -187,6 +187,7 @@
   <string name="common_received">Maḫir</string>
   <string name="common_recipient">Maḫirum</string>
   <string name="common_refresh">Edēšum</string>
+  <string name="common_try_again">Try again</string>
   <string name="common_remove">Nasāḫum</string>
   <string name="common_request">Šuālum</string>
   <string name="common_rewrite">Šanītam šaṭārum</string>
@@ -319,6 +320,9 @@
   <string name="mnemonic_invalid_title">Ṣerret awāt zikrim ul kīnam</string>
   <string name="mnemonic_text">Ṭuppam lā ša minâtim ana ṭuppim šanîm niqabbi, kīma eli kanīkim šaṭārum u ina maṣṣartim naṣārum</string>
   <string name="network_fee">Miksu ḫarrānim</string>
+  <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
+  <string name="network_fee_unavailable_short">Network fee unavailable</string>
+  <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="node_details_address_validation_failed">URL ul ukīn: ašrum ul kīnum</string>
   <string name="node_details_genesis_validation_failed">Kunuk rēštim ša bābika itti kunuk rēštim ša ḫarrānim ul mitḫur</string>
   <string name="node_details_node_already_added" formatted="false">Bābum annûm šaknum ša pānim: %s\nRiksum itti bābim %s kīnum</string>

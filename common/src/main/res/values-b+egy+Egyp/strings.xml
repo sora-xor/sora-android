@@ -187,6 +187,7 @@
   <string name="common_received">𓈙𓋴𓊪</string>
   <string name="common_recipient">𓈙𓋴𓊪𓅱</string>
   <string name="common_refresh">𓋴𓅓𓄿𓅱</string>
+  <string name="common_try_again">Try again</string>
   <string name="common_remove">𓂧𓂋</string>
   <string name="common_request">𓂧𓃀𓎛</string>
   <string name="common_rewrite">𓅱𓎛𓅓𓋴𓈙</string>
@@ -319,6 +320,9 @@
   <string name="mnemonic_invalid_title">𓈖𓅓𓄿𓂝 𓋴𓐍𓄿 𓅓𓂧𓅱𓋴𓐍𓄿</string>
   <string name="mnemonic_text">𓇋𓈖𓈖 𓋴𓐍𓂋 𓇋𓂋𓅓 𓈖-𓈖𓏏𓇋𓏏𓅱𓎛𓋴𓃀 𓅱𓄿𓏏 𓂋 𓋴𓈙𓋴𓈖𓈖𓅱, 𓅓𓇋 𓅓𓇋 𓋴𓈙 𓋴𓈙 𓅓 𓈙𓂝𓏏 𓎛𓈖𓂝 𓋴𓄿𓅱 𓋴𓏏 𓅓𓋴𓄿𓅱.</string>
   <string name="network_fee">𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓃀𓄿𓎡𓅱</string>
+  <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
+  <string name="network_fee_unavailable_short">Network fee unavailable</string>
+  <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="node_details_address_validation_failed">𓈖𓐍𓊪𓂋 𓂋 𓋴𓅓𓈖 URL (𓈖𓅓𓄿𓂝 𓋴𓏏𓈖𓎛𓋴𓃀)</string>
   <string name="node_details_genesis_validation_failed">𓏏𓊪𓇋 𓐍𓏏𓅓 𓈖 𓈖𓎡 𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏 𓎡𓇌 𓂋 𓏏𓊪𓇋 𓐍𓏏𓅓 𓈖 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏</string>
   <string name="node_details_node_already_added" formatted="false">𓊪𓈖 𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏 𓅓𓎛𓄿𓏏 𓅱𓄿𓎛: %s\n𓂧𓅓𓆓𓏏 𓋴𓅓𓈖 𓎛𓈖𓂝 𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏 %s</string>

@@ -65,6 +65,7 @@ import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
+import jp.co.soramitsu.common.presentation.compose.components.NetworkFeeUnavailableNotice
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.util.testTagAsId
@@ -90,6 +91,7 @@ internal fun SwapMainScreen(
     onAmountChangeTo: (BigDecimal) -> Unit,
     onTokenSwapClick: () -> Unit,
     onSwapClick: () -> Unit,
+    onRetryFee: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -179,6 +181,13 @@ internal fun SwapMainScreen(
                 text = stringResource(R.string.wallet_assets_unavailable_details),
                 color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphS,
+            )
+            Spacer(modifier = Modifier.size(Dimens.x2))
+        }
+        state.feeUnavailable?.let { reason ->
+            NetworkFeeUnavailableNotice(
+                reason = reason,
+                onRetry = onRetryFee,
             )
             Spacer(modifier = Modifier.size(Dimens.x2))
         }

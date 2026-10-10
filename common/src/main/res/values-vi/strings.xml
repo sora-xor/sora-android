@@ -185,6 +185,7 @@
   <string name="common_received">Nhận</string>
   <string name="common_recipient">Người nhận</string>
   <string name="common_refresh">Làm mới</string>
+  <string name="common_try_again">Try again</string>
   <string name="common_remove">Gỡ bỏ</string>
   <string name="common_request">Yêu cầu</string>
   <string name="common_rewrite">Ghi lại</string>
@@ -317,6 +318,9 @@
   <string name="mnemonic_invalid_title">Chuỗi từ khóa khôi phục không hợp lệ</string>
   <string name="mnemonic_text">Chúng tôi khuyên bạn không nên sao lưu bằng phương tiện kỹ thuật số, chẳng hạn như viết nó xuống giấy.</string>
   <string name="network_fee">Phí mạng</string>
+  <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
+  <string name="network_fee_unavailable_short">Network fee unavailable</string>
+  <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="network_finalized_history">Hoạt động</string>
   <string name="node_details_address_validation_failed">Không xác thực được URL (Địa chỉ sai)</string>
   <string name="node_details_genesis_validation_failed">Hàm băm genesis của nút của bạn khác với hàm băm genesis của mạng</string>
