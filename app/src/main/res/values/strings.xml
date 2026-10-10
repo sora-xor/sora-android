@@ -1,6 +1,6 @@
 <resources>
     <string name="wallet_upgrade_recovery_title">Your wallet is safe, but needs attention</string>
-    <string name="wallet_upgrade_recovery_message">SORA stopped the upgrade because it could not verify every existing account. Nothing was deleted or replaced. Retry, or contact support before reinstalling or clearing app data.</string>
+    <string name="wallet_upgrade_recovery_message">SORA paused the upgrade because it could not check every existing account yet. Nothing was deleted or replaced, and your funds stay safe on the blockchain. Try again, or contact support for help.</string>
     <string name="wallet_upgrade_recovery_code">Recovery code: %1$s</string>
     <string name="wallet_upgrade_recovery_retry">Retry verification</string>
     <string name="wallet_upgrade_recovery_export">Export encrypted recovery archive</string>
