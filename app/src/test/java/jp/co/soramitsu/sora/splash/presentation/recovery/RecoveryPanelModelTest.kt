@@ -51,9 +51,9 @@ class RecoveryPanelModelTest {
     @Test
     fun `every blocking state has a forward action besides try again`() {
         for (code in blockingCodes) for (facts in factVariants) for (transient in listOf(false, true)) {
-            for (drive in listOf(false, true)) {
+            for (drive in listOf(false, true)) for (restorePending in listOf(false, true)) {
                 val options = WalletRecoveryOptions.forState(code, transient, facts)
-                val model = RecoveryPanels.model(options, driveAvailable = drive)
+                val model = RecoveryPanels.model(options, driveAvailable = drive, restorePending = restorePending)
                 assertEquals(RecoveryAction.TRY_AGAIN, model.primary)
                 assertTrue("$code $facts", model.forwardActionsBesidesRetry.isNotEmpty())
                 assertTrue("$code: support is always offered", RecoveryAction.CONTACT_SUPPORT in model.actions)
@@ -134,6 +134,21 @@ class RecoveryPanelModelTest {
         val model = RecoveryPanels.model(options, driveAvailable = true)
         assertEquals(RecoveryPanelKind.STORAGE, model.kind)
         assertEquals(null, model.requiredMegabytes)
+    }
+
+    @Test
+    fun `a restore waiting for a restart offers the restart, never another restore or read only`() {
+        for (code in listOf("SET_UP_AGAIN_INCOMPLETE", "KEYSTORE_UNAVAILABLE", "DATABASE_CORRUPT")) {
+            val options = WalletRecoveryOptions.forState(code, code == "KEYSTORE_UNAVAILABLE", richFacts)
+            val model = RecoveryPanels.model(options, driveAvailable = true, restorePending = true)
+            assertEquals(RecoveryPanelKind.RESTORE_PENDING, model.kind)
+            assertEquals(RecoveryAction.TRY_AGAIN, model.primary)
+            assertFalse("$code never retries by itself", model.retryAutomatically)
+            assertTrue(model.secondary.isEmpty())
+            assertFalse(RecoveryAction.READ_ONLY in model.actions)
+            assertEquals(SetUpAgainScope.NONE, model.setUpAgainScope)
+            assertTrue(RecoveryAction.CONTACT_SUPPORT in model.actions)
+        }
     }
 
     @Test

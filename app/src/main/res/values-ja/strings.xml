@@ -30,7 +30,6 @@
     <string name="recovery_read_only_sheet_body">残高と履歴は確認できます。アップグレードが完了するまで、送金・スワップ・アカウントの変更はできません。アップグレードはホーム画面からいつでも再試行できます。</string>
     <string name="recovery_read_only_confirm">閲覧専用で続ける</string>
     <string name="recovery_restore_sheet_body">ウォレットを復元できるよう、SORAは新規インストールと同じ状態で再起動します。この端末のウォレットデータは保持され、何も削除されません。</string>
-    <string name="recovery_restore_sheet_keys_kept">この端末に保存された鍵はそのまま残ります。同じウォレットを復元すると、一致を確認したうえで再利用されます。</string>
     <string name="recovery_restore_sheet_keys_unavailable">この端末では以前のデータを開けないため、リカバリーフレーズまたはGoogleドライブのパスワードをご用意ください。</string>
     <string name="recovery_restore_sheet_write_down">リカバリーフレーズをまだ書き留めていない場合は、先に表示して書き留めてください。</string>
     <string name="recovery_restore_confirm">再起動して復元</string>
@@ -73,4 +72,16 @@
     <string name="recovery_phrase_none">この端末には、このウォレットのリカバリーフレーズやシードは保存されていません。</string>
     <string name="recovery_done">完了</string>
     <string name="recovery_back">戻る</string>
+    <string name="recovery_restore_sheet_keys_kept">この端末に保存された鍵はそのまま残ります。同じウォレットを復元すると、一致を確認したうえで再利用されます。この端末に鍵が保存されている他のウォレットは、その後「ログインとセキュリティ」の「この端末で見つかったウォレット」に表示され、1つずつ復元できます。</string>
+    <string name="recovery_restore_pending_title">開始した復元を完了しています</string>
+    <string name="recovery_restore_pending_body">復元できるように、SORAは以前のウォレットデータを別の場所に移しています。完了するにはSORAの再起動が必要です。以前のデータはこの端末に残り、何も削除されません。ここで何度も止まる場合は、端末の空き容量を確認するか、サポートにお問い合わせください。</string>
+    <string name="recovery_restart_continue">再起動して続ける</string>
+    <string name="recovery_detail_last_attempt">最後の試行</string>
+    <string name="recovery_sheet_read_only_unavailable">閲覧専用モードでは、現在この端末のウォレットデータを開けません。何も変更されていません。閉じて、別の方法を選んでください。</string>
+    <string name="recovery_sheet_read_only_failed">閲覧専用モードを開けませんでした。何も変更されていません。もう一度お試しいただくか、サポートにお問い合わせください。</string>
+    <string name="recovery_sheet_export_failed">ファイルを作成できませんでした。ウォレットのデータは変更されていません。もう一度お試しいただくか、サポートにお問い合わせください。</string>
+    <string name="recovery_sheet_restore_failed">復元の準備ができませんでした。何も移動・削除されていません。もう一度お試しいただくか、サポートにお問い合わせください。</string>
+    <string name="recovery_phrase_unchecked">このフレーズは以前のバージョンのSORAが保存したものです。このウォレットのものかどうかを確認できませんでした。</string>
+    <string name="recovery_seed_unchecked">このシードは以前のバージョンのSORAが保存したものです。このウォレットのものかどうかを確認できませんでした。</string>
+    <string name="recovery_phrase_unreadable">この端末では保存されたフレーズを開けないため、再試行しても解決しません。書き留めたフレーズやGoogleドライブのバックアップがあれば、それを使って復元できます。</string>
 </resources>

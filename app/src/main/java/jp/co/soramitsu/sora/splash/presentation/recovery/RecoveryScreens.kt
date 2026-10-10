@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.splash.presentation.recovery
 
+import android.os.SystemClock
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -106,6 +107,8 @@ object RecoveryTags {
     const val REVEAL = "recoveryReveal"
     const val PIN_DOTS = "recoveryPinDots"
     const val WALLET_LIST = "recoveryWalletList"
+    const val SHEET_FAILURE = "recoverySheetFailure"
+    const val CONFIRM_READ_ONLY = "recoveryConfirmReadOnly"
     fun action(action: RecoveryAction) = "recoveryAction_${action.name}"
     fun pinKey(digit: Char) = "recoveryPinKey_$digit"
 }
@@ -192,6 +195,15 @@ private fun UpgradeProgress(progress: ProgressUi, callbacks: SafeModeCallbacks, 
         SafeStep(stringResource(CommonR.string.safe_mode_step_finishing), progress.finishing),
     )
     val finishing = progress.title == ProgressTitle.FINISHING
+    // The 10 s / 60 s prompts count from when the work started (kept by the view model, so a
+    // recreated screen continues where it was).
+    val initialElapsed = remember(progress.startedAtElapsed) {
+        if (progress.startedAtElapsed > 0) {
+            (SystemClock.elapsedRealtime() - progress.startedAtElapsed).coerceAtLeast(0)
+        } else {
+            0L
+        }
+    }
     UpgradeProgressContent(
         title = stringResource(
             if (finishing) CommonR.string.safe_mode_finishing_title else CommonR.string.safe_mode_updating_title,
@@ -201,6 +213,7 @@ private fun UpgradeProgress(progress: ProgressUi, callbacks: SafeModeCallbacks, 
         ),
         steps = steps,
         onGetHelp = callbacks.onGetHelp,
+        initialElapsedMillis = initialElapsed,
         fixedElapsedMillis = fixedElapsed,
     )
 }
@@ -208,8 +221,11 @@ private fun UpgradeProgress(progress: ProgressUi, callbacks: SafeModeCallbacks, 
 @Composable
 private fun actionLabel(action: RecoveryAction, kind: RecoveryPanelKind): String = stringResource(
     when (action) {
-        RecoveryAction.TRY_AGAIN ->
-            if (kind == RecoveryPanelKind.STORAGE) R.string.recovery_check_again else R.string.recovery_try_again
+        RecoveryAction.TRY_AGAIN -> when (kind) {
+            RecoveryPanelKind.STORAGE -> R.string.recovery_check_again
+            RecoveryPanelKind.RESTORE_PENDING -> R.string.recovery_restart_continue
+            else -> R.string.recovery_try_again
+        }
         RecoveryAction.RESTORE_PHRASE -> R.string.recovery_restore_phrase
         RecoveryAction.RESTORE_DRIVE -> R.string.recovery_restore_drive
         RecoveryAction.SHOW_PHRASE -> R.string.recovery_show_phrase
@@ -234,6 +250,7 @@ private fun RecoveryPanel(
             RecoveryPanelKind.STORAGE -> R.string.recovery_storage_title
             RecoveryPanelKind.KEYS_UNAVAILABLE -> R.string.recovery_keys_title
             RecoveryPanelKind.RECOVERY, RecoveryPanelKind.TRANSIENT -> R.string.recovery_paused_title
+            RecoveryPanelKind.RESTORE_PENDING -> R.string.recovery_restore_pending_title
         },
     )
     val body = when (model.kind) {
@@ -242,6 +259,7 @@ private fun RecoveryPanel(
             ?: stringResource(R.string.recovery_storage_body_generic)
         RecoveryPanelKind.KEYS_UNAVAILABLE -> stringResource(R.string.recovery_keys_body)
         RecoveryPanelKind.TRANSIENT -> stringResource(R.string.recovery_transient_body)
+        RecoveryPanelKind.RESTORE_PENDING -> stringResource(R.string.recovery_restore_pending_body)
         RecoveryPanelKind.RECOVERY -> stringResource(
             if (model.interruptedRemoval) R.string.recovery_removal_body else R.string.recovery_paused_body,
         )
@@ -316,6 +334,28 @@ private fun RecoveryPanel(
     }
 }
 
+/** Why the sheet's action did not complete, announced politely. */
+@Composable
+private fun SheetFailureText(failure: SheetFailure?) {
+    val text = when (failure) {
+        SheetFailure.READ_ONLY_UNAVAILABLE -> R.string.recovery_sheet_read_only_unavailable
+        SheetFailure.READ_ONLY_FAILED -> R.string.recovery_sheet_read_only_failed
+        SheetFailure.EXPORT_FAILED -> R.string.recovery_sheet_export_failed
+        SheetFailure.RESTORE_FAILED -> R.string.recovery_sheet_restore_failed
+        null -> return
+    }
+    Text(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(RecoveryTags.SHEET_FAILURE)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        text = stringResource(text),
+        style = MaterialTheme.customTypography.paragraphS,
+        color = MaterialTheme.neon.textPrimary,
+        textAlign = TextAlign.Center,
+    )
+}
+
 @Composable
 private fun SheetText(text: String) {
     Text(
@@ -328,19 +368,25 @@ private fun SheetText(text: String) {
 @Composable
 private fun ReadOnlySheet(state: SafeModeUiState, callbacks: SafeModeCallbacks) {
     val running = state.running == RecoveryAction.READ_ONLY
+    // Read-only cannot open here: confirming again would not help, so only Close remains.
+    val unavailable = state.sheetFailure == SheetFailure.READ_ONLY_UNAVAILABLE
     SafeSheet(
         title = stringResource(R.string.recovery_read_only),
         onClose = callbacks.onCloseSheet,
         dismissEnabled = !running,
         footer = {
+            SheetFailureText(state.sheetFailure)
+            if (!unavailable) {
+                SafeAction(
+                    modifier = Modifier.testTag(RecoveryTags.CONFIRM_READ_ONLY),
+                    text = stringResource(R.string.recovery_read_only_confirm),
+                    variant = NeonVariant.Safe,
+                    loading = running,
+                    onClick = callbacks.onConfirmReadOnly,
+                )
+            }
             SafeAction(
-                text = stringResource(R.string.recovery_read_only_confirm),
-                variant = NeonVariant.Safe,
-                loading = running,
-                onClick = callbacks.onConfirmReadOnly,
-            )
-            SafeAction(
-                text = stringResource(CommonR.string.common_cancel),
+                text = stringResource(if (unavailable) CommonR.string.common_close else CommonR.string.common_cancel),
                 variant = NeonVariant.Tertiary,
                 enabled = !running,
                 onClick = callbacks.onCloseSheet,
@@ -361,6 +407,7 @@ private fun RestoreSheet(state: SafeModeUiState, callbacks: SafeModeCallbacks) {
         onClose = callbacks.onCloseSheet,
         dismissEnabled = !running,
         footer = {
+            SheetFailureText(state.sheetFailure)
             SafeAction(
                 text = stringResource(R.string.recovery_restore_confirm),
                 variant = NeonVariant.Safe,
@@ -402,6 +449,7 @@ private fun ExportSheet(state: SafeModeUiState, callbacks: SafeModeCallbacks) {
         onClose = callbacks.onCloseSheet,
         dismissEnabled = !running,
         footer = {
+            SheetFailureText(state.sheetFailure)
             SafeAction(
                 text = stringResource(R.string.recovery_export_create),
                 variant = NeonVariant.Safe,
@@ -798,12 +846,23 @@ private fun ColumnScope.ShownStep(step: RevealUi.Shown, callbacks: SafeModeCallb
         }
     }
     val secret = step.secret
+    val unchecked = (secret as? RevealedSecret.Phrase)?.checked == false ||
+        (secret as? RevealedSecret.Seed)?.checked == false
     val title = when {
         secret is RevealedSecret.Seed -> stringResource(R.string.recovery_seed_title)
-        step.entry.olderVersion -> stringResource(R.string.recovery_wallet_older)
+        step.entry.olderVersion || unchecked -> stringResource(R.string.recovery_wallet_older)
         else -> stringResource(R.string.recovery_phrase_title)
     }
     StepHeader(title = title, body = step.entry.name ?: step.entry.address?.let(::shortAddress))
+    if (unchecked) {
+        // Said plainly: this value is not proven to be this wallet's backup.
+        Spacer(Modifier.size(12.dp))
+        ReassuranceCallout(
+            stringResource(
+                if (secret is RevealedSecret.Seed) R.string.recovery_seed_unchecked else R.string.recovery_phrase_unchecked,
+            ),
+        )
+    }
     Spacer(Modifier.size(16.dp))
     when (secret) {
         is RevealedSecret.Phrase -> {
@@ -822,6 +881,7 @@ private fun ColumnScope.ShownStep(step: RevealUi.Shown, callbacks: SafeModeCallb
         }
         RevealedSecret.None -> SheetText(stringResource(R.string.recovery_phrase_none))
         RevealedSecret.Unavailable -> SheetText(stringResource(R.string.recovery_phrase_unavailable))
+        RevealedSecret.Unreadable -> SheetText(stringResource(R.string.recovery_phrase_unreadable))
     }
     Spacer(Modifier.size(16.dp))
     if (step.canGoBack) {

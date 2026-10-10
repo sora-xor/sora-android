@@ -29,7 +29,6 @@
     <string name="recovery_read_only_sheet_body">You can view balances and history. Sending, swapping and account changes stay off until the upgrade finishes. You can try the upgrade again from the home screen at any time.</string>
     <string name="recovery_read_only_confirm">Continue read-only</string>
     <string name="recovery_restore_sheet_body">SORA will restart like a new install so you can restore your wallet. The wallet data on this phone is kept, and nothing is deleted.</string>
-    <string name="recovery_restore_sheet_keys_kept">Keys saved on this phone stay where they are. Restoring the same wallet reuses them after SORA checks that they match.</string>
     <string name="recovery_restore_sheet_keys_unavailable">This phone can\'t unlock the old data, so have your recovery phrase or Google Drive password ready.</string>
     <string name="recovery_restore_sheet_write_down">If you haven\'t written down your recovery phrase yet, show it and write it down first.</string>
     <string name="recovery_restore_confirm">Restart and restore</string>
@@ -72,4 +71,16 @@
     <string name="recovery_phrase_none">No recovery phrase or seed is saved for this wallet on this phone.</string>
     <string name="recovery_done">Done</string>
     <string name="recovery_back">Back</string>
+    <string name="recovery_restore_sheet_keys_kept">Keys saved on this phone stay where they are. Restoring the same wallet reuses them after SORA checks that they match. Other wallets whose keys are saved on this phone are then listed in Login &amp; Security, under \"Wallets found on this phone\", so you can restore them one by one.</string>
+    <string name="recovery_restore_pending_title">Finishing the restore you started</string>
+    <string name="recovery_restore_pending_body">SORA is setting aside the old wallet data so you can restore. It needs to restart to finish this. The old data stays on this phone, and nothing is deleted. If it keeps stopping here, check that your phone has some free space, or contact support.</string>
+    <string name="recovery_restart_continue">Restart and continue</string>
+    <string name="recovery_detail_last_attempt">Last attempt</string>
+    <string name="recovery_sheet_read_only_unavailable">Read-only mode can\'t open your wallet data on this phone right now. Nothing was changed. Close this and choose another option.</string>
+    <string name="recovery_sheet_read_only_failed">SORA couldn\'t open read-only mode. Nothing was changed. Try again, or contact support.</string>
+    <string name="recovery_sheet_export_failed">SORA couldn\'t create the file. Your wallet data was not changed. Try again, or contact support.</string>
+    <string name="recovery_sheet_restore_failed">SORA couldn\'t prepare the restore. Nothing was moved or deleted. Try again, or contact support.</string>
+    <string name="recovery_phrase_unchecked">An older SORA version saved this phrase. SORA couldn\'t confirm that it belongs to this wallet.</string>
+    <string name="recovery_seed_unchecked">An older SORA version saved this seed. SORA couldn\'t confirm that it belongs to this wallet.</string>
+    <string name="recovery_phrase_unreadable">This phone can\'t unlock the saved phrase, so trying again won\'t help. If you wrote it down or backed it up to Google Drive, you can still restore with it.</string>
 </resources>
