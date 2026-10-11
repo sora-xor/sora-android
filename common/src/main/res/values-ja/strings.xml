@@ -652,4 +652,8 @@
   <string name="tx_outcome_quote_unavailable">価格を取得できません</string>
   <string name="tx_outcome_not_sent_balance">残高がこの金額とネットワーク手数料の合計に足りなくなったため、何も送信されておらず、手数料もかかっていません。以前のトランザクションがその間に確定した可能性があります。残高を確認して、金額を変更してください。</string>
   <string name="tx_outcome_not_sent_estimate">数量とネットワーク手数料をネットワークで確認できなかったため、何も送信されておらず、手数料もかかっていません。インターネット接続を確認して、もう一度お試しください。</string>
+  <!-- at2-endpoints-balances: two reviewed endpoints, locked XOR, chain-upgrade headroom (audit F1, F3, F4, F6, F9) -->
+  <string name="tx_outcome_note_not_reached">SORAネットワークに接続できなかったため、このトランザクションは端末から送信されていません。何も送信されておらず、手数料もかかっていません。インターネット接続を確認して、もう一度お試しください。</string>
+  <string name="network_fee_needs_app_update">SORAネットワークがアップグレードされたため、このバージョンのアプリではまだトランザクションを作成できません。送金・スワップ・請求を行うには、アプリをアップデートしてください。残高は引き続き更新され、資産はブロックチェーン上で安全です。</string>
+  <string name="tx_outcome_not_sent_needs_app_update">SORAネットワークがアップグレードされたため、このバージョンのアプリではまだトランザクションを作成できません。何も送信されておらず、手数料もかかっていません。アプリをアップデートしてから、もう一度お試しください。資産はブロックチェーン上で安全です。</string>
 </resources>
