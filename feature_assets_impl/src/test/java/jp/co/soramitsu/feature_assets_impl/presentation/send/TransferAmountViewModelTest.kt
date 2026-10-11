@@ -528,6 +528,49 @@ class TransferAmountViewModelTest {
             }
         }
 
+    // --- audit A5: nothing on the Send screen may leave viewModelScope uncaught ---------------
+
+    @Test
+    fun `a failed local read while an amount is entered does not end the app`() = runTest {
+        // The XOR reminder reads the account's XOR row; that read can fail.
+        coEvery {
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(any(), any())
+        } throws NoSuchElementException("0x0200 not found")
+
+        initViewModel(BigDecimal.TEN, firstTokenId = PolkaswapTestData.XOR_ASSET.token.id)
+        advanceUntilIdle()
+        transferAmountViewModel.amountChanged(BigDecimal.ONE)
+        advanceUntilIdle()
+
+        // runTest reports an exception that left viewModelScope; before, this test failed here.
+        coVerify { assetsInteractor.isNotEnoughXorLeftAfterTransaction(any(), any()) }
+        // The collector is still alive: the next amount is processed as well.
+        transferAmountViewModel.amountChanged(BigDecimal("2"))
+        advanceUntilIdle()
+        coVerify {
+            assetsInteractor.calcTransactionFee(
+                recipientId,
+                TestTokens.xorToken,
+                BigDecimal("2"),
+                WALLET_ID,
+            )
+        }
+    }
+
+    @Test
+    fun `an account that cannot be read while the balances arrive does not end the app`() =
+        runTest {
+            // No selected account is known yet when the balances arrive, and reading it fails.
+            every { assetsInteractor.flowCurSoraAccount() } returns kotlinx.coroutines.flow.emptyFlow()
+            coEvery { assetsInteractor.getCurSoraAccount() } throws
+                IllegalArgumentException("Required value was null.")
+
+            initViewModel(BigDecimal.TEN)
+            advanceUntilIdle()
+
+            assertFalse(transferAmountViewModel.sendState.value.reviewEnabled)
+        }
+
     @Test
     fun `fee preview request is bound to wallet token amount and revision`() {
         val request = Sora2TransferFeePreviewRequest(
