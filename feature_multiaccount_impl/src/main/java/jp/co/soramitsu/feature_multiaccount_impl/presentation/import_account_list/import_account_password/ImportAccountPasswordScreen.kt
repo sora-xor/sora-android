@@ -104,7 +104,8 @@ fun ImportAccountPasswordScreen(
                         .padding(vertical = Dimens.x2, horizontal = Dimens.x3),
                     address = it.backupAccountMeta.address,
                     accountName = it.backupAccountMeta.name,
-                    accountIcon = it.icon
+                    accountIcon = it.icon,
+                    note = readOnlyNote(it),
                 )
             }
 
@@ -148,12 +149,25 @@ fun ImportAccountPasswordScreen(
     }
 }
 
+/**
+ * The line under a backup whose account is already on this phone but cannot sign here: it says
+ * why the backup is offered and what restoring it is for. Null for every other backup.
+ */
+@Composable
+fun readOnlyNote(account: BackupAccountMetaWithIcon): String? =
+    if (account.readOnlyOnThisPhone) {
+        stringResource(id = R.string.import_account_list_read_only_note)
+    } else {
+        null
+    }
+
 @Composable
 fun AccountWithIcon(
     modifier: Modifier = Modifier,
     address: String,
     accountName: String,
     accountIcon: Drawable?,
+    note: String? = null,
 ) {
     Row(
         modifier = modifier,
@@ -181,6 +195,15 @@ fun AccountWithIcon(
                 color = MaterialTheme.customColors.fgSecondary,
                 style = MaterialTheme.customTypography.textXSBold,
             )
+
+            if (note != null) {
+                Text(
+                    modifier = Modifier.padding(top = Dimens.x1_2),
+                    text = note,
+                    color = MaterialTheme.customColors.fgPrimary,
+                    style = MaterialTheme.customTypography.textXS,
+                )
+            }
         }
     }
 }

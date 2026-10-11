@@ -226,6 +226,49 @@ class MultiaccountInteractorTest {
         }
 
     @Test
+    fun `the backup of a read-only account stays restorable and only one that signs is left out`() =
+        runTest {
+            coEvery { userRepository.accountExists("cnNotHere") } returns false
+            coEvery { userRepository.accountExists("cnReadOnly") } returns true
+            coEvery { userRepository.accountExists("cnSigns") } returns true
+            coEvery { userRepository.unavailableWalletIds() } returns setOf("cnReadOnly")
+
+            val restores = multiaccountInteractor.backupRestores(
+                listOf("cnSigns", "cnReadOnly", "cnNotHere")
+            )
+
+            // The read-only account is listed on this phone, and its backup is still offered:
+            // restoring it is how it becomes usable again without being removed.
+            assertEquals(
+                mapOf(
+                    "cnReadOnly" to MultiaccountInteractor.BackupRestore.REPAIRS_READ_ONLY_ACCOUNT,
+                    "cnNotHere" to MultiaccountInteractor.BackupRestore.ADDS_ACCOUNT,
+                ),
+                restores,
+            )
+            // In the order of the backups.
+            assertEquals(listOf("cnReadOnly", "cnNotHere"), restores.keys.toList())
+            // Looking at the list writes nothing.
+            coVerify(exactly = 0) { credentialsRepository.commitDraft(any()) }
+            coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
+            coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+            coVerify(exactly = 0) { userRepository.completeUnavailableWallet(any()) }
+        }
+
+    @Test
+    fun `once a read-only account is repaired its backup is no longer offered`() = runTest {
+        coEvery { userRepository.accountExists("cnReadOnly") } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns setOf("cnReadOnly") andThen emptySet()
+
+        assertEquals(
+            setOf("cnReadOnly"),
+            multiaccountInteractor.backupRestores(listOf("cnReadOnly")).keys,
+        )
+        // The account was verified in between (import or confirmed repair).
+        assertTrue(multiaccountInteractor.backupRestores(listOf("cnReadOnly")).isEmpty())
+    }
+
+    @Test
     fun `read-only account with conflicting stored keys is offered the repair, never removal`() =
         runTest {
             val draft = draft("cnUnreadable", "Name")

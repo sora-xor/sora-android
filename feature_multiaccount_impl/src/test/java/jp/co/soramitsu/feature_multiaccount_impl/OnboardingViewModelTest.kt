@@ -40,6 +40,8 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.InvitationHandler
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingViewModel
@@ -569,7 +571,13 @@ class OnboardingViewModelTest {
         )
         whenever(multiAccInteractor.isJsonBackupValid("{backup json}")).thenReturn(true)
         whenever(multiAccInteractor.isAddressValid(org.mockito.kotlin.any())).thenReturn(true)
-        whenever(multiAccInteractor.accountExists(org.mockito.kotlin.any())).thenReturn(false)
+        // Neither of the two is on this phone yet.
+        whenever(multiAccInteractor.backupRestores(listOf("cnSecond", "cnThird"))).thenReturn(
+            mapOf(
+                "cnSecond" to MultiaccountInteractor.BackupRestore.ADDS_ACCOUNT,
+                "cnThird" to MultiaccountInteractor.BackupRestore.ADDS_ACCOUNT,
+            )
+        )
         whenever(
             multiAccInteractor.importFromJson("{backup json}", "backup password", "Backed up", "cnBackedUp")
         ).thenAnswer { throw repairOffer(accountExists = true, pinRequired = true) }
@@ -607,6 +615,250 @@ class OnboardingViewModelTest {
         // The success screen offers "Import more": two other backups remain.
         assertEquals(true, onboardingViewModel.importAccountPasswordState.value?.isImportMoreAvailable)
         assertEquals(false, onboardingViewModel.importAccountPasswordState.value?.isLoading)
+    }
+
+    @Test
+    fun `the Google backup of a read-only account is listed, restored and repaired after the PIN`() =
+        runTest {
+            val works = jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta("Works", "cnWorks")
+            val readOnly =
+                jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta("Backed up", "cnBackedUp")
+            val notHere =
+                jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta("Not here", "cnNotHere")
+            whenever(coroutineManager.io)
+                .thenReturn(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler))
+            whenever(backupService.getBackupAccounts()).thenReturn(listOf(works, readOnly, notHere))
+            whenever(multiAccInteractor.isAddressValid(org.mockito.kotlin.any())).thenReturn(true)
+            // On this phone: cnWorks can sign, cnBackedUp is listed but read-only, cnNotHere is
+            // not listed. After the repair cnBackedUp can sign too.
+            whenever(
+                multiAccInteractor.backupRestores(listOf("cnWorks", "cnBackedUp", "cnNotHere"))
+            ).thenReturn(
+                mapOf(
+                    "cnBackedUp" to
+                        MultiaccountInteractor.BackupRestore.REPAIRS_READ_ONLY_ACCOUNT,
+                    "cnNotHere" to MultiaccountInteractor.BackupRestore.ADDS_ACCOUNT,
+                )
+            ).thenReturn(
+                mapOf("cnNotHere" to MultiaccountInteractor.BackupRestore.ADDS_ACCOUNT)
+            )
+
+            onboardingViewModel.onSuccessfulGoogleSignin(navController)
+            testScheduler.advanceUntilIdle()
+
+            // The list of backups opens. The read-only account is in it and marked; only the
+            // account that already works is left out.
+            org.mockito.kotlin.verify(navController)
+                .navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
+            val list = requireNotNull(onboardingViewModel.importAccountListState.value).accountList
+            assertEquals(
+                listOf("cnBackedUp" to true, "cnNotHere" to false),
+                list.map { it.backupAccountMeta.address to it.readOnlyOnThisPhone },
+            )
+
+            // Its backup is opened with the backup password. The keys stored for the account on
+            // this phone cannot be used, so the restore offers the repair and writes nothing.
+            whenever(backupService.importBackupAccount("cnBackedUp", "backup password")).thenReturn(
+                googleBackup(
+                    types = listOf(jp.co.soramitsu.xbackup.domain.models.BackupAccountType.PASSPHRASE),
+                    phrase = "own phrase",
+                    seed = "",
+                )
+            )
+            whenever(multiAccInteractor.isMnemonicValid("own phrase")).thenReturn(true)
+            whenever(multiAccInteractor.addressOfMnemonic("own phrase")).thenReturn("cnBackedUp")
+            whenever(multiAccInteractor.importFromMnemonic("own phrase", "Backed up")).thenAnswer {
+                throw repairOffer(accountExists = true, pinRequired = true)
+            }
+            whenever(multiAccInteractor.repairFromMnemonic("own phrase", "Backed up", "135790", false))
+                .thenReturn(jp.co.soramitsu.common.account.SoraAccount("cnBackedUp", "Kept name"))
+            onboardingViewModel.onImportAccountSelected(navController, list.first())
+            onboardingViewModel.onImportPasswordChanged(
+                androidx.compose.ui.text.input.TextFieldValue("backup password")
+            )
+            onboardingViewModel.onImportContinueClicked(navController)
+            testScheduler.advanceUntilIdle()
+
+            val prompt = requireNotNull(onboardingViewModel.repairPrompt.value)
+            assertEquals(true, prompt.accountExists)
+            assertEquals(true, prompt.pinRequired)
+            assertEquals(true, prompt.fromPhrase)
+            org.mockito.kotlin.verify(multiAccInteractor, org.mockito.kotlin.never()).repairFromMnemonic(
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+            )
+
+            onboardingViewModel.onRepairConfirmed("135790")
+            testScheduler.advanceUntilIdle()
+
+            org.mockito.kotlin.verify(multiAccInteractor)
+                .repairFromMnemonic("own phrase", "Backed up", "135790", false)
+            assertNull(onboardingViewModel.repairPrompt.value)
+            // The success screen offers the backup that is left; the repaired account is not
+            // offered again.
+            assertEquals(true, onboardingViewModel.importAccountPasswordState.value?.isImportMoreAvailable)
+            assertEquals(false, onboardingViewModel.importAccountPasswordState.value?.isLoading)
+            onboardingViewModel.onImportMoreClicked(navController)
+            testScheduler.advanceUntilIdle()
+            assertEquals(
+                listOf("cnNotHere" to false),
+                onboardingViewModel.importAccountListState.value?.accountList
+                    ?.map { it.backupAccountMeta.address to it.readOnlyOnThisPhone },
+            )
+        }
+
+    @Test
+    fun `a read-only account whose only backup is on Google is offered there, not Create account`() =
+        runTest {
+            whenever(coroutineManager.io)
+                .thenReturn(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler))
+            whenever(backupService.getBackupAccounts()).thenReturn(
+                listOf(jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta("Backed up", "cnBackedUp"))
+            )
+            whenever(multiAccInteractor.isAddressValid("cnBackedUp")).thenReturn(true)
+            whenever(multiAccInteractor.backupRestores(listOf("cnBackedUp"))).thenReturn(
+                mapOf(
+                    "cnBackedUp" to MultiaccountInteractor.BackupRestore.REPAIRS_READ_ONLY_ACCOUNT
+                )
+            ).thenReturn(emptyMap())
+
+            onboardingViewModel.onSuccessfulGoogleSignin(navController)
+            testScheduler.advanceUntilIdle()
+
+            org.mockito.kotlin.verify(navController)
+                .navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
+            org.mockito.kotlin.verify(navController, org.mockito.kotlin.never())
+                .navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.CREATE_ACCOUNT)
+            val entry = requireNotNull(onboardingViewModel.importAccountListState.value)
+                .accountList.single()
+            assertEquals(true, entry.readOnlyOnThisPhone)
+
+            // Only values were missing on the phone (for example the nonce): the restore adds
+            // them and the account works again, with no repair to confirm.
+            whenever(backupService.importBackupAccount("cnBackedUp", "backup password")).thenReturn(
+                googleBackup(
+                    types = listOf(jp.co.soramitsu.xbackup.domain.models.BackupAccountType.SEED),
+                    phrase = "",
+                    seed = "own seed",
+                )
+            )
+            whenever(multiAccInteractor.isRawSeedValid("own seed")).thenReturn(true)
+            whenever(multiAccInteractor.addressOfRawSeed("own seed")).thenReturn("cnBackedUp")
+            whenever(multiAccInteractor.importFromRawSeed("own seed", "Backed up"))
+                .thenReturn(jp.co.soramitsu.common.account.SoraAccount("cnBackedUp", "Kept name"))
+            onboardingViewModel.onImportAccountSelected(navController, entry)
+            onboardingViewModel.onImportPasswordChanged(
+                androidx.compose.ui.text.input.TextFieldValue("backup password")
+            )
+            onboardingViewModel.onImportContinueClicked(navController)
+            testScheduler.advanceUntilIdle()
+
+            org.mockito.kotlin.verify(multiAccInteractor).importFromRawSeed("own seed", "Backed up")
+            assertNull(onboardingViewModel.repairPrompt.value)
+            // Nothing is left to restore: the account works and is not offered again.
+            assertEquals(false, onboardingViewModel.importAccountPasswordState.value?.isImportMoreAvailable)
+            assertEquals(false, onboardingViewModel.importAccountPasswordState.value?.isLoading)
+        }
+
+    @Test
+    fun `Google backups of accounts that all work here say so and do not open Create account`() =
+        runTest {
+            whenever(backupService.getBackupAccounts()).thenReturn(
+                listOf(jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta("Works", "cnWorks"))
+            )
+            whenever(multiAccInteractor.isAddressValid("cnWorks")).thenReturn(true)
+            whenever(multiAccInteractor.backupRestores(listOf("cnWorks"))).thenReturn(emptyMap())
+
+            onboardingViewModel.onSuccessfulGoogleSignin(navController)
+            testScheduler.advanceUntilIdle()
+
+            // Nothing is offered again, and the screen stays where it is: opening Create account
+            // would look as if this Google account held no backup.
+            org.mockito.kotlin.verify(navController, org.mockito.kotlin.never())
+                .navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
+            org.mockito.kotlin.verify(navController, org.mockito.kotlin.never())
+                .navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.CREATE_ACCOUNT)
+            assertEquals(
+                emptyList<Any>(),
+                onboardingViewModel.importAccountListState.value?.accountList,
+            )
+            // The person is told what was found and what they can do next.
+            assertEquals(
+                R.string.google_backups_all_here_title to R.string.google_backups_all_here,
+                onboardingViewModel.errorFromResourceLiveData.value,
+            )
+            assertEquals(false, onboardingViewModel.tutorialScreenState.value?.isGoogleSigninLoading)
+        }
+
+    @Test
+    fun `a Google account with no backup still opens Create account without a message`() = runTest {
+        whenever(backupService.getBackupAccounts()).thenReturn(emptyList())
+
+        onboardingViewModel.onSuccessfulGoogleSignin(navController)
+        testScheduler.advanceUntilIdle()
+
+        org.mockito.kotlin.verify(navController)
+            .navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.CREATE_ACCOUNT)
+        assertNull(onboardingViewModel.errorFromResourceLiveData.value)
+        org.mockito.kotlin.verify(multiAccInteractor, org.mockito.kotlin.never())
+            .backupRestores(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun `a wrong password for a Google backup that holds only JSON is a Google backup message`() =
+        runTest {
+            // Nothing is decrypted before the JSON import for such a backup, so the wrong
+            // password is found by the import, with the code of a backup file.
+            importFromGoogle(
+                googleBackup(
+                    types = listOf(jp.co.soramitsu.xbackup.domain.models.BackupAccountType.JSON),
+                    phrase = "",
+                    seed = "",
+                ),
+                importResult = {
+                    throw SoraException.businessError(ResponseCode.JSON_BACKUP_WRONG_PASSWORD)
+                },
+            )
+
+            // The text of the Google restore screen, not of "the file you exported".
+            assertEquals(
+                ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED.messageResource,
+                onboardingViewModel.errorFromResourceLiveData.value?.second,
+            )
+            // The screen stays on the password, ready for another try.
+            assertNull(onboardingViewModel.repairPrompt.value)
+            assertEquals(false, onboardingViewModel.importAccountPasswordState.value?.isLoading)
+        }
+
+    @Test
+    fun `a Google backup whose JSON cannot restore the account says so in Google backup words`() =
+        runTest {
+            importFromGoogle(
+                googleBackup(
+                    types = listOf(jp.co.soramitsu.xbackup.domain.models.BackupAccountType.JSON),
+                    phrase = "",
+                    seed = "",
+                ),
+                importResult = { throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID) },
+            )
+
+            assertEquals(
+                R.string.google_backup_unreadable_title to R.string.google_backup_unreadable,
+                onboardingViewModel.errorFromResourceLiveData.value,
+            )
+            assertEquals(false, onboardingViewModel.importAccountPasswordState.value?.isLoading)
+        }
+
+    @Test
+    fun `a phone without a file picker says that the backup text can be pasted`() = runTest {
+        onboardingViewModel.onRecoveryFilePickerUnavailable()
+
+        assertEquals(
+            R.string.recovery_json_no_file_picker,
+            onboardingViewModel.errorFromResourceLiveData.value?.second,
+        )
     }
 
     private fun repairOffer(accountExists: Boolean, pinRequired: Boolean) =
@@ -743,12 +995,20 @@ class OnboardingViewModelTest {
 
     private suspend fun kotlinx.coroutines.test.TestScope.importFromGoogle(
         backup: jp.co.soramitsu.xbackup.domain.models.DecryptedBackupAccount,
+        importResult: () -> MultiaccountInteractor.JsonImportResult = {
+            MultiaccountInteractor.JsonImportResult(
+                listOf(jp.co.soramitsu.common.account.SoraAccount("cnBackedUp", "Backed up")),
+                0,
+            )
+        },
     ) {
         whenever(coroutineManager.io)
             .thenReturn(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler))
         whenever(backupService.importBackupAccount("cnBackedUp", "backup password"))
             .thenReturn(backup)
-        whenever(backupService.getBackupAccounts()).thenReturn(emptyList())
+        // Asked for only after a restore that succeeded ("Import more").
+        org.mockito.Mockito.lenient().`when`(backupService.getBackupAccounts())
+            .thenReturn(emptyList())
         whenever(multiAccInteractor.isJsonBackupValid("{backup json}")).thenReturn(true)
         whenever(multiAccInteractor.isAddressValid("cnBackedUp")).thenReturn(true)
         whenever(
@@ -758,12 +1018,7 @@ class OnboardingViewModelTest {
                 "Backed up",
                 "cnBackedUp",
             )
-        ).thenReturn(
-            MultiaccountInteractor.JsonImportResult(
-                listOf(jp.co.soramitsu.common.account.SoraAccount("cnBackedUp", "Backed up")),
-                0,
-            )
-        )
+        ).thenAnswer { importResult() }
         onboardingViewModel.onImportAccountSelected(
             navController,
             jp.co.soramitsu.feature_multiaccount_impl.presentation.BackupAccountMetaWithIcon(

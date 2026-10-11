@@ -660,4 +660,10 @@
   <string name="account_repair_confirm_batch">Repair accounts</string>
   <string name="recovery_json_file_chosen">File chosen: %1$s</string>
   <string name="recovery_json_file_unnamed">backup file</string>
+  <string name="import_account_list_read_only_note">This account is on this phone, but it can\'t send from here. To repair it, restore this backup.</string>
+  <string name="google_backups_all_here_title">Nothing to restore</string>
+  <string name="google_backups_all_here">Every account backed up in this Google account is already on this phone, so there is nothing to restore. To add another account, choose Create account or Import account.</string>
+  <string name="google_backup_unreadable_title">This backup can\'t be restored</string>
+  <string name="google_backup_unreadable">SORA couldn\'t restore this account from its Google backup: the backup data is damaged or belongs to another account. Nothing on this phone was changed. If you have the account\'s recovery phrase, raw seed or backup file, go to Import account and enter it.</string>
+  <string name="recovery_json_no_file_picker">This phone has no app for choosing a file. Paste the text of your backup file into the field instead. Nothing was changed.</string>
 </resources>

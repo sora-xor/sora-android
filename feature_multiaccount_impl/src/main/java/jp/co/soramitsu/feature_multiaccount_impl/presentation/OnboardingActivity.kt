@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_multiaccount_impl.presentation
 
 import android.app.Activity
 import android.app.ActivityOptions
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -169,6 +170,18 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                 }
             }
         }
+
+    /**
+     * Opens the file picker. A phone or work profile can have no app that picks files; the
+     * launch then throws, and the screen says that the text can be pasted instead.
+     */
+    private fun chooseBackupFile() {
+        try {
+            backupFilePicker.launch(ANY_FILE_TYPE)
+        } catch (_: ActivityNotFoundException) {
+            viewModel.onRecoveryFilePickerUnavailable()
+        }
+    }
 
     /** The name the file picker shows for [uri], or "" when it gives none. */
     private fun backupFileName(uri: Uri): String = runCatching {
@@ -557,7 +570,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             recoveryState = it,
                             onRecoveryInputChanged = viewModel::onRecoveryInputChanged,
                             onPasswordChanged = viewModel::onRecoveryPasswordChanged,
-                            onChooseFile = { backupFilePicker.launch(ANY_FILE_TYPE) },
+                            onChooseFile = ::chooseBackupFile,
                         ) {
                             navController.navigate(OnboardingFeatureRoutes.RECOVERY_ACCOUNT_NAME)
                         }

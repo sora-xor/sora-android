@@ -80,7 +80,6 @@ import jp.co.soramitsu.xbackup.domain.exceptions.DecodingException
 import jp.co.soramitsu.xbackup.domain.exceptions.DecryptionException
 import jp.co.soramitsu.xbackup.domain.exceptions.StorageQuotaExceeded
 import jp.co.soramitsu.xbackup.domain.exceptions.UnauthorizedException
-import jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta
 import jp.co.soramitsu.xbackup.domain.models.BackupAccountType
 import jp.co.soramitsu.xbackup.domain.models.CryptoType
 import jp.co.soramitsu.xbackup.domain.models.DecryptedBackupAccount
@@ -206,6 +205,14 @@ class OnboardingViewModel @Inject constructor(
     /** A chosen backup file could not be read as text. Nothing was changed. */
     fun onRecoveryFileUnreadable() {
         onError(jp.co.soramitsu.common.R.string.recovery_json_file_unreadable)
+    }
+
+    /**
+     * This phone has no app that can pick a file. Nothing was changed; the text of the backup
+     * file can be pasted into the field.
+     */
+    fun onRecoveryFilePickerUnavailable() {
+        onError(jp.co.soramitsu.common.R.string.recovery_json_no_file_picker)
     }
 
     private val _repairPrompt = MutableStateFlow<RepairPrompt?>(null)
@@ -942,23 +949,31 @@ class OnboardingViewModel @Inject constructor(
             if (navController.currentDestination?.route == OnboardingFeatureRoutes.PASSPHRASE) {
                 navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
             } else {
-                val result = getBackupedAccountsFiltered()
+                val backups = googleBackups()
 
                 _tutorialScreenState.value =
                     _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
 
-                if (result.isEmpty()) {
-                    navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
-                } else {
-                    _importAccountListState.value = ImportAccountListScreenState(
-                        accountList = result.map {
-                            BackupAccountMetaWithIcon(
-                                it,
-                                getDrawableFromGoogleBackup(it.address),
-                            )
-                        }
-                    )
-                    navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
+                when {
+                    backups.restorable.isNotEmpty() -> {
+                        _importAccountListState.value =
+                            ImportAccountListScreenState(backups.restorable)
+                        navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
+                    }
+
+                    backups.allUsableHere -> {
+                        // The Drive holds backups, and each one is of an account that already
+                        // works on this phone. Opening Create account here would look as if no
+                        // backup had been found, so the screen stays and says what was found.
+                        isFromGoogleDrive = false
+                        errorFromResourceLiveData.setValue(
+                            jp.co.soramitsu.common.R.string.google_backups_all_here_title to
+                                jp.co.soramitsu.common.R.string.google_backups_all_here
+                        )
+                    }
+
+                    // No backup in this Google account: a new wallet that is backed up there.
+                    else -> navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
                 }
             }
         } catch (e: UnauthorizedException) {
@@ -1173,7 +1188,7 @@ class OnboardingViewModel @Inject constructor(
                     } catch (e: DecodingException) {
                         onError(SoraException.businessError(ResponseCode.GENERAL_ERROR))
                     } catch (e: SoraException) {
-                        onError(e)
+                        onError(asGoogleBackupError(e))
                     } catch (e: IllegalArgumentException) {
                         onError(SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED))
                     } catch (e: SocketException) {
@@ -1191,6 +1206,21 @@ class OnboardingViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * A Google backup that holds only the encrypted JSON is opened with the backup password by
+     * the JSON import itself, so a wrong password or an unusable backup arrives with the codes
+     * of a backup file. Their texts speak of a file the person chose and exported; on this
+     * screen the person typed the password of a Google backup, and the message says that.
+     */
+    private fun asGoogleBackupError(error: SoraException): SoraException =
+        when (error.errorResponseCode) {
+            ResponseCode.JSON_BACKUP_WRONG_PASSWORD ->
+                SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED)
+            ResponseCode.JSON_BACKUP_INVALID ->
+                SoraException.businessError(ResponseCode.GOOGLE_BACKUP_UNREADABLE)
+            else -> error
+        }
 
     /**
      * The form of the wallet in a Google backup that is restored: the one that derives the
@@ -1279,15 +1309,8 @@ class OnboardingViewModel @Inject constructor(
             try {
                 _importAccountPasswordState.value =
                     _importAccountPasswordState.value?.copy(isLoading = true)
-                _importAccountListState.value = ImportAccountListScreenState(
-                    accountList = getBackupedAccountsFiltered()
-                        .map {
-                            BackupAccountMetaWithIcon(
-                                it,
-                                getDrawableFromGoogleBackup(it.address),
-                            )
-                        }
-                )
+                _importAccountListState.value =
+                    ImportAccountListScreenState(getBackupedAccountsFiltered())
 
                 resetBackupLiveData()
                 navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
@@ -1367,13 +1390,44 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getBackupedAccountsFiltered(): List<BackupAccountMeta> {
-        return backupService.getBackupAccounts()
-            .filter {
-                multiaccountInteractor.isAddressValid(it.address) && !multiaccountInteractor.accountExists(
-                    it.address
-                )
-            }
+    /**
+     * The Google backups that still have something to do on this phone: of an account that is
+     * not here yet (restoring adds it), and of an account that is here but read-only (restoring
+     * completes or repairs its keys in place; the entry is marked). Only the backup of an account
+     * that can already sign is left out.
+     *
+     * A read-only account must stay in this list: its Google backup can be the only backup it
+     * has, and hiding it would leave removing the account as the only way to use that backup.
+     */
+    private suspend fun getBackupedAccountsFiltered(): List<BackupAccountMetaWithIcon> =
+        googleBackups().restorable
+
+    /** What the Google account holds for this phone. */
+    private class GoogleBackups(
+        /** The backups that still have something to do here ([getBackupedAccountsFiltered]). */
+        val restorable: List<BackupAccountMetaWithIcon>,
+        /**
+         * The Google account holds backups, and every one is of an account that already works
+         * on this phone, so there is nothing to restore.
+         */
+        val allUsableHere: Boolean,
+    )
+
+    private suspend fun googleBackups(): GoogleBackups {
+        val backups = backupService.getBackupAccounts()
+            .filter { multiaccountInteractor.isAddressValid(it.address) }
+        if (backups.isEmpty()) return GoogleBackups(emptyList(), allUsableHere = false)
+        val restores = multiaccountInteractor.backupRestores(backups.map { it.address })
+        val restorable = backups.mapNotNull { backup ->
+            val restore = restores[backup.address] ?: return@mapNotNull null
+            BackupAccountMetaWithIcon(
+                backupAccountMeta = backup,
+                icon = getDrawableFromGoogleBackup(backup.address),
+                readOnlyOnThisPhone =
+                    restore == MultiaccountInteractor.BackupRestore.REPAIRS_READ_ONLY_ACCOUNT,
+            )
+        }
+        return GoogleBackups(restorable, allUsableHere = restorable.isEmpty())
     }
 
     override fun onAction() {

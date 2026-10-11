@@ -653,4 +653,10 @@
   <string name="account_repair_confirm_batch">アカウントを修復</string>
   <string name="recovery_json_file_chosen">選択したファイル: %1$s</string>
   <string name="recovery_json_file_unnamed">バックアップファイル</string>
+  <string name="import_account_list_read_only_note">このアカウントはこの端末にありますが、この端末からは送金できません。修復するには、このバックアップを復元してください。</string>
+  <string name="google_backups_all_here_title">復元するものはありません</string>
+  <string name="google_backups_all_here">このGoogleアカウントにバックアップされているアカウントは、すべてこの端末にあるため、復元するものはありません。別のアカウントを追加するには、「アカウントを作成」または「アカウントをインポート」を選んでください。</string>
+  <string name="google_backup_unreadable_title">このバックアップは復元できません</string>
+  <string name="google_backup_unreadable">Googleバックアップからこのアカウントを復元できませんでした。バックアップのデータが壊れているか、別のアカウントのものです。この端末では何も変更されていません。このアカウントのリカバリーフレーズ、Raw Seed、またはバックアップファイルをお持ちの場合は、「アカウントをインポート」で入力してください。</string>
+  <string name="recovery_json_no_file_picker">この端末にはファイルを選ぶためのアプリがありません。代わりに、バックアップファイルの内容を入力欄に貼り付けてください。何も変更されていません。</string>
 </resources>
