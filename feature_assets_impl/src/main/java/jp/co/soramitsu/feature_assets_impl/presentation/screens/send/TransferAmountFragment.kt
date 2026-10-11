@@ -179,6 +179,7 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
                         shouldTransactionReminderInsufficientWarningBeShown = state.shouldTransactionReminderInsufficientWarningBeShown,
                         feeUnavailable = state.feeUnavailable,
                         onRetryFee = viewModel::onRetryFee,
+                        lockedNote = state.lockedNote,
                     )
                 }
 
