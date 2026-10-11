@@ -81,7 +81,7 @@ internal fun BackupScreen(
     onExportJsonPressed: (() -> Unit)? = null,
 ) {
     if (state.noMatchingSecret) {
-        NoMatchingSecretCard(onExportJsonPressed)
+        NoMatchingSecretCard(onExportJsonPressed.takeIf { state.canExportJson })
         return
     }
     ContentCard(
@@ -188,7 +188,8 @@ internal fun BackupScreen(
 
 /**
  * Nothing stored on this phone re-derives this account's address, so nothing is shown as its
- * recovery phrase or seed. The way to back it up is the encrypted JSON export.
+ * recovery phrase or seed. When the stored key signs, the encrypted JSON export is the way to
+ * back the account up and its button is shown; a read-only account is told to import its phrase.
  */
 @Composable
 private fun NoMatchingSecretCard(onExportJsonPressed: (() -> Unit)?) {
@@ -207,7 +208,13 @@ private fun NoMatchingSecretCard(onExportJsonPressed: (() -> Unit)?) {
                     .testTagAsId("NoMatchingSecret")
                     .wrapContentHeight()
                     .fillMaxWidth(),
-                text = stringResource(id = R.string.backup_no_matching_secret),
+                text = stringResource(
+                    id = if (onExportJsonPressed != null) {
+                        R.string.backup_no_matching_secret
+                    } else {
+                        R.string.backup_no_matching_secret_read_only
+                    },
+                ),
                 color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )

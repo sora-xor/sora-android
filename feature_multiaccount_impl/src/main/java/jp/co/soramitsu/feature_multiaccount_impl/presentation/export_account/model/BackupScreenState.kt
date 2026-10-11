@@ -42,4 +42,9 @@ data class BackupScreenState(
      * seed is shown; the encrypted JSON export is offered instead.
      */
     val noMatchingSecret: Boolean = false,
+    /**
+     * With [noMatchingSecret]: the account's stored key signs, so the encrypted JSON export
+     * works and is offered. A read-only account is pointed to importing its phrase instead.
+     */
+    val canExportJson: Boolean = false,
 )

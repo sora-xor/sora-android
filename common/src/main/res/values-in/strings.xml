@@ -622,6 +622,6 @@
   <string name="account_repair_too_many_attempts">The PIN was wrong three times, so the repair was stopped. Nothing was changed. You can start again from Import account.</string>
   <string name="account_repair_confirm">Repair account</string>
   <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file.</string>
-  <string name="backup_stored_phrase_not_matching">The recovery phrase saved on this phone belongs to a different wallet, so it is not shown as the backup of this account.</string>
-  <string name="safe_mode_whats_new_accounts_some_read_only">%1$d of %2$d accounts can send from this phone. To repair the others, import their recovery phrase.</string>
+  <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase.</string>
+  <string name="safe_mode_whats_new_accounts_some_read_only">Accounts that can send from this phone: %1$s of %2$s. To repair the rest, import their recovery phrase.</string>
 </resources>

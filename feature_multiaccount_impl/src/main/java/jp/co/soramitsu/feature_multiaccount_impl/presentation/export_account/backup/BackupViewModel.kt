@@ -89,7 +89,7 @@ class BackupViewModel @AssistedInject constructor(
                             seedString = multiAccountInteractor.getSeed(address).addHexPrefix(),
                         )
                     } else {
-                        BackupScreenState(noMatchingSecret = true)
+                        BackupScreenState(noMatchingSecret = true, canExportJson = material.canSign)
                     }
                 }
 
@@ -98,7 +98,7 @@ class BackupViewModel @AssistedInject constructor(
                     _backupScreenState.value = if (material.hasPhrase) {
                         BackupScreenState(mnemonicWords = material.phraseWords)
                     } else {
-                        BackupScreenState(noMatchingSecret = true)
+                        BackupScreenState(noMatchingSecret = true, canExportJson = material.canSign)
                     }
                 }
 
@@ -109,6 +109,7 @@ class BackupViewModel @AssistedInject constructor(
 
     /** The backup that always works for an account that can sign: the encrypted JSON export. */
     fun exportJsonPressed() {
+        if (_backupScreenState.value?.canExportJson != true) return
         mainRouter.showExportJSONProtection(mutableListOf(address))
     }
 

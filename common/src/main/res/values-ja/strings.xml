@@ -624,6 +624,6 @@
   <string name="account_repair_too_many_attempts">PINを3回間違えたため、修復を中止しました。何も変更されていません。「アカウントをインポート」からやり直せます。</string>
   <string name="account_repair_confirm">アカウントを修復</string>
   <string name="backup_no_matching_secret">この端末に保存されているリカバリーフレーズやシードの中に、このアカウントに一致するものがないため、表示していません。アカウント自体は引き続き使用できます。バックアップするには、暗号化されたJSONファイルとしてエクスポートしてください。</string>
-  <string name="backup_stored_phrase_not_matching">この端末に保存されているリカバリーフレーズは別のウォレットのものです。そのため、このアカウントのバックアップとしては表示していません。</string>
-  <string name="safe_mode_whats_new_accounts_some_read_only">%2$d個中%1$d個のアカウントがこの端末から送金できます。残りのアカウントは、リカバリーフレーズをインポートすると修復できます。</string>
+  <string name="backup_no_matching_secret_read_only">この端末に保存されているリカバリーフレーズやシードの中に、このアカウントに一致するものがないため、表示していません。この端末でこのアカウントを再び使うには、「アカウントをインポート」でリカバリーフレーズを入力してください。</string>
+  <string name="safe_mode_whats_new_accounts_some_read_only">この端末から送金できるアカウント: %2$s個中%1$s個。残りのアカウントは、リカバリーフレーズをインポートすると修復できます。</string>
 </resources>

@@ -302,7 +302,13 @@ class AccountDetailsViewModel @AssistedInject constructor(
                                 withContext(coroutineManager.main) {
                                     _createBackupPasswordState.value =
                                         createBackupPasswordState.copy(isLoading = false)
-                                    onError(jp.co.soramitsu.common.R.string.backup_no_matching_secret)
+                                    onError(
+                                        if (material.canSign) {
+                                            jp.co.soramitsu.common.R.string.backup_no_matching_secret
+                                        } else {
+                                            jp.co.soramitsu.common.R.string.backup_no_matching_secret_read_only
+                                        }
+                                    )
                                 }
                                 return@launch
                             }

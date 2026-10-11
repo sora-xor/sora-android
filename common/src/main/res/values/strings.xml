@@ -804,13 +804,15 @@
   <string name="account_repair_copy_failed">This account wasn\'t repaired</string>
   <string name="account_repair_copy_failed_description">SORA couldn\'t keep a copy of the old keys first, for example because the phone is low on storage. Nothing was changed. Free some space and try again.</string>
   <string name="account_repair_title">Repair this account with its recovery phrase</string>
+  <!-- account_repair_body_account / account_repair_body_keys: verified: CredentialsRepositoryImpl.repairWithDraft copies the encrypted preference files to no_backup/wallet-quarantine-*-repaired-account before it writes (no copy, no write), replaces only the values stored for this one address, and the caller keeps the account row and name (MultiaccountInteractor.finishImport) -->
   <string name="account_repair_body_account">What you entered belongs to an account that is already on this phone, but the keys saved for it here can\'t be used. SORA can replace them with the keys from what you entered. The account keeps its address, name and history, and your other accounts are not touched. A copy of the old keys stays on this phone.</string>
   <string name="account_repair_body_keys">Keys for this wallet are already saved on this phone, but they can\'t be used. SORA can replace them with the keys from what you entered and add the wallet. Its address stays the same, and your other accounts are not touched. A copy of the old keys stays on this phone.</string>
   <string name="account_repair_pin_label">Enter your PIN to confirm</string>
   <string name="account_repair_pin_wrong">That PIN isn\'t right. Nothing was changed.</string>
   <string name="account_repair_too_many_attempts">The PIN was wrong three times, so the repair was stopped. Nothing was changed. You can start again from Import account.</string>
   <string name="account_repair_confirm">Repair account</string>
+  <!-- backup_no_matching_secret: verified: shown only when neither the stored phrase nor the stored seed re-derives the address (StoredWalletSecretsJudge); this text and the Export JSON button are used only when the stored key signs (WalletBackupMaterial.canSign), and the sr25519 JSON export is made from that key; a read-only account gets backup_no_matching_secret_read_only and no export button -->
   <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file.</string>
-  <string name="backup_stored_phrase_not_matching">The recovery phrase saved on this phone belongs to a different wallet, so it is not shown as the backup of this account.</string>
-  <string name="safe_mode_whats_new_accounts_some_read_only">%1$d of %2$d accounts can send from this phone. To repair the others, import their recovery phrase.</string>
+  <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase.</string>
+  <string name="safe_mode_whats_new_accounts_some_read_only">Accounts that can send from this phone: %1$s of %2$s. To repair the rest, import their recovery phrase.</string>
 </resources>
