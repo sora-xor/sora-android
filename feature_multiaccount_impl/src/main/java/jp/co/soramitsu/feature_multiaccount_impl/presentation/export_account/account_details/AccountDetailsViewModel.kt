@@ -294,30 +294,36 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     _accountDetailsScreenState.value?.let { accountDetailsScreenState ->
                         account?.let { account ->
                             // Only a phrase or seed that re-derives this account goes into the
-                            // backup. A Google backup is restored from one of the two, so when
-                            // neither matches no backup is made and the person is told to use
-                            // the encrypted JSON export instead.
+                            // backup, next to the encrypted JSON of the stored key pair. An
+                            // account whose stored key signs but has no matching phrase or seed
+                            // is backed up as that JSON alone; restoring from Google reads it
+                            // back (OnboardingViewModel.backupSecret). An account that cannot
+                            // sign has nothing here that would restore it, so no backup is made
+                            // and the person is told how to get the account working again.
                             val material = interactor.getBackupMaterial(account)
-                            if (material.onlyJsonExport) {
+                            if (material.onlyJsonExport && !material.canSign) {
                                 withContext(coroutineManager.main) {
                                     _createBackupPasswordState.value =
                                         createBackupPasswordState.copy(isLoading = false)
                                     onError(
-                                        if (material.canSign) {
-                                            jp.co.soramitsu.common.R.string.backup_no_matching_secret
-                                        } else {
-                                            jp.co.soramitsu.common.R.string.backup_no_matching_secret_read_only
-                                        }
+                                        jp.co.soramitsu.common.R.string.backup_no_matching_secret_read_only
                                     )
                                 }
                                 return@launch
                             }
                             val passphrase =
                                 interactor.getMnemonic(accountDetailsScreenState.address)
-                            val jsonString = interactor.generateSubstrateJsonString(
-                                listOf(account),
-                                createBackupPasswordState.password.value.text
-                            )
+                            // The JSON form is added when the stored key pair is proven. A
+                            // read-only account with a matching phrase or seed is still backed
+                            // up, from that phrase or seed alone.
+                            val jsonString = if (material.canSign) {
+                                interactor.generateSubstrateJsonString(
+                                    listOf(account),
+                                    createBackupPasswordState.password.value.text
+                                )
+                            } else {
+                                ""
+                            }
 
                             val seed = Seed(
                                 substrateSeed = interactor.getSeed(accountDetailsScreenState.address)

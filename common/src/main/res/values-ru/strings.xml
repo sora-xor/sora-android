@@ -663,4 +663,6 @@
   <string name="recovery_json_choose_file">Choose file</string>
   <string name="recovery_json_file_unreadable">SORA couldn\'t read that file. Choose the JSON file you exported from SORA. Nothing was changed.</string>
   <string name="json_backup_batch_skipped">Added %1$s of the accounts in this file. %2$s could not be added because different keys are saved for them on this phone. To repair one of those, go to Import account and enter its recovery phrase or its own backup file.</string>
+  <string name="export_json_keys_unusable_title">This account can\'t be exported</string>
+  <string name="export_json_keys_unusable">An account you chose can\'t be exported, because the keys saved for it on this phone can\'t be used. No file was made. To use that account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
 </resources>

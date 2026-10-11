@@ -140,8 +140,16 @@ class BackupJsonViewModel @AssistedInject constructor(
     fun downloadJsonClicked() {
         viewModelScope.launch {
             _backupJsonScreenState.value?.let {
-                _jsonTextLiveData.value =
-                    interactor.getJsonFileUri(addresses, it.confirmationState.value.text)
+                try {
+                    _jsonTextLiveData.value =
+                        interactor.getJsonFileUri(addresses, it.confirmationState.value.text)
+                } catch (error: kotlinx.coroutines.CancellationException) {
+                    throw error
+                } catch (error: Throwable) {
+                    // For example an account whose stored keys cannot be used: no file is made
+                    // and the screen says why and what to do.
+                    onError(error)
+                }
             }
         }
     }

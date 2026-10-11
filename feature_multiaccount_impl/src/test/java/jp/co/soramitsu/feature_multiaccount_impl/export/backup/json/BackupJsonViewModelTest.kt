@@ -101,6 +101,27 @@ class BackupJsonViewModelTest {
     }
 
     @Test
+    fun `an account that cannot be exported shows why instead of failing`() = runTest {
+        val refused = jp.co.soramitsu.common.domain.SoraException.businessError(
+            jp.co.soramitsu.common.domain.ResponseCode.ACCOUNT_KEYS_NOT_EXPORTABLE
+        )
+        org.mockito.kotlin.whenever(interactor.getJsonFileUri(addresses, "password"))
+            .thenThrow(refused)
+        viewModel.passwordInputChanged(TextFieldValue("password"))
+        viewModel.confirmationInputChanged(TextFieldValue("password"))
+
+        viewModel.downloadJsonClicked()
+        testScheduler.advanceUntilIdle()
+
+        // No file, and the message for an account whose stored keys cannot be used.
+        assertEquals(null, viewModel.jsonTextLiveData.value)
+        assertEquals(
+            R.string.export_json_keys_unusable_title to R.string.export_json_keys_unusable,
+            viewModel.errorFromResourceLiveData.value,
+        )
+    }
+
+    @Test
     fun passwordInputChangedCalled() {
         val textFieldValue = TextFieldValue("password")
 

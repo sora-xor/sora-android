@@ -8,6 +8,7 @@ import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.unmockkObject
+import io.mockk.verify
 import jp.co.soramitsu.common.account.RecoveryPhrase
 import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.account.SoraAccount
@@ -316,12 +317,53 @@ class CredentialsRepositoryStoredSecretsTest {
 
             // The sr25519 JSON export encodes the stored key pair; it gets no seed here.
             val exported = slot<JsonAccountsEncoder.ExportAccount>()
-            every { json.generate(capture(exported), any(), any()) } returns "json"
+            var privateKeyAtEncoding = ByteArray(0)
+            every { json.generate(capture(exported), any(), any()) } answers {
+                privateKeyAtEncoding = exported.captured.keypair.privateKey.copyOf()
+                "json"
+            }
             assertEquals("json", repository.generateJson(listOf(account), "password"))
             assertArrayEquals(keys.publicKey, exported.captured.keypair.publicKey)
+            assertArrayEquals(keys.privateKey, privateKeyAtEncoding)
             assertEquals(0, exported.captured.seed.size)
+            // The copy of the key handed to the encoder is wiped afterwards.
+            assertArrayEquals(ByteArray(32), exported.captured.keypair.privateKey)
             assertEquals(before, store.snapshot())
         }
+
+    @Test
+    fun `an account whose stored key does not prove its address is never exported`() = runTest {
+        // The right public key next to another wallet's private key and nonce, and the
+        // account's own phrase: nothing here would make the file a backup of this account.
+        val other = crypto.generateKeypair(ByteArray(32) { 9 })
+        store.put(CredentialField.PRIVATE_KEY, address, other.privateKey.toHex())
+        store.put(CredentialField.PUBLIC_KEY, address, keys.publicKey.toHex())
+        store.put(CredentialField.KEY_NONCE, address, other.nonce.toHex())
+        store.put(CredentialField.MNEMONIC, address, TWELVE)
+        val working = crypto.generateKeypair(ByteArray(32) { 0xff.toByte() })
+        val workingAddress = requireNotNull(codec.toSoraAddressOrNull(working.publicKey))
+        store.putKeys(workingAddress, working)
+        val before = store.snapshot()
+
+        // Alone, and as one of several chosen accounts: no file is made at all.
+        listOf(
+            listOf(account),
+            listOf(SoraAccount(workingAddress, "Working"), account),
+        ).forEach { chosen ->
+            val error = runCatching { repository.generateJson(chosen, "password") }.exceptionOrNull()
+            assertEquals(
+                ResponseCode.ACCOUNT_KEYS_NOT_EXPORTABLE,
+                (error as? SoraException)?.errorResponseCode,
+            )
+        }
+        verify(exactly = 0) { json.generate(any<JsonAccountsEncoder.ExportAccount>(), any(), any()) }
+        verify(exactly = 0) {
+            json.generate(any<List<JsonAccountsEncoder.ExportAccount>>(), any<String>(), any<String>())
+        }
+        // The phrase that does match is still offered as the backup.
+        assertEquals(TWELVE.split(" "), repository.retrieveBackupMaterial(account).phraseWords)
+        assertEquals(before, store.snapshot())
+    }
 
     @Test
     fun `JSON export of several accounts hands over each canonical seed`() = runTest {
@@ -335,11 +377,15 @@ class CredentialsRepositoryStoredSecretsTest {
         store.put(CredentialField.SEED, secondAddress, "0X" + "FF".repeat(32))
 
         val exported = slot<List<JsonAccountsEncoder.ExportAccount>>()
-        every { json.generate(capture(exported), any<String>(), any<String>()) } returns "json"
+        var seedsAtEncoding = emptyList<ByteArray>()
+        every { json.generate(capture(exported), any<String>(), any<String>()) } answers {
+            seedsAtEncoding = exported.captured.map { it.seed.copyOf() }
+            "json"
+        }
         repository.generateJson(listOf(account, SoraAccount(secondAddress, "Second")), "password")
 
-        assertArrayEquals(phrase.miniSeed(), exported.captured[0].seed)
-        assertArrayEquals(secondSeed, exported.captured[1].seed)
+        assertArrayEquals(phrase.miniSeed(), seedsAtEncoding[0])
+        assertArrayEquals(secondSeed, seedsAtEncoding[1])
     }
 
     private companion object {

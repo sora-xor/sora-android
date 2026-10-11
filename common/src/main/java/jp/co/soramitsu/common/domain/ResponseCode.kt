@@ -137,6 +137,15 @@ enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.str
         R.string.json_backup_wrong_password_title,
     ),
 
+    /**
+     * The encrypted JSON export was asked for an account whose stored key pair does not prove
+     * its address. No file is made: it would not be a backup of that account.
+     */
+    ACCOUNT_KEYS_NOT_EXPORTABLE(
+        R.string.export_json_keys_unusable,
+        R.string.export_json_keys_unusable_title,
+    ),
+
     /** This phone cannot unlock the wallet data stored on it; nothing was written. */
     WALLET_KEYS_UNAVAILABLE(
         R.string.wallet_keys_unavailable_description,

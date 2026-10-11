@@ -123,33 +123,159 @@ class MultiaccountInteractor @Inject constructor(
         return soraAccount
     }
 
+    /** True when [json] has the shape of an encrypted JSON export this app can restore. */
+    suspend fun isJsonBackupValid(json: String): Boolean =
+        credentialsRepository.isJsonBackupValid(json)
+
+    /** What importing an encrypted JSON export did. */
+    class JsonImportResult(
+        /** The accounts that were added or made usable again, in file order. */
+        val imported: List<SoraAccount>,
+        /** Accounts of a batch file that were skipped because they can already sign here. */
+        val alreadyHere: Int,
+        /**
+         * Accounts of a batch file that were skipped because other keys are stored for them on
+         * this phone. Nothing was changed for them; each can be repaired by importing it on its
+         * own (its phrase, seed or one-account backup file).
+         */
+        val needRepair: Int,
+    )
+
+    /**
+     * Restores accounts from the encrypted JSON export this app writes (Account details, Export
+     * JSON; also the JSON kept in a Google backup). The key pair in the file is the wallet: the
+     * public key is computed from its private key and gives the SORA address.
+     *
+     * A one-account file behaves exactly like [importFromMnemonic]: "already imported", adopted,
+     * filled in, or [WalletRepairAvailableException] ([repairFromJson]). A batch file adds every
+     * account that can be added without replacing anything and reports the rest in the result;
+     * it is `ACCOUNT_ALREADY_IMPORTED` only when every account in it is already usable here.
+     */
+    suspend fun importFromJson(
+        json: String,
+        password: String,
+        accountName: String,
+        expectedAddress: String? = null,
+    ): JsonImportResult = WalletMutationCoordinator.withLock {
+        val drafts = credentialsRepository.draftsFromJson(json, password, accountName)
+        try {
+            if (expectedAddress != null && drafts.none { it.address == expectedAddress }) {
+                throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID)
+            }
+            val wanted = drafts.filter { expectedAddress == null || it.address == expectedAddress }
+            if (wanted.size == 1) {
+                return@withLock JsonImportResult(
+                    imported = listOf(importJsonDraft(wanted.single())),
+                    alreadyHere = 0,
+                    needRepair = 0,
+                )
+            }
+            val imported = mutableListOf<SoraAccount>()
+            var alreadyHere = 0
+            var needRepair = 0
+            wanted.forEach { draft ->
+                try {
+                    imported += importJsonDraft(draft)
+                } catch (_: WalletRepairAvailableException) {
+                    needRepair += 1
+                } catch (error: SoraException) {
+                    if (error.errorResponseCode != ResponseCode.ACCOUNT_ALREADY_IMPORTED) throw error
+                    alreadyHere += 1
+                }
+            }
+            if (imported.isEmpty() && needRepair == 0) {
+                throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
+            }
+            JsonImportResult(imported, alreadyHere, needRepair)
+        } finally {
+            drafts.forEach(WalletDraft::destroy)
+        }
+    }
+
+    /** The confirmed repair ([repairFromMnemonic]) from a one-account encrypted JSON export. */
+    suspend fun repairFromJson(
+        json: String,
+        password: String,
+        accountName: String,
+        pin: String,
+        expectedAddress: String? = null,
+    ): SoraAccount = WalletMutationCoordinator.withLock {
+        requireStoredPin(pin)
+        val drafts = credentialsRepository.draftsFromJson(json, password, accountName)
+        try {
+            val draft = drafts.singleOrNull { expectedAddress == null || it.address == expectedAddress }
+                ?: throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID)
+            val exists = requireNotAlreadyUsable(draft)
+            credentialsRepository.repairWithDraft(draft)
+            val account = finishImport(draft, exists)
+            if (!exists) markWalletWithoutPhrase(account)
+            account
+        } finally {
+            drafts.forEach(WalletDraft::destroy)
+        }
+    }
+
+    private suspend fun importJsonDraft(draft: WalletDraft): SoraAccount {
+        val existed = userRepository.accountExists(draft.address)
+        val account = commitPreparedDraft(draft)
+        if (!existed) markWalletWithoutPhrase(account)
+        return account
+    }
+
+    /**
+     * A wallet that arrives as a key pair has no phrase, so there is no SORA v1 identity to look
+     * up. (An account that was already listed keeps what was recorded for it.)
+     */
+    private suspend fun markWalletWithoutPhrase(account: SoraAccount) {
+        userRepository.saveNeedsMigration(false, account)
+        userRepository.saveIsMigrationFetched(true, account)
+    }
+
     private suspend fun importDraft(createDraft: suspend () -> WalletDraft): SoraAccount =
         WalletMutationCoordinator.withLock {
             val draft = createDraft()
             try {
-                val exists = requireNotAlreadyUsable(draft)
-                try {
-                    credentialsRepository.commitDraft(draft)
-                } catch (error: SoraException) {
-                    if (error.errorResponseCode == ResponseCode.ACCOUNT_STORAGE_CONFLICT) {
-                        throw WalletRepairAvailableException(
-                            address = draft.address,
-                            accountExists = exists,
-                            pinRequired = storedPin().isNotEmpty(),
-                        )
-                    }
-                    throw error
-                }
-                finishImport(draft, exists)
+                commitPreparedDraft(draft)
             } finally {
                 draft.destroy()
             }
         }
 
+    /** Stores [draft] and adds or completes its account. The caller destroys the draft. */
+    private suspend fun commitPreparedDraft(draft: WalletDraft): SoraAccount {
+        val exists = requireNotAlreadyUsable(draft)
+        try {
+            credentialsRepository.commitDraft(draft)
+        } catch (error: SoraException) {
+            if (error.errorResponseCode == ResponseCode.ACCOUNT_STORAGE_CONFLICT) {
+                throw WalletRepairAvailableException(
+                    address = draft.address,
+                    accountExists = exists,
+                    pinRequired = storedPin().isNotEmpty(),
+                )
+            }
+            throw error
+        }
+        return finishImport(draft, exists)
+    }
+
     private suspend fun repairDraft(
         pin: String,
         createDraft: suspend () -> WalletDraft,
     ): SoraAccount = WalletMutationCoordinator.withLock {
+        requireStoredPin(pin)
+        val draft = createDraft()
+        try {
+            val exists = requireNotAlreadyUsable(draft)
+            credentialsRepository.repairWithDraft(draft)
+            finishImport(draft, exists)
+        } finally {
+            draft.destroy()
+        }
+    }
+
+    /** The repair is confirmed with the PIN when one is set on this phone. */
+    private suspend fun requireStoredPin(pin: String) {
         val stored = storedPin()
         if (
             stored.isNotEmpty() &&
@@ -157,11 +283,30 @@ class MultiaccountInteractor @Inject constructor(
         ) {
             throw SoraException.businessError(ResponseCode.WRONG_PIN_CODE)
         }
-        val draft = createDraft()
-        try {
-            val exists = requireNotAlreadyUsable(draft)
-            credentialsRepository.repairWithDraft(draft)
-            finishImport(draft, exists)
+    }
+
+    /**
+     * The SORA address a recovery phrase derives, or null when it is not a valid phrase. Nothing
+     * is written; used to pick, from a backup that holds several forms of a wallet, the one that
+     * restores the account the backup names.
+     */
+    suspend fun addressOfMnemonic(mnemonic: String): String? = addressOfDraft {
+        credentialsRepository.draftFromMnemonic(mnemonic, "")
+    }
+
+    /** The SORA address a raw seed derives, or null when it is not a valid seed. */
+    suspend fun addressOfRawSeed(rawSeed: String): String? = addressOfDraft {
+        credentialsRepository.draftFromRawSeed(rawSeed, "")
+    }
+
+    private suspend fun addressOfDraft(createDraft: suspend () -> WalletDraft): String? {
+        val draft = try {
+            createDraft()
+        } catch (_: SoraException) {
+            return null
+        }
+        return try {
+            draft.address
         } finally {
             draft.destroy()
         }

@@ -354,6 +354,184 @@ class MultiaccountInteractorTest {
         }
     }
 
+    @Test
+    fun `import from an encrypted JSON file stores the key pair and adds the account`() = runTest {
+        val draft = jsonDraft("cnFromJson", "Restored")
+        val imported = SoraAccount("cnFromJson", "Restored")
+        coEvery { credentialsRepository.draftsFromJson("{json}", "password", "Restored") } returns
+            listOf(draft)
+        coEvery { userRepository.accountExists("cnFromJson") } returns false
+        coEvery { credentialsRepository.commitDraft(draft) } returns imported
+
+        val result = multiaccountInteractor.importFromJson("{json}", "password", "Restored")
+
+        assertEquals(listOf(imported), result.imported)
+        assertEquals(0, result.alreadyHere)
+        assertEquals(0, result.needRepair)
+        coVerifyOrder {
+            credentialsRepository.draftsFromJson("{json}", "password", "Restored")
+            credentialsRepository.commitDraft(draft)
+            userRepository.insertSoraAccount(imported, false)
+            userRepository.setCurSoraAccount(imported)
+            // A key pair has no phrase, so there is no SORA v1 identity to look up.
+            userRepository.saveNeedsMigration(false, imported)
+            userRepository.saveIsMigrationFetched(true, imported)
+        }
+        assertTrue(draft.isDestroyedForTest())
+    }
+
+    @Test
+    fun `a JSON file of an account that can already sign reports it and stores nothing`() = runTest {
+        val draft = jsonDraft("cnExisting", "Existing")
+        coEvery { credentialsRepository.draftsFromJson(any(), any(), any()) } returns listOf(draft)
+        coEvery { userRepository.accountExists("cnExisting") } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns emptySet()
+
+        val error = runCatching {
+            multiaccountInteractor.importFromJson("{json}", "password", "Existing")
+        }.exceptionOrNull()
+
+        assertEquals(
+            ResponseCode.ACCOUNT_ALREADY_IMPORTED,
+            (error as? SoraException)?.errorResponseCode,
+        )
+        coVerify(exactly = 0) { credentialsRepository.commitDraft(any()) }
+        assertTrue(draft.isDestroyedForTest())
+    }
+
+    @Test
+    fun `a JSON file makes a read-only account usable again and keeps what was recorded for it`() =
+        runTest {
+            val draft = jsonDraft("cnReadOnly", "From file")
+            val repaired = SoraAccount("cnReadOnly", "Partial")
+            coEvery { credentialsRepository.draftsFromJson(any(), any(), any()) } returns listOf(draft)
+            coEvery { userRepository.accountExists("cnReadOnly") } returns true
+            coEvery { userRepository.unavailableWalletIds() } returns setOf("cnReadOnly")
+            coEvery { credentialsRepository.commitDraft(draft) } returns
+                SoraAccount("cnReadOnly", "From file")
+            coEvery { userRepository.completeUnavailableWallet("cnReadOnly") } returns repaired
+
+            val result = multiaccountInteractor.importFromJson("{json}", "password", "From file")
+
+            assertEquals(listOf(repaired), result.imported)
+            coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+            // The account row existed: its recorded SORA v1 state is not overwritten.
+            coVerify(exactly = 0) { userRepository.saveNeedsMigration(any(), any()) }
+        }
+
+    @Test
+    fun `a JSON file over conflicting stored keys offers the confirmed repair`() = runTest {
+        val draft = jsonDraft("cnConflict", "Name")
+        coEvery { credentialsRepository.draftsFromJson(any(), any(), any()) } returns listOf(draft)
+        coEvery { userRepository.accountExists("cnConflict") } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns setOf("cnConflict")
+        coEvery { userRepository.retrievePin() } returns "135790"
+        coEvery { credentialsRepository.commitDraft(draft) } throws
+            SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+
+        val offer = runCatching {
+            multiaccountInteractor.importFromJson("{json}", "password", "Name")
+        }.exceptionOrNull() as WalletRepairAvailableException
+
+        assertTrue(offer.accountExists && offer.pinRequired)
+        coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
+
+        // Confirming with a wrong PIN changes nothing; the right PIN repairs in place.
+        val again = jsonDraft("cnConflict", "Name")
+        val repaired = SoraAccount("cnConflict", "Kept name")
+        coEvery { credentialsRepository.draftsFromJson(any(), any(), any()) } returns listOf(again)
+        coEvery { credentialsRepository.repairWithDraft(again) } returns
+            SoraAccount("cnConflict", "Name")
+        coEvery { userRepository.completeUnavailableWallet("cnConflict") } returns repaired
+        val wrongPin = runCatching {
+            multiaccountInteractor.repairFromJson("{json}", "password", "Name", pin = "000000")
+        }.exceptionOrNull()
+        assertEquals(ResponseCode.WRONG_PIN_CODE, (wrongPin as? SoraException)?.errorResponseCode)
+        coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
+
+        assertEquals(
+            repaired,
+            multiaccountInteractor.repairFromJson("{json}", "password", "Name", pin = "135790"),
+        )
+        coVerify(exactly = 1) { credentialsRepository.repairWithDraft(again) }
+        assertTrue(again.isDestroyedForTest())
+    }
+
+    @Test
+    fun `a batch JSON file adds what it can and reports the rest without changing them`() = runTest {
+        val fresh = jsonDraft("cnFresh", "Fresh")
+        val here = jsonDraft("cnHere", "Here")
+        val conflict = jsonDraft("cnConflict", "Conflict")
+        val imported = SoraAccount("cnFresh", "Fresh")
+        coEvery { credentialsRepository.draftsFromJson(any(), any(), any()) } returns
+            listOf(fresh, here, conflict)
+        coEvery { userRepository.accountExists("cnFresh") } returns false
+        coEvery { userRepository.accountExists("cnHere") } returns true
+        coEvery { userRepository.accountExists("cnConflict") } returns false
+        coEvery { userRepository.unavailableWalletIds() } returns emptySet()
+        coEvery { userRepository.retrievePin() } returns ""
+        coEvery { credentialsRepository.commitDraft(fresh) } returns imported
+        coEvery { credentialsRepository.commitDraft(conflict) } throws
+            SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+
+        val result = multiaccountInteractor.importFromJson("{batch}", "password", "")
+
+        assertEquals(listOf(imported), result.imported)
+        assertEquals(1, result.alreadyHere)
+        assertEquals(1, result.needRepair)
+        // Nothing replaces stored keys from a batch file.
+        coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
+        listOf(fresh, here, conflict).forEach { assertTrue(it.isDestroyedForTest()) }
+    }
+
+    @Test
+    fun `a batch JSON file whose accounts are all here is reported as already imported`() = runTest {
+        val first = jsonDraft("cnOne", "One")
+        val second = jsonDraft("cnTwo", "Two")
+        coEvery { credentialsRepository.draftsFromJson(any(), any(), any()) } returns
+            listOf(first, second)
+        coEvery { userRepository.accountExists(any()) } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns emptySet()
+
+        val error = runCatching {
+            multiaccountInteractor.importFromJson("{batch}", "password", "")
+        }.exceptionOrNull()
+
+        assertEquals(
+            ResponseCode.ACCOUNT_ALREADY_IMPORTED,
+            (error as? SoraException)?.errorResponseCode,
+        )
+    }
+
+    @Test
+    fun `the JSON of a Google backup restores only the account the backup names`() = runTest {
+        val other = jsonDraft("cnOther", "Other")
+        coEvery { credentialsRepository.draftsFromJson(any(), any(), any()) } returns listOf(other)
+
+        val error = runCatching {
+            multiaccountInteractor.importFromJson(
+                json = "{json}",
+                password = "password",
+                accountName = "Named",
+                expectedAddress = "cnNamed",
+            )
+        }.exceptionOrNull()
+
+        assertEquals(ResponseCode.JSON_BACKUP_INVALID, (error as? SoraException)?.errorResponseCode)
+        coVerify(exactly = 0) { credentialsRepository.commitDraft(any()) }
+        assertTrue(other.isDestroyedForTest())
+    }
+
+    private fun jsonDraft(address: String, name: String) = WalletDraft(
+        address = address,
+        accountName = name,
+        mnemonic = null,
+        seedHex = "",
+        keypair = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32)),
+        source = WalletDraft.Source.JSON,
+        wipeKeypair = { it.nonce.fill(1) },
+    )
+
     private fun draft(address: String, name: String) = WalletDraft(
         address = address,
         accountName = name,

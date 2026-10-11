@@ -696,48 +696,46 @@ class CredentialsRepositoryImpl constructor(
         // Recovery export is part of the installed wallet's safety boundary. Never let a missing,
         // stale, or compromised remote configuration rewrite the chain identity embedded in it.
         val localGenesis = Sora2RuntimeContract.SORA_MAINNET_GENESIS_HASH
-        if (accounts.size == 1) {
-            accounts.first().let {
-                val seed = exportSeed(it)
-                val keys = retrieveKeyPair(it)
-
-                val exportAccountData = JsonAccountsEncoder.ExportAccount(
-                    keypair = keys,
-                    seed = seed,
-                    it.accountName,
-                    it.substrateAddress
-                )
-
-                return jsonSeedEncoder.generate(
-                    account = exportAccountData,
+        // Every account is proven before anything is encoded, so a file is either a backup of
+        // all the chosen accounts or it is not made.
+        val exported = accounts.map { exportAccount(it) }
+        return try {
+            if (exported.size == 1) {
+                jsonSeedEncoder.generate(
+                    account = exported.single(),
                     password = password,
                     genesisHash = localGenesis,
                 )
+            } else {
+                jsonSeedEncoder.generate(exported, password, localGenesis)
             }
-        } else {
-            val accountsList = accounts.map {
-                val seed = exportSeed(it)
-                val keys = retrieveKeyPair(it)
-
-                JsonAccountsEncoder.ExportAccount(
-                    keypair = keys,
-                    seed = seed,
-                    it.accountName,
-                    it.substrateAddress
-                )
+        } finally {
+            exported.forEach { account ->
+                (account.keypair as? Sr25519Keypair)?.let(::wipe)
+                account.seed.fill(0)
             }
-
-            return jsonSeedEncoder.generate(accountsList, password, localGenesis)
         }
     }
 
     /**
-     * The seed handed to the JSON encoder. The sr25519 export encodes the stored key pair and
-     * does not use the seed, so an account whose stored phrase and seed do not re-derive it can
-     * still be exported: the encrypted JSON is its backup.
+     * One account for the JSON encoder. The export is made from the stored key pair, so it is
+     * the backup of an account only when that key pair is proven to be the key of the account's
+     * address and to sign: otherwise `ACCOUNT_KEYS_NOT_EXPORTABLE`, and nothing unproven is ever
+     * handed to the native encoder. The seed is not needed (the sr25519 export never used it),
+     * so an account without a matching phrase or seed exports all the same.
      */
-    private suspend fun exportSeed(soraAccount: SoraAccount): ByteArray =
-        backupVerdict(soraAccount).canonicalSeedHex?.fromHex() ?: ByteArray(0)
+    private suspend fun exportAccount(soraAccount: SoraAccount): JsonAccountsEncoder.ExportAccount {
+        val verdict = backupVerdict(soraAccount)
+        if (!verdict.canSign) {
+            throw SoraException.businessError(ResponseCode.ACCOUNT_KEYS_NOT_EXPORTABLE)
+        }
+        return JsonAccountsEncoder.ExportAccount(
+            keypair = retrieveKeyPair(soraAccount),
+            seed = verdict.canonicalSeedHex?.fromHex() ?: ByteArray(0),
+            name = soraAccount.accountName,
+            address = soraAccount.substrateAddress,
+        )
+    }
 
     override fun convertPassphraseToSeed(mnemonic: String): String = derivePassphraseToSeed(mnemonic)
 
