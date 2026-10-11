@@ -68,13 +68,13 @@ The three places named by the review now decide signing before any backup materi
 | Upgrade verification | Required stored seed = 32-byte phrase seed, and stored private key and nonce byte-equal to a fresh derivation. A phrase counted by whitespace. | The judge. The run records per account whether it can sign and the status of phrase and seed (`MigrationManager.lastSecretsReports`, in memory; the durable part is the `secretSource` label). |
 | Stored seed | Equal to the 32-byte seed or the account was read-only. | Matches when it is the 32-byte seed that derives the address, **or** the full 64-byte PBKDF2 output of the account's own phrase (all 64 bytes compared; arbitrary trailing bytes are not accepted). One helper (`StoredSecretHex.canonicalSeedOf`) used by the judge and by import. |
 | Stored phrase | Raw whitespace split for count and comparison. | Parsed once with the library parser (`RecoveryPhrase.parseOrNull`, NFKD and `[\s,]+`). The parsed words give the count, the label and the comparison. The stored text is never changed. |
-| Hex values | `0X` prefix made the key unreadable. | Either case and `0x`/`0X` read as the same bytes (`StoredSecretHex`). |
+| Hex values | `0X` prefix made the key unreadable. | Either case and `0x`/`0X` read as the same bytes, and spaces, tabs and line breaks inside the text are skipped, as the released reader (BouncyCastle `Hex.decode`) skipped them (`StoredSecretHex`). 3.8.x stored a typed raw seed as it was typed, so a seed pasted with a line break is stored with it and is still that account's seed. A seed imported by 3.9.0 is stored as its 64 lower-case hex characters. |
 | Secret-source continuity | An account verified as one source and now seen as another became read-only. | Removed: the label is a fact proven from the stored values on every start and never blocks signing. |
 | `retrieveSeed`, Raw seed screen, Google backup | Returned the stored value (128 hex for A1 accounts). | The canonical 32 bytes that re-derive the account. Stored bytes stay. |
 | Phrase and seed screens, account-screen Google backup | Showed whatever was stored. | Show only material that re-derives the account. When none does the screen says so. If the stored key signs it offers the encrypted JSON export; a read-only account is told how to get it working again. |
 | Import of a phrase whose account exists | "This account can't be repaired as it is ... remove it from this phone". | Never asks for removal. See "Import outcomes". `ACCOUNT_REPAIR_NEEDS_REMOVAL` and its strings are deleted in every locale. |
 | Key set without an account row | "Restore this wallet" and phrase import both failed and pointed at each other. | Adopted by both under the same rule; a conflicting set is repaired by the phrase. |
-| Removal check | Re-ran the strict comparison, so affected accounts could not be removed either. | Proves the stored key signs for the address. |
+| Removal check | Re-ran the strict comparison, so affected accounts could not be removed either. | Proves the stored key signs for the address. When the account signs but nothing stored on the phone is a proven backup of it (label `LEGACY_SECRET`, or a stored phrase or seed that is another wallet's or cannot be read), the confirmed removal first copies the encrypted preference files to `no_backup/wallet-quarantine-<time>-removed-account-without-backup/`; without the copy nothing is removed. (Before this task those accounts were read-only and got the same copy as `-removed-unavailable-account`.) |
 | Migration journal | `verifiedAccountCount` = number of accounts classified. | Number of accounts whose identity is `VERIFIED`, the condition the signing gate uses. A journal written by an earlier candidate build is refreshed to the true count on the next start. |
 | Upgrade-complete sheet | Always a plain tick for accounts. | Waits for the real counts; when some accounts cannot sign it says how many can and how to repair the rest. |
 
@@ -130,8 +130,20 @@ only internal builds of 3.9.0 can hold an account derived the earlier way.
 - **Import account has a third choice, "Backup file (JSON)"**: choose the file or paste its
   text, enter its password. One account behaves exactly like a phrase import (already here,
   adopted, filled in, or the confirmed repair). A batch file adds every account it can without
-  replacing anything and then says how many were skipped because other keys are stored for them;
-  each of those can be repaired by importing it on its own.
+  replacing anything. For the accounts it holds whose keys on this phone cannot be used, it then
+  offers the same confirmed repair, once, with those accounts listed by name and short address
+  (`repairFromJsonBatch`); cancelling changes nothing for them and says how many were added.
+- **The file is opened off the main thread.** Opening a backup file is scrypt (N = 32768,
+  r = 8): one derivation for a one-account file and one more per account of a batch. It runs on
+  `Dispatchers.Default`, before the wallet lock is taken (`CredentialsRepositoryImpl.draftsFromJson`,
+  `MultiaccountInteractor.keyWork`); so do phrase and seed imports, the repairs and the export.
+  The Continue and Download buttons show a progress indicator meanwhile.
+- **A chosen file is checked before it is used.** The picker accepts any file type, so the file
+  is read only up to 128 KB (a batch of the 100 accounts the import accepts is about 100 KB) and
+  must have the shape of an account backup; anything else is refused with "SORA couldn't read
+  that file". The file's text stays in the view model: the screen shows the file's name, the
+  paste field is at most four lines high, and the text is not parsed again while the password
+  is typed.
 - **Google Drive.** Recovery now restores the form that derives the account the backup names:
   the phrase, else the raw seed, else the encrypted JSON (opened with the backup password, which
   is the password it was made with). Before, the JSON was ignored and a backup without a usable
@@ -145,10 +157,10 @@ only internal builds of 3.9.0 can hold an account derived the earlier way.
 
 | Stored for the imported address | Result |
 |---|---|
-| Account that can sign | "Already imported". Nothing is touched. |
+| Account that can sign | "Already imported". Its keys are never touched. When no phrase (or raw seed) is stored for it, neither under its address nor through the release-era entry, the one just entered is kept as its backup: add-only, after proving it re-derives the address (`addMissingBackup`). The message then says so, and the backup label and the SORA 3 accounts of a 12- or 24-word phrase are recorded at once (`refreshVerifiedWallet`). This is how a wallet restored from a backup file gets its phrase back without being removed. |
 | Key pair that proves the address (account row or not), whatever else is stored | Adopted unchanged. A typed phrase or seed is added only where none is stored. The account is added or made usable again. |
 | Some values missing, everything stored agrees | Missing values are added (add-only), then verified. |
-| A stored value differs or cannot be read, and the stored key does not prove the address | Nothing is written. The dialog "Repair this account with its recovery phrase" (or "... from your backup" for a seed or file) explains what will happen. Confirming needs the PIN when one is set (three wrong entries close the dialog, nothing changed). The repair first copies the encrypted preference files to `no_backup/wallet-quarantine-<time>-repaired-account/` (no copy, no write), then writes the proven key pair (and the phrase or seed, when there is one) for that one address and reads them back with the judge. |
+| A stored value differs or cannot be read, and the stored key does not prove the address | Nothing is written. The dialog "Repair this account with its recovery phrase" (or "... from your backup" for a seed or file) explains what will happen. Confirming needs the PIN when one is set. Wrong PINs are counted by the PIN screen's own persistent counter and lock timer (`savePinTriesUsed`, timer timestamp): the third wrong entry in a row locks PIN entry for 1 minute, then 5, 15 and 30, here and on the PIN screen, and starting the import again gives no new tries. When a PIN is stored but cannot be read, it is "set but unavailable", never "no PIN": the repair is then confirmed with the phone's screen lock (and asks for one to be set when the phone has none). Only a phone with no PIN at all confirms with the dialog alone. The repair first copies the encrypted preference files to `no_backup/wallet-quarantine-<time>-repaired-account/` (no copy, no write), then writes the proven key pair (and the phrase or seed, when there is one) for that one address and reads them back with the judge. |
 
 `CredentialsDatasource.replaceCredentialsForRepair` / `SoraPreferences.replaceStringsForConfirmedRepair`
 is the only code path that replaces stored credentials, and only `repairWithDraft` calls it.
@@ -186,9 +198,18 @@ is the only code path that replaces stored credentials, and only `repairWithDraf
   bytes can never be a transaction payload; the signature is wiped after verification.
 - A Keystore or storage failure while reading still ends the run as transient.
 - The repair PIN is a confirmation of intent, not the security boundary: the person has just
-  entered the account's own recovery secret, which controls its funds anyway.
-- The JSON import never replaces stored keys except through the same confirmed repair, and a
-  batch file never repairs.
+  entered the account's own recovery secret, which controls its funds anyway. It is still held
+  to the PIN screen's limits, so the dialog cannot be used to guess the app PIN. The typed PIN
+  is kept in memory only (not in the saved instance state), and digits typed with an Arabic,
+  Persian or Hindi keyboard are read as the same numbers.
+- The JSON import never replaces stored keys except through the same confirmed repair, for one
+  account or for the listed accounts of a batch.
+- `addMissingBackup` is the only new write of this round. It writes one value (the phrase or the
+  seed), only where none is stored and none reaches the account through the release-era entry,
+  only next to a key set stored under the address that proves the address, and only after the
+  entered secret is proven to re-derive it. A stored phrase is never shadowed by a second one:
+  the SORA v1 claim identity and SORA 3 accounts keep seeing the text they were derived from.
+  The same rule now guards the adoption of a key set without an account row.
 
 ## Historical crypto fixtures [A6]
 
@@ -220,7 +241,8 @@ that today's library derives exactly them.
 
 JVM (`testProductionDebugUnitTest`):
 
-- `common`: `StoredWalletSecretFormatsTest`, `IrohaKeyDerivationTest` (canonical text for new
+- `common`: `StoredWalletSecretFormatsTest` (including the spaces, tabs and line breaks the
+  released hex reader skipped, checked against BouncyCastle), `IrohaKeyDerivationTest` (canonical text for new
   derivations; an account derived from a comma text keeps its identity through
   `deriveExisting`; the earlier derivation is kept verbatim as the reference),
   `JsonAccountsEncoderImportTest` (what the import refuses before any key is derived: other key
@@ -235,10 +257,18 @@ JVM (`testProductionDebugUnitTest`):
   sr25519 key pairs instead of hashed stand-ins; only the native sign and verify call is stood
   in for.
 - `feature_multiaccount_impl`: `MultiaccountInteractorTest` (JSON import, already here, read-only
-  account completed, repair with PIN, batch outcomes, the address a Google backup names),
-  `OnboardingViewModelTest` (backup file flow, batch notice, Google recovery from JSON and from
-  the form that derives the named account), `BackupViewModelTest`,
+  account completed, repair with PIN, batch outcomes and the batch repair, the address a Google
+  backup names, wrong repair PINs through the PIN screen's counter and lock, a stored PIN that
+  cannot be read, the phrase kept as the backup of a wallet that works, and that opening and
+  writing a backup file never run on the caller's thread), `OnboardingViewModelTest` (backup
+  file flow, a chosen file kept out of the text field and refused when it is not a backup, the
+  repair prompt for a phrase, a raw seed, a one-account file and a batch file, wrong PIN, PIN
+  lock, screen lock, cancel, "Import more" after a repaired Google restore, Google recovery
+  from JSON and from the form that derives the named account), `BackupViewModelTest`,
   `AccountDetailsViewModelTest`.
+- `app`: `SafeModeVaultTest` (a 64-byte seed shown as the 32 bytes that derive the wallet or
+  marked as not confirmed, a seed stored with a line break shown as 64 characters, a phrase or
+  seed proven to open another wallet has its own result).
 - `feature_main_impl`: `PinCodeInteractorTest`.
 
 Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
@@ -260,18 +290,40 @@ Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
 | (d) stored nonce differs from a fresh derivation | `storedNonceThatDiffersFromAFreshDerivationStillSigns` |
 | (e) stored phrase of another wallet next to a working key | `storedPhraseOfAnotherWalletNeverBlocksAWorkingKeyAndIsNotShownAsItsBackup` |
 | (f) stored key that does not derive the address | `storedKeyOfAnotherWalletIsReadOnlyAndRepairedWithItsPhrase`, `conflictingKeySetWithoutAccountRowIsRepairedByImportingItsPhrase`, `undecryptableAccountIsRepairedInPlaceWithItsPhrase` |
+| a raw seed pasted with a line break, stored by the 3.8.6.3 raw-seed writer: signs, is shown as 64 characters, restores the account | `rawSeedPastedWithALineBreakOn3863KeepsSigningAndIsStillItsSeed` |
+| a broken key next to such a seed is repaired by typing the seed as it was pasted | `brokenKeyNextToASeedStoredWithALineBreakIsRepairedWithThatSeed` |
+| a wallet restored from its backup file gets its phrase, label and SORA 3 accounts by entering the phrase; no key value changes | `phraseEnteredForAWalletRestoredFromItsBackupFileIsKeptAsItsBackup` |
+| wrong repair PINs count through the PIN screen's stored counter and lock; the right PIN is refused while locked | `wrongRepairPinsCountThroughThePinScreensCounterAndLockIt` |
+| removing an account that signs without a proven backup keeps a copy first; one with its own phrase needs none | `accountThatSignsWithoutAProvenBackupKeepsACopyWhenItIsRemoved` |
+| a batch backup file names the read-only account it can repair, and one PIN confirmation repairs it in place | `batchBackupFileRepairsTheAccountItNamesAfterOneConfirmation` |
+| Safe Mode screen for a phrase proven to open another wallet | `app`: `SafeModeScreensTest.aPhraseProvenToOpenAnotherWalletIsNeverCalledUnconfirmed` |
+
+Every import and repair in these scenarios runs through the production
+`MultiaccountInteractor` on the real repositories (the scenario class used a step-for-step copy
+of it before; `feature_account_impl` now has `:feature_multiaccount_impl` as a device-test
+dependency).
 
 ### Results on this branch
 
-- JVM: `testProductionDebugUnitTest` for all modules, 0 failures. `:app:assembleProductionDebug`
-  builds; `:app:lintProductionDebug` reports no new finding in the changed files or strings.
-- Device, Android 14 emulator (SORA-Api34): `feature_account_impl` 61 of 61 (52 upgrade
-  scenarios, 6 native parity, 3 native contract), `common` 17 of 17, `app` 24 run, 0 failed, 1
-  skipped by its own condition.
+- JVM: `testProductionDebugUnitTest` for all modules: 1283 tests, 0 failures (10 skipped by
+  their own conditions in `feature_blockexplorer_api`). `:app:assembleProductionDebug` builds;
+  `:app:lintProductionDebug` reports no new finding in the changed files or strings.
+- Device, Android 14 emulator (SORA-Api34): `feature_account_impl` 67 of 67 (58 upgrade
+  scenarios, 6 native parity, 3 native contract), `common` 17 of 17, `app`
+  `SafeModeScreensTest` 11 of 11.
 - `EncryptedWalletMigrationStorageTest` (five `phaseNN` tests) is a qualification sequence that
   needs a process restart between phases (`scripts/run-encrypted-wallet-upgrade-qualification.sh`).
-  It was left out of the class run above and not run through the script here.
+  It is left out of the class runs above and was not run through the script here; run in one
+  process with the other classes, four of its phases fail by design.
 - `core_db` device tests were not run again: this task's later commits do not touch `core_db`.
+- Walked through on the emulator with the production debug build (screen text read with
+  `uiautomator dump`): Import account with a phrase (keys are derived off the main thread, the
+  PIN set-up follows); the "Backup file (JSON)" screen; and the repair dialog on a staged key
+  conflict (the key values of one test wallet copied under a second test wallet's address):
+  title, text and PIN field, "That PIN isn't right" after a wrong PIN, "Too many wrong PINs ...
+  locked for about 1 min, here and on the PIN screen" after the third, the right PIN refused
+  while locked, and after the lock the right PIN repaired the account, which was added and
+  selected, with `no_backup/wallet-quarantine-<time>-repaired-account` present.
 
 ## Limits
 
@@ -282,13 +334,34 @@ Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
   binaries. Today's packaged binary is checked against the vectors on a device.
 - The 3.8.2.0 seed cache is the verbatim 3.8.2.0 function run against today's library. Both
   return the uncropped 64 bytes; the vectors record that value independently.
-- The repair dialog, the "no matching backup" card and the new "Backup file (JSON)" screen were
-  not walked through by hand on a device (headless emulator). Their logic is covered by
-  view-model, interactor and repository tests; the file picker itself is not.
-- Safe Mode "Show my recovery phrase" still shows a stored phrase that is proven to belong to
-  another wallet, marked with the existing "could not be confirmed" text. In that emergency
-  screen it may be the only copy of that other wallet's phrase, so it is not hidden.
+- The "no matching backup" card, the batch repair dialog, choosing a file with the system file
+  picker and importing a real backup file through the screen were not walked through by hand
+  (headless emulator image without a file picker). Their logic is covered by view-model,
+  interactor and repository tests and by the device scenarios; the file picker itself is not.
+  The one-account repair dialog and the phrase import were walked through (see Results).
+- Safe Mode "Show my recovery phrase" still shows a stored phrase (or seed) that is proven to
+  open another wallet, because in that emergency screen it may be the only copy of that other
+  wallet's phrase. It is no longer described as "could not be confirmed": it has its own
+  result, title and text, which say that it opens a different wallet, that it is not a backup
+  of this one, that SORA found no phrase for this wallet, that nothing was changed, and that the
+  JSON export is the backup once the wallet works. A stored seed, or the 2.x owner's unsuffixed
+  value, that derives this wallet is shown instead when there is one.
+- Safe Mode judges a stored seed on its own (it has no access to Room or to the judge's
+  verdict): a seed of 64 bytes is shown as its first 32 bytes when those derive the wallet's
+  address, also when the phrase it was cached from can no longer be read. The normal app keeps
+  the stricter rule of the task (all 64 bytes must be the stored phrase's derivation) and offers
+  the JSON export in that case.
 - The batch export stays readable only as a whole file; one account cannot be picked from it.
+- The screen-lock confirmation of a repair (stored PIN unreadable) was not walked through by
+  hand on a device. Its logic is covered by interactor and view-model tests; the system prompt
+  itself is not.
+- A wallet restored from its backup file had its SORA v1 claim check marked as done (a key pair
+  has no v1 identity). Entering its phrase afterwards keeps the phrase as its backup but does
+  not start that check again.
+- The batch repair scenario builds its batch file with the library's own encoder for that
+  format, because the upgrade harness has no real `CryptoAssistant` (the production batch
+  writer's outer layer). The production reader opens it, and `JsonAccountsExportRoundTripTest`
+  proves the production writer and reader agree.
 
 ## Human and ops actions
 
@@ -296,12 +369,19 @@ Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
   text (block `ak1-signing-compat` at the end of each `common/src/main/res/values*/strings.xml`):
   `account_repair_*`, `backup_no_matching_secret`, `backup_no_matching_secret_read_only`,
   `safe_mode_whats_new_accounts_some_read_only`, `json_backup_*`, `recovery_json_*`,
-  `recovery_enter_json_title`, `onboarding_enter_json`, `export_json_keys_unusable*`. The manual
+  `recovery_enter_json_title`, `onboarding_enter_json`, `export_json_keys_unusable*`,
+  `account_already_imported_backup_saved`, `account_repair_screen_lock_*`,
+  `account_repair_confirm_screen_lock`, `account_repair_pin_locked*`, `account_repair_*_batch`.
+  In the app module (`app/src/main/res/values*/strings.xml`, block `ak1-signing-compat`):
+  `recovery_phrase_other_wallet*`, `recovery_seed_other_wallet*`. `json_backup_batch_skipped`
+  changed its text; `account_repair_too_many_attempts` was removed. The manual
   `scripts/verify-middle-egyptian-localization.mjs` check already failed before this task on
   English placeholders (test-only locale).
-- **Sign-off.** Assurance notes marked `verified:` are next to `account_repair_body_*` and
-  `backup_no_matching_secret` in `values/strings.xml`; the engineering owner signs them off like
-  the other `safe_mode_*` assurances. `backup_no_matching_secret` now also promises that the
+- **Sign-off.** Assurance notes marked `verified:` are next to `account_repair_body_*`,
+  `account_already_imported_backup_saved`, `account_repair_pin_locked` and
+  `backup_no_matching_secret` in `common/.../values/strings.xml`, and next to
+  `recovery_phrase_other_wallet` in `app/.../values/strings.xml`; the engineering owner signs
+  them off like the other `safe_mode_*` assurances. `backup_no_matching_secret` now also promises that the
   JSON file can be imported again.
 - **QA on a real device** (release checklist, real-upgrade gate):
   1. Open "Show raw seed" on a 3.8.x build before 3.8.3, update, and check the account sends
@@ -312,6 +392,15 @@ Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
      pasting the text.
   4. Restore a Google backup made by 3.8.6 and one made by 3.9.0 for an account without a
      matching phrase (JSON only).
+  5. Import a batch backup file while one of its accounts is read-only on the phone: the
+     dialog lists that account, and the PIN repairs it.
+  6. In the repair dialog enter a wrong PIN three times: PIN entry is locked for a minute, and
+     the PIN screen shows the same lock.
+  7. Pick a large file that is not a backup in "Choose file": it is refused at once and the
+     screen stays responsive. Pick a batch file of several accounts: Continue shows a progress
+     indicator and the screen stays responsive.
+  8. Restore a wallet from its backup file, then enter its phrase in Import account: the
+     message says the phrase was saved, and Passphrase then shows it.
 - **Support.** The text "remove it from this phone, then import the same recovery phrase" no
   longer exists. The advice for a read-only account is: Import account, enter its recovery
   phrase, raw seed or backup file, confirm "Repair this account" with the PIN. A repair leaves
@@ -322,9 +411,46 @@ Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
   version could back up either.
 - **Not in this change.** The account removal flow still does not show the recovery phrase first
   (audit A2). Read-only accounts still have no label and no explanation on Send and Swap (A2).
+- **For the lane that adds "show the phrase before removal".** An account that signs but has no
+  proven backup on the phone has no phrase to show (`WalletBackupMaterial.onlyJsonExport`).
+  Its removal now keeps a copy of the preference files (`-removed-account-without-backup`);
+  the removal screen should offer the JSON export first for these accounts instead of a phrase.
+- **Support, removal copy.** `no_backup/wallet-quarantine-<time>-removed-account-without-backup/`
+  is the copy kept when a working account without a proven backup was removed (encrypted with
+  the same Keystore key; nothing in the app reads it back).
 - **Play Console.** The number of A1 accounts is still unknown; nothing in this change reports
   it. If telemetry for read-only accounts is added, `MigrationManager.lastSecretsReports` holds
   the per-account codes (never key bytes).
 - **Regenerating the vectors** needs a Rust toolchain and the crates in the local cargo registry:
   `cargo build --release --offline` and `python3 generate.py` in
   `scripts/historical-sr25519-vectors/`. Only the `signature` fields change between runs.
+
+## Fix round of 12 October (second review)
+
+Fourteen findings of the adversarial review of commit `4a574d97`, one major. All were verified
+against the code and fixed; none was rejected.
+
+| Finding | Fix |
+|---|---|
+| **Major.** The JSON import and repair ran scrypt on the main thread. | `draftsFromJson` and `generateJson` run on `Dispatchers.Default`; the interactor runs every import, repair and export off the caller's thread and opens the file before taking the wallet lock; the buttons show progress. |
+| A verified account without a proven backup lost the "keep a copy before removal" safety net. | The removal keeps the copy for it too (`removalLosesTheOnlyCopy`), and refuses when the copy cannot be made. |
+| Safe Mode showed a 64-byte seed as a confirmed raw seed. | The 32 bytes that derive the wallet are shown; otherwise the value is marked as not confirmed. |
+| Safe Mode called a phrase proven to open another wallet "could not be confirmed". | Its own result, title and text (English and Japanese). |
+| The repair needed no PIN when the stored PIN could not be read. | Unreadable is "set but unavailable": the phone's screen lock confirms. |
+| Wrong repair PINs were only counted per dialog. | They count through the PIN screen's persistent counter and lock timer. |
+| The typed PIN was kept in the saved instance state; non-ASCII digits never matched. | `remember`; digits of any script are read as the same numbers. |
+| A raw seed stored with whitespace inside was not recognised. | The hex reader skips what the released reader skipped; new seeds are stored as 64 characters. |
+| The matching phrase of a working account without a stored phrase was never kept. | `addMissingBackup` (add-only), reported as "already here, saved as its backup". |
+| The device scenarios ran a copy of `MultiaccountInteractor`; the repair prompt had no test. | The scenarios call the production class; `OnboardingViewModelTest` covers the prompt. |
+| A batch backup file could never repair an account. | One confirmation that lists the accounts, then `repairFromJsonBatch`. |
+| A chosen file went into the text field unchecked; 512 KB cap; re-parsed per keystroke. | Checked first, kept in the view model, file name shown, 128 KB, validity cached. |
+| "Import more" was hidden after a repaired Google restore. | Computed before the success screen opens, also after a repair. |
+
+Found while fixing: `feature_multiaccount_impl` now uses `androidx.biometric` (the library the
+app and `feature_main_impl` already use) for the screen-lock confirmation. Release dependency
+locks are strict, so `feature_multiaccount_impl/gradle.lockfile` gained that one line;
+`verifyProductionReleaseLockCoverage resolveReleaseDependencyLocks` passes for every module.
+No artifact was added to the project and nothing was downloaded.
+
+The file cap is 128 KB, not the 64 KB the review suggested: the import accepts batch files of
+up to 100 accounts, which are about 100 KB.
