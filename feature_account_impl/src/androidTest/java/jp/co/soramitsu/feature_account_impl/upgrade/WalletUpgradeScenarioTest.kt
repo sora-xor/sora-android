@@ -2861,6 +2861,13 @@ class WalletUpgradeScenarioTest {
                 launch.userRepository.retainedWallets(),
             )
             assertEquals(emptyList<String>(), launch.interactor.walletsRestorableWithPin())
+            // What Safe Mode goes by: the owner is listed for a phrase, and that phrase is the
+            // release-era one (nothing is stored under the address), so the mark hides it.
+            WalletUpgradeBackup.recoveryFacts().let { facts ->
+                assertEquals(original.address, facts.legacyOwner)
+                assertTrue(original.address in facts.phraseWalletIds)
+                assertFalse(original.address in facts.scopedPhraseWalletIds)
+            }
             launch.userRepository.savePin("246810")
             assertEquals(emptyList<String>(), launch.interactor.walletsRestorableWithPin())
             val refusal = runCatching {
@@ -2881,6 +2888,8 @@ class WalletUpgradeScenarioTest {
             assertTrue(launch.prepare.isSuccess)
             assertEquals(MigrationOutcome.Verified, launch.verify())
             launch.assertUsable(listOf(original), selected = original)
+            // The import stored the phrase under the address: it is the account's own now.
+            assertTrue(original.address in WalletUpgradeBackup.recoveryFacts().scopedPhraseWalletIds)
         }
     }
 
