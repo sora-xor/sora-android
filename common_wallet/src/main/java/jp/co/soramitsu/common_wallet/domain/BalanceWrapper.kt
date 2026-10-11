@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common_wallet.domain
 
+import java.math.BigDecimal
 import java.math.BigInteger
 import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.util.mapBalance
@@ -41,21 +42,36 @@ import jp.co.soramitsu.core_db.model.AssetLocal
 
 object BalanceWrapper {
 
+    /**
+     * The part of [free] that cannot be transferred under the current balances layout
+     * (`free, reserved, frozen, flags`). The chain's `frozen` is a floor for free plus reserved,
+     * so only what the reserved balance does not already cover locks free balance, and never
+     * more than there is: `min(max(frozen - reserved, 0), free)`. This is what
+     * pallet_balances' `reducible_balance` leaves untouched (SORA has no existential deposit).
+     */
+    fun lockedFreeBalance(
+        free: BigInteger,
+        reserved: BigInteger,
+        frozen: BigInteger,
+    ): BigInteger = (frozen - reserved).max(BigInteger.ZERO).min(free.max(BigInteger.ZERO))
+
     private fun calcLocked(dto: XorBalanceDto): BigInteger {
-        return dto.miscFrozen.max(dto.feeFrozen)
+        return dto.miscFrozen.max(dto.feeFrozen).min(dto.free).max(BigInteger.ZERO)
     }
 
+    /** Never more than the chain lets the account move, and never negative. */
     fun calcTransferable(dto: XorBalanceDto): BigInteger {
-        return dto.free - calcLocked(dto)
+        return calcTransferable(dto, calcLocked(dto))
     }
 
     private fun calcTransferable(dto: XorBalanceDto, locked: BigInteger): BigInteger {
-        return dto.free - locked
+        return (dto.free - locked).max(BigInteger.ZERO)
     }
 
     fun mapLocalBalance(assetLocal: AssetLocal): AssetBalance {
         return AssetBalance(
-            assetLocal.free - assetLocal.miscFrozen.max(assetLocal.feeFrozen),
+            (assetLocal.free - assetLocal.miscFrozen.max(assetLocal.feeFrozen))
+                .max(BigDecimal.ZERO),
             assetLocal.reserved,
             assetLocal.miscFrozen,
             assetLocal.feeFrozen,
