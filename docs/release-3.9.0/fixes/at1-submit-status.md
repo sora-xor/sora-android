@@ -117,6 +117,80 @@ Screen behaviour:
   nothing; the screen says "Not sent ... an earlier transaction is still being
   checked ... try again in a few minutes".
 
+#### Opening the transaction page: only from the screen in front
+
+A transaction is followed in the foreground until it is final, typically 15 to
+30 seconds and at most 120. The page of the transaction used to be opened from
+that coroutine the moment the wait ended (`assetsRouter.showTxDetails(hash,
+pop = true)`), whatever was on screen by then. That had two faults:
+
+- The PIN lock is only a destination on the navigation stack
+  (`MainActivity.onResume` puts `pincodeFragment` on top after five minutes in
+  the background). `showTxDetails(pop = true)` navigated with a pop back to the
+  wallet hub, which removes everything above the hub, the PIN lock included.
+  Tap Confirm, lock the phone, open the app more than five minutes later: when
+  the wait ended behind the PIN screen, the PIN screen was replaced by the
+  transaction page and Back led into the wallet. No PIN or biometric was
+  entered. The referral screen navigated without the pop and put the page over
+  the PIN lock instead. The store version has the same blind navigation after a
+  wait of about a second; the wait until finality made the window 15 to 120
+  seconds.
+- With the activity stopped (Home, app switch, screen timeout) the fragment
+  manager has saved its state and ignores both the pop and the navigation.
+  Nothing delivered the result again. On return Swap showed a disabled Confirm
+  with the amounts reset and no result; Send showed its toast but kept Confirm
+  on with the same fee, so a second tap sent a second transfer (without the
+  duplicate question when the first was already final); the Demeter button was
+  simply active again.
+
+Now:
+
+- `BaseViewModel` knows whether its screen is in front: `SoraBaseFragment`
+  calls `onScreenResumed()` in `onResume` and `onScreenPaused()` in `onPause`.
+  A screen is not in front while the app is in the background or while another
+  destination (the PIN lock) is on top of it.
+- `BaseViewModel.showWhenInFront { ... }` holds a result until the screen is in
+  front: it runs at once when it is, otherwise on the next resume, and is asked
+  again on a later resume when it reports that nothing was shown.
+- `AssetsRouter.showTxResult(txHash, from)` (`Navigator`) opens the page only
+  while `from` (`TransactionScreen`: Send, Swap, Add liquidity, Remove
+  liquidity, Demeter claim, Demeter stake, Referral) is the current
+  destination, and answers whether the page is open afterwards. With any other
+  destination on top, the PIN lock in particular, it pops nothing, opens
+  nothing and answers false. The pop back to the hub therefore only removes
+  what the user put there on the way to the screen.
+- All seven view models open the page through
+  `showWhenInFront { assetsRouter.showTxResult(hash, <their screen>) }`. The
+  `pop` option of `showTxDetails` is removed; `showTxDetails(hash)` remains for
+  a tap on a list entry.
+- While a result is held the screen says what it can and sends nothing more:
+  Swap and liquidity keep the result mark ("Transaction confirmed",
+  "submitted" or "failed") on the confirm screen with Confirm off; Send has
+  Confirm off (the toast is delivered when the screen is shown again); the
+  Demeter button is off; the referral screen sends nothing. Dialogs (refused,
+  not sent, failed on chain on Send) already went through LiveData and are
+  delivered when the screen is shown again.
+- Send never confirms a second time once a transfer of that screen reached the
+  network (`sentTxHash`): the screen is replaced by the page.
+
+Two orders are possible when the app returns after more than five minutes,
+because `MainActivity` asks for the PIN screen asynchronously. Either the PIN
+lock is already the current destination when the confirm screen resumes: the
+router answers false, the result stays held, and the page opens after the PIN
+was entered and the PIN lock removed itself. Or the confirm screen resumes
+first: the page opens (the confirm screen is the current destination, nothing
+else is popped) and the PIN lock is then put on top of the page. In both the
+PIN lock ends on top and stays until the PIN or biometric is entered.
+
+Found on the way: on Remove liquidity every pool update (one per block) rebuilt
+both buttons from the same state, which brought Confirm back, enabled and
+without its progress mark, in the middle of the wait. On Swap and Add liquidity
+going back and tapping Review again did the same. A second tap was caught by
+the duplicate question, but the button should not have been there. Confirm now
+stays off from the tap until it is known that nothing reached the network
+(`confirmLocked` in both liquidity view models, `isExtrinsicSubmitted` in
+`SwapViewModel`).
+
 #### Legacy claim screen: following and closing
 
 - The claim screen closes only itself, and only while it is the screen in front.
@@ -341,6 +415,12 @@ swallows cancellation).
   explicit confirmation.
 - Invite Friends, Edit farm, Claim rewards and Remove liquidity explain an
   unreachable network instead of closing the app.
+- Leaving the app (or locking the phone) after Confirm no longer loses the
+  result: on return the transaction page opens. If the PIN screen is shown
+  first, it stays until the PIN or biometric is entered, and the page opens
+  after that.
+- Confirm cannot be tapped a second time for a transaction that is being
+  followed or whose result has not been shown yet.
 
 ## New strings
 
@@ -350,7 +430,7 @@ pass added `tx_outcome_claim_uncertain`, `tx_outcome_not_sent_key_unavailable`,
 `tx_outcome_pool_unavailable_title`, `tx_outcome_pool_unavailable` and
 `tx_outcome_quote_unavailable`). English and Japanese are written; the
 other locales carry the English text (as for earlier 3.9.0 strings) so lint
-`MissingTranslation` passes.
+`MissingTranslation` passes. The fourth pass adds no strings.
 
 ## Tests
 
@@ -476,6 +556,51 @@ them fail there: 10 in `ClaimViewModelTest`, 3 in `NavigatorClaimScreenTest`,
 the new read-only coordinator functions and of the repository and interactor
 plumbing do not compile against the earlier code.
 
+Added in the fourth pass (second review round; all through production code,
+only the router and the interactor boundaries are doubles, and on the device
+only the fragments):
+
+- `app` `NavigatorTxResultTest` (new, 7): every screen that sends a transaction
+  has its own destination; the page opens while that screen is the current
+  destination, with the pop back to the hub for the six screens the page
+  replaces and without it for the referral screen; with the PIN lock on top
+  nothing is opened and nothing is popped, for all seven; nothing is opened
+  from another screen, from the page itself or without a current destination;
+  a navigation that was dropped is answered as not done; nothing happens
+  without a controller; a tap on a list entry still opens the page on top.
+- `app` `NavigatorPinLockStackTest` (new, device test, 4): the app's router and
+  its real navigation graph in a real `NavController`; only the fragments are
+  replaced by a navigator that shows nothing. For each of the seven screens,
+  opened the way the app opens it: the page opens while the screen is in front
+  and the stack is hub, page (hub, referral, page for the referral screen);
+  with the PIN lock put on top, a result changes nothing on the stack and the
+  PIN lock stays the current destination; after the PIN lock removed itself
+  the held result opens the page. A result for another screen opens nothing.
+- View models, "the result arrives while the screen is not in front":
+  `TransferAmountViewModelTest` (+4), `SwapViewModelTest` (+5),
+  `AddLiquidityViewModelTest` (+5), `RemoveLiquidityViewModelTest` (+5),
+  `ReferralViewModelTest` (+2), `ClaimDemeterViewModelTest` (+2),
+  `EditFarmViewModelTest` (+2). For every screen: a result that arrives while
+  the screen is paused asks nothing of the router, the page opens exactly once
+  on the next resume, and a further Confirm before that sends nothing; while
+  the router answers "not in front" (the PIN lock is on top) the result is
+  kept and the page opens on the resume after the PIN. For Send, Swap and
+  liquidity also: Confirm is off (and the result mark stays) while the result
+  is held, a refusal that arrives in the background is still explained by its
+  dialog and opens nothing, and Confirm stays off during the wait itself (a
+  pool update on Remove liquidity, Review again on Swap and Add liquidity).
+- The earlier outcome tests of these seven view models now run with the screen
+  in front and expect `showTxResult(hash, <screen>)`.
+
+The fourth-pass tests were run once with the fixes switched off in the main
+code (`showWhenInFront` showing at once, the destination check and the
+truthful answer in `Navigator`, the Send latch and the three confirm locks).
+24 unit tests fail there (3 in `TransferAmountViewModelTest`, 4 each in
+`SwapViewModelTest`, `AddLiquidityViewModelTest` and
+`RemoveLiquidityViewModelTest`, 2 each in `ReferralViewModelTest`,
+`ClaimDemeterViewModelTest` and `EditFarmViewModelTest`, 3 in
+`NavigatorTxResultTest`) and 2 of the 4 device tests (the PIN lock on top, and
+a result for another screen).
 
 Checked against the old behaviour: with the wait loop changed back to "one failed
 read ends the wait", three `Sora2FinalityWaitTest` tests fail (retry with pauses,
@@ -576,6 +701,28 @@ the third pass, a new unfunded wallet; nothing was signed or sent):
 Not run on a device: confirmed, failed-on-chain and refused outcomes of a real
 transaction. They need a funded mainnet account; see the QA steps below.
 
+Fourth device check (emulator `SORA-Api34`, port 5592, production debug build of
+the fourth pass, a new unfunded wallet; nothing was signed or sent):
+
+- `NavigatorPinLockStackTest` (4 tests) passed on the emulator, and 2 of them
+  failed there with the fixes switched off (see Tests).
+- Every `SoraBaseFragment` now tells its view model when it comes to the front
+  and when it leaves it, so the app was walked through: onboarding, PIN setup,
+  the wallet hub, Swap (disclaimer and form), Invite Friends, and Home and back
+  on Swap and on Invite Friends. Each screen came back as it was left.
+- The PIN lock with a confirm screen below it: on Swap, Home was pressed and
+  the app opened again 5 minutes 20 seconds later. "Enter pin code" was shown
+  and was still there 20 seconds later. After the PIN the Swap form was back.
+- Logcat had no `FATAL EXCEPTION`. The emulator was shut down afterwards.
+- Not done on a device: a result arriving behind the PIN lock or in the
+  background. It needs a transaction that reaches the network, that is, a
+  funded wallet; see the QA steps.
+
+Build and checks at the end of the fourth pass: `:app:assembleProductionDebug`,
+`testProductionDebugUnitTest` (all modules, 1384 tests, 10 skipped, none failed)
+and `:app:lintProductionDebug` passed. `ktlintCheck` reports no finding on
+lines this pass changed (the project has 985 older findings).
+
 Build and checks at the end of the third pass: `:app:assembleProductionDebug`,
 `testProductionDebugUnitTest` (all modules, 1352 tests, 10 skipped, none failed)
 and `:app:lintProductionDebug` passed. `ktlintCheck` reports no finding on
@@ -612,7 +759,57 @@ Left as it is, on purpose:
   account's "done". This pass does not widen it (a claim found done on a return
   to the screen is not stored there).
 
+## Fourth pass: review findings
+
+| Finding | Decision |
+|---|---|
+| Major: on every confirm path other than the legacy claim, the result opened the transaction page with a pop back to the hub from the coroutine, which removed a PIN lock put on top in the meantime (Send, Swap, Add and Remove liquidity, Demeter claim and stake); the referral screen put the page over it | Fixed. The page opens only while the screen that sent the transaction is the current destination and in front. See "Opening the transaction page: only from the screen in front". |
+| Major: with the activity stopped at the end of the wait the navigation was dropped and nothing delivered the result again; Send kept Confirm on, so a second tap sent a second transfer | Fixed by the same change: the result is held in the view model and shown on the next resume; Confirm is off meanwhile, and on Send for good once a transfer reached the network. |
+
+Decisions:
+
+- The result is delivered by the view model on `onResume`, as `ClaimViewModel`
+  does, not by a LiveData navigation event. A LiveData observer becomes active
+  at `onStart`, before `MainActivity.onResume` asks for the PIN screen; that
+  order would have been safe too (the PIN lock would land on top of the page),
+  but the router check is the guard that matters, and holding the result in
+  one place keeps "is it shown yet" a plain fact the screen can use for its
+  button.
+- The router answers from the stack after navigating instead of assuming
+  success, so a dropped navigation can never clear a held result.
+- Failed on chain keeps its earlier presentation: the page on Swap, liquidity,
+  referral and Demeter; a dialog on Send, where the screen stays and Confirm is
+  available again (the failed transfer is final, so a repeat is a new,
+  deliberate transfer).
+- Confirm staying off during the wait on Remove liquidity, Swap and Add
+  liquidity was not in the review. It is the same harm (a second signature by
+  habit) and was one line each.
+
+Not done:
+
+- Nothing else that navigates blindly was changed. `PinCodeViewModel` still
+  pops with `popBackStack()` after a correct PIN, which is right while the PIN
+  lock is on top, and with this pass nothing on these paths can put a screen
+  over it. The explicit taps that close a screen (`router.popBackStack()` from
+  a dialog's Close, the toolbar arrow) act on the screen the user is looking
+  at.
+- No real transaction was sent on a device (unfunded test wallet), so the
+  return from the background with a real result is covered by the view-model
+  tests and the navigation by the device test of the stack; see the QA steps.
+
 ## Human and ops actions
+
+- QA, result after leaving the app (funded mainnet test wallet): on Swap tap
+  Confirm and press Home at once. Open the app again after about 40 seconds.
+  Expect the transaction page with the final status, not the confirm screen
+  with empty amounts. Repeat on Send: expect the toast and the transaction
+  page, and no way to tap Confirm a second time. Repeat on a farm's Claim.
+- QA, result behind the PIN lock (security check of the fourth pass; funded
+  wallet): on Send tap Confirm and lock the phone at once, before the result
+  mark appears. Wait more than five minutes, unlock the phone and open the
+  app. The PIN screen must be shown and must stay, however long it is left
+  open; Back must close the app. After the PIN or biometric the transaction
+  page opens. Repeat with Swap and with Invite Friends > bond.
 
 - QA on a funded mainnet test wallet (cannot be automated here, it moves funds):
   1. Swap a small amount and switch to airplane mode right after Confirm. Expect
