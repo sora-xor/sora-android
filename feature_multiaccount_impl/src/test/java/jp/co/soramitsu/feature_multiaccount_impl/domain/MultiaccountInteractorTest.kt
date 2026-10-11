@@ -898,15 +898,17 @@ class MultiaccountInteractorTest {
     fun `no phrase or seed is offered when none stored re-derives the account`() = runTest {
         val address = "address"
         val soraAccount = SoraAccount("address", "name")
+        val nothingMatches = WalletBackupMaterial(
+            canSign = true,
+            phraseWords = emptyList(),
+            seedHex = "",
+            storedPhraseDoesNotMatch = true,
+            storedSeedDoesNotMatch = false,
+        )
         coEvery { userRepository.getSoraAccount(address) } returns soraAccount
-        coEvery { credentialsRepository.retrieveBackupMaterial(soraAccount) } returns
-            WalletBackupMaterial(
-                canSign = true,
-                phraseWords = emptyList(),
-                seedHex = "",
-                storedPhraseDoesNotMatch = true,
-                storedSeedDoesNotMatch = false,
-            )
+        coEvery { credentialsRepository.retrieveBackupMaterial(soraAccount) } returns nothingMatches
+        coEvery { credentialsRepository.retrieveBackupMaterialForSeed(soraAccount) } returns
+            nothingMatches
         assertEquals("", multiaccountInteractor.getMnemonic(address))
         assertEquals("", multiaccountInteractor.getSeed(address))
         assertTrue(multiaccountInteractor.getBackupMaterial(address).onlyJsonExport)
@@ -914,17 +916,51 @@ class MultiaccountInteractorTest {
     }
 
     @Test
-    fun `get seed is called`() = runTest {
+    fun `the seed comes from one judgement of the stored secrets`() = runTest {
         val address = "address"
         val soraAccount = SoraAccount("address", "name")
         coEvery { userRepository.getSoraAccount(address) } returns soraAccount
         val seed = "seed"
-        coEvery { credentialsRepository.retrieveBackupMaterial(soraAccount) } returns
+        coEvery { credentialsRepository.retrieveBackupMaterialForSeed(soraAccount) } returns
             material(emptyList(), seed)
-        coEvery { credentialsRepository.retrieveSeed(soraAccount) } returns seed
-        val result = multiaccountInteractor.getSeed(address)
-        assertEquals(seed, result)
+
+        assertEquals(seed, multiaccountInteractor.getSeed(address))
+        // The Raw seed screen: what may be shown and the seed itself, in the same answer.
+        val shown = multiaccountInteractor.getSeedBackupMaterial(address)
+        assertTrue(shown.hasSeed)
+        assertEquals(seed, shown.seedHex)
+
+        // One judgement per call, never the three the screen used to make.
+        coVerify(exactly = 2) { credentialsRepository.retrieveBackupMaterialForSeed(soraAccount) }
+        coVerify(exactly = 0) { credentialsRepository.retrieveBackupMaterial(any()) }
+        coVerify(exactly = 0) { credentialsRepository.retrieveSeed(any()) }
     }
+
+    @Test
+    fun `judging the stored secrets for a backup screen never runs on the caller's thread`() =
+        runTest {
+            val caller = Thread.currentThread()
+            val workers = mutableListOf<Thread>()
+            val soraAccount = SoraAccount("address", "name")
+            coEvery { userRepository.getSoraAccount("address") } returns soraAccount
+            coEvery { credentialsRepository.retrieveBackupMaterial(soraAccount) } answers {
+                workers += Thread.currentThread()
+                material(listOf("alpha", "beta"), "seed")
+            }
+            coEvery { credentialsRepository.retrieveBackupMaterialForSeed(soraAccount) } answers {
+                workers += Thread.currentThread()
+                material(listOf("alpha", "beta"), "seed")
+            }
+
+            // Account options (is a phrase available), Passphrase, Raw seed, Google backup.
+            multiaccountInteractor.getMnemonic(soraAccount)
+            multiaccountInteractor.getBackupMaterial("address")
+            multiaccountInteractor.getSeedBackupMaterial("address")
+            multiaccountInteractor.getSeed("address")
+
+            assertEquals(4, workers.size)
+            workers.forEach { worker -> assertTrue(worker !== caller) }
+        }
 
     @Test
     fun `get keypair is called`() = runTest {
