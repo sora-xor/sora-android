@@ -58,12 +58,14 @@ import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -78,10 +80,12 @@ import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.given
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.willSuspendableAnswer
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -424,6 +428,68 @@ class ReferralViewModelTest {
         question.onConfirm()
         advanceUntilIdle()
         verify(assetsRouter).showTxResult("0x" + "cd".repeat(32), TransactionScreen.REFERRAL)
+    }
+
+    @Test
+    fun `a second tap while the bond is followed does nothing`() = runTest {
+        programLoaded()
+        stubOutcomeTexts()
+        val result = CompletableDeferred<TransactionOutcome>()
+        var started = 0
+        given(interactor.observeBond(any(), eq(false))).willSuspendableAnswer {
+            started += 1
+            // What the duplicate guard answers a second request while the first is followed.
+            if (started > 1) throw DuplicateWaitingTransactionException(txHash, 1L)
+            result.await()
+        }
+
+        referralViewModel.onBondButtonClick()
+        runCurrent()
+        // The button is still clickable while its progress mark fades in.
+        referralViewModel.onBondButtonClick()
+        referralViewModel.onUnbondButtonClick()
+        runCurrent()
+
+        // Before: a second coroutine ran into the duplicate guard, cleared the progress mark
+        // and asked "send again anyway?" about the bond sent a moment ago.
+        assertEquals(1, started)
+        verify(interactor, never()).observeUnbond(any(), any())
+        assertEquals(true, referralViewModel.referralScreenState.value.common.progress)
+        assertNull(referralViewModel.confirmDialogLiveData.value)
+
+        // A balance update during the wait must not bring the button back either.
+        assetFlowEmit(TestAssets.xorAsset(BigDecimal.TEN))
+        runCurrent()
+        assertEquals(true, referralViewModel.referralScreenState.value.common.progress)
+
+        result.complete(TransactionOutcome.Confirmed(txHash, "0xblock"))
+        advanceUntilIdle()
+
+        assertProgressCleared()
+        verify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.REFERRAL)
+        assertEquals(1, started)
+    }
+
+    @Test
+    fun `a bond can be sent again after one that did not reach the network`() = runTest {
+        programLoaded()
+        stubOutcomeTexts()
+        var attempts = 0
+        whenever(interactor.observeBond(any(), eq(false))).thenAnswer {
+            attempts += 1
+            if (attempts == 1) throw IOException("BOUNDED_HTTP_IO")
+            TransactionOutcome.Confirmed(txHash, "0xblock")
+        }
+
+        referralViewModel.onBondButtonClick()
+        advanceUntilIdle()
+        verify(assetsRouter, never()).showTxResult(any(), any())
+
+        referralViewModel.onBondButtonClick()
+        advanceUntilIdle()
+
+        assertEquals(2, attempts)
+        verify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.REFERRAL)
     }
 
     // --- the result arrives while the screen is not in front -------------------------------

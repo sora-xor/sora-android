@@ -29,13 +29,16 @@ import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.test_data.PolkaswapTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -232,6 +235,59 @@ class EditFarmViewModelTest {
         advanceUntilIdle()
         coVerify(exactly = 1) { demeter.depositDemeterFarming(ids, any(), any(), true) }
         verify { assetsRouter.showTxResult("0x" + "cd".repeat(32), TransactionScreen.DEMETER_STAKE) }
+    }
+
+    @Test
+    fun `a second tap on Confirm while the stake is followed does nothing`() = runTest {
+        val viewModel = readyToStake()
+        val result = CompletableDeferred<TransactionOutcome>()
+        var started = 0
+        coEvery { demeter.depositDemeterFarming(ids, any(), any(), false) } coAnswers {
+            started += 1
+            // What the duplicate guard answers a second request while the first is followed.
+            if (started > 1) throw DuplicateWaitingTransactionException(txHash, 1L)
+            result.await()
+        }
+
+        viewModel.onConfirm()
+        runCurrent()
+        // The button is still clickable while its progress mark fades in.
+        viewModel.onConfirm()
+        runCurrent()
+
+        // Before: a second coroutine ran into the duplicate guard, cleared the progress mark
+        // and asked "send again anyway?" about the stake sent a moment ago.
+        assertEquals(1, started)
+        assertTrue(viewModel.state.value.isButtonLoading)
+        assertNull(viewModel.confirmDialogLiveData.value)
+
+        result.complete(TransactionOutcome.Confirmed(txHash, "0xblock"))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isButtonLoading)
+        verify(exactly = 1) { assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_STAKE) }
+        assertEquals(1, started)
+    }
+
+    @Test
+    fun `Confirm works again after a stake that did not reach the network`() = runTest {
+        val viewModel = readyToStake()
+        var attempts = 0
+        stakeAnswers(false) {
+            attempts += 1
+            if (attempts == 1) throw IOException("BOUNDED_HTTP_IO")
+            TransactionOutcome.Confirmed(txHash, "0xblock")
+        }
+
+        viewModel.onConfirm()
+        advanceUntilIdle()
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
+
+        viewModel.onConfirm()
+        advanceUntilIdle()
+
+        assertEquals(2, attempts)
+        verify(exactly = 1) { assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_STAKE) }
     }
 
     // --- the result arrives while the screen is not in front -------------------------------
