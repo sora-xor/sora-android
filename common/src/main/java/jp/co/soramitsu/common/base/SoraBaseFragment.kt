@@ -241,7 +241,6 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                         .collectAsState(initial = SelectedAccountSigning.NONE).value
                     val accountReadOnly = signing.readOnly && !rememberWalletReadOnly()
 
-                    CompositionLocalProvider(LocalSelectedAccountReadOnly provides accountReadOnly) {
                     Scaffold(
                         scaffoldState = scaffoldState,
                         backgroundColor = backgroundColorComposable(),
@@ -258,37 +257,40 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                             )
                         }
                     ) { padding ->
-                        Column(
-                            modifier = Modifier
-                                .padding(padding)
-                                .fillMaxSize(),
+                        CompositionLocalProvider(
+                            LocalSelectedAccountReadOnly provides accountReadOnly,
                         ) {
-                            if (explainsReadOnlyAccount && accountReadOnly) {
-                                AccountReadOnlyNotice(
-                                    modifier = Modifier.padding(
-                                        start = 16.dp,
-                                        end = 16.dp,
-                                        bottom = 12.dp,
-                                    ),
-                                    compact = true,
-                                    onRepair = {
-                                        accountOptionsRouter.showAccountDetails(signing.address)
-                                    },
-                                )
-                            }
-                            NavHost(
+                            Column(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f),
-                                navController = navController,
-                                contentAlignment = Alignment.TopCenter,
-                                startDestination = viewModel.startScreen(),
+                                    .padding(padding)
+                                    .fillMaxSize(),
                             ) {
-                                content(scrollState, navController)
+                                if (explainsReadOnlyAccount && accountReadOnly) {
+                                    AccountReadOnlyNotice(
+                                        modifier = Modifier.padding(
+                                            start = 16.dp,
+                                            end = 16.dp,
+                                            bottom = 12.dp,
+                                        ),
+                                        compact = true,
+                                        onRepair = {
+                                            accountOptionsRouter.showAccountDetails(signing.address)
+                                        },
+                                    )
+                                }
+                                NavHost(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
+                                    navController = navController,
+                                    contentAlignment = Alignment.TopCenter,
+                                    startDestination = viewModel.startScreen(),
+                                ) {
+                                    content(scrollState, navController)
+                                }
                             }
                         }
                         AlertDialogContent(openAlertDialog)
-                    }
                     }
                 }
             }

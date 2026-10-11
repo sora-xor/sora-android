@@ -48,7 +48,8 @@ class SoraPreferencesRemoveAllTest {
     private suspend fun SoraPreferences.removeAll(vararg accounts: String) {
         val stringFields = accounts.flatMap(WalletPreferenceKeys::scopedStringKeys).toSet()
         val booleanFields = accounts.flatMap(WalletPreferenceKeys::scopedBooleanKeys).toSet()
-        val hashes = previewWalletDeletion(stringFields, booleanFields, selectedAddress = "", clearAll = true)
+        val hashes =
+            previewWalletDeletion(stringFields, booleanFields, selectedAddress = "", clearAll = true)
         commitWalletDeletion(stringFields, booleanFields, "", true, hashes.before, hashes.after)
         assertTrue(walletDeletionPreferencesMatch(stringFields, booleanFields, "", true, hashes.after))
         // The journal applies the same edit again after a crash: it changes nothing.
