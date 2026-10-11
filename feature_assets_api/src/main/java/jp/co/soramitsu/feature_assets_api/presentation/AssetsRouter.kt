@@ -49,7 +49,8 @@ enum class TransactionScreen(val replacedByPage: Boolean) {
 
 interface AssetsRouter {
 
-    fun showTxDetails(txHash: String, pop: Boolean = false)
+    /** Opens a transaction's page on top of the current screen. For a tap on a list entry. */
+    fun showTxDetails(txHash: String)
 
     /**
      * Opens the page of the transaction that [from] has just sent, but only while [from] is the
