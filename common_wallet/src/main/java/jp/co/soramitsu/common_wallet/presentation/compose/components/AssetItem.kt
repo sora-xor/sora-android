@@ -43,8 +43,10 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
@@ -66,12 +68,21 @@ fun AssetItem(
         icon = Uri.parse(assetState.tokenIcon),
         name = assetState.tokenName,
         balance = assetState.assetAmount,
-        symbol = "",
+        symbol = frozenSuffix(assetState),
         fiat = assetState.assetFiatAmount,
         change = assetState.fiatChange,
         onClick = { onClick.invoke(assetState.tokenId) },
     )
 }
+
+/**
+ * The row shows the liquid amount. When the account holds more of the asset that it cannot send
+ * now, the same line names it ("0 XOR · 110 XOR frozen"), so that locked funds do not look lost.
+ */
+@Composable
+private fun frozenSuffix(assetState: AssetItemCardState): String =
+    assetState.frozenAmount?.let { stringResource(R.string.asset_frozen_amount_suffix, it) }
+        .orEmpty()
 
 @Composable
 fun AssetItemEnumerated(
@@ -103,7 +114,7 @@ fun AssetItemEnumerated(
             icon = Uri.parse(assetState.tokenIcon),
             name = assetState.tokenName,
             balance = assetState.assetAmount,
-            symbol = "",
+            symbol = frozenSuffix(assetState),
             fiat = assetState.assetFiatAmount,
             change = assetState.fiatChange,
             onClick = { onClick.invoke(assetState.tokenId) },
