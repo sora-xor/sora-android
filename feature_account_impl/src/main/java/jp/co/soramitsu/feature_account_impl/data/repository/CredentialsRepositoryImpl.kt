@@ -74,6 +74,9 @@ import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class CredentialsRepositoryImpl constructor(
     private val credentialsPrefs: CredentialsDatasource,
@@ -81,6 +84,8 @@ class CredentialsRepositoryImpl constructor(
     private val sora2AddressCodec: Sora2AddressCodec,
     private val jsonSeedEncoder: JsonAccountsEncoder,
     private val storedKeyCrypto: StoredKeyCrypto = PackagedStoredKeyCrypto,
+    /** Where scrypt (the encrypted JSON export and its import) runs: never the main thread. */
+    private val keyWorkDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : CredentialsRepository {
 
     private val irohaCash = mutableMapOf<String, IrohaData>()
@@ -129,7 +134,9 @@ class CredentialsRepositoryImpl constructor(
                 address = soraAddress(keyPair),
                 accountName = accountName,
                 mnemonic = null,
-                seedHex = normalized,
+                // The 32 bytes as lower-case hex, whatever was typed: the typed text may carry
+                // spaces or line breaks (the reader skips them), and those are not stored.
+                seedHex = StoredSecretHex.encode(seed),
                 keypair = keyPair,
                 source = WalletDraft.Source.RAW_SEED,
                 wipeKeypair = ::wipe,
@@ -145,8 +152,11 @@ class CredentialsRepositoryImpl constructor(
         json: String,
         password: String,
         accountName: String,
-    ): List<WalletDraft> {
+    ): List<WalletDraft> = withContext(keyWorkDispatcher) {
         WalletRecoveryCapabilityGate.requireUserMutationAllowed()
+        // Opening the file is scrypt (N = 32768, r = 8): about a second per derivation on a
+        // phone, once for a one-account file and once more per account for a batch. It never
+        // runs on the caller's thread.
         val imported = try {
             jsonSeedEncoder.decode(json, password)
         } catch (_: JsonAccountsEncoder.JsonImportException.WrongPassword) {
@@ -187,7 +197,7 @@ class CredentialsRepositoryImpl constructor(
             imported.forEach { wipe(it.keypair) }
             throw error
         }
-        return drafts
+        drafts
     }
 
     private fun draftFromPhrase(
@@ -328,13 +338,7 @@ class CredentialsRepositoryImpl constructor(
         val stored = storedValues(address)
         val absent = mutableMapOf<CredentialField, String>()
         if (scopedVerdict(address, stored).canSign) {
-            desired.forEach { (field, value) ->
-                val backupMaterial =
-                    field == CredentialField.MNEMONIC || field == CredentialField.SEED
-                if (backupMaterial && stored.getValue(field) == StoredCredential.Absent) {
-                    absent[field] = value
-                }
-            }
+            absent += missingBackupOf(draft, stored)
         } else {
             desired.forEach { (field, value) ->
                 when (val current = stored.getValue(field)) {
@@ -369,6 +373,67 @@ class CredentialsRepositoryImpl constructor(
     override suspend fun storedKeyProvesAddress(address: String): Boolean {
         if (credentialsPrefs.isExplicitWatchOnly(address)) return false
         return scopedVerdict(address, storedValues(address)).canSign
+    }
+
+    override suspend fun addMissingBackup(draft: WalletDraft): Boolean =
+        WalletMutationCoordinator.withLock {
+            WalletRecoveryCapabilityGate.requireUserMutationAllowed()
+            val address = draft.address
+            if (credentialsPrefs.isExplicitWatchOnly(address)) return@withLock false
+            val stored = storedValues(address)
+            // Only next to the account's own key set, and only when that key set proves the
+            // address. (A release-era account keeps its unsuffixed values as they are.)
+            if (!scopedVerdict(address, stored).canSign) return@withLock false
+            val missing = missingBackupOf(draft, stored)
+            val (field, value) = missing.entries.singleOrNull() ?: return@withLock false
+            // The entered secret is proven on its own to re-derive this address before it is
+            // kept as the account's backup.
+            val entered = secretsJudge.judgeBackup(
+                address = address,
+                signing = SigningKeyVerdict(null),
+                keyPair = null,
+                mnemonic = if (field == CredentialField.MNEMONIC) value else "",
+                storedSeed = if (field == CredentialField.SEED) value else "",
+            )
+            check(entered.hasMatchingBackup) { "WALLET_BACKUP_DRAFT_UNPROVEN" }
+            credentialsPrefs.writeCredentialsIfAbsent(address, missing)
+            // Read back: the key still signs and the added value is a proven backup.
+            val after = scopedVerdict(address, storedValues(address))
+            check(
+                after.canSign && when (field) {
+                    CredentialField.MNEMONIC -> after.phrase == BackupMatch.MATCHES
+                    else -> after.seed == BackupMatch.MATCHES
+                }
+            ) { "WALLET_KEYS_READBACK_MISMATCH" }
+            FirebaseWrapper.log("A recovery secret was kept as the backup of an account that signs")
+            true
+        }
+
+    /**
+     * The draft's own phrase (or raw seed) when the account has none: nothing is stored for
+     * that field under the address, and nothing reaches the account through the release-era
+     * (unsuffixed) entry either. A value that is stored is never shadowed by a second one, in
+     * whatever form it is stored: identities derived from the stored phrase text (SORA v1 claim,
+     * SORA 3 accounts) must keep seeing the text they were first derived from. A draft read
+     * from a backup file has no phrase or seed.
+     */
+    private suspend fun missingBackupOf(
+        draft: WalletDraft,
+        stored: Map<CredentialField, StoredCredential>,
+    ): Map<CredentialField, String> {
+        val mnemonic = draft.mnemonic
+        val (field, value) = when {
+            draft.source == WalletDraft.Source.JSON -> return emptyMap()
+            mnemonic != null -> CredentialField.MNEMONIC to mnemonic
+            else -> CredentialField.SEED to draft.seedHex
+        }
+        if (stored.getValue(field) != StoredCredential.Absent) return emptyMap()
+        val account = backupVerdict(SoraAccount(draft.address, draft.accountName))
+        val absentForAccount = when (field) {
+            CredentialField.MNEMONIC -> account.phrase == BackupMatch.ABSENT
+            else -> account.seed == BackupMatch.ABSENT
+        }
+        return if (absentForAccount) mapOf(field to value) else emptyMap()
     }
 
     override suspend fun repairWithDraft(draft: WalletDraft): SoraAccount =
@@ -692,14 +757,17 @@ class CredentialsRepositoryImpl constructor(
         return address
     }
 
-    override suspend fun generateJson(accounts: List<SoraAccount>, password: String): String {
+    override suspend fun generateJson(
+        accounts: List<SoraAccount>,
+        password: String,
+    ): String = withContext(keyWorkDispatcher) {
         // Recovery export is part of the installed wallet's safety boundary. Never let a missing,
         // stale, or compromised remote configuration rewrite the chain identity embedded in it.
         val localGenesis = Sora2RuntimeContract.SORA_MAINNET_GENESIS_HASH
         // Every account is proven before anything is encoded, so a file is either a backup of
         // all the chosen accounts or it is not made.
         val exported = accounts.map { exportAccount(it) }
-        return try {
+        try {
             if (exported.size == 1) {
                 jsonSeedEncoder.generate(
                     account = exported.single(),

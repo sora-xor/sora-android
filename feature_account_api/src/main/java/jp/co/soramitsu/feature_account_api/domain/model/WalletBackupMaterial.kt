@@ -47,4 +47,16 @@ class WalletRepairAvailableException(
     val accountExists: Boolean,
     /** A PIN is set on this phone and must be entered to confirm the repair. */
     val pinRequired: Boolean,
+    /**
+     * A PIN is stored on this phone but it cannot be read, so it cannot confirm anything. The
+     * repair is confirmed with the phone's screen lock instead (never with a plain tap).
+     */
+    val screenLockRequired: Boolean = false,
 ) : Exception("WALLET_REPAIR_AVAILABLE")
+
+/**
+ * The PIN that confirms a repair was wrong too many times. Wrong entries are counted by the same
+ * persistent counter and lock timer as the PIN screen, so PIN entry is locked there too for
+ * [remainingMillis]. Nothing was changed.
+ */
+class RepairPinLockedException(val remainingMillis: Long) : Exception("REPAIR_PIN_LOCKED")

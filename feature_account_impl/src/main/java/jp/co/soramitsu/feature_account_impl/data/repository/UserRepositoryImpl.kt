@@ -71,6 +71,7 @@ import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionTarget
 import jp.co.soramitsu.feature_account_api.domain.model.WalletMutationSnapshot
+import jp.co.soramitsu.feature_account_impl.domain.keys.BackupMatch
 import jp.co.soramitsu.feature_account_impl.domain.keys.NexusChildAccounts
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredKeyCrypto
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredSecretsVerdict
@@ -140,6 +141,8 @@ class UserRepositoryImpl(
             StoredSecretsVerdict.SOURCE_LEGACY_SECRET,
         )
         const val UNAVAILABLE_STATE = "UNAVAILABLE"
+        const val REMOVED_UNAVAILABLE_COPY_REASON = "removed-unavailable-account"
+        const val REMOVED_WITHOUT_BACKUP_COPY_REASON = "removed-account-without-backup"
         const val MAX_WALLET_ID_LENGTH = 256
     }
 
@@ -825,16 +828,25 @@ class UserRepositoryImpl(
                 confirmedPreferenceHashes.after == preview.afterPreferencesHash,
             "WALLET_DELETION_PREFERENCES_CHANGED",
         )
-        val unavailableTargets = walletIdentities().filter {
-            it.walletId in targetIds && it.migrationState == UNAVAILABLE_STATE
-        }
-        if (unavailableTargets.isNotEmpty()) {
+        val targetIdentities = walletIdentities().filter { it.walletId in targetIds }
+        val copyReason = when {
             // The keys of a read-only account could not be verified, so nothing shows that they
-            // exist anywhere else. Keep a copy of the encrypted preference files on the device
-            // before the confirmed removal; without that copy nothing is removed.
+            // exist anywhere else.
+            targetIdentities.any { it.migrationState == UNAVAILABLE_STATE } ->
+                REMOVED_UNAVAILABLE_COPY_REASON
+            // An account that signs, but nothing stored on this phone is a proven backup of it
+            // (only its key pair is usable; its stored phrase or seed belongs to another wallet
+            // or cannot be read). No recovery phrase can be shown before it is removed, and the
+            // removal deletes the only key and whatever is stored next to it.
+            targetIdentities.any { removalLosesTheOnlyCopy(it) } ->
+                REMOVED_WITHOUT_BACKUP_COPY_REASON
+            else -> null
+        }
+        if (copyReason != null) {
+            // Keep a copy of the encrypted preference files on the device before the confirmed
+            // removal; without that copy nothing is removed.
             deletionRequire(
-                WalletUpgradeBackup.preserveWalletPreferencesCopy("removed-unavailable-account")
-                    .isSuccess,
+                WalletUpgradeBackup.preserveWalletPreferencesCopy(copyReason).isSuccess,
                 "WALLET_DELETION_PRESERVE_COPY_FAILED",
             )
         }
@@ -1372,6 +1384,35 @@ class UserRepositoryImpl(
         throw WalletDeletionInvariantException("WALLET_DELETION_LEGACY_OWNER_UNVERIFIED")
     }
 
+    /**
+     * True for an account that signs while the phone holds no proven backup of it: its label is
+     * `LEGACY_SECRET` (only the key pair is usable), or a stored phrase or seed was judged as
+     * another wallet's or cannot be read. Removing such an account deletes the only copy of its
+     * key (and, possibly, another wallet's phrase) from the app. A watch-only account stores no
+     * secret. A Keystore or storage failure here stops the removal: nothing is removed when it is
+     * not known what would be lost.
+     */
+    private suspend fun removalLosesTheOnlyCopy(identity: WalletIdentityLocal): Boolean {
+        if (identity.migrationState != "VERIFIED" || identity.secretSource == "WATCH_ONLY") {
+            return false
+        }
+        if (identity.secretSource == StoredSecretsVerdict.SOURCE_LEGACY_SECRET) return true
+        val notProven = setOf(BackupMatch.DOES_NOT_MATCH, BackupMatch.UNREADABLE)
+        return try {
+            val secrets = readSecrets(identity.walletId)
+            try {
+                val verdict = judge(identity.walletId, secrets)
+                !verdict.hasMatchingBackup || verdict.phrase in notProven || verdict.seed in notProven
+            } finally {
+                secrets.wipe()
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            throw WalletDeletionInvariantException("WALLET_DELETION_SECRET_VERIFICATION_FAILED")
+        }
+    }
+
     private suspend fun requireDeletionWalletSecrets(
         accounts: List<SoraAccountLocal>,
         targetIds: Set<String>,
@@ -1704,6 +1745,24 @@ class UserRepositoryImpl(
             }
             account
         }
+
+    override suspend fun refreshVerifiedWallet(address: String) {
+        mutex.withLock {
+            WalletRecoveryCapabilityGate.requireUserMutationAllowed()
+            resumePendingWalletDeletionLocked()
+            val row = db.accountDao().getAccount(address) ?: return@withLock
+            if (db.walletIdentityDao().getWallet(address)?.migrationState != "VERIFIED") {
+                return@withLock
+            }
+            val model = verifiedWalletModel(SoraAccountMapper.map(row))
+            // Only ever records an account that signs: this never makes one read-only.
+            if (model.identity.migrationState != "VERIFIED") return@withLock
+            db.withTransaction {
+                db.walletIdentityDao().upsertWallet(model.identity)
+                db.walletIdentityDao().upsertNetworkAccounts(model.networkAccounts)
+            }
+        }
+    }
 
     private fun ByteArray.toHex(): String = joinToString("") {
         (it.toInt() and 0xff).toString(16).padStart(2, '0')

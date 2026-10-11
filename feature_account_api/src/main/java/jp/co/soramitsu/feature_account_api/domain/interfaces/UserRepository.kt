@@ -172,4 +172,13 @@ interface UserRepository {
      * values are not changed here. Throws when the stored keys still do not verify.
      */
     suspend fun completeUnavailableWallet(address: String): SoraAccount
+
+    /**
+     * Records again what the stored values of an account that can sign prove, after a recovery
+     * phrase or seed was added as its backup (`CredentialsRepository.addMissingBackup`): the
+     * backup label, and the SORA 3 accounts of a 12- or 24-word phrase. The account stays
+     * verified; account rows and key values are not changed. Does nothing for an account that
+     * is not listed or is read-only. The next app start records the same facts in any case.
+     */
+    suspend fun refreshVerifiedWallet(address: String)
 }
