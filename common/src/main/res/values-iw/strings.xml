@@ -700,7 +700,7 @@
   <string name="account_read_only_restore_phrase">Restore keys with recovery phrase</string>
   <string name="account_read_only_restore_google">Restore from Google Drive</string>
   <string name="account_read_only_show_backup">Show the backup saved on this phone</string>
-  <string name="account_read_only_restore_note">Restoring opens Import account. Enter this account\'s recovery phrase, raw seed or backup file there, and SORA puts its keys back in place. You never need to remove the account to repair it.</string>
+  <string name="account_read_only_restore_note">These actions open Import account. Enter this account\'s recovery phrase, raw seed or backup file there, and SORA puts its keys back in place. You never need to remove the account to repair it.</string>
   <string name="account_read_only_remove">Remove from this phone</string>
   <string name="account_removal_title">Remove this account from this phone?</string>
   <string name="account_removal_body">Removing deletes this account\'s keys from this phone. Your funds stay on the blockchain, and the account can be added again later with its backup.</string>
@@ -723,7 +723,7 @@
   <string name="account_removal_remove">Remove from this phone</string>
   <string name="account_removal_not_removed_title">This account wasn\'t removed</string>
   <string name="account_removal_not_removed">SORA checks everything before it removes an account, and a check didn\'t pass, so nothing was removed (%1$s). Please try again.</string>
-  <string name="safe_mode_retained_needs_phrase">This wallet stayed on this phone when all accounts were removed. To bring it back, import its recovery phrase, raw seed or backup file. The keys saved here are then used as they are.</string>
+  <string name="safe_mode_retained_needs_phrase">This wallet\'s keys were on this phone before your current SORA PIN was set, so the PIN can\'t restore it. To bring it back, import its recovery phrase, raw seed or backup file. The keys saved here are then used as they are.</string>
   <string name="safe_mode_retained_import_phrase">Import its recovery phrase</string>
   <string name="onboarding_found_wallets_explanation">Keys of wallets you used here before are still on this phone. Restore them with your SORA PIN.</string>
   <string name="onboarding_found_wallets_body">SORA found wallet keys on this phone that no account uses, for example after this device was set up again. Enter the PIN you used in SORA on this phone to restore these wallets. Nothing is deleted or changed if you leave this screen.</string>
@@ -739,4 +739,13 @@
   <string name="create_account_interrupted">This account setup was interrupted before it was finished, so no account was created and nothing was saved. Please start again from Create account.</string>
   <string name="create_account_not_saved_title">Your new account isn\'t saved yet</string>
   <string name="create_account_not_saved">SORA couldn\'t save your new account on this phone just now, so it hasn\'t been added. Your recovery phrase is still shown on this screen. Keep it, then tap Continue to try again.</string>
+  <string name="failure_submission_unknown_title">Check Activity before you try again</string>
+  <string name="failure_submission_unknown_message">SORA passed this transaction to the network but couldn\'t confirm the result. It may still go through. Open Activity and wait a little before you try again, so that nothing is sent twice.</string>
+  <string name="account_read_only_restore_other">Use a raw seed or backup file</string>
+  <string name="account_read_only_reason_not_checked">SORA hasn\'t checked this account\'s signing key on this phone yet. The check runs each time SORA starts. Restoring the keys below also completes it.</string>
+  <string name="account_removal_pending_transactions">This account has a transaction that isn\'t finished yet, so it can\'t be removed now. Nothing was removed. Wait until the transaction shows as completed or failed in Activity, then try again.</string>
+  <string name="account_removal_found_wallets_warning">%1$s of them can still be restored now with your SORA PIN, under Login &amp; Security, Wallets found on this phone. This removal also removes the PIN. Afterwards only their own recovery phrases bring them back. If you don\'t have those phrases, keep this account and restore those wallets first.</string>
+  <string name="account_removal_found_wallets_ack">I have the recovery phrases of those wallets, or I don\'t need them</string>
+  <string name="recovery_wallets_withheld">Wallet keys that were on this phone before the current SORA PIN was set are not listed here. Their recovery phrase can\'t be shown after this confirmation.</string>
+  <string name="recovery_wallets_unreadable">SORA couldn\'t read just now which wallets may be shown, so some may be missing from this list. Go back and try again.</string>
 </resources>

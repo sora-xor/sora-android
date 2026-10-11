@@ -880,8 +880,8 @@
   <string name="account_read_only_restore_phrase">Restore keys with recovery phrase</string>
   <string name="account_read_only_restore_google">Restore from Google Drive</string>
   <string name="account_read_only_show_backup">Show the backup saved on this phone</string>
-  <!-- account_read_only_restore_note: verified: MultiaccountInteractor.commitPreparedDraft adds missing values add-only or offers the confirmed in-place repair (WalletRepairAvailableException); no import outcome asks for removal -->
-  <string name="account_read_only_restore_note">Restoring opens Import account. Enter this account\'s recovery phrase, raw seed or backup file there, and SORA puts its keys back in place. You never need to remove the account to repair it.</string>
+  <!-- account_read_only_restore_note: verified: Restore keys with recovery phrase, Use a raw seed or backup file and Restore from Google Drive all open OnboardingActivity (Import account); its source list offers recovery phrase, raw seed and backup file; MultiaccountInteractor.commitPreparedDraft adds missing values add-only or offers the confirmed in-place repair (WalletRepairAvailableException); no import outcome asks for removal -->
+  <string name="account_read_only_restore_note">These actions open Import account. Enter this account\'s recovery phrase, raw seed or backup file there, and SORA puts its keys back in place. You never need to remove the account to repair it.</string>
   <string name="account_read_only_remove">Remove from this phone</string>
   <string name="account_removal_title">Remove this account from this phone?</string>
   <!-- account_removal_body: verified: the removal only deletes rows and preference values on this phone (UserRepositoryImpl.confirmAndExecuteWalletDeletion); it submits nothing to the chain -->
@@ -913,8 +913,8 @@
   <string name="account_removal_not_removed_title">This account wasn\'t removed</string>
   <!-- account_removal_not_removed: verified: PinCodeViewModel.handleWalletDeletionError shows it only when no deletion failure is journaled and every target is still listed (PinCodeInteractor.areListed) -->
   <string name="account_removal_not_removed">SORA checks everything before it removes an account, and a check didn\'t pass, so nothing was removed (%1$s). Please try again.</string>
-  <!-- safe_mode_retained_needs_phrase: verified: shown for a retained key set named in WalletPreferenceKeys.RETAINED_NEEDS_PHRASE; CredentialsRepositoryImpl.commitDraft adopts stored keys that prove the address without writing them -->
-  <string name="safe_mode_retained_needs_phrase">This wallet stayed on this phone when all accounts were removed. To bring it back, import its recovery phrase, raw seed or backup file. The keys saved here are then used as they are.</string>
+  <!-- safe_mode_retained_needs_phrase: verified: shown in Login &amp; Security (so a PIN is stored) for a retained key set named in WalletPreferenceKeys.RETAINED_NEEDS_PHRASE; a set is named there only by Remove all accounts (which removes the PIN in the same edit) or when a PIN is saved while none is stored (UserRepositoryImpl.markKeySetsOlderThanThePin), so in both cases the keys were on the phone before the PIN stored now; CredentialsRepositoryImpl.commitDraft adopts stored keys that prove the address without writing them -->
+  <string name="safe_mode_retained_needs_phrase">This wallet\'s keys were on this phone before your current SORA PIN was set, so the PIN can\'t restore it. To bring it back, import its recovery phrase, raw seed or backup file. The keys saved here are then used as they are.</string>
   <string name="safe_mode_retained_import_phrase">Import its recovery phrase</string>
   <string name="onboarding_found_wallets_explanation">Keys of wallets you used here before are still on this phone. Restore them with your SORA PIN.</string>
   <!-- onboarding_found_wallets_body: verified: MultiaccountInteractor.walletsRestorableWithPin lists only key sets no account uses while a readable PIN is stored, and never one left by Remove all accounts; restoreRetainedWallets checks that PIN first and writes no key material (UserRepository.adoptRetainedWallet) -->
@@ -936,4 +936,18 @@
   <string name="create_account_not_saved_title">Your new account isn\'t saved yet</string>
   <!-- create_account_not_saved: verified: OnboardingViewModel.finishCreateAccountProcess keeps the draft on a failed save and returns to the phrase screen; MultiaccountInteractor.createUserFromDraft finishes an attempt that had already added the account -->
   <string name="create_account_not_saved">SORA couldn\'t save your new account on this phone just now, so it hasn\'t been added. Your recovery phrase is still shown on this screen. Keep it, then tap Continue to try again.</string>
+  <string name="failure_submission_unknown_title">Check Activity before you try again</string>
+  <!-- failure_submission_unknown_message: verified: FailureNotice.SUBMISSION_UNKNOWN is chosen only for EXTRINSIC_SUBMISSION_UNKNOWN, which ExtrinsicManager raises after the signed extrinsic was handed to the RPC transport and its outcome could not be classified -->
+  <string name="failure_submission_unknown_message">SORA passed this transaction to the network but couldn\'t confirm the result. It may still go through. Open Activity and wait a little before you try again, so that nothing is sent twice.</string>
+  <string name="account_read_only_restore_other">Use a raw seed or backup file</string>
+  <!-- account_read_only_reason_not_checked: verified: UnavailableWalletReason.NOT_CHECKED is given only when the account's identity was never judged as unavailable and all three key values are stored and readable; MigrationManager.startLocked judges every account at each start, and MultiaccountInteractor.finishImport completes it through UserRepository.completeUnavailableWallet -->
+  <string name="account_read_only_reason_not_checked">SORA hasn\'t checked this account\'s signing key on this phone yet. The check runs each time SORA starts. Restoring the keys below also completes it.</string>
+  <!-- account_removal_pending_transactions: verified: shown only for WALLET_DELETION_PENDING_TRANSACTIONS, which UserRepositoryImpl.createWalletDeletionPreview raises before anything is journaled or removed -->
+  <string name="account_removal_pending_transactions">This account has a transaction that isn\'t finished yet, so it can\'t be removed now. Nothing was removed. Wait until the transaction shows as completed or failed in Activity, then try again.</string>
+  <!-- account_removal_found_wallets_warning: verified: counted from UserRepository.retainedWallets() entries with needsRecoveryPhrase == false; SoraPreferences.commitWalletDeletion (scope ALL) marks every kept key set and clears the PIN in the same edit, and UserRepositoryImpl.adoptRetainedWallet refuses a marked set -->
+  <string name="account_removal_found_wallets_warning">%1$s of them can still be restored now with your SORA PIN, under Login &amp; Security, Wallets found on this phone. This removal also removes the PIN. Afterwards only their own recovery phrases bring them back. If you don\'t have those phrases, keep this account and restore those wallets first.</string>
+  <string name="account_removal_found_wallets_ack">I have the recovery phrases of those wallets, or I don\'t need them</string>
+  <!-- recovery_wallets_withheld: verified: SafeModeVault.listing sets withheld only when an entry was left out because its key set is named in WalletPreferenceKeys.RETAINED_NEEDS_PHRASE -->
+  <string name="recovery_wallets_withheld">Wallet keys that were on this phone before the current SORA PIN was set are not listed here. Their recovery phrase can\'t be shown after this confirmation.</string>
+  <string name="recovery_wallets_unreadable">SORA couldn\'t read just now which wallets may be shown, so some may be missing from this list. Go back and try again.</string>
 </resources>
