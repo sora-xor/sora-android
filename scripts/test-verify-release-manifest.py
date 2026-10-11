@@ -467,6 +467,20 @@ class ReleaseManifestTest(unittest.TestCase):
         component(manifest, "androidx.core.content.FileProvider")["attributes"]["exported"] = True
         self.assert_rejected(manifest, "exported component is not in the reviewed list: <provider> androidx.core.content.FileProvider")
 
+        # android:exported given as a resource reference cannot be judged, so it counts as exported.
+        manifest = production_manifest()
+        component(manifest, "androidx.core.content.FileProvider")["attributes"]["exported"] = "@0x7f050001"
+        for artifact in (
+            write_apk(self.directory / "reference.apk", manifest),
+            write_aab(self.directory / "reference.aab", manifest),
+        ):
+            result = run(artifact)
+            self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+            self.assertIn(
+                "exported component is not in the reviewed list: <provider> androidx.core.content.FileProvider",
+                result.stderr,
+            )
+
         manifest = production_manifest()
         component(manifest, SPLASH)["attributes"]["exported"] = False
         self.assert_rejected(manifest, f"reviewed exported component is missing or no longer exported: {SPLASH}")
