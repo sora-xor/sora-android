@@ -847,6 +847,15 @@ class TxDetailsViewModelTest {
 
     private fun shownStatus() = viewModel.txDetailsScreenState.value.basicTxDetailsState.txStatus
 
+    /** Opens the page and brings it to the front, as the fragment does in onResume. */
+    private suspend fun openPage(
+        tx: Transaction,
+        localTransactions: Flow<Boolean> = flowOf(true),
+    ) {
+        initTestData(tx, localTransactions)
+        viewModel.onScreenResumed()
+    }
+
     @Test
     fun `the page asks for the status of a waiting transaction and stops once it is final`() =
         runTest {
@@ -864,7 +873,7 @@ class TxDetailsViewModelTest {
                     journal.emit(true)
                 }
             }
-            initTestData(waitingSwap, localTransactions = journal)
+            openPage(waitingSwap, localTransactions = journal)
 
             advanceTimeBy(5_000)
             assertEquals(0, checks)
@@ -889,7 +898,7 @@ class TxDetailsViewModelTest {
         every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
         coEvery { transactionHistoryHandler.checkWaitingTransaction(txHash) } returns Unit
         val journal = MutableSharedFlow<Boolean>()
-        initTestData(waitingSwap, localTransactions = journal)
+        openPage(waitingSwap, localTransactions = journal)
         advanceTimeBy(1_000)
         assertEquals(TransactionStatus.PENDING, shownStatus())
 
@@ -914,7 +923,7 @@ class TxDetailsViewModelTest {
     fun `the page stops asking when the transaction can no longer be included`() = runTest {
         every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
         coEvery { transactionHistoryHandler.checkWaitingTransaction(txHash) } returns Unit
-        initTestData(waitingSwap)
+        openPage(waitingSwap)
 
         advanceUntilIdle()
 
@@ -923,9 +932,74 @@ class TxDetailsViewModelTest {
     }
 
     @Test
+    fun `the page does not ask for the status while it is not in front`() = runTest {
+        every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
+        var checks = 0
+        coEvery { transactionHistoryHandler.checkWaitingTransaction(txHash) } coAnswers {
+            checks += 1
+        }
+        val journal = MutableSharedFlow<Boolean>()
+        openPage(waitingSwap, localTransactions = journal)
+        advanceTimeBy(13_000)
+        assertEquals(2, checks)
+
+        // Home, or the PIN lock on top of the page.
+        viewModel.onScreenPaused()
+        advanceTimeBy(300_000)
+
+        // Before: a finalized-head read and block reads every 6 seconds for up to 8 minutes
+        // with nobody looking at the page.
+        assertEquals(2, checks)
+
+        // A journal write while the page is away redraws it, and still nothing is asked.
+        journal.emit(true)
+        advanceTimeBy(300_000)
+        assertEquals(2, checks)
+        assertEquals(TransactionStatus.PENDING, shownStatus())
+
+        // Back in front: the page is read again at once and the status is followed again.
+        coEvery { transactionHistoryHandler.getTransaction(txHash) } returns swapWith(
+            TransactionStatus.PENDING,
+            TransactionStatusDetail(TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN),
+        )
+        viewModel.onScreenResumed()
+        advanceTimeBy(1_000)
+        assertEquals(
+            "text-${R.string.tx_outcome_note_uncertain}",
+            viewModel.txDetailsScreenState.value.basicTxDetailsState.statusNote,
+        )
+        assertEquals(2, checks)
+        advanceTimeBy(6_000)
+        assertEquals(3, checks)
+    }
+
+    @Test
+    fun `a transaction that became final while the page was away is shown on return`() = runTest {
+        every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
+        var checks = 0
+        coEvery { transactionHistoryHandler.checkWaitingTransaction(txHash) } coAnswers {
+            checks += 1
+        }
+        // No journal tick reaches the page in this test: the return alone must redraw it.
+        openPage(waitingSwap, localTransactions = MutableSharedFlow())
+        advanceTimeBy(7_000)
+        assertEquals(1, checks)
+        viewModel.onScreenPaused()
+
+        // The background status check resolved the transaction in the meantime.
+        coEvery { transactionHistoryHandler.getTransaction(txHash) } returns
+            swapWith(TransactionStatus.COMMITTED, null)
+        viewModel.onScreenResumed()
+        advanceTimeBy(600_000)
+
+        assertEquals(TransactionStatus.COMMITTED, shownStatus())
+        assertEquals(1, checks)
+    }
+
+    @Test
     fun `a transaction with a final status is never asked about`() = runTest {
         every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
-        initTestData(
+        openPage(
             swapWith(
                 TransactionStatus.REJECTED,
                 TransactionStatusDetail(TransactionStatusDetail.Kind.REFUSED_CANNOT_PAY_FEE),

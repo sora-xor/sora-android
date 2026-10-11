@@ -104,6 +104,12 @@ class TxDetailsViewModel @AssistedInject constructor(
 
     private var waitingStatusJob: Job? = null
 
+    /** The page shows a transaction of this device that has no final status yet. */
+    private var showsWaitingTransaction = false
+
+    /** The page was left (Home, another screen, the PIN lock) and is redrawn on return. */
+    private var refreshOnReturn = false
+
     init {
         _toolbarState.value = SoramitsuToolbarState(
             type = SoramitsuToolbarType.Small(),
@@ -127,6 +133,31 @@ class TxDetailsViewModel @AssistedInject constructor(
                 tryCatch { calcState() }
             }
             .launchIn(viewModelScope)
+    }
+
+    /**
+     * The page is in front. After a return it is redrawn once, because what it shows may have
+     * been decided while it was away, and the status is followed again if it is still open.
+     */
+    override fun onScreenResumed() {
+        super.onScreenResumed()
+        if (refreshOnReturn) {
+            refreshOnReturn = false
+            viewModelScope.launch { tryCatch { calcState() } }
+        } else {
+            followWhileWaiting()
+        }
+    }
+
+    /**
+     * The page is no longer in front: the app went to the background, or another screen (the
+     * PIN lock) is on top. Nobody reads the status then, so the network is not asked for it
+     * every few seconds; the background status check goes on resolving the transaction.
+     */
+    override fun onScreenPaused() {
+        super.onScreenPaused()
+        refreshOnReturn = true
+        stopFollowing()
     }
 
     private fun statusNote(detail: TransactionStatusDetail): String = when (detail.kind) {
@@ -648,7 +679,12 @@ class TxDetailsViewModel @AssistedInject constructor(
                 )
             )
         }
-        followWhileWaiting(transaction)
+        showsWaitingTransaction = transaction?.base?.status == TransactionStatus.PENDING &&
+            transaction.base.statusDetail?.kind.let { kind ->
+                kind == TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION ||
+                    kind == TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN
+            }
+        followWhileWaiting()
     }
 
     /**
@@ -656,18 +692,12 @@ class TxDetailsViewModel @AssistedInject constructor(
      * this device that is still waiting it asks for the status at short intervals. Without this
      * the page changes only when the background status check next runs, which can be minutes
      * away after a few attempts that found nothing yet. The check is read-only, a failed one
-     * changes nothing, and it stops as soon as the status is final, the page is closed, or the
-     * transaction can no longer be included.
+     * changes nothing, and it stops as soon as the status is final, the page is closed or no
+     * longer in front, or the transaction can no longer be included.
      */
-    private fun followWhileWaiting(transaction: Transaction?) {
-        val waiting = transaction?.base?.status == TransactionStatus.PENDING &&
-            transaction.base.statusDetail?.kind.let { kind ->
-                kind == TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION ||
-                    kind == TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN
-            }
-        if (!waiting) {
-            waitingStatusJob?.cancel()
-            waitingStatusJob = null
+    private fun followWhileWaiting() {
+        if (!showsWaitingTransaction || !screenInFront) {
+            stopFollowing()
             return
         }
         if (waitingStatusJob?.isActive == true) return
@@ -680,6 +710,11 @@ class TxDetailsViewModel @AssistedInject constructor(
                 guarded { transactionHistoryHandler.checkWaitingTransaction(txHash) }
             }
         }
+    }
+
+    private fun stopFollowing() {
+        waitingStatusJob?.cancel()
+        waitingStatusJob = null
     }
 
     fun onCopyClicked(text: String) {
