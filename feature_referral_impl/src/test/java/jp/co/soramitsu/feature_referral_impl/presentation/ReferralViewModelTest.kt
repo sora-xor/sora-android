@@ -48,6 +48,7 @@ import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_referral_impl.domain.ReferralInteractor
 import jp.co.soramitsu.feature_referral_impl.domain.model.Referral
@@ -78,6 +79,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -162,6 +164,10 @@ class ReferralViewModelTest {
             router,
             resourceManager,
         )
+        // The referral screen is the screen in front, as it is when a button is tapped, and
+        // the router opens the transaction page when asked.
+        pageOpens { true }
+        referralViewModel.onScreenResumed()
 
         expectedToolbarState = SoramitsuToolbarState(
             type = SoramitsuToolbarType.Small(),
@@ -224,7 +230,7 @@ class ReferralViewModelTest {
         advanceUntilIdle()
         navEvent = referralViewModel.navToStart.getOrAwaitValue()
         assertEquals(ReferralFeatureRoutes.WELCOME_PAGE, navEvent)
-        verify(assetsRouter).showTxDetails(txHash, false)
+        verify(assetsRouter).showTxResult(txHash, TransactionScreen.REFERRAL)
         assertEquals(false, referralViewModel.referralScreenState.value.common.progress)
     }
 
@@ -289,6 +295,13 @@ class ReferralViewModelTest {
         }
     }
 
+    /** What the router answers when asked to open the transaction page. */
+    private fun pageOpens(answer: () -> Boolean) {
+        org.mockito.Mockito.lenient()
+            .`when`(assetsRouter.showTxResult(any(), any()))
+            .thenAnswer { answer() }
+    }
+
     private fun assertProgressCleared() =
         assertEquals(false, referralViewModel.referralScreenState.value.common.progress)
 
@@ -301,7 +314,7 @@ class ReferralViewModelTest {
         referralViewModel.onBondButtonClick()
         advanceUntilIdle()
 
-        verify(assetsRouter).showTxDetails(txHash, false)
+        verify(assetsRouter).showTxResult(txHash, TransactionScreen.REFERRAL)
         assertEquals(
             ReferralFeatureRoutes.REFERRAL_PROGRAM,
             referralViewModel.navToStart.getOrAwaitValue(),
@@ -320,7 +333,7 @@ class ReferralViewModelTest {
         advanceUntilIdle()
 
         // The transaction page carries "waiting for confirmation" and follows the result.
-        verify(assetsRouter).showTxDetails(txHash, false)
+        verify(assetsRouter).showTxResult(txHash, TransactionScreen.REFERRAL)
         assertNull(referralViewModel.alertDialogLiveData.value)
         assertNull(referralViewModel.errorFromResourceLiveData.value)
         // Before the fix nothing was shown at all and the progress mark stayed on.
@@ -342,7 +355,7 @@ class ReferralViewModelTest {
         referralViewModel.onUnbondButtonClick()
         advanceUntilIdle()
 
-        verify(assetsRouter).showTxDetails(txHash, false)
+        verify(assetsRouter).showTxResult(txHash, TransactionScreen.REFERRAL)
         assertProgressCleared()
     }
 
@@ -366,7 +379,7 @@ class ReferralViewModelTest {
                 "text-${R.string.tx_outcome_note_refused_fee}",
             referralViewModel.alertDialogLiveData.value,
         )
-        verify(assetsRouter, never()).showTxDetails(any(), any())
+        verify(assetsRouter, never()).showTxResult(any(), any())
         assertProgressCleared()
     }
 
@@ -387,7 +400,7 @@ class ReferralViewModelTest {
                 "text-${R.string.tx_outcome_not_sent_network}",
             referralViewModel.alertDialogLiveData.value,
         )
-        verify(assetsRouter, never()).showTxDetails(any(), any())
+        verify(assetsRouter, never()).showTxResult(any(), any())
         assertProgressCleared()
     }
 
@@ -405,13 +418,87 @@ class ReferralViewModelTest {
 
         val question = checkNotNull(referralViewModel.confirmDialogLiveData.value)
         assertEquals("text-${R.string.tx_outcome_duplicate_send_again}", question.confirmText)
-        verify(assetsRouter, never()).showTxDetails(any(), any())
+        verify(assetsRouter, never()).showTxResult(any(), any())
         assertProgressCleared()
 
         question.onConfirm()
         advanceUntilIdle()
-        verify(assetsRouter).showTxDetails("0x" + "cd".repeat(32), false)
+        verify(assetsRouter).showTxResult("0x" + "cd".repeat(32), TransactionScreen.REFERRAL)
     }
+
+    // --- the result arrives while the screen is not in front -------------------------------
+
+    @Test
+    fun `a result that arrives in the background opens its page on return and not before`() =
+        runTest {
+            programLoaded()
+            whenever(interactor.observeBond(any(), eq(false))).thenAnswer {
+                // Home was pressed (or the phone locked) while the bond was followed.
+                referralViewModel.onScreenPaused()
+                TransactionOutcome.Confirmed(txHash, "0xblock")
+            }
+
+            referralViewModel.onBondButtonClick()
+            advanceUntilIdle()
+
+            // Before the fix the page was opened from the coroutine at this moment. With the
+            // activity stopped that navigation is dropped, and with the PIN lock on top the
+            // page was put over the PIN lock.
+            verify(assetsRouter, never()).showTxResult(any(), any())
+            assertProgressCleared()
+
+            // Nothing more is sent from here until the result has been shown.
+            referralViewModel.onBondButtonClick()
+            referralViewModel.onUnbondButtonClick()
+            advanceUntilIdle()
+            verify(interactor, times(1)).observeBond(any(), any())
+            verify(interactor, never()).observeUnbond(any(), any())
+
+            referralViewModel.onScreenResumed()
+
+            verify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.REFERRAL)
+
+            // Shown once: a later return to the front opens nothing more.
+            referralViewModel.onScreenPaused()
+            referralViewModel.onScreenResumed()
+            verify(assetsRouter, times(1)).showTxResult(any(), any())
+        }
+
+    @Test
+    fun `a result is kept while the PIN lock is on top and shown when the screen is back`() =
+        runTest {
+            programLoaded()
+            // The router opens the page only when the referral screen is the current
+            // destination.
+            var pinLockOnTop = true
+            pageOpens { !pinLockOnTop }
+            whenever(interactor.observeUnbond(any(), eq(false))).thenAnswer {
+                referralViewModel.onScreenPaused()
+                TransactionOutcome.Waiting(txHash, acceptedByNode = true)
+            }
+
+            referralViewModel.onUnbondButtonClick()
+            advanceUntilIdle()
+
+            // The app returns after more than five minutes: the activity resumes this screen
+            // for a moment while the PIN lock is already the current destination.
+            referralViewModel.onScreenResumed()
+            verify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.REFERRAL)
+            referralViewModel.onScreenPaused()
+
+            // The PIN was entered and the PIN lock removed itself.
+            pinLockOnTop = false
+            referralViewModel.onScreenResumed()
+            verify(assetsRouter, times(2)).showTxResult(txHash, TransactionScreen.REFERRAL)
+
+            // Opened: nothing more is asked of the router, and the screen can be used again.
+            referralViewModel.onScreenPaused()
+            referralViewModel.onScreenResumed()
+            verify(assetsRouter, times(2)).showTxResult(any(), any())
+            referralViewModel.onUnbondButtonClick()
+            advanceUntilIdle()
+            verify(interactor, times(2)).observeUnbond(any(), any())
+        }
 
     @Test
     fun `opening the screen offline explains and recovers instead of crashing`() = runTest {

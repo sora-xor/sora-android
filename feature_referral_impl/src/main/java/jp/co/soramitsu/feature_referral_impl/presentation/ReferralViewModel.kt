@@ -55,6 +55,7 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_referral_impl.domain.ReferralInteractor
 import jp.co.soramitsu.feature_referral_impl.presentation.ReferralFeatureRoutes.BOND_XOR
@@ -369,12 +370,19 @@ class ReferralViewModel @Inject constructor(
      * transaction page, which carries the status and follows it. One that did not reach the
      * network (refused by the node, or not prepared) is explained in a dialog. The progress mark
      * is cleared on every path.
+     *
+     * The result arrives after a wait of up to two minutes, so the app can be in the background
+     * or behind the PIN lock by then. The dialogs and the change of page inside this screen are
+     * delivered when the screen is shown again; the transaction page opens when it is in front
+     * (see [openTransactionPage]), and until then nothing more is sent from here.
      */
     private fun submit(
         destinationAfter: String?,
         confirmedDuplicate: Boolean = false,
         send: suspend (confirmedDuplicate: Boolean) -> TransactionOutcome,
     ) {
+        // A referral transaction reached the network and its page has not opened yet.
+        if (resultHeld) return
         viewModelScope.launch {
             setProgress(true)
             var outcome: TransactionOutcome? = null
@@ -397,7 +405,7 @@ class ReferralViewModel @Inject constructor(
                 is TransactionOutcome.Confirmed,
                 is TransactionOutcome.Waiting,
                 is TransactionOutcome.FailedOnChain -> {
-                    assetsRouter.showTxDetails(outcome.txHash)
+                    openTransactionPage(outcome.txHash)
                     _navToStart.value = destinationAfter
                         ?: if (_referralScreenState.value.isInitialized()) {
                             REFERRAL_PROGRAM
@@ -410,6 +418,15 @@ class ReferralViewModel @Inject constructor(
                 null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
             }
         }
+    }
+
+    /**
+     * Opens the transaction's page on top of this screen, only while this screen is in front. A
+     * result that arrives while the app is in the background, or while the PIN lock is on top,
+     * is held and the page opens on the next resume; nothing is navigated before that.
+     */
+    private fun openTransactionPage(txHash: String) = showWhenInFront {
+        assetsRouter.showTxResult(txHash, TransactionScreen.REFERRAL)
     }
 
     private fun setProgress(progress: Boolean) {
