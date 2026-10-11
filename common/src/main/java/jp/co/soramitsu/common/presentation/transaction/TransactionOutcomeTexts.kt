@@ -11,9 +11,12 @@ import androidx.annotation.StringRes
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
+import jp.co.soramitsu.common.domain.SigningKeyUnavailableException
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.TransactionOutcome
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
+import jp.co.soramitsu.common.util.WalletDecryptionException
 
 /** The short result mark a confirm screen shows before it moves on. */
 enum class TransactionResultBadge(@StringRes val text: Int, val positive: Boolean) {
@@ -126,6 +129,11 @@ object TransactionOutcomeTexts {
                         R.string.safe_mode_read_only_details
                     SIGNING_UNAVAILABLE_CODES.any { error.hasMessageInChain(it) } ->
                         R.string.tx_outcome_not_sent_account_unavailable
+                    // The signing key is absent, or stored and unreadable. Another try cannot
+                    // help either. A Keystore that is only busy is transient and falls through
+                    // to "try again".
+                    error.isSigningKeyUnusable() ->
+                        R.string.tx_outcome_not_sent_key_unavailable
                     NetworkFeeUnavailable.from(error) ==
                         NetworkFeeUnavailable.NETWORK_UNREACHABLE ->
                         R.string.tx_outcome_not_sent_network
@@ -154,6 +162,28 @@ object TransactionOutcomeTexts {
             depth += 1
         }
         return false
+    }
+
+    /**
+     * True when the stored signing key is absent or cannot be decrypted, and nothing in the
+     * error says that the Keystore was only busy. One transient cause anywhere in the chain
+     * keeps the text on "try again": a busy Keystore must never be reported as a lost key.
+     */
+    private fun Throwable.isSigningKeyUnusable(): Boolean {
+        var unusable = false
+        var current: Throwable? = this
+        var depth = 0
+        while (current != null && depth < MAX_CAUSE_DEPTH) {
+            when (current) {
+                is KeyMaterialUnavailableException ->
+                    if (current.transient) return false else unusable = true
+                is SigningKeyUnavailableException,
+                is WalletDecryptionException -> unusable = true
+            }
+            current = current.cause?.takeIf { it !== current }
+            depth += 1
+        }
+        return unusable
     }
 
     private const val FEE_CHANGED_CODE = "SORA2_TRANSFER_FEE_CHANGED"

@@ -12,8 +12,11 @@ import java.io.IOException
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SigningKeyUnavailableException
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
+import jp.co.soramitsu.common.util.WalletDecryptionException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
@@ -102,6 +105,45 @@ class TransactionNotSentTest {
         assertEquals(
             text(R.string.tx_outcome_not_sent_account_unavailable),
             notSentMessage(IllegalStateException("SIGNING_WALLET_UNAVAILABLE", IOException("io"))),
+        )
+    }
+
+    @Test
+    fun `an account without a readable signing key is not told to try again`() {
+        // Before: "This transaction couldn't be prepared ... Please try again", on every try,
+        // and nothing said that this account cannot sign on this phone.
+        listOf(
+            // CredentialsRepositoryImpl.retrieveKeyPair: no signing key is stored.
+            SigningKeyUnavailableException("Keypair not found"),
+            // The stored key cannot be decrypted (its bytes, not the device state).
+            WalletDecryptionException("Authenticated wallet envelope failed verification"),
+            // The Keystore alias is gone while encrypted wallet material still exists.
+            KeyMaterialUnavailableException("alias missing", transient = false),
+        ).forEach { error ->
+            assertEquals(
+                text(R.string.tx_outcome_not_sent_key_unavailable),
+                notSentMessage(error),
+            )
+            // As it reaches a screen through an interactor or a submit helper.
+            assertEquals(
+                text(R.string.tx_outcome_not_sent_key_unavailable),
+                notSentMessage(RuntimeException("confirm failed", error)),
+            )
+        }
+    }
+
+    @Test
+    fun `a Keystore that is only busy keeps the try again text`() {
+        // Transient: a later attempt may succeed, so it is never reported as a lost key.
+        val busy = KeyMaterialUnavailableException(
+            "Android Keystore is temporarily unavailable",
+            transient = true,
+        )
+        assertEquals(text(R.string.tx_outcome_not_sent_generic), notSentMessage(busy))
+        // Also when a decryption error was raised on top of the busy Keystore.
+        assertEquals(
+            text(R.string.tx_outcome_not_sent_generic),
+            notSentMessage(WalletDecryptionException("Unable to decrypt", busy)),
         )
     }
 

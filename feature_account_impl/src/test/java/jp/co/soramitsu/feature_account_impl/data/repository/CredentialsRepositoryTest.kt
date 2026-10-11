@@ -556,6 +556,26 @@ class CredentialsRepositoryTest {
     }
 
     @Test
+    fun `an account without a stored signing key fails with a typed error`() = runTest {
+        val account = SoraAccount("no-key-address", "No key")
+        whenever(datasource.retrieveKeys(account.substrateAddress)).thenReturn(null)
+        whenever(datasource.retrieveKeys("")).thenReturn(null)
+
+        val error = runCatching { credentialsRepository.retrieveKeyPair(account) }
+            .exceptionOrNull()
+
+        // Typed, so a confirm screen says "this account can't sign on this phone" instead of
+        // "please try again". It stays the IllegalStateException older callers handle.
+        assertTrue(
+            error is jp.co.soramitsu.common.domain.SigningKeyUnavailableException
+        )
+        assertTrue(error is IllegalStateException)
+        assertEquals("Keypair not found", error?.message)
+        // Looking for the key never writes or removes anything.
+        verify(datasource, never()).saveKeys(any(), any())
+    }
+
+    @Test
     fun `explicit watch only marker is account scoped`() = runTest {
         val account = SoraAccount("watch-address", "Watch")
         whenever(datasource.isExplicitWatchOnly(account.substrateAddress)).thenReturn(true)
