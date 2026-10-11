@@ -47,6 +47,7 @@ import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -60,6 +61,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterT
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatusDetail
 import jp.co.soramitsu.feature_blockexplorer_impl.testdata.TestTransactions
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -661,6 +663,129 @@ class TxDetailsViewModelTest {
                 token = TestTokens.xorToken,
             )
         )
+    }
+
+    // --- audit A5: the transaction page explains the status -----------------------------------
+
+    private fun swapWith(status: TransactionStatus, detail: TransactionStatusDetail?) =
+        Transaction.Swap(
+            base = TransactionBase(
+                txHash = "0x" + "ab".repeat(32),
+                blockHash = null,
+                fee = BigDecimal.ONE,
+                status = status,
+                timestamp = 1673918013,
+                statusDetail = detail,
+            ),
+            tokenFrom = TestTokens.xorToken,
+            tokenTo = TestTokens.valToken,
+            amountFrom = BigDecimal.ONE,
+            amountTo = BigDecimal.TEN,
+            market = Market.SMART,
+        )
+
+    private suspend fun stateFor(tx: Transaction): BasicTxDetailsState {
+        every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
+        initTestData(tx)
+        delay(10)
+        return viewModel.txDetailsScreenState.value.basicTxDetailsState
+    }
+
+    @Test
+    fun `a waiting transaction says it is waiting and must not be sent again`() = runTest {
+        val state = stateFor(
+            swapWith(
+                TransactionStatus.PENDING,
+                TransactionStatusDetail(TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION),
+            )
+        )
+
+        assertEquals(TransactionStatus.PENDING, state.txStatus)
+        assertEquals("text-${R.string.tx_outcome_note_waiting}", state.statusNote)
+    }
+
+    @Test
+    fun `an uncertain submission says it is being checked`() = runTest {
+        val state = stateFor(
+            swapWith(
+                TransactionStatus.PENDING,
+                TransactionStatusDetail(TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN),
+            )
+        )
+
+        assertEquals("text-${R.string.tx_outcome_note_uncertain}", state.statusNote)
+    }
+
+    @Test
+    fun `a transaction that failed on chain shows the reported reason`() = runTest {
+        val state = stateFor(
+            swapWith(
+                TransactionStatus.REJECTED,
+                TransactionStatusDetail(
+                    TransactionStatusDetail.Kind.FAILED_ON_CHAIN,
+                    "LiquidityProxy.SlippageNotTolerated",
+                ),
+            )
+        )
+
+        assertEquals(TransactionStatus.REJECTED, state.txStatus)
+        assertEquals(
+            "text-${R.string.tx_outcome_note_failed_on_chain}\n\n" +
+                "text-${R.string.tx_outcome_note_failed_on_chain_reason}",
+            state.statusNote,
+        )
+        // It is in a block, so the explorer can show it.
+        assertEquals(explorerUrl("0x" + "ab".repeat(32)), state.explorerUrl)
+    }
+
+    @Test
+    fun `a refused transaction is failed with its reason and has no explorer link`() = runTest {
+        val state = stateFor(
+            swapWith(
+                TransactionStatus.REJECTED,
+                TransactionStatusDetail(
+                    TransactionStatusDetail.Kind.REFUSED_CANNOT_PAY_FEE,
+                    "Inability to pay some fees",
+                ),
+            )
+        )
+
+        assertEquals(TransactionStatus.REJECTED, state.txStatus)
+        assertEquals("text-${R.string.tx_outcome_note_refused_fee}", state.statusNote)
+        assertEquals(null, state.explorerUrl)
+    }
+
+    @Test
+    fun `an ordinary confirmed transaction has no status note`() = runTest {
+        val state = stateFor(swapWith(TransactionStatus.COMMITTED, null))
+
+        assertEquals(null, state.statusNote)
+        assertEquals(explorerUrl("0x" + "ab".repeat(32)), state.explorerUrl)
+    }
+
+    @Test
+    fun `a failed read never ends the app`() = runTest {
+        coEvery { transactionHistoryHandler.getTransaction(txHash) } throws
+            IllegalStateException("database is busy")
+        coEvery { assetsInteractor.getCurSoraAccount() } throws
+            IllegalStateException("database is busy")
+        every { transactionHistoryHandler.flowLocalTransactions() } returns flowOf(true)
+
+        viewModel = TxDetailsViewModel(
+            assetsInteractor,
+            walletInteractor,
+            transactionHistoryHandler,
+            clipboardManager,
+            resourceManager,
+            dateTimeFormatter,
+            nf,
+            soraConfigManager,
+            txHash,
+        )
+        delay(10)
+
+        // The empty page stays; runTest would fail on an uncaught exception in viewModelScope.
+        assertEquals(null, viewModel.txDetailsScreenState.value.basicTxDetailsState.statusNote)
     }
 
     @Test

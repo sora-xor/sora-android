@@ -71,6 +71,8 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -125,6 +127,12 @@ class AssetDetailsViewModel @AssistedInject constructor(
                     )
                 }
         }
+        // A transaction of this asset that is still waiting for confirmation is listed here as
+        // well, and the list follows it when the background status check resolves it.
+        transactionHistoryHandler.flowLocalTransactions()
+            .catch { }
+            .onEach { refreshActivities() }
+            .launchIn(viewModelScope)
         onPullToRefresh()
     }
 
@@ -197,15 +205,18 @@ class AssetDetailsViewModel @AssistedInject constructor(
 
     private fun refreshActivities() {
         viewModelScope.launch {
-            val events =
-                withContext(coroutineManager.io) {
-                    transactionHistoryHandler.getCachedEvents(TX_HISTORY_COUNT, assetId)
-                }
-            state = state.copy(
-                state = state.state.copy(
-                    events = events,
+            // A failed read keeps the list as it is; it is read again on the next refresh.
+            tryCatch {
+                val events =
+                    withContext(coroutineManager.io) {
+                        transactionHistoryHandler.getCachedEvents(TX_HISTORY_COUNT, assetId)
+                    }
+                state = state.copy(
+                    state = state.state.copy(
+                        events = events,
+                    )
                 )
-            )
+            }
         }
     }
 

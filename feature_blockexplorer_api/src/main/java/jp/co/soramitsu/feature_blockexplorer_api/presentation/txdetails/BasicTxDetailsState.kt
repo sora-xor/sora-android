@@ -49,6 +49,11 @@ data class BasicTxDetailsState(
     val txTypeTitle: String,
     val txTypeSubTitle: String? = null,
     val explorerUrl: String? = null,
+    /**
+     * Plain-language explanation of the status of a transaction sent from this device: that it is
+     * still waiting and must not be sent again, or why it failed or was not sent.
+     */
+    val statusNote: String? = null,
 )
 
 data class BasicTxDetailsItem(
