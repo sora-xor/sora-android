@@ -67,7 +67,14 @@ object TransactionOutcomeTexts {
         resources: ResourceManager,
         outcome: TransactionOutcome.RefusedByNode,
     ): TransactionMessage = TransactionMessage(
-        title = resources.getString(R.string.tx_outcome_refused_title),
+        title = resources.getString(
+            if (outcome.reason == TransactionNodeRefusal.NOT_REACHED) {
+                // No node saw it, so no network "did not accept" it.
+                R.string.tx_outcome_not_sent_title
+            } else {
+                R.string.tx_outcome_refused_title
+            }
+        ),
         message = refusedNote(resources, outcome.reason, outcome.nodeMessage),
     )
 
@@ -110,6 +117,8 @@ object TransactionOutcomeTexts {
             label = R.string.tx_outcome_note_network_message,
             technicalText = nodeMessage,
         )
+        TransactionNodeRefusal.NOT_REACHED ->
+            resources.getString(R.string.tx_outcome_note_not_reached)
     }
 
     /**
@@ -121,6 +130,10 @@ object TransactionOutcomeTexts {
             title = resources.getString(R.string.tx_outcome_not_sent_title),
             message = resources.getString(
                 when {
+                    // The network was upgraded and asks for data this version cannot produce.
+                    // Another try cannot help; an app update does.
+                    error.hasMessageInChain(NetworkFeeUnavailable.APP_UPDATE_REQUIRED_CODE) ->
+                        R.string.tx_outcome_not_sent_needs_app_update
                     error.hasMessageInChain(FEE_CHANGED_CODE) ->
                         R.string.tx_outcome_not_sent_fee_changed
                     // The balance read from the network just before sending no longer covers

@@ -90,12 +90,17 @@ data class TransactionStatusDetail(
 
         /** The node refused it before broadcast: not valid right now. */
         REFUSED_NOT_VALID,
+
+        /** It never left this device: no SORA endpoint could be connected to. */
+        NOT_REACHED,
     }
 
+    /** True when the transaction was provably never broadcast. */
     val isRefusal: Boolean
         get() = kind == Kind.REFUSED_CANNOT_PAY_FEE ||
             kind == Kind.REFUSED_NETWORK_BUSY ||
-            kind == Kind.REFUSED_NOT_VALID
+            kind == Kind.REFUSED_NOT_VALID ||
+            kind == Kind.NOT_REACHED
 
     /** True when the transaction never reached a block, so an explorer has nothing to show. */
     val neverOnChain: Boolean

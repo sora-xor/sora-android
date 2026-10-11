@@ -75,6 +75,8 @@ fun NetworkFeeUnavailableNotice(
             text = stringResource(
                 id = when (reason) {
                     NetworkFeeUnavailable.NETWORK_UNREACHABLE -> R.string.network_fee_unreachable
+                    NetworkFeeUnavailable.APP_UPDATE_REQUIRED ->
+                        R.string.network_fee_needs_app_update
                     NetworkFeeUnavailable.OTHER -> R.string.network_fee_unavailable
                 }
             ),
