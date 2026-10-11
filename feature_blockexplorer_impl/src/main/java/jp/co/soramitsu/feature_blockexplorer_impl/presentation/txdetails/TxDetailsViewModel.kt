@@ -65,16 +65,19 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.emptyTxD
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatusDetail
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.genericTitle
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -99,6 +102,8 @@ class TxDetailsViewModel @AssistedInject constructor(
     private val _txDetailsScreenState = MutableStateFlow(emptyTxDetailsState)
     val txDetailsScreenState = _txDetailsScreenState.asStateFlow()
 
+    private var waitingStatusJob: Job? = null
+
     init {
         _toolbarState.value = SoramitsuToolbarState(
             type = SoramitsuToolbarType.Small(),
@@ -113,8 +118,10 @@ class TxDetailsViewModel @AssistedInject constructor(
             // the local transactions refreshes it. It must never end the app.
             tryCatch { calcState() }
         }
+        // Every tick redraws the page. The first one must not be skipped: after a restart
+        // nothing is replayed, so the first tick is the journal write that makes a waiting
+        // transaction final, and skipping it left the page on "Pending".
         transactionHistoryHandler.flowLocalTransactions()
-            .drop(1)
             .catch { onError(it) }
             .onEach {
                 tryCatch { calcState() }
@@ -182,13 +189,7 @@ class TxDetailsViewModel @AssistedInject constructor(
                         networkFee = null,
                         networkFeeFiat = null,
                         txTypeIcon = R.drawable.ic_refresh_24,
-                        txTypeTitle = resourceManager.getString(
-                            if (transaction.submissionIsAmbiguous) {
-                                R.string.wallet_transaction_status_unknown
-                            } else {
-                                R.string.wallet_transaction_submitted
-                            }
-                        ),
+                        txTypeTitle = resourceManager.getString(transaction.genericTitle()),
                         txTypeSubTitle = transaction.networkId.uppercase(),
                     ),
                     amount1 = "",
@@ -630,21 +631,66 @@ class TxDetailsViewModel @AssistedInject constructor(
             null -> emptyTxDetailsState
         }
         val statusDetail = transaction?.base?.statusDetail
+        val neverOnChain = statusDetail?.neverOnChain == true
+        val basic = screenState.basicTxDetailsState
         _txDetailsScreenState.value = if (transaction == null) {
             screenState
         } else {
             screenState.copy(
-                basicTxDetailsState = screenState.basicTxDetailsState.copy(
-                    // A transaction that never reached a block has no explorer page.
-                    explorerUrl = explorerUrl.takeUnless { statusDetail?.neverOnChain == true },
+                basicTxDetailsState = basic.copy(
+                    // A transaction that never reached a block has no explorer page, and no
+                    // fee was charged for it: the note says so, and the fee that was only
+                    // expected is not listed as if it had been paid.
+                    explorerUrl = explorerUrl.takeUnless { neverOnChain },
+                    networkFee = basic.networkFee.takeUnless { neverOnChain },
+                    networkFeeFiat = basic.networkFeeFiat.takeUnless { neverOnChain },
                     statusNote = statusDetail?.let(::statusNote),
                 )
             )
+        }
+        followWhileWaiting(transaction)
+    }
+
+    /**
+     * The page says "the status here updates by itself", so while it shows a transaction of
+     * this device that is still waiting it asks for the status at short intervals. Without this
+     * the page changes only when the background status check next runs, which can be minutes
+     * away after a few attempts that found nothing yet. The check is read-only, a failed one
+     * changes nothing, and it stops as soon as the status is final, the page is closed, or the
+     * transaction can no longer be included.
+     */
+    private fun followWhileWaiting(transaction: Transaction?) {
+        val waiting = transaction?.base?.status == TransactionStatus.PENDING &&
+            transaction.base.statusDetail?.kind.let { kind ->
+                kind == TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION ||
+                    kind == TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN
+            }
+        if (!waiting) {
+            waitingStatusJob?.cancel()
+            waitingStatusJob = null
+            return
+        }
+        if (waitingStatusJob?.isActive == true) return
+        waitingStatusJob = viewModelScope.launch {
+            repeat(WAITING_STATUS_CHECKS) {
+                delay(WAITING_STATUS_CHECK_INTERVAL_MILLIS)
+                // A change of the journal ticks flowLocalTransactions, which redraws the page.
+                guarded { transactionHistoryHandler.checkWaitingTransactions() }
+            }
         }
     }
 
     fun onCopyClicked(text: String) {
         clipboardManager.addToClipboard(text)
         copiedToast.trigger()
+    }
+
+    private companion object {
+        /**
+         * Six seconds is one block. Eighty checks cover eight minutes: a transaction can be
+         * included for 64 blocks (about six and a half minutes) after it was signed.
+         */
+        const val WAITING_STATUS_CHECK_INTERVAL_MILLIS = 6_000L
+        const val WAITING_STATUS_CHECKS = 80
     }
 }

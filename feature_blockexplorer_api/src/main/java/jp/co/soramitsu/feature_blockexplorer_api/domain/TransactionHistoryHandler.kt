@@ -51,5 +51,11 @@ interface TransactionHistoryHandler {
 
     suspend fun getTransaction(txHash: String): Transaction?
 
+    /**
+     * Asks the network once for the final status of this device's waiting transactions, so that
+     * a screen showing one follows it promptly. Read-only and never an error for the caller.
+     */
+    suspend fun checkWaitingTransactions()
+
     suspend fun hasNewTransaction(): Boolean
 }

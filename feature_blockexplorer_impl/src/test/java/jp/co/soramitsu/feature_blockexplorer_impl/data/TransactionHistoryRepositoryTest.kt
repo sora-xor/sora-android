@@ -66,6 +66,8 @@ import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.Sora2NodeRefusal
 import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionDetails
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingRecoveryPass
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingSubmissionCoordinator
 import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionDetailsStore
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_data.TestAccounts
@@ -113,6 +115,9 @@ class TransactionHistoryRepositoryTest {
 
     @MockK
     private lateinit var detailsStore: Sora2SubmissionDetailsStore
+
+    @MockK
+    private lateinit var pendingSubmissionCoordinator: Sora2PendingSubmissionCoordinator
 
     private lateinit var health: PiIndexerHealth
 
@@ -180,6 +185,7 @@ class TransactionHistoryRepositoryTest {
             validatedHistoryCache,
             database,
             detailsStore,
+            pendingSubmissionCoordinator,
         )
     }
 
@@ -952,6 +958,30 @@ class TransactionHistoryRepositoryTest {
             TransactionStatusDetail.Kind.NOT_INCLUDED,
             expired.base.statusDetail?.kind,
         )
+    }
+
+    @Test
+    fun `a screen can ask for the status of waiting transactions without waiting for the worker`() =
+        runTest {
+            coEvery {
+                pendingSubmissionCoordinator.recoverStatusOnly(any(), any())
+            } returns Sora2PendingRecoveryPass(1, 1, 0, 0, 0)
+
+            transactionHistoryRepository.checkWaitingTransactions()
+
+            // The status-only pass of the coordinator: it has no signer and cannot submit.
+            coVerify(exactly = 1) { pendingSubmissionCoordinator.recoverStatusOnly(any(), any()) }
+        }
+
+    @Test
+    fun `a failed status check is never an error for the screen`() = runTest {
+        coEvery {
+            pendingSubmissionCoordinator.recoverStatusOnly(any(), any())
+        } throws java.io.IOException("BOUNDED_HTTP_IO")
+
+        transactionHistoryRepository.checkWaitingTransactions()
+
+        coVerify(exactly = 1) { pendingSubmissionCoordinator.recoverStatusOnly(any(), any()) }
     }
 
     @Test
