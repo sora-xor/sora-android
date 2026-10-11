@@ -630,6 +630,69 @@ class SwapViewModelTest {
     }
 
     @Test
+    fun `a failed quote drops the earlier one so its limit is never signed for another amount`() =
+        runTest {
+            readyToConfirmSwap()
+            given(resourceManager.getString(R.string.tx_outcome_quote_unavailable))
+                .willReturn("Price unavailable")
+            var state = viewModel.swapMainState.value
+            assertEquals("Review", state.swapButtonState.text)
+            assertEquals(true, state.swapButtonState.enabled)
+            // The quote for 1 XOR is on screen with its minimum received.
+            assertEquals(true, state.details.minmaxValue.isNotEmpty())
+
+            // The amount changes and the request for its price fails (the connection dropped).
+            var priceCanBeRead = false
+            given(
+                swapInteractor.calcDetails(
+                    anyNonNull(),
+                    anyNonNull(),
+                    anyNonNull(),
+                    anyNonNull(),
+                    anyNonNull(),
+                    anyDouble(),
+                )
+            ).willAnswer {
+                if (!priceCanBeRead) throw java.io.IOException("socket closed")
+                SwapDetails(
+                    BigDecimal("0.04"),
+                    BigDecimal("12.2"),
+                    BigDecimal("18.3"),
+                    BigDecimal("44.66"),
+                    networkFee,
+                    PoolDex(0, assetsListItems.first().tokenId, assetsListItems.last().tokenId),
+                    null,
+                )
+            }
+            viewModel.onFromAmountChange(BigDecimal.TEN)
+            advanceUntilIdle()
+
+            // Before (also in the store version): the error was shown, the quote for 1 XOR
+            // stayed, Review stayed on, and Confirm signed 10 XOR with the limit of 1 XOR.
+            state = viewModel.swapMainState.value
+            assertEquals("Price unavailable", state.swapButtonState.text)
+            assertFalse(state.swapButtonState.enabled)
+            assertFalse(state.swapButtonState.loading)
+            assertFalse(state.confirmButtonState.enabled)
+            assertEquals("", state.details.minmaxValue)
+            viewModel.onConfirmClicked()
+            advanceUntilIdle()
+            kVerify(swapInteractor, org.mockito.kotlin.never()).swap(
+                any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+
+            // The price can be read again: the next change brings a quote and Review is back.
+            priceCanBeRead = true
+            viewModel.onFromAmountChange(BigDecimal("2"))
+            advanceUntilIdle()
+
+            state = viewModel.swapMainState.value
+            assertEquals("Review", state.swapButtonState.text)
+            assertEquals(true, state.swapButtonState.enabled)
+            assertEquals(true, state.details.minmaxValue.isNotEmpty())
+        }
+
+    @Test
     fun `a confirmed swap shows confirmed and opens its transaction page`() = runTest {
         readyToConfirmSwap()
         swapAnswers(false) { TransactionOutcome.Confirmed(txHash, "0xblock") }

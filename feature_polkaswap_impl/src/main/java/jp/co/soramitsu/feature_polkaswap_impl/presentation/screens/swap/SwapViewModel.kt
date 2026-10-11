@@ -150,6 +150,13 @@ class SwapViewModel @AssistedInject constructor(
     private val availableMarkets = mutableListOf<Market>()
     private var desired: WithDesired = WithDesired.INPUT
     private var swapDetails: SwapDetails? = null
+
+    /**
+     * The last request for a price failed, so there is no quote for the pair and amount now on
+     * screen. Review and Confirm stay off until a quote arrives: the minimum received (or maximum
+     * sold) of an earlier quote must never be signed for a different amount or pair.
+     */
+    private var quoteUnavailable = false
     private var networkFee: BigDecimal? = null
 
     private val _swapMainState = MutableStateFlow(
@@ -386,6 +393,7 @@ class SwapViewModel @AssistedInject constructor(
                     // A failed recalculation must not end this collector (the screen would stop
                     // reacting), must not leave the button spinning and must never leave
                     // viewModelScope uncaught.
+                    var quoteSettled = false
                     try {
                         if (assetCatalogUnavailable) {
                             toggleSwapButtonStatus()
@@ -397,6 +405,7 @@ class SwapViewModel @AssistedInject constructor(
                             property.reset()
                         }
                         recalcDetails()
+                        quoteSettled = true
                         toggleSwapButtonStatus()
                         updateTransactionReminderWarningVisibility()
                         resetLoading()
@@ -404,6 +413,13 @@ class SwapViewModel @AssistedInject constructor(
                         throw cancellation
                     } catch (t: Throwable) {
                         onError(t)
+                        if (!quoteSettled) {
+                            // The quote on screen may belong to other input: it is dropped and
+                            // Review and Confirm go off. A failure after the quote was settled
+                            // (the optional XOR reminder) leaves the valid quote alone.
+                            dropQuote()
+                            toggleSwapButtonStatus()
+                        }
                         resetLoading()
                     }
                 }
@@ -652,6 +668,10 @@ class SwapViewModel @AssistedInject constructor(
                 resourceManager.getString(R.string.network_fee_unavailable_short) to false
             }
 
+            quoteUnavailable -> {
+                resourceManager.getString(R.string.tx_outcome_quote_unavailable) to false
+            }
+
             ok?.isEmpty() == true -> {
                 resourceManager.getString(R.string.review) to true
             }
@@ -677,6 +697,8 @@ class SwapViewModel @AssistedInject constructor(
             assetCatalogUnavailable -> resourceManager.getString(R.string.wallet_assets_unavailable) to false
             _swapMainState.value.feeUnavailable != null ->
                 resourceManager.getString(R.string.network_fee_unavailable_short) to false
+            quoteUnavailable ->
+                resourceManager.getString(R.string.tx_outcome_quote_unavailable) to false
             ok?.isNotEmpty() == true -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_balance)
                     .format(ok) to false
@@ -793,46 +815,65 @@ class SwapViewModel @AssistedInject constructor(
                         updateDetailsView()
                         return
                     }
-                    tryCatchFinally(
-                        finally = {},
-                        block = {
-                            val details = swapInteractor.calcDetails(
-                                fromAsset.token,
-                                toAsset.token,
-                                feeToken(),
-                                amountToCalc,
-                                desired,
-                                _swapMainState.value.slippage,
+                    val details = try {
+                        swapInteractor.calcDetails(
+                            fromAsset.token,
+                            toAsset.token,
+                            feeToken(),
+                            amountToCalc,
+                            desired,
+                            _swapMainState.value.slippage,
+                        )
+                    } catch (cancellation: CancellationException) {
+                        throw cancellation
+                    } catch (t: Throwable) {
+                        // No price for what is on screen now. The earlier quote is dropped, so
+                        // its limit and route cannot be reviewed or signed for this input. The
+                        // price is asked again on the next change of the pools or of the input.
+                        onError(t)
+                        dropQuote()
+                        return
+                    }
+                    quoteUnavailable = false
+                    swapDetails = details
+                    updateDetailsView()
+                    details?.amount?.let {
+                        if (desired == WithDesired.INPUT) {
+                            _swapMainState.value = _swapMainState.value.copy(
+                                tokenToState = _swapMainState.value.tokenToState?.copy(
+                                    amountFiat = toAsset.token.printFiat(
+                                        it,
+                                        numbersFormatter
+                                    ),
+                                    amount = it,
+                                )
                             )
-                            swapDetails = details
-                            updateDetailsView()
-                            details?.amount?.let {
-                                if (desired == WithDesired.INPUT) {
-                                    _swapMainState.value = _swapMainState.value.copy(
-                                        tokenToState = _swapMainState.value.tokenToState?.copy(
-                                            amountFiat = toAsset.token.printFiat(
-                                                it,
-                                                numbersFormatter
-                                            ),
-                                            amount = it,
-                                        )
-                                    )
-                                } else {
-                                    _swapMainState.value = _swapMainState.value.copy(
-                                        tokenFromState = _swapMainState.value.tokenFromState?.copy(
-                                            amountFiat = fromAsset.token.printFiat(
-                                                it,
-                                                numbersFormatter
-                                            ),
-                                            amount = it,
-                                        )
-                                    )
-                                }
-                            }
-                        },
-                    )
+                        } else {
+                            _swapMainState.value = _swapMainState.value.copy(
+                                tokenFromState = _swapMainState.value.tokenFromState?.copy(
+                                    amountFiat = fromAsset.token.printFiat(
+                                        it,
+                                        numbersFormatter
+                                    ),
+                                    amount = it,
+                                )
+                            )
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    private suspend fun dropQuote() {
+        quoteUnavailable = true
+        swapDetails = null
+        try {
+            updateDetailsView()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: Throwable) {
+            // The details rows are only cleared here; the quote itself is already gone.
         }
     }
 
