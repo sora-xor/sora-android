@@ -100,9 +100,9 @@ class ClaimViewModel @Inject constructor(
     /**
      * Submits the claim and shows exactly what is known afterwards. Only a claim the network
      * confirmed (or already had) is stored as done, and only one that failed on chain as failed.
-     * A claim that is still waiting is said to be waiting and is never stored as failed: its
-     * journal row blocks a second claim until the status check has resolved it. The progress
-     * mark is cleared on every path that keeps the screen open.
+     * A claim that is still waiting is said to be waiting and is never stored as failed. While
+     * an earlier transaction of the account is unresolved the claim gate sends nothing, and the
+     * screen says so. The progress mark is cleared on every path that keeps the screen open.
      */
     fun nextButtonClicked() {
         viewModelScope.launch {
@@ -118,9 +118,14 @@ class ClaimViewModel @Inject constructor(
             }
             FirebaseWrapper.log("SORA migration done ${outcome?.let { it::class.simpleName }}")
             when {
-                notSent != null && notSent.isEarlierClaimWaiting() -> {
+                notSent != null && notSent.isEarlierTransactionUnresolved() -> {
+                    // Nothing was sent now. The earlier transaction may be this claim or any
+                    // other one of this account, so the text does not say which.
                     setLoading(false)
-                    showClaimWaiting()
+                    alertDialogLiveData.setValue(
+                        resourceManager.getString(R.string.tx_outcome_not_sent_title) to
+                            resourceManager.getString(R.string.tx_outcome_claim_blocked)
+                    )
                 }
                 notSent != null -> {
                     setLoading(false)
@@ -163,8 +168,12 @@ class ClaimViewModel @Inject constructor(
         )
     }
 
-    /** The claim gate refuses a second claim while the first has no final status yet. */
-    private fun Throwable.isEarlierClaimWaiting(): Boolean {
+    /**
+     * The claim gate refuses to sign a claim while any earlier transaction of this account has
+     * no final status yet (a waiting claim, another waiting transaction, or one the node refused
+     * whose validity window has not been scanned to its end).
+     */
+    private fun Throwable.isEarlierTransactionUnresolved(): Boolean {
         var current: Throwable? = this
         var depth = 0
         while (current != null && depth < MAX_CAUSE_DEPTH) {
