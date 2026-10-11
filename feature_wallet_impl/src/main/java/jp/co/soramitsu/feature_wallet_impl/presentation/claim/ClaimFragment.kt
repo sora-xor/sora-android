@@ -99,6 +99,12 @@ class ClaimFragment : SoraBaseFragment<ClaimViewModel>() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.checkMigrationIsAlreadyFinished()
+        viewModel.onScreenResumed()
+    }
+
+    override fun onPause() {
+        // Nothing is followed, and the screen is not closed, while it is not in front.
+        viewModel.onScreenPaused()
+        super.onPause()
     }
 }

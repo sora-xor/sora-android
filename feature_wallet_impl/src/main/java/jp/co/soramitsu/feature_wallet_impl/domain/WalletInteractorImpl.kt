@@ -103,6 +103,12 @@ class WalletInteractorImpl(
         }
     }
 
+    override suspend fun checkSubmittedClaim(txHash: String?): TransactionOutcome? =
+        walletRepository.checkSubmittedClaim(
+            walletId = userRepository.getCurSoraAccount().substrateAddress,
+            txHash = txHash,
+        )
+
     override suspend fun getContacts(query: String): List<String>? {
         val curAccount = userRepository.getCurSoraAccount().substrateAddress
         if (curAccount == query) return null

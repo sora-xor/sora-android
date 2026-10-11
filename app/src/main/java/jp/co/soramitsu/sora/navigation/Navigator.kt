@@ -446,6 +446,18 @@ class Navigator :
         navController?.popBackStack()
     }
 
+    /**
+     * Pops the claim screen only while it is the screen in front. A blind pop from a timer or a
+     * late network answer would remove whatever is on top instead, and after a pause that is the
+     * PIN lock.
+     */
+    override fun closeClaimScreen() {
+        val controller = navController ?: return
+        if (controller.currentDestination?.id == R.id.claimFragment) {
+            controller.popBackStack(R.id.claimFragment, true)
+        }
+    }
+
     override fun showTxDetails(txHash: String, pop: Boolean) {
         navController?.navigate(
             R.id.txDetailsFragment,
