@@ -40,6 +40,7 @@ import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SigningKeyUnavailableException
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.Const
@@ -397,7 +398,9 @@ class CredentialsRepositoryImpl constructor(
 
     override suspend fun retrieveKeyPair(soraAccount: SoraAccount): Sr25519Keypair =
         retrieveKeyPairOrNull(soraAccount)
-            ?: throw IllegalStateException("Keypair not found")
+            // Typed, so a confirm screen can say that this account cannot sign on this phone
+            // instead of asking for another try. Still an IllegalStateException for callers.
+            ?: throw SigningKeyUnavailableException("Keypair not found")
 
     override suspend fun saveKeyPair(
         key: Sr25519Keypair,
