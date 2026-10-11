@@ -92,6 +92,12 @@ data class RecoveryFacts(
     val legacyOwner: String? = null,
     /** A release-era phrase or seed is stored without an address suffix. */
     val hasUnscopedPhraseOrSeed: Boolean = false,
+    /**
+     * The addresses in [phraseWalletIds] that have a phrase or seed stored under the address
+     * itself. [legacyOwner] is in [phraseWalletIds] without being here when the only phrase or
+     * seed it has is the release-era (unsuffixed) one.
+     */
+    val scopedPhraseWalletIds: Set<String> = emptySet(),
 )
 
 /**

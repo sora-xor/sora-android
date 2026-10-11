@@ -787,8 +787,24 @@ private fun ColumnScope.WalletsStep(step: RevealUi.Wallets, callbacks: SafeModeC
     val n = MaterialTheme.neon
     StepHeader(
         title = stringResource(R.string.recovery_wallets_title),
-        body = stringResource(if (step.entries.isEmpty()) R.string.recovery_phrase_none else R.string.recovery_wallets_body),
+        body = stringResource(
+            when {
+                step.entries.isNotEmpty() -> R.string.recovery_wallets_body
+                // "Nothing is saved" is said only when that is what was found.
+                step.incomplete -> R.string.recovery_wallets_unreadable
+                step.withheld -> R.string.recovery_wallets_withheld
+                else -> R.string.recovery_phrase_none
+            },
+        ),
     )
+    if (step.entries.isNotEmpty() && (step.incomplete || step.withheld)) {
+        Spacer(Modifier.size(8.dp))
+        SheetText(
+            stringResource(
+                if (step.incomplete) R.string.recovery_wallets_unreadable else R.string.recovery_wallets_withheld,
+            ),
+        )
+    }
     Spacer(Modifier.size(16.dp))
     Column(
         modifier = Modifier
