@@ -44,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,6 +69,7 @@ internal fun LoginSecurityScreen(
     onToggle: (Boolean) -> Unit,
     retained: RetainedWalletsUi = RetainedWalletsUi(),
     onRestoreRetained: (String) -> Unit = {},
+    onImportRecoveryPhrase: () -> Unit = {},
 ) {
     Column {
         ContentCard(
@@ -111,6 +113,7 @@ internal fun LoginSecurityScreen(
                     .padding(top = Dimens.x2),
                 retained = retained,
                 onRestore = onRestoreRetained,
+                onImportRecoveryPhrase = onImportRecoveryPhrase,
             )
         }
     }
@@ -122,7 +125,16 @@ internal data class RetainedWalletsUi(
     val restoring: String? = null,
     val restored: List<String> = emptyList(),
     val notRestorable: List<String> = emptyList(),
+    /** Left by "Remove all accounts": only their own recovery phrase brings them back. */
+    val needRecoveryPhrase: List<String> = emptyList(),
 )
+
+/** Test tags of the "Wallets found on this phone" section. */
+internal object RetainedWalletsTags {
+    const val NEEDS_PHRASE = "RetainedWalletNeedsPhrase"
+    const val IMPORT_PHRASE = "RetainedWalletImportPhrase"
+    const val RESTORE = "RetainedWalletRestore"
+}
 
 /**
  * Key sets kept on this phone that no account uses (U8: an unfinished account setup is kept
@@ -134,6 +146,7 @@ private fun RetainedWallets(
     retained: RetainedWalletsUi,
     onRestore: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onImportRecoveryPhrase: () -> Unit = {},
 ) {
     val n = MaterialTheme.neon
     SafeCard(modifier = modifier) {
@@ -167,7 +180,25 @@ private fun RetainedWallets(
                     style = MaterialTheme.customTypography.textS,
                     color = n.textSecondary,
                 )
+                // Left on the phone when every account was removed: its own recovery phrase is
+                // asked for. "Restore this wallet" is not offered, and the repository refuses.
+                in retained.needRecoveryPhrase -> {
+                    Text(
+                        modifier = Modifier.testTag(RetainedWalletsTags.NEEDS_PHRASE),
+                        text = stringResource(R.string.safe_mode_retained_needs_phrase),
+                        style = MaterialTheme.customTypography.textS,
+                        color = n.textSecondary,
+                    )
+                    SafeAction(
+                        modifier = Modifier.testTag(RetainedWalletsTags.IMPORT_PHRASE),
+                        text = stringResource(R.string.safe_mode_retained_import_phrase),
+                        variant = NeonVariant.Secondary,
+                        enabled = retained.restoring == null,
+                        onClick = onImportRecoveryPhrase,
+                    )
+                }
                 else -> SafeAction(
+                    modifier = Modifier.testTag(RetainedWalletsTags.RESTORE),
                     text = stringResource(R.string.safe_mode_retained_restore),
                     variant = NeonVariant.Secondary,
                     enabled = retained.restoring == null,

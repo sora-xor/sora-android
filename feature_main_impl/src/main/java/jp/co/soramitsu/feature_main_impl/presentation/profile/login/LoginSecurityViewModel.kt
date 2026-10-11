@@ -35,16 +35,17 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile.login
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -62,6 +63,11 @@ class LoginSecurityViewModel @Inject constructor(
     internal var state by mutableStateOf(LoginSecurityState(false, false))
         private set
 
+    private val _importAccountEvent = SingleLiveEvent<Unit>()
+
+    /** Opens Import account, where a wallet's own recovery phrase adopts its stored keys. */
+    val importAccountEvent: LiveData<Unit> = _importAccountEvent
+
     init {
         _toolbarState.value = initSmallTitle2(
             title = R.string.settings_login_title,
@@ -75,22 +81,26 @@ class LoginSecurityViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            tryCatch {
-                state = state.copy(retainedWallets = findRetainedWallets())
+            // Key sets found at startup that no account uses (an unfinished account setup, an
+            // account removed in an older version, or keys kept by "Set up this device again").
+            // Only listed in normal mode, where adding an account is allowed. When the list
+            // cannot be read right now the section is not shown; nothing depends on it.
+            try {
+                val retained = userRepository.retainedWallets()
+                state = state.copy(
+                    retainedWallets = retained.map { it.address },
+                    needRecoveryPhrase = retained.filter { it.needsRecoveryPhrase }.map { it.address },
+                )
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                onBackgroundError(error)
             }
         }
     }
 
-    /**
-     * Key sets found at startup that no account uses (an unfinished account setup, an account
-     * removed in an older version, or keys kept by "Set up this device again"). Only offered in
-     * normal mode, where adding an account is allowed.
-     */
-    private suspend fun findRetainedWallets(): List<String> {
-        if (WalletRecoveryCapabilityGate.isUserMutationBlocked()) return emptyList()
-        return WalletUpgradeBackup.quarantine().retainedWalletIds
-            .filter { !userRepository.accountExists(it) }
-            .sorted()
+    fun importRecoveryPhrase() {
+        _importAccountEvent.trigger()
     }
 
     /**
@@ -98,7 +108,7 @@ class LoginSecurityViewModel @Inject constructor(
      * address before it adds the account; no key material is written, moved or deleted.
      */
     fun restoreRetainedWallet(address: String) {
-        if (state.restoring != null) return
+        if (state.restoring != null || address in state.needRecoveryPhrase) return
         state = state.copy(restoring = address)
         viewModelScope.launch {
             val result = runCatching {

@@ -39,6 +39,38 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+/** See [PinCodeInteractor.walletRemovalBriefing]. */
+class WalletRemovalBriefing(
+    val accounts: List<Account>,
+    /**
+     * Every account on the phone is removed. That also removes the PIN and the custom nodes,
+     * and the app starts again from the welcome screen.
+     */
+    val removesEverything: Boolean,
+    /**
+     * Complete key sets that no account uses and that stay on the phone when everything is
+     * removed. Afterwards only their own recovery phrase brings them back.
+     */
+    val retainedKeySets: Int,
+) {
+    class Account(
+        val address: String,
+        val name: String,
+        /** The stored recovery phrase when it re-derives this account; otherwise empty. */
+        val phraseWords: List<String>,
+        /** The raw seed that re-derives this account, when no phrase does; otherwise "". */
+        val seedHex: String,
+        /** The stored key signs, so the encrypted JSON export can be made before removal. */
+        val canExportJson: Boolean,
+    ) {
+        /** Something stored on this phone re-derives this account and is shown first. */
+        val hasBackupToShow: Boolean get() = phraseWords.isNotEmpty() || seedHex.isNotEmpty()
+    }
+}
 
 class PinCodeInteractor @Inject constructor(
     private val userRepository: UserRepository,
@@ -74,6 +106,63 @@ class PinCodeInteractor @Inject constructor(
 
     suspend fun walletDeletionFailureCode(): String? =
         userRepository.walletDeletionFailureCode()
+
+    /**
+     * True while every one of [addresses] is still an account on this phone. Asked after a
+     * removal that ended in an error, to learn whether anything was removed. (Reading the list
+     * first finishes a removal that was already journaled.)
+     */
+    suspend fun areListed(addresses: List<String>): Boolean {
+        val listed = userRepository.soraAccountsList().map { it.substrateAddress }.toSet()
+        return listed.containsAll(addresses)
+    }
+
+    /**
+     * What the person is shown before an account is removed from this phone: for each account
+     * the backup that re-derives it (its stored recovery phrase, else its stored raw seed; a
+     * stored value that derives another wallet is never offered as its backup), whether it can
+     * still be exported as encrypted JSON, and what stays on the phone afterwards. Reads only;
+     * nothing is removed here.
+     *
+     * Judging the stored secrets decrypts them and derives keys, so it runs off the caller's
+     * thread.
+     */
+    suspend fun walletRemovalBriefing(addresses: List<String>): WalletRemovalBriefing {
+        val listed = userRepository.soraAccountsList()
+        val targets = addresses.distinct().map { address ->
+            listed.firstOrNull { it.substrateAddress == address }
+                ?: error("WALLET_DELETION_TARGET_INVALID")
+        }
+        val accounts = withContext(Dispatchers.Default) {
+            targets.map { account ->
+                val material = credentialsRepository.retrieveBackupMaterial(account)
+                WalletRemovalBriefing.Account(
+                    address = account.substrateAddress,
+                    name = account.accountName,
+                    phraseWords = material.phraseWords,
+                    // The seed is the backup only where no phrase is one.
+                    seedHex = if (material.hasPhrase) "" else material.seedHex,
+                    canExportJson = material.canSign,
+                )
+            }
+        }
+        val removesEverything =
+            listed.map { it.substrateAddress }.toSet() == targets.map { it.substrateAddress }.toSet()
+        val retainedKeySets = if (removesEverything) {
+            try {
+                userRepository.retainedWallets().size
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                // Not known right now. The screen then says, without a number, that wallet keys
+                // which no account uses are not removed.
+                0
+            }
+        } else {
+            0
+        }
+        return WalletRemovalBriefing(accounts, removesEverything, retainedKeySets)
+    }
 
     suspend fun setBiometryAvailable(isBiometryAvailable: Boolean) {
         userRepository.setBiometryAvailable(isBiometryAvailable)

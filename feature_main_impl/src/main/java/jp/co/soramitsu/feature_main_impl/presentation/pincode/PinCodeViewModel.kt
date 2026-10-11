@@ -53,7 +53,6 @@ import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
-import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
@@ -115,9 +114,12 @@ class PinCodeViewModel @Inject constructor(
     private val _pincodeChangedEvent = SingleLiveEvent<Unit>()
     val pincodeChangedEvent: LiveData<Unit> = _pincodeChangedEvent
 
-    private val _logoutEvent = SingleLiveEvent<String>()
-    val logoutEvent: LiveData<String> = _logoutEvent
-    private var pendingDeletionPreview: WalletDeletionPreview? = null
+    /**
+     * Set once the PIN or biometrics were confirmed for "Forget account": the removal screen
+     * replaces the keypad. Nothing is removed before [onRemovalConfirmed].
+     */
+    internal var removal by mutableStateOf<AccountRemovalState?>(null)
+        private set
 
     private val _biometryInitialDialogEvent = SingleLiveEvent<Unit>()
     val biometryInitialDialogEvent: LiveData<Unit> = _biometryInitialDialogEvent
@@ -364,6 +366,11 @@ class PinCodeViewModel @Inject constructor(
     }
 
     override fun onBackPressed() {
+        if (removal != null) {
+            // Back on the removal screen cancels: nothing was removed.
+            onRemovalCancelled()
+            return
+        }
         if (PinCodeAction.CREATE_PIN_CODE == action) {
             if (tempCode.isEmpty()) {
                 if (isChanging && !isPincodeUpdateNeeded) {
@@ -391,6 +398,9 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun onResume() {
+        // The removal screen is already behind the PIN: coming back to it (for example from the
+        // JSON export) asks for nothing again.
+        if (removal != null) return
         if (action != PinCodeAction.CREATE_PIN_CODE && !buttonsDisabled) {
             startFingerprintScannerEventLiveData.value = isBiometryEnabled
         }
@@ -474,21 +484,67 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The PIN (or biometrics) was just confirmed for "Forget account". Before anything is
+     * removed the person sees the backup that re-derives the account (its recovery phrase, else
+     * its raw seed), or is told plainly that this phone holds none, and what stays on the phone.
+     * The PIN is not asked for again to show it.
+     */
     private fun logout() {
         viewModelScope.launch {
             try {
                 check(this@PinCodeViewModel::addresses.isInitialized) {
                     "WALLET_DELETION_TARGETS_MISSING"
                 }
-                publishDeletionPreview(
-                    interactor.createWalletDeletionPreview(addresses.toList())
+                val briefing = interactor.walletRemovalBriefing(addresses.toList())
+                removal = AccountRemovalState(
+                    accounts = briefing.accounts.map { account ->
+                        AccountRemovalState.Account(
+                            address = account.address,
+                            name = account.name,
+                            phraseWords = account.phraseWords,
+                            seed = account.seedHex.takeIf(String::isNotEmpty)?.let { "0x$it" }.orEmpty(),
+                            canExportJson = account.canExportJson,
+                        )
+                    },
+                    removesEverything = briefing.removesEverything,
+                    retainedKeySets = briefing.retainedKeySets,
                 )
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Throwable) {
-                handleWalletDeletionError(error, reloadPreview = false)
+                // Nothing was removed and nothing was started: say so and leave the screen.
+                onError(error)
+                mainRouter.popBackStack()
             }
         }
+    }
+
+    fun onRemovalRevealed() {
+        removal = removal?.copy(revealed = true)
+    }
+
+    fun onRemovalWrittenDown(checked: Boolean) {
+        val state = removal ?: return
+        // Only after the phrase or seed was actually shown.
+        if (state.revealed) removal = state.copy(writtenDown = checked)
+    }
+
+    fun onRemovalUnderstoodNoBackup(checked: Boolean) {
+        removal = removal?.copy(understoodNoBackup = checked)
+    }
+
+    /** "Export JSON first": the encrypted JSON export of the accounts whose key still signs. */
+    fun onRemovalExportJson() {
+        val exportable = removal?.accounts?.filter { it.canExportJson }?.map { it.address }
+        if (exportable.isNullOrEmpty()) return
+        mainRouter.showBackupJson(exportable)
+    }
+
+    fun onRemovalCancelled() {
+        if (removal?.working == true) return
+        removal = null
+        mainRouter.popBackStack()
     }
 
     fun onAuthenticationFailed() {
@@ -504,15 +560,31 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
-    fun logoutOkPressed() {
+    /**
+     * "Remove from this phone", after the acknowledgement. The deletion is prepared and carried
+     * out only now, so writing the phrase down can take as long as it takes. If what would be
+     * removed is no longer what the screen described, nothing is removed and the screen is
+     * described again.
+     */
+    fun onRemovalConfirmed() {
+        val state = removal ?: return
+        if (!state.canRemove) return
+        removal = state.copy(working = true)
         viewModelScope.launch {
             progress.showProgress()
             try {
-                val preview = checkNotNull(pendingDeletionPreview) {
-                    "WALLET_DELETION_PREVIEW_MISSING"
+                val preview = interactor.createWalletDeletionPreview(addresses.toList())
+                val described = state.accounts.map { it.address }.toSet()
+                val sameAsDescribed =
+                    preview.targets.map { it.walletId }.toSet() == described &&
+                        (preview.scope == WalletDeletionScope.ALL) == state.removesEverything
+                if (!sameAsDescribed) {
+                    // The accounts on this phone changed while the screen was open.
+                    removal = null
+                    logout()
+                    return@launch
                 }
                 val result = interactor.confirmAndExecuteWalletDeletion(preview)
-                pendingDeletionPreview = null
                 when (result.scope) {
                     WalletDeletionScope.ALL -> _resetApplicationEvent.trigger()
                     WalletDeletionScope.SINGLE -> _switchAccountEvent.trigger()
@@ -520,34 +592,15 @@ class PinCodeViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Throwable) {
-                handleWalletDeletionError(error, reloadPreview = true)
+                handleWalletDeletionError(error)
             } finally {
                 progress.hideProgress()
             }
         }
     }
 
-    private fun publishDeletionPreview(preview: WalletDeletionPreview) {
-        pendingDeletionPreview = preview
-        val walletNames = preview.targets.joinToString(separator = "\n\n") {
-            "${it.displayName}\n${it.walletId}"
-        }
-        val baseMessage = resourceManager.getString(R.string.logout_dialog_body)
-        val allWalletSuffix =
-            if (preview.scope == WalletDeletionScope.ALL) {
-                resourceManager.getString(R.string.logout_remove_nodes_body)
-            } else {
-                ""
-            }
-        _logoutEvent.value =
-            "$baseMessage$allWalletSuffix\n\n$walletNames"
-    }
-
-    private suspend fun handleWalletDeletionError(
-        error: Throwable,
-        reloadPreview: Boolean,
-    ) {
-        onError(error)
+    private suspend fun handleWalletDeletionError(error: Throwable) {
+        jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
         val failureCode = try {
             interactor.walletDeletionFailureCode()
         } catch (lookupError: CancellationException) {
@@ -556,7 +609,7 @@ class PinCodeViewModel @Inject constructor(
             null
         }
         if (failureCode != null) {
-            pendingDeletionPreview = null
+            removal = null
             errorLiveData.value = failureCode
             // Startup resumes the durable journal and routes the user to the
             // encrypted-backup recovery screen. Never continue in a partially
@@ -564,26 +617,29 @@ class PinCodeViewModel @Inject constructor(
             _resetApplicationEvent.trigger()
             return
         }
-
-        errorLiveData.value = error.walletDeletionSafeCode()
-        if (!reloadPreview || !this::addresses.isInitialized) {
-            pendingDeletionPreview = null
+        val stillListed = try {
+            interactor.areListed(addresses.toList())
+        } catch (lookupError: CancellationException) {
+            throw lookupError
+        } catch (_: Throwable) {
+            false
+        }
+        if (!stillListed) {
+            // The removal was journaled and has gone past the point where the accounts are
+            // listed (or its state cannot be read). The next start finishes it; this session
+            // must not go on as if nothing had happened.
+            removal = null
+            _resetApplicationEvent.trigger()
             return
         }
-        try {
-            // Confirmation capabilities are one-shot. If no durable journal
-            // exists, present a newly verified preview and require another
-            // explicit confirmation rather than reusing the consumed value.
-            publishDeletionPreview(
-                interactor.createWalletDeletionPreview(addresses.toList())
-            )
-        } catch (reloadError: CancellationException) {
-            throw reloadError
-        } catch (reloadError: Throwable) {
-            pendingDeletionPreview = null
-            onError(reloadError)
-            errorLiveData.value = reloadError.walletDeletionSafeCode()
-        }
+        // The accounts are all still listed: nothing was removed. The screen stays, with the
+        // same acknowledgement, and the person can try again or cancel.
+        removal = removal?.copy(working = false)
+        alertDialogLiveData.value = Pair(
+            resourceManager.getString(R.string.account_removal_not_removed_title),
+            resourceManager.getString(R.string.account_removal_not_removed)
+                .format(error.walletDeletionSafeCode()),
+        )
     }
 
     private fun Throwable.walletDeletionSafeCode(): String =

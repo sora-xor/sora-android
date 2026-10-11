@@ -37,6 +37,8 @@ import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_account_api.domain.model.RetainedWallet
+import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
@@ -290,5 +292,117 @@ class PinCodeInteractorTest {
         given(userRepository.retrieveTimerStartedTimestamp()).willReturn(timestamp)
 
         assertEquals(timestamp, interactor.retrieveTimerStartedTimestamp())
+    }
+
+    // ---- What is shown before an account is removed -------------------------------------------
+
+    private val alice = SoraAccount("cnAlice", "Alice")
+    private val bob = SoraAccount("cnBob", "Bob")
+
+    private fun material(
+        canSign: Boolean = true,
+        phrase: List<String> = emptyList(),
+        seedHex: String = "",
+        storedPhraseDoesNotMatch: Boolean = false,
+    ) = WalletBackupMaterial(
+        canSign = canSign,
+        phraseWords = phrase,
+        seedHex = seedHex,
+        storedPhraseDoesNotMatch = storedPhraseDoesNotMatch,
+        storedSeedDoesNotMatch = false,
+    )
+
+    @Test
+    fun `the removal briefing shows the phrase that re-derives the account`() = runTest {
+        val words = List(12) { "word$it" }
+        given(userRepository.soraAccountsList()).willReturn(listOf(alice, bob))
+        given(credentialsRepository.retrieveBackupMaterial(alice))
+            .willReturn(material(phrase = words, seedHex = "ab".repeat(32)))
+
+        val briefing = interactor.walletRemovalBriefing(listOf("cnAlice"))
+
+        val account = briefing.accounts.single()
+        assertEquals("cnAlice", account.address)
+        assertEquals("Alice", account.name)
+        assertEquals(words, account.phraseWords)
+        // The phrase is the backup; the seed is shown only where no phrase matches.
+        assertEquals("", account.seedHex)
+        assertTrue(account.hasBackupToShow)
+        // One of two accounts: the others, the PIN and the settings stay.
+        assertFalse(briefing.removesEverything)
+        assertEquals(0, briefing.retainedKeySets)
+    }
+
+    @Test
+    fun `the raw seed is the backup where no phrase matches`() = runTest {
+        given(userRepository.soraAccountsList()).willReturn(listOf(alice, bob))
+        given(credentialsRepository.retrieveBackupMaterial(alice))
+            .willReturn(material(seedHex = "cd".repeat(32)))
+
+        val account = interactor.walletRemovalBriefing(listOf("cnAlice")).accounts.single()
+
+        assertTrue(account.phraseWords.isEmpty())
+        assertEquals("cd".repeat(32), account.seedHex)
+        assertTrue(account.hasBackupToShow)
+    }
+
+    @Test
+    fun `a stored phrase of another wallet is never offered as this account's backup`() = runTest {
+        // Invariant 4: the judge reports no matching phrase; the stored words are not shown.
+        given(userRepository.soraAccountsList()).willReturn(listOf(alice, bob))
+        given(credentialsRepository.retrieveBackupMaterial(alice))
+            .willReturn(material(canSign = true, storedPhraseDoesNotMatch = true))
+
+        val account = interactor.walletRemovalBriefing(listOf("cnAlice")).accounts.single()
+
+        assertFalse(account.hasBackupToShow)
+        // Its key still signs, so the encrypted JSON export can be made first.
+        assertTrue(account.canExportJson)
+    }
+
+    @Test
+    fun `a read-only account without a matching backup cannot be exported`() = runTest {
+        given(userRepository.soraAccountsList()).willReturn(listOf(alice, bob))
+        given(credentialsRepository.retrieveBackupMaterial(alice)).willReturn(material(canSign = false))
+
+        val account = interactor.walletRemovalBriefing(listOf("cnAlice")).accounts.single()
+
+        assertFalse(account.hasBackupToShow)
+        assertFalse(account.canExportJson)
+    }
+
+    @Test
+    fun `removing the only account removes everything and names the key sets that stay`() = runTest {
+        given(userRepository.soraAccountsList()).willReturn(listOf(alice))
+        given(credentialsRepository.retrieveBackupMaterial(alice))
+            .willReturn(material(phrase = List(24) { "word$it" }))
+        given(userRepository.retainedWallets()).willReturn(
+            listOf(
+                RetainedWallet("cnOld1", needsRecoveryPhrase = false),
+                RetainedWallet("cnOld2", needsRecoveryPhrase = true),
+            )
+        )
+
+        val briefing = interactor.walletRemovalBriefing(listOf("cnAlice"))
+
+        assertTrue(briefing.removesEverything)
+        assertEquals(2, briefing.retainedKeySets)
+    }
+
+    @Test
+    fun `an address that is not an account is refused before anything is read`() = runTest {
+        given(userRepository.soraAccountsList()).willReturn(listOf(alice))
+
+        val error = runCatching { interactor.walletRemovalBriefing(listOf("cnGone")) }.exceptionOrNull()
+
+        assertEquals("WALLET_DELETION_TARGET_INVALID", error?.message)
+    }
+
+    @Test
+    fun `areListed says whether a removal left its accounts in place`() = runTest {
+        given(userRepository.soraAccountsList()).willReturn(listOf(alice, bob))
+
+        assertTrue(interactor.areListed(listOf("cnAlice")))
+        assertFalse(interactor.areListed(listOf("cnAlice", "cnGone")))
     }
 }

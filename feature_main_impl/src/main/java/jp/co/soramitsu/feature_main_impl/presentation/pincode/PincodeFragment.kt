@@ -123,15 +123,6 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
             Toast.makeText(requireContext(), R.string.pincode_change_success, Toast.LENGTH_LONG)
                 .show()
         }
-        viewModel.logoutEvent.observe { message ->
-            AlertDialog.Builder(requireActivity())
-                .setTitle(R.string.profile_logout_title)
-                .setMessage(message)
-                .setCancelable(false)
-                .setPositiveButton(R.string.profile_logout_title) { _, _ -> viewModel.logoutOkPressed() }
-                .setNegativeButton(R.string.common_cancel) { _, _ -> viewModel.onBackPressed() }
-                .show()
-        }
         viewModel.biometryInitialDialogEvent.observe {
             AlertDialog.Builder(requireActivity())
                 .setTitle(R.string.biometric_dialog_title)
@@ -214,6 +205,22 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         ) {
             // Only the keypad and dots are pinned left-to-right (inside PincodeScreen); the
             // Safe Mode panels on this screen follow the device's layout direction.
+            val removal = viewModel.removal
+            if (removal != null) {
+                // "Forget account", after the PIN: the backup is shown before anything is
+                // removed. The window is secure while a phrase or seed can be on screen.
+                SecureWindow(enabled = removal.showsBackup)
+                AccountRemovalScreen(
+                    state = removal,
+                    onReveal = viewModel::onRemovalRevealed,
+                    onWrittenDown = viewModel::onRemovalWrittenDown,
+                    onUnderstoodNoBackup = viewModel::onRemovalUnderstoodNoBackup,
+                    onExportJson = viewModel::onRemovalExportJson,
+                    onRemove = viewModel::onRemovalConfirmed,
+                    onCancel = viewModel::onRemovalCancelled,
+                )
+                return@composable
+            }
             PincodeScreen(
                 pinCodeScreenState = viewModel.state,
                 onNumClick = viewModel::pinCodeNumberClicked,
