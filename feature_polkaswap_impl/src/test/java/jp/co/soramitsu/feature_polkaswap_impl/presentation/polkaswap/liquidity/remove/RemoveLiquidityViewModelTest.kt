@@ -46,6 +46,7 @@ import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -80,6 +81,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.willSuspendableAnswer
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -284,6 +286,17 @@ class RemoveLiquidityViewModelTest {
         advanceUntilIdle()
         viewModel.onAmount1Change(BigDecimal(0.5))
         advanceUntilIdle()
+        // The screen is the screen in front, as it is when Confirm is tapped, and the router
+        // opens the transaction page when asked.
+        pageOpens { true }
+        viewModel.onScreenResumed()
+    }
+
+    /** What the router answers when asked to open the transaction page. */
+    private fun pageOpens(answer: () -> Boolean) {
+        org.mockito.Mockito.lenient()
+            .`when`(assetsRouter.showTxResult(any(), any()))
+            .thenAnswer { answer() }
     }
 
     private suspend fun answers(confirmedDuplicate: Boolean, answer: () -> TransactionOutcome) {
@@ -329,8 +342,7 @@ class RemoveLiquidityViewModelTest {
 
         assertEquals(TransactionResultBadge.CONFIRMED, shownBadge())
         advanceUntilIdle()
-        assertEquals(null, shownBadge())
-        verify(assetsRouter).showTxDetails(txHash, true)
+        verify(assetsRouter).showTxResult(txHash, TransactionScreen.REMOVE_LIQUIDITY)
     }
 
     @Test
@@ -347,7 +359,7 @@ class RemoveLiquidityViewModelTest {
             assertEquals(R.string.wallet_transaction_submitted_1, shownBadge()?.text)
             advanceUntilIdle()
             // The transaction page carries "waiting for confirmation" and follows the result.
-            verify(assetsRouter).showTxDetails(txHash, true)
+            verify(assetsRouter).showTxResult(txHash, TransactionScreen.REMOVE_LIQUIDITY)
             verify(router, never()).returnToHubFragment()
             assertEquals(null, viewModel.alertDialogLiveData.value)
         }
@@ -370,7 +382,7 @@ class RemoveLiquidityViewModelTest {
 
             assertEquals(TransactionResultBadge.FAILED, shownBadge())
             advanceUntilIdle()
-            verify(assetsRouter).showTxDetails(txHash, true)
+            verify(assetsRouter).showTxResult(txHash, TransactionScreen.REMOVE_LIQUIDITY)
         }
 
     @Test
@@ -396,7 +408,7 @@ class RemoveLiquidityViewModelTest {
                     "text-${R.string.tx_outcome_note_refused_busy}",
                 viewModel.alertDialogLiveData.value,
             )
-            verify(assetsRouter, never()).showTxDetails(any(), any())
+            verify(assetsRouter, never()).showTxResult(any(), any())
             // The dialog is on this screen, so the screen stays and offers Confirm again.
             verify(router, never()).returnToHubFragment()
             assertTrue(confirmButton().enabled)
@@ -416,11 +428,173 @@ class RemoveLiquidityViewModelTest {
         val question = checkNotNull(viewModel.confirmDialogLiveData.value)
         assertEquals("text-${R.string.tx_outcome_duplicate_title}", question.title)
         assertEquals(null, shownBadge())
-        verify(assetsRouter, never()).showTxDetails(any(), any())
+        verify(assetsRouter, never()).showTxResult(any(), any())
         assertTrue(confirmButton().enabled)
 
         question.onConfirm()
         advanceUntilIdle()
-        verify(assetsRouter).showTxDetails("0x" + "cd".repeat(32), true)
+        verify(assetsRouter).showTxResult("0x" + "cd".repeat(32), TransactionScreen.REMOVE_LIQUIDITY)
+    }
+
+    // --- the result arrives while the screen is not in front -------------------------------
+
+    @Test
+    fun `a result that arrives in the background opens its page on return and not before`() =
+        runTest {
+            readyToConfirm()
+            answers(false) { TransactionOutcome.Confirmed(txHash, "0xblock") }
+
+            confirm()
+            runCurrent()
+            // Home was pressed (or the phone locked) while the result mark was shown.
+            viewModel.onScreenPaused()
+            advanceUntilIdle()
+
+            // Before the fix the page was opened from the coroutine at this moment. With the
+            // activity stopped that navigation is dropped, and with the PIN lock on top it
+            // removes the PIN lock.
+            verify(assetsRouter, never()).showTxResult(any(), any())
+            // Until the page opens the confirm screen says what happened and Confirm is off.
+            assertEquals(TransactionResultBadge.CONFIRMED, shownBadge())
+            assertFalse(confirmButton().enabled)
+            assertFalse(confirmButton().loading)
+
+            viewModel.onScreenResumed()
+
+            verify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.REMOVE_LIQUIDITY)
+
+            // Shown once: a later return to the front opens nothing more.
+            viewModel.onScreenPaused()
+            viewModel.onScreenResumed()
+            verify(assetsRouter, times(1)).showTxResult(any(), any())
+        }
+
+    @Test
+    fun `a sent transaction cannot be confirmed a second time while its page has not opened`() =
+        runTest {
+            readyToConfirm()
+            var sent = 0
+            answers(false) {
+                sent += 1
+                TransactionOutcome.Waiting(txHash, acceptedByNode = true)
+            }
+
+            confirm()
+            runCurrent()
+            viewModel.onScreenPaused()
+            advanceUntilIdle()
+
+            confirm()
+            viewModel.onReviewClick()
+            confirm()
+            advanceUntilIdle()
+
+            assertEquals(1, sent)
+            assertFalse(confirmButton().enabled)
+        }
+
+    @Test
+    fun `a result is kept while the PIN lock is on top and shown when the screen is back`() =
+        runTest {
+            readyToConfirm()
+            // The router opens the page only when this screen is the current destination.
+            var pinLockOnTop = true
+            pageOpens { !pinLockOnTop }
+            answers(false) { TransactionOutcome.Waiting(txHash, acceptedByNode = true) }
+
+            confirm()
+            runCurrent()
+            viewModel.onScreenPaused()
+            advanceUntilIdle()
+
+            // The app returns after more than five minutes: the activity resumes this screen
+            // for a moment while the PIN lock is already the current destination.
+            viewModel.onScreenResumed()
+            verify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.REMOVE_LIQUIDITY)
+            assertEquals(TransactionResultBadge.SUBMITTED, shownBadge())
+            assertFalse(confirmButton().enabled)
+            viewModel.onScreenPaused()
+
+            // The PIN was entered and the PIN lock removed itself.
+            pinLockOnTop = false
+            viewModel.onScreenResumed()
+            verify(assetsRouter, times(2)).showTxResult(txHash, TransactionScreen.REMOVE_LIQUIDITY)
+
+            // Opened: nothing more is asked of the router.
+            viewModel.onScreenPaused()
+            viewModel.onScreenResumed()
+            verify(assetsRouter, times(2)).showTxResult(any(), any())
+        }
+
+    @Test
+    fun `a failure that arrives in the background is explained and opens nothing`() = runTest {
+        readyToConfirm()
+        stubOutcomeTexts()
+        answers(false) {
+            TransactionOutcome.RefusedByNode(
+                txHash = txHash,
+                reason = TransactionNodeRefusal.NETWORK_BUSY,
+                nodeMessage = "Immediately Dropped",
+            )
+        }
+
+        confirm()
+        runCurrent()
+        viewModel.onScreenPaused()
+        advanceUntilIdle()
+        viewModel.onScreenResumed()
+
+        // The dialog is held by the view model and delivered when the screen is shown again.
+        assertEquals(
+            "text-${R.string.tx_outcome_refused_title}" to
+                "text-${R.string.tx_outcome_note_refused_busy}",
+            viewModel.alertDialogLiveData.value,
+        )
+        verify(assetsRouter, never()).showTxResult(any(), any())
+        assertEquals(null, shownBadge())
+        assertTrue(confirmButton().enabled)
+    }
+
+    @Test
+    fun `an update of the pool during the wait does not bring Confirm back`() = runTest {
+        readyToConfirm()
+        val result = kotlinx.coroutines.CompletableDeferred<TransactionOutcome>()
+        var sent = 0
+        given(
+            poolsInteractor.removeLiquidity(any(), any(), any(), any(), any(), any(), eq(false))
+        ).willSuspendableAnswer {
+            sent += 1
+            result.await()
+        }
+
+        confirm()
+        runCurrent()
+        assertFalse(confirmButton().enabled)
+        assertTrue(confirmButton().loading)
+
+        // The pool is read again with every block and the buttons are rebuilt each time. The
+        // same happens here through a change of the amount.
+        viewModel.onAmount1Change(BigDecimal(0.25))
+        advanceUntilIdle()
+
+        // Before the fix Confirm was back, enabled and without its progress mark, while the
+        // first withdrawal was still being followed.
+        assertFalse(confirmButton().enabled)
+        assertTrue(confirmButton().loading)
+        confirm()
+        runCurrent()
+        assertEquals(1, sent)
+
+        result.complete(TransactionOutcome.Confirmed(txHash, "0xblock"))
+        advanceUntilIdle()
+
+        verify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.REMOVE_LIQUIDITY)
+        // The page takes this screen's place; nothing more is sent from here.
+        viewModel.onAmount1Change(BigDecimal(0.5))
+        advanceUntilIdle()
+        assertFalse(confirmButton().enabled)
+        confirm()
+        runCurrent()
+        assertEquals(1, sent)
     }
 }

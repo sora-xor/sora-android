@@ -50,6 +50,7 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd.LiquidityAddViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -555,6 +556,17 @@ class AddLiquidityViewModelTest {
             .willReturn(flowOf(true))
         setUpViewModel(TestTokens.valToken.id)
         advanceUntilIdle()
+        // The screen is the screen in front, as it is when Confirm is tapped, and the router
+        // opens the transaction page when asked.
+        pageOpens { true }
+        viewModel.onScreenResumed()
+    }
+
+    /** What the router answers when asked to open the transaction page. */
+    private fun pageOpens(answer: () -> Boolean) {
+        org.mockito.Mockito.lenient()
+            .`when`(assetsRouter.showTxResult(any(), any()))
+            .thenAnswer { answer() }
     }
 
     private suspend fun answers(confirmedDuplicate: Boolean, answer: () -> TransactionOutcome) {
@@ -601,8 +613,7 @@ class AddLiquidityViewModelTest {
 
         assertEquals(TransactionResultBadge.CONFIRMED, shownBadge())
         advanceUntilIdle()
-        assertEquals(null, shownBadge())
-        kVerify(assetsRouter).showTxDetails(txHash, true)
+        kVerify(assetsRouter).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
     }
 
     @Test
@@ -619,7 +630,7 @@ class AddLiquidityViewModelTest {
             assertEquals(R.string.wallet_transaction_submitted_1, shownBadge()?.text)
             advanceUntilIdle()
             // The transaction page carries "waiting for confirmation" and follows the result.
-            kVerify(assetsRouter).showTxDetails(txHash, true)
+            kVerify(assetsRouter).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
             kVerify(router, never()).returnToHubFragment()
             assertEquals(null, viewModel.alertDialogLiveData.value)
         }
@@ -642,7 +653,7 @@ class AddLiquidityViewModelTest {
 
             assertEquals(TransactionResultBadge.FAILED, shownBadge())
             advanceUntilIdle()
-            kVerify(assetsRouter).showTxDetails(txHash, true)
+            kVerify(assetsRouter).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
         }
 
     @Test
@@ -668,7 +679,7 @@ class AddLiquidityViewModelTest {
                     "text-${R.string.tx_outcome_note_refused_busy}",
                 viewModel.alertDialogLiveData.value,
             )
-            kVerify(assetsRouter, never()).showTxDetails(any(), any())
+            kVerify(assetsRouter, never()).showTxResult(any(), any())
             // The dialog is on this screen, so the screen stays and offers Confirm again.
             kVerify(router, never()).returnToHubFragment()
             assertTrue(confirmButton().enabled)
@@ -688,11 +699,160 @@ class AddLiquidityViewModelTest {
         val question = checkNotNull(viewModel.confirmDialogLiveData.value)
         assertEquals("text-${R.string.tx_outcome_duplicate_title}", question.title)
         assertEquals(null, shownBadge())
-        kVerify(assetsRouter, never()).showTxDetails(any(), any())
+        kVerify(assetsRouter, never()).showTxResult(any(), any())
         assertTrue(confirmButton().enabled)
 
         question.onConfirm()
         advanceUntilIdle()
-        kVerify(assetsRouter).showTxDetails("0x" + "cd".repeat(32), true)
+        kVerify(assetsRouter).showTxResult("0x" + "cd".repeat(32), TransactionScreen.ADD_LIQUIDITY)
+    }
+
+    // --- the result arrives while the screen is not in front -------------------------------
+
+    @Test
+    fun `a result that arrives in the background opens its page on return and not before`() =
+        runTest {
+            readyToConfirm()
+            answers(false) { TransactionOutcome.Confirmed(txHash, "0xblock") }
+
+            confirm()
+            runCurrent()
+            // Home was pressed (or the phone locked) while the result mark was shown.
+            viewModel.onScreenPaused()
+            advanceUntilIdle()
+
+            // Before the fix the page was opened from the coroutine at this moment. With the
+            // activity stopped that navigation is dropped, and with the PIN lock on top it
+            // removes the PIN lock.
+            kVerify(assetsRouter, never()).showTxResult(any(), any())
+            // Until the page opens the confirm screen says what happened and Confirm is off.
+            assertEquals(TransactionResultBadge.CONFIRMED, shownBadge())
+            assertFalse(confirmButton().enabled)
+            assertFalse(confirmButton().loading)
+
+            viewModel.onScreenResumed()
+
+            kVerify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
+
+            // Shown once: a later return to the front opens nothing more.
+            viewModel.onScreenPaused()
+            viewModel.onScreenResumed()
+            kVerify(assetsRouter, times(1)).showTxResult(any(), any())
+        }
+
+    @Test
+    fun `a sent transaction cannot be confirmed a second time while its page has not opened`() =
+        runTest {
+            readyToConfirm()
+            var sent = 0
+            answers(false) {
+                sent += 1
+                TransactionOutcome.Waiting(txHash, acceptedByNode = true)
+            }
+
+            confirm()
+            runCurrent()
+            viewModel.onScreenPaused()
+            advanceUntilIdle()
+
+            confirm()
+            viewModel.onReviewClick()
+            confirm()
+            advanceUntilIdle()
+
+            assertEquals(1, sent)
+            assertFalse(confirmButton().enabled)
+        }
+
+    @Test
+    fun `a result is kept while the PIN lock is on top and shown when the screen is back`() =
+        runTest {
+            readyToConfirm()
+            // The router opens the page only when this screen is the current destination.
+            var pinLockOnTop = true
+            pageOpens { !pinLockOnTop }
+            answers(false) { TransactionOutcome.Waiting(txHash, acceptedByNode = true) }
+
+            confirm()
+            runCurrent()
+            viewModel.onScreenPaused()
+            advanceUntilIdle()
+
+            // The app returns after more than five minutes: the activity resumes this screen
+            // for a moment while the PIN lock is already the current destination.
+            viewModel.onScreenResumed()
+            kVerify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
+            assertEquals(TransactionResultBadge.SUBMITTED, shownBadge())
+            assertFalse(confirmButton().enabled)
+            viewModel.onScreenPaused()
+
+            // The PIN was entered and the PIN lock removed itself.
+            pinLockOnTop = false
+            viewModel.onScreenResumed()
+            kVerify(assetsRouter, times(2)).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
+
+            // Opened: nothing more is asked of the router.
+            viewModel.onScreenPaused()
+            viewModel.onScreenResumed()
+            kVerify(assetsRouter, times(2)).showTxResult(any(), any())
+        }
+
+    @Test
+    fun `a failure that arrives in the background is explained and opens nothing`() = runTest {
+        readyToConfirm()
+        stubOutcomeTexts()
+        answers(false) {
+            TransactionOutcome.RefusedByNode(
+                txHash = txHash,
+                reason = TransactionNodeRefusal.NETWORK_BUSY,
+                nodeMessage = "Immediately Dropped",
+            )
+        }
+
+        confirm()
+        runCurrent()
+        viewModel.onScreenPaused()
+        advanceUntilIdle()
+        viewModel.onScreenResumed()
+
+        // The dialog is held by the view model and delivered when the screen is shown again.
+        assertEquals(
+            "text-${R.string.tx_outcome_refused_title}" to
+                "text-${R.string.tx_outcome_note_refused_busy}",
+            viewModel.alertDialogLiveData.value,
+        )
+        kVerify(assetsRouter, never()).showTxResult(any(), any())
+        assertEquals(null, shownBadge())
+        assertTrue(confirmButton().enabled)
+    }
+
+    @Test
+    fun `the same deposit cannot be reviewed and confirmed again during the wait`() = runTest {
+        readyToConfirm()
+        val result = kotlinx.coroutines.CompletableDeferred<TransactionOutcome>()
+        var sent = 0
+        given(
+            poolsInteractor.observeAddLiquidity(
+                any(), any(), any(), any(), any(), any(), any(), eq(false),
+            )
+        ).willSuspendableAnswer {
+            sent += 1
+            result.await()
+        }
+
+        confirm()
+        runCurrent()
+        // Back to the amounts, Review and Confirm again while the first deposit is followed.
+        viewModel.onReviewClick()
+        confirm()
+        runCurrent()
+
+        assertEquals(1, sent)
+        assertFalse(confirmButton().enabled)
+        assertTrue(confirmButton().loading)
+
+        result.complete(TransactionOutcome.Confirmed(txHash, "0xblock"))
+        advanceUntilIdle()
+        kVerify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
     }
 }

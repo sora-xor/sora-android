@@ -55,6 +55,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardSt
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapViewModel
@@ -87,6 +88,7 @@ import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify as kVerify
+import org.mockito.kotlin.willSuspendableAnswer
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -596,6 +598,17 @@ class SwapViewModelTest {
         advanceUntilIdle()
         viewModel.onFromAmountChange(BigDecimal.ONE)
         advanceUntilIdle()
+        // The swap screen is the screen in front, as it is when Confirm is tapped, and the
+        // router opens the transaction page when asked.
+        pageOpens { true }
+        viewModel.onScreenResumed()
+    }
+
+    /** What the router answers when asked to open the transaction page. */
+    private fun pageOpens(answer: () -> Boolean) {
+        org.mockito.Mockito.lenient()
+            .`when`(assetsRouter.showTxResult(any(), any()))
+            .thenAnswer { answer() }
     }
 
     private suspend fun swapAnswers(confirmedDuplicate: Boolean, answer: () -> TransactionOutcome) {
@@ -702,8 +715,7 @@ class SwapViewModelTest {
 
         assertEquals(TransactionResultBadge.CONFIRMED, viewModel.swapMainState.value.confirmResult)
         advanceUntilIdle()
-        assertEquals(null, viewModel.swapMainState.value.confirmResult)
-        kVerify(assetsRouter).showTxDetails(txHash, true)
+        kVerify(assetsRouter).showTxResult(txHash, TransactionScreen.SWAP)
         assertEquals(null, viewModel.alertDialogLiveData.value)
     }
 
@@ -721,7 +733,7 @@ class SwapViewModelTest {
         assertEquals(R.string.wallet_transaction_submitted_1, badge?.text)
         advanceUntilIdle()
         // The transaction page carries "waiting for confirmation" and follows the result.
-        kVerify(assetsRouter).showTxDetails(txHash, true)
+        kVerify(assetsRouter).showTxResult(txHash, TransactionScreen.SWAP)
         assertEquals(null, viewModel.alertDialogLiveData.value)
         assertEquals(null, viewModel.errorFromResourceLiveData.value)
         // Confirm stays off: the swap is on its way and must not be sent again from here.
@@ -745,7 +757,7 @@ class SwapViewModelTest {
 
         assertEquals(TransactionResultBadge.FAILED, viewModel.swapMainState.value.confirmResult)
         advanceUntilIdle()
-        kVerify(assetsRouter).showTxDetails(txHash, true)
+        kVerify(assetsRouter).showTxResult(txHash, TransactionScreen.SWAP)
     }
 
     @Test
@@ -770,7 +782,7 @@ class SwapViewModelTest {
                 "text-${R.string.tx_outcome_note_refused_fee}",
             viewModel.alertDialogLiveData.value,
         )
-        kVerify(assetsRouter, org.mockito.kotlin.never()).showTxDetails(any(), any())
+        kVerify(assetsRouter, org.mockito.kotlin.never()).showTxResult(any(), any())
         // Nothing was sent, so the same screen offers Confirm again.
         org.junit.Assert.assertTrue(viewModel.swapMainState.value.confirmButtonState.enabled)
         assertFalse(viewModel.swapMainState.value.confirmButtonState.loading)
@@ -791,7 +803,7 @@ class SwapViewModelTest {
                 "text-${R.string.tx_outcome_not_sent_network}",
             viewModel.alertDialogLiveData.value,
         )
-        kVerify(assetsRouter, org.mockito.kotlin.never()).showTxDetails(any(), any())
+        kVerify(assetsRouter, org.mockito.kotlin.never()).showTxResult(any(), any())
         org.junit.Assert.assertTrue(viewModel.swapMainState.value.confirmButtonState.enabled)
     }
 
@@ -810,7 +822,7 @@ class SwapViewModelTest {
         assertEquals("text-${R.string.tx_outcome_duplicate_title}", question.title)
         assertEquals("text-${R.string.tx_outcome_duplicate_send_again}", question.confirmText)
         assertEquals(null, viewModel.swapMainState.value.confirmResult)
-        kVerify(assetsRouter, org.mockito.kotlin.never()).showTxDetails(any(), any())
+        kVerify(assetsRouter, org.mockito.kotlin.never()).showTxResult(any(), any())
         org.junit.Assert.assertTrue(viewModel.swapMainState.value.confirmButtonState.enabled)
 
         // Dismissing changes nothing; only the explicit answer sends it again.
@@ -823,6 +835,159 @@ class SwapViewModelTest {
         advanceUntilIdle()
         kVerify(swapInteractor)
             .swap(any(), any(), any(), any(), any(), any(), any(), any(), eq(true))
-        kVerify(assetsRouter).showTxDetails("0x" + "cd".repeat(32), true)
+        kVerify(assetsRouter).showTxResult("0x" + "cd".repeat(32), TransactionScreen.SWAP)
+    }
+
+    // --- the result arrives while the screen is not in front -------------------------------
+
+    @Test
+    fun `a result that arrives in the background opens its page on return and not before`() =
+        runTest {
+            readyToConfirmSwap()
+            swapAnswers(false) { TransactionOutcome.Confirmed(txHash, "0xblock") }
+
+            viewModel.onConfirmClicked()
+            runCurrent()
+            // Home was pressed (or the phone locked) while the result mark was shown.
+            viewModel.onScreenPaused()
+            advanceUntilIdle()
+
+            // Before the fix the page was opened from the coroutine at this moment. With the
+            // activity stopped that navigation is dropped, and with the PIN lock on top it
+            // removes the PIN lock.
+            kVerify(assetsRouter, org.mockito.kotlin.never()).showTxResult(any(), any())
+            // Until the page opens the confirm screen says what happened and Confirm is off.
+            val state = viewModel.swapMainState.value
+            assertEquals(TransactionResultBadge.CONFIRMED, state.confirmResult)
+            assertFalse(state.confirmButtonState.enabled)
+            assertFalse(state.confirmButtonState.loading)
+
+            viewModel.onScreenResumed()
+
+            kVerify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.SWAP)
+
+            // Shown once: a later return to the front opens nothing more.
+            viewModel.onScreenPaused()
+            viewModel.onScreenResumed()
+            kVerify(assetsRouter, times(1)).showTxResult(any(), any())
+        }
+
+    @Test
+    fun `a sent swap cannot be confirmed a second time while its page has not opened`() =
+        runTest {
+            readyToConfirmSwap()
+            swapAnswers(false) { TransactionOutcome.Waiting(txHash, acceptedByNode = true) }
+
+            viewModel.onConfirmClicked()
+            runCurrent()
+            viewModel.onScreenPaused()
+            advanceUntilIdle()
+
+            viewModel.onConfirmClicked()
+            advanceUntilIdle()
+
+            kVerify(swapInteractor, times(1))
+                .swap(any(), any(), any(), any(), any(), any(), any(), any(), any())
+            assertFalse(viewModel.swapMainState.value.confirmButtonState.enabled)
+        }
+
+    @Test
+    fun `a result is kept while the PIN lock is on top and shown when the screen is back`() =
+        runTest {
+            readyToConfirmSwap()
+            // The router opens the page only when the swap screen is the current destination.
+            var pinLockOnTop = true
+            pageOpens { !pinLockOnTop }
+            swapAnswers(false) {
+                TransactionOutcome.FailedOnChain(
+                    txHash = txHash,
+                    blockHash = "0xblock",
+                    reason = TransactionChainFailure.EXECUTION_FAILED,
+                    detail = "LiquidityProxy.SlippageNotTolerated",
+                )
+            }
+
+            viewModel.onConfirmClicked()
+            runCurrent()
+            viewModel.onScreenPaused()
+            advanceUntilIdle()
+
+            // The app returns after more than five minutes: the activity resumes this screen
+            // for a moment while the PIN lock is already the current destination.
+            viewModel.onScreenResumed()
+            kVerify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.SWAP)
+            assertEquals(TransactionResultBadge.FAILED, viewModel.swapMainState.value.confirmResult)
+            viewModel.onScreenPaused()
+
+            // The PIN was entered and the PIN lock removed itself.
+            pinLockOnTop = false
+            viewModel.onScreenResumed()
+            kVerify(assetsRouter, times(2)).showTxResult(txHash, TransactionScreen.SWAP)
+
+            // Opened: nothing more is asked of the router.
+            viewModel.onScreenPaused()
+            viewModel.onScreenResumed()
+            kVerify(assetsRouter, times(2)).showTxResult(any(), any())
+        }
+
+    @Test
+    fun `a failure that arrives in the background is explained and opens nothing`() = runTest {
+        readyToConfirmSwap()
+        stubOutcomeTexts()
+        swapAnswers(false) {
+            TransactionOutcome.RefusedByNode(
+                txHash = txHash,
+                reason = TransactionNodeRefusal.CANNOT_PAY_FEE,
+                nodeMessage = "Inability to pay some fees",
+            )
+        }
+
+        viewModel.onConfirmClicked()
+        runCurrent()
+        viewModel.onScreenPaused()
+        advanceUntilIdle()
+        viewModel.onScreenResumed()
+
+        // The dialog is held by the view model and delivered when the screen is shown again.
+        assertEquals(
+            "text-${R.string.tx_outcome_refused_title}" to
+                "text-${R.string.tx_outcome_note_refused_fee}",
+            viewModel.alertDialogLiveData.value,
+        )
+        kVerify(assetsRouter, org.mockito.kotlin.never()).showTxResult(any(), any())
+        assertEquals(null, viewModel.swapMainState.value.confirmResult)
+        org.junit.Assert.assertTrue(viewModel.swapMainState.value.confirmButtonState.enabled)
+    }
+
+    @Test
+    fun `the same swap cannot be reviewed and confirmed again during the wait`() = runTest {
+        readyToConfirmSwap()
+        org.mockito.Mockito.lenient()
+            .`when`(resourceManager.getString(R.string.polkaswap_output_estimated))
+            .thenReturn("At least %s")
+        val result = kotlinx.coroutines.CompletableDeferred<TransactionOutcome>()
+        var sent = 0
+        given(
+            swapInteractor.swap(any(), any(), any(), any(), any(), any(), any(), any(), eq(false))
+        ).willSuspendableAnswer {
+            sent += 1
+            result.await()
+        }
+
+        viewModel.onConfirmClicked()
+        runCurrent()
+        // Back to the amounts, Review and Confirm again while the first swap is followed.
+        viewModel.swapClicked()
+        // Before the fix Review switched Confirm on again and a tap sent the swap once more.
+        assertFalse(viewModel.swapMainState.value.confirmButtonState.enabled)
+        org.junit.Assert.assertTrue(viewModel.swapMainState.value.confirmButtonState.loading)
+        viewModel.onConfirmClicked()
+        runCurrent()
+
+        assertEquals(1, sent)
+
+        result.complete(TransactionOutcome.Confirmed(txHash, "0xblock"))
+        advanceUntilIdle()
+        kVerify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.SWAP)
     }
 }

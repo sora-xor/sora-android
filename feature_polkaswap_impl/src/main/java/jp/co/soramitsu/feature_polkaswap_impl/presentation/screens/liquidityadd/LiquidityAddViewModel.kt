@@ -66,6 +66,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddConfirmState
@@ -167,6 +168,14 @@ class LiquidityAddViewModel @AssistedInject constructor(
      * also simply take long, for example while the connection is being restored.
      */
     private var reservesReady = false
+
+    /**
+     * True from a tapped Confirm until it is known that nothing reached the network, so the
+     * same deposit cannot be reviewed and confirmed again in the middle of the wait for its
+     * result. Once a deposit has reached the network it stays true: this screen is then
+     * replaced by the transaction's page and sends nothing more.
+     */
+    private var confirmLocked = false
 
     /** The last read of the reserves failed; the person is told, with Try again. */
     private var reservesUnavailable = false
@@ -909,12 +918,21 @@ class LiquidityAddViewModel @AssistedInject constructor(
      * reached the network (confirmed, failed on chain, or still waiting) opens its transaction
      * page, which carries the status and follows it. One that did not reach the network is
      * explained in a dialog and this screen stays with Confirm available again.
+     *
+     * The result arrives after a wait of up to two minutes, so the app can be in the background
+     * or behind the PIN lock by then. The dialogs are delivered when the screen is shown again;
+     * the transaction page opens when it is in front (see [openTransactionPage]). Until then
+     * the result mark stays on the confirm screen and Confirm stays off.
      */
     private fun confirmAddLiquidity(confirmedDuplicate: Boolean) {
+        // A Confirm is on its way, or a deposit of this screen reached the network and its page
+        // has not opened yet.
+        if (confirmLocked || resultHeld) return
         val state1 = _addState.value.assetState1 ?: return
         val state2 = _addState.value.assetState2 ?: return
         // Never sign amounts that were not checked against the pool's reserves.
         if (!reservesReady) return
+        confirmLocked = true
         viewModelScope.launch {
             setConfirmButton(enabled = false, loading = true)
             var outcome: TransactionOutcome? = null
@@ -933,6 +951,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (_: DuplicateWaitingTransactionException) {
+                confirmLocked = false
                 setConfirmButton(enabled = true, loading = false)
                 askBeforeSendingAgain(resourceManager) {
                     confirmAddLiquidity(confirmedDuplicate = true)
@@ -951,24 +970,41 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 )
             )
             delay(RESULT_BADGE_MILLIS)
-            _addState.value = _addState.value.copy(
-                confirm = _addState.value.confirm.copy(confirmResult = null)
-            )
             when (outcome) {
                 is TransactionOutcome.Confirmed,
                 is TransactionOutcome.Waiting,
                 is TransactionOutcome.FailedOnChain ->
-                    assetsRouter.showTxDetails(outcome.txHash, true)
+                    // The result mark stays until the page has taken this screen's place.
+                    openTransactionPage(outcome.txHash)
                 is TransactionOutcome.RefusedByNode -> {
+                    confirmLocked = false
+                    clearResultMark()
                     setConfirmButton(enabled = true, loading = false)
                     showTransactionRefused(resourceManager, outcome)
                 }
                 null -> {
+                    confirmLocked = false
+                    clearResultMark()
                     setConfirmButton(enabled = true, loading = false)
                     showTransactionNotSent(resourceManager, checkNotNull(notSent))
                 }
             }
         }
+    }
+
+    /**
+     * Opens the deposit's transaction page in place of this screen, only while this screen is in
+     * front. A result that arrives while the app is in the background, or while the PIN lock is
+     * on top, is held and the page opens on the next resume; nothing is navigated before that.
+     */
+    private fun openTransactionPage(txHash: String) = showWhenInFront {
+        assetsRouter.showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
+    }
+
+    private fun clearResultMark() {
+        _addState.value = _addState.value.copy(
+            confirm = _addState.value.confirm.copy(confirmResult = null)
+        )
     }
 
     private fun setConfirmButton(enabled: Boolean, loading: Boolean) {
@@ -983,6 +1019,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
     }
 
     fun onReviewClick() {
+        // Nothing new is reviewed while a Confirm is on its way or its result waits to be shown.
+        if (confirmLocked || resultHeld) return
         val tokenFrom = _addState.value.assetState1?.token
         val tokenTo = _addState.value.assetState2?.token
         if (tokenFrom == null || tokenTo == null) {

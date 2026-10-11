@@ -74,6 +74,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
@@ -1009,6 +1010,9 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     fun swapClicked() {
+        // Nothing new is reviewed while a Confirm is on its way or its result waits to be
+        // shown: the confirm screen keeps its progress or result mark and Confirm stays off.
+        if (isExtrinsicSubmitted || resultHeld) return
         val token =
             if (desired == WithDesired.INPUT) _swapMainState.value.tokenToState?.token else _swapMainState.value.tokenFromState?.token
         val minmax = swapDetails?.minmax
@@ -1050,8 +1054,16 @@ class SwapViewModel @AssistedInject constructor(
      * carries the status and follows it. A swap that did not reach the network (refused by the
      * node, or not prepared) is explained in a dialog and the screen stays, so nothing here ever
      * marks a broadcast swap as rejected.
+     *
+     * The result arrives after a wait of up to two minutes, so the app can be in the background
+     * or behind the PIN lock by then. The dialogs are delivered when the screen is shown again;
+     * the transaction page opens when it is in front (see [openTransactionPage]). Until then
+     * the result mark stays on the confirm screen and Confirm stays off.
      */
     private fun confirmSwap(confirmedDuplicate: Boolean) {
+        // A Confirm is on its way, or a swap of this screen reached the network and its page
+        // has not opened yet. (The duplicate question clears the mark before it asks.)
+        if (isExtrinsicSubmitted || resultHeld) return
         val details = swapDetails ?: return
         val fromState = _swapMainState.value.tokenFromState ?: return
         val toState = _swapMainState.value.tokenToState ?: return
@@ -1092,21 +1104,42 @@ class SwapViewModel @AssistedInject constructor(
                 confirmResult = outcome?.badge() ?: TransactionResultBadge.NOT_SENT,
             )
             delay(RESULT_BADGE_MILLIS)
-            _swapMainState.value = _swapMainState.value.copy(confirmResult = null)
             when (outcome) {
                 is TransactionOutcome.Confirmed,
                 is TransactionOutcome.Waiting,
                 is TransactionOutcome.FailedOnChain ->
-                    assetsRouter.showTxDetails(outcome.txHash, true)
+                    openTransactionPage(outcome.txHash, outcome.badge())
                 is TransactionOutcome.RefusedByNode -> {
+                    _swapMainState.value = _swapMainState.value.copy(confirmResult = null)
                     setConfirmButton(enabled = true, loading = false)
                     showTransactionRefused(resourceManager, outcome)
                 }
                 null -> {
+                    _swapMainState.value = _swapMainState.value.copy(confirmResult = null)
                     setConfirmButton(enabled = true, loading = false)
                     showTransactionNotSent(resourceManager, checkNotNull(notSent))
                 }
             }
+        }
+    }
+
+    /**
+     * Opens the swap's transaction page in place of this screen, only while this screen is in
+     * front. A result that arrives while the app is in the background, or while the PIN lock is
+     * on top, is held and the page opens on the next resume; nothing is navigated before that.
+     * While it is held the confirm screen shows the result mark and Confirm stays off, also
+     * after the form was cleared for the finished swap.
+     */
+    private fun openTransactionPage(txHash: String, badge: TransactionResultBadge) {
+        showWhenInFront { assetsRouter.showTxResult(txHash, TransactionScreen.SWAP) }
+        if (resultHeld) {
+            _swapMainState.value = _swapMainState.value.copy(
+                confirmButtonState = _swapMainState.value.confirmButtonState.copy(
+                    enabled = false,
+                    loading = false,
+                ),
+                confirmResult = badge,
+            )
         }
     }
 
