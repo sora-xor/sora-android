@@ -8,6 +8,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import io.mockk.mockk
 import java.io.File
 import java.security.KeyPair
@@ -40,6 +42,7 @@ import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException
 import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
 import jp.co.soramitsu.feature_account_impl.data.repository.CredentialsRepositoryImpl
 import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositoryImpl
@@ -50,14 +53,18 @@ import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationManager
 import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationOutcome
 import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationSr25519Crypto
 import jp.co.soramitsu.feature_account_impl.historical.HistoricalSr25519Vectors
+import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.xcrypto.encryption.sr25519.Sr25519JNI
 import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
+import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.EncryptionType
 import jp.co.soramitsu.xsubstrate.encrypt.MultiChainEncryption
 import jp.co.soramitsu.xsubstrate.encrypt.SignWrapper
 import jp.co.soramitsu.xsubstrate.encrypt.json.JsonSeedEncoder
+import jp.co.soramitsu.xsubstrate.encrypt.json.coders.type.TypeCoderFactory
+import jp.co.soramitsu.xsubstrate.encrypt.json.coders.type.encode
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.SubstrateKeypairFactory
 import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
@@ -1742,6 +1749,410 @@ class WalletUpgradeScenarioTest {
     }
 
     @Test
+    fun rawSeedPastedWithALineBreakOn3863KeepsSigningAndIsStillItsSeed() = runBlocking {
+        val wallet = rawSeedWallet(RAW_SEED)
+        val control = phraseWallet(TWELVE_WORDS)
+        // The 64 characters as a note app wrapped them onto two lines.
+        val typed = RAW_SEED.take(32) + "\n" + RAW_SEED.drop(32)
+        val before = release3863 {
+            importedSeedAsTyped(wallet, typed)
+            created(control)
+            finishedAccount(wallet)
+            finishedAccount(control)
+            select(wallet)
+            registrationFinished()
+        }
+        room(73, wallet to "Seed wallet", control to "Control")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet, control), selected = wallet)
+            launch.assertCiphertextsKept(before)
+            // The stored text, line break included, is this account's seed.
+            assertEquals(typed, launch.credentialsDatasource.retrieveSeed(wallet.address))
+            assertEquals("RAW_SEED", launch.identity(wallet).secretSource)
+            assertEquals("MATCHES", launch.report(wallet).seed)
+            // What is shown, exported and backed up is the 64 characters the import accepts.
+            val material = launch.backupMaterial(wallet)
+            assertTrue(material.canSign && material.hasSeed && !material.storedSeedDoesNotMatch)
+            assertEquals(RAW_SEED, material.seedHex)
+            assertEquals(RAW_SEED, launch.credentials.retrieveSeed(SoraAccount(wallet.address, "")))
+            // Typing the same seed again, with or without the line break: already here.
+            listOf(typed, RAW_SEED).forEach { again ->
+                val error = runCatching { launch.importSeed(again, "Again") }.exceptionOrNull()
+                assertEquals(
+                    ResponseCode.ACCOUNT_ALREADY_IMPORTED,
+                    (error as? SoraException)?.errorResponseCode,
+                )
+            }
+            launch.assertCiphertextsKept(before)
+        }
+
+        // The seed as it is shown restores the same account on an empty phone, and a seed
+        // imported by this version is stored as its 64 characters.
+        cleanInstall()
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            assertEquals(wallet.address, launch.importSeed(typed, "Restored").substrateAddress)
+            assertEquals(RAW_SEED, launch.credentialsDatasource.retrieveSeed(wallet.address))
+            launch.assertUsable(listOf(wallet), selected = wallet)
+        }
+    }
+
+    @Test
+    fun brokenKeyNextToASeedStoredWithALineBreakIsRepairedWithThatSeed() = runBlocking {
+        val broken = rawSeedWallet(RAW_SEED)
+        val control = phraseWallet(TWELVE_WORDS)
+        val foreign = phraseWallet(TWENTY_FOUR_WORDS)
+        val typed = RAW_SEED.take(32) + "\n" + RAW_SEED.drop(32)
+        val before = release3863 {
+            // The key stored under this account's address does not derive that address.
+            credentials.saveKeys(foreign.keypair, broken.address)
+            credentials.saveSeed(typed, broken.address)
+            created(control)
+            finishedAccount(broken)
+            finishedAccount(control)
+            select(control)
+            registrationFinished()
+        }
+        room(73, broken to "Broken", control to "Control")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(control), unavailable = listOf(broken.address), selected = control)
+            // Its own seed is still recognised and shown as its backup.
+            assertEquals(RAW_SEED, launch.backupMaterial(broken).seedHex)
+
+            // Typing the seed exactly as it was first pasted offers the repair ...
+            val offer = runCatching { launch.importSeed(typed, "Broken") }.exceptionOrNull()
+            assertTrue(offer.toString(), offer is WalletRepairAvailableException)
+            launch.assertCiphertextsKept(before)
+            // ... and the confirmed repair accepts it as proven and writes the proven keys.
+            val repaired = launch.interactor.repairFromRawSeed(typed, "Broken", "135790")
+            assertEquals(broken.address, repaired.substrateAddress)
+            assertEquals(1, repairCopies().size)
+            launch.assertUsable(listOf(control, broken), selected = broken)
+            assertEquals(RAW_SEED, launch.credentialsDatasource.retrieveSeed(broken.address))
+            launch.assertCiphertextsKept(before.filterKeys { !it.endsWith(broken.address) })
+        }
+    }
+
+    @Test
+    fun phraseEnteredForAWalletRestoredFromItsBackupFileIsKeptAsItsBackup() = runBlocking {
+        val wallet = phraseWallet(TWELVE_WORDS)
+        release3863 {
+            created(wallet)
+            finishedAccount(wallet)
+            select(wallet)
+            registrationFinished()
+        }
+        room(73, wallet to "Main")
+        var json = ""
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            json = launch.credentials.generateJson(listOf(SoraAccount(wallet.address, "Main")), JSON_PASSWORD)
+        }
+
+        // A new phone: the wallet is restored from its backup file and is only a key pair.
+        cleanInstall()
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.importJson(json, JSON_PASSWORD, "Restored")
+            launch.assertUsable(listOf(wallet), selected = wallet)
+            assertEquals("LEGACY_SECRET", launch.identity(wallet).secretSource)
+            assertTrue(launch.backupMaterial(wallet).onlyJsonExport)
+            assertEquals(setOf("sora2"), launch.networkIds(wallet))
+            val keysBefore = launch.dataStore.data.first().asMap().mapKeys { it.key.name }
+                .filterKeys { it.endsWith(wallet.address) }
+            val key = launch.credentials.retrieveKeyPair(SoraAccount(wallet.address, ""))
+
+            // The person enters the wallet's phrase in Import account, typed with commas.
+            val answer = runCatching {
+                launch.importPhrase(TWELVE_WORDS.replace(" ", ", "), "Typed name")
+            }.exceptionOrNull()
+            // "Already here", and the phrase was kept as its backup.
+            assertEquals(
+                ResponseCode.ACCOUNT_ALREADY_IMPORTED_BACKUP_SAVED,
+                (answer as? SoraException)?.errorResponseCode,
+            )
+            // Add-only: every value stored before is unchanged, the key included.
+            launch.assertCiphertextsKept(keysBefore)
+            val after = launch.credentials.retrieveKeyPair(SoraAccount(wallet.address, ""))
+            assertArrayEquals(key.privateKey, after.privateKey)
+            assertArrayEquals(key.nonce, after.nonce)
+            assertEquals(TWELVE_WORDS, launch.credentialsDatasource.retrieveMnemonic(wallet.address))
+            // The account keeps its row and name, shows its phrase and seed, and has its
+            // SORA 3 accounts at once (they need a recorded 12- or 24-word phrase).
+            launch.assertUsable(listOf(wallet), selected = wallet)
+            assertEquals("Restored", launch.userRepository.getCurSoraAccount().accountName)
+            assertEquals("MNEMONIC", launch.identity(wallet).secretSource)
+            val material = launch.backupMaterial(wallet)
+            assertEquals(TWELVE_WORDS.split(" "), material.phraseWords)
+            assertEquals(wallet.seedHex, material.seedHex)
+            NexusNetworks.admitted.forEach { network ->
+                assertTrue(network.id.wireId, network.id.wireId in launch.networkIds(wallet))
+            }
+            assertTrue(repairCopies().isEmpty())
+
+            // Entered once more: plainly already here, nothing more is written.
+            val stored = launch.dataStore.data.first().asMap().mapKeys { it.key.name }
+            val again = runCatching { launch.importPhrase(TWELVE_WORDS, "Again") }.exceptionOrNull()
+            assertEquals(
+                ResponseCode.ACCOUNT_ALREADY_IMPORTED,
+                (again as? SoraException)?.errorResponseCode,
+            )
+            assertEquals(stored, launch.dataStore.data.first().asMap().mapKeys { it.key.name })
+        }
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+            assertEquals("MNEMONIC", launch.identity(wallet).secretSource)
+            assertEquals(1, launch.journal().verifiedAccountCount)
+        }
+    }
+
+    @Test
+    fun wrongRepairPinsCountThroughThePinScreensCounterAndLockIt() = runBlocking {
+        val broken = phraseWallet(TWELVE_WORDS)
+        val control = phraseWallet(TWENTY_FOUR_WORDS)
+        val foreign = rawSeedWallet(RAW_SEED)
+        val before = release3863 {
+            credentials.saveKeys(foreign.keypair, broken.address)
+            credentials.saveMnemonic(requireNotNull(broken.mnemonic), broken.address)
+            created(control)
+            finishedAccount(broken)
+            finishedAccount(control)
+            select(control)
+            registrationFinished()
+        }
+        room(73, broken to "Broken", control to "Control")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            val offer = runCatching { launch.importPhrase(TWELVE_WORDS, "Broken") }.exceptionOrNull()
+            assertTrue(offer.toString(), (offer as? WalletRepairAvailableException)?.pinRequired == true)
+
+            // Two wrong PINs, then a third: PIN entry is locked, as on the PIN screen, and the
+            // lock is what the PIN screen reads at its next start.
+            repeat(2) {
+                val wrong = runCatching { launch.repairWithPhrase(TWELVE_WORDS, "Broken", "00000$it") }
+                    .exceptionOrNull()
+                assertEquals(ResponseCode.WRONG_PIN_CODE, (wrong as? SoraException)?.errorResponseCode)
+            }
+            assertEquals(2, launch.userRepository.retrievePinTriesUsed())
+            val third = runCatching { launch.repairWithPhrase(TWELVE_WORDS, "Broken", "999999") }
+                .exceptionOrNull()
+            assertTrue(third.toString(), third is RepairPinLockedException)
+            assertEquals(3, launch.userRepository.retrievePinTriesUsed())
+            assertTrue(launch.userRepository.retrieveTimerStartedTimestamp() > 0)
+            // Starting the import again does not give new tries: not even the right PIN is
+            // accepted while it is locked. Nothing was changed by any of this.
+            val locked = runCatching { launch.repairWithPhrase(TWELVE_WORDS, "Broken", "135790") }
+                .exceptionOrNull()
+            assertTrue(locked.toString(), locked is RepairPinLockedException)
+            launch.assertCiphertextsKept(before)
+            assertTrue(repairCopies().isEmpty())
+            launch.assertUsable(listOf(control), unavailable = listOf(broken.address), selected = control)
+
+            // After the lock (the timer is moved back here instead of waiting a minute) the
+            // right PIN repairs the account and clears the counter and the timer.
+            launch.userRepository.saveTimerStartedTimestamp(System.currentTimeMillis() - 61_000)
+            launch.repairWithPhrase(TWELVE_WORDS, "Broken", "135790")
+            assertEquals(0, launch.userRepository.retrievePinTriesUsed())
+            assertEquals(0L, launch.userRepository.retrieveTimerStartedTimestamp())
+            launch.assertUsable(listOf(control, broken), selected = broken)
+        }
+    }
+
+    @Test
+    fun accountThatSignsWithoutAProvenBackupKeepsACopyWhenItIsRemoved() = runBlocking {
+        val working = phraseWallet(TWELVE_WORDS)
+        val backedUp = phraseWallet(EIGHTEEN_WORDS)
+        val control = rawSeedWallet(RAW_SEED)
+        val before = release3863 {
+            credentials.saveKeys(working.keypair, working.address)
+            // The phrase stored next to this key belongs to a different wallet: nothing on the
+            // phone is a backup of this account, and there is no phrase to show before removal.
+            credentials.saveMnemonic(TWENTY_FOUR_WORDS, working.address)
+            created(backedUp)
+            importedSeed(control)
+            listOf(working, backedUp, control).forEach { finishedAccount(it) }
+            select(control)
+            registrationFinished()
+        }
+        room(73, working to "Working", backedUp to "Backed up", control to "Control")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(working, backedUp, control), selected = control)
+            val copies = {
+                context.noBackupFilesDir.listFiles().orEmpty()
+                    .filter { it.name.startsWith("wallet-quarantine-") && it.name.contains("-removed-") }
+            }
+
+            // An account whose own phrase is stored: removing it needs no copy.
+            launch.remove(backedUp.address)
+            assertTrue(copies().isEmpty())
+
+            // The account that signs but has no proven backup on the phone: the confirmed
+            // removal first keeps a copy of the encrypted preference files, which still hold
+            // its key and the other wallet's phrase.
+            val stored = launch.dataStore.data.first().asMap().mapKeys { it.key.name }
+            launch.remove(working.address)
+            val copy = copies().single()
+            assertTrue(copy.name, copy.name.endsWith("-removed-account-without-backup"))
+            val kept = File(copy, "sora_prefs_datastore.preferences_pb").readBytes()
+            listOf("prefs_priv_key", "prefs_key_nonce", "prefs_mnemonic").forEach { field ->
+                val ciphertext = stored.getValue(field + working.address) as String
+                assertTrue(field, String(kept, Charsets.ISO_8859_1).contains(ciphertext))
+                assertEquals(before[field + working.address], ciphertext)
+            }
+            launch.assertUsable(listOf(control), selected = control)
+        }
+    }
+
+    @Test
+    fun batchBackupFileRepairsTheAccountItNamesAfterOneConfirmation() = runBlocking {
+        val first = phraseWallet(TWELVE_WORDS)
+        val broken = phraseWallet(TWENTY_FOUR_WORDS)
+        val foreign = rawSeedWallet(RAW_SEED)
+        release3863 {
+            created(first)
+            created(broken)
+            finishedAccount(first)
+            finishedAccount(broken)
+            select(first)
+            registrationFinished()
+        }
+        room(73, first to "First", broken to "Broken")
+        // The batch backup of both accounts, made while both worked. It is the person's only
+        // backup of the second one.
+        var batch = ""
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            batch = batchBackupFile(
+                listOf(first to "First", broken to "Broken").map { (wallet, name) ->
+                    launch.credentials.generateJson(listOf(SoraAccount(wallet.address, name)), JSON_PASSWORD)
+                },
+            )
+        }
+        // Later the keys stored for the second account are another wallet's, and no phrase is
+        // stored for it any more.
+        cleanInstall()
+        val before = release3863 {
+            created(first)
+            credentials.saveKeys(
+                Sr25519Keypair(foreign.keypair.privateKey, broken.keypair.publicKey, foreign.keypair.nonce),
+                broken.address,
+            )
+            finishedAccount(first)
+            finishedAccount(broken)
+            select(first)
+            registrationFinished()
+        }
+        room(73, first to "First", broken to "Broken")
+
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(first), unavailable = listOf(broken.address), selected = first)
+
+            // Import account, Backup file (JSON): the first account is already here; the second
+            // is named for the repair. Nothing was written and nothing was copied.
+            val result = launch.interactor.importFromJson(batch, JSON_PASSWORD, "")
+            assertTrue(result.imported.isEmpty())
+            assertEquals(1, result.alreadyHere)
+            assertEquals(listOf(broken.address), result.needRepair.map { it.address })
+            assertTrue(result.needRepair.single().accountExists)
+            assertTrue(result.repairPinRequired && !result.repairScreenLockRequired)
+            launch.assertCiphertextsKept(before)
+            assertTrue(repairCopies().isEmpty())
+
+            // A wrong PIN changes nothing.
+            val wrongPin = runCatching {
+                launch.interactor.repairFromJsonBatch(
+                    json = batch,
+                    password = JSON_PASSWORD,
+                    accountName = "",
+                    pin = "000000",
+                    addresses = listOf(broken.address),
+                )
+            }.exceptionOrNull()
+            assertEquals(ResponseCode.WRONG_PIN_CODE, (wrongPin as? SoraException)?.errorResponseCode)
+            launch.assertCiphertextsKept(before)
+
+            // Confirmed once with the PIN: a copy of the old values is kept, the key pair of
+            // the file is written for that account only, and it signs under the same address.
+            val repaired = launch.interactor.repairFromJsonBatch(
+                json = batch,
+                password = JSON_PASSWORD,
+                accountName = "",
+                pin = "135790",
+                addresses = result.needRepair.map { it.address },
+            )
+            assertEquals(listOf(broken.address), repaired.map { it.substrateAddress })
+            assertEquals(1, repairCopies().size)
+            launch.assertUsable(listOf(first, broken), selected = broken)
+            assertEquals("Broken", launch.userRepository.getCurSoraAccount().accountName)
+            launch.assertCiphertextsKept(before.filterKeys { !it.endsWith(broken.address) })
+
+            // The same file again: every account in it is already here.
+            val again = runCatching { launch.interactor.importFromJson(batch, JSON_PASSWORD, "") }
+                .exceptionOrNull()
+            assertEquals(
+                ResponseCode.ACCOUNT_ALREADY_IMPORTED,
+                (again as? SoraException)?.errorResponseCode,
+            )
+        }
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(first, broken), selected = broken)
+            assertEquals(2, launch.journal().verifiedAccountCount)
+        }
+    }
+
+    /**
+     * HARNESS: a batch backup file in the format `JsonAccountsEncoder.generate(List)` writes:
+     * the one-account exports as a JSON array, encrypted as a whole with scrypt and
+     * xsalsa20-poly1305 under the same password. The production batch writer needs the app's
+     * CryptoAssistant, which this harness does not build, so the outer layer is made with the
+     * library's own encoder for that format (the one the one-account export uses). The
+     * production reader opens it; `JsonAccountsExportRoundTripTest` proves the production writer
+     * and reader agree.
+     */
+    private fun batchBackupFile(accountExports: List<String>): String {
+        val gson = Gson()
+        val accounts = JsonArray()
+        accountExports.forEach { accounts.add(gson.fromJson(it, JsonElement::class.java)) }
+        val encryption = listOf("scrypt", "xsalsa20-poly1305")
+        val outer = requireNotNull(TypeCoderFactory.getEncoder(encryption)).encode(
+            gson.toJson(accounts).encodeToByteArray(),
+            JSON_PASSWORD.encodeToByteArray(),
+        )
+        return JSONObject()
+            .put("encoded", android.util.Base64.encodeToString(outer, android.util.Base64.NO_WRAP))
+            .put(
+                "encoding",
+                JSONObject()
+                    .put("content", org.json.JSONArray(listOf("batch-pkcs8")))
+                    .put("type", org.json.JSONArray(encryption))
+                    .put("version", "3"),
+            )
+            .put("accounts", org.json.JSONArray())
+            .toString()
+    }
+
+    @Test
     fun backupMaterialThatCannotBeReadNeverBlocksSigning() = runBlocking {
         val wallet = phraseWallet(TWELVE_WORDS)
         val control = phraseWallet(TWENTY_FOUR_WORDS)
@@ -2282,6 +2693,21 @@ class WalletUpgradeScenarioTest {
             credentials.saveSeed(wallet.seedHex, wallet.address)
         }
 
+        /**
+         * CredentialsRepositoryImpl.restoreUserCredentialsFromRawSeed at b7b0f0fc for a seed
+         * [typed] as it was pasted: `generateEntropyAndKeysFromRawSeed(rawSeed.removeHexPrefix())`
+         * derives the keys from `rawSeed.fromHex()` (BouncyCastle `Hex.decode`, which skips
+         * spaces, tabs and line breaks) and stores the text itself with `saveSeed(rawSeed, ..)`.
+         */
+        suspend fun importedSeedAsTyped(wallet: Fixture, typed: String) {
+            val rawSeed = typed.removePrefix("0x")
+            // 3.8.6.3 accepted it (isRawSeedValid) and derived this wallet's key pair from it.
+            assertEquals(32, rawSeed.fromHex().size)
+            assertArrayEquals(HistoricalSr25519Vectors.hex(wallet.seedHex), rawSeed.fromHex())
+            credentials.saveKeys(wallet.keypair, wallet.address)
+            credentials.saveSeed(rawSeed, wallet.address)
+        }
+
         /** MultiaccountInteractor.createUser / continueRecoverFlow at b7b0f0fc (preferences). */
         suspend fun finishedAccount(wallet: Fixture) {
             user.saveNeedsMigration(false, wallet.address)
@@ -2461,119 +2887,40 @@ class WalletUpgradeScenarioTest {
         suspend fun identity(wallet: Fixture) =
             requireNotNull(database.walletIdentityDao().getWallet(wallet.address))
 
-        /** MultiaccountInteractor.importFromMnemonic (importDraft), step for step. */
-        suspend fun importPhrase(phrase: String, name: String): SoraAccount {
-            val draft = credentials.draftFromMnemonic(phrase, name)
-            try {
-                val exists = requireNotAlreadyUsable(draft.address)
-                try {
-                    credentials.commitDraft(draft)
-                } catch (error: SoraException) {
-                    if (error.errorResponseCode == ResponseCode.ACCOUNT_STORAGE_CONFLICT) {
-                        throw WalletRepairAvailableException(
-                            address = draft.address,
-                            accountExists = exists,
-                            pinRequired = userRepository.retrievePin().isNotEmpty(),
-                        )
-                    }
-                    throw error
-                }
-                return finishImport(draft.address, draft.accountName, exists)
-            } finally {
-                draft.destroy()
-            }
+        /**
+         * The production import and repair entry point of the app, on the real repositories of
+         * this process (real Keystore, DataStore, Room and native sr25519). Its three other
+         * constructor parameters are never used by an import or a repair.
+         */
+        val interactor by lazy {
+            MultiaccountInteractor(
+                userRepository = userRepository,
+                credentialsRepository = credentials,
+                fileManager = mockk(relaxed = true),
+                runtimeManager = mockk(relaxed = true),
+                walletRepository = mockk(relaxed = true),
+            )
         }
 
-        /** MultiaccountInteractor.importFromRawSeed (importDraft), step for step. */
-        suspend fun importSeed(seedHex: String, name: String): SoraAccount {
-            val draft = credentials.draftFromRawSeed(seedHex, name)
-            try {
-                val exists = requireNotAlreadyUsable(draft.address)
-                credentials.commitDraft(draft)
-                return finishImport(draft.address, draft.accountName, exists)
-            } finally {
-                draft.destroy()
-            }
-        }
+        /** Import account, Passphrase. */
+        suspend fun importPhrase(phrase: String, name: String): SoraAccount =
+            interactor.importFromMnemonic(phrase, name)
 
-        /** MultiaccountInteractor.importFromJson for a one-account file, step for step. */
-        suspend fun importJson(json: String, password: String, name: String): SoraAccount {
-            val drafts = credentials.draftsFromJson(json, password, name)
-            try {
-                val draft = drafts.single()
-                val exists = requireNotAlreadyUsable(draft.address)
-                try {
-                    credentials.commitDraft(draft)
-                } catch (error: SoraException) {
-                    if (error.errorResponseCode == ResponseCode.ACCOUNT_STORAGE_CONFLICT) {
-                        throw WalletRepairAvailableException(
-                            address = draft.address,
-                            accountExists = exists,
-                            pinRequired = userRepository.retrievePin().isNotEmpty(),
-                        )
-                    }
-                    throw error
-                }
-                return finishImport(draft.address, draft.accountName, exists)
-            } finally {
-                drafts.forEach { it.destroy() }
-            }
-        }
+        /** Import account, Raw seed. */
+        suspend fun importSeed(seedHex: String, name: String): SoraAccount =
+            interactor.importFromRawSeed(seedHex, name)
 
-        /** MultiaccountInteractor.repairFromJson, step for step. */
-        suspend fun repairWithJson(json: String, password: String, name: String, pin: String): SoraAccount {
-            val stored = userRepository.retrievePin()
-            if (stored.isNotEmpty() && stored != pin) {
-                throw SoraException.businessError(ResponseCode.WRONG_PIN_CODE)
-            }
-            val drafts = credentials.draftsFromJson(json, password, name)
-            try {
-                val draft = drafts.single()
-                val exists = requireNotAlreadyUsable(draft.address)
-                credentials.repairWithDraft(draft)
-                return finishImport(draft.address, draft.accountName, exists)
-            } finally {
-                drafts.forEach { it.destroy() }
-            }
-        }
+        /** Import account, Backup file (JSON), for a one-account file. */
+        suspend fun importJson(json: String, password: String, name: String): SoraAccount =
+            interactor.importFromJson(json, password, name).imported.single()
 
-        /** MultiaccountInteractor.repairFromMnemonic (repairDraft), step for step. */
-        suspend fun repairWithPhrase(phrase: String, name: String, pin: String): SoraAccount {
-            val stored = userRepository.retrievePin()
-            if (stored.isNotEmpty() && stored != pin) {
-                throw SoraException.businessError(ResponseCode.WRONG_PIN_CODE)
-            }
-            val draft = credentials.draftFromMnemonic(phrase, name)
-            try {
-                val exists = requireNotAlreadyUsable(draft.address)
-                credentials.repairWithDraft(draft)
-                return finishImport(draft.address, draft.accountName, exists)
-            } finally {
-                draft.destroy()
-            }
-        }
+        /** The confirmed repair from a one-account backup file. */
+        suspend fun repairWithJson(json: String, password: String, name: String, pin: String): SoraAccount =
+            interactor.repairFromJson(json, password, name, pin)
 
-        private suspend fun requireNotAlreadyUsable(address: String): Boolean {
-            if (!userRepository.accountExists(address)) return false
-            if (address !in userRepository.unavailableWalletIds()) {
-                throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
-            }
-            return true
-        }
-
-        private suspend fun finishImport(address: String, name: String, exists: Boolean): SoraAccount {
-            if (!exists) {
-                val account = SoraAccount(address, name)
-                userRepository.insertSoraAccount(account, false)
-                userRepository.setCurSoraAccount(account)
-                userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
-                return account
-            }
-            val repaired = userRepository.completeUnavailableWallet(address)
-            userRepository.setCurSoraAccount(repaired)
-            userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
-            return repaired
-        }
+        /** The confirmed repair from a recovery phrase. */
+        suspend fun repairWithPhrase(phrase: String, name: String, pin: String): SoraAccount =
+            interactor.repairFromMnemonic(phrase, name, pin)
 
         /** What the last verification run found for [wallet]'s stored secrets. */
         fun report(wallet: Fixture) = migrationManager.lastSecretsReports.getValue(wallet.address)
