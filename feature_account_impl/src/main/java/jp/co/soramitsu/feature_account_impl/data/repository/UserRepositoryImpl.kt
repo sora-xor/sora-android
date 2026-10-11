@@ -582,15 +582,32 @@ class UserRepositoryImpl(
             val nexusPhrase = verdict?.recoveryPhrase
                 ?.takeIf { secretSource == StoredSecretsVerdict.SOURCE_MNEMONIC }
             if (migrationState == "VERIFIED" && nexusPhrase != null) {
-                networkAccounts += NexusChildAccounts.prepare(
-                    walletId = soraAccount.substrateAddress,
-                    storedPhraseText = secrets.mnemonic.orEmpty(),
-                    phrase = nexusPhrase,
-                    existing = db.walletIdentityDao()
-                        .getNetworkAccounts(soraAccount.substrateAddress)
-                        .associateBy(NetworkAccountLocal::networkId),
-                    derivationVersion = 1,
-                )
+                // This comes after the signing decision and can never undo it: if it fails for
+                // a reason other than storage, the account is still added as verified and the
+                // next start prepares the Nexus accounts.
+                networkAccounts += try {
+                    NexusChildAccounts.prepare(
+                        walletId = soraAccount.substrateAddress,
+                        storedPhraseText = secrets.mnemonic.orEmpty(),
+                        phrase = nexusPhrase,
+                        existing = db.walletIdentityDao()
+                            .getNetworkAccounts(soraAccount.substrateAddress)
+                            .associateBy(NetworkAccountLocal::networkId),
+                        derivationVersion = 1,
+                    )
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: OutOfMemoryError) {
+                    throw error
+                } catch (error: Throwable) {
+                    if (
+                        WalletStorageFailures.isTransient(error) ||
+                        WalletStorageFailures.isKeyMaterialUnavailable(error)
+                    ) {
+                        throw error
+                    }
+                    emptyList()
+                }
             }
             return VerifiedWalletModel(
                 identity = WalletIdentityLocal(

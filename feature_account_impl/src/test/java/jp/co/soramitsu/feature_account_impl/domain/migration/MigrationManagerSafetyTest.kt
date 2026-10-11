@@ -6,8 +6,10 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import java.security.MessageDigest
 import jp.co.soramitsu.common.account.SoraAccount
@@ -32,6 +34,7 @@ import jp.co.soramitsu.core_db.model.WalletIdentityLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
 import jp.co.soramitsu.core_db.model.WalletMigrationJournalLocal
 import jp.co.soramitsu.feature_account_impl.domain.keys.FakeStoredKeyCrypto
+import jp.co.soramitsu.feature_account_impl.domain.keys.NexusChildAccounts
 import jp.co.soramitsu.feature_account_impl.domain.keys.realSr25519Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
@@ -943,6 +946,53 @@ class MigrationManagerSafetyTest {
             assertTrue(storage.wallets.isEmpty())
             assertEquals(null, storage.journal)
             coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+        }
+
+    @Test
+    fun `a failure while preparing Nexus accounts never makes the SORA2 account read-only`() =
+        runTest {
+            val vector = soraVector(PINNED_TWELVE_WORD_SORA2_SEED)
+            val legacy = SoraAccountLocal(vector.address, "Primary")
+            val storage = successfulMigrationStorage(listOf(legacy))
+            val userRepository = mockk<UserRepository>()
+            val credentials = mockk<CredentialsRepository>()
+            stubWalletMutationLock(
+                userRepository = userRepository,
+                selectedAccount = SoraAccount(vector.address, "Primary"),
+                onboardingState = OnboardingState.REGISTRATION_FINISHED,
+            )
+            coEvery { credentials.isExplicitWatchOnly(any()) } returns false
+            coEvery { credentials.retrieveKeyPair(any()) } answers { sr25519KeyPair(vector.seed) }
+            coEvery { credentials.retrieveMnemonic(any()) } returns MNEMONIC
+            coEvery { credentials.retrieveStoredSeed(any()) } returns ""
+            val manager = MigrationManager(
+                userRepository = userRepository,
+                credentialsRepository = credentials,
+                sora2AddressCodec = Sora2AddressCodec(),
+                database = storage.database,
+                migrationSr25519Crypto = testMigrationSr25519Crypto,
+            )
+            mockkObject(NexusChildAccounts)
+            try {
+                every { NexusChildAccounts.prepare(any(), any(), any(), any(), any()) } throws
+                    IllegalStateException("unexpected derivation failure")
+
+                assertTrue(manager.start())
+            } finally {
+                unmockkObject(NexusChildAccounts)
+            }
+
+            // The stored key signs: the account is verified with its phrase as the backup.
+            val identity = storage.wallets.getValue(vector.address)
+            assertEquals("VERIFIED", identity.migrationState)
+            assertEquals("MNEMONIC", identity.secretSource)
+            assertEquals(
+                listOf("sora2"),
+                storage.networkAccounts.getValue(vector.address).map(NetworkAccountLocal::networkId),
+            )
+            val report = manager.lastSecretsReports.getValue(vector.address)
+            assertTrue(report.canSign)
+            assertTrue("NEXUS_ACCOUNTS_NOT_PREPARED" in report.diagnostics)
         }
 
     @Test

@@ -207,50 +207,56 @@ class StoredWalletSecretsJudge(
         var canonicalSeed: ByteArray? = null
         val seedBytes = storedSeed?.takeIf(String::isNotBlank)?.let(StoredSecretHex::decodeOrNull)
         try {
-            val phraseMatch = when {
-                mnemonic == null -> BackupMatch.UNREADABLE.also { diagnostics += "PHRASE_UNREADABLE" }
-                mnemonic.isBlank() -> BackupMatch.ABSENT
-                phrase == null -> BackupMatch.DOES_NOT_MATCH.also { diagnostics += "PHRASE_NOT_BIP39" }
-                else -> {
-                    phraseKeys = keysOf(phrase.miniSeed(), wipeSeed = true)
-                    if (derivesAccount(phraseKeys, accountPublicKey)) {
-                        if (mnemonic != phrase.text) diagnostics += "PHRASE_TEXT_NOT_CANONICAL"
-                        BackupMatch.MATCHES
-                    } else {
-                        BackupMatch.DOES_NOT_MATCH.also { diagnostics += "PHRASE_OTHER_WALLET" }
+            // Judging backup material never throws: whatever goes wrong while a phrase or seed
+            // is checked says only that it is not a proven backup.
+            val phraseMatch = judged("PHRASE_CHECK_FAILED", diagnostics) {
+                when {
+                    mnemonic == null -> BackupMatch.UNREADABLE.also { diagnostics += "PHRASE_UNREADABLE" }
+                    mnemonic.isBlank() -> BackupMatch.ABSENT
+                    phrase == null -> BackupMatch.DOES_NOT_MATCH.also { diagnostics += "PHRASE_NOT_BIP39" }
+                    else -> {
+                        phraseKeys = keysOf(phrase.miniSeed(), wipeSeed = true)
+                        if (derivesAccount(phraseKeys, accountPublicKey)) {
+                            if (mnemonic != phrase.text) diagnostics += "PHRASE_TEXT_NOT_CANONICAL"
+                            BackupMatch.MATCHES
+                        } else {
+                            BackupMatch.DOES_NOT_MATCH.also { diagnostics += "PHRASE_OTHER_WALLET" }
+                        }
                     }
                 }
             }
-            val seedMatch = when {
-                storedSeed == null -> BackupMatch.UNREADABLE.also { diagnostics += "SEED_UNREADABLE" }
-                storedSeed.isBlank() -> BackupMatch.ABSENT
-                seedBytes == null -> BackupMatch.DOES_NOT_MATCH.also { diagnostics += "SEED_NOT_HEX" }
-                seedBytes.size == RecoveryPhrase.MINI_SEED_BYTES -> {
-                    seedKeys = keysOf(seedBytes, wipeSeed = false)
-                    if (derivesAccount(seedKeys, accountPublicKey)) {
-                        canonicalSeed = seedBytes.copyOf()
-                        BackupMatch.MATCHES
-                    } else {
-                        BackupMatch.DOES_NOT_MATCH.also { diagnostics += "SEED_OTHER_WALLET" }
+            val seedMatch = judged("SEED_CHECK_FAILED", diagnostics) {
+                when {
+                    storedSeed == null -> BackupMatch.UNREADABLE.also { diagnostics += "SEED_UNREADABLE" }
+                    storedSeed.isBlank() -> BackupMatch.ABSENT
+                    seedBytes == null -> BackupMatch.DOES_NOT_MATCH.also { diagnostics += "SEED_NOT_HEX" }
+                    seedBytes.size == RecoveryPhrase.MINI_SEED_BYTES -> {
+                        seedKeys = keysOf(seedBytes, wipeSeed = false)
+                        if (derivesAccount(seedKeys, accountPublicKey)) {
+                            canonicalSeed = seedBytes.copyOf()
+                            BackupMatch.MATCHES
+                        } else {
+                            BackupMatch.DOES_NOT_MATCH.also { diagnostics += "SEED_OTHER_WALLET" }
+                        }
                     }
+                    seedBytes.size == RecoveryPhrase.FULL_SEED_BYTES -> {
+                        // The uncropped derivation cached by 3.6.0.0 to 3.8.2.0. It is this
+                        // account's seed only as the complete 64-byte output of its own phrase.
+                        val cropped = if (phraseMatch == BackupMatch.MATCHES && phrase != null) {
+                            StoredSecretHex.canonicalSeedOf(seedBytes, phrase)
+                        } else {
+                            null
+                        }
+                        if (cropped != null) {
+                            canonicalSeed = cropped
+                            diagnostics += "SEED_STORED_AS_64_BYTES"
+                            BackupMatch.MATCHES
+                        } else {
+                            BackupMatch.DOES_NOT_MATCH.also { diagnostics += "SEED_64_BYTES_UNPROVEN" }
+                        }
+                    }
+                    else -> BackupMatch.DOES_NOT_MATCH.also { diagnostics += "SEED_LENGTH_UNSUPPORTED" }
                 }
-                seedBytes.size == RecoveryPhrase.FULL_SEED_BYTES -> {
-                    // The uncropped derivation cached by 3.6.0.0 to 3.8.2.0. It is this
-                    // account's seed only as the complete 64-byte output of its own phrase.
-                    val cropped = if (phraseMatch == BackupMatch.MATCHES && phrase != null) {
-                        StoredSecretHex.canonicalSeedOf(seedBytes, phrase)
-                    } else {
-                        null
-                    }
-                    if (cropped != null) {
-                        canonicalSeed = cropped
-                        diagnostics += "SEED_STORED_AS_64_BYTES"
-                        BackupMatch.MATCHES
-                    } else {
-                        BackupMatch.DOES_NOT_MATCH.also { diagnostics += "SEED_64_BYTES_UNPROVEN" }
-                    }
-                }
-                else -> BackupMatch.DOES_NOT_MATCH.also { diagnostics += "SEED_LENGTH_UNSUPPORTED" }
             }
             if (canonicalSeed == null && phraseMatch == BackupMatch.MATCHES && phrase != null) {
                 canonicalSeed = phrase.miniSeed()
@@ -332,6 +338,21 @@ class StoredWalletSecretsJudge(
         } finally {
             challenge.fill(0)
         }
+    }
+
+    private inline fun judged(
+        failure: String,
+        diagnostics: MutableSet<String>,
+        check: () -> BackupMatch,
+    ): BackupMatch = try {
+        check()
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: OutOfMemoryError) {
+        throw error
+    } catch (_: Throwable) {
+        diagnostics += failure
+        BackupMatch.DOES_NOT_MATCH
     }
 
     private fun keysOf(seed: ByteArray, wipeSeed: Boolean): Sr25519Keypair? = try {
