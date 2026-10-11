@@ -112,4 +112,7 @@ dependencies {
     // constructor parameter the import never uses.
     androidTestImplementation(project(":feature_multiaccount_impl"))
     androidTestImplementation(project(":feature_wallet_api"))
+    // The read-only scenarios open the account list and Account options (their view models)
+    // on the real repositories; :feature_main_api is only the type of their router parameter.
+    androidTestImplementation(project(":feature_main_api"))
 }

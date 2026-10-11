@@ -30,6 +30,10 @@ import jp.co.soramitsu.common.nexus.IrohaKeyDerivation
 import jp.co.soramitsu.common.nexus.NexusNetworks
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.EncryptionUtil
+import jp.co.soramitsu.common.account.SelectedAccountSigning
+import jp.co.soramitsu.common.backup.CloudBackupProvider
+import jp.co.soramitsu.common.data.WalletPreferenceKeys
+import jp.co.soramitsu.common.presentation.viewmodel.FailureNotice
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.core_db.AppDatabase
@@ -43,6 +47,8 @@ import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException
+import jp.co.soramitsu.feature_account_api.domain.model.RetainedWallet
+import jp.co.soramitsu.feature_account_api.domain.model.UnavailableWalletReason
 import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
 import jp.co.soramitsu.feature_account_impl.data.repository.CredentialsRepositoryImpl
 import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositoryImpl
@@ -55,6 +61,9 @@ import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationSr25519Cry
 import jp.co.soramitsu.feature_account_impl.historical.HistoricalSr25519Vectors
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor.BackupRestore
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details.AccountDetailsViewModel
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_list.AccountListViewModel
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ReadOnlyAccountUi
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.xcrypto.encryption.sr25519.Sr25519JNI
 import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
@@ -77,6 +86,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
@@ -2525,6 +2536,371 @@ class WalletUpgradeScenarioTest {
         }
     }
 
+    // ---- ak2 (audit A2): a read-only account is labelled, explained and repairable -----------
+
+    @Test
+    fun readOnlyAccountShowsItsLabelItsRepairAndSendExplainsItself() = runBlocking {
+        val broken = phraseWallet(TWELVE_WORDS)
+        val control = phraseWallet(TWENTY_FOUR_WORDS)
+        val foreign = rawSeedWallet(RAW_SEED)
+        release3863 {
+            // The key stored under this account's address does not derive that address.
+            credentials.saveKeys(foreign.keypair, broken.address)
+            credentials.saveMnemonic(requireNotNull(broken.mnemonic), broken.address)
+            created(control)
+            finishedAccount(broken)
+            finishedAccount(control)
+            // The person had this account selected.
+            select(broken)
+            registrationFinished()
+        }
+        room(73, broken to "Broken", control to "Control")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            val users = launch.userRepository
+            assertEquals(broken.address, users.getCurSoraAccount().substrateAddress)
+
+            // The label of the main screen and of every screen where the person signs: the
+            // selected account is reported as read-only, from the database.
+            assertEquals(
+                SelectedAccountSigning(broken.address, readOnly = true),
+                withTimeout(SCREEN_TIMEOUT_MS) {
+                    users.flowSelectedAccountSigning().first { it.address == broken.address }
+                },
+            )
+            assertEquals(setOf(broken.address), users.flowUnavailableWalletIds().first())
+
+            // Why, and what can be done (UserRepository.unavailableWalletOptions).
+            val options = requireNotNull(users.unavailableWalletOptions(broken.address))
+            assertEquals(UnavailableWalletReason.KEY_NOT_USABLE, options.reason)
+            assertTrue(options.canRepairWithPhrase)
+            assertTrue(options.canShowPhraseAfterPin)
+            assertNull(users.unavailableWalletOptions(control.address))
+
+            // Send explains itself: the signer refuses this account with the code the screens
+            // turn into "This account can't send from this phone ... nothing was signed or
+            // sent", also when a screen wrapped it as an unexpected error (as Send does).
+            val refusal = requireNotNull(WalletSigningGate.unavailableReason(launch.database, broken.address))
+            assertEquals(FailureNotice.SIGNING_WALLET_UNAVAILABLE, refusal)
+            assertEquals(
+                FailureNotice.ACCOUNT_READ_ONLY,
+                FailureNotice.of(SoraException.unexpectedError(IllegalStateException(refusal))),
+            )
+            assertNull(WalletSigningGate.unavailableReason(launch.database, control.address))
+
+            // The account list labels exactly this account.
+            val list = onMainThread {
+                AccountListViewModel(
+                    launch.interactor,
+                    mockk(relaxed = true),
+                    mockk(relaxed = true),
+                    mockk(relaxed = true),
+                )
+            }
+            awaitOnScreen("two rows") { list.accountListScreenState.value?.accountList?.size == 2 }
+            val rows = requireNotNull(list.accountListScreenState.value).accountList
+            assertTrue(rows.single { it.account.substrateAddress == broken.address }.readOnly)
+            assertFalse(rows.single { it.account.substrateAddress == control.address }.readOnly)
+
+            // Account options: the reason, and the repair action first.
+            val details = onMainThread {
+                AccountDetailsViewModel(
+                    launch.interactor,
+                    mockk(relaxed = true),
+                    mockk(relaxed = true),
+                    mockk(relaxed = true),
+                    CloudBackupProvider(false) { error("Google backup is not used here") },
+                    CoroutineManager(),
+                    broken.address,
+                )
+            }
+            awaitOnScreen("read-only panel") { details.accountDetailsScreenState.value?.readOnly != null }
+            assertEquals(
+                ReadOnlyAccountUi(
+                    reason = UnavailableWalletReason.KEY_NOT_USABLE,
+                    canRestoreWithPhrase = true,
+                    canRestoreFromGoogle = false,
+                    canShowBackup = true,
+                    canRemove = true,
+                ),
+                details.accountDetailsScreenState.value?.readOnly,
+            )
+            onMainThread { details.onRestoreKeysWithPhrase() }
+            assertEquals(
+                AccountDetailsViewModel.RestoreKeys.WITH_PHRASE,
+                details.restoreKeysEvent.value,
+            )
+            // Its own phrase is what the removal screen would show first (invariant 4).
+            assertEquals(TWELVE_WORDS.split(" "), launch.backupMaterial(broken).phraseWords)
+
+            // "Restore keys with recovery phrase": Import account, the phrase, the PIN.
+            launch.repairWithPhrase(TWELVE_WORDS, "Broken", "135790")
+
+            // The labels go at once, without a restart, and the account signs.
+            awaitOnScreen("panel gone") { details.accountDetailsScreenState.value?.readOnly == null }
+            awaitOnScreen("label gone") {
+                list.accountListScreenState.value?.accountList?.none { it.readOnly } == true
+            }
+            assertEquals(
+                SelectedAccountSigning(broken.address, readOnly = false),
+                withTimeout(SCREEN_TIMEOUT_MS) {
+                    users.flowSelectedAccountSigning().first { !it.readOnly }
+                },
+            )
+            assertNull(WalletSigningGate.unavailableReason(launch.database, broken.address))
+            launch.assertUsable(listOf(broken, control), selected = broken)
+        }
+    }
+
+    @Test
+    fun removingTheOnlyAccountEndsCleanlyWithTheAccountListStillOpen() = runBlocking {
+        // The candidate crashed here (IllegalArgumentException "Required value was null" from
+        // getCurSoraAccount): the account list, still on the back stack, asked for the selected
+        // account as soon as the list became empty.
+        val only = phraseWallet(TWELVE_WORDS)
+        release3863Wallet(only)
+        room(73, only to "Only")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            val list = onMainThread {
+                AccountListViewModel(
+                    launch.interactor,
+                    mockk(relaxed = true),
+                    mockk(relaxed = true),
+                    mockk(relaxed = true),
+                )
+            }
+            awaitOnScreen("one row") { list.accountListScreenState.value?.accountList?.size == 1 }
+
+            launch.remove(only.address)
+
+            awaitOnScreen("empty list") { list.accountListScreenState.value?.accountList?.isEmpty() == true }
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            assertEquals(
+                SelectedAccountSigning.NONE,
+                withTimeout(SCREEN_TIMEOUT_MS) {
+                    launch.userRepository.flowSelectedAccountSigning().first { it.address.isEmpty() }
+                },
+            )
+            // Nothing was reported as a failure either.
+            assertNull(list.errorFromResourceLiveData.value)
+        }
+        // The app restarts: onboarding, with nothing left to restore without a phrase.
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            assertEquals(emptyList<RetainedWallet>(), launch.userRepository.retainedWallets())
+            // The same phrase brings the account back at the same address.
+            launch.importPhrase(TWELVE_WORDS, "Only")
+            launch.assertUsable(listOf(only), selected = only)
+        }
+    }
+
+    @Test
+    fun removeAllAccountsLeavesKeySetsThatOnlyTheirOwnPhraseBringsBack() = runBlocking {
+        val main = phraseWallet(TWELVE_WORDS)
+        val leftover = phraseWallet(TWENTY_FOUR_WORDS)
+        val before = release3863 {
+            created(main)
+            finishedAccount(main)
+            select(main)
+            registrationFinished()
+            // A "Create account" abandoned in 3.8.6.3: keys and phrase without an account.
+            created(leftover)
+        }
+        room(73, main to "Main")
+        val leftoverBefore = before.filterKeys { it.endsWith(leftover.address) }
+        assertTrue(leftoverBefore.isNotEmpty())
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            // Behind the owner's PIN the leftover wallet can be restored from the phone.
+            assertEquals(
+                listOf(RetainedWallet(leftover.address, needsRecoveryPhrase = false)),
+                launch.userRepository.retainedWallets(),
+            )
+            assertEquals(listOf(leftover.address), launch.interactor.walletsRestorableWithPin())
+
+            // The owner removes the only account before handing the phone on.
+            launch.remove(main.address)
+
+            val after = launch.dataStore.data.first().asMap().mapKeys { it.key.name }
+            // The PIN and the removed account's keys are gone; the leftover set is untouched.
+            assertFalse(after.containsKey("user_pin_code"))
+            assertTrue(after.keys.none { it.endsWith(main.address) })
+            launch.assertCiphertextsKept(leftoverBefore)
+            // And it is marked, in the same edit, as needing its own recovery phrase.
+            assertEquals(
+                setOf(leftover.address),
+                WalletPreferenceKeys.decodeRetainedNeedsPhrase(
+                    after[WalletPreferenceKeys.RETAINED_NEEDS_PHRASE] as String?
+                ),
+            )
+        }
+        // The next person opens the app.
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            assertEquals(
+                listOf(RetainedWallet(leftover.address, needsRecoveryPhrase = true)),
+                launch.userRepository.retainedWallets(),
+            )
+            // Onboarding does not offer it: no PIN is stored, and it is marked.
+            assertEquals(emptyList<String>(), launch.interactor.walletsRestorableWithPin())
+            // They set their own PIN (as after creating any wallet). Still nothing to restore.
+            launch.userRepository.savePin("246810")
+            assertEquals(emptyList<String>(), launch.interactor.walletsRestorableWithPin())
+            val restored = runCatching {
+                launch.interactor.restoreRetainedWallets("246810", "Restored wallet")
+            }.getOrThrow()
+            assertTrue(restored.restored.isEmpty() && restored.notRestorable.isEmpty())
+            // "Restore this wallet" in Login & Security is refused by the repository itself.
+            val refusal = runCatching {
+                launch.userRepository.adoptRetainedWallet(leftover.address, "Restored wallet")
+            }.exceptionOrNull()
+            assertEquals("RETAINED_WALLET_NEEDS_RECOVERY_PHRASE", refusal?.message)
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            launch.assertCiphertextsKept(leftoverBefore)
+
+            // Whoever knows the wallet's recovery phrase brings it back: the import adopts the
+            // stored keys unchanged.
+            launch.importPhrase(TWENTY_FOUR_WORDS, "Mine")
+            launch.assertCiphertextsKept(leftoverBefore)
+            launch.assertUsable(listOf(leftover), selected = leftover)
+        }
+    }
+
+    @Test
+    fun walletsFoundOnThisPhoneAreRestoredFromOnboardingBehindThePin() = runBlocking {
+        val first = phraseWallet(TWELVE_WORDS)
+        // Imported from a raw seed: no phrase was ever written down.
+        val second = rawSeedWallet(RAW_SEED)
+        val before = release3863 {
+            created(first)
+            importedSeed(second)
+            finishedAccount(first)
+            finishedAccount(second)
+            select(first)
+            registrationFinished()
+        }
+        room(73, first to "First", second to "Second")
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(first, second), selected = first)
+            // While both are accounts, nothing waits to be restored.
+            assertEquals(emptyList<String>(), launch.interactor.walletsRestorableWithPin())
+        }
+        // The database is set aside ("Set up this device again", database only); the keys and
+        // the PIN stay.
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            WalletUpgradeBackup.noteDatabaseCorruption(context)
+            assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        }
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            // Onboarding: no account, but two wallets are found behind the PIN used here.
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            assertEquals(
+                setOf(first.address, second.address),
+                launch.interactor.walletsRestorableWithPin().toSet(),
+            )
+
+            // A wrong PIN restores nothing and is counted like on the PIN screen.
+            val wrong = runCatching {
+                launch.interactor.restoreRetainedWallets("000000", "Restored wallet")
+            }.exceptionOrNull()
+            assertEquals(ResponseCode.WRONG_PIN_CODE, (wrong as? SoraException)?.errorResponseCode)
+            assertEquals(1, launch.userRepository.retrievePinTriesUsed())
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+
+            // The PIN that was used on this phone restores both, with every stored byte kept.
+            val result = launch.interactor.restoreRetainedWallets("135790", "Restored wallet")
+            assertEquals(
+                setOf(first.address, second.address),
+                result.restored.map { it.substrateAddress }.toSet(),
+            )
+            assertTrue(result.notRestorable.isEmpty())
+            assertEquals(0, launch.userRepository.retrievePinTriesUsed())
+            launch.assertCiphertextsKept(before)
+            launch.assertUsable(
+                listOf(first, second),
+                selected = listOf(first, second).first { it.address == result.restored.first().substrateAddress },
+            )
+        }
+    }
+
+    @Test
+    fun aPinSetForTheFirstTimeNeverUnlocksKeySetsThatWereOnThePhoneBeforeIt() = runBlocking {
+        // 3.8.6.3 stored a new wallet's keys at "Continue". This one was abandoned before any
+        // account or PIN existed on the phone.
+        val abandoned = phraseWallet(TWENTY_FOUR_WORDS)
+        val mine = phraseWallet(TWELVE_WORDS)
+        val before = release3863 { created(abandoned) }
+        room(73)
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            // Onboarding: no PIN is stored, so nothing is offered to restore from the phone.
+            assertEquals(emptyList<String>(), launch.interactor.walletsRestorableWithPin())
+
+            // Someone sets the app up with their own wallet and their own PIN.
+            launch.importPhrase(TWELVE_WORDS, "Mine")
+            launch.userRepository.savePin("246810")
+
+            // The key set that was there before that PIN is marked, byte for byte unchanged...
+            launch.assertCiphertextsKept(before)
+            assertEquals(
+                listOf(RetainedWallet(abandoned.address, needsRecoveryPhrase = true)),
+                launch.userRepository.retainedWallets(),
+            )
+            // ...and the new PIN does not restore it.
+            val refusal = runCatching {
+                launch.userRepository.adoptRetainedWallet(abandoned.address, "Restored wallet")
+            }.exceptionOrNull()
+            assertEquals("RETAINED_WALLET_NEEDS_RECOVERY_PHRASE", refusal?.message)
+            assertTrue(launch.interactor.restoreRetainedWallets("246810", "Restored wallet").restored.isEmpty())
+            launch.assertUsable(listOf(mine), selected = mine)
+
+            // Changing the PIN later marks nothing new and keeps the mark.
+            launch.userRepository.savePin("135790")
+            assertEquals(
+                listOf(RetainedWallet(abandoned.address, needsRecoveryPhrase = true)),
+                launch.userRepository.retainedWallets(),
+            )
+
+            // Its own recovery phrase adopts the stored keys unchanged.
+            launch.importPhrase(TWENTY_FOUR_WORDS, "Found again")
+            launch.assertCiphertextsKept(before)
+            launch.assertUsable(listOf(mine, abandoned), selected = abandoned)
+        }
+    }
+
+    /** Runs [block] on the main thread, where screens (and their LiveData) are created. */
+    private fun <T> onMainThread(block: () -> T): T {
+        var result: Result<T>? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { result = runCatching(block) }
+        return requireNotNull(result).getOrThrow()
+    }
+
+    /** Waits until a screen's state shows [what]. */
+    private suspend fun awaitOnScreen(what: String, condition: () -> Boolean) {
+        val shown = withTimeoutOrNull(SCREEN_TIMEOUT_MS) {
+            while (!onMainThread(condition)) delay(SCREEN_POLL_MS)
+            true
+        }
+        assertTrue("not shown: $what", shown == true)
+    }
+
     private suspend fun release3863Wallet(wallet: Fixture) {
         release3863 {
             created(wallet)
@@ -3185,6 +3561,9 @@ class WalletUpgradeScenarioTest {
 
     private companion object {
         const val DATASTORE_RELEASE_DELAY_MS = 50L
+        const val SCREEN_TIMEOUT_MS = 15_000L
+        const val SCREEN_POLL_MS = 50L
+
         const val TWELVE_WORDS =
             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
         const val TWELVE_WORDS_ADDRESS = "cnTon6cV8Ze8ATHT1tZdHregCc3wBc8vfg7P5o2TtwdUoRf4m"
