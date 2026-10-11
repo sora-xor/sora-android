@@ -45,6 +45,7 @@ import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import kotlinx.coroutines.CancellationException
 
 open class BaseViewModel : ViewModel() {
 
@@ -74,36 +75,93 @@ open class BaseViewModel : ViewModel() {
         onCurrentDestinationChanged(d)
     }
 
+    /**
+     * Reports a failure of something the person started or is looking at. Every failure ends in
+     * a message: one that carries its own text shows it, and everything else (an exception that
+     * is not a [SoraException], or an unexpected one) gets a calm text that says what is known
+     * ([FailureNotice]). A cancelled coroutine is not a failure and shows nothing.
+     *
+     * A screen that shows progress while an action runs puts its controls back in
+     * [onErrorResetProgress], so a failure never leaves it without its buttons.
+     *
+     * May be called from any thread.
+     */
     fun onError(throwable: Throwable) {
-        FirebaseWrapper.recordException(throwable)
+        report(throwable, explainEverything = true)
+    }
 
-        if (throwable is SoraException) {
-            when (throwable.kind) {
-                SoraException.Kind.BUSINESS -> {
-                    throwable.errorResponseCode?.messageResource?.let {
-                        errorFromResourceLiveData.setValue(throwable.errorResponseCode.titleResource to it)
-                    }
-                }
-                SoraException.Kind.HTTP -> {
-                    throwable.message?.let {
-                        alertDialogLiveData.setValue(throwable.errorTitle to it)
-                    }
-                }
-                SoraException.Kind.NETWORK -> {
-                    throwable.message?.let {
-                        errorLiveData.setValue(it)
-                    }
-                }
-                SoraException.Kind.UNEXPECTED -> {
-                    throwable.errorResponseCode?.messageResource?.let {
-                        errorFromResourceLiveData.setValue(
-                            R.string.something_went_wrong to R.string.unexpected_error
-                        )
-                    }
+    /**
+     * Reports a failure of background work nobody is waiting for: a subscription that feeds the
+     * screen, or a periodic refresh. It is recorded, and the screen's own state (for example the
+     * connection banner) shows it. Only a failure that carries its own message is shown, as
+     * before; nothing else interrupts the person.
+     */
+    protected fun onBackgroundError(throwable: Throwable) {
+        report(throwable, explainEverything = false)
+    }
+
+    private fun report(throwable: Throwable, explainEverything: Boolean) {
+        if (throwable is CancellationException) return
+        FirebaseWrapper.recordException(throwable)
+        if (explainEverything) onErrorResetProgress()
+
+        if (throwable !is SoraException) {
+            if (explainEverything) showFailureNotice(FailureNotice.of(throwable))
+            return
+        }
+        when (throwable.kind) {
+            SoraException.Kind.BUSINESS -> {
+                val code = throwable.errorResponseCode
+                if (code != null && code.messageResource != 0) {
+                    errorFromResourceLiveData.emit(code.titleResource to code.messageResource)
+                } else if (explainEverything) {
+                    showFailureNotice(FailureNotice.of(throwable))
                 }
             }
+            SoraException.Kind.HTTP -> {
+                val message = throwable.message
+                if (!message.isNullOrEmpty() || throwable.errorTitle.isNotEmpty()) {
+                    alertDialogLiveData.emit(throwable.errorTitle to message.orEmpty())
+                } else if (explainEverything) {
+                    showFailureNotice(FailureNotice.of(throwable))
+                }
+            }
+            SoraException.Kind.NETWORK -> {
+                val message = throwable.message
+                if (!message.isNullOrEmpty()) {
+                    errorLiveData.emit(message)
+                } else if (explainEverything) {
+                    showFailureNotice(FailureNotice.NETWORK)
+                }
+            }
+            // An unexpected failure is explained by what caused it, never by a bare
+            // "Something went wrong".
+            SoraException.Kind.UNEXPECTED -> showFailureNotice(FailureNotice.of(throwable))
         }
     }
+
+    private fun showFailureNotice(notice: FailureNotice) {
+        errorFromResourceLiveData.emit(notice.titleResource to notice.messageResource)
+    }
+
+    /**
+     * Sets the event from the main thread and posts it from any other. Some screens report
+     * failures from a background dispatcher (`flowOn`, `launch(io)`); setting a LiveData value
+     * there throws, which would turn the report itself into a crash.
+     */
+    private fun <T> SingleLiveEvent<T>.emit(event: T) {
+        try {
+            value = event
+        } catch (_: IllegalStateException) {
+            postValue(event)
+        }
+    }
+
+    /**
+     * Called for every failure reported through [onError], before its message is shown. A screen
+     * that hides or disables its controls while an action runs restores them here.
+     */
+    protected open fun onErrorResetProgress() = Unit
 
     open fun startScreen(): String = theOnlyRoute
 

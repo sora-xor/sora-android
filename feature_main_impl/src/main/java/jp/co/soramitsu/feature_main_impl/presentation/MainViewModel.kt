@@ -88,7 +88,8 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             globalSubscriptionManager
                 .start()
-                .catch { onError(it) }
+                // Background work: its failures show in the connection banner, not in a dialog.
+                .catch { onBackgroundError(it) }
                 .flowOn(coroutineManager.io)
                 .collect()
         }
@@ -102,7 +103,7 @@ class MainViewModel @Inject constructor(
         }
         viewModelScope.launch(coroutineManager.io) {
             assetsInteractor.flowCurSoraAccount()
-                .catch { onError(it) }
+                .catch { onBackgroundError(it) }
                 .collectLatest {
                     try {
                         assetsInteractor.updateWhitelistBalances()
@@ -121,8 +122,14 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(coroutineManager.io) {
                 RepeatStrategyBuilder.infinite().repeat {
-                    tryCatch {
+                    // A periodic refresh: a failed round is recorded and tried again; it never
+                    // opens a dialog.
+                    try {
                         blockExplorerManager.updateFiat()
+                    } catch (error: kotlinx.coroutines.CancellationException) {
+                        throw error
+                    } catch (error: Throwable) {
+                        onBackgroundError(error)
                     }
                     delay(20000)
                 }

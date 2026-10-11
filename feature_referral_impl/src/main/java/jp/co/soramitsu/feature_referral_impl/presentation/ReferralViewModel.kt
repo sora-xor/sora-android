@@ -117,6 +117,17 @@ class ReferralViewModel @Inject constructor(
 
     override fun startScreen(): String = ReferralFeatureRoutes.WELCOME_PROGRESS
 
+    /**
+     * Bond, Unbond and Activate replace their button with a progress indicator while they run.
+     * A failure puts the button back, so the person can read the message and try again.
+     */
+    override fun onErrorResetProgress() {
+        val state = _referralScreenState.value
+        if (state.common.progress) {
+            _referralScreenState.value = state.copy(common = state.common.copy(progress = false))
+        }
+    }
+
     init {
         _toolbarState.value = initSmallTitle2(
             title = R.string.referral_toolbar_title,
