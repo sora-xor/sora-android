@@ -264,7 +264,7 @@ private fun PreviewLiquidityRemoveScreen() {
                 assetState2 = previewAssetAmountInputState,
                 confirm = LiquidityAddConfirmState(
                     text = "",
-                    confirmResult = false,
+                    confirmResult = null,
                     btnState = ButtonState(
                         text = "btn",
                         enabled = true,

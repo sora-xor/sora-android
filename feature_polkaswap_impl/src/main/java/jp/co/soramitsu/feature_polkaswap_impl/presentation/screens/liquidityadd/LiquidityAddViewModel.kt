@@ -46,9 +46,13 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.LiquidityDetails
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
+import jp.co.soramitsu.common.presentation.transaction.badge
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
@@ -72,6 +76,7 @@ import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -114,6 +119,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     }
 
     private companion object {
+        const val RESULT_BADGE_MILLIS = 700L
         const val PER_FORMAT = "%s/%s"
         const val PERCENT_FORMAT = "%s%%"
         const val NETWORK_FEE_FORMAT = "%s %s"
@@ -796,54 +802,82 @@ class LiquidityAddViewModel @AssistedInject constructor(
         }
     }
 
-    fun onConfirmClick() {
-        _addState.value.assetState1?.let { state1 ->
-            _addState.value.assetState2?.let { state2 ->
-                viewModelScope.launch {
-                    _addState.value = _addState.value.copy(
-                        confirm = _addState.value.confirm.copy(
-                            btnState = _addState.value.confirm.btnState.copy(
-                                enabled = false,
-                                loading = true,
-                            )
-                        )
-                    )
-                    var result = ""
-                    try {
-                        result = poolsInteractor.observeAddLiquidity(
-                            state1.token,
-                            state2.token,
-                            amountFrom,
-                            amountTo,
-                            pairEnabled,
-                            pairPresented,
-                            _stateSlippage.value,
-                        )
-                    } catch (t: Throwable) {
-                        onError(t)
-                    } finally {
-                        _addState.value = _addState.value.copy(
-                            confirm = _addState.value.confirm.copy(
-                                btnState = _addState.value.confirm.btnState.copy(
-                                    enabled = false,
-                                    loading = false,
-                                ),
-                                confirmResult = result.isNotEmpty()
-                            )
-                        )
-                        delay(700)
-                        _addState.value = _addState.value.copy(
-                            confirm = _addState.value.confirm.copy(
-                                confirmResult = null
-                            )
-                        )
-                        if (result.isNotEmpty())
-                            assetsRouter.showTxDetails(result, true)
-                        else router.returnToHubFragment()
-                    }
+    fun onConfirmClick() = confirmAddLiquidity(confirmedDuplicate = false)
+
+    /**
+     * Sends the reviewed deposit and shows exactly what is known afterwards. A transaction that
+     * reached the network (confirmed, failed on chain, or still waiting) opens its transaction
+     * page, which carries the status and follows it. One that did not reach the network is
+     * explained in a dialog and this screen stays with Confirm available again.
+     */
+    private fun confirmAddLiquidity(confirmedDuplicate: Boolean) {
+        val state1 = _addState.value.assetState1 ?: return
+        val state2 = _addState.value.assetState2 ?: return
+        viewModelScope.launch {
+            setConfirmButton(enabled = false, loading = true)
+            var outcome: TransactionOutcome? = null
+            var notSent: Throwable? = null
+            try {
+                outcome = poolsInteractor.observeAddLiquidity(
+                    state1.token,
+                    state2.token,
+                    amountFrom,
+                    amountTo,
+                    pairEnabled,
+                    pairPresented,
+                    _stateSlippage.value,
+                    confirmedDuplicate,
+                )
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: DuplicateWaitingTransactionException) {
+                setConfirmButton(enabled = true, loading = false)
+                askBeforeSendingAgain(resourceManager) {
+                    confirmAddLiquidity(confirmedDuplicate = true)
+                }
+                return@launch
+            } catch (t: Throwable) {
+                notSent = t
+            }
+            _addState.value = _addState.value.copy(
+                confirm = _addState.value.confirm.copy(
+                    btnState = _addState.value.confirm.btnState.copy(
+                        enabled = false,
+                        loading = false,
+                    ),
+                    confirmResult = outcome?.badge() ?: TransactionResultBadge.NOT_SENT,
+                )
+            )
+            delay(RESULT_BADGE_MILLIS)
+            _addState.value = _addState.value.copy(
+                confirm = _addState.value.confirm.copy(confirmResult = null)
+            )
+            when (outcome) {
+                is TransactionOutcome.Confirmed,
+                is TransactionOutcome.Waiting,
+                is TransactionOutcome.FailedOnChain ->
+                    assetsRouter.showTxDetails(outcome.txHash, true)
+                is TransactionOutcome.RefusedByNode -> {
+                    setConfirmButton(enabled = true, loading = false)
+                    showTransactionRefused(resourceManager, outcome)
+                }
+                null -> {
+                    setConfirmButton(enabled = true, loading = false)
+                    showTransactionNotSent(resourceManager, checkNotNull(notSent))
                 }
             }
         }
+    }
+
+    private fun setConfirmButton(enabled: Boolean, loading: Boolean) {
+        _addState.value = _addState.value.copy(
+            confirm = _addState.value.confirm.copy(
+                btnState = _addState.value.confirm.btnState.copy(
+                    enabled = enabled,
+                    loading = loading,
+                )
+            )
+        )
     }
 
     fun onReviewClick() {

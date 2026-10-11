@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_polkaswap_impl.presentation.states
 
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 
 data class LiquidityAddState(
     val btnState: ButtonState,
@@ -49,7 +50,8 @@ data class LiquidityAddState(
 
 data class LiquidityAddConfirmState(
     val text: String,
-    val confirmResult: Boolean?,
+    /** Result mark shown briefly after Confirm; taken from the transaction outcome. */
+    val confirmResult: TransactionResultBadge?,
     val btnState: ButtonState,
 )
 

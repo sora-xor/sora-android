@@ -38,6 +38,7 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.TokenPrecision
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 
 interface PolkaswapExtrinsicRepository {
@@ -54,7 +55,8 @@ interface PolkaswapExtrinsicRepository {
         token2: Token,
         markerAssetDesired: BigDecimal,
         firstAmountMin: BigDecimal,
-        secondAmountMin: BigDecimal
+        secondAmountMin: BigDecimal,
+        activity: Sora2SubmissionActivity? = null,
     ): ExtrinsicSubmitStatus
 
     suspend fun observeSwap(
@@ -67,6 +69,7 @@ interface PolkaswapExtrinsicRepository {
         amount: BigDecimal,
         limit: BigDecimal,
         dexId: Int,
+        activity: Sora2SubmissionActivity? = null,
     ): ExtrinsicSubmitStatus
 
     suspend fun observeAddLiquidity(
@@ -78,7 +81,8 @@ interface PolkaswapExtrinsicRepository {
         tokenToAmount: BigDecimal,
         pairEnabled: Boolean,
         pairPresented: Boolean,
-        slippageTolerance: Double
+        slippageTolerance: Double,
+        activity: Sora2SubmissionActivity? = null,
     ): ExtrinsicSubmitStatus
 
     suspend fun calcAddLiquidityNetworkFee(
