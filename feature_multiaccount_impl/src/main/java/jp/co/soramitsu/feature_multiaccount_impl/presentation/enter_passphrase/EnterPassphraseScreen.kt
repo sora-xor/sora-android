@@ -99,6 +99,13 @@ fun EnterPassphraseScreen(
                     .wrapContentHeight(),
                 state = recoveryState.recoveryInputState,
                 onValueChange = onRecoveryInputChanged,
+                // Pasted backup text can be long: the field stays a few lines high so the
+                // password field and the button stay on the screen.
+                maxLines = if (recoveryState.recoveryType == RecoveryType.JSON) {
+                    JSON_FIELD_MAX_LINES
+                } else {
+                    Int.MAX_VALUE
+                },
                 keyboardActions = KeyboardActions(
                     onDone = {
                         focusManager.clearFocus()
@@ -111,8 +118,20 @@ fun EnterPassphraseScreen(
             )
 
             if (recoveryState.recoveryType == RecoveryType.JSON) {
-                // An encrypted backup file: choose the file (its text fills the field above) or
-                // paste the text, then the password it was exported with.
+                // An encrypted backup file: choose the file (only its name is shown; its text
+                // is not put into the field above) or paste the text, then the password it was
+                // exported with.
+                recoveryState.chosenFileName?.let { fileName ->
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = Dimens.x1)
+                            .testTag("RecoveryChosenFile"),
+                        text = stringResource(id = R.string.recovery_json_file_chosen, fileName),
+                        color = MaterialTheme.customColors.fgPrimary,
+                        style = MaterialTheme.customTypography.textXS,
+                    )
+                }
                 TextButton(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -159,6 +178,9 @@ fun EnterPassphraseScreen(
         }
     }
 }
+
+/** Lines of pasted backup text shown at once. */
+private const val JSON_FIELD_MAX_LINES = 4
 
 @Composable
 @Preview

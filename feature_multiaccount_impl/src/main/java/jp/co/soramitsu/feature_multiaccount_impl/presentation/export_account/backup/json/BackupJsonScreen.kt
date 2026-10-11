@@ -55,6 +55,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.neon.InputText
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupJsonScreenState
 import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
@@ -126,15 +127,22 @@ internal fun BackupJsonScreen(
                 singleLine = true,
             )
             Spacer(modifier = Modifier.size(Dimens.x3))
-            FilledButton(
-                Modifier
-                    .fillMaxWidth(),
-                enabled = state.buttonEnabledState,
-                text = stringResource(id = R.string.export_json_download_json).uppercase(),
-                onClick = onDownloadClick,
-                order = Order.PRIMARY,
-                size = Size.Large,
-            )
+            // Writing the file encrypts it (scrypt), which takes a moment and runs off the
+            // main thread: the button shows that the app is working.
+            LoaderWrapper(
+                modifier = Modifier.fillMaxWidth(),
+                loading = state.loading,
+                loaderSize = Size.Large,
+            ) { modifier, _ ->
+                FilledButton(
+                    modifier.fillMaxWidth(),
+                    enabled = state.buttonEnabledState,
+                    text = stringResource(id = R.string.export_json_download_json).uppercase(),
+                    onClick = onDownloadClick,
+                    order = Order.PRIMARY,
+                    size = Size.Large,
+                )
+            }
         }
     }
 }

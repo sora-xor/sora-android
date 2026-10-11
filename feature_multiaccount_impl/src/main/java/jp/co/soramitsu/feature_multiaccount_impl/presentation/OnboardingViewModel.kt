@@ -64,6 +64,7 @@ import jp.co.soramitsu.common.util.Const.SORA_TERMS_PAGE
 import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
 import jp.co.soramitsu.common.util.ext.trimAccountNameTo32Bytes
+import jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
@@ -91,8 +92,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Wrong PIN entries allowed in one repair prompt before it closes without any change. */
-private const val MAX_REPAIR_PIN_FAILURES = 3
+private const val MINUTE_MILLIS = 60_000L
+
+/** Characters kept from each end of an address in the list of accounts to repair. */
+private const val SHORT_ADDRESS_CHARS = 8
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
@@ -160,7 +163,8 @@ class OnboardingViewModel @Inject constructor(
     /**
      * "Repair this account with its recovery phrase": shown when an import found keys stored for
      * the same address that cannot be used. Nothing was written; confirming (with the PIN when
-     * one is set) keeps a copy of the old values and writes the ones the phrase derives.
+     * one is set, or the phone's screen lock when the stored PIN cannot be read) keeps a copy of
+     * the old values and writes the ones the phrase derives.
      */
     data class RepairPrompt(
         val accountExists: Boolean,
@@ -169,6 +173,16 @@ class OnboardingViewModel @Inject constructor(
         val fromPhrase: Boolean = true,
         val wrongPin: Boolean = false,
         val working: Boolean = false,
+        /**
+         * A PIN is stored on this phone but cannot be read: the repair is confirmed with the
+         * phone's screen lock instead ([onRepairConfirmed] with `screenLockConfirmed`).
+         */
+        val screenLockRequired: Boolean = false,
+        /**
+         * The accounts of a batch backup file that will be repaired, one line each (name and
+         * short address). Empty when one account is repaired.
+         */
+        val batchAccounts: List<String> = emptyList(),
     )
 
     /** What the person entered to import: decides which repair call a confirmation makes. */
@@ -206,11 +220,14 @@ class OnboardingViewModel @Inject constructor(
         val password: String,
         /** The address a Google backup names, when the import came from one. */
         val expectedAddress: String?,
+        /** The accounts of a batch backup file to repair; empty for one account. */
+        val batchAddresses: List<String>,
         val onRepaired: suspend () -> Unit,
+        /** Runs when the prompt closes without a repair (cancelled, or PIN entry locked). */
+        val onClosedWithoutRepair: () -> Unit,
     )
 
     private var pendingRepair: PendingRepair? = null
-    private var repairPinFailures = 0
 
     private fun offerRepair(
         offer: WalletRepairAvailableException,
@@ -221,71 +238,157 @@ class OnboardingViewModel @Inject constructor(
         expectedAddress: String? = null,
         onRepaired: suspend () -> Unit,
     ) {
-        pendingRepair = PendingRepair(input, accountName, kind, password, expectedAddress, onRepaired)
-        repairPinFailures = 0
+        pendingRepair = PendingRepair(
+            input = input,
+            accountName = accountName,
+            kind = kind,
+            password = password,
+            expectedAddress = expectedAddress,
+            batchAddresses = emptyList(),
+            onRepaired = onRepaired,
+            onClosedWithoutRepair = {},
+        )
         _repairPrompt.value = RepairPrompt(
             accountExists = offer.accountExists,
             pinRequired = offer.pinRequired,
             fromPhrase = kind == ImportKind.PHRASE,
+            screenLockRequired = offer.screenLockRequired,
         )
+    }
+
+    /**
+     * A batch backup file holds accounts whose stored keys on this phone cannot be used. The
+     * same file repairs them after one confirmation that names them. Closing the prompt without
+     * confirming changes nothing for them and says how many accounts were added.
+     */
+    private fun offerBatchRepair(
+        result: MultiaccountInteractor.JsonImportResult,
+        json: String,
+        password: String,
+        accountName: String,
+        context: Context,
+    ) {
+        pendingRepair = PendingRepair(
+            input = json,
+            accountName = accountName,
+            kind = ImportKind.JSON,
+            password = password,
+            expectedAddress = null,
+            batchAddresses = result.needRepair.map { it.address },
+            onRepaired = { mainStarter.start(context) },
+            onClosedWithoutRepair = {
+                _batchImportNotice.value = BatchImportNotice(
+                    message = resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.json_backup_batch_skipped
+                    ).format(
+                        result.imported.size.toString(),
+                        result.needRepair.size.toString(),
+                    ),
+                    anyImported = result.imported.isNotEmpty(),
+                )
+            },
+        )
+        _repairPrompt.value = RepairPrompt(
+            accountExists = result.needRepair.all { it.accountExists },
+            pinRequired = result.repairPinRequired,
+            fromPhrase = false,
+            screenLockRequired = result.repairScreenLockRequired,
+            batchAccounts = result.needRepair.map { candidate ->
+                val address = candidate.address
+                val short = if (address.length <= SHORT_ADDRESS_CHARS * 2) {
+                    address
+                } else {
+                    "${address.take(SHORT_ADDRESS_CHARS)}…${address.takeLast(SHORT_ADDRESS_CHARS)}"
+                }
+                if (candidate.name.isBlank()) short else "${candidate.name} ($short)"
+            },
+        )
+    }
+
+    private fun closeRepairPrompt(): PendingRepair? {
+        val pending = pendingRepair
+        pendingRepair = null
+        _repairPrompt.value = null
+        return pending
     }
 
     fun onRepairDismissed() {
         if (_repairPrompt.value?.working == true) return
-        pendingRepair = null
-        _repairPrompt.value = null
+        closeRepairPrompt()?.onClosedWithoutRepair?.invoke()
     }
 
-    fun onRepairConfirmed(pin: String) {
+    /**
+     * The person confirmed the repair. [pin] is what they typed when a PIN is asked for.
+     * [screenLockConfirmed] is true only when the phone's screen lock was just confirmed (the
+     * way a repair is confirmed when the stored PIN cannot be read).
+     */
+    fun onRepairConfirmed(pin: String, screenLockConfirmed: Boolean = false) {
         val prompt = _repairPrompt.value ?: return
         val pending = pendingRepair ?: return
         if (prompt.working) return
         _repairPrompt.value = prompt.copy(working = true, wrongPin = false)
         viewModelScope.launch {
             try {
-                when (pending.kind) {
-                    ImportKind.PHRASE -> multiaccountInteractor.repairFromMnemonic(
+                when {
+                    pending.batchAddresses.isNotEmpty() -> multiaccountInteractor.repairFromJsonBatch(
+                        json = pending.input,
+                        password = pending.password,
+                        accountName = pending.accountName,
+                        pin = pin,
+                        addresses = pending.batchAddresses,
+                        screenLockConfirmed = screenLockConfirmed,
+                    )
+                    pending.kind == ImportKind.PHRASE -> multiaccountInteractor.repairFromMnemonic(
                         pending.input,
                         pending.accountName,
                         pin,
+                        screenLockConfirmed,
                     )
-                    ImportKind.SEED -> multiaccountInteractor.repairFromRawSeed(
+                    pending.kind == ImportKind.SEED -> multiaccountInteractor.repairFromRawSeed(
                         pending.input,
                         pending.accountName,
                         pin,
+                        screenLockConfirmed,
                     )
-                    ImportKind.JSON -> multiaccountInteractor.repairFromJson(
+                    else -> multiaccountInteractor.repairFromJson(
                         json = pending.input,
                         password = pending.password,
                         accountName = pending.accountName,
                         pin = pin,
                         expectedAddress = pending.expectedAddress,
+                        screenLockConfirmed = screenLockConfirmed,
                     )
                 }
-                pendingRepair = null
-                _repairPrompt.value = null
+                closeRepairPrompt()
                 pending.onRepaired()
-            } catch (error: SoraException) {
-                if (error.errorResponseCode == ResponseCode.WRONG_PIN_CODE) {
-                    repairPinFailures += 1
-                    if (repairPinFailures >= MAX_REPAIR_PIN_FAILURES) {
-                        // Stop here: nothing was changed, and the import can be started again.
-                        pendingRepair = null
-                        _repairPrompt.value = null
-                        onError(jp.co.soramitsu.common.R.string.account_repair_too_many_attempts)
-                    } else {
-                        _repairPrompt.value = prompt.copy(working = false, wrongPin = true)
-                    }
-                } else {
-                    pendingRepair = null
-                    _repairPrompt.value = null
-                    onError(error)
-                }
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error
+            } catch (locked: RepairPinLockedException) {
+                // Too many wrong PINs: PIN entry is locked here and on the PIN screen. Nothing
+                // was changed, and the import can be started again once the lock is over.
+                closeRepairPrompt()
+                val minutes = ((locked.remainingMillis + MINUTE_MILLIS - 1) / MINUTE_MILLIS)
+                    .coerceAtLeast(1)
+                alertDialogLiveData.value = Pair(
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.account_repair_pin_locked_title
+                    ),
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.account_repair_pin_locked
+                    ).format(minutes.toString()),
+                )
+                pending.onClosedWithoutRepair()
+            } catch (error: SoraException) {
+                if (error.errorResponseCode == ResponseCode.WRONG_PIN_CODE) {
+                    _repairPrompt.value = prompt.copy(working = false, wrongPin = true)
+                } else {
+                    // The error says what happened. Nothing more is claimed here: the import
+                    // can be started again, and it reports each account as it then is.
+                    closeRepairPrompt()
+                    onError(error)
+                }
             } catch (error: Throwable) {
-                pendingRepair = null
-                _repairPrompt.value = null
+                closeRepairPrompt()
                 onError(SoraException.unexpectedError(error))
             }
         }
@@ -449,14 +552,35 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The text of a chosen backup file. It is kept here and not in the text field: a file can be
+     * a hundred kilobytes, which a text field cannot lay out, and it would push the password
+     * field and the button off the screen.
+     */
+    private var chosenFileText: String? = null
+
+    /** Whether the entered text (or the chosen file) is valid input; checked when it changes. */
+    private var recoveryInputValid = false
+
+    /** What will be imported: the chosen file, or what is typed in the field. */
+    private fun recoveryInput(state: RecoveryState): String =
+        chosenFileText ?: state.recoveryInputState.value.text
+
     fun onRecoveryInputChanged(textFieldValue: TextFieldValue) {
         viewModelScope.launch {
             _recoveryState.value?.let {
+                val textChanged = textFieldValue.text != it.recoveryInputState.value.text
+                // Typing or pasting replaces a file that was chosen before.
+                if (textChanged) chosenFileText = null
+                if (textChanged || chosenFileText == null) {
+                    recoveryInputValid = isValidMethod(textFieldValue.text)
+                }
                 _recoveryState.value = it.copy(
                     recoveryInputState = it.recoveryInputState.copy(
                         value = textFieldValue,
                     ),
-                    isButtonEnabled = isValidMethod(textFieldValue.text) &&
+                    chosenFileName = it.chosenFileName.takeIf { chosenFileText != null },
+                    isButtonEnabled = recoveryInputValid &&
                         (it.recoveryType != RecoveryType.JSON || it.passwordInputState.value.text.isNotEmpty())
                 )
             }
@@ -465,31 +589,58 @@ class OnboardingViewModel @Inject constructor(
 
     /** The password of the backup file ([RecoveryType.JSON]). */
     fun onRecoveryPasswordChanged(textFieldValue: TextFieldValue) {
-        viewModelScope.launch {
-            _recoveryState.value?.let {
-                _recoveryState.value = it.copy(
-                    passwordInputState = it.passwordInputState.copy(value = textFieldValue),
-                    isButtonEnabled = textFieldValue.text.isNotEmpty() &&
-                        isValidMethod(it.recoveryInputState.value.text)
-                )
-            }
+        _recoveryState.value?.let {
+            // The file text is not parsed again for every character of the password.
+            _recoveryState.value = it.copy(
+                passwordInputState = it.passwordInputState.copy(value = textFieldValue),
+                isButtonEnabled = textFieldValue.text.isNotEmpty() && recoveryInputValid
+            )
         }
     }
 
-    /** The text of a backup file the person chose; it replaces what is in the text field. */
-    fun onRecoveryFileChosen(text: String) {
-        onRecoveryInputChanged(TextFieldValue(text))
+    /**
+     * A backup file the person chose. It is accepted only when it has the shape of an encrypted
+     * account backup; anything else (a wrong file) is refused here and never shown or parsed
+     * further. The screen shows the file's name, not its text.
+     */
+    fun onRecoveryFileChosen(text: String, fileName: String = "") {
+        viewModelScope.launch {
+            val state = _recoveryState.value ?: return@launch
+            if (state.recoveryType != RecoveryType.JSON) return@launch
+            if (!multiaccountInteractor.isJsonBackupValid(text)) {
+                onRecoveryFileUnreadable()
+                return@launch
+            }
+            chosenFileText = text
+            recoveryInputValid = true
+            _recoveryState.value = state.copy(
+                recoveryInputState = state.recoveryInputState.copy(value = TextFieldValue("")),
+                chosenFileName = fileName.ifBlank {
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.recovery_json_file_unnamed
+                    )
+                },
+                isButtonEnabled = state.passwordInputState.value.text.isNotEmpty(),
+            )
+        }
     }
 
     fun recoveryNextClicked(navController: NavController, context: Context) {
         _recoveryState.value?.let { recoveryCardState ->
             _recoveryAccountNameCardState.value?.let { recoverAccountNameState ->
+                if (recoverAccountNameState.loading) return
+                val input = recoveryInput(recoveryCardState)
+                val accountName = recoverAccountNameState.accountNameInputState.value.text
+                val password = recoveryCardState.passwordInputState.value.text
                 viewModelScope.launch {
+                    // Deriving keys and opening a backup file take a moment (they run off the
+                    // main thread): the button shows that the app is working.
                     _recoveryAccountNameCardState.value = recoverAccountNameState.copy(
                         btnEnabled = false,
+                        loading = true,
                     )
                     try {
-                        val valid = isValidMethod(recoveryCardState.recoveryInputState.value.text)
+                        val valid = recoveryInputValid || isValidMethod(input)
 
                         if (!valid) {
                             throw SoraException.businessError(errorMessageCode)
@@ -497,51 +648,42 @@ class OnboardingViewModel @Inject constructor(
                         if (recoveryCardState.recoveryType == RecoveryType.JSON) {
                             // Stores the keys of the file's account (or accounts) and adds them.
                             val result = multiaccountInteractor.importFromJson(
-                                json = recoveryCardState.recoveryInputState.value.text,
-                                password = recoveryCardState.passwordInputState.value.text,
-                                accountName = recoverAccountNameState.accountNameInputState.value.text,
+                                json = input,
+                                password = password,
+                                accountName = accountName,
                             )
-                            if (result.needRepair > 0) {
-                                _batchImportNotice.value = BatchImportNotice(
-                                    message = resourceManager.getString(
-                                        jp.co.soramitsu.common.R.string.json_backup_batch_skipped
-                                    ).format(
-                                        result.imported.size.toString(),
-                                        result.needRepair.toString(),
-                                    ),
-                                    anyImported = result.imported.isNotEmpty(),
-                                )
+                            if (result.needRepair.isNotEmpty()) {
+                                offerBatchRepair(result, input, password, accountName, context)
                             } else {
                                 mainStarter.start(context)
                             }
                         } else {
                             // Stores the keys and adds the account in one step.
-                            recoverSoraAccountMethod(
-                                recoveryCardState.recoveryInputState.value.text,
-                                recoverAccountNameState.accountNameInputState.value.text
-                            )
+                            recoverSoraAccountMethod(input, accountName)
                             mainStarter.start(context)
                         }
                     } catch (offer: WalletRepairAvailableException) {
                         offerRepair(
                             offer = offer,
-                            input = recoveryCardState.recoveryInputState.value.text,
-                            accountName = recoverAccountNameState.accountNameInputState.value.text,
+                            input = input,
+                            accountName = accountName,
                             kind = when (recoveryCardState.recoveryType) {
                                 RecoveryType.PASSPHRASE -> ImportKind.PHRASE
                                 RecoveryType.SEED -> ImportKind.SEED
                                 RecoveryType.JSON -> ImportKind.JSON
                             },
-                            password = recoveryCardState.passwordInputState.value.text,
+                            password = password,
                             onRepaired = { mainStarter.start(context) },
                         )
                     } catch (t: Throwable) {
                         navController.popBackStack()
                         onError(t)
                     } finally {
-                        _recoveryAccountNameCardState.value = recoverAccountNameState.copy(
-                            btnEnabled = true,
-                        )
+                        _recoveryAccountNameCardState.value =
+                            (_recoveryAccountNameCardState.value ?: recoverAccountNameState).copy(
+                                btnEnabled = true,
+                                loading = false,
+                            )
                     }
                 }
             }
@@ -713,6 +855,8 @@ class OnboardingViewModel @Inject constructor(
 
     fun onRecoveryClicked(navController: NavController, index: Int) {
         _recoveryDialog.value = false
+        chosenFileText = null
+        recoveryInputValid = false
         _recoveryState.value = when (index) {
             1 -> {
                 isValidMethod = multiaccountInteractor::isMnemonicValid
@@ -972,7 +1116,6 @@ class OnboardingViewModel @Inject constructor(
         if (!requireCloudBackup()) return
         _importAccountPasswordState.value?.let { state ->
             _importAccountPasswordState.value = state.copy(isLoading = true)
-            var isImportMoreAvailable = false
             viewModelScope.launch {
                 state.selectedAccount?.let {
                     try {
@@ -984,6 +1127,22 @@ class OnboardingViewModel @Inject constructor(
                         }
 
                         val showImported: suspend () -> Unit = {
+                            // Whether other backups remain is known before the success screen
+                            // opens, also when it opens after a confirmed repair.
+                            val more = try {
+                                getBackupedAccountsFiltered().isNotEmpty()
+                            } catch (error: kotlinx.coroutines.CancellationException) {
+                                throw error
+                            } catch (_: Exception) {
+                                // The list could not be loaded just now; the account itself
+                                // was restored.
+                                false
+                            }
+                            _importAccountPasswordState.value =
+                                (_importAccountPasswordState.value ?: state).copy(
+                                    isImportMoreAvailable = more,
+                                    isLoading = false,
+                                )
                             navController.navigate(
                                 route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
                                 navOptions = NavOptions.Builder()
@@ -1008,8 +1167,6 @@ class OnboardingViewModel @Inject constructor(
                             return@let
                         }
 
-                        isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()
-
                         showImported()
                     } catch (e: DecryptionException) {
                         onError(SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED))
@@ -1027,8 +1184,10 @@ class OnboardingViewModel @Inject constructor(
                         _consentExceptionHandler.value = e.intent
                     }
                 }
+                // The success screen's state (import more) was set by showImported; only the
+                // loading mark is cleared here.
                 _importAccountPasswordState.value =
-                    state.copy(isImportMoreAvailable = isImportMoreAvailable, isLoading = false)
+                    (_importAccountPasswordState.value ?: state).copy(isLoading = false)
             }
         }
     }

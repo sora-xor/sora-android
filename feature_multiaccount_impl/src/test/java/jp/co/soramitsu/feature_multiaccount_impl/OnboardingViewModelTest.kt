@@ -223,7 +223,7 @@ class OnboardingViewModelTest {
         whenever(resourceManager.getString(org.mockito.kotlin.any())).thenReturn("label")
         whenever(multiAccInteractor.isJsonBackupValid("{file}")).thenReturn(true)
         whenever(multiAccInteractor.importFromJson("{file}", "file password", "Restored", null))
-            .thenReturn(MultiaccountInteractor.JsonImportResult(listOf(imported), 0, 0))
+            .thenReturn(MultiaccountInteractor.JsonImportResult(listOf(imported), 0))
 
         onboardingViewModel.onRecoveryClicked(navController, 3)
         assertEquals(RecoveryType.JSON, onboardingViewModel.recoveryState.value?.recoveryType)
@@ -250,33 +250,425 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun `accounts of a batch backup file that were skipped are named before the wallet opens`() =
+    fun `a chosen backup file is kept out of the text field and is not parsed again per keystroke`() =
+        runTest {
+            whenever(resourceManager.getString(org.mockito.kotlin.any())).thenReturn("label")
+            whenever(multiAccInteractor.isJsonBackupValid("{file}")).thenReturn(true)
+            onboardingViewModel.onRecoveryClicked(navController, 3)
+
+            onboardingViewModel.onRecoveryFileChosen("{file}", "sora-backup.json")
+            testScheduler.advanceUntilIdle()
+            val chosen = requireNotNull(onboardingViewModel.recoveryState.value)
+            // The screen gets the file's name; the text field stays empty.
+            assertEquals("sora-backup.json", chosen.chosenFileName)
+            assertEquals("", chosen.recoveryInputState.value.text)
+
+            "file password".indices.forEach { end ->
+                onboardingViewModel.onRecoveryPasswordChanged(
+                    androidx.compose.ui.text.input.TextFieldValue("file password".take(end + 1))
+                )
+            }
+            testScheduler.advanceUntilIdle()
+            assertEquals(true, onboardingViewModel.recoveryState.value?.isButtonEnabled)
+            org.mockito.kotlin.verify(multiAccInteractor, org.mockito.kotlin.times(1))
+                .isJsonBackupValid(org.mockito.kotlin.any())
+
+            // Typing or pasting replaces the chosen file.
+            whenever(multiAccInteractor.isJsonBackupValid("{")).thenReturn(false)
+            onboardingViewModel.onRecoveryInputChanged(
+                androidx.compose.ui.text.input.TextFieldValue("{")
+            )
+            testScheduler.advanceUntilIdle()
+            assertNull(onboardingViewModel.recoveryState.value?.chosenFileName)
+            assertEquals(false, onboardingViewModel.recoveryState.value?.isButtonEnabled)
+        }
+
+    @Test
+    fun `a chosen file that is not a backup is refused and never shown`() = runTest {
+        whenever(resourceManager.getString(org.mockito.kotlin.any())).thenReturn("label")
+        whenever(multiAccInteractor.isJsonBackupValid("time,level,message\n")).thenReturn(false)
+        onboardingViewModel.onRecoveryClicked(navController, 3)
+
+        onboardingViewModel.onRecoveryFileChosen("time,level,message\n", "app.log")
+        testScheduler.advanceUntilIdle()
+
+        val state = requireNotNull(onboardingViewModel.recoveryState.value)
+        assertNull(state.chosenFileName)
+        assertEquals("", state.recoveryInputState.value.text)
+        assertEquals(false, state.isButtonEnabled)
+        assertEquals(
+            R.string.recovery_json_file_unreadable,
+            onboardingViewModel.errorFromResourceLiveData.value?.second,
+        )
+    }
+
+    @Test
+    fun `accounts of a batch file that need repair are listed and repaired after one confirmation`() =
         runTest {
             val context = org.mockito.kotlin.mock<android.content.Context>()
             val imported = jp.co.soramitsu.common.account.SoraAccount("cnFromFile", "Restored")
-            whenever(resourceManager.getString(org.mockito.kotlin.any()))
-                .thenReturn("Added %1\$s. Skipped %2\$s.")
+            whenever(resourceManager.getString(org.mockito.kotlin.any())).thenReturn("label")
             whenever(multiAccInteractor.isJsonBackupValid("{batch}")).thenReturn(true)
             whenever(multiAccInteractor.importFromJson("{batch}", "pw", "", null))
-                .thenReturn(MultiaccountInteractor.JsonImportResult(listOf(imported), 1, 2))
+                .thenReturn(batchResult(imported))
+            whenever(
+                multiAccInteractor.repairFromJsonBatch(
+                    "{batch}",
+                    "pw",
+                    "",
+                    "135790",
+                    listOf("cnBrokenAccountAddress0001", "cnOrphan"),
+                    false,
+                )
+            ).thenReturn(emptyList())
 
-            onboardingViewModel.onRecoveryClicked(navController, 3)
-            onboardingViewModel.onRecoveryFileChosen("{batch}")
-            onboardingViewModel.onRecoveryPasswordChanged(
-                androidx.compose.ui.text.input.TextFieldValue("pw")
-            )
-            testScheduler.advanceUntilIdle()
-            onboardingViewModel.recoveryNextClicked(navController, context)
-            testScheduler.advanceUntilIdle()
+            importBatch(context)
 
-            // Nothing opens until the person has read which accounts were not added.
+            // Nothing opens and nothing is replaced until the person has confirmed.
             org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
-            assertEquals("Added 1. Skipped 2.", onboardingViewModel.batchImportNotice.value?.message)
+            val prompt = requireNotNull(onboardingViewModel.repairPrompt.value)
+            assertEquals(
+                listOf("Broken (cnBroken…ress0001)", "cnOrphan"),
+                prompt.batchAccounts,
+            )
+            assertEquals(true, prompt.pinRequired)
+            assertEquals(false, prompt.fromPhrase)
 
-            onboardingViewModel.onBatchImportNoticeDismissed(context)
-            org.mockito.kotlin.verify(mainStarter).start(context)
+            onboardingViewModel.onRepairConfirmed("135790")
+            testScheduler.advanceUntilIdle()
+
+            org.mockito.kotlin.verify(multiAccInteractor).repairFromJsonBatch(
+                "{batch}",
+                "pw",
+                "",
+                "135790",
+                listOf("cnBrokenAccountAddress0001", "cnOrphan"),
+                false,
+            )
+            assertNull(onboardingViewModel.repairPrompt.value)
             assertNull(onboardingViewModel.batchImportNotice.value)
+            org.mockito.kotlin.verify(mainStarter).start(context)
         }
+
+    @Test
+    fun `cancelling the batch repair changes nothing and says what was added`() = runTest {
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+        val imported = jp.co.soramitsu.common.account.SoraAccount("cnFromFile", "Restored")
+        whenever(resourceManager.getString(org.mockito.kotlin.any()))
+            .thenReturn("Added %1\$s. Not changed %2\$s.")
+        whenever(multiAccInteractor.isJsonBackupValid("{batch}")).thenReturn(true)
+        whenever(multiAccInteractor.importFromJson("{batch}", "pw", "", null))
+            .thenReturn(batchResult(imported))
+
+        importBatch(context)
+        onboardingViewModel.onRepairDismissed()
+
+        assertNull(onboardingViewModel.repairPrompt.value)
+        org.mockito.kotlin.verify(multiAccInteractor, org.mockito.kotlin.never()).repairFromJsonBatch(
+            org.mockito.kotlin.any(),
+            org.mockito.kotlin.any(),
+            org.mockito.kotlin.any(),
+            org.mockito.kotlin.any(),
+            org.mockito.kotlin.any(),
+            org.mockito.kotlin.any(),
+        )
+        // The wallet opens only after the person has read what was not changed.
+        org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+        assertEquals("Added 1. Not changed 2.", onboardingViewModel.batchImportNotice.value?.message)
+        onboardingViewModel.onBatchImportNoticeDismissed(context)
+        org.mockito.kotlin.verify(mainStarter).start(context)
+        assertNull(onboardingViewModel.batchImportNotice.value)
+    }
+
+    @Test
+    fun `conflicting stored keys offer the repair and the right PIN repairs from a phrase`() = runTest {
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+        whenever(resourceManager.getString(org.mockito.kotlin.any())).thenReturn("label")
+        whenever(multiAccInteractor.isMnemonicValid("the phrase")).thenReturn(true)
+        whenever(multiAccInteractor.importFromMnemonic("the phrase", "Name")).thenAnswer {
+            throw repairOffer(accountExists = true, pinRequired = true)
+        }
+        whenever(multiAccInteractor.repairFromMnemonic("the phrase", "Name", "000000", false))
+            .thenAnswer {
+                throw jp.co.soramitsu.common.domain.SoraException.businessError(
+                    jp.co.soramitsu.common.domain.ResponseCode.WRONG_PIN_CODE
+                )
+            }
+        whenever(multiAccInteractor.repairFromMnemonic("the phrase", "Name", "135790", false))
+            .thenReturn(jp.co.soramitsu.common.account.SoraAccount("cnBroken", "Name"))
+
+        enterAndContinue(kind = 1, input = "the phrase", context = context)
+
+        // The import wrote nothing and opened nothing: it offers the repair.
+        val prompt = requireNotNull(onboardingViewModel.repairPrompt.value)
+        assertEquals(true, prompt.accountExists)
+        assertEquals(true, prompt.pinRequired)
+        assertEquals(true, prompt.fromPhrase)
+        assertEquals(false, prompt.screenLockRequired)
+        org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+
+        // A wrong PIN keeps the prompt open and says so; nothing was changed.
+        onboardingViewModel.onRepairConfirmed("000000")
+        testScheduler.advanceUntilIdle()
+        assertEquals(true, onboardingViewModel.repairPrompt.value?.wrongPin)
+        assertEquals(false, onboardingViewModel.repairPrompt.value?.working)
+        org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+
+        onboardingViewModel.onRepairConfirmed("135790")
+        testScheduler.advanceUntilIdle()
+        assertNull(onboardingViewModel.repairPrompt.value)
+        org.mockito.kotlin.verify(mainStarter).start(context)
+    }
+
+    @Test
+    fun `the repair of a raw seed import calls the raw seed repair`() = runTest {
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+        whenever(resourceManager.getString(org.mockito.kotlin.any())).thenReturn("label")
+        whenever(multiAccInteractor.isRawSeedValid("the seed")).thenReturn(true)
+        whenever(multiAccInteractor.importFromRawSeed("the seed", "Name")).thenAnswer {
+            throw repairOffer(accountExists = false, pinRequired = false)
+        }
+        whenever(multiAccInteractor.repairFromRawSeed("the seed", "Name", "", false))
+            .thenReturn(jp.co.soramitsu.common.account.SoraAccount("cnBroken", "Name"))
+
+        enterAndContinue(kind = 2, input = "the seed", context = context)
+
+        val prompt = requireNotNull(onboardingViewModel.repairPrompt.value)
+        assertEquals(false, prompt.accountExists)
+        assertEquals(false, prompt.pinRequired)
+        assertEquals(false, prompt.fromPhrase)
+
+        onboardingViewModel.onRepairConfirmed("")
+        testScheduler.advanceUntilIdle()
+        org.mockito.kotlin.verify(multiAccInteractor).repairFromRawSeed("the seed", "Name", "", false)
+        org.mockito.kotlin.verify(mainStarter).start(context)
+    }
+
+    @Test
+    fun `the repair of a one-account backup file calls the file repair with its password`() = runTest {
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+        whenever(resourceManager.getString(org.mockito.kotlin.any())).thenReturn("label")
+        whenever(multiAccInteractor.isJsonBackupValid("{file}")).thenReturn(true)
+        whenever(multiAccInteractor.importFromJson("{file}", "file password", "Name", null))
+            .thenAnswer { throw repairOffer(accountExists = true, pinRequired = true) }
+        whenever(
+            multiAccInteractor.repairFromJson("{file}", "file password", "Name", "135790", null, false)
+        ).thenReturn(jp.co.soramitsu.common.account.SoraAccount("cnBroken", "Name"))
+
+        enterAndContinue(kind = 3, input = "{file}", password = "file password", context = context)
+        assertEquals(false, onboardingViewModel.repairPrompt.value?.fromPhrase)
+
+        onboardingViewModel.onRepairConfirmed("135790")
+        testScheduler.advanceUntilIdle()
+        org.mockito.kotlin.verify(multiAccInteractor)
+            .repairFromJson("{file}", "file password", "Name", "135790", null, false)
+        org.mockito.kotlin.verify(mainStarter).start(context)
+    }
+
+    @Test
+    fun `too many wrong PINs close the repair with nothing changed and say how long it is locked`() =
+        runTest {
+            val context = org.mockito.kotlin.mock<android.content.Context>()
+            whenever(resourceManager.getString(org.mockito.kotlin.any()))
+                .thenReturn("Locked for about %1\$s min")
+            whenever(multiAccInteractor.isMnemonicValid("the phrase")).thenReturn(true)
+            whenever(multiAccInteractor.importFromMnemonic("the phrase", "Name")).thenAnswer {
+                throw repairOffer(accountExists = true, pinRequired = true)
+            }
+            whenever(multiAccInteractor.repairFromMnemonic("the phrase", "Name", "000000", false))
+                .thenAnswer {
+                    throw jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException(
+                        remainingMillis = 4 * 60_000L + 1,
+                    )
+                }
+
+            enterAndContinue(kind = 1, input = "the phrase", context = context)
+            onboardingViewModel.onRepairConfirmed("000000")
+            testScheduler.advanceUntilIdle()
+
+            assertNull(onboardingViewModel.repairPrompt.value)
+            // Rounded up to whole minutes.
+            assertEquals(
+                "Locked for about 5 min",
+                onboardingViewModel.alertDialogLiveData.value?.second,
+            )
+            org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+
+            // The prompt is closed: another confirmation does nothing.
+            onboardingViewModel.onRepairConfirmed("135790")
+            testScheduler.advanceUntilIdle()
+            org.mockito.kotlin.verify(multiAccInteractor, org.mockito.kotlin.never())
+                .repairFromMnemonic("the phrase", "Name", "135790", false)
+        }
+
+    @Test
+    fun `a stored PIN that cannot be read makes the repair ask for the screen lock`() = runTest {
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+        whenever(resourceManager.getString(org.mockito.kotlin.any())).thenReturn("label")
+        whenever(multiAccInteractor.isMnemonicValid("the phrase")).thenReturn(true)
+        whenever(multiAccInteractor.importFromMnemonic("the phrase", "Name")).thenAnswer {
+            throw jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException(
+                address = "cnBroken",
+                accountExists = true,
+                pinRequired = false,
+                screenLockRequired = true,
+            )
+        }
+        whenever(multiAccInteractor.repairFromMnemonic("the phrase", "Name", "", true))
+            .thenReturn(jp.co.soramitsu.common.account.SoraAccount("cnBroken", "Name"))
+
+        enterAndContinue(kind = 1, input = "the phrase", context = context)
+        val prompt = requireNotNull(onboardingViewModel.repairPrompt.value)
+        assertEquals(true, prompt.screenLockRequired)
+        assertEquals(false, prompt.pinRequired)
+
+        // The screen confirmed the phone's screen lock.
+        onboardingViewModel.onRepairConfirmed(pin = "", screenLockConfirmed = true)
+        testScheduler.advanceUntilIdle()
+        org.mockito.kotlin.verify(multiAccInteractor).repairFromMnemonic("the phrase", "Name", "", true)
+        org.mockito.kotlin.verify(mainStarter).start(context)
+    }
+
+    @Test
+    fun `cancelling the repair of one account changes nothing and stays on the import`() = runTest {
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+        whenever(resourceManager.getString(org.mockito.kotlin.any())).thenReturn("label")
+        whenever(multiAccInteractor.isMnemonicValid("the phrase")).thenReturn(true)
+        whenever(multiAccInteractor.importFromMnemonic("the phrase", "Name")).thenAnswer {
+            throw repairOffer(accountExists = true, pinRequired = true)
+        }
+
+        enterAndContinue(kind = 1, input = "the phrase", context = context)
+        onboardingViewModel.onRepairDismissed()
+
+        assertNull(onboardingViewModel.repairPrompt.value)
+        assertNull(onboardingViewModel.batchImportNotice.value)
+        org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+        // The import can be started again: the button is enabled and nothing is loading.
+        assertEquals(true, onboardingViewModel.recoveryAccountNameCardState.value?.btnEnabled)
+        assertEquals(false, onboardingViewModel.recoveryAccountNameCardState.value?.loading)
+    }
+
+    @Test
+    fun `a Google backup repaired after confirmation still offers the other backups`() = runTest {
+        val backup = googleBackup(
+            types = listOf(jp.co.soramitsu.xbackup.domain.models.BackupAccountType.JSON),
+            phrase = "",
+            seed = "",
+        )
+        whenever(coroutineManager.io)
+            .thenReturn(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler))
+        whenever(backupService.importBackupAccount("cnBackedUp", "backup password"))
+            .thenReturn(backup)
+        // Two more backups are on the drive.
+        whenever(backupService.getBackupAccounts()).thenReturn(
+            listOf(
+                jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta("Second", "cnSecond"),
+                jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta("Third", "cnThird"),
+            )
+        )
+        whenever(multiAccInteractor.isJsonBackupValid("{backup json}")).thenReturn(true)
+        whenever(multiAccInteractor.isAddressValid(org.mockito.kotlin.any())).thenReturn(true)
+        whenever(multiAccInteractor.accountExists(org.mockito.kotlin.any())).thenReturn(false)
+        whenever(
+            multiAccInteractor.importFromJson("{backup json}", "backup password", "Backed up", "cnBackedUp")
+        ).thenAnswer { throw repairOffer(accountExists = true, pinRequired = true) }
+        whenever(
+            multiAccInteractor.repairFromJson(
+                "{backup json}",
+                "backup password",
+                "Backed up",
+                "135790",
+                "cnBackedUp",
+                false,
+            )
+        ).thenReturn(jp.co.soramitsu.common.account.SoraAccount("cnBackedUp", "Backed up"))
+        onboardingViewModel.onImportAccountSelected(
+            navController,
+            jp.co.soramitsu.feature_multiaccount_impl.presentation.BackupAccountMetaWithIcon(
+                jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta("Backed up", "cnBackedUp"),
+                null,
+            ),
+        )
+        onboardingViewModel.onImportPasswordChanged(
+            androidx.compose.ui.text.input.TextFieldValue("backup password")
+        )
+        onboardingViewModel.onImportContinueClicked(navController)
+        testScheduler.advanceUntilIdle()
+
+        // The restore stopped at the repair prompt: no success screen yet, nothing loading.
+        requireNotNull(onboardingViewModel.repairPrompt.value)
+        assertEquals(false, onboardingViewModel.importAccountPasswordState.value?.isLoading)
+
+        onboardingViewModel.onRepairConfirmed("135790")
+        testScheduler.advanceUntilIdle()
+
+        assertNull(onboardingViewModel.repairPrompt.value)
+        // The success screen offers "Import more": two other backups remain.
+        assertEquals(true, onboardingViewModel.importAccountPasswordState.value?.isImportMoreAvailable)
+        assertEquals(false, onboardingViewModel.importAccountPasswordState.value?.isLoading)
+    }
+
+    private fun repairOffer(accountExists: Boolean, pinRequired: Boolean) =
+        jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException(
+            address = "cnBroken",
+            accountExists = accountExists,
+            pinRequired = pinRequired,
+        )
+
+    private fun batchResult(imported: jp.co.soramitsu.common.account.SoraAccount) =
+        MultiaccountInteractor.JsonImportResult(
+            imported = listOf(imported),
+            alreadyHere = 1,
+            needRepair = listOf(
+                MultiaccountInteractor.RepairCandidate(
+                    address = "cnBrokenAccountAddress0001",
+                    name = "Broken",
+                    accountExists = true,
+                ),
+                MultiaccountInteractor.RepairCandidate(
+                    address = "cnOrphan",
+                    name = "",
+                    accountExists = false,
+                ),
+            ),
+            repairPinRequired = true,
+        )
+
+    private fun kotlinx.coroutines.test.TestScope.importBatch(context: android.content.Context) {
+        onboardingViewModel.onRecoveryClicked(navController, 3)
+        onboardingViewModel.onRecoveryFileChosen("{batch}", "batch.json")
+        onboardingViewModel.onRecoveryPasswordChanged(
+            androidx.compose.ui.text.input.TextFieldValue("pw")
+        )
+        testScheduler.advanceUntilIdle()
+        onboardingViewModel.recoveryNextClicked(navController, context)
+        testScheduler.advanceUntilIdle()
+    }
+
+    /** Import account: choose the kind (1 phrase, 2 raw seed, 3 backup file), enter, Continue. */
+    private fun kotlinx.coroutines.test.TestScope.enterAndContinue(
+        kind: Int,
+        input: String,
+        context: android.content.Context,
+        password: String = "",
+    ) {
+        onboardingViewModel.onRecoveryClicked(navController, kind)
+        onboardingViewModel.onRecoveryInputChanged(
+            androidx.compose.ui.text.input.TextFieldValue(input)
+        )
+        if (kind == 3) {
+            onboardingViewModel.onRecoveryPasswordChanged(
+                androidx.compose.ui.text.input.TextFieldValue(password)
+            )
+        }
+        onboardingViewModel.onRecoveryAccountChanged(
+            androidx.compose.ui.text.input.TextFieldValue("Name")
+        )
+        testScheduler.advanceUntilIdle()
+        onboardingViewModel.recoveryNextClicked(navController, context)
+        testScheduler.advanceUntilIdle()
+    }
 
     @Test
     fun `a Google backup that holds only the encrypted JSON restores the account from it`() =
@@ -369,7 +761,6 @@ class OnboardingViewModelTest {
         ).thenReturn(
             MultiaccountInteractor.JsonImportResult(
                 listOf(jp.co.soramitsu.common.account.SoraAccount("cnBackedUp", "Backed up")),
-                0,
                 0,
             )
         )

@@ -621,7 +621,6 @@
   <string name="account_repair_body_keys">このウォレットの鍵はすでにこの端末に保存されていますが、使用できません。入力された内容から得られる鍵に置き換えて、ウォレットを追加できます。アドレスは変わらず、他のアカウントには影響しません。古い鍵のコピーはこの端末に残ります。</string>
   <string name="account_repair_pin_label">確認のためPINを入力してください</string>
   <string name="account_repair_pin_wrong">PINが正しくありません。何も変更されていません。</string>
-  <string name="account_repair_too_many_attempts">PINを3回間違えたため、修復を中止しました。何も変更されていません。「アカウントをインポート」からやり直せます。</string>
   <string name="account_repair_confirm">アカウントを修復</string>
   <string name="backup_no_matching_secret">この端末に保存されているリカバリーフレーズやシードの中に、このアカウントに一致するものがないため、表示していません。アカウント自体は引き続き使用できます。バックアップするには、暗号化されたJSONファイルとしてエクスポートしてください。あとで「アカウントをインポート」の「バックアップファイル（JSON）」から復元できます。</string>
   <string name="backup_no_matching_secret_read_only">この端末に保存されているリカバリーフレーズやシードの中に、このアカウントに一致するものがないため、表示していません。この端末でこのアカウントを再び使うには、「アカウントをインポート」でリカバリーフレーズ、Raw Seed、またはバックアップファイルを入力してください。</string>
@@ -638,7 +637,20 @@
   <string name="recovery_json_password_label">バックアップファイルのパスワード</string>
   <string name="recovery_json_choose_file">ファイルを選ぶ</string>
   <string name="recovery_json_file_unreadable">そのファイルを読み取れませんでした。SORAからエクスポートしたJSONファイルを選んでください。何も変更されていません。</string>
-  <string name="json_backup_batch_skipped">このファイルのアカウントのうち%1$s個を追加しました。%2$s個は、この端末に別の鍵が保存されているため追加できませんでした。修復するには、「アカウントをインポート」で、そのアカウントのリカバリーフレーズまたはそのアカウントだけのバックアップファイルを入力してください。</string>
+  <string name="json_backup_batch_skipped">このファイルのアカウントのうち%1$s個を追加しました。%2$s個は変更していません。この端末に、使用できない別の鍵が保存されているためです。修復するには、このファイルをもう一度インポートして修復を確認するか、「アカウントをインポート」でそのアカウントのリカバリーフレーズを入力してください。</string>
   <string name="export_json_keys_unusable_title">このアカウントはエクスポートできません</string>
   <string name="export_json_keys_unusable">選択したアカウントの中に、この端末に保存されている鍵を使用できないものがあるため、エクスポートできません。ファイルは作成されていません。この端末でそのアカウントを再び使うには、「アカウントをインポート」でリカバリーフレーズ、Raw Seed、またはバックアップファイルを入力してください。</string>
+  <string name="account_already_imported_backup_saved">このウォレットはすでにこの端末にあり、使用できます。入力された内容はこれまでこの端末に保存されていなかったため、このウォレットのバックアップとして保存しました。「アカウントのオプション」で確認できます。そのほかは何も変更されていません。</string>
+  <string name="account_repair_screen_lock_needed">この端末に保存されているPINを読み取れないため、この修復は端末の画面ロックで確認する必要があります。何も変更されていません。「アカウントをインポート」からやり直してください。</string>
+  <string name="account_repair_screen_lock_body">この端末に保存されているPINを読み取れません。代わりに端末の画面ロックで確認してください。</string>
+  <string name="account_repair_screen_lock_missing">この端末に保存されているPINを読み取れず、確認に使える画面ロックもこの端末に設定されていません。端末の設定で画面ロックを設定してから、もう一度修復をお試しください。何も変更されていません。</string>
+  <string name="account_repair_screen_lock_prompt">アカウントの修復を確認</string>
+  <string name="account_repair_confirm_screen_lock">画面ロックで確認</string>
+  <string name="account_repair_pin_locked_title">PINの入力ミスが続きました</string>
+  <string name="account_repair_pin_locked">PINを何度も間違えたため、PINの入力は約%1$s分間ロックされます。この画面とPIN画面の両方に適用されます。何も変更されていません。ロックが解除されたら、「アカウントをインポート」からやり直せます。</string>
+  <string name="account_repair_title_batch">バックアップファイルでアカウントを修復</string>
+  <string name="account_repair_body_batch">このファイルのほかのアカウントは、追加されたか、すでにこの端末にあります。以下のアカウントは、鍵がすでにこの端末に保存されていますが、使用できません。このファイルの鍵に置き換えることができます。各アカウントのアドレスは変わらず、他のアカウントには影響しません。古い鍵のコピーはこの端末に残ります。</string>
+  <string name="account_repair_confirm_batch">アカウントを修復</string>
+  <string name="recovery_json_file_chosen">選択したファイル: %1$s</string>
+  <string name="recovery_json_file_unnamed">バックアップファイル</string>
 </resources>

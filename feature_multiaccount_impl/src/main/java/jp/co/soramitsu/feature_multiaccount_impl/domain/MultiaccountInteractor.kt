@@ -45,13 +45,17 @@ import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException
 import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.xcrypto.encryption.Keypair
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 
 class MultiaccountInteractor @Inject constructor(
     private val userRepository: UserRepository,
@@ -61,9 +65,26 @@ class MultiaccountInteractor @Inject constructor(
     private val walletRepository: WalletRepository,
 ) {
 
-    private companion object {
-        const val MULTIPLE_ACCOUNT_COUNT = 2
+    companion object {
+        private const val MULTIPLE_ACCOUNT_COUNT = 2
+        private const val MINUTE_MILLIS = 60_000L
+
+        /**
+         * How long PIN entry is locked after [triesUsed] wrong entries in a row. The same steps
+         * as the PIN screen (`PinCodeViewModel`): 3 wrong entries lock for 1 minute, then 5, 15
+         * and 30 minutes.
+         */
+        fun pinLockMillis(triesUsed: Int): Long = when {
+            triesUsed >= 6 -> 30 * MINUTE_MILLIS
+            triesUsed == 5 -> 15 * MINUTE_MILLIS
+            triesUsed == 4 -> 5 * MINUTE_MILLIS
+            triesUsed == 3 -> MINUTE_MILLIS
+            else -> 0L
+        }
     }
+
+    /** Wall-clock time, as the PIN screen's lock timer uses it. Replaced in tests. */
+    internal var now: () -> Long = System::currentTimeMillis
 
     suspend fun anyBackupStarted() {
         walletRepository.updateCardVisibilityOnCardsHub(CardHubType.BACKUP.hubName, false)
@@ -84,7 +105,10 @@ class MultiaccountInteractor @Inject constructor(
      * Imports a recovery phrase as one step under the wallet lock. No outcome asks the person to
      * remove an account.
      * - An account with this address that can sign is reported as already here
-     *   (`ACCOUNT_ALREADY_IMPORTED`); nothing is touched.
+     *   (`ACCOUNT_ALREADY_IMPORTED`); its keys are never touched. When no phrase is stored for
+     *   it (for example a wallet restored from a backup file), the phrase just entered is kept
+     *   as its backup, add-only, and that is reported
+     *   (`ACCOUNT_ALREADY_IMPORTED_BACKUP_SAVED`).
      * - Keys stored for this address whose signing key proves the address (with or without an
      *   account row, for example after the database was lost) are adopted unchanged, and the
      *   account is added or made usable again.
@@ -92,6 +116,8 @@ class MultiaccountInteractor @Inject constructor(
      * - When a stored value differs or cannot be read and the stored key does not prove the
      *   address, nothing is written and [WalletRepairAvailableException] offers the confirmed
      *   repair ([repairFromMnemonic]).
+     *
+     * Deriving and proving keys is CPU work and never runs on the caller's thread.
      */
     suspend fun importFromMnemonic(input: String, accountName: String): SoraAccount =
         importDraft { credentialsRepository.draftFromMnemonic(input, accountName) }
@@ -106,16 +132,32 @@ class MultiaccountInteractor @Inject constructor(
     }
 
     /**
-     * "Repair this account with its recovery phrase": the person confirmed (with the PIN when one
-     * is set) that the values stored for this phrase's address are replaced by the ones the
-     * phrase derives. A copy of the old values is kept on the device first. The account row,
-     * its name and every other account stay as they are.
+     * "Repair this account with its recovery phrase": the person confirmed that the values
+     * stored for this phrase's address are replaced by the ones the phrase derives. The
+     * confirmation is the PIN when one is set ([pin]); when a PIN is stored but cannot be read,
+     * it is the phone's screen lock, which the screen checks before it passes
+     * [screenLockConfirmed]. A copy of the old values is kept on the device first. The account
+     * row, its name and every other account stay as they are.
+     *
+     * Wrong PINs are counted by the PIN screen's own persistent counter and lock timer
+     * ([RepairPinLockedException] once locked), so this is not a way around the PIN lockout.
      */
-    suspend fun repairFromMnemonic(input: String, accountName: String, pin: String): SoraAccount =
-        repairDraft(pin) { credentialsRepository.draftFromMnemonic(input, accountName) }
+    suspend fun repairFromMnemonic(
+        input: String,
+        accountName: String,
+        pin: String,
+        screenLockConfirmed: Boolean = false,
+    ): SoraAccount = repairDraft(pin, screenLockConfirmed) {
+        credentialsRepository.draftFromMnemonic(input, accountName)
+    }
 
-    suspend fun repairFromRawSeed(input: String, accountName: String, pin: String): SoraAccount {
-        val soraAccount = repairDraft(pin) {
+    suspend fun repairFromRawSeed(
+        input: String,
+        accountName: String,
+        pin: String,
+        screenLockConfirmed: Boolean = false,
+    ): SoraAccount {
+        val soraAccount = repairDraft(pin, screenLockConfirmed) {
             credentialsRepository.draftFromRawSeed(input, accountName)
         }
         userRepository.saveNeedsMigration(false, soraAccount)
@@ -127,6 +169,15 @@ class MultiaccountInteractor @Inject constructor(
     suspend fun isJsonBackupValid(json: String): Boolean =
         credentialsRepository.isJsonBackupValid(json)
 
+    /** One account of a backup file that the confirmed repair can bring back. */
+    data class RepairCandidate(
+        val address: String,
+        /** The name this account has in the file (the account on the phone keeps its own). */
+        val name: String,
+        /** An account with this address is listed (read-only); otherwise only its keys are stored. */
+        val accountExists: Boolean,
+    )
+
     /** What importing an encrypted JSON export did. */
     class JsonImportResult(
         /** The accounts that were added or made usable again, in file order. */
@@ -134,11 +185,15 @@ class MultiaccountInteractor @Inject constructor(
         /** Accounts of a batch file that were skipped because they can already sign here. */
         val alreadyHere: Int,
         /**
-         * Accounts of a batch file that were skipped because other keys are stored for them on
-         * this phone. Nothing was changed for them; each can be repaired by importing it on its
-         * own (its phrase, seed or one-account backup file).
+         * Accounts of a batch file that were skipped because other keys, which cannot be used,
+         * are stored for them on this phone. Nothing was changed for them. The same file repairs
+         * them after one confirmation ([repairFromJsonBatch]).
          */
-        val needRepair: Int,
+        val needRepair: List<RepairCandidate> = emptyList(),
+        /** How that repair is confirmed: with the PIN ... */
+        val repairPinRequired: Boolean = false,
+        /** ... or, when the stored PIN cannot be read, with the phone's screen lock. */
+        val repairScreenLockRequired: Boolean = false,
     )
 
     /**
@@ -150,43 +205,64 @@ class MultiaccountInteractor @Inject constructor(
      * filled in, or [WalletRepairAvailableException] ([repairFromJson]). A batch file adds every
      * account that can be added without replacing anything and reports the rest in the result;
      * it is `ACCOUNT_ALREADY_IMPORTED` only when every account in it is already usable here.
+     *
+     * The file is opened (scrypt, about a second per account) off the caller's thread and
+     * before the wallet lock is taken.
      */
     suspend fun importFromJson(
         json: String,
         password: String,
         accountName: String,
         expectedAddress: String? = null,
-    ): JsonImportResult = WalletMutationCoordinator.withLock {
+    ): JsonImportResult = keyWork {
         val drafts = credentialsRepository.draftsFromJson(json, password, accountName)
         try {
-            if (expectedAddress != null && drafts.none { it.address == expectedAddress }) {
-                throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID)
-            }
-            val wanted = drafts.filter { expectedAddress == null || it.address == expectedAddress }
-            if (wanted.size == 1) {
-                return@withLock JsonImportResult(
-                    imported = listOf(importJsonDraft(wanted.single())),
-                    alreadyHere = 0,
-                    needRepair = 0,
+            WalletMutationCoordinator.withLock {
+                if (expectedAddress != null && drafts.none { it.address == expectedAddress }) {
+                    throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID)
+                }
+                val wanted =
+                    drafts.filter { expectedAddress == null || it.address == expectedAddress }
+                if (wanted.size == 1) {
+                    return@withLock JsonImportResult(
+                        imported = listOf(importJsonDraft(wanted.single())),
+                        alreadyHere = 0,
+                    )
+                }
+                val imported = mutableListOf<SoraAccount>()
+                val needRepair = mutableListOf<RepairCandidate>()
+                var alreadyHere = 0
+                var pinRequired = false
+                var screenLockRequired = false
+                wanted.forEach { draft ->
+                    try {
+                        imported += importJsonDraft(draft)
+                    } catch (offer: WalletRepairAvailableException) {
+                        needRepair += RepairCandidate(
+                            address = draft.address,
+                            name = draft.accountName,
+                            accountExists = offer.accountExists,
+                        )
+                        pinRequired = offer.pinRequired
+                        screenLockRequired = offer.screenLockRequired
+                    } catch (error: SoraException) {
+                        if (error.errorResponseCode != ResponseCode.ACCOUNT_ALREADY_IMPORTED) {
+                            throw error
+                        }
+                        alreadyHere += 1
+                    }
+                }
+                if (imported.isEmpty() && needRepair.isEmpty()) {
+                    throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
+                }
+                JsonImportResult(
+                    imported = imported,
+                    alreadyHere = alreadyHere,
+                    needRepair = needRepair,
+                    repairPinRequired = pinRequired,
+                    repairScreenLockRequired = screenLockRequired,
                 )
             }
-            val imported = mutableListOf<SoraAccount>()
-            var alreadyHere = 0
-            var needRepair = 0
-            wanted.forEach { draft ->
-                try {
-                    imported += importJsonDraft(draft)
-                } catch (_: WalletRepairAvailableException) {
-                    needRepair += 1
-                } catch (error: SoraException) {
-                    if (error.errorResponseCode != ResponseCode.ACCOUNT_ALREADY_IMPORTED) throw error
-                    alreadyHere += 1
-                }
-            }
-            if (imported.isEmpty() && needRepair == 0) {
-                throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
-            }
-            JsonImportResult(imported, alreadyHere, needRepair)
         } finally {
             drafts.forEach(WalletDraft::destroy)
         }
@@ -199,20 +275,69 @@ class MultiaccountInteractor @Inject constructor(
         accountName: String,
         pin: String,
         expectedAddress: String? = null,
-    ): SoraAccount = WalletMutationCoordinator.withLock {
-        requireStoredPin(pin)
+        screenLockConfirmed: Boolean = false,
+    ): SoraAccount = keyWork {
+        // The confirmation is checked first: a wrong PIN never costs a key derivation.
+        WalletMutationCoordinator.withLock { requireRepairConfirmed(pin, screenLockConfirmed) }
         val drafts = credentialsRepository.draftsFromJson(json, password, accountName)
         try {
-            val draft = drafts.singleOrNull { expectedAddress == null || it.address == expectedAddress }
-                ?: throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID)
-            val exists = requireNotAlreadyUsable(draft)
-            credentialsRepository.repairWithDraft(draft)
-            val account = finishImport(draft, exists)
-            if (!exists) markWalletWithoutPhrase(account)
-            account
+            WalletMutationCoordinator.withLock {
+                val draft = drafts
+                    .singleOrNull { expectedAddress == null || it.address == expectedAddress }
+                    ?: throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID)
+                repairJsonDraft(draft)
+            }
         } finally {
             drafts.forEach(WalletDraft::destroy)
         }
+    }
+
+    /**
+     * The confirmed repair of several accounts of one batch backup file: the accounts
+     * [importFromJson] reported in [JsonImportResult.needRepair], after one confirmation that
+     * named them. Each account is repaired exactly like [repairFromJson] (a copy of the old
+     * values is kept first; only that account's stored values are replaced). An account that can
+     * sign by now is left as it is. Returns the repaired accounts.
+     */
+    suspend fun repairFromJsonBatch(
+        json: String,
+        password: String,
+        accountName: String,
+        pin: String,
+        addresses: List<String>,
+        screenLockConfirmed: Boolean = false,
+    ): List<SoraAccount> = keyWork {
+        WalletMutationCoordinator.withLock { requireRepairConfirmed(pin, screenLockConfirmed) }
+        val drafts = credentialsRepository.draftsFromJson(json, password, accountName)
+        try {
+            WalletMutationCoordinator.withLock {
+                // Every named account must be in the file before anything is replaced.
+                val wanted = addresses.distinct().map { address ->
+                    drafts.singleOrNull { it.address == address }
+                        ?: throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID)
+                }
+                wanted.mapNotNull { draft ->
+                    try {
+                        repairJsonDraft(draft)
+                    } catch (error: SoraException) {
+                        if (error.errorResponseCode != ResponseCode.ACCOUNT_ALREADY_IMPORTED) {
+                            throw error
+                        }
+                        null
+                    }
+                }
+            }
+        } finally {
+            drafts.forEach(WalletDraft::destroy)
+        }
+    }
+
+    private suspend fun repairJsonDraft(draft: WalletDraft): SoraAccount {
+        val exists = requireNotAlreadyUsable(draft)
+        credentialsRepository.repairWithDraft(draft)
+        val account = finishImport(draft, exists)
+        if (!exists) markWalletWithoutPhrase(account)
+        return account
     }
 
     private suspend fun importJsonDraft(draft: WalletDraft): SoraAccount {
@@ -231,13 +356,23 @@ class MultiaccountInteractor @Inject constructor(
         userRepository.saveIsMigrationFetched(true, account)
     }
 
+    /**
+     * Key derivation (PBKDF2, sr25519), opening or writing a backup file (scrypt) and the
+     * stored-key proof are CPU work. They never run on the caller's thread, which is the main
+     * thread for every screen that imports, repairs or exports.
+     */
+    private suspend fun <T> keyWork(block: suspend () -> T): T =
+        withContext(Dispatchers.Default) { block() }
+
     private suspend fun importDraft(createDraft: suspend () -> WalletDraft): SoraAccount =
-        WalletMutationCoordinator.withLock {
-            val draft = createDraft()
-            try {
-                commitPreparedDraft(draft)
-            } finally {
-                draft.destroy()
+        keyWork {
+            WalletMutationCoordinator.withLock {
+                val draft = createDraft()
+                try {
+                    commitPreparedDraft(draft)
+                } finally {
+                    draft.destroy()
+                }
             }
         }
 
@@ -248,10 +383,12 @@ class MultiaccountInteractor @Inject constructor(
             credentialsRepository.commitDraft(draft)
         } catch (error: SoraException) {
             if (error.errorResponseCode == ResponseCode.ACCOUNT_STORAGE_CONFLICT) {
+                val pin = storedPin()
                 throw WalletRepairAvailableException(
                     address = draft.address,
                     accountExists = exists,
-                    pinRequired = storedPin().isNotEmpty(),
+                    pinRequired = pin is StoredPin.Set,
+                    screenLockRequired = pin is StoredPin.Unreadable,
                 )
             }
             throw error
@@ -261,28 +398,86 @@ class MultiaccountInteractor @Inject constructor(
 
     private suspend fun repairDraft(
         pin: String,
+        screenLockConfirmed: Boolean,
         createDraft: suspend () -> WalletDraft,
-    ): SoraAccount = WalletMutationCoordinator.withLock {
-        requireStoredPin(pin)
-        val draft = createDraft()
-        try {
-            val exists = requireNotAlreadyUsable(draft)
-            credentialsRepository.repairWithDraft(draft)
-            finishImport(draft, exists)
-        } finally {
-            draft.destroy()
+    ): SoraAccount = keyWork {
+        WalletMutationCoordinator.withLock {
+            requireRepairConfirmed(pin, screenLockConfirmed)
+            val draft = createDraft()
+            try {
+                val exists = requireNotAlreadyUsable(draft)
+                credentialsRepository.repairWithDraft(draft)
+                finishImport(draft, exists)
+            } finally {
+                draft.destroy()
+            }
         }
     }
 
-    /** The repair is confirmed with the PIN when one is set on this phone. */
-    private suspend fun requireStoredPin(pin: String) {
-        val stored = storedPin()
-        if (
-            stored.isNotEmpty() &&
-            !MessageDigest.isEqual(stored.toByteArray(), pin.toByteArray())
-        ) {
-            throw SoraException.businessError(ResponseCode.WRONG_PIN_CODE)
+    /** The PIN stored on this phone, as far as it can be known. */
+    private sealed interface StoredPin {
+        /** No PIN is set (for example before the first wallet is finished). */
+        data object None : StoredPin
+
+        /** A PIN is stored but cannot be decrypted, so nothing can be compared with it. */
+        data object Unreadable : StoredPin
+
+        class Set(val value: String) : StoredPin
+    }
+
+    /**
+     * A PIN that cannot be decrypted is "set but unavailable", never "no PIN": the damage that
+     * made an account's keys unreadable can have reached the PIN value too. A Keystore or
+     * storage failure is not an answer and is rethrown.
+     */
+    private suspend fun storedPin(): StoredPin = try {
+        userRepository.retrievePin().let { if (it.isEmpty()) StoredPin.None else StoredPin.Set(it) }
+    } catch (_: WalletDecryptionException) {
+        StoredPin.Unreadable
+    }
+
+    /**
+     * The repair replaces stored key values, so it is confirmed first:
+     * - with the PIN when one is set. A wrong PIN is counted by the same persistent counter and
+     *   lock timer as the PIN screen (3 wrong entries lock PIN entry for 1 minute, then 5, 15
+     *   and 30), and a correct one resets them, exactly as on the PIN screen;
+     * - with the phone's screen lock when a PIN is stored but cannot be read;
+     * - by the dialog's explicit confirmation alone only when no PIN is set on this phone.
+     */
+    private suspend fun requireRepairConfirmed(pin: String, screenLockConfirmed: Boolean) {
+        when (val stored = storedPin()) {
+            StoredPin.None -> Unit
+            StoredPin.Unreadable -> if (!screenLockConfirmed) {
+                throw SoraException.businessError(ResponseCode.REPAIR_NEEDS_SCREEN_LOCK)
+            }
+            is StoredPin.Set -> {
+                val locked = pinLockRemainingMillis()
+                if (locked > 0) throw RepairPinLockedException(locked)
+                if (MessageDigest.isEqual(stored.value.toByteArray(), pin.toByteArray())) {
+                    userRepository.resetTriesUsed()
+                    userRepository.resetTimerStartedTimestamp()
+                    return
+                }
+                val tries = userRepository.retrievePinTriesUsed() + 1
+                userRepository.savePinTriesUsed(tries)
+                val lock = pinLockMillis(tries)
+                if (lock > 0) {
+                    userRepository.saveTimerStartedTimestamp(now())
+                    throw RepairPinLockedException(lock)
+                }
+                throw SoraException.businessError(ResponseCode.WRONG_PIN_CODE)
+            }
         }
+    }
+
+    /** How long PIN entry is still locked by the PIN screen's timer; 0 when it is not. */
+    private suspend fun pinLockRemainingMillis(): Long {
+        val startedAt = userRepository.retrieveTimerStartedTimestamp()
+        if (startedAt <= 0L) return 0L
+        val step = pinLockMillis(userRepository.retrievePinTriesUsed())
+        val elapsed = now() - startedAt
+        // A clock that was set back never shortens the lock; it lasts at most its own step.
+        return if (elapsed < 0L) step else (step - elapsed).coerceAtLeast(0L)
     }
 
     /**
@@ -299,23 +494,43 @@ class MultiaccountInteractor @Inject constructor(
         credentialsRepository.draftFromRawSeed(rawSeed, "")
     }
 
-    private suspend fun addressOfDraft(createDraft: suspend () -> WalletDraft): String? {
+    private suspend fun addressOfDraft(createDraft: suspend () -> WalletDraft): String? = keyWork {
         val draft = try {
             createDraft()
         } catch (_: SoraException) {
-            return null
+            return@keyWork null
         }
-        return try {
+        try {
             draft.address
         } finally {
             draft.destroy()
         }
     }
 
-    /** True when an account row exists (read-only); throws when that account can already sign. */
+    /**
+     * True when an account row exists and is read-only; false when there is no account row.
+     * Throws when that account can already sign: the wallet is already here and its keys are
+     * never touched. When no phrase (or seed) is stored for such an account, the one just
+     * entered is kept as its backup first (add-only), so it can be shown and backed up and a
+     * 12- or 24-word phrase gets its SORA 3 accounts.
+     */
     private suspend fun requireNotAlreadyUsable(draft: WalletDraft): Boolean {
         if (!userRepository.accountExists(draft.address)) return false
         if (draft.address !in userRepository.unavailableWalletIds()) {
+            if (credentialsRepository.addMissingBackup(draft)) {
+                // The value is stored; recording what it proves is repeated by the next start
+                // when it cannot be done now.
+                try {
+                    userRepository.refreshVerifiedWallet(draft.address)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    // Nothing to undo: the account signs as before.
+                }
+                throw SoraException.businessError(
+                    ResponseCode.ACCOUNT_ALREADY_IMPORTED_BACKUP_SAVED
+                )
+            }
             // The stored signing key proves the account: the wallet is already here.
             throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
         }
@@ -334,13 +549,6 @@ class MultiaccountInteractor @Inject constructor(
         return repaired
     }
 
-    /** The PIN set on this phone, or "" when none is set or it cannot be read. */
-    private suspend fun storedPin(): String = try {
-        userRepository.retrievePin()
-    } catch (_: WalletDecryptionException) {
-        ""
-    }
-
     /** A new wallet held in memory until [createUserFromDraft]; backing out stores nothing. */
     suspend fun createDraft(accountName: String): WalletDraft =
         credentialsRepository.createDraft(accountName)
@@ -356,7 +564,7 @@ class MultiaccountInteractor @Inject constructor(
         }
 
     suspend fun generateDraftJson(draft: WalletDraft, password: String): String =
-        credentialsRepository.generateJsonForDraft(draft, password)
+        keyWork { credentialsRepository.generateJsonForDraft(draft, password) }
 
     /**
      * The recovery phrase to show or back up for an account: the stored phrase's words joined by
@@ -409,19 +617,20 @@ class MultiaccountInteractor @Inject constructor(
     suspend fun isMultiAccount(): Boolean =
         userRepository.getSoraAccountsCount() >= MULTIPLE_ACCOUNT_COUNT
 
-    suspend fun getJsonFileUri(addresses: List<String>, password: String): Uri {
+    /** Writes the encrypted JSON export (scrypt) off the caller's thread. */
+    suspend fun getJsonFileUri(addresses: List<String>, password: String): Uri = keyWork {
         val accounts = addresses.map { userRepository.getSoraAccount(it) }
 
         val filename = if (addresses.size == 1) addresses.first() else "batch_exported_sora_accounts"
 
-        return fileManager.writeExternalCacheText(
+        fileManager.writeExternalCacheText(
             "$filename.json",
             credentialsRepository.generateJson(accounts, password)
         )
     }
 
     suspend fun generateSubstrateJsonString(accounts: List<SoraAccount>, password: String) =
-        credentialsRepository.generateJson(accounts, password)
+        keyWork { credentialsRepository.generateJson(accounts, password) }
 
     suspend fun getSoraAccount(address: String): SoraAccount = userRepository.getSoraAccount(address)
 
