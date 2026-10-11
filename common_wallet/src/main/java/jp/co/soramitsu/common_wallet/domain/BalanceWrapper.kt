@@ -35,6 +35,8 @@ package jp.co.soramitsu.common_wallet.domain
 import java.math.BigDecimal
 import java.math.BigInteger
 import jp.co.soramitsu.common.domain.AssetBalance
+import jp.co.soramitsu.common.domain.frozenTotal
+import jp.co.soramitsu.common.domain.lockedFree
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import jp.co.soramitsu.common_wallet.data.XorBalanceDto
@@ -55,23 +57,50 @@ object BalanceWrapper {
         frozen: BigInteger,
     ): BigInteger = (frozen - reserved).max(BigInteger.ZERO).min(free.max(BigInteger.ZERO))
 
-    private fun calcLocked(dto: XorBalanceDto): BigInteger {
-        return dto.miscFrozen.max(dto.feeFrozen).min(dto.free).max(BigInteger.ZERO)
-    }
+    /**
+     * The part of [free] that cannot pay a network fee under the current balances layout:
+     * `min(frozen, free)`. The fee is withdrawn before the call runs, and that withdrawal needs
+     * `free - fee >= frozen`; the reserved balance gives no discount there (pallet_balances
+     * `Currency::withdraw`, used by SORA's xor-fee pallet). It is therefore never smaller than
+     * [lockedFreeBalance], and larger whenever the account has both reserved and frozen XOR.
+     */
+    fun feeLockedFreeBalance(
+        free: BigInteger,
+        frozen: BigInteger,
+    ): BigInteger = frozen.max(BigInteger.ZERO).min(free.max(BigInteger.ZERO))
 
-    /** Never more than the chain lets the account move, and never negative. */
+    /**
+     * What the account can send, never more than the chain allows and never negative.
+     *
+     * Every transaction pays its fee in XOR first. An account whose whole free balance is held
+     * back from fees ([XorBalanceDto.feeFrozen]) cannot pay any fee, so it can send nothing,
+     * even where the transfer rule alone would leave an amount. Otherwise it is the free balance
+     * minus the part locked against transfers ([XorBalanceDto.miscFrozen]). Whether a given fee
+     * fits is a separate question: see [calcPayableAsFee].
+     */
     fun calcTransferable(dto: XorBalanceDto): BigInteger {
-        return calcTransferable(dto, calcLocked(dto))
+        val free = dto.free.max(BigInteger.ZERO)
+        if (free <= dto.feeFrozen) return BigInteger.ZERO
+        return (free - dto.miscFrozen.max(BigInteger.ZERO)).max(BigInteger.ZERO)
     }
 
-    private fun calcTransferable(dto: XorBalanceDto, locked: BigInteger): BigInteger {
-        return (dto.free - locked).max(BigInteger.ZERO)
-    }
+    /** The largest network fee the chain lets this account pay right now; never negative. */
+    fun calcPayableAsFee(dto: XorBalanceDto): BigInteger =
+        (dto.free - dto.feeFrozen.max(BigInteger.ZERO)).max(BigInteger.ZERO)
+
+    /** The part of the free balance that cannot be sent: free minus [calcTransferable]. */
+    private fun calcLocked(dto: XorBalanceDto): BigInteger =
+        dto.free.max(BigInteger.ZERO) - calcTransferable(dto)
 
     fun mapLocalBalance(assetLocal: AssetLocal): AssetBalance {
+        val free = assetLocal.free.max(BigDecimal.ZERO)
+        val transferable = if (free <= assetLocal.feeFrozen) {
+            BigDecimal.ZERO
+        } else {
+            (free - assetLocal.miscFrozen.max(BigDecimal.ZERO)).max(BigDecimal.ZERO)
+        }
         return AssetBalance(
-            (assetLocal.free - assetLocal.miscFrozen.max(assetLocal.feeFrozen))
-                .max(BigDecimal.ZERO),
+            transferable,
             assetLocal.reserved,
             assetLocal.miscFrozen,
             assetLocal.feeFrozen,
@@ -85,7 +114,7 @@ object BalanceWrapper {
     fun mapXorBalance(dto: XorBalanceDto, precision: Int): XorAssetBalance {
         return dto.let {
             val locked = calcLocked(dto)
-            val transferable = mapBalance(calcTransferable(dto, locked), precision)
+            val transferable = mapBalance(calcTransferable(dto), precision)
             val frozen = mapBalance(it.bonded + it.reserved + locked, precision)
             val total = mapBalance(it.free + it.reserved + it.bonded, precision)
             val bonded = mapBalance(it.bonded, precision)
@@ -105,4 +134,20 @@ object BalanceWrapper {
             )
         }
     }
+
+    /**
+     * The same breakdown from the row the wallet stored at its last balance update, for when the
+     * network cannot be asked. The amounts on the asset page then agree with the balance shown
+     * on the home screen, which comes from the same row.
+     */
+    fun mapStoredXorBalance(balance: AssetBalance): XorAssetBalance = XorAssetBalance(
+        transferable = balance.transferable,
+        frozen = balance.frozenTotal,
+        totalBalance = balance.total,
+        locked = balance.lockedFree,
+        bonded = balance.bonded,
+        reserved = balance.reserved,
+        redeemable = balance.redeemable,
+        unbonding = balance.unbonding,
+    )
 }

@@ -268,9 +268,8 @@ class AssetsRepositoryImpl @Inject constructor(
         transferAmount: BigInteger,
         exactFee: BigInteger,
     ) {
-        val xorTransferable = BalanceWrapper.calcTransferable(
-            freshBalanceRead { substrateCalls.fetchXORBalances(from) }
-        )
+        val xorBalance = freshBalanceRead { substrateCalls.fetchXORBalances(from) }
+        val xorTransferable = BalanceWrapper.calcTransferable(xorBalance)
         val xorRequired = exactFee + if (
             token.id == SubstrateOptionsProvider.feeAssetId
         ) {
@@ -280,6 +279,13 @@ class AssetsRepositoryImpl @Inject constructor(
         }
         check(xorTransferable >= xorRequired) {
             "SORA2_TRANSFER_XOR_BALANCE_INSUFFICIENT"
+        }
+        // The node withdraws the fee first and refuses the transaction when that would take the
+        // free balance below the frozen amount, where the reserved balance gives no discount.
+        // An account with reserved and frozen XOR can therefore have enough for the amount and
+        // still be unable to pay the fee.
+        check(BalanceWrapper.calcPayableAsFee(xorBalance) >= exactFee) {
+            "SORA2_TRANSFER_XOR_FEE_LOCKED"
         }
         if (token.id != SubstrateOptionsProvider.feeAssetId) {
             val assetBalances = freshBalanceRead {

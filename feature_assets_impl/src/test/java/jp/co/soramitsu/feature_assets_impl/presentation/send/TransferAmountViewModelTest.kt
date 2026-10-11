@@ -166,14 +166,12 @@ class TransferAmountViewModelTest {
     @Test
     fun `locked XOR is named next to the balance that can be sent`() = runTest {
         // 12 XOR can be sent; 3.5 XOR more is free on chain but locked by staking or voting.
-        val staked = TestAssets.xorAsset(BigDecimal("12")).let { asset ->
-            asset.copy(
-                balance = asset.balance.copy(
-                    miscFrozen = BigDecimal("3.5"),
-                    feeFrozen = BigDecimal("3.5"),
-                )
+        val staked = TestAssets.xorAsset().copy(
+            balance = TestAssets.lockedBalance(
+                transferable = BigDecimal("12"),
+                locked = BigDecimal("3.5"),
             )
-        }
+        )
         initViewModel(BigDecimal.ZERO, assets = flowOf(listOf(staked)))
         advanceUntilIdle()
 
@@ -182,15 +180,74 @@ class TransferAmountViewModelTest {
     }
 
     @Test
-    fun `an account without a lock shows no locked note`() = runTest {
-        val unlocked = TestAssets.xorAsset(BigDecimal("12")).let { asset ->
-            asset.copy(
-                balance = asset.balance.copy(
-                    miscFrozen = BigDecimal.ZERO,
-                    feeFrozen = BigDecimal.ZERO,
-                )
+    fun `XOR that no fee can be paid from is all named as locked`() = runTest {
+        // free 100 with 30 reserved and 110 frozen: a transfer alone could move 20, but no
+        // fee can be paid, so nothing can be sent and the whole free balance is locked.
+        val stuck = TestAssets.xorAsset().copy(
+            balance = TestAssets.lockedBalance(
+                transferable = BigDecimal.ZERO,
+                locked = BigDecimal("100"),
+                reserved = BigDecimal("30"),
             )
-        }
+        )
+        initViewModel(BigDecimal.ZERO, assets = flowOf(listOf(stuck)))
+        advanceUntilIdle()
+
+        assertEquals("100 XOR is locked", transferAmountViewModel.sendState.value.lockedNote)
+    }
+
+    @Test
+    fun `a fee that would come out of frozen XOR is named before Review`() = runTest {
+        every { resourceManager.getString(R.string.send_fee_locked_hint) } returns "fee locked"
+        // 0.3 XOR can be transferred, but only 0.05 XOR is above the frozen amount, and the
+        // fee is 0.07 XOR. Before the fix 0.1 XOR passed here and the node refused it.
+        val reservedAndFrozen = TestAssets.xorAsset().copy(
+            balance = TestAssets.lockedBalance(
+                transferable = BigDecimal("0.3"),
+                locked = BigDecimal("1.7"),
+                reserved = BigDecimal("0.25"),
+                feeLocked = BigDecimal("1.95"),
+            )
+        )
+        initViewModel(BigDecimal.ZERO, assets = flowOf(listOf(reservedAndFrozen)))
+        advanceUntilIdle()
+        transferAmountViewModel.amountChanged(BigDecimal("0.1"))
+        advanceUntilIdle()
+
+        var state = transferAmountViewModel.sendState.value
+        assertEquals(true, state.input?.error)
+        assertEquals("fee locked", state.input?.errorHint)
+        assertFalse(state.reviewEnabled)
+
+        // With 0.08 XOR above the frozen amount the same transfer can be reviewed.
+        val enoughForFee = reservedAndFrozen.copy(
+            balance = TestAssets.lockedBalance(
+                transferable = BigDecimal("0.3"),
+                locked = BigDecimal("1.7"),
+                reserved = BigDecimal("0.25"),
+                feeLocked = BigDecimal("1.92"),
+            )
+        )
+        initViewModel(BigDecimal.ZERO, assets = flowOf(listOf(enoughForFee)))
+        advanceUntilIdle()
+        transferAmountViewModel.amountChanged(BigDecimal("0.1"))
+        advanceUntilIdle()
+
+        state = transferAmountViewModel.sendState.value
+        assertEquals(false, state.input?.error)
+        assertTrue(state.reviewEnabled)
+    }
+
+    @Test
+    fun `an account without a lock shows no locked note`() = runTest {
+        // Reserved XOR is not free balance and is not what this note is about.
+        val unlocked = TestAssets.xorAsset().copy(
+            balance = TestAssets.lockedBalance(
+                transferable = BigDecimal("12"),
+                locked = BigDecimal.ZERO,
+                reserved = BigDecimal("2"),
+            )
+        )
         initViewModel(BigDecimal.ZERO, assets = flowOf(listOf(unlocked)))
         advanceUntilIdle()
 

@@ -55,6 +55,8 @@ import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.TransactionOutcome
+import jp.co.soramitsu.common.domain.lockedFree
+import jp.co.soramitsu.common.domain.payableAsFee
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.subtractFee
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -354,7 +356,7 @@ class TransferAmountViewModel @AssistedInject constructor(
      * free balance back (XOR locked by staking, voting or vesting), say how much.
      */
     private fun lockedNoteOf(asset: Asset): String? {
-        val locked = asset.balance.miscFrozen.max(asset.balance.feeFrozen)
+        val locked = asset.balance.lockedFree
         if (locked <= BigDecimal.ZERO) return null
         return resourceManager.getString(R.string.send_locked_balance_note).format(
             asset.token.printBalance(locked, numbersFormatter, AssetHolder.ROUNDING)
@@ -624,8 +626,10 @@ class TransferAmountViewModel @AssistedInject constructor(
 
     private fun Throwable.isFeeChanged(): Boolean = hasMessageInChain(FEE_CHANGED_CODE)
 
+    /** Also when the XOR left for the fee turned out to be locked: the screen reads it again. */
     private fun Throwable.isBalanceNoLongerEnough(): Boolean =
-        TransactionOutcomeTexts.BALANCE_NO_LONGER_ENOUGH_CODES.any { hasMessageInChain(it) }
+        TransactionOutcomeTexts.BALANCE_NO_LONGER_ENOUGH_CODES.any { hasMessageInChain(it) } ||
+            hasMessageInChain(TransactionOutcomeTexts.XOR_FEE_LOCKED_CODE)
 
     private fun Throwable.hasMessageInChain(code: String): Boolean {
         var current: Throwable? = this
@@ -658,6 +662,19 @@ class TransferAmountViewModel @AssistedInject constructor(
                     input = _sendState.value.input?.copy(
                         error = true,
                         errorHint = resourceManager.getString(R.string.error_transaction_fee_title),
+                    ),
+                    reviewEnabled = false,
+                )
+            }
+
+            // The fee is taken before the transfer, and the network does not let it come out of
+            // frozen XOR even where a transfer could. Without this the amount passed here and
+            // the node refused the transaction.
+            feeAsset.balance.payableAsFee < fee -> {
+                _sendState.value = _sendState.value.copy(
+                    input = _sendState.value.input?.copy(
+                        error = true,
+                        errorHint = resourceManager.getString(R.string.send_fee_locked_hint),
                     ),
                     reviewEnabled = false,
                 )

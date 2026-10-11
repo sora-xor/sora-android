@@ -31,18 +31,21 @@ class XorAccountDataDecodingTest {
             storageHex = storageHex,
         )
 
+    private fun dto(account: XorAccountData) = XorBalanceDto(
+        free = account.free,
+        reserved = account.reserved,
+        miscFrozen = account.miscFrozen,
+        feeFrozen = account.feeFrozen,
+        bonded = BigInteger.ZERO,
+        redeemable = BigInteger.ZERO,
+        unbonding = BigInteger.ZERO,
+    )
+
     private fun transferable(account: XorAccountData): BigInteger =
-        BalanceWrapper.calcTransferable(
-            XorBalanceDto(
-                free = account.free,
-                reserved = account.reserved,
-                miscFrozen = account.miscFrozen,
-                feeFrozen = account.feeFrozen,
-                bonded = BigInteger.ZERO,
-                redeemable = BigInteger.ZERO,
-                unbonding = BigInteger.ZERO,
-            )
-        )
+        BalanceWrapper.calcTransferable(dto(account))
+
+    private fun payableAsFee(account: XorAccountData): BigInteger =
+        BalanceWrapper.calcPayableAsFee(dto(account))
 
     @Test
     fun `runtime 133 metadata names the balance fields free, reserved, frozen, flags`() {
@@ -78,6 +81,37 @@ class XorAccountDataDecodingTest {
         assertEquals(BigInteger("258168799936194698"), account.reserved)
         assertEquals(BigInteger("1731831320063805302"), account.miscFrozen)
         assertEquals(BigInteger("307931817478290402"), transferable(account))
+        // The fee is withdrawn first and may only take free balance down to frozen, without
+        // the discount: 2.0397... - 1.99000012 = 0.0497... XOR is all a fee can come from.
+        assertEquals(BigInteger("1990000120000000000"), account.feeFrozen)
+        assertEquals(BigInteger("49763017542095704"), payableAsFee(account))
+    }
+
+    @Test
+    fun `free balance at or below frozen can pay no fee and so transfer nothing`() {
+        // Reserved 50 covers the floor of 30 for transfers, but a fee needs free - fee >= 30.
+        val atTheFloor = decode(
+            TestRuntimeSnapshots.mainnet133,
+            accountValue(free = 30, reserved = 50, third = 30),
+        )
+        assertEquals(BigInteger.ZERO, atTheFloor.miscFrozen)
+        assertEquals(BigInteger.valueOf(30), atTheFloor.feeFrozen)
+        assertEquals(BigInteger.ZERO, payableAsFee(atTheFloor))
+        assertEquals(BigInteger.ZERO, transferable(atTheFloor))
+
+        val justAbove = decode(
+            TestRuntimeSnapshots.mainnet133,
+            accountValue(free = 31, reserved = 50, third = 30),
+        )
+        assertEquals(BigInteger.ONE, payableAsFee(justAbove))
+        assertEquals(BigInteger.valueOf(31), transferable(justAbove))
+
+        val justBelow = decode(
+            TestRuntimeSnapshots.mainnet133,
+            accountValue(free = 29, reserved = 50, third = 30),
+        )
+        assertEquals(BigInteger.ZERO, payableAsFee(justBelow))
+        assertEquals(BigInteger.ZERO, transferable(justBelow))
     }
 
     @Test
@@ -121,6 +155,16 @@ class XorAccountDataDecodingTest {
         assertEquals(BigInteger.valueOf(30), account.miscFrozen)
         assertEquals(BigInteger.valueOf(20), account.feeFrozen)
         assertEquals(BigInteger.valueOf(70), transferable(account))
+        assertEquals(BigInteger.valueOf(80), payableAsFee(account))
+
+        // The other way round: the larger lock is still the one held back from transfers.
+        val feeLockLarger = decode(
+            TestRuntimeSnapshots.oldBalancesLayout,
+            accountValue(free = 100, reserved = 50, third = 20, fourth = 30),
+        )
+        assertEquals(BigInteger.valueOf(30), feeLockLarger.miscFrozen)
+        assertEquals(BigInteger.valueOf(30), feeLockLarger.feeFrozen)
+        assertEquals(BigInteger.valueOf(70), transferable(feeLockLarger))
     }
 
     @Test
@@ -134,6 +178,9 @@ class XorAccountDataDecodingTest {
 
         assertEquals(BigInteger.ZERO, account.miscFrozen)
         assertEquals(BigInteger.valueOf(100), transferable(account))
+        // A fee can come out of what is above the frozen 30.
+        assertEquals(BigInteger.valueOf(30), account.feeFrozen)
+        assertEquals(BigInteger.valueOf(70), payableAsFee(account))
     }
 
     private companion object {
