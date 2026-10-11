@@ -62,7 +62,7 @@ class PolkaswapIndexerClientLiveContractTest {
     /** The same client and cache with every HTTPS request failing as it does offline. */
     private val offlineClient by lazy {
         val offline = mockk<BoundedHttpTextClient>()
-        coEvery { offline.postJsonUtf8(any(), any(), any()) } throws
+        coEvery { offline.postJson(any(), any(), any(), any(), any()) } throws
             BoundedHttpTextException("BOUNDED_HTTP_IO")
         coEvery { offline.getUtf8(any(), any()) } throws BoundedHttpTextException("BOUNDED_HTTP_IO")
         PolkaswapIndexerClient(offline, json, cache)
