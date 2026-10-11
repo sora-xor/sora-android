@@ -428,6 +428,36 @@ class SwapViewModelTest {
         }
 
     @Test
+    fun `a failed local read while recalculating neither ends the app nor leaves a spinner`() =
+        runTest {
+            initViewModel(
+                firstTokenId = PolkaswapTestData.XOR_ASSET.token.id,
+                secondTokenId = PolkaswapTestData.VAL_ASSET.token.id
+            )
+            // The XOR reminder reads the account's XOR row; that read can fail. Before, the
+            // exception left viewModelScope uncaught (runTest reports that), which ends the app.
+            given(
+                assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                    networkFeeInXor = any(),
+                    xorChange = anyOrNull(),
+                )
+            ).willAnswer { throw NoSuchElementException("0x0200 not found") }
+            advanceUntilIdle()
+
+            viewModel.onFromAmountChange(BigDecimal.ONE)
+            advanceUntilIdle()
+
+            assertEquals(false, viewModel.swapMainState.value.swapButtonState.loading)
+            // The collector is still alive: a later amount is recalculated as well.
+            viewModel.onFromAmountChange(BigDecimal.TEN)
+            advanceUntilIdle()
+            kVerify(assetsInteractor, atLeast(2)).isNotEnoughXorLeftAfterTransaction(
+                networkFeeInXor = any(),
+                xorChange = anyOrNull(),
+            )
+        }
+
+    @Test
     fun `WHEN user enters amount starting without XOR EXPECT transaction reminder is checked`() =
         runTest {
             initViewModel(

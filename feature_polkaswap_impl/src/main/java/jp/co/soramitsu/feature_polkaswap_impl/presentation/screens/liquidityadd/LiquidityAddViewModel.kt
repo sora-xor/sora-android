@@ -218,8 +218,12 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 onError(it)
             }
             .onEach {
-                recalculateData()
-                updateButtonState()
+                // Every collector on this screen handles a failure of its own work: an exception
+                // that leaves viewModelScope uncaught would end the app.
+                guarded {
+                    recalculateData()
+                    updateButtonState()
+                }
             }
             .launchIn(viewModelScope)
 
@@ -228,21 +232,23 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .collectLatest {
-                    assets.clear()
-                    assets.addAll(it)
-                    if (_addState.value.assetState1 == null) {
-                        val a = assets.first { t -> t.token.id == token1Id }
-                        _addState.value = _addState.value.copy(
-                            assetState1 = buildInitialAssetState(a),
-                        )
+                    guarded {
+                        assets.clear()
+                        assets.addAll(it)
+                        if (_addState.value.assetState1 == null) {
+                            val a = assets.first { t -> t.token.id == token1Id }
+                            _addState.value = _addState.value.copy(
+                                assetState1 = buildInitialAssetState(a),
+                            )
+                        }
+                        if (_addState.value.assetState2 == null && token2Id != null) {
+                            val a = assets.first { t -> t.token.id == token2Id }
+                            _addState.value = _addState.value.copy(
+                                assetState2 = buildInitialAssetState(a),
+                            )
+                        }
+                        setTokensFromArgs()
                     }
-                    if (_addState.value.assetState2 == null && token2Id != null) {
-                        val a = assets.first { t -> t.token.id == token2Id }
-                        _addState.value = _addState.value.copy(
-                            assetState2 = buildInitialAssetState(a),
-                        )
-                    }
-                    setTokensFromArgs()
                 }
         }
         viewModelScope.launch {
@@ -257,8 +263,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     _addState.value.assetState1?.token?.id == SubstrateOptionsProvider.feeAssetId ||
                         !hasXorReminderWarningBeenChecked
                 }.onEach {
-                    updateTransactionReminderWarningVisibility()
-                    hasXorReminderWarningBeenChecked = true
+                    guarded {
+                        updateTransactionReminderWarningVisibility()
+                        hasXorReminderWarningBeenChecked = true
+                    }
                 }.collect()
         }
         viewModelScope.launch {
@@ -515,19 +523,21 @@ class LiquidityAddViewModel @AssistedInject constructor(
     fun onToken1Click() {
         if (assets.isNotEmpty()) {
             viewModelScope.launch {
-                val bases = poolsInteractor.getPoolDexList().map { it.tokenId }
-                val list = assets.filter { it.token.id in bases && it.token.id != addToken2 }
-                _addState.value = _addState.value.copy(
-                    assetState1 = _addState.value.assetState1?.copy(
-                        amount = _addState.value.assetState1?.amount?.nullZero()
-                    ),
-                    assetState2 = _addState.value.assetState2?.copy(
-                        amount = _addState.value.assetState2?.amount?.nullZero()
-                    ),
-                )
-                _searchTokenFilter.value = _searchTokenFilter.value.copy(
-                    tokenIds = list.map { it.token.id },
-                )
+                guarded {
+                    val bases = poolsInteractor.getPoolDexList().map { it.tokenId }
+                    val list = assets.filter { it.token.id in bases && it.token.id != addToken2 }
+                    _addState.value = _addState.value.copy(
+                        assetState1 = _addState.value.assetState1?.copy(
+                            amount = _addState.value.assetState1?.amount?.nullZero()
+                        ),
+                        assetState2 = _addState.value.assetState2?.copy(
+                            amount = _addState.value.assetState2?.amount?.nullZero()
+                        ),
+                    )
+                    _searchTokenFilter.value = _searchTokenFilter.value.copy(
+                        tokenIds = list.map { it.token.id },
+                    )
+                }
             }
         }
     }
@@ -535,28 +545,30 @@ class LiquidityAddViewModel @AssistedInject constructor(
     fun onToken2Click() {
         if (assets.isNotEmpty()) {
             viewModelScope.launch {
-                val bases = poolsInteractor.getPoolDexList()
-                val curBase = bases.find { it.tokenId == addToken1 }
-                val list = assets
-                    .filter { asset ->
-                        val inBases = bases.find { it.tokenId == asset.token.id }
-                        if (inBases != null && curBase != null) {
-                            inBases.dexId > curBase.dexId
-                        } else {
-                            asset.token.id != addToken1
+                guarded {
+                    val bases = poolsInteractor.getPoolDexList()
+                    val curBase = bases.find { it.tokenId == addToken1 }
+                    val list = assets
+                        .filter { asset ->
+                            val inBases = bases.find { it.tokenId == asset.token.id }
+                            if (inBases != null && curBase != null) {
+                                inBases.dexId > curBase.dexId
+                            } else {
+                                asset.token.id != addToken1
+                            }
                         }
-                    }
-                _addState.value = _addState.value.copy(
-                    assetState1 = _addState.value.assetState1?.copy(
-                        amount = _addState.value.assetState1?.amount?.nullZero()
-                    ),
-                    assetState2 = _addState.value.assetState2?.copy(
-                        amount = _addState.value.assetState2?.amount?.nullZero()
-                    ),
-                )
-                _searchTokenFilter.value = _searchTokenFilter.value.copy(
-                    tokenIds = list.map { it.token.id },
-                )
+                    _addState.value = _addState.value.copy(
+                        assetState1 = _addState.value.assetState1?.copy(
+                            amount = _addState.value.assetState1?.amount?.nullZero()
+                        ),
+                        assetState2 = _addState.value.assetState2?.copy(
+                            amount = _addState.value.assetState2?.amount?.nullZero()
+                        ),
+                    )
+                    _searchTokenFilter.value = _searchTokenFilter.value.copy(
+                        tokenIds = list.map { it.token.id },
+                    )
+                }
             }
         }
     }
@@ -682,13 +694,17 @@ class LiquidityAddViewModel @AssistedInject constructor(
                         onError(it)
                     }
                     .onEach { localData ->
-                        if (localData == null) {
-                            fetchLiquidityData()
-                        } else {
-                            liquidityData = localData
-                            _addState.value = _addState.value.copy(
-                                pairNotExist = false,
-                            )
+                        // The reserves of a pair that is not cached are read from the network;
+                        // that read fails while it cannot be reached.
+                        guarded {
+                            if (localData == null) {
+                                fetchLiquidityData()
+                            } else {
+                                liquidityData = localData
+                                _addState.value = _addState.value.copy(
+                                    pairNotExist = false,
+                                )
+                            }
                         }
                         onChangedProperty.set(false)
                     }

@@ -190,9 +190,14 @@ class AddLiquidityViewModelTest {
         given(resourceManager.getString(R.string.common_insufficient_balance)).willReturn("Insufficient balance")
     }
 
+    /** Errors a test expects the screen to report; every other test must report none. */
+    private var expectedReportedErrors = 0
+
     @After
     fun tearDown() {
-        io.mockk.verify(exactly = 0) { FirebaseWrapper.recordException(any()) }
+        io.mockk.verify(exactly = expectedReportedErrors) {
+            FirebaseWrapper.recordException(any())
+        }
     }
 
     @Test
@@ -332,6 +337,35 @@ class AddLiquidityViewModelTest {
 
         val pair = viewModel.addState.value.pairNotExist
         assertTrue(pair == true)
+    }
+
+    @Test
+    fun `reserves that cannot be read from the network do not end the app`() = runTest {
+        // The pair is not in the local cache, so its reserves are read from the network, and
+        // that read fails. Before, the exception left viewModelScope uncaught (runTest reports
+        // that), which ends the app on a device.
+        expectedReportedErrors = 1
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(false))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(false))
+        given(poolsInteractor.subscribeReservesCache(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(null))
+        given(
+            poolsInteractor.getLiquidityData(
+                XOR_ASSET.token,
+                VAL_ASSET.token,
+                enabled = false,
+                presented = false
+            )
+        ).willAnswer { throw java.io.IOException("socket closed") }
+
+        setUpViewModel(VAL_ASSET.token.id)
+        advanceUntilIdle()
+
+        // The screen is still there with both tokens, and the amounts can be entered.
+        assertEquals(VAL_ASSET.token.id, viewModel.addState.value.assetState2?.token?.id)
+        assertEquals("Enter amount", viewModel.addState.value.btnState.text)
     }
 
     @Test

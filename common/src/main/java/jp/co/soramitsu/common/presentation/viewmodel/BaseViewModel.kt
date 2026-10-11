@@ -49,6 +49,7 @@ import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.transaction.TransactionOutcomeTexts
 import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import kotlinx.coroutines.CancellationException
 
 open class BaseViewModel : ViewModel() {
 
@@ -141,6 +142,21 @@ open class BaseViewModel : ViewModel() {
     suspend fun tryCatch(block: suspend () -> Unit) {
         try {
             block.invoke()
+        } catch (t: Throwable) {
+            onError(t)
+        }
+    }
+
+    /**
+     * Runs [block] inside a collector or a launched coroutine and reports a failure through
+     * [onError] instead of letting it leave viewModelScope, where an uncaught exception ends the
+     * app. Unlike [tryCatch] it passes cancellation on, so it is safe inside collectLatest.
+     */
+    protected suspend fun guarded(block: suspend () -> Unit) {
+        try {
+            block.invoke()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
         } catch (t: Throwable) {
             onError(t)
         }

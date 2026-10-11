@@ -151,32 +151,38 @@ class TransferAmountViewModel @AssistedInject constructor(
         _toolbarState.value = initSmallTitle2(
             title = R.string.common_enter_amount,
         )
+        // Every collector below handles a failure of its own work: an exception that leaves
+        // viewModelScope uncaught would end the app in the middle of a transfer.
         viewModelScope.launch {
-            interactor.flowCurSoraAccount().collectLatest { account ->
-                if (currentWalletId != account.substrateAddress) {
-                    currentWalletId = account.substrateAddress
-                    invalidateFeeReview()
+            interactor.flowCurSoraAccount()
+                .catch { onError(it) }
+                .collectLatest { account ->
+                    if (currentWalletId != account.substrateAddress) {
+                        currentWalletId = account.substrateAddress
+                        invalidateFeeReview()
+                    }
                 }
-            }
         }
         viewModelScope.launch {
             interactor.subscribeAssetsActiveOfCurAccount()
                 .catch { onError(it) }
                 .collectLatest { list ->
-                    assetsList.clear()
-                    assetsList.addAll(list)
-                    updateCurAsset()
-                    feeAsset = list.find { it.token.id == SubstrateOptionsProvider.feeAssetId }
-                        ?.also { asset ->
-                            if (fee == null) {
-                                calcTransactionFee(
-                                    asset,
-                                    _sendState.value.input?.amount.orZero(),
-                                )
+                    guarded {
+                        assetsList.clear()
+                        assetsList.addAll(list)
+                        updateCurAsset()
+                        feeAsset = list.find { it.token.id == SubstrateOptionsProvider.feeAssetId }
+                            ?.also { asset ->
+                                if (fee == null) {
+                                    calcTransactionFee(
+                                        asset,
+                                        _sendState.value.input?.amount.orZero(),
+                                    )
+                                }
                             }
+                        _sendState.value.input?.amount?.let {
+                            checkEnteredAmount(it)
                         }
-                    _sendState.value.input?.amount?.let {
-                        checkEnteredAmount(it)
                     }
                 }
         }
@@ -185,15 +191,17 @@ class TransferAmountViewModel @AssistedInject constructor(
                 .drop(1)
                 .debounce(ViewHelper.debounce)
                 .collectLatest { amount ->
-                    feeAsset?.let { calcTransactionFee(it, amount) }
-                    checkEnteredAmount(amount)
-                    if (
-                        _sendState.value.input?.token?.id ==
-                        SubstrateOptionsProvider.feeAssetId ||
-                        !hasXorReminderWarningBeenChecked
-                    ) {
-                        updateTransactionReminderWarningVisibility()
-                        hasXorReminderWarningBeenChecked = true
+                    guarded {
+                        feeAsset?.let { calcTransactionFee(it, amount) }
+                        checkEnteredAmount(amount)
+                        if (
+                            _sendState.value.input?.token?.id ==
+                            SubstrateOptionsProvider.feeAssetId ||
+                            !hasXorReminderWarningBeenChecked
+                        ) {
+                            updateTransactionReminderWarningVisibility()
+                            hasXorReminderWarningBeenChecked = true
+                        }
                     }
                 }
         }
@@ -250,9 +258,11 @@ class TransferAmountViewModel @AssistedInject constructor(
         _sendState.value.input?.amount?.let {
             checkEnteredAmount(it)
             viewModelScope.launch {
-                feeAsset?.let { feeAsset ->
-                    calcTransactionFee(feeAsset, it)
-                    checkEnteredAmount(it)
+                guarded {
+                    feeAsset?.let { feeAsset ->
+                        calcTransactionFee(feeAsset, it)
+                        checkEnteredAmount(it)
+                    }
                 }
             }
         }
@@ -412,8 +422,10 @@ class TransferAmountViewModel @AssistedInject constructor(
         val feeAsset = feeAsset ?: return
         val amount = _sendState.value.input?.amount.orZero()
         viewModelScope.launch {
-            calcTransactionFee(feeAsset, amount)
-            checkEnteredAmount(amount)
+            guarded {
+                calcTransactionFee(feeAsset, amount)
+                checkEnteredAmount(amount)
+            }
         }
     }
 

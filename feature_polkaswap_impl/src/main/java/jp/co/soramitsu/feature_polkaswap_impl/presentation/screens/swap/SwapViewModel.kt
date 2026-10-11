@@ -281,6 +281,8 @@ class SwapViewModel @AssistedInject constructor(
                 updateDetailsView()
                 onChangedProperty.set(property.newReloadMarkets(false))
             }
+            // After onEach, so a failure while clearing the form is handled here as well.
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         assetsInteractor.subscribeAssetsActiveOfCurAccount()
@@ -381,19 +383,29 @@ class SwapViewModel @AssistedInject constructor(
                     onError(it)
                 }
                 .collectLatest {
-                    if (assetCatalogUnavailable) {
+                    // A failed recalculation must not end this collector (the screen would stop
+                    // reacting), must not leave the button spinning and must never leave
+                    // viewModelScope uncaught.
+                    try {
+                        if (assetCatalogUnavailable) {
+                            toggleSwapButtonStatus()
+                            resetLoading()
+                            return@collectLatest
+                        }
+                        if (it.reloadMarkets) {
+                            getMarkets()
+                            property.reset()
+                        }
+                        recalcDetails()
                         toggleSwapButtonStatus()
+                        updateTransactionReminderWarningVisibility()
                         resetLoading()
-                        return@collectLatest
+                    } catch (cancellation: CancellationException) {
+                        throw cancellation
+                    } catch (t: Throwable) {
+                        onError(t)
+                        resetLoading()
                     }
-                    if (it.reloadMarkets) {
-                        getMarkets()
-                        property.reset()
-                    }
-                    recalcDetails()
-                    toggleSwapButtonStatus()
-                    updateTransactionReminderWarningVisibility()
-                    resetLoading()
                 }
         }
         viewModelScope.launch {
@@ -426,7 +438,7 @@ class SwapViewModel @AssistedInject constructor(
 
     fun onDisclaimerClose() {
         viewModelScope.launch {
-            swapInteractor.setPolkaswapDisclaimerVisibility(false)
+            guarded { swapInteractor.setPolkaswapDisclaimerVisibility(false) }
         }
     }
 
@@ -600,12 +612,14 @@ class SwapViewModel @AssistedInject constructor(
     /** Try again on the fee notice. */
     fun onRetryFee() {
         viewModelScope.launch {
-            setSwapButtonLoading(true)
-            if (networkFee != null || refreshNetworkFee()) {
-                onChangedProperty.set(property.newReloadMarkets(false))
-            } else {
-                toggleSwapButtonStatus()
-                resetLoading()
+            guarded {
+                setSwapButtonLoading(true)
+                if (networkFee != null || refreshNetworkFee()) {
+                    onChangedProperty.set(property.newReloadMarkets(false))
+                } else {
+                    toggleSwapButtonStatus()
+                    resetLoading()
+                }
             }
         }
     }

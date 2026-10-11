@@ -241,46 +241,51 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
             amount1Flow
                 .debounce(ViewHelper.debounce)
                 .onEach { amount ->
-                    val pdu = poolDataUsable
-                    if (pdu != null) {
-                        amount1 = if (amount <= pdu.user.basePooled) amount else pdu.user.basePooled
-                        amount2 = PolkaswapFormulas.calculateOneAmountFromAnother(
-                            amount1,
-                            pdu.user.basePooled,
-                            pdu.user.targetPooled,
-                            removeState.assetState2?.token?.precision,
-                        )
-                        percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
-                            amount1,
-                            pdu.user.basePooled,
-                        )
-                        reCalcDetails()
+                    // A failure while recalculating must never leave viewModelScope uncaught.
+                    guarded {
+                        val pdu = poolDataUsable
+                        if (pdu != null) {
+                            amount1 = if (amount <= pdu.user.basePooled) amount else pdu.user.basePooled
+                            amount2 = PolkaswapFormulas.calculateOneAmountFromAnother(
+                                amount1,
+                                pdu.user.basePooled,
+                                pdu.user.targetPooled,
+                                removeState.assetState2?.token?.precision,
+                            )
+                            percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                                amount1,
+                                pdu.user.basePooled,
+                            )
+                            reCalcDetails()
+                        }
                     }
                 }.filter {
                     removeState.assetState1?.token?.id == SubstrateOptionsProvider.feeAssetId
                 }.onEach {
-                    updateTransactionReminderWarningVisibility()
+                    guarded { updateTransactionReminderWarningVisibility() }
                 }.collect()
         }
         viewModelScope.launch {
             amount2Flow
                 .debounce(ViewHelper.debounce)
                 .collectLatest { amount ->
-                    poolDataUsable?.let {
-                        amount2 =
-                            if (amount <= it.user.targetPooled) amount else it.user.targetPooled
-                        amount1 =
-                            PolkaswapFormulas.calculateOneAmountFromAnother(
-                                amount2,
-                                it.user.targetPooled,
+                    guarded {
+                        poolDataUsable?.let {
+                            amount2 =
+                                if (amount <= it.user.targetPooled) amount else it.user.targetPooled
+                            amount1 =
+                                PolkaswapFormulas.calculateOneAmountFromAnother(
+                                    amount2,
+                                    it.user.targetPooled,
+                                    it.user.basePooled,
+                                    removeState.assetState1?.token?.precision
+                                )
+                            percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                                amount1,
                                 it.user.basePooled,
-                                removeState.assetState1?.token?.precision
                             )
-                        percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
-                            amount1,
-                            it.user.basePooled,
-                        )
-                        reCalcDetails()
+                            reCalcDetails()
+                        }
                     }
                 }
         }
@@ -450,30 +455,31 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
 
     fun onPercentClick(prc: Int) {
         viewModelScope.launch {
-            poolDataUsable?.let { poolData ->
-                removeState.assetState1?.let { asset1 ->
-                    removeState.assetState2?.let { asset2 ->
-                        percent = prc.toDouble()
-                        if (percent == 100.0) {
-                            amount1 = poolData.user.basePooled
-                            amount2 = poolData.user.targetPooled
-                        } else {
-                            amount1 = PolkaswapFormulas.calculateAmountByPercentage(
-                                poolData.user.basePooled,
-                                percent,
-                                asset1.token.precision,
-                            )
-                            amount2 = PolkaswapFormulas.calculateAmountByPercentage(
-                                poolData.user.targetPooled,
-                                percent,
-                                asset2.token.precision,
-                            )
-                        }
-                        reCalcDetails()
-                    }
-                }
-            }
+            guarded { applyPercent(prc) }
         }
+    }
+
+    private suspend fun applyPercent(prc: Int) {
+        val poolData = poolDataUsable ?: return
+        val asset1 = removeState.assetState1 ?: return
+        val asset2 = removeState.assetState2 ?: return
+        percent = prc.toDouble()
+        if (percent == 100.0) {
+            amount1 = poolData.user.basePooled
+            amount2 = poolData.user.targetPooled
+        } else {
+            amount1 = PolkaswapFormulas.calculateAmountByPercentage(
+                poolData.user.basePooled,
+                percent,
+                asset1.token.precision,
+            )
+            amount2 = PolkaswapFormulas.calculateAmountByPercentage(
+                poolData.user.targetPooled,
+                percent,
+                asset2.token.precision,
+            )
+        }
+        reCalcDetails()
     }
 
     fun onSlippageClick() {
