@@ -120,6 +120,15 @@ only internal builds of 3.9.0 can hold an account derived the earlier way.
   account. Nothing unproven is handed to the native encoder **[A1]**, and the copies of the key
   given to the encoder are wiped afterwards. A read-only account that still has a matching
   phrase or seed is backed up to Google from those alone (no JSON form).
+- **The several-account export is written key by key.** `JsonAccountsEncoder.generate(List)`
+  builds the batch file (polkadot.js "batch-pkcs8") as a `JsonObject` with string-constant
+  keys. It used to hand a model class (`JsonAccountData`) to Gson. Nothing but reflection read
+  that class's fields, so in the minified release build R8 removed them and the file held only
+  `{}` (fix round of 12 October, third review, below). The model class is gone.
+- **An export that the import could not read is never handed out.** Before returning, the
+  encoder checks that what it wrote has the shape `decode` accepts (kind, encryption and scrypt
+  header), for the one-account export, the batch file and each account inside the batch.
+  Otherwise the export fails and no file is made.
 - **The export can be imported.** `JsonAccountsEncoder.decode` reads the one-account export and
   the batch export back. `CredentialsRepository.draftsFromJson` turns each account into a draft
   that carries the key pair only (`WalletDraft.Source.JSON`). The file is trusted for nothing: the
@@ -150,6 +159,31 @@ only internal builds of 3.9.0 can hold an account derived the earlier way.
   phrase or seed ended in "Something went wrong". An account whose key signs but has no matching
   phrase or seed can now be backed up to Google (as JSON alone); before this change the first
   version of this fix refused that backup.
+- **Google Drive, read-only account.** The list of Google backups (Import account, Google) keeps
+  the backup of an account that is listed on this phone but read-only, with a line under it that
+  says so. Restoring it is the same import as typing the phrase: it completes the account's keys
+  in place or offers the confirmed repair. Only the backup of an account that already signs is
+  left out (`MultiaccountInteractor.backupRestores`). Before, every backup whose account had a
+  row was hidden, so the Google backup of a read-only account could only be used by removing the
+  account first. When the Google account holds backups and every one is of an account that
+  already works on this phone, the screen stays and says "Nothing to restore"; it no longer
+  opens Create account as if no backup had been found. Create account still opens when the
+  Google account holds no backup.
+- **Google Drive, messages.** A backup that holds only the encrypted JSON is opened by the JSON
+  import, so a wrong backup password or an unusable backup used to arrive with the texts of a
+  backup file ("the file you exported"). They are now the Google backup texts
+  (`GOOGLE_BACKUP_DECRYPTION_FAILED`, `GOOGLE_BACKUP_UNREADABLE`). A backup that holds no
+  valid phrase, seed or JSON gets the same "This backup can't be restored" text, which says
+  that nothing was changed and points to Import account; it used to end in "Something went
+  wrong".
+- **A several-account export that is refused names the accounts.** The file is a backup of
+  every chosen account or it is not made. When some of several chosen accounts cannot be
+  exported, the message lists them by name and short address
+  (`MultiaccountInteractor.AccountsNotExportableException`).
+- **Backup screens.** Account options, Passphrase and Raw seed judge the stored secrets off the
+  main thread, and once per screen (the Raw seed screen did it three times):
+  `MultiaccountInteractor.getBackupMaterial`, `getSeedBackupMaterial`,
+  `CredentialsRepository.retrieveBackupMaterialForSeed`.
 - A wallet that arrives as a key pair is recorded as `LEGACY_SECRET`, signs, shows no phrase or
   seed, and offers its JSON export again.
 
@@ -172,11 +206,16 @@ is the only code path that replaces stored credentials, and only `repairWithDraf
 - An account whose phrase or seed ciphertext no longer decrypts keeps signing when its key does.
 - Raw seed shows 64 hex characters for A1 accounts (it showed 128, which the app's own import
   rejects).
-- Importing the phrase, seed or backup file of a read-only account repairs it in place. No screen
-  tells anyone to remove an account.
+- Importing the phrase, seed or backup file of a read-only account repairs it in place. So does
+  restoring its Google backup, which Import account, Google now lists. No screen tells anyone to
+  remove an account.
 - An account whose stored phrase belongs to another wallet keeps working; that phrase is not
   shown as its backup, and the JSON export is offered. That file can be imported again.
 - Import account, Backup file (JSON) is new. Google backup recovery uses the JSON when needed.
+- "Export JSON" for several accounts writes a file that holds the accounts. In a release build
+  it wrote `{}` before. People with two or more accounts are told once, on the sheet shown after
+  the upgrade, that such a file made by an earlier version can be empty and to export again.
+- Import account, Google says "Nothing to restore" when every backup is already on the phone.
 - The welcome sheet and the journal no longer claim that every account is verified when one is
   read-only.
 
@@ -246,7 +285,13 @@ JVM (`testProductionDebugUnitTest`):
   derivations; an account derived from a comma text keeps its identity through
   `deriveExisting`; the earlier derivation is kept verbatim as the reference),
   `JsonAccountsEncoderImportTest` (what the import refuses before any key is derived: other key
-  types, other scrypt costs, oversized input, wrong password, empty batch).
+  types, other scrypt costs, oversized input, wrong password, empty batch),
+  `JsonAccountsEncoderExportTest` (the batch file written with a Gson that refuses reflection
+  for every class the release rules do not keep whole: every key of the format by name, the
+  sealed part opens with the password and holds each account's own export; an export that could
+  not be read back is not handed out; the keep rule the library's one-account model depends
+  on is in `app/proguard-rules.pro`), `UpgradeCompleteChecksTest` (who is asked for a new
+  several-account backup file).
 - `feature_account_impl`: `HistoricalSr25519VectorsTest` (public key from each historical private
   key, addresses, seeds, the Kotlin key expansion the JVM tests use, RFC 9496 points, scalar
   range), `StoredWalletSecretsJudgeTest` (two steps, `UNREADABLE`, malformed keys never reach
@@ -264,8 +309,20 @@ JVM (`testProductionDebugUnitTest`):
   file flow, a chosen file kept out of the text field and refused when it is not a backup, the
   repair prompt for a phrase, a raw seed, a one-account file and a batch file, wrong PIN, PIN
   lock, screen lock, cancel, "Import more" after a repaired Google restore, Google recovery
-  from JSON and from the form that derives the named account), `BackupViewModelTest`,
-  `AccountDetailsViewModelTest`.
+  from JSON and from the form that derives the named account, the Google backup of a read-only
+  account listed, restored and repaired after the PIN, or completed without a prompt when only
+  values were missing, backups of accounts that all work here answered with "Nothing to
+  restore" and no Create account, a Google account without a backup still opening Create
+  account, the Google backup texts for a wrong password and an unusable JSON-only backup, and
+  a phone without a file picker), `BackupViewModelTest` (one judgement per screen),
+  `BackupJsonViewModelTest` (the accounts a several-account export refuses are named),
+  `AccountDetailsViewModelTest`. `MultiaccountInteractorTest` also covers which backups are
+  offered (`backupRestores`: not on the phone, read-only, signing, and after a repair), the
+  seed from one judgement, the judgement never running on the caller's thread, and the
+  refused export naming its accounts and writing no file.
+  `CredentialsRepositoryStoredSecretsTest` covers `retrieveBackupMaterialForSeed` (one
+  sign-and-verify, add-only cache, nothing written next to a stored seed or without a match).
+- `scripts/test-verify-release-json-export.py` (9 tests on hand-built DEX files).
 - `app`: `SafeModeVaultTest` (a 64-byte seed shown as the 32 bytes that derive the wallet or
   marked as not confirmed, a seed stored with a line break shown as 64 characters, a phrase or
   seed proven to open another wallet has its own result).
@@ -277,7 +334,7 @@ Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
 |---|---|
 | Packaged library derives the historical seeds and key bytes; historical signatures verify; stored historical bytes sign through the production signer; the JSON secret is unchanged; Kotlin public key equals the native one for 300 random keys | `HistoricalSr25519NativeParityTest` |
 | Native behaviour the proof relies on | `Sr25519NativeContractTest` |
-| One-account and batch export read back by the import through the production encoder | `common`: `JsonAccountsExportRoundTripTest` |
+| One-account and batch export read back by the import through the production encoder, with a Gson that refuses reflection outside the library package the release rules keep; every key of the batch file by name | `common`: `JsonAccountsExportRoundTripTest` |
 | [A6] every vector stored by 3.8.6.3 code: same address, unchanged stored bytes and ciphertext, fresh signature verifies, export holds the same key pair | `keyBytesOfTheReleasedLibraryUpgradeUnchangedSignAndExport` |
 | [A4] phrase, raw seed and JSON each restore the same account on an empty phone; a key-pair-only wallet signs and exports again | `everyBackupFormatTheAppOffersRestoresTheSameAccount` |
 | [A4] a read-only account is not exported, and is repaired from the JSON export made while it worked | `storedKeyOfAnotherWalletIsRepairedWithItsEncryptedJsonExport` |
@@ -296,7 +353,11 @@ Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
 | wrong repair PINs count through the PIN screen's stored counter and lock; the right PIN is refused while locked | `wrongRepairPinsCountThroughThePinScreensCounterAndLockIt` |
 | removing an account that signs without a proven backup keeps a copy first; one with its own phrase needs none | `accountThatSignsWithoutAProvenBackupKeepsACopyWhenItIsRemoved` |
 | a batch backup file names the read-only account it can repair, and one PIN confirmation repairs it in place | `batchBackupFileRepairsTheAccountItNamesAfterOneConfirmation` |
+| the Google backup of a read-only account is offered (real Room and identities), the one of an account that signs is not, and it is no longer offered once the account is completed or repaired | `partialKeyTripleIsCompletedByImportingItsPhrase`, `undecryptableAccountIsRepairedInPlaceWithItsPhrase` |
+| one backup file for a working and a read-only account is refused, the refusal names the read-only one, nothing is written | `undecryptableAccountIsRepairedInPlaceWithItsPhrase` |
+| the Raw seed screen's single judgement shows the 32 bytes of a 64-byte cached seed and writes nothing | `seedCachedAs64BytesBy3820KeepsSigningAndReadsAs32Bytes` |
 | Safe Mode screen for a phrase proven to open another wallet | `app`: `SafeModeScreensTest.aPhraseProvenToOpenAnotherWalletIsNeverCalledUnconfirmed` |
+| the sheet shown after the upgrade asks for a new several-account backup file with two accounts and not with one | `app`: `SafeModeScreensTest.upgradeSheetAsksPeopleWithSeveralAccountsForANewBatchBackupFile` |
 
 Every import and repair in these scenarios runs through the production
 `MultiaccountInteractor` on the real repositories (the scenario class used a step-for-step copy
@@ -305,12 +366,25 @@ dependency).
 
 ### Results on this branch
 
-- JVM: `testProductionDebugUnitTest` for all modules: 1283 tests, 0 failures (10 skipped by
+- JVM: `testProductionDebugUnitTest` for all modules: 1306 tests, 0 failures (10 skipped by
   their own conditions in `feature_blockexplorer_api`). `:app:assembleProductionDebug` builds;
-  `:app:lintProductionDebug` reports no new finding in the changed files or strings.
-- Device, Android 14 emulator (SORA-Api34): `feature_account_impl` 67 of 67 (58 upgrade
-  scenarios, 6 native parity, 3 native contract), `common` 17 of 17, `app`
-  `SafeModeScreensTest` 11 of 11.
+  every device-test variant compiles (`assembleProductionDebugAndroidTest`,
+  `:app:compileQualificationDebugAndroidTestKotlin`); `:app:lintProductionDebug` reports no
+  new finding in the changed files or strings; `ktlintCheck` reports nothing on the lines of
+  this round. `scripts/test-verify-release-json-export.py`: 9 tests pass.
+- Device, Android 14 emulator (SORA-Api34), on the final code: `feature_account_impl` 67 of
+  67 (58 upgrade scenarios, 6 native parity, 3 native contract), `common` 17 of 17, `app`
+  `SafeModeScreensTest` 12 of 12.
+- Minified build (`:app:assembleProductionBenchmarkRelease`: R8 with the release rules, signed
+  with the repository's test key), installed on the emulator and walked through with
+  `uiautomator dump`: two accounts imported from the public test phrases, Accounts, "Select
+  account for batch export", both selected, Backup, password, Download JSON. The file
+  (`batch_exported_sora_accounts.json`, 2165 bytes) holds `accounts` (both addresses, names
+  and the genesis hash), `encoded` and `encoding` (`batch-pkcs8`, `scrypt`,
+  `xsalsa20-poly1305`, version 3). After clearing the app's data: Import account, Backup file
+  (JSON), Choose file (system file picker), password, Continue restored both accounts with the
+  same addresses. `scripts/verify-release-json-export.py` passes on that APK and fails on the
+  minified APK built from `42013abd` (the reflective model).
 - `EncryptedWalletMigrationStorageTest` (five `phaseNN` tests) is a qualification sequence that
   needs a process restart between phases (`scripts/run-encrypted-wallet-upgrade-qualification.sh`).
   It is left out of the class runs above and was not run through the script here; run in one
@@ -371,14 +445,18 @@ dependency).
   `safe_mode_whats_new_accounts_some_read_only`, `json_backup_*`, `recovery_json_*`,
   `recovery_enter_json_title`, `onboarding_enter_json`, `export_json_keys_unusable*`,
   `account_already_imported_backup_saved`, `account_repair_screen_lock_*`,
-  `account_repair_confirm_screen_lock`, `account_repair_pin_locked*`, `account_repair_*_batch`.
+  `account_repair_confirm_screen_lock`, `account_repair_pin_locked*`, `account_repair_*_batch`,
+  `import_account_list_read_only_note`, `google_backups_all_here*`, `google_backup_unreadable*`,
+  `recovery_json_no_file_picker`, `export_json_keys_unusable_named*`,
+  `safe_mode_whats_new_batch_export`.
   In the app module (`app/src/main/res/values*/strings.xml`, block `ak1-signing-compat`):
   `recovery_phrase_other_wallet*`, `recovery_seed_other_wallet*`. `json_backup_batch_skipped`
   changed its text; `account_repair_too_many_attempts` was removed. The manual
   `scripts/verify-middle-egyptian-localization.mjs` check already failed before this task on
   English placeholders (test-only locale).
 - **Sign-off.** Assurance notes marked `verified:` are next to `account_repair_body_*`,
-  `account_already_imported_backup_saved`, `account_repair_pin_locked` and
+  `account_already_imported_backup_saved`, `account_repair_pin_locked`,
+  `import_account_list_read_only_note`, `google_backups_all_here` and
   `backup_no_matching_secret` in `common/.../values/strings.xml`, and next to
   `recovery_phrase_other_wallet` in `app/.../values/strings.xml`; the engineering owner signs
   them off like the other `safe_mode_*` assurances. `backup_no_matching_secret` now also promises that the
@@ -401,9 +479,54 @@ dependency).
      indicator and the screen stays responsive.
   8. Restore a wallet from its backup file, then enter its phrase in Import account: the
      message says the phrase was saved, and Passphrase then shows it.
+  9. With a Google backup of an account made in 3.8.x, make that account read-only on the
+     phone (for example a deliberately broken key value), then open Import account, Google and
+     sign in: the account is in the list with the line "This account is on this phone, but it
+     can't send from here", its backup password opens it, the repair is confirmed with the PIN,
+     and the account sends again under the same name. An account that works is not in the list.
+  10. On the release build: with two or more accounts, Accounts, "Select account for batch
+      export", select them, Backup, set a password, Download JSON, and open the file. It must
+      hold `accounts`, `encoded` and `encoding`, not `{}`. Then restore it on a phone without
+      those accounts (Import account, Backup file (JSON)).
+  11. Import account, Google, with a Google account whose backups are all of accounts that
+      work on the phone: the message "Nothing to restore" appears and Create account does not
+      open.
+  12. With two or more accounts, update from 3.8.6: the sheet shown once after the upgrade has
+      the line about a JSON backup file with several accounts.
+- **Play 3.8.6.2 and the several-account JSON file (to confirm before release).** The Play
+  binary could not be inspected here (nothing is downloaded in this lane). The evidence that it
+  writes that file as `{}`: its source and release rules are the same (`JsonAccountData` exists
+  unchanged since 2.5.1.6 and only Gson reflection reads it; release builds are minified), and
+  the `common` classes of 3.8.6.3 (`b7b0f0fc`) minified with that release's own R8 (8.7.18,
+  from AGP 8.7.2) and `app/proguard-rules.pro` keep no field of `JsonAccountData`
+  (`JsonAccountData -> a` with no members in the mapping). That run can be repeated with
+  `java -cp builder-8.7.2.jar com.android.tools.r8.R8 --release --min-api 26 --lib android.jar
+  --pg-conf rules.pro --pg-map-output map.txt --output out common-classes.jar`, where
+  `rules.pro` is the 3.8.6.3 `app/proguard-rules.pro` plus
+  `-keep class jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder { public *; }` (the
+  export stays reachable) and `-dontwarn **`. To confirm on the real binary:
+  install 3.8.6.2 from Play on a test phone, create two accounts, select both in Accounts,
+  Backup, Download JSON, and open the file. If it holds the accounts, remove
+  `safe_mode_whats_new_batch_export` and the step in `UpgradeCompleteSheet`
+  (`UpgradeCompleteChecks.mayHoldEmptyBatchExport`) and drop the release note below.
+- **Release note (Play "What's new", support article).** Suggested text: "If you saved several
+  accounts in one JSON backup file with an earlier version, that file can be empty and cannot
+  restore your accounts. Please export your accounts again: Accounts, Select account for batch
+  export, Backup. Backups of a single account, recovery phrases and Google Drive backups are
+  not affected." The one-account export was not affected: it is written by the library, whose
+  classes the release rules keep whole.
+- **Release pipeline.** `android_release.yml` now runs
+  `scripts/verify-release-json-export.py` on the AAB and the APK; `android_ci.yml` runs its
+  test. A release built by hand must run the script too.
+- **Offline release builds.** `:app:produceProductionBenchmarkReleaseComposeMapping` (and the
+  same task of `productionRelease`) needs `org.jetbrains.kotlin:compose-group-mapping:2.3.21`,
+  which is not in the offline Gradle cache of this machine. The minified build here was made
+  with that task and `mergeProductionBenchmarkReleaseComposeMapping` excluded; they only add
+  Compose group names to the mapping file. CI resolves the artifact online.
 - **Support.** The text "remove it from this phone, then import the same recovery phrase" no
   longer exists. The advice for a read-only account is: Import account, enter its recovery
-  phrase, raw seed or backup file, confirm "Repair this account" with the PIN. A repair leaves
+  phrase, raw seed or backup file, or choose Google and restore its Google Drive backup, then
+  confirm "Repair this account" with the PIN when the app asks. A repair leaves
   `no_backup/wallet-quarantine-<time>-repaired-account/` on the device (encrypted, same Keystore
   key); nothing in the app reads it back, it is evidence for a support case.
 - **Older app versions cannot restore a JSON-only Google backup** (3.8.6 ignores the JSON). Such
@@ -454,3 +577,143 @@ No artifact was added to the project and nothing was downloaded.
 
 The file cap is 128 KB, not the 64 KB the review suggested: the import accepts batch files of
 up to 100 accounts, which are about 100 KB.
+
+## Fix round of 12 October (third review)
+
+The adversarial review covered commit `4a574d97` and, for some findings, `34d019e2`. Each
+finding was checked against the code at `34d019e2`. One blocker and one major were still open
+and are fixed; five minors were still open and are fixed; the rest were already fixed by the
+second round (`b1c42ee0` to `3a3937a3`), which this round confirmed in the code and by tests.
+None was rejected.
+
+| Finding | State at `34d019e2` | What was done |
+|---|---|---|
+| **Blocker.** In the minified release build "Export JSON" for several accounts writes `{}`. | Open | Fixed (below). |
+| **Major.** The Google backup of a read-only account is hidden; with no other backup, Create account opens. | Open | Fixed (below). |
+| Major. Removing an account that signs but has no proven backup keeps no copy. | Fixed in `16333cea` | Confirmed: `removalLosesTheOnlyCopy`, copy reason `removed-account-without-backup`, refusal when the copy fails; device test `accountThatSignsWithoutAProvenBackupKeepsACopyWhenItIsRemoved`. Showing a phrase or an export step before removal belongs to the removal flow (audit A2), see "Human and ops actions". |
+| Major. A raw seed stored with whitespace inside is not recognised. | Fixed in `b1c42ee0`, `16333cea`, `3a3937a3` | Confirmed: `StoredSecretHex.decodeOrNull` skips what the released reader skipped; device tests `rawSeedPastedWithALineBreakOn3863...`, `brokenKeyNextToASeedStoredWithALineBreak...`. |
+| Major. Opening a backup file runs on the main thread. | Fixed in `16333cea` | Confirmed: `keyWork`, `keyWorkDispatcher`; `opening a backup file never runs on the caller's thread`. |
+| Major. Safe Mode shows a phrase of another wallet as "couldn't confirm", and a 64-byte seed as confirmed. | Fixed in `b21f1eeb` | Confirmed in `SafeModeVault.reveal` and `SafeModeVaultTest`. |
+| Minor. Repair PIN: unreadable PIN treated as no PIN, per-dialog counter, saved instance state, non-ASCII digits. | Fixed in `1f54b61b` | Confirmed: `StoredPin.Unreadable`, the PIN screen's counter and lock, `remember`, `asciiPinDigits`. |
+| Minor. Device scenarios used a copy of `MultiaccountInteractor`. | Fixed in `3a3937a3` | Confirmed: the scenarios construct the production class. |
+| Minor. A chosen backup file went whole into the text field. | Fixed in `1f54b61b` | Confirmed. |
+| Minor. The stored-secrets judgement runs on the main thread for Account options, Passphrase and Raw seed, three times for Raw seed. | Open | Fixed: `getBackupMaterial` runs on `Dispatchers.Default`; the Raw seed screen makes one call (`getSeedBackupMaterial`, `retrieveBackupMaterialForSeed`). |
+| Minor. A refused several-account export does not name the account. | Open | Fixed: `AccountsNotExportableException` lists the accounts; the dialog names them. Key pairs already read are wiped when a later account is refused. |
+| Minor. A JSON-only Google backup reports a wrong password and an unusable backup in backup-file words. | Open | Fixed: `asGoogleBackupError` maps them to the Google backup texts. A backup with nothing usable in it gets the same text instead of "Something went wrong". |
+| Minor. "Choose file" crashes without a document picker. | Open | Fixed: `chooseBackupFile` catches `ActivityNotFoundException` and says the text can be pasted. |
+
+### The blocker: the several-account JSON backup file
+
+**Finding.** `JsonAccountsEncoder.generate(List)` built a `JsonAccountData` and passed it to
+`gson.toJson`. The class has no `@SerializedName` and no keep rule, and nothing but Gson
+reflection reads its fields. R8 removed them: in the mapping of the minified build made at
+`42013abd`, `JsonAccountData -> veb` has no members. The file a release build writes is `{}`.
+This lane added the batch import, said the batch export can be restored, and made the JSON
+export the designated backup of an account without a matching phrase or seed; every test ran
+on unminified code.
+
+**Fix.**
+
+- The batch file is built as a `JsonObject` with string-constant keys. `JsonAccountData` is
+  deleted. Nothing in the export or the import reflects over a class of this app any more; the
+  one-account export is still written by the library, whose package the release rules keep
+  whole (`-keep class jp.co.soramitsu.xsubstrate.** { *; }`).
+- `requireReadable`: before a file is returned, it must have the shape the import accepts.
+  This is checked for the one-account export, the batch file and each account inside the
+  batch. A build that loses a model again fails the export; it cannot hand out an empty file.
+- The file format is unchanged: `accounts` (address, `meta.name`, `meta.genesisHash`,
+  `meta.whenCreated`), `encoded`, `encoding` (`batch-pkcs8`, `scrypt`, `xsalsa20-poly1305`,
+  version 3), in that order.
+
+**Checks that would have caught it, and now do.**
+
+- JVM, `JsonAccountsEncoderExportTest`, and device, `JsonAccountsExportRoundTripTest`: the
+  encoder runs with a Gson whose `ReflectionAccessFilter` refuses reflection for every class
+  outside the kept library package. On the old encoder both fail with `JsonIOException`.
+- Release artifact, `scripts/verify-release-json-export.py`: reads the DEX code and requires
+  one method that loads all eleven keys of the batch file as string constants. It fails on the
+  minified APK of `42013abd` and passes on the minified APK of this branch. The release
+  workflow runs it on the AAB and the APK.
+- The minified build itself, walked through on the emulator (see "Results on this branch"):
+  export of two accounts, then restore from that file after clearing the app's data.
+
+**Earlier releases.** See "Play 3.8.6.2 and the several-account JSON file" above: the same
+code minified with that release's R8 and rules loses every field, so the released builds very
+likely wrote `{}` too. That could not be confirmed on the Play binary here. Acting on the
+likely case: people with two or more accounts see one more line on the sheet shown after the
+upgrade ("A JSON backup file with several accounts made by an earlier version of SORA can be
+empty. If you rely on one, export your accounts again from Accounts."), and a release note is
+proposed. The one-account export, recovery phrases, raw seeds and Google Drive backups are not
+affected.
+
+### The major: a read-only account and its Google backup
+
+**Finding.** `OnboardingViewModel.getBackupedAccountsFiltered()` dropped every backup whose
+address has an account row, and a read-only account has one. When the Google backup was the
+only backup of such an account, the list was empty and Create account opened, as if there were
+no backup. The only way to use the backup was to remove the account first, which invariants 5
+and 6 rule out.
+
+**Fix.**
+
+- `MultiaccountInteractor.backupRestores(addresses)` says what restoring each backup does on
+  this phone: `ADDS_ACCOUNT` (no account row), `REPAIRS_READ_ONLY_ACCOUNT` (a row that is in
+  `UserRepository.unavailableWalletIds()`), or nothing (the account works; its backup is left
+  out as before). It reads only.
+- The list after sign-in, "Import more" on the success screen and the list it opens all use it.
+  The entry of a read-only account carries `readOnlyOnThisPhone`, and the list and the password
+  screen show one line under its address: "This account is on this phone, but it can't send
+  from here. To repair it, restore this backup."
+- The restore itself did not change: it goes through `importFromMnemonic`, `importFromRawSeed`
+  or `importFromJson`, which complete a read-only account in place (add-only) or offer the
+  confirmed repair. Once the account signs it leaves the list.
+- When backups exist and every one is of an account that already works here, the screen stays
+  and shows "Nothing to restore ... To add another account, choose Create account or Import
+  account." A Google account without any backup still opens Create account, which is the
+  intended start of a wallet that is backed up to Google. A new Google-backed account can
+  still be made from Create account, on the recovery phrase screen.
+
+**Key safety.** Listing writes nothing. Every write still happens in the import and repair
+paths, behind the same PIN or screen-lock confirmation.
+
+**Not walked through by hand:** the Google sign-in and the Drive list (the emulator has no
+Google account and the debug build no Drive credentials). The view-model tests drive the flow
+against a stand-in for the Drive service; QA steps 9 and 11 cover it on a real device.
+
+### Tests added in this round
+
+Each fails without its fix.
+
+- `common`: `JsonAccountsEncoderExportTest` (3), `UpgradeCompleteChecksTest` (2);
+  `JsonAccountsExportRoundTripTest` now refuses reflection and checks every key of the batch
+  file (device).
+- `feature_multiaccount_impl`: `MultiaccountInteractorTest` (`the backup of a read-only
+  account stays restorable ...`, `once a read-only account is repaired ...`, `the seed comes
+  from one judgement ...`, `judging the stored secrets for a backup screen never runs on the
+  caller's thread`, `accounts that cannot be exported with the others are named ...`, `one
+  account that cannot be exported keeps the message that needs no name`);
+  `OnboardingViewModelTest` (the Google backup of a read-only account listed, restored and
+  repaired; offered instead of Create account; "Nothing to restore"; no backup still opens
+  Create account; the Google backup messages for a wrong password, an unusable JSON and a
+  backup with nothing usable; no file picker); `BackupViewModelTest` (one judgement per
+  screen); `BackupJsonViewModelTest` (the refused accounts are named).
+- `app` (device): `SafeModeScreensTest.upgradeSheetAsksPeopleWithSeveralAccountsForANewBatchBackupFile`.
+- `feature_account_impl`: `CredentialsRepositoryStoredSecretsTest` (two tests for
+  `retrieveBackupMaterialForSeed`); device, `WalletUpgradeScenarioTest`: the offered backups in
+  `partialKeyTripleIsCompletedByImportingItsPhrase` and
+  `undecryptableAccountIsRepairedInPlaceWithItsPhrase`, the named refusal in the latter, and
+  the Raw seed screen's single judgement in
+  `seedCachedAs64BytesBy3820KeepsSigningAndReadsAs32Bytes`.
+- `scripts/test-verify-release-json-export.py` (9).
+
+### Seen while fixing, not changed here
+
+- Account options lets the person delete an account's Google backup after a confirmation
+  dialog, also for a read-only account, for which that backup may be the only way back. It is
+  an explicit, confirmed action on the cloud copy and does not touch keys on the phone; the
+  lane that labels read-only accounts (audit A2) should decide whether that dialog needs a
+  stronger warning for them.
+- Import account, Google with a Google account that holds no backup opens Create account
+  without a word, as every release did. For a person who signed in to the wrong Google account
+  a line such as "No SORA backup was found in this Google account" would help; it was left as
+  it is because the same step is the start of creating a Google-backed wallet.
