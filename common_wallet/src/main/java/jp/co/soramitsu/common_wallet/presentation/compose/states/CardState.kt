@@ -40,6 +40,7 @@ import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
+import jp.co.soramitsu.common.domain.frozenTotal
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.printFiatChange
@@ -83,6 +84,13 @@ data class AssetItemCardState(
     val assetAmount: String,
     val assetFiatAmount: String,
     val fiatChange: String,
+    /**
+     * What the account holds of this asset and cannot send now (reserved, bonded and locked),
+     * formatted with its symbol; null when there is nothing. [assetAmount] is the liquid part
+     * only, so an account whose XOR is all locked shows "0 XOR" there, and this says where the
+     * rest is.
+     */
+    val frozenAmount: String? = null,
 )
 
 fun mapTokensToCardState(
@@ -120,6 +128,9 @@ fun mapAssetsToCardState(
             tokenSymbol = it.token.symbol,
             assetFiatAmount = it.printFiat(nf),
             fiatChange = it.token.printFiatChange(nf),
+            frozenAmount = it.balance.frozenTotal
+                .takeIf { frozen -> frozen > BigDecimal.ZERO }
+                ?.let { frozen -> it.token.printBalance(frozen, nf, precision) },
         )
     }
 }
