@@ -39,9 +39,14 @@ import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.Big100
 import jp.co.soramitsu.androidfoundation.format.divideBy
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.base.ConfirmDialogData
 import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
@@ -60,6 +65,7 @@ import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlin.math.abs
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -70,7 +76,7 @@ class EditFarmViewModel @AssistedInject constructor(
     private val assetsRouter: AssetsRouter,
     private val assetsInteractor: AssetsInteractor,
     private val numbersFormatter: NumbersFormatter,
-    resourceManager: ResourceManager,
+    private val resourceManager: ResourceManager,
     private val demeterFarmingInteractor: DemeterFarmingInteractor,
     @Assisted("id1") private val token1Id: String,
     @Assisted("id2") private val token2Id: String,
@@ -110,8 +116,6 @@ class EditFarmViewModel @AssistedInject constructor(
     private var stakeFee: BigDecimal = BigDecimal.ZERO
 
     init {
-        val ids = StringTriple(token1Id, token2Id, token3Id)
-
         _toolbarState.value = SoramitsuToolbarState(
             type = SoramitsuToolbarType.SmallCentered(),
             basic = BasicToolbarState(
@@ -121,8 +125,50 @@ class EditFarmViewModel @AssistedInject constructor(
                 searchEnabled = false,
             ),
         )
+        load()
+    }
 
+    /**
+     * The screen is built from fees asked from the SORA network. While it cannot be reached the
+     * user is told so, with Try again and Close. Nothing here may end the app.
+     */
+    private fun onLoadFailed(error: Throwable) {
+        onError(error)
+        val unreachable =
+            NetworkFeeUnavailable.from(error) == NetworkFeeUnavailable.NETWORK_UNREACHABLE
+        confirmDialogLiveData.setValue(
+            ConfirmDialogData(
+                title = resourceManager.getString(R.string.network_fee_unavailable_short),
+                message = resourceManager.getString(
+                    if (unreachable) {
+                        R.string.tx_outcome_screen_needs_network
+                    } else {
+                        R.string.network_fee_unavailable
+                    }
+                ),
+                confirmText = resourceManager.getString(R.string.common_try_again),
+                dismissText = resourceManager.getString(R.string.common_close),
+                onDismiss = { _navigationPop.trigger() },
+                onConfirm = ::load,
+            )
+        )
+    }
+
+    private fun load() {
+        val ids = StringTriple(token1Id, token2Id, token3Id)
         viewModelScope.launch {
+            try {
+                loadFarm(ids)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (t: Throwable) {
+                onLoadFailed(t)
+            }
+        }
+    }
+
+    private suspend fun loadFarm(ids: StringTriple) {
+        run {
             poolData = poolsInteractor.getPoolOfCurAccount(StringPair(ids.first, ids.second))
             feeAsset = assetsInteractor.getAssetOrThrow(SubstrateOptionsProvider.feeAssetId)
             transferableXorBalance = feeAsset?.balance?.transferable ?: BigDecimal.ZERO
@@ -177,37 +223,56 @@ class EditFarmViewModel @AssistedInject constructor(
         }
     }
 
-    fun onConfirm() {
+    fun onConfirm() = confirm(confirmedDuplicate = false)
+
+    /**
+     * Stakes or unstakes and shows exactly what is known afterwards. A transaction that reached
+     * the network (confirmed, failed on chain, or still waiting) opens its transaction page,
+     * which carries the status and follows it. One that did not reach the network (refused by
+     * the node, or not prepared) is explained in a dialog. The button stops spinning on every
+     * path, and no failure may leave viewModelScope uncaught.
+     */
+    private fun confirm(confirmedDuplicate: Boolean) {
+        val current = _state.value
+        if (stakingAmount <= BigDecimal.ZERO) return
         viewModelScope.launch {
-            _state.value = _state.value.copy(
-                isButtonLoading = true
-            )
-
-            _state.value.let {
-                if (stakingAmount > BigDecimal.ZERO) {
-                    val txHash = if (it.sliderProgressState * 100 > currentStackedPercent) {
-                        demeterFarmingInteractor.depositDemeterFarming(
-                            it.farmIds,
-                            stakingAmount,
-                            stakingNetworkFee
-                        )
-                    } else {
-                        demeterFarmingInteractor.withdrawDemeterFarming(
-                            it.farmIds,
-                            stakingAmount,
-                            unStakingNetworkFee
-                        )
-                    }
-
-                    if (txHash.isNotEmpty()) {
-                        assetsRouter.showTxDetails(txHash, true)
-                    } else {
-                        _state.value = _state.value.copy(
-                            isButtonLoading = false
-                        )
-                        onError(R.string.common_error_general_message)
-                    }
+            _state.value = _state.value.copy(isButtonLoading = true)
+            var outcome: TransactionOutcome? = null
+            var notSent: Throwable? = null
+            try {
+                outcome = if (current.sliderProgressState * 100 > currentStackedPercent) {
+                    demeterFarmingInteractor.depositDemeterFarming(
+                        current.farmIds,
+                        stakingAmount,
+                        stakingNetworkFee,
+                        confirmedDuplicate,
+                    )
+                } else {
+                    demeterFarmingInteractor.withdrawDemeterFarming(
+                        current.farmIds,
+                        stakingAmount,
+                        unStakingNetworkFee,
+                        confirmedDuplicate,
+                    )
                 }
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: DuplicateWaitingTransactionException) {
+                _state.value = _state.value.copy(isButtonLoading = false)
+                askBeforeSendingAgain(resourceManager) { confirm(confirmedDuplicate = true) }
+                return@launch
+            } catch (t: Throwable) {
+                notSent = t
+            }
+            _state.value = _state.value.copy(isButtonLoading = false)
+            when (outcome) {
+                is TransactionOutcome.Confirmed,
+                is TransactionOutcome.Waiting,
+                is TransactionOutcome.FailedOnChain ->
+                    assetsRouter.showTxDetails(outcome.txHash, true)
+                is TransactionOutcome.RefusedByNode ->
+                    showTransactionRefused(resourceManager, outcome)
+                null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
             }
         }
     }

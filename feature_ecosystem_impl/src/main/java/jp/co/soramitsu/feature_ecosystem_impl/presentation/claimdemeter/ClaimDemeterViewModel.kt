@@ -37,9 +37,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.base.ConfirmDialogData
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -53,6 +58,7 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -62,7 +68,7 @@ class ClaimDemeterViewModel @AssistedInject constructor(
     private val assetsRouter: AssetsRouter,
     private val assetsInteractor: AssetsInteractor,
     private val numbersFormatter: NumbersFormatter,
-    resourceManager: ResourceManager,
+    private val resourceManager: ResourceManager,
     private val demeterFarmingInteractor: DemeterFarmingInteractor,
     @Assisted("id1") private val token1Id: String,
     @Assisted("id2") private val token2Id: String,
@@ -107,7 +113,49 @@ class ClaimDemeterViewModel @AssistedInject constructor(
             ),
         )
 
+        load()
+    }
+
+    /**
+     * The screen is built from fees asked from the SORA network. While it cannot be reached the
+     * user is told so, with Try again and Close. Nothing here may end the app.
+     */
+    private fun onLoadFailed(error: Throwable) {
+        onError(error)
+        val unreachable =
+            NetworkFeeUnavailable.from(error) == NetworkFeeUnavailable.NETWORK_UNREACHABLE
+        confirmDialogLiveData.setValue(
+            ConfirmDialogData(
+                title = resourceManager.getString(R.string.network_fee_unavailable_short),
+                message = resourceManager.getString(
+                    if (unreachable) {
+                        R.string.tx_outcome_screen_needs_network
+                    } else {
+                        R.string.network_fee_unavailable
+                    }
+                ),
+                confirmText = resourceManager.getString(R.string.common_try_again),
+                dismissText = resourceManager.getString(R.string.common_close),
+                onDismiss = { _navigationPop.trigger() },
+                onConfirm = ::load,
+            )
+        )
+    }
+
+    private fun load() {
         viewModelScope.launch {
+            try {
+                loadClaim()
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (t: Throwable) {
+                onLoadFailed(t)
+            }
+        }
+    }
+
+    private suspend fun loadClaim() {
+        run {
             val feeToken = walletInteractor.getFeeToken()
             networkFee = demeterFarmingInteractor.calcClaimDemeterRewards(ids)
             val xorBalance = assetsInteractor.getXorBalance(feeToken.precision).transferable
@@ -127,21 +175,45 @@ class ClaimDemeterViewModel @AssistedInject constructor(
         }
     }
 
-    fun onClaim() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(
-                isButtonLoading = true
-            )
-            val resultHash = demeterFarmingInteractor
-                .claimDemeterRewards(ids = ids, amount = claimAmount, networkFee = networkFee)
+    fun onClaim() = claim(confirmedDuplicate = false)
 
-            if (resultHash.isNotEmpty()) {
-                assetsRouter.showTxDetails(resultHash, true)
-            } else {
-                _state.value = _state.value.copy(
-                    isButtonLoading = false
+    /**
+     * Claims the rewards and shows exactly what is known afterwards. A transaction that reached
+     * the network (confirmed, failed on chain, or still waiting) opens its transaction page,
+     * which carries the status and follows it. One that did not reach the network (refused by
+     * the node, or not prepared) is explained in a dialog. The button stops spinning on every
+     * path, and no failure may leave viewModelScope uncaught.
+     */
+    private fun claim(confirmedDuplicate: Boolean) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isButtonLoading = true)
+            var outcome: TransactionOutcome? = null
+            var notSent: Throwable? = null
+            try {
+                outcome = demeterFarmingInteractor.claimDemeterRewards(
+                    ids = ids,
+                    amount = claimAmount,
+                    networkFee = networkFee,
+                    confirmedDuplicate = confirmedDuplicate,
                 )
-                onError(R.string.common_error_general_message)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: DuplicateWaitingTransactionException) {
+                _state.value = _state.value.copy(isButtonLoading = false)
+                askBeforeSendingAgain(resourceManager) { claim(confirmedDuplicate = true) }
+                return@launch
+            } catch (t: Throwable) {
+                notSent = t
+            }
+            _state.value = _state.value.copy(isButtonLoading = false)
+            when (outcome) {
+                is TransactionOutcome.Confirmed,
+                is TransactionOutcome.Waiting,
+                is TransactionOutcome.FailedOnChain ->
+                    assetsRouter.showTxDetails(outcome.txHash, true)
+                is TransactionOutcome.RefusedByNode ->
+                    showTransactionRefused(resourceManager, outcome)
+                null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
             }
         }
     }
