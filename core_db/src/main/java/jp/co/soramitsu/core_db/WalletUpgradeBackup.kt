@@ -5150,9 +5150,7 @@ object WalletUpgradeBackup {
             legacyPureAddress = legacyOwner,
             mnemonicWalletIds = mnemonicWalletIds,
             rawSeedWalletIds = rawSeedWalletIds,
-            scopedPhraseOrSeedWalletIds =
-                entries.scopedNonBlankStringIds(WalletPreferenceKeys.MNEMONIC) +
-                    entries.scopedNonBlankStringIds(WalletPreferenceKeys.SEED),
+            scopedPhraseOrSeedWalletIds = entries.scopedPhraseOrSeedIds(),
             keyPairWalletIds = keyPairWalletIds,
             incompleteKeyPairWalletIds = incompleteKeyPairWalletIds,
             watchOnlyWalletIds = watchOnlyWalletIds,
@@ -5160,6 +5158,11 @@ object WalletUpgradeBackup {
             fingerprint = walletPreferenceFingerprint(entries),
         )
     }
+
+    /** Addresses with a non-blank phrase or seed stored under the address itself. */
+    private fun List<PreferenceEntry>.scopedPhraseOrSeedIds(): Set<String> =
+        scopedNonBlankStringIds(WalletPreferenceKeys.MNEMONIC) +
+            scopedNonBlankStringIds(WalletPreferenceKeys.SEED)
 
     private fun List<PreferenceEntry>.scopedNonBlankStringIds(
         prefix: String,
