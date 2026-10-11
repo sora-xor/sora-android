@@ -103,6 +103,14 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     override fun onResume() {
         super.onResume()
         activity?.safeCast<BarsColorHandler>()?.setColor(backgroundColor())
+        // A result the view model held while this screen was not in front is shown now.
+        viewModel.onScreenResumed()
+    }
+
+    override fun onPause() {
+        // From here on the view model opens nothing and closes nothing until the next resume.
+        viewModel.onScreenPaused()
+        super.onPause()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
