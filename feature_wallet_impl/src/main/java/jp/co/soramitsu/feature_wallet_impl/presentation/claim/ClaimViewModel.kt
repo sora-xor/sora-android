@@ -315,9 +315,10 @@ class ClaimViewModel @Inject constructor(
     }
 
     /**
-     * The claim gate refuses to sign a claim while any earlier transaction of this account has
-     * no final status yet (a waiting claim, another waiting transaction, or one the node refused
-     * whose validity window has not been scanned to its end).
+     * The claim gate refuses to sign a claim while an earlier transaction of this account has no
+     * final status yet and may still reach the chain (a waiting claim or another waiting
+     * transaction). One the node explicitly refused does not count: after "the network was too
+     * busy, please try again" Submit works at once.
      */
     private fun Throwable.isEarlierTransactionUnresolved(): Boolean {
         var current: Throwable? = this

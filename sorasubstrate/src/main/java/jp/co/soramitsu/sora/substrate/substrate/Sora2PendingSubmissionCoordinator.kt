@@ -102,19 +102,37 @@ internal object Sora2PendingRecoveryBatchPlanner {
     }
 }
 
-/** Blocks a second legacy claim while the first exact generic witness is still unresolved. */
+/**
+ * Blocks a second legacy claim while the first exact generic witness is still unresolved.
+ *
+ * A row the node explicitly refused at its one submission attempt ([refusedByNode]) does not
+ * block: the node did not take that transaction, so it is not waiting for anything, and the
+ * person was told "not sent ... try again". Its journal row still stays unresolved until its
+ * validity window has been scanned, which is about six and a half minutes; holding the claim
+ * back for that long contradicted the refusal text on a screen that cannot be left. This is the
+ * rule the duplicate question already follows. Only a row that never left the "submission
+ * unknown" state qualifies: one the node accepted always blocks, whatever was recorded next to
+ * it. With no record of a refusal (the description file is lost or unreadable) the gate blocks
+ * exactly as before.
+ */
 internal object Sora2LegacyMigrationAdmissionGate {
     fun requireNoUnresolvedWitness(
         walletId: String,
         unresolved: List<Sora2PendingSubmissionLocal>,
+        refusedByNode: Set<String> = emptySet(),
     ) {
         check(
             unresolved.none { row ->
                 row.walletId == walletId &&
-                    row.operationKind == Sora2PendingSubmissionLocal.OPERATION_GENERIC
+                    row.operationKind == Sora2PendingSubmissionLocal.OPERATION_GENERIC &&
+                    !row.wasRefusedByNode(refusedByNode)
             }
         ) { "SORA2_LEGACY_MIGRATION_ALREADY_UNRESOLVED" }
     }
+
+    private fun Sora2PendingSubmissionLocal.wasRefusedByNode(refusedByNode: Set<String>): Boolean =
+        state == Sora2PendingSubmissionLocal.STATE_SUBMISSION_UNKNOWN &&
+            transactionHash in refusedByNode
 }
 
 /**
@@ -217,14 +235,28 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
             throw Sora2PendingSubmissionAlreadyJournaled(hash)
         }
         if (prepared.purpose == ExtrinsicManager.PreparedPurpose.LEGACY_MIGRATION) {
-            Sora2LegacyMigrationAdmissionGate.requireNoUnresolvedWitness(
-                walletId = prepared.walletId,
-                unresolved = dao.getUnresolvedSora2PendingSubmissions(),
-            )
+            requireLegacyMigrationAdmissible(prepared.walletId)
         }
         dao.insertSora2PendingSubmission(row)
         kickBestEffort()
         row
+    }
+
+    /**
+     * The legacy-claim gate: throws while an earlier transaction of [walletId] has no final
+     * status and may still reach the chain. One the node explicitly refused may not, and does
+     * not hold the claim back (see [Sora2LegacyMigrationAdmissionGate]).
+     */
+    suspend fun requireLegacyMigrationAdmissible(walletId: String) {
+        val unresolved = database.walletIdentityDao().getUnresolvedSora2PendingSubmissions()
+        if (unresolved.none { it.walletId == walletId }) return
+        Sora2LegacyMigrationAdmissionGate.requireNoUnresolvedWitness(
+            walletId = walletId,
+            unresolved = unresolved,
+            refusedByNode = detailsStore.list(walletId)
+                .filter { it.nodeRefusal != null }
+                .mapTo(hashSetOf()) { it.transactionHash },
+        )
     }
 
     /** Persist ambiguity before the exact line that enters the one permitted transport attempt. */
