@@ -961,9 +961,10 @@ class RuntimeManager @Inject constructor(
 
     private suspend fun createMutationRuntimeContextLocked(): Sora2MutationRuntimeContext {
         // Every value that authorizes a mutation (this runtime context, the nonce, the fee
-        // quote) and the one submission attempt go through the reviewed HTTPS endpoint
-        // (Sora2BoundedRuntimeRpcClient). The node the app's WebSocket shows balances from is
-        // not involved, so an automatic or manual switch to another node never blocks sending.
+        // quote) and the single delivery of the signed bytes go through the reviewed HTTPS
+        // endpoints (Sora2BoundedRuntimeRpcClient; two hosts, one set of checks). The node the
+        // app's WebSocket shows balances from is not involved, so an automatic or manual switch
+        // to another node never blocks sending.
         // Production signs against whatever runtime the canonical mainnet is running now. The
         // chain is pinned by genesis hash and the SS58 prefix; the runtime version, transaction
         // version and metadata come from the node at one finalized block and must match the
