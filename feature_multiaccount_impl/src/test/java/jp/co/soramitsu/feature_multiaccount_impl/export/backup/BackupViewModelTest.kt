@@ -38,6 +38,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R as commonR
+import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.BackupViewModel
@@ -85,8 +86,17 @@ class BackupViewModelTest {
     private val mnemo = "mne mo nic"
     private val seed = "seed"
 
-    private fun setUp(type: ExportProtectionViewModel.Type) = runTest {
-        given(interactor.getMnemonic("address")).willReturn(mnemo)
+    private fun setUp(
+        type: ExportProtectionViewModel.Type,
+        material: WalletBackupMaterial = WalletBackupMaterial(
+            canSign = true,
+            phraseWords = mnemo.split(" "),
+            seedHex = seed,
+            storedPhraseDoesNotMatch = false,
+            storedSeedDoesNotMatch = false,
+        ),
+    ) = runTest {
+        given(interactor.getBackupMaterial("address")).willReturn(material)
         given(interactor.getSeed("address")).willReturn(seed)
         viewModel =
             BackupViewModel(interactor, resourceManager, router, clipboardManager, type, "address")
@@ -127,6 +137,26 @@ class BackupViewModelTest {
             commonR.string.common_passphrase_title,
             s.basic.title,
         )
+    }
+
+    @Test
+    fun nothingIsShownWhenNoStoredSecretMatchesTheAccount() = runTest {
+        val noMatch = WalletBackupMaterial(
+            canSign = true,
+            phraseWords = emptyList(),
+            seedHex = "",
+            storedPhraseDoesNotMatch = true,
+            storedSeedDoesNotMatch = false,
+        )
+        listOf(ExportProtectionViewModel.Type.PASSPHRASE, ExportProtectionViewModel.Type.SEED).forEach { type ->
+            setUp(type, noMatch)
+            // Said plainly, with the JSON export as the way to back the account up.
+            assertEquals(BackupScreenState(noMatchingSecret = true), viewModel.backupScreenState.getOrAwaitValue())
+            viewModel.backupPressed()
+            viewModel.exportJsonPressed()
+        }
+        org.mockito.Mockito.verifyNoInteractions(clipboardManager)
+        verify(router, org.mockito.Mockito.times(2)).showExportJSONProtection(listOf("address"))
     }
 
     @Test

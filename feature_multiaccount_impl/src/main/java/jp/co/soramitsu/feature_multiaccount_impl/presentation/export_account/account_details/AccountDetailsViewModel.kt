@@ -293,6 +293,19 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 try {
                     _accountDetailsScreenState.value?.let { accountDetailsScreenState ->
                         account?.let { account ->
+                            // Only a phrase or seed that re-derives this account goes into the
+                            // backup. A Google backup is restored from one of the two, so when
+                            // neither matches no backup is made and the person is told to use
+                            // the encrypted JSON export instead.
+                            val material = interactor.getBackupMaterial(account)
+                            if (material.onlyJsonExport) {
+                                withContext(coroutineManager.main) {
+                                    _createBackupPasswordState.value =
+                                        createBackupPasswordState.copy(isLoading = false)
+                                    onError(jp.co.soramitsu.common.R.string.backup_no_matching_secret)
+                                }
+                                return@launch
+                            }
                             val passphrase =
                                 interactor.getMnemonic(accountDetailsScreenState.address)
                             val jsonString = interactor.generateSubstrateJsonString(

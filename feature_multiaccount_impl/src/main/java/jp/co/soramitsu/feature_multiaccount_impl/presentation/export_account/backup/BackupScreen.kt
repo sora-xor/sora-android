@@ -78,7 +78,12 @@ internal fun BackupScreen(
     state: BackupScreenState,
     onButtonPressed: () -> Unit,
     onBackupWithGoogleButtonPressed: (() -> Unit)? = null,
+    onExportJsonPressed: (() -> Unit)? = null,
 ) {
+    if (state.noMatchingSecret) {
+        NoMatchingSecretCard(onExportJsonPressed)
+        return
+    }
     ContentCard(
         modifier = Modifier.padding(horizontal = Dimens.x2, vertical = Dimens.x1).fillMaxWidth().wrapContentHeight(),
     ) {
@@ -175,6 +180,47 @@ internal fun BackupScreen(
                     order = Order.TERTIARY,
                     size = Size.Large,
                     onClick = onButtonPressed,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Nothing stored on this phone re-derives this account's address, so nothing is shown as its
+ * recovery phrase or seed. The way to back it up is the encrypted JSON export.
+ */
+@Composable
+private fun NoMatchingSecretCard(onExportJsonPressed: (() -> Unit)?) {
+    ContentCard(
+        modifier = Modifier.padding(horizontal = Dimens.x2, vertical = Dimens.x1).fillMaxWidth().wrapContentHeight(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(Dimens.x3),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                modifier = Modifier
+                    .testTagAsId("NoMatchingSecret")
+                    .wrapContentHeight()
+                    .fillMaxWidth(),
+                text = stringResource(id = R.string.backup_no_matching_secret),
+                color = MaterialTheme.customColors.fgPrimary,
+                style = MaterialTheme.customTypography.paragraphM,
+            )
+            onExportJsonPressed?.let {
+                FilledButton(
+                    modifier = Modifier
+                        .testTagAsId("ExportJson")
+                        .fillMaxWidth()
+                        .padding(top = Dimens.x3),
+                    text = stringResource(id = R.string.export_protection_json_title),
+                    order = Order.PRIMARY,
+                    size = Size.Large,
+                    onClick = it,
                 )
             }
         }

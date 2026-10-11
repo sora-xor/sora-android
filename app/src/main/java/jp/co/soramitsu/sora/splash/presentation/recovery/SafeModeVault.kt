@@ -35,6 +35,7 @@ package jp.co.soramitsu.sora.splash.presentation.recovery
 import android.os.SystemClock
 import java.io.File
 import java.security.MessageDigest
+import jp.co.soramitsu.common.account.RecoveryPhrase
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.WalletDecryptionException
@@ -155,10 +156,25 @@ object SafeModeVault {
         val account = SoraAccount(address, entry.name.orEmpty())
         val phrase = read { credentialsRepository.retrieveMnemonic(account) }
         if (phrase is Read.Value && phrase.text.isNotEmpty()) {
-            return RevealedSecret.Phrase(phrase.text.split(Regex("\\s+")))
+            val shown = RevealedSecret.Phrase(phraseWords(phrase.text))
+            if (!derivesAnotherWallet(shown, address, addressOf)) return shown
+            // The stored phrase is proven to belong to another wallet. A stored seed that
+            // derives this address is this wallet's backup; otherwise the phrase is shown and
+            // marked as not confirmed for this wallet.
+            val otherSeed = read { credentialsRepository.retrieveStoredSeed(account) }
+            if (otherSeed is Read.Value && otherSeed.text.isNotEmpty()) {
+                val seedShown = RevealedSecret.Seed(otherSeed.text)
+                if (derives(seedShown, address, addressOf)) return seedShown
+            }
+            return shown.copy(checked = false)
         }
+        // The seed is read only when no phrase is stored.
         val seed = read { credentialsRepository.retrieveStoredSeed(account) }
-        if (seed is Read.Value && seed.text.isNotEmpty()) return RevealedSecret.Seed(seed.text)
+        val storedSeed = (seed as? Read.Value)?.text?.takeIf(String::isNotEmpty)
+        if (storedSeed != null) {
+            val shown = RevealedSecret.Seed(storedSeed)
+            return shown.copy(checked = !derivesAnotherWallet(shown, address, addressOf))
+        }
         if (address == legacyOwner) {
             // The 2.x owner's unsuffixed value. The repository already returns it above when the
             // unsuffixed keys derive this address; here they are missing, unreadable or derive
@@ -178,6 +194,26 @@ object SafeModeVault {
         }
     }
 
+    /**
+     * The words as the library parser reads them (a phrase stored with commas by an old version
+     * shows as its words); the stored text split on spaces when it is not a valid phrase.
+     */
+    private fun phraseWords(text: String): List<String> =
+        RecoveryPhrase.parseOrNull(text)?.words ?: text.split(Regex("\\s+"))
+
+    /** True only when the derivation succeeded and gave a different address. */
+    private suspend fun derivesAnotherWallet(
+        secret: RevealedSecret,
+        address: String,
+        addressOf: suspend (RevealedSecret) -> String?,
+    ): Boolean = try {
+        addressOf(secret)?.let { it != address } ?: false
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Throwable) {
+        false
+    }
+
     private suspend fun derives(
         secret: RevealedSecret,
         address: String,
@@ -193,7 +229,7 @@ object SafeModeVault {
     private suspend fun releaseEra(datasource: CredentialsDatasource): RevealedSecret {
         val phrase = read { datasource.retrieveMnemonic("") }
         if (phrase is Read.Value && phrase.text.isNotEmpty()) {
-            return RevealedSecret.Phrase(phrase.text.split(Regex("\\s+")))
+            return RevealedSecret.Phrase(phraseWords(phrase.text))
         }
         val seed = read { datasource.retrieveSeed("") }
         if (seed is Read.Value && seed.text.isNotEmpty()) return RevealedSecret.Seed(seed.text)

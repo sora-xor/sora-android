@@ -44,6 +44,7 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details.AccountDetailsViewModel
@@ -234,6 +235,15 @@ class AccountDetailsViewModelTest {
     fun `onBackupPasswordClicked() called`() = runTest {
         val password = "password"
         given(multiAccInteractor.getMnemonic(account.substrateAddress)).willReturn("mne mo nic")
+        given(multiAccInteractor.getBackupMaterial(account)).willReturn(
+            WalletBackupMaterial(
+                canSign = true,
+                phraseWords = listOf("mne", "mo", "nic"),
+                seedHex = "",
+                storedPhraseDoesNotMatch = false,
+                storedSeedDoesNotMatch = false,
+            )
+        )
         given(backupService.authorize(accountResultLauncher)).willReturn(true)
         given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(false)
 

@@ -798,6 +798,11 @@ class SafeModeViewModel @Inject constructor(
             else -> return null
         }
         val seed = seedHex.removePrefix("0x").removePrefix("0X").fromHex()
+        // Only a 32-byte seed derives a key pair. Any other length is not confirmed.
+        if (seed.size != 32) {
+            seed.fill(0)
+            return null
+        }
         val keypair = try {
             migrationSr25519Crypto.generateKeypair(seed)
         } finally {

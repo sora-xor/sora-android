@@ -65,6 +65,7 @@ import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
 import jp.co.soramitsu.common.util.ext.trimAccountNameTo32Bytes
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
+import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
@@ -89,6 +90,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+/** Wrong PIN entries allowed in one repair prompt before it closes without any change. */
+private const val MAX_REPAIR_PIN_FAILURES = 3
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
@@ -152,6 +156,94 @@ class OnboardingViewModel @Inject constructor(
 
     private val _consentExceptionHandler = SingleLiveEvent<Intent>()
     val consentExceptionHandler: LiveData<Intent> = _consentExceptionHandler
+
+    /**
+     * "Repair this account with its recovery phrase": shown when an import found keys stored for
+     * the same address that cannot be used. Nothing was written; confirming (with the PIN when
+     * one is set) keeps a copy of the old values and writes the ones the phrase derives.
+     */
+    data class RepairPrompt(
+        val accountExists: Boolean,
+        val pinRequired: Boolean,
+        val wrongPin: Boolean = false,
+        val working: Boolean = false,
+    )
+
+    private val _repairPrompt = MutableStateFlow<RepairPrompt?>(null)
+    val repairPrompt = _repairPrompt.asStateFlow()
+
+    /** What the person entered, kept in memory only while the repair prompt is open. */
+    private class PendingRepair(
+        val input: String,
+        val accountName: String,
+        val rawSeed: Boolean,
+        val onRepaired: suspend () -> Unit,
+    )
+
+    private var pendingRepair: PendingRepair? = null
+    private var repairPinFailures = 0
+
+    private fun offerRepair(
+        offer: WalletRepairAvailableException,
+        input: String,
+        accountName: String,
+        rawSeed: Boolean,
+        onRepaired: suspend () -> Unit,
+    ) {
+        pendingRepair = PendingRepair(input, accountName, rawSeed, onRepaired)
+        repairPinFailures = 0
+        _repairPrompt.value = RepairPrompt(
+            accountExists = offer.accountExists,
+            pinRequired = offer.pinRequired,
+        )
+    }
+
+    fun onRepairDismissed() {
+        if (_repairPrompt.value?.working == true) return
+        pendingRepair = null
+        _repairPrompt.value = null
+    }
+
+    fun onRepairConfirmed(pin: String) {
+        val prompt = _repairPrompt.value ?: return
+        val pending = pendingRepair ?: return
+        if (prompt.working) return
+        _repairPrompt.value = prompt.copy(working = true, wrongPin = false)
+        viewModelScope.launch {
+            try {
+                if (pending.rawSeed) {
+                    multiaccountInteractor.repairFromRawSeed(pending.input, pending.accountName, pin)
+                } else {
+                    multiaccountInteractor.repairFromMnemonic(pending.input, pending.accountName, pin)
+                }
+                pendingRepair = null
+                _repairPrompt.value = null
+                pending.onRepaired()
+            } catch (error: SoraException) {
+                if (error.errorResponseCode == ResponseCode.WRONG_PIN_CODE) {
+                    repairPinFailures += 1
+                    if (repairPinFailures >= MAX_REPAIR_PIN_FAILURES) {
+                        // Stop here: nothing was changed, and the import can be started again.
+                        pendingRepair = null
+                        _repairPrompt.value = null
+                        onError(jp.co.soramitsu.common.R.string.account_repair_too_many_attempts)
+                    } else {
+                        _repairPrompt.value = prompt.copy(working = false, wrongPin = true)
+                    }
+                } else {
+                    pendingRepair = null
+                    _repairPrompt.value = null
+                    onError(error)
+                }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                pendingRepair = null
+                _repairPrompt.value = null
+                onError(SoraException.unexpectedError(error))
+            }
+        }
+    }
 
     /**
      * The wallet being created. It lives in memory only until the person finishes the flow, so
@@ -344,6 +436,14 @@ class OnboardingViewModel @Inject constructor(
                         } else {
                             throw SoraException.businessError(errorMessageCode)
                         }
+                    } catch (offer: WalletRepairAvailableException) {
+                        offerRepair(
+                            offer = offer,
+                            input = recoveryCardState.recoveryInputState.value.text,
+                            accountName = recoverAccountNameState.accountNameInputState.value.text,
+                            rawSeed = errorMessageCode == ResponseCode.RAW_SEED_IS_NOT_VALID,
+                            onRepaired = { mainStarter.start(context) },
+                        )
                     } catch (t: Throwable) {
                         navController.popBackStack()
                         onError(t)
@@ -770,17 +870,25 @@ class OnboardingViewModel @Inject constructor(
                             )
                         }
 
+                        val showImported: suspend () -> Unit = {
+                            navController.navigate(
+                                route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
+                                navOptions = NavOptions.Builder()
+                                    .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
+                                    .build()
+                            )
+                        }
                         // Stores the keys and adds the account in one step.
-                        recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount)
+                        try {
+                            recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount)
+                        } catch (offer: WalletRepairAvailableException) {
+                            offerRepairFromBackup(offer, decryptedBackupAccount, showImported)
+                            return@let
+                        }
 
                         isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()
 
-                        navController.navigate(
-                            route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
-                            navOptions = NavOptions.Builder()
-                                .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
-                                .build()
-                        )
+                        showImported()
                     } catch (e: DecryptionException) {
                         onError(SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED))
                     } catch (e: DecodingException) {
@@ -801,6 +909,25 @@ class OnboardingViewModel @Inject constructor(
                     state.copy(isImportMoreAvailable = isImportMoreAvailable, isLoading = false)
             }
         }
+    }
+
+    /** The same choice of secret as [recoverSoraAccountFromDecryptedBackupAccount]. */
+    private suspend fun offerRepairFromBackup(
+        offer: WalletRepairAvailableException,
+        decryptedBackupAccount: DecryptedBackupAccount,
+        onRepaired: suspend () -> Unit,
+    ) {
+        val phrase = decryptedBackupAccount.mnemonicPhrase
+            ?.takeIf { decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSPHRASE) }
+            ?.takeIf { multiaccountInteractor.isMnemonicValid(it) }
+        val seed = decryptedBackupAccount.seed?.substrateSeed
+        offerRepair(
+            offer = offer,
+            input = phrase ?: seed.orEmpty(),
+            accountName = decryptedBackupAccount.name,
+            rawSeed = phrase == null,
+            onRepaired = onRepaired,
+        )
     }
 
     private suspend fun recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount: DecryptedBackupAccount): SoraAccount {

@@ -50,6 +50,45 @@ class SafeModeVaultTest {
     }
 
     @Test
+    fun `a phrase stored with commas shows as its words`() = runTest {
+        val repository = mockk<CredentialsRepository>()
+        val phrase =
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+        coEvery { repository.retrieveMnemonic(any()) } returns phrase.replace(" ", ",")
+        val secret = SafeModeVault.reveal(
+            PhraseEntry("cnA", "cnA", "Main", olderVersion = false),
+            legacyOwner = null,
+            credentialsRepository = repository,
+            credentialsDatasource = mockk(),
+        )
+        assertEquals(RevealedSecret.Phrase(phrase.split(" ")), secret)
+    }
+
+    @Test
+    fun `a phrase proven to belong to another wallet is never shown as confirmed`() = runTest {
+        val repository = mockk<CredentialsRepository>()
+        coEvery { repository.retrieveMnemonic(any()) } returns "alpha beta gamma"
+        // No stored seed: the phrase is shown, marked as not confirmed for this wallet.
+        coEvery { repository.retrieveStoredSeed(any()) } returns ""
+        val entry = PhraseEntry("cnA", "cnA", "Main", olderVersion = false)
+        val unconfirmed = SafeModeVault.reveal(entry, null, repository, mockk()) { secret ->
+            if (secret is RevealedSecret.Phrase) "cnOther" else "cnA"
+        }
+        assertEquals(RevealedSecret.Phrase(listOf("alpha", "beta", "gamma"), checked = false), unconfirmed)
+
+        // A stored seed that derives this address is this wallet's backup and is shown instead.
+        coEvery { repository.retrieveStoredSeed(any()) } returns "aa".repeat(32)
+        val seed = SafeModeVault.reveal(entry, null, repository, mockk()) { secret ->
+            if (secret is RevealedSecret.Phrase) "cnOther" else "cnA"
+        }
+        assertEquals(RevealedSecret.Seed("aa".repeat(32)), seed)
+
+        // When the address cannot be derived at all, nothing is claimed either way.
+        val unknown = SafeModeVault.reveal(entry, null, repository, mockk()) { null }
+        assertEquals(RevealedSecret.Phrase(listOf("alpha", "beta", "gamma")), unknown)
+    }
+
+    @Test
     fun `raw seed accounts show the stored seed, never a derived cache`() = runTest {
         coEvery { repository.retrieveMnemonic(any()) } returns ""
         coEvery { repository.retrieveStoredSeed(any()) } returns "0xabc"

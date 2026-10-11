@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_main_impl.domain
 
 import javax.inject.Inject
+import jp.co.soramitsu.common.account.RecoveryPhrase
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
@@ -93,10 +94,8 @@ class PinCodeInteractor @Inject constructor(
     suspend fun migrationCheckNeedsNetwork(): Boolean {
         val soraAccount = userRepository.getCurSoraAccount()
         if (userRepository.isMigrationFetched(soraAccount)) return false
-        val retainedWordCount = credentialsRepository.retrieveMnemonic(soraAccount)
-            .trim()
-            .split(Regex("\\s+"))
-            .count(String::isNotBlank)
+        val retainedWordCount =
+            RecoveryPhrase.wordCount(credentialsRepository.retrieveMnemonic(soraAccount))
         return retainedWordCount == LEGACY_SORA_MNEMONIC_WORD_COUNT
     }
 
@@ -106,10 +105,9 @@ class PinCodeInteractor @Inject constructor(
         return if (isFetched) {
             userRepository.needsMigration(soraAccount)
         } else {
-            val retainedWordCount = credentialsRepository.retrieveMnemonic(soraAccount)
-                .trim()
-                .split(Regex("\\s+"))
-                .count(String::isNotBlank)
+            // Counted from the parsed phrase, so the separators it was stored with do not matter.
+            val retainedWordCount =
+                RecoveryPhrase.wordCount(credentialsRepository.retrieveMnemonic(soraAccount))
             val needs = if (retainedWordCount == LEGACY_SORA_MNEMONIC_WORD_COUNT) {
                 val irohaData = credentialsRepository.getIrohaData(soraAccount)
                 walletRepository.needsMigration(irohaData.address)
