@@ -76,6 +76,7 @@ import jp.co.soramitsu.common.presentation.compose.components.ConfirmDialogConte
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.AppStoreListing
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -201,6 +202,9 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                         }
                         viewModel.confirmDialogLiveData.observe {
                             openConfirmDialog.value = it
+                        }
+                        viewModel.openAppStoreLiveData.observe {
+                            AppStoreListing.open(requireContext())
                         }
 
                         viewModel.snackBarLiveData.observe {

@@ -42,6 +42,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.ConfirmDialogData
 import jp.co.soramitsu.common.base.theOnlyRoute
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -57,6 +58,9 @@ open class BaseViewModel : ViewModel() {
     val errorFromResourceLiveData = SingleLiveEvent<Pair<Int, Int>>()
     val alertDialogLiveData = SingleLiveEvent<Pair<String, String>>()
     val confirmDialogLiveData = SingleLiveEvent<ConfirmDialogData>()
+
+    /** Asks the screen to open this app's page in the store, where the user can update it. */
+    val openAppStoreLiveData = SingleLiveEvent<Unit>()
     val snackBarLiveData = SingleLiveEvent<SnackBarState>()
     val copiedToast = SingleLiveEvent<Unit>()
 
@@ -249,6 +253,49 @@ open class BaseViewModel : ViewModel() {
     ) {
         val text = TransactionOutcomeTexts.refused(resourceManager, outcome)
         alertDialogLiveData.setValue(text.title to text.message)
+    }
+
+    /**
+     * A screen that is built from network fees could not get them. The dialog says why and
+     * offers the action that can help. While the network cannot be reached that is Try again.
+     * When the network was upgraded and asks for a newer app, asking again gives the same
+     * answer, so the action is Update (the store page of this app) and the screen is left.
+     * Close always leaves the screen.
+     */
+    protected fun showFeesUnavailable(
+        resourceManager: ResourceManager,
+        error: Throwable,
+        onClose: () -> Unit,
+        onRetry: () -> Unit,
+    ) {
+        val reason = NetworkFeeUnavailable.from(error)
+        confirmDialogLiveData.setValue(
+            ConfirmDialogData(
+                title = resourceManager.getString(R.string.network_fee_unavailable_short),
+                message = resourceManager.getString(
+                    when (reason) {
+                        NetworkFeeUnavailable.NETWORK_UNREACHABLE ->
+                            R.string.tx_outcome_screen_needs_network
+                        NetworkFeeUnavailable.APP_UPDATE_REQUIRED ->
+                            R.string.network_fee_needs_app_update
+                        NetworkFeeUnavailable.OTHER -> R.string.network_fee_unavailable
+                    }
+                ),
+                confirmText = resourceManager.getString(
+                    if (reason.retryCanHelp) R.string.common_try_again else R.string.common_update
+                ),
+                dismissText = resourceManager.getString(R.string.common_close),
+                onDismiss = onClose,
+                onConfirm = if (reason.retryCanHelp) {
+                    onRetry
+                } else {
+                    {
+                        openAppStoreLiveData.trigger()
+                        onClose()
+                    }
+                },
+            )
+        )
     }
 
     /**

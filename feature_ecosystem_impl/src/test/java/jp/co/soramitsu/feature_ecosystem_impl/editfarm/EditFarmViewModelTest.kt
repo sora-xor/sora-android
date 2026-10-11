@@ -12,6 +12,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.TransactionOutcome
@@ -37,6 +38,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -73,6 +75,7 @@ class EditFarmViewModelTest {
         Triple(TestTokens.xorToken.id, TestTokens.valToken.id, TestTokens.pswapToken.id)
     private val txHash = "0x" + "ab".repeat(32)
     private var feeOffline = false
+    private var feeNeedsAppUpdate = false
 
     private fun TestScope.screen(): EditFarmViewModel {
         coEvery {
@@ -92,6 +95,12 @@ class EditFarmViewModelTest {
         coEvery { demeter.getFarmedPool(ids) } returns null
         coEvery { demeter.calcDepositDemeterNetworkFee(ids) } coAnswers {
             if (feeOffline) throw IOException("BOUNDED_HTTP_IO")
+            if (feeNeedsAppUpdate) {
+                throw IllegalStateException(
+                    "SORA2_FEE_QUOTE_FAILED",
+                    IllegalStateException(NetworkFeeUnavailable.APP_UPDATE_REQUIRED_CODE),
+                )
+            }
             BigDecimal("0.0007")
         }
         coEvery { demeter.calcWithdrawDemeterNetworkFee(ids) } returns BigDecimal("0.0007")
@@ -368,6 +377,27 @@ class EditFarmViewModelTest {
             viewModel.onScreenPaused()
             viewModel.onScreenResumed()
             verify(exactly = 2) { assetsRouter.showTxResult(any(), any()) }
+        }
+
+    @Test
+    fun `a network that needs a newer app says so and offers the update instead of another try`() =
+        runTest {
+            feeNeedsAppUpdate = true
+
+            val viewModel = screen()
+
+            val question = checkNotNull(viewModel.confirmDialogLiveData.value)
+            assertEquals("text-${R.string.network_fee_needs_app_update}", question.message)
+            assertEquals("text-${R.string.common_update}", question.confirmText)
+            assertEquals("text-${R.string.common_close}", question.dismissText)
+            assertNull(viewModel.openAppStoreLiveData.value)
+
+            question.onConfirm()
+            advanceUntilIdle()
+
+            assertNotNull(viewModel.openAppStoreLiveData.value)
+            assertNotNull(viewModel.navigationPop.value)
+            coVerify(exactly = 1) { demeter.calcDepositDemeterNetworkFee(ids) }
         }
 
     @Test

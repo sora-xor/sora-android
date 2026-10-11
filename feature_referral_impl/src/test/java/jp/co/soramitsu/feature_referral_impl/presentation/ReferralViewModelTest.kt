@@ -42,6 +42,7 @@ import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.TransactionOutcome
@@ -68,6 +69,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -76,6 +78,7 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mock
+import org.mockito.Mockito.mockingDetails
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
@@ -294,6 +297,8 @@ class ReferralViewModelTest {
             R.string.tx_outcome_screen_needs_network,
             R.string.common_try_again,
             R.string.common_close,
+            R.string.network_fee_needs_app_update,
+            R.string.common_update,
         ).forEach { id ->
             whenever(resourceManager.getString(id)).thenReturn("text-$id")
         }
@@ -565,6 +570,46 @@ class ReferralViewModelTest {
             advanceUntilIdle()
             verify(interactor, times(2)).observeUnbond(any(), any())
         }
+
+    @Test
+    fun `a network that needs a newer app says so and offers the update instead of another try`() =
+        runTest {
+            stubOutcomeTexts()
+            whenever(interactor.getReferrals()).thenReturn(emptyFlow())
+            whenever(interactor.observeReferrals()).thenReturn(emptyFlow())
+            // What the signing runtime raises for a live signed extension the app cannot write.
+            whenever(interactor.calcBondFee()).thenAnswer {
+                throw IllegalStateException(
+                    "SORA2_FEE_QUOTE_FAILED",
+                    IllegalStateException(NetworkFeeUnavailable.APP_UPDATE_REQUIRED_CODE),
+                )
+            }
+
+            setupViewModel()
+            advanceUntilIdle()
+            assetFlowEmit(xorAsset)
+            advanceUntilIdle()
+
+            // Before the fix: "can't be checked right now, try again in a moment", for ever.
+            val question = checkNotNull(referralViewModel.confirmDialogLiveData.value)
+            assertEquals("text-${R.string.network_fee_needs_app_update}", question.message)
+            assertEquals("text-${R.string.common_update}", question.confirmText)
+            assertEquals("text-${R.string.common_close}", question.dismissText)
+            assertNull(referralViewModel.openAppStoreLiveData.value)
+            val feeQuestions = feeQuestionCount()
+
+            question.onConfirm()
+            advanceUntilIdle()
+
+            // The store page of the app is asked for, the screen that cannot load is left, and
+            // the fee is not asked again.
+            assertNotNull(referralViewModel.openAppStoreLiveData.value)
+            verify(router).popBackStack()
+            assertEquals(feeQuestions, feeQuestionCount())
+        }
+
+    private fun feeQuestionCount(): Int =
+        mockingDetails(interactor).invocations.count { it.method.name == "calcBondFee" }
 
     @Test
     fun `opening the screen offline explains and recovers instead of crashing`() = runTest {

@@ -53,6 +53,13 @@ enum class NetworkFeeUnavailable {
     /** Any other reason. Details go only to the privacy-safe crash channel. */
     OTHER;
 
+    /**
+     * Whether asking again can change the answer. It cannot when the app has to be updated, so
+     * screens offer the update there instead of Try again.
+     */
+    val retryCanHelp: Boolean
+        get() = this != APP_UPDATE_REQUIRED
+
     companion object {
         /**
          * Message of the error the signing runtime raises when the live network needs an app
