@@ -146,6 +146,15 @@ class TransferAmountViewModel @AssistedInject constructor(
      */
     private var sentTxHash: String? = null
 
+    /**
+     * A tapped Confirm is on its way and reports its own result. Set before the coroutine starts,
+     * so a second tap is ignored whatever the button shows at that moment (it stays clickable
+     * while its progress mark fades in). Without this a second tap started a second coroutine;
+     * the duplicate guard stopped it from signing, but it cleared the progress mark and asked
+     * "send again anyway?" about a transfer sent a moment ago.
+     */
+    private var confirmInFlight = false
+
     private val _sendState = MutableStateFlow(
         SendState(
             address = recipientId,
@@ -464,7 +473,7 @@ class TransferAmountViewModel @AssistedInject constructor(
      * shown again; the transaction page opens when it is in front (see [openTransactionPage]).
      */
     private fun confirmTransfer(confirmedDuplicate: Boolean) {
-        if (sentTxHash != null) return
+        if (sentTxHash != null || confirmInFlight) return
         val curAsset = curAsset ?: return
         val amount = _sendState.value.input?.amount ?: return
         val fee = fee ?: return
@@ -473,51 +482,71 @@ class TransferAmountViewModel @AssistedInject constructor(
             invalidateFeeReview()
             return
         }
+        confirmInFlight = true
         viewModelScope.launch {
-            _sendState.value = _sendState.value.copy(
-                inProgress = true
-            )
-            var outcome: TransactionOutcome? = null
-            var notSent: Throwable? = null
             try {
-                outcome = interactor.observeTransfer(
-                    recipientId,
-                    curAsset.token,
-                    amount,
-                    fee,
-                    expectedWalletId,
-                    confirmedDuplicate,
-                )
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (_: DuplicateWaitingTransactionException) {
-                _sendState.value = _sendState.value.copy(inProgress = false)
-                askBeforeSendingAgain(resourceManager) {
-                    confirmTransfer(confirmedDuplicate = true)
-                }
-                return@launch
-            } catch (t: Throwable) {
-                notSent = t
+                sendTransfer(curAsset, amount, fee, expectedWalletId, confirmedDuplicate)
+            } finally {
+                // The result was shown. A transfer that reached the network keeps Confirm off
+                // through sentTxHash; in every other case Confirm may be used again.
+                confirmInFlight = false
             }
+        }
+    }
+
+    private suspend fun sendTransfer(
+        curAsset: Asset,
+        amount: BigDecimal,
+        fee: BigDecimal,
+        expectedWalletId: String,
+        confirmedDuplicate: Boolean,
+    ) {
+        _sendState.value = _sendState.value.copy(
+            inProgress = true
+        )
+        var outcome: TransactionOutcome? = null
+        var notSent: Throwable? = null
+        try {
+            outcome = interactor.observeTransfer(
+                recipientId,
+                curAsset.token,
+                amount,
+                fee,
+                expectedWalletId,
+                confirmedDuplicate,
+            )
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: DuplicateWaitingTransactionException) {
             _sendState.value = _sendState.value.copy(inProgress = false)
-            when (outcome) {
-                is TransactionOutcome.Confirmed,
-                is TransactionOutcome.Waiting -> {
-                    sentTxHash = outcome.txHash
-                    _sendState.value = _sendState.value.copy(reviewEnabled = false)
-                    _transactionSuccessEvent.value = outcome.badge()
-                    openTransactionPage(outcome.txHash)
-                }
-                is TransactionOutcome.FailedOnChain -> {
-                    val text = TransactionOutcomeTexts.describe(resourceManager, outcome)
-                    alertDialogLiveData.setValue(text.title to text.message)
-                }
-                is TransactionOutcome.RefusedByNode ->
-                    showTransactionRefused(resourceManager, outcome)
-                null -> {
-                    val error = checkNotNull(notSent)
-                    showTransactionNotSent(resourceManager, error)
-                    if (error.isFeeChanged()) showNewFee(amount)
+            askBeforeSendingAgain(resourceManager) {
+                confirmTransfer(confirmedDuplicate = true)
+            }
+            return
+        } catch (t: Throwable) {
+            notSent = t
+        }
+        _sendState.value = _sendState.value.copy(inProgress = false)
+        when (outcome) {
+            is TransactionOutcome.Confirmed,
+            is TransactionOutcome.Waiting -> {
+                sentTxHash = outcome.txHash
+                _sendState.value = _sendState.value.copy(reviewEnabled = false)
+                _transactionSuccessEvent.value = outcome.badge()
+                openTransactionPage(outcome.txHash)
+            }
+            is TransactionOutcome.FailedOnChain -> {
+                val text = TransactionOutcomeTexts.describe(resourceManager, outcome)
+                alertDialogLiveData.setValue(text.title to text.message)
+            }
+            is TransactionOutcome.RefusedByNode ->
+                showTransactionRefused(resourceManager, outcome)
+            null -> {
+                val error = checkNotNull(notSent)
+                showTransactionNotSent(resourceManager, error)
+                when {
+                    error.isFeeChanged() -> showNewFee(amount)
+                    error.isBalanceNoLongerEnough() -> showCurrentBalance()
                 }
             }
         }
@@ -553,11 +582,42 @@ class TransferAmountViewModel @AssistedInject constructor(
         }
     }
 
-    private fun Throwable.isFeeChanged(): Boolean {
+    /**
+     * The last check before the transfer left the phone read the balance from the network, and
+     * it no longer covers the amount and the fee, so nothing was sent. The figures on this screen
+     * come from the local database and were out of date: an earlier transfer was included in the
+     * meantime, or the funds moved from another device. The dialog says so; here the balances
+     * are read again, and when they arrive the amount is checked against them (the balance
+     * collector does that), which turns Confirm off and names the amount as too high. Without
+     * this every further Confirm ended in the same dialog until the amount was edited.
+     *
+     * The read is not part of the Confirm that just ended: it can take as long as the network
+     * takes, and Confirm must not be held back for it.
+     */
+    private fun showCurrentBalance() {
+        viewModelScope.launch {
+            try {
+                interactor.updateBalanceVisibleAssets()
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+                // The dialog was shown. A balance that cannot be read now is read again by the
+                // app's own refresh; Confirm keeps checking against the network either way.
+                FirebaseWrapper.recordException(error)
+            }
+        }
+    }
+
+    private fun Throwable.isFeeChanged(): Boolean = hasMessageInChain(FEE_CHANGED_CODE)
+
+    private fun Throwable.isBalanceNoLongerEnough(): Boolean =
+        TransactionOutcomeTexts.BALANCE_NO_LONGER_ENOUGH_CODES.any { hasMessageInChain(it) }
+
+    private fun Throwable.hasMessageInChain(code: String): Boolean {
         var current: Throwable? = this
         var depth = 0
         while (current != null && depth < MAX_CAUSE_DEPTH) {
-            if (current.message == FEE_CHANGED_CODE) return true
+            if (current.message == code) return true
             current = current.cause?.takeIf { it !== current }
             depth += 1
         }
