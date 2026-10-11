@@ -54,8 +54,12 @@ class JsonAccountsEncoder(
     private val jsonSeedEncoder: JsonSeedEncoder
 ) {
 
+    /**
+     * The export of one account (polkadot.js "pkcs8"), written by the library encoder. [decode]
+     * reads it back.
+     */
     fun generate(account: ExportAccount, password: String, genesisHash: String): String {
-        return jsonSeedEncoder.generate(
+        val json = jsonSeedEncoder.generate(
             account.keypair,
             account.seed,
             password,
@@ -64,25 +68,77 @@ class JsonAccountsEncoder(
             genesisHash,
             account.address
         )
+        requireReadable(json, batch = false)
+        return json
     }
 
+    /**
+     * The batch export of several accounts (polkadot.js "batch-pkcs8"): the accounts' addresses
+     * and names in the clear, and every account's own one-account export sealed under [password]
+     * in `encoded`. [decode] reads it back.
+     *
+     * The JSON is built key by key. It must never be written by handing a model class of this
+     * app to Gson: in the minified release build R8 removes or renames fields that only
+     * reflection reads, and the file then comes out as `{}`. That is what the reflective model
+     * this replaces (`JsonAccountData`) produced in a release build. The key names below are
+     * string constants, which no build step changes.
+     */
     fun generate(
         accounts: List<ExportAccount>,
         password: String,
         genesisHash: String,
     ): String {
-        val accountsData =
-            accounts.map {
-                JsonAccountData.Account(it.address, JsonAccountData.Meta(name = it.name, genesisHash = genesisHash))
-            }
-        val encoded = formEncodedField(accounts, password, genesisHash)
-
-        val importData = JsonAccountData(
-            encoded = encoded,
-            accounts = accountsData,
+        val whenCreated = System.currentTimeMillis()
+        val root = JsonObject()
+        root.add(
+            BATCH_ACCOUNTS,
+            JsonArray().apply {
+                accounts.forEach { account ->
+                    add(
+                        JsonObject().apply {
+                            addProperty(ACCOUNT_ADDRESS, account.address)
+                            add(
+                                ACCOUNT_META,
+                                JsonObject().apply {
+                                    addProperty(META_NAME, account.name)
+                                    addProperty(META_GENESIS_HASH, genesisHash)
+                                    addProperty(META_WHEN_CREATED, whenCreated)
+                                },
+                            )
+                        }
+                    )
+                }
+            },
         )
+        root.addProperty(ENCODED, formEncodedField(accounts, password, genesisHash))
+        root.add(
+            ENCODING,
+            JsonObject().apply {
+                add(ENCODING_CONTENT, JsonArray().apply { BATCH_CONTENT.forEach { add(it) } })
+                add(ENCODING_TYPE, JsonArray().apply { ENCRYPTION.forEach { add(it) } })
+                addProperty(ENCODING_VERSION, BATCH_VERSION)
+            },
+        )
+        val json = gson.toJson(root as JsonElement)
+        requireReadable(json, batch = true)
+        return json
+    }
 
-        return gson.toJson(importData)
+    /**
+     * A file the import could not read is not a backup, so it is never handed out: what was just
+     * written must have the shape [decode] accepts (kind, encryption and scrypt header). Nothing
+     * is decrypted here. This is what stops a build that writes an empty or renamed JSON from
+     * giving it to anyone as their backup.
+     */
+    private fun requireReadable(json: String, batch: Boolean) {
+        val readable = try {
+            val (root, isBatch) = exportKind(json)
+            encodedBytes(root).fill(0)
+            isBatch == batch
+        } catch (_: JsonImportException) {
+            false
+        }
+        check(readable) { "JSON_EXPORT_NOT_READABLE" }
     }
 
     private fun formEncodedField(
@@ -93,20 +149,8 @@ class JsonAccountsEncoder(
         val jsonArray = JsonArray()
 
         accounts.forEach {
-            jsonArray.add(
-                gson.fromJson(
-                    jsonSeedEncoder.generate(
-                        it.keypair,
-                        it.seed,
-                        password,
-                        it.name,
-                        MultiChainEncryption.Substrate(EncryptionType.SR25519),
-                        genesisHash,
-                        it.address
-                    ),
-                    JsonElement::class.java
-                )
-            )
+            // Each account inside a batch is its own one-account export (checked as such).
+            jsonArray.add(gson.fromJson(generate(it, password, genesisHash), JsonElement::class.java))
         }
 
         val key = cryptoAssistant.generateKeyForJson(password.toByteArray())
@@ -236,7 +280,7 @@ class JsonAccountsEncoder(
     /** The decoded `encoded` field, after its scrypt parameters were checked. */
     private fun encodedBytes(export: JsonObject): ByteArray {
         val bytes = try {
-            Base64.decode(export.get("encoded").asString)
+            Base64.decode(export.get(ENCODED).asString)
         } catch (_: Exception) {
             throw JsonImportException.Invalid()
         }
@@ -257,12 +301,12 @@ class JsonAccountsEncoder(
         return bytes
     }
 
-    private fun content(export: JsonObject): List<String> = strings(export, "content")
+    private fun content(export: JsonObject): List<String> = strings(export, ENCODING_CONTENT)
 
-    private fun type(export: JsonObject): List<String> = strings(export, "type")
+    private fun type(export: JsonObject): List<String> = strings(export, ENCODING_TYPE)
 
     private fun strings(export: JsonObject, field: String): List<String> = try {
-        export.getAsJsonObject("encoding").getAsJsonArray(field).map { it.asString }
+        export.getAsJsonObject(ENCODING).getAsJsonArray(field).map { it.asString }
     } catch (_: Exception) {
         emptyList()
     }
@@ -271,6 +315,20 @@ class JsonAccountsEncoder(
         val ACCOUNT_CONTENT = listOf("pkcs8", "sr25519")
         val BATCH_CONTENT = listOf("batch-pkcs8")
         val ENCRYPTION = listOf("scrypt", "xsalsa20-poly1305")
+
+        // The keys of the batch export, as polkadot.js and this app's import name them.
+        const val BATCH_ACCOUNTS = "accounts"
+        const val ACCOUNT_ADDRESS = "address"
+        const val ACCOUNT_META = "meta"
+        const val META_NAME = "name"
+        const val META_GENESIS_HASH = "genesisHash"
+        const val META_WHEN_CREATED = "whenCreated"
+        const val ENCODED = "encoded"
+        const val ENCODING = "encoding"
+        const val ENCODING_CONTENT = "content"
+        const val ENCODING_TYPE = "type"
+        const val ENCODING_VERSION = "version"
+        const val BATCH_VERSION = "3"
         const val KEY_BYTES = 32
         const val MAX_JSON_CHARS = 512 * 1024
         const val MAX_BATCH_ACCOUNTS = 100
