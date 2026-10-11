@@ -32,9 +32,35 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_api.presentation
 
+/**
+ * The screens that send a transaction and then open its page. [replacedByPage] says whether the
+ * page takes the place of the screen (and of the steps that led to it, back to the wallet hub)
+ * or is put on top of it.
+ */
+enum class TransactionScreen(val replacedByPage: Boolean) {
+    SEND(true),
+    SWAP(true),
+    ADD_LIQUIDITY(true),
+    REMOVE_LIQUIDITY(true),
+    DEMETER_CLAIM(true),
+    DEMETER_STAKE(true),
+    REFERRAL(false),
+}
+
 interface AssetsRouter {
 
     fun showTxDetails(txHash: String, pop: Boolean = false)
+
+    /**
+     * Opens the page of the transaction that [from] has just sent, but only while [from] is the
+     * screen in front. The result of a transaction can arrive long after the tap, when another
+     * screen is on top; after a pause that screen is the PIN lock, and it must stay.
+     *
+     * Returns true when the page is open. Returns false, having changed nothing, when [from] is
+     * not in front or the page could not be opened now; the caller keeps the result and asks
+     * again when its screen is in front.
+     */
+    fun showTxResult(txHash: String, from: TransactionScreen): Boolean
 
     fun showTxList(assetId: String)
 
