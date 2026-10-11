@@ -961,27 +961,33 @@ class TransactionHistoryRepositoryTest {
     }
 
     @Test
-    fun `a screen can ask for the status of waiting transactions without waiting for the worker`() =
-        runTest {
-            coEvery {
-                pendingSubmissionCoordinator.recoverStatusOnly(any(), any())
-            } returns Sora2PendingRecoveryPass(1, 1, 0, 0, 0)
+    fun `a screen asks for the status of the one transaction it shows`() = runTest {
+        val wallet = TestAccounts.soraAccount.substrateAddress
+        val hash = "0x" + "a9".repeat(32)
+        coEvery {
+            pendingSubmissionCoordinator.recoverStatusOnlyFor(wallet, hash)
+        } returns Sora2PendingRecoveryPass(1, 1, 0, 0, 0)
 
-            transactionHistoryRepository.checkWaitingTransactions()
+        transactionHistoryRepository.checkWaitingTransaction(wallet, hash)
 
-            // The status-only pass of the coordinator: it has no signer and cannot submit.
-            coVerify(exactly = 1) { pendingSubmissionCoordinator.recoverStatusOnly(any(), any()) }
-        }
+        // The status-only pass of the coordinator: it has no signer and cannot submit. It is
+        // asked for this transaction alone; the batch pass, which fails as a whole when one of
+        // its rows cannot be read, is not what the screen depends on.
+        coVerify(exactly = 1) { pendingSubmissionCoordinator.recoverStatusOnlyFor(wallet, hash) }
+        coVerify(exactly = 0) { pendingSubmissionCoordinator.recoverStatusOnly(any(), any()) }
+    }
 
     @Test
     fun `a failed status check is never an error for the screen`() = runTest {
+        val wallet = TestAccounts.soraAccount.substrateAddress
+        val hash = "0x" + "a9".repeat(32)
         coEvery {
-            pendingSubmissionCoordinator.recoverStatusOnly(any(), any())
+            pendingSubmissionCoordinator.recoverStatusOnlyFor(any(), any())
         } throws java.io.IOException("BOUNDED_HTTP_IO")
 
-        transactionHistoryRepository.checkWaitingTransactions()
+        transactionHistoryRepository.checkWaitingTransaction(wallet, hash)
 
-        coVerify(exactly = 1) { pendingSubmissionCoordinator.recoverStatusOnly(any(), any()) }
+        coVerify(exactly = 1) { pendingSubmissionCoordinator.recoverStatusOnlyFor(wallet, hash) }
     }
 
     @Test
