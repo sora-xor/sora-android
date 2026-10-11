@@ -667,9 +667,9 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `a new PIN in place of one that cannot be read marks them too`() = runTest {
-        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
-        // The release-era unsuffixed set belongs to the listed account: it is in use.
+    fun `the release-era set of a listed account is in use and is not marked`() = runTest {
+        coEvery { userDatasource.retrievePin() } returns ""
+        // The release-era unsuffixed set belongs to the listed account.
         coEvery { credentialsDatasource.getAddress() } returns "accountAddress"
         coEvery { credentialsDatasource.markKeySetsNeedingPhrase(any()) } returns Unit
         coEvery { userDatasource.savePin("123456") } returns Unit
@@ -681,6 +681,18 @@ class UserRepositoryTest {
                 setOf("accountAddress", WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID)
             )
         }
+    }
+
+    @Test
+    fun `a new PIN in place of a stored one that cannot be read marks nothing`() = runTest {
+        // Damaged data, not a hand-over: marking could leave a wallet without a phrase stuck.
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin("123456") } returns Unit
+
+        userRepository.savePin("123456")
+
+        coVerify { userDatasource.savePin("123456") }
+        coVerify(exactly = 0) { credentialsDatasource.markKeySetsNeedingPhrase(any()) }
     }
 
     @Test
@@ -1180,7 +1192,9 @@ class UserRepositoryTest {
         coEvery { accountDao.getAccount("cnReadOnly") } returns SoraAccountLocal("cnReadOnly", "Read only")
         coEvery { walletIdentityDao.getWallet("cnReadOnly") } returns identity("cnReadOnly", "UNAVAILABLE")
         coEvery { credentialsDatasource.readStoredCredential(any(), "") } returns StoredCredential.Absent
-        coEvery { credentialsDatasource.readStoredCredential(any(), "cnReadOnly") } returns StoredCredential.Absent
+        coEvery {
+            credentialsDatasource.readStoredCredential(any(), "cnReadOnly")
+        } returns StoredCredential.Absent
         coEvery {
             credentialsDatasource.readStoredCredential(CredentialField.PRIVATE_KEY, "cnReadOnly")
         } returns privateKey
