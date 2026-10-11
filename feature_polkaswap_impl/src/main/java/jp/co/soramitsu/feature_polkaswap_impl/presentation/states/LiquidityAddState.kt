@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.states
 
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 
@@ -46,6 +47,11 @@ data class LiquidityAddState(
     val pairNotExist: Boolean? = null,
     val hintVisible: Boolean,
     val shouldTransactionReminderInsufficientWarningBeShown: Boolean,
+    /**
+     * The amounts could not be checked against the pool and the network fee could not be read.
+     * Supply stays off and the screen shows a notice with Try again.
+     */
+    val estimateUnavailable: NetworkFeeUnavailable? = null,
 )
 
 data class LiquidityAddConfirmState(

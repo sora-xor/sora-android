@@ -56,6 +56,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
+import jp.co.soramitsu.common.presentation.compose.components.NetworkFeeUnavailableNotice
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.util.testTagAsId
@@ -83,6 +84,7 @@ internal fun LiquidityAddScreen(
     onReview: () -> Unit,
     onSelect1: () -> Unit,
     onSelect2: () -> Unit,
+    onRetryEstimate: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -156,7 +158,11 @@ internal fun LiquidityAddScreen(
                 error = false,
             )
         }
-        if (state.shouldTransactionReminderInsufficientWarningBeShown) {
+        // The reminder names the fee, so it is shown only while the fee is known.
+        if (
+            state.shouldTransactionReminderInsufficientWarningBeShown &&
+            state.prices.fee.isNotBlank()
+        ) {
             Divider(
                 modifier = Modifier.fillMaxWidth(),
                 thickness = Dimens.x2,
@@ -174,6 +180,17 @@ internal fun LiquidityAddScreen(
             thickness = Dimens.x2,
             color = Color.Transparent
         )
+        state.estimateUnavailable?.let { reason ->
+            NetworkFeeUnavailableNotice(
+                reason = reason,
+                onRetry = onRetryEstimate,
+            )
+            Divider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = Dimens.x2,
+                color = Color.Transparent
+            )
+        }
         LoaderWrapper(
             modifier = Modifier.fillMaxWidth(),
             loading = state.btnState.loading,
