@@ -121,8 +121,9 @@ chain proof wins over a recorded refusal.
   journal row is written and before transport, so it survives the app being
   closed during the wait.
 - Storage: `FileSora2SubmissionDetailsStore`, one JSON file
-  `files/sora2_submission_details.json` (at most 256 entries, written through a
-  temporary file and an atomic rename). No database schema change. It also keeps
+  `files/sora2_submission_details.json` (at most 256 entries, none older than
+  30 days, written through a temporary file and an atomic rename). No database
+  schema change. It also keeps
   the node's refusal and the runtime error of a failed transaction. It holds
   nothing secret and is never an authority for status. If the file is lost or
   unreadable, entries fall back to the generic "Transaction submitted / SORA2"
@@ -210,6 +211,10 @@ interactor boundaries are doubles):
   until the limit; a read failure in the middle of polling; failed on chain with
   the runtime error (generic event form, as mainnet decodes); non-module error;
   expired; duplicate lookup rules.
+- `sorasubstrate` `FileSora2SubmissionDetailsStoreTest` (11): the description
+  survives a restart; refusal and failure reason merge into the same entry and
+  are kept on one line; a damaged file or a malformed entry is ignored; an
+  unwritable location never throws; pruning by journal, by age and by count.
 - `sorasubstrate` `ExtrinsicManagerOutcomeTest` (10): an explicit JSON-RPC
   rejection through the production RPC client is `RefusedByNode`, recorded,
   never marked submitted; `1012`, `1013`, "outdated", `-32603`, `4003` and a lost
@@ -232,6 +237,10 @@ interactor boundaries are doubles):
 - `AssetsInteractorTest`: failed on chain and refused are returned as outcomes
   with the signing key zeroed.
 
+Checked against the old behaviour: with the wait loop changed back to "one failed
+read ends the wait", three `Sora2FinalityWaitTest` tests fail (retry with pauses,
+bounded retries end as pending, read failure in the middle of polling).
+
 The view-model tests for "waiting", "not prepared" and the offline screens fail
 on the previous code: either with the old "rejected" state, or because `runTest`
 reports the uncaught exception that closed the app.
@@ -243,6 +252,20 @@ errors number them 0..n-1 in declaration order, and synthetic `ExtrinsicFailed`
 events decoded to `LiquidityProxy.InvalidFeeValue`, `Assets.InsufficientBalance`,
 `Referrals.ReferrerInsufficientBalance`, `BadOrigin`, `Token.FundsUnavailable`
 and `Arithmetic.Overflow` as expected.
+
+Device check (emulator `SORA-Api34`, Android 14, production debug build of this
+branch, a wallet created in the app): with airplane mode on, More > Invite
+Friends & Earn shows "Network fee unavailable" with Close and Try again. The
+audit's run crashed here with `BoundedHttpTextException: BOUNDED_HTTP_IO`. With
+the network back, Try again loads the referral page. Logcat has no
+`FATAL EXCEPTION`. Screen text was captured with `uiautomator dump`.
+
+Not run on a device: the outcome screens themselves. They need a funded mainnet
+account; see the QA steps below.
+
+Build and checks at the end of this task: `:app:assembleProductionDebug`,
+`testProductionDebugUnitTest` (all modules) and `:app:lintProductionDebug`
+passed. `ktlintCheck` reports no finding on lines this task changed.
 
 ## Human and ops actions
 
