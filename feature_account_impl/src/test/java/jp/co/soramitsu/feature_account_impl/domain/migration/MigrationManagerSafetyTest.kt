@@ -31,6 +31,8 @@ import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletIdentityLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
 import jp.co.soramitsu.core_db.model.WalletMigrationJournalLocal
+import jp.co.soramitsu.feature_account_impl.domain.keys.FakeStoredKeyCrypto
+import jp.co.soramitsu.feature_account_impl.domain.keys.realSr25519Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -70,14 +72,10 @@ class MigrationManagerSafetyTest {
             val keypair = firstArg<Sr25519Keypair>()
             val challenge = secondArg<ByteArray>()
             val expectedPublicKey = thirdArg<ByteArray>()
-            // Like the real library: the signature verifies only when the private key is the
-            // one that belongs to the expected public key; the nonce plays no part. Every proof
-            // signs a fresh random challenge behind the fixed prefix.
-            MessageDigest.isEqual(keypair.publicKey, expectedPublicKey) &&
-                MessageDigest.isEqual(
-                    keypair.privateKey,
-                    testKeyComponent("private", expectedPublicKey),
-                ) &&
+            // Like the real library: the signature verifies only under the public key that
+            // belongs to the private key that signed; the nonce plays no part. Every proof signs
+            // a fresh random challenge behind the fixed prefix.
+            FakeStoredKeyCrypto().signAndVerify(keypair, challenge, expectedPublicKey) &&
                 challenge.size == SIGNING_CHALLENGE_PREFIX.length + 32 &&
                 challenge.copyOfRange(0, SIGNING_CHALLENGE_PREFIX.length)
                     .contentEquals(SIGNING_CHALLENGE_PREFIX.encodeToByteArray())
@@ -872,6 +870,182 @@ class MigrationManagerSafetyTest {
                     .sortedBy(NetworkAccountLocal::networkId),
             )
             coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+        }
+
+    @Test
+    fun `backup material that cannot be read never makes a signing account read-only`() =
+        runTest {
+            val vector = soraVector(PINNED_TWELVE_WORD_SORA2_SEED)
+            val legacy = SoraAccountLocal(vector.address, "Primary")
+            val storage = successfulMigrationStorage(listOf(legacy))
+            val userRepository = mockk<UserRepository>()
+            val credentials = mockk<CredentialsRepository>()
+            stubWalletMutationLock(
+                userRepository = userRepository,
+                selectedAccount = SoraAccount(vector.address, "Primary"),
+                onboardingState = OnboardingState.REGISTRATION_FINISHED,
+            )
+            coEvery { credentials.isExplicitWatchOnly(any()) } returns false
+            coEvery { credentials.retrieveKeyPair(any()) } answers { sr25519KeyPair(vector.seed) }
+            // The phrase does not decrypt; reading the seed fails in a way no rule foresees.
+            coEvery { credentials.retrieveMnemonic(any()) } throws
+                WalletDecryptionException("WALLET_DECRYPTION_FAILED")
+            coEvery { credentials.retrieveStoredSeed(any()) } throws
+                IllegalArgumentException("unexpected stored value")
+            val manager = MigrationManager(
+                userRepository = userRepository,
+                credentialsRepository = credentials,
+                sora2AddressCodec = Sora2AddressCodec(),
+                database = storage.database,
+                migrationSr25519Crypto = testMigrationSr25519Crypto,
+            )
+
+            assertTrue(manager.start())
+
+            val identity = storage.wallets.getValue(vector.address)
+            assertEquals("VERIFIED", identity.migrationState)
+            assertEquals("LEGACY_SECRET", identity.secretSource)
+            val report = manager.lastSecretsReports.getValue(vector.address)
+            assertTrue(report.canSign)
+            assertEquals("UNREADABLE", report.phrase)
+            assertEquals("UNREADABLE", report.seed)
+            assertEquals(1, storage.journal?.verifiedAccountCount)
+        }
+
+    @Test
+    fun `a storage failure while reading backup material ends the run without a verdict`() =
+        runTest {
+            val vector = soraVector(PINNED_TWELVE_WORD_SORA2_SEED)
+            val legacy = SoraAccountLocal(vector.address, "Primary")
+            val storage = successfulMigrationStorage(listOf(legacy))
+            val userRepository = mockk<UserRepository>()
+            val credentials = mockk<CredentialsRepository>()
+            stubWalletMutationLock(
+                userRepository = userRepository,
+                selectedAccount = SoraAccount(vector.address, "Primary"),
+                onboardingState = OnboardingState.REGISTRATION_FINISHED,
+            )
+            coEvery { credentials.isExplicitWatchOnly(any()) } returns false
+            coEvery { credentials.retrieveKeyPair(any()) } answers { sr25519KeyPair(vector.seed) }
+            coEvery { credentials.retrieveMnemonic(any()) } throws
+                KeyMaterialUnavailableException("KEYSTORE_BUSY", transient = true)
+            coEvery { credentials.retrieveStoredSeed(any()) } returns ""
+            val manager = MigrationManager(
+                userRepository = userRepository,
+                credentialsRepository = credentials,
+                sora2AddressCodec = Sora2AddressCodec(),
+                database = storage.database,
+                migrationSr25519Crypto = testMigrationSr25519Crypto,
+            )
+
+            // Transient: nothing is recorded, no account is marked, the next start runs again.
+            assertTrue(manager.startWithOutcome() is MigrationOutcome.Transient)
+            assertTrue(storage.wallets.isEmpty())
+            assertEquals(null, storage.journal)
+            coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+        }
+
+    @Test
+    fun `a Nexus account first derived from a comma text keeps its identity on later runs`() =
+        runTest {
+            val vector = soraVector(PINNED_TWELVE_WORD_SORA2_SEED)
+            val legacy = SoraAccountLocal(vector.address, "Primary")
+            val storage = successfulMigrationStorage(listOf(legacy))
+            val userRepository = mockk<UserRepository>()
+            val credentials = mockk<CredentialsRepository>()
+            stubWalletMutationLock(
+                userRepository = userRepository,
+                selectedAccount = SoraAccount(vector.address, "Primary"),
+                onboardingState = OnboardingState.REGISTRATION_FINISHED,
+            )
+            // 2.3.2 stored the phrase as typed: a comma and a space after every word.
+            val stored = MNEMONIC.replace(" ", ", ")
+            coEvery { credentials.isExplicitWatchOnly(any()) } returns false
+            coEvery { credentials.retrieveKeyPair(any()) } answers { sr25519KeyPair(vector.seed) }
+            coEvery { credentials.retrieveMnemonic(any()) } returns stored
+            coEvery { credentials.retrieveStoredSeed(any()) } returns ""
+            // An earlier build already derived the Nexus accounts from that text, commas included.
+            val earlier = NexusNetworks.admitted.map { network ->
+                val derived = IrohaKeyDerivation.derive(
+                    mnemonic = stored,
+                    profile = network.derivationProfile,
+                    phraseText = IrohaKeyDerivation.PhraseText.AS_FIRST_DERIVED,
+                )
+                try {
+                    NetworkAccountLocal(
+                        walletId = vector.address,
+                        networkId = network.id.wireId,
+                        publicKey = derived.publicKey.toHex(),
+                        address = derived.address,
+                        derivationPath = network.derivationPath,
+                        derivationVersion = 1,
+                        enabled = network.enabledByDefault,
+                    )
+                } finally {
+                    derived.destroy()
+                }
+            }
+            storage.networkAccounts[vector.address] = earlier
+            val manager = MigrationManager(
+                userRepository = userRepository,
+                credentialsRepository = credentials,
+                sora2AddressCodec = Sora2AddressCodec(),
+                database = storage.database,
+                migrationSr25519Crypto = testMigrationSr25519Crypto,
+            )
+
+            assertTrue(manager.start())
+
+            val recorded = storage.networkAccounts.getValue(vector.address)
+                .filter { it.networkId != "sora2" }
+                .sortedBy(NetworkAccountLocal::networkId)
+            // Address, public key, path and version are exactly the ones first derived.
+            assertEquals(earlier.sortedBy(NetworkAccountLocal::networkId), recorded)
+            // They are not the identities of the same words separated by spaces.
+            NexusNetworks.admitted.forEach { network ->
+                val canonical = IrohaKeyDerivation.derive(MNEMONIC, network)
+                try {
+                    assertFalse(recorded.any { it.address == canonical.address })
+                } finally {
+                    canonical.destroy()
+                }
+            }
+            assertEquals("MNEMONIC", storage.wallets.getValue(vector.address).secretSource)
+        }
+
+    @Test
+    fun `a new Nexus account of a phrase stored with commas is derived from its words`() =
+        runTest {
+            val vector = soraVector(PINNED_TWELVE_WORD_SORA2_SEED)
+            val legacy = SoraAccountLocal(vector.address, "Primary")
+            val storage = successfulMigrationStorage(listOf(legacy))
+            val userRepository = mockk<UserRepository>()
+            val credentials = mockk<CredentialsRepository>()
+            stubWalletMutationLock(
+                userRepository = userRepository,
+                selectedAccount = SoraAccount(vector.address, "Primary"),
+                onboardingState = OnboardingState.REGISTRATION_FINISHED,
+            )
+            coEvery { credentials.isExplicitWatchOnly(any()) } returns false
+            coEvery { credentials.retrieveKeyPair(any()) } answers { sr25519KeyPair(vector.seed) }
+            coEvery { credentials.retrieveMnemonic(any()) } returns MNEMONIC.replace(" ", ",")
+            coEvery { credentials.retrieveStoredSeed(any()) } returns ""
+            val manager = MigrationManager(
+                userRepository = userRepository,
+                credentialsRepository = credentials,
+                sora2AddressCodec = Sora2AddressCodec(),
+                database = storage.database,
+                migrationSr25519Crypto = testMigrationSr25519Crypto,
+            )
+
+            assertTrue(manager.start())
+
+            // The same identities as the same words separated by single spaces.
+            assertMnemonicNetworkAccounts(
+                vector,
+                MNEMONIC,
+                storage.networkAccounts.getValue(vector.address),
+            )
         }
 
     @Test
@@ -2215,24 +2389,8 @@ class MigrationManagerSafetyTest {
         }
     }
 
-    private fun testSr25519Keypair(seed: ByteArray): Sr25519Keypair {
-        val publicKey = when (seed.toHex()) {
-            PINNED_TWELVE_WORD_SORA2_SEED -> PINNED_TWELVE_WORD_SORA2_PUBLIC_KEY.fromHex()
-            PINNED_TWENTY_FOUR_WORD_SORA2_SEED ->
-                PINNED_TWENTY_FOUR_WORD_SORA2_PUBLIC_KEY.fromHex()
-            else -> testKeyComponent("public", seed)
-        }
-        return Sr25519Keypair(
-            privateKey = testKeyComponent("private", publicKey),
-            publicKey = publicKey,
-            nonce = testKeyComponent("nonce", publicKey),
-        )
-    }
-
-    private fun testKeyComponent(label: String, material: ByteArray): ByteArray =
-        MessageDigest.getInstance("SHA-256").digest(
-            label.encodeToByteArray() + byteArrayOf(0) + material
-        )
+    /** A real sr25519 key pair (the released derivation, see StoredSecretsTestDoubles). */
+    private fun testSr25519Keypair(seed: ByteArray): Sr25519Keypair = realSr25519Keypair(seed)
 
     private fun stubWalletMutationLock(
         userRepository: UserRepository,

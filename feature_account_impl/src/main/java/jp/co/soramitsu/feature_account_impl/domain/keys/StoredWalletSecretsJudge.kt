@@ -57,11 +57,28 @@ enum class BackupMatch {
     /** It re-derives the account's address, so it is a valid backup of this account. */
     MATCHES,
 
-    /** Stored, but unreadable, malformed or deriving another address. Never shown as a backup. */
+    /** It was read, but it is malformed or derives another address. Never shown as a backup. */
     DOES_NOT_MATCH,
+
+    /**
+     * Something is stored but it cannot be read (it does not decrypt). Nothing is known about
+     * it, so it is not offered as a backup. It is never a reason to refuse signing.
+     */
+    UNREADABLE,
 
     /** Nothing is stored. */
     ABSENT,
+}
+
+/**
+ * The signing decision for one account, made from its stored key pair alone, before any phrase
+ * or seed is looked at.
+ */
+class SigningKeyVerdict(
+    /** Null when the stored signing key can sign for the account; otherwise why it cannot. */
+    val refusal: String?,
+) {
+    val canSign: Boolean get() = refusal == null
 }
 
 /**
@@ -120,20 +137,28 @@ class StoredSecretsVerdict(
  * One rule for every place that judges an account's stored secrets (upgrade verification, adding
  * and restoring accounts, importing a phrase over stored keys, removal, backup screens).
  *
- * **Signing is decided by the stored signing key alone.** The account can sign when
- * 1. a complete key pair is stored (32-byte private scalar, nonce and public key),
- * 2. the stored public key is the public key in the account's SORA2 address (SS58 prefix 69), and
- * 3. a signature made with the stored private key over a random challenge verifies against that
- *    public key. A Schnorr signature only verifies under the public key that belongs to the
- *    private scalar that made it, so this proves the stored public key is the one derived from
- *    the stored private key, and that the key signs.
+ * **Step 1, [judgeSigningKey]: signing is decided by the stored signing key alone.** The account
+ * can sign when
+ * 1. a complete key pair is stored: private key, nonce and public key of 32 bytes each, and the
+ *    private key is a canonical non-zero scalar (checked here, before any native call);
+ * 2. the stored public key is the public key in the account's SORA2 address (SS58 prefix 69);
+ * 3. the public key computed directly from the stored private scalar
+ *    ([Sr25519PublicKeyDerivation], no seed factory involved) is that same public key; and
+ * 4. a signature made by the packaged library with the stored private key and nonce over a
+ *    random challenge verifies against the address's public key. A failed or throwing
+ *    sign-and-verify refuses signing.
  *
- * What could sign in the released apps therefore signs here. The phrase and the seed are
- * judged separately, only as backup material: each [BackupMatch.MATCHES] when it re-derives the
- * account's address. A cached seed of 64 bytes (3.6.0.0 to 3.8.2.0), a phrase stored with
- * commas (2.3.x), stored key or nonce bytes that differ from a fresh derivation, or a phrase or
- * seed that belongs to another wallet never stop the account from signing; they only limit what
- * is offered as a backup and are listed in [StoredSecretsVerdict.diagnostics].
+ * **Step 2, [judgeBackup]: the phrase and the seed are judged separately, only as backup
+ * material.** Each [BackupMatch.MATCHES] when it re-derives the account's address. A cached seed
+ * of 64 bytes (3.6.0.0 to 3.8.2.0), a phrase stored with commas (2.3.x), stored key or nonce
+ * bytes that differ from a fresh derivation, a phrase or seed that belongs to another wallet, or
+ * one that cannot be read ([BackupMatch.UNREADABLE]) never stop the account from signing; they
+ * only limit what is offered as a backup and are listed in [StoredSecretsVerdict.diagnostics].
+ * Step 2 takes the result of step 1 and cannot change it.
+ *
+ * What could sign in the released apps therefore signs here. This rule says what the stored
+ * values prove and nothing more: an explicit watch-only marker, the PIN and the recovery gates
+ * are checked by the callers and are never overridden by a key that happens to be stored.
  */
 class StoredWalletSecretsJudge(
     private val sora2AddressCodec: Sora2AddressCodec,
@@ -141,19 +166,40 @@ class StoredWalletSecretsJudge(
 ) {
 
     /**
+     * Step 1. Decides from the stored key pair alone whether the account can sign.
+     *
      * @param keyPair the stored key pair, or null when none is stored.
+     */
+    fun judgeSigningKey(address: String, keyPair: Sr25519Keypair?): SigningKeyVerdict =
+        SigningKeyVerdict(signingRefusal(address, sora2AddressCodec.soraPublicKeyOrNull(address), keyPair))
+
+    /** Both steps, for callers that already hold every stored value. */
+    fun judge(
+        address: String,
+        keyPair: Sr25519Keypair?,
+        mnemonic: String?,
+        storedSeed: String?,
+    ): StoredSecretsVerdict =
+        judgeBackup(address, judgeSigningKey(address, keyPair), keyPair, mnemonic, storedSeed)
+
+    /**
+     * Step 2. Judges the stored phrase and seed as backup material. [signing] is the result of
+     * step 1 and is carried into the verdict unchanged.
+     *
+     * @param keyPair the stored key pair, used only for the byte-difference diagnostics.
      * @param mnemonic the stored phrase text ("" when absent), or null when it cannot be read.
      * @param storedSeed the stored seed hex ("" when absent), or null when it cannot be read.
      */
-    fun judge(
+    fun judgeBackup(
         address: String,
+        signing: SigningKeyVerdict,
         keyPair: Sr25519Keypair?,
         mnemonic: String?,
         storedSeed: String?,
     ): StoredSecretsVerdict {
         val diagnostics = linkedSetOf<String>()
         val accountPublicKey = sora2AddressCodec.soraPublicKeyOrNull(address)
-        val signingRefusal = signingRefusal(address, accountPublicKey, keyPair)
+        val signingRefusal = signing.refusal
 
         val phrase = mnemonic?.let(RecoveryPhrase::parseOrNull)
         var phraseKeys: Sr25519Keypair? = null
@@ -162,7 +208,7 @@ class StoredWalletSecretsJudge(
         val seedBytes = storedSeed?.takeIf(String::isNotBlank)?.let(StoredSecretHex::decodeOrNull)
         try {
             val phraseMatch = when {
-                mnemonic == null -> BackupMatch.DOES_NOT_MATCH.also { diagnostics += "PHRASE_UNREADABLE" }
+                mnemonic == null -> BackupMatch.UNREADABLE.also { diagnostics += "PHRASE_UNREADABLE" }
                 mnemonic.isBlank() -> BackupMatch.ABSENT
                 phrase == null -> BackupMatch.DOES_NOT_MATCH.also { diagnostics += "PHRASE_NOT_BIP39" }
                 else -> {
@@ -176,7 +222,7 @@ class StoredWalletSecretsJudge(
                 }
             }
             val seedMatch = when {
-                storedSeed == null -> BackupMatch.DOES_NOT_MATCH.also { diagnostics += "SEED_UNREADABLE" }
+                storedSeed == null -> BackupMatch.UNREADABLE.also { diagnostics += "SEED_UNREADABLE" }
                 storedSeed.isBlank() -> BackupMatch.ABSENT
                 seedBytes == null -> BackupMatch.DOES_NOT_MATCH.also { diagnostics += "SEED_NOT_HEX" }
                 seedBytes.size == RecoveryPhrase.MINI_SEED_BYTES -> {
@@ -245,6 +291,7 @@ class StoredWalletSecretsJudge(
     ): String? {
         if (accountPublicKey == null) return "SORA_ADDRESS_INVALID"
         if (keyPair == null) return "SIGNING_KEY_MISSING"
+        // Lengths and encodings first: nothing malformed is ever handed to the native library.
         if (
             keyPair.privateKey.size != KEY_BYTES ||
             keyPair.nonce.size != KEY_BYTES ||
@@ -258,8 +305,14 @@ class StoredWalletSecretsJudge(
         ) {
             return "SORA_ADDRESS_MISMATCH"
         }
-        // A malformed scalar or public key makes the native library throw (it never aborts the
-        // process; see Sr25519NativeContractTest), which is reported as a failed proof below.
+        // The public key of the stored private scalar, computed directly (no seed factory).
+        val derivedPublicKey = Sr25519PublicKeyDerivation.publicKeyOrNull(keyPair.privateKey)
+            ?: return "SIGNING_KEY_SCALAR_INVALID"
+        if (!MessageDigest.isEqual(derivedPublicKey, accountPublicKey)) {
+            return "SIGNING_KEY_NOT_OF_ADDRESS"
+        }
+        // The key pair is now known to be well-formed and to belong together. The proof that it
+        // signs is made by the same library call that signs transactions.
         val challenge = randomChallenge()
         return try {
             val verified = try {

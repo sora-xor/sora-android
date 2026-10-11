@@ -61,6 +61,12 @@ class WalletDraft(
 
         /** An imported raw seed. */
         RAW_SEED,
+
+        /**
+         * A key pair read from an encrypted JSON export. It carries no phrase and no seed
+         * ([mnemonic] is null and [seedHex] is empty): the key pair itself is the wallet.
+         */
+        JSON,
     }
 
     @Volatile
@@ -70,14 +76,14 @@ class WalletDraft(
     private var seedValue: String = seedHex
     private val keypairValue: Sr25519Keypair = keypair
 
-    /** Space-separated phrase words, or null for a raw-seed import. */
+    /** Space-separated phrase words, or null for a raw-seed or JSON import. */
     val mnemonic: String?
         get() {
             check(!destroyed) { "WALLET_DRAFT_DESTROYED" }
             return mnemonicValue
         }
 
-    /** 32-byte SORA2 seed as lowercase hex without a prefix. */
+    /** 32-byte SORA2 seed as lowercase hex without a prefix; empty for a JSON import. */
     val seedHex: String
         get() {
             check(!destroyed) { "WALLET_DRAFT_DESTROYED" }

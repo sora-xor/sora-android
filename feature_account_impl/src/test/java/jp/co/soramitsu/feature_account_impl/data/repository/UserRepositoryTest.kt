@@ -60,6 +60,8 @@ import jp.co.soramitsu.core_db.dao.ReferralsDao
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletIdentityLocal
+import jp.co.soramitsu.feature_account_impl.domain.keys.FakeStoredKeyCrypto
+import jp.co.soramitsu.feature_account_impl.domain.keys.realSr25519Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
@@ -164,13 +166,10 @@ class UserRepositoryTest {
             val keypair = firstArg<Sr25519Keypair>()
             val challenge = secondArg<ByteArray>()
             val expectedPublicKey = thirdArg<ByteArray>()
-            // Like the real library: only the private key of the expected public key verifies;
-            // the nonce plays no part. Every proof signs a fresh challenge behind a fixed prefix.
-            MessageDigest.isEqual(keypair.publicKey, expectedPublicKey) &&
-                MessageDigest.isEqual(
-                    keypair.privateKey,
-                    testKeyComponent("private", expectedPublicKey),
-                ) &&
+            // Like the real library: the signature verifies only under the public key that
+            // belongs to the private key that signed; the nonce plays no part. Every proof signs
+            // a fresh challenge behind a fixed prefix.
+            FakeStoredKeyCrypto().signAndVerify(keypair, challenge, expectedPublicKey) &&
                 challenge.size == SIGNING_CHALLENGE_PREFIX.length + 32 &&
                 challenge.copyOfRange(0, SIGNING_CHALLENGE_PREFIX.length)
                     .contentEquals(SIGNING_CHALLENGE_PREFIX.encodeToByteArray())
@@ -1009,19 +1008,8 @@ class UserRepositoryTest {
         }
     }
 
-    private fun testSr25519Keypair(seed: ByteArray): Sr25519Keypair {
-        val publicKey = testKeyComponent("public", seed)
-        return Sr25519Keypair(
-            privateKey = testKeyComponent("private", publicKey),
-            publicKey = publicKey,
-            nonce = testKeyComponent("nonce", publicKey),
-        )
-    }
-
-    private fun testKeyComponent(label: String, material: ByteArray): ByteArray =
-        MessageDigest.getInstance("SHA-256").digest(
-            label.encodeToByteArray() + byteArrayOf(0) + material
-        )
+    /** A real sr25519 key pair (the released derivation, see StoredSecretsTestDoubles). */
+    private fun testSr25519Keypair(seed: ByteArray): Sr25519Keypair = realSr25519Keypair(seed)
 
     private companion object {
         const val RETAINED_FIFTEEN_WORD_MNEMONIC =

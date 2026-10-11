@@ -128,6 +128,15 @@ enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.str
         R.string.account_repair_copy_failed,
     ),
 
+    /** The text is not an encrypted sr25519 account export this app can read; nothing was written. */
+    JSON_BACKUP_INVALID(R.string.json_backup_invalid, R.string.json_backup_invalid_title),
+
+    /** The password does not open the encrypted JSON export; nothing was written. */
+    JSON_BACKUP_WRONG_PASSWORD(
+        R.string.json_backup_wrong_password,
+        R.string.json_backup_wrong_password_title,
+    ),
+
     /** This phone cannot unlock the wallet data stored on it; nothing was written. */
     WALLET_KEYS_UNAVAILABLE(
         R.string.wallet_keys_unavailable_description,

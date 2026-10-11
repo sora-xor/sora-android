@@ -41,8 +41,6 @@ import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.CardHubType
-import jp.co.soramitsu.common.nexus.IrohaKeyDerivation
-import jp.co.soramitsu.common.nexus.NexusNetworks
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.core_db.AppDatabase
@@ -73,6 +71,7 @@ import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionTarget
 import jp.co.soramitsu.feature_account_api.domain.model.WalletMutationSnapshot
+import jp.co.soramitsu.feature_account_impl.domain.keys.NexusChildAccounts
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredKeyCrypto
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredSecretsVerdict
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredWalletSecretsJudge
@@ -241,9 +240,10 @@ class UserRepositoryImpl(
             ?: (if (scopedKeys == null) legacyKeys != null else releaseEraOwnerIs(address))
                 .also { legacyOwnedChecked = it }
         try {
-            // Backup material that cannot be decrypted is reported as unreadable (null): it limits
-            // what is offered as a backup and never decides whether the account can sign. A
-            // Keystore or storage failure is not caught here.
+            // The signing key was read first, on its own. Backup material that cannot be read
+            // is reported as unreadable (null): it limits what is offered as a backup and never
+            // decides whether the account can sign. Only a Keystore or storage failure, which
+            // says nothing about the account, is rethrown.
             val mnemonic = readableOrNull {
                 credentialsDatasource.retrieveMnemonic(address).takeIf(String::isNotEmpty)
                     ?: if (legacyOwned()) credentialsDatasource.retrieveMnemonic("") else ""
@@ -264,18 +264,34 @@ class UserRepositoryImpl(
 
     private suspend fun readableOrNull(read: suspend () -> String): String? = try {
         read()
-    } catch (_: WalletDecryptionException) {
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: OutOfMemoryError) {
+        throw error
+    } catch (error: Throwable) {
+        if (
+            WalletStorageFailures.isTransient(error) ||
+            WalletStorageFailures.isKeyMaterialUnavailable(error)
+        ) {
+            throw error
+        }
         null
     }
 
-    /** What the stored secrets of [address] prove (see [StoredWalletSecretsJudge]). */
-    private fun judge(address: String, secrets: StoredSecrets): StoredSecretsVerdict =
-        secretsJudge.judge(
+    /**
+     * What the stored secrets of [address] prove (see [StoredWalletSecretsJudge]): first the
+     * signing decision from the key pair alone, then the phrase and seed as backup material.
+     */
+    private fun judge(address: String, secrets: StoredSecrets): StoredSecretsVerdict {
+        val signing = secretsJudge.judgeSigningKey(address, secrets.keyPair)
+        return secretsJudge.judgeBackup(
             address = address,
+            signing = signing,
             keyPair = secrets.keyPair,
             mnemonic = secrets.mnemonic,
             storedSeed = secrets.rawSeed,
         )
+    }
 
     private suspend fun releaseEraKeysOwnedBy(address: String): Sr25519Keypair? {
         val legacy = try {
@@ -560,27 +576,21 @@ class UserRepositoryImpl(
                     enabled = true,
                 )
             )
-            // Only a 12- or 24-word phrase that re-derives this SORA2 address derives Nexus
-            // accounts, always from its parsed words.
+            // Nexus accounts belong only to a 12- or 24-word phrase that re-derives this SORA2
+            // address. One that is already recorded as a derivation of this phrase keeps its
+            // identity exactly; a missing one is derived from the canonical words.
             val nexusPhrase = verdict?.recoveryPhrase
                 ?.takeIf { secretSource == StoredSecretsVerdict.SOURCE_MNEMONIC }
             if (migrationState == "VERIFIED" && nexusPhrase != null) {
-                NexusNetworks.admitted.forEach { network ->
-                    val derived = IrohaKeyDerivation.derive(nexusPhrase.text, network)
-                    try {
-                        networkAccounts += NetworkAccountLocal(
-                            walletId = soraAccount.substrateAddress,
-                            networkId = network.id.wireId,
-                            publicKey = derived.publicKey.toHex(),
-                            address = derived.address,
-                            derivationPath = network.derivationPath,
-                            derivationVersion = 1,
-                            enabled = network.enabledByDefault,
-                        )
-                    } finally {
-                        derived.destroy()
-                    }
-                }
+                networkAccounts += NexusChildAccounts.prepare(
+                    walletId = soraAccount.substrateAddress,
+                    storedPhraseText = secrets.mnemonic.orEmpty(),
+                    phrase = nexusPhrase,
+                    existing = db.walletIdentityDao()
+                        .getNetworkAccounts(soraAccount.substrateAddress)
+                        .associateBy(NetworkAccountLocal::networkId),
+                    derivationVersion = 1,
+                )
             }
             return VerifiedWalletModel(
                 identity = WalletIdentityLocal(

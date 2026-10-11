@@ -15,10 +15,14 @@ class WalletBackupMaterial(
      * matching phrase; otherwise empty.
      */
     val seedHex: String,
-    /** A phrase is stored for this account but it is unreadable or derives another wallet. */
+    /** A phrase is stored for this account and was read, but it derives another wallet. */
     val storedPhraseDoesNotMatch: Boolean,
-    /** A seed is stored for this account but it is unreadable or derives another wallet. */
+    /** A seed is stored for this account and was read, but it derives another wallet. */
     val storedSeedDoesNotMatch: Boolean,
+    /** A phrase is stored for this account but it cannot be read, so nothing is known about it. */
+    val storedPhraseUnreadable: Boolean = false,
+    /** A seed is stored for this account but it cannot be read, so nothing is known about it. */
+    val storedSeedUnreadable: Boolean = false,
 ) {
     val hasPhrase: Boolean get() = phraseWords.isNotEmpty()
     val hasSeed: Boolean get() = seedHex.isNotEmpty()

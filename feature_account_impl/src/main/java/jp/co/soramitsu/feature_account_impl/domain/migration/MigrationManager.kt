@@ -8,8 +8,6 @@ import javax.inject.Singleton
 import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
-import jp.co.soramitsu.common.nexus.IrohaKeyDerivation
-import jp.co.soramitsu.common.nexus.NexusNetworks
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.WalletStorageFailures
@@ -26,7 +24,7 @@ import jp.co.soramitsu.core_db.model.WalletMigrationJournalLocal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import jp.co.soramitsu.feature_account_impl.domain.keys.BackupMatch
+import jp.co.soramitsu.feature_account_impl.domain.keys.NexusChildAccounts
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredKeyCrypto
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredSecretsVerdict
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredWalletSecretsJudge
@@ -80,9 +78,12 @@ data class WalletSecretsReport(
     val canSign: Boolean,
     /** Why it cannot sign, when it cannot. */
     val signingRefusal: String?,
-    /** "MATCHES", "DOES_NOT_MATCH" or "ABSENT" for the stored recovery phrase. */
+    /**
+     * "MATCHES", "DOES_NOT_MATCH", "UNREADABLE" or "ABSENT" for the stored recovery phrase;
+     * "NOT_JUDGED" when the account cannot sign.
+     */
     val phrase: String,
-    /** "MATCHES", "DOES_NOT_MATCH" or "ABSENT" for the stored seed. */
+    /** The same for the stored seed. */
     val seed: String,
     /** Differences that did not change the decision. */
     val diagnostics: Set<String>,
@@ -159,6 +160,9 @@ class MigrationManager @Inject constructor(
         const val MAX_WALLET_ID_LENGTH = 256
         const val UNAVAILABLE_STATE = "UNAVAILABLE"
         const val UNAVAILABLE_SOURCE = "SECRET_UNAVAILABLE"
+
+        /** The backup material of an account that cannot sign is not looked at by this run. */
+        const val BACKUP_NOT_JUDGED = "NOT_JUDGED"
         val INTEGRITY_HASH = Regex("^[0-9a-f]{64}$")
     }
 
@@ -486,8 +490,8 @@ class MigrationManager @Inject constructor(
                 walletId = walletId,
                 canSign = false,
                 signingRefusal = refusal,
-                phrase = BackupMatch.ABSENT.name,
-                seed = BackupMatch.ABSENT.name,
+                phrase = BACKUP_NOT_JUDGED,
+                seed = BACKUP_NOT_JUDGED,
                 diagnostics = emptySet(),
             ),
             identity = WalletIdentityLocal(
@@ -759,19 +763,24 @@ class MigrationManager @Inject constructor(
         }
         val keyPair = credentialsRepository.retrieveKeyPair(account)
         try {
-            // The phrase and the seed are backup material: a value that cannot be read limits
-            // what is offered as a backup, it never decides whether the account can sign.
+            // Step 1. The stored signing key alone decides: it must be the key of this address
+            // (computed from the stored private key) and sign a random challenge that verifies
+            // against the address's public key. This is decided before any backup material is
+            // read, so nothing about a phrase or seed can make the account read-only.
+            val signing = secretsJudge.judgeSigningKey(legacy.substrateAddress, keyPair)
+            signing.refusal?.let { throw MigrationVerificationException(it) }
+
+            // Step 2. The phrase and the seed are backup material. A value that cannot be read
+            // has its own status and only limits what is offered as a backup.
             val mnemonic = readBackupMaterial { credentialsRepository.retrieveMnemonic(account) }
             val storedSeed = readBackupMaterial { credentialsRepository.retrieveStoredSeed(account) }
-            val verdict = secretsJudge.judge(
+            val verdict = secretsJudge.judgeBackup(
                 address = legacy.substrateAddress,
+                signing = signing,
                 keyPair = keyPair,
                 mnemonic = mnemonic,
                 storedSeed = storedSeed,
             )
-            // The stored signing key alone decides: it must be the key of this address and
-            // sign a random challenge that verifies against the address's public key.
-            verdict.signingRefusal?.let { throw MigrationVerificationException(it) }
 
             val networkAccounts = mutableListOf(
                 NetworkAccountLocal(
@@ -784,27 +793,22 @@ class MigrationManager @Inject constructor(
                     enabled = true,
                 )
             )
-            // Nexus accounts are derived only from a 12- or 24-word phrase that re-derives this
-            // account's SORA2 address, and always from its parsed words.
+            // Nexus accounts belong only to a 12- or 24-word phrase that re-derives this
+            // account's SORA2 address. One that is already recorded as a derivation of this
+            // phrase keeps its identity exactly; a missing one is derived from the canonical
+            // words.
             val nexusPhrase = verdict.recoveryPhrase
                 ?.takeIf { verdict.secretSource == StoredSecretsVerdict.SOURCE_MNEMONIC }
             if (nexusPhrase != null) {
-                NexusNetworks.admitted.forEach { network ->
-                    val derived = IrohaKeyDerivation.derive(nexusPhrase.text, network)
-                    try {
-                        networkAccounts += NetworkAccountLocal(
-                            walletId = legacy.substrateAddress,
-                            networkId = network.id.wireId,
-                            publicKey = derived.publicKey.toHex(),
-                            address = derived.address,
-                            derivationPath = network.derivationPath,
-                            derivationVersion = DERIVATION_VERSION,
-                            enabled = network.enabledByDefault,
-                        )
-                    } finally {
-                        derived.destroy()
-                    }
-                }
+                networkAccounts += NexusChildAccounts.prepare(
+                    walletId = legacy.substrateAddress,
+                    storedPhraseText = mnemonic.orEmpty(),
+                    phrase = nexusPhrase,
+                    existing = database.walletIdentityDao()
+                        .getNetworkAccounts(legacy.substrateAddress)
+                        .associateBy(NetworkAccountLocal::networkId),
+                    derivationVersion = DERIVATION_VERSION,
+                )
             }
 
             return PreparedWallet(
@@ -832,19 +836,21 @@ class MigrationManager @Inject constructor(
     }
 
     /**
-     * Reads one piece of backup material. Null when the stored value cannot be decrypted (a fact
-     * about those bytes). A Keystore or storage failure is rethrown: it says nothing about the
-     * account and must end the run without any result.
+     * Reads one piece of backup material after the signing decision was made. Null when the
+     * stored value cannot be read (a fact about that value, reported as its own status); it
+     * never becomes a failure of the account. Only a Keystore or storage failure is rethrown: it
+     * says nothing about the account and must end the run without any result.
      */
     private suspend fun readBackupMaterial(read: suspend () -> String): String? = try {
         read()
     } catch (error: CancellationException) {
         throw error
+    } catch (error: OutOfMemoryError) {
+        throw error
     } catch (error: Throwable) {
         if (
             WalletStorageFailures.isKeyMaterialUnavailable(error) ||
-            WalletStorageFailures.isTransient(error) ||
-            error !is WalletDecryptionException
+            WalletStorageFailures.isTransient(error)
         ) {
             throw error
         }
