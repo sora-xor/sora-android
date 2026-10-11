@@ -168,6 +168,19 @@ class FileSora2SubmissionDetailsStoreTest {
     }
 
     @Test
+    fun `entries older than a month are dropped at the next write`() = runTest {
+        val store = store()
+        val old = "0x" + "0a".repeat(32)
+        store.recordActivity("cnRemovedWallet", old, swap)
+        clock += FileSora2SubmissionDetailsStore.MAXIMUM_AGE_MILLIS + 1L
+
+        store.recordActivity(wallet, hash, swap)
+
+        assertNull(store().get("cnRemovedWallet", old))
+        assertTrue(store().get(wallet, hash) != null)
+    }
+
+    @Test
     fun `removing an entry removes only that transaction`() = runTest {
         val store = store()
         val other = "0x" + "ef".repeat(32)

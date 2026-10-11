@@ -59,8 +59,9 @@ interface Sora2SubmissionDetailsStore {
 
 /**
  * One small JSON file in the app's private files directory. It is rewritten as a whole through a
- * temporary file and an atomic rename, holds at most [MAXIMUM_ENTRIES] transactions and contains
- * nothing secret (addresses, token ids, amounts, hashes, short status texts).
+ * temporary file and an atomic rename, holds at most [MAXIMUM_ENTRIES] transactions no older than
+ * [MAXIMUM_AGE_MILLIS] and contains nothing secret (addresses, token ids, amounts, hashes, short
+ * status texts).
  */
 class FileSora2SubmissionDetailsStore(
     private val file: File,
@@ -187,6 +188,10 @@ class FileSora2SubmissionDetailsStore(
     }
 
     private fun pruneLocked(entries: LinkedHashMap<String, Sora2SubmissionDetails>) {
+        // By then the indexer has long listed the transaction itself. This also clears the
+        // entries of an account that was removed from the app and is never read again.
+        val oldest = now() - MAXIMUM_AGE_MILLIS
+        entries.values.removeAll { it.createdAt < oldest }
         if (entries.size <= MAXIMUM_ENTRIES) return
         entries.values
             .sortedBy(Sora2SubmissionDetails::createdAt)
@@ -338,6 +343,7 @@ class FileSora2SubmissionDetailsStore(
     companion object {
         const val FILE_NAME = "sora2_submission_details.json"
         internal const val MAXIMUM_ENTRIES = 256
+        internal const val MAXIMUM_AGE_MILLIS = 30L * 24L * 60L * 60L * 1000L
         private const val MAXIMUM_FILE_BYTES = 1024L * 1024L
         private const val MAXIMUM_WALLET_ID_CHARS = 128
         private const val FORMAT_VERSION = 1
