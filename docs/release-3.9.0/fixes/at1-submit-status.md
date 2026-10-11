@@ -71,6 +71,7 @@ help:
 |---|---|
 | network unreachable while preparing | "couldn't reach the network ... check your internet connection and try again" |
 | fee changed during review (`SORA2_TRANSFER_FEE_CHANGED`) | "the network fee changed ... check the new fee and confirm again" |
+| the balance read from the network just before sending no longer covers the amount and the fee (`SORA2_TRANSFER_XOR_BALANCE_INSUFFICIENT`, `SORA2_TRANSFER_ASSET_BALANCE_INSUFFICIENT` from `AssetsRepositoryImpl.requireExactTransferBalances`) | "Your balance is no longer enough for this amount and the network fee ... Check your balance and change the amount." Send then reads the balances again; when they arrive the amount is marked as too high and Confirm is off. |
 | the signer refused this account (`SIGNING_WALLET_UNAVAILABLE`, `WALLET_DELETION_ACTIVE`) | "This account can't sign transactions on this phone right now ... Your keys were not changed and your funds are safe" |
 | the stored signing key is absent or cannot be decrypted (`SigningKeyUnavailableException` from `CredentialsRepositoryImpl.retrieveKeyPair`, `WalletDecryptionException`, a `KeyMaterialUnavailableException` that is not transient) | "SORA can't read this account's signing key on this phone ... Trying again won't change this ... To sign with this account again, you need its recovery phrase or backup." A Keystore that is only busy (transient) keeps "Please try again". |
 | read-only mode after an unfinished upgrade check (`WALLET_RECOVERY_READ_ONLY`) | the existing read-only explanation (`safe_mode_read_only_details`) |
@@ -112,10 +113,13 @@ Screen behaviour:
   phone never got the node's answer the text says that SORA could not confirm the
   network received the claim, not that it was submitted.
   The claim screen cannot be left without closing the app, so it follows the claim
-  by itself (see "Legacy claim screen: following and closing" below). While any
-  earlier transaction of the account is unresolved, the existing claim gate sends
-  nothing; the screen says "Not sent ... an earlier transaction is still being
-  checked ... try again in a few minutes".
+  by itself (see "Legacy claim screen: following and closing" below). While an
+  earlier transaction of the account is unresolved and may still reach the
+  chain, the existing claim gate sends nothing; the screen says "Not sent ... an
+  earlier transaction is still being checked ... try again in a few minutes". A
+  transaction the node explicitly refused is not one of these (see "Duplicate
+  protection"): after "the network was too busy ... please try again in a
+  moment" Submit works at once.
 
 #### Opening the transaction page: only from the screen in front
 
@@ -248,7 +252,8 @@ was already included.
 A refusal does not change the journal row. The row stays unresolved, its whole
 validity window is still scanned and it expires normally. If a refused
 transaction does appear in a finalized block, Activity shows the chain result:
-chain proof wins over a recorded refusal.
+chain proof wins over a recorded refusal. While the row is unresolved it holds
+back neither the duplicate question nor the legacy-claim gate.
 
 ### 4. A waiting transaction is visible where the user looks
 
@@ -284,6 +289,11 @@ chain proof wins over a recorded refusal.
   background worker retries after 30, 60, 120, 240 ... seconds, so without this
   a page opened right after sending could show "Pending" for minutes after the
   transaction was final. A failed check changes nothing and is not shown.
+- The page asks only while it is in front. It stops in `onPause` (Home, another
+  screen, the PIN lock on top) and on return it is redrawn once and follows
+  again if the transaction is still waiting. Before, it went on reading the
+  finalized head and blocks every 6 seconds for up to 8 minutes with nobody
+  looking at it. The background worker keeps resolving the transaction.
 - One transaction that cannot be checked no longer holds the others back. A
   status pass over a batch used to be all or nothing: when the wallet of one
   selected row no longer passed its witness, when the first block of its
@@ -316,10 +326,18 @@ chain proof wins over a recorded refusal.
   refused it (`Transaction.Sora2Submission.genericTitle`). Its journal row is
   still "submission unknown" at that point, so it used to be titled "Submission
   status unknown" or "Transaction submitted" next to the status Failed.
-- A transaction the indexer already lists is in a block. A refusal recorded for
-  it at submission is then not used to call it failed; it stays pending
-  ("waiting for confirmation") until the app's own check of finalized blocks
-  has resolved the journal row.
+- A transaction the indexer already lists is in a block. Nothing recorded on
+  this device may then say that it never reached one:
+  - A refusal recorded for it at submission is not used to call it failed; it
+    stays pending ("waiting for confirmation") until the app's own check of
+    finalized blocks has resolved the journal row.
+  - A journal row that expired as "not included" does not turn the listed entry
+    into "The network did not include this transaction ... Nothing was sent ...
+    You can try again". The entry stays exactly as the indexer gave it: its
+    status, its block, its fee and the explorer link. (The indexer rows shown
+    are checked against the canonical block hash, `PiHistoryCheckpointValidator`.)
+    With the one endpoint of this branch the two cannot disagree; they could if
+    the status scan ever read a block from a node that is behind.
 - Failed on chain: the reason is the `DispatchError` of the `ExtrinsicFailed`
   event, for example `LiquidityProxy.SlippageNotTolerated` or
   `Token.FundsUnavailable` (`Sora2DispatchErrorDescriber`). It only describes a
@@ -340,8 +358,26 @@ button repeats the request, with `duplicateConfirmed = true`.
 - A transaction the node refused does not count as waiting.
 - If the check itself cannot be made (local read failure), the transaction
   proceeds: a failed read must not block a transaction.
-- The legacy claim keeps its own stricter gate (no second claim at all while one
-  is unresolved).
+- The legacy claim keeps its own stricter gate (no second claim at all while any
+  earlier transaction of the account is unresolved). Like the duplicate
+  question it does not count a transaction the node explicitly refused
+  (`Sora2PendingSubmissionCoordinator.requireLegacyMigrationAdmissible`,
+  `Sora2LegacyMigrationAdmissionGate`). Only a row that never left "submission
+  unknown" and has a refusal recorded for this account and this hash qualifies.
+  A row the node accepted always blocks, and without a record of the refusal
+  (the description file is lost or unreadable) the gate blocks as before.
+- One Confirm at a time on every screen. Each confirm path sets a flag before
+  its coroutine starts and ignores a second tap while it is set: Swap
+  (`isExtrinsicSubmitted`), Add and Remove liquidity (`confirmLocked`), the
+  legacy claim (`submitting`), and since the fifth pass Send, Referral (bond,
+  unbond, set referrer), Demeter stake and unstake and Demeter claim
+  (`confirmInFlight`, `submitInFlight`, `claimInFlight`). These four relied on
+  the button being hidden behind its progress mark, and the button stays
+  clickable while that mark fades in. A second tap started a second coroutine.
+  The duplicate question stopped it from signing, but it cleared the progress
+  mark of the first and asked "send again anyway?" about a transaction sent a
+  moment ago. On the referral screen a balance update during the wait also
+  brought the button back; the progress mark now stays until the result.
 
 ### 6. Crashes removed (every `viewModelScope.launch` on these paths reviewed)
 
@@ -383,6 +419,28 @@ swallows cancellation).
     **Close** (leaves the screen).
   - The button is refreshed as soon as both tokens are chosen; it used to keep
     "Choose tokens" until the reserves answered.
+- Add liquidity, the estimate: besides the reserves, the amounts on screen need
+  a successful estimate (`calcLiquidityDetails`: the second amount at the
+  pool's ratio, and the network fee, which is read from the network). Before,
+  a failed estimate was passed over in silence unless it was a business error.
+  On the first Add liquidity of a session with cached reserves and no
+  connection the second amount stayed empty with no explanation; with both
+  amounts typed by hand Supply and Confirm were on, at a ratio never checked
+  against the pool and with a blank fee.
+  - A failed estimate drops the earlier one, clears the share, the prices and
+    the fee, turns Supply off ("Network fee unavailable") and shows the same
+    notice with **Try again** as Send and Swap (`NetworkFeeUnavailableNotice`).
+  - Supply is on only while the two amounts are the ones the last successful
+    estimate was made for (`estimatedAmounts`). It turns off as soon as an
+    amount is edited and comes back with the new estimate. Before, Supply
+    stayed on during that time and Confirm could sign the new first amount with
+    the second amount of the earlier estimate.
+  - Confirm checks the same thing. When it does not hold (the estimate failed
+    after the review, or has not arrived), nothing is signed, the screen says
+    "Not sent ... SORA couldn't check these amounts and the network fee with
+    the network just now ... try again", and the estimate is asked again, so
+    the next Confirm works as soon as the network answers.
+  - An estimate belongs to its pair: choosing another token drops it.
 - Swap: when the request for a price fails, the earlier quote is dropped. Before
   (also in the store version) the error was shown but the old quote stayed, and
   Review and Confirm signed the new amount with the minimum received of the old
@@ -424,13 +482,15 @@ swallows cancellation).
 
 ## New strings
 
-34 strings `tx_outcome_*` at the end of every `common/src/main/res/values*/strings.xml`
+36 strings `tx_outcome_*` at the end of every `common/src/main/res/values*/strings.xml`
 under the comment `at1-submit-status` (29 from the first two passes; the third
 pass added `tx_outcome_claim_uncertain`, `tx_outcome_not_sent_key_unavailable`,
 `tx_outcome_pool_unavailable_title`, `tx_outcome_pool_unavailable` and
-`tx_outcome_quote_unavailable`). English and Japanese are written; the
-other locales carry the English text (as for earlier 3.9.0 strings) so lint
-`MissingTranslation` passes. The fourth pass adds no strings.
+`tx_outcome_quote_unavailable`; the fifth pass added
+`tx_outcome_not_sent_balance` and `tx_outcome_not_sent_estimate`). English and
+Japanese are written; the other locales carry the English text (as for earlier
+3.9.0 strings) so lint `MissingTranslation` passes. The fourth pass adds no
+strings.
 
 ## Tests
 
@@ -718,6 +778,85 @@ the fourth pass, a new unfunded wallet; nothing was signed or sent):
   background. It needs a transaction that reaches the network, that is, a
   funded wallet; see the QA steps.
 
+Fifth pass tests (unit; production view models, the production submit manager
+and status coordinator; only interactors, the database, the description store
+and the network are doubles):
+
+- One Confirm at a time: `TransferAmountViewModelTest`, `ReferralViewModelTest`,
+  `EditFarmViewModelTest`, `ClaimDemeterViewModelTest`, one test each: a second
+  tap while the first transaction is followed starts nothing, keeps the
+  progress mark and asks no duplicate question (on the referral screen also
+  after a balance update during the wait). One more test each shows that the
+  action can be used again after a transaction that did not reach the network.
+- Legacy-claim gate: `ExtrinsicManagerSafetyTest` (+4, and the existing gate
+  test now runs the production coordinator instead of a mock): a claim the node
+  refused does not hold back the next claim; a refused claim next to one that
+  is still waiting does; a transaction the node accepted does, whatever was
+  recorded; a refusal recorded for another account does not open this
+  account's gate.
+- "Not sent" for a balance that is no longer enough: `TransactionNotSentTest`
+  (+1, both codes), `TransferAmountViewModelTest` (+3): the dialog names the
+  balance, the balances are read again and the amount is then marked as too
+  high with Confirm off; Confirm is not held back while that read is running;
+  a read that fails does not end the app.
+- Indexer and an expired row: `TransactionHistoryRepositoryTest` (+1): the
+  listed entry keeps the indexer's status, block and fee and has no "not
+  included" note.
+- Add liquidity estimate: `AddLiquidityViewModelTest` (+4): with the estimate
+  failing on a cached pair and both amounts typed, Supply is off, the notice
+  is shown, Review and Confirm sign nothing and say why, and Try again
+  recovers; an estimate that fails after the review does not let Confirm sign,
+  and the next Confirm works when the network answers; an edited amount
+  cannot be supplied before its estimate is there; an estimate does not carry
+  over to another pair. The outcome tests of this class now enter an amount
+  first, as a person does before Review.
+- Transaction page: `TxDetailsViewModelTest` (+2): no status check is made
+  between pause and resume, also not after a journal write; on return the page
+  is read again and the status is followed again; a transaction that became
+  final while the page was away is shown on return without another check.
+
+Of these, 15 fail against the code as it was before the fifth pass (checked by
+running them with the production Kotlin changes set aside; for the Add
+liquidity tests the old view model was given the two new names they use,
+`estimateUnavailable` and `onRetryEstimate`, with the old behaviour). The five
+"can be used again" and "is not held back" tests pass before and after: they
+guard the new one-at-a-time flag against staying set.
+
+Fifth device check (emulator `SORA-Api34`, port 5592, production debug build of
+the fifth pass, a new unfunded wallet; nothing was signed or sent):
+
+- Add liquidity (Explore > Pools > add), XOR and VAL chosen with the network
+  on, then airplane mode before the first estimate of the app process.
+  - 1 XOR typed: the notice "The network fee can't be checked because the SORA
+    network can't be reached right now. Check your internet connection and try
+    again. Your funds are safe on the blockchain." with Try again is shown
+    above the button. The VAL amount stays empty; the button reads "Enter
+    amount" and is off.
+  - 5 VAL typed by hand: the button reads "Network fee unavailable" and is off.
+    Before this pass it read "Supply" and was on.
+  - Try again while offline: unchanged. Network on, Try again: the XOR amount
+    changed to the pool's ratio for 5 VAL, the pool share and the fee
+    (0.10002361 XOR) were shown, the notice was gone, and the button read
+    "Insufficient balance" (unfunded wallet).
+- Found in this run and fixed: with the fee unknown the low-balance reminder
+  read "Ensure that you have  left after this transaction", because the fee it
+  names was blank. (Before this pass that could happen when the very first
+  estimate failed; clearing the fee after a failed estimate would have made it
+  happen after every failed one.) The reminder is now shown only while the fee
+  is known (`LiquidityAddScreen`). A second run showed the notice without it.
+- Invite Friends opened; Home and back left it as it was. Logcat had no
+  `FATAL EXCEPTION`. The emulator was shut down afterwards.
+- Not done on a device: the double tap, the stale balance on Send, the claim
+  gate and the pause of the transaction page. They need a transaction that
+  reaches the network or an account with an outstanding claim; see the QA
+  steps.
+
+Build and checks at the end of the fifth pass: `:app:assembleProductionDebug`,
+`testProductionDebugUnitTest` (all modules, 1407 tests, 10 skipped, none failed)
+and `:app:lintProductionDebug` passed, with no change to the lint baseline.
+`ktlintCheck` reports no finding on lines this pass changed (the project has
+985 older findings).
+
 Build and checks at the end of the fourth pass: `:app:assembleProductionDebug`,
 `testProductionDebugUnitTest` (all modules, 1384 tests, 10 skipped, none failed)
 and `:app:lintProductionDebug` passed. `ktlintCheck` reports no finding on
@@ -797,7 +936,80 @@ Not done:
   return from the background with a real result is covered by the view-model
   tests and the navigation by the device test of the stack; see the QA steps.
 
+## Fifth pass: review findings
+
+Six findings, all minor, all confirmed against the code and fixed.
+
+| Finding | Decision |
+|---|---|
+| Send, Referral, Demeter stake/unstake and Demeter claim had no in-flight guard; a double tap ended in the duplicate question about a transaction sent a moment ago, with the progress mark cleared | Fixed with a flag set before the coroutine starts, as the review proposed. See "Duplicate protection". |
+| After a node refusal the legacy-claim gate blocked the retry for about 6.5 minutes with a text that contradicted the refusal dialog | Fixed in the gate (the first of the two proposed ways): a refused row does not block, as in the duplicate question. The other way, a text that says "about seven minutes", would have kept the wait. |
+| "Not sent" said "please try again" when the last balance check before transport failed | Fixed with its own text, and Send reads the balances again. |
+| A transaction the indexer lists was shown as "not included, nothing was sent, you can try again" when its journal row had expired | Fixed: the indexer's entry stands. Not reachable with the one endpoint of this branch. |
+| Add liquidity passed over a failed estimate and could enable Supply and Confirm | Fixed: a successful estimate for the amounts on screen is required; notice with Try again. |
+| The transaction page kept asking for the status while not in front | Fixed: stops on pause, redraws and follows again on resume. |
+
+Decisions:
+
+- The in-flight flag is cleared when the coroutine ends, on every path. After
+  a transaction that reached the network the screens' own state keeps the
+  action off (`sentTxHash` on Send, the held result elsewhere), so the flag
+  does not need to outlive the coroutine.
+- The claim gate reads the refusal from the description file, which is "never
+  an authority for status". It is used here only to stop holding the person
+  back, in the same way the duplicate question already uses it, and only for a
+  row the journal itself still has as "submission unknown". Every missing or
+  unreadable record leaves the gate closed.
+- For a listed transaction whose row expired the indexer's own status is
+  shown, not "being checked": the row is final, so nothing would ever move the
+  entry on from "being checked".
+- On Add liquidity a Confirm that cannot sign shows a dialog instead of a
+  disabled button: the confirm screen has no place for the notice, and a
+  disabled button with no text would not say why.
+- Found on the way and fixed with the same change: on Add liquidity, editing
+  an amount left Supply on with the earlier estimate until the new one arrived
+  (about a second, longer on a slow connection), and Confirm in that time
+  signed the new first amount with the old second amount.
+
+Left as it is:
+
+- After 80 checks (8 minutes) the transaction page starts another round when
+  the journal changes and the transaction is still waiting. This only happens
+  while the page is in front.
+- The found uncommitted work in this clone (a two-endpoint RPC failover in
+  `BoundedHttpTextClient`, `Sora2BoundedRuntimeRpcClient`,
+  `Sora2RuntimeContract` and a new `Sora2RuntimeRpcFailoverTest`) is not part
+  of this task. It was not committed and not discarded: it is in `git stash`
+  of this clone and as a patch outside it; see "Human and ops actions".
+
 ## Human and ops actions
+
+- Integration: this clone held uncommitted work of another task when the
+  fifth pass started (two-endpoint RPC failover, last modified 02:09 on
+  12 October, about two hours earlier; four changed files and one new test).
+  It was set aside unchanged with `git stash` (entry "foreign WIP found before
+  at1-submit-status fix round 3") and saved as
+  `scratchpad/and-tx-foreign-wip/failover-wip-tracked.patch` plus
+  `Sora2RuntimeRpcFailoverTest.kt`. Whoever owns that task restores it with
+  `git stash pop` in this clone. Nothing of it is in this branch.
+- QA, fifth pass (unfunded wallet is enough for the first three):
+  1. Add liquidity: start the app, go to airplane mode, open Add liquidity for
+     a pair you have opened before and type an amount. Expect the notice "The
+     network fee can't be checked because the SORA network can't be reached
+     ..." with Try again, the button "Network fee unavailable" and off. Type
+     the second amount: still off. With the network back, Try again fills the
+     second amount at the pool's ratio and shows the fee.
+  2. Transaction page: open the page of a waiting transaction and press Home.
+     In a network log the status reads (`chain_getFinalizedHead`,
+     `chain_getBlock`) stop; they start again when the app is opened.
+  3. Double tap: on Send, Invite Friends (bond) and a farm's Claim tap the
+     confirm button twice quickly (funded wallet). Expect one transaction and
+     no "An earlier one is still waiting" question.
+  4. Send with a stale balance (funded wallet, two devices with the same
+     account): on device A enter an amount close to the whole balance and
+     stop on the confirm screen; on device B send most of the balance away and
+     wait for it to be confirmed; tap Confirm on A. Expect "Not sent ... Your
+     balance is no longer enough ...", then the amount marked as too high.
 
 - QA, result after leaving the app (funded mainnet test wallet): on Swap tap
   Confirm and press Home at once. Open the app again after about 40 seconds.
@@ -826,7 +1038,7 @@ Not done:
 - Support: the reply for "my swap shows pending" is now on the transaction page
   itself. A pending entry resolves by itself; at the latest about 6.5 minutes
   after sending it shows as failed, "not included".
-- Translations: the 34 `tx_outcome_*` strings need translation in the production
+- Translations: the 36 `tx_outcome_*` strings need translation in the production
   locales other than English and Japanese.
 - QA, legacy claim (an account that still has an Iroha claim): submit the claim
   and switch to airplane mode right after. Expect "Submitted, waiting for
