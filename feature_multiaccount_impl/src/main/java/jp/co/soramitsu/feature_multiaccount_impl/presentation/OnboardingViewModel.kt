@@ -165,9 +165,34 @@ class OnboardingViewModel @Inject constructor(
     data class RepairPrompt(
         val accountExists: Boolean,
         val pinRequired: Boolean,
+        /** What was entered is a recovery phrase (otherwise a raw seed or a backup file). */
+        val fromPhrase: Boolean = true,
         val wrongPin: Boolean = false,
         val working: Boolean = false,
     )
+
+    /** What the person entered to import: decides which repair call a confirmation makes. */
+    private enum class ImportKind { PHRASE, SEED, JSON }
+
+    /**
+     * Some accounts of a batch backup file were not added. Shown once, then the app continues
+     * to the wallet when at least one account was added.
+     */
+    data class BatchImportNotice(val message: String, val anyImported: Boolean)
+
+    private val _batchImportNotice = MutableStateFlow<BatchImportNotice?>(null)
+    val batchImportNotice = _batchImportNotice.asStateFlow()
+
+    fun onBatchImportNoticeDismissed(context: Context) {
+        val notice = _batchImportNotice.value ?: return
+        _batchImportNotice.value = null
+        if (notice.anyImported) mainStarter.start(context)
+    }
+
+    /** A chosen backup file could not be read as text. Nothing was changed. */
+    fun onRecoveryFileUnreadable() {
+        onError(jp.co.soramitsu.common.R.string.recovery_json_file_unreadable)
+    }
 
     private val _repairPrompt = MutableStateFlow<RepairPrompt?>(null)
     val repairPrompt = _repairPrompt.asStateFlow()
@@ -176,7 +201,11 @@ class OnboardingViewModel @Inject constructor(
     private class PendingRepair(
         val input: String,
         val accountName: String,
-        val rawSeed: Boolean,
+        val kind: ImportKind,
+        /** The password of the backup file, for [ImportKind.JSON]. */
+        val password: String,
+        /** The address a Google backup names, when the import came from one. */
+        val expectedAddress: String?,
         val onRepaired: suspend () -> Unit,
     )
 
@@ -187,14 +216,17 @@ class OnboardingViewModel @Inject constructor(
         offer: WalletRepairAvailableException,
         input: String,
         accountName: String,
-        rawSeed: Boolean,
+        kind: ImportKind,
+        password: String = "",
+        expectedAddress: String? = null,
         onRepaired: suspend () -> Unit,
     ) {
-        pendingRepair = PendingRepair(input, accountName, rawSeed, onRepaired)
+        pendingRepair = PendingRepair(input, accountName, kind, password, expectedAddress, onRepaired)
         repairPinFailures = 0
         _repairPrompt.value = RepairPrompt(
             accountExists = offer.accountExists,
             pinRequired = offer.pinRequired,
+            fromPhrase = kind == ImportKind.PHRASE,
         )
     }
 
@@ -211,10 +243,24 @@ class OnboardingViewModel @Inject constructor(
         _repairPrompt.value = prompt.copy(working = true, wrongPin = false)
         viewModelScope.launch {
             try {
-                if (pending.rawSeed) {
-                    multiaccountInteractor.repairFromRawSeed(pending.input, pending.accountName, pin)
-                } else {
-                    multiaccountInteractor.repairFromMnemonic(pending.input, pending.accountName, pin)
+                when (pending.kind) {
+                    ImportKind.PHRASE -> multiaccountInteractor.repairFromMnemonic(
+                        pending.input,
+                        pending.accountName,
+                        pin,
+                    )
+                    ImportKind.SEED -> multiaccountInteractor.repairFromRawSeed(
+                        pending.input,
+                        pending.accountName,
+                        pin,
+                    )
+                    ImportKind.JSON -> multiaccountInteractor.repairFromJson(
+                        json = pending.input,
+                        password = pending.password,
+                        accountName = pending.accountName,
+                        pin = pin,
+                        expectedAddress = pending.expectedAddress,
+                    )
                 }
                 pendingRepair = null
                 _repairPrompt.value = null
@@ -410,10 +456,29 @@ class OnboardingViewModel @Inject constructor(
                     recoveryInputState = it.recoveryInputState.copy(
                         value = textFieldValue,
                     ),
-                    isButtonEnabled = isValidMethod(textFieldValue.text)
+                    isButtonEnabled = isValidMethod(textFieldValue.text) &&
+                        (it.recoveryType != RecoveryType.JSON || it.passwordInputState.value.text.isNotEmpty())
                 )
             }
         }
+    }
+
+    /** The password of the backup file ([RecoveryType.JSON]). */
+    fun onRecoveryPasswordChanged(textFieldValue: TextFieldValue) {
+        viewModelScope.launch {
+            _recoveryState.value?.let {
+                _recoveryState.value = it.copy(
+                    passwordInputState = it.passwordInputState.copy(value = textFieldValue),
+                    isButtonEnabled = textFieldValue.text.isNotEmpty() &&
+                        isValidMethod(it.recoveryInputState.value.text)
+                )
+            }
+        }
+    }
+
+    /** The text of a backup file the person chose; it replaces what is in the text field. */
+    fun onRecoveryFileChosen(text: String) {
+        onRecoveryInputChanged(TextFieldValue(text))
     }
 
     fun recoveryNextClicked(navController: NavController, context: Context) {
@@ -426,22 +491,48 @@ class OnboardingViewModel @Inject constructor(
                     try {
                         val valid = isValidMethod(recoveryCardState.recoveryInputState.value.text)
 
-                        if (valid) {
+                        if (!valid) {
+                            throw SoraException.businessError(errorMessageCode)
+                        }
+                        if (recoveryCardState.recoveryType == RecoveryType.JSON) {
+                            // Stores the keys of the file's account (or accounts) and adds them.
+                            val result = multiaccountInteractor.importFromJson(
+                                json = recoveryCardState.recoveryInputState.value.text,
+                                password = recoveryCardState.passwordInputState.value.text,
+                                accountName = recoverAccountNameState.accountNameInputState.value.text,
+                            )
+                            if (result.needRepair > 0) {
+                                _batchImportNotice.value = BatchImportNotice(
+                                    message = resourceManager.getString(
+                                        jp.co.soramitsu.common.R.string.json_backup_batch_skipped
+                                    ).format(
+                                        result.imported.size.toString(),
+                                        result.needRepair.toString(),
+                                    ),
+                                    anyImported = result.imported.isNotEmpty(),
+                                )
+                            } else {
+                                mainStarter.start(context)
+                            }
+                        } else {
                             // Stores the keys and adds the account in one step.
                             recoverSoraAccountMethod(
                                 recoveryCardState.recoveryInputState.value.text,
                                 recoverAccountNameState.accountNameInputState.value.text
                             )
                             mainStarter.start(context)
-                        } else {
-                            throw SoraException.businessError(errorMessageCode)
                         }
                     } catch (offer: WalletRepairAvailableException) {
                         offerRepair(
                             offer = offer,
                             input = recoveryCardState.recoveryInputState.value.text,
                             accountName = recoverAccountNameState.accountNameInputState.value.text,
-                            rawSeed = errorMessageCode == ResponseCode.RAW_SEED_IS_NOT_VALID,
+                            kind = when (recoveryCardState.recoveryType) {
+                                RecoveryType.PASSPHRASE -> ImportKind.PHRASE
+                                RecoveryType.SEED -> ImportKind.SEED
+                                RecoveryType.JSON -> ImportKind.JSON
+                            },
+                            password = recoveryCardState.passwordInputState.value.text,
                             onRepaired = { mainStarter.start(context) },
                         )
                     } catch (t: Throwable) {
@@ -518,6 +609,8 @@ class OnboardingViewModel @Inject constructor(
                             OnboardingFeatureRoutes.RECOVERY -> when (_recoveryState.value?.recoveryType) {
                                 RecoveryType.PASSPHRASE -> R.string.onboarding_enter_passphrase
                                 RecoveryType.SEED -> R.string.onboarding_enter_seed
+                                RecoveryType.JSON ->
+                                    jp.co.soramitsu.common.R.string.onboarding_enter_json
                                 else -> R.string.onboarding_enter_passphrase
                             }
 
@@ -646,6 +739,26 @@ class OnboardingViewModel @Inject constructor(
                     recoveryInputState = InputTextState(
                         label = resourceManager.getString(R.string.recovery_input_raw_seed_hint)
                     )
+                )
+            }
+
+            3 -> {
+                isValidMethod = multiaccountInteractor::isJsonBackupValid
+                errorMessageCode = ResponseCode.JSON_BACKUP_INVALID
+
+                RecoveryState(
+                    title = jp.co.soramitsu.common.R.string.recovery_enter_json_title,
+                    recoveryType = RecoveryType.JSON,
+                    recoveryInputState = InputTextState(
+                        label = resourceManager.getString(
+                            jp.co.soramitsu.common.R.string.recovery_json_input_label
+                        )
+                    ),
+                    passwordInputState = InputTextState(
+                        label = resourceManager.getString(
+                            jp.co.soramitsu.common.R.string.recovery_json_password_label
+                        )
+                    ),
                 )
             }
 
@@ -879,10 +992,19 @@ class OnboardingViewModel @Inject constructor(
                             )
                         }
                         // Stores the keys and adds the account in one step.
+                        val backupPassword = state.passwordInput.value.text
                         try {
-                            recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount)
+                            recoverSoraAccountFromDecryptedBackupAccount(
+                                decryptedBackupAccount,
+                                backupPassword,
+                            )
                         } catch (offer: WalletRepairAvailableException) {
-                            offerRepairFromBackup(offer, decryptedBackupAccount, showImported)
+                            offerRepairFromBackup(
+                                offer,
+                                decryptedBackupAccount,
+                                backupPassword,
+                                showImported,
+                            )
                             return@let
                         }
 
@@ -911,53 +1033,82 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The form of the wallet in a Google backup that is restored: the one that derives the
+     * account the backup names. A backup holds up to three forms (phrase, raw seed, encrypted
+     * JSON); an old backup can hold a phrase or seed that is not this account's, and a wallet
+     * that is only a key pair is backed up as JSON alone.
+     */
+    private class BackupSecret(val kind: ImportKind, val input: String)
+
+    private suspend fun backupSecret(backup: DecryptedBackupAccount): BackupSecret? {
+        val phrase = backup.mnemonicPhrase
+            ?.takeIf { backup.backupAccountType.contains(BackupAccountType.PASSPHRASE) }
+            ?.takeIf { multiaccountInteractor.isMnemonicValid(it) }
+        val seed = backup.seed?.substrateSeed
+            ?.takeIf { backup.backupAccountType.contains(BackupAccountType.SEED) }
+            ?.takeIf { multiaccountInteractor.isRawSeedValid(it) }
+        val json = backup.json?.substrateJson
+            ?.takeIf { backup.backupAccountType.contains(BackupAccountType.JSON) }
+            ?.takeIf { multiaccountInteractor.isJsonBackupValid(it) }
+        // First choice: the form that restores exactly the account the backup names.
+        if (phrase != null && multiaccountInteractor.addressOfMnemonic(phrase) == backup.address) {
+            return BackupSecret(ImportKind.PHRASE, phrase)
+        }
+        if (seed != null && multiaccountInteractor.addressOfRawSeed(seed) == backup.address) {
+            return BackupSecret(ImportKind.SEED, seed)
+        }
+        if (json != null) return BackupSecret(ImportKind.JSON, json)
+        // A backup whose address is written another way: the order every release used.
+        return when {
+            phrase != null -> BackupSecret(ImportKind.PHRASE, phrase)
+            seed != null -> BackupSecret(ImportKind.SEED, seed)
+            else -> null
+        }
+    }
+
+    /** The JSON in a backup names its own account; anything else in the file is not imported. */
+    private fun expectedJsonAddress(backup: DecryptedBackupAccount): String? =
+        backup.address.takeIf { multiaccountInteractor.isAddressValid(it) }
+
     /** The same choice of secret as [recoverSoraAccountFromDecryptedBackupAccount]. */
     private suspend fun offerRepairFromBackup(
         offer: WalletRepairAvailableException,
         decryptedBackupAccount: DecryptedBackupAccount,
+        backupPassword: String,
         onRepaired: suspend () -> Unit,
     ) {
-        val phrase = decryptedBackupAccount.mnemonicPhrase
-            ?.takeIf { decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSPHRASE) }
-            ?.takeIf { multiaccountInteractor.isMnemonicValid(it) }
-        val seed = decryptedBackupAccount.seed?.substrateSeed
+        val secret = backupSecret(decryptedBackupAccount)
         offerRepair(
             offer = offer,
-            input = phrase ?: seed.orEmpty(),
+            input = secret?.input.orEmpty(),
             accountName = decryptedBackupAccount.name,
-            rawSeed = phrase == null,
+            kind = secret?.kind ?: ImportKind.PHRASE,
+            password = backupPassword,
+            expectedAddress = expectedJsonAddress(decryptedBackupAccount),
             onRepaired = onRepaired,
         )
     }
 
-    private suspend fun recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount: DecryptedBackupAccount): SoraAccount {
-        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSPHRASE)) {
-            decryptedBackupAccount.mnemonicPhrase?.let { passphrase ->
-                val isValid = multiaccountInteractor.isMnemonicValid(passphrase)
-
-                if (isValid) {
-                    return multiaccountInteractor.importFromMnemonic(
-                        passphrase,
-                        decryptedBackupAccount.name
-                    )
-                }
-            }
+    private suspend fun recoverSoraAccountFromDecryptedBackupAccount(
+        decryptedBackupAccount: DecryptedBackupAccount,
+        backupPassword: String,
+    ): SoraAccount {
+        val secret = backupSecret(decryptedBackupAccount)
+            ?: throw SoraException.businessError(ResponseCode.GENERAL_ERROR)
+        return when (secret.kind) {
+            ImportKind.PHRASE ->
+                multiaccountInteractor.importFromMnemonic(secret.input, decryptedBackupAccount.name)
+            ImportKind.SEED ->
+                multiaccountInteractor.importFromRawSeed(secret.input, decryptedBackupAccount.name)
+            // The JSON of a Google backup is encrypted with the backup password itself.
+            ImportKind.JSON -> multiaccountInteractor.importFromJson(
+                json = secret.input,
+                password = backupPassword,
+                accountName = decryptedBackupAccount.name,
+                expectedAddress = expectedJsonAddress(decryptedBackupAccount),
+            ).imported.single()
         }
-
-        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.SEED)) {
-            decryptedBackupAccount.seed?.substrateSeed?.let { rawSeed ->
-                val isValid = multiaccountInteractor.isRawSeedValid(rawSeed)
-
-                if (isValid) {
-                    return multiaccountInteractor.importFromRawSeed(
-                        rawSeed,
-                        decryptedBackupAccount.name
-                    )
-                }
-            }
-        }
-
-        throw SoraException.businessError(ResponseCode.GENERAL_ERROR)
     }
 
     fun onImportFinished(context: Context) {

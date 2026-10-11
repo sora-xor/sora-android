@@ -41,12 +41,17 @@ data class RecoveryState(
     val recoveryType: RecoveryType,
     val title: Int,
     val recoveryInputState: InputTextState = InputTextState(),
-    val isButtonEnabled: Boolean = false
+    val isButtonEnabled: Boolean = false,
+    /** The password of an encrypted backup file; only used by [RecoveryType.JSON]. */
+    val passwordInputState: InputTextState = InputTextState(),
 )
 
 enum class RecoveryType {
     PASSPHRASE,
-    SEED
+    SEED,
+
+    /** The encrypted JSON export (Account details, Export JSON), pasted or chosen as a file. */
+    JSON,
 }
 
 data class RecoveryAccountNameState(

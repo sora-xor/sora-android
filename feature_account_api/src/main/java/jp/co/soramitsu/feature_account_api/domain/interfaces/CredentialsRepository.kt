@@ -154,6 +154,12 @@ interface CredentialsRepository {
 
     suspend fun getAddressForMigration(): String
 
+    /**
+     * The encrypted JSON export of [accounts] (one account, or a batch). It is made from each
+     * account's stored key pair and needs no phrase or seed. Every account must be able to sign
+     * (its stored key pair proves its address); otherwise `ACCOUNT_KEYS_NOT_EXPORTABLE` is thrown
+     * and no file is made. [draftsFromJson] reads the result back.
+     */
     suspend fun generateJson(accounts: List<SoraAccount>, password: String): String
 
     fun convertPassphraseToSeed(mnemonic: String): String

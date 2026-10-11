@@ -639,4 +639,6 @@
   <string name="recovery_json_choose_file">ファイルを選ぶ</string>
   <string name="recovery_json_file_unreadable">そのファイルを読み取れませんでした。SORAからエクスポートしたJSONファイルを選んでください。何も変更されていません。</string>
   <string name="json_backup_batch_skipped">このファイルのアカウントのうち%1$s個を追加しました。%2$s個は、この端末に別の鍵が保存されているため追加できませんでした。修復するには、「アカウントをインポート」で、そのアカウントのリカバリーフレーズまたはそのアカウントだけのバックアップファイルを入力してください。</string>
+  <string name="export_json_keys_unusable_title">このアカウントはエクスポートできません</string>
+  <string name="export_json_keys_unusable">選択したアカウントの中に、この端末に保存されている鍵を使用できないものがあるため、エクスポートできません。ファイルは作成されていません。この端末でそのアカウントを再び使うには、「アカウントをインポート」でリカバリーフレーズ、Raw Seed、またはバックアップファイルを入力してください。</string>
 </resources>

@@ -44,9 +44,11 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
@@ -54,6 +56,7 @@ import jp.co.soramitsu.common.presentation.compose.neon.InputText
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.RecoveryState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.RecoveryType
 import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
@@ -65,6 +68,8 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 fun EnterPassphraseScreen(
     recoveryState: RecoveryState,
     onRecoveryInputChanged: (TextFieldValue) -> Unit,
+    onPasswordChanged: (TextFieldValue) -> Unit = {},
+    onChooseFile: () -> Unit = {},
     onNextClicked: () -> Unit,
 ) {
     ContentCard(
@@ -105,6 +110,42 @@ fun EnterPassphraseScreen(
                 ),
             )
 
+            if (recoveryState.recoveryType == RecoveryType.JSON) {
+                // An encrypted backup file: choose the file (its text fills the field above) or
+                // paste the text, then the password it was exported with.
+                TextButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Dimens.x1)
+                        .testTag("RecoveryChooseFile"),
+                    size = Size.Small,
+                    order = Order.TERTIARY,
+                    text = stringResource(id = R.string.recovery_json_choose_file),
+                    onClick = onChooseFile,
+                )
+                InputText(
+                    modifier = Modifier
+                        .background(MaterialTheme.customColors.bgSurface)
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .padding(top = Dimens.x1)
+                        .testTag("RecoveryFilePassword"),
+                    state = recoveryState.passwordInputState,
+                    onValueChange = onPasswordChanged,
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus()
+                        },
+                    ),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Done,
+                        keyboardType = KeyboardType.Password
+                    ),
+                )
+            }
+
             FilledButton(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -124,7 +165,7 @@ fun EnterPassphraseScreen(
 fun PreviewEnterPassphraseScreen() {
     EnterPassphraseScreen(
         recoveryState = RecoveryState(recoveryType = RecoveryType.PASSPHRASE, title = R.string.common_passphrase_title),
-        {},
-        {}
+        onRecoveryInputChanged = {},
+        onNextClicked = {},
     )
 }

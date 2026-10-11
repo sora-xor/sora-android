@@ -36,7 +36,13 @@ import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
+import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -110,6 +116,13 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 
         const val ACTION_INVITE = "jp.co.soramitsu.feature_onboarding_impl.ACTION_INVITE"
 
+        /** File managers label an exported backup in different ways, so any type can be picked. */
+        private const val ANY_FILE_TYPE = "*/*"
+        private const val BACKUP_FILE_CHUNK_BYTES = 8 * 1024
+
+        /** Far above any account export; a larger file is not a backup of this app. */
+        private const val MAX_BACKUP_FILE_BYTES = 512 * 1024
+
         fun start(context: Context, isClearTask: Boolean) {
             val intent = Intent(context, OnboardingActivity::class.java).apply {
                 if (isClearTask) {
@@ -124,6 +137,36 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             context.startActivity(intent, options.toBundle())
         }
     }
+
+    /** Lets the person pick the encrypted backup file (JSON) they exported earlier. */
+    private val backupFilePicker =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null) {
+                lifecycleScope.launch {
+                    val text = withContext(Dispatchers.IO) { readBackupFile(uri) }
+                    if (text == null) {
+                        viewModel.onRecoveryFileUnreadable()
+                    } else {
+                        viewModel.onRecoveryFileChosen(text)
+                    }
+                }
+            }
+        }
+
+    /** The text of a chosen backup file, or null when it cannot be read or is far too large. */
+    private fun readBackupFile(uri: Uri): String? = runCatching {
+        contentResolver.openInputStream(uri)?.use { stream ->
+            val out = ByteArrayOutputStream()
+            val chunk = ByteArray(BACKUP_FILE_CHUNK_BYTES)
+            while (true) {
+                val read = stream.read(chunk)
+                if (read < 0) break
+                out.write(chunk, 0, read)
+                if (out.size() > MAX_BACKUP_FILE_BYTES) return@runCatching null
+            }
+            out.toString(Charsets.UTF_8.name())
+        }
+    }.getOrNull()
 
     private val launcher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -229,6 +272,29 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             )
         }
 
+        viewModel.batchImportNotice.collectAsStateWithLifecycle().value?.let { notice ->
+            val dismiss = { viewModel.onBatchImportNoticeDismissed(this@OnboardingActivity) }
+            AlertDialog(
+                backgroundColor = MaterialTheme.customColors.bgPage,
+                onDismissRequest = dismiss,
+                text = {
+                    Text(
+                        text = notice.message,
+                        color = MaterialTheme.customColors.fgPrimary,
+                        style = MaterialTheme.customTypography.paragraphS,
+                    )
+                },
+                confirmButton = {
+                    TextButton(modifier = Modifier.testTag("BatchImportNoticeOk"), onClick = dismiss) {
+                        Text(
+                            text = stringResource(id = R.string.common_ok),
+                            color = MaterialTheme.customColors.accentPrimary,
+                        )
+                    }
+                },
+            )
+        }
+
         NavHost(
             modifier = Modifier
                 .padding(padding)
@@ -299,6 +365,21 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                                         viewModel.onRecoveryClicked(
                                             navController,
                                             2
+                                        )
+                                    },
+                                )
+                                jp.co.soramitsu.ui_core.component.button.TextButton(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentHeight()
+                                        .testTag("RecoveryBackupFile"),
+                                    size = Size.Small,
+                                    order = Order.TERTIARY,
+                                    text = stringResource(id = R.string.recovery_json_option),
+                                    onClick = {
+                                        viewModel.onRecoveryClicked(
+                                            navController,
+                                            3
                                         )
                                     },
                                 )
@@ -420,7 +501,9 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                     Box {
                         EnterPassphraseScreen(
                             recoveryState = it,
-                            onRecoveryInputChanged = viewModel::onRecoveryInputChanged
+                            onRecoveryInputChanged = viewModel::onRecoveryInputChanged,
+                            onPasswordChanged = viewModel::onRecoveryPasswordChanged,
+                            onChooseFile = { backupFilePicker.launch(ANY_FILE_TYPE) },
                         ) {
                             navController.navigate(OnboardingFeatureRoutes.RECOVERY_ACCOUNT_NAME)
                         }
@@ -545,7 +628,13 @@ private fun RepairAccountDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = stringResource(id = R.string.account_repair_title),
+                text = stringResource(
+                    id = if (prompt.fromPhrase) {
+                        R.string.account_repair_title
+                    } else {
+                        R.string.account_repair_title_backup
+                    },
+                ),
                 color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.textSBold,
             )
