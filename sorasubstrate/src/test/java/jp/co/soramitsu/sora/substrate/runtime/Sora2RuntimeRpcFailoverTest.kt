@@ -305,10 +305,8 @@ class Sora2RuntimeRpcFailoverTest {
         assertEquals("0x${"c2".repeat(32)}", block.blockHash)
         assertEquals(
             listOf(
-                // The second endpoint proves its chain, then that block 7 is final on it too.
-                "chain_getBlockHash",
-                "chain_getFinalizedHead",
-                "chain_getHeader",
+                // The second endpoint proved its chain and its finalized height when the two
+                // endpoints were compared, so block 7 is known to be final on it too.
                 "chain_getBlockHash",
                 "chain_getBlock",
             ),
@@ -438,6 +436,137 @@ class Sora2RuntimeRpcFailoverTest {
         assertEquals(emptyList<String>(), second.methods)
     }
 
+    // --- an endpoint that answers but no longer follows the chain ---------------------------
+
+    @Test
+    fun `an endpoint that answers but is far behind is not what a transaction is signed against`() =
+        runTest {
+            // The first endpoint restarted and is syncing: every request is answered, 500
+            // blocks behind. Before the fix a fresh process took identity, nonce and fee from
+            // it and sent the transaction to it, although the second endpoint was healthy.
+            val first = FakeNode(finalizedNumber = 500)
+            val second = FakeNode(finalizedNumber = 1_000)
+            val client = client(first, second)
+
+            assertEquals(1_000L, client.getFinalizedIdentity().finalizedBlockNumber)
+
+            first.methods.clear()
+            second.methods.clear()
+            assertEquals(BigInteger.valueOf(7), client.getAccountNextIndex(account))
+            assertEquals(BigInteger("700000000000000"), client.queryPartialFee(signed))
+            assertEquals(signedHash, client.submitExtrinsicOnce(signed))
+            assertEquals(1_000L, client.getFinalizedIdentity().finalizedBlockNumber)
+
+            assertEquals(emptyList<String>(), first.methods)
+            assertEquals(0, first.submissions)
+            assertEquals(1, second.submissions)
+        }
+
+    @Test
+    fun `endpoints a few blocks apart keep the reviewed order`() = runTest {
+        val first = FakeNode(finalizedNumber = 1_000 - TOLERANCE)
+        val second = FakeNode(finalizedNumber = 1_000)
+        val client = client(first, second)
+
+        assertEquals(1_000L - TOLERANCE, client.getFinalizedIdentity().finalizedBlockNumber)
+
+        second.methods.clear()
+        assertEquals(BigInteger.valueOf(7), client.getAccountNextIndex(account))
+        assertEquals(emptyList<String>(), second.methods)
+
+        // One block more and the first endpoint counts as not following the chain.
+        val behind = FakeNode(finalizedNumber = 1_000 - TOLERANCE - 1)
+        val current = FakeNode(finalizedNumber = 1_000)
+        assertEquals(
+            1_000L,
+            client(behind, current).getFinalizedIdentity().finalizedBlockNumber,
+        )
+    }
+
+    @Test
+    fun `the other endpoint is asked for its height once per interval and with two requests`() =
+        runTest {
+            val first = FakeNode(finalizedNumber = 1_000)
+            val second = FakeNode(finalizedNumber = 1_000)
+            val client = client(first, second)
+
+            client.getFinalizedIdentity()
+            assertEquals(
+                listOf("chain_getBlockHash", "chain_getFinalizedHead", "chain_getHeader"),
+                second.methods,
+            )
+
+            // Every fee quote reads the identity; the comparison is not repeated with it.
+            second.methods.clear()
+            repeat(5) {
+                now += 10_000
+                client.getFinalizedIdentity()
+            }
+            assertEquals(emptyList<String>(), second.methods)
+
+            now += 2 * 60_000
+            client.getFinalizedIdentity()
+            assertEquals(listOf("chain_getFinalizedHead", "chain_getHeader"), second.methods)
+        }
+
+    @Test
+    fun `an endpoint that cannot be reached is not asked for its height on every identity`() =
+        runTest {
+            val first = FakeNode(finalizedNumber = 1_000)
+            val second = FakeNode(finalizedNumber = 1_000).apply { unreachable() }
+            val client = client(first, second)
+
+            assertEquals(1_000L, client.getFinalizedIdentity().finalizedBlockNumber)
+            assertEquals(1, second.methods.size)
+
+            // While its pause lasts the unreachable endpoint costs nothing more.
+            now += 20_000
+            assertEquals(1_000L, client.getFinalizedIdentity().finalizedBlockNumber)
+            assertEquals(1, second.methods.size)
+        }
+
+    @Test
+    fun `an endpoint that has caught up is the first choice again`() = runTest {
+        val first = FakeNode(finalizedNumber = 500)
+        val second = FakeNode(finalizedNumber = 1_000)
+        val client = client(first, second)
+        assertEquals(1_000L, client.getFinalizedIdentity().finalizedBlockNumber)
+
+        // It finished syncing. Its next height report, at the next comparison, ends the pause.
+        first.finalizedNumber = 1_003
+        second.finalizedNumber = 1_002
+        now += 2 * 60_000 + 1
+        assertEquals(1_003L, client.getFinalizedIdentity().finalizedBlockNumber)
+
+        first.methods.clear()
+        second.methods.clear()
+        assertEquals(BigInteger.valueOf(7), client.getAccountNextIndex(account))
+        assertEquals(listOf("system_accountNextIndex"), first.methods)
+        assertEquals(emptyList<String>(), second.methods)
+    }
+
+    @Test
+    fun `an endpoint that is behind is still used when the other one stops answering`() = runTest {
+        val first = FakeNode(finalizedNumber = 500)
+        val second = FakeNode(finalizedNumber = 1_000)
+        val client = client(first, second)
+        assertEquals(1_000L, client.getFinalizedIdentity().finalizedBlockNumber)
+
+        second.unreachable()
+
+        // Nothing is locked out: the caller gets the best answer there is and decides.
+        assertEquals(500L, client.getFinalizedIdentity().finalizedBlockNumber)
+        assertEquals(BigInteger.valueOf(7), client.getAccountNextIndex(account))
+    }
+
+    @Test
+    fun `a stalled first endpoint is used when the second cannot be reached at all`() = runTest {
+        val first = FakeNode(finalizedNumber = 500)
+        val second = FakeNode(finalizedNumber = 1_000).apply { unreachable() }
+
+        assertEquals(500L, client(first, second).getFinalizedIdentity().finalizedBlockNumber)
+    }
+
     private suspend fun captureFailure(block: suspend () -> Unit): Throwable {
         try {
             block()
@@ -538,6 +667,7 @@ class Sora2RuntimeRpcFailoverTest {
     }
 
     private companion object {
+        const val TOLERANCE = Sora2BoundedRuntimeRpcClient.FINALITY_LAG_TOLERANCE_BLOCKS
         const val METADATA = "0x6d657461"
         const val CODE_HASH =
             "0xfe91daf57982171d8051acc71c1ca7626041cec571561232b3d6256544acbed3"

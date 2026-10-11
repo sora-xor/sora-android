@@ -34,6 +34,7 @@ import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.chain.RuntimeVersion
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Narrow transport seam for deterministic protocol tests. Production always constructs the
@@ -138,6 +139,11 @@ private enum class Sora2RuntimeRpcResultKind {
  *   number only from an endpoint whose own finalized head has reached that number, and
  *   [getFinalizedIdentity] prefers an endpoint that is not behind a finalized height this
  *   process has already been given.
+ * - **An endpoint that has stopped following the chain is tried last.** A node can answer every
+ *   request and still be far behind (restarting, syncing, cut off from its peers). Each endpoint's
+ *   own finalized height is compared with the other's, on first use and every few minutes; one
+ *   that is more than [FINALITY_LAG_TOLERANCE_BLOCKS] behind is moved behind the other until it
+ *   has caught up. It is still asked when the other gives no answer.
  * - **A signed transaction is delivered at most once.** [submitExtrinsicOnce] moves on to the
  *   next endpoint only when the previous attempt provably never reached its node. Any other
  *   outcome is final for the submission; the caller resolves it by transaction hash.
@@ -195,6 +201,20 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
          */
         @Volatile
         var finalizedHeight: Long = -1L
+
+        /**
+         * While in the future, this endpoint's finalized head was far behind the other
+         * endpoint's when it last reported it, and it is tried after the others.
+         */
+        @Volatile
+        var laggingUntilElapsedMillis: Long? = null
+
+        /**
+         * When this endpoint last reported its finalized height, or was last asked for it only
+         * to compare it. It is not asked again for the comparison before the interval is over.
+         */
+        @Volatile
+        var finalizedHeightAskedAtElapsedMillis: Long? = null
     }
 
     private val endpoints: List<Endpoint> = listOfNotNull(transport, secondTransport).map(::Endpoint)
@@ -205,6 +225,9 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
 
     /** The highest finalized height [getFinalizedIdentity] has returned in this process. */
     private val highestFinalizedHeight = AtomicLong(-1L)
+
+    /** The highest finalized height any endpoint on the expected chain has reported. */
+    private val highestReportedFinalizedHeight = AtomicLong(-1L)
 
     /**
      * Obtains one canonical finalized checkpoint from one endpoint. Runtime version is explicitly
@@ -219,19 +242,50 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
      * passed over while another endpoint is not behind. When every endpoint that answers is
      * behind, the most advanced answer is returned; callers that need finality to move forward
      * check that themselves.
+     *
+     * An endpoint that answers is not thereby current. The other endpoint's finalized height is
+     * compared from time to time ([compareFinalityWithOtherEndpoints]); when the endpoint that
+     * answered turns out to be far behind, the identity is read again from the one that is not,
+     * so that nothing is signed against a block the rest of the network left long ago.
      */
     internal suspend fun getFinalizedIdentity(): Sora2FinalizedRuntimeIdentity {
+        val answer = readFinalizedIdentityInPreferenceOrder()
+        // A last-resort answer already means that no other endpoint had a better one just now.
+        val answeredBy = answer.endpoint ?: return answer.identity
+        compareFinalityWithOtherEndpoints(answeredBy, answer.identity.finalizedBlockNumber)
+        if (!isLagging(answeredBy, elapsedMillis())) return answer.identity
+        // The endpoint that answered is now tried last. If the other one gives no acceptable
+        // answer either, the answer already in hand is the best there is.
+        return try {
+            readFinalizedIdentityInPreferenceOrder().identity
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            answer.identity
+        }
+    }
+
+    private class IdentityAnswer(
+        val identity: Sora2FinalizedRuntimeIdentity,
+        /**
+         * The endpoint that gave it as its regular answer. Null for a last resort: the most
+         * advanced answer when every endpoint that answered was behind, or what an endpoint on
+         * an unexpected chain reported.
+         */
+        val endpoint: Endpoint?,
+    )
+
+    private suspend fun readFinalizedIdentityInPreferenceOrder(): IdentityAnswer {
         var unexpectedChain: Sora2FinalizedRuntimeIdentity? = null
         var behind: Sora2FinalizedRuntimeIdentity? = null
-        val identity = try {
+        val answer = try {
             readWithFailover(admitFirst = false) { endpoint ->
                 val identity = readFinalizedIdentity(endpoint)
                 if (!admitGenesis(endpoint, identity.genesisHash)) {
                     if (unexpectedChain == null) unexpectedChain = identity
                     throw Sora2RuntimeIdentityException(ENDPOINT_GENESIS_MISMATCH)
                 }
-                endpoint.finalizedHeight =
-                    maxOf(endpoint.finalizedHeight, identity.finalizedBlockNumber)
+                noteFinalizedHeight(endpoint, identity.finalizedBlockNumber)
                 if (
                     endpoints.size > 1 &&
                     identity.finalizedBlockNumber < highestFinalizedHeight.get()
@@ -243,17 +297,109 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
                     }
                     throw Sora2RuntimeIdentityException(ENDPOINT_BEHIND)
                 }
-                identity
+                IdentityAnswer(identity, endpoint)
             }
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
             // Nothing better is available: the most advanced answer from the expected chain,
             // else what was observed on an unexpected one (the caller rejects that as drift).
-            return behind ?: unexpectedChain ?: throw error
+            return IdentityAnswer(
+                identity = behind ?: unexpectedChain ?: throw error,
+                endpoint = null,
+            )
         }
-        highestFinalizedHeight.accumulateAndGet(identity.finalizedBlockNumber, ::maxOf)
-        return identity
+        highestFinalizedHeight.accumulateAndGet(answer.identity.finalizedBlockNumber, ::maxOf)
+        return answer
+    }
+
+    /**
+     * Asks every other endpoint for its finalized height, at most once per
+     * [FINALITY_COMPARE_INTERVAL_MILLIS] each, so that an endpoint which answers but no longer
+     * follows the chain is noticed even when nothing has failed. Without it the first endpoint
+     * stayed the only source for as long as it answered: a node that was restarting or syncing
+     * gave a stale block to sign against, and every send failed while the second endpoint was
+     * healthy.
+     *
+     * Two small requests (three the first time, for the chain check). An endpoint that could
+     * not be reached just now is not asked, the wait is bounded, and no outcome of the
+     * comparison is an error for the caller: it only changes which endpoint is tried first.
+     */
+    private suspend fun compareFinalityWithOtherEndpoints(
+        answeredBy: Endpoint,
+        answeredFinalizedNumber: Long,
+    ) {
+        if (endpoints.size == 1) return
+        for (other in endpoints) {
+            if (other === answeredBy) continue
+            val now = elapsedMillis()
+            val askedAt = other.finalizedHeightAskedAtElapsedMillis
+            if (askedAt != null && now - askedAt < FINALITY_COMPARE_INTERVAL_MILLIS) continue
+            val avoidUntil = other.avoidUntilElapsedMillis
+            if (avoidUntil != null && now < avoidUntil) continue
+            // Set before asking: an endpoint that gives no answer in time is not asked again
+            // on every identity read.
+            other.finalizedHeightAskedAtElapsedMillis = now
+            try {
+                withTimeoutOrNull(FINALITY_COMPARE_TIMEOUT_MILLIS) {
+                    requireAdmitted(other)
+                    readFinalizedHeight(other)
+                    noteReachable(other)
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                noteFailure(other, error)
+            }
+            currentCoroutineContext().ensureActive()
+        }
+        // The height just given by [answeredBy], measured against what the others have now.
+        noteFinalizedHeight(answeredBy, answeredFinalizedNumber)
+    }
+
+    /** This endpoint's own finalized height, recorded with [noteFinalizedHeight]. */
+    private suspend fun readFinalizedHeight(endpoint: Endpoint): Long {
+        val finalizedHash = executeOn(
+            target = endpoint,
+            method = METHOD_FINALIZED_HEAD,
+            params = emptyList(),
+            maximumResponseBytes = MAXIMUM_HASH_RESPONSE_BYTES,
+            resultKind = Sora2RuntimeRpcResultKind.STRING,
+        ).requireCanonicalHashResult("SORA2_RUNTIME_RPC_FINALIZED_INVALID")
+        val finalizedNumber = executeOn(
+            target = endpoint,
+            method = METHOD_HEADER,
+            params = listOf(JsonPrimitive(finalizedHash)),
+            maximumResponseBytes = MAXIMUM_HEADER_RESPONSE_BYTES,
+            resultKind = Sora2RuntimeRpcResultKind.STRUCTURED,
+        ).requireHeaderBlockNumber()
+        noteFinalizedHeight(endpoint, finalizedNumber)
+        return finalizedNumber
+    }
+
+    /**
+     * Records what [endpoint], which is on the expected chain, reported as its finalized height,
+     * and whether that is far behind the most advanced report of any endpoint. Healthy nodes
+     * differ by a block or two; a larger gap means this node is not following the chain now.
+     * The mark ends by itself, and at once when the endpoint reports a height that has caught up.
+     */
+    private fun noteFinalizedHeight(endpoint: Endpoint, finalizedNumber: Long) {
+        endpoint.finalizedHeight = maxOf(endpoint.finalizedHeight, finalizedNumber)
+        if (endpoints.size == 1) return
+        endpoint.finalizedHeightAskedAtElapsedMillis = elapsedMillis()
+        val highest = highestReportedFinalizedHeight.accumulateAndGet(finalizedNumber, ::maxOf)
+        endpoint.laggingUntilElapsedMillis = if (
+            highest - finalizedNumber > FINALITY_LAG_TOLERANCE_BLOCKS
+        ) {
+            elapsedMillis() + FINALITY_LAG_PAUSE_MILLIS
+        } else {
+            null
+        }
+    }
+
+    private fun isLagging(endpoint: Endpoint, now: Long): Boolean {
+        val laggingUntil = endpoint.laggingUntilElapsedMillis
+        return laggingUntil != null && now < laggingUntil
     }
 
     private suspend fun readFinalizedIdentity(endpoint: Endpoint): Sora2FinalizedRuntimeIdentity {
@@ -634,22 +780,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
      */
     private suspend fun requireFinalizedOn(endpoint: Endpoint, blockNumber: Long) {
         if (endpoints.size == 1 || endpoint.finalizedHeight >= blockNumber) return
-        val finalizedHash = executeOn(
-            target = endpoint,
-            method = METHOD_FINALIZED_HEAD,
-            params = emptyList(),
-            maximumResponseBytes = MAXIMUM_HASH_RESPONSE_BYTES,
-            resultKind = Sora2RuntimeRpcResultKind.STRING,
-        ).requireCanonicalHashResult("SORA2_RUNTIME_RPC_FINALIZED_INVALID")
-        val finalizedNumber = executeOn(
-            target = endpoint,
-            method = METHOD_HEADER,
-            params = listOf(JsonPrimitive(finalizedHash)),
-            maximumResponseBytes = MAXIMUM_HEADER_RESPONSE_BYTES,
-            resultKind = Sora2RuntimeRpcResultKind.STRUCTURED,
-        ).requireHeaderBlockNumber()
-        endpoint.finalizedHeight = maxOf(endpoint.finalizedHeight, finalizedNumber)
-        if (finalizedNumber < blockNumber) {
+        if (readFinalizedHeight(endpoint) < blockNumber) {
             throw Sora2RuntimeIdentityException(ENDPOINT_BEHIND)
         }
     }
@@ -677,13 +808,16 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         return admitted
     }
 
-    /** Endpoints in reviewed order, with those that could not be reached just now moved last. */
+    /**
+     * Endpoints in reviewed order, with those moved last that could not be reached just now or
+     * whose finalized head was far behind the other endpoint's.
+     */
     private fun endpointsInPreferenceOrder(): List<Endpoint> {
         if (endpoints.size == 1) return endpoints
         val now = elapsedMillis()
         return endpoints.sortedBy { endpoint ->
             val avoidUntil = endpoint.avoidUntilElapsedMillis
-            if (avoidUntil != null && now < avoidUntil) 1 else 0
+            if ((avoidUntil != null && now < avoidUntil) || isLagging(endpoint, now)) 1 else 0
         }
     }
 
@@ -1016,6 +1150,18 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         private const val ENDPOINT_BEHIND = "SORA2_RUNTIME_RPC_ENDPOINT_BEHIND"
         private const val ENDPOINT_AVOID_BASE_MILLIS = 30_000L
         private const val ENDPOINT_AVOID_MAXIMUM_MILLIS = 5 * 60_000L
+
+        /**
+         * How many blocks an endpoint's finalized head may be behind the other endpoint's before
+         * it counts as not following the chain: about one minute of blocks. Two healthy nodes
+         * differ by a block or two, and a transaction signed against a block this old is still
+         * well inside its validity window of
+         * [SubstrateOptionsProvider.mortalEraLength] blocks.
+         */
+        internal const val FINALITY_LAG_TOLERANCE_BLOCKS = 10L
+        private const val FINALITY_LAG_PAUSE_MILLIS = 2 * 60_000L
+        private const val FINALITY_COMPARE_INTERVAL_MILLIS = 2 * 60_000L
+        private const val FINALITY_COMPARE_TIMEOUT_MILLIS = 3_000L
         private const val METHOD_QUERY_INFO = "payment_queryInfo"
         private const val FIELD_PARTIAL_FEE = "partialFee"
         private const val MAXIMUM_FEE_RESPONSE_BYTES = 16 * 1024

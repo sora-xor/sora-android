@@ -5,6 +5,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.AccountDao
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
@@ -684,6 +685,85 @@ class ExtrinsicManagerSafetyTest {
         assertTrue(error is ExtrinsicSubmissionUnknownException)
         assertTrue(error.cause === handoffError)
         coVerify(exactly = 1) {
+            fixture.runtimeRpcClient.submitExtrinsicOnce(any())
+        }
+    }
+
+    @Test
+    fun `a head a few blocks lower from the other endpoint still reaches transport`() = runTest {
+        // Signed against block 64 of the first endpoint, which then dropped. The check before
+        // transport is answered by the second endpoint, whose finalized head is a block or a
+        // few behind. Before the fix this ended the Send as "Not sent".
+        listOf(63L, 64L - Sora2BoundedRuntimeRpcClient.FINALITY_LAG_TOLERANCE_BLOCKS).forEach { height ->
+            val fixture = preparedFixture(
+                activeDeletion = listOf(false, false, false),
+                signingRuntime = mutationContext(finalizedByte = "31", finalizedBlockNumber = 64),
+                currentRuntime = mutationContext(
+                    finalizedByte = "30",
+                    finalizedBlockNumber = height,
+                ),
+            )
+            val handoffError = IllegalStateException("transport entered")
+            coEvery { fixture.runtimeRpcClient.submitExtrinsicOnce(any()) } throws handoffError
+
+            val error = captureFailure {
+                fixture.manager.submitPreparedAndWait(fixture.prepared)
+            }
+
+            assertTrue(error.cause === handoffError)
+            coVerify(exactly = 1) {
+                fixture.runtimeRpcClient.submitExtrinsicOnce(any())
+            }
+        }
+    }
+
+    @Test
+    fun `a head far behind is not handed the transaction and is told as a network problem`() =
+        runTest {
+            val fixture = preparedFixture(
+                activeDeletion = listOf(false, false, false),
+                signingRuntime = mutationContext(finalizedByte = "31", finalizedBlockNumber = 64),
+                currentRuntime = mutationContext(
+                    finalizedByte = "30",
+                    finalizedBlockNumber =
+                    63L - Sora2BoundedRuntimeRpcClient.FINALITY_LAG_TOLERANCE_BLOCKS,
+                ),
+            )
+
+            val error = captureFailure {
+                fixture.manager.submitPreparedAndWait(fixture.prepared)
+            }
+
+            assertTrue(error is DefinitelyNotSubmitted)
+            assertFalse(error is ExtrinsicSubmissionUnknown)
+            assertEquals("SORA2_RUNTIME_RPC_ENDPOINT_BEHIND", error.deepestCause().message)
+            // "SORA couldn't reach the network ... Nothing was sent ... try again".
+            assertEquals(
+                NetworkFeeUnavailable.NETWORK_UNREACHABLE,
+                NetworkFeeUnavailable.from(error),
+            )
+            coVerify(exactly = 0) {
+                fixture.runtimeRpcClient.submitExtrinsicOnce(any())
+            }
+        }
+
+    @Test
+    fun `runtime drift is still refused when the head is lower`() = runTest {
+        val signing = mutationContext(finalizedByte = "31", finalizedBlockNumber = 64)
+        val fixture = preparedFixture(
+            activeDeletion = listOf(false, false, false),
+            signingRuntime = signing,
+            currentRuntime = mutationContext(finalizedByte = "30", finalizedBlockNumber = 63)
+                .copy(metadataSha256 = "e".repeat(64)),
+        )
+
+        val error = captureFailure {
+            fixture.manager.submitPreparedAndWait(fixture.prepared)
+        }
+
+        assertTrue(error is DefinitelyNotSubmitted)
+        assertEquals("SORA2_MUTATION_METADATA_DRIFT", error.deepestCause().message)
+        coVerify(exactly = 0) {
             fixture.runtimeRpcClient.submitExtrinsicOnce(any())
         }
     }
