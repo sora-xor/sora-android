@@ -175,19 +175,26 @@ class Sora2RuntimeContract @Inject constructor(
 
     companion object {
         const val SOURCE_REVISION = "411dcdb70c5c00b21482a44d02334840d5f338c6"
-        /** Exact HTTPS JSON-RPC endpoint reviewed in sora2_metadata.manifest.json. */
+        /**
+         * First reviewed HTTPS JSON-RPC endpoint (the one named in sora2_metadata.manifest.json).
+         * It keeps the state of about the last 256 blocks.
+         */
         const val RUNTIME_RPC_ENDPOINT = "https://ws.mof.sora.org"
         /** Exact selected WebSocket counterpart permitted to carry reviewed SORA2 mutations. */
         const val RUNTIME_WS_ENDPOINT = "wss://ws.mof.sora.org"
         /**
-         * Archive node (one of the default SORA mainnet nodes) used only for status recovery
-         * reads at exact, already-admitted block hashes once [RUNTIME_RPC_ENDPOINT] has discarded
-         * that block's state (it keeps about 256 blocks): System events of the inclusion block,
-         * and the runtime version and metadata a pending submission was signed with (the metadata
-         * is admitted only when its SHA-256 equals the one journaled at signing). It never serves
-         * signing, nonces, fees or submission.
+         * Second reviewed HTTPS JSON-RPC endpoint: another SORA mainnet node on another host and
+         * address (an archive node, one of the default nodes of the app). It serves the same
+         * requests as [RUNTIME_RPC_ENDPOINT] under the same checks whenever that endpoint gives
+         * no acceptable answer: chain identity, metadata, nonce, fee and status reads, and the
+         * state of blocks the first endpoint has already discarded.
+         *
+         * A signed transaction is offered to it only when the attempt on the other endpoint
+         * provably never reached that node ([Sora2BoundedRuntimeRpcClient.submitExtrinsicOnce]).
+         * Each endpoint must itself report [SORA_MAINNET_GENESIS_HASH] before it serves anything
+         * else in a production build.
          */
-        const val STATUS_ARCHIVE_RPC_ENDPOINT = "https://mof2.sora.org"
+        const val SECOND_RUNTIME_RPC_ENDPOINT = "https://mof2.sora.org"
         /** Runtime of the packaged fixture; not a signing requirement (see the class KDoc). */
         const val SPEC_VERSION = 130
         /** Transaction version of the packaged fixture; not a signing requirement. */
