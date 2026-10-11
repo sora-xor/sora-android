@@ -1617,6 +1617,7 @@ object WalletUpgradeBackup {
                 ).sorted(),
             legacyOwner = preferenceInventory.legacyPureAddress,
             hasUnscopedPhraseOrSeed = preferenceInventory.hasUnscopedPhraseOrSeed,
+            scopedPhraseWalletIds = preferenceInventory.scopedPhraseOrSeedWalletIds,
         )
         // Only "no such file" means missing. Any other lstat error is reported as a transient
         // failure: treating it as missing would set aside a live write-ahead log.
@@ -5149,6 +5150,9 @@ object WalletUpgradeBackup {
             legacyPureAddress = legacyOwner,
             mnemonicWalletIds = mnemonicWalletIds,
             rawSeedWalletIds = rawSeedWalletIds,
+            scopedPhraseOrSeedWalletIds =
+                entries.scopedNonBlankStringIds(WalletPreferenceKeys.MNEMONIC) +
+                    entries.scopedNonBlankStringIds(WalletPreferenceKeys.SEED),
             keyPairWalletIds = keyPairWalletIds,
             incompleteKeyPairWalletIds = incompleteKeyPairWalletIds,
             watchOnlyWalletIds = watchOnlyWalletIds,
@@ -6456,6 +6460,8 @@ object WalletUpgradeBackup {
         val legacyPureAddress: String?,
         val mnemonicWalletIds: Set<String>,
         val rawSeedWalletIds: Set<String>,
+        /** Addresses with a phrase or seed stored under the address itself (never the 2.x owner's unsuffixed one). */
+        val scopedPhraseOrSeedWalletIds: Set<String> = emptySet(),
         val keyPairWalletIds: Set<String>,
         val incompleteKeyPairWalletIds: Set<String>,
         val watchOnlyWalletIds: Set<String>,

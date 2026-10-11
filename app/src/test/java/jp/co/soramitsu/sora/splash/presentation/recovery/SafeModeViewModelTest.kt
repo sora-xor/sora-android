@@ -345,6 +345,33 @@ class SafeModeViewModelTest {
     }
 
     @Test
+    fun `marks that cannot be read just now are said, not shown as nothing saved`() = runTest {
+        // The database is unreadable (no wallet is known to be an account) and the marker read
+        // fails once. The empty list must say that it may be incomplete; trying again lists.
+        coEvery { datasource.retainedKeySetsNeedingPhrase() } throws java.io.IOException("busy")
+        val vm = viewModel(RecoveryFacts(phraseWalletIds = listOf("cnOne", "cnTwo")))
+        vm.startReveal()
+        advanceUntilIdle()
+        vm.enter("123456")
+        advanceUntilIdle()
+
+        val first = vm.state.value.reveal as RevealUi.Wallets
+        assertEquals(emptyList<PhraseEntry>(), first.entries)
+        assertEquals(true, first.incomplete)
+
+        coEvery { datasource.retainedKeySetsNeedingPhrase() } returns emptySet()
+        vm.closeReveal()
+        vm.startReveal()
+        advanceUntilIdle()
+        vm.enter("123456")
+        advanceUntilIdle()
+
+        val second = vm.state.value.reveal as RevealUi.Wallets
+        assertEquals(listOf("cnOne", "cnTwo"), second.entries.map { it.id })
+        assertEquals(false, second.incomplete)
+    }
+
+    @Test
     fun `a key set left by Remove all accounts is not listed, whatever PIN is stored now`() = runTest {
         // The next person set their own PIN; a recovery state must not show them the phrase of
         // a wallet that was on the phone before that PIN.
@@ -361,7 +388,15 @@ class SafeModeViewModelTest {
         vm.enter("123456")
         advanceUntilIdle()
 
+        // Only the account is listed, and the list says that a wallet is not shown.
+        val wallets = vm.state.value.reveal as RevealUi.Wallets
+        assertEquals(listOf("cnMine"), wallets.entries.map { it.id })
+        assertEquals(true, wallets.withheld)
+        assertEquals(false, wallets.incomplete)
+
         // Only the account's own phrase is opened; the leftover key set is never read.
+        vm.openEntry(wallets.entries.single())
+        advanceUntilIdle()
         val shown = vm.state.value.reveal as RevealUi.Shown
         assertEquals("cnMine", shown.entry.id)
         coVerify(exactly = 0) {

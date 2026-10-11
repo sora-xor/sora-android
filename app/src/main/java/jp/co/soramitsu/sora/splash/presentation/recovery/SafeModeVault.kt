@@ -111,6 +111,18 @@ object SafeModeVault {
 
     const val OLDER_VERSION_ID = "release-era-phrase"
 
+    /** The wallets that may be listed, and what the list leaves out. */
+    data class Listing(
+        val entries: List<PhraseEntry>,
+        /** A key set is not listed because only its own recovery phrase may bring it back. */
+        val withheld: Boolean = false,
+        /**
+         * The marks could not be read just now, so a wallet that is not known to be an account
+         * is not listed. Trying again may list it.
+         */
+        val marksUnreadable: Boolean = false,
+    )
+
     /**
      * The wallets whose recovery phrase or seed can be shown.
      *
@@ -118,18 +130,46 @@ object SafeModeVault {
      * (`WalletPreferenceKeys.RETAINED_NEEDS_PHRASE`: they were on the phone before the PIN that
      * is stored now, for example left by "Remove all accounts"). Neither that PIN nor the
      * phone's screen lock shows their phrase, so they are not listed. Null means the marks
-     * could not be read: then only wallets that are accounts are listed.
+     * could not be read: then only wallets that are accounts are listed, and the listing says
+     * that it may be incomplete.
+     *
+     * - A wallet that is an account is the person's own and is listed whatever a mark says
+     *   (a mark is taken off when its wallet is imported; one that outlived that must not hide
+     *   a live account's phrase).
+     * - The 2.x owner whose only phrase or seed is the release-era (unsuffixed) one stands for
+     *   that unsuffixed set: it is hidden exactly when that set is marked.
      */
+    fun listing(
+        facts: RecoveryFacts,
+        needOwnPhrase: Set<String>? = emptySet(),
+    ): Listing {
+        val all = allEntries(facts)
+        val unsuffixedMarked =
+            needOwnPhrase == null || WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID in needOwnPhrase
+        val listed = all.filter { entry ->
+            val address = entry.address
+            when {
+                address == null -> !unsuffixedMarked
+                // Its phrase is the release-era one (nothing is stored under the address).
+                address == facts.legacyOwner && address !in facts.scopedPhraseWalletIds ->
+                    !unsuffixedMarked
+                address in facts.accountNames -> true
+                needOwnPhrase == null -> false
+                else -> address !in needOwnPhrase
+            }
+        }
+        val leftOut = listed.size < all.size
+        return Listing(
+            entries = listed,
+            withheld = leftOut && needOwnPhrase != null,
+            marksUnreadable = leftOut && needOwnPhrase == null,
+        )
+    }
+
     fun entries(
         facts: RecoveryFacts,
         needOwnPhrase: Set<String>? = emptySet(),
-    ): List<PhraseEntry> = allEntries(facts).filter { entry ->
-        when {
-            needOwnPhrase == null -> entry.address != null && entry.address in facts.accountNames
-            entry.address == null -> WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID !in needOwnPhrase
-            else -> entry.address !in needOwnPhrase
-        }
-    }
+    ): List<PhraseEntry> = listing(facts, needOwnPhrase).entries
 
     private fun allEntries(facts: RecoveryFacts): List<PhraseEntry> = buildList {
         facts.phraseWalletIds.distinct().forEach { address ->

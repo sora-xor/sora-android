@@ -116,7 +116,14 @@ sealed interface RevealUi {
         val checking: Boolean = false,
     ) : RevealUi
 
-    data class Wallets(val entries: List<PhraseEntry>, val loading: PhraseEntry? = null) : RevealUi
+    data class Wallets(
+        val entries: List<PhraseEntry>,
+        val loading: PhraseEntry? = null,
+        /** A key set that needs its own recovery phrase is on this phone and is not listed. */
+        val withheld: Boolean = false,
+        /** The list may be incomplete: what may be shown could not be read just now. */
+        val incomplete: Boolean = false,
+    ) : RevealUi
 
     data class Shown(
         val entry: PhraseEntry,
@@ -757,12 +764,14 @@ class SafeModeViewModel @Inject constructor(
         if (state.value.reveal !is RevealUi.Auth) return
         authenticated = true
         viewModelScope.launch {
-            val entries = revealEntries()
+            val listing = revealListing()
             if (state.value.reveal !is RevealUi.Auth) return@launch
-            if (entries.size == 1) {
-                openEntry(entries.single(), canGoBack = false)
+            // One wallet and nothing left out: straight to it. Otherwise the list, which says
+            // when a wallet is not shown and why.
+            if (listing.entries.size == 1 && !listing.withheld && !listing.marksUnreadable) {
+                openEntry(listing.entries.single(), canGoBack = false)
             } else {
-                mutableState.update { it.copy(reveal = RevealUi.Wallets(entries)) }
+                mutableState.update { it.copy(reveal = listing.toUi()) }
             }
         }
     }
@@ -772,12 +781,18 @@ class SafeModeViewModel @Inject constructor(
      * own recovery phrase may bring back (it was on the phone before the PIN that is stored
      * now) is left out: the PIN or screen lock that was just confirmed never protected it.
      */
-    private suspend fun revealEntries(): List<PhraseEntry> {
+    private suspend fun revealListing(): SafeModeVault.Listing {
         val needOwnPhrase = withContext(coroutineManager.io) {
             runCatching { credentialsDatasource.retainedKeySetsNeedingPhrase() }.getOrNull()
         }
-        return SafeModeVault.entries(WalletUpgradeBackup.recoveryFacts(), needOwnPhrase)
+        return SafeModeVault.listing(WalletUpgradeBackup.recoveryFacts(), needOwnPhrase)
     }
+
+    private fun SafeModeVault.Listing.toUi() = RevealUi.Wallets(
+        entries = entries,
+        withheld = withheld,
+        incomplete = marksUnreadable,
+    )
 
     fun openEntry(entry: PhraseEntry, canGoBack: Boolean = true) {
         // A phrase is read only after the person was confirmed in this flow.
@@ -840,9 +855,9 @@ class SafeModeViewModel @Inject constructor(
         when (val current = state.value.reveal) {
             is RevealUi.Shown -> if (current.canGoBack) {
                 viewModelScope.launch {
-                    val entries = revealEntries()
+                    val listing = revealListing()
                     if (state.value.reveal === current) {
-                        mutableState.update { it.copy(reveal = RevealUi.Wallets(entries)) }
+                        mutableState.update { it.copy(reveal = listing.toUi()) }
                     }
                 }
             } else {

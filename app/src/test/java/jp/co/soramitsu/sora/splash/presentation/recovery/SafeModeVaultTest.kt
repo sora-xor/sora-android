@@ -41,6 +41,79 @@ class SafeModeVaultTest {
     }
 
     @Test
+    fun `a marked key set that became an account again is listed`() {
+        // Remove all accounts marked it; the person then imported its phrase. Should the mark
+        // have outlived that import, it must not hide the phrase of a live account.
+        val facts = RecoveryFacts(
+            phraseWalletIds = listOf("cnAdopted", "cnLeftover"),
+            accountNames = mapOf("cnAdopted" to "Mine"),
+            scopedPhraseWalletIds = setOf("cnAdopted", "cnLeftover"),
+        )
+
+        val listing = SafeModeVault.listing(facts, needOwnPhrase = setOf("cnAdopted", "cnLeftover"))
+
+        assertEquals(listOf("cnAdopted"), listing.entries.map { it.id })
+        assertEquals(true, listing.withheld)
+        assertEquals(false, listing.marksUnreadable)
+    }
+
+    @Test
+    fun `the 2-x owner stands for the release-era set and is hidden when that set is marked`() {
+        val unsuffixed = jp.co.soramitsu.common.data.WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID
+        // prefs_address_pure names the owner; its only phrase is the unsuffixed one.
+        val ownerOnlyReleaseEra = RecoveryFacts(
+            phraseWalletIds = listOf("cnOwner"),
+            legacyOwner = "cnOwner",
+            hasUnscopedPhraseOrSeed = true,
+        )
+
+        assertEquals(
+            emptyList<String>(),
+            SafeModeVault.entries(ownerOnlyReleaseEra, needOwnPhrase = setOf(unsuffixed)).map { it.id },
+        )
+        // Also when the owner is listed as an account: the phrase that would be shown is still
+        // the marked set's.
+        assertEquals(
+            emptyList<String>(),
+            SafeModeVault.entries(
+                ownerOnlyReleaseEra.copy(accountNames = mapOf("cnOwner" to "Old")),
+                needOwnPhrase = setOf(unsuffixed),
+            ).map { it.id },
+        )
+        // Not marked: listed as before.
+        assertEquals(
+            listOf("cnOwner"),
+            SafeModeVault.entries(ownerOnlyReleaseEra, needOwnPhrase = emptySet()).map { it.id },
+        )
+        // A phrase stored under the owner's own address is the owner's, whatever the
+        // release-era set's mark says.
+        assertEquals(
+            listOf("cnOwner"),
+            SafeModeVault.entries(
+                ownerOnlyReleaseEra.copy(scopedPhraseWalletIds = setOf("cnOwner")),
+                needOwnPhrase = setOf(unsuffixed),
+            ).map { it.id },
+        )
+    }
+
+    @Test
+    fun `unreadable marks are reported, not shown as nothing saved`() {
+        // In a recovery state the database is often unreadable, so no wallet is known to be an
+        // account. The list is then empty for a reason the screen must be able to say.
+        val facts = RecoveryFacts(phraseWalletIds = listOf("cnOne", "cnTwo"))
+
+        val unreadable = SafeModeVault.listing(facts, needOwnPhrase = null)
+        assertEquals(emptyList<PhraseEntry>(), unreadable.entries)
+        assertEquals(true, unreadable.marksUnreadable)
+        assertEquals(false, unreadable.withheld)
+
+        val readable = SafeModeVault.listing(facts, needOwnPhrase = emptySet())
+        assertEquals(listOf("cnOne", "cnTwo"), readable.entries.map { it.id })
+        assertEquals(false, readable.marksUnreadable)
+        assertEquals(false, readable.withheld)
+    }
+
+    @Test
     fun `a key set that needs its own recovery phrase is never listed for a reveal`() {
         // Left on the phone by "Remove all accounts": the PIN stored now never protected it.
         val facts = RecoveryFacts(
