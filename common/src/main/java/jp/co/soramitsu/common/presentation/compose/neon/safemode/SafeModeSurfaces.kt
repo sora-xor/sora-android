@@ -364,6 +364,13 @@ data class UpgradeCompleteChecks(
     val protectedByPin: Boolean,
     val balancesLoaded: Boolean,
     val needsBackup: Boolean,
+    /** Accounts listed in the app. 0 when the count is not known. */
+    val accountCount: Int = 0,
+    /**
+     * How many of them can sign on this phone. When it is lower than [accountCount] the sheet
+     * says so instead of showing a plain tick, and says how to repair the others.
+     */
+    val signingAccountCount: Int = 0,
 )
 
 /**
@@ -409,6 +416,18 @@ fun UpgradeCompleteSheet(
         val steps = buildList {
             if (checks.accountsOnDevice) {
                 add(SafeStep(stringResource(R.string.safe_mode_whats_new_accounts), SafeStepState.DONE))
+            }
+            if (checks.signingAccountCount < checks.accountCount) {
+                add(
+                    SafeStep(
+                        stringResource(
+                            R.string.safe_mode_whats_new_accounts_some_read_only,
+                            checks.signingAccountCount,
+                            checks.accountCount,
+                        ),
+                        SafeStepState.NEEDS_ACTION,
+                    ),
+                )
             }
             if (checks.protectedByPin) {
                 add(SafeStep(stringResource(R.string.safe_mode_whats_new_pin), SafeStepState.DONE))

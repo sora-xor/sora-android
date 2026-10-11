@@ -346,7 +346,8 @@ private fun ReadOnlyHomeBanner() {
 /**
  * U11 (design spec 9.2, 9.1-7): once, after the upgrade succeeded, after the PIN and never in
  * read-only mode. Each tick is a real check: the selected account exists on this device, the
- * wallet was unlocked with the PIN, and the balance list has loaded.
+ * wallet was unlocked with the PIN, and the balance list has loaded. When some accounts cannot
+ * sign on this phone, the sheet says how many can and how to repair the others.
  */
 @Composable
 private fun UpgradeSheets(state: CardsState, onBackUpNow: () -> Unit) {
@@ -354,13 +355,16 @@ private fun UpgradeSheets(state: CardsState, onBackUpNow: () -> Unit) {
     var pending by remember { mutableStateOf(UpgradeWelcome.isPending(context)) }
     val unlocked by WalletSessionState.unlocked.collectAsStateWithLifecycle()
     val readOnly = rememberWalletReadOnly()
-    if (!pending || !unlocked || readOnly || state.accountAddress.isBlank()) return
+    // The account counts are read first, so the sheet never claims more than was checked.
+    if (!pending || !unlocked || readOnly || state.accountAddress.isBlank() || state.accountCount == 0) return
     UpgradeCompleteSheet(
         checks = UpgradeCompleteChecks(
             accountsOnDevice = true,
             protectedByPin = true,
             balancesLoaded = !state.loading,
             needsBackup = state.cards.any { it is BackupWalletState },
+            accountCount = state.accountCount,
+            signingAccountCount = state.signingAccountCount,
         ),
         onBackUpNow = {
             UpgradeWelcome.markDone(context)
