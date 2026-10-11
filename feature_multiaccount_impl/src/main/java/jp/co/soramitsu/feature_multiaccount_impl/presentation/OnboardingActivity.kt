@@ -51,15 +51,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -210,6 +219,14 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                     onDismissRequest = viewModel::skipDialogDismiss
                 )
             }
+        }
+
+        viewModel.repairPrompt.collectAsStateWithLifecycle().value?.let { prompt ->
+            RepairAccountDialog(
+                prompt = prompt,
+                onConfirm = viewModel::onRepairConfirmed,
+                onDismiss = viewModel::onRepairDismissed,
+            )
         }
 
         NavHost(
@@ -508,4 +525,89 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
     }
 
     private lateinit var navController: NavController
+}
+
+/**
+ * "Repair this account with its recovery phrase". States what happens before anything happens:
+ * the stored keys of this one account are replaced by the ones the entered phrase derives, a copy
+ * of the old keys stays on the phone, and nothing else changes. Confirmed with the PIN when one
+ * is set; Cancel leaves everything as it is.
+ */
+@Composable
+private fun RepairAccountDialog(
+    prompt: OnboardingViewModel.RepairPrompt,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var pin by rememberSaveable { mutableStateOf("") }
+    AlertDialog(
+        backgroundColor = MaterialTheme.customColors.bgPage,
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(id = R.string.account_repair_title),
+                color = MaterialTheme.customColors.fgPrimary,
+                style = MaterialTheme.customTypography.textSBold,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.x1)) {
+                Text(
+                    text = stringResource(
+                        id = if (prompt.accountExists) {
+                            R.string.account_repair_body_account
+                        } else {
+                            R.string.account_repair_body_keys
+                        },
+                    ),
+                    color = MaterialTheme.customColors.fgPrimary,
+                    style = MaterialTheme.customTypography.paragraphS,
+                )
+                if (prompt.pinRequired) {
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth().testTag("RepairPin"),
+                        value = pin,
+                        onValueChange = { value -> pin = value.filter(Char::isDigit).take(12) },
+                        enabled = !prompt.working,
+                        singleLine = true,
+                        label = { Text(text = stringResource(id = R.string.account_repair_pin_label)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                        isError = prompt.wrongPin,
+                    )
+                    if (prompt.wrongPin) {
+                        Text(
+                            text = stringResource(id = R.string.account_repair_pin_wrong),
+                            color = MaterialTheme.customColors.statusError,
+                            style = MaterialTheme.customTypography.textXS,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                modifier = Modifier.testTag("RepairConfirm"),
+                enabled = !prompt.working && (!prompt.pinRequired || pin.isNotEmpty()),
+                onClick = {
+                    val entered = pin
+                    pin = ""
+                    onConfirm(entered)
+                },
+            ) {
+                Text(
+                    text = stringResource(id = R.string.account_repair_confirm),
+                    color = MaterialTheme.customColors.accentPrimary,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(enabled = !prompt.working, onClick = onDismiss) {
+                Text(
+                    text = stringResource(id = R.string.common_cancel),
+                    color = MaterialTheme.customColors.fgPrimary,
+                )
+            }
+        },
+    )
 }

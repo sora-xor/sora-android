@@ -235,7 +235,10 @@ class PinCodeInteractorTest {
         given(userRepository.getCurSoraAccount()).willReturn(account)
         given(userRepository.isMigrationFetched(account)).willReturn(false)
         given(credentialsRepository.getIrohaData(account)).willReturn(irohaData)
-        given(credentialsRepository.retrieveMnemonic(account)).willReturn("qwe asd zxc vbn tyu qwe asd zxc vbn tyu qwe asd zxc vbn tyu")
+        // A 15-word SORA v1 phrase as an old version stored it: typed with commas.
+        given(credentialsRepository.retrieveMnemonic(account)).willReturn(
+            "adapt,explain,ecology,dinner,glare,old,unfair,empty,expect,road,off,suggest,dash,dolphin,case"
+        )
         given(walletRepository.needsMigration(address)).willReturn(needsMigration)
 
         interactor.needsMigration()

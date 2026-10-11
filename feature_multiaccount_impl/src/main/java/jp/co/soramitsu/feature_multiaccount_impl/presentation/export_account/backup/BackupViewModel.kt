@@ -74,18 +74,32 @@ class BackupViewModel @AssistedInject constructor(
     init {
         _toolbarState.value = initMediumTitle2("")
         viewModelScope.launch {
+            // Only a stored phrase or seed that re-derives this account's address is shown.
+            val material = runCatching { multiAccountInteractor.getBackupMaterial(address) }
+                .getOrElse { error ->
+                    onError(error)
+                    return@launch
+                }
             when (type) {
                 ExportProtectionViewModel.Type.SEED -> {
-                    val seed = multiAccountInteractor.getSeed(address)
-                    _backupScreenState.value = BackupScreenState(seedString = seed.addHexPrefix())
                     _toolbarState.value = initMediumTitle2(R.string.common_raw_seed)
+                    _backupScreenState.value = if (material.hasSeed) {
+                        // Also caches the seed where none is stored (as before).
+                        BackupScreenState(
+                            seedString = multiAccountInteractor.getSeed(address).addHexPrefix(),
+                        )
+                    } else {
+                        BackupScreenState(noMatchingSecret = true)
+                    }
                 }
 
                 ExportProtectionViewModel.Type.PASSPHRASE -> {
-                    val mnemonic = multiAccountInteractor.getMnemonic(address)
-                    _backupScreenState.value =
-                        BackupScreenState(mnemonicWords = mnemonic.split(" "))
                     _toolbarState.value = initMediumTitle2(R.string.common_passphrase_title)
+                    _backupScreenState.value = if (material.hasPhrase) {
+                        BackupScreenState(mnemonicWords = material.phraseWords)
+                    } else {
+                        BackupScreenState(noMatchingSecret = true)
+                    }
                 }
 
                 else -> {}
@@ -93,8 +107,14 @@ class BackupViewModel @AssistedInject constructor(
         }
     }
 
+    /** The backup that always works for an account that can sign: the encrypted JSON export. */
+    fun exportJsonPressed() {
+        mainRouter.showExportJSONProtection(mutableListOf(address))
+    }
+
     fun backupPressed() {
         _backupScreenState.value?.let {
+            if (it.noMatchingSecret) return
             if (it.seedString.isNotEmpty()) {
                 clipboardManager.addToClipboard(it.seedString)
             } else {

@@ -80,6 +80,7 @@ class BackupFragment : SoraBaseFragment<BackupViewModel>() {
                     BackupScreen(
                         state = it,
                         onButtonPressed = viewModel::backupPressed,
+                        onExportJsonPressed = viewModel::exportJsonPressed,
                     )
                 }
             }

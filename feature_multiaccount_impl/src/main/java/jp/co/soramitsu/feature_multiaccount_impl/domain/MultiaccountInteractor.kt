@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_multiaccount_impl.domain
 
 import android.net.Uri
+import java.security.MessageDigest
 import javax.inject.Inject
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
@@ -40,10 +41,13 @@ import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.io.FileManager
+import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
+import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.xcrypto.encryption.Keypair
@@ -77,14 +81,17 @@ class MultiaccountInteractor @Inject constructor(
     }
 
     /**
-     * Imports a recovery phrase as one step under the wallet lock.
-     * - A usable account with this address is reported as already imported; nothing is touched.
-     * - A read-only account with this address (its keys are missing or incomplete on this phone)
-     *   is completed from the phrase: only missing key values are added, every stored value must
-     *   match, and the account can sign again. If a stored value cannot be read, nothing is
-     *   written and ACCOUNT_REPAIR_NEEDS_REMOVAL explains the remaining path.
-     * - Otherwise the keys are stored (re-using identical keys already on the device, never
-     *   overwriting different ones) and the account row is added.
+     * Imports a recovery phrase as one step under the wallet lock. No outcome asks the person to
+     * remove an account.
+     * - An account with this address that can sign is reported as already here
+     *   (`ACCOUNT_ALREADY_IMPORTED`); nothing is touched.
+     * - Keys stored for this address whose signing key proves the address (with or without an
+     *   account row, for example after the database was lost) are adopted unchanged, and the
+     *   account is added or made usable again.
+     * - Missing key values are filled in (add-only) when everything already stored agrees.
+     * - When a stored value differs or cannot be read and the stored key does not prove the
+     *   address, nothing is written and [WalletRepairAvailableException] offers the confirmed
+     *   repair ([repairFromMnemonic]).
      */
     suspend fun importFromMnemonic(input: String, accountName: String): SoraAccount =
         importDraft { credentialsRepository.draftFromMnemonic(input, accountName) }
@@ -98,37 +105,95 @@ class MultiaccountInteractor @Inject constructor(
         return soraAccount
     }
 
+    /**
+     * "Repair this account with its recovery phrase": the person confirmed (with the PIN when one
+     * is set) that the values stored for this phrase's address are replaced by the ones the
+     * phrase derives. A copy of the old values is kept on the device first. The account row,
+     * its name and every other account stay as they are.
+     */
+    suspend fun repairFromMnemonic(input: String, accountName: String, pin: String): SoraAccount =
+        repairDraft(pin) { credentialsRepository.draftFromMnemonic(input, accountName) }
+
+    suspend fun repairFromRawSeed(input: String, accountName: String, pin: String): SoraAccount {
+        val soraAccount = repairDraft(pin) {
+            credentialsRepository.draftFromRawSeed(input, accountName)
+        }
+        userRepository.saveNeedsMigration(false, soraAccount)
+        userRepository.saveIsMigrationFetched(true, soraAccount)
+        return soraAccount
+    }
+
     private suspend fun importDraft(createDraft: suspend () -> WalletDraft): SoraAccount =
         WalletMutationCoordinator.withLock {
             val draft = createDraft()
             try {
-                if (userRepository.accountExists(draft.address)) {
-                    if (draft.address !in userRepository.unavailableWalletIds()) {
-                        throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
+                val exists = requireNotAlreadyUsable(draft)
+                try {
+                    credentialsRepository.commitDraft(draft)
+                } catch (error: SoraException) {
+                    if (error.errorResponseCode == ResponseCode.ACCOUNT_STORAGE_CONFLICT) {
+                        throw WalletRepairAvailableException(
+                            address = draft.address,
+                            accountExists = exists,
+                            pinRequired = storedPin().isNotEmpty(),
+                        )
                     }
-                    return@withLock completeUnavailableAccount(draft)
+                    throw error
                 }
-                val soraAccount = credentialsRepository.commitDraft(draft)
-                continueRecoverFlow(soraAccount)
-                soraAccount
+                finishImport(draft, exists)
             } finally {
                 draft.destroy()
             }
         }
 
-    private suspend fun completeUnavailableAccount(draft: WalletDraft): SoraAccount {
+    private suspend fun repairDraft(
+        pin: String,
+        createDraft: suspend () -> WalletDraft,
+    ): SoraAccount = WalletMutationCoordinator.withLock {
+        val stored = storedPin()
+        if (
+            stored.isNotEmpty() &&
+            !MessageDigest.isEqual(stored.toByteArray(), pin.toByteArray())
+        ) {
+            throw SoraException.businessError(ResponseCode.WRONG_PIN_CODE)
+        }
+        val draft = createDraft()
         try {
-            credentialsRepository.commitDraft(draft)
-        } catch (error: SoraException) {
-            if (error.errorResponseCode == ResponseCode.ACCOUNT_STORAGE_CONFLICT) {
-                throw SoraException.businessError(ResponseCode.ACCOUNT_REPAIR_NEEDS_REMOVAL)
-            }
-            throw error
+            val exists = requireNotAlreadyUsable(draft)
+            credentialsRepository.repairWithDraft(draft)
+            finishImport(draft, exists)
+        } finally {
+            draft.destroy()
+        }
+    }
+
+    /** True when an account row exists (read-only); throws when that account can already sign. */
+    private suspend fun requireNotAlreadyUsable(draft: WalletDraft): Boolean {
+        if (!userRepository.accountExists(draft.address)) return false
+        if (draft.address !in userRepository.unavailableWalletIds()) {
+            // The stored signing key proves the account: the wallet is already here.
+            throw SoraException.businessError(ResponseCode.ACCOUNT_ALREADY_IMPORTED)
+        }
+        return true
+    }
+
+    private suspend fun finishImport(draft: WalletDraft, accountExists: Boolean): SoraAccount {
+        if (!accountExists) {
+            val soraAccount = SoraAccount(draft.address, draft.accountName)
+            continueRecoverFlow(soraAccount)
+            return soraAccount
         }
         val repaired = userRepository.completeUnavailableWallet(draft.address)
         userRepository.setCurSoraAccount(repaired)
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
         return repaired
+    }
+
+    /** The PIN set on this phone, or "" when none is set or it cannot be read. */
+    private suspend fun storedPin(): String = try {
+        userRepository.retrievePin()
+    } catch (_: WalletDecryptionException) {
+        ""
     }
 
     /** A new wallet held in memory until [createUserFromDraft]; backing out stores nothing. */
@@ -148,21 +213,37 @@ class MultiaccountInteractor @Inject constructor(
     suspend fun generateDraftJson(draft: WalletDraft, password: String): String =
         credentialsRepository.generateJsonForDraft(draft, password)
 
-    suspend fun getMnemonic(soraAccount: SoraAccount? = null): String {
-        return credentialsRepository.retrieveMnemonic(soraAccount ?: userRepository.getCurSoraAccount())
-    }
+    /**
+     * The recovery phrase to show or back up for an account: the stored phrase's words joined by
+     * single spaces, and only when that phrase re-derives the account's address. "" otherwise.
+     */
+    suspend fun getMnemonic(soraAccount: SoraAccount? = null): String =
+        getBackupMaterial(soraAccount ?: userRepository.getCurSoraAccount())
+            .phraseWords.joinToString(" ")
+
+    /** What may be shown as a backup of [soraAccount] (only material that re-derives it). */
+    suspend fun getBackupMaterial(soraAccount: SoraAccount): WalletBackupMaterial =
+        credentialsRepository.retrieveBackupMaterial(soraAccount)
+
+    suspend fun getBackupMaterial(address: String): WalletBackupMaterial =
+        getBackupMaterial(userRepository.getSoraAccount(address))
 
     private suspend fun insertAndSetCurAccount(soraAccount: SoraAccount, newAccount: Boolean) {
         userRepository.insertSoraAccount(soraAccount, newAccount)
         userRepository.setCurSoraAccount(soraAccount)
     }
 
-    suspend fun getMnemonic(address: String): String {
-        return credentialsRepository.retrieveMnemonic(userRepository.getSoraAccount(address))
-    }
+    suspend fun getMnemonic(address: String): String =
+        getMnemonic(userRepository.getSoraAccount(address))
 
+    /**
+     * The 32-byte seed that re-derives the account ("" when neither the stored seed nor the
+     * stored phrase does). The first call also caches it where no seed is stored yet.
+     */
     suspend fun getSeed(address: String): String {
-        return credentialsRepository.retrieveSeed(userRepository.getSoraAccount(address))
+        val account = userRepository.getSoraAccount(address)
+        if (!credentialsRepository.retrieveBackupMaterial(account).hasSeed) return ""
+        return credentialsRepository.retrieveSeed(account)
     }
 
     suspend fun getKeypair(address: String): Keypair {

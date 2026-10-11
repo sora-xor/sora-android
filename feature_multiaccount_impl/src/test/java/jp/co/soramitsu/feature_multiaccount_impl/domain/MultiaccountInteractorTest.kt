@@ -35,7 +35,9 @@ package jp.co.soramitsu.feature_multiaccount_impl.domain
 import io.mockk.coVerifyOrder
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
+import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
 import org.junit.Assert.assertTrue
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -56,6 +58,7 @@ import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -209,26 +212,109 @@ class MultiaccountInteractorTest {
         }
 
     @Test
-    fun `read-only account with unreadable stored keys asks for removal and writes nothing`() =
+    fun `read-only account with conflicting stored keys is offered the repair, never removal`() =
         runTest {
             val draft = draft("cnUnreadable", "Name")
             coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
             coEvery { userRepository.accountExists("cnUnreadable") } returns true
             coEvery { userRepository.unavailableWalletIds() } returns setOf("cnUnreadable")
+            coEvery { userRepository.retrievePin() } returns "135790"
             coEvery { credentialsRepository.commitDraft(draft) } throws
                 SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
 
-            val error = runCatching {
+            val offer = runCatching {
                 multiaccountInteractor.importFromMnemonic("mnemonic", "Name")
-            }.exceptionOrNull()
+            }.exceptionOrNull() as WalletRepairAvailableException
 
-            assertEquals(
-                ResponseCode.ACCOUNT_REPAIR_NEEDS_REMOVAL,
-                (error as? SoraException)?.errorResponseCode,
-            )
+            assertEquals("cnUnreadable", offer.address)
+            assertTrue(offer.accountExists)
+            assertTrue(offer.pinRequired)
+            // Nothing was written by the refused import.
+            coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
             coVerify(exactly = 0) { userRepository.completeUnavailableWallet(any()) }
             coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+            assertTrue(draft.isDestroyedForTest())
         }
+
+    @Test
+    fun `conflicting keys without an account row are offered the repair too`() = runTest {
+        val draft = draft("cnOrphan", "Name")
+        coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+        coEvery { userRepository.accountExists("cnOrphan") } returns false
+        coEvery { userRepository.retrievePin() } returns ""
+        coEvery { credentialsRepository.commitDraft(draft) } throws
+            SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+
+        val offer = runCatching {
+            multiaccountInteractor.importFromMnemonic("mnemonic", "Name")
+        }.exceptionOrNull() as WalletRepairAvailableException
+
+        assertFalse(offer.accountExists)
+        // No PIN is set on this phone, so there is none to ask for.
+        assertFalse(offer.pinRequired)
+        coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+    }
+
+    @Test
+    fun `repair needs the PIN and then replaces the keys of the read-only account in place`() =
+        runTest {
+            val draft = draft("cnBroken", "Typed name")
+            val repaired = SoraAccount("cnBroken", "Kept name")
+            coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+            coEvery { userRepository.accountExists("cnBroken") } returns true
+            coEvery { userRepository.unavailableWalletIds() } returns setOf("cnBroken")
+            coEvery { userRepository.retrievePin() } returns "135790"
+            coEvery { credentialsRepository.repairWithDraft(draft) } returns
+                SoraAccount("cnBroken", "Typed name")
+            coEvery { userRepository.completeUnavailableWallet("cnBroken") } returns repaired
+            coEvery { userRepository.setCurSoraAccount(repaired) } returns Unit
+            coEvery {
+                userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+            } returns Unit
+
+            val wrongPin = runCatching {
+                multiaccountInteractor.repairFromMnemonic("mnemonic", "Typed name", "000000")
+            }.exceptionOrNull()
+            assertEquals(
+                ResponseCode.WRONG_PIN_CODE,
+                (wrongPin as? SoraException)?.errorResponseCode,
+            )
+            // A wrong PIN stops before the phrase is even turned into keys.
+            coVerify(exactly = 0) { credentialsRepository.draftFromMnemonic(any(), any()) }
+            coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
+
+            assertEquals(
+                repaired,
+                multiaccountInteractor.repairFromMnemonic("mnemonic", "Typed name", "135790"),
+            )
+            coVerifyOrder {
+                credentialsRepository.repairWithDraft(draft)
+                userRepository.completeUnavailableWallet("cnBroken")
+                userRepository.setCurSoraAccount(repaired)
+            }
+            // The account row is kept (no insert, no removal).
+            coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+            coVerify(exactly = 0) { userRepository.createWalletDeletionPreview(any()) }
+        }
+
+    @Test
+    fun `repair is refused for an account that can already sign`() = runTest {
+        val draft = draft("cnFine", "Name")
+        coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+        coEvery { userRepository.accountExists("cnFine") } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns emptySet()
+        coEvery { userRepository.retrievePin() } returns "135790"
+
+        val error = runCatching {
+            multiaccountInteractor.repairFromMnemonic("mnemonic", "Name", "135790")
+        }.exceptionOrNull()
+
+        assertEquals(
+            ResponseCode.ACCOUNT_ALREADY_IMPORTED,
+            (error as? SoraException)?.errorResponseCode,
+        )
+        coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
+    }
 
     @Test
     fun `import from raw seed stores keys and adds the account`() = runTest {
@@ -306,15 +392,43 @@ class MultiaccountInteractorTest {
         coVerify { userRepository.updateAccountName(soraAccount, "newName") }
     }
 
+    private fun material(words: List<String>, seedHex: String) = WalletBackupMaterial(
+        canSign = true,
+        phraseWords = words,
+        seedHex = seedHex,
+        storedPhraseDoesNotMatch = false,
+        storedSeedDoesNotMatch = false,
+    )
+
     @Test
-    fun `get mnemonic is called`() = runTest {
+    fun `the phrase shown is the stored phrase that re-derives the account`() = runTest {
         val address = "address"
         val soraAccount = SoraAccount("address", "name")
         coEvery { userRepository.getSoraAccount(address) } returns soraAccount
-        val mnemonic = "mnemonic"
-        coEvery { credentialsRepository.retrieveMnemonic(soraAccount) } returns mnemonic
-        val result = multiaccountInteractor.getMnemonic(address)
-        assertEquals(mnemonic, result)
+        coEvery { credentialsRepository.retrieveBackupMaterial(soraAccount) } returns
+            material(listOf("alpha", "beta", "gamma"), "")
+        assertEquals("alpha beta gamma", multiaccountInteractor.getMnemonic(address))
+        // The raw stored text is never what the screens show.
+        coVerify(exactly = 0) { credentialsRepository.retrieveMnemonic(any()) }
+    }
+
+    @Test
+    fun `no phrase or seed is offered when none stored re-derives the account`() = runTest {
+        val address = "address"
+        val soraAccount = SoraAccount("address", "name")
+        coEvery { userRepository.getSoraAccount(address) } returns soraAccount
+        coEvery { credentialsRepository.retrieveBackupMaterial(soraAccount) } returns
+            WalletBackupMaterial(
+                canSign = true,
+                phraseWords = emptyList(),
+                seedHex = "",
+                storedPhraseDoesNotMatch = true,
+                storedSeedDoesNotMatch = false,
+            )
+        assertEquals("", multiaccountInteractor.getMnemonic(address))
+        assertEquals("", multiaccountInteractor.getSeed(address))
+        assertTrue(multiaccountInteractor.getBackupMaterial(address).onlyJsonExport)
+        coVerify(exactly = 0) { credentialsRepository.retrieveSeed(any()) }
     }
 
     @Test
@@ -323,6 +437,8 @@ class MultiaccountInteractorTest {
         val soraAccount = SoraAccount("address", "name")
         coEvery { userRepository.getSoraAccount(address) } returns soraAccount
         val seed = "seed"
+        coEvery { credentialsRepository.retrieveBackupMaterial(soraAccount) } returns
+            material(emptyList(), seed)
         coEvery { credentialsRepository.retrieveSeed(soraAccount) } returns seed
         val result = multiaccountInteractor.getSeed(address)
         assertEquals(seed, result)
