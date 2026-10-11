@@ -174,6 +174,15 @@ enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.str
 
     GOOGLE_BACKUP_DECRYPTION_FAILED(R.string.common_google_backup_decryption_failed_2),
 
+    /**
+     * A Google backup was opened, but what it holds cannot restore the account it names (for
+     * example its encrypted JSON is damaged or is of another account). Nothing was written.
+     */
+    GOOGLE_BACKUP_UNREADABLE(
+        R.string.google_backup_unreadable,
+        R.string.google_backup_unreadable_title,
+    ),
+
     NOW_BROWSER_FOUND(R.string.common_error_no_browser_error);
 
     companion object {

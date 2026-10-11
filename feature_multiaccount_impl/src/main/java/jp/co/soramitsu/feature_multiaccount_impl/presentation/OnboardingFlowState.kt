@@ -103,6 +103,11 @@ data class ImportAccountPasswordState(
 data class BackupAccountMetaWithIcon(
     val backupAccountMeta: BackupAccountMeta,
     val icon: Drawable?,
+    /**
+     * The account of this backup is already listed on this phone but cannot sign here. Restoring
+     * the backup completes or repairs its keys in place; the list says so under the address.
+     */
+    val readOnlyOnThisPhone: Boolean = false,
 )
 
 data class MnemonicConfirmationState(

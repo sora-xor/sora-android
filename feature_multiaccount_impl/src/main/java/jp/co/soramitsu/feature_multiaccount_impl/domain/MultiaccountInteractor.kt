@@ -94,7 +94,42 @@ class MultiaccountInteractor @Inject constructor(
 
     suspend fun isRawSeedValid(rawSeed: String) = credentialsRepository.isRawSeedValid(rawSeed)
 
-    suspend fun accountExists(address: String) = userRepository.accountExists(address)
+    /** What restoring a backup of an account does on this phone ([backupRestores]). */
+    enum class BackupRestore {
+        /** No account with this address is listed here: the restore adds it. */
+        ADDS_ACCOUNT,
+
+        /**
+         * The account is listed here but read-only (its keys are missing, incomplete or cannot
+         * be used). The same restore completes its keys in place, or offers the confirmed
+         * repair. The account row, its name and every other account stay as they are.
+         */
+        REPAIRS_READ_ONLY_ACCOUNT,
+    }
+
+    /**
+     * The accounts among [addresses] whose backup still has something to do on this phone, in
+     * the order given, and what restoring it does. An account that can sign is already here and
+     * is left out: its keys are never touched.
+     *
+     * A read-only account is kept. Its backup is exactly what makes it usable again
+     * ([importFromMnemonic], [importFromRawSeed] and [importFromJson] complete or repair it in
+     * place), so hiding that backup would leave removing the account as the only way to use it.
+     * Reads only.
+     */
+    suspend fun backupRestores(addresses: Collection<String>): Map<String, BackupRestore> {
+        val readOnly = userRepository.unavailableWalletIds()
+        val restores = LinkedHashMap<String, BackupRestore>()
+        addresses.forEach { address ->
+            when {
+                !userRepository.accountExists(address) ->
+                    restores[address] = BackupRestore.ADDS_ACCOUNT
+                address in readOnly ->
+                    restores[address] = BackupRestore.REPAIRS_READ_ONLY_ACCOUNT
+            }
+        }
+        return restores
+    }
 
     suspend fun continueRecoverFlow(soraAccount: SoraAccount) {
         insertAndSetCurAccount(soraAccount, false)

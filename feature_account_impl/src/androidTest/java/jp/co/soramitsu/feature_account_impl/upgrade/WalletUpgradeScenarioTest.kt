@@ -54,6 +54,7 @@ import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationOutcome
 import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationSr25519Crypto
 import jp.co.soramitsu.feature_account_impl.historical.HistoricalSr25519Vectors
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
+import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor.BackupRestore
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.xcrypto.encryption.sr25519.Sr25519JNI
 import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
@@ -644,13 +645,22 @@ class WalletUpgradeScenarioTest {
             launch.assertUsable(listOf(main), unavailable = listOf(partial.address), selected = main)
             val options = requireNotNull(launch.userRepository.unavailableWalletOptions(partial.address))
             assertTrue(options.canRepairWithPhrase && options.canShowPhraseAfterPin && options.canReadOnly)
+            // Import account, Google: the backup of the read-only account is offered, although
+            // the account is listed on this phone. Only the account that works is left out.
+            assertEquals(
+                mapOf(partial.address to BackupRestore.REPAIRS_READ_ONLY_ACCOUNT),
+                launch.backupRestores(main, partial),
+            )
 
-            // The person imports the account's own phrase: only the missing nonce is added.
+            // The person imports the account's own phrase (typed, or restored from that backup):
+            // only the missing nonce is added.
             launch.importPhrase(TWENTY_FOUR_WORDS, "Typed name")
             launch.assertUsable(listOf(main, partial), selected = partial)
             launch.assertCiphertextsKept(before)
             assertEquals("Partial", launch.userRepository.getCurSoraAccount().accountName)
             assertNull(launch.userRepository.unavailableWalletOptions(partial.address))
+            // It works again, so its backup is not offered a second time.
+            assertTrue(launch.backupRestores(main, partial).isEmpty())
         }
         // The next start verifies it like every other account.
         candidate { launch ->
@@ -685,6 +695,19 @@ class WalletUpgradeScenarioTest {
             val options = requireNotNull(launch.userRepository.unavailableWalletOptions(broken.address))
             assertTrue(options.canRepairWithPhrase)
             assertTrue(options.repairReplacesStoredValues)
+            // Import account, Google: the backup of the read-only account is offered, next to
+            // the backup of a wallet that is not on this phone. The account that works is not.
+            val notHere = rawSeedWallet(RAW_SEED)
+            assertEquals(
+                mapOf(
+                    broken.address to BackupRestore.REPAIRS_READ_ONLY_ACCOUNT,
+                    notHere.address to BackupRestore.ADDS_ACCOUNT,
+                ),
+                launch.backupRestores(first, broken, notHere),
+            )
+            // Looking at that list changes nothing.
+            launch.assertCiphertextsKept(before)
+            launch.assertUsable(listOf(first), unavailable = listOf(broken.address), selected = first)
 
             // Importing the phrase never asks to remove the account. A stored value cannot be
             // read, so nothing is written and the confirmed repair is offered.
@@ -710,6 +733,11 @@ class WalletUpgradeScenarioTest {
             assertEquals("Broken", launch.userRepository.getCurSoraAccount().accountName)
             launch.assertCiphertextsKept(before.filterKeys { !it.endsWith(broken.address) })
             assertNull(launch.userRepository.unavailableWalletOptions(broken.address))
+            // Repaired: only the wallet that is not on this phone is still offered.
+            assertEquals(
+                mapOf(notHere.address to BackupRestore.ADDS_ACCOUNT),
+                launch.backupRestores(first, broken, notHere),
+            )
         }
         candidate { launch ->
             assertTrue(launch.prepare.isSuccess)
@@ -2901,6 +2929,13 @@ class WalletUpgradeScenarioTest {
                 walletRepository = mockk(relaxed = true),
             )
         }
+
+        /**
+         * Import account, Google: the backups the list offers on this phone, and what restoring
+         * each does. (`OnboardingViewModel.getBackupedAccountsFiltered` asks exactly this.)
+         */
+        suspend fun backupRestores(vararg wallets: Fixture): Map<String, BackupRestore> =
+            interactor.backupRestores(wallets.map(Fixture::address))
 
         /** Import account, Passphrase. */
         suspend fun importPhrase(phrase: String, name: String): SoraAccount =
