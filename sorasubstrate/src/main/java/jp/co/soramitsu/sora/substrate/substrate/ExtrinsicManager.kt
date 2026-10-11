@@ -325,11 +325,7 @@ class ExtrinsicManager @Inject constructor(
         ) { "SORA2_PREPARED_PURPOSE_INVALID" }
         requireSigningWalletAvailable(from)
         if (purpose == PreparedPurpose.LEGACY_MIGRATION) {
-            Sora2LegacyMigrationAdmissionGate.requireNoUnresolvedWitness(
-                walletId = from,
-                unresolved = database.walletIdentityDao()
-                    .getUnresolvedSora2PendingSubmissions(),
-            )
+            pendingSubmissionCoordinator.requireLegacyMigrationAdmissible(from)
         }
         val contextBoundBuilder = if (qualifiedPolkamarktRuntime == null) {
             val signingRuntime = runtimeManager.getMutationRuntimeContext()
