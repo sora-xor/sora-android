@@ -274,6 +274,30 @@ class ReferralViewModelTest {
     }
 
     @Test
+    fun `opening the screen without network reports it and does not end the app`() = runTest {
+        // Audit (SEED64-DYN): the candidate crashed here with BOUNDED_HTTP_IO. The fee is read
+        // again when the XOR balance arrives, in a place no handler covered.
+        whenever(interactor.getReferrals()).thenReturn(emptyFlow())
+        whenever(interactor.observeReferrals()).thenReturn(emptyFlow())
+        whenever(assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)).thenReturn(
+            flow { emit(TestAssets.xorAsset()) }
+        )
+        whenever(interactor.calcBondFee()).thenAnswer { throw java.io.IOException("BOUNDED_HTTP_IO") }
+
+        setupViewModel()
+        advanceUntilIdle()
+
+        assertEquals(
+            R.string.common_error_general_title to R.string.common_error_network,
+            referralViewModel.errorFromResourceLiveData.value,
+        )
+        // Changing the number of invitations while offline is reported the same way.
+        referralViewModel.onBondPlus()
+        advanceUntilIdle()
+        assertEquals(false, referralViewModel.referralScreenState.value.common.progress)
+    }
+
+    @Test
     fun `onDestinationChanged() called`() = runTest {
         whenever(interactor.getReferrals()).thenReturn(flow { emit(referrals) })
         whenever(interactor.observeReferrals()).thenReturn(flow { emit("") })

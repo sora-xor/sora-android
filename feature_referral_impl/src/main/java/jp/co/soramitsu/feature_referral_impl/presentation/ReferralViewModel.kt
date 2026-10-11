@@ -64,6 +64,7 @@ import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.component.wrappedtext.WrappedTextState
 import kotlin.math.truncate
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -199,6 +200,9 @@ class ReferralViewModel @Inject constructor(
                     _navToStart.value = if (_referralScreenState.value.isInitialized()) REFERRAL_PROGRAM else WELCOME_PAGE
                 }
             }
+            // Also what the screen does with each value can fail (a fee or a list read while
+            // offline): reported, never thrown out of the view model's scope.
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         interactor.observeMyReferrer()
@@ -209,6 +213,9 @@ class ReferralViewModel @Inject constructor(
                 _referralScreenState.value =
                     _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(referrer = referrer))
             }
+            // Also what the screen does with each value can fail (a fee or a list read while
+            // offline): reported, never thrown out of the view model's scope.
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         interactor.observeReferrals()
@@ -218,6 +225,9 @@ class ReferralViewModel @Inject constructor(
             .onEach {
                 interactor.updateReferrals()
             }
+            // Also what the screen does with each value can fail (a fee or a list read while
+            // offline): reported, never thrown out of the view model's scope.
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
@@ -227,6 +237,9 @@ class ReferralViewModel @Inject constructor(
                 xorBalance = asset?.balance?.transferable ?: BigDecimal.ZERO
                 reCalcOnChange(currentDestination)
             }
+            // Also what the screen does with each value can fail (a fee or a list read while
+            // offline): reported, never thrown out of the view model's scope.
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         interactor.getReferrals()
@@ -246,6 +259,9 @@ class ReferralViewModel @Inject constructor(
                     isExpanded = referralsState.isExpanded,
                 )
             }
+            // Also what the screen does with each value can fail (a fee or a list read while
+            // offline): reported, never thrown out of the view model's scope.
+            .catch { onError(it) }
             .launchIn(viewModelScope)
     }
 
@@ -352,7 +368,22 @@ class ReferralViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Recalculates the bond screen from the current fee. The fee is read from the network; when
+     * that fails (for example offline) the failure is reported and the screen keeps what it
+     * shows. It used to end the app: several callers launch this without a handler.
+     */
     private suspend fun reCalcOnChange(route: String?) {
+        try {
+            reCalc(route)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            onError(error)
+        }
+    }
+
+    private suspend fun reCalc(route: String?) {
         if (route == null) return
         val feeToken = feeToken()
         val bondFee = interactor.calcBondFee()
