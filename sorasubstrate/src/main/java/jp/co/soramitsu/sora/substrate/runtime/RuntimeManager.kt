@@ -162,6 +162,8 @@ private data class RuntimeCandidate(
     val sora2TypesToCache: String? = null,
     /** See [Sora2SignedExtensionAdmission]; not empty means this runtime cannot be signed for. */
     val unsupportedSignedExtensions: List<String> = emptyList(),
+    /** Set when the metadata was just read from the chain together with its runtime code hash. */
+    val codeBinding: RuntimeCodeBinding? = null,
 )
 
 /**
@@ -883,6 +885,9 @@ class RuntimeManager @Inject constructor(
         withContext(coroutineManager.io) {
             val candidate = checkRuntimeVersion(initFromCache())
             publishRuntimeCandidate(candidate)
+            // A refresh for reading already downloaded the live metadata. Remember what it
+            // belongs to, so the first fee quote does not download it a second time.
+            candidate.codeBinding?.let(::rememberRuntimeCodeBindingLocked)
             candidate.snapshot
         }
 
@@ -1406,7 +1411,20 @@ class RuntimeManager @Inject constructor(
                         FirebaseWrapper.recordException(error)
                     }
                 }
-                return refreshedCandidate
+                // The code hash of the same finalized block the metadata was read at.
+                val runtimeCodeHash = runtimeCodeHashOrNull(liveIdentity.finalizedHash)
+                return refreshedCandidate.copy(
+                    codeBinding = runtimeCodeHash?.let { codeHash ->
+                        RuntimeCodeBinding(
+                            schemaVersion = RUNTIME_CODE_BINDING_SCHEMA_VERSION,
+                            genesisHash = liveGenesisHash,
+                            specVersion = runtimeVersion.specVersion,
+                            transactionVersion = runtimeVersion.transactionVersion,
+                            metadataSha256 = refreshedCandidate.metadataSha256,
+                            runtimeCodeHash = codeHash.lowercase(),
+                        )
+                    },
+                )
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Sora2RuntimeIdentityException) {

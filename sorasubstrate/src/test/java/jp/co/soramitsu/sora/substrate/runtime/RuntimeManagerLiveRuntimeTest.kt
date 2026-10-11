@@ -528,6 +528,26 @@ class RuntimeManagerLiveRuntimeTest {
         }
 
     @Test
+    fun `the download that refreshed the runtime for reading also serves the first quote`() =
+        runTest {
+            // First start after a chain upgrade: the packaged runtime is 130, mainnet is at 133.
+            liveChain(specVersion = 133, transactionVersion = 131)
+            coEvery { rpc.getRuntimeCodeHashAtFinalized(any()) } returns CODE_HASH
+            coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+            val manager = runtimeManager()
+
+            manager.getRuntimeSnapshot()
+            assertEquals(133, manager.getRuntimeSpecVersion())
+            coVerify(exactly = 1) { rpc.getMetadataAtFinalized(any()) }
+
+            val context = manager.getMutationRuntimeContext()
+
+            assertEquals(133, context.runtimeVersion.specVersion)
+            assertSame(manager.getRuntimeSnapshot(), context.snapshot)
+            coVerify(exactly = 1) { rpc.getMetadataAtFinalized(any()) }
+        }
+
+    @Test
     fun `new runtime code or a new version always reads the metadata again`() = runTest {
         liveChain()
         coEvery { rpc.getRuntimeCodeHashAtFinalized(any()) } returns CODE_HASH
