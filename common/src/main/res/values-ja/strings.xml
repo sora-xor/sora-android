@@ -657,4 +657,7 @@
   <string name="network_fee_needs_app_update">SORAネットワークがアップグレードされたため、このバージョンのアプリではまだトランザクションを作成できません。送金・スワップ・請求を行うには、アプリをアップデートしてください。残高は引き続き更新され、資産はブロックチェーン上で安全です。</string>
   <string name="tx_outcome_not_sent_needs_app_update">SORAネットワークがアップグレードされたため、このバージョンのアプリではまだトランザクションを作成できません。何も送信されておらず、手数料もかかっていません。アプリをアップデートしてから、もう一度お試しください。資産はブロックチェーン上で安全です。</string>
   <string name="send_locked_balance_note">%1$s はステーキングや投票などによりネットワーク上でロックされているため、送金できません。</string>
+  <string name="tx_outcome_not_sent_fee_locked">ネットワーク手数料の支払いに使うXORが、ステーキングや投票などによりネットワーク上でロックされているため、このアカウントは現在手数料を支払えません。何も送信されておらず、手数料もかかっていません。</string>
+  <string name="send_fee_locked_hint">ネットワーク手数料に使える、ロックされていないXORが不足しています</string>
+  <string name="asset_frozen_amount_suffix">・凍結中 %1$s</string>
 </resources>

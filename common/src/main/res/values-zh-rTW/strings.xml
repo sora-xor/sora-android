@@ -654,4 +654,7 @@
   <string name="network_fee_needs_app_update">The SORA network was upgraded, and this version of the app can\'t prepare transactions for it yet. Please update the app to send, swap or claim. Your balances still update, and your funds are safe on the blockchain.</string>
   <string name="tx_outcome_not_sent_needs_app_update">The SORA network was upgraded, and this version of the app can\'t prepare transactions for it yet. Nothing was sent and no fee was charged. Please update the app and try again. Your funds are safe on the blockchain.</string>
   <string name="send_locked_balance_note">%1$s is locked on the network, for example by staking or voting, and can\'t be sent.</string>
+  <string name="tx_outcome_not_sent_fee_locked">This account can\'t pay the network fee right now, because the XOR it would be paid from is locked on the network, for example by staking or voting. Nothing was sent and no fee was charged.</string>
+  <string name="send_fee_locked_hint">Not enough unlocked XOR for the network fee</string>
+  <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
 </resources>
