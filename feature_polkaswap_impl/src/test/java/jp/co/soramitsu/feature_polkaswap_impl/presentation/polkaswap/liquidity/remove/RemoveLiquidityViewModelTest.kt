@@ -39,6 +39,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.TransactionOutcome
@@ -413,6 +414,48 @@ class RemoveLiquidityViewModelTest {
             verify(router, never()).returnToHubFragment()
             assertTrue(confirmButton().enabled)
             assertFalse(confirmButton().loading)
+        }
+
+    @Test
+    fun `a network that needs a newer app says so and offers the update instead of another try`() =
+        runTest {
+            listOf(
+                R.string.network_fee_unavailable_short,
+                R.string.network_fee_needs_app_update,
+                R.string.common_update,
+                R.string.common_close,
+            ).forEach { id ->
+                given(resourceManager.getString(id)).willReturn("text-$id")
+            }
+            // What the signing runtime raises for a live signed extension the app cannot write.
+            given(
+                poolsInteractor.fetchRemoveLiquidityNetworkFee(XOR_ASSET.token, VAL_ASSET.token)
+            ).willSuspendableAnswer {
+                throw IllegalStateException(
+                    "SORA2_FEE_QUOTE_FAILED",
+                    IllegalStateException(NetworkFeeUnavailable.APP_UPDATE_REQUIRED_CODE),
+                )
+            }
+
+            setUpViewModel()
+            advanceUntilIdle()
+
+            // Before the fix: "can't be checked right now, try again in a moment", for ever.
+            val question = checkNotNull(viewModel.confirmDialogLiveData.value)
+            assertEquals("text-${R.string.network_fee_needs_app_update}", question.message)
+            assertEquals("text-${R.string.common_update}", question.confirmText)
+            assertEquals("text-${R.string.common_close}", question.dismissText)
+            assertEquals(null, viewModel.openAppStoreLiveData.value)
+
+            question.onConfirm()
+            advanceUntilIdle()
+
+            // The store page of the app is asked for, the screen that cannot load is left, and
+            // the fee is not asked again.
+            assertEquals(Unit, viewModel.openAppStoreLiveData.value)
+            assertEquals(Unit, viewModel.navigationPop.value)
+            verify(poolsInteractor, times(1))
+                .fetchRemoveLiquidityNetworkFee(XOR_ASSET.token, VAL_ASSET.token)
         }
 
     @Test

@@ -40,10 +40,8 @@ import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.base.ConfirmDialogData
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
-import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
@@ -132,23 +130,11 @@ class ClaimDemeterViewModel @AssistedInject constructor(
      */
     private fun onLoadFailed(error: Throwable) {
         onError(error)
-        val unreachable =
-            NetworkFeeUnavailable.from(error) == NetworkFeeUnavailable.NETWORK_UNREACHABLE
-        confirmDialogLiveData.setValue(
-            ConfirmDialogData(
-                title = resourceManager.getString(R.string.network_fee_unavailable_short),
-                message = resourceManager.getString(
-                    if (unreachable) {
-                        R.string.tx_outcome_screen_needs_network
-                    } else {
-                        R.string.network_fee_unavailable
-                    }
-                ),
-                confirmText = resourceManager.getString(R.string.common_try_again),
-                dismissText = resourceManager.getString(R.string.common_close),
-                onDismiss = { _navigationPop.trigger() },
-                onConfirm = ::load,
-            )
+        showFeesUnavailable(
+            resourceManager = resourceManager,
+            error = error,
+            onClose = { _navigationPop.trigger() },
+            onRetry = ::load,
         )
     }
 

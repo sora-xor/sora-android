@@ -12,6 +12,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.TransactionOutcome
@@ -33,6 +34,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -68,11 +70,13 @@ class ClaimDemeterViewModelTest {
     private val txHash = "0x" + "ab".repeat(32)
     private val fee = BigDecimal("0.0007")
     private var feeOffline = false
+    private var feeNeedsAppUpdate = false
 
     private fun TestScope.screen(): ClaimDemeterViewModel {
         coEvery { walletInteractor.getFeeToken() } returns TestTokens.xorToken
         coEvery { demeter.calcClaimDemeterRewards(ids) } coAnswers {
             if (feeOffline) throw IOException("BOUNDED_HTTP_IO")
+            if (feeNeedsAppUpdate) throw appUpdateRequired()
             fee
         }
         coEvery { assetsInteractor.getXorBalance(any()) } returns mockk<XorAssetBalance>().also {
@@ -351,6 +355,36 @@ class ClaimDemeterViewModelTest {
             viewModel.onScreenPaused()
             viewModel.onScreenResumed()
             verify(exactly = 2) { assetsRouter.showTxResult(any(), any()) }
+        }
+
+    /** What the signing runtime raises for a live signed extension the app cannot write. */
+    private fun appUpdateRequired() = IllegalStateException(
+        "SORA2_FEE_QUOTE_FAILED",
+        IllegalStateException(NetworkFeeUnavailable.APP_UPDATE_REQUIRED_CODE),
+    )
+
+    @Test
+    fun `a network that needs a newer app says so and offers the update instead of another try`() =
+        runTest {
+            feeNeedsAppUpdate = true
+
+            val viewModel = screen()
+
+            // Before the fix: "can't be checked right now, try again in a moment", for ever.
+            val question = checkNotNull(viewModel.confirmDialogLiveData.value)
+            assertEquals("text-${R.string.network_fee_needs_app_update}", question.message)
+            assertEquals("text-${R.string.common_update}", question.confirmText)
+            assertEquals("text-${R.string.common_close}", question.dismissText)
+            assertNull(viewModel.openAppStoreLiveData.value)
+
+            question.onConfirm()
+            advanceUntilIdle()
+
+            // The store page of the app is asked for, the screen that cannot load is left, and
+            // the fee is not asked again.
+            assertNotNull(viewModel.openAppStoreLiveData.value)
+            assertNotNull(viewModel.navigationPop.value)
+            coVerify(exactly = 1) { demeter.calcClaimDemeterRewards(ids) }
         }
 
     @Test
