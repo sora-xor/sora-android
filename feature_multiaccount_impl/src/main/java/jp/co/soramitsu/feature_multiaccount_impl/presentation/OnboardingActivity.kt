@@ -38,6 +38,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +59,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
 import androidx.compose.foundation.text.KeyboardOptions
@@ -66,7 +71,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -119,9 +124,18 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         /** File managers label an exported backup in different ways, so any type can be picked. */
         private const val ANY_FILE_TYPE = "*/*"
         private const val BACKUP_FILE_CHUNK_BYTES = 8 * 1024
+        private const val MAX_FILE_NAME_CHARS = 80
 
-        /** Far above any account export; a larger file is not a backup of this app. */
-        private const val MAX_BACKUP_FILE_BYTES = 512 * 1024
+        /**
+         * Above any account export this app writes: a batch of the 100 accounts the import
+         * accepts is about 100 KB. A larger file is not a backup of this app and is not read.
+         */
+        private const val MAX_BACKUP_FILE_BYTES = 128 * 1024
+
+        /** The phone's screen lock (PIN, pattern, password) or a biometric that stands for it. */
+        private const val SCREEN_LOCK_AUTHENTICATORS =
+            BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
 
         fun start(context: Context, isClearTask: Boolean) {
             val intent = Intent(context, OnboardingActivity::class.java).apply {
@@ -147,11 +161,49 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                     if (text == null) {
                         viewModel.onRecoveryFileUnreadable()
                     } else {
-                        viewModel.onRecoveryFileChosen(text)
+                        // The view model checks that it is a backup file and keeps its text;
+                        // the screen shows only the file's name.
+                        val name = withContext(Dispatchers.IO) { backupFileName(uri) }
+                        viewModel.onRecoveryFileChosen(text, name)
                     }
                 }
             }
         }
+
+    /** The name the file picker shows for [uri], or "" when it gives none. */
+    private fun backupFileName(uri: Uri): String = runCatching {
+        contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
+    }.getOrNull().orEmpty().take(MAX_FILE_NAME_CHARS)
+
+    /**
+     * Confirms a repair with the phone's screen lock. Used only when a PIN is stored on this
+     * phone but cannot be read, so the PIN cannot confirm anything.
+     */
+    private fun confirmRepairWithScreenLock() {
+        val prompt = BiometricPrompt(
+            this,
+            ContextCompat.getMainExecutor(this),
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    viewModel.onRepairConfirmed(pin = "", screenLockConfirmed = true)
+                }
+            },
+        )
+        val info = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(R.string.account_repair_screen_lock_prompt))
+            .setAllowedAuthenticators(SCREEN_LOCK_AUTHENTICATORS)
+            .build()
+        // A prompt that cannot be shown changes nothing: the dialog stays open.
+        runCatching { prompt.authenticate(info) }
+    }
+
+    private fun screenLockAvailable(): Boolean = runCatching {
+        BiometricManager.from(this).canAuthenticate(SCREEN_LOCK_AUTHENTICATORS) ==
+            BiometricManager.BIOMETRIC_SUCCESS
+    }.getOrDefault(false)
 
     /** The text of a chosen backup file, or null when it cannot be read or is far too large. */
     private fun readBackupFile(uri: Uri): String? = runCatching {
@@ -267,7 +319,9 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         viewModel.repairPrompt.collectAsStateWithLifecycle().value?.let { prompt ->
             RepairAccountDialog(
                 prompt = prompt,
-                onConfirm = viewModel::onRepairConfirmed,
+                screenLockAvailable = !prompt.screenLockRequired || screenLockAvailable(),
+                onConfirm = { pin -> viewModel.onRepairConfirmed(pin) },
+                onConfirmWithScreenLock = ::confirmRepairWithScreenLock,
                 onDismiss = viewModel::onRepairDismissed,
             )
         }
@@ -613,26 +667,31 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 /**
  * "Repair this account with its recovery phrase". States what happens before anything happens:
  * the stored keys of this one account are replaced by the ones the entered phrase derives, a copy
- * of the old keys stays on the phone, and nothing else changes. Confirmed with the PIN when one
- * is set; Cancel leaves everything as it is.
+ * of the old keys stays on the phone, and nothing else changes. For a batch backup file the
+ * accounts are listed. Confirmed with the PIN when one is set, or with the phone's screen lock
+ * when the stored PIN cannot be read; Cancel leaves everything as it is.
  */
 @Composable
 private fun RepairAccountDialog(
     prompt: OnboardingViewModel.RepairPrompt,
+    screenLockAvailable: Boolean,
     onConfirm: (String) -> Unit,
+    onConfirmWithScreenLock: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var pin by rememberSaveable { mutableStateOf("") }
+    // Held in memory only: the typed PIN is never written to the saved instance state.
+    var pin by remember { mutableStateOf("") }
+    val batch = prompt.batchAccounts.isNotEmpty()
     AlertDialog(
         backgroundColor = MaterialTheme.customColors.bgPage,
         onDismissRequest = onDismiss,
         title = {
             Text(
                 text = stringResource(
-                    id = if (prompt.fromPhrase) {
-                        R.string.account_repair_title
-                    } else {
-                        R.string.account_repair_title_backup
+                    id = when {
+                        batch -> R.string.account_repair_title_batch
+                        prompt.fromPhrase -> R.string.account_repair_title
+                        else -> R.string.account_repair_title_backup
                     },
                 ),
                 color = MaterialTheme.customColors.fgPrimary,
@@ -640,23 +699,47 @@ private fun RepairAccountDialog(
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.x1)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Dimens.x1),
+            ) {
                 Text(
                     text = stringResource(
-                        id = if (prompt.accountExists) {
-                            R.string.account_repair_body_account
-                        } else {
-                            R.string.account_repair_body_keys
+                        id = when {
+                            batch -> R.string.account_repair_body_batch
+                            prompt.accountExists -> R.string.account_repair_body_account
+                            else -> R.string.account_repair_body_keys
                         },
                     ),
                     color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphS,
                 )
-                if (prompt.pinRequired) {
+                if (batch) {
+                    Text(
+                        modifier = Modifier.testTag("RepairBatchAccounts"),
+                        text = prompt.batchAccounts.joinToString("\n"),
+                        color = MaterialTheme.customColors.fgPrimary,
+                        style = MaterialTheme.customTypography.textXS,
+                    )
+                }
+                if (prompt.screenLockRequired) {
+                    Text(
+                        modifier = Modifier.testTag("RepairScreenLock"),
+                        text = stringResource(
+                            id = if (screenLockAvailable) {
+                                R.string.account_repair_screen_lock_body
+                            } else {
+                                R.string.account_repair_screen_lock_missing
+                            },
+                        ),
+                        color = MaterialTheme.customColors.fgPrimary,
+                        style = MaterialTheme.customTypography.paragraphS,
+                    )
+                } else if (prompt.pinRequired) {
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth().testTag("RepairPin"),
                         value = pin,
-                        onValueChange = { value -> pin = value.filter(Char::isDigit).take(12) },
+                        onValueChange = { value -> pin = asciiPinDigits(value) },
                         enabled = !prompt.working,
                         singleLine = true,
                         label = { Text(text = stringResource(id = R.string.account_repair_pin_label)) },
@@ -677,15 +760,29 @@ private fun RepairAccountDialog(
         confirmButton = {
             TextButton(
                 modifier = Modifier.testTag("RepairConfirm"),
-                enabled = !prompt.working && (!prompt.pinRequired || pin.isNotEmpty()),
+                enabled = !prompt.working && when {
+                    prompt.screenLockRequired -> screenLockAvailable
+                    prompt.pinRequired -> pin.isNotEmpty()
+                    else -> true
+                },
                 onClick = {
-                    val entered = pin
-                    pin = ""
-                    onConfirm(entered)
+                    if (prompt.screenLockRequired) {
+                        onConfirmWithScreenLock()
+                    } else {
+                        val entered = pin
+                        pin = ""
+                        onConfirm(entered)
+                    }
                 },
             ) {
                 Text(
-                    text = stringResource(id = R.string.account_repair_confirm),
+                    text = stringResource(
+                        id = when {
+                            prompt.screenLockRequired -> R.string.account_repair_confirm_screen_lock
+                            batch -> R.string.account_repair_confirm_batch
+                            else -> R.string.account_repair_confirm
+                        },
+                    ),
                     color = MaterialTheme.customColors.accentPrimary,
                 )
             }
@@ -699,4 +796,21 @@ private fun RepairAccountDialog(
             }
         },
     )
+}
+
+/** The longest PIN the field accepts (the app's PIN has 6 digits; older ones had 4). */
+private const val MAX_PIN_DIGITS = 12
+
+/**
+ * The digits of [typed] as the ASCII digits the app's PIN is stored in. A keyboard set to
+ * Arabic, Persian or Hindi types the same PIN in its own digits; those are the same numbers and
+ * are converted, so a correct PIN is never refused for the script it was typed in. Everything
+ * that is not a decimal digit is dropped.
+ */
+internal fun asciiPinDigits(typed: String): String = buildString {
+    for (char in typed) {
+        val digit = Character.digit(char, 10)
+        if (digit in 0..9 && Character.isDigit(char)) append('0' + digit)
+        if (length == MAX_PIN_DIGITS) break
+    }
 }

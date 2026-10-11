@@ -44,6 +44,11 @@ data class RecoveryState(
     val isButtonEnabled: Boolean = false,
     /** The password of an encrypted backup file; only used by [RecoveryType.JSON]. */
     val passwordInputState: InputTextState = InputTextState(),
+    /**
+     * The name of the backup file that was chosen ([RecoveryType.JSON]). The file's text is kept
+     * by the view model and is not put into the text field.
+     */
+    val chosenFileName: String? = null,
 )
 
 enum class RecoveryType {
@@ -71,6 +76,8 @@ data class TermsAndPrivacyState(
 data class CreateAccountState(
     val accountNameInputState: InputTextState = InputTextState(),
     val btnEnabled: Boolean = true,
+    /** The import is running (keys are derived, a backup file is opened). */
+    val loading: Boolean = false,
 )
 
 data class CreateBackupPasswordState(

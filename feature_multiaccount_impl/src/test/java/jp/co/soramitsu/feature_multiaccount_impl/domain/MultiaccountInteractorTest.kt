@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_multiaccount_impl.domain
 import io.mockk.coVerifyOrder
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException
 import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
@@ -96,6 +97,10 @@ class MultiaccountInteractorTest {
     private val account = mockk<SoraAccount>()
     private val uri = mockk<Uri>()
 
+    /** The PIN screen's persistent counter and lock timer, as the repository stores them. */
+    private var pinTries = 0
+    private var pinLockStartedAt = 0L
+
     @Before
     fun setup() {
         coEvery { credentialsRepository.isMnemonicValid(any()) } returns true
@@ -107,6 +112,15 @@ class MultiaccountInteractorTest {
         coEvery { userRepository.saveIsMigrationFetched(any(), any()) } returns Unit
         coEvery { userRepository.updateAccountName(any(), any()) } returns Unit
         coEvery { fileManager.writeExternalCacheText(any(), any()) } returns uri
+        // Nothing is missing unless a test says so, and the PIN screen's counter starts clean.
+        coEvery { credentialsRepository.addMissingBackup(any()) } returns false
+        coEvery { userRepository.refreshVerifiedWallet(any()) } returns Unit
+        coEvery { userRepository.retrievePinTriesUsed() } answers { pinTries }
+        coEvery { userRepository.savePinTriesUsed(any()) } answers { pinTries = firstArg() }
+        coEvery { userRepository.resetTriesUsed() } answers { pinTries = 0 }
+        coEvery { userRepository.retrieveTimerStartedTimestamp() } answers { pinLockStartedAt }
+        coEvery { userRepository.saveTimerStartedTimestamp(any()) } answers { pinLockStartedAt = firstArg() }
+        coEvery { userRepository.resetTimerStartedTimestamp() } answers { pinLockStartedAt = 0 }
         multiaccountInteractor = MultiaccountInteractor(
             userRepository,
             credentialsRepository,
@@ -367,7 +381,7 @@ class MultiaccountInteractorTest {
 
         assertEquals(listOf(imported), result.imported)
         assertEquals(0, result.alreadyHere)
-        assertEquals(0, result.needRepair)
+        assertTrue(result.needRepair.isEmpty())
         coVerifyOrder {
             credentialsRepository.draftsFromJson("{json}", "password", "Restored")
             credentialsRepository.commitDraft(draft)
@@ -478,10 +492,257 @@ class MultiaccountInteractorTest {
 
         assertEquals(listOf(imported), result.imported)
         assertEquals(1, result.alreadyHere)
-        assertEquals(1, result.needRepair)
-        // Nothing replaces stored keys from a batch file.
+        // The account with other stored keys is named, so the same file can repair it after
+        // one confirmation. The import itself replaced nothing.
+        assertEquals(
+            listOf(MultiaccountInteractor.RepairCandidate("cnConflict", "Conflict", accountExists = false)),
+            result.needRepair,
+        )
+        assertFalse(result.repairPinRequired)
         coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
         listOf(fresh, here, conflict).forEach { assertTrue(it.isDestroyedForTest()) }
+    }
+
+    @Test
+    fun `a batch JSON file repairs the accounts it named after one confirmation`() = runTest {
+        val broken = jsonDraft("cnBroken", "Broken")
+        val orphan = jsonDraft("cnOrphan", "Orphan")
+        val fine = jsonDraft("cnFine", "Fine")
+        val other = jsonDraft("cnOther", "Other")
+        val repaired = SoraAccount("cnBroken", "Kept name")
+        val adopted = SoraAccount("cnOrphan", "Orphan")
+        coEvery { credentialsRepository.draftsFromJson(any(), any(), any()) } returns
+            listOf(broken, orphan, fine, other)
+        coEvery { userRepository.retrievePin() } returns "135790"
+        coEvery { userRepository.accountExists("cnBroken") } returns true
+        coEvery { userRepository.accountExists("cnOrphan") } returns false
+        coEvery { userRepository.accountExists("cnFine") } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns setOf("cnBroken")
+        coEvery { credentialsRepository.repairWithDraft(broken) } returns
+            SoraAccount("cnBroken", "Broken")
+        coEvery { credentialsRepository.repairWithDraft(orphan) } returns adopted
+        coEvery { userRepository.completeUnavailableWallet("cnBroken") } returns repaired
+
+        // A wrong PIN repairs nothing and does not even open the file.
+        val wrongPin = runCatching {
+            multiaccountInteractor.repairFromJsonBatch(
+                json = "{batch}",
+                password = "password",
+                accountName = "",
+                pin = "000000",
+                addresses = listOf("cnBroken", "cnOrphan", "cnFine"),
+            )
+        }.exceptionOrNull()
+        assertEquals(ResponseCode.WRONG_PIN_CODE, (wrongPin as? SoraException)?.errorResponseCode)
+        coVerify(exactly = 0) { credentialsRepository.draftsFromJson(any(), any(), any()) }
+
+        val result = multiaccountInteractor.repairFromJsonBatch(
+            json = "{batch}",
+            password = "password",
+            accountName = "",
+            pin = "135790",
+            // cnFine can sign by now: it is left as it is. cnOther was not named: untouched.
+            addresses = listOf("cnBroken", "cnOrphan", "cnFine"),
+        )
+
+        assertEquals(listOf(repaired, adopted), result)
+        coVerify(exactly = 1) { credentialsRepository.repairWithDraft(broken) }
+        coVerify(exactly = 1) { credentialsRepository.repairWithDraft(orphan) }
+        coVerify(exactly = 0) { credentialsRepository.repairWithDraft(fine) }
+        coVerify(exactly = 0) { credentialsRepository.repairWithDraft(other) }
+        // The listed account keeps its row; the key set without a row becomes an account.
+        coVerify(exactly = 0) { userRepository.insertSoraAccount(repaired, any()) }
+        coVerify(exactly = 1) { userRepository.insertSoraAccount(adopted, false) }
+        listOf(broken, orphan, fine, other).forEach { assertTrue(it.isDestroyedForTest()) }
+    }
+
+    @Test
+    fun `a batch repair that names an account the file does not hold replaces nothing`() = runTest {
+        val broken = jsonDraft("cnBroken", "Broken")
+        coEvery { credentialsRepository.draftsFromJson(any(), any(), any()) } returns listOf(broken)
+        coEvery { userRepository.retrievePin() } returns ""
+
+        val error = runCatching {
+            multiaccountInteractor.repairFromJsonBatch(
+                json = "{batch}",
+                password = "password",
+                accountName = "",
+                pin = "",
+                addresses = listOf("cnBroken", "cnMissing"),
+            )
+        }.exceptionOrNull()
+
+        assertEquals(ResponseCode.JSON_BACKUP_INVALID, (error as? SoraException)?.errorResponseCode)
+        coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
+    }
+
+    @Test
+    fun `wrong repair PINs count through the PIN screen's counter and lock PIN entry`() = runTest {
+        val draft = draft("cnBroken", "Name")
+        coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+        coEvery { userRepository.retrievePin() } returns "135790"
+        coEvery { userRepository.accountExists("cnBroken") } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns setOf("cnBroken")
+        var clock = 1_000_000L
+        multiaccountInteractor.now = { clock }
+        // One wrong entry was already made on the PIN screen.
+        pinTries = 1
+
+        val second = runCatching {
+            multiaccountInteractor.repairFromMnemonic("mnemonic", "Name", "000000")
+        }.exceptionOrNull()
+        assertEquals(ResponseCode.WRONG_PIN_CODE, (second as? SoraException)?.errorResponseCode)
+        assertEquals(2, pinTries)
+        assertEquals(0L, pinLockStartedAt)
+
+        // The third wrong entry in a row locks PIN entry for a minute, as on the PIN screen.
+        val third = runCatching {
+            multiaccountInteractor.repairFromMnemonic("mnemonic", "Name", "111111")
+        }.exceptionOrNull() as RepairPinLockedException
+        assertEquals(60_000L, third.remainingMillis)
+        assertEquals(3, pinTries)
+        assertEquals(clock, pinLockStartedAt)
+
+        // While it is locked not even the right PIN is looked at, here or by reopening.
+        clock += 20_000L
+        val locked = runCatching {
+            multiaccountInteractor.repairFromMnemonic("mnemonic", "Name", "135790")
+        }.exceptionOrNull() as RepairPinLockedException
+        assertEquals(40_000L, locked.remainingMillis)
+        assertEquals(3, pinTries)
+        coVerify(exactly = 0) { credentialsRepository.draftFromMnemonic(any(), any()) }
+        coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
+
+        // After the lock the next wrong entry locks for the next, longer step.
+        clock += 60_000L
+        val fourth = runCatching {
+            multiaccountInteractor.repairFromMnemonic("mnemonic", "Name", "222222")
+        }.exceptionOrNull() as RepairPinLockedException
+        assertEquals(5 * 60_000L, fourth.remainingMillis)
+        assertEquals(4, pinTries)
+
+        // The right PIN after the lock repairs and resets the counter and the timer.
+        clock += 5 * 60_000L
+        val repaired = SoraAccount("cnBroken", "Kept name")
+        coEvery { credentialsRepository.repairWithDraft(draft) } returns SoraAccount("cnBroken", "Name")
+        coEvery { userRepository.completeUnavailableWallet("cnBroken") } returns repaired
+        assertEquals(
+            repaired,
+            multiaccountInteractor.repairFromMnemonic("mnemonic", "Name", "135790"),
+        )
+        assertEquals(0, pinTries)
+        assertEquals(0L, pinLockStartedAt)
+    }
+
+    @Test
+    fun `a stored PIN that cannot be read is never treated as no PIN`() = runTest {
+        val draft = draft("cnBroken", "Name")
+        coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+        coEvery { userRepository.retrievePin() } throws
+            jp.co.soramitsu.common.util.WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userRepository.accountExists("cnBroken") } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns setOf("cnBroken")
+        coEvery { credentialsRepository.commitDraft(draft) } throws
+            SoraException.businessError(ResponseCode.ACCOUNT_STORAGE_CONFLICT)
+
+        val offer = runCatching {
+            multiaccountInteractor.importFromMnemonic("mnemonic", "Name")
+        }.exceptionOrNull() as WalletRepairAvailableException
+        // No PIN can be asked for, and a plain tap is not enough either.
+        assertFalse(offer.pinRequired)
+        assertTrue(offer.screenLockRequired)
+
+        val again = draft("cnBroken", "Name")
+        coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns again
+        val unconfirmed = runCatching {
+            multiaccountInteractor.repairFromMnemonic("mnemonic", "Name", pin = "")
+        }.exceptionOrNull()
+        assertEquals(
+            ResponseCode.REPAIR_NEEDS_SCREEN_LOCK,
+            (unconfirmed as? SoraException)?.errorResponseCode,
+        )
+        coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
+
+        // Confirmed with the phone's screen lock: the repair runs.
+        val repaired = SoraAccount("cnBroken", "Kept name")
+        coEvery { credentialsRepository.repairWithDraft(again) } returns SoraAccount("cnBroken", "Name")
+        coEvery { userRepository.completeUnavailableWallet("cnBroken") } returns repaired
+        assertEquals(
+            repaired,
+            multiaccountInteractor.repairFromMnemonic(
+                "mnemonic",
+                "Name",
+                pin = "",
+                screenLockConfirmed = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `the phrase of a wallet that works but has no phrase stored is kept as its backup`() =
+        runTest {
+            val draft = draft("cnFromFile", "Name")
+            coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+            coEvery { userRepository.accountExists("cnFromFile") } returns true
+            coEvery { userRepository.unavailableWalletIds() } returns emptySet()
+            coEvery { credentialsRepository.addMissingBackup(draft) } returns true
+
+            val error = runCatching {
+                multiaccountInteractor.importFromMnemonic("mnemonic", "Name")
+            }.exceptionOrNull()
+
+            // Still "already here", and it says that the phrase was kept.
+            assertEquals(
+                ResponseCode.ACCOUNT_ALREADY_IMPORTED_BACKUP_SAVED,
+                (error as? SoraException)?.errorResponseCode,
+            )
+            coVerifyOrder {
+                credentialsRepository.addMissingBackup(draft)
+                // The backup label and the SORA 3 accounts are recorded right away.
+                userRepository.refreshVerifiedWallet("cnFromFile")
+            }
+            // No key value is written and the account row is not touched.
+            coVerify(exactly = 0) { credentialsRepository.commitDraft(any()) }
+            coVerify(exactly = 0) { credentialsRepository.repairWithDraft(any()) }
+            coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+            assertTrue(draft.isDestroyedForTest())
+        }
+
+    @Test
+    fun `opening a backup file never runs on the caller's thread`() = runTest {
+        val caller = Thread.currentThread()
+        var importThread: Thread? = null
+        var repairThread: Thread? = null
+        var exportThread: Thread? = null
+        val draft = jsonDraft("cnFromJson", "Restored")
+        val imported = SoraAccount("cnFromJson", "Restored")
+        coEvery { credentialsRepository.draftsFromJson("{json}", any(), any()) } answers {
+            importThread = Thread.currentThread()
+            listOf(draft)
+        }
+        coEvery { userRepository.accountExists("cnFromJson") } returns false
+        coEvery { credentialsRepository.commitDraft(draft) } returns imported
+        multiaccountInteractor.importFromJson("{json}", "password", "Restored")
+
+        val again = jsonDraft("cnFromJson", "Restored")
+        coEvery { userRepository.retrievePin() } returns ""
+        coEvery { credentialsRepository.draftsFromJson("{repair}", any(), any()) } answers {
+            repairThread = Thread.currentThread()
+            listOf(again)
+        }
+        coEvery { credentialsRepository.repairWithDraft(again) } returns imported
+        multiaccountInteractor.repairFromJson("{repair}", "password", "Restored", pin = "")
+
+        coEvery { userRepository.getSoraAccount("cnFromJson") } returns imported
+        coEvery { credentialsRepository.generateJson(listOf(imported), "password") } answers {
+            exportThread = Thread.currentThread()
+            "{export}"
+        }
+        multiaccountInteractor.getJsonFileUri(listOf("cnFromJson"), "password")
+
+        listOf(importThread, repairThread, exportThread).forEach { worker ->
+            assertTrue(worker != null && worker !== caller)
+        }
     }
 
     @Test

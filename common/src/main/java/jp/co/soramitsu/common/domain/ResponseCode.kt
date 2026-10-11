@@ -116,6 +116,24 @@ enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.str
 
     ACCOUNT_ALREADY_IMPORTED(R.string.account_already_imported_description, R.string.account_already_imported),
 
+    /**
+     * The wallet is already on this phone and signs. No recovery phrase (or seed) was stored for
+     * it, so the one just entered, proven to re-derive it, was kept as its backup (add-only).
+     */
+    ACCOUNT_ALREADY_IMPORTED_BACKUP_SAVED(
+        R.string.account_already_imported_backup_saved,
+        R.string.account_already_imported,
+    ),
+
+    /**
+     * A PIN is stored on this phone but cannot be read, so a repair must be confirmed with the
+     * phone's screen lock. Nothing was changed.
+     */
+    REPAIR_NEEDS_SCREEN_LOCK(
+        R.string.account_repair_screen_lock_needed,
+        R.string.account_repair_copy_failed,
+    ),
+
     /** Different keys are already stored for the imported address; nothing was written. */
     ACCOUNT_STORAGE_CONFLICT(R.string.account_storage_conflict_description, R.string.account_storage_conflict),
 

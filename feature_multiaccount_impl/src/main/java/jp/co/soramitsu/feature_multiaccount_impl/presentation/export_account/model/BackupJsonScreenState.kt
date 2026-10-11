@@ -37,5 +37,7 @@ import jp.co.soramitsu.ui_core.component.input.InputTextState
 data class BackupJsonScreenState(
     val state: InputTextState = InputTextState(),
     val confirmationState: InputTextState = InputTextState(),
-    val buttonEnabledState: Boolean = false
+    val buttonEnabledState: Boolean = false,
+    /** The encrypted file is being written. */
+    val loading: Boolean = false,
 )

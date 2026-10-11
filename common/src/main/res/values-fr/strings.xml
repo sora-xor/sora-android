@@ -628,7 +628,6 @@
   <string name="account_repair_body_keys">Keys for this wallet are already saved on this phone, but they can\'t be used. SORA can replace them with the keys from what you entered and add the wallet. Its address stays the same, and your other accounts are not touched. A copy of the old keys stays on this phone.</string>
   <string name="account_repair_pin_label">Enter your PIN to confirm</string>
   <string name="account_repair_pin_wrong">That PIN isn\'t right. Nothing was changed.</string>
-  <string name="account_repair_too_many_attempts">The PIN was wrong three times, so the repair was stopped. Nothing was changed. You can start again from Import account.</string>
   <string name="account_repair_confirm">Repair account</string>
   <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file. You can bring it back later from Import account, Backup file (JSON).</string>
   <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
@@ -645,7 +644,20 @@
   <string name="recovery_json_password_label">Backup file password</string>
   <string name="recovery_json_choose_file">Choose file</string>
   <string name="recovery_json_file_unreadable">SORA couldn\'t read that file. Choose the JSON file you exported from SORA. Nothing was changed.</string>
-  <string name="json_backup_batch_skipped">Added %1$s of the accounts in this file. %2$s could not be added because different keys are saved for them on this phone. To repair one of those, go to Import account and enter its recovery phrase or its own backup file.</string>
+  <string name="json_backup_batch_skipped">Added %1$s of the accounts in this file. %2$s were not changed: other keys, which can\'t be used, are saved for them on this phone. To repair them, import this file again and confirm the repair, or go to Import account and enter an account\'s recovery phrase.</string>
   <string name="export_json_keys_unusable_title">This account can\'t be exported</string>
   <string name="export_json_keys_unusable">An account you chose can\'t be exported, because the keys saved for it on this phone can\'t be used. No file was made. To use that account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
+  <string name="account_already_imported_backup_saved">This wallet is already on this phone and works. What you entered was not saved here before, so SORA saved it as this wallet\'s backup. You can see it in Account options. Nothing else was changed.</string>
+  <string name="account_repair_screen_lock_needed">SORA can\'t read the PIN saved on this phone, so this repair has to be confirmed with your phone\'s screen lock. Nothing was changed. Start again from Import account.</string>
+  <string name="account_repair_screen_lock_body">SORA can\'t read the PIN saved on this phone. Confirm with your phone\'s screen lock instead.</string>
+  <string name="account_repair_screen_lock_missing">SORA can\'t read the PIN saved on this phone, and this phone has no screen lock to confirm with. Set a screen lock in your phone\'s settings, then start the repair again. Nothing was changed.</string>
+  <string name="account_repair_screen_lock_prompt">Confirm the account repair</string>
+  <string name="account_repair_confirm_screen_lock">Confirm with screen lock</string>
+  <string name="account_repair_pin_locked_title">Too many wrong PINs</string>
+  <string name="account_repair_pin_locked">The PIN was wrong too many times, so PIN entry is locked for about %1$s min, here and on the PIN screen. Nothing was changed. After that, you can start again from Import account.</string>
+  <string name="account_repair_title_batch">Repair accounts from your backup file</string>
+  <string name="account_repair_body_batch">The other accounts in this file were added or are already here. For the accounts below, keys are already saved on this phone, but they can\'t be used. SORA can replace them with the keys from this file. Each account keeps its address, and your other accounts are not touched. A copy of the old keys stays on this phone.</string>
+  <string name="account_repair_confirm_batch">Repair accounts</string>
+  <string name="recovery_json_file_chosen">File chosen: %1$s</string>
+  <string name="recovery_json_file_unnamed">backup file</string>
 </resources>
