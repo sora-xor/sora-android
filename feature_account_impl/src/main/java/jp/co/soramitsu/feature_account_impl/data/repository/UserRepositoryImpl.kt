@@ -56,7 +56,9 @@ import jp.co.soramitsu.core_db.model.WalletDeletionOperationLocal
 import jp.co.soramitsu.core_db.model.WalletDeletionTargetLocal
 import jp.co.soramitsu.core_db.model.WalletIdentityLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
+import jp.co.soramitsu.common.account.SelectedAccountSigning
 import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
+import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.WalletStorageFailures
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
@@ -65,7 +67,9 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_api.domain.model.RetainedWallet
 import jp.co.soramitsu.feature_account_api.domain.model.UnavailableWalletOptions
+import jp.co.soramitsu.feature_account_api.domain.model.UnavailableWalletReason
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
@@ -87,8 +91,13 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.CancellationException
@@ -143,6 +152,7 @@ class UserRepositoryImpl(
         const val UNAVAILABLE_STATE = "UNAVAILABLE"
         const val REMOVED_UNAVAILABLE_COPY_REASON = "removed-unavailable-account"
         const val REMOVED_WITHOUT_BACKUP_COPY_REASON = "removed-account-without-backup"
+        const val RETAINED_WALLET_NEEDS_RECOVERY_PHRASE = "RETAINED_WALLET_NEEDS_RECOVERY_PHRASE"
         const val MAX_WALLET_ID_LENGTH = 256
     }
 
@@ -497,6 +507,30 @@ class UserRepositoryImpl(
                 SoraAccountMapper.map(it)
             }
         }
+
+    override fun flowUnavailableWalletIds(): Flow<Set<String>> =
+        db.accountDao().flowAccountsNotVerified().map { ids ->
+            ids.filter(::isWalletId).toSet()
+        }
+
+    override fun flowSelectedAccountSigning(): Flow<SelectedAccountSigning> =
+        // The selection as this repository holds it (no side effect on collection), with the
+        // accounts that are not verified to sign, read from the database on every change.
+        flow { emitAll(flowUnavailableWalletIds()) }
+            .combine(currentSoraAccount) { readOnly, account ->
+                if (account == null) {
+                    SelectedAccountSigning.NONE
+                } else {
+                    SelectedAccountSigning(
+                        address = account.substrateAddress,
+                        readOnly = account.substrateAddress in readOnly,
+                    )
+                }
+            }
+            .distinctUntilChanged()
+            // A screen only labels with this; the signer checks the key itself. A failed read
+            // (for example a database that is closed for recovery) shows no label.
+            .catch { emit(SelectedAccountSigning.NONE) }
 
     override suspend fun soraAccountsList(): List<SoraAccount> =
         mutex.withLock {
@@ -1637,6 +1671,10 @@ class UserRepositoryImpl(
         WalletRecoveryCapabilityGate.requireUserMutationAllowed()
         resumePendingWalletDeletionLocked()
         check(db.accountDao().getAccount(address) == null) { "RETAINED_WALLET_ALREADY_ACCOUNT" }
+        // A key set that "Remove all accounts" left behind lost the PIN that protected it. It
+        // comes back only with its own recovery phrase, raw seed or backup file (the import
+        // adopts the stored keys unchanged), never from here.
+        check(!retainedKeySetNeedsPhrase(address)) { RETAINED_WALLET_NEEDS_RECOVERY_PHRASE }
         // The address's own key set, or the release-era unsuffixed set when its public key derives
         // exactly this address (an account removed in an older version kept those keys).
         val secrets = readSecrets(address)
@@ -1666,6 +1704,45 @@ class UserRepositoryImpl(
         }
         userDatasource.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
         account
+    }
+
+    /**
+     * Whether the key set [adoptRetainedWallet] would use for [address] is marked as needing its
+     * recovery phrase: the set stored under the address when one is stored there (even partly),
+     * otherwise the release-era unsuffixed set. When the marks cannot be read, the answer is
+     * yes: restoring without the phrase is only offered when it is known to be allowed.
+     */
+    private suspend fun retainedKeySetNeedsPhrase(address: String): Boolean = try {
+        val marked = credentialsDatasource.retainedKeySetsNeedingPhrase()
+        when {
+            marked.isEmpty() -> false
+            listOf(
+                CredentialField.PRIVATE_KEY,
+                CredentialField.PUBLIC_KEY,
+                CredentialField.KEY_NONCE,
+            ).any { field ->
+                credentialsDatasource.readStoredCredential(field, address) !=
+                    StoredCredential.Absent
+            } -> address in marked
+            else -> WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID in marked
+        }
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Throwable) {
+        true
+    }
+
+    override suspend fun retainedWallets(): List<RetainedWallet> = mutex.withLock {
+        if (WalletRecoveryCapabilityGate.isUserMutationBlocked()) return@withLock emptyList()
+        WalletUpgradeBackup.quarantine().retainedWalletIds
+            .filter { isWalletId(it) && db.accountDao().getAccount(it) == null }
+            .sorted()
+            .map { address ->
+                RetainedWallet(
+                    address = address,
+                    needsRecoveryPhrase = retainedKeySetNeedsPhrase(address),
+                )
+            }
     }
 
     override suspend fun unavailableWalletIds(): Set<String> {
@@ -1707,8 +1784,30 @@ class UserRepositoryImpl(
         ).any { field ->
             credentialsDatasource.readStoredCredential(field, "") is StoredCredential.Present
         }
+        val keyValues = listOf(
+            stored[CredentialField.PRIVATE_KEY],
+            stored[CredentialField.PUBLIC_KEY],
+            stored[CredentialField.KEY_NONCE],
+        )
+        val reason = when {
+            watchOnly -> UnavailableWalletReason.WATCH_ONLY
+            keyValues.any { it == StoredCredential.Unreadable } ->
+                UnavailableWalletReason.KEY_UNREADABLE
+            // A release-era copy that derives this address stands in when nothing is stored
+            // under the address; it was judged and refused, so it is a key that is not usable.
+            keyValues.all { it == StoredCredential.Absent } ->
+                if (releaseEraCopy) {
+                    UnavailableWalletReason.KEY_NOT_USABLE
+                } else {
+                    UnavailableWalletReason.KEY_MISSING
+                }
+            keyValues.any { it == StoredCredential.Absent } ->
+                UnavailableWalletReason.KEY_INCOMPLETE
+            else -> UnavailableWalletReason.KEY_NOT_USABLE
+        }
         UnavailableWalletOptions(
             walletId = address,
+            reason = reason,
             // Importing the account's phrase or seed adds the missing values. When a stored value
             // differs or cannot be read, the same import offers a confirmed repair that keeps a
             // copy of the old values and writes the proven ones. Never needs removal.

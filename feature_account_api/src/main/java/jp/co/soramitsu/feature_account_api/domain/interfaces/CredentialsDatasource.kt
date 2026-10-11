@@ -105,6 +105,13 @@ interface CredentialsDatasource {
     suspend fun requireKeyMaterialReadable()
 
     /**
+     * The key sets that only their own recovery phrase may bring back: the address a set is
+     * stored under, or `WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID` for the release-era
+     * unsuffixed set. They were left on the phone by "Remove all accounts". Reads only.
+     */
+    suspend fun retainedKeySetsNeedingPhrase(): Set<String> = emptySet()
+
+    /**
      * Checks that every id in [requiredCoverage] holds stored credentials and that the selection
      * is one of [walletIds]. Key sets of other addresses (without an account) are ignored.
      */

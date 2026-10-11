@@ -76,4 +76,44 @@ data class UnavailableWalletOptions(
      * stored values (after confirmation, keeping a copy) instead of only adding missing ones.
      */
     val repairReplacesStoredValues: Boolean = false,
+    /** Why the account cannot sign, as far as the stored values show. */
+    val reason: UnavailableWalletReason = UnavailableWalletReason.KEY_NOT_USABLE,
+)
+
+/**
+ * Why an account is read-only on this phone. Only what the stored values of its signing key
+ * show; a stored recovery phrase or seed never decides this.
+ */
+enum class UnavailableWalletReason {
+    /** No signing key is stored for this account on this phone. */
+    KEY_MISSING,
+
+    /** Part of the signing key (private key, public key or nonce) is stored, part is missing. */
+    KEY_INCOMPLETE,
+
+    /** A value of the signing key is stored but cannot be read on this phone. */
+    KEY_UNREADABLE,
+
+    /**
+     * A complete signing key is stored and readable, but it does not prove this account's
+     * address (it is another address's key, or it fails the sign-and-verify proof).
+     */
+    KEY_NOT_USABLE,
+
+    /** The account is marked watch-only: it never had a key on this phone. */
+    WATCH_ONLY,
+}
+
+/**
+ * A complete key set stored on this phone that no account uses (for example after "Set up this
+ * device again", or left by "Remove all accounts").
+ */
+data class RetainedWallet(
+    val address: String,
+    /**
+     * Only this wallet's own recovery phrase, raw seed or backup file brings it back: it was on
+     * the phone when every account was removed, and the PIN that protected it was removed with
+     * them. Importing adopts the stored keys unchanged. `adoptRetainedWallet` refuses it.
+     */
+    val needsRecoveryPhrase: Boolean,
 )

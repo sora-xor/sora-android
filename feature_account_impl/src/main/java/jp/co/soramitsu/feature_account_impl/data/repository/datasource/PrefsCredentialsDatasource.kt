@@ -167,6 +167,9 @@ class PrefsCredentialsDatasource constructor(
         soraPreferences.putBoolean(PREFS_WATCH_ONLY + suffixAddress, watchOnly)
     }
 
+    override suspend fun retainedKeySetsNeedingPhrase(): Set<String> =
+        soraPreferences.retainedKeySetsNeedingPhrase()
+
     override suspend fun requireWalletPreferenceCoverage(
         walletIds: Set<String>,
         selectedAddress: String,
