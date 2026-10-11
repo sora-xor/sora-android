@@ -51,6 +51,7 @@ import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalle
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -71,6 +72,8 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -141,6 +144,7 @@ class WalletRepositoryTest {
                 any(),
                 anyBoolean(),
                 anyString(),
+                anyOrNull(),
                 any(),
             )
         ).willReturn(
@@ -160,6 +164,8 @@ class WalletRepositoryTest {
             any(),
             anyBoolean(),
             anyString(),
+            // The claim is described for Activity, so a waiting claim is not a nameless entry.
+            eq(Sora2SubmissionActivity.legacyClaim()),
             any(),
         )
     }

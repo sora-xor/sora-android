@@ -42,6 +42,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
@@ -176,7 +177,7 @@ class WalletInteractorTest {
             "justification",
             BlockEntry("header", listOf("0x112323345", "0x35456472"))
         )
-        assertEquals(true, interactor.migrate())
+        assertEquals(TransactionOutcome.Confirmed("", ""), interactor.migrate())
         verify(walletRepository).needsMigration(irohaData.address)
         verify(walletRepository).migrate(
             irohaData.address,
@@ -194,7 +195,8 @@ class WalletInteractorTest {
         given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
         given(walletRepository.needsMigration(irohaData.address)).willReturn(false)
 
-        assertEquals(true, interactor.migrate())
+        // Nothing to send: the network already has the claim.
+        assertEquals(null, interactor.migrate())
 
         verify(userRepository).saveNeedsMigration(false, soraAccount)
         verify(credentialsRepository, never()).retrieveKeyPair(soraAccount)

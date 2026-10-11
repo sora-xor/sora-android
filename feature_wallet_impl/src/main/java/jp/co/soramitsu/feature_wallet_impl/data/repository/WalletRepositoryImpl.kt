@@ -44,6 +44,7 @@ import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.migrate
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -99,6 +100,7 @@ class WalletRepositoryImpl @Inject constructor(
             from = from,
             keypair = keypair,
             useBatchAll = false,
+            activity = Sora2SubmissionActivity.legacyClaim(),
         ) {
             migrate(
                 irohaAddress = irohaAddress,

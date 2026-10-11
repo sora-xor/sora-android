@@ -38,13 +38,16 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -54,6 +57,7 @@ class ClaimViewModel @Inject constructor(
     private val router: WalletRouter,
     private val walletInteractor: WalletInteractor,
     private val coroutineManager: CoroutineManager,
+    private val resourceManager: ResourceManager,
 ) : BaseViewModel() {
 
     private val _openSendEmailEvent = SingleLiveEvent<String>()
@@ -64,13 +68,15 @@ class ClaimViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            walletInteractor.observeMigrationStatus().collectLatest {
-                when (it) {
-                    MigrationStatus.NOT_INITIATED -> {
-                    }
+            tryCatch {
+                walletInteractor.observeMigrationStatus().collectLatest {
+                    when (it) {
+                        MigrationStatus.NOT_INITIATED -> {
+                        }
 
-                    MigrationStatus.FAILED -> onError(R.string.claim_error_title_v1)
-                    MigrationStatus.SUCCESS -> router.popBackStackFragment()
+                        MigrationStatus.FAILED -> onError(R.string.claim_error_title_v1)
+                        MigrationStatus.SUCCESS -> router.popBackStackFragment()
+                    }
                 }
             }
         }
@@ -80,7 +86,10 @@ class ClaimViewModel @Inject constructor(
 
     fun checkMigrationIsAlreadyFinished() {
         viewModelScope.launch {
-            if (!walletInteractor.needsMigration()) router.popBackStackFragment()
+            // Asked from the network; while it cannot be reached the screen simply stays.
+            tryCatch {
+                if (!walletInteractor.needsMigration()) router.popBackStackFragment()
+            }
         }
     }
 
@@ -88,21 +97,86 @@ class ClaimViewModel @Inject constructor(
         _openSendEmailEvent.postValue(OptionsProvider.email)
     }
 
+    /**
+     * Submits the claim and shows exactly what is known afterwards. Only a claim the network
+     * confirmed (or already had) is stored as done, and only one that failed on chain as failed.
+     * A claim that is still waiting is said to be waiting and is never stored as failed: its
+     * journal row blocks a second claim until the status check has resolved it. The progress
+     * mark is cleared on every path that keeps the screen open.
+     */
     fun nextButtonClicked() {
         viewModelScope.launch {
-            _claimScreenState.value?.let {
-                _claimScreenState.value = it.copy(loading = true)
+            setLoading(true)
+            var outcome: TransactionOutcome? = null
+            var notSent: Throwable? = null
+            try {
+                outcome = withContext(coroutineManager.io) { walletInteractor.migrate() }
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (t: Throwable) {
+                notSent = t
             }
-            withContext(coroutineManager.io) {
-                val result = runCatching { walletInteractor.migrate() }.getOrElse {
-                    FirebaseWrapper.recordException(it)
-                    false
+            FirebaseWrapper.log("SORA migration done ${outcome?.let { it::class.simpleName }}")
+            when {
+                notSent != null && notSent.isEarlierClaimWaiting() -> {
+                    setLoading(false)
+                    showClaimWaiting()
                 }
-                FirebaseWrapper.log("SORA migration done $result")
-                walletInteractor.saveMigrationStatus(
-                    if (result) MigrationStatus.SUCCESS else MigrationStatus.FAILED
-                )
+                notSent != null -> {
+                    setLoading(false)
+                    showTransactionNotSent(resourceManager, notSent)
+                }
+                outcome == null || outcome is TransactionOutcome.Confirmed ->
+                    saveStatus(MigrationStatus.SUCCESS)
+                outcome is TransactionOutcome.Waiting -> {
+                    setLoading(false)
+                    showClaimWaiting()
+                }
+                outcome is TransactionOutcome.FailedOnChain -> {
+                    setLoading(false)
+                    saveStatus(MigrationStatus.FAILED)
+                }
+                outcome is TransactionOutcome.RefusedByNode -> {
+                    setLoading(false)
+                    showTransactionRefused(resourceManager, outcome)
+                }
             }
         }
+    }
+
+    private suspend fun saveStatus(status: MigrationStatus) {
+        tryCatch {
+            withContext(coroutineManager.io) { walletInteractor.saveMigrationStatus(status) }
+        }
+    }
+
+    private fun setLoading(loading: Boolean) {
+        _claimScreenState.value?.let {
+            _claimScreenState.value = it.copy(loading = loading)
+        }
+    }
+
+    private fun showClaimWaiting() {
+        alertDialogLiveData.setValue(
+            resourceManager.getString(R.string.tx_outcome_waiting_title) to
+                resourceManager.getString(R.string.tx_outcome_claim_waiting)
+        )
+    }
+
+    /** The claim gate refuses a second claim while the first has no final status yet. */
+    private fun Throwable.isEarlierClaimWaiting(): Boolean {
+        var current: Throwable? = this
+        var depth = 0
+        while (current != null && depth < MAX_CAUSE_DEPTH) {
+            if (current.message == EARLIER_CLAIM_UNRESOLVED) return true
+            current = current.cause?.takeIf { it !== current }
+            depth += 1
+        }
+        return false
+    }
+
+    private companion object {
+        const val EARLIER_CLAIM_UNRESOLVED = "SORA2_LEGACY_MIGRATION_ALREADY_UNRESOLVED"
+        const val MAX_CAUSE_DEPTH = 16
     }
 }

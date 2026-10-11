@@ -33,13 +33,21 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_wallet_impl.presentation.claim
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import java.io.IOException
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.TransactionChainFailure
+import jp.co.soramitsu.common.domain.TransactionNodeRefusal
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -53,6 +61,8 @@ import org.mockito.Mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.never
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -74,6 +84,9 @@ class ClaimViewModelTest {
     @Mock
     private lateinit var cm: CoroutineManager
 
+    @Mock
+    private lateinit var resourceManager: ResourceManager
+
     private lateinit var viewModel: ClaimViewModel
 
     @Before
@@ -83,6 +96,7 @@ class ClaimViewModelTest {
             router,
             walletInteractor,
             cm,
+            resourceManager,
         )
     }
 
@@ -107,5 +121,153 @@ class ClaimViewModelTest {
         viewModel.checkMigrationIsAlreadyFinished()
         advanceUntilIdle()
         verify(router, times(2)).popBackStackFragment()
+    }
+
+    // --- audit A5: the legacy claim tells the truth about every outcome ----------------------
+
+    private val txHash = "0x" + "ab".repeat(32)
+
+    private suspend fun TestScope.claimAnswers(answer: () -> TransactionOutcome?) {
+        given(cm.io).willReturn(checkNotNull(coroutineContext[CoroutineDispatcher]))
+        given(walletInteractor.migrate()).willAnswer { answer() }
+    }
+
+    private fun stubOutcomeTexts() {
+        listOf(
+            R.string.tx_outcome_waiting_title,
+            R.string.tx_outcome_claim_waiting,
+            R.string.tx_outcome_refused_title,
+            R.string.tx_outcome_note_refused_fee,
+            R.string.tx_outcome_not_sent_title,
+            R.string.tx_outcome_not_sent_network,
+        ).forEach { id ->
+            given(resourceManager.getString(id)).willReturn("text-$id")
+        }
+    }
+
+    @Test
+    fun `a confirmed claim is stored as done`() = runTest {
+        claimAnswers { TransactionOutcome.Confirmed(txHash, "0xblock") }
+
+        viewModel.nextButtonClicked()
+        advanceUntilIdle()
+
+        verify(walletInteractor).saveMigrationStatus(MigrationStatus.SUCCESS)
+    }
+
+    @Test
+    fun `a claim the network already has is stored as done without sending`() = runTest {
+        claimAnswers { null }
+
+        viewModel.nextButtonClicked()
+        advanceUntilIdle()
+
+        verify(walletInteractor).saveMigrationStatus(MigrationStatus.SUCCESS)
+    }
+
+    @Test
+    fun `a claim that is still waiting is said to be waiting and never stored as failed`() =
+        runTest {
+            stubOutcomeTexts()
+            // What a failed status read or an unfinished finality wait gives after a broadcast.
+            claimAnswers { TransactionOutcome.Waiting(txHash, acceptedByNode = true) }
+
+            viewModel.nextButtonClicked()
+            advanceUntilIdle()
+
+            // Before the fix: stored as FAILED and "Transition of assets failed" on every visit.
+            verify(walletInteractor, never()).saveMigrationStatus(MigrationStatus.FAILED)
+            verify(walletInteractor, never()).saveMigrationStatus(MigrationStatus.SUCCESS)
+            assertEquals(
+                "text-${R.string.tx_outcome_waiting_title}" to
+                    "text-${R.string.tx_outcome_claim_waiting}",
+                viewModel.alertDialogLiveData.value,
+            )
+            assertEquals(false, viewModel.claimScreenState.value?.loading)
+        }
+
+    @Test
+    fun `a second claim while the first is unresolved is said to be waiting`() = runTest {
+        stubOutcomeTexts()
+        claimAnswers { throw IllegalStateException("SORA2_LEGACY_MIGRATION_ALREADY_UNRESOLVED") }
+
+        viewModel.nextButtonClicked()
+        advanceUntilIdle()
+
+        verify(walletInteractor, never()).saveMigrationStatus(MigrationStatus.FAILED)
+        assertEquals(
+            "text-${R.string.tx_outcome_waiting_title}" to
+                "text-${R.string.tx_outcome_claim_waiting}",
+            viewModel.alertDialogLiveData.value,
+        )
+        assertEquals(false, viewModel.claimScreenState.value?.loading)
+    }
+
+    @Test
+    fun `a claim that failed on chain is stored as failed`() = runTest {
+        claimAnswers {
+            TransactionOutcome.FailedOnChain(
+                txHash = txHash,
+                blockHash = "0xblock",
+                reason = TransactionChainFailure.EXECUTION_FAILED,
+            )
+        }
+
+        viewModel.nextButtonClicked()
+        advanceUntilIdle()
+
+        verify(walletInteractor).saveMigrationStatus(MigrationStatus.FAILED)
+        assertEquals(false, viewModel.claimScreenState.value?.loading)
+    }
+
+    @Test
+    fun `a claim the node refused is a failure with its reason and is not stored`() = runTest {
+        stubOutcomeTexts()
+        claimAnswers {
+            TransactionOutcome.RefusedByNode(
+                txHash = txHash,
+                reason = TransactionNodeRefusal.CANNOT_PAY_FEE,
+                nodeMessage = null,
+            )
+        }
+
+        viewModel.nextButtonClicked()
+        advanceUntilIdle()
+
+        verify(walletInteractor, never()).saveMigrationStatus(any())
+        assertEquals(
+            "text-${R.string.tx_outcome_refused_title}" to
+                "text-${R.string.tx_outcome_note_refused_fee}",
+            viewModel.alertDialogLiveData.value,
+        )
+        assertEquals(false, viewModel.claimScreenState.value?.loading)
+    }
+
+    @Test
+    fun `a claim that could not be prepared says nothing was sent and is not stored`() = runTest {
+        stubOutcomeTexts()
+        claimAnswers { throw IOException("BOUNDED_HTTP_IO") }
+
+        viewModel.nextButtonClicked()
+        advanceUntilIdle()
+
+        verify(walletInteractor, never()).saveMigrationStatus(any())
+        assertEquals(
+            "text-${R.string.tx_outcome_not_sent_title}" to
+                "text-${R.string.tx_outcome_not_sent_network}",
+            viewModel.alertDialogLiveData.value,
+        )
+        assertEquals(false, viewModel.claimScreenState.value?.loading)
+    }
+
+    @Test
+    fun `an unreachable network while checking the claim does not crash the screen`() = runTest {
+        given(walletInteractor.needsMigration()).willAnswer { throw IOException("offline") }
+
+        viewModel.checkMigrationIsAlreadyFinished()
+        advanceUntilIdle()
+
+        // Only the init path (status SUCCESS) popped the screen.
+        verify(router, times(1)).popBackStackFragment()
     }
 }

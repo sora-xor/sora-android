@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import kotlinx.coroutines.flow.Flow
 
@@ -47,7 +48,11 @@ interface WalletInteractor {
 
     suspend fun needsMigration(): Boolean
 
-    suspend fun migrate(): Boolean
+    /**
+     * Submits the legacy claim and reports what is known about it. Null means there was nothing
+     * to send: the network already has this account's claim.
+     */
+    suspend fun migrate(): TransactionOutcome?
 
     suspend fun getContacts(query: String): List<String>?
 
