@@ -312,6 +312,8 @@ class MigrationManager @Inject constructor(
             .associateBy(WalletSecretsReport::walletId)
         // The journal counts only accounts that can sign. A read-only account is classified,
         // not verified: the run still completes, and the count says how many accounts work.
+        // (This is the condition of the signing gate. An explicit watch-only identity also
+        // has it; no flow of this version can create one.)
         val signingAccountCount = classifiedWallets.count {
             it.identity.migrationState == "VERIFIED"
         }
@@ -799,16 +801,35 @@ class MigrationManager @Inject constructor(
             // words.
             val nexusPhrase = verdict.recoveryPhrase
                 ?.takeIf { verdict.secretSource == StoredSecretsVerdict.SOURCE_MNEMONIC }
+            // Preparing them comes after the signing decision and can never undo it: if it
+            // fails for a reason other than storage, the SORA2 account is still verified, the
+            // recorded Nexus rows are left exactly as they are and the next start tries again.
+            var nexusPrepared = true
             if (nexusPhrase != null) {
-                networkAccounts += NexusChildAccounts.prepare(
-                    walletId = legacy.substrateAddress,
-                    storedPhraseText = mnemonic.orEmpty(),
-                    phrase = nexusPhrase,
-                    existing = database.walletIdentityDao()
-                        .getNetworkAccounts(legacy.substrateAddress)
-                        .associateBy(NetworkAccountLocal::networkId),
-                    derivationVersion = DERIVATION_VERSION,
-                )
+                networkAccounts += try {
+                    NexusChildAccounts.prepare(
+                        walletId = legacy.substrateAddress,
+                        storedPhraseText = mnemonic.orEmpty(),
+                        phrase = nexusPhrase,
+                        existing = database.walletIdentityDao()
+                            .getNetworkAccounts(legacy.substrateAddress)
+                            .associateBy(NetworkAccountLocal::networkId),
+                        derivationVersion = DERIVATION_VERSION,
+                    )
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: OutOfMemoryError) {
+                    throw error
+                } catch (error: Throwable) {
+                    if (
+                        WalletStorageFailures.isKeyMaterialUnavailable(error) ||
+                        WalletStorageFailures.isTransient(error)
+                    ) {
+                        throw error
+                    }
+                    nexusPrepared = false
+                    emptyList()
+                }
             }
 
             return PreparedWallet(
@@ -826,7 +847,11 @@ class MigrationManager @Inject constructor(
                     signingRefusal = null,
                     phrase = verdict.phrase.name,
                     seed = verdict.seed.name,
-                    diagnostics = verdict.diagnostics,
+                    diagnostics = if (nexusPrepared) {
+                        verdict.diagnostics
+                    } else {
+                        verdict.diagnostics + "NEXUS_ACCOUNTS_NOT_PREPARED"
+                    },
                 ),
             )
         } finally {
