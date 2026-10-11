@@ -1,8 +1,19 @@
 name: Android Release
 
-# Builds the signed, minified productionRelease AAB and APK in one job, checks them, and
-# uploads them as a workflow artifact. Nothing is published to Google Play from here; the
-# release manager uploads the AAB by hand (see docs/release-3.9.0/RELEASE-CHECKLIST.md).
+# Builds the signed, minified productionRelease AAB and APK, checks them, and uploads them as
+# a workflow artifact. Nothing is published to Google Play from here; the release manager
+# uploads the AAB by hand (see docs/release-3.9.0/RELEASE-CHECKLIST.md).
+#
+# Two jobs, in this order:
+#   1. upgrade-device-tests  the wallet-upgrade device tests on an emulator
+#                            (android_device_tests.yml). No secrets.
+#   2. release               runs only when job 1 passed on this commit. It waits for the
+#                            approval of the "production" environment, then builds and checks.
+# After a failure in job 2, "Re-run failed jobs" keeps the result of job 1.
+#
+# The build must run online: the bundle needs org.jetbrains.kotlin:compose-group-mapping,
+# whose POM is not in the offline cache of the release machine (its checksum is in
+# gradle/verification-metadata.xml, and --dependency-verification=strict checks it).
 #
 # Required secrets (store them in the "production" environment):
 #   CI_KEYSTORE_BASE64      base64 of the upload keystore (Jenkins credential android_keystore_sora)
@@ -11,6 +22,10 @@ name: Android Release
 #   CI_KEYSTORE_KEY_PASS    key password
 #   SORA_GOOGLE_TOKEN_PROD  Google Drive backup OAuth client; must be the same client as 3.8.6.3
 #   GOOGLE_SERVICES_JSON    base64 of app/google-services.json for jp.co.soramitsu.sora
+# SORA_GOOGLE_TOKEN_PROD is compared with the SHA-256 pinned in
+# config/android-production-google-identity.json. While that pin is empty the run stops in
+# "Check the Google Drive client and the Firebase app against the pins" (scripts/README.md says
+# how to fill it in). The Firebase app in GOOGLE_SERVICES_JSON is compared when it is pinned.
 # Version code: the version_code input, else the SORA_VERSION_CODE variable or secret.
 # Version name: the version_name input, or the tag name after "android/v". The built APK must
 # carry exactly that versionName, so a release commit without the version bump fails.
@@ -40,8 +55,14 @@ permissions:
   contents: read
 
 jobs:
+  upgrade-device-tests:
+    name: Wallet upgrade device tests
+    uses: ./.github/workflows/android_device_tests.yml
+
   release:
     name: Signed productionRelease AAB and APK
+    # No signed artifact from a commit on which the upgrade device tests failed or did not run.
+    needs: upgrade-device-tests
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 150
@@ -89,6 +110,10 @@ jobs:
           VERSION_NAME_INPUT: ${{ inputs.version_name }}
         run: |
           set -euo pipefail
+          if [[ " $GRADLE_FLAGS " == *" --offline "* ]]; then
+            echo "::error::The release build must run online: the bundle cannot be built with --offline."
+            exit 1
+          fi
           missing=()
           for name in CI_KEYSTORE_BASE64 CI_KEYSTORE_PASS CI_KEYSTORE_KEY_ALIAS CI_KEYSTORE_KEY_PASS \
                       SORA_GOOGLE_TOKEN_PROD GOOGLE_SERVICES_JSON; do
@@ -177,6 +202,14 @@ jobs:
           print("google-services.json is valid for jp.co.soramitsu.sora")
           EOF
 
+      - name: Check the Google Drive client and the Firebase app against the pins
+        # Fails here, before the long build, when SORA_GOOGLE_TOKEN_PROD is not the pinned
+        # Google Drive backup client or when nobody has filled in the pin yet. Gradle makes the
+        # same check again (verifyProductionReleaseSigning). Only SHA-256 values are printed.
+        env:
+          SORA_GOOGLE_TOKEN_PROD: ${{ secrets.SORA_GOOGLE_TOKEN_PROD }}
+        run: python3 scripts/google-identity-pin.py check --google-services app/google-services.json
+
       - name: Unit tests
         run: ./gradlew $GRADLE_FLAGS testProductionDebugUnitTest
 
@@ -201,6 +234,7 @@ jobs:
         run: |
           # The build reads SORA_VERSION_CODE (set for the whole job above). Gradle refuses a
           # productionRelease build without it, below 123, or outside 3090000..3090099 for 3.9.0.
+          # Online on purpose (no --offline): see the note at the top of this file.
           ./gradlew $GRADLE_FLAGS \
             :app:verifyProductionReleaseSigning \
             :app:assembleProductionRelease \
@@ -222,6 +256,17 @@ jobs:
             echo "::error::APK versionCode does not match $SORA_VERSION_CODE"; exit 1; }
           [[ "$package_line" == *"versionName='$EXPECTED_VERSION_NAME'"* ]] || {
             echo "::error::APK versionName is not $EXPECTED_VERSION_NAME"; exit 1; }
+
+      - name: Check the merged manifest of the AAB and the APK
+        # Target and minimum SDK, backups off, not debuggable, no deep link, no IrohaConnect,
+        # and exactly the reviewed permissions and exported components
+        # (config/android-production-manifest-policy.json). Also the version of the AAB, which
+        # the step above reads only from the APK.
+        run: >-
+          python3 scripts/verify-release-manifest.py
+          --expect-version-code "$SORA_VERSION_CODE"
+          --expect-version-name "$EXPECTED_VERSION_NAME"
+          "$AAB_PATH" "$APK_PATH"
 
       - name: Check signing certificate against the pinned upload certificate
         run: python3 scripts/verify-release-signing.py "$AAB_PATH" "$APK_PATH"
