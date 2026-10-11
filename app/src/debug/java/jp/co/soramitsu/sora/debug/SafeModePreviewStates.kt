@@ -96,6 +96,7 @@ enum class SafeModePreviewState {
     U6_REVEAL_VEILED,
     U6_REVEAL_SHOWN,
     U6_REVEAL_UNCHECKED,
+    U6_REVEAL_OTHER_WALLET,
     U6_REVEAL_UNREADABLE,
     U9_READ_ONLY_HOME,
     U9_LEARN_MORE,
@@ -223,6 +224,14 @@ object SafeModePreviewData {
             reveal = RevealUi.Shown(
                 entries[0],
                 RevealedSecret.Phrase(samplePhrase, checked = false),
+                revealed = false,
+                canGoBack = true,
+            ),
+        )
+        SafeModePreviewState.U6_REVEAL_OTHER_WALLET -> panelState(recovery).copy(
+            reveal = RevealUi.Shown(
+                entries[0],
+                RevealedSecret.Phrase(samplePhrase, checked = false, otherWallet = true),
                 revealed = false,
                 canGoBack = true,
             ),

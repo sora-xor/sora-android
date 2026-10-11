@@ -275,6 +275,21 @@ class SafeModeScreensTest {
     }
 
     @Test
+    fun aPhraseProvenToOpenAnotherWalletIsNeverCalledUnconfirmed() {
+        rule.setContent {
+            SoraAppTheme(darkTheme = true) {
+                SafeModePreview(SafeModePreviewState.U6_REVEAL_OTHER_WALLET)
+            }
+        }
+        rule.onNodeWithText(context.getString(R.string.recovery_phrase_other_wallet_title)).assertExists()
+        rule.onNodeWithText(context.getString(R.string.recovery_phrase_other_wallet)).assertExists()
+        // Not the "older version" title and not "couldn't confirm": both would be wrong here.
+        rule.onNodeWithText(context.getString(R.string.recovery_wallet_older)).assertDoesNotExist()
+        rule.onNodeWithText(context.getString(R.string.recovery_phrase_unchecked)).assertDoesNotExist()
+        rule.onAllNodesWithText(SafeModePreviewData.samplePhrase.first(), substring = true).assertCountEquals(0)
+    }
+
+    @Test
     fun offlineCheckOnThePhoneNeverSaysItWaitsForTheNetwork() {
         rule.setContent {
             SoraAppTheme(darkTheme = true) {
