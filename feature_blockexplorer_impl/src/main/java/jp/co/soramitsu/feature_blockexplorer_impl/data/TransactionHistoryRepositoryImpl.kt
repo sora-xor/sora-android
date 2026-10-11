@@ -405,7 +405,11 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             canonicalTransactionHashOrNull(transaction.base.txHash)
                 ?.let(rowsByHash::get)
                 ?.let { row ->
-                    transaction.base.applyJournal(row, detailsByHash[row.transactionHash])
+                    transaction.base.applyJournal(
+                        row = row,
+                        details = detailsByHash[row.transactionHash],
+                        listedByIndexer = true,
+                    )
                 }
         }
 
@@ -519,12 +523,20 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         timestamp = row.createdAt,
     ).apply { applyJournal(row, details) }
 
-    /** The journal row is the only authority for status; the details explain it. */
+    /**
+     * The journal row is the only authority for status; the details explain it.
+     *
+     * [listedByIndexer] is true for a transaction the indexer lists, which means it is in a
+     * block. A refusal recorded for it at submission can then no longer be the whole story, so
+     * it is not used to call the transaction failed; the row stays pending until the app's own
+     * check of finalized blocks has resolved it.
+     */
     private fun TransactionBase.applyJournal(
         row: Sora2PendingSubmissionLocal,
         details: Sora2SubmissionDetails?,
+        listedByIndexer: Boolean = false,
     ) {
-        val refusal = details?.nodeRefusal?.let { refusal ->
+        val refusal = details?.nodeRefusal?.takeUnless { listedByIndexer }?.let { refusal ->
             TransactionStatusDetail(
                 kind = when (refusal.reason) {
                     TransactionNodeRefusal.CANNOT_PAY_FEE ->
@@ -571,7 +583,12 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             } else {
                 status = TransactionStatus.PENDING
                 statusDetail = TransactionStatusDetail(
-                    TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN
+                    if (listedByIndexer) {
+                        // It did reach the network; only the final confirmation is outstanding.
+                        TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION
+                    } else {
+                        TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN
+                    }
                 )
             }
             else -> error("SORA2_PENDING_OVERLAY_STATE_INVALID")
