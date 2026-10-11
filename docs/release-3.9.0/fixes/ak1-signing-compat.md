@@ -261,7 +261,17 @@ Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
 | (e) stored phrase of another wallet next to a working key | `storedPhraseOfAnotherWalletNeverBlocksAWorkingKeyAndIsNotShownAsItsBackup` |
 | (f) stored key that does not derive the address | `storedKeyOfAnotherWalletIsReadOnlyAndRepairedWithItsPhrase`, `conflictingKeySetWithoutAccountRowIsRepairedByImportingItsPhrase`, `undecryptableAccountIsRepairedInPlaceWithItsPhrase` |
 
-Results on this branch are in the task report (JVM and device runs of the final commit).
+### Results on this branch
+
+- JVM: `testProductionDebugUnitTest` for all modules, 0 failures. `:app:assembleProductionDebug`
+  builds; `:app:lintProductionDebug` reports no new finding in the changed files or strings.
+- Device, Android 14 emulator (SORA-Api34): `feature_account_impl` 61 of 61 (52 upgrade
+  scenarios, 6 native parity, 3 native contract), `common` 17 of 17, `app` 24 run, 0 failed, 1
+  skipped by its own condition.
+- `EncryptedWalletMigrationStorageTest` (five `phaseNN` tests) is a qualification sequence that
+  needs a process restart between phases (`scripts/run-encrypted-wallet-upgrade-qualification.sh`).
+  It was left out of the class run above and not run through the script here.
+- `core_db` device tests were not run again: this task's later commits do not touch `core_db`.
 
 ## Limits
 
