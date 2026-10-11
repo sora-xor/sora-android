@@ -70,7 +70,19 @@ class ClaimViewModel @Inject constructor(
     private val _claimScreenState = SingleLiveEvent<ClaimState>()
     val claimScreenState: LiveData<ClaimState> = _claimScreenState
 
-    private var waitingClaimJob: Job? = null
+    /** True between onResume and onPause of the claim screen, that is, while it is in front. */
+    private var screenInFront = false
+
+    /** The claim is known to be on the network; the screen closes when it is in front. */
+    private var claimDone = false
+
+    /** A tapped submission is in flight; it reports its own result. */
+    private var submitting = false
+
+    /** The claim of this account that this device sent and that has no final status yet. */
+    private var waitingClaimHash: String? = null
+
+    private var followJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -81,7 +93,10 @@ class ClaimViewModel @Inject constructor(
                         }
 
                         MigrationStatus.FAILED -> onError(R.string.claim_error_title_v1)
-                        MigrationStatus.SUCCESS -> router.popBackStackFragment()
+                        MigrationStatus.SUCCESS -> {
+                            claimDone = true
+                            closeWhenInFront()
+                        }
                     }
                 }
             }
@@ -90,13 +105,39 @@ class ClaimViewModel @Inject constructor(
         _claimScreenState.value = ClaimState(false)
     }
 
-    fun checkMigrationIsAlreadyFinished() {
-        viewModelScope.launch {
-            // Asked from the network; while it cannot be reached the screen simply stays.
-            tryCatch {
-                if (!walletInteractor.needsMigration()) router.popBackStackFragment()
-            }
+    /**
+     * The claim screen came to the front. If the claim is already known to be done the screen
+     * closes; otherwise the network is asked, and a claim this device sent earlier and that is
+     * still waiting is followed. Nothing is signed or sent from here.
+     */
+    fun onScreenResumed() {
+        screenInFront = true
+        if (claimDone) {
+            closeWhenInFront()
+            return
         }
+        if (!submitting) follow(checkAtOnce = true)
+    }
+
+    /**
+     * The claim screen left the front: the app went to the background, or another screen (the
+     * PIN lock) is on top. Nothing is followed and nothing is closed until it is back.
+     */
+    fun onScreenPaused() {
+        screenInFront = false
+        followJob?.cancel()
+        followJob = null
+    }
+
+    /**
+     * Closes the claim screen only while it is the screen in front. Everything that finds the
+     * claim done (the tapped submission, the follow timer, a late network answer) ends here, so
+     * none of them can pop a screen that was put on top in the meantime. After a pause that
+     * screen is the PIN lock, and popping it would open the wallet without the PIN. When the
+     * claim screen is not in front, [onScreenResumed] closes it as soon as it is.
+     */
+    private fun closeWhenInFront() {
+        if (claimDone && screenInFront) router.closeClaimScreen()
     }
 
     fun contactsUsClicked() {
@@ -107,11 +148,15 @@ class ClaimViewModel @Inject constructor(
      * Submits the claim and shows exactly what is known afterwards. Only a claim the network
      * confirmed (or already had) is stored as done, and only one that was included and failed
      * there as failed. A claim that is still waiting is said to be waiting, is never stored as
-     * failed, and this screen then continues by itself once the network has it. While an earlier
+     * failed, and this screen then follows it and reports its result. While an earlier
      * transaction of the account is unresolved the claim gate sends nothing, and the screen says
      * so. The progress mark is cleared on every path that keeps the screen open.
      */
     fun nextButtonClicked() {
+        if (submitting) return
+        submitting = true
+        followJob?.cancel()
+        followJob = null
         viewModelScope.launch {
             setLoading(true)
             var outcome: TransactionOutcome? = null
@@ -122,6 +167,8 @@ class ClaimViewModel @Inject constructor(
                 throw cancellation
             } catch (t: Throwable) {
                 notSent = t
+            } finally {
+                submitting = false
             }
             FirebaseWrapper.log("SORA migration done ${outcome?.let { it::class.simpleName }}")
             when {
@@ -133,6 +180,8 @@ class ClaimViewModel @Inject constructor(
                         resourceManager.getString(R.string.tx_outcome_not_sent_title) to
                             resourceManager.getString(R.string.tx_outcome_claim_blocked)
                     )
+                    // If it is a claim, this screen follows it and reports its result.
+                    if (screenInFront) follow(checkAtOnce = true)
                 }
                 notSent != null -> {
                     setLoading(false)
@@ -142,19 +191,13 @@ class ClaimViewModel @Inject constructor(
                     saveStatus(MigrationStatus.SUCCESS)
                 outcome is TransactionOutcome.Waiting -> {
                     setLoading(false)
-                    showClaimWaiting()
-                    followWaitingClaim()
+                    waitingClaimHash = outcome.txHash
+                    showClaimWaiting(outcome.acceptedByNode)
+                    if (screenInFront) follow(checkAtOnce = false)
                 }
                 outcome is TransactionOutcome.FailedOnChain -> {
                     setLoading(false)
-                    if (outcome.reason == TransactionChainFailure.EXECUTION_FAILED) {
-                        saveStatus(MigrationStatus.FAILED)
-                    } else {
-                        // Never included: nothing happened on chain, so nothing is stored and
-                        // the claim can simply be submitted again.
-                        val text = TransactionOutcomeTexts.describe(resourceManager, outcome)
-                        alertDialogLiveData.setValue(text.title to text.message)
-                    }
+                    showClaimFailed(outcome)
                 }
                 outcome is TransactionOutcome.RefusedByNode -> {
                     setLoading(false)
@@ -177,37 +220,101 @@ class ClaimViewModel @Inject constructor(
     }
 
     /**
-     * A waiting claim is resolved by the network, not by this screen. So that the person is not
-     * left looking at a screen that never changes, the network is asked at intervals whether it
-     * has the claim, for as long as the submitted transaction can still be included, and the
-     * screen closes as soon as it does. Nothing is signed or sent from here, and a read that
-     * fails (for example while offline) is simply repeated at the next interval.
+     * The claim screen cannot be left without closing the app, so it must not sit unchanged
+     * while something it showed is being decided elsewhere. While it is in front, and only then,
+     * it asks at intervals:
+     *
+     * 1. whether the network has this account's claim (then the screen closes), and
+     * 2. what became of the claim this device sent, if one is still waiting: confirmed closes the
+     *    screen; failed on chain, or expired without being included, is said so and Submit can
+     *    be used again. A waiting claim found after the screen was opened anew (for example
+     *    after the PIN lock) is followed in the same way.
+     *
+     * Nothing is signed or sent from here. A read that fails (for example while offline) is
+     * simply repeated at the next interval. Without a waiting claim there is one check, as on
+     * every return to this screen before. The number of checks per visit is bounded; the next
+     * return to the screen, or Submit, starts it again.
      */
-    private fun followWaitingClaim() {
-        waitingClaimJob?.cancel()
-        waitingClaimJob = viewModelScope.launch {
-            repeat(WAITING_CLAIM_CHECKS) {
-                delay(WAITING_CLAIM_CHECK_INTERVAL_MILLIS)
-                val claimed = try {
-                    withContext(coroutineManager.io) { !walletInteractor.needsMigration() }
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
-                } catch (_: Throwable) {
-                    false
-                }
+    private fun follow(checkAtOnce: Boolean) {
+        followJob?.cancel()
+        followJob = viewModelScope.launch {
+            repeat(WAITING_CLAIM_CHECKS) { check ->
+                if (check > 0 || !checkAtOnce) delay(WAITING_CLAIM_CHECK_INTERVAL_MILLIS)
+                val claimed = readOrNull { !walletInteractor.needsMigration() } ?: false
                 if (claimed) {
-                    saveStatus(MigrationStatus.SUCCESS)
+                    if (waitingClaimHash != null) {
+                        waitingClaimHash = null
+                        saveStatus(MigrationStatus.SUCCESS)
+                    } else {
+                        // Found done on a return to the screen (another device may have
+                        // claimed): the screen closes, as before, without storing anything.
+                        claimDone = true
+                        closeWhenInFront()
+                    }
                     return@launch
                 }
+                val followed = waitingClaimHash
+                when (val known = readOrNull { walletInteractor.checkSubmittedClaim(followed) }) {
+                    is TransactionOutcome.Waiting -> if (followed == null) {
+                        // A claim sent before this screen was opened is still waiting.
+                        waitingClaimHash = known.txHash
+                        showClaimWaiting(known.acceptedByNode)
+                    }
+                    is TransactionOutcome.Confirmed -> if (followed != null) {
+                        waitingClaimHash = null
+                        saveStatus(MigrationStatus.SUCCESS)
+                        return@launch
+                    }
+                    is TransactionOutcome.FailedOnChain -> if (followed != null) {
+                        waitingClaimHash = null
+                        showClaimFailed(known)
+                        return@launch
+                    }
+                    // A refusal was shown when it happened; an unreadable status is asked again.
+                    is TransactionOutcome.RefusedByNode, null -> Unit
+                }
+                if (waitingClaimHash == null) return@launch
             }
         }
     }
 
-    private fun showClaimWaiting() {
+    /** A failed read is not a result: null, and the caller asks again at the next interval. */
+    private suspend fun <T> readOrNull(read: suspend () -> T): T? = try {
+        withContext(coroutineManager.io) { read() }
+    } catch (cancellation: CancellationException) {
+        throw cancellation
+    } catch (_: Throwable) {
+        null
+    }
+
+    /**
+     * The network received the claim, or the phone never got its answer: the two are said
+     * differently, because only the first is known to be on its way.
+     */
+    private fun showClaimWaiting(acceptedByNode: Boolean) {
         alertDialogLiveData.setValue(
             resourceManager.getString(R.string.tx_outcome_waiting_title) to
-                resourceManager.getString(R.string.tx_outcome_claim_waiting)
+                resourceManager.getString(
+                    if (acceptedByNode) {
+                        R.string.tx_outcome_claim_waiting
+                    } else {
+                        R.string.tx_outcome_claim_uncertain
+                    }
+                )
         )
+    }
+
+    /**
+     * Only a claim that was included and failed there is stored as failed. One that was never
+     * included changed nothing on chain, so nothing is stored and it can be submitted again.
+     */
+    private suspend fun showClaimFailed(outcome: TransactionOutcome.FailedOnChain) {
+        if (outcome.reason == TransactionChainFailure.EXECUTION_FAILED) {
+            saveStatus(MigrationStatus.FAILED)
+        } else {
+            val text = TransactionOutcomeTexts.describe(resourceManager, outcome)
+            alertDialogLiveData.setValue(text.title to text.message)
+        }
     }
 
     /**

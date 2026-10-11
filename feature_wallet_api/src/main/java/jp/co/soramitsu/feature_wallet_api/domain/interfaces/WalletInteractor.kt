@@ -54,6 +54,14 @@ interface WalletInteractor {
      */
     suspend fun migrate(): TransactionOutcome?
 
+    /**
+     * What is known now about a legacy claim this device already sent for the current account,
+     * after one read-only status check. [txHash] names the claim; when it is null the newest
+     * claim this device recorded for the account is used. Null when there is none. Nothing is
+     * signed or sent.
+     */
+    suspend fun checkSubmittedClaim(txHash: String?): TransactionOutcome?
+
     suspend fun getContacts(query: String): List<String>?
 
     suspend fun getSoraAccounts(): List<SoraAccount>

@@ -136,6 +136,17 @@ class WalletInteractorTest {
     }
 
     @Test
+    fun `a submitted claim is checked for the current account`() = runTest {
+        val outcome = jp.co.soramitsu.common.domain.TransactionOutcome.Waiting(
+            txHash = "0xhash",
+            acceptedByNode = true,
+        )
+        given(walletRepository.checkSubmittedClaim("address", "0xhash")).willReturn(outcome)
+
+        assertEquals(outcome, interactor.checkSubmittedClaim("0xhash"))
+    }
+
+    @Test
     fun `find other users`() = runTest {
         given(runtimeManager.isAddressOk(anyString())).willReturn(true)
         given(
