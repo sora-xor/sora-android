@@ -74,7 +74,11 @@ class SafeModeVaultTest {
         val unconfirmed = SafeModeVault.reveal(entry, null, repository, mockk()) { secret ->
             if (secret is RevealedSecret.Phrase) "cnOther" else "cnA"
         }
-        assertEquals(RevealedSecret.Phrase(listOf("alpha", "beta", "gamma"), checked = false), unconfirmed)
+        // Its own result: never "could not be confirmed", it is known to open another wallet.
+        assertEquals(
+            RevealedSecret.Phrase(listOf("alpha", "beta", "gamma"), checked = false, otherWallet = true),
+            unconfirmed,
+        )
 
         // A stored seed that derives this address is this wallet's backup and is shown instead.
         coEvery { repository.retrieveStoredSeed(any()) } returns "aa".repeat(32)
@@ -89,11 +93,77 @@ class SafeModeVaultTest {
     }
 
     @Test
-    fun `raw seed accounts show the stored seed, never a derived cache`() = runTest {
+    fun `a seed cached as 64 bytes shows the 32 bytes that derive the wallet, or is not confirmed`() =
+        runTest {
+            val front = "ab".repeat(32)
+            val cached = front + "cd".repeat(32)
+            coEvery { repository.retrieveMnemonic(any()) } throws WalletDecryptionException("damaged")
+            coEvery { repository.retrieveStoredSeed(any()) } returns cached
+            val entry = PhraseEntry("cnA", "cnA", null, false)
+
+            // The first 32 bytes derive this wallet: they are its raw seed, in the form the
+            // app's own import accepts (64 characters).
+            val proven = SafeModeVault.reveal(entry, null, repository, datasource) { secret ->
+                if ((secret as? RevealedSecret.Seed)?.value == front) "cnA" else null
+            }
+            assertEquals(RevealedSecret.Seed(front), proven)
+
+            // Not proven (the address cannot be derived, or the front derives another wallet):
+            // the 128 characters are never shown as a confirmed raw seed.
+            assertEquals(
+                RevealedSecret.Seed(cached, checked = false),
+                SafeModeVault.reveal(entry, null, repository, datasource),
+            )
+            assertEquals(
+                RevealedSecret.Seed(cached, checked = false),
+                SafeModeVault.reveal(entry, null, repository, datasource) { "cnOther" },
+            )
+        }
+
+    @Test
+    fun `a seed stored with a line break or a prefix shows as its 64 hex characters`() = runTest {
+        val seed = "0123456789abcdef".repeat(4)
         coEvery { repository.retrieveMnemonic(any()) } returns ""
-        coEvery { repository.retrieveStoredSeed(any()) } returns "0xabc"
+        val entry = PhraseEntry("cnA", "cnA", null, false)
+        listOf(
+            seed.take(32) + "\n" + seed.drop(32),
+            "0x" + seed.uppercase(),
+            seed.chunked(8).joinToString(" "),
+        ).forEach { stored ->
+            coEvery { repository.retrieveStoredSeed(any()) } returns stored
+            assertEquals(
+                stored,
+                RevealedSecret.Seed(seed),
+                SafeModeVault.reveal(entry, null, repository, datasource) { "cnA" },
+            )
+        }
+    }
+
+    @Test
+    fun `a seed proven to derive another wallet says so, and a value that is not a seed is not confirmed`() =
+        runTest {
+            val seed = "0123456789abcdef".repeat(4)
+            coEvery { repository.retrieveMnemonic(any()) } returns ""
+            coEvery { repository.retrieveStoredSeed(any()) } returns seed
+            val entry = PhraseEntry("cnA", "cnA", null, false)
+            assertEquals(
+                RevealedSecret.Seed(seed, checked = false, otherWallet = true),
+                SafeModeVault.reveal(entry, null, repository, datasource) { "cnOther" },
+            )
+            coEvery { repository.retrieveStoredSeed(any()) } returns "0xabc"
+            assertEquals(
+                RevealedSecret.Seed("0xabc", checked = false),
+                SafeModeVault.reveal(entry, null, repository, datasource) { "cnA" },
+            )
+        }
+
+    @Test
+    fun `raw seed accounts show the stored seed, never a derived cache`() = runTest {
+        val seed = "0123456789abcdef".repeat(4)
+        coEvery { repository.retrieveMnemonic(any()) } returns ""
+        coEvery { repository.retrieveStoredSeed(any()) } returns seed
         val secret = SafeModeVault.reveal(PhraseEntry("cnA", "cnA", null, false), null, repository, datasource)
-        assertEquals(RevealedSecret.Seed("0xabc"), secret)
+        assertEquals(RevealedSecret.Seed(seed), secret)
         coVerify(exactly = 1) { repository.retrieveMnemonic(any()) }
         coVerify(exactly = 1) { repository.retrieveStoredSeed(any()) }
         coVerify(exactly = 0) { repository.retrieveSeed(any()) }
@@ -124,10 +194,11 @@ class SafeModeVaultTest {
 
     @Test
     fun `an unreadable phrase never hides a readable seed`() = runTest {
+        val seed = "0123456789abcdef".repeat(4)
         coEvery { repository.retrieveMnemonic(any()) } throws WalletDecryptionException("damaged")
-        coEvery { repository.retrieveStoredSeed(any()) } returns "0xabc"
+        coEvery { repository.retrieveStoredSeed(any()) } returns seed
         assertEquals(
-            RevealedSecret.Seed("0xabc"),
+            RevealedSecret.Seed(seed),
             SafeModeVault.reveal(PhraseEntry("cnA", "cnA", null, false), null, repository, datasource),
         )
     }

@@ -84,4 +84,9 @@
     <string name="recovery_phrase_unchecked">このフレーズは以前のバージョンのSORAが保存したものです。このウォレットのものかどうかを確認できませんでした。</string>
     <string name="recovery_seed_unchecked">このシードは以前のバージョンのSORAが保存したものです。このウォレットのものかどうかを確認できませんでした。</string>
     <string name="recovery_phrase_unreadable">この端末では保存されたフレーズを開けないため、再試行しても解決しません。書き留めたフレーズやGoogleドライブのバックアップがあれば、それを使って復元できます。</string>
+    <!-- ak1-signing-compat: a stored phrase or seed proven to open a different wallet is never called this wallet's backup -->
+    <string name="recovery_phrase_other_wallet_title">別のウォレットのフレーズ</string>
+    <string name="recovery_phrase_other_wallet">このフレーズで開くのは別のウォレットで、このウォレットではありません。そのため、このウォレットのバックアップにはなりません。この端末には、このウォレットのリカバリーフレーズは見つかりませんでした。表示しても何も変わらず、この端末に保存されているものはすべてそのまま残ります。SORAを開き直してこのウォレットが使える場合は、「アカウントのオプション」から暗号化されたJSONファイルとしてエクスポートしてバックアップしてください。</string>
+    <string name="recovery_seed_other_wallet_title">別のウォレットのシード</string>
+    <string name="recovery_seed_other_wallet">このシードで開くのは別のウォレットで、このウォレットではありません。そのため、このウォレットのバックアップにはなりません。表示しても何も変わらず、この端末に保存されているものはすべてそのまま残ります。SORAを開き直してこのウォレットが使える場合は、「アカウントのオプション」から暗号化されたJSONファイルとしてエクスポートしてバックアップしてください。</string>
 </resources>

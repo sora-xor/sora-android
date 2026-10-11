@@ -850,13 +850,31 @@ private fun ColumnScope.ShownStep(step: RevealUi.Shown, callbacks: SafeModeCallb
     val secret = step.secret
     val unchecked = (secret as? RevealedSecret.Phrase)?.checked == false ||
         (secret as? RevealedSecret.Seed)?.checked == false
+    // Proven to derive a different address: never this wallet's backup, and never described
+    // as "could not be confirmed".
+    val otherWallet = (secret as? RevealedSecret.Phrase)?.otherWallet == true ||
+        (secret as? RevealedSecret.Seed)?.otherWallet == true
     val title = when {
+        otherWallet && secret is RevealedSecret.Seed ->
+            stringResource(R.string.recovery_seed_other_wallet_title)
+        otherWallet -> stringResource(R.string.recovery_phrase_other_wallet_title)
         secret is RevealedSecret.Seed -> stringResource(R.string.recovery_seed_title)
         step.entry.olderVersion || unchecked -> stringResource(R.string.recovery_wallet_older)
         else -> stringResource(R.string.recovery_phrase_title)
     }
     StepHeader(title = title, body = step.entry.name ?: step.entry.address?.let(::shortAddress))
-    if (unchecked) {
+    if (otherWallet) {
+        Spacer(Modifier.size(12.dp))
+        ReassuranceCallout(
+            stringResource(
+                if (secret is RevealedSecret.Seed) {
+                    R.string.recovery_seed_other_wallet
+                } else {
+                    R.string.recovery_phrase_other_wallet
+                },
+            ),
+        )
+    } else if (unchecked) {
         // Said plainly: this value is not proven to be this wallet's backup.
         Spacer(Modifier.size(12.dp))
         ReassuranceCallout(

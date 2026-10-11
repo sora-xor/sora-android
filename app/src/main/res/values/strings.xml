@@ -100,4 +100,10 @@
     <string name="recovery_seed_unchecked">An older SORA version saved this seed. SORA couldn\'t confirm that it belongs to this wallet.</string>
     <!-- recovery_phrase_unreadable: verified: SafeModeVault returns Unreadable only for WalletDecryptionException or a non-transient KeyMaterialUnavailableException on every stored value -->
     <string name="recovery_phrase_unreadable">This phone can\'t unlock the saved phrase, so trying again won\'t help. If you wrote it down or backed it up to Google Drive, you can still restore with it.</string>
+    <!-- ak1-signing-compat: a stored phrase or seed proven to open a different wallet is never called this wallet's backup -->
+    <!-- recovery_phrase_other_wallet / recovery_seed_other_wallet: verified: SafeModeVault.reveal sets otherWallet only when SafeModeViewModel.derivedAddress derived an address and it is not this wallet's, and (for a phrase) no stored seed and no release-era value of the 2.x owner derives this wallet either; reveal only reads (no put, no Room); CredentialsRepositoryImpl.generateJson exports an account whose stored key signs without needing a phrase or seed -->
+    <string name="recovery_phrase_other_wallet_title">Phrase of a different wallet</string>
+    <string name="recovery_phrase_other_wallet">This phrase opens a different wallet, not this one, so it is not a backup of this wallet. SORA found no recovery phrase for this wallet on this phone. Showing this changes nothing: everything saved on this phone stays as it is. If this wallet works when SORA opens again, back it up by exporting it as an encrypted JSON file (Account options).</string>
+    <string name="recovery_seed_other_wallet_title">Seed of a different wallet</string>
+    <string name="recovery_seed_other_wallet">This seed opens a different wallet, not this one, so it is not a backup of this wallet. Showing this changes nothing: everything saved on this phone stays as it is. If this wallet works when SORA opens again, back it up by exporting it as an encrypted JSON file (Account options).</string>
 </resources>

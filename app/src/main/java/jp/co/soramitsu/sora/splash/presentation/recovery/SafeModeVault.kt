@@ -37,6 +37,7 @@ import java.io.File
 import java.security.MessageDigest
 import jp.co.soramitsu.common.account.RecoveryPhrase
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.account.StoredSecretHex
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.core_db.RecoveryFacts
@@ -60,9 +61,29 @@ sealed interface RevealedSecret {
     /**
      * [checked] is false for a phrase an older SORA version saved without an address when SORA
      * could not confirm that it derives this wallet's address: it is shown, with that said.
+     *
+     * [otherWallet] is true when the value stored for this wallet is proven to derive a
+     * different address. It is still shown (in this emergency screen it may be the only copy of
+     * that other wallet's phrase), but never as this wallet's backup: the screen says plainly
+     * that it opens a different wallet and that this wallet has no phrase on the phone.
      */
-    data class Phrase(val words: List<String>, val checked: Boolean = true) : RevealedSecret
-    data class Seed(val value: String, val checked: Boolean = true) : RevealedSecret
+    data class Phrase(
+        val words: List<String>,
+        val checked: Boolean = true,
+        val otherWallet: Boolean = false,
+    ) : RevealedSecret
+
+    /**
+     * [value] is the 32-byte seed as 64 lower-case hex characters whenever the stored value
+     * reads as 32 bytes, or holds the 32 bytes that derive this wallet's address in front (a
+     * seed cached as 64 bytes by 3.6.0.0 to 3.8.2.0). That is the form Import account, Raw seed
+     * accepts. Anything else is shown as stored with [checked] false.
+     */
+    data class Seed(
+        val value: String,
+        val checked: Boolean = true,
+        val otherWallet: Boolean = false,
+    ) : RevealedSecret
 
     /** Nothing is saved for this wallet on this phone. */
     data object None : RevealedSecret
@@ -159,22 +180,28 @@ object SafeModeVault {
             val shown = RevealedSecret.Phrase(phraseWords(phrase.text))
             if (!derivesAnotherWallet(shown, address, addressOf)) return shown
             // The stored phrase is proven to belong to another wallet. A stored seed that
-            // derives this address is this wallet's backup; otherwise the phrase is shown and
-            // marked as not confirmed for this wallet.
+            // derives this address is this wallet's backup; otherwise the phrase is shown as
+            // what it is: the phrase of a different wallet, not a backup of this one.
             val otherSeed = read { credentialsRepository.retrieveStoredSeed(account) }
             if (otherSeed is Read.Value && otherSeed.text.isNotEmpty()) {
-                val seedShown = RevealedSecret.Seed(otherSeed.text)
-                if (derives(seedShown, address, addressOf)) return seedShown
+                val seedShown = storedSeed(otherSeed.text, address, addressOf)
+                if (seedShown.checked && derives(seedShown, address, addressOf)) return seedShown
             }
-            return shown.copy(checked = false)
+            if (address == legacyOwner) {
+                // The 2.x owner's unsuffixed value is this wallet's backup when it derives this
+                // address, whatever is stored under the address itself.
+                when (val older = releaseEra(credentialsDatasource)) {
+                    is RevealedSecret.Phrase -> if (derives(older, address, addressOf)) return older
+                    is RevealedSecret.Seed -> if (derives(older, address, addressOf)) return older
+                    else -> Unit
+                }
+            }
+            return shown.copy(checked = false, otherWallet = true)
         }
         // The seed is read only when no phrase is stored.
         val seed = read { credentialsRepository.retrieveStoredSeed(account) }
         val storedSeed = (seed as? Read.Value)?.text?.takeIf(String::isNotEmpty)
-        if (storedSeed != null) {
-            val shown = RevealedSecret.Seed(storedSeed)
-            return shown.copy(checked = !derivesAnotherWallet(shown, address, addressOf))
-        }
+        if (storedSeed != null) return storedSeed(storedSeed, address, addressOf)
         if (address == legacyOwner) {
             // The 2.x owner's unsuffixed value. The repository already returns it above when the
             // unsuffixed keys derive this address; here they are missing, unreadable or derive
@@ -191,6 +218,46 @@ object SafeModeVault {
             failures.isEmpty() -> RevealedSecret.None
             failures.all { it.permanent } -> RevealedSecret.Unreadable
             else -> RevealedSecret.Unavailable
+        }
+    }
+
+    /**
+     * The seed stored for [address] as it may be shown.
+     * - 32 bytes: shown as 64 lower-case hex characters (spaces, line breaks and a prefix in the
+     *   stored text are not part of the seed). It is marked as another wallet's only when it is
+     *   proven to derive a different address.
+     * - Longer, with the 32 bytes that derive this address in front (the 64-byte value cached by
+     *   3.6.0.0 to 3.8.2.0): those 32 bytes are shown. They are this wallet's raw seed, proven
+     *   by deriving its address, and they are what Import account, Raw seed accepts.
+     * - Anything else (another length, not hex, or 64 bytes whose first half does not derive
+     *   this address): shown as stored and marked as not confirmed. It is never presented as a
+     *   confirmed raw seed, because the app's own import would not accept it.
+     */
+    private suspend fun storedSeed(
+        text: String,
+        address: String,
+        addressOf: suspend (RevealedSecret) -> String?,
+    ): RevealedSecret.Seed {
+        val bytes = StoredSecretHex.decodeOrNull(text)
+            ?: return RevealedSecret.Seed(text, checked = false)
+        try {
+            if (bytes.size == RecoveryPhrase.MINI_SEED_BYTES) {
+                val shown = RevealedSecret.Seed(StoredSecretHex.encode(bytes))
+                val other = derivesAnotherWallet(shown, address, addressOf)
+                return shown.copy(checked = !other, otherWallet = other)
+            }
+            if (bytes.size > RecoveryPhrase.MINI_SEED_BYTES) {
+                val front = bytes.copyOfRange(0, RecoveryPhrase.MINI_SEED_BYTES)
+                try {
+                    val shown = RevealedSecret.Seed(StoredSecretHex.encode(front))
+                    if (derives(shown, address, addressOf)) return shown
+                } finally {
+                    front.fill(0)
+                }
+            }
+            return RevealedSecret.Seed(text, checked = false)
+        } finally {
+            bytes.fill(0)
         }
     }
 
