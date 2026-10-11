@@ -42,14 +42,17 @@ import jp.co.soramitsu.androidfoundation.coroutine.SuspendableProperty
 import jp.co.soramitsu.androidfoundation.format.isZero
 import jp.co.soramitsu.androidfoundation.format.nullZero
 import jp.co.soramitsu.androidfoundation.format.orZero
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.base.ConfirmDialogData
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.presentation.transaction.badge
@@ -155,6 +158,14 @@ class LiquidityAddViewModel @AssistedInject constructor(
 
     private var pairEnabled: Boolean = true
     private var pairPresented: Boolean = true
+
+    /**
+     * The reserves of the chosen pair could not be read from the network. Without them the
+     * second amount cannot be derived from the first, so nothing may be reviewed or signed until
+     * a read succeeds: amounts typed at any other ratio than the pool's fail on chain, and the
+     * fee is charged for it.
+     */
+    private var reservesUnavailable = false
 
     private val _searchTokenFilter = MutableStateFlow(emptySearchTokenFilter)
     val searchTokenFilter = _searchTokenFilter.asStateFlow()
@@ -354,6 +365,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 resourceManager.getString(R.string.choose_tokens) to false
             }
 
+            reservesUnavailable -> {
+                resourceManager.getString(R.string.tx_outcome_pool_unavailable_title) to false
+            }
+
             (_addState.value.assetState1?.token != null && amountFrom == BigDecimal.ZERO) -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
@@ -393,6 +408,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
         if (tokenFrom == null || tokenTo == null || basedAmount < BigDecimal.ZERO || targetAmount < BigDecimal.ZERO) {
             return
         }
+        // Nothing is estimated against reserves that were never read.
+        if (reservesUnavailable) return
 
         setButtonLoading(true)
 
@@ -648,6 +665,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
         pairPresentedJob?.cancel()
         liquidityDataSubscriptionJob?.cancel()
         liquidityData = LiquidityData()
+        reservesUnavailable = false
     }
 
     private fun subscribePoolChanges(tokenFromId: String, tokenToId: String) {
@@ -694,13 +712,12 @@ class LiquidityAddViewModel @AssistedInject constructor(
                         onError(it)
                     }
                     .onEach { localData ->
-                        // The reserves of a pair that is not cached are read from the network;
-                        // that read fails while it cannot be reached.
                         guarded {
                             if (localData == null) {
                                 fetchLiquidityData()
                             } else {
                                 liquidityData = localData
+                                reservesUnavailable = false
                                 _addState.value = _addState.value.copy(
                                     pairNotExist = false,
                                 )
@@ -712,6 +729,13 @@ class LiquidityAddViewModel @AssistedInject constructor(
         }
     }
 
+    /**
+     * Reads the reserves of a pair that is not cached from the network. The read fails while the
+     * network cannot be reached. The screen then must not go on with reserves of zero, which
+     * would treat an existing pool like a new one: Supply stays off and the person is told, with
+     * Try again. The cache flow does not emit a second time for the same pair, so Try again is
+     * the way the read is repeated.
+     */
     private suspend fun fetchLiquidityData() {
         val tokenFrom = _addState.value.assetState1?.token
         val tokenTo = _addState.value.assetState2?.token
@@ -719,12 +743,55 @@ class LiquidityAddViewModel @AssistedInject constructor(
             return
         }
 
-        liquidityData = withContext(coroutineManager.io) {
-            poolsInteractor.getLiquidityData(tokenFrom, tokenTo, pairEnabled, pairPresented)
+        val fetched = try {
+            withContext(coroutineManager.io) {
+                poolsInteractor.getLiquidityData(tokenFrom, tokenTo, pairEnabled, pairPresented)
+            }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (t: Throwable) {
+            if (tokenFrom.id == addToken1 && tokenTo.id == addToken2) onReservesUnavailable(t)
+            return
         }
+        // The pair may have been changed while the answer was on its way.
+        if (tokenFrom.id != addToken1 || tokenTo.id != addToken2) return
+        liquidityData = fetched
+        reservesUnavailable = false
         _addState.value = _addState.value.copy(
             pairNotExist = liquidityData.secondReserves.isZero() && liquidityData.firstReserves.isZero(),
         )
+    }
+
+    private fun onReservesUnavailable(error: Throwable) {
+        FirebaseWrapper.recordException(error)
+        reservesUnavailable = true
+        liquidityDetails = null
+        updateButtonState()
+        confirmDialogLiveData.setValue(
+            ConfirmDialogData(
+                title = resourceManager.getString(R.string.tx_outcome_pool_unavailable_title),
+                message = resourceManager.getString(R.string.tx_outcome_pool_unavailable),
+                confirmText = resourceManager.getString(R.string.common_try_again),
+                dismissText = resourceManager.getString(R.string.common_close),
+                onDismiss = { _navigationPop.trigger() },
+                onConfirm = ::retryReserves,
+            )
+        )
+    }
+
+    /** Try again on the pool notice: reads the reserves of the chosen pair once more. */
+    private fun retryReserves() {
+        viewModelScope.launch {
+            guarded {
+                setButtonLoading(true)
+                try {
+                    fetchLiquidityData()
+                } finally {
+                    setButtonLoading(false)
+                }
+            }
+            onChangedProperty.set(false)
+        }
     }
 
     fun onSlippageClick() {
@@ -829,6 +896,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private fun confirmAddLiquidity(confirmedDuplicate: Boolean) {
         val state1 = _addState.value.assetState1 ?: return
         val state2 = _addState.value.assetState2 ?: return
+        // Never sign amounts that were not checked against the pool's reserves.
+        if (reservesUnavailable) return
         viewModelScope.launch {
             setConfirmButton(enabled = false, loading = true)
             var outcome: TransactionOutcome? = null
