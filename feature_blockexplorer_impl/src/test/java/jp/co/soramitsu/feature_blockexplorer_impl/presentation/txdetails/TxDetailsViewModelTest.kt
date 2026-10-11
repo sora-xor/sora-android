@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
@@ -70,7 +71,10 @@ import jp.co.soramitsu.test_data.TestTokens
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -141,12 +145,15 @@ class TxDetailsViewModelTest {
         assertEquals(explorerUrl(tx.base.txHash), viewModel.txDetailsScreenState.value.basicTxDetailsState.explorerUrl)
     }
 
-    private suspend fun initTestData(tx: Transaction = TestTransactions.sendFailedTx) {
+    private suspend fun initTestData(
+        tx: Transaction = TestTransactions.sendFailedTx,
+        localTransactions: Flow<Boolean> = flowOf(true),
+    ) {
         coEvery { transactionHistoryHandler.getTransaction(txHash) } returns tx
         coEvery {
             soraConfigManager.getTransactionExplorerUrl(tx.base.txHash)
         } returns explorerUrl(tx.base.txHash)
-        every { transactionHistoryHandler.flowLocalTransactions() } returns flowOf(true)
+        every { transactionHistoryHandler.flowLocalTransactions() } returns localTransactions
         every { resourceManager.getString(R.string.common_recipient) } returns "recipient"
         every { resourceManager.getString(R.string.common_sent) } returns "sent"
         every { resourceManager.getString(R.string.common_bridged) } returns "bridged"
@@ -753,6 +760,181 @@ class TxDetailsViewModelTest {
         assertEquals(TransactionStatus.REJECTED, state.txStatus)
         assertEquals("text-${R.string.tx_outcome_note_refused_fee}", state.statusNote)
         assertEquals(null, state.explorerUrl)
+        // "No fee was charged": the fee that was only expected is not listed as paid.
+        assertEquals(null, state.networkFee)
+        assertEquals(null, state.networkFeeFiat)
+    }
+
+    @Test
+    fun `a transaction that reached a block keeps its fee`() = runTest {
+        val failed = stateFor(
+            swapWith(
+                TransactionStatus.REJECTED,
+                TransactionStatusDetail(TransactionStatusDetail.Kind.FAILED_ON_CHAIN),
+            )
+        )
+        // It was included, so the fee was charged and is shown.
+        assertEquals(true, failed.networkFee != null)
+
+        val waiting = stateFor(waitingSwap)
+        assertEquals(true, waiting.networkFee != null)
+    }
+
+    private fun genericWith(
+        status: TransactionStatus,
+        detail: TransactionStatusDetail?,
+        ambiguous: Boolean,
+    ) = Transaction.Sora2Submission(
+        base = TransactionBase(
+            txHash = "0x" + "ab".repeat(32),
+            blockHash = null,
+            fee = BigDecimal.ZERO,
+            status = status,
+            timestamp = 1673918013,
+            statusDetail = detail,
+        ),
+        networkId = "sora2",
+        submissionIsAmbiguous = ambiguous,
+        terminalBlockNumber = null,
+    )
+
+    @Test
+    fun `an entry known only by its hash is never titled submitted when the node refused it`() =
+        runTest {
+            // The journal row of a refused transaction is still "submission unknown".
+            val state = stateFor(
+                genericWith(
+                    TransactionStatus.REJECTED,
+                    TransactionStatusDetail(TransactionStatusDetail.Kind.REFUSED_NOT_VALID),
+                    ambiguous = true,
+                )
+            )
+
+            assertEquals("text-${R.string.tx_outcome_not_sent_title}", state.txTypeTitle)
+            assertEquals(TransactionStatus.REJECTED, state.txStatus)
+            assertEquals("text-${R.string.tx_outcome_note_refused_invalid}", state.statusNote)
+            assertEquals(null, state.explorerUrl)
+        }
+
+    @Test
+    fun `an entry known only by its hash keeps its submitted and unknown titles`() = runTest {
+        val waiting = stateFor(
+            genericWith(
+                TransactionStatus.PENDING,
+                TransactionStatusDetail(TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION),
+                ambiguous = false,
+            )
+        )
+        assertEquals("text-${R.string.wallet_transaction_submitted}", waiting.txTypeTitle)
+
+        val uncertain = stateFor(
+            genericWith(
+                TransactionStatus.PENDING,
+                TransactionStatusDetail(TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN),
+                ambiguous = true,
+            )
+        )
+        assertEquals("text-${R.string.wallet_transaction_status_unknown}", uncertain.txTypeTitle)
+    }
+
+    // --- the page follows a waiting transaction ------------------------------------------------
+
+    private val waitingSwap
+        get() = swapWith(
+            TransactionStatus.PENDING,
+            TransactionStatusDetail(TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION),
+        )
+
+    private fun shownStatus() = viewModel.txDetailsScreenState.value.basicTxDetailsState.txStatus
+
+    @Test
+    fun `the page asks for the status of a waiting transaction and stops once it is final`() =
+        runTest {
+            every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
+            // Ticks on every write to the status journal. Nothing is replayed, as in a process
+            // that was started after the transaction was sent.
+            val journal = MutableSharedFlow<Boolean>()
+            var checks = 0
+            coEvery { transactionHistoryHandler.checkWaitingTransactions() } coAnswers {
+                checks += 1
+                if (checks == 2) {
+                    // The second check finds the transaction in a finalized block.
+                    coEvery { transactionHistoryHandler.getTransaction(txHash) } returns
+                        swapWith(TransactionStatus.COMMITTED, null)
+                    journal.emit(true)
+                }
+            }
+            initTestData(waitingSwap, localTransactions = journal)
+
+            advanceTimeBy(5_000)
+            assertEquals(0, checks)
+            assertEquals(TransactionStatus.PENDING, shownStatus())
+
+            advanceTimeBy(8_000)
+            // Before: the page changed only when the background worker next ran, and after a
+            // restart it skipped that first change and stayed on "Pending".
+            assertEquals(2, checks)
+            assertEquals(TransactionStatus.COMMITTED, shownStatus())
+            assertEquals(
+                null,
+                viewModel.txDetailsScreenState.value.basicTxDetailsState.statusNote,
+            )
+
+            advanceTimeBy(600_000)
+            assertEquals(2, checks)
+        }
+
+    @Test
+    fun `the first journal write after a restart changes the page`() = runTest {
+        every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
+        coEvery { transactionHistoryHandler.checkWaitingTransactions() } returns Unit
+        val journal = MutableSharedFlow<Boolean>()
+        initTestData(waitingSwap, localTransactions = journal)
+        advanceTimeBy(1_000)
+        assertEquals(TransactionStatus.PENDING, shownStatus())
+
+        // The background worker resolved the transaction: it expired without being included.
+        coEvery { transactionHistoryHandler.getTransaction(txHash) } returns swapWith(
+            TransactionStatus.REJECTED,
+            TransactionStatusDetail(TransactionStatusDetail.Kind.NOT_INCLUDED),
+        )
+        journal.emit(true)
+        advanceTimeBy(1_000)
+
+        // Seen on the emulator before the fix: the journal row was final, the page still said
+        // "Pending" and "don't send it again".
+        assertEquals(TransactionStatus.REJECTED, shownStatus())
+        assertEquals(
+            "text-${R.string.tx_outcome_note_not_included}",
+            viewModel.txDetailsScreenState.value.basicTxDetailsState.statusNote,
+        )
+    }
+
+    @Test
+    fun `the page stops asking when the transaction can no longer be included`() = runTest {
+        every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
+        coEvery { transactionHistoryHandler.checkWaitingTransactions() } returns Unit
+        initTestData(waitingSwap)
+
+        advanceUntilIdle()
+
+        coVerify(exactly = 80) { transactionHistoryHandler.checkWaitingTransactions() }
+        assertEquals(TransactionStatus.PENDING, shownStatus())
+    }
+
+    @Test
+    fun `a transaction with a final status is never asked about`() = runTest {
+        every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
+        initTestData(
+            swapWith(
+                TransactionStatus.REJECTED,
+                TransactionStatusDetail(TransactionStatusDetail.Kind.REFUSED_CANNOT_PAY_FEE),
+            )
+        )
+
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { transactionHistoryHandler.checkWaitingTransactions() }
     }
 
     @Test

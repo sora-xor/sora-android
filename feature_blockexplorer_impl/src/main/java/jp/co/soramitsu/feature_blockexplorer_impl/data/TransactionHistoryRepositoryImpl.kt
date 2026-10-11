@@ -61,6 +61,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingSubmissionCoordinator
 import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionDetails
 import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionDetailsStore
@@ -89,6 +90,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
     private val validatedHistoryCache: PiValidatedHistoryCache,
     private val database: AppDatabase,
     private val detailsStore: Sora2SubmissionDetailsStore,
+    private val pendingSubmissionCoordinator: Sora2PendingSubmissionCoordinator,
 ) : TransactionHistoryRepository {
 
     init {
@@ -342,6 +344,23 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             ] = transfer
         }
         _state.set(true)
+    }
+
+    /**
+     * One status-only pass over the journal, the same read the background worker makes. It
+     * exists so that a screen showing a waiting transaction does not have to wait for the
+     * worker's next attempt, which can be minutes away after a few unsuccessful ones. The
+     * coordinator used here has no signer and cannot submit anything.
+     */
+    override suspend fun checkWaitingTransactions() {
+        try {
+            pendingSubmissionCoordinator.recoverStatusOnly()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            // Offline, a slow node or an unreadable block: the entry stays as it is and the
+            // background check keeps trying. Never an error for the screen.
+        }
     }
 
     private fun isReferral(item: IndexerHistoryElement, tokenId: String): Boolean {

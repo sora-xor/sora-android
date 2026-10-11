@@ -160,6 +160,12 @@ class TransactionHistoryHandlerImpl @Inject constructor(
         }
     }
 
+    override suspend fun checkWaitingTransactions() {
+        withContext(coroutineManager.io) {
+            transactionHistoryRepository.checkWaitingTransactions()
+        }
+    }
+
     private suspend fun reloadHistoryEvents(): HistoryState =
         try {
             historyPage = 1
