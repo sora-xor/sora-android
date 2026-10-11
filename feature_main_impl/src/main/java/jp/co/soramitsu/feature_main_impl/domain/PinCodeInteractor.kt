@@ -56,6 +56,12 @@ class WalletRemovalBriefing(
      * removed. Afterwards only their own recovery phrase brings them back.
      */
     val retainedKeySets: Int,
+    /**
+     * How many of [retainedKeySets] can still be restored now with the PIN ("Wallets found on
+     * this phone"). Removing everything removes the PIN and turns them into "recovery phrase
+     * only", so the person is told and asked before that happens.
+     */
+    val restorableKeySets: Int = 0,
 ) {
     class Account(
         val address: String,
@@ -128,6 +134,11 @@ class PinCodeInteractor @Inject constructor(
      * thread.
      */
     suspend fun walletRemovalBriefing(addresses: List<String>): WalletRemovalBriefing {
+        // The checks a removal must pass anyway (wallet changes allowed, no unfinished
+        // transaction, no removal in progress, the keys readable) are run now, read-only, so a
+        // removal that cannot happen says so before the person reveals and writes down a
+        // phrase for it. The preview made here is not used; confirming makes its own.
+        userRepository.createWalletDeletionPreview(addresses.distinct())
         val listed = userRepository.soraAccountsList()
         val targets = addresses.distinct().map { address ->
             listed.firstOrNull { it.substrateAddress == address }
@@ -148,20 +159,25 @@ class PinCodeInteractor @Inject constructor(
         }
         val removesEverything =
             listed.map { it.substrateAddress }.toSet() == targets.map { it.substrateAddress }.toSet()
-        val retainedKeySets = if (removesEverything) {
+        val retained = if (removesEverything) {
             try {
-                userRepository.retainedWallets().size
+                userRepository.retainedWallets()
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
                 // Not known right now. The screen then says, without a number, that wallet keys
                 // which no account uses are not removed.
-                0
+                emptyList()
             }
         } else {
-            0
+            emptyList()
         }
-        return WalletRemovalBriefing(accounts, removesEverything, retainedKeySets)
+        return WalletRemovalBriefing(
+            accounts = accounts,
+            removesEverything = removesEverything,
+            retainedKeySets = retained.size,
+            restorableKeySets = retained.count { !it.needsRecoveryPhrase },
+        )
     }
 
     suspend fun setBiometryAvailable(isBiometryAvailable: Boolean) {

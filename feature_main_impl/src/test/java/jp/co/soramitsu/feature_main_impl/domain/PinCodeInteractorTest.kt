@@ -56,7 +56,9 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mockito.kotlin.anyOrNull
 import org.mockito.junit.MockitoJUnitRunner
 
 @ExperimentalCoroutinesApi
@@ -387,6 +389,24 @@ class PinCodeInteractorTest {
 
         assertTrue(briefing.removesEverything)
         assertEquals(2, briefing.retainedKeySets)
+        // One of them can still be restored with the PIN that this removal takes away.
+        assertEquals(1, briefing.restorableKeySets)
+    }
+
+    @Test
+    fun `a removal that cannot happen is refused before any backup is read or shown`() = runTest {
+        // The checks of the deletion itself run first, read-only: an unfinished transaction,
+        // read-only mode or a removal in progress are said before the phrase step, not after
+        // the person revealed and wrote down a phrase.
+        given(userRepository.createWalletDeletionPreview(listOf("cnAlice")))
+            .willAnswer { throw IllegalStateException("WALLET_DELETION_PENDING_TRANSACTIONS") }
+
+        val error = runCatching { interactor.walletRemovalBriefing(listOf("cnAlice")) }.exceptionOrNull()
+
+        assertEquals("WALLET_DELETION_PENDING_TRANSACTIONS", error?.message)
+        verify(credentialsRepository, never()).retrieveBackupMaterial(anyOrNull())
+        // Nothing is removed by looking: only the preview was asked for.
+        verify(userRepository, never()).confirmAndExecuteWalletDeletion(anyOrNull())
     }
 
     @Test

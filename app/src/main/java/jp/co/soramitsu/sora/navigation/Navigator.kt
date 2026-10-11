@@ -146,6 +146,18 @@ class Navigator :
         }
     }
 
+    override fun leaveBackupJson() {
+        val navController = navController ?: return
+        // "Export JSON first" on the removal screen: that screen (the PIN destination, already
+        // past its PIN) is directly underneath and keeps its state. Everywhere else the PIN
+        // screen was popped before the export opened.
+        if (navController.previousBackStackEntry?.destination?.id == R.id.pincodeFragment) {
+            navController.popBackStack()
+        } else {
+            popBackStackToAccountList()
+        }
+    }
+
     override fun popBackStackToAccountDetails() {
         navController?.popBackStack(R.id.accountDetailsFragment, false)
     }
