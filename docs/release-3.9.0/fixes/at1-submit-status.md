@@ -62,7 +62,23 @@ mapping is `sora2TransactionOutcome { ... }` in
 
 Errors raised before the transaction reaches the network (no connection while
 preparing, a changed fee, the signing gate) are not outcomes. They are thrown, and
-every screen now shows "Not sent ... Nothing was sent" instead of nothing.
+every screen now shows "Not sent ... Nothing was sent" instead of nothing
+(`BaseViewModel.showTransactionNotSent`, `TransactionOutcomeTexts.notSent`). The
+text depends on the reason, so that it never asks for another try that cannot
+help:
+
+| Reason | Text |
+|---|---|
+| network unreachable while preparing | "couldn't reach the network ... check your internet connection and try again" |
+| fee changed during review (`SORA2_TRANSFER_FEE_CHANGED`) | "the network fee changed ... check the new fee and confirm again" |
+| the signer refused this account (`SIGNING_WALLET_UNAVAILABLE`, `WALLET_DELETION_ACTIVE`) | "This account can't sign transactions on this phone right now ... Your keys were not changed and your funds are safe" |
+| read-only mode after an unfinished upgrade check (`WALLET_RECOVERY_READ_ONLY`) | the existing read-only explanation (`safe_mode_read_only_details`) |
+| anything else | "couldn't be prepared. Nothing was sent ... Please try again." |
+
+Only a business error with its own message (for example an unavailable fee rate)
+keeps that message. Every other `SoraException` gets the "Not sent" dialog: the
+general error handler shows nothing at all for some of them and a bare "unexpected
+error" for others, and neither says what happened to the transaction.
 
 Paths converted (interactor returns `TransactionOutcome`, view model handles all
 four with an exhaustive `when`):
@@ -88,8 +104,15 @@ Screen behaviour:
   refused and not-sent show a dialog and stay on the Send screen.
 - Referral and Demeter: same rule; the progress mark is cleared on every path.
 - Legacy claim: only a confirmed (or already present) claim is stored as done and
-  only a claim that failed on chain as failed. A waiting claim shows "submitted,
-  waiting" and is not stored as failed. While any earlier transaction of the
+  only a claim that was included and failed there as failed. A claim that expired
+  without being included is explained ("nothing was sent ... you can try again")
+  and not stored, because the stored "failed" state is shown again on every visit.
+  A waiting claim shows "submitted, waiting" and is not stored as failed. The
+  claim screen cannot be left without closing the app, so it then follows the
+  claim by itself: every 10 seconds for 8 minutes (longer than the 64 blocks in
+  which the transaction can be included) it asks the network whether the claim is
+  there, and closes as soon as it is. Nothing is signed or sent while following,
+  and a failed read is simply repeated. While any earlier transaction of the
   account is unresolved, the existing claim gate sends nothing; the screen says
   "Not sent ... an earlier transaction is still being checked ... try again in a
   few minutes".
@@ -142,6 +165,35 @@ chain proof wins over a recorded refusal.
   under the status: waiting, being checked, failed on chain with the reason,
   never included, or refused with the reason. The explorer button is hidden for
   a transaction that never reached a block.
+- The transaction page follows a waiting transaction by itself. While it shows
+  one, it asks for the status every 6 seconds for at most 8 minutes
+  (`TransactionHistoryRepository.checkWaitingTransactions`: one status-only
+  pass of the coordinator, which has no signer and cannot submit). The
+  background worker retries after 30, 60, 120, 240 ... seconds, so without this
+  a page opened right after sending could show "Pending" for minutes after the
+  transaction was final. A failed check changes nothing and is not shown.
+- The transaction page no longer skips the first refresh tick. It used to
+  (`drop(1)`), which is right only when an earlier tick is replayed, that is,
+  when a transaction was saved in the same app session. After a restart nothing
+  is replayed, so the skipped tick was the very journal write that made the
+  waiting transaction final. Seen on the emulator: the journal row was
+  `EXPIRED_NOT_INCLUDED` and the open page still said "Pending ... don't send
+  it again" until it was closed and opened again.
+- For a transaction that never reached a block (refused or expired) the page
+  does not list the network fee. The note says no fee was charged; the fee that
+  was only expected used to be shown as "Network fee" next to it.
+- The pending and failed marks on Activity rows have a spoken description
+  ("Pending", "Failed"). Before, a screen reader could not tell a waiting entry
+  from a completed one.
+- An entry that is known only by its hash (the legacy claim, or a transaction
+  whose token is not in the token list) is titled "Not sent" when the node
+  refused it (`Transaction.Sora2Submission.genericTitle`). Its journal row is
+  still "submission unknown" at that point, so it used to be titled "Submission
+  status unknown" or "Transaction submitted" next to the status Failed.
+- A transaction the indexer already lists is in a block. A refusal recorded for
+  it at submission is then not used to call it failed; it stays pending
+  ("waiting for confirmation") until the app's own check of finalized blocks
+  has resolved the journal row.
 - Failed on chain: the reason is the `DispatchError` of the `ExtrinsicFailed`
   event, for example `LiquidityProxy.SlippageNotTolerated` or
   `Token.FundsUnavailable` (`Sora2DispatchErrorDescriber`). It only describes a
@@ -177,6 +229,14 @@ button repeats the request, with `duplicateConfirmed = true`.
 | `LiquidityRemoveViewModel` fee read while collecting assets | uncaught | dialog with Try again and Close |
 | `ClaimViewModel.checkMigrationIsAlreadyFinished`, status collector | uncaught | guarded |
 | `TxDetailsViewModel.calcState`, `AssetDetailsViewModel.refreshActivities` | uncaught | guarded |
+| `TransferAmountViewModel` account, balance and amount collectors, token change, fee retry | a failed local read (selected account, XOR row) was uncaught | `guarded`; the collector stays alive |
+| `SwapViewModel` recalculation collector, form reset, disclaimer, fee retry | a failed local read was uncaught | handled; the button stops spinning |
+| `LiquidityAddViewModel` collectors, token pickers and the reserves read of a pair that is not cached (network) | uncaught | `guarded` |
+| `LiquidityRemoveViewModel` amount collectors and percent shortcut | uncaught | `guarded` |
+
+`BaseViewModel.guarded` reports a failure through `onError` and passes
+cancellation on, so it is safe inside `collectLatest` (the older `tryCatch`
+swallows cancellation).
 
 ## User-visible effect
 
@@ -196,7 +256,7 @@ button repeats the request, with `duplicateConfirmed = true`.
 
 ## New strings
 
-28 strings `tx_outcome_*` at the end of every `common/src/main/res/values*/strings.xml`
+29 strings `tx_outcome_*` at the end of every `common/src/main/res/values*/strings.xml`
 under the comment `at1-submit-status`. English and Japanese are written; the
 other locales carry the English text (as for earlier 3.9.0 strings) so lint
 `MissingTranslation` passes.
@@ -239,9 +299,49 @@ interactor boundaries are doubles):
 - `AssetsInteractorTest`: failed on chain and refused are returned as outcomes
   with the signing key zeroed.
 
+Added in the second pass (all through production code):
+
+- `common` `TransactionNotSentTest` (new, 11): the "Not sent" text for an
+  unreachable network, a changed fee, the two signer refusals (direct and
+  wrapped by the pre-transport check), read-only mode and any other error; a
+  `SoraException` without a message of its own still gets the dialog; a generic
+  network or unexpected `SoraException` says nothing was sent; a business error
+  keeps its message.
+- `feature_wallet_impl` `ClaimViewModelTest` (+3, 1 changed): a waiting claim is
+  followed for 48 checks and never sent again; the screen closes by itself once
+  the network has the claim; a failed read while following is asked again; a
+  claim that was never included is explained and not stored as failed.
+- `feature_blockexplorer_impl` `TxDetailsViewModelTest` (+7): the page asks for
+  the status of a waiting transaction and stops once it is final; the first
+  journal write after a restart changes the page; it stops after 80 checks; a
+  final transaction is never asked about; a refused entry known only by its
+  hash is titled "Not sent"; the submitted and unknown titles are kept; a
+  transaction that never reached a block lists no fee, one that did keeps it.
+- `feature_blockexplorer_impl` `TransactionMappersTest` (+3): the Activity row
+  titles of an entry known only by its hash (refused, waiting, uncertain).
+- `feature_blockexplorer_impl` `TransactionHistoryRepositoryTest` (+3): a
+  transaction the indexer lists is not called failed because of a recorded
+  refusal; the status check goes to the status-only pass of the coordinator; a
+  failed status check is not an error.
+- `feature_assets_impl` `TransferAmountViewModelTest` (+2), `feature_polkaswap_impl`
+  `SwapViewModelTest` (+1) and `AddLiquidityViewModelTest` (+1): a failed local
+  read, or a failed network read of pool reserves, inside a collector does not
+  leave viewModelScope uncaught, and the collector keeps working.
+
 Checked against the old behaviour: with the wait loop changed back to "one failed
 read ends the wait", three `Sora2FinalityWaitTest` tests fail (retry with pauses,
 bounded retries end as pending, read failure in the middle of polling).
+
+The second-pass tests were run once against the main code as it was before the
+second pass (the changed view models, `BaseViewModel`, `TransactionOutcomeTexts`
+and the activity mapper put back, and the indexer rule taken out of the
+repository). 21 of them fail there: 6 in `TransactionNotSentTest`, 4 in
+`ClaimViewModelTest`, 7 in the block explorer module (5 `TxDetailsViewModelTest`,
+1 `TransactionMappersTest`, 1 `TransactionHistoryRepositoryTest`), 2 in
+`TransferAmountViewModelTest`, and 1 each in `SwapViewModelTest` and
+`AddLiquidityViewModelTest`. The other new tests guard behaviour that was
+already right (for example that a transaction with a final status is never
+polled, and that one in a block keeps its fee).
 
 The view-model tests for "waiting", "not prepared" and the offline screens fail
 on the previous code: either with the old "rejected" state, or because `runTest`
@@ -262,12 +362,54 @@ audit's run crashed here with `BoundedHttpTextException: BOUNDED_HTTP_IO`. With
 the network back, Try again loads the referral page. Logcat has no
 `FATAL EXCEPTION`. Screen text was captured with `uiautomator dump`.
 
-Not run on a device: the outcome screens themselves. They need a funded mainnet
-account; see the QA steps below.
+Second device check (emulator `SORA-Api34`, port 5592, production debug build of
+this branch, a new wallet with no funds; no transaction was signed or sent, and
+every confirm was tapped in airplane mode only):
 
-Build and checks at the end of this task: `:app:assembleProductionDebug`,
-`testProductionDebugUnitTest` (all modules) and `:app:lintProductionDebug`
-passed. `ktlintCheck` reports no finding on lines this task changed.
+- Invite Friends in airplane mode: "Network fee unavailable" with Close and Try
+  again; with the network back, Try again loads the page.
+- Enter referrer's link, Activate in airplane mode: dialog "Not sent / SORA
+  couldn't reach the network to prepare this transaction. Nothing was sent.
+  Check your internet connection and try again." After OK the Activate button is
+  there again. The audit saw no message and no button here. The status journal
+  stayed empty.
+- A waiting swap was simulated by writing one journal row (state
+  `SUBMITTED_AWAITING_FINALITY`, a hash that was never signed, the current
+  finalized block as its birth) and its description into the app's own storage
+  while the app was stopped. Result: the XOR asset page lists it under "Recent
+  activity" as "Swapped XOR -> VAL, 1.5 XOR -> 30 VAL", the Activity tab lists
+  the same entry, and its page shows "Status Pending" with the note "Submitted.
+  The network has not confirmed it yet ... Please don't send it again. The
+  status here and in Activity updates by itself."
+- The same entry, 64 blocks later: the journal row became
+  `EXPIRED_NOT_INCLUDED` at the first finalized block past its window, and the
+  page shows "Status Failed" with "The network did not include this transaction
+  before it expired. Nothing was sent and no fee was charged. You can try
+  again.", no explorer button. This check found that the open page skipped its
+  first refresh after a restart; see "The transaction page no longer skips"
+  above.
+- Duplicate question: with a simulated waiting "set referrer" entry for the same
+  referrer, Activate (airplane mode) shows "An earlier one is still waiting /
+  You already sent this action from this account ... it may be carried out
+  twice" with Wait and Send again anyway. Wait sends nothing and leaves the
+  screen as it was. Send again anyway goes on and, being offline, ends in "Not
+  sent". The journal still held only the two simulated rows.
+- With the final build and a second simulated waiting swap, the page was opened
+  after an app restart and left open. It changed from "Pending" to "Failed"
+  by itself 8 seconds after the first finalized block past the transaction's
+  window (the watcher looked every 4 seconds), and it then listed neither a
+  network fee nor an explorer button. The Activity tab listed the entries with
+  the spoken marks "Pending" and "Failed", waiting entries first.
+- Logcat had no `FATAL EXCEPTION` in any of these steps. Screen texts were
+  captured with `uiautomator dump`. The emulator was shut down afterwards.
+
+Not run on a device: confirmed, failed-on-chain and refused outcomes of a real
+transaction. They need a funded mainnet account; see the QA steps below.
+
+Build and checks at the end of this task (first and second pass):
+`:app:assembleProductionDebug`, `testProductionDebugUnitTest` (all modules) and
+`:app:lintProductionDebug` passed. `ktlintCheck` reports no finding on lines
+this task changed.
 
 ## Human and ops actions
 
@@ -286,8 +428,19 @@ passed. `ktlintCheck` reports no finding on lines this task changed.
 - Support: the reply for "my swap shows pending" is now on the transaction page
   itself. A pending entry resolves by itself; at the latest about 6.5 minutes
   after sending it shows as failed, "not included".
-- Translations: the 28 `tx_outcome_*` strings need translation in the production
+- Translations: the 29 `tx_outcome_*` strings need translation in the production
   locales other than English and Japanese.
+- QA, legacy claim (an account that still has an Iroha claim): submit the claim
+  and switch to airplane mode right after. Expect "Submitted, waiting for
+  confirmation ... This screen continues by itself". Turn the network back on:
+  the claim screen closes by itself within about ten seconds of the claim being
+  on the network.
+- QA, transaction page: in step 1 above, keep the transaction page open. It must
+  change from Pending to Successful by itself within a few seconds of the
+  network coming back, also when the app was closed and opened again in between.
+- Product: the "Not sent" text for an account that may not sign says "This
+  account can't sign transactions on this phone right now". If the key-recovery
+  work adds a screen for such an account, this text should point to it.
 - Product: the foreground wait still lasts up to 120 seconds on a working
   connection. Nothing is misreported in that time; shortening it is a product
   decision.
