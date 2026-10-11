@@ -82,6 +82,14 @@ interface CredentialsDatasource {
     suspend fun writeCredentialsIfAbsent(address: String, values: Map<CredentialField, String>)
 
     /**
+     * Replaces the stored [values] of [address] in one atomic preference edit. Used only by the
+     * repair of one account with its own recovery phrase or seed, after the person confirmed it
+     * and after a copy of the old preference files was kept on the device. The values written
+     * must have been proven to derive [address] by the caller.
+     */
+    suspend fun replaceCredentialsForRepair(address: String, values: Map<CredentialField, String>)
+
+    /**
      * A watch-only account must be explicitly marked. Missing or unreadable signing material is
      * never enough to infer this state during a production upgrade.
      */

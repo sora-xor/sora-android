@@ -70,16 +70,17 @@ class MigrationManagerSafetyTest {
             val keypair = firstArg<Sr25519Keypair>()
             val challenge = secondArg<ByteArray>()
             val expectedPublicKey = thirdArg<ByteArray>()
+            // Like the real library: the signature verifies only when the private key is the
+            // one that belongs to the expected public key; the nonce plays no part. Every proof
+            // signs a fresh random challenge behind the fixed prefix.
             MessageDigest.isEqual(keypair.publicKey, expectedPublicKey) &&
                 MessageDigest.isEqual(
                     keypair.privateKey,
-                    testKeyComponent("private", keypair.publicKey),
+                    testKeyComponent("private", expectedPublicKey),
                 ) &&
-                MessageDigest.isEqual(
-                    keypair.nonce,
-                    testKeyComponent("nonce", keypair.publicKey),
-                ) &&
-                challenge.contentEquals(PINNED_SORA2_SIGNING_CHALLENGE.encodeToByteArray())
+                challenge.size == SIGNING_CHALLENGE_PREFIX.length + 32 &&
+                challenge.copyOfRange(0, SIGNING_CHALLENGE_PREFIX.length)
+                    .contentEquals(SIGNING_CHALLENGE_PREFIX.encodeToByteArray())
         }
     }
 
@@ -429,6 +430,7 @@ class MigrationManagerSafetyTest {
             credentials.retrieveStoredSeed(match { it.substrateAddress == watchId })
         } returns ""
         every { runtime.soraPublicKeyOrNull(watchId) } returns watchPublicKey
+        every { runtime.soraPublicKeyOrNull(rawVector.address) } returns rawVector.publicKey.fromHex()
         every { runtime.toSoraAddressOrNull(any()) } answers {
             firstArg<ByteArray>().toAddress(SORA2_PREFIX)
         }
@@ -500,20 +502,32 @@ class MigrationManagerSafetyTest {
         }
 
     @Test
-    fun `verified legacy secret seen as raw seed becomes read-only for that wallet only`() =
+    fun `a key pair recorded without a backup keeps signing when a matching seed appears`() =
         runTest {
-            assertActiveSecretSourceReclassificationIsReadOnly(
-                activeSecretSource = "LEGACY_SECRET",
+            assertBackupLabelFollowsStoredMaterialAndNeverBlocksSigning(
+                recordedSecretSource = "LEGACY_SECRET",
                 retainedSeed = RAW_SEED,
+                expectedSecretSource = "RAW_SEED",
             )
         }
 
     @Test
-    fun `verified raw seed seen as legacy secret becomes read-only for that wallet only`() =
+    fun `a raw seed wallet keeps signing when its seed is no longer stored`() =
         runTest {
-            assertActiveSecretSourceReclassificationIsReadOnly(
-                activeSecretSource = "RAW_SEED",
+            assertBackupLabelFollowsStoredMaterialAndNeverBlocksSigning(
+                recordedSecretSource = "RAW_SEED",
                 retainedSeed = "",
+                expectedSecretSource = "LEGACY_SECRET",
+            )
+        }
+
+    @Test
+    fun `a raw seed wallet keeps signing when another wallet's seed is stored next to its key`() =
+        runTest {
+            assertBackupLabelFollowsStoredMaterialAndNeverBlocksSigning(
+                recordedSecretSource = "RAW_SEED",
+                retainedSeed = "11".repeat(32),
+                expectedSecretSource = "LEGACY_SECRET",
             )
         }
 
@@ -895,6 +909,8 @@ class MigrationManagerSafetyTest {
         every { runtime.soraPublicKeyOrNull(secondaryId) } returns secondaryKey
         every { runtime.toSoraAddressOrNull(primaryKey) } returns primaryId
         every { runtime.toSoraAddressOrNull(secondaryKey) } returns secondaryId
+        every { runtime.soraPublicKeyOrNull(primaryId) } returns primaryKey
+        every { runtime.soraPublicKeyOrNull(secondaryId) } returns secondaryKey
         coEvery {
             walletDao.getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
         } returns WalletMigrationJournalLocal(
@@ -957,6 +973,7 @@ class MigrationManagerSafetyTest {
                 receiptStartedAt = any(),
                 receiptCompletedAt = any(),
                 currentAccountCount = any(),
+                currentVerifiedAccountCount = any(),
                 currentSelectedWalletId = any(),
                 currentIntegrityHash = any(),
                 refreshedAt = any(),
@@ -982,6 +999,7 @@ class MigrationManagerSafetyTest {
                 receiptStartedAt = 1,
                 receiptCompletedAt = 2,
                 currentAccountCount = 2,
+                currentVerifiedAccountCount = 2,
                 currentSelectedWalletId = secondaryId,
                 currentIntegrityHash = currentHash,
                 refreshedAt = any(),
@@ -1046,6 +1064,7 @@ class MigrationManagerSafetyTest {
                 receiptStartedAt = any(),
                 receiptCompletedAt = any(),
                 currentAccountCount = any(),
+                currentVerifiedAccountCount = any(),
                 currentSelectedWalletId = any(),
                 currentIntegrityHash = any(),
                 refreshedAt = any(),
@@ -1071,6 +1090,7 @@ class MigrationManagerSafetyTest {
                 receiptStartedAt = 1,
                 receiptCompletedAt = 2,
                 currentAccountCount = 1,
+                currentVerifiedAccountCount = 1,
                 currentSelectedWalletId = WALLET_ID,
                 currentIntegrityHash = currentHash,
                 refreshedAt = any(),
@@ -1145,6 +1165,7 @@ class MigrationManagerSafetyTest {
                 receiptStartedAt = any(),
                 receiptCompletedAt = any(),
                 currentAccountCount = any(),
+                currentVerifiedAccountCount = any(),
                 currentSelectedWalletId = any(),
                 currentIntegrityHash = any(),
                 refreshedAt = any(),
@@ -1171,6 +1192,7 @@ class MigrationManagerSafetyTest {
                 receiptStartedAt = 1,
                 receiptCompletedAt = 2,
                 currentAccountCount = 2,
+                currentVerifiedAccountCount = 2,
                 currentSelectedWalletId = primaryId,
                 currentIntegrityHash = currentHash,
                 refreshedAt = any(),
@@ -1229,6 +1251,7 @@ class MigrationManagerSafetyTest {
                     receiptStartedAt = receipt.startedAt,
                     receiptCompletedAt = requireNotNull(receipt.completedAt),
                     currentAccountCount = 1,
+                    currentVerifiedAccountCount = 1,
                     currentSelectedWalletId = walletId,
                     currentIntegrityHash = integrityHash(listOf(account), walletId),
                     refreshedAt = any(),
@@ -1324,6 +1347,7 @@ class MigrationManagerSafetyTest {
         coEvery { credentials.retrieveStoredSeed(any()) } returns RAW_SEED
         coEvery { credentials.isRawSeedValid(RAW_SEED) } returns true
         every { runtime.toSoraAddressOrNull(keyPair.publicKey) } returns WALLET_ID
+        every { runtime.soraPublicKeyOrNull(WALLET_ID) } returns keyPair.publicKey
         coEvery {
             walletDao.getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
         } returns WalletMigrationJournalLocal(
@@ -1930,6 +1954,7 @@ class MigrationManagerSafetyTest {
                 receiptStartedAt = any(),
                 receiptCompletedAt = any(),
                 currentAccountCount = any(),
+                currentVerifiedAccountCount = any(),
                 currentSelectedWalletId = any(),
                 currentIntegrityHash = any(),
                 refreshedAt = any(),
@@ -1982,9 +2007,14 @@ class MigrationManagerSafetyTest {
         }
     }
 
-    private suspend fun assertActiveSecretSourceReclassificationIsReadOnly(
-        activeSecretSource: String,
+    /**
+     * The stored signing key alone decides signing. The recorded label says which stored
+     * material is a proven backup today; it never makes a working account read-only.
+     */
+    private suspend fun assertBackupLabelFollowsStoredMaterialAndNeverBlocksSigning(
+        recordedSecretSource: String,
         retainedSeed: String,
+        expectedSecretSource: String,
     ) {
         val vector = soraVector(RAW_SEED)
         val account = SoraAccountLocal(vector.address, "Retained wallet")
@@ -1992,7 +2022,7 @@ class MigrationManagerSafetyTest {
         storage.wallets[vector.address] = WalletIdentityLocal(
             walletId = vector.address,
             displayName = account.accountName,
-            secretSource = activeSecretSource,
+            secretSource = recordedSecretSource,
             migrationState = "VERIFIED",
             derivationVersion = 1,
         )
@@ -2020,8 +2050,9 @@ class MigrationManagerSafetyTest {
         )
 
         assertTrue(manager.start())
-        assertEquals("UNAVAILABLE", storage.wallets.getValue(vector.address).migrationState)
-        assertEquals("SECRET_UNAVAILABLE", storage.wallets.getValue(vector.address).secretSource)
+        assertEquals("VERIFIED", storage.wallets.getValue(vector.address).migrationState)
+        assertEquals(expectedSecretSource, storage.wallets.getValue(vector.address).secretSource)
+        assertTrue(manager.lastSecretsReports.getValue(vector.address).canSign)
         coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
         coVerify(exactly = 0) { credentials.saveMnemonic(any(), any()) }
         coVerify(exactly = 0) { credentials.saveKeyPair(any(), any()) }
@@ -2292,7 +2323,6 @@ class MigrationManagerSafetyTest {
             "4a50a9606f3b0c47e0582f9a2dce9da3ec59819c6e15468f6f03f07e7fcfed23"
         const val PINNED_TWENTY_FOUR_WORD_SORA2_ADDRESS =
             "cnTAiyqa6dqfhfX5HhJfmPdd56sum2WXFvg1i1UgRReB336yz"
-        const val PINNED_SORA2_SIGNING_CHALLENGE =
-            "sora-wallet-migration-signing-parity-v1"
+        const val SIGNING_CHALLENGE_PREFIX = "sora-wallet-stored-key-proof-v1:"
     }
 }

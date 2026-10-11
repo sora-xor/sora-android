@@ -164,18 +164,21 @@ class UserRepositoryTest {
             val keypair = firstArg<Sr25519Keypair>()
             val challenge = secondArg<ByteArray>()
             val expectedPublicKey = thirdArg<ByteArray>()
+            // Like the real library: only the private key of the expected public key verifies;
+            // the nonce plays no part. Every proof signs a fresh challenge behind a fixed prefix.
             MessageDigest.isEqual(keypair.publicKey, expectedPublicKey) &&
                 MessageDigest.isEqual(
                     keypair.privateKey,
-                    testKeyComponent("private", keypair.publicKey),
+                    testKeyComponent("private", expectedPublicKey),
                 ) &&
-                MessageDigest.isEqual(
-                    keypair.nonce,
-                    testKeyComponent("nonce", keypair.publicKey),
-                ) &&
-                challenge.contentEquals(
-                    LEGACY_SECRET_SIGNING_CHALLENGE.encodeToByteArray()
-                )
+                challenge.size == SIGNING_CHALLENGE_PREFIX.length + 32 &&
+                challenge.copyOfRange(0, SIGNING_CHALLENGE_PREFIX.length)
+                    .contentEquals(SIGNING_CHALLENGE_PREFIX.encodeToByteArray())
+        }
+        // The public key inside an address: these tests name accounts freely, so every address
+        // decodes to the public key of the retained test key pair unless a test says otherwise.
+        every { runtimeManager.soraPublicKeyOrNull(any()) } answers {
+            retainedFifteenWordKeyPair().publicKey
         }
         coEvery {
             credentialsDatasource.requireWalletPreferenceCoverage(any(), any(), any())
@@ -469,23 +472,34 @@ class UserRepositoryTest {
         }
 
     @Test
-    fun `verified wallet secret source cannot be reclassified on insertion`() = runTest {
+    fun `a label recorded earlier never blocks an account whose stored key signs`() = runTest {
         val account = SoraAccount("accountAddress", "Primary")
+        // Recorded as a phrase wallet earlier; today only its key pair is stored.
+        coEvery { walletIdentityDao.getWallet(account.substrateAddress) } returns
+            WalletIdentityLocal(account.substrateAddress, "Primary", "MNEMONIC", "VERIFIED", 1)
         coEvery { credentialsDatasource.retrieveKeys(account.substrateAddress) } answers {
             retainedFifteenWordKeyPair()
         }
         every { runtimeManager.toSoraAddressOrNull(any()) } returns
             account.substrateAddress
-
-        val result = runCatching {
-            userRepository.insertSoraAccount(account, true)
+        coEvery { accountDao.insertSoraAccount(any()) } returns Unit
+        coEvery { hubDao.insert(any()) } returns Unit
+        coEvery { globalCardsHubDao.count() } returns 1
+        val identity = slot<WalletIdentityLocal>()
+        coEvery { walletIdentityDao.upsertWallet(capture(identity)) } returns Unit
+        coEvery { walletIdentityDao.upsertNetworkAccounts(any()) } returns Unit
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        val transaction = slot<suspend () -> R>()
+        coEvery { db.withTransaction(capture(transaction)) } coAnswers {
+            transaction.captured.invoke()
         }
 
-        assertEquals(
-            "WALLET_SECRET_SOURCE_CONTINUITY_MISMATCH",
-            result.exceptionOrNull()?.message,
-        )
-        coVerify(exactly = 0) { accountDao.insertSoraAccount(any()) }
+        userRepository.insertSoraAccount(account, true)
+
+        // The stored key signs for the address, so the account is verified; the label says
+        // what is stored now (a key pair with no matching phrase or seed).
+        assertEquals("VERIFIED", identity.captured.migrationState)
+        assertEquals("LEGACY_SECRET", identity.captured.secretSource)
     }
 
     @Test
@@ -822,7 +836,7 @@ class UserRepositoryTest {
             }
 
             assertEquals(
-                "WALLET_DELETION_SECRET_VERIFICATION_FAILED",
+                "WALLET_DELETION_SIGNING_KEY_MISMATCH",
                 result.exceptionOrNull()?.message,
             )
             coVerify(exactly = 0) {
@@ -872,7 +886,7 @@ class UserRepositoryTest {
             }
 
             assertEquals(
-                "WALLET_DELETION_SECRET_VERIFICATION_FAILED",
+                "WALLET_DELETION_SIGNING_KEY_MISMATCH",
                 result.exceptionOrNull()?.message,
             )
             coVerify(exactly = 0) {
@@ -1013,7 +1027,6 @@ class UserRepositoryTest {
         const val RETAINED_FIFTEEN_WORD_MNEMONIC =
             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon " +
                 "abandon abandon abandon abandon address"
-        const val LEGACY_SECRET_SIGNING_CHALLENGE =
-            "sora-wallet-legacy-secret-self-consistency-v1"
+        const val SIGNING_CHALLENGE_PREFIX = "sora-wallet-stored-key-proof-v1:"
     }
 }

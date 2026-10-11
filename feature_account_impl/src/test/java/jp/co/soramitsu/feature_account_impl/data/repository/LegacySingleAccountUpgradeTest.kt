@@ -57,6 +57,7 @@ class LegacySingleAccountUpgradeTest {
         coEvery { walletDao.getMigrationJournal(any()) } returns null
         coEvery { walletDao.getWallets() } returns emptyList()
         every { runtime.toSoraAddressOrNull(any()) } returns address
+        every { runtime.soraPublicKeyOrNull(address) } returns publicKey.copyOf()
         every { crypto.signAndVerify(any(), any(), any()) } returns validSignature
         coEvery { accountDao.getAccounts() } answers { rows }
         coEvery { accountDao.insertSoraAccount(any()) } answers { rows = listOf(firstArg()) }

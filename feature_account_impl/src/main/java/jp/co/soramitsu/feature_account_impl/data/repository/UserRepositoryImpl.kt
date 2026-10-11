@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_account_impl.data.repository
 
 import android.os.SystemClock
 import androidx.room.withTransaction
-import java.security.MessageDigest
 import java.util.UUID
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.SoraAccount
@@ -74,16 +73,15 @@ import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionTarget
 import jp.co.soramitsu.feature_account_api.domain.model.WalletMutationSnapshot
+import jp.co.soramitsu.feature_account_impl.domain.keys.StoredKeyCrypto
+import jp.co.soramitsu.feature_account_impl.domain.keys.StoredSecretsVerdict
+import jp.co.soramitsu.feature_account_impl.domain.keys.StoredWalletSecretsJudge
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
-import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
-import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xsubstrate.encrypt.MultiChainEncryption
 import jp.co.soramitsu.xcrypto.encryption.sr25519.Sr25519JNI
 import jp.co.soramitsu.xsubstrate.encrypt.SignWrapper
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.SubstrateKeypairFactory
-import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -97,15 +95,15 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 @Singleton
-class UserRepositorySr25519Crypto @Inject constructor() {
+class UserRepositorySr25519Crypto @Inject constructor() : StoredKeyCrypto {
 
-    fun generateKeypair(seed: ByteArray): Sr25519Keypair? =
+    override fun generateKeypair(seed: ByteArray): Sr25519Keypair? =
         SubstrateKeypairFactory.generate(
             SubstrateOptionsProvider.encryptionType,
             seed,
         ) as? Sr25519Keypair
 
-    fun signAndVerify(
+    override fun signAndVerify(
         keypair: Sr25519Keypair,
         challenge: ByteArray,
         expectedPublicKey: ByteArray,
@@ -135,10 +133,13 @@ class UserRepositoryImpl(
 
     private companion object {
         const val DELETION_PREVIEW_TTL_MILLIS = 2 * 60 * 1_000L
-        val LEGACY_SORA_MNEMONIC_WORD_COUNTS = setOf(15, 18, 21)
-        const val LEGACY_SECRET_SIGNING_CHALLENGE =
-            "sora-wallet-legacy-secret-self-consistency-v1"
         val SELECTABLE_STATES = setOf("VERIFIED", "UNAVAILABLE")
+        val DELETABLE_SECRET_SOURCES = setOf(
+            StoredSecretsVerdict.SOURCE_MNEMONIC,
+            StoredSecretsVerdict.SOURCE_MNEMONIC_UNSUPPORTED,
+            StoredSecretsVerdict.SOURCE_RAW_SEED,
+            StoredSecretsVerdict.SOURCE_LEGACY_SECRET,
+        )
         const val UNAVAILABLE_STATE = "UNAVAILABLE"
         const val MAX_WALLET_ID_LENGTH = 256
     }
@@ -146,6 +147,7 @@ class UserRepositoryImpl(
     private val currentSoraAccount = MutableStateFlow<SoraAccount?>(null)
 
     private val mutex = WalletMutationCoordinator
+    private val secretsJudge = StoredWalletSecretsJudge(sora2AddressCodec, userRepositorySr25519Crypto)
     private val deletionPreviews = mutableMapOf<String, WalletDeletionPreview>()
 
     init {
@@ -210,10 +212,11 @@ class UserRepositoryImpl(
     private suspend fun walletNetworkAccounts(): List<NetworkAccountLocal> =
         db.walletIdentityDao().getAllNetworkAccounts().filter { isWalletId(it.walletId) }
 
+    /** [mnemonic] and [rawSeed] are "" when absent and null when the stored value is unreadable. */
     private class StoredSecrets(
         val keyPair: Sr25519Keypair?,
-        val mnemonic: String,
-        val rawSeed: String,
+        val mnemonic: String?,
+        val rawSeed: String?,
     ) {
         fun wipe() {
             keyPair?.privateKey?.fill(0)
@@ -238,10 +241,17 @@ class UserRepositoryImpl(
             ?: (if (scopedKeys == null) legacyKeys != null else releaseEraOwnerIs(address))
                 .also { legacyOwnedChecked = it }
         try {
-            val mnemonic = credentialsDatasource.retrieveMnemonic(address).takeIf(String::isNotEmpty)
-                ?: if (legacyOwned()) credentialsDatasource.retrieveMnemonic("") else ""
-            val rawSeed = credentialsDatasource.retrieveSeed(address).takeIf(String::isNotEmpty)
-                ?: if (legacyOwned()) credentialsDatasource.retrieveSeed("") else ""
+            // Backup material that cannot be decrypted is reported as unreadable (null): it limits
+            // what is offered as a backup and never decides whether the account can sign. A
+            // Keystore or storage failure is not caught here.
+            val mnemonic = readableOrNull {
+                credentialsDatasource.retrieveMnemonic(address).takeIf(String::isNotEmpty)
+                    ?: if (legacyOwned()) credentialsDatasource.retrieveMnemonic("") else ""
+            }
+            val rawSeed = readableOrNull {
+                credentialsDatasource.retrieveSeed(address).takeIf(String::isNotEmpty)
+                    ?: if (legacyOwned()) credentialsDatasource.retrieveSeed("") else ""
+            }
             return StoredSecrets(scopedKeys ?: legacyKeys, mnemonic, rawSeed)
         } catch (error: Throwable) {
             (scopedKeys ?: legacyKeys)?.let { keys ->
@@ -251,6 +261,21 @@ class UserRepositoryImpl(
             throw error
         }
     }
+
+    private suspend fun readableOrNull(read: suspend () -> String): String? = try {
+        read()
+    } catch (_: WalletDecryptionException) {
+        null
+    }
+
+    /** What the stored secrets of [address] prove (see [StoredWalletSecretsJudge]). */
+    private fun judge(address: String, secrets: StoredSecrets): StoredSecretsVerdict =
+        secretsJudge.judge(
+            address = address,
+            keyPair = secrets.keyPair,
+            mnemonic = secrets.mnemonic,
+            storedSeed = secrets.rawSeed,
+        )
 
     private suspend fun releaseEraKeysOwnedBy(address: String): Sr25519Keypair? {
         val legacy = try {
@@ -323,12 +348,15 @@ class UserRepositoryImpl(
                 return null
             }
             retainedLegacyStep {
-                val mnemonic = credentialsDatasource.retrieveMnemonic("")
-                val seed = credentialsDatasource.retrieveSeed("")
-                if (mnemonic.isNotBlank() || seed.isNotBlank()) {
-                    verifyStoredSigningKey(keys, mnemonic, seed)
-                }
-                verifyLegacySecretSigningKey(keys)
+                // The stored key alone decides: it must be the key of this address and sign.
+                // The release-era phrase or seed is judged later, only as backup material.
+                val verdict = secretsJudge.judge(
+                    address = address,
+                    keyPair = keys,
+                    mnemonic = "",
+                    storedSeed = "",
+                )
+                check(verdict.canSign) { verdict.signingRefusal.orEmpty() }
             } ?: run {
                 unrestorableLegacyWallet(owner = address)
                 return null
@@ -479,27 +507,29 @@ class UserRepositoryImpl(
     )
 
     /**
-     * Verifies the stored keys of [soraAccount] (they must derive its address and match its stored
-     * phrase or seed, or sign for a keypair-only wallet) and returns the identity and network
-     * accounts to record. Reads only.
+     * Judges the stored secrets of [soraAccount] and returns the identity and network accounts to
+     * record. The stored signing key alone decides whether the account is verified: it must be
+     * the key of this address and sign a random challenge. The stored phrase and seed only decide
+     * the recorded backup label and whether Nexus accounts are derived. Reads only.
      */
     private suspend fun verifiedWalletModel(soraAccount: SoraAccount): VerifiedWalletModel {
         val secrets = readSecrets(soraAccount.substrateAddress)
-        val mnemonic = secrets.mnemonic
-        val rawSeed = secrets.rawSeed
         val keyPair = secrets.keyPair
         try {
             val explicitWatchOnly =
                 credentialsDatasource.isExplicitWatchOnly(soraAccount.substrateAddress)
-            val words = mnemonic.trim().split(Regex("\\s+")).filter(String::isNotBlank)
             val watchOnlyPublicKey = if (explicitWatchOnly) {
-                check(keyPair == null && mnemonic.isBlank() && rawSeed.isBlank()) {
-                    "WATCH_ONLY_SECRET_CONFLICT"
-                }
+                check(
+                    keyPair == null && secrets.mnemonic == "" && secrets.rawSeed == ""
+                ) { "WATCH_ONLY_SECRET_CONFLICT" }
                 sora2AddressCodec.soraPublicKeyOrNull(soraAccount.substrateAddress)
                     ?: error("WATCH_ONLY_ADDRESS_INVALID")
             } else {
                 null
+            }
+            val verdict = if (keyPair != null) judge(soraAccount.substrateAddress, secrets) else null
+            if (verdict != null) {
+                check(verdict.canSign) { verdict.signingRefusal.orEmpty() }
             }
             val verifiedPublicKey = keyPair?.publicKey ?: watchOnlyPublicKey
             if (verifiedPublicKey != null) {
@@ -508,24 +538,9 @@ class UserRepositoryImpl(
                         soraAccount.substrateAddress
                 ) { "SORA_ADDRESS_MISMATCH" }
             }
-            if (keyPair != null) {
-                if (mnemonic.isNotBlank() || rawSeed.isNotBlank()) {
-                    verifyStoredSigningKey(keyPair, mnemonic, rawSeed)
-                } else if (!explicitWatchOnly) {
-                    verifyLegacySecretSigningKey(keyPair)
-                }
-            }
             val secretSource = when {
                 explicitWatchOnly -> "WATCH_ONLY"
-                words.size == 12 || words.size == 24 -> "MNEMONIC"
-                mnemonic.isNotBlank() -> {
-                    check(words.size in LEGACY_SORA_MNEMONIC_WORD_COUNTS) {
-                        "SORA_MNEMONIC_WORD_COUNT_UNSUPPORTED"
-                    }
-                    "MNEMONIC_UNSUPPORTED"
-                }
-                rawSeed.isNotBlank() -> "RAW_SEED"
-                keyPair != null -> "LEGACY_SECRET"
+                verdict != null -> verdict.secretSource
                 else -> "SECRET_MISSING"
             }
             val migrationState =
@@ -545,9 +560,13 @@ class UserRepositoryImpl(
                     enabled = true,
                 )
             )
-            if (migrationState == "VERIFIED" && secretSource == "MNEMONIC") {
+            // Only a 12- or 24-word phrase that re-derives this SORA2 address derives Nexus
+            // accounts, always from its parsed words.
+            val nexusPhrase = verdict?.recoveryPhrase
+                ?.takeIf { secretSource == StoredSecretsVerdict.SOURCE_MNEMONIC }
+            if (migrationState == "VERIFIED" && nexusPhrase != null) {
                 NexusNetworks.admitted.forEach { network ->
-                    val derived = IrohaKeyDerivation.derive(mnemonic, network)
+                    val derived = IrohaKeyDerivation.derive(nexusPhrase.text, network)
                     try {
                         networkAccounts += NetworkAccountLocal(
                             walletId = soraAccount.substrateAddress,
@@ -582,14 +601,9 @@ class UserRepositoryImpl(
         soraAccount: SoraAccount,
         newAccount: Boolean,
     ) {
+        // The label of the stored backup material is a fact proven from the stored values each
+        // time; a label recorded earlier never stops an account whose stored key signs.
         val model = verifiedWalletModel(soraAccount)
-        val activeIdentity = db.walletIdentityDao()
-            .getWallet(soraAccount.substrateAddress)
-        check(
-            activeIdentity == null ||
-                activeIdentity.migrationState != "VERIFIED" ||
-                activeIdentity.secretSource == model.identity.secretSource
-        ) { "WALLET_SECRET_SOURCE_CONTINUITY_MISMATCH" }
 
         db.withTransaction {
             db.accountDao().insertSoraAccount(
@@ -1359,102 +1373,41 @@ class UserRepositoryImpl(
                     "WALLET_DELETION_WALLET_NOT_VERIFIED",
                 )
                 val secrets = readSecrets(account.substrateAddress)
-                val mnemonic = secrets.mnemonic
-                val rawSeed = secrets.rawSeed
                 val keyPair = secrets.keyPair
                 try {
                     val watchOnly = credentialsDatasource.isExplicitWatchOnly(
                         account.substrateAddress
                     )
-                    val words = mnemonic.trim()
-                        .split(Regex("\\s+"))
-                        .filter(String::isNotBlank)
-                    when (identity.secretSource) {
-                        "WATCH_ONLY" -> {
-                            deletionRequire(
-                                watchOnly &&
-                                    keyPair == null &&
-                                    mnemonic.isBlank() &&
-                                    rawSeed.isBlank() &&
-                                    sora2AddressCodec.soraPublicKeyOrNull(
-                                        account.substrateAddress
-                                    ) != null,
-                                "WALLET_DELETION_WATCH_ONLY_MISMATCH",
-                            )
-                        }
-                        "MNEMONIC" -> {
-                            val signingKey = keyPair
-                                ?: throw WalletDeletionInvariantException(
-                                    "WALLET_DELETION_MNEMONIC_MISSING"
-                                )
-                            deletionRequire(
-                                !watchOnly &&
-                                    words.size in setOf(12, 24),
-                                "WALLET_DELETION_MNEMONIC_MISSING",
-                            )
-                            verifyDeletionSigningKey(
-                                account,
-                                signingKey,
-                                mnemonic,
-                                rawSeed,
-                            )
-                        }
-                        "MNEMONIC_UNSUPPORTED" -> {
-                            val signingKey = keyPair
-                                ?: throw WalletDeletionInvariantException(
-                                    "WALLET_DELETION_MNEMONIC_MISSING"
-                                )
-                            deletionRequire(
-                                !watchOnly &&
-                                    words.size in LEGACY_SORA_MNEMONIC_WORD_COUNTS,
-                                "WALLET_DELETION_MNEMONIC_MISSING",
-                            )
-                            verifyDeletionSigningKey(
-                                account,
-                                signingKey,
-                                mnemonic,
-                                rawSeed,
-                            )
-                        }
-                        "RAW_SEED" -> {
-                            val signingKey = keyPair
-                                ?: throw WalletDeletionInvariantException(
-                                    "WALLET_DELETION_RAW_SEED_MISSING"
-                                )
-                            deletionRequire(
-                                !watchOnly &&
-                                    mnemonic.isBlank() &&
-                                    rawSeed.isNotBlank(),
-                                "WALLET_DELETION_RAW_SEED_MISSING",
-                            )
-                            verifyDeletionSigningKey(
-                                account,
-                                signingKey,
-                                mnemonic,
-                                rawSeed,
-                            )
-                        }
-                        "LEGACY_SECRET" -> {
-                            val signingKey = keyPair
-                                ?: throw WalletDeletionInvariantException(
-                                    "WALLET_DELETION_LEGACY_SECRET_MISSING"
-                                )
-                            deletionRequire(
-                                !watchOnly &&
-                                    mnemonic.isBlank() &&
-                                    rawSeed.isBlank(),
-                                "WALLET_DELETION_LEGACY_SECRET_MISMATCH",
-                            )
-                            deletionRequire(
-                                sora2AddressCodec.toSoraAddressOrNull(
-                                    signingKey.publicKey
-                                ) == account.substrateAddress,
-                                "WALLET_DELETION_SORA_ADDRESS_MISMATCH",
-                            )
-                            verifyLegacySecretSigningKey(signingKey)
-                        }
-                        else -> throw WalletDeletionInvariantException(
-                            "WALLET_DELETION_SECRET_SOURCE_UNSUPPORTED"
+                    if (identity.secretSource == "WATCH_ONLY") {
+                        deletionRequire(
+                            watchOnly &&
+                                keyPair == null &&
+                                secrets.mnemonic == "" &&
+                                secrets.rawSeed == "" &&
+                                sora2AddressCodec.soraPublicKeyOrNull(
+                                    account.substrateAddress
+                                ) != null,
+                            "WALLET_DELETION_WATCH_ONLY_MISMATCH",
+                        )
+                    } else {
+                        // A verified account is the one whose stored key signs for its address.
+                        // That is what is proven again before anything is removed; the stored
+                        // phrase and seed are backup material and do not block the removal the
+                        // person chose.
+                        deletionRequire(
+                            identity.secretSource in DELETABLE_SECRET_SOURCES,
+                            "WALLET_DELETION_SECRET_SOURCE_UNSUPPORTED",
+                        )
+                        deletionRequire(!watchOnly, "WALLET_DELETION_WATCH_ONLY_MISMATCH")
+                        deletionRequire(keyPair != null, "WALLET_DELETION_SIGNING_KEY_MISSING")
+                        deletionRequire(
+                            sora2AddressCodec.toSoraAddressOrNull(keyPair?.publicKey) ==
+                                account.substrateAddress,
+                            "WALLET_DELETION_SORA_ADDRESS_MISMATCH",
+                        )
+                        deletionRequire(
+                            judge(account.substrateAddress, secrets).canSign,
+                            "WALLET_DELETION_SIGNING_KEY_MISMATCH",
                         )
                     }
                 } finally {
@@ -1470,20 +1423,6 @@ class UserRepositoryImpl(
                 "WALLET_DELETION_SECRET_VERIFICATION_FAILED"
             )
         }
-    }
-
-    private fun verifyDeletionSigningKey(
-        account: SoraAccountLocal,
-        keyPair: Sr25519Keypair,
-        mnemonic: String,
-        rawSeed: String,
-    ) {
-        deletionRequire(
-            sora2AddressCodec.toSoraAddressOrNull(keyPair.publicKey) ==
-                account.substrateAddress,
-            "WALLET_DELETION_SORA_ADDRESS_MISMATCH",
-        )
-        verifyStoredSigningKey(keyPair, mnemonic, rawSeed)
     }
 
     private suspend fun deletionPreferenceHashes(
@@ -1702,9 +1641,11 @@ class UserRepositoryImpl(
         }
         UnavailableWalletOptions(
             walletId = address,
-            // Completing in place adds only missing values; a value that cannot be read can
-            // never be compared, so that case needs removal (confirmed) and a fresh import.
-            canRepairWithPhrase = !unreadable && !watchOnly,
+            // Importing the account's phrase or seed adds the missing values. When a stored value
+            // differs or cannot be read, the same import offers a confirmed repair that keeps a
+            // copy of the old values and writes the proven ones. Never needs removal.
+            canRepairWithPhrase = !watchOnly,
+            repairReplacesStoredValues = unreadable,
             // Offered only when removal loses nothing readable, or when the readable secret is a
             // phrase or seed the person is shown first.
             canRemoveAndImport = !removalDeletesReadableSecret || scopedPhraseOrSeed,
@@ -1740,74 +1681,6 @@ class UserRepositoryImpl(
     private fun ByteArray.toHex(): String = joinToString("") {
         (it.toInt() and 0xff).toString(16).padStart(2, '0')
     }
-
-    private fun verifyStoredSigningKey(
-        stored: Sr25519Keypair,
-        mnemonic: String,
-        rawSeed: String,
-    ) {
-        var mnemonicSeed: ByteArray? = null
-        var storedSeed: ByteArray? = null
-        try {
-            mnemonicSeed = if (mnemonic.isNotBlank()) {
-                SubstrateSeedFactory.deriveSeed32(
-                    MnemonicCreator.fromWords(mnemonic).words,
-                    null,
-                ).seed
-            } else {
-                null
-            }
-            storedSeed = if (rawSeed.isNotBlank()) {
-                rawSeed.removePrefix("0x").removePrefix("0X").fromHex()
-            } else {
-                null
-            }
-            val seed = mnemonicSeed ?: storedSeed
-                ?: throw IllegalStateException("SORA_SECRET_SOURCE_MISSING")
-            if (
-                mnemonicSeed != null &&
-                storedSeed != null &&
-                !MessageDigest.isEqual(mnemonicSeed, storedSeed)
-            ) {
-                throw IllegalStateException("SORA_STORED_SEED_MISMATCH")
-            }
-            val regenerated = userRepositorySr25519Crypto.generateKeypair(seed)
-                ?: throw IllegalStateException("SORA_KEY_TYPE_MISMATCH")
-            try {
-                check(
-                    MessageDigest.isEqual(stored.publicKey, regenerated.publicKey) &&
-                        MessageDigest.isEqual(stored.privateKey, regenerated.privateKey) &&
-                        MessageDigest.isEqual(stored.nonce, regenerated.nonce)
-                ) { "SORA_SIGNING_KEY_MISMATCH" }
-            } finally {
-                regenerated.privateKey.fill(0)
-                regenerated.nonce.fill(0)
-            }
-        } finally {
-            mnemonicSeed?.fill(0)
-            storedSeed?.fill(0)
-        }
-    }
-
-    /**
-     * Verifies a retained keypair-only wallet without inventing a mnemonic or seed. The caller
-     * separately binds the public key to the wallet's unchanged SORA2 address.
-     */
-    private fun verifyLegacySecretSigningKey(stored: Sr25519Keypair) {
-        val challenge = LEGACY_SECRET_SIGNING_CHALLENGE.encodeToByteArray()
-        try {
-            check(
-                userRepositorySr25519Crypto.signAndVerify(
-                    keypair = stored,
-                    challenge = challenge,
-                    expectedPublicKey = stored.publicKey,
-                )
-            ) { "SORA_SIGNING_KEY_MISMATCH" }
-        } finally {
-            challenge.fill(0)
-        }
-    }
-
 }
 
 private class WalletDeletionInvariantException(

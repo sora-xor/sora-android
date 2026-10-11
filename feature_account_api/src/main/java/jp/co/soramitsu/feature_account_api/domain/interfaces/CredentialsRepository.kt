@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_account_api.domain.interfaces
 
 import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 
@@ -62,14 +63,33 @@ interface CredentialsRepository {
     suspend fun draftFromRawSeed(rawSeed: String, accountName: String): WalletDraft
 
     /**
-     * Stores the draft's keys for its address. Values already stored for that address are kept
-     * when they decrypt to exactly the same keys (this adopts a key set left by an earlier,
-     * unfinished flow); only absent values are written. If any stored value differs or cannot
-     * be read, nothing is written and `ACCOUNT_STORAGE_CONFLICT` is thrown. The caller adds the
-     * account row afterwards. When this phone cannot unlock the key material stored here,
-     * `WALLET_KEYS_UNAVAILABLE` is thrown and nothing is written.
+     * Stores the draft's keys for its address without ever replacing a stored value.
+     * - When the signing key already stored for that address proves the address (it is the key
+     *   of the address and signs a random challenge), the stored key set is adopted unchanged,
+     *   whatever else is stored next to it; the draft's own phrase or seed is added only where
+     *   none is stored. This adopts a key set left by an unfinished flow or a lost database.
+     * - Otherwise only absent values are written, and every stored value must agree with the
+     *   draft (the same phrase words whatever the separators; a seed that is the phrase's 32-byte
+     *   seed or its full 64-byte derivation). If a stored value differs or cannot be read,
+     *   nothing is written and `ACCOUNT_STORAGE_CONFLICT` is thrown; [repairWithDraft] is the
+     *   confirmed way forward.
+     * The caller adds the account row afterwards. When this phone cannot unlock the key material
+     * stored here, `WALLET_KEYS_UNAVAILABLE` is thrown and nothing is written.
      */
     suspend fun commitDraft(draft: WalletDraft): SoraAccount
+
+    /** The signing key stored under [address] itself is the key of that address and signs. */
+    suspend fun storedKeyProvesAddress(address: String): Boolean
+
+    /**
+     * The explicit, confirmed repair of one account with its own recovery phrase or seed: keeps a
+     * copy of the old encrypted preference files in `no_backup/wallet-quarantine-*`, then writes
+     * the draft's proven key pair and secret over the values stored for the draft's address, and
+     * reads them back. A stored key that already proves the address is never replaced (the call
+     * then behaves like [commitDraft]). Without the copy nothing is written
+     * (`ACCOUNT_REPAIR_COPY_FAILED`). Only the caller's confirmation flow may call this.
+     */
+    suspend fun repairWithDraft(draft: WalletDraft): SoraAccount
 
     /** Encrypted polkadot.js JSON for a draft, for a Google Drive backup made before commit. */
     suspend fun generateJsonForDraft(draft: WalletDraft, password: String): String
@@ -78,7 +98,18 @@ interface CredentialsRepository {
 
     suspend fun retrieveMnemonic(soraAccount: SoraAccount): String
 
+    /**
+     * The 32-byte seed (hex) that re-derives this account, for display, export and backup: the
+     * stored seed (a 64-byte cached seed is returned as its canonical 32 bytes; stored bytes are
+     * not changed) or the seed of the stored phrase. Throws when neither re-derives the account.
+     */
     suspend fun retrieveSeed(soraAccount: SoraAccount): String
+
+    /**
+     * The backup material of [soraAccount] that may be shown: only a stored phrase or seed that
+     * re-derives its address. Reads only.
+     */
+    suspend fun retrieveBackupMaterial(soraAccount: SoraAccount): WalletBackupMaterial
 
     /**
      * Reads only the legacy stored seed. Unlike [retrieveSeed], this never derives or writes one.
@@ -113,9 +144,9 @@ interface CredentialsRepository {
     fun convertPassphraseToSeed(mnemonic: String): String
 
     /**
-     * Migration-only derivation for an already-installed SORA wallet. Unlike public recovery,
-     * this retains historical 15-, 18-, and 21-word phrases so their existing SORA2 keys can be
-     * verified; it does not make those phrases eligible for Nexus child derivation.
+     * The SORA2 seed of a stored phrase of any BIP-39 length (12 to 24 words), read by the
+     * library parser, so the separators used when it was stored do not matter. It does not make
+     * 15-, 18- or 21-word phrases eligible for Nexus child derivation.
      */
     fun convertRetainedSoraPassphraseToSeed(mnemonic: String): String
 }

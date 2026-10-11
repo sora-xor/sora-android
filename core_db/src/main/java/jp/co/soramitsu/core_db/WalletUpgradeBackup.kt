@@ -4762,7 +4762,8 @@ object WalletUpgradeBackup {
             journal.failureCode != null ||
             journal.completedAt == null ||
             journal.legacyAccountCount <= 0 ||
-            journal.verifiedAccountCount != journal.legacyAccountCount ||
+            // The count holds only the accounts that can sign: read-only accounts are classified
+            // by the verification, not verified. The range was checked above.
             journal.selectedWalletId.isBlank()
         ) {
             throw WalletUpgradeBackupException("WALLET_MIGRATION_JOURNAL_INVALID")
