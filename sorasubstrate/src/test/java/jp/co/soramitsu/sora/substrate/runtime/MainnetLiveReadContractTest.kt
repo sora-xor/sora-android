@@ -85,11 +85,12 @@ class MainnetLiveReadContractTest {
             second.first.runtimeVersion.transactionVersion,
         )
         assertEquals(first.second, second.second)
-        // Two healthy nodes finalize the same chain within a few blocks of each other.
+        // Two healthy nodes finalize the same chain within a block or two of each other. The
+        // app moves an endpoint behind the other when it is further behind than this.
         assertTrue(
             kotlin.math.abs(
                 first.first.finalizedBlockNumber - second.first.finalizedBlockNumber
-            ) < 50
+            ) <= Sora2BoundedRuntimeRpcClient.FINALITY_LAG_TOLERANCE_BLOCKS
         )
     }
 
@@ -143,17 +144,17 @@ class MainnetLiveReadContractTest {
                 return@forEach
             }
             val account = decodeXorAccountData(runtime, storage, raw)
-            val transferable = BalanceWrapper.calcTransferable(
-                XorBalanceDto(
-                    free = account.free,
-                    reserved = account.reserved,
-                    miscFrozen = account.miscFrozen,
-                    feeFrozen = account.feeFrozen,
-                    bonded = BigInteger.ZERO,
-                    redeemable = BigInteger.ZERO,
-                    unbonding = BigInteger.ZERO,
-                )
+            val balance = XorBalanceDto(
+                free = account.free,
+                reserved = account.reserved,
+                miscFrozen = account.miscFrozen,
+                feeFrozen = account.feeFrozen,
+                bonded = BigInteger.ZERO,
+                redeemable = BigInteger.ZERO,
+                unbonding = BigInteger.ZERO,
             )
+            val transferable = BalanceWrapper.calcTransferable(balance)
+            val payableAsFee = BalanceWrapper.calcPayableAsFee(balance)
 
             // Independent reading of the same bytes: four u32, then free, reserved, frozen
             // as little-endian u128.
@@ -163,14 +164,22 @@ class MainnetLiveReadContractTest {
             val free = u128(0)
             val reserved = u128(1)
             val frozen = u128(2)
-            val expected = (free - (frozen - reserved).max(BigInteger.ZERO)).max(BigInteger.ZERO)
+            // A transfer may take free balance down to frozen - reserved. The fee comes first
+            // and may only take it down to frozen, so at or below frozen nothing can be moved.
+            val expectedFee = (free - frozen).max(BigInteger.ZERO)
+            val expected = if (expectedFee.signum() == 0) {
+                BigInteger.ZERO
+            } else {
+                (free - (frozen - reserved).max(BigInteger.ZERO)).max(BigInteger.ZERO)
+            }
             println(
                 "LIVE account ${accountId.take(12)} free=$free reserved=$reserved " +
-                    "frozen=$frozen transferable=$transferable"
+                    "frozen=$frozen transferable=$transferable payableAsFee=$payableAsFee"
             )
             assertEquals(free, account.free)
             assertEquals(reserved, account.reserved)
             assertEquals(expected, transferable)
+            assertEquals(expectedFee, payableAsFee)
             decoded += 1
             if (frozen > reserved) {
                 locked += 1

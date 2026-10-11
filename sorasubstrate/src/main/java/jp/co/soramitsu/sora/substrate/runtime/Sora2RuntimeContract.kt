@@ -1,5 +1,6 @@
 package jp.co.soramitsu.sora.substrate.runtime
 
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
@@ -40,6 +41,19 @@ internal fun requireReviewedSora2SnapshotIdentity(
  * A newer finalized head is expected and is not identity drift. Each head is independently
  * admitted by [RuntimeManager]; everything that controls call encoding or signing must remain
  * identical between the qualified signing context and the last pre-transport check.
+ *
+ * The finalized height itself controls neither. The two reviewed endpoints finalize the same
+ * chain a moment apart, and this check is answered by the second one exactly when the first has
+ * just dropped. A head that is a few blocks lower than the one signed against
+ * ([Sora2BoundedRuntimeRpcClient.FINALITY_LAG_TOLERANCE_BLOCKS]) is therefore accepted: genesis,
+ * runtime versions, metadata and types are still compared exactly, the signing block is by
+ * definition inside its validity window, and the node that receives the transaction checks the
+ * signed block hash itself. Refusing here failed a Send in the one moment the second endpoint
+ * exists for.
+ *
+ * A head that is further behind comes from an endpoint that no longer follows the chain. Nothing
+ * is handed to it; the failure carries an [IOException] so that screens name the network and ask
+ * to try again.
  */
 internal fun requireSameSora2MutationRuntimeIdentity(
     signing: Sora2MutationRuntimeContext,
@@ -68,8 +82,14 @@ internal fun requireSameSora2MutationRuntimeIdentity(
     check(signing.typesSha256 == current.typesSha256) {
         "SORA2_MUTATION_TYPES_DRIFT"
     }
-    check(current.finalizedBlockNumber >= signing.finalizedBlockNumber) {
-        "SORA2_MUTATION_FINALIZED_HEIGHT_REGRESSION"
+    if (
+        signing.finalizedBlockNumber - current.finalizedBlockNumber >
+        Sora2BoundedRuntimeRpcClient.FINALITY_LAG_TOLERANCE_BLOCKS
+    ) {
+        throw IllegalStateException(
+            "SORA2_MUTATION_FINALIZED_HEIGHT_REGRESSION",
+            IOException("SORA2_RUNTIME_RPC_ENDPOINT_BEHIND"),
+        )
     }
     val eraDeath = try {
         Math.addExact(
