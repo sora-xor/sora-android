@@ -525,9 +525,10 @@ class PinCodeViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Throwable) {
-                // Nothing was removed and nothing was started: say so and leave the screen.
+                // Nothing was removed and nothing was started. The message is shown on this
+                // screen (leaving it now would take the message away with it); the keypad is
+                // back, and Back leaves.
                 onError(error)
-                mainRouter.popBackStack()
             }
         }
     }
