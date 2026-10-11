@@ -121,6 +121,196 @@ class CredentialsRepositoryStoredSecretsTest {
     }
 
     @Test
+    fun `a raw seed with a line break or spaces is the same seed and new writes store 64 hex characters`() =
+        runTest {
+            // What a note app gives when the 64 characters wrapped onto two lines, and a seed
+            // typed in groups. Every release read these (BouncyCastle Hex.decode skips them).
+            val wrapped = seedHex.take(32) + "\n" + seedHex.drop(32)
+            val grouped = "0x" + seedHex.uppercase().chunked(8).joinToString(" ")
+            listOf(wrapped, grouped).forEach { typed ->
+                store.values.clear()
+                store.addOnlyWrites.clear()
+                assertTrue(repository.isRawSeedValid(typed.removePrefix("0x")))
+                val draft = repository.draftFromRawSeed(typed, "Seed")
+                assertEquals(address, draft.address)
+                // The draft holds the 32 bytes as lower-case hex, not the typed text.
+                assertEquals(seedHex, draft.seedHex)
+                repository.commitDraft(draft)
+                assertEquals(seedHex, store.addOnlyWrites.single()[CredentialField.SEED])
+            }
+
+            // 3.8.6.3 stored the typed text as it was. It is this account's seed.
+            store.values.clear()
+            store.addOnlyWrites.clear()
+            store.putKeys(address, keys)
+            store.put(CredentialField.SEED, address, wrapped)
+            val before = store.snapshot()
+            val material = repository.retrieveBackupMaterial(account)
+            assertTrue(material.canSign)
+            assertEquals(seedHex, material.seedHex)
+            assertFalse(material.storedSeedDoesNotMatch)
+            assertEquals(seedHex, repository.retrieveSeed(account))
+            // Importing the same seed again adopts the stored set and writes nothing.
+            repository.commitDraft(repository.draftFromRawSeed(wrapped, "Seed"))
+            assertEquals(before, store.snapshot())
+            assertTrue(store.addOnlyWrites.isEmpty() && store.replacingWrites.isEmpty())
+        }
+
+    @Test
+    fun `a repair with a raw seed typed with a line break is accepted as proven`() = runTest {
+        val wrapped = seedHex.take(32) + "\n" + seedHex.drop(32)
+        val other = crypto.generateKeypair(ByteArray(32) { 9 })
+        store.putKeys(address, other)
+        val before = store.snapshot()
+
+        val error = runCatching {
+            repository.repairWithDraft(repository.draftFromRawSeed(wrapped, "Seed"))
+        }.exceptionOrNull()
+
+        // The draft passed the proof (it is this address's key and its seed re-derives it). It
+        // stops only where a JVM test must stop: no app context to keep the copy in.
+        assertEquals(
+            ResponseCode.ACCOUNT_REPAIR_COPY_FAILED,
+            (error as? SoraException)?.errorResponseCode,
+        )
+        assertEquals(before, store.snapshot())
+    }
+
+    @Test
+    fun `the phrase or seed entered for an account that signs is kept only where it has none`() =
+        runTest {
+            // A wallet that arrived as a key pair (the JSON import): nothing else is stored.
+            store.putKeys(address, keys)
+            val keysBefore = store.snapshot()
+
+            assertTrue(repository.addMissingBackup(repository.draftFromMnemonic(TWELVE.replace(" ", ","), "Name")))
+
+            // Add-only, the phrase alone, in the canonical form; every key value is untouched.
+            assertEquals(mapOf(CredentialField.MNEMONIC to TWELVE), store.addOnlyWrites.single())
+            assertTrue(store.replacingWrites.isEmpty())
+            keysBefore.forEach { (key, value) -> assertEquals(key, value, store.values[key]) }
+            val material = repository.retrieveBackupMaterial(account)
+            assertTrue(material.canSign)
+            assertEquals(TWELVE.split(" "), material.phraseWords)
+
+            // Entered again: nothing more to add.
+            assertFalse(repository.addMissingBackup(repository.draftFromMnemonic(TWELVE, "Name")))
+            assertEquals(1, store.addOnlyWrites.size)
+
+            // The raw seed of the same account is kept next to it where no seed is stored.
+            assertTrue(repository.addMissingBackup(repository.draftFromRawSeed(seedHex, "Name")))
+            assertEquals(mapOf(CredentialField.SEED to seedHex), store.addOnlyWrites.last())
+            assertFalse(repository.addMissingBackup(repository.draftFromRawSeed(seedHex, "Name")))
+            assertTrue(store.replacingWrites.isEmpty())
+        }
+
+    @Test
+    fun `nothing is added as a backup over a stored value, an unproven key or a backup file`() =
+        runTest {
+            val other = crypto.generateKeypair(ByteArray(32) { 9 })
+            val refused: List<FakeCredentialsDatasource.() -> Unit> = listOf(
+                // A phrase is stored already, even when it is another wallet's.
+                {
+                    putKeys(address, keys)
+                    put(CredentialField.MNEMONIC, address, TWENTY_FOUR)
+                },
+                // A phrase is stored but cannot be read.
+                {
+                    putKeys(address, keys)
+                    markUnreadable(CredentialField.MNEMONIC, address)
+                },
+                // The stored key does not prove the address (that is the repair's job).
+                { putKeys(address, other) },
+                // No key at all.
+                { },
+                // An explicit watch-only marker.
+                {
+                    putKeys(address, keys)
+                    watchOnly += address
+                },
+                // The account reaches its phrase through the release-era entry: the text it
+                // was stored with (commas) must stay the one that is read.
+                {
+                    putKeys(address, keys)
+                    putKeys("", keys)
+                    put(CredentialField.MNEMONIC, "", TWELVE.replace(" ", ","))
+                },
+            )
+            refused.forEach { arrange ->
+                store.values.clear()
+                store.unreadable.clear()
+                store.watchOnly.clear()
+                store.addOnlyWrites.clear()
+                store.arrange()
+                val before = store.snapshot()
+
+                assertFalse(repository.addMissingBackup(repository.draftFromMnemonic(TWELVE, "Name")))
+
+                assertEquals(before, store.snapshot())
+                assertTrue(store.addOnlyWrites.isEmpty() && store.replacingWrites.isEmpty())
+            }
+
+            // A backup file is the key pair itself: it has no phrase or seed to keep.
+            store.values.clear()
+            store.unreadable.clear()
+            store.watchOnly.clear()
+            store.putKeys(address, keys)
+            val fromFile = jp.co.soramitsu.feature_account_api.domain.model.WalletDraft(
+                address = address,
+                accountName = "Name",
+                mnemonic = null,
+                seedHex = "",
+                keypair = Sr25519Keypair(keys.privateKey.copyOf(), keys.publicKey.copyOf(), keys.nonce.copyOf()),
+                source = jp.co.soramitsu.feature_account_api.domain.model.WalletDraft.Source.JSON,
+                wipeKeypair = {},
+            )
+            assertFalse(repository.addMissingBackup(fromFile))
+            assertTrue(store.addOnlyWrites.isEmpty())
+        }
+
+    @Test
+    fun `adopting a stored key set never shadows a phrase the account reaches through the release-era entry`() =
+        runTest {
+            store.putKeys(address, keys)
+            store.putKeys("", keys)
+            store.put(CredentialField.MNEMONIC, "", TWELVE.replace(" ", ","))
+            val before = store.snapshot()
+
+            assertEquals(account, repository.commitDraft(repository.draftFromMnemonic(TWELVE, "Name")))
+
+            // The text the SORA v1 identity was derived from is still the one that is read.
+            assertEquals(before, store.snapshot())
+            assertEquals(TWELVE.replace(" ", ","), repository.retrieveMnemonic(account))
+        }
+
+    @Test
+    fun `opening a backup file and writing one never run on the caller's thread`() = runTest {
+        val caller = Thread.currentThread()
+        var decodeThread: Thread? = null
+        every { json.decode("{json}", "password") } answers {
+            decodeThread = Thread.currentThread()
+            listOf(
+                JsonAccountsEncoder.ImportedAccount(
+                    Sr25519Keypair(keys.privateKey.copyOf(), keys.publicKey.copyOf(), keys.nonce.copyOf()),
+                    "From file",
+                )
+            )
+        }
+        val draft = repository.draftsFromJson("{json}", "password", "").single()
+        assertEquals(address, draft.address)
+        assertTrue(decodeThread != null && decodeThread !== caller)
+
+        store.putKeys(address, keys)
+        var encodeThread: Thread? = null
+        every { json.generate(any<JsonAccountsEncoder.ExportAccount>(), "password", any()) } answers {
+            encodeThread = Thread.currentThread()
+            "{export}"
+        }
+        assertEquals("{export}", repository.generateJson(listOf(account), "password"))
+        assertTrue(encodeThread != null && encodeThread !== caller)
+    }
+
+    @Test
     fun `stored keys that prove the address are adopted unchanged whatever is stored next to them`() =
         runTest {
             val variants: List<FakeCredentialsDatasource.() -> Unit> = listOf(

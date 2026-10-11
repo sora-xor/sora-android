@@ -97,6 +97,16 @@ interface CredentialsRepository {
     suspend fun storedKeyProvesAddress(address: String): Boolean
 
     /**
+     * For an account that already signs on this phone: keeps the recovery phrase (or raw seed)
+     * the person just entered as its backup, when no phrase (or seed) is stored for it. Add-only:
+     * no stored value is replaced and no key value is written. It applies only next to a key set
+     * stored under the address itself that proves the address, and only after the entered secret
+     * is proven to re-derive that address. Returns true when a value was added. A draft read
+     * from a backup file carries no phrase or seed and adds nothing.
+     */
+    suspend fun addMissingBackup(draft: WalletDraft): Boolean
+
+    /**
      * The explicit, confirmed repair of one account with its own recovery phrase or seed: keeps a
      * copy of the old encrypted preference files in `no_backup/wallet-quarantine-*`, then writes
      * the draft's proven key pair and secret over the values stored for the draft's address, and

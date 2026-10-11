@@ -502,6 +502,48 @@ class UserRepositoryTest {
     }
 
     @Test
+    fun `a phrase kept as the backup of an account that signs is recorded at once`() = runTest {
+        val address = "accountAddress"
+        // Recorded as a key pair only; its phrase has just been stored as its backup.
+        coEvery { walletIdentityDao.getWallet(address) } returns
+            WalletIdentityLocal(address, "Primary", "LEGACY_SECRET", "VERIFIED", 1)
+        coEvery { credentialsDatasource.retrieveKeys(address) } answers { retainedFifteenWordKeyPair() }
+        coEvery { credentialsDatasource.retrieveMnemonic(address) } returns
+            RETAINED_FIFTEEN_WORD_MNEMONIC
+        every { runtimeManager.toSoraAddressOrNull(any()) } returns address
+        val identity = slot<WalletIdentityLocal>()
+        coEvery { walletIdentityDao.upsertWallet(capture(identity)) } returns Unit
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        val transaction = slot<suspend () -> R>()
+        coEvery { db.withTransaction(capture(transaction)) } coAnswers {
+            transaction.captured.invoke()
+        }
+
+        userRepository.refreshVerifiedWallet(address)
+
+        // Still verified; the label now says that a matching phrase is stored.
+        assertEquals("VERIFIED", identity.captured.migrationState)
+        assertEquals("MNEMONIC_UNSUPPORTED", identity.captured.secretSource)
+        // No account row and no key value is written by this.
+        coVerify(exactly = 0) { accountDao.insertSoraAccount(any()) }
+        coVerify(exactly = 0) { credentialsDatasource.saveKeys(any(), any()) }
+        coVerify(exactly = 0) { credentialsDatasource.saveMnemonic(any(), any()) }
+    }
+
+    @Test
+    fun `the refresh never touches a read-only account or one that is not listed`() = runTest {
+        coEvery { walletIdentityDao.getWallet("readOnly") } returns
+            WalletIdentityLocal("readOnly", "Primary", "UNAVAILABLE", "UNAVAILABLE", 1)
+        coEvery { accountDao.getAccount("notListed") } returns null
+
+        userRepository.refreshVerifiedWallet("readOnly")
+        userRepository.refreshVerifiedWallet("notListed")
+
+        coVerify(exactly = 0) { walletIdentityDao.upsertWallet(any()) }
+        coVerify(exactly = 0) { walletIdentityDao.upsertNetworkAccounts(any()) }
+    }
+
+    @Test
     fun `insert sora account EXPECT insert local cards hub`() = runTest {
         coEvery { walletIdentityDao.getWallet("accountAddress") } returns null
         coEvery {
