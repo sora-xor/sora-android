@@ -615,4 +615,32 @@
   <string name="safe_mode_retained_restored">復元しました。アカウント一覧に追加されています。</string>
   <string name="safe_mode_retained_not_restorable">この端末の鍵からはこのウォレットを復元できません。代わりにリカバリーフレーズまたはシードをインポートしてください。</string>
   <string name="safe_mode_restored_wallet_name">復元したウォレット</string>
+  <!-- at1-submit-status: truthful transaction status on every screen (audit A5) -->
+  <string name="tx_outcome_badge_confirmed">トランザクションが\n確定しました</string>
+  <string name="tx_outcome_badge_failed">トランザクションが\n失敗しました</string>
+  <string name="tx_outcome_badge_not_sent">送信されませんでした</string>
+  <string name="tx_outcome_confirmed_title">確定しました</string>
+  <string name="tx_outcome_confirmed_message">ネットワークがこのトランザクションを確定しました。</string>
+  <string name="tx_outcome_waiting_title">送信済み、確認待ち</string>
+  <string name="tx_outcome_failed_title">トランザクションが失敗しました</string>
+  <string name="tx_outcome_refused_title">ネットワークがこのトランザクションを受け付けませんでした</string>
+  <string name="tx_outcome_not_sent_title">送信されませんでした</string>
+  <string name="tx_outcome_note_waiting">送信済みです。ネットワークによる確定はまだ完了していません。通常は1分以内に完了します。もう一度送信しないでください。この画面とアクティビティのステータスは自動で更新されます。</string>
+  <string name="tx_outcome_note_uncertain">ネットワークがこのトランザクションを受信したかどうかを確認できませんでした。現在確認中で、この画面とアクティビティのステータスは自動で更新されます。結果が表示されるまで、もう一度送信しないでください。</string>
+  <string name="tx_outcome_note_failed_on_chain">ネットワークはこのトランザクションを処理しましたが、失敗しました。このトランザクションによる資産の移動はありません。ネットワーク手数料は差し引かれました。</string>
+  <string name="tx_outcome_note_failed_on_chain_reason">ネットワークから報告された理由: %1$s</string>
+  <string name="tx_outcome_note_not_included">有効期限までにネットワークに取り込まれませんでした。何も送信されておらず、手数料もかかっていません。もう一度お試しいただけます。</string>
+  <string name="tx_outcome_note_refused_fee">このアカウントは現在ネットワーク手数料を支払えないため、ネットワークがこのトランザクションを受け付けませんでした。ステーキングや投票などでXORの一部がロックされている可能性があります。何も送信されておらず、手数料もかかっていません。</string>
+  <string name="tx_outcome_note_refused_busy">ネットワークが混雑しており、このトランザクションを受け付けられませんでした。何も送信されておらず、手数料もかかっていません。しばらくしてからもう一度お試しください。</string>
+  <string name="tx_outcome_note_refused_invalid">ネットワークがこのトランザクションを確認しましたが、受け付けませんでした。何も送信されておらず、手数料もかかっていません。</string>
+  <string name="tx_outcome_note_network_message">ネットワークからのメッセージ: %1$s</string>
+  <string name="tx_outcome_not_sent_network">このトランザクションを準備するためのネットワーク接続ができませんでした。何も送信されていません。インターネット接続を確認して、もう一度お試しください。</string>
+  <string name="tx_outcome_not_sent_fee_changed">確認中にネットワーク手数料が変わりました。何も送信されていません。新しい手数料を確認して、もう一度承認してください。</string>
+  <string name="tx_outcome_not_sent_generic">このトランザクションを準備できませんでした。何も送信されておらず、手数料もかかっていません。もう一度お試しください。</string>
+  <string name="tx_outcome_duplicate_title">前回の操作がまだ確認待ちです</string>
+  <string name="tx_outcome_duplicate_message">このアカウントから同じ操作をすでに送信しており、ネットワークによる確定がまだ完了していません。もう一度送信すると、二重に実行される可能性があります。最初の操作はアクティビティで確認できます。</string>
+  <string name="tx_outcome_duplicate_send_again">それでも再送信する</string>
+  <string name="tx_outcome_duplicate_wait">待つ</string>
+  <string name="tx_outcome_claim_waiting">申請は送信済みですが、ネットワークによる確定がまだ完了していません。もう一度送信しないでください。数分後にもう一度ご確認ください。</string>
+  <string name="tx_outcome_screen_needs_network">この画面では手数料の確認にSORAネットワークへの接続が必要ですが、現在接続できません。インターネット接続を確認して、もう一度お試しください。資産はブロックチェーン上で安全です。</string>
 </resources>
