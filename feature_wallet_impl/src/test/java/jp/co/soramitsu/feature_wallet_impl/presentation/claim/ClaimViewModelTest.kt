@@ -141,6 +141,8 @@ class ClaimViewModelTest {
             R.string.tx_outcome_not_sent_title,
             R.string.tx_outcome_not_sent_network,
             R.string.tx_outcome_claim_blocked,
+            R.string.tx_outcome_failed_title,
+            R.string.tx_outcome_note_not_included,
         ).forEach { id ->
             given(resourceManager.getString(id)).willReturn("text-$id")
         }
@@ -172,6 +174,8 @@ class ClaimViewModelTest {
             stubOutcomeTexts()
             // What a failed status read or an unfinished finality wait gives after a broadcast.
             claimAnswers { TransactionOutcome.Waiting(txHash, acceptedByNode = true) }
+            // The network does not have the claim for as long as this screen keeps asking.
+            given(walletInteractor.needsMigration()).willReturn(true)
 
             viewModel.nextButtonClicked()
             advanceUntilIdle()
@@ -185,7 +189,68 @@ class ClaimViewModelTest {
                 viewModel.alertDialogLiveData.value,
             )
             assertEquals(false, viewModel.claimScreenState.value?.loading)
+            // It asked for as long as the transaction could still be included, then stopped,
+            // and never signed or sent anything again.
+            verify(walletInteractor, times(48)).needsMigration()
+            verify(walletInteractor, times(1)).migrate()
         }
+
+    @Test
+    fun `a waiting claim closes the screen by itself once the network has it`() = runTest {
+        stubOutcomeTexts()
+        claimAnswers { TransactionOutcome.Waiting(txHash, acceptedByNode = true) }
+        // Two checks still find the claim outstanding; the third finds it on the network.
+        given(walletInteractor.needsMigration()).willReturn(true, true, false)
+
+        viewModel.nextButtonClicked()
+        advanceUntilIdle()
+
+        // Before: the dialog said "check back in a few minutes" and nothing on the screen ever
+        // changed until the person submitted again or reopened the app.
+        verify(walletInteractor, times(3)).needsMigration()
+        verify(walletInteractor).saveMigrationStatus(MigrationStatus.SUCCESS)
+        verify(walletInteractor, never()).saveMigrationStatus(MigrationStatus.FAILED)
+        verify(walletInteractor, times(1)).migrate()
+    }
+
+    @Test
+    fun `a failed read while following a waiting claim is asked again`() = runTest {
+        stubOutcomeTexts()
+        claimAnswers { TransactionOutcome.Waiting(txHash, acceptedByNode = true) }
+        given(walletInteractor.needsMigration())
+            .willAnswer { throw IOException("offline") }
+            .willReturn(false)
+
+        viewModel.nextButtonClicked()
+        advanceUntilIdle()
+
+        verify(walletInteractor, times(2)).needsMigration()
+        verify(walletInteractor).saveMigrationStatus(MigrationStatus.SUCCESS)
+    }
+
+    @Test
+    fun `a claim that was never included is explained and not stored as failed`() = runTest {
+        stubOutcomeTexts()
+        claimAnswers {
+            TransactionOutcome.FailedOnChain(
+                txHash = txHash,
+                blockHash = null,
+                reason = TransactionChainFailure.NOT_INCLUDED,
+            )
+        }
+
+        viewModel.nextButtonClicked()
+        advanceUntilIdle()
+
+        // Nothing happened on chain: "Transition of assets failed" on every visit would be wrong.
+        verify(walletInteractor, never()).saveMigrationStatus(any())
+        assertEquals(
+            "text-${R.string.tx_outcome_failed_title}" to
+                "text-${R.string.tx_outcome_note_not_included}",
+            viewModel.alertDialogLiveData.value,
+        )
+        assertEquals(false, viewModel.claimScreenState.value?.loading)
+    }
 
     @Test
     fun `a claim blocked by an unresolved earlier transaction says nothing was sent`() = runTest {
