@@ -191,6 +191,12 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         fingerprintWrapper.cancel()
     }
 
+    override fun onStop() {
+        super.onStop()
+        // Leaving the screen veils a phrase or seed that the removal screen was showing.
+        viewModel.onRemovalHidden()
+    }
+
     override fun onResume() {
         super.onResume()
         viewModel.onResume()
@@ -215,6 +221,7 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
                     onReveal = viewModel::onRemovalRevealed,
                     onWrittenDown = viewModel::onRemovalWrittenDown,
                     onUnderstoodNoBackup = viewModel::onRemovalUnderstoodNoBackup,
+                    onUnderstoodFoundWallets = viewModel::onRemovalUnderstoodFoundWallets,
                     onExportJson = viewModel::onRemovalExportJson,
                     onRemove = viewModel::onRemovalConfirmed,
                     onCancel = viewModel::onRemovalCancelled,

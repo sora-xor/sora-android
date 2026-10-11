@@ -631,6 +631,7 @@ class PinCodeViewModelTest {
         seedHex: String = "",
         canExportJson: Boolean = true,
         retainedKeySets: Int = 0,
+        restorableKeySets: Int = 0,
     ) = WalletRemovalBriefing(
         accounts = listOf(
             WalletRemovalBriefing.Account(
@@ -643,6 +644,7 @@ class PinCodeViewModelTest {
         ),
         removesEverything = removesEverything,
         retainedKeySets = retainedKeySets,
+        restorableKeySets = restorableKeySets,
     )
 
     private suspend fun TestScope.openRemovalScreen(briefing: WalletRemovalBriefing) {
@@ -796,9 +798,140 @@ class PinCodeViewModelTest {
         }
 
     @Test
-    fun `a check that does not pass keeps the screen and says that nothing was removed`() = runTest {
+    fun `found wallets the PIN can still restore need their own acknowledgement`() = runTest {
+        // Removing the only account removes the PIN: the two found wallets it can restore
+        // today would need their own recovery phrases afterwards.
+        openRemovalScreen(briefing(removesEverything = true, retainedKeySets = 3, restorableKeySets = 2))
+        val removal = requireNotNull(pinCodeViewModel.removal)
+        assertEquals(2, removal.restorableKeySets)
+        assertTrue(removal.strandsFoundWallets)
+
+        acknowledgeWrittenDown()
+        assertFalse(requireNotNull(pinCodeViewModel.removal).canRemove)
+        pinCodeViewModel.onRemovalConfirmed()
+        advanceUntilIdle()
+        verify(interactor, never()).createWalletDeletionPreview(anyOrNull())
+
+        pinCodeViewModel.onRemovalUnderstoodFoundWallets(true)
+        assertTrue(requireNotNull(pinCodeViewModel.removal).canRemove)
+    }
+
+    @Test
+    fun `one of several accounts never asks about found wallets`() = runTest {
+        // The PIN stays, so "Wallets found on this phone" keeps working.
+        openRemovalScreen(briefing(removesEverything = false, restorableKeySets = 2))
+        assertFalse(requireNotNull(pinCodeViewModel.removal).strandsFoundWallets)
+
+        acknowledgeWrittenDown()
+        assertTrue(requireNotNull(pinCodeViewModel.removal).canRemove)
+    }
+
+    @Test
+    fun `leaving the removal screen veils the phrase and keeps what was acknowledged`() = runTest {
+        openRemovalScreen(briefing())
+        acknowledgeWrittenDown()
+        assertTrue(requireNotNull(pinCodeViewModel.removal).revealed)
+
+        // Another app, the recents screen or the JSON export came in front.
+        pinCodeViewModel.onRemovalHidden()
+
+        val hidden = requireNotNull(pinCodeViewModel.removal)
+        assertFalse(hidden.revealed)
+        // It was shown and ticked: that stays, and Remove needs no second reveal.
+        assertTrue(hidden.writtenDown)
+        assertTrue(hidden.canRemove)
+    }
+
+    @Test
+    fun `coming back from the JSON export keeps the removal screen and asks for nothing`() = runTest {
+        openRemovalScreen(briefing(phraseWords = emptyList()))
+        pinCodeViewModel.onRemovalUnderstoodNoBackup(true)
+        pinCodeViewModel.onRemovalExportJson()
+        verify(mainRouter).showBackupJson(listOf("address"))
+
+        // Back on the export returns to this destination, whose view is created again.
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        pinCodeViewModel.onResume()
+        advanceUntilIdle()
+
+        val removal = requireNotNull(pinCodeViewModel.removal)
+        assertTrue(removal.understoodNoBackup)
+        assertTrue(removal.canRemove)
+        verify(interactor, times(1)).walletRemovalBriefing(listOf("address"))
+    }
+
+    @Test
+    fun `an unfinished transaction is said right after the PIN, before any phrase is shown`() = runTest {
+        given(interactor.walletRemovalBriefing(listOf("address")))
+            .willThrow(IllegalStateException("WALLET_DELETION_PENDING_TRANSACTIONS"))
+        given(resourceManager.getString(R.string.account_removal_not_removed_title))
+            .willReturn("Not removed")
+        given(resourceManager.getString(R.string.account_removal_pending_transactions))
+            .willReturn("Wait for the transaction")
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        advanceUntilIdle()
+
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+
+        // No removal screen, so no phrase to reveal and write down for a removal that
+        // cannot happen yet; the text says what has to happen first.
+        assertNull(pinCodeViewModel.removal)
+        assertEquals(
+            "Not removed" to "Wait for the transaction",
+            pinCodeViewModel.alertDialogLiveData.value,
+        )
+        assertNull(pinCodeViewModel.errorFromResourceLiveData.value)
+        verify(mainRouter, never()).popBackStack()
+    }
+
+    @Test
+    fun `read-only mode of the whole app is said right after the PIN`() = runTest {
+        given(interactor.walletRemovalBriefing(listOf("address")))
+            .willThrow(IllegalStateException("WALLET_RECOVERY_READ_ONLY"))
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        advanceUntilIdle()
+
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+
+        assertNull(pinCodeViewModel.removal)
+        assertEquals(
+            R.string.safe_mode_read_only_title to R.string.safe_mode_read_only_body,
+            pinCodeViewModel.errorFromResourceLiveData.value,
+        )
+    }
+
+    @Test
+    fun `a transaction that started while the screen was open is named at the last step too`() = runTest {
         given(interactor.createWalletDeletionPreview(listOf("address")))
             .willThrow(IllegalStateException("WALLET_DELETION_PENDING_TRANSACTIONS"))
+        given(interactor.walletDeletionFailureCode()).willReturn(null)
+        given(interactor.areListed(listOf("address"))).willReturn(true)
+        given(resourceManager.getString(R.string.account_removal_not_removed_title))
+            .willReturn("Not removed")
+        given(resourceManager.getString(R.string.account_removal_pending_transactions))
+            .willReturn("Wait for the transaction")
+        openRemovalScreen(briefing())
+        acknowledgeWrittenDown()
+
+        pinCodeViewModel.onRemovalConfirmed()
+        advanceUntilIdle()
+
+        assertEquals(
+            "Not removed" to "Wait for the transaction",
+            pinCodeViewModel.alertDialogLiveData.value,
+        )
+        assertFalse(requireNotNull(pinCodeViewModel.removal).working)
+        verify(interactor, never()).confirmAndExecuteWalletDeletion(anyOrNull())
+    }
+
+    @Test
+    fun `a check that does not pass keeps the screen and says that nothing was removed`() = runTest {
+        given(interactor.createWalletDeletionPreview(listOf("address")))
+            .willThrow(IllegalStateException("WALLET_DELETION_SELECTION_INVALID"))
         given(interactor.walletDeletionFailureCode()).willReturn(null)
         given(interactor.areListed(listOf("address"))).willReturn(true)
         given(resourceManager.getString(R.string.account_removal_not_removed_title))
@@ -812,7 +945,7 @@ class PinCodeViewModelTest {
         advanceUntilIdle()
 
         assertEquals(
-            "Not removed" to "Nothing was removed (WALLET_DELETION_PENDING_TRANSACTIONS)",
+            "Not removed" to "Nothing was removed (WALLET_DELETION_SELECTION_INVALID)",
             pinCodeViewModel.alertDialogLiveData.value,
         )
         val removal = requireNotNull(pinCodeViewModel.removal)

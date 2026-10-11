@@ -57,10 +57,20 @@ internal data class AccountRemovalState(
     val removesEverything: Boolean,
     /** Wallet key sets no account uses that stay on the phone (only when everything goes). */
     val retainedKeySets: Int = 0,
-    /** The person tapped the veil: the phrase or seed is drawn. */
+    /**
+     * How many of [retainedKeySets] the PIN can still restore now. This removal takes the PIN
+     * away and leaves them restorable by their own recovery phrase only, so it needs its own
+     * acknowledgement ([understoodFoundWallets]).
+     */
+    val restorableKeySets: Int = 0,
+    /** The phrase or seed is drawn right now. Veiled again whenever the screen is left. */
     val revealed: Boolean = false,
+    /** The phrase or seed was drawn at least once, so it can have been written down. */
+    val shownOnce: Boolean = false,
     /** "I have written it down", for the accounts whose backup is shown. */
     val writtenDown: Boolean = false,
+    /** "I have the recovery phrases of those wallets, or I don't need them". */
+    val understoodFoundWallets: Boolean = false,
     /** "I understand that this phone can't bring it back", for accounts without a backup. */
     val understoodNoBackup: Boolean = false,
     val working: Boolean = false,
@@ -81,10 +91,14 @@ internal data class AccountRemovalState(
     /** At least one account has nothing on this phone that re-derives it. */
     val hasAccountWithoutBackup: Boolean get() = accounts.any { !it.hasBackupToShow }
 
+    /** Found wallets the PIN can restore now would need their own phrase after this removal. */
+    val strandsFoundWallets: Boolean get() = removesEverything && restorableKeySets > 0
+
     /** The acknowledgements this removal needs are all given. */
     val acknowledged: Boolean
-        get() = (!showsBackup || (revealed && writtenDown)) &&
-            (!hasAccountWithoutBackup || understoodNoBackup)
+        get() = (!showsBackup || (shownOnce && writtenDown)) &&
+            (!hasAccountWithoutBackup || understoodNoBackup) &&
+            (!strandsFoundWallets || understoodFoundWallets)
 
     val canRemove: Boolean get() = acknowledged && !working
 }

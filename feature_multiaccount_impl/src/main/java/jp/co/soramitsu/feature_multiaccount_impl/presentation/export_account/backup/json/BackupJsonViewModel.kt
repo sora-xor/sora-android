@@ -187,11 +187,11 @@ class BackupJsonViewModel @AssistedInject constructor(
     }
 
     override fun onNavIcon() {
-        router.popBackStackToAccountList()
+        router.leaveBackupJson()
     }
 
     override fun onBackPressed() {
-        router.popBackStackToAccountList()
+        router.leaveBackupJson()
     }
 
     private fun getPasswordConfirmationDescriptionAndErrorStatus(

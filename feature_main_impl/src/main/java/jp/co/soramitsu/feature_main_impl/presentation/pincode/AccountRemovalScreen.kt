@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.view.WindowManager
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Checkbox
 import androidx.compose.material.CheckboxDefaults
@@ -50,6 +50,8 @@ internal object AccountRemovalTags {
     const val EXPORT_JSON = "AccountRemovalExportJson"
     const val WRITTEN_DOWN = "AccountRemovalWrittenDown"
     const val UNDERSTOOD_NO_BACKUP = "AccountRemovalUnderstoodNoBackup"
+    const val FOUND_WALLETS = "AccountRemovalFoundWallets"
+    const val UNDERSTOOD_FOUND_WALLETS = "AccountRemovalUnderstoodFoundWallets"
     const val STAYS = "AccountRemovalWhatStays"
     const val REMOVE = "AccountRemovalRemove"
     const val CANCEL = "AccountRemovalCancel"
@@ -96,6 +98,7 @@ internal fun AccountRemovalScreen(
     onReveal: () -> Unit,
     onWrittenDown: (Boolean) -> Unit,
     onUnderstoodNoBackup: (Boolean) -> Unit,
+    onUnderstoodFoundWallets: (Boolean) -> Unit = {},
     onExportJson: () -> Unit,
     onRemove: () -> Unit,
     onCancel: () -> Unit,
@@ -241,6 +244,18 @@ internal fun AccountRemovalScreen(
                     color = n.textSecondary,
                 )
             }
+            if (state.strandsFoundWallets) {
+                // Wallets the PIN can restore today need their own phrase after this removal.
+                // Said where it happens, with where to restore them first.
+                Spacer(Modifier.size(8.dp))
+                ReassuranceCallout(
+                    modifier = Modifier.testTag(AccountRemovalTags.FOUND_WALLETS),
+                    text = stringResource(
+                        R.string.account_removal_found_wallets_warning,
+                        state.restorableKeySets.toString(),
+                    ),
+                )
+            }
         }
 
         SafeCard {
@@ -250,10 +265,10 @@ internal fun AccountRemovalScreen(
                     text = stringResource(R.string.account_removal_written_down),
                     checked = state.writtenDown,
                     // Only what was shown can have been written down.
-                    enabled = state.revealed && !state.working,
+                    enabled = state.shownOnce && !state.working,
                     onChecked = onWrittenDown,
                 )
-                if (!state.revealed) {
+                if (!state.shownOnce) {
                     ReassuranceCallout(stringResource(R.string.account_removal_reveal_first))
                 }
             }
@@ -264,6 +279,15 @@ internal fun AccountRemovalScreen(
                     checked = state.understoodNoBackup,
                     enabled = !state.working,
                     onChecked = onUnderstoodNoBackup,
+                )
+            }
+            if (state.strandsFoundWallets) {
+                AcknowledgeRow(
+                    modifier = Modifier.testTag(AccountRemovalTags.UNDERSTOOD_FOUND_WALLETS),
+                    text = stringResource(R.string.account_removal_found_wallets_ack),
+                    checked = state.understoodFoundWallets,
+                    enabled = !state.working,
+                    onChecked = onUnderstoodFoundWallets,
                 )
             }
             Spacer(Modifier.size(12.dp))
@@ -301,8 +325,13 @@ private fun AcknowledgeRow(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
-            .clickable(enabled = enabled, role = Role.Checkbox) { onChecked(!checked) }
-            .semantics(mergeDescendants = true) { },
+            // The row is one checkbox for a screen reader: it announces whether it is ticked.
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Checkbox,
+                onValueChange = onChecked,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(

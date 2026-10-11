@@ -49,6 +49,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.presentation.viewmodel.FailureNotice
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
@@ -187,6 +188,9 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun startAuth(pinCodeAction: PinCodeAction) {
+        // Back on the removal screen (from the JSON export): it is already past the PIN and
+        // keeps its state; nothing is asked or started again.
+        if (removal != null) return
         if (pinCodeAction == PinCodeAction.TIMEOUT_CHECK) WalletSessionState.markLocked()
         viewModelScope.launch {
             action = pinCodeAction
@@ -410,8 +414,9 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun onResume() {
-        // The removal screen is already behind the PIN: coming back to it (for example from the
-        // JSON export) asks for nothing again.
+        // The removal screen is already behind the PIN: coming back to it from the JSON export
+        // (whose Back returns here) does not ask for the PIN again. The phrase is veiled again
+        // whenever the screen was left ([onRemovalHidden]).
         if (removal != null) return
         if (action != PinCodeAction.CREATE_PIN_CODE && !buttonsDisabled) {
             startFingerprintScannerEventLiveData.value = isBiometryEnabled
@@ -521,6 +526,7 @@ class PinCodeViewModel @Inject constructor(
                     },
                     removesEverything = briefing.removesEverything,
                     retainedKeySets = briefing.retainedKeySets,
+                    restorableKeySets = briefing.restorableKeySets,
                 )
             } catch (error: CancellationException) {
                 throw error
@@ -528,23 +534,51 @@ class PinCodeViewModel @Inject constructor(
                 // Nothing was removed and nothing was started. The message is shown on this
                 // screen (leaving it now would take the message away with it); the keypad is
                 // back, and Back leaves.
-                onError(error)
+                if (!showRemovalPrecondition(error)) onError(error)
             }
         }
     }
 
+    /**
+     * A removal that cannot happen until something else does gets a text that says what, never
+     * "try again". True when [error] was such a refusal and its message is shown.
+     */
+    private fun showRemovalPrecondition(error: Throwable): Boolean {
+        if (error.message != WALLET_DELETION_PENDING_TRANSACTIONS) return false
+        onErrorResetProgress()
+        alertDialogLiveData.value = Pair(
+            resourceManager.getString(R.string.account_removal_not_removed_title),
+            resourceManager.getString(R.string.account_removal_pending_transactions),
+        )
+        return true
+    }
+
     fun onRemovalRevealed() {
-        removal = removal?.copy(revealed = true)
+        removal = removal?.copy(revealed = true, shownOnce = true)
+    }
+
+    /**
+     * The removal screen is no longer in front (another app, the recents screen, the JSON
+     * export): the phrase or seed is veiled again, like every screen that shows a secret. What
+     * was already acknowledged stays.
+     */
+    fun onRemovalHidden() {
+        val state = removal ?: return
+        if (state.revealed) removal = state.copy(revealed = false)
     }
 
     fun onRemovalWrittenDown(checked: Boolean) {
         val state = removal ?: return
         // Only after the phrase or seed was actually shown.
-        if (state.revealed) removal = state.copy(writtenDown = checked)
+        if (state.shownOnce) removal = state.copy(writtenDown = checked)
     }
 
     fun onRemovalUnderstoodNoBackup(checked: Boolean) {
         removal = removal?.copy(understoodNoBackup = checked)
+    }
+
+    fun onRemovalUnderstoodFoundWallets(checked: Boolean) {
+        removal = removal?.copy(understoodFoundWallets = checked)
     }
 
     /** "Export JSON first": the encrypted JSON export of the accounts whose key still signs. */
@@ -648,11 +682,23 @@ class PinCodeViewModel @Inject constructor(
         // The accounts are all still listed: nothing was removed. The screen stays, with the
         // same acknowledgement, and the person can try again or cancel.
         removal = removal?.copy(working = false)
+        if (showRemovalPrecondition(error)) return
+        if (FailureNotice.of(error) == FailureNotice.WALLET_READ_ONLY) {
+            // Wallet changes went off for the whole app meanwhile: trying again cannot help,
+            // and the read-only text says what does.
+            onError(error)
+            return
+        }
         alertDialogLiveData.value = Pair(
             resourceManager.getString(R.string.account_removal_not_removed_title),
             resourceManager.getString(R.string.account_removal_not_removed)
                 .format(error.walletDeletionSafeCode()),
         )
+    }
+
+    private companion object {
+        /** `UserRepositoryImpl.createWalletDeletionPreview`: a transaction is not finished. */
+        const val WALLET_DELETION_PENDING_TRANSACTIONS = "WALLET_DELETION_PENDING_TRANSACTIONS"
     }
 
     private fun Throwable.walletDeletionSafeCode(): String =
