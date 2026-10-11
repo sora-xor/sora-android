@@ -50,6 +50,8 @@ import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.LiquidityDetails
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -180,6 +182,15 @@ class LiquidityAddViewModel @AssistedInject constructor(
     /** The last read of the reserves failed; the person is told, with Try again. */
     private var reservesUnavailable = false
 
+    /**
+     * The two amounts the last successful estimate was made for, or null when there is none or
+     * the last one failed. An estimate checks the amounts against the pool's reserves and reads
+     * the network fee, so it fails while the network cannot be reached. Nothing is reviewed or
+     * signed unless the amounts on screen are these: amounts typed at any other ratio than the
+     * pool's fail on chain, and the fee is charged for it.
+     */
+    private var estimatedAmounts: Pair<BigDecimal, BigDecimal>? = null
+
     private val _searchTokenFilter = MutableStateFlow(emptySearchTokenFilter)
     val searchTokenFilter = _searchTokenFilter.asStateFlow()
 
@@ -282,6 +293,9 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 .onEach { amount ->
                     amountFrom = amount
                     desired = WithDesired.INPUT
+                    // The earlier estimate was made for another amount: Supply is off until
+                    // the new one is there.
+                    updateButtonState()
                     onChangedProperty.set(false)
                 }.filter {
                     _addState.value.assetState1?.token?.id == SubstrateOptionsProvider.feeAssetId ||
@@ -300,6 +314,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 .collectLatest { amount ->
                     amountTo = amount
                     desired = WithDesired.OUTPUT
+                    updateButtonState()
                     onChangedProperty.set(false)
                 }
         }
@@ -395,6 +410,16 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 resourceManager.getString(R.string.common_supply) to false
             }
 
+            // The amounts could not be checked; the notice above the button offers Try again.
+            _addState.value.estimateUnavailable != null -> {
+                resourceManager.getString(R.string.network_fee_unavailable_short) to false
+            }
+
+            // An estimate for the amounts on screen is still on its way.
+            !estimateReady() -> {
+                resourceManager.getString(R.string.common_supply) to false
+            }
+
             balanceCheckResult -> {
                 resourceManager.getString(R.string.common_supply) to true
             }
@@ -422,7 +447,11 @@ class LiquidityAddViewModel @AssistedInject constructor(
         val basedAmount = if (desired == WithDesired.INPUT) amountFrom else amountTo
         val targetAmount = if (desired == WithDesired.INPUT) amountTo else amountFrom
 
-        if (basedAmount.isZero() && targetAmount.isZero()) return
+        if (basedAmount.isZero() && targetAmount.isZero()) {
+            // Nothing to estimate, so there is nothing to try again either.
+            clearEstimateNotice()
+            return
+        }
         if (tokenFrom == null || tokenTo == null || basedAmount < BigDecimal.ZERO || targetAmount < BigDecimal.ZERO) {
             return
         }
@@ -430,57 +459,107 @@ class LiquidityAddViewModel @AssistedInject constructor(
         if (!reservesReady) return
 
         setButtonLoading(true)
+        try {
+            val details = poolsInteractor.calcLiquidityDetails(
+                tokenFrom,
+                tokenTo,
+                liquidityData.firstReserves,
+                liquidityData.secondReserves,
+                liquidityData.secondPooled,
+                basedAmount,
+                targetAmount,
+                desired,
+                _stateSlippage.value,
+                pairEnabled,
+                pairPresented
+            )
 
-        tryCatchFinally(
-            finally = { setButtonLoading(false) },
-            block = {
-                val details = poolsInteractor.calcLiquidityDetails(
-                    tokenFrom,
-                    tokenTo,
-                    liquidityData.firstReserves,
-                    liquidityData.secondReserves,
-                    liquidityData.secondPooled,
-                    basedAmount,
-                    targetAmount,
-                    desired,
-                    _stateSlippage.value,
-                    pairEnabled,
-                    pairPresented
-                )
-
-                networkFee = details.networkFee
-                liquidityDetails = details
-                details.targetAmount.let {
-                    if (desired == WithDesired.INPUT) {
-                        _addState.value = _addState.value.copy(
-                            assetState2 = _addState.value.assetState2?.copy(
-                                amount = it,
-                                amountFiat = _addState.value.assetState2?.token?.printFiat(
-                                    it,
-                                    numbersFormatter
-                                ).orEmpty(),
-                                enabled = true,
-                            ),
-                        )
-                        amountTo = it
-                    } else {
-                        _addState.value = _addState.value.copy(
-                            assetState1 = _addState.value.assetState1?.copy(
-                                amount = it,
-                                amountFiat = _addState.value.assetState1?.token?.printFiat(
-                                    it,
-                                    numbersFormatter
-                                ).orEmpty(),
-                                enabled = true,
-                            ),
-                        )
-                        amountFrom = it
-                    }
+            networkFee = details.networkFee
+            liquidityDetails = details
+            details.targetAmount.let {
+                if (desired == WithDesired.INPUT) {
+                    _addState.value = _addState.value.copy(
+                        assetState2 = _addState.value.assetState2?.copy(
+                            amount = it,
+                            amountFiat = _addState.value.assetState2?.token?.printFiat(
+                                it,
+                                numbersFormatter
+                            ).orEmpty(),
+                            enabled = true,
+                        ),
+                    )
+                    amountTo = it
+                } else {
+                    _addState.value = _addState.value.copy(
+                        assetState1 = _addState.value.assetState1?.copy(
+                            amount = it,
+                            amountFiat = _addState.value.assetState1?.token?.printFiat(
+                                it,
+                                numbersFormatter
+                            ).orEmpty(),
+                            enabled = true,
+                        ),
+                    )
+                    amountFrom = it
                 }
-
-                updateLiquidityDetails(details)
             }
+
+            updateLiquidityDetails(details)
+            estimatedAmounts = amountFrom to amountTo
+            clearEstimateNotice()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (t: Throwable) {
+            onEstimateUnavailable(t)
+        } finally {
+            setButtonLoading(false)
+        }
+    }
+
+    /** True when the amounts on screen are the ones the last successful estimate was made for. */
+    private fun estimateReady(): Boolean = estimatedAmounts?.let { (from, to) ->
+        from.compareTo(amountFrom) == 0 && to.compareTo(amountTo) == 0
+    } == true
+
+    /**
+     * The estimate failed, typically because the network fee could not be read while the SORA
+     * endpoint cannot be reached. Before, the failure was passed over in silence for anything
+     * but a business error: the second amount stayed empty with no explanation, and once both
+     * amounts were typed by hand Supply and Confirm were on, at a ratio never checked against
+     * the pool and with a blank fee. Now the earlier estimate is dropped, Supply stays off and
+     * the screen shows the same notice with Try again as Send and Swap.
+     */
+    private fun onEstimateUnavailable(error: Throwable) {
+        if (error is SoraException && error.kind == SoraException.Kind.BUSINESS) {
+            // A business error names its own reason.
+            onError(error)
+        } else {
+            FirebaseWrapper.recordException(error)
+        }
+        liquidityDetails = null
+        estimatedAmounts = null
+        _addState.value = _addState.value.copy(
+            estimateUnavailable = NetworkFeeUnavailable.from(error),
+            // What an earlier estimate said no longer belongs to the amounts on screen.
+            estimated = _addState.value.estimated.copy(shareOfPool = ""),
+            prices = _addState.value.prices.copy(pair1Value = "", pair2Value = "", fee = ""),
         )
+    }
+
+    private fun clearEstimateNotice() {
+        if (_addState.value.estimateUnavailable != null) {
+            _addState.value = _addState.value.copy(estimateUnavailable = null)
+        }
+    }
+
+    /** Try again on the estimate notice: checks the amounts on screen once more. */
+    fun onRetryEstimate() {
+        viewModelScope.launch {
+            guarded {
+                recalculateData()
+                updateButtonState()
+            }
+        }
     }
 
     private suspend fun updateLiquidityDetails(details: LiquidityDetails) {
@@ -689,6 +768,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
         liquidityData = LiquidityData()
         reservesReady = false
         reservesUnavailable = false
+        // An estimate belongs to the pair it was made for.
+        liquidityDetails = null
+        estimatedAmounts = null
+        clearEstimateNotice()
     }
 
     private fun subscribePoolChanges(tokenFromId: String, tokenToId: String) {
@@ -931,7 +1014,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
         val state1 = _addState.value.assetState1 ?: return
         val state2 = _addState.value.assetState2 ?: return
         // Never sign amounts that were not checked against the pool's reserves.
-        if (!reservesReady) return
+        if (!reservesReady || !estimateReady()) {
+            showAmountsNotChecked()
+            return
+        }
         confirmLocked = true
         viewModelScope.launch {
             setConfirmButton(enabled = false, loading = true)
@@ -990,6 +1076,20 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Confirm was tapped while the amounts on screen have no successful estimate: the reserves
+     * or the fee could not be read after the review, or an estimate for an edited amount has
+     * not arrived yet. Nothing is signed. The person is told so, and the amounts are checked
+     * once more, so that "try again" can succeed as soon as the network answers.
+     */
+    private fun showAmountsNotChecked() {
+        alertDialogLiveData.setValue(
+            resourceManager.getString(R.string.tx_outcome_not_sent_title) to
+                resourceManager.getString(R.string.tx_outcome_not_sent_estimate)
+        )
+        if (reservesReady) onRetryEstimate()
     }
 
     /**

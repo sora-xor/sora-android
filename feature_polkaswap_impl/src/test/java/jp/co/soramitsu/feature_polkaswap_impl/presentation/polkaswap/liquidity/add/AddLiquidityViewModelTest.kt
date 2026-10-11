@@ -41,6 +41,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.TransactionOutcome
@@ -67,6 +68,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -545,6 +547,224 @@ class AddLiquidityViewModelTest {
             )
         }
 
+    // --- an estimate that cannot be made ----------------------------------------------------
+
+    private var failedEstimates = 0
+
+    /** The estimate reads the network fee; [reachable] says whether that read answers. */
+    private suspend fun estimateAnswers(reachable: () -> Boolean) {
+        given(
+            poolsInteractor.calcLiquidityDetails(
+                any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        ).willAnswer {
+            if (!reachable()) {
+                failedEstimates += 1
+                // RuntimeManager.getMutationRuntimeContext while the endpoint is unreachable.
+                throw java.io.IOException("BOUNDED_HTTP_IO")
+            }
+            LIQUIDITY_DETAILS
+        }
+    }
+
+    private fun stubEstimateTexts() {
+        listOf(
+            R.string.network_fee_unavailable_short,
+            R.string.tx_outcome_not_sent_title,
+            R.string.tx_outcome_not_sent_estimate,
+            R.string.remove_pool_confirmation_description,
+        ).forEach { id ->
+            org.mockito.Mockito.lenient()
+                .`when`(resourceManager.getString(id))
+                .thenReturn("text-$id")
+        }
+    }
+
+    private suspend fun verifyNothingSigned() {
+        verify(poolsInteractor, never()).observeAddLiquidity(
+            any(), any(), any(), any(), any(), any(), any(), any(),
+        )
+    }
+
+    @Test
+    fun `an estimate that cannot be made keeps Supply and Confirm off and Try again recovers`() =
+        runTest {
+            // The first Add liquidity of the session on a pair whose reserves are cached, while
+            // the SORA endpoint cannot be reached: the fee read inside the estimate fails.
+            given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
+                .willReturn(flowOf(true))
+            given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
+                .willReturn(flowOf(true))
+            var reachable = false
+            estimateAnswers { reachable }
+            stubEstimateTexts()
+            setUpViewModel(VAL_ASSET.token.id)
+            advanceUntilIdle()
+            pageOpens { true }
+            viewModel.onScreenResumed()
+
+            viewModel.onAmount1Change(BigDecimal.ONE)
+            advanceUntilIdle()
+
+            // Before: the button spun briefly, the second amount stayed empty and nothing said
+            // why. Now the same notice as on Send and Swap is shown, with Try again.
+            assertEquals(
+                NetworkFeeUnavailable.NETWORK_UNREACHABLE,
+                viewModel.addState.value.estimateUnavailable,
+            )
+            assertFalse(viewModel.addState.value.btnState.loading)
+
+            // The second amount is typed by hand, at a ratio the pool was never asked about.
+            viewModel.onAmount2Change(BigDecimal("0.5"))
+            advanceUntilIdle()
+
+            // Before: "Supply", enabled, with a blank fee.
+            assertEquals(
+                "text-${R.string.network_fee_unavailable_short}",
+                viewModel.addState.value.btnState.text,
+            )
+            assertFalse(viewModel.addState.value.btnState.enabled)
+            assertEquals("", viewModel.addState.value.prices.fee)
+
+            // Whatever is tapped, nothing is signed, and Confirm says why.
+            viewModel.onReviewClick()
+            confirm()
+            advanceUntilIdle()
+            verifyNothingSigned()
+            assertEquals(
+                "text-${R.string.tx_outcome_not_sent_title}" to
+                    "text-${R.string.tx_outcome_not_sent_estimate}",
+                viewModel.alertDialogLiveData.value,
+            )
+            assertFalse(viewModel.addState.value.confirm.btnState.loading)
+
+            // The connection is back.
+            reachable = true
+            viewModel.onRetryEstimate()
+            advanceUntilIdle()
+
+            assertEquals(null, viewModel.addState.value.estimateUnavailable)
+            assertEquals("Supply", viewModel.addState.value.btnState.text)
+            assertTrue(viewModel.addState.value.btnState.enabled)
+            assertTrue(viewModel.addState.value.prices.fee.isNotEmpty())
+
+            // The amounts on screen are the estimated ones and can be confirmed now.
+            answers(false) { TransactionOutcome.Confirmed(txHash, "0xblock") }
+            viewModel.onReviewClick()
+            confirm()
+            advanceUntilIdle()
+            kVerify(assetsRouter).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
+
+            assertTrue(failedEstimates >= 2)
+            expectedReportedErrors = failedEstimates
+        }
+
+    @Test
+    fun `an estimate that fails after the review does not let Confirm sign`() = runTest {
+        var reachable = true
+        estimateAnswers { reachable }
+        stubEstimateTexts()
+        readyToConfirm()
+        viewModel.onReviewClick()
+        assertTrue(viewModel.addState.value.btnState.enabled)
+
+        // On the confirm screen: the pool changed (every block does that) and the amounts
+        // could not be checked against it.
+        reachable = false
+        viewModel.slippageChanged(1.0)
+        advanceUntilIdle()
+        assertEquals(
+            NetworkFeeUnavailable.NETWORK_UNREACHABLE,
+            viewModel.addState.value.estimateUnavailable,
+        )
+
+        confirm()
+        advanceUntilIdle()
+
+        verifyNothingSigned()
+        assertEquals(
+            "text-${R.string.tx_outcome_not_sent_title}" to
+                "text-${R.string.tx_outcome_not_sent_estimate}",
+            viewModel.alertDialogLiveData.value,
+        )
+        assertEquals(null, shownBadge())
+
+        // "Try again": a blocked Confirm asks for the estimate once more, so the next one
+        // succeeds as soon as the network answers.
+        reachable = true
+        confirm()
+        advanceUntilIdle()
+        verifyNothingSigned()
+        answers(false) { TransactionOutcome.Confirmed(txHash, "0xblock") }
+        confirm()
+        advanceUntilIdle()
+        kVerify(assetsRouter).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
+
+        expectedReportedErrors = failedEstimates
+    }
+
+    @Test
+    fun `an edited amount cannot be supplied before its estimate is there`() = runTest {
+        stubEstimateTexts()
+        readyToConfirm()
+        assertTrue(viewModel.addState.value.btnState.enabled)
+        // The estimate for the new amount is on its way (a fee read can take seconds).
+        val estimate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        given(
+            poolsInteractor.calcLiquidityDetails(
+                any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        ).willSuspendableAnswer {
+            estimate.await()
+            LIQUIDITY_DETAILS
+        }
+
+        viewModel.onAmount1Change(BigDecimal("0.5"))
+        advanceTimeBy(1_000)
+        runCurrent()
+
+        // Before: Supply stayed on with the second amount of the earlier estimate, and
+        // Confirm signed the new first amount with the old second one.
+        assertFalse(viewModel.addState.value.btnState.enabled)
+        confirm()
+        runCurrent()
+        verifyNothingSigned()
+
+        estimate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals("Supply", viewModel.addState.value.btnState.text)
+        assertTrue(viewModel.addState.value.btnState.enabled)
+    }
+
+    @Test
+    fun `an estimate made for another pair does not carry over`() = runTest {
+        given(poolsInteractor.isPairEnabled(any(), any())).willReturn(flowOf(true))
+        given(poolsInteractor.isPairPresentedInNetwork(any(), any())).willReturn(flowOf(true))
+        given(poolsInteractor.subscribeReservesCache(any(), any()))
+            .willReturn(flowOf(LIQUIDITY_DATA))
+        var reachable = true
+        estimateAnswers { reachable }
+        stubEstimateTexts()
+        setUpViewModel(VAL_ASSET.token.id)
+        advanceUntilIdle()
+        viewModel.onAmount1Change(BigDecimal.ONE)
+        advanceUntilIdle()
+        assertTrue(viewModel.addState.value.btnState.enabled)
+
+        // Another second token is chosen while the network cannot be reached.
+        reachable = false
+        viewModel.onToken2Change(XSTXAU_ASSET.token.id)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.addState.value.btnState.enabled)
+        confirm()
+        advanceUntilIdle()
+        verifyNothingSigned()
+
+        expectedReportedErrors = failedEstimates
+    }
+
     // --- audit A5: one truthful result for every outcome of Confirm -------------------------
 
     private val txHash = "0x" + "ab".repeat(32)
@@ -555,6 +775,9 @@ class AddLiquidityViewModelTest {
         given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
         setUpViewModel(TestTokens.valToken.id)
+        advanceUntilIdle()
+        // An amount was entered and estimated against the pool, as it is before Review.
+        viewModel.onAmount1Change(BigDecimal.ONE)
         advanceUntilIdle()
         // The screen is the screen in front, as it is when Confirm is tapped, and the router
         // opens the transaction page when asked.
