@@ -963,6 +963,60 @@ class MultiaccountInteractorTest {
         }
 
     @Test
+    fun `accounts that cannot be exported with the others are named and no file is written`() =
+        runTest {
+            val works = SoraAccount("cnWorks", "Works")
+            val broken = SoraAccount("cnBroken", "Broken")
+            val alsoBroken = SoraAccount("cnAlsoBroken", "Also broken")
+            listOf(works, broken, alsoBroken).forEach { account ->
+                coEvery { userRepository.getSoraAccount(account.substrateAddress) } returns account
+                coEvery { credentialsRepository.retrieveBackupMaterial(account) } returns
+                    WalletBackupMaterial(
+                        canSign = account == works,
+                        phraseWords = emptyList(),
+                        seedHex = "",
+                        storedPhraseDoesNotMatch = false,
+                        storedSeedDoesNotMatch = false,
+                    )
+            }
+            coEvery {
+                credentialsRepository.generateJson(listOf(works, broken, alsoBroken), "password")
+            } throws SoraException.businessError(ResponseCode.ACCOUNT_KEYS_NOT_EXPORTABLE)
+
+            val error = runCatching {
+                multiaccountInteractor.getJsonFileUri(
+                    listOf("cnWorks", "cnBroken", "cnAlsoBroken"),
+                    "password",
+                )
+            }.exceptionOrNull()
+
+            assertTrue(error is MultiaccountInteractor.AccountsNotExportableException)
+            assertEquals(
+                listOf(broken, alsoBroken),
+                (error as MultiaccountInteractor.AccountsNotExportableException).accounts,
+            )
+            coVerify(exactly = 0) { fileManager.writeExternalCacheText(any(), any()) }
+        }
+
+    @Test
+    fun `one account that cannot be exported keeps the message that needs no name`() = runTest {
+        val broken = SoraAccount("cnBroken", "Broken")
+        coEvery { userRepository.getSoraAccount("cnBroken") } returns broken
+        coEvery { credentialsRepository.generateJson(listOf(broken), "password") } throws
+            SoraException.businessError(ResponseCode.ACCOUNT_KEYS_NOT_EXPORTABLE)
+
+        val error = runCatching {
+            multiaccountInteractor.getJsonFileUri(listOf("cnBroken"), "password")
+        }.exceptionOrNull()
+
+        assertEquals(
+            ResponseCode.ACCOUNT_KEYS_NOT_EXPORTABLE,
+            (error as? SoraException)?.errorResponseCode,
+        )
+        coVerify(exactly = 0) { fileManager.writeExternalCacheText(any(), any()) }
+    }
+
+    @Test
     fun `get keypair is called`() = runTest {
         val address = "address"
         val soraAccount = SoraAccount("address", "name")

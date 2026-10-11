@@ -656,4 +656,6 @@
   <string name="google_backup_unreadable_title">This backup can\'t be restored</string>
   <string name="google_backup_unreadable">SORA couldn\'t restore this account from its Google backup: the backup data is damaged or belongs to another account. Nothing on this phone was changed. If you have the account\'s recovery phrase, raw seed or backup file, go to Import account and enter it.</string>
   <string name="recovery_json_no_file_picker">This phone has no app for choosing a file. Paste the text of your backup file into the field instead. Nothing was changed.</string>
+  <string name="export_json_keys_unusable_named_title">Some accounts can\'t be exported</string>
+  <string name="export_json_keys_unusable_named">These accounts can\'t be exported, because the keys saved for them on this phone can\'t be used:\n\n%1$s\n\nNo file was made. Export your other accounts without them. To use these accounts on this phone again, go to Import account and enter their recovery phrase, raw seed or backup file.</string>
 </resources>

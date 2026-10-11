@@ -659,4 +659,6 @@
   <string name="google_backup_unreadable_title">このバックアップは復元できません</string>
   <string name="google_backup_unreadable">Googleバックアップからこのアカウントを復元できませんでした。バックアップのデータが壊れているか、別のアカウントのものです。この端末では何も変更されていません。このアカウントのリカバリーフレーズ、Raw Seed、またはバックアップファイルをお持ちの場合は、「アカウントをインポート」で入力してください。</string>
   <string name="recovery_json_no_file_picker">この端末にはファイルを選ぶためのアプリがありません。代わりに、バックアップファイルの内容を入力欄に貼り付けてください。何も変更されていません。</string>
+  <string name="export_json_keys_unusable_named_title">エクスポートできないアカウントがあります</string>
+  <string name="export_json_keys_unusable_named">次のアカウントは、この端末に保存されている鍵を使用できないため、エクスポートできません。\n\n%1$s\n\nファイルは作成されていません。これらを除いて、ほかのアカウントをエクスポートしてください。これらのアカウントをこの端末で再び使うには、「アカウントをインポート」でリカバリーフレーズ、Raw Seed、またはバックアップファイルを入力してください。</string>
 </resources>

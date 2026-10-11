@@ -664,16 +664,41 @@ class MultiaccountInteractor @Inject constructor(
     suspend fun isMultiAccount(): Boolean =
         userRepository.getSoraAccountsCount() >= MULTIPLE_ACCOUNT_COUNT
 
-    /** Writes the encrypted JSON export (scrypt) off the caller's thread. */
+    /**
+     * Several accounts were chosen for one backup file and [accounts] of them cannot be
+     * exported: the keys stored for them on this phone do not prove their address. No file was
+     * made. The screen names them, so the person knows which ones to leave out.
+     */
+    class AccountsNotExportableException(
+        val accounts: List<SoraAccount>,
+    ) : Exception("ACCOUNT_KEYS_NOT_EXPORTABLE")
+
+    /**
+     * Writes the encrypted JSON export (scrypt) off the caller's thread. The file is a backup of
+     * every chosen account or it is not made: one account ends in `ACCOUNT_KEYS_NOT_EXPORTABLE`,
+     * several in [AccountsNotExportableException], which names the accounts to leave out.
+     */
     suspend fun getJsonFileUri(addresses: List<String>, password: String): Uri = keyWork {
         val accounts = addresses.map { userRepository.getSoraAccount(it) }
 
         val filename = if (addresses.size == 1) addresses.first() else "batch_exported_sora_accounts"
 
-        fileManager.writeExternalCacheText(
-            "$filename.json",
+        val json = try {
             credentialsRepository.generateJson(accounts, password)
-        )
+        } catch (error: SoraException) {
+            if (
+                accounts.size > 1 &&
+                error.errorResponseCode == ResponseCode.ACCOUNT_KEYS_NOT_EXPORTABLE
+            ) {
+                // Which ones: asked only now that the export was refused. Reads only.
+                val refused = accounts.filterNot {
+                    credentialsRepository.retrieveBackupMaterial(it).canSign
+                }
+                if (refused.isNotEmpty()) throw AccountsNotExportableException(refused)
+            }
+            throw error
+        }
+        fileManager.writeExternalCacheText("$filename.json", json)
     }
 
     suspend fun generateSubstrateJsonString(accounts: List<SoraAccount>, password: String) =
