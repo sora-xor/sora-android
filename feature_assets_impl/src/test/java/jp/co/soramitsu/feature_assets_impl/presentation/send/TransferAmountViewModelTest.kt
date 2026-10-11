@@ -401,6 +401,88 @@ class TransferAmountViewModelTest {
         verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
     }
 
+    private fun feeChanged() = IllegalStateException(
+        "EXTRINSIC_PRE_TRANSPORT_VALIDATION_FAILED",
+        IllegalStateException("SORA2_TRANSFER_FEE_CHANGED"),
+    )
+
+    @Test
+    fun `after a changed fee the new fee is shown and the next confirm sends with it`() =
+        runTest {
+            readyToConfirm()
+            val newFee = 0.09.toBigDecimal()
+            val sentWithFee = mutableListOf<BigDecimal>()
+            coEvery {
+                assetsInteractor.observeTransfer(recipientId, any(), any(), any(), WALLET_ID, false)
+            } answers {
+                val reviewedFee = arg<BigDecimal>(3)
+                sentWithFee += reviewedFee
+                // The signer accepts only the fee the network asks for now.
+                if (reviewedFee.compareTo(newFee) != 0) throw feeChanged()
+                TransactionOutcome.Confirmed(txHash, "0xblock")
+            }
+            val feeBefore = transferAmountViewModel.sendState.value.fee
+            // The network fee changed between review and confirm.
+            coEvery {
+                assetsInteractor.calcTransactionFee(recipientId, any(), any(), any())
+            } returns newFee
+
+            transferAmountViewModel.onConfirmClick()
+            advanceUntilIdle()
+
+            assertEquals(
+                "text-${R.string.tx_outcome_not_sent_title}" to
+                    "text-${R.string.tx_outcome_not_sent_fee_changed}",
+                transferAmountViewModel.alertDialogLiveData.value,
+            )
+            // "Check the new fee and confirm again": the new fee is on screen and Confirm is
+            // available. Before, the old fee stayed and Confirm sent it again, every time.
+            val state = transferAmountViewModel.sendState.value
+            assertTrue(state.fee.isNotEmpty())
+            assertTrue(state.fee != feeBefore)
+            assertFalse(state.feeLoading)
+            assertTrue(state.reviewEnabled)
+
+            transferAmountViewModel.onConfirmClick()
+            advanceUntilIdle()
+
+            assertEquals(2, sentWithFee.size)
+            assertEquals(0, sentWithFee[0].compareTo(networkFee))
+            assertEquals(0, sentWithFee[1].compareTo(newFee))
+            verify { assetsRouter.showTxDetails(txHash, true) }
+        }
+
+    @Test
+    fun `after a changed fee nothing can be confirmed until a new fee is known`() = runTest {
+        readyToConfirm()
+        var attempts = 0
+        coEvery {
+            assetsInteractor.observeTransfer(recipientId, any(), any(), any(), WALLET_ID, false)
+        } answers {
+            attempts += 1
+            throw feeChanged()
+        }
+        // The new fee cannot be read right now.
+        coEvery {
+            assetsInteractor.calcTransactionFee(recipientId, any(), any(), any())
+        } throws BoundedHttpTextException("BOUNDED_HTTP_IO")
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        val state = transferAmountViewModel.sendState.value
+        // The fee that is no longer valid is not left on screen.
+        assertEquals("", state.fee)
+        assertFalse(state.reviewEnabled)
+        assertFalse(state.feeLoading)
+        assertEquals(NetworkFeeUnavailable.NETWORK_UNREACHABLE, state.feeUnavailable)
+
+        // A further Confirm does not send the stale fee again.
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+        assertEquals(1, attempts)
+    }
+
     @Test
     fun `the same transfer still waiting needs a deliberate second confirmation`() = runTest {
         readyToConfirm()

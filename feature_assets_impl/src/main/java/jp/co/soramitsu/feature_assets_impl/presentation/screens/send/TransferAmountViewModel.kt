@@ -498,9 +498,45 @@ class TransferAmountViewModel @AssistedInject constructor(
                 }
                 is TransactionOutcome.RefusedByNode ->
                     showTransactionRefused(resourceManager, outcome)
-                null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
+                null -> {
+                    val error = checkNotNull(notSent)
+                    showTransactionNotSent(resourceManager, error)
+                    if (error.isFeeChanged()) showNewFee(amount)
+                }
             }
         }
+    }
+
+    /**
+     * The network fee is no longer the one that was reviewed, so nothing was sent. The dialog
+     * says "check the new fee and confirm again": the reviewed fee is dropped and asked again
+     * for the same token and amount. Confirm is off while that runs and comes back with the new
+     * fee on screen. Without this the old fee stayed, and every further Confirm ended the same
+     * way until the amount was edited.
+     */
+    private suspend fun showNewFee(amount: BigDecimal) {
+        val feeAsset = feeAsset
+        if (feeAsset == null) {
+            invalidateFeeReview()
+            return
+        }
+        // The fee that is no longer valid is not left on screen while the new one is asked.
+        _sendState.value = _sendState.value.copy(fee = "", feeFiat = "")
+        guarded {
+            calcTransactionFee(feeAsset, amount)
+            checkEnteredAmount(amount)
+        }
+    }
+
+    private fun Throwable.isFeeChanged(): Boolean {
+        var current: Throwable? = this
+        var depth = 0
+        while (current != null && depth < MAX_CAUSE_DEPTH) {
+            if (current.message == FEE_CHANGED_CODE) return true
+            current = current.cause?.takeIf { it !== current }
+            depth += 1
+        }
+        return false
     }
 
     private fun checkEnteredAmount(amount: BigDecimal) {
@@ -626,5 +662,11 @@ class TransferAmountViewModel @AssistedInject constructor(
             reviewEnabled = false,
         )
         return feeReviewRevision
+    }
+
+    private companion object {
+        // requireExactSora2TransferFee: the fee at signing is not the reviewed one.
+        const val FEE_CHANGED_CODE = "SORA2_TRANSFER_FEE_CHANGED"
+        const val MAX_CAUSE_DEPTH = 16
     }
 }
