@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_assets_impl.data
 
 import androidx.room.withTransaction
+import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -75,6 +76,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+
+/**
+ * Longest wait for one balance read of the last check before a transfer leaves the phone. An
+ * answer normally takes well under a second.
+ */
+internal const val FRESH_BALANCE_READ_TIMEOUT_MILLIS = 15_000L
 
 class AssetsRepositoryImpl @Inject constructor(
     private val db: AppDatabase,
@@ -244,7 +252,16 @@ class AssetsRepositoryImpl @Inject constructor(
         }
     }
 
-    /** Runs at ExtrinsicManager's last pre-transport boundary against fresh chain storage. */
+    /**
+     * Runs at ExtrinsicManager's last pre-transport boundary against fresh chain storage.
+     *
+     * This is the one read of a transfer that goes over the selected node's WebSocket, and it
+     * runs while the wallet lock is held. A disconnected socket keeps a request queued without
+     * any time limit, and switching to another node needs the same lock, so an unanswered read
+     * would leave the transfer spinning on a node the app could no longer leave. Each read
+     * therefore gets [FRESH_BALANCE_READ_TIMEOUT_MILLIS]; when it passes, the transfer ends as
+     * "not sent" (nothing was handed to the network yet) and the lock is released.
+     */
     private suspend fun requireExactTransferBalances(
         from: String,
         token: Token,
@@ -252,7 +269,7 @@ class AssetsRepositoryImpl @Inject constructor(
         exactFee: BigInteger,
     ) {
         val xorTransferable = BalanceWrapper.calcTransferable(
-            substrateCalls.fetchXORBalances(from)
+            freshBalanceRead { substrateCalls.fetchXORBalances(from) }
         )
         val xorRequired = exactFee + if (
             token.id == SubstrateOptionsProvider.feeAssetId
@@ -265,15 +282,23 @@ class AssetsRepositoryImpl @Inject constructor(
             "SORA2_TRANSFER_XOR_BALANCE_INSUFFICIENT"
         }
         if (token.id != SubstrateOptionsProvider.feeAssetId) {
-            val assetBalances = substrateCalls.fetchTransferableBalances(
-                from,
-                listOf(token.id),
-            )
+            val assetBalances = freshBalanceRead {
+                substrateCalls.fetchTransferableBalances(
+                    from,
+                    listOf(token.id),
+                )
+            }
             check(assetBalances.size == 1 && assetBalances.single() >= transferAmount) {
                 "SORA2_TRANSFER_ASSET_BALANCE_INSUFFICIENT"
             }
         }
     }
+
+    private suspend fun <T : Any> freshBalanceRead(read: suspend () -> T): T =
+        withTimeoutOrNull(FRESH_BALANCE_READ_TIMEOUT_MILLIS) { read() }
+            // An IOException: screens say that the network could not be reached and that
+            // nothing was sent.
+            ?: throw IOException("SORA2_TRANSFER_BALANCE_READ_TIMED_OUT")
 
     override fun subscribeAsset(address: String, tokenId: String): Flow<Asset?> = flow {
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
