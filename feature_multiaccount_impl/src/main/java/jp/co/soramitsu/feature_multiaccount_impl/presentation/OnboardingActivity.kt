@@ -169,6 +169,14 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
          */
         IMPORT_RECOVERY_PHRASE,
 
+        /**
+         * Import account with its list of sources open (recovery phrase, raw seed, backup file,
+         * and Google where the build has it). Opened from the options of an account that cannot
+         * sign and has no recovery phrase (imported by raw seed or from a backup file): the
+         * same import restores its keys in place.
+         */
+        IMPORT_CHOOSE_SOURCE,
+
         /** Straight to the Google sign-in, to restore a read-only account from its backup. */
         IMPORT_FROM_GOOGLE,
     }
@@ -408,6 +416,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                     Entry.WELCOME -> Unit
                     Entry.IMPORT_RECOVERY_PHRASE ->
                         viewModel.onRecoveryClicked(navController, 1, asFirstScreen = true)
+                    Entry.IMPORT_CHOOSE_SOURCE -> viewModel.onRecoveryDialogShow()
                     Entry.IMPORT_FROM_GOOGLE -> viewModel.onGoogleSignin(navController, launcher)
                 }
             }

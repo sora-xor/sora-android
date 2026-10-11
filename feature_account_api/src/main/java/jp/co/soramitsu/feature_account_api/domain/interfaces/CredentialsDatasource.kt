@@ -118,6 +118,12 @@ interface CredentialsDatasource {
     suspend fun markKeySetsNeedingPhrase(exceptIds: Set<String>) = Unit
 
     /**
+     * Takes [ids] out of the marker again, in one edit, after their wallets were proven with
+     * their own recovery phrase, raw seed or backup file. Writes only the marker.
+     */
+    suspend fun unmarkKeySetsNeedingPhrase(ids: Set<String>) = Unit
+
+    /**
      * Checks that every id in [requiredCoverage] holds stored credentials and that the selection
      * is one of [walletIds]. Key sets of other addresses (without an account) are ignored.
      */

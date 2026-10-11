@@ -316,6 +316,29 @@ class SoraPreferences(
         }
     }
 
+    /**
+     * Takes [ids] out of [WalletPreferenceKeys.RETAINED_NEEDS_PHRASE], in one edit. Called only
+     * after the person proved those key sets with their own recovery phrase, raw seed or backup
+     * file: from then on the key set is theirs again, like any other wallet on this phone.
+     * Only the marker is written (it is removed when no id is left): no key value is read,
+     * changed, moved or removed, and nothing is written at all when none of [ids] is marked.
+     */
+    suspend fun unmarkKeySetsNeedingPhrase(ids: Set<String>) {
+        if (ids.isEmpty()) return
+        val marker = stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)
+        val marked = WalletPreferenceKeys.decodeRetainedNeedsPhrase(dataStore.data.first()[marker])
+        if (marked.none { it in ids }) return
+        dataStore.edit { preferences ->
+            val current = WalletPreferenceKeys.decodeRetainedNeedsPhrase(preferences[marker])
+            val left = current - ids
+            when {
+                left.size == current.size -> Unit
+                left.isEmpty() -> preferences.remove(marker)
+                else -> preferences[marker] = WalletPreferenceKeys.encodeRetainedNeedsPhrase(left)
+            }
+        }
+    }
+
     suspend fun previewWalletDeletion(
         stringFields: Set<String>,
         booleanFields: Set<String>,

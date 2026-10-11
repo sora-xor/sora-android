@@ -372,6 +372,7 @@ class MultiaccountInteractor @Inject constructor(
     private suspend fun repairJsonDraft(draft: WalletDraft): SoraAccount {
         val exists = requireNotAlreadyUsable(draft)
         credentialsRepository.repairWithDraft(draft)
+        userRepository.keySetProvenByItsBackup(draft.address)
         val account = finishImport(draft, exists)
         if (!exists) markWalletWithoutPhrase(account)
         return account
@@ -430,6 +431,11 @@ class MultiaccountInteractor @Inject constructor(
             }
             throw error
         }
+        // The stored keys are this wallet's and the person just entered its phrase, seed or
+        // backup file: a "needs its recovery phrase" mark on this key set has done its job.
+        // Before the account is added, so a failure here leaves nothing half done and trying
+        // again repeats both steps.
+        userRepository.keySetProvenByItsBackup(draft.address)
         return finishImport(draft, exists)
     }
 
@@ -444,6 +450,7 @@ class MultiaccountInteractor @Inject constructor(
             try {
                 val exists = requireNotAlreadyUsable(draft)
                 credentialsRepository.repairWithDraft(draft)
+                userRepository.keySetProvenByItsBackup(draft.address)
                 finishImport(draft, exists)
             } finally {
                 draft.destroy()
@@ -629,6 +636,16 @@ class MultiaccountInteractor @Inject constructor(
     private suspend fun requireNotAlreadyUsable(draft: WalletDraft): Boolean {
         if (!userRepository.accountExists(draft.address)) return false
         if (draft.address !in userRepository.unavailableWalletIds()) {
+            // The person entered the secret of an account that already signs here. If its key
+            // set still carries a "needs its recovery phrase" mark (an earlier import could not
+            // take it off), this proof takes it off. The answer below does not depend on it.
+            try {
+                userRepository.keySetProvenByItsBackup(draft.address)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                // The mark stays; nothing else changed.
+            }
             if (credentialsRepository.addMissingBackup(draft)) {
                 // The value is stored; recording what it proves is repeated by the next start
                 // when it cannot be done now.
@@ -814,7 +831,9 @@ class MultiaccountInteractor @Inject constructor(
      * is saved here, remove), or null when the account can sign. Reads only.
      */
     suspend fun unavailableWalletOptions(address: String): UnavailableWalletOptions? =
-        userRepository.unavailableWalletOptions(address)
+        // Reads every stored value of the account through the Keystore: never on the caller's
+        // (main) thread.
+        keyWork { userRepository.unavailableWalletOptions(address) }
 
     suspend fun setCurSoraAccount(account: SoraAccount) {
         userRepository.setCurSoraAccount(account)

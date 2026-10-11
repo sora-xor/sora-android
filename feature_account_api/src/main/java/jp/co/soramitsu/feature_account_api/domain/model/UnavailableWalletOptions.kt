@@ -67,8 +67,11 @@ data class UnavailableWalletOptions(
     val showPhraseBeforeRemoval: Boolean = false,
     /**
      * Release-era keys that derive this address are stored on the phone. Removing the account
-     * keeps them, and "Restore wallets found on this phone" (`adoptRetainedWallet`) makes the
-     * account usable again from them without the phrase.
+     * keeps them. While another account stays on the phone (and with it the PIN), "Wallets
+     * found on this phone" (`adoptRetainedWallet`) can make the account usable again from them
+     * without the phrase. When the removed account is the only one, the PIN goes with it and
+     * that copy is marked: afterwards only the wallet's own recovery phrase, raw seed or backup
+     * file brings it back (`WalletPreferenceKeys.RETAINED_NEEDS_PHRASE`).
      */
     val hasReleaseEraCopy: Boolean = false,
     /**
@@ -102,6 +105,14 @@ enum class UnavailableWalletReason {
 
     /** The account is marked watch-only: it never had a key on this phone. */
     WATCH_ONLY,
+
+    /**
+     * A complete, readable signing key is stored, and nothing has judged it yet: the account's
+     * identity was never recorded as unavailable (for example the row an upgrade created before
+     * the first check finished). Nothing is claimed about the key. The check at the next start,
+     * or restoring the keys, settles it.
+     */
+    NOT_CHECKED,
 }
 
 /**

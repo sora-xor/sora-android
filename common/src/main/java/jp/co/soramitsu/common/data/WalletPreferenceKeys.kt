@@ -70,6 +70,9 @@ object WalletPreferenceKeys {
      * also removes the app PIN, so nothing the previous owner knew protects those key sets any
      * more: they can be brought back only by entering their own recovery phrase, raw seed or
      * backup file (which adopts the stored keys unchanged), never by "Restore this wallet".
+     * A key set that no account used when a PIN was set for the first time is named the same
+     * way. Once its wallet is imported with that phrase, seed or file, its id is taken out
+     * again: the person has proven it, and it is protected by their PIN like any other.
      *
      * The value is a comma-separated list of key-set ids: the address a credential key is
      * suffixed with, or [RETAINED_UNSUFFIXED_ID] for the release-era unsuffixed set. It is

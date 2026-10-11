@@ -186,6 +186,27 @@ class OnboardingViewModelTest {
         assertNull(onboardingViewModel?.recoveryState?.value)
     }
 
+    @Test
+    fun `the list of sources opened for a repair leads to raw seed and backup file`() = runTest {
+        // Account options, "Use a raw seed or backup file" (OnboardingActivity.Entry
+        // IMPORT_CHOOSE_SOURCE) opens Import account with this list showing. Each source goes to
+        // its own step, with the welcome screen kept underneath (Back returns to the list).
+        whenever(resourceManager.getString(R.string.recovery_input_raw_seed_hint)).thenReturn("raw label")
+        onboardingViewModel.onRecoveryDialogShow()
+        assertEquals(true, onboardingViewModel.recoveryDialog.value)
+
+        onboardingViewModel.onRecoveryClicked(navController, 2)
+
+        assertEquals(false, onboardingViewModel.recoveryDialog.value)
+        assertEquals(RecoveryType.SEED, onboardingViewModel.recoveryState.value?.recoveryType)
+
+        onboardingViewModel.onRecoveryDialogShow()
+        onboardingViewModel.onRecoveryClicked(navController, 3)
+
+        assertEquals(false, onboardingViewModel.recoveryDialog.value)
+        assertEquals(RecoveryType.JSON, onboardingViewModel.recoveryState.value?.recoveryType)
+    }
+
     private fun stubWordCountText() {
         whenever(resourceManager.getString(R.string.export_protection_passphrase_description_words))
             .thenReturn("the %1\$s-word passphrase")
