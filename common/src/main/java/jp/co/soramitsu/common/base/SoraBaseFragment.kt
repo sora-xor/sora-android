@@ -41,8 +41,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -51,7 +49,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarResult
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -62,7 +59,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.navigation.NavGraphBuilder
@@ -74,15 +70,12 @@ import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountOptionsRouter
-import jp.co.soramitsu.common.account.SelectedAccountSigning
 import jp.co.soramitsu.common.account.SelectedAccountSigningSource
 import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.AlertDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyNotice
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.SelectedAccountSigningHost
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.BuildUtils
@@ -233,14 +226,6 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                         }
                     }
 
-                    // Whether the selected account can sign on this phone, for every screen
-                    // this fragment hosts. In read-only mode of the whole app the home banner
-                    // speaks instead (and an account cannot be repaired until that ends).
-                    val signingFlow = remember { selectedAccountSigningSource.flow() }
-                    val signing = signingFlow
-                        .collectAsState(initial = SelectedAccountSigning.NONE).value
-                    val accountReadOnly = signing.readOnly && !rememberWalletReadOnly()
-
                     Scaffold(
                         scaffoldState = scaffoldState,
                         backgroundColor = backgroundColorComposable(),
@@ -257,37 +242,24 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                             )
                         }
                     ) { padding ->
-                        CompositionLocalProvider(
-                            LocalSelectedAccountReadOnly provides accountReadOnly,
+                        // Whether the selected account can sign on this phone, for every
+                        // screen this fragment hosts: the notice above a signing form, and the
+                        // state its action button reads.
+                        SelectedAccountSigningHost(
+                            source = selectedAccountSigningSource,
+                            explainsReadOnlyAccount = explainsReadOnlyAccount,
+                            onRepair = accountOptionsRouter::showAccountDetails,
+                            modifier = Modifier.padding(padding),
                         ) {
-                            Column(
+                            NavHost(
                                 modifier = Modifier
-                                    .padding(padding)
-                                    .fillMaxSize(),
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                navController = navController,
+                                contentAlignment = Alignment.TopCenter,
+                                startDestination = viewModel.startScreen(),
                             ) {
-                                if (explainsReadOnlyAccount && accountReadOnly) {
-                                    AccountReadOnlyNotice(
-                                        modifier = Modifier.padding(
-                                            start = 16.dp,
-                                            end = 16.dp,
-                                            bottom = 12.dp,
-                                        ),
-                                        compact = true,
-                                        onRepair = {
-                                            accountOptionsRouter.showAccountDetails(signing.address)
-                                        },
-                                    )
-                                }
-                                NavHost(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .weight(1f),
-                                    navController = navController,
-                                    contentAlignment = Alignment.TopCenter,
-                                    startDestination = viewModel.startScreen(),
-                                ) {
-                                    content(scrollState, navController)
-                                }
+                                content(scrollState, navController)
                             }
                         }
                         AlertDialogContent(openAlertDialog)
