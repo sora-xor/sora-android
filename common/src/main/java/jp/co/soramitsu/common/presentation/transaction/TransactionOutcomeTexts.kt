@@ -120,6 +120,12 @@ object TransactionOutcomeTexts {
                 when {
                     error.hasMessageInChain(FEE_CHANGED_CODE) ->
                         R.string.tx_outcome_not_sent_fee_changed
+                    // The signer refused before anything was built. Trying again does not help,
+                    // so the text says why instead of asking for another try.
+                    error.hasMessageInChain(RECOVERY_READ_ONLY_CODE) ->
+                        R.string.safe_mode_read_only_details
+                    SIGNING_UNAVAILABLE_CODES.any { error.hasMessageInChain(it) } ->
+                        R.string.tx_outcome_not_sent_account_unavailable
                     NetworkFeeUnavailable.from(error) ==
                         NetworkFeeUnavailable.NETWORK_UNREACHABLE ->
                         R.string.tx_outcome_not_sent_network
@@ -151,5 +157,14 @@ object TransactionOutcomeTexts {
     }
 
     private const val FEE_CHANGED_CODE = "SORA2_TRANSFER_FEE_CHANGED"
+
+    // WalletRecoveryCapabilityGate.requireUserMutationAllowed
+    private const val RECOVERY_READ_ONLY_CODE = "WALLET_RECOVERY_READ_ONLY"
+
+    // WalletSigningGate.unavailableReason: this account may not sign on this phone right now.
+    private val SIGNING_UNAVAILABLE_CODES = listOf(
+        "SIGNING_WALLET_UNAVAILABLE",
+        "WALLET_DELETION_ACTIVE",
+    )
     private const val MAX_CAUSE_DEPTH = 16
 }
