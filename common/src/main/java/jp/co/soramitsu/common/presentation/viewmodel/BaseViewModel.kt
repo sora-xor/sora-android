@@ -38,11 +38,15 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavOptionsBuilder
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.base.ConfirmDialogData
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
+import jp.co.soramitsu.common.presentation.transaction.TransactionOutcomeTexts
 import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 
@@ -51,6 +55,7 @@ open class BaseViewModel : ViewModel() {
     val errorLiveData = SingleLiveEvent<String>()
     val errorFromResourceLiveData = SingleLiveEvent<Pair<Int, Int>>()
     val alertDialogLiveData = SingleLiveEvent<Pair<String, String>>()
+    val confirmDialogLiveData = SingleLiveEvent<ConfirmDialogData>()
     val snackBarLiveData = SingleLiveEvent<SnackBarState>()
     val copiedToast = SingleLiveEvent<Unit>()
 
@@ -144,5 +149,44 @@ open class BaseViewModel : ViewModel() {
     protected open fun onError(errorMessageResource: Int) {
         errorFromResourceLiveData.value =
             R.string.common_error_general_title to errorMessageResource
+    }
+
+    /**
+     * A transaction could not be prepared, so nothing reached the network. Unlike [onError] this
+     * always tells the user, whatever the error type: a confirm button must never end in silence.
+     */
+    protected fun showTransactionNotSent(resourceManager: ResourceManager, error: Throwable) {
+        if (error is SoraException) {
+            onError(error)
+            return
+        }
+        FirebaseWrapper.recordException(error)
+        val text = TransactionOutcomeTexts.notSent(resourceManager, error)
+        alertDialogLiveData.setValue(text.title to text.message)
+    }
+
+    /** The node refused the transaction before broadcast: a failure, with its reason. */
+    protected fun showTransactionRefused(
+        resourceManager: ResourceManager,
+        outcome: TransactionOutcome.RefusedByNode,
+    ) {
+        val text = TransactionOutcomeTexts.refused(resourceManager, outcome)
+        alertDialogLiveData.setValue(text.title to text.message)
+    }
+
+    /**
+     * The same action for this account is still waiting for confirmation. Sending it again needs
+     * a deliberate second confirmation; dismissing the question sends nothing.
+     */
+    protected fun askBeforeSendingAgain(resourceManager: ResourceManager, sendAgain: () -> Unit) {
+        confirmDialogLiveData.setValue(
+            ConfirmDialogData(
+                title = resourceManager.getString(R.string.tx_outcome_duplicate_title),
+                message = resourceManager.getString(R.string.tx_outcome_duplicate_message),
+                confirmText = resourceManager.getString(R.string.tx_outcome_duplicate_send_again),
+                dismissText = resourceManager.getString(R.string.tx_outcome_duplicate_wait),
+                onConfirm = sendAgain,
+            )
+        )
     }
 }

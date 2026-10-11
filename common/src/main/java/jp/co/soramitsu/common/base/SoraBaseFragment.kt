@@ -72,6 +72,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.AlertDialogContent
+import jp.co.soramitsu.common.presentation.compose.components.ConfirmDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -131,6 +132,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                     val scrollState = rememberScrollState()
                     val coroutineScope = rememberCoroutineScope()
                     val openAlertDialog = remember { mutableStateOf(AlertDialogData()) }
+                    val openConfirmDialog = remember { mutableStateOf<ConfirmDialogData?>(null) }
 
                     val navController = rememberNavController()
                     LaunchedEffect(Unit) {
@@ -189,6 +191,9 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                                 message = message,
                             )
                         }
+                        viewModel.confirmDialogLiveData.observe {
+                            openConfirmDialog.value = it
+                        }
 
                         viewModel.snackBarLiveData.observe {
                             coroutineScope.launch {
@@ -237,6 +242,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                             content(scrollState, navController)
                         }
                         AlertDialogContent(openAlertDialog)
+                        ConfirmDialogContent(openConfirmDialog)
                     }
                 }
             }

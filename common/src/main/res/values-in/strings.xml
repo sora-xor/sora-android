@@ -613,4 +613,32 @@
   <string name="safe_mode_retained_restored">Restored. It is now in your accounts.</string>
   <string name="safe_mode_retained_not_restorable">This wallet can\'t be restored from the keys on this phone. Import its recovery phrase or seed instead.</string>
   <string name="safe_mode_restored_wallet_name">Restored wallet</string>
+  <!-- at1-submit-status: truthful transaction status on every screen (audit A5) -->
+  <string name="tx_outcome_badge_confirmed">Transaction\nconfirmed</string>
+  <string name="tx_outcome_badge_failed">Transaction\nfailed</string>
+  <string name="tx_outcome_badge_not_sent">Not sent</string>
+  <string name="tx_outcome_confirmed_title">Confirmed</string>
+  <string name="tx_outcome_confirmed_message">The network confirmed this transaction.</string>
+  <string name="tx_outcome_waiting_title">Submitted, waiting for confirmation</string>
+  <string name="tx_outcome_failed_title">Transaction failed</string>
+  <string name="tx_outcome_refused_title">The network did not accept this transaction</string>
+  <string name="tx_outcome_not_sent_title">Not sent</string>
+  <string name="tx_outcome_note_waiting">Submitted. The network has not confirmed it yet; this usually takes less than a minute. Please don\'t send it again. The status here and in Activity updates by itself.</string>
+  <string name="tx_outcome_note_uncertain">SORA could not confirm that the network received this transaction. It is being checked, and the status here and in Activity updates by itself. Please don\'t send it again until the result is shown.</string>
+  <string name="tx_outcome_note_failed_on_chain">The network processed this transaction and it failed. It did not move any funds. The network fee was charged.</string>
+  <string name="tx_outcome_note_failed_on_chain_reason">Reason reported by the network: %1$s</string>
+  <string name="tx_outcome_note_not_included">The network did not include this transaction before it expired. Nothing was sent and no fee was charged. You can try again.</string>
+  <string name="tx_outcome_note_refused_fee">The network did not accept this transaction because the account can\'t pay the network fee right now. Some of your XOR may be locked, for example by staking or voting. Nothing was sent and no fee was charged.</string>
+  <string name="tx_outcome_note_refused_busy">The network was too busy to take this transaction. Nothing was sent and no fee was charged. Please try again in a moment.</string>
+  <string name="tx_outcome_note_refused_invalid">The network checked this transaction and did not accept it. Nothing was sent and no fee was charged.</string>
+  <string name="tx_outcome_note_network_message">Network message: %1$s</string>
+  <string name="tx_outcome_not_sent_network">SORA couldn\'t reach the network to prepare this transaction. Nothing was sent. Check your internet connection and try again.</string>
+  <string name="tx_outcome_not_sent_fee_changed">The network fee changed while you were reviewing. Nothing was sent. Check the new fee and confirm again.</string>
+  <string name="tx_outcome_not_sent_generic">This transaction couldn\'t be prepared. Nothing was sent and no fee was charged. Please try again.</string>
+  <string name="tx_outcome_duplicate_title">An earlier one is still waiting</string>
+  <string name="tx_outcome_duplicate_message">You already sent this action from this account, and the network has not confirmed it yet. If you send it again, it may be carried out twice. You can follow the first one in Activity.</string>
+  <string name="tx_outcome_duplicate_send_again">Send again anyway</string>
+  <string name="tx_outcome_duplicate_wait">Wait</string>
+  <string name="tx_outcome_claim_waiting">Your claim was submitted and the network has not confirmed it yet. Please don\'t submit it again. Check back in a few minutes.</string>
+  <string name="tx_outcome_screen_needs_network">This screen needs the SORA network to check fees, and it can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
 </resources>
