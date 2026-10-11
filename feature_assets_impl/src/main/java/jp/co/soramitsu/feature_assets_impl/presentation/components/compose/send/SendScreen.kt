@@ -62,6 +62,8 @@ import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetwork
 import jp.co.soramitsu.common.presentation.compose.components.NetworkFeeUnavailableNotice
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyReason
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.testTagAsId
@@ -94,6 +96,7 @@ internal fun SendScreen(
     feeUnavailable: NetworkFeeUnavailable? = null,
     onRetryFee: () -> Unit = {},
     readOnly: Boolean = rememberWalletReadOnly(),
+    accountReadOnly: Boolean = LocalSelectedAccountReadOnly.current,
 ) {
     SendScreenAddress(
         address = address,
@@ -142,12 +145,16 @@ internal fun SendScreen(
     if (readOnly) {
         // U9: sending is off in read-only mode; the reason sits above the disabled button.
         ReadOnlyReason(modifier = Modifier.padding(bottom = Dimens.x2))
+    } else if (accountReadOnly) {
+        // The selected account cannot sign on this phone. The notice above the form says why
+        // and offers the repair; the button is off instead of failing at the last step.
+        AccountReadOnlyReason(modifier = Modifier.padding(bottom = Dimens.x2))
     }
     FilledButton(
         modifier = Modifier
             .testTagAsId("ReviewButton")
             .fillMaxWidth(),
-        enabled = reviewEnabled && !readOnly,
+        enabled = reviewEnabled && !readOnly && !accountReadOnly,
         text = stringResource(id = R.string.review),
         size = Size.Large,
         order = Order.PRIMARY,

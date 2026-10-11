@@ -53,6 +53,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -64,6 +65,8 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyTags
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyChip
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.extension.noRippleClickable
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
@@ -88,6 +91,7 @@ fun TopBar(
     account: String,
     onAccountClick: () -> Unit,
     onQrClick: () -> Unit,
+    readOnly: Boolean = false,
 ) {
     Row(
         modifier = Modifier
@@ -114,6 +118,13 @@ fun TopBar(
                 style = MaterialTheme.customTypography.displayS,
                 color = MaterialTheme.customColors.fgPrimary,
             )
+            if (readOnly) {
+                ReadOnlyChip(
+                    modifier = Modifier
+                        .padding(start = Dimens.x1)
+                        .testTag(AccountReadOnlyTags.CHIP),
+                )
+            }
             Icon(
                 modifier = Modifier.wrapContentWidth(),
                 painter = painterResource(R.drawable.ic_arrows_chevron_right_rounded_24),

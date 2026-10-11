@@ -63,6 +63,12 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 @AndroidEntryPoint
 class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
 
+    /**
+     * Bonding, unbonding and setting a referrer signs with the selected account. When that account cannot sign on this phone, the
+     * screen says so above the form and offers the repair (`SoraBaseFragment`).
+     */
+    override val explainsReadOnlyAccount: Boolean = true
+
     override val viewModel: ReferralViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

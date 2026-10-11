@@ -59,6 +59,7 @@ import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmo
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.ClaimDemeterFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.EditFarmFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.FarmDetailsFragment
+import jp.co.soramitsu.common.account.AccountOptionsRouter
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.util.action
@@ -82,7 +83,8 @@ class Navigator :
     ReferralRouter,
     SelectNodeRouter,
     PolkaswapRouter,
-    AssetsRouter {
+    AssetsRouter,
+    AccountOptionsRouter {
 
     private var navController: NavController? = null
 
@@ -135,7 +137,13 @@ class Navigator :
     }
 
     override fun popBackStackToAccountList() {
-        navController?.popBackStack(R.id.accountListFragment, false)
+        val navController = navController ?: return
+        // Account options is also opened from the home screen (the backup banner, the read-only
+        // notice). The account list is then not on the back stack: return to the home screen
+        // instead of staying on a screen about an account that is gone.
+        if (!navController.popBackStack(R.id.accountListFragment, false)) {
+            navController.popBackStack(R.id.cardsHubFragment, false)
+        }
     }
 
     override fun popBackStackToAccountDetails() {
