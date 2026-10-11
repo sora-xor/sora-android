@@ -914,6 +914,46 @@ class TransactionHistoryRepositoryTest {
         }
 
     @Test
+    fun `a transaction the indexer lists is never said to be not sent because its row expired`() =
+        runTest {
+            val hash = TestTransactions.txHistoryItem.id.lowercase()
+            val tokens = listOf(TestTokens.xorToken, TestTokens.valToken)
+            suspend fun listed() = transactionHistoryRepository
+                .getLastTransactions(TestAccounts.soraAccount, tokens, 1, null)
+                .single()
+            // The entry as the indexer gives it while this device has no journal row for it.
+            val asIndexed = listed()
+
+            // The app's own scan of the validity window ended without finding the transaction
+            // (a block read from a node that was behind, for example), so the journal row
+            // expired as "not included". The indexer lists the transaction: it is in a block.
+            coEvery {
+                walletIdentityDao.getSora2SubmissionOverlayRows(
+                    TestAccounts.soraAccount.substrateAddress
+                )
+            } returns listOf(
+                pendingSora2(hash).copy(
+                    state = Sora2PendingSubmissionLocal.STATE_EXPIRED_NOT_INCLUDED,
+                    submissionIsAmbiguous = false,
+                    terminalFinalizedHeight = 130,
+                )
+            )
+            details(swapDetails(hash))
+
+            val shown = listed()
+
+            // Before: REJECTED with "The network did not include this transaction ... Nothing
+            // was sent and no fee was charged. You can try again", and neither the block nor,
+            // on its page, the fee and the explorer link.
+            assertEquals(TransactionStatus.COMMITTED, asIndexed.base.status)
+            assertEquals(asIndexed.base.status, shown.base.status)
+            assertEquals(null, shown.base.statusDetail)
+            assertEquals(TestTransactions.txHistoryItem.blockHash, shown.base.blockHash)
+            assertEquals(asIndexed.base.blockHash, shown.base.blockHash)
+            assertEquals(asIndexed.base.fee, shown.base.fee)
+        }
+
+    @Test
     fun `a transaction that failed on chain carries the reported runtime error`() = runTest {
         val hash = "0x" + "a7".repeat(32)
         journal(
