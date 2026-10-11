@@ -42,10 +42,12 @@ import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.util.WalletDecryptionException
+import jp.co.soramitsu.common.util.WalletStorageFailures
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException
+import jp.co.soramitsu.feature_account_api.domain.model.UnavailableWalletOptions
 import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
@@ -485,25 +487,100 @@ class MultiaccountInteractor @Inject constructor(
             StoredPin.Unreadable -> if (!screenLockConfirmed) {
                 throw SoraException.businessError(ResponseCode.REPAIR_NEEDS_SCREEN_LOCK)
             }
-            is StoredPin.Set -> {
-                val locked = pinLockRemainingMillis()
-                if (locked > 0) throw RepairPinLockedException(locked)
-                if (MessageDigest.isEqual(stored.value.toByteArray(), pin.toByteArray())) {
-                    userRepository.resetTriesUsed()
-                    userRepository.resetTimerStartedTimestamp()
-                    return
-                }
-                val tries = userRepository.retrievePinTriesUsed() + 1
-                userRepository.savePinTriesUsed(tries)
-                val lock = pinLockMillis(tries)
-                if (lock > 0) {
-                    userRepository.saveTimerStartedTimestamp(now())
-                    throw RepairPinLockedException(lock)
-                }
-                throw SoraException.businessError(ResponseCode.WRONG_PIN_CODE)
-            }
+            is StoredPin.Set -> requireCountedPin(stored, pin)
         }
     }
+
+    /**
+     * Compares [pin] with the stored PIN under the PIN screen's own rules: refused while PIN
+     * entry is locked, a wrong entry is counted by the same persistent counter and starts the
+     * same lock timer, and a correct one resets them.
+     */
+    private suspend fun requireCountedPin(stored: StoredPin.Set, pin: String) {
+        val locked = pinLockRemainingMillis()
+        if (locked > 0) throw RepairPinLockedException(locked)
+        if (MessageDigest.isEqual(stored.value.toByteArray(), pin.toByteArray())) {
+            userRepository.resetTriesUsed()
+            userRepository.resetTimerStartedTimestamp()
+            return
+        }
+        val tries = userRepository.retrievePinTriesUsed() + 1
+        userRepository.savePinTriesUsed(tries)
+        val lock = pinLockMillis(tries)
+        if (lock > 0) {
+            userRepository.saveTimerStartedTimestamp(now())
+            throw RepairPinLockedException(lock)
+        }
+        throw SoraException.businessError(ResponseCode.WRONG_PIN_CODE)
+    }
+
+    /**
+     * "Wallets found on this phone", as onboarding offers it: complete key sets that no account
+     * uses and that the PIN stored on this phone still protects. Empty when no PIN is stored or
+     * it cannot be read (there is then nothing the person can prove here; importing a wallet's
+     * recovery phrase adopts its keys), and a key set left by "Remove all accounts" is never in
+     * it. Reads only.
+     */
+    suspend fun walletsRestorableWithPin(): List<String> {
+        if (storedPin() !is StoredPin.Set) return emptyList()
+        return userRepository.retainedWallets()
+            .filterNot { it.needsRecoveryPhrase }
+            .map { it.address }
+    }
+
+    /** What "Restore these wallets" did. */
+    class RetainedRestoreResult(
+        val restored: List<SoraAccount>,
+        /**
+         * Key sets whose stored keys could not be proven to be the wallet's. Nothing was
+         * changed for them; importing the wallet's recovery phrase is the way to bring it back.
+         */
+        val notRestorable: List<String>,
+    )
+
+    /**
+     * Restores the wallets [walletsRestorableWithPin] lists, after the PIN that is stored on
+     * this phone was entered ([pin], counted like on the PIN screen: [RepairPinLockedException]
+     * once locked, `WRONG_PIN_CODE` otherwise). Each wallet's stored keys are proven to derive
+     * its address before its account is added; no key material is written, moved or deleted.
+     * The first restored wallet becomes the selected one when none is selected.
+     */
+    suspend fun restoreRetainedWallets(pin: String, accountName: String): RetainedRestoreResult =
+        keyWork {
+            WalletMutationCoordinator.withLock {
+                val stored = storedPin() as? StoredPin.Set
+                    ?: throw SoraException.businessError(ResponseCode.WRONG_PIN_CODE)
+                requireCountedPin(stored, pin)
+                val restored = mutableListOf<SoraAccount>()
+                val notRestorable = mutableListOf<String>()
+                userRepository.retainedWallets()
+                    .filterNot { it.needsRecoveryPhrase }
+                    .forEach { wallet ->
+                        try {
+                            restored += userRepository.adoptRetainedWallet(
+                                address = wallet.address,
+                                accountName = accountName,
+                                // An account that is already selected stays selected.
+                                makeCurrent = false,
+                            )
+                        } catch (error: CancellationException) {
+                            throw error
+                        } catch (error: Exception) {
+                            if (isStorageFailure(error)) throw error
+                            notRestorable += wallet.address
+                        }
+                    }
+                RetainedRestoreResult(restored, notRestorable)
+            }
+        }
+
+    /**
+     * A Keystore or storage failure says nothing about a wallet: it ends the action so it can
+     * be tried again, and is never recorded as "this wallet cannot be restored".
+     */
+    private fun isStorageFailure(error: Throwable): Boolean =
+        WalletStorageFailures.isTransient(error) ||
+            WalletStorageFailures.isKeyMaterialUnavailable(error)
 
     /** How long PIN entry is still locked by the PIN screen's timer; 0 when it is not. */
     private suspend fun pinLockRemainingMillis(): Long {
@@ -591,7 +668,21 @@ class MultiaccountInteractor @Inject constructor(
     /** Stores the draft's keys and adds its account in one step under the wallet lock. */
     suspend fun createUserFromDraft(draft: WalletDraft): SoraAccount =
         WalletMutationCoordinator.withLock {
-            check(!userRepository.accountExists(draft.address)) { "WALLET_DRAFT_ALREADY_ACCOUNT" }
+            if (userRepository.accountExists(draft.address)) {
+                // A new wallet's address is random, so an account with it can only come from an
+                // earlier attempt to finish this same flow that added the account and then
+                // failed (for example on a full disk). Trying again finishes that attempt; it
+                // must be an account that signs, and nothing is written to its keys.
+                check(draft.address !in userRepository.unavailableWalletIds()) {
+                    "WALLET_DRAFT_ALREADY_ACCOUNT"
+                }
+                val existing = userRepository.getSoraAccount(draft.address)
+                userRepository.setCurSoraAccount(existing)
+                userRepository.saveNeedsMigration(false, existing)
+                userRepository.saveIsMigrationFetched(true, existing)
+                saveRegistrationStateFinished()
+                return@withLock existing
+            }
             val soraAccount = credentialsRepository.commitDraft(draft)
             createUser(soraAccount)
             saveRegistrationStateFinished()
@@ -711,6 +802,19 @@ class MultiaccountInteractor @Inject constructor(
     fun flowCurSoraAccount(): Flow<SoraAccount> = userRepository.flowCurSoraAccount()
 
     fun flowSoraAccountsList(): Flow<List<SoraAccount>> = userRepository.flowSoraAccountsList()
+
+    /**
+     * The accounts that are listed but cannot sign on this phone, kept current (a label follows
+     * a repair at once). Reads only.
+     */
+    fun flowUnavailableWalletIds(): Flow<Set<String>> = userRepository.flowUnavailableWalletIds()
+
+    /**
+     * The forward paths of a read-only account (restore its keys in place, show the backup that
+     * is saved here, remove), or null when the account can sign. Reads only.
+     */
+    suspend fun unavailableWalletOptions(address: String): UnavailableWalletOptions? =
+        userRepository.unavailableWalletOptions(address)
 
     suspend fun setCurSoraAccount(account: SoraAccount) {
         userRepository.setCurSoraAccount(account)

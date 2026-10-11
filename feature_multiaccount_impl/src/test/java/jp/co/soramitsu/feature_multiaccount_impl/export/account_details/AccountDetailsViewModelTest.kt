@@ -48,6 +48,9 @@ import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details.AccountDetailsViewModel
+import jp.co.soramitsu.feature_account_api.domain.model.UnavailableWalletOptions
+import jp.co.soramitsu.feature_account_api.domain.model.UnavailableWalletReason
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ReadOnlyAccountUi
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountDetailsScreenState
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -60,10 +63,14 @@ import jp.co.soramitsu.xbackup.domain.models.Seed
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -72,6 +79,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.verifyNoMoreInteractions
@@ -115,11 +123,37 @@ class AccountDetailsViewModelTest {
 
     private val account = SoraAccount("address", "accountName")
 
+    /** The accounts that cannot sign on this phone, as the repository reports them. */
+    private val unavailable = MutableStateFlow<Set<String>>(emptySet())
+
+    private fun readOnlyOptions(
+        reason: UnavailableWalletReason = UnavailableWalletReason.KEY_NOT_USABLE,
+        canShowPhraseAfterPin: Boolean = true,
+    ) = UnavailableWalletOptions(
+        walletId = account.substrateAddress,
+        canRepairWithPhrase = true,
+        canRemoveAndImport = true,
+        canShowPhraseAfterPin = canShowPhraseAfterPin,
+        showPhraseBeforeRemoval = canShowPhraseAfterPin,
+        reason = reason,
+    )
+
+    private fun viewModel(cloudBackup: Boolean = true) = AccountDetailsViewModel(
+        multiAccInteractor,
+        mainRouter,
+        resourceManager,
+        copy,
+        jp.co.soramitsu.common.backup.CloudBackupProvider(cloudBackup) { backupService },
+        coroutineManager,
+        account.substrateAddress,
+    )
+
     @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
         given(multiAccInteractor.getSoraAccount(account.substrateAddress)).willReturn(account)
         given(multiAccInteractor.getMnemonic(account)).willReturn("mne mo nic")
+        given(multiAccInteractor.flowUnavailableWalletIds()).willReturn(unavailable)
         given(coroutineManager.io).willReturn(this.coroutineContext[CoroutineDispatcher])
         given(coroutineManager.main).willReturn(Dispatchers.Main)
         given(backupService.isAccountBackedUp("address")).willReturn(true)
@@ -166,6 +200,130 @@ class AccountDetailsViewModelTest {
             ),
             state,
         )
+    }
+
+    @Test
+    fun `an account that signs has no read-only panel`() = runTest {
+        advanceUntilIdle()
+
+        assertNull(accountDetailsViewModel.accountDetailsScreenState.value?.readOnly)
+        // Nothing to restore: the actions of the panel do nothing.
+        accountDetailsViewModel.onRestoreKeysWithPhrase()
+        accountDetailsViewModel.onRestoreKeysFromGoogle()
+        assertNull(accountDetailsViewModel.restoreKeysEvent.value)
+    }
+
+    @Test
+    fun `a read-only account shows why and what can be done`() = runTest {
+        unavailable.value = setOf(account.substrateAddress)
+        given(multiAccInteractor.unavailableWalletOptions(account.substrateAddress))
+            .willReturn(readOnlyOptions(UnavailableWalletReason.KEY_UNREADABLE))
+
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        assertEquals(
+            ReadOnlyAccountUi(
+                reason = UnavailableWalletReason.KEY_UNREADABLE,
+                canRestoreWithPhrase = true,
+                canRestoreFromGoogle = true,
+                canShowBackup = true,
+                canRemove = true,
+            ),
+            viewModel.accountDetailsScreenState.value?.readOnly,
+        )
+        // The rest of the screen is as for any account.
+        assertEquals(account.substrateAddress, viewModel.accountDetailsScreenState.value?.address)
+        assertEquals(true, viewModel.accountDetailsScreenState.value?.isMnemonicAvailable)
+    }
+
+    @Test
+    fun `restore from Google Drive is not offered where Google backup is unavailable`() = runTest {
+        unavailable.value = setOf(account.substrateAddress)
+        given(multiAccInteractor.unavailableWalletOptions(account.substrateAddress))
+            .willReturn(readOnlyOptions())
+
+        val viewModel = viewModel(cloudBackup = false)
+        advanceUntilIdle()
+
+        val panel = requireNotNull(viewModel.accountDetailsScreenState.value?.readOnly)
+        assertTrue(panel.canRestoreWithPhrase)
+        assertFalse(panel.canRestoreFromGoogle)
+        viewModel.onRestoreKeysFromGoogle()
+        assertNull(viewModel.restoreKeysEvent.value)
+    }
+
+    @Test
+    fun `restoring keys opens Import account at the chosen step and keeps the account`() = runTest {
+        unavailable.value = setOf(account.substrateAddress)
+        given(multiAccInteractor.unavailableWalletOptions(account.substrateAddress))
+            .willReturn(readOnlyOptions())
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onRestoreKeysWithPhrase()
+        assertEquals(AccountDetailsViewModel.RestoreKeys.WITH_PHRASE, viewModel.restoreKeysEvent.value)
+
+        viewModel.onRestoreKeysFromGoogle()
+        assertEquals(AccountDetailsViewModel.RestoreKeys.FROM_GOOGLE, viewModel.restoreKeysEvent.value)
+
+        // Neither is a removal.
+        verify(mainRouter, never()).showPinForLogout(account.substrateAddress)
+    }
+
+    @Test
+    fun `the saved backup of a read-only account is shown after the PIN, phrase first`() = runTest {
+        unavailable.value = setOf(account.substrateAddress)
+        given(multiAccInteractor.unavailableWalletOptions(account.substrateAddress))
+            .willReturn(readOnlyOptions())
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onShowSavedBackup()
+
+        verify(mainRouter).showExportPassphraseProtection(account.substrateAddress)
+    }
+
+    @Test
+    fun `without a matching phrase the saved backup opens the raw seed screen`() = runTest {
+        unavailable.value = setOf(account.substrateAddress)
+        given(multiAccInteractor.getMnemonic(account)).willReturn("")
+        given(multiAccInteractor.unavailableWalletOptions(account.substrateAddress))
+            .willReturn(readOnlyOptions())
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onShowSavedBackup()
+
+        verify(mainRouter).showExportSeedProtection(account.substrateAddress)
+    }
+
+    @Test
+    fun `the panel goes away as soon as the account's keys are restored`() = runTest {
+        unavailable.value = setOf(account.substrateAddress)
+        given(multiAccInteractor.unavailableWalletOptions(account.substrateAddress))
+            .willReturn(readOnlyOptions())
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        assertNotNull(viewModel.accountDetailsScreenState.value?.readOnly)
+
+        unavailable.value = emptySet()
+        advanceUntilIdle()
+
+        assertNull(viewModel.accountDetailsScreenState.value?.readOnly)
+    }
+
+    @Test
+    fun `removing a read-only account goes through the PIN and the removal screen`() = runTest {
+        unavailable.value = setOf(account.substrateAddress)
+        given(multiAccInteractor.unavailableWalletOptions(account.substrateAddress))
+            .willReturn(readOnlyOptions())
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onLogout()
+
+        verify(mainRouter).showPinForLogout(account.substrateAddress)
     }
 
     @Test

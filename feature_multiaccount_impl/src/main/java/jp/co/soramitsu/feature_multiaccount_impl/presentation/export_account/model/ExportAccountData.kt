@@ -40,4 +40,9 @@ data class ExportAccountData(
     val isSelectedAction: Boolean,
     val icon: Drawable,
     val account: SoraAccount,
+    /**
+     * The account is listed but cannot sign on this phone: its row says so. It can still be
+     * selected (balances and history show) and repaired from its options.
+     */
+    val readOnly: Boolean = false,
 )

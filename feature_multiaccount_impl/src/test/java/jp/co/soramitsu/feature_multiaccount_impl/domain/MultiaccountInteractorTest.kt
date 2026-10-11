@@ -35,7 +35,10 @@ package jp.co.soramitsu.feature_multiaccount_impl.domain
 import io.mockk.coVerifyOrder
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
+import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException
+import jp.co.soramitsu.feature_account_api.domain.model.RetainedWallet
 import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
@@ -410,6 +413,143 @@ class MultiaccountInteractorTest {
             userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
         }
     }
+
+    @Test
+    fun `finishing a new wallet again after the account was already added completes that attempt`() =
+        runTest {
+            // The first try added the account and failed afterwards (for example a full disk
+            // while the registration state was saved). Trying again must not end in
+            // WALLET_DRAFT_ALREADY_ACCOUNT for ever.
+            val draft = draft("cnNew", "New")
+            val added = SoraAccount("cnNew", "New")
+            coEvery { userRepository.accountExists("cnNew") } returns true
+            coEvery { userRepository.unavailableWalletIds() } returns emptySet()
+            coEvery { userRepository.getSoraAccount("cnNew") } returns added
+
+            assertEquals(added, multiaccountInteractor.createUserFromDraft(draft))
+
+            coVerify(exactly = 0) { credentialsRepository.commitDraft(any()) }
+            coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+            coVerifyOrder {
+                userRepository.setCurSoraAccount(added)
+                userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+            }
+        }
+
+    @Test
+    fun `a new wallet never takes over an account that cannot sign`() = runTest {
+        val draft = draft("cnNew", "New")
+        coEvery { userRepository.accountExists("cnNew") } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns setOf("cnNew")
+
+        val error = runCatching { multiaccountInteractor.createUserFromDraft(draft) }.exceptionOrNull()
+
+        assertEquals("WALLET_DRAFT_ALREADY_ACCOUNT", error?.message)
+        coVerify(exactly = 0) { userRepository.setCurSoraAccount(any()) }
+        coVerify(exactly = 0) { credentialsRepository.commitDraft(any()) }
+    }
+
+    // ---- "Wallets found on this phone", behind the stored PIN --------------------------------
+
+    @Test
+    fun `wallets found on this phone are offered only behind a PIN that is stored and readable`() =
+        runTest {
+            coEvery { userRepository.retainedWallets() } returns listOf(
+                RetainedWallet("cnKept", needsRecoveryPhrase = false),
+                RetainedWallet("cnLeftByRemoveAll", needsRecoveryPhrase = true),
+            )
+
+            coEvery { userRepository.retrievePin() } returns "135790"
+            assertEquals(listOf("cnKept"), multiaccountInteractor.walletsRestorableWithPin())
+
+            // No PIN: nothing the person could prove here.
+            coEvery { userRepository.retrievePin() } returns ""
+            assertEquals(emptyList<String>(), multiaccountInteractor.walletsRestorableWithPin())
+
+            // A PIN that cannot be read confirms nothing either.
+            coEvery { userRepository.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+            assertEquals(emptyList<String>(), multiaccountInteractor.walletsRestorableWithPin())
+        }
+
+    @Test
+    fun `the stored PIN restores the wallets found on this phone and never one left by Remove all accounts`() =
+        runTest {
+            coEvery { userRepository.retrievePin() } returns "135790"
+            coEvery { userRepository.retainedWallets() } returns listOf(
+                RetainedWallet("cnA", needsRecoveryPhrase = false),
+                RetainedWallet("cnLeftByRemoveAll", needsRecoveryPhrase = true),
+                RetainedWallet("cnB", needsRecoveryPhrase = false),
+            )
+            coEvery { userRepository.adoptRetainedWallet("cnA", "Restored", false) } returns
+                SoraAccount("cnA", "Restored")
+            coEvery { userRepository.adoptRetainedWallet("cnB", "Restored", false) } throws
+                IllegalStateException("RETAINED_WALLET_ADDRESS_MISMATCH")
+
+            val result = multiaccountInteractor.restoreRetainedWallets("135790", "Restored")
+
+            assertEquals(listOf(SoraAccount("cnA", "Restored")), result.restored)
+            assertEquals(listOf("cnB"), result.notRestorable)
+            coVerify(exactly = 0) { userRepository.adoptRetainedWallet("cnLeftByRemoveAll", any(), any()) }
+        }
+
+    @Test
+    fun `a wrong PIN restores nothing and is counted like on the PIN screen`() = runTest {
+        coEvery { userRepository.retrievePin() } returns "135790"
+        coEvery { userRepository.retainedWallets() } returns
+            listOf(RetainedWallet("cnA", needsRecoveryPhrase = false))
+        multiaccountInteractor.now = { 1_000_000L }
+
+        repeat(2) {
+            val error = runCatching {
+                multiaccountInteractor.restoreRetainedWallets("000000", "Restored")
+            }.exceptionOrNull()
+            assertEquals(ResponseCode.WRONG_PIN_CODE, (error as? SoraException)?.errorResponseCode)
+        }
+        // The third wrong entry locks PIN entry, here and on the PIN screen.
+        val locked = runCatching {
+            multiaccountInteractor.restoreRetainedWallets("000000", "Restored")
+        }.exceptionOrNull()
+        assertTrue(locked is RepairPinLockedException)
+        assertEquals(3, pinTries)
+        assertEquals(1_000_000L, pinLockStartedAt)
+        // While locked, the right PIN is refused too.
+        val stillLocked = runCatching {
+            multiaccountInteractor.restoreRetainedWallets("135790", "Restored")
+        }.exceptionOrNull()
+        assertTrue(stillLocked is RepairPinLockedException)
+
+        coVerify(exactly = 0) { userRepository.adoptRetainedWallet(any(), any(), any()) }
+    }
+
+    @Test
+    fun `without a stored PIN nothing is restored from the phone`() = runTest {
+        coEvery { userRepository.retrievePin() } returns ""
+        coEvery { userRepository.retainedWallets() } returns
+            listOf(RetainedWallet("cnA", needsRecoveryPhrase = false))
+
+        val error = runCatching {
+            multiaccountInteractor.restoreRetainedWallets("", "Restored")
+        }.exceptionOrNull()
+
+        assertEquals(ResponseCode.WRONG_PIN_CODE, (error as? SoraException)?.errorResponseCode)
+        coVerify(exactly = 0) { userRepository.adoptRetainedWallet(any(), any(), any()) }
+    }
+
+    @Test
+    fun `a storage failure while restoring ends the action instead of calling a wallet not restorable`() =
+        runTest {
+            coEvery { userRepository.retrievePin() } returns "135790"
+            coEvery { userRepository.retainedWallets() } returns
+                listOf(RetainedWallet("cnA", needsRecoveryPhrase = false))
+            coEvery { userRepository.adoptRetainedWallet("cnA", any(), any()) } throws
+                KeyMaterialUnavailableException("KEYSTORE_UNAVAILABLE", transient = true)
+
+            val error = runCatching {
+                multiaccountInteractor.restoreRetainedWallets("135790", "Restored")
+            }.exceptionOrNull()
+
+            assertTrue(error is KeyMaterialUnavailableException)
+        }
 
     @Test
     fun `import from an encrypted JSON file stores the key pair and adds the account`() = runTest {

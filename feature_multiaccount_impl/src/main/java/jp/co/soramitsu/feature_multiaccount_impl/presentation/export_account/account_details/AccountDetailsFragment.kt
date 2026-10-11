@@ -64,6 +64,7 @@ import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.presentation.args.address
 import jp.co.soramitsu.common.presentation.compose.components.animatedComposable
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingActivity
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.backup_password.BackupPasswordScreen
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -106,6 +107,20 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
         (activity as BottomBarController).hideBottomBar()
         viewModel.consentExceptionHandler.observe {
             consentHandlerLauncher?.launch(it)
+        }
+        viewModel.restoreKeysEvent.observe { how ->
+            // Import account opens at the chosen step. Entering this account's recovery phrase
+            // (or restoring its Google backup) there repairs its keys in place.
+            OnboardingActivity.start(
+                context = requireContext(),
+                isClearTask = false,
+                entry = when (how) {
+                    AccountDetailsViewModel.RestoreKeys.WITH_PHRASE ->
+                        OnboardingActivity.Entry.IMPORT_RECOVERY_PHRASE
+                    AccountDetailsViewModel.RestoreKeys.FROM_GOOGLE ->
+                        OnboardingActivity.Entry.IMPORT_FROM_GOOGLE
+                },
+            )
         }
     }
 
@@ -180,6 +195,9 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                         },
                         viewModel::onLogout,
                         viewModel::onAddressCopy,
+                        onRestoreKeysWithPhrase = viewModel::onRestoreKeysWithPhrase,
+                        onRestoreKeysFromGoogle = viewModel::onRestoreKeysFromGoogle,
+                        onShowSavedBackup = viewModel::onShowSavedBackup,
                     )
                 }
             }
