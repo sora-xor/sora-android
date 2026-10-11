@@ -41,13 +41,17 @@ import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.presentation.transaction.TransactionOutcomeTexts
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -65,6 +69,8 @@ class ClaimViewModel @Inject constructor(
 
     private val _claimScreenState = SingleLiveEvent<ClaimState>()
     val claimScreenState: LiveData<ClaimState> = _claimScreenState
+
+    private var waitingClaimJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -99,10 +105,11 @@ class ClaimViewModel @Inject constructor(
 
     /**
      * Submits the claim and shows exactly what is known afterwards. Only a claim the network
-     * confirmed (or already had) is stored as done, and only one that failed on chain as failed.
-     * A claim that is still waiting is said to be waiting and is never stored as failed. While
-     * an earlier transaction of the account is unresolved the claim gate sends nothing, and the
-     * screen says so. The progress mark is cleared on every path that keeps the screen open.
+     * confirmed (or already had) is stored as done, and only one that was included and failed
+     * there as failed. A claim that is still waiting is said to be waiting, is never stored as
+     * failed, and this screen then continues by itself once the network has it. While an earlier
+     * transaction of the account is unresolved the claim gate sends nothing, and the screen says
+     * so. The progress mark is cleared on every path that keeps the screen open.
      */
     fun nextButtonClicked() {
         viewModelScope.launch {
@@ -136,10 +143,18 @@ class ClaimViewModel @Inject constructor(
                 outcome is TransactionOutcome.Waiting -> {
                     setLoading(false)
                     showClaimWaiting()
+                    followWaitingClaim()
                 }
                 outcome is TransactionOutcome.FailedOnChain -> {
                     setLoading(false)
-                    saveStatus(MigrationStatus.FAILED)
+                    if (outcome.reason == TransactionChainFailure.EXECUTION_FAILED) {
+                        saveStatus(MigrationStatus.FAILED)
+                    } else {
+                        // Never included: nothing happened on chain, so nothing is stored and
+                        // the claim can simply be submitted again.
+                        val text = TransactionOutcomeTexts.describe(resourceManager, outcome)
+                        alertDialogLiveData.setValue(text.title to text.message)
+                    }
                 }
                 outcome is TransactionOutcome.RefusedByNode -> {
                     setLoading(false)
@@ -158,6 +173,33 @@ class ClaimViewModel @Inject constructor(
     private fun setLoading(loading: Boolean) {
         _claimScreenState.value?.let {
             _claimScreenState.value = it.copy(loading = loading)
+        }
+    }
+
+    /**
+     * A waiting claim is resolved by the network, not by this screen. So that the person is not
+     * left looking at a screen that never changes, the network is asked at intervals whether it
+     * has the claim, for as long as the submitted transaction can still be included, and the
+     * screen closes as soon as it does. Nothing is signed or sent from here, and a read that
+     * fails (for example while offline) is simply repeated at the next interval.
+     */
+    private fun followWaitingClaim() {
+        waitingClaimJob?.cancel()
+        waitingClaimJob = viewModelScope.launch {
+            repeat(WAITING_CLAIM_CHECKS) {
+                delay(WAITING_CLAIM_CHECK_INTERVAL_MILLIS)
+                val claimed = try {
+                    withContext(coroutineManager.io) { !walletInteractor.needsMigration() }
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (_: Throwable) {
+                    false
+                }
+                if (claimed) {
+                    saveStatus(MigrationStatus.SUCCESS)
+                    return@launch
+                }
+            }
         }
     }
 
@@ -187,5 +229,12 @@ class ClaimViewModel @Inject constructor(
     private companion object {
         const val EARLIER_CLAIM_UNRESOLVED = "SORA2_LEGACY_MIGRATION_ALREADY_UNRESOLVED"
         const val MAX_CAUSE_DEPTH = 16
+
+        /**
+         * Ten seconds apart for eight minutes: a submitted transaction can be included for 64
+         * blocks (about six and a half minutes), after which it can no longer change anything.
+         */
+        const val WAITING_CLAIM_CHECK_INTERVAL_MILLIS = 10_000L
+        const val WAITING_CLAIM_CHECKS = 48
     }
 }

@@ -638,7 +638,7 @@
   <string name="tx_outcome_duplicate_message">You already sent this action from this account, and the network has not confirmed it yet. If you send it again, it may be carried out twice. You can follow the first one in Activity.</string>
   <string name="tx_outcome_duplicate_send_again">Send again anyway</string>
   <string name="tx_outcome_duplicate_wait">Wait</string>
-  <string name="tx_outcome_claim_waiting">Your claim was submitted and the network has not confirmed it yet. Please don\'t submit it again. Check back in a few minutes.</string>
+  <string name="tx_outcome_claim_waiting">Your claim was submitted and the network has not confirmed it yet. Please don\'t submit it again. This screen continues by itself once the claim is confirmed. You can also close the app and come back later.</string>
   <string name="tx_outcome_claim_blocked">An earlier transaction from this account is still being checked, so the claim was not sent. Please try again in a few minutes.</string>
   <string name="tx_outcome_screen_needs_network">This screen needs the SORA network to check fees, and it can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
   <string name="tx_outcome_not_sent_account_unavailable">This account can\'t sign transactions on this phone right now, so nothing was sent and no fee was charged. Your keys were not changed and your funds are safe on the blockchain.</string>
