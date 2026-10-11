@@ -39,15 +39,18 @@ class PiValidatedHistoryCache private constructor(
     private val directory: File,
     private val json: Json,
     private val nowEpochMillis: () -> Long,
+    private val indexerClock: PiIndexerClock,
 ) {
     @Inject
     constructor(
         @ApplicationContext context: Context,
         json: Json,
+        indexerClock: PiIndexerClock,
     ) : this(
         directory = File(context.noBackupFilesDir, DIRECTORY_NAME),
         json = json,
         nowEpochMillis = System::currentTimeMillis,
+        indexerClock = indexerClock,
     )
 
     internal constructor(
@@ -55,7 +58,8 @@ class PiValidatedHistoryCache private constructor(
         json: Json,
         nowEpochMillis: () -> Long,
         @Suppress("UNUSED_PARAMETER") testOnly: Unit,
-    ) : this(directory, json, nowEpochMillis)
+        indexerClock: PiIndexerClock = PiIndexerClock(),
+    ) : this(directory, json, nowEpochMillis, indexerClock)
 
     private val mutex = Mutex()
 
@@ -186,7 +190,16 @@ class PiValidatedHistoryCache private constructor(
                     health = payload.health,
                     endReached = payload.endReached,
                     totalCount = payload.totalCount,
-                ).also { validateRecord(request, it, payload.savedAtEpochMillis) }
+                ).also {
+                    validateRecord(
+                        request = request,
+                        record = it,
+                        savedAtEpochMillis = payload.savedAtEpochMillis,
+                        // Files written before the reference was stored used the phone's clock.
+                        healthReferenceEpochSeconds = payload.healthReferenceEpochSeconds
+                            ?: (payload.savedAtEpochMillis / 1_000),
+                    )
+                }
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
@@ -218,12 +231,16 @@ class PiValidatedHistoryCache private constructor(
         record: PiValidatedHistoryRecord,
     ) = withContext(Dispatchers.IO) {
         val savedAt = nowEpochMillis()
-        validateRecord(request, record, savedAt)
+        // The indexer's own time now, as the health check that admitted this data measured it.
+        // The phone's clock still says when the file was saved and when it is too old.
+        val healthReference = indexerClock.indexerEpochSeconds(savedAt / 1_000)
+        validateRecord(request, record, savedAt, healthReference)
         val key = requestKey(request)
         val payload = CachePayload(
             requestKey = key,
             request = request,
             savedAtEpochMillis = savedAt,
+            healthReferenceEpochSeconds = healthReference,
             health = record.health,
             items = record.items,
             endReached = record.endReached,
@@ -297,10 +314,18 @@ class PiValidatedHistoryCache private constructor(
         request: CacheRequest,
         record: PiValidatedHistoryRecord,
         savedAtEpochMillis: Long,
+        healthReferenceEpochSeconds: Long,
     ) {
         check(timestampIsValid(savedAtEpochMillis)) {
             "PI_VALIDATED_HISTORY_CACHE_TIMESTAMP_INVALID"
         }
+        // The indexer's clock is trusted only as far as a live health check trusts it.
+        val referenceAhead = healthReferenceEpochSeconds - savedAtEpochMillis / 1_000
+        check(
+            healthReferenceEpochSeconds >= 0 &&
+                referenceAhead in
+                -PI_MAX_DEVICE_CLOCK_SKEW_SECONDS..PI_MAX_DEVICE_CLOCK_SKEW_SECONDS
+        ) { "PI_VALIDATED_HISTORY_CACHE_TIMESTAMP_INVALID" }
         check(record.items.map(IndexerHistoryElement::id).distinct().size == record.items.size) {
             "PI_INDEXER_DUPLICATE_TRANSACTION"
         }
@@ -310,7 +335,7 @@ class PiValidatedHistoryCache private constructor(
             health = record.health,
             maximumRecords = request.maximumRecords,
         )
-        validateHealth(record.health, savedAtEpochMillis)
+        validateHealth(record.health, healthReferenceEpochSeconds)
         when (request.operation) {
             OPERATION_PAGE -> {
                 val endReached = checkNotNull(record.endReached) {
@@ -339,9 +364,15 @@ class PiValidatedHistoryCache private constructor(
         }
     }
 
+    /**
+     * [referenceEpochSeconds] is the indexer's own time when the record was saved: the phone's
+     * clock corrected by what the health check measured from the HTTP `Date`
+     * ([PiIndexerClock]). Judging the indexer's timestamps against the uncorrected phone clock
+     * refused every save on a phone 45 seconds slow or six minutes fast (audit LIVE-13).
+     */
     private fun validateHealth(
         health: PiIndexerHealth,
-        savedAtEpochMillis: Long,
+        referenceEpochSeconds: Long,
     ) {
         check(
             health.ok &&
@@ -371,16 +402,15 @@ class PiValidatedHistoryCache private constructor(
         val indexed = health.latestIndexedBlock?.let(::parseUnsignedLong) ?: workerIndexed
         val workerTimestamp = parseUnsignedLong(health.workerLastSuccessfulIndexTimestamp)
         val indexedTimestamp = health.latestIndexedAt?.let(::parseUnsignedLong) ?: workerTimestamp
-        val savedAtSeconds = savedAtEpochMillis / 1_000
-        val earliest = if (savedAtSeconds >= MAXIMUM_HEALTH_AGE_SECONDS) {
-            savedAtSeconds - MAXIMUM_HEALTH_AGE_SECONDS
+        val earliest = if (referenceEpochSeconds >= MAXIMUM_HEALTH_AGE_SECONDS) {
+            referenceEpochSeconds - MAXIMUM_HEALTH_AGE_SECONDS
         } else {
             0L
         }
-        val latest = if (savedAtSeconds > Long.MAX_VALUE - MAXIMUM_FUTURE_SKEW_SECONDS) {
+        val latest = if (referenceEpochSeconds > Long.MAX_VALUE - MAXIMUM_FUTURE_SKEW_SECONDS) {
             Long.MAX_VALUE
         } else {
-            savedAtSeconds + MAXIMUM_FUTURE_SKEW_SECONDS
+            referenceEpochSeconds + MAXIMUM_FUTURE_SKEW_SECONDS
         }
         check(
             indexed > 0 &&
@@ -599,6 +629,8 @@ class PiValidatedHistoryCache private constructor(
         val items: List<IndexerHistoryElement>,
         val endReached: Boolean? = null,
         val totalCount: Int? = null,
+        /** The indexer's own time at [savedAtEpochMillis]; absent in files of earlier builds. */
+        val healthReferenceEpochSeconds: Long? = null,
     )
 
     @Serializable

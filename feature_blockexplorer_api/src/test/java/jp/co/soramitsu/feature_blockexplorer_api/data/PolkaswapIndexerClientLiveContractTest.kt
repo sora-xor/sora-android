@@ -155,14 +155,43 @@ class PolkaswapIndexerClientLiveContractTest {
             // The health check follows the indexer host's own clock (HTTP Date): a phone ten
             // minutes slow or three hours fast still qualifies the live indexer.
             listOf(-10 * 60_000L, 3 * 60 * 60_000L).forEach { offsetMillis ->
+                val phoneClock = { System.currentTimeMillis() + offsetMillis }
+                val indexerClock = PiIndexerClock()
                 val skewed = PolkaswapIndexerClient(
                     boundedHttpTextClient = http,
                     json = json,
                     responseCache = cache,
-                    nowEpochMillis = { System.currentTimeMillis() + offsetMillis },
+                    nowEpochMillis = phoneClock,
                     nowMonotonicNanos = System::nanoTime,
+                    indexerClock = indexerClock,
                 )
                 assertThat(skewed.requireHealthy().ok).isTrue()
+
+                // What that phone loaded is also saved for offline use, and read back.
+                val last = skewed.getLastTransactionsQualified(ACTIVE_ACCOUNT, count = 5)
+                val receipt = PiHistoryCheckpointValidator.validate(
+                    elements = last.value,
+                    expectedAddress = ACTIVE_ACCOUNT,
+                    health = last.health,
+                    maximumRecords = 5,
+                    canonicalBlockHash = ::canonicalBlockHash,
+                )
+                val directory = File(cacheDirectory, "validated-$offsetMillis")
+                val store = PiValidatedHistoryCache(
+                    directory = directory,
+                    json = json,
+                    nowEpochMillis = phoneClock,
+                    testOnly = Unit,
+                    indexerClock = indexerClock,
+                )
+                store.storeLast(ACTIVE_ACCOUNT, count = 5, validation = receipt)
+                val reopened = PiValidatedHistoryCache(
+                    directory = directory,
+                    json = json,
+                    nowEpochMillis = phoneClock,
+                    testOnly = Unit,
+                )
+                assertThat(reopened.readLast(ACTIVE_ACCOUNT, 5)?.items).isEqualTo(last.value)
             }
         }
 
