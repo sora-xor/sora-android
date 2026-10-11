@@ -47,8 +47,11 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.domain.TransactionChainFailure
+import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.presentation.transaction.TransactionOutcomeTexts
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -62,6 +65,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.emptyTxD
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatusDetail
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
@@ -105,15 +109,54 @@ class TxDetailsViewModel @AssistedInject constructor(
             ),
         )
         viewModelScope.launch {
-            calcState()
+            // A failed read (offline, database busy) keeps the page as it is; the next change of
+            // the local transactions refreshes it. It must never end the app.
+            tryCatch { calcState() }
         }
         transactionHistoryHandler.flowLocalTransactions()
             .drop(1)
             .catch { onError(it) }
             .onEach {
-                calcState()
+                tryCatch { calcState() }
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun statusNote(detail: TransactionStatusDetail): String = when (detail.kind) {
+        TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION ->
+            TransactionOutcomeTexts.waitingNote(resourceManager, acceptedByNode = true)
+        TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN ->
+            TransactionOutcomeTexts.waitingNote(resourceManager, acceptedByNode = false)
+        TransactionStatusDetail.Kind.FAILED_ON_CHAIN ->
+            TransactionOutcomeTexts.failedOnChainNote(
+                resourceManager,
+                TransactionChainFailure.EXECUTION_FAILED,
+                detail.text,
+            )
+        TransactionStatusDetail.Kind.NOT_INCLUDED ->
+            TransactionOutcomeTexts.failedOnChainNote(
+                resourceManager,
+                TransactionChainFailure.NOT_INCLUDED,
+                null,
+            )
+        TransactionStatusDetail.Kind.REFUSED_CANNOT_PAY_FEE ->
+            TransactionOutcomeTexts.refusedNote(
+                resourceManager,
+                TransactionNodeRefusal.CANNOT_PAY_FEE,
+                detail.text,
+            )
+        TransactionStatusDetail.Kind.REFUSED_NETWORK_BUSY ->
+            TransactionOutcomeTexts.refusedNote(
+                resourceManager,
+                TransactionNodeRefusal.NETWORK_BUSY,
+                detail.text,
+            )
+        TransactionStatusDetail.Kind.REFUSED_NOT_VALID ->
+            TransactionOutcomeTexts.refusedNote(
+                resourceManager,
+                TransactionNodeRefusal.NOT_VALID,
+                detail.text,
+            )
     }
 
     private suspend fun calcState() {
@@ -586,11 +629,18 @@ class TxDetailsViewModel @AssistedInject constructor(
 
             null -> emptyTxDetailsState
         }
-        _txDetailsScreenState.value = explorerUrl?.let {
+        val statusDetail = transaction?.base?.statusDetail
+        _txDetailsScreenState.value = if (transaction == null) {
+            screenState
+        } else {
             screenState.copy(
-                basicTxDetailsState = screenState.basicTxDetailsState.copy(explorerUrl = it)
+                basicTxDetailsState = screenState.basicTxDetailsState.copy(
+                    // A transaction that never reached a block has no explorer page.
+                    explorerUrl = explorerUrl.takeUnless { statusDetail?.neverOnChain == true },
+                    statusNote = statusDetail?.let(::statusNote),
+                )
             )
-        } ?: screenState
+        }
     }
 
     fun onCopyClicked(text: String) {

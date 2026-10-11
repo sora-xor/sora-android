@@ -52,7 +52,54 @@ class TransactionBase(
     val fee: BigDecimal,
     var status: TransactionStatus,
     val timestamp: Long,
+    /**
+     * Why a transaction sent from this device has its [status]. Null for ordinary history and
+     * for a confirmed transaction, where the status says everything.
+     */
+    var statusDetail: TransactionStatusDetail? = null,
 )
+
+/**
+ * The reason behind the status of a transaction sent from this device, taken from the durable
+ * status journal. [text] is a short technical text reported by the network (a runtime error or
+ * the node's refusal message); it is untrusted and shown as plain text only.
+ */
+data class TransactionStatusDetail(
+    val kind: Kind,
+    val text: String? = null,
+) {
+    enum class Kind {
+        /** The node took the transaction; it is not in a finalized block yet. */
+        WAITING_FOR_CONFIRMATION,
+
+        /** The node's answer was lost; the transaction may or may not have been received. */
+        SUBMISSION_UNCERTAIN,
+
+        /** Included in a finalized block and failed there; the fee was charged. */
+        FAILED_ON_CHAIN,
+
+        /** Never included before it expired; nothing happened and no fee was charged. */
+        NOT_INCLUDED,
+
+        /** The node refused it before broadcast: the account cannot pay the fee. */
+        REFUSED_CANNOT_PAY_FEE,
+
+        /** The node refused it before broadcast: its transaction queue did not take it. */
+        REFUSED_NETWORK_BUSY,
+
+        /** The node refused it before broadcast: not valid right now. */
+        REFUSED_NOT_VALID,
+    }
+
+    val isRefusal: Boolean
+        get() = kind == Kind.REFUSED_CANNOT_PAY_FEE ||
+            kind == Kind.REFUSED_NETWORK_BUSY ||
+            kind == Kind.REFUSED_NOT_VALID
+
+    /** True when the transaction never reached a block, so an explorer has nothing to show. */
+    val neverOnChain: Boolean
+        get() = isRefusal || kind == Kind.NOT_INCLUDED
+}
 
 sealed class Transaction(
     val base: TransactionBase,
