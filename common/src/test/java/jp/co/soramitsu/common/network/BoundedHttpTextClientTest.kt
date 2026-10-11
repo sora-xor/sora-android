@@ -4,11 +4,14 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.io.OutputStream
+import java.net.ConnectException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.zip.GZIPOutputStream
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +21,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -97,7 +101,7 @@ class BoundedHttpTextClientTest {
                 connection.requestHeaders["Cache-Control"],
             )
             assertEquals("no-cache", connection.requestHeaders["Pragma"])
-            assertEquals("identity", connection.requestHeaders["Accept-Encoding"])
+            assertEquals("gzip", connection.requestHeaders["Accept-Encoding"])
             assertTrue(connection.disconnected)
         }
     }
@@ -181,7 +185,7 @@ class BoundedHttpTextClientTest {
         val encoded = FakeHttpConnection(
             url = URL("https://runtime.example/encoded"),
             status = 200,
-            headers = mapOf("Content-Encoding" to "gzip"),
+            headers = mapOf("Content-Encoding" to "br"),
             body = "compressed".toByteArray(),
         )
         val encodingError = runCatching {
@@ -506,6 +510,222 @@ class BoundedHttpTextClientTest {
         assertTrue(connection.disconnected)
     }
 
+    @Test
+    fun `client asks for gzip and decodes a gzip body under the same byte bound`() = runBlocking {
+        val text = "{\"result\":\"0x" + "ab".repeat(2_000) + "\"}"
+        val connection = FakeHttpConnection(
+            url = URL("https://runtime.example/rpc"),
+            status = 200,
+            headers = mapOf(
+                "Content-Type" to "application/json",
+                "Content-Encoding" to "gzip",
+            ),
+            body = gzip(text),
+        )
+        assertTrue(gzip(text).size < text.length / 4)
+
+        val response = readBoundedHttpsUtf8(
+            rawUrl = connection.url.toExternalForm(),
+            maximumBytes = text.length,
+            connectionOpener = BoundedHttpConnectionOpener { connection },
+            jsonRequestBody = "{}",
+            requireJsonResponse = true,
+        )
+
+        assertEquals(text, response)
+        assertEquals("gzip", connection.requestHeaders["Accept-Encoding"])
+    }
+
+    @Test
+    fun `gzip body that decodes past the bound is rejected however small it is on the wire`() =
+        runBlocking {
+            val text = "a".repeat(1_000_000)
+            val compressed = gzip(text)
+            assertTrue(compressed.size < 2_000)
+            val error = runCatching {
+                readBoundedHttpsUtf8(
+                    rawUrl = "https://runtime.example/bomb",
+                    maximumBytes = 4_096,
+                    connectionOpener = BoundedHttpConnectionOpener { url ->
+                        FakeHttpConnection(
+                            url = url,
+                            status = 200,
+                            headers = mapOf("Content-Encoding" to "gzip"),
+                            declaredLength = compressed.size.toLong(),
+                            body = compressed,
+                        )
+                    },
+                )
+            }.exceptionOrNull() as BoundedHttpTextException
+
+            assertEquals("BOUNDED_HTTP_RESPONSE_TOO_LARGE", error.safeCode)
+        }
+
+    @Test
+    fun `corrupt or truncated gzip body is a malformed response`() = runBlocking {
+        val whole = gzip("{\"data\":{}}")
+        listOf(
+            "not gzip at all".toByteArray(),
+            whole.copyOf(whole.size - 6),
+        ).forEach { body ->
+            val error = runCatching {
+                readBoundedHttpsUtf8(
+                    rawUrl = "https://runtime.example/corrupt",
+                    maximumBytes = 4_096,
+                    connectionOpener = BoundedHttpConnectionOpener { url ->
+                        FakeHttpConnection(
+                            url = url,
+                            status = 200,
+                            headers = mapOf("Content-Encoding" to "gzip"),
+                            body = body,
+                        )
+                    },
+                )
+            }.exceptionOrNull() as BoundedHttpTextException
+
+            assertEquals("BOUNDED_HTTP_ENCODING_INVALID", error.safeCode)
+        }
+    }
+
+    @Test
+    fun `POST that fails before its body is handed over is reported as not sent`() = runBlocking {
+        val connectFailure = FakeHttpConnection(
+            url = URL("https://node.example/"),
+            status = 200,
+            failOnOutputOpen = ConnectException("refused"),
+        )
+        val notSent = runCatching {
+            readBoundedHttpsUtf8(
+                rawUrl = connectFailure.url.toExternalForm(),
+                maximumBytes = 64,
+                connectionOpener = BoundedHttpConnectionOpener { connectFailure },
+                jsonRequestBody = "{\"method\":\"author_submitExtrinsic\"}",
+                requireJsonResponse = true,
+            )
+        }.exceptionOrNull() as BoundedHttpTextException
+
+        assertEquals("BOUNDED_HTTP_IO", notSent.safeCode)
+        assertTrue(notSent.requestNotSent)
+        assertEquals(0, connectFailure.postedBody.size())
+
+        val openerFailure = runCatching {
+            readBoundedHttpsUtf8(
+                rawUrl = "https://node.example/",
+                maximumBytes = 64,
+                connectionOpener = BoundedHttpConnectionOpener { throw IOException("no route") },
+                jsonRequestBody = "{}",
+                requireJsonResponse = true,
+            )
+        }.exceptionOrNull() as BoundedHttpTextException
+        assertTrue(openerFailure.requestNotSent)
+    }
+
+    @Test
+    fun `POST that fails after its body was handed over is never reported as not sent`() =
+        runBlocking {
+            val failingWrite = object : OutputStream() {
+                override fun write(b: Int) = throw IOException("connection reset")
+                override fun write(b: ByteArray, off: Int, len: Int) =
+                    throw IOException("connection reset")
+            }
+            val cases = listOf(
+                // The write itself failed: part of the body may be on the wire.
+                FakeHttpConnection(
+                    url = URL("https://node.example/"),
+                    status = 200,
+                    output = failingWrite,
+                ),
+                // The body was written and the answer was lost.
+                FakeHttpConnection(
+                    url = URL("https://node.example/"),
+                    status = 200,
+                    failOnResponse = IOException("timeout"),
+                ),
+                // The node answered with an HTTP error.
+                FakeHttpConnection(url = URL("https://node.example/"), status = 502),
+            )
+            cases.forEach { connection ->
+                val error = runCatching {
+                    readBoundedHttpsUtf8(
+                        rawUrl = connection.url.toExternalForm(),
+                        maximumBytes = 64,
+                        connectionOpener = BoundedHttpConnectionOpener { connection },
+                        jsonRequestBody = "{}",
+                        requireJsonResponse = true,
+                    )
+                }.exceptionOrNull() as BoundedHttpTextException
+
+                assertFalse(error.safeCode, error.requestNotSent)
+            }
+        }
+
+    @Test
+    fun `GET failures never claim that a request was not sent`() = runBlocking {
+        val error = runCatching {
+            readBoundedHttpsUtf8(
+                rawUrl = "https://runtime.example/types.json",
+                maximumBytes = 32,
+                connectionOpener = BoundedHttpConnectionOpener { throw IOException("offline") },
+            )
+        }.exceptionOrNull() as BoundedHttpTextException
+
+        assertEquals("BOUNDED_HTTP_IO", error.safeCode)
+        assertFalse(error.requestNotSent)
+    }
+
+    @Test
+    fun `response carries the server date only for an exact RFC 1123 header`() = runBlocking {
+        suspend fun dateFor(header: String?): Long? = readBoundedHttpsResponse(
+            rawUrl = "https://pi.example/graphql",
+            maximumBytes = 64,
+            connectionOpener = BoundedHttpConnectionOpener { url ->
+                FakeHttpConnection(
+                    url = url,
+                    status = 200,
+                    headers = listOfNotNull(
+                        "Content-Type" to "application/json",
+                        header?.let { "Date" to it },
+                    ).toMap(),
+                    body = "{}".toByteArray(),
+                )
+            },
+            jsonRequestBody = "{}",
+            requireJsonResponse = true,
+        ).serverDateEpochMillis
+
+        assertEquals(1_791_737_791_000L, dateFor("Sun, 11 Oct 2026 16:56:31 GMT"))
+        assertNull(dateFor(null))
+        assertNull(dateFor("yesterday"))
+        assertNull(dateFor("2026-10-11T16:56:31Z"))
+        assertNull(dateFor("Sun, 11 Oct 2026 16:56:31 GMT" + " ".repeat(80)))
+    }
+
+    @Test
+    fun `connect timeout is configurable and never above the whole deadline`() = runBlocking {
+        val connection = FakeHttpConnection(
+            url = URL("https://node.example/"),
+            status = 200,
+            headers = mapOf("Content-Type" to "application/json"),
+            body = "{}".toByteArray(),
+        )
+
+        readBoundedHttpsUtf8(
+            rawUrl = connection.url.toExternalForm(),
+            maximumBytes = 64,
+            connectionOpener = BoundedHttpConnectionOpener { connection },
+            jsonRequestBody = "{}",
+            requireJsonResponse = true,
+            connectTimeoutMillis = 8_000,
+        )
+
+        assertEquals(8_000, connection.connectTimeout)
+        assertEquals(30_000, connection.readTimeout)
+    }
+
+    private fun gzip(text: String): ByteArray = ByteArrayOutputStream().also { bytes ->
+        GZIPOutputStream(bytes).use { it.write(text.toByteArray(Charsets.UTF_8)) }
+    }.toByteArray()
+
     private class FakeHttpConnection(
         url: URL,
         private val status: Int,
@@ -514,6 +734,9 @@ class BoundedHttpTextClientTest {
         body: ByteArray = ByteArray(0),
         private val input: InputStream = ByteArrayInputStream(body),
         private val onDisconnect: () -> Unit = {},
+        private val output: OutputStream? = null,
+        private val failOnOutputOpen: IOException? = null,
+        private val failOnResponse: IOException? = null,
     ) : HttpURLConnection(url) {
         val requestHeaders = linkedMapOf<String, String>()
         val postedBody = ByteArrayOutputStream()
@@ -529,7 +752,10 @@ class BoundedHttpTextClientTest {
 
         override fun usingProxy(): Boolean = false
 
-        override fun getResponseCode(): Int = status
+        override fun getResponseCode(): Int {
+            failOnResponse?.let { throw it }
+            return status
+        }
 
         override fun getHeaderField(name: String?): String? = headers.entries
             .firstOrNull { (key, _) -> key.equals(name, ignoreCase = true) }
@@ -542,7 +768,10 @@ class BoundedHttpTextClientTest {
             return input
         }
 
-        override fun getOutputStream(): ByteArrayOutputStream = postedBody
+        override fun getOutputStream(): OutputStream {
+            failOnOutputOpen?.let { throw it }
+            return output ?: postedBody
+        }
 
         override fun setRequestProperty(key: String, value: String) {
             requestHeaders[key] = value
