@@ -668,4 +668,5 @@
   <string name="recovery_json_no_file_picker">This phone has no app for choosing a file. Paste the text of your backup file into the field instead. Nothing was changed.</string>
   <string name="export_json_keys_unusable_named_title">Some accounts can\'t be exported</string>
   <string name="export_json_keys_unusable_named">These accounts can\'t be exported, because the keys saved for them on this phone can\'t be used:\n\n%1$s\n\nNo file was made. Export your other accounts without them. To use these accounts on this phone again, go to Import account and enter their recovery phrase, raw seed or backup file.</string>
+  <string name="safe_mode_whats_new_batch_export">A JSON backup file with several accounts made by an earlier version of SORA can be empty. If you rely on one, export your accounts again from Accounts.</string>
 </resources>
