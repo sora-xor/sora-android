@@ -87,6 +87,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify as kVerify
+import org.mockito.kotlin.willSuspendableAnswer
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -419,6 +420,55 @@ class AddLiquidityViewModelTest {
             eq(LIQUIDITY_DATA.secondReserves),
             any(), any(), any(), any(), any(), any(), any(),
         )
+    }
+
+    @Test
+    fun `nothing can be supplied while the reserves are still being read`() = runTest {
+        // Seen on the emulator: offline, the read of the reserves does not fail, it waits for
+        // the connection. Until it answers the reserves are not known, and the screen must not
+        // treat them as zero (a new pool) either.
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        given(poolsInteractor.subscribeReservesCache(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(null))
+        val answer = kotlinx.coroutines.CompletableDeferred<LiquidityData>()
+        given(
+            poolsInteractor.getLiquidityData(
+                eq(XOR_ASSET.token),
+                eq(VAL_ASSET.token),
+                any(),
+                any(),
+            )
+        ).willSuspendableAnswer { answer.await() }
+
+        setUpViewModel(VAL_ASSET.token.id)
+        advanceUntilIdle()
+        // Both tokens are chosen; the button no longer says "Choose tokens".
+        assertEquals("Enter amount", viewModel.addState.value.btnState.text)
+
+        viewModel.onAmount1Change(BigDecimal.ONE)
+        viewModel.onAmount2Change(BigDecimal.ONE)
+        advanceUntilIdle()
+
+        assertEquals("Supply", viewModel.addState.value.btnState.text)
+        assertFalse(viewModel.addState.value.btnState.enabled)
+        verify(poolsInteractor, never()).calcLiquidityDetails(
+            any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
+        )
+        viewModel.onConfirmClick()
+        advanceUntilIdle()
+        verify(poolsInteractor, never()).observeAddLiquidity(
+            any(), any(), any(), any(), any(), any(), any(), any(),
+        )
+
+        // The connection is back and the read answers.
+        answer.complete(LIQUIDITY_DATA)
+        advanceUntilIdle()
+
+        assertEquals("Supply", viewModel.addState.value.btnState.text)
+        assertTrue(viewModel.addState.value.btnState.enabled)
     }
 
     @Test
