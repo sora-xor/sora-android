@@ -169,6 +169,24 @@ class AccountListViewModelTest {
     }
 
     @Test
+    fun `the list is shown without labels when they cannot be read`() = runTest {
+        given(multiAccInteractor.flowUnavailableWalletIds())
+            .willReturn(flow { throw IllegalStateException("WALLET_DATABASE_RECOVERY_BLOCKED") })
+        val viewModel = AccountListViewModel(
+            multiAccInteractor,
+            avatarGenerator,
+            mainRouter,
+            clipboardManager,
+        )
+        advanceUntilIdle()
+
+        val list = requireNotNull(viewModel.accountListScreenState.value).accountList
+        assertEquals(2, list.size)
+        assertTrue(list.none { it.readOnly })
+        assertNull(viewModel.errorFromResourceLiveData.value)
+    }
+
+    @Test
     fun `removing the last account empties the list without asking for a selected account`() = runTest {
         // The candidate crashed here: the list emitted no accounts right after the removal and
         // the screen (still on the back stack) asked the repository for the selected account.
