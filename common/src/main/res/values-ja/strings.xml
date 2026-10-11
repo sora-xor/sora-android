@@ -681,7 +681,7 @@
   <string name="account_read_only_restore_phrase">リカバリーフレーズで鍵を復元</string>
   <string name="account_read_only_restore_google">Google ドライブから復元</string>
   <string name="account_read_only_show_backup">この端末に保存されているバックアップを表示</string>
-  <string name="account_read_only_restore_note">復元を選ぶと「アカウントをインポート」が開きます。このアカウントのリカバリーフレーズ、シード、またはバックアップファイルを入力すると、鍵が元の場所に戻ります。修復のためにアカウントを削除する必要はありません。</string>
+  <string name="account_read_only_restore_note">これらの操作は「アカウントをインポート」を開きます。このアカウントのリカバリーフレーズ、シード、またはバックアップファイルを入力すると、鍵が元の場所に戻ります。修復のためにアカウントを削除する必要はありません。</string>
   <string name="account_read_only_remove">この端末から削除</string>
   <string name="account_removal_title">このアカウントをこの端末から削除しますか？</string>
   <string name="account_removal_body">削除すると、このアカウントの鍵がこの端末から消去されます。資産はブロックチェーン上に残り、バックアップがあれば後でもう一度追加できます。</string>
@@ -704,7 +704,7 @@
   <string name="account_removal_remove">この端末から削除</string>
   <string name="account_removal_not_removed_title">このアカウントは削除されていません</string>
   <string name="account_removal_not_removed">SORAはアカウントを削除する前にすべてを確認します。確認を通過しなかった項目があるため、何も削除されていません（%1$s）。もう一度お試しください。</string>
-  <string name="safe_mode_retained_needs_phrase">このウォレットは、すべてのアカウントを削除したときにこの端末に残ったものです。元に戻すには、そのリカバリーフレーズ、シード、またはバックアップファイルをインポートしてください。この端末に保存されている鍵がそのまま使われます。</string>
+  <string name="safe_mode_retained_needs_phrase">このウォレットの鍵は、現在のSORAのPINを設定する前からこの端末にあったため、PINでは復元できません。元に戻すには、そのリカバリーフレーズ、シード、またはバックアップファイルをインポートしてください。この端末に保存されている鍵がそのまま使われます。</string>
   <string name="safe_mode_retained_import_phrase">リカバリーフレーズをインポート</string>
   <string name="onboarding_found_wallets_explanation">以前この端末で使っていたウォレットの鍵が、この端末に残っています。SORAのPINで復元できます。</string>
   <string name="onboarding_found_wallets_body">どのアカウントにも使われていないウォレットの鍵が、この端末に見つかりました（たとえば、この端末をもう一度セットアップした後など）。これらのウォレットを復元するには、この端末のSORAで使っていたPINを入力してください。この画面を離れても、何も削除・変更されません。</string>
@@ -720,4 +720,13 @@
   <string name="create_account_interrupted">このアカウントの設定は完了前に中断されたため、アカウントは作成されておらず、何も保存されていません。「アカウントを作成」からやり直してください。</string>
   <string name="create_account_not_saved_title">新しいアカウントはまだ保存されていません</string>
   <string name="create_account_not_saved">ただいま新しいアカウントをこの端末に保存できなかったため、まだ追加されていません。リカバリーフレーズは引き続きこの画面に表示されています。控えたうえで、「続行する」をタップしてもう一度お試しください。</string>
+  <string name="failure_submission_unknown_title">もう一度試す前に「履歴」を確認してください</string>
+  <string name="failure_submission_unknown_message">このトランザクションはネットワークに渡されましたが、結果を確認できませんでした。このあと処理される可能性があります。二重に送信しないよう、もう一度試す前に「履歴」を開いて少しお待ちください。</string>
+  <string name="account_read_only_restore_other">シードまたはバックアップファイルを使う</string>
+  <string name="account_read_only_reason_not_checked">SORAはこの端末でこのアカウントの署名鍵をまだ確認していません。確認はSORAを起動するたびに行われます。下の方法で鍵を復元しても完了します。</string>
+  <string name="account_removal_pending_transactions">このアカウントにはまだ完了していないトランザクションがあるため、今は削除できません。何も削除されていません。「履歴」でそのトランザクションが完了または失敗と表示されてから、もう一度お試しください。</string>
+  <string name="account_removal_found_wallets_warning">そのうち%1$s件は、今ならSORAのPINで復元できます（「ログインとセキュリティ」の「この端末で見つかったウォレット」）。この削除でPINも削除されます。その後は、それぞれのリカバリーフレーズがなければ復元できません。フレーズをお持ちでない場合は、このアカウントを残して、先にそれらのウォレットを復元してください。</string>
+  <string name="account_removal_found_wallets_ack">それらのウォレットのリカバリーフレーズを持っている、または不要です</string>
+  <string name="recovery_wallets_withheld">現在のSORAのPINを設定する前からこの端末にあったウォレットの鍵は、ここには表示されません。この確認では、そのリカバリーフレーズを表示できません。</string>
+  <string name="recovery_wallets_unreadable">表示できるウォレットをただいま読み取れなかったため、この一覧に表示されていないものがあるかもしれません。戻ってもう一度お試しください。</string>
 </resources>
