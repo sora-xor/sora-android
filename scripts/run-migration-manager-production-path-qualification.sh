@@ -1,6 +1,46 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# MigrationManager through the production start path, one method per process, in the isolated
+# jp.co.soramitsu.sora.qualification package (never the production package). Ten phases:
+# seven stored-secret shapes, then the three ordered phases that take a pre-multiaccount
+# wallet at Room 50 (release 2.3.3 layout) through every migration to the current schema and
+# through a restart.
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/device-test-common.sh
+source "${script_dir}/device-test-common.sh"
+
+usage() {
+  cat <<'USAGE'
+usage: run-migration-manager-production-path-qualification.sh [--offline]
+
+  --offline   build with Gradle's --offline (local Gradle cache, no network)
+
+Environment: SORA_GRADLE_FLAGS (extra Gradle arguments), ANDROID_SERIAL (device to use),
+ANDROID_HOME (to find apkanalyzer or aapt2).
+USAGE
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --offline) sora_use_offline_gradle ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "error: unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
+sora_read_gradle_environment
+cd "${script_dir}/.."
+sora_require_one_device
+
 readonly qualification_class="jp.co.soramitsu.sora.splash.domain.MigrationManagerProductionPathQualificationTest"
 readonly qualification_target_package="jp.co.soramitsu.sora.qualification"
 readonly qualification_test_package="jp.co.soramitsu.sora.qualification.test"
@@ -15,12 +55,12 @@ cleanup_qualification_tmp() {
 }
 trap cleanup_qualification_tmp EXIT
 
-./gradlew \
-  :app:assembleQualificationDebug \
-  :app:assembleQualificationDebugAndroidTest \
-  --stacktrace --no-daemon --no-parallel
+sora_gradle :app:assembleQualificationDebug :app:assembleQualificationDebugAndroidTest
 
-resolve_apkanalyzer() {
+# apkanalyzer comes with the SDK command-line tools, which an offline machine may not have.
+# aapt2 from build-tools reads the same two facts (package name, sharedUserId). Each finder
+# prints a path, or nothing.
+find_apkanalyzer() {
   local candidate=""
   local sdk_root=""
 
@@ -49,9 +89,45 @@ resolve_apkanalyzer() {
       fi
     done
   done
+}
 
-  echo "error: apkanalyzer is required to prove APK package isolation before install" >&2
-  exit 1
+find_aapt2() {
+  local candidate=""
+  local sdk_root=""
+
+  candidate="$(command -v aapt2 2>/dev/null || true)"
+  if [ -n "${candidate}" ] && [ -x "${candidate}" ]; then
+    printf '%s\n' "${candidate}"
+    return
+  fi
+  for sdk_root in "${ANDROID_SDK_ROOT:-}" "${ANDROID_HOME:-}"; do
+    if [ -z "${sdk_root}" ]; then
+      continue
+    fi
+    # Any installed aapt2 can print a manifest, so the order of the versions does not matter.
+    for candidate in "${sdk_root}"/build-tools/*/aapt2; do
+      if [ -x "${candidate}" ]; then
+        printf '%s\n' "${candidate}"
+        return
+      fi
+    done
+  done
+}
+
+apk_application_id() {
+  if [ "${apk_inspector_kind}" = "apkanalyzer" ]; then
+    "${apk_inspector}" manifest application-id "$1" | tr -d '\r\n'
+  else
+    "${apk_inspector}" dump packagename "$1" | tr -d '\r\n'
+  fi
+}
+
+apk_manifest_text() {
+  if [ "${apk_inspector_kind}" = "apkanalyzer" ]; then
+    "${apk_inspector}" manifest print "$1" | tr -d '\r'
+  else
+    "${apk_inspector}" dump xmltree --file AndroidManifest.xml "$1" | tr -d '\r'
+  fi
 }
 
 resolve_single_apk() {
@@ -74,8 +150,22 @@ resolve_single_apk() {
   printf '%s\n' "${matches[0]}"
 }
 
-apkanalyzer="$(resolve_apkanalyzer)"
-readonly apkanalyzer
+# SORA_APK_INSPECTOR=aapt2 uses aapt2 even when apkanalyzer is installed.
+apk_inspector_kind="apkanalyzer"
+apk_inspector=""
+if [ "${SORA_APK_INSPECTOR:-}" != "aapt2" ]; then
+  apk_inspector="$(find_apkanalyzer)"
+fi
+if [ -z "${apk_inspector}" ]; then
+  apk_inspector_kind="aapt2"
+  apk_inspector="$(find_aapt2)"
+fi
+if [ -z "${apk_inspector}" ]; then
+  echo "error: apkanalyzer or aapt2 is required to prove APK package isolation before install" >&2
+  exit 1
+fi
+readonly apk_inspector_kind
+readonly apk_inspector
 qualification_target_apk="$(
   resolve_single_apk "${qualification_target_output}" "qualification target"
 )"
@@ -84,22 +174,18 @@ qualification_test_apk="$(
   resolve_single_apk "${qualification_test_output}" "qualification test"
 )"
 readonly qualification_test_apk
-built_target_package="$(
-  "${apkanalyzer}" manifest application-id "${qualification_target_apk}" | tr -d '\r\n'
-)"
+built_target_package="$(apk_application_id "${qualification_target_apk}")"
 readonly built_target_package
-built_test_package="$(
-  "${apkanalyzer}" manifest application-id "${qualification_test_apk}" | tr -d '\r\n'
-)"
+built_test_package="$(apk_application_id "${qualification_test_apk}")"
 readonly built_test_package
-built_target_manifest="$(
-  "${apkanalyzer}" manifest print "${qualification_target_apk}" | tr -d '\r'
-)"
+built_target_manifest="$(apk_manifest_text "${qualification_target_apk}")"
 readonly built_target_manifest
-built_test_manifest="$(
-  "${apkanalyzer}" manifest print "${qualification_test_apk}" | tr -d '\r'
-)"
+built_test_manifest="$(apk_manifest_text "${qualification_test_apk}")"
 readonly built_test_manifest
+if [ -z "${built_target_manifest}" ] || [ -z "${built_test_manifest}" ]; then
+  echo "error: could not read the manifest of a qualification APK" >&2
+  exit 1
+fi
 if [ "${built_target_package}" != "${qualification_target_package}" ]; then
   echo "error: refusing to install non-isolated MigrationManager target APK" >&2
   exit 1
@@ -113,8 +199,9 @@ if [ "${built_target_package}" = "jp.co.soramitsu.sora" ] ||
   echo "error: built qualification APK aliases production" >&2
   exit 1
 fi
-if grep -Fq 'android:sharedUserId' <<<"${built_target_manifest}" ||
-  grep -Fq 'android:sharedUserId' <<<"${built_test_manifest}"; then
+# apkanalyzer prints android:sharedUserId="..."; aapt2 prints ...android:sharedUserId(0x0101000b)=...
+if grep -Fq 'sharedUserId' <<<"${built_target_manifest}" ||
+  grep -Fq 'sharedUserId' <<<"${built_test_manifest}"; then
   echo "error: qualification APK must not declare a shared Android UID" >&2
   exit 1
 fi
@@ -200,3 +287,18 @@ run_qualification_method \
 run_qualification_method \
   "07-two-account-selection" \
   "qualifyTwoAccountExactSelectionThroughProductionPath"
+
+# Pre-multiaccount wallet at Room 50 (release 2.3.3 layout). The three phases share state and
+# must run in this order: write the old storage, upgrade it through the production database
+# builder (15..57 -> 58 and every later migration), then start again as a new process.
+run_qualification_method \
+  "08-room-50-prepare" \
+  "preparePreMultiaccountRoom50NativeFixture"
+run_qualification_method \
+  "09-room-50-upgrade" \
+  "upgradePreMultiaccountRoom50ThroughProductionPath"
+run_qualification_method \
+  "10-room-50-restart" \
+  "restartPreMultiaccountUpgradeThroughProductionPath"
+
+echo "MigrationManager production-path qualification passed: 10 phases"
