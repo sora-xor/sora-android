@@ -47,9 +47,10 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.common.domain.ResponseCode
-import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionChainFailure
+import jp.co.soramitsu.common.domain.TransactionNodeRefusal
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
@@ -62,7 +63,9 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicRefusedByNodeException
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicSubmissionUnknownException
+import jp.co.soramitsu.sora.substrate.substrate.Sora2NodeRefusal
 import jp.co.soramitsu.sora.substrate.substrate.extrinsicHash
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
@@ -215,7 +218,7 @@ class AssetsInteractorTest {
                 BigDecimal.ONE,
                 BigDecimal.ONE,
                 expectedWalletId = "address",
-            ),
+            ).txHash,
         )
         coEvery { userRepository.getCurSoraAccount() } returns
             SoraAccount("different-address", "different-name")
@@ -234,7 +237,7 @@ class AssetsInteractorTest {
     }
 
     @Test
-    fun `finalized transfer failure is surfaced to the caller`() = runTest {
+    fun `a transfer that failed on chain is returned as failed with its reason`() = runTest {
         val kp = Sr25519Keypair(
             ByteArray(32) { 1 },
             ByteArray(32) { 2 },
@@ -251,28 +254,81 @@ class AssetsInteractorTest {
                 any(),
                 any(),
             )
-        } returns ExtrinsicSubmitStatus(false, "txhash", "blockhash")
+        } returns ExtrinsicSubmitStatus(
+            success = false,
+            txHash = "txhash",
+            blockHash = "blockhash",
+            failureDetail = "Assets.InsufficientBalance",
+        )
 
-        val error = runCatching {
-            interactor.observeTransfer(
-                "to",
-                TestTokens.xorToken,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                expectedWalletId = "address",
-            )
-        }.exceptionOrNull()
+        val outcome = interactor.observeTransfer(
+            "to",
+            TestTokens.xorToken,
+            BigDecimal.ONE,
+            BigDecimal.ONE,
+            expectedWalletId = "address",
+        )
 
-        Assert.assertTrue(error is SoraException)
         Assert.assertEquals(
-            ResponseCode.BROKEN_TRANSACTION,
-            (error as SoraException).errorResponseCode,
+            TransactionOutcome.FailedOnChain(
+                txHash = "txhash",
+                blockHash = "blockhash",
+                reason = TransactionChainFailure.EXECUTION_FAILED,
+                detail = "Assets.InsufficientBalance",
+            ),
+            outcome,
         )
         Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
         Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
-        verify(exactly = 0) {
-            transactionHistoryRepository.saveTransaction(any(), any())
-        }
+    }
+
+    @Test
+    fun `a transfer the node refused is a failure and never a submitted hash`() = runTest {
+        val kp = Sr25519Keypair(
+            ByteArray(32) { 1 },
+            ByteArray(32) { 2 },
+            ByteArray(32) { 3 },
+        )
+        val transactionHash = "0x${"22".repeat(32)}"
+        coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns kp
+        coEvery {
+            assetsRepository.observeTransfer(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } throws ExtrinsicRefusedByNodeException(
+            transactionHash = transactionHash,
+            refusal = Sora2NodeRefusal(
+                reason = TransactionNodeRefusal.CANNOT_PAY_FEE,
+                code = 1010,
+                message = "Inability to pay some fees",
+            ),
+            cause = IllegalStateException("SORA2_RUNTIME_RPC_REMOTE_ERROR"),
+        )
+
+        val outcome = interactor.observeTransfer(
+            "to",
+            TestTokens.xorToken,
+            BigDecimal.ONE,
+            BigDecimal.ONE,
+            expectedWalletId = "address",
+        )
+
+        Assert.assertEquals(
+            TransactionOutcome.RefusedByNode(
+                txHash = transactionHash,
+                reason = TransactionNodeRefusal.CANNOT_PAY_FEE,
+                nodeMessage = "Inability to pay some fees",
+            ),
+            outcome,
+        )
+        Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
+        Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
     }
 
     @Test
@@ -318,7 +374,7 @@ class AssetsInteractorTest {
                 BigDecimal.ONE,
                 BigDecimal.ONE,
                 expectedWalletId = "address",
-            )
+            ).txHash
         )
         Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
         Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
@@ -368,7 +424,7 @@ class AssetsInteractorTest {
                 BigDecimal.ONE,
                 BigDecimal.ONE,
                 expectedWalletId = "address",
-            )
+            ).txHash
         )
         Assert.assertTrue(kp.privateKey.all { it == 0.toByte() })
         Assert.assertTrue(kp.nonce.all { it == 0.toByte() })
@@ -423,7 +479,7 @@ class AssetsInteractorTest {
                 BigDecimal.ONE,
                 BigDecimal.ONE,
                 expectedWalletId = "address",
-            ),
+            ).txHash,
         )
 
         verify {
