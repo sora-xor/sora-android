@@ -42,8 +42,12 @@ import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.base.ConfirmDialogData
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -64,7 +68,9 @@ import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.component.wrappedtext.WrappedTextState
 import kotlin.math.truncate
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -114,6 +120,7 @@ class ReferralViewModel @Inject constructor(
     val referralScreenState = _referralScreenState.asStateFlow()
 
     private var referrer: String? = null
+    private var programJob: Job? = null
 
     override fun startScreen(): String = ReferralFeatureRoutes.WELCOME_PROGRESS
 
@@ -121,13 +128,22 @@ class ReferralViewModel @Inject constructor(
         _toolbarState.value = initSmallTitle2(
             title = R.string.referral_toolbar_title,
         )
+        loadProgram()
+        observeAccountState()
+    }
 
-        interactor.observeReferrerBalance()
+    /**
+     * Loads the fees and the bonded balance the whole screen is built from. Both fees are asked
+     * from the SORA network, so this fails while it cannot be reached. The failure is told to the
+     * user with Try again and Close; it never ends the app and never leaves an endless spinner.
+     */
+    private fun loadProgram() {
+        programJob?.cancel()
+        programJob = interactor.observeReferrerBalance()
             .onStart {
                 extrinsicFee = interactor.calcBondFee()
                 setReferrerFee = interactor.getSetReferrerFee()
             }
-            .catch { onError(it) }
             .debounce(500)
             .distinctUntilChanged()
             .onEach {
@@ -188,38 +204,68 @@ class ReferralViewModel @Inject constructor(
                     _navToStart.value = if (_referralScreenState.value.isInitialized()) REFERRAL_PROGRAM else WELCOME_PAGE
                 }
             }
+            // After onEach, so a failure while building the state is handled here as well.
+            .catch { onProgramUnavailable(it) }
             .launchIn(viewModelScope)
+    }
 
+    private fun onProgramUnavailable(error: Throwable) {
+        onError(error)
+        val unreachable =
+            NetworkFeeUnavailable.from(error) == NetworkFeeUnavailable.NETWORK_UNREACHABLE
+        confirmDialogLiveData.setValue(
+            ConfirmDialogData(
+                title = resourceManager.getString(R.string.network_fee_unavailable_short),
+                message = resourceManager.getString(
+                    if (unreachable) {
+                        R.string.tx_outcome_screen_needs_network
+                    } else {
+                        R.string.network_fee_unavailable
+                    }
+                ),
+                confirmText = resourceManager.getString(R.string.common_try_again),
+                dismissText = resourceManager.getString(R.string.common_close),
+                onDismiss = { router.popBackStack() },
+                onConfirm = ::loadProgram,
+            )
+        )
+    }
+
+    /**
+     * Every collector below handles failures of its own work: an exception thrown inside onEach
+     * would otherwise leave viewModelScope uncaught and end the app (seen offline, when the fee
+     * could not be read while the XOR balance arrived).
+     */
+    private fun observeAccountState() {
         interactor.observeMyReferrer()
-            .catch { onError(it) }
             .distinctUntilChanged()
             .onEach { newValue ->
                 referrer = newValue.ifEmpty { null }
                 _referralScreenState.value =
                     _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(referrer = referrer))
             }
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         interactor.observeReferrals()
-            .catch { onError(it) }
             .debounce(1000)
             .distinctUntilChanged()
             .onEach {
-                interactor.updateReferrals()
+                tryCatch { interactor.updateReferrals() }
             }
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
-            .catch { onError(it) }
             .distinctUntilChanged()
             .onEach { asset ->
                 xorBalance = asset?.balance?.transferable ?: BigDecimal.ZERO
-                reCalcOnChange(currentDestination)
+                tryCatch { reCalcOnChange(currentDestination) }
             }
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         interactor.getReferrals()
-            .catch { onError(it) }
             .onEach { referrals ->
                 var totalAmount = BigDecimal.ZERO
                 val feeToken = feeToken()
@@ -235,7 +281,13 @@ class ReferralViewModel @Inject constructor(
                     isExpanded = referralsState.isExpanded,
                 )
             }
+            .catch { onError(it) }
             .launchIn(viewModelScope)
+    }
+
+    /** Recalculations read fees; a failure leaves the screen as it is and never ends the app. */
+    private fun launchSafely(block: suspend () -> Unit) {
+        viewModelScope.launch { tryCatch(block) }
     }
 
     fun onShareLink() {
@@ -245,7 +297,7 @@ class ReferralViewModel @Inject constructor(
 
     fun onBondMinus() {
         if (bondInvitationsCount > 1) {
-            viewModelScope.launch {
+            launchSafely {
                 bondInvitationsCount--
                 reCalcOnChange(BOND_XOR)
             }
@@ -253,7 +305,7 @@ class ReferralViewModel @Inject constructor(
     }
 
     fun onBondPlus() {
-        viewModelScope.launch {
+        launchSafely {
             bondInvitationsCount++
             reCalcOnChange(BOND_XOR)
         }
@@ -262,7 +314,7 @@ class ReferralViewModel @Inject constructor(
     fun onBondValueChange(value: Int) {
         val realValue = getRealValue(value)
         if (realValue >= 0) {
-            viewModelScope.launch {
+            launchSafely {
                 bondInvitationsCount = realValue
                 reCalcOnChange(BOND_XOR)
             }
@@ -271,7 +323,7 @@ class ReferralViewModel @Inject constructor(
 
     fun onUnbondMinus() {
         if (bondInvitationsCount > 1) {
-            viewModelScope.launch {
+            launchSafely {
                 bondInvitationsCount--
                 reCalcOnChange(UNBOND_XOR)
             }
@@ -280,7 +332,7 @@ class ReferralViewModel @Inject constructor(
 
     fun onUnbondPlus() {
         if (bondInvitationsCount < calcInvitationsCount()) {
-            viewModelScope.launch {
+            launchSafely {
                 bondInvitationsCount++
                 reCalcOnChange(UNBOND_XOR)
             }
@@ -290,55 +342,80 @@ class ReferralViewModel @Inject constructor(
     fun onUnbondValueChange(value: Int) {
         val realValue = getRealValue(value)
         if (realValue >= 0 && realValue <= calcInvitationsCount()) {
-            viewModelScope.launch {
+            launchSafely {
                 bondInvitationsCount = realValue
                 reCalcOnChange(UNBOND_XOR)
             }
         }
     }
 
-    fun onBondButtonClick() {
+    fun onBondButtonClick() = submit(REFERRAL_PROGRAM) { confirmedDuplicate ->
+        interactor.observeBond(calcInvitationsAmount(bondInvitationsCount), confirmedDuplicate)
+    }
+
+    fun onUnbondButtonClick() = submit(REFERRAL_PROGRAM) { confirmedDuplicate ->
+        interactor.observeUnbond(calcInvitationsAmount(bondInvitationsCount), confirmedDuplicate)
+    }
+
+    fun onActivateLinkClick() = submit(destinationAfter = null) { confirmedDuplicate ->
+        val input = _referralScreenState.value.referrerInputState.value.text
+        val referrerOk = interactor.isLinkOrAddressOk(input)
+        interactor.observeSetReferrer(referrerOk.second, confirmedDuplicate)
+    }
+
+    /**
+     * Sends one referral transaction and shows exactly what is known afterwards. A transaction
+     * that reached the network (confirmed, failed on chain, or still waiting) opens its
+     * transaction page, which carries the status and follows it. One that did not reach the
+     * network (refused by the node, or not prepared) is explained in a dialog. The progress mark
+     * is cleared on every path.
+     */
+    private fun submit(
+        destinationAfter: String?,
+        confirmedDuplicate: Boolean = false,
+        send: suspend (confirmedDuplicate: Boolean) -> TransactionOutcome,
+    ) {
         viewModelScope.launch {
-            tryCatch {
-                _referralScreenState.value =
-                    _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(progress = true))
-                val result = interactor.observeBond(calcInvitationsAmount(bondInvitationsCount))
-                assetsRouter.showTxDetails(result)
-                _navToStart.value = REFERRAL_PROGRAM
+            setProgress(true)
+            var outcome: TransactionOutcome? = null
+            var notSent: Throwable? = null
+            try {
+                outcome = send(confirmedDuplicate)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: DuplicateWaitingTransactionException) {
+                setProgress(false)
+                askBeforeSendingAgain(resourceManager) {
+                    submit(destinationAfter, confirmedDuplicate = true, send = send)
+                }
+                return@launch
+            } catch (t: Throwable) {
+                notSent = t
+            }
+            setProgress(false)
+            when (outcome) {
+                is TransactionOutcome.Confirmed,
+                is TransactionOutcome.Waiting,
+                is TransactionOutcome.FailedOnChain -> {
+                    assetsRouter.showTxDetails(outcome.txHash)
+                    _navToStart.value = destinationAfter
+                        ?: if (_referralScreenState.value.isInitialized()) {
+                            REFERRAL_PROGRAM
+                        } else {
+                            WELCOME_PAGE
+                        }
+                }
+                is TransactionOutcome.RefusedByNode ->
+                    showTransactionRefused(resourceManager, outcome)
+                null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
             }
         }
     }
 
-    fun onUnbondButtonClick() {
-        viewModelScope.launch {
-            tryCatch {
-                _referralScreenState.value =
-                    _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(progress = true))
-                val result = interactor.observeUnbond(
-                    calcInvitationsAmount(bondInvitationsCount),
-                )
-
-                assetsRouter.showTxDetails(result)
-                _navToStart.value = REFERRAL_PROGRAM
-            }
-        }
-    }
-
-    fun onActivateLinkClick() {
-        viewModelScope.launch {
-            tryCatch {
-                val input =
-                    _referralScreenState.value.referrerInputState.value.text
-                _referralScreenState.value =
-                    _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(progress = true))
-                val referrerOk = interactor.isLinkOrAddressOk(input)
-                val result = interactor.observeSetReferrer(referrerOk.second)
-
-                assetsRouter.showTxDetails(result)
-                _navToStart.value =
-                    if (_referralScreenState.value.isInitialized()) REFERRAL_PROGRAM else WELCOME_PAGE
-            }
-        }
+    private fun setProgress(progress: Boolean) {
+        _referralScreenState.value = _referralScreenState.value.copy(
+            common = _referralScreenState.value.common.copy(progress = progress)
+        )
     }
 
     private suspend fun reCalcOnChange(route: String?) {
@@ -394,6 +471,8 @@ class ReferralViewModel @Inject constructor(
     }
 
     private fun calcInvitationsCount(): Int {
+        // The fee is zero until it has been read; dividing by it would throw.
+        if (setReferrerFee.signum() <= 0) return 0
         return truncate((referrerBalance / setReferrerFee).toDouble()).toInt()
     }
 
@@ -463,7 +542,7 @@ class ReferralViewModel @Inject constructor(
 
     fun onReferrerInputChange(textValue: TextFieldValue) {
         currentEnteredReferrerLink = textValue.text
-        viewModelScope.launch {
+        launchSafely {
             _referralScreenState.value = _referralScreenState.value.copy(
                 common = _referralScreenState.value.common.copy(
                     activate = interactor.isLinkOrAddressOk(
@@ -483,13 +562,13 @@ class ReferralViewModel @Inject constructor(
                 value = TextFieldValue()
             ),
         )
-        viewModelScope.launch {
+        launchSafely {
             reCalcOnChange(REFERRER_INPUT)
         }
     }
 
     fun openBond() {
-        viewModelScope.launch {
+        launchSafely {
             bondInvitationsCount = 1
             reCalcOnChange(BOND_XOR)
         }
@@ -512,7 +591,7 @@ class ReferralViewModel @Inject constructor(
     }
 
     fun openUnbond() {
-        viewModelScope.launch {
+        launchSafely {
             bondInvitationsCount = 1
             reCalcOnChange(UNBOND_XOR)
         }

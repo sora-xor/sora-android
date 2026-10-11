@@ -65,6 +65,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 
@@ -162,6 +163,7 @@ class ReferralRepositoryTest {
                 any(),
                 anyBoolean(),
                 anyString(),
+                anyOrNull(),
                 any(),
             )
         ).willReturn(
@@ -198,6 +200,7 @@ class ReferralRepositoryTest {
             keypair = eq(keypair),
             useBatchAll = eq(false),
             untilStatus = eq(SubstrateCalls.FINALIZED),
+            activity = anyOrNull(),
             formExtrinsic = any(),
         )
     }
