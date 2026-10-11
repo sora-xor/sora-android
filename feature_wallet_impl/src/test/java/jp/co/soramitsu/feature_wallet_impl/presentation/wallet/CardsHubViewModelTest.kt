@@ -189,6 +189,8 @@ class CardsHubViewModelTest {
                 emit(listOf(POOL_DATA))
             }
         coEvery { cardsHubInteractorImpl.updateCardVisibilityOnCardHub(any(), any()) } returns Unit
+        // Three accounts on this phone, one of them read-only.
+        coEvery { cardsHubInteractorImpl.accountSigningCounts() } returns (3 to 2)
         coEvery { demeterFarmingInteractor.getFarmedPools() } returns emptyList()
         every { demeterFarmingInteractor.subscribeFarms(any()) } returns flow { emit("") }
         every { cardsHubInteractorImpl.subscribeVisibleCardsHubList() } returns
@@ -234,6 +236,13 @@ class CardsHubViewModelTest {
             nexusPortfolioRepository,
             nexusTransactionCoordinator,
         )
+    }
+
+    @Test
+    fun `the upgrade sheet is given how many accounts can really sign`() = runTest {
+        advanceUntilIdle()
+        assertEquals(3, cardsHubViewModel.state.value.accountCount)
+        assertEquals(2, cardsHubViewModel.state.value.signingAccountCount)
     }
 
     @Test

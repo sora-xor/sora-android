@@ -175,6 +175,16 @@ class CardsHubViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            // For the upgrade-complete sheet: it only ticks accounts that can really sign.
+            runCatching {
+                val counts = cardsHubInteractorImpl.accountSigningCounts()
+                _state.value = _state.value.copy(
+                    accountCount = counts.first,
+                    signingAccountCount = counts.second,
+                )
+            }
+        }
+        viewModelScope.launch {
             assetsInteractor.flowCurSoraAccount()
                 .distinctUntilChanged()
                 .flatMapLatest { account ->

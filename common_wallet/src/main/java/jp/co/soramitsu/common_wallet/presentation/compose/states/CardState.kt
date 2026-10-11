@@ -50,6 +50,9 @@ data class CardsState(
     val curAccount: String,
     val loading: Boolean = false,
     val cards: List<CardState> = emptyList(),
+    /** Accounts listed in the app, and how many of them can sign on this phone (0: not read yet). */
+    val accountCount: Int = 0,
+    val signingAccountCount: Int = 0,
 )
 
 sealed class CardState(

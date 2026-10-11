@@ -52,6 +52,16 @@ class CardsHubInteractorImpl @Inject constructor(
     private val walletRepository: WalletRepository,
 ) {
 
+    /**
+     * The number of accounts, and how many of them can sign on this phone (an account whose
+     * stored signing key is missing, unreadable or not the key of its address is read-only).
+     */
+    suspend fun accountSigningCounts(): Pair<Int, Int> {
+        val total = userRepository.getSoraAccountsCount()
+        val readOnly = userRepository.unavailableWalletIds().size
+        return total to (total - readOnly).coerceAtLeast(0)
+    }
+
     fun subscribeVisibleCardsHubList(): Flow<Pair<SoraAccount, List<CardHub>>> {
         return userRepository.flowCurSoraAccount().flatMapLatest { account ->
             walletRepository.subscribeVisibleGlobalCardsHubList()
