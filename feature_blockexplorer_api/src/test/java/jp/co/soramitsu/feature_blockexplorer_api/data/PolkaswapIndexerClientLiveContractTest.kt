@@ -140,6 +140,33 @@ class PolkaswapIndexerClientLiveContractTest {
         }
 
     @Test
+    fun `history coverage is found out at run time and a wrong phone clock passes health`() =
+        runBlocking {
+            // The app asks for every role first; the indexer deployed in October 2026 rejects
+            // that and the signer-only question answers. Either way the page must load.
+            val page = client.getTransactionHistoryQualified(ACTIVE_ACCOUNT, page = 1, pageCount = 25)
+            val everyRole = PiHistoryCoverage.listsReceivedTransfers.value
+            println("LIVE PI history lists received transfers: $everyRole")
+            assertThat(page.value.items).isNotEmpty()
+            if (!everyRole) {
+                assertThat(page.value.items.all { it.address == ACTIVE_ACCOUNT }).isTrue()
+            }
+
+            // The health check follows the indexer host's own clock (HTTP Date): a phone ten
+            // minutes slow or three hours fast still qualifies the live indexer.
+            listOf(-10 * 60_000L, 3 * 60 * 60_000L).forEach { offsetMillis ->
+                val skewed = PolkaswapIndexerClient(
+                    boundedHttpTextClient = http,
+                    json = json,
+                    responseCache = cache,
+                    nowEpochMillis = { System.currentTimeMillis() + offsetMillis },
+                    nowMonotonicNanos = System::nanoTime,
+                )
+                assertThat(skewed.requireHealthy().ok).isTrue()
+            }
+        }
+
+    @Test
     fun `referral rewards decode for a referrer that has rewards`() = runBlocking {
         val referrer = anyReferrerWithRewards()
         assertThat(client.getReferralRewards(referrer)).isNotEmpty()
