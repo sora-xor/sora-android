@@ -146,6 +146,7 @@ class Sora2PendingRecoveryWithoutRuntimeTest {
         runtimeRpcClient = rpc,
         addressCodec = codec,
         recoveryKick = {},
+        detailsStore = InMemorySora2SubmissionDetailsStore(),
     )
 
     @Test

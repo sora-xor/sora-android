@@ -990,6 +990,14 @@ interface WalletIdentityDao {
         walletId: String,
     ): Flow<List<Sora2PendingSubmissionLocal>>
 
+    /**
+     * Emits again after every write to the SORA2 status journal (Room re-runs the query whenever
+     * the table changes, also when the count stays the same). Activity listens to it so that an
+     * entry changes as soon as the background status worker resolves it. Read-only.
+     */
+    @Query("select count(*) from sora2PendingSubmissions")
+    fun observeSora2PendingSubmissionChanges(): Flow<Int>
+
     @Query(
         """
         select * from sora2PendingSubmissions
