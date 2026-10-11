@@ -71,6 +71,27 @@ class TransactionNotSentTest {
     }
 
     @Test
+    fun `a balance that is no longer enough is named and is not told to try again`() {
+        // AssetsRepositoryImpl.requireExactTransferBalances, at the last check before transport,
+        // against the balance the network holds at that moment. Before: "This transaction
+        // couldn't be prepared ... Please try again", which cannot help.
+        listOf(
+            "SORA2_TRANSFER_XOR_BALANCE_INSUFFICIENT",
+            "SORA2_TRANSFER_ASSET_BALANCE_INSUFFICIENT",
+        ).forEach { code ->
+            assertEquals(
+                text(R.string.tx_outcome_not_sent_balance),
+                notSentMessage(
+                    IllegalStateException(
+                        "EXTRINSIC_PRE_TRANSPORT_VALIDATION_FAILED",
+                        IllegalStateException(code),
+                    )
+                ),
+            )
+        }
+    }
+
+    @Test
     fun `an account that may not sign is not told to try again`() {
         // WalletSigningGate.unavailableReason, thrown by the signer before anything is built.
         listOf("SIGNING_WALLET_UNAVAILABLE", "WALLET_DELETION_ACTIVE").forEach { reason ->

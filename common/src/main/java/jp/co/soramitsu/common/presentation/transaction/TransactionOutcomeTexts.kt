@@ -123,6 +123,10 @@ object TransactionOutcomeTexts {
                 when {
                     error.hasMessageInChain(FEE_CHANGED_CODE) ->
                         R.string.tx_outcome_not_sent_fee_changed
+                    // The balance read from the network just before sending no longer covers
+                    // the amount and the fee. Another try with the same amount cannot help.
+                    BALANCE_NO_LONGER_ENOUGH_CODES.any { error.hasMessageInChain(it) } ->
+                        R.string.tx_outcome_not_sent_balance
                     // The signer refused before anything was built. Trying again does not help,
                     // so the text says why instead of asking for another try.
                     error.hasMessageInChain(RECOVERY_READ_ONLY_CODE) ->
@@ -187,6 +191,15 @@ object TransactionOutcomeTexts {
     }
 
     private const val FEE_CHANGED_CODE = "SORA2_TRANSFER_FEE_CHANGED"
+
+    /**
+     * AssetsRepositoryImpl.requireExactTransferBalances: the last check before a transfer leaves
+     * the phone, against the balance the network holds at that moment.
+     */
+    val BALANCE_NO_LONGER_ENOUGH_CODES = listOf(
+        "SORA2_TRANSFER_XOR_BALANCE_INSUFFICIENT",
+        "SORA2_TRANSFER_ASSET_BALANCE_INSUFFICIENT",
+    )
 
     // WalletRecoveryCapabilityGate.requireUserMutationAllowed
     private const val RECOVERY_READ_ONLY_CODE = "WALLET_RECOVERY_READ_ONLY"
