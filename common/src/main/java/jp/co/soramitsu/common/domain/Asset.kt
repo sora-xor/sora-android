@@ -79,6 +79,32 @@ data class AssetBalance(
 
 fun createAssetBalance(b: BigDecimal = BigDecimal.ZERO) = AssetBalance(b, b, b, b, b, b, b, b)
 
+/** The free balance on the chain: [AssetBalance.total] is free plus reserved plus bonded. */
+val AssetBalance.free: BigDecimal
+    get() = (total - reserved - bonded).max(BigDecimal.ZERO)
+
+/**
+ * The part of the free balance that cannot be sent now, for example XOR locked by staking,
+ * voting or vesting. Zero for every asset without locks.
+ */
+val AssetBalance.lockedFree: BigDecimal
+    get() = (free - transferable).max(BigDecimal.ZERO)
+
+/**
+ * Everything the account holds of this asset and cannot send now: reserved, bonded and locked.
+ * Together with [AssetBalance.transferable] it is the [AssetBalance.total].
+ */
+val AssetBalance.frozenTotal: BigDecimal
+    get() = (total - transferable).max(BigDecimal.ZERO)
+
+/**
+ * The largest network fee the chain lets this balance pay now. The fee is withdrawn before the
+ * call runs and may not take the free balance below what is held back from fees
+ * ([AssetBalance.feeFrozen]), which can be more than what is held back from transfers.
+ */
+val AssetBalance.payableAsFee: BigDecimal
+    get() = (free - feeFrozen.max(BigDecimal.ZERO)).max(BigDecimal.ZERO)
+
 typealias TokenPrecision = Pair<String, Int>
 
 @Parcelize

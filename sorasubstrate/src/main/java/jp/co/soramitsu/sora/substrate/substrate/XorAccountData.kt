@@ -15,8 +15,9 @@ import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module.StorageEntry
 
 /**
- * The XOR balance fields of one `System.Account` value. [miscFrozen] and [feeFrozen] are the part
- * of [free] that is locked; see [jp.co.soramitsu.common_wallet.data.XorBalanceDto].
+ * The XOR balance fields of one `System.Account` value. [miscFrozen] is the part of [free] that
+ * cannot be transferred and [feeFrozen] the part that cannot pay a network fee; see
+ * [jp.co.soramitsu.common_wallet.data.XorBalanceDto].
  */
 internal data class XorAccountData(
     val free: BigInteger,
@@ -46,6 +47,11 @@ internal data class XorAccountData(
  * The field names come from the metadata, so the layout is recognized by the presence of
  * `frozen`. Reading only the old names on the current layout gives zero locks, which showed
  * locked XOR as transferable (audit F4, LIVE-2).
+ *
+ * `frozen` limits two things differently. A transfer may take free balance down to
+ * `frozen - reserved`; the fee withdrawal that comes before it may only take it down to
+ * `frozen`. Both limits are kept, so that an account with reserved and frozen XOR is not
+ * promised an amount whose fee it cannot pay.
  */
 internal fun decodeXorAccountData(
     runtime: RuntimeSnapshot,
@@ -58,17 +64,24 @@ internal fun decodeXorAccountData(
     val reserved = data.get<BigInteger>("reserved") ?: BigInteger.ZERO
     val frozen = data.get<BigInteger>("frozen")
     if (frozen != null) {
-        val locked = BalanceWrapper.lockedFreeBalance(
+        return XorAccountData(
             free = free,
             reserved = reserved,
-            frozen = frozen,
+            miscFrozen = BalanceWrapper.lockedFreeBalance(
+                free = free,
+                reserved = reserved,
+                frozen = frozen,
+            ),
+            feeFrozen = BalanceWrapper.feeLockedFreeBalance(free = free, frozen = frozen),
         )
-        return XorAccountData(free, reserved, miscFrozen = locked, feeFrozen = locked)
     }
+    val miscFrozen = data.get<BigInteger>("miscFrozen") ?: BigInteger.ZERO
+    val feeFrozen = data.get<BigInteger>("feeFrozen") ?: BigInteger.ZERO
     return XorAccountData(
         free = free,
         reserved = reserved,
-        miscFrozen = data.get<BigInteger>("miscFrozen") ?: BigInteger.ZERO,
-        feeFrozen = data.get<BigInteger>("feeFrozen") ?: BigInteger.ZERO,
+        // The larger of the two is what this app has always held back from transfers there.
+        miscFrozen = miscFrozen.max(feeFrozen),
+        feeFrozen = feeFrozen,
     )
 }

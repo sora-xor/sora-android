@@ -140,6 +140,10 @@ object TransactionOutcomeTexts {
                     // the amount and the fee. Another try with the same amount cannot help.
                     BALANCE_NO_LONGER_ENOUGH_CODES.any { error.hasMessageInChain(it) } ->
                         R.string.tx_outcome_not_sent_balance
+                    // The XOR that is left for fees is locked on the network. The amount is not
+                    // the problem, so the text names the fee and the lock.
+                    error.hasMessageInChain(XOR_FEE_LOCKED_CODE) ->
+                        R.string.tx_outcome_not_sent_fee_locked
                     // The signer refused before anything was built. Trying again does not help,
                     // so the text says why instead of asking for another try.
                     error.hasMessageInChain(RECOVERY_READ_ONLY_CODE) ->
@@ -213,6 +217,13 @@ object TransactionOutcomeTexts {
         "SORA2_TRANSFER_XOR_BALANCE_INSUFFICIENT",
         "SORA2_TRANSFER_ASSET_BALANCE_INSUFFICIENT",
     )
+
+    /**
+     * AssetsRepositoryImpl.requireExactTransferBalances: the account has XOR, but the network
+     * would not let it pay the fee from it (free balance minus the fee would be below the
+     * frozen amount).
+     */
+    const val XOR_FEE_LOCKED_CODE = "SORA2_TRANSFER_XOR_FEE_LOCKED"
 
     // WalletRecoveryCapabilityGate.requireUserMutationAllowed
     private const val RECOVERY_READ_ONLY_CODE = "WALLET_RECOVERY_READ_ONLY"

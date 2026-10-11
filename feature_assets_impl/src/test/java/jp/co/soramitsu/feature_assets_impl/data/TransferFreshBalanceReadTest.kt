@@ -13,6 +13,7 @@ import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.WhitelistTokensManager
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.common_wallet.data.XorBalanceDto
+import jp.co.soramitsu.common_wallet.domain.BalanceWrapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
@@ -170,4 +171,35 @@ class TransferFreshBalanceReadTest {
         )
         check(BigInteger.TEN.pow(15))
     }
+
+    @Test
+    fun `a fee that would come out of frozen XOR stops the transfer before it leaves the phone`() =
+        runTest {
+            val xor = BigInteger.TEN.pow(18)
+            val fee = BigInteger.TEN.pow(15)
+            // free 3 XOR, reserved 2 XOR, frozen 2.9995 XOR. A transfer may take free balance
+            // down to frozen - reserved, so 1 XOR plus the fee fits the transferable amount.
+            // The fee itself may only take it down to frozen: 0.0005 XOR is left for a fee of
+            // 0.001 XOR, and the node would refuse the transaction.
+            val frozen = xor * BigInteger.valueOf(3) - fee / BigInteger.TWO
+            val reserved = xor * BigInteger.TWO
+            val free = xor * BigInteger.valueOf(3)
+            coEvery { substrateCalls.fetchXORBalances("cnFrom") } returns XorBalanceDto(
+                free = free,
+                reserved = reserved,
+                miscFrozen = BalanceWrapper.lockedFreeBalance(free, reserved, frozen),
+                feeFrozen = BalanceWrapper.feeLockedFreeBalance(free, frozen),
+                bonded = BigInteger.ZERO,
+                redeemable = BigInteger.ZERO,
+                unbonding = BigInteger.ZERO,
+            )
+            val check = balanceCheckOfTransfer()
+
+            val failure = runCatching { check(fee) }.exceptionOrNull()
+
+            assertEquals("SORA2_TRANSFER_XOR_FEE_LOCKED", failure?.message)
+
+            // With the fee inside what is above the frozen amount the transfer goes ahead.
+            check(fee / BigInteger.TWO)
+        }
 }

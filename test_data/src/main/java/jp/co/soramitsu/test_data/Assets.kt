@@ -102,14 +102,36 @@ object TestAssets {
         balance = balance(balance),
     )
 
+    /** A plain balance: all of it free and transferable, nothing reserved, bonded or locked. */
     fun balance(balance: BigDecimal) = AssetBalance(
         transferable = balance,
-        reserved = balance,
-        miscFrozen = balance,
-        feeFrozen = balance,
-        bonded = balance,
-        redeemable = balance,
-        unbonding = balance,
+        reserved = BigDecimal.ZERO,
+        miscFrozen = BigDecimal.ZERO,
+        feeFrozen = BigDecimal.ZERO,
+        bonded = BigDecimal.ZERO,
+        redeemable = BigDecimal.ZERO,
+        unbonding = BigDecimal.ZERO,
         total = balance,
+    )
+
+    /**
+     * A balance as the wallet stores it for an account with locked XOR: [transferable] can be
+     * sent, [locked] more is free on the chain and held back from transfers, and [feeLocked] is
+     * held back from fees (at least [locked]; more when the account also has reserved XOR).
+     */
+    fun lockedBalance(
+        transferable: BigDecimal,
+        locked: BigDecimal,
+        reserved: BigDecimal = BigDecimal.ZERO,
+        feeLocked: BigDecimal = locked,
+    ) = AssetBalance(
+        transferable = transferable,
+        reserved = reserved,
+        miscFrozen = locked,
+        feeFrozen = feeLocked,
+        bonded = BigDecimal.ZERO,
+        redeemable = BigDecimal.ZERO,
+        unbonding = BigDecimal.ZERO,
+        total = transferable + locked + reserved,
     )
 }
