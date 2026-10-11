@@ -340,32 +340,85 @@ class AddLiquidityViewModelTest {
     }
 
     @Test
-    fun `reserves that cannot be read from the network do not end the app`() = runTest {
+    fun `reserves that cannot be read keep Supply off and Try again reads them`() = runTest {
         // The pair is not in the local cache, so its reserves are read from the network, and
-        // that read fails. Before, the exception left viewModelScope uncaught (runTest reports
-        // that), which ends the app on a device.
+        // that read fails. First fix: the exception no longer leaves viewModelScope uncaught
+        // (which ends the app). But the screen then went on with reserves of zero, as for a new
+        // pool: both amounts could be typed freely and confirmed, and the deposit failed on
+        // chain with the fee charged.
         expectedReportedErrors = 1
         given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
-            .willReturn(flowOf(false))
+            .willReturn(flowOf(true))
         given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
-            .willReturn(flowOf(false))
+            .willReturn(flowOf(true))
         given(poolsInteractor.subscribeReservesCache(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(null))
+        var reads = 0
         given(
             poolsInteractor.getLiquidityData(
-                XOR_ASSET.token,
-                VAL_ASSET.token,
-                enabled = false,
-                presented = false
+                eq(XOR_ASSET.token),
+                eq(VAL_ASSET.token),
+                any(),
+                any(),
             )
-        ).willAnswer { throw java.io.IOException("socket closed") }
+        ).willAnswer {
+            reads += 1
+            if (reads == 1) throw java.io.IOException("socket closed")
+            LIQUIDITY_DATA
+        }
+        listOf(
+            R.string.tx_outcome_pool_unavailable_title,
+            R.string.tx_outcome_pool_unavailable,
+            R.string.common_try_again,
+            R.string.common_close,
+        ).forEach { id ->
+            given(resourceManager.getString(id)).willReturn("text-$id")
+        }
 
         setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
+        viewModel.onAmount1Change(BigDecimal.ONE)
+        viewModel.onAmount2Change(BigDecimal.ONE)
+        advanceUntilIdle()
 
-        // The screen is still there with both tokens, and the amounts can be entered.
+        // Both tokens and both amounts are there, and Supply is off because of the reserves.
         assertEquals(VAL_ASSET.token.id, viewModel.addState.value.assetState2?.token?.id)
-        assertEquals("Enter amount", viewModel.addState.value.btnState.text)
+        assertEquals(
+            "text-${R.string.tx_outcome_pool_unavailable_title}",
+            viewModel.addState.value.btnState.text,
+        )
+        assertFalse(viewModel.addState.value.btnState.enabled)
+        // Nothing was estimated against reserves that were never read ...
+        verify(poolsInteractor, never()).calcLiquidityDetails(
+            any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
+        )
+        // ... and nothing can be signed.
+        viewModel.onConfirmClick()
+        advanceUntilIdle()
+        verify(poolsInteractor, never()).observeAddLiquidity(
+            any(), any(), any(), any(), any(), any(), any(), any(),
+        )
+
+        // The person is told, with Try again; the cache flow would never ask a second time.
+        val notice = checkNotNull(viewModel.confirmDialogLiveData.value)
+        assertEquals("text-${R.string.tx_outcome_pool_unavailable_title}", notice.title)
+        assertEquals("text-${R.string.tx_outcome_pool_unavailable}", notice.message)
+        assertEquals("text-${R.string.common_try_again}", notice.confirmText)
+
+        notice.onConfirm()
+        advanceUntilIdle()
+
+        assertEquals(2, reads)
+        assertEquals("Supply", viewModel.addState.value.btnState.text)
+        assertTrue(viewModel.addState.value.btnState.enabled)
+        // The amounts are now checked against the reserves that were read.
+        verify(poolsInteractor, org.mockito.Mockito.atLeastOnce()).calcLiquidityDetails(
+            any(),
+            any(),
+            eq(LIQUIDITY_DATA.firstReserves),
+            eq(LIQUIDITY_DATA.secondReserves),
+            any(), any(), any(), any(), any(), any(), any(),
+        )
     }
 
     @Test
