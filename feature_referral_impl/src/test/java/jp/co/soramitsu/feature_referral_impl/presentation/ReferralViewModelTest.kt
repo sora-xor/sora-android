@@ -282,7 +282,9 @@ class ReferralViewModelTest {
         whenever(assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)).thenReturn(
             flow { emit(TestAssets.xorAsset()) }
         )
-        whenever(interactor.calcBondFee()).thenAnswer { throw jp.co.soramitsu.common.network.BoundedHttpTextException("BOUNDED_HTTP_IO") }
+        whenever(interactor.calcBondFee()).thenAnswer {
+            throw jp.co.soramitsu.common.network.BoundedHttpTextException("BOUNDED_HTTP_IO")
+        }
 
         setupViewModel()
         advanceUntilIdle()
