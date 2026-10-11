@@ -408,9 +408,10 @@ class ExtrinsicManager @Inject constructor(
             pendingSubmissionCoordinator.kickAfterUnknownBestEffort()
             val refusal = Sora2SubmissionRefusalClassifier.refusalOrNull(error)
             if (refusal != null) {
-                // The node answered with an explicit refusal: the transaction was not broadcast
-                // and the user is told so. The journal row is left exactly as it is; the status
-                // check still scans its validity window and lets it expire.
+                // The node answered with an explicit refusal, or no reviewed endpoint could be
+                // connected to: the transaction was not broadcast and the user is told so. The
+                // journal row is left exactly as it is; the status check still scans its
+                // validity window and lets it expire.
                 presentationBestEffort {
                     pendingSubmissionCoordinator.recordNodeRefusal(armed, refusal)
                 }
