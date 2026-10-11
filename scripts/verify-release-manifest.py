@@ -536,9 +536,12 @@ def check_manifest(manifest: Element, policy: dict, version_code=None, version_n
             for part in forbidden:
                 if part in field.lower():
                     issues.append(f"forbidden component is packaged: <{component.name}> {field}")
-        flag = as_bool(component.get("exported"))
+        declared = component.get("exported")
+        flag = as_bool(declared)
         has_filter = bool(component.child_elements("intent-filter"))
-        if flag is True or (flag is None and has_filter):
+        # Exported when it says so, when it has an intent filter and says nothing, and when the
+        # value is not a plain true or false (a resource reference cannot be judged here).
+        if flag is True or (flag is None and (has_filter or declared is not None)):
             if name in exported:
                 issues.append(f"exported component {name} is declared twice")
             exported[name] = component
