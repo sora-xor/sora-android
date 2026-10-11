@@ -40,7 +40,8 @@ jobs:
   upgrade-device-tests:
     name: Wallet upgrade device tests (emulator)
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    # Builds seven test APKs and two app variants before the tests start.
+    timeout-minutes: 150
     env:
       GRADLE_OPTS: -Dorg.gradle.daemon=false
       # Read by the device-test scripts and passed to every Gradle call.

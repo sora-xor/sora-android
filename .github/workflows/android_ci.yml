@@ -57,15 +57,18 @@ jobs:
           ./gradlew $GRADLE_FLAGS -I scripts/verify-production-release-lock-coverage.gradle
           verifyProductionReleaseLockCoverage resolveReleaseDependencyLocks
 
-      - name: Test the release manifest and Google identity checks
-        # The last one also runs the real release gate (:app:verifyProductionReleaseSigning)
-        # without inputs and expects it to refuse the build.
+      - name: Test the release manifest check, the Google identity pins and the device-test scripts
+        # The second one also runs the real release gate (:app:verifyProductionReleaseSigning)
+        # without inputs and expects it to refuse the build. The third one runs the
+        # device-test scripts against recorders in place of Gradle and adb; the tests on an
+        # emulator are in android_device_tests.yml.
         env:
           SORA_TEST_RELEASE_GATE: "1"
           SORA_GRADLE_FLAGS: ${{ env.GRADLE_FLAGS }}
         run: |
           python3 scripts/test-verify-release-manifest.py
           python3 scripts/test-google-identity-pin.py
+          python3 scripts/test-device-test-scripts.py
 
       - name: Run unit tests
         run: ./gradlew $GRADLE_FLAGS testProductionDebugUnitTest
