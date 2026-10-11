@@ -160,11 +160,15 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private var pairPresented: Boolean = true
 
     /**
-     * The reserves of the chosen pair could not be read from the network. Without them the
-     * second amount cannot be derived from the first, so nothing may be reviewed or signed until
-     * a read succeeds: amounts typed at any other ratio than the pool's fail on chain, and the
-     * fee is charged for it.
+     * The reserves of the chosen pair are known (from the local cache or from the network; zero
+     * reserves read from the network mean a new pool). Until then the second amount cannot be
+     * derived from the first, so nothing is estimated, reviewed or signed: amounts typed at any
+     * other ratio than the pool's fail on chain, and the fee is charged for it. The read can
+     * also simply take long, for example while the connection is being restored.
      */
+    private var reservesReady = false
+
+    /** The last read of the reserves failed; the person is told, with Try again. */
     private var reservesUnavailable = false
 
     private val _searchTokenFilter = MutableStateFlow(emptySearchTokenFilter)
@@ -377,6 +381,11 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
 
+            // Still being read: Supply is shown and stays off until the reserves are there.
+            !reservesReady -> {
+                resourceManager.getString(R.string.common_supply) to false
+            }
+
             balanceCheckResult -> {
                 resourceManager.getString(R.string.common_supply) to true
             }
@@ -409,7 +418,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
             return
         }
         // Nothing is estimated against reserves that were never read.
-        if (reservesUnavailable) return
+        if (!reservesReady) return
 
         setButtonLoading(true)
 
@@ -655,9 +664,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
         if (token1State != null && token2State != null) {
             subscribePoolChanges(token1State.id, token2State.id)
             subscribeReserves(token1State.id, token2State.id)
-        } else {
-            onChangedProperty.set(false)
         }
+        // Also with both tokens chosen: the reserves can take long to arrive (or not arrive
+        // while offline), and the button must not keep the text of the previous state.
+        onChangedProperty.set(false)
     }
 
     private fun cleanUpSubscriptions() {
@@ -665,6 +675,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
         pairPresentedJob?.cancel()
         liquidityDataSubscriptionJob?.cancel()
         liquidityData = LiquidityData()
+        reservesReady = false
         reservesUnavailable = false
     }
 
@@ -717,6 +728,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                                 fetchLiquidityData()
                             } else {
                                 liquidityData = localData
+                                reservesReady = true
                                 reservesUnavailable = false
                                 _addState.value = _addState.value.copy(
                                     pairNotExist = false,
@@ -756,6 +768,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
         // The pair may have been changed while the answer was on its way.
         if (tokenFrom.id != addToken1 || tokenTo.id != addToken2) return
         liquidityData = fetched
+        reservesReady = true
         reservesUnavailable = false
         _addState.value = _addState.value.copy(
             pairNotExist = liquidityData.secondReserves.isZero() && liquidityData.firstReserves.isZero(),
@@ -764,6 +777,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
 
     private fun onReservesUnavailable(error: Throwable) {
         FirebaseWrapper.recordException(error)
+        reservesReady = false
         reservesUnavailable = true
         liquidityDetails = null
         updateButtonState()
@@ -897,7 +911,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
         val state1 = _addState.value.assetState1 ?: return
         val state2 = _addState.value.assetState2 ?: return
         // Never sign amounts that were not checked against the pool's reserves.
-        if (reservesUnavailable) return
+        if (!reservesReady) return
         viewModelScope.launch {
             setConfirmButton(enabled = false, loading = true)
             var outcome: TransactionOutcome? = null
