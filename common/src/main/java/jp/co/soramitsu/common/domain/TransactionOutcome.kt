@@ -15,8 +15,9 @@ package jp.co.soramitsu.common.domain
  *
  * - [Confirmed]: found in a finalized block and executed successfully.
  * - [FailedOnChain]: the network gave a final negative answer for the broadcast transaction.
- * - [RefusedByNode]: the node answered the single submission with an explicit error, so the
- *   transaction was never broadcast. It is a failure and must never be shown as "submitted".
+ * - [RefusedByNode]: the node answered the single submission with an explicit error, or no node
+ *   could be connected to at all ([TransactionNodeRefusal.NOT_REACHED]), so the transaction was
+ *   never broadcast. It is a failure and must never be shown as "submitted".
  * - [Waiting]: handed over (or possibly handed over) and not final yet. It must never be shown
  *   as failed or rejected; the background status check resolves it and Activity shows the result.
  *
@@ -72,6 +73,12 @@ enum class TransactionNodeRefusal {
 
     /** The node checked the transaction and found it not valid right now. */
     NOT_VALID,
+
+    /**
+     * No node was reached: no connection to any SORA endpoint could be established, so the
+     * signed transaction never left this device. There is no answer from a node in this case.
+     */
+    NOT_REACHED,
 }
 
 /**

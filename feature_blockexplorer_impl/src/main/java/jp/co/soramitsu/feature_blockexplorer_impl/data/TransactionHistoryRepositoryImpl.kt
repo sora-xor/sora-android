@@ -580,6 +580,8 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
                         TransactionStatusDetail.Kind.REFUSED_NETWORK_BUSY
                     TransactionNodeRefusal.NOT_VALID ->
                         TransactionStatusDetail.Kind.REFUSED_NOT_VALID
+                    TransactionNodeRefusal.NOT_REACHED ->
+                        TransactionStatusDetail.Kind.NOT_REACHED
                 },
                 text = refusal.message,
             )

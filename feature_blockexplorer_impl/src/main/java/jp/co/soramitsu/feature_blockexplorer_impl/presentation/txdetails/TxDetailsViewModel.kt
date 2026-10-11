@@ -195,6 +195,12 @@ class TxDetailsViewModel @AssistedInject constructor(
                 TransactionNodeRefusal.NOT_VALID,
                 detail.text,
             )
+        TransactionStatusDetail.Kind.NOT_REACHED ->
+            TransactionOutcomeTexts.refusedNote(
+                resourceManager,
+                TransactionNodeRefusal.NOT_REACHED,
+                null,
+            )
     }
 
     private suspend fun calcState() {
