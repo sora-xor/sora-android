@@ -60,6 +60,7 @@ import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.Sora2TransferFeePreviewRequest
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountViewModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -262,7 +263,7 @@ class TransferAmountViewModelTest {
             transferAmountViewModel.errorFromResourceLiveData.value,
         )
         verify(exactly = 0) { walletRouter.returnToHubFragment() }
-        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
     }
 
     // --- audit A5: one truthful result for every outcome of Confirm -------------------------
@@ -287,12 +288,14 @@ class TransferAmountViewModelTest {
 
     private fun kotlinx.coroutines.test.TestScope.readyToConfirm() {
         every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
-        every { assetsRouter.showTxDetails(any(), any()) } returns Unit
+        every { assetsRouter.showTxResult(any(), any()) } returns true
         initViewModel(
             balance = BigDecimal.TEN,
             initialSendAmount = BigDecimal.ONE.toPlainString(),
         )
         advanceUntilIdle()
+        // The send screen is the screen in front, as it is when Confirm is tapped.
+        transferAmountViewModel.onScreenResumed()
     }
 
     @Test
@@ -307,7 +310,7 @@ class TransferAmountViewModelTest {
             TransactionResultBadge.CONFIRMED,
             transferAmountViewModel.transactionSuccessEvent.value,
         )
-        verify { assetsRouter.showTxDetails(txHash, true) }
+        verify { assetsRouter.showTxResult(txHash, TransactionScreen.SEND) }
         assertFalse(transferAmountViewModel.sendState.value.inProgress)
     }
 
@@ -324,7 +327,7 @@ class TransferAmountViewModelTest {
                 TransactionResultBadge.SUBMITTED,
                 transferAmountViewModel.transactionSuccessEvent.value,
             )
-            verify { assetsRouter.showTxDetails(txHash, true) }
+            verify { assetsRouter.showTxResult(txHash, TransactionScreen.SEND) }
             assertNull(transferAmountViewModel.alertDialogLiveData.value)
         }
 
@@ -345,7 +348,7 @@ class TransferAmountViewModelTest {
 
         // Before the fix: the green "Transaction submitted" toast and the transaction page.
         assertNull(transferAmountViewModel.transactionSuccessEvent.value)
-        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
         assertEquals(
             "text-${R.string.tx_outcome_refused_title}" to
                 "text-${R.string.tx_outcome_note_refused_fee}",
@@ -376,7 +379,7 @@ class TransferAmountViewModelTest {
                 "text-${R.string.tx_outcome_note_failed_on_chain_reason}",
             transferAmountViewModel.alertDialogLiveData.value,
         )
-        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
     }
 
     @Test
@@ -398,7 +401,7 @@ class TransferAmountViewModelTest {
                 "text-${R.string.tx_outcome_not_sent_fee_changed}",
             transferAmountViewModel.alertDialogLiveData.value,
         )
-        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
     }
 
     private fun feeChanged() = IllegalStateException(
@@ -449,7 +452,7 @@ class TransferAmountViewModelTest {
             assertEquals(2, sentWithFee.size)
             assertEquals(0, sentWithFee[0].compareTo(networkFee))
             assertEquals(0, sentWithFee[1].compareTo(newFee))
-            verify { assetsRouter.showTxDetails(txHash, true) }
+            verify { assetsRouter.showTxResult(txHash, TransactionScreen.SEND) }
         }
 
     @Test
@@ -495,11 +498,139 @@ class TransferAmountViewModelTest {
         val question = checkNotNull(transferAmountViewModel.confirmDialogLiveData.value)
         assertEquals("text-${R.string.tx_outcome_duplicate_title}", question.title)
         assertNull(transferAmountViewModel.transactionSuccessEvent.value)
-        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
 
         question.onConfirm()
         advanceUntilIdle()
-        verify { assetsRouter.showTxDetails("0x" + "cd".repeat(32), true) }
+        verify { assetsRouter.showTxResult("0x" + "cd".repeat(32), TransactionScreen.SEND) }
+    }
+
+    // --- the result arrives while the screen is not in front -------------------------------
+
+    @Test
+    fun `a result that arrives in the background opens its page on return and not before`() =
+        runTest {
+            readyToConfirm()
+            transferAnswers(false) {
+                // Home was pressed (or the phone locked) while the transfer was followed.
+                transferAmountViewModel.onScreenPaused()
+                TransactionOutcome.Confirmed(txHash, "0xblock")
+            }
+
+            transferAmountViewModel.onConfirmClick()
+            advanceUntilIdle()
+
+            // Before the fix the page was opened from the coroutine at this moment. With the
+            // activity stopped that navigation is dropped, and with the PIN lock on top it
+            // removes the PIN lock.
+            verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
+            // The toast is delivered by the screen when it is shown again.
+            assertEquals(
+                TransactionResultBadge.CONFIRMED,
+                transferAmountViewModel.transactionSuccessEvent.value,
+            )
+
+            transferAmountViewModel.onScreenResumed()
+
+            verify(exactly = 1) { assetsRouter.showTxResult(txHash, TransactionScreen.SEND) }
+
+            // Shown once: a later return to the front opens nothing more.
+            transferAmountViewModel.onScreenPaused()
+            transferAmountViewModel.onScreenResumed()
+            verify(exactly = 1) { assetsRouter.showTxResult(any(), any()) }
+        }
+
+    @Test
+    fun `a sent transfer cannot be confirmed a second time while its page has not opened`() =
+        runTest {
+            readyToConfirm()
+            var sent = 0
+            transferAnswers(false) {
+                sent += 1
+                transferAmountViewModel.onScreenPaused()
+                TransactionOutcome.Confirmed(txHash, "0xblock")
+            }
+
+            transferAmountViewModel.onConfirmClick()
+            advanceUntilIdle()
+
+            // Before the fix Confirm was still on with the same fee. The first transfer is
+            // final, so the duplicate question would not have been asked for the second one.
+            val state = transferAmountViewModel.sendState.value
+            assertFalse(state.reviewEnabled)
+            assertFalse(state.inProgress)
+
+            transferAmountViewModel.onConfirmClick()
+            advanceUntilIdle()
+            assertEquals(1, sent)
+
+            // Editing the amount and getting a new fee does not bring Confirm back either.
+            transferAmountViewModel.amountChanged(BigDecimal("2"))
+            advanceUntilIdle()
+            assertFalse(transferAmountViewModel.sendState.value.reviewEnabled)
+            transferAmountViewModel.onConfirmClick()
+            advanceUntilIdle()
+            assertEquals(1, sent)
+        }
+
+    @Test
+    fun `a result is kept while the PIN lock is on top and shown when the screen is back`() =
+        runTest {
+            readyToConfirm()
+            // The router opens the page only when the send screen is the current destination.
+            var pinLockOnTop = true
+            every { assetsRouter.showTxResult(any(), any()) } answers { !pinLockOnTop }
+            transferAnswers(false) {
+                transferAmountViewModel.onScreenPaused()
+                TransactionOutcome.Waiting(txHash, acceptedByNode = true)
+            }
+
+            transferAmountViewModel.onConfirmClick()
+            advanceUntilIdle()
+
+            // The app returns after more than five minutes: the activity resumes this screen
+            // for a moment while the PIN lock is already the current destination.
+            transferAmountViewModel.onScreenResumed()
+            verify(exactly = 1) { assetsRouter.showTxResult(txHash, TransactionScreen.SEND) }
+            assertFalse(transferAmountViewModel.sendState.value.reviewEnabled)
+            transferAmountViewModel.onScreenPaused()
+
+            // The PIN was entered and the PIN lock removed itself.
+            pinLockOnTop = false
+            transferAmountViewModel.onScreenResumed()
+            verify(exactly = 2) { assetsRouter.showTxResult(txHash, TransactionScreen.SEND) }
+
+            // Opened: nothing more is asked of the router.
+            transferAmountViewModel.onScreenPaused()
+            transferAmountViewModel.onScreenResumed()
+            verify(exactly = 2) { assetsRouter.showTxResult(any(), any()) }
+        }
+
+    @Test
+    fun `a failure that arrives in the background is explained and opens nothing`() = runTest {
+        readyToConfirm()
+        transferAnswers(false) {
+            transferAmountViewModel.onScreenPaused()
+            TransactionOutcome.RefusedByNode(
+                txHash = txHash,
+                reason = TransactionNodeRefusal.CANNOT_PAY_FEE,
+                nodeMessage = "Inability to pay some fees (e.g. account balance too low)",
+            )
+        }
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+        transferAmountViewModel.onScreenResumed()
+
+        // The dialog is held by the view model and delivered when the screen is shown again.
+        assertEquals(
+            "text-${R.string.tx_outcome_refused_title}" to
+                "text-${R.string.tx_outcome_note_refused_fee}",
+            transferAmountViewModel.alertDialogLiveData.value,
+        )
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
+        // Nothing was sent, so Confirm is available again.
+        assertTrue(transferAmountViewModel.sendState.value.reviewEnabled)
     }
 
     @Test

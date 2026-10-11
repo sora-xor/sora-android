@@ -68,6 +68,7 @@ import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.states.SendState
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
@@ -136,6 +137,14 @@ class TransferAmountViewModel @AssistedInject constructor(
     private val assetsList = mutableListOf<Asset>()
     private var curTokenId: String = assetId
     private var hasXorReminderWarningBeenChecked = false
+
+    /**
+     * The transfer of this screen that reached the network. From then on this screen sends
+     * nothing more: it is replaced by the transaction's page as soon as it is in front, and
+     * until then Confirm stays off. A second tap would otherwise sign a second transfer, and
+     * the duplicate question only covers a transfer that is still waiting.
+     */
+    private var sentTxHash: String? = null
 
     private val _sendState = MutableStateFlow(
         SendState(
@@ -449,8 +458,13 @@ class TransferAmountViewModel @AssistedInject constructor(
      * it. A transfer that failed on chain, was refused by the node before broadcast, or could
      * not be prepared is explained in a dialog and the screen stays; it is never announced as
      * submitted.
+     *
+     * The result arrives after a wait of up to two minutes, so the app can be in the background
+     * or behind the PIN lock by then. The toast and the dialogs are delivered when the screen is
+     * shown again; the transaction page opens when it is in front (see [openTransactionPage]).
      */
     private fun confirmTransfer(confirmedDuplicate: Boolean) {
+        if (sentTxHash != null) return
         val curAsset = curAsset ?: return
         val amount = _sendState.value.input?.amount ?: return
         val fee = fee ?: return
@@ -489,8 +503,10 @@ class TransferAmountViewModel @AssistedInject constructor(
             when (outcome) {
                 is TransactionOutcome.Confirmed,
                 is TransactionOutcome.Waiting -> {
+                    sentTxHash = outcome.txHash
+                    _sendState.value = _sendState.value.copy(reviewEnabled = false)
                     _transactionSuccessEvent.value = outcome.badge()
-                    assetsRouter.showTxDetails(outcome.txHash, true)
+                    openTransactionPage(outcome.txHash)
                 }
                 is TransactionOutcome.FailedOnChain -> {
                     val text = TransactionOutcomeTexts.describe(resourceManager, outcome)
@@ -505,6 +521,15 @@ class TransferAmountViewModel @AssistedInject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Opens the transaction's page in place of this screen, only while this screen is in front.
+     * A result that arrives while the app is in the background, or while the PIN lock is on
+     * top, is held and the page opens on the next resume; nothing is navigated before that.
+     */
+    private fun openTransactionPage(txHash: String) = showWhenInFront {
+        assetsRouter.showTxResult(txHash, TransactionScreen.SEND)
     }
 
     /**
@@ -600,7 +625,8 @@ class TransferAmountViewModel @AssistedInject constructor(
                         error = false,
                         errorHint = "",
                     ),
-                    reviewEnabled = true,
+                    // A balance update after the transfer must not switch Confirm on again.
+                    reviewEnabled = sentTxHash == null,
                 )
             }
         }
