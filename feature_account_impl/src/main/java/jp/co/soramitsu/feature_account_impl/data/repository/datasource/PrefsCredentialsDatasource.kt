@@ -174,6 +174,10 @@ class PrefsCredentialsDatasource constructor(
         soraPreferences.markKeySetsNeedingPhrase(exceptIds)
     }
 
+    override suspend fun unmarkKeySetsNeedingPhrase(ids: Set<String>) {
+        soraPreferences.unmarkKeySetsNeedingPhrase(ids)
+    }
+
     override suspend fun requireWalletPreferenceCoverage(
         walletIds: Set<String>,
         selectedAddress: String,

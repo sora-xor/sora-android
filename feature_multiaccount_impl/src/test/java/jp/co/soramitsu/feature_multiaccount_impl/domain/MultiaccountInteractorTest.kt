@@ -118,6 +118,7 @@ class MultiaccountInteractorTest {
         // Nothing is missing unless a test says so, and the PIN screen's counter starts clean.
         coEvery { credentialsRepository.addMissingBackup(any()) } returns false
         coEvery { userRepository.refreshVerifiedWallet(any()) } returns Unit
+        coEvery { userRepository.keySetProvenByItsBackup(any()) } returns Unit
         coEvery { userRepository.retrievePinTriesUsed() } answers { pinTries }
         coEvery { userRepository.savePinTriesUsed(any()) } answers { pinTries = firstArg() }
         coEvery { userRepository.resetTriesUsed() } answers { pinTries = 0 }
@@ -176,6 +177,81 @@ class MultiaccountInteractorTest {
             userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
         }
         assertTrue(draft.isDestroyedForTest())
+    }
+
+    @Test
+    fun `importing a wallet takes its needs-phrase mark off before its account is added`() = runTest {
+        // The key set was left by Remove all accounts. Its own phrase adopts the stored keys;
+        // from then on it is the person's wallet again and must not stay marked.
+        val draft = draft("cnLeft", "Mine")
+        val imported = SoraAccount("cnLeft", "Mine")
+        coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+        coEvery { userRepository.accountExists("cnLeft") } returns false
+        coEvery { credentialsRepository.commitDraft(draft) } returns imported
+
+        multiaccountInteractor.importFromMnemonic("mnemonic", "Mine")
+
+        coVerifyOrder {
+            credentialsRepository.commitDraft(draft)
+            userRepository.keySetProvenByItsBackup("cnLeft")
+            userRepository.insertSoraAccount(imported, false)
+        }
+    }
+
+    @Test
+    fun `a mark that cannot be taken off ends the import before the account is added`() = runTest {
+        val draft = draft("cnLeft", "Mine")
+        coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+        coEvery { userRepository.accountExists("cnLeft") } returns false
+        coEvery { credentialsRepository.commitDraft(draft) } returns SoraAccount("cnLeft", "Mine")
+        coEvery { userRepository.keySetProvenByItsBackup("cnLeft") } throws
+            java.io.IOException("No space left on device")
+
+        val error = runCatching {
+            multiaccountInteractor.importFromMnemonic("mnemonic", "Mine")
+        }.exceptionOrNull()
+
+        // Nothing is half done: trying again adopts the same stored keys and unmarks.
+        assertTrue(error is java.io.IOException)
+        coVerify(exactly = 0) { userRepository.insertSoraAccount(any(), any()) }
+        assertTrue(draft.isDestroyedForTest())
+    }
+
+    @Test
+    fun `entering the secret of an account that already signs takes a leftover mark off`() = runTest {
+        val draft = draft("cnExisting", "Existing")
+        coEvery { credentialsRepository.draftFromMnemonic(any(), any()) } returns draft
+        coEvery { userRepository.accountExists("cnExisting") } returns true
+        coEvery { userRepository.unavailableWalletIds() } returns emptySet()
+
+        val first = runCatching {
+            multiaccountInteractor.importFromMnemonic("mnemonic", "Existing")
+        }.exceptionOrNull()
+        assertEquals(ResponseCode.ACCOUNT_ALREADY_IMPORTED, (first as? SoraException)?.errorResponseCode)
+        coVerify(exactly = 1) { userRepository.keySetProvenByItsBackup("cnExisting") }
+
+        // The answer is the same when the mark cannot be written just now.
+        coEvery { userRepository.keySetProvenByItsBackup("cnExisting") } throws
+            IllegalStateException("WALLET_RECOVERY_READ_ONLY")
+        val second = runCatching {
+            multiaccountInteractor.importFromMnemonic("mnemonic", "Existing")
+        }.exceptionOrNull()
+        assertEquals(ResponseCode.ACCOUNT_ALREADY_IMPORTED, (second as? SoraException)?.errorResponseCode)
+    }
+
+    @Test
+    fun `the read-only options are read off the caller's thread`() = runTest {
+        // Every stored value of the account is decrypted through the Keystore for them.
+        val caller = Thread.currentThread()
+        var worker: Thread? = null
+        coEvery { userRepository.unavailableWalletOptions("cnReadOnly") } answers {
+            worker = Thread.currentThread()
+            null
+        }
+
+        multiaccountInteractor.unavailableWalletOptions("cnReadOnly")
+
+        assertTrue(worker != null && worker !== caller)
     }
 
     @Test
@@ -490,6 +566,8 @@ class MultiaccountInteractorTest {
             assertEquals(listOf(SoraAccount("cnA", "Restored")), result.restored)
             assertEquals(listOf("cnB"), result.notRestorable)
             coVerify(exactly = 0) { userRepository.adoptRetainedWallet("cnLeftByRemoveAll", any(), any()) }
+            // The PIN is no proof of a wallet's own secret: it never takes a mark off.
+            coVerify(exactly = 0) { userRepository.keySetProvenByItsBackup(any()) }
         }
 
     @Test

@@ -1242,6 +1242,87 @@ class UserRepositoryTest {
     }
 
     @Test
+    fun `no account is labelled read-only while wallet changes are off for the whole app`() = runTest {
+        // An upgrade from Room 73 gives every account PENDING_VERIFICATION. When the first
+        // check is interrupted and the person continues in read-only mode, nothing was judged:
+        // every account is "not verified", and none of them is known to be read-only.
+        every { accountDao.flowAccountsNotVerified() } returns flowOf(listOf("accountAddress", "a"))
+        try {
+            WalletRecoveryCapabilityGate.enterBlocked()
+            WalletRecoveryCapabilityGate.enterLegacyReadOnly()
+            userRepository.getCurSoraAccount()
+
+            assertEquals(emptySet<String>(), userRepository.flowUnavailableWalletIds().first())
+            assertEquals(
+                SelectedAccountSigning("accountAddress", readOnly = false),
+                userRepository.flowSelectedAccountSigning().first(),
+            )
+
+            // Neither a reason nor an action is offered: repair and removal are refused there.
+            coEvery { accountDao.getAccount("accountAddress") } returns
+                SoraAccountLocal("accountAddress", "accountName")
+            coEvery { walletIdentityDao.getWallet("accountAddress") } returns
+                identity("accountAddress", "PENDING_VERIFICATION")
+            assertEquals(null, userRepository.unavailableWalletOptions("accountAddress"))
+            coVerify(exactly = 0) { credentialsDatasource.readStoredCredential(any(), any()) }
+        } finally {
+            WalletRecoveryCapabilityGate.enterNormal()
+        }
+
+        // Back in normal mode the labels follow the database again.
+        assertEquals(setOf("accountAddress", "a"), userRepository.flowUnavailableWalletIds().first())
+    }
+
+    @Test
+    fun `the labels go and come back with the app mode without a new database read`() = runTest {
+        every { accountDao.flowAccountsNotVerified() } returns MutableStateFlow(listOf("cnReadOnly"))
+        val seen = mutableListOf<Set<String>>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            userRepository.flowUnavailableWalletIds().collect { seen += it }
+        }
+        try {
+            assertEquals(setOf("cnReadOnly"), seen.last())
+
+            WalletRecoveryCapabilityGate.enterBlocked()
+            assertEquals(emptySet<String>(), seen.last())
+
+            WalletRecoveryCapabilityGate.enterNormal()
+            assertEquals(setOf("cnReadOnly"), seen.last())
+        } finally {
+            WalletRecoveryCapabilityGate.enterNormal()
+            job.cancel()
+        }
+    }
+
+    @Test
+    fun `a complete key that nothing has judged is not called unusable`() = runTest {
+        val present = StoredCredential.Present("value")
+        readOnlyAccountWith(present, present, present)
+        // The identity an upgrade creates before its first check, or no identity at all.
+        coEvery { walletIdentityDao.getWallet("cnReadOnly") } returns
+            identity("cnReadOnly", "PENDING_VERIFICATION")
+        val pending = requireNotNull(userRepository.unavailableWalletOptions("cnReadOnly"))
+        assertEquals(UnavailableWalletReason.NOT_CHECKED, pending.reason)
+        // Restoring the keys completes the check, so the repair stays offered.
+        assertTrue(pending.canRepairWithPhrase)
+
+        coEvery { walletIdentityDao.getWallet("cnReadOnly") } returns null
+        assertEquals(
+            UnavailableWalletReason.NOT_CHECKED,
+            userRepository.unavailableWalletOptions("cnReadOnly")?.reason,
+        )
+
+        // What the stored values show by themselves is still said for an unjudged account.
+        readOnlyAccountWith(StoredCredential.Absent, StoredCredential.Absent, StoredCredential.Absent)
+        coEvery { walletIdentityDao.getWallet("cnReadOnly") } returns
+            identity("cnReadOnly", "PENDING_VERIFICATION")
+        assertEquals(
+            UnavailableWalletReason.KEY_MISSING,
+            userRepository.unavailableWalletOptions("cnReadOnly")?.reason,
+        )
+    }
+
+    @Test
     fun `an account that signs has no read-only options`() = runTest {
         assertEquals(null, userRepository.unavailableWalletOptions("accountAddress"))
     }
@@ -1343,6 +1424,69 @@ class UserRepositoryTest {
         coVerify(exactly = 0) { credentialsDatasource.retrieveKeys(any()) }
         coVerify(exactly = 0) { accountDao.insertSoraAccount(any()) }
         coVerify(exactly = 0) { userDatasource.setCurAccountAddress(any()) }
+    }
+
+    // ---- A marked key set that its owner proved is theirs again ------------------------------
+
+    @Test
+    fun `importing a marked wallet takes its mark off and writes nothing else`() = runTest {
+        coEvery { credentialsDatasource.retainedKeySetsNeedingPhrase() } returns
+            setOf("cnLeft", "cnOther", WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID)
+        coEvery { credentialsDatasource.unmarkKeySetsNeedingPhrase(any()) } returns Unit
+
+        userRepository.keySetProvenByItsBackup("cnLeft")
+
+        // Only this wallet's id: the release-era set is another wallet's (no unsuffixed key
+        // derives this address), and so is every other marked set.
+        coVerify(exactly = 1) { credentialsDatasource.unmarkKeySetsNeedingPhrase(setOf("cnLeft")) }
+        coVerify(exactly = 0) { credentialsDatasource.markKeySetsNeedingPhrase(any()) }
+    }
+
+    @Test
+    fun `the release-era set is unmarked with the wallet its keys derive`() = runTest {
+        val keys = retainedFifteenWordKeyPair()
+        coEvery { credentialsDatasource.retainedKeySetsNeedingPhrase() } returns
+            setOf(WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID)
+        coEvery { credentialsDatasource.unmarkKeySetsNeedingPhrase(any()) } returns Unit
+        coEvery { credentialsDatasource.retrieveKeys("") } returns keys
+        every { runtimeManager.toSoraAddressOrNull(keys.publicKey) } returns "cnLegacyOwner"
+
+        // Another wallet's import leaves the release-era mark alone.
+        userRepository.keySetProvenByItsBackup("cnSomeoneElse")
+        coVerify(exactly = 0) { credentialsDatasource.unmarkKeySetsNeedingPhrase(any()) }
+
+        userRepository.keySetProvenByItsBackup("cnLegacyOwner")
+        coVerify(exactly = 1) {
+            credentialsDatasource.unmarkKeySetsNeedingPhrase(
+                setOf(WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID)
+            )
+        }
+    }
+
+    @Test
+    fun `nothing is written when the proven wallet carries no mark`() = runTest {
+        coEvery { credentialsDatasource.retainedKeySetsNeedingPhrase() } returns emptySet()
+        userRepository.keySetProvenByItsBackup("cnPlain")
+
+        coEvery { credentialsDatasource.retainedKeySetsNeedingPhrase() } returns setOf("cnOther")
+        userRepository.keySetProvenByItsBackup("cnPlain")
+
+        coVerify(exactly = 0) { credentialsDatasource.unmarkKeySetsNeedingPhrase(any()) }
+    }
+
+    @Test
+    fun `a mark is never taken off while wallet changes are off`() = runTest {
+        coEvery { credentialsDatasource.retainedKeySetsNeedingPhrase() } returns setOf("cnLeft")
+        try {
+            WalletRecoveryCapabilityGate.enterBlocked()
+
+            val error = runCatching { userRepository.keySetProvenByItsBackup("cnLeft") }.exceptionOrNull()
+
+            assertEquals("WALLET_RECOVERY_READ_ONLY", error?.message)
+            coVerify(exactly = 0) { credentialsDatasource.unmarkKeySetsNeedingPhrase(any()) }
+        } finally {
+            WalletRecoveryCapabilityGate.enterNormal()
+        }
     }
 
     private fun retainedFifteenWordKeyPair(): Sr25519Keypair {

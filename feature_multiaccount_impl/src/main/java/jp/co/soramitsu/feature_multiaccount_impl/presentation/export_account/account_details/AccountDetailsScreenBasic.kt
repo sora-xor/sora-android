@@ -82,11 +82,13 @@ internal fun AccountDetailsScreenBasic(
     onRestoreKeysWithPhrase: () -> Unit = {},
     onRestoreKeysFromGoogle: () -> Unit = {},
     onShowSavedBackup: () -> Unit = {},
+    onRestoreKeysAnotherWay: () -> Unit = {},
 ) {
     state.readOnly?.let { readOnly ->
         ReadOnlyAccountPanel(
             readOnly = readOnly,
             onRestoreKeysWithPhrase = onRestoreKeysWithPhrase,
+            onRestoreKeysAnotherWay = onRestoreKeysAnotherWay,
             onRestoreKeysFromGoogle = onRestoreKeysFromGoogle,
             onShowSavedBackup = onShowSavedBackup,
             onRemove = onLogout,
@@ -133,6 +135,7 @@ internal object ReadOnlyAccountPanelTags {
     const val PANEL = "ReadOnlyAccountPanel"
     const val REASON = "ReadOnlyAccountReason"
     const val RESTORE_PHRASE = "ReadOnlyRestoreWithPhrase"
+    const val RESTORE_OTHER = "ReadOnlyRestoreAnotherWay"
     const val RESTORE_GOOGLE = "ReadOnlyRestoreFromGoogle"
     const val SHOW_BACKUP = "ReadOnlyShowBackup"
     const val REMOVE = "ReadOnlyRemove"
@@ -145,18 +148,21 @@ internal fun UnavailableWalletReason.textResource(): Int = when (this) {
     UnavailableWalletReason.KEY_UNREADABLE -> R.string.account_read_only_reason_unreadable
     UnavailableWalletReason.KEY_NOT_USABLE -> R.string.account_read_only_reason_not_usable
     UnavailableWalletReason.WATCH_ONLY -> R.string.account_read_only_reason_watch_only
+    UnavailableWalletReason.NOT_CHECKED -> R.string.account_read_only_reason_not_checked
 }
 
 /**
  * Why this account cannot send from this phone, and every way forward
  * (`UserRepository.unavailableWalletOptions`): restore its keys in place with its recovery
- * phrase or its Google backup, look at the backup that is saved here, or remove it. The repair
- * comes first and keeps the account; removal is last and is never needed for the repair.
+ * phrase, with its raw seed or backup file, or with its Google backup; look at the backup that
+ * is saved here; or remove it. The repair comes first and keeps the account; removal is last
+ * and is never needed for the repair.
  */
 @Composable
 internal fun ReadOnlyAccountPanel(
     readOnly: ReadOnlyAccountUi,
     onRestoreKeysWithPhrase: () -> Unit,
+    onRestoreKeysAnotherWay: () -> Unit = {},
     onRestoreKeysFromGoogle: () -> Unit,
     onShowSavedBackup: () -> Unit,
     onRemove: () -> Unit,
@@ -192,6 +198,14 @@ internal fun ReadOnlyAccountPanel(
                     text = stringResource(R.string.account_read_only_restore_phrase),
                     variant = NeonVariant.Safe,
                     onClick = onRestoreKeysWithPhrase,
+                )
+                // A wallet that was imported by raw seed or from a backup file has no phrase:
+                // the same in-place restore, from Import account's list of sources.
+                SafeAction(
+                    modifier = Modifier.testTagAsId(ReadOnlyAccountPanelTags.RESTORE_OTHER),
+                    text = stringResource(R.string.account_read_only_restore_other),
+                    variant = NeonVariant.Secondary,
+                    onClick = onRestoreKeysAnotherWay,
                 )
             }
             if (readOnly.canRestoreFromGoogle) {

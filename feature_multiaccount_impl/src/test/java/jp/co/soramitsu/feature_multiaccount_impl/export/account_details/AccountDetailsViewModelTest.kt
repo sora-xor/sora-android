@@ -272,6 +272,65 @@ class AccountDetailsViewModelTest {
     }
 
     @Test
+    fun `an account without a phrase restores its keys from Import account's list of sources`() = runTest {
+        // Imported by raw seed or from a backup file: the phrase screen alone has no way
+        // forward for it. This opens Import account where raw seed and backup file are chosen.
+        unavailable.value = setOf(account.substrateAddress)
+        given(multiAccInteractor.unavailableWalletOptions(account.substrateAddress))
+            .willReturn(readOnlyOptions(canShowPhraseAfterPin = false))
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onRestoreKeysAnotherWay()
+
+        assertEquals(AccountDetailsViewModel.RestoreKeys.CHOOSE_SOURCE, viewModel.restoreKeysEvent.value)
+        verify(mainRouter, never()).showPinForLogout(account.substrateAddress)
+    }
+
+    @Test
+    fun `the list of sources is not opened for an account that signs`() = runTest {
+        advanceUntilIdle()
+
+        accountDetailsViewModel.onRestoreKeysAnotherWay()
+
+        assertNull(accountDetailsViewModel.restoreKeysEvent.value)
+    }
+
+    @Test
+    fun `a key that nothing has judged yet is shown as not checked`() = runTest {
+        unavailable.value = setOf(account.substrateAddress)
+        given(multiAccInteractor.unavailableWalletOptions(account.substrateAddress))
+            .willReturn(readOnlyOptions(UnavailableWalletReason.NOT_CHECKED))
+
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        assertEquals(
+            UnavailableWalletReason.NOT_CHECKED,
+            viewModel.accountDetailsScreenState.value?.readOnly?.reason,
+        )
+    }
+
+    @Test
+    fun `a Keystore failure while the screen opens is reported and does not end the app`() = runTest {
+        // Account options is where every read-only notice sends the person.
+        given(multiAccInteractor.getMnemonic(account))
+            .willAnswer { throw IllegalStateException("KEYSTORE_BUSY") }
+
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        assertEquals(
+            jp.co.soramitsu.common.R.string.failure_generic_title to
+                jp.co.soramitsu.common.R.string.failure_generic_message,
+            viewModel.errorFromResourceLiveData.value,
+        )
+        // The screen is there, without the Passphrase entry.
+        assertEquals(account.substrateAddress, viewModel.accountDetailsScreenState.value?.address)
+        assertEquals(false, viewModel.accountDetailsScreenState.value?.isMnemonicAvailable)
+    }
+
+    @Test
     fun `the saved backup of a read-only account is shown after the PIN, phrase first`() = runTest {
         unavailable.value = setOf(account.substrateAddress)
         given(multiAccInteractor.unavailableWalletOptions(account.substrateAddress))

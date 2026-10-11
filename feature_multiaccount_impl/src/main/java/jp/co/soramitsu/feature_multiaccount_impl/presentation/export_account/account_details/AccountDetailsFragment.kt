@@ -117,6 +117,8 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                 entry = when (how) {
                     AccountDetailsViewModel.RestoreKeys.WITH_PHRASE ->
                         OnboardingActivity.Entry.IMPORT_RECOVERY_PHRASE
+                    AccountDetailsViewModel.RestoreKeys.CHOOSE_SOURCE ->
+                        OnboardingActivity.Entry.IMPORT_CHOOSE_SOURCE
                     AccountDetailsViewModel.RestoreKeys.FROM_GOOGLE ->
                         OnboardingActivity.Entry.IMPORT_FROM_GOOGLE
                 },
@@ -198,6 +200,7 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                         onRestoreKeysWithPhrase = viewModel::onRestoreKeysWithPhrase,
                         onRestoreKeysFromGoogle = viewModel::onRestoreKeysFromGoogle,
                         onShowSavedBackup = viewModel::onShowSavedBackup,
+                        onRestoreKeysAnotherWay = viewModel::onRestoreKeysAnotherWay,
                     )
                 }
             }

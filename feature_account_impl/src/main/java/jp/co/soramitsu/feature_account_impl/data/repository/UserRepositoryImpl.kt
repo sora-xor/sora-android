@@ -509,9 +509,18 @@ class UserRepositoryImpl(
         }
 
     override fun flowUnavailableWalletIds(): Flow<Set<String>> =
-        db.accountDao().flowAccountsNotVerified().map { ids ->
-            ids.filter(::isWalletId).toSet()
-        }
+        db.accountDao().flowAccountsNotVerified()
+            .combine(WalletRecoveryCapabilityGate.modeFlow) { ids, mode ->
+                // While wallet changes are off for the whole app, no account is labelled: none
+                // can sign, be repaired or be removed, and after an interrupted upgrade check
+                // "not verified" only means "not checked yet". The app-wide banner speaks.
+                if (WalletRecoveryCapabilityGate.isUserMutationBlocked(mode)) {
+                    emptySet()
+                } else {
+                    ids.filter(::isWalletId).toSet()
+                }
+            }
+            .distinctUntilChanged()
 
     override fun flowSelectedAccountSigning(): Flow<SelectedAccountSigning> =
         // The selection as this repository holds it (no side effect on collection), with the
@@ -1773,6 +1782,28 @@ class UserRepositoryImpl(
         true
     }
 
+    override suspend fun keySetProvenByItsBackup(address: String) {
+        mutex.withLock {
+            // The marker is wallet state: it is written only where wallet changes are allowed
+            // (the import that proves a wallet runs only there, too).
+            WalletRecoveryCapabilityGate.requireUserMutationAllowed()
+            if (!isWalletId(address)) return@withLock
+            val marked = credentialsDatasource.retainedKeySetsNeedingPhrase()
+            if (marked.isEmpty()) return@withLock
+            val proven = buildSet {
+                if (address in marked) add(address)
+                // The release-era set is the same wallet when its keys derive this address.
+                if (
+                    WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID in marked &&
+                    releaseEraOwnerIs(address)
+                ) {
+                    add(WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID)
+                }
+            }
+            if (proven.isNotEmpty()) credentialsDatasource.unmarkKeySetsNeedingPhrase(proven)
+        }
+    }
+
     override suspend fun retainedWallets(): List<RetainedWallet> = mutex.withLock {
         if (WalletRecoveryCapabilityGate.isUserMutationBlocked()) return@withLock emptyList()
         WalletUpgradeBackup.quarantine().retainedWalletIds
@@ -1798,10 +1829,14 @@ class UserRepositoryImpl(
     override suspend fun unavailableWalletOptions(
         address: String,
     ): UnavailableWalletOptions? = mutex.withLock {
+        // Repairing and removing are refused while wallet changes are off for the whole app,
+        // so no option is offered there (the app-wide banner has the way forward).
+        if (WalletRecoveryCapabilityGate.isUserMutationBlocked()) return@withLock null
         if (!isWalletId(address) || db.accountDao().getAccount(address) == null) {
             return@withLock null
         }
-        if (db.walletIdentityDao().getWallet(address)?.migrationState == "VERIFIED") {
+        val identityState = db.walletIdentityDao().getWallet(address)?.migrationState
+        if (identityState == "VERIFIED") {
             return@withLock null
         }
         val stored = CredentialField.entries.associateWith { field ->
@@ -1844,6 +1879,10 @@ class UserRepositoryImpl(
                 }
             keyValues.any { it == StoredCredential.Absent } ->
                 UnavailableWalletReason.KEY_INCOMPLETE
+            // A complete, readable key is "not usable" only when a check said so. An identity
+            // that was never judged (the row an upgrade creates before its first check) says
+            // nothing about the key.
+            identityState != UNAVAILABLE_STATE -> UnavailableWalletReason.NOT_CHECKED
             else -> UnavailableWalletReason.KEY_NOT_USABLE
         }
         UnavailableWalletOptions(

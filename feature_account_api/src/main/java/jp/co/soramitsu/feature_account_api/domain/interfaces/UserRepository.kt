@@ -161,14 +161,34 @@ interface UserRepository {
     ): SoraAccount
 
     /**
+     * The person has just proven the wallet at [address] with its own recovery phrase, raw seed
+     * or backup file, and the keys stored for it on this phone are that wallet's keys (the
+     * import adopted, completed or repaired them). If that key set was marked as "needs its
+     * recovery phrase" (left by "Remove all accounts", or on the phone before the first PIN),
+     * the mark is taken off: it is the person's own wallet again, so Safe Mode may show its
+     * phrase after their PIN and "Wallets found on this phone" may restore it after a database
+     * loss. The release-era (unsuffixed) set is unmarked too when its keys derive [address].
+     *
+     * Writes only the marker; no key value is read into the marker, changed, moved or removed.
+     * Never call it for a key set that was not proven this way (`adoptRetainedWallet` is not a
+     * proof).
+     */
+    suspend fun keySetProvenByItsBackup(address: String)
+
+    /**
      * Accounts whose keys are missing, incomplete or unreadable on this device. They stay listed
      * and show balances, but cannot sign; other accounts are unaffected.
      */
     suspend fun unavailableWalletIds(): Set<String>
 
     /**
-     * [unavailableWalletIds], kept current: emits again when an account is added, removed or
-     * repaired and after every start-up check. For labels; reads only.
+     * The accounts to label as read-only, kept current: emits again when an account is added,
+     * removed or repaired and after every start-up check. For labels; reads only.
+     *
+     * Empty while wallet changes are off for the whole app (read-only or recovery mode). In that
+     * mode no account can sign, none can be repaired or removed, and accounts may not have been
+     * checked at all (an upgrade whose first check was interrupted): the app-wide banner
+     * explains it, and a per-account label would state something nobody has established.
      */
     fun flowUnavailableWalletIds(): Flow<Set<String>>
 
@@ -187,7 +207,8 @@ interface UserRepository {
 
     /**
      * The forward paths for an account in [unavailableWalletIds], or null when the account can
-     * sign. Reads stored values only.
+     * sign, or while wallet changes are off for the whole app (none of the paths works then;
+     * see [flowUnavailableWalletIds]). Reads stored values only.
      */
     suspend fun unavailableWalletOptions(address: String): UnavailableWalletOptions?
 

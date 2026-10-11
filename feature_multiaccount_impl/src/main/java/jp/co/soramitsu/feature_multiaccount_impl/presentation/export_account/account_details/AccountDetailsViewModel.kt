@@ -126,8 +126,12 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val _consentExceptionHandler = SingleLiveEvent<Intent>()
     val consentExceptionHandler: LiveData<Intent> = _consentExceptionHandler
 
-    /** How the person chose to restore a read-only account's keys in place. */
-    enum class RestoreKeys { WITH_PHRASE, FROM_GOOGLE }
+    /**
+     * How the person chose to restore a read-only account's keys in place. [CHOOSE_SOURCE]
+     * opens Import account at its list of sources, for an account whose backup is a raw seed or
+     * a backup file.
+     */
+    enum class RestoreKeys { WITH_PHRASE, CHOOSE_SOURCE, FROM_GOOGLE }
 
     private val _restoreKeysEvent = SingleLiveEvent<RestoreKeys>()
 
@@ -155,9 +159,19 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 null
             }
 
-            account = interactor.getSoraAccount(address)
+            // Reading the account and judging its stored phrase goes through the Keystore. A
+            // failure there (a Keystore that stays busy) is reported like any other; the screen
+            // stays, without the Passphrase entry, and opening it again reads again.
+            val isMnemonicAvailable = try {
+                account = interactor.getSoraAccount(address)
+                account?.let { interactor.getMnemonic(it).isNotEmpty() } ?: false
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                onError(e)
+                false
+            }
             account?.let { account ->
-                val isMnemonicAvailable = interactor.getMnemonic(account).isNotEmpty()
                 _accountDetailsScreenState.value = AccountDetailsScreenState(
                     InputTextState(
                         value = TextFieldValue(account.accountName),
@@ -228,6 +242,15 @@ class AccountDetailsViewModel @AssistedInject constructor(
     fun onRestoreKeysWithPhrase() {
         if (_accountDetailsScreenState.value?.readOnly?.canRestoreWithPhrase != true) return
         _restoreKeysEvent.value = RestoreKeys.WITH_PHRASE
+    }
+
+    /**
+     * "Use a raw seed or backup file": Import account with its list of sources. The same
+     * import repairs this account in place, whichever source proves it.
+     */
+    fun onRestoreKeysAnotherWay() {
+        if (_accountDetailsScreenState.value?.readOnly?.canRestoreWithPhrase != true) return
+        _restoreKeysEvent.value = RestoreKeys.CHOOSE_SOURCE
     }
 
     /** "Restore from Google Drive": Import account, Google, where its backup repairs in place. */
