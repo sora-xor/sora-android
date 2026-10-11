@@ -48,6 +48,7 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.ResponseCode
@@ -67,9 +68,13 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.PolkaswapTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -505,6 +510,170 @@ class TransferAmountViewModelTest {
         verify { assetsRouter.showTxResult("0x" + "cd".repeat(32), TransactionScreen.SEND) }
     }
 
+    @Test
+    fun `a second tap on Confirm while the transfer is followed does nothing`() = runTest {
+        readyToConfirm()
+        val result = CompletableDeferred<TransactionOutcome>()
+        var started = 0
+        coEvery {
+            assetsInteractor.observeTransfer(recipientId, any(), any(), any(), WALLET_ID, false)
+        } coAnswers {
+            started += 1
+            // What the duplicate guard answers a second request while the first is followed.
+            if (started > 1) throw DuplicateWaitingTransactionException(txHash, 1L)
+            result.await()
+        }
+
+        transferAmountViewModel.onConfirmClick()
+        runCurrent()
+        // The button is still clickable while its progress mark fades in.
+        transferAmountViewModel.onConfirmClick()
+        runCurrent()
+
+        // Before: a second coroutine ran into the duplicate guard, cleared the progress mark
+        // and asked "send again anyway?" about the transfer sent a moment ago.
+        assertEquals(1, started)
+        assertTrue(transferAmountViewModel.sendState.value.inProgress)
+        assertNull(transferAmountViewModel.confirmDialogLiveData.value)
+
+        result.complete(TransactionOutcome.Confirmed(txHash, "0xblock"))
+        advanceUntilIdle()
+
+        assertFalse(transferAmountViewModel.sendState.value.inProgress)
+        verify(exactly = 1) { assetsRouter.showTxResult(txHash, TransactionScreen.SEND) }
+        assertEquals(1, started)
+    }
+
+    @Test
+    fun `Confirm works again after a transfer that did not reach the network`() = runTest {
+        readyToConfirm()
+        var attempts = 0
+        transferAnswers(false) {
+            attempts += 1
+            if (attempts == 1) {
+                TransactionOutcome.RefusedByNode(
+                    txHash = txHash,
+                    reason = TransactionNodeRefusal.NETWORK_BUSY,
+                    nodeMessage = "Immediately Dropped",
+                )
+            } else {
+                TransactionOutcome.Confirmed(txHash, "0xblock")
+            }
+        }
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
+
+        // "Please try again in a moment": the next Confirm is a new, deliberate request.
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        assertEquals(2, attempts)
+        verify(exactly = 1) { assetsRouter.showTxResult(txHash, TransactionScreen.SEND) }
+    }
+
+    @Test
+    fun `a balance that is no longer enough is named and the balance is read again`() = runTest {
+        every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
+        every { assetsRouter.showTxResult(any(), any()) } returns true
+        // The figures on the Send screen come from the local database.
+        val balances = MutableStateFlow(
+            listOf(TestAssets.xorAsset(BigDecimal.TEN), TestAssets.valAsset(BigDecimal.TEN))
+        )
+        initViewModel(
+            balance = BigDecimal.TEN,
+            initialSendAmount = BigDecimal.ONE.toPlainString(),
+            assets = balances,
+        )
+        advanceUntilIdle()
+        transferAmountViewModel.onScreenResumed()
+        assertTrue(transferAmountViewModel.sendState.value.reviewEnabled)
+        // The last check before transport reads the balance from the network: an earlier
+        // transfer was included in the meantime and the funds are no longer there.
+        transferAnswers(false) {
+            throw IllegalStateException(
+                "EXTRINSIC_PRE_TRANSPORT_VALIDATION_FAILED",
+                IllegalStateException("SORA2_TRANSFER_XOR_BALANCE_INSUFFICIENT"),
+            )
+        }
+        coEvery { assetsInteractor.updateBalanceVisibleAssets() } answers {
+            balances.value = listOf(
+                TestAssets.xorAsset(BigDecimal("0.5")),
+                TestAssets.valAsset(BigDecimal.TEN),
+            )
+        }
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        // Before: "This transaction couldn't be prepared ... Please try again", on every try.
+        assertEquals(
+            "text-${R.string.tx_outcome_not_sent_title}" to
+                "text-${R.string.tx_outcome_not_sent_balance}",
+            transferAmountViewModel.alertDialogLiveData.value,
+        )
+        coVerify(exactly = 1) { assetsInteractor.updateBalanceVisibleAssets() }
+        // The balance on screen is the current one and the amount is checked against it.
+        val state = transferAmountViewModel.sendState.value
+        assertFalse(state.reviewEnabled)
+        assertTrue(state.input?.error == true)
+        assertEquals("text-${R.string.amount_error_no_funds}", state.input?.errorHint)
+        assertFalse(state.inProgress)
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
+    }
+
+    @Test
+    fun `Confirm is not held back while the balance is read again`() = runTest {
+        readyToConfirm()
+        var attempts = 0
+        transferAnswers(false) {
+            attempts += 1
+            throw IllegalStateException(
+                "EXTRINSIC_PRE_TRANSPORT_VALIDATION_FAILED",
+                IllegalStateException("SORA2_TRANSFER_XOR_BALANCE_INSUFFICIENT"),
+            )
+        }
+        // The read of the balances takes as long as the network takes.
+        val balancesRead = CompletableDeferred<Unit>()
+        coEvery { assetsInteractor.updateBalanceVisibleAssets() } coAnswers {
+            balancesRead.await()
+        }
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        // The second Confirm is answered (with the same notice) and not passed over in silence.
+        assertEquals(2, attempts)
+        balancesRead.complete(Unit)
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun `a balance that cannot be read again after the notice does not end the app`() = runTest {
+        readyToConfirm()
+        transferAnswers(false) {
+            throw IllegalStateException(
+                "EXTRINSIC_PRE_TRANSPORT_VALIDATION_FAILED",
+                IllegalStateException("SORA2_TRANSFER_ASSET_BALANCE_INSUFFICIENT"),
+            )
+        }
+        coEvery { assetsInteractor.updateBalanceVisibleAssets() } throws
+            BoundedHttpTextException("BOUNDED_HTTP_IO")
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        assertEquals(
+            "text-${R.string.tx_outcome_not_sent_title}" to
+                "text-${R.string.tx_outcome_not_sent_balance}",
+            transferAmountViewModel.alertDialogLiveData.value,
+        )
+        assertFalse(transferAmountViewModel.sendState.value.inProgress)
+    }
+
     // --- the result arrives while the screen is not in front -------------------------------
 
     @Test
@@ -656,15 +825,16 @@ class TransferAmountViewModelTest {
     private fun initViewModel(
         balance: BigDecimal,
         firstTokenId: String? = null,
-        initialSendAmount: String? = null
-    ) {
-        every { assetsInteractor.subscribeAssetsActiveOfCurAccount() } returns flowOf(
+        initialSendAmount: String? = null,
+        assets: Flow<List<Asset>> = flowOf(
             listOf(
                 TestAssets.xorAsset(balance),
                 TestAssets.valAsset(balance),
                 TestAssets.pswapAsset(balance),
             )
-        )
+        ),
+    ) {
+        every { assetsInteractor.subscribeAssetsActiveOfCurAccount() } returns assets
         transferAmountViewModel = TransferAmountViewModel(
             interactor = assetsInteractor,
             walletRouter = walletRouter,
