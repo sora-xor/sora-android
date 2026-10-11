@@ -1,13 +1,14 @@
 # Scripts
 
-None of these scripts is part of the Gradle build. CI runs the first three and the
+None of these scripts is part of the Gradle build. CI runs the first four and the
 lock-coverage init script with its test.
 
 | Script | What it does | Where it runs |
 |---|---|---|
 | `verify-android-native-16kb.py APK_OR_AAB` | Fails if a 64-bit native library is not aligned for 16 KB pages. | `android_ci.yml` (debug APK), `android_release.yml` (release AAB and APK) |
 | `verify-release-signing.py ARTIFACT...` | Fails unless each APK/AAB is signed by `uploadCertificateSha256` in `config/android-production-signing-identity.json`. | `android_release.yml` |
-| `test-android-native-16kb.py`, `test-verify-release-signing.py` | Tests for the two checks above. | `android_ci.yml` |
+| `verify-release-json-export.py ARTIFACT...` | Fails unless the DEX code of each APK/AAB has one method that writes every key of the several-account JSON backup file as a string constant (`JsonAccountsEncoder.generate`). A minified build that serialises a model class through Gson reflection writes that file as `{}`, and has no such method. | `android_release.yml` (release AAB and APK) |
+| `test-android-native-16kb.py`, `test-verify-release-signing.py`, `test-verify-release-json-export.py` | Tests for the three checks above. | `android_ci.yml` |
 | `verify-production-release-lock-coverage.gradle` | Gradle init script with two tasks. `verifyProductionReleaseLockCoverage`: every `productionRelease` configuration has a lock entry, and no stale ones remain. `resolveReleaseDependencyLocks`: resolves every `productionRelease` configuration, so a dependency change without an updated `gradle.lockfile` fails (locking is STRICT only for those configurations, which debug builds never resolve). Needs no secrets. Run with `./gradlew -I scripts/verify-production-release-lock-coverage.gradle verifyProductionReleaseLockCoverage resolveReleaseDependencyLocks`; after an intended dependency change, add `--write-locks` to that command and commit the updated lockfiles. `test-production-release-lock-coverage.mjs` tests both tasks. | `android_ci.yml` (unit-test job) |
 | `run-production-connected-device-qualification.sh` | Runs the wallet-upgrade device tests (storage, Room migration, upgrade scenarios from 3.8.6.3 and 2.3.3 storage, crypto runtime, encrypted wallet storage, migration production path). Emulator only: it stops on any other device, because `:app:connectedProductionDebugAndroidTest` installs and then uninstalls `jp.co.soramitsu.sora`, deleting that app's data. Optional before a release. | Manual |
 | `run-encrypted-wallet-upgrade-qualification.sh`, `run-migration-manager-production-path-qualification.sh` | The two multi-process device tests used by the script above. The second one installs the isolated `jp.co.soramitsu.sora.qualification` test APK, never the production package. | Manual |

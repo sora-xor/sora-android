@@ -231,6 +231,10 @@ jobs:
           python3 scripts/verify-android-native-16kb.py "$AAB_PATH"
           python3 scripts/verify-android-native-16kb.py "$APK_PATH"
 
+      # The minified build once wrote the several-account JSON backup file as "{}".
+      - name: Check that the batch JSON export survives minification
+        run: python3 scripts/verify-release-json-export.py "$AAB_PATH" "$APK_PATH"
+
       - name: Record checksums
         shell: bash
         run: |
