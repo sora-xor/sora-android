@@ -72,6 +72,7 @@ help:
 | network unreachable while preparing | "couldn't reach the network ... check your internet connection and try again" |
 | fee changed during review (`SORA2_TRANSFER_FEE_CHANGED`) | "the network fee changed ... check the new fee and confirm again" |
 | the signer refused this account (`SIGNING_WALLET_UNAVAILABLE`, `WALLET_DELETION_ACTIVE`) | "This account can't sign transactions on this phone right now ... Your keys were not changed and your funds are safe" |
+| the stored signing key is absent or cannot be decrypted (`SigningKeyUnavailableException` from `CredentialsRepositoryImpl.retrieveKeyPair`, `WalletDecryptionException`, a `KeyMaterialUnavailableException` that is not transient) | "SORA can't read this account's signing key on this phone ... Trying again won't change this ... To sign with this account again, you need its recovery phrase or backup." A Keystore that is only busy (transient) keeps "Please try again". |
 | read-only mode after an unfinished upgrade check (`WALLET_RECOVERY_READ_ONLY`) | the existing read-only explanation (`safe_mode_read_only_details`) |
 | anything else | "couldn't be prepared. Nothing was sent ... Please try again." |
 
@@ -107,15 +108,51 @@ Screen behaviour:
   only a claim that was included and failed there as failed. A claim that expired
   without being included is explained ("nothing was sent ... you can try again")
   and not stored, because the stored "failed" state is shown again on every visit.
-  A waiting claim shows "submitted, waiting" and is not stored as failed. The
-  claim screen cannot be left without closing the app, so it then follows the
-  claim by itself: every 10 seconds for 8 minutes (longer than the 64 blocks in
-  which the transaction can be included) it asks the network whether the claim is
-  there, and closes as soon as it is. Nothing is signed or sent while following,
-  and a failed read is simply repeated. While any earlier transaction of the
-  account is unresolved, the existing claim gate sends nothing; the screen says
-  "Not sent ... an earlier transaction is still being checked ... try again in a
-  few minutes".
+  A waiting claim shows "submitted, waiting" and is not stored as failed; when the
+  phone never got the node's answer the text says that SORA could not confirm the
+  network received the claim, not that it was submitted.
+  The claim screen cannot be left without closing the app, so it follows the claim
+  by itself (see "Legacy claim screen: following and closing" below). While any
+  earlier transaction of the account is unresolved, the existing claim gate sends
+  nothing; the screen says "Not sent ... an earlier transaction is still being
+  checked ... try again in a few minutes".
+
+#### Legacy claim screen: following and closing
+
+- The claim screen closes only itself, and only while it is the screen in front.
+  `WalletRouter.closeClaimScreen()` (`Navigator`) pops `claimFragment` when it is
+  the current destination and does nothing otherwise. `ClaimViewModel` asks for
+  it only between the fragment's `onResume` and `onPause`; a claim found done at
+  any other time is remembered and the screen closes on its next `onResume`.
+  Before, every path that found the claim done called `popBackStack()`, which
+  removes whatever is on top. After five minutes in the background that is the
+  PIN lock: it was popped, the claim screen below popped itself, and the wallet
+  was open with no PIN or biometric entered. This could already happen in the
+  store version when a tapped submission finished behind the PIN lock; the
+  follow timer of the second pass made it likely.
+- Following runs only while the claim screen is in front. It stops in `onPause`
+  and starts again, with an immediate check, in `onResume`. Per visit it checks
+  at most 48 times, 10 seconds apart.
+- Each check asks two things, both read-only (nothing is signed or sent):
+  1. `needsMigration()`: does the network have this account's claim? Then the
+     screen closes.
+  2. `WalletInteractor.checkSubmittedClaim(hash)`: what became of the claim this
+     device sent? This runs one status-only pass for that transaction
+     (`Sora2PendingSubmissionCoordinator.recoverStatusOnlyFor`) and reads its
+     journal row. Confirmed closes the screen. Failed on chain is stored as
+     failed (the existing "Transition of assets failed"). Expired without being
+     included shows "The network did not include this transaction before it
+     expired ... You can try again." Before, the loop only asked the first
+     question, got "not yet" 48 times and ended in silence.
+- A claim sent before the screen was opened again is followed too. After a PIN
+  re-lock the app creates a new claim screen with a new view model. On `onResume`
+  it looks up the newest claim this device recorded for the account
+  (`latestSubmissionHashOrNull`, from the description stored next to the journal)
+  and, when its journal row is still unresolved, says "Submitted, waiting" and
+  follows it. The final result of an old claim is not announced again.
+- After "Not sent ... an earlier transaction is still being checked" the screen
+  starts following as well, so it continues by itself when that earlier
+  transaction was a claim.
 
 ### 3. Explicit refusal by the node
 
@@ -167,11 +204,26 @@ chain proof wins over a recorded refusal.
   a transaction that never reached a block.
 - The transaction page follows a waiting transaction by itself. While it shows
   one, it asks for the status every 6 seconds for at most 8 minutes
-  (`TransactionHistoryRepository.checkWaitingTransactions`: one status-only
-  pass of the coordinator, which has no signer and cannot submit). The
+  (`TransactionHistoryRepository.checkWaitingTransaction(walletId, txHash)`: one
+  status-only pass of the coordinator for that transaction alone,
+  `recoverStatusOnlyFor`; the coordinator has no signer and cannot submit). The
   background worker retries after 30, 60, 120, 240 ... seconds, so without this
   a page opened right after sending could show "Pending" for minutes after the
   transaction was final. A failed check changes nothing and is not shown.
+- One transaction that cannot be checked no longer holds the others back. A
+  status pass over a batch used to be all or nothing: when the wallet of one
+  selected row no longer passed its witness, when the first block of its
+  validity window was not the canonical one, when the events of an included row
+  could not be read or decoded, or when its journal row changed under the pass,
+  the pass threw and no row was resolved. With up to 8 unresolved rows every
+  pass selects all of them, so one such row kept every other transaction, also
+  of other accounts, on "Pending ... don't send it again", with the duplicate
+  question and the legacy-claim gate active. Such a row is now left exactly as
+  it is and counted in `failures` (the worker retries), and the other rows are
+  resolved. Only a pass asked for that very transaction (the foreground wait,
+  the transaction page, the claim screen) still reports its failure. Checks
+  that concern the node rather than one row (genesis, finalized height, a hash
+  found in two blocks) still fail the whole pass.
 - The transaction page no longer skips the first refresh tick. It used to
   (`drop(1)`), which is right only when an earlier tick is replayed, that is,
   when a transaction was saved in the same app session. After a restart nothing
@@ -231,12 +283,48 @@ button repeats the request, with `duplicateConfirmed = true`.
 | `TxDetailsViewModel.calcState`, `AssetDetailsViewModel.refreshActivities` | uncaught | guarded |
 | `TransferAmountViewModel` account, balance and amount collectors, token change, fee retry | a failed local read (selected account, XOR row) was uncaught | `guarded`; the collector stays alive |
 | `SwapViewModel` recalculation collector, form reset, disclaimer, fee retry | a failed local read was uncaught | handled; the button stops spinning |
-| `LiquidityAddViewModel` collectors, token pickers and the reserves read of a pair that is not cached (network) | uncaught | `guarded` |
+| `LiquidityAddViewModel` collectors and token pickers | uncaught | `guarded` |
+| `LiquidityAddViewModel` reserves read of a pair that is not cached (network) | uncaught | caught; Supply is off, "Pool data unavailable" dialog with Try again and Close (see "Screens that must not go on with stale or missing data") |
 | `LiquidityRemoveViewModel` amount collectors and percent shortcut | uncaught | `guarded` |
 
 `BaseViewModel.guarded` reports a failure through `onError` and passes
 cancellation on, so it is safe inside `collectLatest` (the older `tryCatch`
 swallows cancellation).
+
+### 7. Screens that must not go on with stale or missing data
+
+- Add liquidity: the reserves of the chosen pair have to be known, from the
+  local cache or from the network, before anything is estimated, reviewed or
+  signed. Before, the screen worked with reserves of zero until they arrived,
+  and for good when the read failed. Zero reserves are treated like a new pool,
+  so both amounts could be typed at any ratio and confirmed; the deposit then
+  failed on chain and the fee was charged.
+  - While the reserves are being read (offline the read does not fail, it waits
+    for the connection; the app's "Connecting..." bar is shown) Supply is shown
+    and off. When they arrive the second amount follows the pool's ratio.
+  - When the read fails, Supply is off ("Pool data unavailable") and a dialog
+    says "SORA couldn't read this pool from the network, so the amounts can't be
+    checked right now. Nothing was sent." with **Try again** (reads the reserves
+    again; the cache flow never asks a second time for the same pair) and
+    **Close** (leaves the screen).
+  - The button is refreshed as soon as both tokens are chosen; it used to keep
+    "Choose tokens" until the reserves answered.
+- Swap: when the request for a price fails, the earlier quote is dropped. Before
+  (also in the store version) the error was shown but the old quote stayed, and
+  Review and Confirm signed the new amount with the minimum received of the old
+  one, so the slippage limit no longer protected the trade. Now the details are
+  cleared and both buttons are off ("Price unavailable") until a quote for the
+  current pair and amount exists. The price is asked again on the next change of
+  the amount, the tokens, the slippage or the pool reserves (which tick with
+  every block). A failure of the optional XOR reminder after a valid quote does
+  not drop that quote.
+- Send: after "the network fee changed ... check the new fee and confirm again"
+  the reviewed fee is dropped and asked again for the same token and amount.
+  Confirm is off while that runs and comes back with the new fee on screen.
+  Before, the old fee stayed and every further Confirm ended in the same dialog
+  until the amount was edited. If the new fee cannot be read, the fee field is
+  empty and Confirm stays off; the amount step shows the fee notice with Try
+  again.
 
 ## User-visible effect
 
@@ -256,8 +344,11 @@ swallows cancellation).
 
 ## New strings
 
-29 strings `tx_outcome_*` at the end of every `common/src/main/res/values*/strings.xml`
-under the comment `at1-submit-status`. English and Japanese are written; the
+34 strings `tx_outcome_*` at the end of every `common/src/main/res/values*/strings.xml`
+under the comment `at1-submit-status` (29 from the first two passes; the third
+pass added `tx_outcome_claim_uncertain`, `tx_outcome_not_sent_key_unavailable`,
+`tx_outcome_pool_unavailable_title`, `tx_outcome_pool_unavailable` and
+`tx_outcome_quote_unavailable`). English and Japanese are written; the
 other locales carry the English text (as for earlier 3.9.0 strings) so lint
 `MissingTranslation` passes.
 
@@ -327,6 +418,64 @@ Added in the second pass (all through production code):
   `SwapViewModelTest` (+1) and `AddLiquidityViewModelTest` (+1): a failed local
   read, or a failed network read of pool reserves, inside a collector does not
   leave viewModelScope uncaught, and the collector keeps working.
+
+Added in the third pass (review round; all through production code, only the
+transport, the DAO, the router and the interactor boundaries are doubles):
+
+- `sorasubstrate` `Sora2PendingRecoveryIsolationTest` (new, 7): a row whose
+  wallet fails its witness, and an included row whose events cannot be decoded,
+  do not hold back another row of the pass; a screen's check reads only the 64
+  blocks of its own transaction; a check asked for one transaction reports that
+  transaction's own failure; nothing is asked for a row that is final, unknown
+  or of another account; the journal row is reported as the outcome every
+  screen shows (waiting, uncertain, refused, confirmed, failed with its reason,
+  expired); the newest transaction of a kind is found from its description.
+- `feature_wallet_impl` `ClaimViewModelTest` (rewritten around a fake interactor,
+  23): a claim found done while another screen is on top does not navigate, and
+  the screen closes on its next resume; a submission confirmed behind another
+  screen closes the claim screen only on return; nothing is followed while the
+  screen is not in front; a waiting claim that expired, or failed on chain, is
+  reported; a claim the journal shows confirmed closes the screen also when the
+  claim state cannot be read; a claim sent before the screen was opened again
+  is followed; the result of an old claim is not announced again; a submission
+  without an answer from the node is not said to be submitted; and the earlier
+  outcome tests.
+- `app` `NavigatorClaimScreenTest` (new, 4): the claim screen is popped only
+  while it is the current destination; nothing is popped while the PIN lock or
+  any other screen is on top.
+- `feature_wallet_impl` `WalletRepositoryTest` (+4), `WalletInteractorTest` (+1):
+  the claim check asks for the claim's hash (or the newest recorded claim),
+  reports the journal row also after a failed status read, asks nothing when no
+  claim was recorded, and never touches the submitting `ExtrinsicManager`.
+- `feature_blockexplorer_impl` `TransactionHistoryRepositoryTest` (2 changed),
+  `TxDetailsViewModelTest` (5 changed): the page asks for its own transaction
+  alone, not for the batch.
+- `feature_polkaswap_impl` `AddLiquidityViewModelTest` (+1, 1 replaced): a failed
+  read of the reserves keeps Supply off, estimates nothing, signs nothing and
+  offers Try again, which reads them; nothing can be supplied while the
+  reserves are still being read.
+- `feature_polkaswap_impl` `SwapViewModelTest` (+1): a failed quote clears the
+  earlier one, Review and Confirm are off, Confirm signs nothing, and the next
+  quote brings Review back.
+- `feature_assets_impl` `TransferAmountViewModelTest` (+2): after a changed fee
+  the new fee is shown and the next Confirm sends with it; while the new fee
+  cannot be read nothing can be confirmed.
+- `common` `TransactionNotSentTest` (+2): an absent or undecryptable signing key
+  is not told to try again; a Keystore that is only busy keeps "try again".
+- `feature_account_impl` `CredentialsRepositoryTest` (+1): `retrieveKeyPair`
+  without a stored key throws the typed error and writes nothing.
+
+The third-pass tests were run once with each fix switched off in the main code
+(the close guard and the pause in `ClaimViewModel`, the destination check in
+`Navigator`, the per-row handling in the coordinator, the reserves and quote
+states, the fee refresh, the key classification and the typed error). 22 of
+them fail there: 10 in `ClaimViewModelTest`, 3 in `NavigatorClaimScreenTest`,
+2 in `Sora2PendingRecoveryIsolationTest`, 2 in `AddLiquidityViewModelTest`, 1 in
+`SwapViewModelTest`, 2 in `TransferAmountViewModelTest`, 1 in
+`TransactionNotSentTest` and 1 in `CredentialsRepositoryTest`. The tests of
+the new read-only coordinator functions and of the repository and interactor
+plumbing do not compile against the earlier code.
+
 
 Checked against the old behaviour: with the wait loop changed back to "one failed
 read ends the wait", three `Sora2FinalityWaitTest` tests fail (retry with pauses,
@@ -403,13 +552,65 @@ every confirm was tapped in airplane mode only):
 - Logcat had no `FATAL EXCEPTION` in any of these steps. Screen texts were
   captured with `uiautomator dump`. The emulator was shut down afterwards.
 
+Third device check (emulator `SORA-Api34`, port 5592, production debug build of
+the third pass, a new unfunded wallet; nothing was signed or sent):
+
+- Swap XOR to VAL online: a quote is shown. In airplane mode, after changing
+  the amount, the request for the new price does not fail: it waits for the
+  connection, the button shows its progress mark and cannot be tapped. With
+  the network back the quote for the new amount appears. (The "Price
+  unavailable" state needs a request that fails; it is covered by the
+  view-model test.)
+- Add liquidity (Explore > Pools > add) in airplane mode, XOR and VAL chosen:
+  the button reads "Enter amount" (it read "Choose tokens" before this pass).
+  With 1 XOR and 5 VAL typed, the button reads "Supply" and is off. This run
+  found that the read waits instead of failing, which is why the reserves now
+  have to be known and not only "not failed". With the network back the XOR
+  amount changed to the pool's ratio for 5 VAL, the pool share and the fee
+  were shown, and the button read "Insufficient balance" (unfunded wallet).
+- Logcat had no `FATAL EXCEPTION`. The emulator was shut down afterwards.
+- Not reachable on this emulator: the legacy claim screen. It needs an account
+  with an outstanding Iroha claim; see the QA steps below, including the one
+  for the PIN lock.
+
 Not run on a device: confirmed, failed-on-chain and refused outcomes of a real
 transaction. They need a funded mainnet account; see the QA steps below.
 
-Build and checks at the end of this task (first and second pass):
+Build and checks at the end of the third pass: `:app:assembleProductionDebug`,
+`testProductionDebugUnitTest` (all modules, 1352 tests, 10 skipped, none failed)
+and `:app:lintProductionDebug` passed. `ktlintCheck` reports no finding on
+lines this pass changed (the project has 985 older findings).
+
+Build and checks at the end of the first and second pass:
 `:app:assembleProductionDebug`, `testProductionDebugUnitTest` (all modules) and
 `:app:lintProductionDebug` passed. `ktlintCheck` reports no finding on lines
 this task changed.
+
+## Third pass: review findings
+
+| Finding | Decision |
+|---|---|
+| Major: the claim follow timer could pop the PIN lock, so the wallet opened without authentication | Fixed. The claim screen pops only itself, only while it is in front; following runs only while it is in front. |
+| The claim follow only detected success; a new claim screen after the PIN lock followed nothing; a submission without an answer was called "submitted" | Fixed (three findings). |
+| Add liquidity went on with zero reserves after a failed read, without a message for an I/O error | Fixed (two findings), and extended to a read that is still in flight. |
+| A status pass failed as a whole when one row could not be checked | Fixed in the coordinator; the page and the claim screen ask for their own transaction alone. |
+| A failed swap quote left the earlier quote in place (already in the store version) | Fixed. |
+| "Not sent" asked for another try when the signing key is absent or unreadable | Fixed with a typed error and its own text. The dialog still ends in OK only; see the product note below. |
+| After "the network fee changed" Send kept the old fee | Fixed. |
+
+Left as it is, on purpose:
+
+- A journal row whose own wallet no longer passes the witness stays unresolved,
+  as before. It no longer affects other accounts, but for that account the
+  duplicate question and the claim gate stay active until its wallet passes the
+  witness again. Resolving such a row without the witness would weaken the
+  check; whether that state can be reached at all in this build was not
+  established by the review either.
+- The in-memory migration status (`PrefsWalletDatasource.migrationStatusFlow`)
+  is per process, not per account, as in the store version. A claim screen
+  opened for a second account in the same process still receives the first
+  account's "done". This pass does not widen it (a claim found done on a return
+  to the screen is not stored there).
 
 ## Human and ops actions
 
@@ -428,19 +629,37 @@ this task changed.
 - Support: the reply for "my swap shows pending" is now on the transaction page
   itself. A pending entry resolves by itself; at the latest about 6.5 minutes
   after sending it shows as failed, "not included".
-- Translations: the 29 `tx_outcome_*` strings need translation in the production
+- Translations: the 34 `tx_outcome_*` strings need translation in the production
   locales other than English and Japanese.
 - QA, legacy claim (an account that still has an Iroha claim): submit the claim
   and switch to airplane mode right after. Expect "Submitted, waiting for
-  confirmation ... This screen continues by itself". Turn the network back on:
-  the claim screen closes by itself within about ten seconds of the claim being
-  on the network.
+  confirmation" with the text that SORA could not confirm the network received
+  the claim (when the connection dropped during the submit) or that it was
+  submitted. Turn the network back on: the claim screen closes by itself within
+  about ten seconds of the claim being on the network; if the claim was never
+  included, the screen says so about six and a half minutes after the submit and
+  Submit can be used again.
+- QA, legacy claim and the PIN lock (security check of the third pass; needs the
+  same kind of account): with a claim "Submitted, waiting", press Home, wait
+  more than five minutes with the network on, and open the app again. The PIN
+  screen must stay until the PIN or biometric is entered, however long it is
+  left open. After the PIN, the wallet opens (claim done) or the claim screen is
+  shown again and follows the claim.
+- QA, Add liquidity: choose a pair you have no pool position in, in airplane
+  mode. Expect "Pool data unavailable" with Close and Try again, and Supply off.
+  With the network back, Try again enables the screen.
+- QA, Swap: enter an amount, wait for the quote, switch to airplane mode and
+  change the amount. Expect "Price unavailable" on the button and empty details;
+  Review must not be available until the network is back and a new quote is
+  shown.
 - QA, transaction page: in step 1 above, keep the transaction page open. It must
   change from Pending to Successful by itself within a few seconds of the
   network coming back, also when the app was closed and opened again in between.
-- Product: the "Not sent" text for an account that may not sign says "This
-  account can't sign transactions on this phone right now". If the key-recovery
-  work adds a screen for such an account, this text should point to it.
+- Product: the "Not sent" texts for an account that may not sign ("This account
+  can't sign transactions on this phone right now") and for one whose signing
+  key is absent or unreadable ("... you need its recovery phrase or backup") end
+  in OK only. When the key-recovery work adds a screen for such an account,
+  these two dialogs should offer to open it.
 - Product: the foreground wait still lasts up to 120 seconds on a working
   connection. Nothing is misreported in that time; shortening it is a product
   decision.
