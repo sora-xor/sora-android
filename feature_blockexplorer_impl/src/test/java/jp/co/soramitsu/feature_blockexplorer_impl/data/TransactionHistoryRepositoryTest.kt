@@ -876,6 +876,38 @@ class TransactionHistoryRepositoryTest {
     }
 
     @Test
+    fun `a transaction the indexer lists is never called failed because of a recorded refusal`() =
+        runTest {
+            // The indexer lists it, so it is in a block, although the node answered the
+            // submission with a refusal and the journal row has not been resolved yet.
+            val hash = TestTransactions.txHistoryItem.id.lowercase()
+            coEvery {
+                walletIdentityDao.getSora2SubmissionOverlayRows(
+                    TestAccounts.soraAccount.substrateAddress
+                )
+            } returns listOf(pendingSora2(hash))
+            details(
+                swapDetails(hash).copy(
+                    nodeRefusal = Sora2NodeRefusal(TransactionNodeRefusal.NOT_VALID, 1010, null)
+                )
+            )
+
+            val listed = transactionHistoryRepository.getLastTransactions(
+                TestAccounts.soraAccount,
+                listOf(TestTokens.xorToken, TestTokens.valToken),
+                1,
+                null,
+            ).single()
+
+            // Before: REJECTED with the refusal as its reason.
+            assertEquals(TransactionStatus.PENDING, listed.base.status)
+            assertEquals(
+                TransactionStatusDetail(TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION),
+                listed.base.statusDetail,
+            )
+        }
+
+    @Test
     fun `a transaction that failed on chain carries the reported runtime error`() = runTest {
         val hash = "0x" + "a7".repeat(32)
         journal(

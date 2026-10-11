@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory
 
+import androidx.annotation.StringRes
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import java.math.BigDecimal
@@ -208,6 +209,17 @@ enum class TransactionTransferType {
 enum class TransactionLiquidityType {
     ADD,
     WITHDRAW
+}
+
+/**
+ * The title of an entry that is known only by its transaction hash. A transaction the node
+ * refused was never broadcast, so it is not called "submitted" (nor "status unknown").
+ */
+@StringRes
+fun Transaction.Sora2Submission.genericTitle(): Int = when {
+    base.statusDetail?.isRefusal == true -> R.string.tx_outcome_not_sent_title
+    submissionIsAmbiguous -> R.string.wallet_transaction_status_unknown
+    else -> R.string.wallet_transaction_submitted
 }
 
 fun TransactionStatus.toName() = when (this) {
