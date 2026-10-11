@@ -237,7 +237,8 @@ class TransferAmountViewModel @AssistedInject constructor(
                         enabled = false,
                         error = false,
                         errorHint = ""
-                    )
+                    ),
+                    lockedNote = lockedNoteOf(asset),
                 )
             } else {
                 _sendState.value = _sendState.value.copy(
@@ -248,7 +249,8 @@ class TransferAmountViewModel @AssistedInject constructor(
                             _sendState.value.input?.amount.orZero(),
                             numbersFormatter
                         )
-                    )
+                    ),
+                    lockedNote = lockedNoteOf(asset),
                 )
             }
         }
@@ -345,6 +347,18 @@ class TransferAmountViewModel @AssistedInject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * The balance shown on this screen is what can be sent. When the chain holds part of the
+     * free balance back (XOR locked by staking, voting or vesting), say how much.
+     */
+    private fun lockedNoteOf(asset: Asset): String? {
+        val locked = asset.balance.miscFrozen.max(asset.balance.feeFrozen)
+        if (locked <= BigDecimal.ZERO) return null
+        return resourceManager.getString(R.string.send_locked_balance_note).format(
+            asset.token.printBalance(locked, numbersFormatter, AssetHolder.ROUNDING)
+        )
     }
 
     private fun getAssetBalanceText(asset: Asset) = "%s (%s)".format(

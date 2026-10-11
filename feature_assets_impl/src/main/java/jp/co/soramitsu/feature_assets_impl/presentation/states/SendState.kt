@@ -51,4 +51,9 @@ internal data class SendState(
     val feeUnavailable: NetworkFeeUnavailable? = null,
     val searchFilter: SearchTokenFilter = emptySearchTokenFilter,
     val shouldTransactionReminderInsufficientWarningBeShown: Boolean = false,
+    /**
+     * Set while part of the selected token's balance is locked on chain (XOR held by staking,
+     * voting or vesting): says how much, so a balance smaller than the total is understood.
+     */
+    val lockedNote: String? = null,
 )

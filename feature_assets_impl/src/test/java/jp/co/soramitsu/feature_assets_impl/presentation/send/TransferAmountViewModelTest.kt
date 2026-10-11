@@ -128,6 +128,8 @@ class TransferAmountViewModelTest {
     @Before
     fun setUp() = runTest {
         every { resourceManager.getString(R.string.error_transaction_fee_title) } returns "Not enough funds"
+        every { resourceManager.getString(R.string.send_locked_balance_note) } returns
+            "%1\$s is locked"
         every { avatarGenerator.createAvatar(any(), any()) } returns drawable
         coEvery {
             assetsInteractor.isNotEnoughXorLeftAfterTransaction(
@@ -159,6 +161,40 @@ class TransferAmountViewModelTest {
             "recipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientId",
             state.value.address
         )
+    }
+
+    @Test
+    fun `locked XOR is named next to the balance that can be sent`() = runTest {
+        // 12 XOR can be sent; 3.5 XOR more is free on chain but locked by staking or voting.
+        val staked = TestAssets.xorAsset(BigDecimal("12")).let { asset ->
+            asset.copy(
+                balance = asset.balance.copy(
+                    miscFrozen = BigDecimal("3.5"),
+                    feeFrozen = BigDecimal("3.5"),
+                )
+            )
+        }
+        initViewModel(BigDecimal.ZERO, assets = flowOf(listOf(staked)))
+        advanceUntilIdle()
+
+        assertEquals("3.5 XOR is locked", transferAmountViewModel.sendState.value.lockedNote)
+        assertTrue(transferAmountViewModel.sendState.value.input?.balance?.startsWith("12") == true)
+    }
+
+    @Test
+    fun `an account without a lock shows no locked note`() = runTest {
+        val unlocked = TestAssets.xorAsset(BigDecimal("12")).let { asset ->
+            asset.copy(
+                balance = asset.balance.copy(
+                    miscFrozen = BigDecimal.ZERO,
+                    feeFrozen = BigDecimal.ZERO,
+                )
+            )
+        }
+        initViewModel(BigDecimal.ZERO, assets = flowOf(listOf(unlocked)))
+        advanceUntilIdle()
+
+        assertNull(transferAmountViewModel.sendState.value.lockedNote)
     }
 
     @Test
