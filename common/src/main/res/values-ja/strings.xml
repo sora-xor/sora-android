@@ -645,4 +645,9 @@
   <string name="tx_outcome_claim_blocked">このアカウントの以前のトランザクションを確認中のため、申請は送信されませんでした。数分後にもう一度お試しください。</string>
   <string name="tx_outcome_screen_needs_network">この画面では手数料の確認にSORAネットワークへの接続が必要ですが、現在接続できません。インターネット接続を確認して、もう一度お試しください。資産はブロックチェーン上で安全です。</string>
   <string name="tx_outcome_not_sent_account_unavailable">このアカウントは現在この端末でトランザクションに署名できないため、何も送信されておらず、手数料もかかっていません。鍵は変更されておらず、資産はブロックチェーン上で安全です。</string>
+  <string name="tx_outcome_claim_uncertain">ネットワークが申請を受信したかどうかを確認できませんでした。現在確認中です。結果が表示されるまで、もう一度送信しないでください。確定すると、この画面は自動的に先へ進み、確定しなかった場合はその旨を表示します。アプリを閉じて、後でもう一度開くこともできます。</string>
+  <string name="tx_outcome_not_sent_key_unavailable">この端末ではこのアカウントの署名鍵を読み取れないため、何も送信されておらず、手数料もかかっていません。もう一度試しても結果は変わりません。資産はブロックチェーン上で安全で、この端末のデータは何も変更されていません。このアカウントで再び署名するには、リカバリーフレーズまたはバックアップが必要です。</string>
+  <string name="tx_outcome_pool_unavailable_title">プール情報を取得できません</string>
+  <string name="tx_outcome_pool_unavailable">ネットワークからこのプールの情報を取得できなかったため、現在は数量を確認できません。何も送信されていません。インターネット接続を確認して、もう一度お試しください。</string>
+  <string name="tx_outcome_quote_unavailable">価格を取得できません</string>
 </resources>
