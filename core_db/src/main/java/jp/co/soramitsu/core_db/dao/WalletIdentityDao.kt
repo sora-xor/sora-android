@@ -194,13 +194,14 @@ interface WalletIdentityDao {
      *
      * Every field from the previously observed checkpoint participates in the compare-and-set. A
      * caller may use this only after re-verifying all current secrets and the exact dual-read
-     * wallet/network model in the same Room transaction.
+     * wallet/network model in the same Room transaction. `verifiedAccountCount` counts only the
+     * accounts that can sign (read-only accounts are classified, not verified).
      */
     @Query(
         """
         update walletMigrationJournal
         set legacyAccountCount = :currentAccountCount,
-            verifiedAccountCount = :currentAccountCount,
+            verifiedAccountCount = :currentVerifiedAccountCount,
             selectedWalletId = :currentSelectedWalletId,
             integrityHash = :currentIntegrityHash,
             failureCode = null,
@@ -225,6 +226,7 @@ interface WalletIdentityDao {
         receiptStartedAt: Long,
         receiptCompletedAt: Long,
         currentAccountCount: Int,
+        currentVerifiedAccountCount: Int,
         currentSelectedWalletId: String,
         currentIntegrityHash: String,
         refreshedAt: Long,

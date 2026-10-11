@@ -39,17 +39,18 @@ package jp.co.soramitsu.feature_account_api.domain.model
 data class UnavailableWalletOptions(
     val walletId: String,
     /**
-     * Importing this account's recovery phrase or raw seed completes its stored keys in place:
-     * only missing values are added, and every value already stored must match. The account
-     * can sign again afterwards.
+     * Importing this account's recovery phrase or raw seed repairs its stored keys in place:
+     * missing values are added. When a stored value differs or cannot be read, the import
+     * offers a confirmed repair that keeps a copy of the old values on the device and writes the
+     * proven ones. The account can sign again afterwards; it never has to be removed first.
      */
     val canRepairWithPhrase: Boolean,
     /**
-     * Removing this account (after the person confirms) and importing its phrase again. Used when
-     * a stored value cannot be read, so the account cannot be completed in place. A copy of the
-     * old preference files is kept on the device first. Offered only when removal loses no
-     * readable secret, or when that secret is a phrase or seed shown first
-     * ([showPhraseBeforeRemoval]). A release-era copy ([hasReleaseEraCopy]) is never removed.
+     * The person may still choose to remove this account (confirmed). It is never the repair:
+     * [canRepairWithPhrase] keeps the account. A copy of the old preference files is kept on the
+     * device first. Offered only when removal loses no readable secret, or when that secret is a
+     * phrase or seed shown first ([showPhraseBeforeRemoval]). A release-era copy
+     * ([hasReleaseEraCopy]) is never removed.
      */
     val canRemoveAndImport: Boolean,
     /**
@@ -70,4 +71,9 @@ data class UnavailableWalletOptions(
      * account usable again from them without the phrase.
      */
     val hasReleaseEraCopy: Boolean = false,
+    /**
+     * A stored value of this account cannot be read, so the repair with its phrase will replace
+     * stored values (after confirmation, keeping a copy) instead of only adding missing ones.
+     */
+    val repairReplacesStoredValues: Boolean = false,
 )

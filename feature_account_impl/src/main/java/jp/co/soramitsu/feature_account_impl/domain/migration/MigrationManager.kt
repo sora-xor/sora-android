@@ -3,7 +3,6 @@ package jp.co.soramitsu.feature_account_impl.domain.migration
 import android.database.sqlite.SQLiteDatabaseLockedException
 import android.database.sqlite.SQLiteFullException
 import androidx.room.withTransaction
-import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.account.Sora2AddressCodec
@@ -27,9 +26,12 @@ import jp.co.soramitsu.core_db.model.WalletMigrationJournalLocal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_impl.domain.keys.BackupMatch
+import jp.co.soramitsu.feature_account_impl.domain.keys.StoredKeyCrypto
+import jp.co.soramitsu.feature_account_impl.domain.keys.StoredSecretsVerdict
+import jp.co.soramitsu.feature_account_impl.domain.keys.StoredWalletSecretsJudge
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.xcrypto.encryption.sr25519.Sr25519JNI
-import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xsubstrate.encrypt.MultiChainEncryption
 import jp.co.soramitsu.xsubstrate.encrypt.SignWrapper
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -42,15 +44,15 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 @Singleton
-class MigrationSr25519Crypto @Inject constructor() {
+class MigrationSr25519Crypto @Inject constructor() : StoredKeyCrypto {
 
-    fun generateKeypair(seed: ByteArray): Sr25519Keypair? =
+    override fun generateKeypair(seed: ByteArray): Sr25519Keypair? =
         SubstrateKeypairFactory.generate(
             SubstrateOptionsProvider.encryptionType,
             seed,
         ) as? Sr25519Keypair
 
-    fun signAndVerify(
+    override fun signAndVerify(
         keypair: Sr25519Keypair,
         challenge: ByteArray,
         expectedPublicKey: ByteArray,
@@ -67,6 +69,24 @@ class MigrationSr25519Crypto @Inject constructor() {
         }
     }
 }
+
+/**
+ * What one account's stored secrets proved in the last verification run. Kept in memory only
+ * (never key bytes): the durable part is the account's `secretSource` label.
+ */
+data class WalletSecretsReport(
+    val walletId: String,
+    /** The stored signing key signs for this address. */
+    val canSign: Boolean,
+    /** Why it cannot sign, when it cannot. */
+    val signingRefusal: String?,
+    /** "MATCHES", "DOES_NOT_MATCH" or "ABSENT" for the stored recovery phrase. */
+    val phrase: String,
+    /** "MATCHES", "DOES_NOT_MATCH" or "ABSENT" for the stored seed. */
+    val seed: String,
+    /** Differences that did not change the decision. */
+    val diagnostics: Set<String>,
+)
 
 /** Result of one wallet verification run. Only [Recovery] was written to the journal. */
 sealed interface MigrationOutcome {
@@ -116,9 +136,14 @@ sealed interface MigrationProgress {
  *
  * - All keys are read and checked before anything is written, so a transient failure (busy
  *   Keystore, full disk) leaves no trace and the next start simply runs again.
- * - Problems that belong to one account (missing, incomplete or unreadable keys, an address that
- *   does not match) make only that account unavailable (read-only); every other account verifies.
- *   A later run that finds valid keys makes the account available again.
+ * - Whether an account can sign is decided by its stored signing key alone
+ *   ([StoredWalletSecretsJudge]): the key must be the key of the account's address and sign a
+ *   random challenge. The stored phrase and seed are judged separately as backup material and
+ *   never make an account read-only.
+ * - A signing key that is missing, incomplete, unreadable or not the key of the address makes
+ *   only that account unavailable (read-only); every other account verifies. A later run that
+ *   finds a valid key makes the account available again.
+ * - The journal counts only the accounts that can sign as verified.
  * - Only genuine integrity failures of the verification itself are journaled.
  */
 @Singleton
@@ -131,7 +156,6 @@ class MigrationManager @Inject constructor(
 ) {
     private companion object {
         const val DERIVATION_VERSION = 1
-        const val SIGNING_PARITY_CHALLENGE = "sora-wallet-migration-signing-parity-v1"
         const val MAX_WALLET_ID_LENGTH = 256
         const val UNAVAILABLE_STATE = "UNAVAILABLE"
         const val UNAVAILABLE_SOURCE = "SECRET_UNAVAILABLE"
@@ -139,9 +163,18 @@ class MigrationManager @Inject constructor(
     }
 
     private val migrationMutex = Mutex()
+    private val secretsJudge = StoredWalletSecretsJudge(sora2AddressCodec, migrationSr25519Crypto)
 
     @Volatile
     var lastOutcome: MigrationOutcome? = null
+        private set
+
+    /**
+     * Per account, what its stored secrets proved in the last run of this process: whether the
+     * stored key signs, and whether the stored phrase and seed are valid backups of it.
+     */
+    @Volatile
+    var lastSecretsReports: Map<String, WalletSecretsReport> = emptyMap()
         private set
 
     private val progressState = MutableStateFlow<MigrationProgress>(MigrationProgress.Idle)
@@ -270,14 +303,21 @@ class MigrationManager @Inject constructor(
             progressState.value =
                 MigrationProgress.CheckingAccounts(preparedWallets.size, legacyAccounts.size)
         }
-        val classifiedWallets = applySecretSourceContinuity(preparedWallets)
+        val classifiedWallets = preparedWallets.toList()
+        lastSecretsReports = classifiedWallets.mapNotNull(PreparedWallet::report)
+            .associateBy(WalletSecretsReport::walletId)
+        // The journal counts only accounts that can sign. A read-only account is classified,
+        // not verified: the run still completes, and the count says how many accounts work.
+        val signingAccountCount = classifiedWallets.count {
+            it.identity.migrationState == "VERIFIED"
+        }
         progressState.value = MigrationProgress.Saving
 
         // 2. Already verified: re-stage only what changed and advance the checkpoint.
         if (verifiedReceipt != null) {
             val receiptMatchesLiveSnapshot =
                 verifiedReceipt.legacyAccountCount == legacyAccounts.size &&
-                    verifiedReceipt.verifiedAccountCount == legacyAccounts.size &&
+                    verifiedReceipt.verifiedAccountCount == signingAccountCount &&
                     verifiedReceipt.selectedWalletId == selectedWalletId &&
                     verifiedReceipt.integrityHash == integrityHash
             return try {
@@ -289,6 +329,7 @@ class MigrationManager @Inject constructor(
                             refreshVerifiedReceiptLocked(
                                 receipt = verifiedReceipt,
                                 legacyAccounts = legacyAccounts,
+                                signingAccountCount = signingAccountCount,
                                 selectedWalletId = selectedWalletId,
                                 currentIntegrityHash = integrityHash,
                             )
@@ -341,7 +382,7 @@ class MigrationManager @Inject constructor(
                         migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
                         state = "VERIFYING",
                         legacyAccountCount = legacyAccounts.size,
-                        verifiedAccountCount = classifiedWallets.size,
+                        verifiedAccountCount = signingAccountCount,
                         selectedWalletId = selectedWalletId,
                         integrityHash = integrityHash,
                         failureCode = null,
@@ -368,7 +409,7 @@ class MigrationManager @Inject constructor(
                     database.walletIdentityDao().activateMigrationJournal(
                         migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
                         legacyAccountCount = legacyAccounts.size,
-                        verifiedAccountCount = classifiedWallets.size,
+                        verifiedAccountCount = signingAccountCount,
                         selectedWalletId = selectedWalletId,
                         integrityHash = integrityHash,
                         startedAt = migrationStartedAt,
@@ -411,33 +452,6 @@ class MigrationManager @Inject constructor(
         }
     }
 
-    /**
-     * An account whose stored keys were verified earlier under one secret source and now present
-     * another is not silently re-labelled: it becomes read-only until the keys verify under the
-     * same source again (or the person restores it).
-     */
-    private suspend fun applySecretSourceContinuity(
-        prepared: List<PreparedWallet>,
-    ): List<PreparedWallet> {
-        val active = database.walletIdentityDao().getWallets()
-            .associateBy(WalletIdentityLocal::walletId)
-        return prepared.map { wallet ->
-            val stored = active[wallet.identity.walletId]
-            if (
-                stored?.migrationState == "VERIFIED" &&
-                wallet.identity.migrationState == "VERIFIED" &&
-                stored.secretSource != wallet.identity.secretSource
-            ) {
-                unavailableWallet(
-                    walletId = wallet.identity.walletId,
-                    displayName = wallet.identity.displayName,
-                )
-            } else {
-                wallet
-            }
-        }
-    }
-
     private suspend fun prepareWalletClassified(legacy: SoraAccountLocal): Preparation =
         try {
             Preparation.Ready(prepareWallet(legacy))
@@ -450,19 +464,32 @@ class MigrationManager @Inject constructor(
             ) {
                 Preparation.Abort.from(error)
             } else {
-                // This account's keys are missing, incomplete, unreadable or do not match its
-                // address. Only this account becomes read-only.
+                // This account's signing key is missing, incomplete, unreadable or does not derive
+                // its address. Only this account becomes read-only.
                 Preparation.Ready(
                     unavailableWallet(
                         walletId = legacy.substrateAddress,
                         displayName = legacy.accountName,
+                        refusal = error.safeFailureCode(),
                     )
                 )
             }
         }
 
-    private fun unavailableWallet(walletId: String, displayName: String): PreparedWallet =
+    private fun unavailableWallet(
+        walletId: String,
+        displayName: String,
+        refusal: String,
+    ): PreparedWallet =
         PreparedWallet(
+            report = WalletSecretsReport(
+                walletId = walletId,
+                canSign = false,
+                signingRefusal = refusal,
+                phrase = BackupMatch.ABSENT.name,
+                seed = BackupMatch.ABSENT.name,
+                diagnostics = emptySet(),
+            ),
             identity = WalletIdentityLocal(
                 walletId = walletId,
                 displayName = displayName,
@@ -489,7 +516,8 @@ class MigrationManager @Inject constructor(
         receipt.migrationId == WalletMigrationIds.NETWORK_ACCOUNTS_V1 &&
             receipt.state == "VERIFIED" &&
             receipt.legacyAccountCount > 0 &&
-            receipt.verifiedAccountCount == receipt.legacyAccountCount &&
+            // Read-only accounts are not counted as verified, so the count may be lower.
+            receipt.verifiedAccountCount in 0..receipt.legacyAccountCount &&
             receipt.selectedWalletId.isNotBlank() &&
             receipt.selectedWalletId.length <= MAX_WALLET_ID_LENGTH &&
             INTEGRITY_HASH.matches(receipt.integrityHash) &&
@@ -505,6 +533,7 @@ class MigrationManager @Inject constructor(
     private suspend fun refreshVerifiedReceiptLocked(
         receipt: WalletMigrationJournalLocal,
         legacyAccounts: List<SoraAccountLocal>,
+        signingAccountCount: Int,
         selectedWalletId: String,
         currentIntegrityHash: String,
     ) {
@@ -530,6 +559,7 @@ class MigrationManager @Inject constructor(
                 receiptStartedAt = receipt.startedAt,
                 receiptCompletedAt = receiptCompletedAt,
                 currentAccountCount = finalAccounts.size,
+                currentVerifiedAccountCount = signingAccountCount,
                 currentSelectedWalletId = selectedWalletId,
                 currentIntegrityHash = currentIntegrityHash,
                 refreshedAt = maxOf(
@@ -729,52 +759,19 @@ class MigrationManager @Inject constructor(
         }
         val keyPair = credentialsRepository.retrieveKeyPair(account)
         try {
-            val rederivedAddress = sora2AddressCodec.toSoraAddressOrNull(keyPair.publicKey)
-                ?: throw MigrationVerificationException("SORA_ADDRESS_DERIVATION")
-            if (rederivedAddress != legacy.substrateAddress) {
-                throw MigrationVerificationException("SORA_ADDRESS_MISMATCH")
-            }
-
-            val mnemonic = credentialsRepository.retrieveMnemonic(account)
-            val storedSeed = credentialsRepository.retrieveStoredSeed(account)
-            val words = mnemonic.trim().split(Regex("\\s+")).filter(String::isNotBlank)
-            val secret = when {
-                mnemonic.isBlank() && storedSeed.isBlank() ->
-                    VerifiedSecret("LEGACY_SECRET", "")
-                mnemonic.isBlank() -> {
-                    if (!credentialsRepository.isRawSeedValid(storedSeed)) {
-                        throw MigrationVerificationException("SECRET_SOURCE_MISSING")
-                    }
-                    VerifiedSecret("RAW_SEED", storedSeed)
-                }
-                else -> {
-                    val mnemonicSeed = credentialsRepository
-                        .convertRetainedSoraPassphraseToSeed(mnemonic)
-                    if (
-                        storedSeed.isNotBlank() &&
-                        !storedSeed.removePrefix("0x").removePrefix("0X")
-                            .equals(
-                                mnemonicSeed.removePrefix("0x").removePrefix("0X"),
-                                ignoreCase = true,
-                            )
-                    ) {
-                        throw MigrationVerificationException("STORED_SEED_MISMATCH")
-                    }
-                    VerifiedSecret(
-                        if (words.size == 12 || words.size == 24) {
-                            "MNEMONIC"
-                        } else {
-                            "MNEMONIC_UNSUPPORTED"
-                        },
-                        mnemonicSeed,
-                    )
-                }
-            }
-            if (secret.source == "LEGACY_SECRET") {
-                verifyLegacySecretKeyMaterial(keyPair)
-            } else {
-                verifySoraKeyMaterial(keyPair, secret.substrateSeed)
-            }
+            // The phrase and the seed are backup material: a value that cannot be read limits
+            // what is offered as a backup, it never decides whether the account can sign.
+            val mnemonic = readBackupMaterial { credentialsRepository.retrieveMnemonic(account) }
+            val storedSeed = readBackupMaterial { credentialsRepository.retrieveStoredSeed(account) }
+            val verdict = secretsJudge.judge(
+                address = legacy.substrateAddress,
+                keyPair = keyPair,
+                mnemonic = mnemonic,
+                storedSeed = storedSeed,
+            )
+            // The stored signing key alone decides: it must be the key of this address and
+            // sign a random challenge that verifies against the address's public key.
+            verdict.signingRefusal?.let { throw MigrationVerificationException(it) }
 
             val networkAccounts = mutableListOf(
                 NetworkAccountLocal(
@@ -787,9 +784,13 @@ class MigrationManager @Inject constructor(
                     enabled = true,
                 )
             )
-            if (secret.source == "MNEMONIC") {
+            // Nexus accounts are derived only from a 12- or 24-word phrase that re-derives this
+            // account's SORA2 address, and always from its parsed words.
+            val nexusPhrase = verdict.recoveryPhrase
+                ?.takeIf { verdict.secretSource == StoredSecretsVerdict.SOURCE_MNEMONIC }
+            if (nexusPhrase != null) {
                 NexusNetworks.admitted.forEach { network ->
-                    val derived = IrohaKeyDerivation.derive(mnemonic, network)
+                    val derived = IrohaKeyDerivation.derive(nexusPhrase.text, network)
                     try {
                         networkAccounts += NetworkAccountLocal(
                             walletId = legacy.substrateAddress,
@@ -810,16 +811,44 @@ class MigrationManager @Inject constructor(
                 identity = WalletIdentityLocal(
                     walletId = legacy.substrateAddress,
                     displayName = legacy.accountName,
-                    secretSource = secret.source,
+                    secretSource = verdict.secretSource,
                     migrationState = "VERIFIED",
                     derivationVersion = DERIVATION_VERSION,
                 ),
                 networkAccounts = networkAccounts,
+                report = WalletSecretsReport(
+                    walletId = legacy.substrateAddress,
+                    canSign = true,
+                    signingRefusal = null,
+                    phrase = verdict.phrase.name,
+                    seed = verdict.seed.name,
+                    diagnostics = verdict.diagnostics,
+                ),
             )
         } finally {
             keyPair.privateKey.fill(0)
             keyPair.nonce.fill(0)
         }
+    }
+
+    /**
+     * Reads one piece of backup material. Null when the stored value cannot be decrypted (a fact
+     * about those bytes). A Keystore or storage failure is rethrown: it says nothing about the
+     * account and must end the run without any result.
+     */
+    private suspend fun readBackupMaterial(read: suspend () -> String): String? = try {
+        read()
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Throwable) {
+        if (
+            WalletStorageFailures.isKeyMaterialUnavailable(error) ||
+            WalletStorageFailures.isTransient(error) ||
+            error !is WalletDecryptionException
+        ) {
+            throw error
+        }
+        null
     }
 
     private suspend fun prepareExplicitWatchOnlyWallet(
@@ -868,79 +897,6 @@ class MigrationManager @Inject constructor(
                 )
             ),
         )
-    }
-
-    private fun verifySoraKeyMaterial(
-        stored: Sr25519Keypair,
-        substrateSeed: String,
-    ) {
-        val normalizedSeed = substrateSeed.removePrefix("0x").removePrefix("0X")
-        val seed = normalizedSeed.fromHex()
-        val regenerated = try {
-            migrationSr25519Crypto.generateKeypair(seed)
-                ?: throw MigrationVerificationException("SORA_KEY_TYPE_MISMATCH")
-        } finally {
-            seed.fill(0)
-        }
-        try {
-            if (
-                !MessageDigest.isEqual(stored.publicKey, regenerated.publicKey) ||
-                !MessageDigest.isEqual(stored.privateKey, regenerated.privateKey) ||
-                !MessageDigest.isEqual(stored.nonce, regenerated.nonce)
-            ) {
-                throw MigrationVerificationException("SORA_SIGNING_KEY_MISMATCH")
-            }
-            val challenge = SIGNING_PARITY_CHALLENGE.encodeToByteArray()
-            try {
-                val signatureMatches = try {
-                    migrationSr25519Crypto.signAndVerify(
-                        keypair = stored,
-                        challenge = challenge,
-                        expectedPublicKey = regenerated.publicKey,
-                    )
-                } catch (_: Throwable) {
-                    throw MigrationVerificationException("SORA_SIGNING_VECTOR_FAILED")
-                }
-                if (!signatureMatches) {
-                    throw MigrationVerificationException(
-                        "SORA_SIGNING_VECTOR_MISMATCH"
-                    )
-                }
-            } finally {
-                challenge.fill(0)
-            }
-        } finally {
-            regenerated.privateKey.fill(0)
-            regenerated.nonce.fill(0)
-        }
-    }
-
-    /**
-     * Proves that a retained keypair-only wallet can still sign for its stored public key.
-     *
-     * There is deliberately no seed reconstruction here: release-era wallets may have retained
-     * only the independently encrypted Sr25519 key fields. The caller has already bound the
-     * public key to the unchanged SORA2 address; this fixed challenge binds the private half to
-     * that public key without persisting or logging either the challenge response or key bytes.
-     */
-    private fun verifyLegacySecretKeyMaterial(stored: Sr25519Keypair) {
-        val challenge = SIGNING_PARITY_CHALLENGE.encodeToByteArray()
-        try {
-            val signatureMatches = try {
-                migrationSr25519Crypto.signAndVerify(
-                    keypair = stored,
-                    challenge = challenge,
-                    expectedPublicKey = stored.publicKey,
-                )
-            } catch (_: Throwable) {
-                throw MigrationVerificationException("SORA_SIGNING_VECTOR_FAILED")
-            }
-            if (!signatureMatches) {
-                throw MigrationVerificationException("SORA_SIGNING_VECTOR_MISMATCH")
-            }
-        } finally {
-            challenge.fill(0)
-        }
     }
 
     private fun Throwable.safeFailureCode(): String = when (this) {
@@ -998,11 +954,7 @@ class MigrationManager @Inject constructor(
     private data class PreparedWallet(
         val identity: WalletIdentityLocal,
         val networkAccounts: List<NetworkAccountLocal>,
-    )
-
-    private data class VerifiedSecret(
-        val source: String,
-        val substrateSeed: String,
+        val report: WalletSecretsReport? = null,
     )
 
     private class MigrationVerificationException(val code: String) : IllegalStateException(code)

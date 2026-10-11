@@ -105,6 +105,23 @@ class SoraPreferences(
         }
     }
 
+    /**
+     * Replaces all [values] in one atomic edit. The only caller is the repair of one account
+     * with its own recovery phrase, which the person confirms explicitly and which first keeps a
+     * copy of the old preference files (`CredentialsDatasource.replaceCredentialsForRepair`).
+     * Nothing else may overwrite wallet credentials.
+     */
+    suspend fun replaceStringsForConfirmedRepair(values: Map<String, String>) {
+        require(values.isNotEmpty() && values.values.none(String::isEmpty)) {
+            "WALLET_CREDENTIAL_VALUE_EMPTY"
+        }
+        dataStore.edit { preferences ->
+            values.forEach { (field, value) ->
+                preferences[stringPreferencesKey(field)] = value
+            }
+        }
+    }
+
     /** Publishes metadata only; original encrypted credentials are never rewritten or removed. */
     suspend fun completeLegacyAccountUpgrade(accountAddress: String) {
         check(accountAddress.isNotBlank()) { "LEGACY_ACCOUNT_ADDRESS_EMPTY" }

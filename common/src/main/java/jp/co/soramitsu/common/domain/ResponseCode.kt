@@ -120,12 +120,12 @@ enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.str
     ACCOUNT_STORAGE_CONFLICT(R.string.account_storage_conflict_description, R.string.account_storage_conflict),
 
     /**
-     * Importing the phrase of an account that is read-only on this phone found stored values that
-     * cannot be read, so it could not be completed in place. Nothing was written.
+     * The confirmed repair of an account could not keep a copy of the old values first (for
+     * example the phone is out of space), so nothing was changed.
      */
-    ACCOUNT_REPAIR_NEEDS_REMOVAL(
-        R.string.account_repair_needs_removal_description,
-        R.string.account_repair_needs_removal,
+    ACCOUNT_REPAIR_COPY_FAILED(
+        R.string.account_repair_copy_failed_description,
+        R.string.account_repair_copy_failed,
     ),
 
     /** This phone cannot unlock the wallet data stored on it; nothing was written. */
