@@ -7,6 +7,8 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.net.ConnectException
 import java.net.HttpURLConnection
+import java.net.SocketException
+import java.net.SocketTimeoutException
 import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -562,29 +564,93 @@ class BoundedHttpTextClientTest {
         }
 
     @Test
-    fun `corrupt or truncated gzip body is a malformed response`() = runBlocking {
+    fun `corrupt gzip body is a malformed response`() = runBlocking {
         val whole = gzip("{\"data\":{}}")
+        val wrongChecksum = whole.copyOf().also { it[it.size - 8] = (it[it.size - 8] + 1).toByte() }
         listOf(
             "not gzip at all".toByteArray(),
-            whole.copyOf(whole.size - 6),
+            wrongChecksum,
         ).forEach { body ->
-            val error = runCatching {
-                readBoundedHttpsUtf8(
-                    rawUrl = "https://runtime.example/corrupt",
-                    maximumBytes = 4_096,
-                    connectionOpener = BoundedHttpConnectionOpener { url ->
-                        FakeHttpConnection(
-                            url = url,
-                            status = 200,
-                            headers = mapOf("Content-Encoding" to "gzip"),
-                            body = body,
-                        )
-                    },
-                )
-            }.exceptionOrNull() as BoundedHttpTextException
+            val error = gzipReadFailure(input = ByteArrayInputStream(body))
 
             assertEquals("BOUNDED_HTTP_ENCODING_INVALID", error.safeCode)
         }
+    }
+
+    @Test
+    fun `network failure while a gzip body is read is a network failure, not a malformed body`() =
+        runBlocking {
+            val whole = gzip("{\"data\":{\"value\":\"" + "ab".repeat(4_000) + "\"}}")
+            val failures = listOf(
+                // The first read, made by the gzip header check, times out.
+                FailingInputStream(ByteArray(0), SocketTimeoutException("Read timed out")),
+                // The connection is cut after the header and part of the data arrived.
+                FailingInputStream(whole.copyOf(whole.size / 2), SocketException("reset")),
+                // The body ends before the gzip stream is complete.
+                ByteArrayInputStream(whole.copyOf(whole.size - 6)),
+                ByteArrayInputStream(whole.copyOf(5)),
+            )
+            failures.forEach { input ->
+                val error = gzipReadFailure(input = input)
+
+                // The code the offline fallback of the indexer accepts. Before the fix all four
+                // were BOUNDED_HTTP_ENCODING_INVALID, which it refuses.
+                assertEquals("BOUNDED_HTTP_IO", error.safeCode)
+            }
+        }
+
+    @Test
+    fun `deadline that passes while a gzip body is read is reported as the deadline`() =
+        runBlocking {
+            val closed = CountDownLatch(1)
+            val blocked = object : InputStream() {
+                override fun read(): Int {
+                    // Blocks like a silent socket until the deadline closes the connection.
+                    closed.await()
+                    throw SocketException("Socket closed")
+                }
+            }
+            val error = gzipReadFailure(
+                input = blocked,
+                absoluteTimeoutMillis = 200,
+                onDisconnect = { closed.countDown() },
+            )
+
+            assertEquals("BOUNDED_HTTP_DEADLINE", error.safeCode)
+        }
+
+    private suspend fun gzipReadFailure(
+        input: InputStream,
+        absoluteTimeoutMillis: Long = 5_000,
+        onDisconnect: () -> Unit = {},
+    ): BoundedHttpTextException = runCatching {
+        readBoundedHttpsUtf8(
+            rawUrl = "https://indexer.example/graphql",
+            maximumBytes = 64 * 1_024,
+            absoluteTimeoutMillis = absoluteTimeoutMillis,
+            connectionOpener = BoundedHttpConnectionOpener { url ->
+                FakeHttpConnection(
+                    url = url,
+                    status = 200,
+                    headers = mapOf("Content-Encoding" to "gzip"),
+                    input = input,
+                    onDisconnect = onDisconnect,
+                )
+            },
+        )
+    }.exceptionOrNull() as BoundedHttpTextException
+
+    /** Delivers [available] and then fails like a socket, where a plain stream would end. */
+    private class FailingInputStream(
+        available: ByteArray,
+        private val failure: IOException,
+    ) : InputStream() {
+        private val delegate = ByteArrayInputStream(available)
+
+        override fun read(): Int = delegate.read().also { if (it < 0) throw failure }
+
+        override fun read(buffer: ByteArray, offset: Int, length: Int): Int =
+            delegate.read(buffer, offset, length).also { if (it < 0) throw failure }
     }
 
     @Test
