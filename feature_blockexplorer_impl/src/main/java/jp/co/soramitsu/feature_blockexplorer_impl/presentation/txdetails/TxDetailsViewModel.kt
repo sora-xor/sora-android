@@ -675,7 +675,9 @@ class TxDetailsViewModel @AssistedInject constructor(
             repeat(WAITING_STATUS_CHECKS) {
                 delay(WAITING_STATUS_CHECK_INTERVAL_MILLIS)
                 // A change of the journal ticks flowLocalTransactions, which redraws the page.
-                guarded { transactionHistoryHandler.checkWaitingTransactions() }
+                // Only this page's transaction is asked about, so no other waiting transaction
+                // can hold its status back.
+                guarded { transactionHistoryHandler.checkWaitingTransaction(txHash) }
             }
         }
     }

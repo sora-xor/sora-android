@@ -160,9 +160,12 @@ class TransactionHistoryHandlerImpl @Inject constructor(
         }
     }
 
-    override suspend fun checkWaitingTransactions() {
+    override suspend fun checkWaitingTransaction(txHash: String) {
         withContext(coroutineManager.io) {
-            transactionHistoryRepository.checkWaitingTransactions()
+            transactionHistoryRepository.checkWaitingTransaction(
+                walletId = userRepository.getCurSoraAccount().substrateAddress,
+                txHash = txHash,
+            )
         }
     }
 

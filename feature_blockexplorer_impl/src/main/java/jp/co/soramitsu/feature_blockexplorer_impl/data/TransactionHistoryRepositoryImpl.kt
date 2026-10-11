@@ -347,14 +347,16 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
     }
 
     /**
-     * One status-only pass over the journal, the same read the background worker makes. It
-     * exists so that a screen showing a waiting transaction does not have to wait for the
-     * worker's next attempt, which can be minutes away after a few unsuccessful ones. The
-     * coordinator used here has no signer and cannot submit anything.
+     * One status-only pass for the transaction a screen is showing, the same read the background
+     * worker makes for a whole batch. It exists so that the screen does not have to wait for the
+     * worker's next attempt, which can be minutes away after a few unsuccessful ones, and it
+     * looks at that one transaction only: a batch fails as a whole when the network cannot be
+     * read for one of its rows, and the screen must not depend on the other rows. The coordinator
+     * used here has no signer and cannot submit anything.
      */
-    override suspend fun checkWaitingTransactions() {
+    override suspend fun checkWaitingTransaction(walletId: String, txHash: String) {
         try {
-            pendingSubmissionCoordinator.recoverStatusOnly()
+            pendingSubmissionCoordinator.recoverStatusOnlyFor(walletId, txHash)
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {

@@ -855,7 +855,7 @@ class TxDetailsViewModelTest {
             // that was started after the transaction was sent.
             val journal = MutableSharedFlow<Boolean>()
             var checks = 0
-            coEvery { transactionHistoryHandler.checkWaitingTransactions() } coAnswers {
+            coEvery { transactionHistoryHandler.checkWaitingTransaction(txHash) } coAnswers {
                 checks += 1
                 if (checks == 2) {
                     // The second check finds the transaction in a finalized block.
@@ -887,7 +887,7 @@ class TxDetailsViewModelTest {
     @Test
     fun `the first journal write after a restart changes the page`() = runTest {
         every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
-        coEvery { transactionHistoryHandler.checkWaitingTransactions() } returns Unit
+        coEvery { transactionHistoryHandler.checkWaitingTransaction(txHash) } returns Unit
         val journal = MutableSharedFlow<Boolean>()
         initTestData(waitingSwap, localTransactions = journal)
         advanceTimeBy(1_000)
@@ -913,12 +913,12 @@ class TxDetailsViewModelTest {
     @Test
     fun `the page stops asking when the transaction can no longer be included`() = runTest {
         every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
-        coEvery { transactionHistoryHandler.checkWaitingTransactions() } returns Unit
+        coEvery { transactionHistoryHandler.checkWaitingTransaction(txHash) } returns Unit
         initTestData(waitingSwap)
 
         advanceUntilIdle()
 
-        coVerify(exactly = 80) { transactionHistoryHandler.checkWaitingTransactions() }
+        coVerify(exactly = 80) { transactionHistoryHandler.checkWaitingTransaction(txHash) }
         assertEquals(TransactionStatus.PENDING, shownStatus())
     }
 
@@ -934,7 +934,7 @@ class TxDetailsViewModelTest {
 
         advanceUntilIdle()
 
-        coVerify(exactly = 0) { transactionHistoryHandler.checkWaitingTransactions() }
+        coVerify(exactly = 0) { transactionHistoryHandler.checkWaitingTransaction(txHash) }
     }
 
     @Test
