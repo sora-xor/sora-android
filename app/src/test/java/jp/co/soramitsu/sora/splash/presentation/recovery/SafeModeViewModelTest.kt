@@ -56,7 +56,10 @@ class SafeModeViewModelTest {
         every { it.migrationProgress } returns MutableStateFlow(MigrationProgress.Idle)
     }
     private val credentials = mockk<CredentialsRepository>()
-    private val datasource = mockk<CredentialsDatasource>()
+    private val datasource = mockk<CredentialsDatasource>().also {
+        // No key set on the phone needs its own recovery phrase, unless a test says so.
+        coEvery { it.retainedKeySetsNeedingPhrase() } returns emptySet()
+    }
     private val user = mockk<UserDatasource>().also {
         coEvery { it.retrievePin() } returns "123456"
         coEvery { it.isBiometryEnabled() } returns false
@@ -339,6 +342,31 @@ class SafeModeViewModelTest {
         advanceUntilIdle()
         assertNull(vm.state.value.reveal)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
+    }
+
+    @Test
+    fun `a key set left by Remove all accounts is not listed, whatever PIN is stored now`() = runTest {
+        // The next person set their own PIN; a recovery state must not show them the phrase of
+        // a wallet that was on the phone before that PIN.
+        coEvery { datasource.retainedKeySetsNeedingPhrase() } returns setOf("cnLeftover")
+        coEvery { credentials.retrieveMnemonic(any()) } returns "alpha beta gamma"
+        val vm = viewModel(
+            RecoveryFacts(
+                phraseWalletIds = listOf("cnMine", "cnLeftover"),
+                accountNames = mapOf("cnMine" to "Mine"),
+            )
+        )
+        vm.startReveal()
+        advanceUntilIdle()
+        vm.enter("123456")
+        advanceUntilIdle()
+
+        // Only the account's own phrase is opened; the leftover key set is never read.
+        val shown = vm.state.value.reveal as RevealUi.Shown
+        assertEquals("cnMine", shown.entry.id)
+        coVerify(exactly = 0) {
+            credentials.retrieveMnemonic(match { it.substrateAddress == "cnLeftover" })
+        }
     }
 
     @Test

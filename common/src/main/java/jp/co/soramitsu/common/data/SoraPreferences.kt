@@ -292,6 +292,30 @@ class SoraPreferences(
             dataStore.data.first()[stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)]
         )
 
+    /**
+     * Marks every stored key set whose id is not in [exceptIds] as needing its own recovery
+     * phrase ([WalletPreferenceKeys.RETAINED_NEEDS_PHRASE]), in one edit. Earlier marks are
+     * kept. Only the marker is written: no key value is read, changed, moved or removed, and
+     * nothing is written at all when there is nothing new to mark.
+     */
+    suspend fun markKeySetsNeedingPhrase(exceptIds: Set<String>) {
+        val marker = stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)
+        val snapshot = dataStore.data.first()
+        fun toMark(preferences: Preferences): Set<String> =
+            preferences.asMap().keys
+                .mapNotNull { key -> WalletPreferenceKeys.retainedKeySetId(key.name) }
+                .toSet() - exceptIds - WalletPreferenceKeys.decodeRetainedNeedsPhrase(preferences[marker])
+        if (toMark(snapshot).isEmpty()) return
+        dataStore.edit { preferences ->
+            val added = toMark(preferences)
+            if (added.isNotEmpty()) {
+                preferences[marker] = WalletPreferenceKeys.encodeRetainedNeedsPhrase(
+                    WalletPreferenceKeys.decodeRetainedNeedsPhrase(preferences[marker]) + added
+                )
+            }
+        }
+    }
+
     suspend fun previewWalletDeletion(
         stringFields: Set<String>,
         booleanFields: Set<String>,

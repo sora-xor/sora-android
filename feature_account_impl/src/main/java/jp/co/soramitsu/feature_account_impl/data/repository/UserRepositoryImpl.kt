@@ -711,7 +711,44 @@ class UserRepositoryImpl(
     }
 
     override suspend fun savePin(pin: String) {
+        markKeySetsOlderThanThePin()
         userDatasource.savePin(pin)
+    }
+
+    /**
+     * A PIN that is set while no readable PIN is stored (the first set-up, the set-up after
+     * "Remove all accounts", or a new PIN in place of one that cannot be read) was never proven
+     * by whoever used this phone before. It must not open what was on the phone before it: every
+     * key set that no account uses is marked, before the PIN is saved, as needing its own
+     * recovery phrase. Changing a PIN (the old one was just entered) marks nothing, and nothing
+     * is written when no such key set exists. Accounts are never affected.
+     */
+    private suspend fun markKeySetsOlderThanThePin() {
+        val readablePinStored = try {
+            userDatasource.retrievePin().isNotEmpty()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            if (
+                WalletStorageFailures.isTransient(error) ||
+                WalletStorageFailures.isKeyMaterialUnavailable(error)
+            ) {
+                // Not known right now: the PIN is not saved either, and the person tries again.
+                throw error
+            }
+            false
+        }
+        if (readablePinStored) return
+        val accounts = walletAccounts().map(SoraAccountLocal::substrateAddress).toSet()
+        // The release-era unsuffixed set is in use when its recorded owner is an account.
+        val releaseEraInUse = credentialsDatasource.getAddress().let { it.isNotBlank() && it in accounts }
+        credentialsDatasource.markKeySetsNeedingPhrase(
+            exceptIds = if (releaseEraInUse) {
+                accounts + WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID
+            } else {
+                accounts
+            },
+        )
     }
 
     override suspend fun retrievePin(): String {

@@ -756,12 +756,27 @@ class SafeModeViewModel @Inject constructor(
         authenticating = false
         if (state.value.reveal !is RevealUi.Auth) return
         authenticated = true
-        val entries = SafeModeVault.entries(WalletUpgradeBackup.recoveryFacts())
-        if (entries.size == 1) {
-            openEntry(entries.single(), canGoBack = false)
-        } else {
-            mutableState.update { it.copy(reveal = RevealUi.Wallets(entries)) }
+        viewModelScope.launch {
+            val entries = revealEntries()
+            if (state.value.reveal !is RevealUi.Auth) return@launch
+            if (entries.size == 1) {
+                openEntry(entries.single(), canGoBack = false)
+            } else {
+                mutableState.update { it.copy(reveal = RevealUi.Wallets(entries)) }
+            }
         }
+    }
+
+    /**
+     * The wallets whose phrase may be shown after this confirmation. A key set that only its
+     * own recovery phrase may bring back (it was on the phone before the PIN that is stored
+     * now) is left out: the PIN or screen lock that was just confirmed never protected it.
+     */
+    private suspend fun revealEntries(): List<PhraseEntry> {
+        val needOwnPhrase = withContext(coroutineManager.io) {
+            runCatching { credentialsDatasource.retainedKeySetsNeedingPhrase() }.getOrNull()
+        }
+        return SafeModeVault.entries(WalletUpgradeBackup.recoveryFacts(), needOwnPhrase)
     }
 
     fun openEntry(entry: PhraseEntry, canGoBack: Boolean = true) {
@@ -824,8 +839,11 @@ class SafeModeViewModel @Inject constructor(
     fun backFromReveal() {
         when (val current = state.value.reveal) {
             is RevealUi.Shown -> if (current.canGoBack) {
-                mutableState.update {
-                    it.copy(reveal = RevealUi.Wallets(SafeModeVault.entries(WalletUpgradeBackup.recoveryFacts())))
+                viewModelScope.launch {
+                    val entries = revealEntries()
+                    if (state.value.reveal === current) {
+                        mutableState.update { it.copy(reveal = RevealUi.Wallets(entries)) }
+                    }
                 }
             } else {
                 closeReveal()

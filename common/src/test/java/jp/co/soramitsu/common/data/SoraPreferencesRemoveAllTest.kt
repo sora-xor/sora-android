@@ -132,4 +132,41 @@ class SoraPreferencesRemoveAllTest {
         assertEquals("pin-ciphertext", prefs.getString(WalletPreferenceKeys.PIN_CODE))
         (kept + leftover).forEach { (key, value) -> assertEquals(value, prefs.getString(key)) }
     }
+
+    @Test
+    fun `key sets that are not an account's are marked without touching a key value`() = runBlocking {
+        // What UserRepositoryImpl.savePin asks for when a PIN is set for the first time.
+        val prefs = preferences()
+        val account = prefs.storeKeySet("cnAccount", "account")
+        val abandoned = prefs.storeKeySet("cnAbandonedCreate", "abandoned")
+        val releaseEra = prefs.storeKeySet("", "release-era")
+
+        prefs.markKeySetsNeedingPhrase(exceptIds = setOf("cnAccount"))
+
+        assertEquals(
+            setOf("cnAbandonedCreate", WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID),
+            prefs.retainedKeySetsNeedingPhrase(),
+        )
+        (account + abandoned + releaseEra).forEach { (key, value) -> assertEquals(value, prefs.getString(key)) }
+
+        // Earlier marks stay; the release-era set of a listed account is left out when asked.
+        prefs.storeKeySet("cnLater", "later")
+        prefs.markKeySetsNeedingPhrase(
+            exceptIds = setOf("cnAccount", "cnLater", WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID),
+        )
+        assertEquals(
+            setOf("cnAbandonedCreate", WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID),
+            prefs.retainedKeySetsNeedingPhrase(),
+        )
+    }
+
+    @Test
+    fun `with nothing to mark nothing is written`() = runBlocking {
+        val prefs = preferences()
+        prefs.storeKeySet("cnAccount", "account")
+
+        prefs.markKeySetsNeedingPhrase(exceptIds = setOf("cnAccount"))
+
+        assertEquals("", prefs.getString(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE))
+    }
 }

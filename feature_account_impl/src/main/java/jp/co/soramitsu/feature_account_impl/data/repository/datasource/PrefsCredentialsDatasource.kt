@@ -170,6 +170,10 @@ class PrefsCredentialsDatasource constructor(
     override suspend fun retainedKeySetsNeedingPhrase(): Set<String> =
         soraPreferences.retainedKeySetsNeedingPhrase()
 
+    override suspend fun markKeySetsNeedingPhrase(exceptIds: Set<String>) {
+        soraPreferences.markKeySetsNeedingPhrase(exceptIds)
+    }
+
     override suspend fun requireWalletPreferenceCoverage(
         walletIds: Set<String>,
         selectedAddress: String,
