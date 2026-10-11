@@ -17,6 +17,8 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -166,6 +168,7 @@ class ReadOnlyAccountScreensTest {
                     ReadOnlyAccountPanel(
                         readOnly = panel,
                         onRestoreKeysWithPhrase = { clicked += "phrase" },
+                        onRestoreKeysAnotherWay = { clicked += "other" },
                         onRestoreKeysFromGoogle = { clicked += "google" },
                         onShowSavedBackup = { clicked += "backup" },
                         onRemove = { clicked += "remove" },
@@ -181,6 +184,8 @@ class ReadOnlyAccountScreensTest {
             .assertIsDisplayed()
         listOf(
             ReadOnlyAccountPanelTags.RESTORE_PHRASE,
+            // An account imported by raw seed or backup file has no phrase to enter.
+            ReadOnlyAccountPanelTags.RESTORE_OTHER,
             ReadOnlyAccountPanelTags.RESTORE_GOOGLE,
             ReadOnlyAccountPanelTags.SHOW_BACKUP,
             ReadOnlyAccountPanelTags.REMOVE,
@@ -188,13 +193,15 @@ class ReadOnlyAccountScreensTest {
             rule.onNode(tagEndsWith(tag)).performScrollTo().assertIsDisplayed().assertIsEnabled()
                 .performClick()
         }
-        assertEquals(listOf("phrase", "google", "backup", "remove"), clicked)
+        assertEquals(listOf("phrase", "other", "google", "backup", "remove"), clicked)
+        rule.onNodeWithText(text(CommonR.string.account_read_only_restore_other)).assertExists()
 
         // Every reason has its own sentence.
         mapOf(
             UnavailableWalletReason.KEY_MISSING to CommonR.string.account_read_only_reason_missing,
             UnavailableWalletReason.KEY_INCOMPLETE to CommonR.string.account_read_only_reason_incomplete,
             UnavailableWalletReason.KEY_NOT_USABLE to CommonR.string.account_read_only_reason_not_usable,
+            UnavailableWalletReason.NOT_CHECKED to CommonR.string.account_read_only_reason_not_checked,
         ).forEach { (reason, sentence) ->
             panel = panel.copy(reason = reason)
             rule.waitForIdle()
@@ -217,10 +224,11 @@ class ReadOnlyAccountScreensTest {
             SoraAppTheme(darkTheme = true) {
                 AccountRemovalScreen(
                     state = state,
-                    onReveal = { state = state.copy(revealed = true) },
+                    onReveal = { state = state.copy(revealed = true, shownOnce = true) },
                     // The view model's rule: only what was shown can have been written down.
-                    onWrittenDown = { if (state.revealed) state = state.copy(writtenDown = it) },
+                    onWrittenDown = { if (state.shownOnce) state = state.copy(writtenDown = it) },
                     onUnderstoodNoBackup = { state = state.copy(understoodNoBackup = it) },
+                    onUnderstoodFoundWallets = { state = state.copy(understoodFoundWallets = it) },
                     onExportJson = { events += "export" },
                     onRemove = { events += "remove" },
                     onCancel = { events += "cancel" },
@@ -276,6 +284,99 @@ class ReadOnlyAccountScreensTest {
         assertTrue(events.isEmpty())
         rule.onNodeWithTag(AccountRemovalTags.REMOVE).performScrollTo().assertIsEnabled().performClick()
         assertEquals(listOf("remove"), events)
+    }
+
+    @Test
+    fun removingTheOnlyAccountAsksAboutFoundWalletsThePinCanStillRestore() {
+        val events = mutableListOf<String>()
+        val state = removalContent(
+            AccountRemovalState(
+                accounts = listOf(
+                    AccountRemovalState.Account(address = "cnB", name = "Bravo", phraseWords = phrase),
+                ),
+                removesEverything = true,
+                retainedKeySets = 3,
+                restorableKeySets = 2,
+            ),
+            events,
+        )
+
+        // Said where it happens: these wallets need their own phrases after this removal, and
+        // where they can be restored first.
+        rule.onNodeWithTag(AccountRemovalTags.FOUND_WALLETS).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText(
+            text(CommonR.string.account_removal_found_wallets_warning, "2")
+        ).performScrollTo().assertIsDisplayed()
+
+        // The phrase acknowledgement alone is not enough.
+        rule.onNodeWithTag(SafeModeTags.PHRASE_VEIL).performScrollTo().performClick()
+        rule.onNodeWithTag(AccountRemovalTags.WRITTEN_DOWN).performScrollTo().assertIsOff().performClick()
+        // A screen reader hears whether the acknowledgement is ticked.
+        rule.onNodeWithTag(AccountRemovalTags.WRITTEN_DOWN).assertIsOn()
+        rule.onNodeWithTag(AccountRemovalTags.REMOVE).performScrollTo().assertIsNotEnabled()
+
+        rule.onNodeWithTag(AccountRemovalTags.UNDERSTOOD_FOUND_WALLETS).performScrollTo()
+            .assertIsOff().performClick()
+        assertTrue(state().understoodFoundWallets)
+        rule.onNodeWithTag(AccountRemovalTags.UNDERSTOOD_FOUND_WALLETS).assertIsOn()
+        rule.onNodeWithTag(AccountRemovalTags.REMOVE).performScrollTo().assertIsEnabled()
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    fun aPhraseVeiledAgainKeepsItsAcknowledgement() {
+        val events = mutableListOf<String>()
+        removalContent(
+            AccountRemovalState(
+                accounts = listOf(
+                    AccountRemovalState.Account(address = "cnB", name = "Bravo", phraseWords = phrase),
+                ),
+                removesEverything = false,
+                // The screen was left after the phrase was shown and ticked (the view model
+                // veils it again on stop).
+                revealed = false,
+                shownOnce = true,
+                writtenDown = true,
+            ),
+            events,
+        )
+
+        rule.onAllNodesWithText("sausage").assertCountEquals(0)
+        rule.onNodeWithTag(AccountRemovalTags.WRITTEN_DOWN).performScrollTo().assertIsOn()
+        rule.onNodeWithTag(AccountRemovalTags.REMOVE).performScrollTo().assertIsEnabled()
+    }
+
+    // ---- Every screen where the person signs turns the explanation on -------------------------
+
+    @Test
+    fun everySigningScreenExplainsAReadOnlyAccountAndOtherScreensDoNot() {
+        // SoraBaseFragment puts the notice above the content only for a fragment that sets
+        // explainsReadOnlyAccount. Losing that line on one screen would lose its explanation.
+        val signing = mutableMapOf<String, Boolean>()
+        val others = mutableMapOf<String, Boolean>()
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            listOf(
+                jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment(),
+                jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment(),
+                jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapFragment(),
+                jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd.LiquidityAddFragment(),
+                jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveFragment(),
+                jp.co.soramitsu.feature_referral_impl.presentation.ReferralFragment(),
+                jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.EditFarmFragment(),
+                jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.ClaimDemeterFragment(),
+                jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimFragment(),
+            ).forEach { signing[it.javaClass.simpleName] = it.explainsReadOnlyAccount }
+            listOf(
+                jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubFragment(),
+                jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_list.AccountListFragment(),
+                jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details.AccountDetailsFragment(),
+            ).forEach { others[it.javaClass.simpleName] = it.explainsReadOnlyAccount }
+        }
+
+        assertEquals(9, signing.size)
+        assertTrue(signing.toString(), signing.values.all { it })
+        // The home screen has its own card, and the account screens are where the repair is.
+        assertTrue(others.toString(), others.values.none { it })
     }
 
     @Test

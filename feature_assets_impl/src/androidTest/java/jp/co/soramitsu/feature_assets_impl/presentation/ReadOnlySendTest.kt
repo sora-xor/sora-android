@@ -34,10 +34,6 @@ package jp.co.soramitsu.feature_assets_impl.presentation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
@@ -52,13 +48,14 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyNotice
+import jp.co.soramitsu.common.account.SelectedAccountSigning
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyTags
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeTags
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.SelectedAccountSigningHost
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsBalanceCard
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendScreen
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -75,6 +72,10 @@ class ReadOnlySendTest {
     @After
     fun tearDown() {
         WalletRecoveryCapabilityGate.enterNormal()
+    }
+
+    private companion object {
+        const val SELECTED = "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm"
     }
 
     private fun tagEndsWith(suffix: String) = SemanticsMatcher("test tag ends with $suffix") {
@@ -165,21 +166,20 @@ class ReadOnlySendTest {
 
     @Test
     fun aReadOnlyAccountIsExplainedAboveTheSendFormWithItsRepairAndReviewIsOff() {
-        // What the screen host (SoraBaseFragment) provides for the Send screen when the selected
-        // account's stored key cannot be used: the notice above the form, and the state the
-        // form reads.
-        var repairs = 0
+        // The production host of every screen (SoraBaseFragment sets exactly this as its
+        // content), fed by a stand-in for the repository's flow: when the selected account's
+        // stored key cannot be used, the notice is above the form and the form's button is off.
+        val repairs = mutableListOf<String>()
         var reviews = 0
-        var accountReadOnly by mutableStateOf(true)
+        val signing = MutableStateFlow(SelectedAccountSigning(SELECTED, readOnly = true))
         rule.setContent {
             SoraAppTheme(darkTheme = true) {
-                CompositionLocalProvider(LocalSelectedAccountReadOnly provides accountReadOnly) {
-                    Column {
-                        if (accountReadOnly) {
-                            AccountReadOnlyNotice(compact = true, onRepair = { repairs++ })
-                        }
-                        SendForm(onReview = { reviews++ })
-                    }
+                SelectedAccountSigningHost(
+                    source = { signing },
+                    explainsReadOnlyAccount = true,
+                    onRepair = { repairs += it },
+                ) {
+                    SendForm(onReview = { reviews++ })
                 }
             }
         }
@@ -192,7 +192,8 @@ class ReadOnlySendTest {
         ).assertIsDisplayed()
         rule.onNodeWithTag(AccountReadOnlyTags.REASON).assertIsDisplayed()
         rule.onNodeWithTag(AccountReadOnlyTags.REPAIR).performClick()
-        assertEquals(1, repairs)
+        // The repair opens Account options of the selected account.
+        assertEquals(listOf(SELECTED), repairs)
 
         // The form cannot be sent from, and says why next to its button.
         rule.onNode(tagEndsWith("ReviewButton")).assertIsNotEnabled()
@@ -201,12 +202,60 @@ class ReadOnlySendTest {
         rule.onNodeWithTag(SafeModeTags.READ_ONLY_REASON).assertDoesNotExist()
 
         // Once its keys are restored, Send works again without leaving the screen.
-        accountReadOnly = false
+        signing.value = SelectedAccountSigning(SELECTED, readOnly = false)
         rule.waitForIdle()
         rule.onNodeWithTag(AccountReadOnlyTags.NOTICE).assertDoesNotExist()
         rule.onNodeWithTag(AccountReadOnlyTags.BUTTON_REASON).assertDoesNotExist()
         rule.onNode(tagEndsWith("ReviewButton")).assertIsEnabled().performClick()
         assertEquals(1, reviews)
+    }
+
+    @Test
+    fun inReadOnlyModeOfTheWholeAppTheAccountNoticeIsNotShown() {
+        // After an interrupted upgrade check no account was judged. The host says nothing about
+        // the account then; the form shows the app-wide reason and stays off.
+        WalletRecoveryCapabilityGate.enterInspectedRecovery()
+        val signing = MutableStateFlow(SelectedAccountSigning(SELECTED, readOnly = true))
+        rule.setContent {
+            SoraAppTheme(darkTheme = true) {
+                SelectedAccountSigningHost(
+                    source = { signing },
+                    explainsReadOnlyAccount = true,
+                    onRepair = {},
+                ) {
+                    SendForm(onReview = {})
+                }
+            }
+        }
+
+        rule.onNodeWithTag(AccountReadOnlyTags.NOTICE).assertDoesNotExist()
+        rule.onNodeWithTag(AccountReadOnlyTags.BUTTON_REASON).assertDoesNotExist()
+        rule.onNode(tagEndsWith("ReviewButton")).assertIsNotEnabled()
+        rule.onNodeWithTag(SafeModeTags.READ_ONLY_REASON).assertExists()
+
+        // The mode ends (Try upgrade again passed): the account's own notice appears.
+        WalletRecoveryCapabilityGate.enterNormal()
+        rule.waitForIdle()
+        rule.onNodeWithTag(AccountReadOnlyTags.NOTICE).assertIsDisplayed()
+    }
+
+    @Test
+    fun aScreenThatDoesNotSignGetsNoNoticeButStillKnowsTheAccountIsReadOnly() {
+        val signing = MutableStateFlow(SelectedAccountSigning(SELECTED, readOnly = true))
+        rule.setContent {
+            SoraAppTheme(darkTheme = false) {
+                SelectedAccountSigningHost(
+                    source = { signing },
+                    explainsReadOnlyAccount = false,
+                    onRepair = {},
+                ) {
+                    SendForm(onReview = {})
+                }
+            }
+        }
+
+        rule.onNodeWithTag(AccountReadOnlyTags.NOTICE).assertDoesNotExist()
+        rule.onNode(tagEndsWith("ReviewButton")).assertIsNotEnabled()
     }
 
     @Test
