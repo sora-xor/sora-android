@@ -97,14 +97,6 @@ class ClaimFragment : SoraBaseFragment<ClaimViewModel>() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.onScreenResumed()
-    }
-
-    override fun onPause() {
-        // Nothing is followed, and the screen is not closed, while it is not in front.
-        viewModel.onScreenPaused()
-        super.onPause()
-    }
+    // SoraBaseFragment tells the view model when this screen comes to the front and when it
+    // leaves it. Nothing is followed, and the screen is not closed, while it is not in front.
 }

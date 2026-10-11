@@ -80,6 +80,57 @@ open class BaseViewModel : ViewModel() {
         onCurrentDestinationChanged(d)
     }
 
+    /**
+     * True between onResume and onPause of this view model's screen, that is, while it is the
+     * screen in front. It is false while the app is in the background and while another screen
+     * is on top of it; after a pause that other screen is the PIN lock.
+     */
+    protected var screenInFront = false
+        private set
+
+    /** A result that arrived while the screen was not in front. It is shown when it is. */
+    private var heldUntilInFront: (() -> Boolean)? = null
+
+    /**
+     * True while a result is waiting to be shown. The screen keeps its action off meanwhile, so
+     * what was just sent cannot be sent a second time from a screen that has not said so yet.
+     */
+    protected val resultHeld: Boolean
+        get() = heldUntilInFront != null
+
+    /** The screen came to the front. A result that was held for it is shown now. */
+    open fun onScreenResumed() {
+        screenInFront = true
+        showHeldResult()
+    }
+
+    /** The screen left the front: the app went to the background or another screen is on top. */
+    open fun onScreenPaused() {
+        screenInFront = false
+    }
+
+    /**
+     * Shows a result that needs this screen in front, typically by opening another screen. A
+     * transaction is followed until it is final, which can take two minutes, so its result can
+     * arrive while the app is in the background or while the PIN lock is on top. Navigating at
+     * that moment is either dropped (the result would never be shown) or removes the screen on
+     * top (the PIN lock would be gone without the PIN). The result is therefore held and [show]
+     * runs only while this screen is in front: at once when it is, otherwise on its next resume.
+     *
+     * [show] returns true when the result was shown. When it returns false nothing happened and
+     * it is asked again on the next resume.
+     */
+    protected fun showWhenInFront(show: () -> Boolean) {
+        heldUntilInFront = show
+        showHeldResult()
+    }
+
+    private fun showHeldResult() {
+        if (!screenInFront) return
+        val show = heldUntilInFront ?: return
+        if (show()) heldUntilInFront = null
+    }
+
     fun onError(throwable: Throwable) {
         FirebaseWrapper.recordException(throwable)
 

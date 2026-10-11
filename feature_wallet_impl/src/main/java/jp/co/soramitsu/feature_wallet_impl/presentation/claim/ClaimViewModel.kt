@@ -70,9 +70,6 @@ class ClaimViewModel @Inject constructor(
     private val _claimScreenState = SingleLiveEvent<ClaimState>()
     val claimScreenState: LiveData<ClaimState> = _claimScreenState
 
-    /** True between onResume and onPause of the claim screen, that is, while it is in front. */
-    private var screenInFront = false
-
     /** The claim is known to be on the network; the screen closes when it is in front. */
     private var claimDone = false
 
@@ -110,8 +107,8 @@ class ClaimViewModel @Inject constructor(
      * closes; otherwise the network is asked, and a claim this device sent earlier and that is
      * still waiting is followed. Nothing is signed or sent from here.
      */
-    fun onScreenResumed() {
-        screenInFront = true
+    override fun onScreenResumed() {
+        super.onScreenResumed()
         if (claimDone) {
             closeWhenInFront()
             return
@@ -123,8 +120,8 @@ class ClaimViewModel @Inject constructor(
      * The claim screen left the front: the app went to the background, or another screen (the
      * PIN lock) is on top. Nothing is followed and nothing is closed until it is back.
      */
-    fun onScreenPaused() {
-        screenInFront = false
+    override fun onScreenPaused() {
+        super.onScreenPaused()
         followJob?.cancel()
         followJob = null
     }
