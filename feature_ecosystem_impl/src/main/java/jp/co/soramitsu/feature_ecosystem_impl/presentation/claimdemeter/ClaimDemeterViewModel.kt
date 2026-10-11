@@ -53,6 +53,7 @@ import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.model.ClaimScreenState
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
@@ -183,8 +184,15 @@ class ClaimDemeterViewModel @AssistedInject constructor(
      * which carries the status and follows it. One that did not reach the network (refused by
      * the node, or not prepared) is explained in a dialog. The button stops spinning on every
      * path, and no failure may leave viewModelScope uncaught.
+     *
+     * The result arrives after a wait of up to two minutes, so the app can be in the background
+     * or behind the PIN lock by then. The dialogs are delivered when the screen is shown again;
+     * the transaction page opens when it is in front (see [openTransactionPage]), and until
+     * then the button stays off.
      */
     private fun claim(confirmedDuplicate: Boolean) {
+        // A claim of this screen reached the network and its page has not opened yet.
+        if (resultHeld) return
         viewModelScope.launch {
             _state.value = _state.value.copy(isButtonLoading = true)
             var outcome: TransactionOutcome? = null
@@ -209,12 +217,24 @@ class ClaimDemeterViewModel @AssistedInject constructor(
             when (outcome) {
                 is TransactionOutcome.Confirmed,
                 is TransactionOutcome.Waiting,
-                is TransactionOutcome.FailedOnChain ->
-                    assetsRouter.showTxDetails(outcome.txHash, true)
+                is TransactionOutcome.FailedOnChain -> {
+                    // This screen is replaced by the transaction's page and claims nothing more.
+                    _state.value = _state.value.copy(isButtonActive = false)
+                    openTransactionPage(outcome.txHash)
+                }
                 is TransactionOutcome.RefusedByNode ->
                     showTransactionRefused(resourceManager, outcome)
                 null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
             }
         }
+    }
+
+    /**
+     * Opens the claim's transaction page in place of this screen, only while this screen is in
+     * front. A result that arrives while the app is in the background, or while the PIN lock is
+     * on top, is held and the page opens on the next resume; nothing is navigated before that.
+     */
+    private fun openTransactionPage(txHash: String) = showWhenInFront {
+        assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_CLAIM)
     }
 }

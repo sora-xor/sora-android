@@ -21,6 +21,7 @@ import jp.co.soramitsu.demeter.domain.DemeterFarmingBasicPool
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.EditFarmViewModel
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -55,7 +56,10 @@ class EditFarmViewModelTest {
 
     private val poolsInteractor = mockk<PoolsInteractor>()
     private val walletInteractor = mockk<WalletInteractor>()
-    private val assetsRouter = mockk<AssetsRouter>(relaxed = true)
+    private val assetsRouter = mockk<AssetsRouter>(relaxed = true).also {
+        // The router opens the transaction page when asked.
+        every { it.showTxResult(any(), any()) } returns true
+    }
     private val assetsInteractor = mockk<AssetsInteractor>()
     private val demeter = mockk<DemeterFarmingInteractor>()
     private val resourceManager = mockk<ResourceManager>().also {
@@ -101,6 +105,8 @@ class EditFarmViewModelTest {
             ids.third,
         )
         advanceUntilIdle()
+        // The farm screen is the screen in front, as it is when the button is tapped.
+        viewModel.onScreenResumed()
         return viewModel
     }
 
@@ -127,7 +133,7 @@ class EditFarmViewModelTest {
         viewModel.onConfirm()
         advanceUntilIdle()
 
-        verify { assetsRouter.showTxDetails(txHash, true) }
+        verify { assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_STAKE) }
         assertFalse(viewModel.state.value.isButtonLoading)
     }
 
@@ -141,7 +147,7 @@ class EditFarmViewModelTest {
         advanceUntilIdle()
 
         // The transaction page carries "waiting for confirmation" and follows the result.
-        verify { assetsRouter.showTxDetails(txHash, true) }
+        verify { assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_STAKE) }
         assertNull(viewModel.alertDialogLiveData.value)
         assertNull(viewModel.errorFromResourceLiveData.value)
         assertFalse(viewModel.state.value.isButtonLoading)
@@ -162,7 +168,7 @@ class EditFarmViewModelTest {
         viewModel.onConfirm()
         advanceUntilIdle()
 
-        verify { assetsRouter.showTxDetails(txHash, true) }
+        verify { assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_STAKE) }
         assertFalse(viewModel.state.value.isButtonLoading)
     }
 
@@ -185,7 +191,7 @@ class EditFarmViewModelTest {
                 "text-${R.string.tx_outcome_note_refused_fee}",
             viewModel.alertDialogLiveData.value,
         )
-        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
         assertFalse(viewModel.state.value.isButtonLoading)
     }
 
@@ -203,7 +209,7 @@ class EditFarmViewModelTest {
                 "text-${R.string.tx_outcome_not_sent_network}",
             viewModel.alertDialogLiveData.value,
         )
-        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
         assertFalse(viewModel.state.value.isButtonLoading)
     }
 
@@ -219,14 +225,94 @@ class EditFarmViewModelTest {
         val question = checkNotNull(viewModel.confirmDialogLiveData.value)
         assertEquals("text-${R.string.tx_outcome_duplicate_title}", question.title)
         assertEquals("text-${R.string.tx_outcome_duplicate_send_again}", question.confirmText)
-        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
         assertFalse(viewModel.state.value.isButtonLoading)
 
         question.onConfirm()
         advanceUntilIdle()
         coVerify(exactly = 1) { demeter.depositDemeterFarming(ids, any(), any(), true) }
-        verify { assetsRouter.showTxDetails("0x" + "cd".repeat(32), true) }
+        verify { assetsRouter.showTxResult("0x" + "cd".repeat(32), TransactionScreen.DEMETER_STAKE) }
     }
+
+    // --- the result arrives while the screen is not in front -------------------------------
+
+    @Test
+    fun `a result that arrives in the background opens its page on return and not before`() =
+        runTest {
+            val viewModel = readyToStake()
+            var sent = 0
+            stakeAnswers(false) {
+                sent += 1
+                // Home was pressed (or the phone locked) while the stake was followed.
+                viewModel.onScreenPaused()
+                TransactionOutcome.Confirmed(txHash, "0xblock")
+            }
+
+            viewModel.onConfirm()
+            advanceUntilIdle()
+
+            // Before the fix the page was opened from the coroutine at this moment. With the
+            // activity stopped that navigation is dropped, and with the PIN lock on top it
+            // removes the PIN lock.
+            verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
+            // Before the fix the button was active again, with no message.
+            assertFalse(viewModel.state.value.isButtonLoading)
+            assertFalse(viewModel.state.value.isButtonActive)
+            viewModel.onConfirm()
+            viewModel.onSliderChange(0.75)
+            assertFalse(viewModel.state.value.isButtonActive)
+            viewModel.onConfirm()
+            advanceUntilIdle()
+            assertEquals(1, sent)
+
+            viewModel.onScreenResumed()
+
+            verify(exactly = 1) {
+                assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_STAKE)
+            }
+
+            // Shown once: a later return to the front opens nothing more.
+            viewModel.onScreenPaused()
+            viewModel.onScreenResumed()
+            verify(exactly = 1) { assetsRouter.showTxResult(any(), any()) }
+        }
+
+    @Test
+    fun `a result is kept while the PIN lock is on top and shown when the screen is back`() =
+        runTest {
+            val viewModel = readyToStake()
+            // The router opens the page only when the farm screen is the current destination.
+            var pinLockOnTop = true
+            every { assetsRouter.showTxResult(any(), any()) } answers { !pinLockOnTop }
+            stakeAnswers(false) {
+                viewModel.onScreenPaused()
+                TransactionOutcome.Waiting(txHash, acceptedByNode = true)
+            }
+
+            viewModel.onConfirm()
+            advanceUntilIdle()
+
+            // The app returns after more than five minutes: the activity resumes this screen
+            // for a moment while the PIN lock is already the current destination.
+            viewModel.onScreenResumed()
+            verify(exactly = 1) {
+                assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_STAKE)
+            }
+            assertFalse(viewModel.state.value.isButtonActive)
+            viewModel.onScreenPaused()
+
+            // The PIN was entered and the PIN lock removed itself.
+            pinLockOnTop = false
+            viewModel.onScreenResumed()
+            verify(exactly = 2) {
+                assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_STAKE)
+            }
+
+            // Opened: nothing more is asked of the router.
+            viewModel.onScreenPaused()
+            viewModel.onScreenResumed()
+            verify(exactly = 2) { assetsRouter.showTxResult(any(), any()) }
+        }
 
     @Test
     fun `opening the screen offline explains and recovers instead of crashing`() = runTest {

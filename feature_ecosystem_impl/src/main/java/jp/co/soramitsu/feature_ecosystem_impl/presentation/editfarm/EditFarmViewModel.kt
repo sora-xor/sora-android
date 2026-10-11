@@ -57,6 +57,7 @@ import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.model.EditFarmScreenState
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -231,8 +232,15 @@ class EditFarmViewModel @AssistedInject constructor(
      * which carries the status and follows it. One that did not reach the network (refused by
      * the node, or not prepared) is explained in a dialog. The button stops spinning on every
      * path, and no failure may leave viewModelScope uncaught.
+     *
+     * The result arrives after a wait of up to two minutes, so the app can be in the background
+     * or behind the PIN lock by then. The dialogs are delivered when the screen is shown again;
+     * the transaction page opens when it is in front (see [openTransactionPage]), and until
+     * then the button stays off.
      */
     private fun confirm(confirmedDuplicate: Boolean) {
+        // A stake or unstake of this screen reached the network and its page has not opened yet.
+        if (resultHeld) return
         val current = _state.value
         if (stakingAmount <= BigDecimal.ZERO) return
         viewModelScope.launch {
@@ -268,13 +276,25 @@ class EditFarmViewModel @AssistedInject constructor(
             when (outcome) {
                 is TransactionOutcome.Confirmed,
                 is TransactionOutcome.Waiting,
-                is TransactionOutcome.FailedOnChain ->
-                    assetsRouter.showTxDetails(outcome.txHash, true)
+                is TransactionOutcome.FailedOnChain -> {
+                    // This screen is replaced by the transaction's page and sends nothing more.
+                    _state.value = _state.value.copy(isButtonActive = false)
+                    openTransactionPage(outcome.txHash)
+                }
                 is TransactionOutcome.RefusedByNode ->
                     showTransactionRefused(resourceManager, outcome)
                 null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
             }
         }
+    }
+
+    /**
+     * Opens the transaction's page in place of this screen, only while this screen is in front.
+     * A result that arrives while the app is in the background, or while the PIN lock is on
+     * top, is held and the page opens on the next resume; nothing is navigated before that.
+     */
+    private fun openTransactionPage(txHash: String) = showWhenInFront {
+        assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_STAKE)
     }
 
     fun onSliderChange(value: Double) {
@@ -298,7 +318,7 @@ class EditFarmViewModel @AssistedInject constructor(
             sliderProgressState = value.toFloat(),
             fee = "${numbersFormatter.formatBigDecimal(fee)}%",
             networkFee = "$networkFee ${feeAsset?.token?.symbol}",
-            isButtonActive = isChanged && transferableXorBalance >= networkFee,
+            isButtonActive = isChanged && transferableXorBalance >= networkFee && !resultHeld,
             percentageText = "${numbersFormatter.format(percentage)}%",
         )
 
