@@ -906,7 +906,7 @@
   <!-- account_removal_stays_copies: verified: the deletion touches nothing under no_backup (wallet-upgrade-backup-*, wallet-quarantine-*); those directories are app-private storage, removed with the app (the manifest sets no hasFragileUserData) -->
   <string name="account_removal_stays_copies">Encrypted safety copies of wallet data that SORA may have made on this phone during an update or a repair. Removing an account does not erase them. They leave the phone only when SORA itself is uninstalled.</string>
   <string name="account_removal_written_down">I have written it down</string>
-  <string name="account_removal_reveal_first">Tap the hidden area above to show it. You can tick this once it has been shown.</string>
+  <string name="account_removal_reveal_first">Tap the hidden part above to show it. You can tick this once it has been shown.</string>
   <string name="account_removal_understood_no_backup">I understand that this phone can\'t bring this account back</string>
   <string name="account_removal_keep">Keep this account</string>
   <string name="account_removal_remove">Remove from this phone</string>
