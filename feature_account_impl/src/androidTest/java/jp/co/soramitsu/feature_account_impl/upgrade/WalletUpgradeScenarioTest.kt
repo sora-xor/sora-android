@@ -2774,6 +2774,113 @@ class WalletUpgradeScenarioTest {
             launch.importPhrase(TWENTY_FOUR_WORDS, "Mine")
             launch.assertCiphertextsKept(leftoverBefore)
             launch.assertUsable(listOf(leftover), selected = leftover)
+            // Proven by its own phrase, it is this person's wallet again: the mark is gone
+            // (the marker itself is removed when it names nothing).
+            assertEquals(emptySet<String>(), launch.credentialsDatasource.retainedKeySetsNeedingPhrase())
+            assertFalse(
+                launch.dataStore.data.first().asMap().keys
+                    .any { it.name == WalletPreferenceKeys.RETAINED_NEEDS_PHRASE }
+            )
+        }
+        // Later the database is lost ("Set up this device again", database only). The wallet
+        // is found behind the PIN its owner set, like any other wallet of theirs.
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            WalletUpgradeBackup.noteDatabaseCorruption(context)
+            assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        }
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            assertEquals(
+                listOf(RetainedWallet(leftover.address, needsRecoveryPhrase = false)),
+                launch.userRepository.retainedWallets(),
+            )
+            assertEquals(listOf(leftover.address), launch.interactor.walletsRestorableWithPin())
+            val result = launch.interactor.restoreRetainedWallets("246810", "Restored wallet")
+            assertEquals(listOf(leftover.address), result.restored.map { it.substrateAddress })
+            launch.assertCiphertextsKept(leftoverBefore)
+            launch.assertUsable(listOf(leftover), selected = leftover)
+        }
+    }
+
+    @Test
+    fun removeAllAccountsMarksTheReleaseEraSetAndItsPhraseBringsItBack() = runBlocking {
+        // A 2.3.3 wallet, migrated by 2.4.0. A later release added a second account and removed
+        // the original one: its address-scoped keys and row are gone, the unsuffixed keys and
+        // prefs_address_pure remain. That leftover is the one most likely to hold funds.
+        val original = phraseWallet(TWELVE_WORDS)
+        val added = phraseWallet(TWENTY_FOUR_WORDS)
+        val legacy = release233 { install(original, name = "Original") }
+        room(58)
+        release240 { migrate() }
+        release3863 {
+            created(added)
+            finishedAccount(added)
+            select(added)
+        }
+        HistoricalRoom.insertAccounts(context, listOf(added.address to "Added"))
+        releasedRemoval(original.address)
+        val unsuffixed = legacy.filterKeys { it != "user_pin_code" }
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(added), selected = added)
+            // Behind the owner's PIN the release-era wallet can be restored from the phone.
+            assertEquals(
+                listOf(RetainedWallet(original.address, needsRecoveryPhrase = false)),
+                launch.userRepository.retainedWallets(),
+            )
+
+            // The owner removes the only account.
+            launch.remove(added.address)
+
+            val after = launch.dataStore.data.first().asMap().mapKeys { it.key.name }
+            assertFalse(after.containsKey("user_pin_code"))
+            assertTrue(after.keys.none { it.endsWith(added.address) })
+            // The release-era set stays byte for byte, with its owner record, and is marked by
+            // its own id in the same edit.
+            launch.assertCiphertextsKept(unsuffixed)
+            assertEquals(original.address, launch.credentialsDatasource.getAddress())
+            assertEquals(
+                setOf(WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID),
+                WalletPreferenceKeys.decodeRetainedNeedsPhrase(
+                    after[WalletPreferenceKeys.RETAINED_NEEDS_PHRASE] as String?
+                ),
+            )
+        }
+        // The next person opens the app and sets their own PIN.
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            assertEquals(
+                listOf(RetainedWallet(original.address, needsRecoveryPhrase = true)),
+                launch.userRepository.retainedWallets(),
+            )
+            assertEquals(emptyList<String>(), launch.interactor.walletsRestorableWithPin())
+            launch.userRepository.savePin("246810")
+            assertEquals(emptyList<String>(), launch.interactor.walletsRestorableWithPin())
+            val refusal = runCatching {
+                launch.userRepository.adoptRetainedWallet(original.address, "Restored wallet")
+            }.exceptionOrNull()
+            assertEquals("RETAINED_WALLET_NEEDS_RECOVERY_PHRASE", refusal?.message)
+            assertEquals(0, launch.userRepository.getSoraAccountsCount())
+            launch.assertCiphertextsKept(unsuffixed)
+
+            // Its own recovery phrase brings it back at the same address. The release-era
+            // values are not touched, and their mark goes with the proof.
+            launch.importPhrase(TWELVE_WORDS, "Mine again")
+            launch.assertUsable(listOf(original), selected = original)
+            launch.assertCiphertextsKept(unsuffixed)
+            assertEquals(emptySet<String>(), launch.credentialsDatasource.retainedKeySetsNeedingPhrase())
+        }
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(original), selected = original)
         }
     }
 
@@ -2883,6 +2990,8 @@ class WalletUpgradeScenarioTest {
             launch.importPhrase(TWENTY_FOUR_WORDS, "Found again")
             launch.assertCiphertextsKept(before)
             launch.assertUsable(listOf(mine, abandoned), selected = abandoned)
+            // Proven by its phrase, it is no longer marked.
+            assertEquals(emptySet<String>(), launch.credentialsDatasource.retainedKeySetsNeedingPhrase())
         }
     }
 
