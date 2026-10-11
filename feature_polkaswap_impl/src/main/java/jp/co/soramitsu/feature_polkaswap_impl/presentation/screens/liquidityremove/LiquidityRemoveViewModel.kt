@@ -65,6 +65,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveConfirmState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveEstimatedState
@@ -136,6 +137,15 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     private val amount1Flow = MutableStateFlow(BigDecimal.ZERO)
     private val amount2Flow = MutableStateFlow(BigDecimal.ZERO)
     private var percent: Double = 0.0
+
+    /**
+     * True from a tapped Confirm until it is known that nothing reached the network. The pool
+     * and the balances are read again with every block, and each of those updates rebuilds the
+     * buttons; without this the confirm button came back, tappable, in the middle of the wait
+     * for the result. Once a withdrawal has reached the network it stays true: this screen is
+     * then replaced by the transaction's page and sends nothing more.
+     */
+    private var confirmLocked = false
 
     var removeState by mutableStateOf(
         LiquidityRemoveState(
@@ -543,6 +553,8 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     }
 
     fun onReviewClick() {
+        // Nothing new is reviewed while a Confirm is on its way or its result waits to be shown.
+        if (confirmLocked || resultHeld) return
         removeState.assetState1?.token?.let {
             removeState.assetState2?.token?.let {
                 removeState = removeState.copy(
@@ -567,8 +579,16 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
      * that reached the network (confirmed, failed on chain, or still waiting) opens its
      * transaction page, which carries the status and follows it. One that did not reach the
      * network is explained in a dialog and this screen stays with Confirm available again.
+     *
+     * The result arrives after a wait of up to two minutes, so the app can be in the background
+     * or behind the PIN lock by then. The dialogs are delivered when the screen is shown again;
+     * the transaction page opens when it is in front (see [openTransactionPage]). Until then
+     * the result mark stays on the confirm screen and Confirm stays off.
      */
     private fun confirmRemoveLiquidity(confirmedDuplicate: Boolean) {
+        // A Confirm is on its way, or a withdrawal of this screen reached the network and its
+        // page has not opened yet.
+        if (confirmLocked || resultHeld) return
         viewModelScope.launch {
             removeState.assetState1?.let { fromToken ->
                 removeState.assetState2?.let { toToken ->
@@ -590,6 +610,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                                 poolData.basic.baseToken.precision
                             )
 
+                        confirmLocked = true
                         setConfirmButton(enabled = false, loading = true)
                         var outcome: TransactionOutcome? = null
                         var notSent: Throwable? = null
@@ -606,6 +627,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         } catch (cancellation: CancellationException) {
                             throw cancellation
                         } catch (_: DuplicateWaitingTransactionException) {
+                            confirmLocked = false
                             setConfirmButton(enabled = true, loading = false)
                             askBeforeSendingAgain(resourceManager) {
                                 confirmRemoveLiquidity(confirmedDuplicate = true)
@@ -624,19 +646,22 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                             )
                         )
                         delay(RESULT_BADGE_MILLIS)
-                        removeState = removeState.copy(
-                            confirm = removeState.confirm.copy(confirmResult = null)
-                        )
                         when (outcome) {
                             is TransactionOutcome.Confirmed,
                             is TransactionOutcome.Waiting,
                             is TransactionOutcome.FailedOnChain ->
-                                assetsRouter.showTxDetails(outcome.txHash, true)
+                                // The result mark stays until the page has taken this
+                                // screen's place.
+                                openTransactionPage(outcome.txHash)
                             is TransactionOutcome.RefusedByNode -> {
+                                confirmLocked = false
+                                clearResultMark()
                                 setConfirmButton(enabled = true, loading = false)
                                 showTransactionRefused(resourceManager, outcome)
                             }
                             null -> {
+                                confirmLocked = false
+                                clearResultMark()
                                 setConfirmButton(enabled = true, loading = false)
                                 showTransactionNotSent(resourceManager, checkNotNull(notSent))
                             }
@@ -645,6 +670,22 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Opens the withdrawal's transaction page in place of this screen, only while this screen is
+     * in front. A result that arrives while the app is in the background, or while the PIN lock
+     * is on top, is held and the page opens on the next resume; nothing is navigated before
+     * that.
+     */
+    private fun openTransactionPage(txHash: String) = showWhenInFront {
+        assetsRouter.showTxResult(txHash, TransactionScreen.REMOVE_LIQUIDITY)
+    }
+
+    private fun clearResultMark() {
+        removeState = removeState.copy(
+            confirm = removeState.confirm.copy(confirmResult = null)
+        )
     }
 
     private fun setConfirmButton(enabled: Boolean, loading: Boolean) {
@@ -777,10 +818,16 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                     enabled = enabled,
                 ),
                 confirm = removeState.confirm.copy(
-                    btnState = removeState.btnState.copy(
-                        text = text ?: resourceManager.getString(R.string.common_confirm),
-                        enabled = enabled,
-                    ),
+                    btnState = if (confirmLocked) {
+                        // A pool or balance update must not bring Confirm back while a tapped
+                        // Confirm is on its way or its result waits to be shown.
+                        removeState.confirm.btnState.copy(enabled = false)
+                    } else {
+                        removeState.btnState.copy(
+                            text = text ?: resourceManager.getString(R.string.common_confirm),
+                            enabled = enabled,
+                        )
+                    },
                 )
             )
         }
