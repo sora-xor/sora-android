@@ -633,7 +633,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private fun setTokensFromArgs() {
         val token1State = _addState.value.assetState1?.token
         val token2State = _addState.value.assetState2?.token
-        if (token1State?.id != addToken1 || token2State?.id != addToken2) {
+        val pairChanged = token1State?.id != addToken1 || token2State?.id != addToken2
+        if (pairChanged) {
             cleanUpSubscriptions()
         }
         addToken1 = token1State?.id
@@ -664,10 +665,12 @@ class LiquidityAddViewModel @AssistedInject constructor(
         if (token1State != null && token2State != null) {
             subscribePoolChanges(token1State.id, token2State.id)
             subscribeReserves(token1State.id, token2State.id)
+            // The reserves of a newly chosen pair can take long to arrive (or not arrive while
+            // offline), and the button must not keep the text of the previous state.
+            if (pairChanged) onChangedProperty.set(false)
+        } else {
+            onChangedProperty.set(false)
         }
-        // Also with both tokens chosen: the reserves can take long to arrive (or not arrive
-        // while offline), and the button must not keep the text of the previous state.
-        onChangedProperty.set(false)
     }
 
     private fun cleanUpSubscriptions() {
