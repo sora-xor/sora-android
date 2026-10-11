@@ -36,6 +36,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.withTransaction
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
@@ -65,6 +66,8 @@ import jp.co.soramitsu.core_db.model.WalletIdentityLocal
 import jp.co.soramitsu.feature_account_impl.domain.keys.FakeStoredKeyCrypto
 import jp.co.soramitsu.feature_account_impl.domain.keys.realSr25519Keypair
 import jp.co.soramitsu.common.account.SelectedAccountSigning
+import jp.co.soramitsu.common.util.WalletDecryptionException
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import jp.co.soramitsu.core_db.WalletQuarantine
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
@@ -635,11 +638,74 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `save pin called`() = runTest {
+    fun `changing the PIN saves it and marks nothing`() = runTest {
         val pin = "1234"
+        coEvery { userDatasource.retrievePin() } returns "0000"
         coEvery { userDatasource.savePin(pin) } returns Unit
+
         userRepository.savePin(pin)
+
         coVerify { userDatasource.savePin(pin) }
+        coVerify(exactly = 0) { credentialsDatasource.markKeySetsNeedingPhrase(any()) }
+    }
+
+    @Test
+    fun `a PIN set for the first time never unlocks key sets that were on the phone before it`() = runTest {
+        // No PIN is stored: first set-up, or the set-up after "Remove all accounts".
+        coEvery { userDatasource.retrievePin() } returns ""
+        coEvery { credentialsDatasource.getAddress() } returns ""
+        coEvery { credentialsDatasource.markKeySetsNeedingPhrase(any()) } returns Unit
+        coEvery { userDatasource.savePin("123456") } returns Unit
+
+        userRepository.savePin("123456")
+
+        coVerifyOrder {
+            // Every key set but the accounts' own is marked, before the PIN exists.
+            credentialsDatasource.markKeySetsNeedingPhrase(setOf("accountAddress"))
+            userDatasource.savePin("123456")
+        }
+    }
+
+    @Test
+    fun `a new PIN in place of one that cannot be read marks them too`() = runTest {
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        // The release-era unsuffixed set belongs to the listed account: it is in use.
+        coEvery { credentialsDatasource.getAddress() } returns "accountAddress"
+        coEvery { credentialsDatasource.markKeySetsNeedingPhrase(any()) } returns Unit
+        coEvery { userDatasource.savePin("123456") } returns Unit
+
+        userRepository.savePin("123456")
+
+        coVerify {
+            credentialsDatasource.markKeySetsNeedingPhrase(
+                setOf("accountAddress", WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID)
+            )
+        }
+    }
+
+    @Test
+    fun `when the stored PIN cannot be looked at right now no PIN is saved`() = runTest {
+        coEvery { userDatasource.retrievePin() } throws
+            KeyMaterialUnavailableException("KEYSTORE_UNAVAILABLE", transient = true)
+
+        val error = runCatching { userRepository.savePin("123456") }.exceptionOrNull()
+
+        assertTrue(error is KeyMaterialUnavailableException)
+        coVerify(exactly = 0) { userDatasource.savePin(any()) }
+        coVerify(exactly = 0) { credentialsDatasource.markKeySetsNeedingPhrase(any()) }
+    }
+
+    @Test
+    fun `when the marks cannot be written no PIN is saved`() = runTest {
+        coEvery { userDatasource.retrievePin() } returns ""
+        coEvery { credentialsDatasource.getAddress() } returns ""
+        coEvery { credentialsDatasource.markKeySetsNeedingPhrase(any()) } throws
+            java.io.IOException("disk full")
+
+        val error = runCatching { userRepository.savePin("123456") }.exceptionOrNull()
+
+        assertTrue(error is java.io.IOException)
+        coVerify(exactly = 0) { userDatasource.savePin(any()) }
     }
 
     @Test

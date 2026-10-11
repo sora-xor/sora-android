@@ -112,6 +112,12 @@ interface CredentialsDatasource {
     suspend fun retainedKeySetsNeedingPhrase(): Set<String> = emptySet()
 
     /**
+     * Marks every stored key set whose id is not in [exceptIds] as needing its own recovery
+     * phrase, in one edit; earlier marks are kept. Writes only the marker, never a key value.
+     */
+    suspend fun markKeySetsNeedingPhrase(exceptIds: Set<String>) = Unit
+
+    /**
      * Checks that every id in [requiredCoverage] holds stored credentials and that the selection
      * is one of [walletIds]. Key sets of other addresses (without an account) are ignored.
      */

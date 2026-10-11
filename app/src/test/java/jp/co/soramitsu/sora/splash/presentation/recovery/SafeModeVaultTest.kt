@@ -41,6 +41,34 @@ class SafeModeVaultTest {
     }
 
     @Test
+    fun `a key set that needs its own recovery phrase is never listed for a reveal`() {
+        // Left on the phone by "Remove all accounts": the PIN stored now never protected it.
+        val facts = RecoveryFacts(
+            phraseWalletIds = listOf("cnAccount", "cnLeftover"),
+            accountNames = mapOf("cnAccount" to "Main"),
+            hasUnscopedPhraseOrSeed = true,
+        )
+
+        assertEquals(
+            listOf("cnAccount", SafeModeVault.OLDER_VERSION_ID),
+            SafeModeVault.entries(facts, needOwnPhrase = setOf("cnLeftover")).map { it.id },
+        )
+        // The release-era unsuffixed set is hidden by its own id.
+        assertEquals(
+            listOf("cnAccount"),
+            SafeModeVault.entries(
+                facts,
+                needOwnPhrase = setOf("cnLeftover", jp.co.soramitsu.common.data.WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID),
+            ).map { it.id },
+        )
+        // When the marks cannot be read, only wallets that are accounts are listed.
+        assertEquals(
+            listOf("cnAccount"),
+            SafeModeVault.entries(facts, needOwnPhrase = null).map { it.id },
+        )
+    }
+
+    @Test
     fun `reveal reads the phrase and writes nothing`() = runTest {
         coEvery { repository.retrieveMnemonic(any()) } returns " one two  three "
         val secret = SafeModeVault.reveal(PhraseEntry("cnA", "cnA", "Main", false), null, repository, datasource)

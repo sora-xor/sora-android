@@ -35,6 +35,7 @@ package jp.co.soramitsu.sora.splash.presentation.recovery
 import android.os.SystemClock
 import java.io.File
 import java.security.MessageDigest
+import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import jp.co.soramitsu.common.account.RecoveryPhrase
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.StoredSecretHex
@@ -110,7 +111,27 @@ object SafeModeVault {
 
     const val OLDER_VERSION_ID = "release-era-phrase"
 
-    fun entries(facts: RecoveryFacts): List<PhraseEntry> = buildList {
+    /**
+     * The wallets whose recovery phrase or seed can be shown.
+     *
+     * [needOwnPhrase] names the key sets that only their own recovery phrase may bring back
+     * (`WalletPreferenceKeys.RETAINED_NEEDS_PHRASE`: they were on the phone before the PIN that
+     * is stored now, for example left by "Remove all accounts"). Neither that PIN nor the
+     * phone's screen lock shows their phrase, so they are not listed. Null means the marks
+     * could not be read: then only wallets that are accounts are listed.
+     */
+    fun entries(
+        facts: RecoveryFacts,
+        needOwnPhrase: Set<String>? = emptySet(),
+    ): List<PhraseEntry> = allEntries(facts).filter { entry ->
+        when {
+            needOwnPhrase == null -> entry.address != null && entry.address in facts.accountNames
+            entry.address == null -> WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID !in needOwnPhrase
+            else -> entry.address !in needOwnPhrase
+        }
+    }
+
+    private fun allEntries(facts: RecoveryFacts): List<PhraseEntry> = buildList {
         facts.phraseWalletIds.distinct().forEach { address ->
             add(
                 PhraseEntry(
