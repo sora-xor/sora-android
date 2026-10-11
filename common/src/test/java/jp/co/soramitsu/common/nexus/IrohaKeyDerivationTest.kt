@@ -53,6 +53,31 @@ class IrohaKeyDerivationTest {
     }
 
     @Test
+    fun `a phrase stored with commas derives the same Nexus identity as the same words with spaces`() {
+        val spaces =
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+        val expected = IrohaKeyDerivation.derive(spaces, NexusDerivationProfiles.taira)
+        try {
+            listOf(
+                spaces.replace(" ", ","),
+                spaces.replace(" ", ", "),
+                spaces.replace(" ", "  "),
+                " $spaces\n",
+            ).forEach { stored ->
+                val derived = IrohaKeyDerivation.derive(stored, NexusDerivationProfiles.taira)
+                try {
+                    assertEquals(stored, expected.address, derived.address)
+                    assertEquals(stored, expected.publicKey.toHex(), derived.publicKey.toHex())
+                } finally {
+                    derived.destroy()
+                }
+            }
+        } finally {
+            expected.destroy()
+        }
+    }
+
+    @Test
     fun `address validation is bound to selected network`() {
         val account = IrohaKeyDerivation.derive(
             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",

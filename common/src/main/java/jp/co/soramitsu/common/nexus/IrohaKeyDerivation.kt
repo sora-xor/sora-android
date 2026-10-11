@@ -6,7 +6,7 @@ import javax.crypto.Mac
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
-import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
+import jp.co.soramitsu.common.account.RecoveryPhrase
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 
 /**
@@ -51,19 +51,17 @@ object IrohaKeyDerivation {
         profile: NexusDerivationProfile,
         passphrase: String = "",
     ): DerivedAccount {
-        val words = mnemonic.trim().split(Regex("\\s+")).filter(String::isNotBlank)
-        require(words.size == 12 || words.size == 24) {
+        // Parsed once with the library parser (NFKD, separators `[\s,]+`), the same reading the
+        // SORA2 derivation uses. A phrase stored with commas or extra spaces therefore derives
+        // the same Nexus identities as the same words separated by single spaces.
+        val phrase = requireNotNull(RecoveryPhrase.parseOrNull(mnemonic)) {
+            "Nexus master phrase has an invalid BIP-39 checksum"
+        }
+        require(phrase.wordCount == 12 || phrase.wordCount == 24) {
             "Nexus master phrase must contain 12 or 24 words"
         }
 
-        val normalizedMnemonic = Normalizer.normalize(words.joinToString(" "), Normalizer.Form.NFKD)
-        require(
-            runCatching {
-                MnemonicCreator.fromWords(normalizedMnemonic)
-            }.isSuccess
-        ) {
-            "Nexus master phrase has an invalid BIP-39 checksum"
-        }
+        val normalizedMnemonic = Normalizer.normalize(phrase.text, Normalizer.Form.NFKD)
         val normalizedPassphrase = Normalizer.normalize(passphrase, Normalizer.Form.NFKD)
         val password = normalizedMnemonic.toCharArray()
         val salt = "mnemonic$normalizedPassphrase".toByteArray(Charsets.UTF_8)
