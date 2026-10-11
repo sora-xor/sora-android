@@ -89,8 +89,10 @@ Screen behaviour:
 - Referral and Demeter: same rule; the progress mark is cleared on every path.
 - Legacy claim: only a confirmed (or already present) claim is stored as done and
   only a claim that failed on chain as failed. A waiting claim shows "submitted,
-  waiting" and is not stored as failed. A second tap while the first is
-  unresolved (the existing claim gate) shows the same message.
+  waiting" and is not stored as failed. While any earlier transaction of the
+  account is unresolved, the existing claim gate sends nothing; the screen says
+  "Not sent ... an earlier transaction is still being checked ... try again in a
+  few minutes".
 
 ### 3. Explicit refusal by the node
 
@@ -194,7 +196,7 @@ button repeats the request, with `duplicateConfirmed = true`.
 
 ## New strings
 
-27 strings `tx_outcome_*` at the end of every `common/src/main/res/values*/strings.xml`
+28 strings `tx_outcome_*` at the end of every `common/src/main/res/values*/strings.xml`
 under the comment `at1-submit-status`. English and Japanese are written; the
 other locales carry the English text (as for earlier 3.9.0 strings) so lint
 `MissingTranslation` passes.
@@ -284,7 +286,7 @@ passed. `ktlintCheck` reports no finding on lines this task changed.
 - Support: the reply for "my swap shows pending" is now on the transaction page
   itself. A pending entry resolves by itself; at the latest about 6.5 minutes
   after sending it shows as failed, "not included".
-- Translations: the 27 `tx_outcome_*` strings need translation in the production
+- Translations: the 28 `tx_outcome_*` strings need translation in the production
   locales other than English and Japanese.
 - Product: the foreground wait still lasts up to 120 seconds on a working
   connection. Nothing is misreported in that time; shortening it is a product

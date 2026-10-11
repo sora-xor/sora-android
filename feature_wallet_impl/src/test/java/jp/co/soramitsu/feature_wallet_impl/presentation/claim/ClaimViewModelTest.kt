@@ -140,6 +140,7 @@ class ClaimViewModelTest {
             R.string.tx_outcome_note_refused_fee,
             R.string.tx_outcome_not_sent_title,
             R.string.tx_outcome_not_sent_network,
+            R.string.tx_outcome_claim_blocked,
         ).forEach { id ->
             given(resourceManager.getString(id)).willReturn("text-$id")
         }
@@ -187,17 +188,17 @@ class ClaimViewModelTest {
         }
 
     @Test
-    fun `a second claim while the first is unresolved is said to be waiting`() = runTest {
+    fun `a claim blocked by an unresolved earlier transaction says nothing was sent`() = runTest {
         stubOutcomeTexts()
         claimAnswers { throw IllegalStateException("SORA2_LEGACY_MIGRATION_ALREADY_UNRESOLVED") }
 
         viewModel.nextButtonClicked()
         advanceUntilIdle()
 
-        verify(walletInteractor, never()).saveMigrationStatus(MigrationStatus.FAILED)
+        verify(walletInteractor, never()).saveMigrationStatus(any())
         assertEquals(
-            "text-${R.string.tx_outcome_waiting_title}" to
-                "text-${R.string.tx_outcome_claim_waiting}",
+            "text-${R.string.tx_outcome_not_sent_title}" to
+                "text-${R.string.tx_outcome_claim_blocked}",
             viewModel.alertDialogLiveData.value,
         )
         assertEquals(false, viewModel.claimScreenState.value?.loading)

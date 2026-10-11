@@ -642,5 +642,6 @@
   <string name="tx_outcome_duplicate_send_again">それでも再送信する</string>
   <string name="tx_outcome_duplicate_wait">待つ</string>
   <string name="tx_outcome_claim_waiting">申請は送信済みですが、ネットワークによる確定がまだ完了していません。もう一度送信しないでください。数分後にもう一度ご確認ください。</string>
+  <string name="tx_outcome_claim_blocked">このアカウントの以前のトランザクションを確認中のため、申請は送信されませんでした。数分後にもう一度お試しください。</string>
   <string name="tx_outcome_screen_needs_network">この画面では手数料の確認にSORAネットワークへの接続が必要ですが、現在接続できません。インターネット接続を確認して、もう一度お試しください。資産はブロックチェーン上で安全です。</string>
 </resources>
