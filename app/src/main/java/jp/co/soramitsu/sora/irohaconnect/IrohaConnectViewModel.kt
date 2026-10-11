@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.account.StoredSecretHex
 import jp.co.soramitsu.common.irohaconnect.IrohaConnectCrypto
 import jp.co.soramitsu.common.irohaconnect.IrohaConnectLaunch
 import jp.co.soramitsu.common.irohaconnect.IrohaConnectPairingReview
@@ -466,7 +467,19 @@ class IrohaConnectViewModel @Inject constructor(
                     throw IllegalStateException("Watch-only wallets cannot sign")
                 }
                 val mnemonic = credentialsRepository.retrieveMnemonic(selected)
-                val derived = IrohaKeyDerivation.derive(mnemonic, parsed.network)
+                // The recorded account is re-derived exactly as it was first derived (from the
+                // canonical words, or from the stored text of an earlier build). A phrase that
+                // derives neither form of it never signs, and nothing is re-derived in its place.
+                val derived = StoredSecretHex.decodeOrNull(current.networkAccount.publicKey)
+                    ?.let { recordedPublicKey ->
+                        IrohaKeyDerivation.deriveExisting(
+                            mnemonic = mnemonic,
+                            profile = parsed.network.derivationProfile,
+                            existingAddress = current.networkAccount.address,
+                            existingPublicKey = recordedPublicKey,
+                        )
+                    }
+                    ?: throw IllegalStateException("Derived SORA 3 account does not match storage")
                 try {
                     if (
                         derived.network != parsed.network.id ||
