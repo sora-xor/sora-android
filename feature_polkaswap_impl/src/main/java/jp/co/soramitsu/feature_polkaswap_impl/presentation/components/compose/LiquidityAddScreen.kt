@@ -52,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import java.math.BigDecimal
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
@@ -182,7 +183,7 @@ internal fun LiquidityAddScreen(
             FilledButton(
                 modifier = modifier
                     .testTagAsId("PrimaryButton"),
-                enabled = state.btnState.enabled,
+                enabled = state.btnState.enabled && !LocalSelectedAccountReadOnly.current,
                 size = Size.Large,
                 order = Order.PRIMARY,
                 text = state.btnState.text,

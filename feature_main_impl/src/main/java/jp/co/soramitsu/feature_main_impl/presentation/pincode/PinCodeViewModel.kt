@@ -168,6 +168,18 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * A failure while a typed PIN is checked or saved (for example a busy Keystore) clears the
+     * entry: the message is shown and the PIN can be typed again, instead of a full row of
+     * dots that takes no more digits.
+     */
+    override fun onErrorResetProgress() {
+        if (inputedCode.isNotEmpty()) {
+            inputedCode = ""
+            state = state.copy(checkedDotsCount = 0, isBackButtonVisible = false)
+        }
+    }
+
     private fun startTimer() {
         buttonsDisabled = true
         showFingerPrintEventLiveData.value = false

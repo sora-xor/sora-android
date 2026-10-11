@@ -48,6 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.neon.InputText
 import jp.co.soramitsu.common.util.testTagAsId
@@ -117,7 +118,7 @@ fun ReferrerInput(
                     size = Size.Large,
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.referral_activate_button_title),
-                    enabled = common.activate,
+                    enabled = common.activate && !LocalSelectedAccountReadOnly.current,
                     onClick = onActivateReferrerClicked
                 )
             }

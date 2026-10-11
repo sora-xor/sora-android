@@ -61,6 +61,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
@@ -158,7 +159,8 @@ fun ReferralBondXor(
                     size = Size.Large,
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.referral_bond_button_title),
-                    enabled = common.activate && state.invitationsCount > 0,
+                    enabled = common.activate && state.invitationsCount > 0 &&
+                        !LocalSelectedAccountReadOnly.current,
                     onClick = onBondClick
                 )
             }
@@ -248,7 +250,8 @@ fun ReferralUnbondXor(
                     size = Size.Large,
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.referral_unbond_button_title),
-                    enabled = common.activate && state.invitationsCount > 0,
+                    enabled = common.activate && state.invitationsCount > 0 &&
+                        !LocalSelectedAccountReadOnly.current,
                     onClick = onUnbondClick
                 )
             }

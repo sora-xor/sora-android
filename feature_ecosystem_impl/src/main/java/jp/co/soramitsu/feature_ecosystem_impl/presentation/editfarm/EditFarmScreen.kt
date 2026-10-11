@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
 import jp.co.soramitsu.common.presentation.compose.components.PolkaswapSlider
@@ -188,7 +189,7 @@ internal fun EditFarmScreen(
                             text = stringResource(id = R.string.common_confirm),
                             size = Size.Large,
                             order = Order.PRIMARY,
-                            enabled = state.isButtonActive,
+                            enabled = state.isButtonActive && !LocalSelectedAccountReadOnly.current,
                             onClick = { onConfirm() }
                         )
                     }
