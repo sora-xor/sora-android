@@ -8,20 +8,27 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 
 /**
- * Stand-in for the native sr25519 library, which JVM tests cannot load. A key pair is derived
- * from a 32-byte seed by hashing, and a signature "verifies" only when the private half is the
- * one that belongs to the expected public key. The nonce plays no part, as in the real library
- * (see Sr25519NativeContractTest, which runs the real one on a device).
+ * Stand-in for the native sr25519 library, which JVM tests cannot load.
+ *
+ * Key pairs are real: [generateKeypair] is `MiniSecretKey::expand_to_keypair(ExpansionMode::Ed25519)`
+ * of schnorrkel written out in Kotlin (SHA-512 of the seed, Ed25519 clamping, division by the
+ * cofactor; the upper half is the nonce), and the public key comes from the production
+ * [Sr25519PublicKeyDerivation]. `HistoricalSr25519VectorsTest` checks both against the vectors of
+ * the released native library, so every address used by the JVM tests is a real SORA address.
+ *
+ * Only the signature itself is stood in for: [signAndVerify] answers what a Schnorr signature
+ * does (it verifies only under the public key of the scalar that made it, whatever the nonce).
+ * The real sign and verify run on a device (WalletUpgradeScenarioTest, Sr25519NativeContractTest).
  */
 class FakeStoredKeyCrypto : StoredKeyCrypto {
+    /** The native call throws (as it does for input it rejects). */
     var throwOnSign = false
+
+    /** The native verification answers false although the key pair belongs together. */
+    var signatureVerifies = true
     val challenges = mutableListOf<ByteArray>()
 
-    override fun generateKeypair(seed: ByteArray): Sr25519Keypair {
-        require(seed.size == 32) { "seed must be 32 bytes" }
-        val public = hash("public", seed)
-        return Sr25519Keypair(privateOf(public), public, hash("nonce", public))
-    }
+    override fun generateKeypair(seed: ByteArray): Sr25519Keypair = realSr25519Keypair(seed)
 
     override fun signAndVerify(
         keypair: Sr25519Keypair,
@@ -30,13 +37,30 @@ class FakeStoredKeyCrypto : StoredKeyCrypto {
     ): Boolean {
         if (throwOnSign) throw IllegalStateException("Provided private key is invalid.")
         challenges += challenge.copyOf()
-        return MessageDigest.isEqual(keypair.privateKey, privateOf(expectedPublicKey))
+        val public = Sr25519PublicKeyDerivation.publicKeyOrNull(keypair.privateKey)
+        return signatureVerifies && public != null &&
+            MessageDigest.isEqual(public, expectedPublicKey) &&
+            MessageDigest.isEqual(keypair.publicKey, expectedPublicKey)
     }
+}
 
-    private fun privateOf(public: ByteArray) = hash("private", public)
-
-    private fun hash(label: String, material: ByteArray): ByteArray =
-        MessageDigest.getInstance("SHA-256").digest(label.encodeToByteArray() + byteArrayOf(0) + material)
+/** schnorrkel `MiniSecretKey::expand_to_keypair(ExpansionMode::Ed25519).to_bytes()` in Kotlin. */
+fun realSr25519Keypair(seed: ByteArray): Sr25519Keypair {
+    require(seed.size == 32) { "seed must be 32 bytes" }
+    val hash = MessageDigest.getInstance("SHA-512").digest(seed)
+    val key = hash.copyOfRange(0, 32)
+    key[0] = (key[0].toInt() and 248).toByte()
+    key[31] = (key[31].toInt() and 63).toByte()
+    key[31] = (key[31].toInt() or 64).toByte()
+    // divide_scalar_bytes_by_cofactor: shift the little-endian value right by three bits.
+    var low = 0
+    for (index in 31 downTo 0) {
+        val byte = key[index].toInt() and 0xff
+        key[index] = ((byte ushr 3) or low).toByte()
+        low = (byte and 0b111) shl 5
+    }
+    val public = requireNotNull(Sr25519PublicKeyDerivation.publicKeyOrNull(key))
+    return Sr25519Keypair(key, public, hash.copyOfRange(32, 64))
 }
 
 /**

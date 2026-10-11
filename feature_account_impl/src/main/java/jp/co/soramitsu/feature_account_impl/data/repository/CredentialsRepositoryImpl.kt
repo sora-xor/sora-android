@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_account_impl.data.repository
 
+import java.security.MessageDigest
 import java.text.Normalizer
 import jp.co.soramitsu.common.account.RecoveryPhrase
 import jp.co.soramitsu.common.account.StoredSecretHex
@@ -47,6 +48,7 @@ import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
+import jp.co.soramitsu.common.util.WalletStorageFailures
 import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.ext.didToAccountId
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
@@ -59,6 +61,8 @@ import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.feature_account_impl.domain.keys.BackupMatch
 import jp.co.soramitsu.feature_account_impl.domain.keys.PackagedStoredKeyCrypto
+import jp.co.soramitsu.feature_account_impl.domain.keys.SigningKeyVerdict
+import jp.co.soramitsu.feature_account_impl.domain.keys.Sr25519PublicKeyDerivation
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredKeyCrypto
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredSecretsVerdict
 import jp.co.soramitsu.feature_account_impl.domain.keys.StoredWalletSecretsJudge
@@ -135,6 +139,57 @@ class CredentialsRepositoryImpl constructor(
         }
     }
 
+    override fun isJsonBackupValid(json: String): Boolean = jsonSeedEncoder.looksLikeExport(json)
+
+    override suspend fun draftsFromJson(
+        json: String,
+        password: String,
+        accountName: String,
+    ): List<WalletDraft> {
+        WalletRecoveryCapabilityGate.requireUserMutationAllowed()
+        val imported = try {
+            jsonSeedEncoder.decode(json, password)
+        } catch (_: JsonAccountsEncoder.JsonImportException.WrongPassword) {
+            throw SoraException.businessError(ResponseCode.JSON_BACKUP_WRONG_PASSWORD)
+        } catch (_: JsonAccountsEncoder.JsonImportException) {
+            throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID)
+        }
+        val drafts = mutableListOf<WalletDraft>()
+        try {
+            imported.forEach { account ->
+                val keyPair = account.keypair
+                // The file is trusted for nothing: the public key is computed from the private
+                // key it holds, and that public key gives the SORA address. The address and
+                // network written in the file are ignored (the same key has one SORA address).
+                val derived = Sr25519PublicKeyDerivation.publicKeyOrNull(keyPair.privateKey)
+                if (derived == null || !MessageDigest.isEqual(derived, keyPair.publicKey)) {
+                    throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID)
+                }
+                val address = sora2AddressCodec.toSoraAddressOrNull(keyPair.publicKey)
+                    ?: throw SoraException.businessError(ResponseCode.JSON_BACKUP_INVALID)
+                drafts += WalletDraft(
+                    address = address,
+                    // One account: the name the person typed. A batch: each account's own name.
+                    accountName = if (imported.size == 1) {
+                        accountName.ifBlank { account.name.orEmpty() }
+                    } else {
+                        account.name ?: accountName
+                    },
+                    mnemonic = null,
+                    seedHex = "",
+                    keypair = keyPair,
+                    source = WalletDraft.Source.JSON,
+                    wipeKeypair = ::wipe,
+                )
+            }
+        } catch (error: Throwable) {
+            drafts.forEach(WalletDraft::destroy)
+            imported.forEach { wipe(it.keypair) }
+            throw error
+        }
+        return drafts
+    }
+
     private fun draftFromPhrase(
         mnemonic: Mnemonic,
         accountName: String,
@@ -192,16 +247,18 @@ class CredentialsRepositoryImpl constructor(
         credentialsPrefs.requireKeyMaterialReadable()
     }
 
-    /** The values a draft stores: its key pair and the one secret it was made from. */
+    /**
+     * The values a draft stores: its key pair and the one secret it was made from. A draft read
+     * from an encrypted JSON export has no such secret and stores the key pair only.
+     */
     private fun desiredValues(draft: WalletDraft): Map<CredentialField, String> = buildMap {
         put(CredentialField.PRIVATE_KEY, draft.keypair.privateKey.toHexString())
         put(CredentialField.PUBLIC_KEY, draft.keypair.publicKey.toHexString())
         put(CredentialField.KEY_NONCE, draft.keypair.nonce.toHexString())
         val mnemonic = draft.mnemonic
-        if (mnemonic != null) {
-            put(CredentialField.MNEMONIC, mnemonic)
-        } else {
-            put(CredentialField.SEED, draft.seedHex)
+        when {
+            mnemonic != null -> put(CredentialField.MNEMONIC, mnemonic)
+            draft.source != WalletDraft.Source.JSON -> put(CredentialField.SEED, draft.seedHex)
         }
     }
 
@@ -232,8 +289,11 @@ class CredentialsRepositoryImpl constructor(
             null
         }
         return try {
-            secretsJudge.judge(
+            // The signing decision comes first and from the key pair alone.
+            val signing = secretsJudge.judgeSigningKey(address, keyPair)
+            secretsJudge.judgeBackup(
                 address = address,
+                signing = signing,
                 keyPair = keyPair,
                 mnemonic = text(CredentialField.MNEMONIC),
                 storedSeed = text(CredentialField.SEED),
@@ -287,7 +347,11 @@ class CredentialsRepositoryImpl constructor(
                 }
             }
             // The secret this draft does not write must still agree when it is already stored.
-            requireRetainedSecretAgrees(draft, stored)
+            // A JSON draft has no phrase or seed to compare: stored backup material is left as
+            // it is and is judged on its own.
+            if (draft.source != WalletDraft.Source.JSON) {
+                requireRetainedSecretAgrees(draft, stored)
+            }
         }
         if (absent.isNotEmpty()) {
             credentialsPrefs.writeCredentialsIfAbsent(address, absent)
@@ -326,7 +390,12 @@ class CredentialsRepositoryImpl constructor(
                 mnemonic = draft.mnemonic.orEmpty(),
                 storedSeed = if (draft.mnemonic == null) draft.seedHex else "",
             )
-            check(proven.canSign && proven.hasMatchingBackup) { "WALLET_REPAIR_DRAFT_UNPROVEN" }
+            // A phrase or seed draft must also re-derive the address; a JSON draft is the key
+            // pair itself and has nothing else to prove.
+            check(
+                proven.canSign &&
+                    (proven.hasMatchingBackup || draft.source == WalletDraft.Source.JSON)
+            ) { "WALLET_REPAIR_DRAFT_UNPROVEN" }
             // Keep the old encrypted values on the device before anything is replaced. Without
             // that copy nothing is written.
             if (WalletUpgradeBackup.preserveWalletPreferencesCopy(REPAIR_COPY_REASON).isFailure) {
@@ -457,16 +526,27 @@ class CredentialsRepositoryImpl constructor(
         return seed
     }
 
-    /** Judges the stored phrase and seed of [soraAccount] as backup material. Reads only. */
+    /**
+     * What the stored secrets of [soraAccount] prove. Reads only. The signing decision is made
+     * first, from the key pair alone; the phrase and the seed are read afterwards and judged as
+     * backup material. An explicit watch-only account never counts as able to sign.
+     */
     private suspend fun backupVerdict(soraAccount: SoraAccount): StoredSecretsVerdict {
+        val address = soraAccount.substrateAddress
         val keyPair = try {
             retrieveKeyPairOrNull(soraAccount)
         } catch (_: WalletDecryptionException) {
             null
         }
         return try {
-            secretsJudge.judge(
-                address = soraAccount.substrateAddress,
+            val signing = if (credentialsPrefs.isExplicitWatchOnly(address)) {
+                SigningKeyVerdict("WATCH_ONLY")
+            } else {
+                secretsJudge.judgeSigningKey(address, keyPair)
+            }
+            secretsJudge.judgeBackup(
+                address = address,
+                signing = signing,
                 keyPair = keyPair,
                 mnemonic = readBackupMaterial { retrieveMnemonic(soraAccount) },
                 storedSeed = readBackupMaterial { retrieveStoredSeed(soraAccount) },
@@ -477,10 +557,24 @@ class CredentialsRepositoryImpl constructor(
         }
     }
 
-    /** Null when the stored value cannot be decrypted; a Keystore failure still propagates. */
+    /**
+     * Null when the stored value cannot be read: that is a fact about the value and has its own
+     * status. Only a Keystore or storage failure, which says nothing about the account, is
+     * rethrown.
+     */
     private suspend fun readBackupMaterial(read: suspend () -> String): String? = try {
         read()
-    } catch (_: WalletDecryptionException) {
+    } catch (error: kotlinx.coroutines.CancellationException) {
+        throw error
+    } catch (error: OutOfMemoryError) {
+        throw error
+    } catch (error: Throwable) {
+        if (
+            WalletStorageFailures.isTransient(error) ||
+            WalletStorageFailures.isKeyMaterialUnavailable(error)
+        ) {
+            throw error
+        }
         null
     }
 
@@ -492,6 +586,8 @@ class CredentialsRepositoryImpl constructor(
             seedHex = verdict.canonicalSeedHex.orEmpty(),
             storedPhraseDoesNotMatch = verdict.phrase == BackupMatch.DOES_NOT_MATCH,
             storedSeedDoesNotMatch = verdict.seed == BackupMatch.DOES_NOT_MATCH,
+            storedPhraseUnreadable = verdict.phrase == BackupMatch.UNREADABLE,
+            storedSeedUnreadable = verdict.seed == BackupMatch.UNREADABLE,
         )
     }
 
@@ -549,17 +645,19 @@ class CredentialsRepositoryImpl constructor(
         if (irohaCash.containsKey(soraAccount.substrateAddress)) {
             return requireNotNull(irohaCash[soraAccount.substrateAddress]) { "Iroha cash failure" }
         } else {
-            // SORA v1 generated its phrases itself (words joined by single spaces) and could only
-            // restore an identity from exactly that text, so the v1 identity always belongs to
-            // the parsed words. A phrase stored with commas or extra spaces by 2.3.x therefore
-            // derives the same v1 identity as the same words with spaces.
-            val phrase = checkNotNull(RecoveryPhrase.parseOrNull(retrieveMnemonic(soraAccount))) {
+            // The SORA v1 identity is derived from the phrase TEXT, and every release derived
+            // it from the text exactly as it is stored. That identity must not change, so the
+            // stored text is used as it is (only its validity is checked with the parsed
+            // words). A phrase imported by this version is stored as its words joined by single
+            // spaces, so a new wallet always gets the canonical identity.
+            val mnemonic = retrieveMnemonic(soraAccount)
+            check(RecoveryPhrase.parseOrNull(mnemonic) != null) {
                 "MNEMONIC_NOT_AVAILABLE_FOR_IROHA_DERIVATION"
             }
             val purpose = "iroha keypair"
 
             val entropy =
-                Normalizer.normalize(phrase.text, Normalizer.Form.NFKD).toByteArray(charset("UTF-8"))
+                Normalizer.normalize(mnemonic, Normalizer.Form.NFKD).toByteArray(charset("UTF-8"))
             val seed =
                 cryptoAssistant.generateScryptSeedForEd25519(entropy, Const.SORA, purpose, "")
             val keys = cryptoAssistant.generateEd25519Keys(seed)

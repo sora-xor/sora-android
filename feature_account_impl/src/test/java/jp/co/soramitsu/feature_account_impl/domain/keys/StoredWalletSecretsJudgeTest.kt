@@ -11,10 +11,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The decision rule itself, with a stand-in for the native sr25519 library (JVM tests cannot load
- * it): a key pair is derived from a seed by hashing, and a signature "verifies" only when the
- * private half is the one that belongs to the expected public key. The nonce plays no part, as in
- * the real library. The real library is exercised by WalletUpgradeScenarioTest on a device.
+ * The decision rule itself. Key pairs are real sr25519 key pairs (see [FakeStoredKeyCrypto]) and
+ * the public key is computed from the stored private key by the production code; only the native
+ * sign-and-verify call is stood in for. The real library runs in WalletUpgradeScenarioTest on a
+ * device.
  */
 class StoredWalletSecretsJudgeTest {
 
@@ -114,14 +114,59 @@ class StoredWalletSecretsJudgeTest {
         assertEquals(BackupMatch.DOES_NOT_MATCH, otherSeed.seed)
         assertEquals("LEGACY_SECRET", otherSeed.secretSource)
 
-        // Unreadable (null) or malformed backup material.
-        val unreadable = judge.judge(address, keys.copy(), null, null)
-        assertTrue(unreadable.canSign)
-        assertEquals(BackupMatch.DOES_NOT_MATCH, unreadable.phrase)
-        assertEquals(BackupMatch.DOES_NOT_MATCH, unreadable.seed)
         val malformed = judge.judge(address, keys.copy(), "not a phrase", "zz")
         assertTrue(malformed.canSign)
+        assertEquals(BackupMatch.DOES_NOT_MATCH, malformed.phrase)
+        assertEquals(BackupMatch.DOES_NOT_MATCH, malformed.seed)
         assertFalse(malformed.hasMatchingBackup)
+    }
+
+    @Test
+    fun `backup material that cannot be read has its own status and never stops signing`() {
+        val unreadable = judge.judge(address, keys.copy(), null, null)
+        assertTrue(unreadable.canSign)
+        assertEquals(BackupMatch.UNREADABLE, unreadable.phrase)
+        assertEquals(BackupMatch.UNREADABLE, unreadable.seed)
+        assertEquals("LEGACY_SECRET", unreadable.secretSource)
+        assertFalse(unreadable.hasMatchingBackup)
+        assertNull(unreadable.canonicalSeedHex)
+        assertEquals(setOf("PHRASE_UNREADABLE", "SEED_UNREADABLE"), unreadable.diagnostics)
+
+        // An unreadable phrase next to a readable seed that matches: the seed is the backup.
+        val seedOnly = judge.judge(address, keys.copy(), null, seedHex)
+        assertTrue(seedOnly.canSign)
+        assertEquals(BackupMatch.UNREADABLE, seedOnly.phrase)
+        assertEquals(BackupMatch.MATCHES, seedOnly.seed)
+        assertEquals("RAW_SEED", seedOnly.secretSource)
+    }
+
+    @Test
+    fun `the signing decision is made from the key pair alone before backup material is judged`() {
+        // Step 1 needs no phrase and no seed.
+        val signing = judge.judgeSigningKey(address, keys.copy())
+        assertTrue(signing.canSign)
+        assertEquals(1, crypto.challenges.size)
+
+        // Step 2 carries the decision of step 1 unchanged, whatever the backup material is, and
+        // makes no further signature.
+        listOf<Pair<String?, String?>>(
+            null to null,
+            "not a phrase" to "zz",
+            TWENTY_FOUR to "11".repeat(32),
+            TWELVE to fullSeedHex,
+        ).forEach { (mnemonic, seed) ->
+            val verdict = judge.judgeBackup(address, signing, keys.copy(), mnemonic, seed)
+            assertTrue("$mnemonic / $seed", verdict.canSign)
+        }
+        assertEquals(1, crypto.challenges.size)
+
+        // And a refusal from step 1 is not undone by a matching phrase and seed.
+        val refused = judge.judgeSigningKey(address, null)
+        val verdict = judge.judgeBackup(address, refused, null, TWELVE, seedHex)
+        assertFalse(verdict.canSign)
+        assertEquals("SIGNING_KEY_MISSING", verdict.signingRefusal)
+        assertEquals(BackupMatch.MATCHES, verdict.phrase)
+        assertEquals(BackupMatch.MATCHES, verdict.seed)
     }
 
     @Test
@@ -153,13 +198,34 @@ class StoredWalletSecretsJudgeTest {
         // The stored key is another wallet's: it does not derive this address.
         val other = crypto.generateKeypair(ByteArray(32) { 9 })
         assertEquals("SORA_ADDRESS_MISMATCH", judge.judge(address, other, TWELVE, seedHex).signingRefusal)
-        // The right public key with a private key that is not its own.
+        // The right public key with a private key that is not its own: the public key computed
+        // from the stored private key is another one. The native library is never called.
         val wrongPrivate = Sr25519Keypair(other.privateKey.copyOf(), keys.publicKey.copyOf(), keys.nonce.copyOf())
+        crypto.challenges.clear()
         assertEquals(
-            "SORA_SIGNING_VECTOR_MISMATCH",
+            "SIGNING_KEY_NOT_OF_ADDRESS",
             judge.judge(address, wrongPrivate, TWELVE, seedHex).signingRefusal,
         )
-        // The native library rejects the stored key bytes.
+        // A private key that is not a canonical scalar (zero, or not below the group order).
+        listOf(ByteArray(32), ByteArray(32) { 0xff.toByte() }).forEach { scalar ->
+            val malformed = Sr25519Keypair(scalar, keys.publicKey.copyOf(), keys.nonce.copyOf())
+            assertEquals(
+                "SIGNING_KEY_SCALAR_INVALID",
+                judge.judge(address, malformed, TWELVE, seedHex).signingRefusal,
+            )
+        }
+        // A key of the wrong length.
+        val longPrivate = Sr25519Keypair(ByteArray(64) { 1 }, keys.publicKey.copyOf(), keys.nonce.copyOf())
+        assertEquals("SIGNING_KEY_INCOMPLETE", judge.judge(address, longPrivate, TWELVE, seedHex).signingRefusal)
+        assertTrue("nothing malformed reaches the native library", crypto.challenges.isEmpty())
+        // A well-formed key pair of this address whose signature does not verify cannot sign.
+        crypto.signatureVerifies = false
+        assertEquals(
+            "SORA_SIGNING_VECTOR_MISMATCH",
+            judge.judge(address, keys.copy(), TWELVE, seedHex).signingRefusal,
+        )
+        crypto.signatureVerifies = true
+        // The native library throws.
         crypto.throwOnSign = true
         assertEquals("SORA_SIGNING_VECTOR_FAILED", judge.judge(address, keys.copy(), TWELVE, seedHex).signingRefusal)
         crypto.throwOnSign = false

@@ -53,7 +53,118 @@ class IrohaKeyDerivationTest {
     }
 
     @Test
-    fun `a phrase stored with commas derives the same Nexus identity as the same words with spaces`() {
+    fun `an existing Nexus account derived from a comma text keeps its identity`() {
+        val spaces =
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+        val stored = spaces.replace(" ", ", ")
+        // What builds before the canonical rule derived for this stored text: PBKDF2 over the
+        // text with its commas (the audited derivation, copied in earlierBuildAddress below).
+        val earlier = earlierBuildDerivation(stored, NexusDerivationProfiles.taira)
+        val canonical = IrohaKeyDerivation.derive(stored, NexusDerivationProfiles.taira)
+        try {
+            assertNotEquals(earlier.address, canonical.address)
+
+            // The existing account is re-derived exactly as it was first derived.
+            val existing = requireNotNull(
+                IrohaKeyDerivation.deriveExisting(
+                    mnemonic = stored,
+                    profile = NexusDerivationProfiles.taira,
+                    existingAddress = earlier.address,
+                    existingPublicKey = earlier.publicKey,
+                )
+            )
+            try {
+                assertEquals(earlier.address, existing.address)
+                assertEquals(earlier.publicKey.toHex(), existing.publicKey.toHex())
+                assertEquals(earlier.privateKeySeed.toHex(), existing.privateKeySeed.toHex())
+                assertEquals(NexusDerivationProfiles.taira.derivationPath, existing.derivationPath)
+            } finally {
+                existing.destroy()
+            }
+
+            // An account first derived from the canonical words is re-derived from them.
+            val fresh = requireNotNull(
+                IrohaKeyDerivation.deriveExisting(
+                    mnemonic = stored,
+                    profile = NexusDerivationProfiles.taira,
+                    existingAddress = canonical.address,
+                    existingPublicKey = canonical.publicKey,
+                )
+            )
+            try {
+                assertEquals(canonical.privateKeySeed.toHex(), fresh.privateKeySeed.toHex())
+            } finally {
+                fresh.destroy()
+            }
+
+            // A stored account that the phrase does not derive is never replaced by another.
+            assertEquals(
+                null,
+                IrohaKeyDerivation.deriveExisting(
+                    mnemonic = stored,
+                    profile = NexusDerivationProfiles.taira,
+                    existingAddress = canonical.address,
+                    existingPublicKey = earlier.publicKey,
+                ),
+            )
+        } finally {
+            earlier.destroy()
+            canonical.destroy()
+        }
+    }
+
+    @Test
+    fun `a phrase stored with single spaces derives one identity in both text forms`() {
+        val spaces =
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+        val earlier = earlierBuildDerivation(spaces, NexusDerivationProfiles.taira)
+        val canonical = IrohaKeyDerivation.derive(spaces, NexusDerivationProfiles.taira)
+        try {
+            assertEquals(earlier.address, canonical.address)
+            assertEquals(earlier.privateKeySeed.toHex(), canonical.privateKeySeed.toHex())
+        } finally {
+            earlier.destroy()
+            canonical.destroy()
+        }
+    }
+
+    /**
+     * The Nexus derivation of the audited build (commit 42013abd, IrohaKeyDerivation.derive),
+     * kept here as the reference for accounts that build already derived: the stored text is
+     * split on whitespace only, so punctuation stays in the PBKDF2 password.
+     */
+    private fun earlierBuildDerivation(
+        mnemonic: String,
+        profile: NexusDerivationProfile,
+    ): IrohaKeyDerivation.DerivedAccount {
+        val words = mnemonic.trim().split(Regex("\\s+")).filter(String::isNotBlank)
+        require(words.size == 12 || words.size == 24)
+        val normalizedMnemonic =
+            java.text.Normalizer.normalize(words.joinToString(" "), java.text.Normalizer.Form.NFKD)
+        val spec = javax.crypto.spec.PBEKeySpec(
+            normalizedMnemonic.toCharArray(),
+            "mnemonic".toByteArray(Charsets.UTF_8),
+            2048,
+            512,
+        )
+        val seed = javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
+            .generateSecret(spec)
+            .encoded
+        val derived = IrohaKeyDerivation.derivePrivateKey(seed, profile.derivationPath)
+        val publicKey = org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters(derived.first, 0)
+            .generatePublicKey().encoded
+        return IrohaKeyDerivation.DerivedAccount(
+            network = profile.id,
+            derivationPath = profile.derivationPath,
+            privateKeySeed = derived.first,
+            chainCode = derived.second,
+            publicKey = publicKey,
+            address = IrohaAddressCodec.encode(publicKey, profile.chainDiscriminant),
+        )
+    }
+
+    @Test
+    fun `a new derivation from a phrase stored with commas uses the same words with spaces`() {
         val spaces =
             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
         val expected = IrohaKeyDerivation.derive(spaces, NexusDerivationProfiles.taira)

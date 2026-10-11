@@ -647,7 +647,20 @@
   <string name="account_repair_pin_wrong">That PIN isn\'t right. Nothing was changed.</string>
   <string name="account_repair_too_many_attempts">The PIN was wrong three times, so the repair was stopped. Nothing was changed. You can start again from Import account.</string>
   <string name="account_repair_confirm">Repair account</string>
-  <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file.</string>
-  <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase.</string>
+  <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file. You can bring it back later from Import account, Backup file (JSON).</string>
+  <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
   <string name="safe_mode_whats_new_accounts_some_read_only">Accounts that can send from this phone: %1$s of %2$s. To repair the rest, import their recovery phrase.</string>
+  <string name="account_repair_title_backup">Repair this account from your backup</string>
+  <string name="json_backup_invalid_title">This backup file can\'t be read</string>
+  <string name="json_backup_invalid">This isn\'t an encrypted account backup (JSON) that SORA can read. Check that you chose the file you exported, or pasted all of its text. Nothing was changed.</string>
+  <string name="json_backup_wrong_password_title">That password isn\'t right</string>
+  <string name="json_backup_wrong_password">That password doesn\'t open this backup file. Enter the password you chose when you exported it. Nothing was changed.</string>
+  <string name="recovery_json_option">Backup file (JSON)</string>
+  <string name="onboarding_enter_json">Import backup file</string>
+  <string name="recovery_enter_json_title">Choose your encrypted backup file (JSON), or paste its text. Then enter the password you chose when you exported it.</string>
+  <string name="recovery_json_input_label">Backup file text</string>
+  <string name="recovery_json_password_label">Backup file password</string>
+  <string name="recovery_json_choose_file">Choose file</string>
+  <string name="recovery_json_file_unreadable">SORA couldn\'t read that file. Choose the JSON file you exported from SORA. Nothing was changed.</string>
+  <string name="json_backup_batch_skipped">Added %1$s of the accounts in this file. %2$s could not be added because different keys are saved for them on this phone. To repair one of those, go to Import account and enter its recovery phrase or its own backup file.</string>
 </resources>

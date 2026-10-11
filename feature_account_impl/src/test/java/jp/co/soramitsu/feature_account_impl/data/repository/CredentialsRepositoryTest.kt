@@ -195,6 +195,7 @@ class CredentialsRepositoryTest {
         whenever(datasource.retrieveSeed(account.substrateAddress)).thenReturn("")
         whenever(datasource.retrieveMnemonic(account.substrateAddress)).thenReturn("")
         whenever(datasource.retrieveKeys("")).thenReturn(null)
+        whenever(datasource.isExplicitWatchOnly(account.substrateAddress)).thenReturn(false)
 
         val error = runCatching {
             credentialsRepository.retrieveSeed(account)

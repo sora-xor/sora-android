@@ -63,6 +63,21 @@ interface CredentialsRepository {
     suspend fun draftFromRawSeed(rawSeed: String, accountName: String): WalletDraft
 
     /**
+     * True when [json] has the shape of an encrypted JSON export this app can restore (one
+     * account, or the batch export of several). Nothing is decrypted.
+     */
+    fun isJsonBackupValid(json: String): Boolean
+
+    /**
+     * Reads an encrypted JSON export made by this app (or polkadot.js) into wallets held in
+     * memory: one draft for a one-account export, one per account for a batch export. Each draft
+     * carries the key pair only ([WalletDraft.Source.JSON]); the SORA address comes from the
+     * public key computed from the private key in the file. Writes nothing. Throws
+     * `JSON_BACKUP_WRONG_PASSWORD` or `JSON_BACKUP_INVALID`. The caller destroys the drafts.
+     */
+    suspend fun draftsFromJson(json: String, password: String, accountName: String): List<WalletDraft>
+
+    /**
      * Stores the draft's keys for its address without ever replacing a stored value.
      * - When the signing key already stored for that address proves the address (it is the key
      *   of the address and signs a random challenge), the stored key set is adopted unchanged,

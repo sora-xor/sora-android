@@ -623,7 +623,20 @@
   <string name="account_repair_pin_wrong">PINが正しくありません。何も変更されていません。</string>
   <string name="account_repair_too_many_attempts">PINを3回間違えたため、修復を中止しました。何も変更されていません。「アカウントをインポート」からやり直せます。</string>
   <string name="account_repair_confirm">アカウントを修復</string>
-  <string name="backup_no_matching_secret">この端末に保存されているリカバリーフレーズやシードの中に、このアカウントに一致するものがないため、表示していません。アカウント自体は引き続き使用できます。バックアップするには、暗号化されたJSONファイルとしてエクスポートしてください。</string>
-  <string name="backup_no_matching_secret_read_only">この端末に保存されているリカバリーフレーズやシードの中に、このアカウントに一致するものがないため、表示していません。この端末でこのアカウントを再び使うには、「アカウントをインポート」でリカバリーフレーズを入力してください。</string>
+  <string name="backup_no_matching_secret">この端末に保存されているリカバリーフレーズやシードの中に、このアカウントに一致するものがないため、表示していません。アカウント自体は引き続き使用できます。バックアップするには、暗号化されたJSONファイルとしてエクスポートしてください。あとで「アカウントをインポート」の「バックアップファイル（JSON）」から復元できます。</string>
+  <string name="backup_no_matching_secret_read_only">この端末に保存されているリカバリーフレーズやシードの中に、このアカウントに一致するものがないため、表示していません。この端末でこのアカウントを再び使うには、「アカウントをインポート」でリカバリーフレーズ、Raw Seed、またはバックアップファイルを入力してください。</string>
   <string name="safe_mode_whats_new_accounts_some_read_only">この端末から送金できるアカウント: %2$s個中%1$s個。残りのアカウントは、リカバリーフレーズをインポートすると修復できます。</string>
+  <string name="account_repair_title_backup">バックアップでこのアカウントを修復</string>
+  <string name="json_backup_invalid_title">このバックアップファイルは読み取れません</string>
+  <string name="json_backup_invalid">SORAで読み取れる暗号化アカウントバックアップ（JSON）ではありません。エクスポートしたファイルを選んだか、内容をすべて貼り付けたかをご確認ください。何も変更されていません。</string>
+  <string name="json_backup_wrong_password_title">パスワードが正しくありません</string>
+  <string name="json_backup_wrong_password">このパスワードではバックアップファイルを開けません。エクスポートしたときに設定したパスワードを入力してください。何も変更されていません。</string>
+  <string name="recovery_json_option">バックアップファイル（JSON）</string>
+  <string name="onboarding_enter_json">バックアップファイルをインポート</string>
+  <string name="recovery_enter_json_title">暗号化されたバックアップファイル（JSON）を選ぶか、その内容を貼り付けてください。次に、エクスポートしたときに設定したパスワードを入力してください。</string>
+  <string name="recovery_json_input_label">バックアップファイルの内容</string>
+  <string name="recovery_json_password_label">バックアップファイルのパスワード</string>
+  <string name="recovery_json_choose_file">ファイルを選ぶ</string>
+  <string name="recovery_json_file_unreadable">そのファイルを読み取れませんでした。SORAからエクスポートしたJSONファイルを選んでください。何も変更されていません。</string>
+  <string name="json_backup_batch_skipped">このファイルのアカウントのうち%1$s個を追加しました。%2$s個は、この端末に別の鍵が保存されているため追加できませんでした。修復するには、「アカウントをインポート」で、そのアカウントのリカバリーフレーズまたはそのアカウントだけのバックアップファイルを入力してください。</string>
 </resources>
