@@ -52,6 +52,8 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -198,13 +200,15 @@ private fun TxHistoryScreen(
 }
 
 /**
- * The PI indexer lists only operations the account signed ([PiHistoryCoverage]). Say so calmly
- * wherever account history is shown, so a missing incoming transfer is not mistaken for a lost
- * payment. Nothing is shown once the indexer lists received transfers.
+ * While the PI indexer lists only operations the account signed ([PiHistoryCoverage]), say so
+ * calmly wherever account history is shown, so a missing incoming transfer is not mistaken for a
+ * lost payment. The note goes away by itself as soon as a history read was answered with
+ * received transfers included; no app update is needed for that.
  */
 @Composable
 fun ReceivedTransfersNote(modifier: Modifier = Modifier) {
-    if (PiHistoryCoverage.LISTS_RECEIVED_TRANSFERS) return
+    val listsReceivedTransfers by PiHistoryCoverage.listsReceivedTransfers.collectAsState()
+    if (listsReceivedTransfers) return
     Text(
         modifier = modifier,
         textAlign = TextAlign.Center,
