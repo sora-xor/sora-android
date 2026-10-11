@@ -548,15 +548,29 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
      * The journal row is the only authority for status; the details explain it.
      *
      * [listedByIndexer] is true for a transaction the indexer lists, which means it is in a
-     * block. A refusal recorded for it at submission can then no longer be the whole story, so
-     * it is not used to call the transaction failed; the row stays pending until the app's own
-     * check of finalized blocks has resolved it.
+     * block. Nothing recorded on this device may then say that it never reached one:
+     *
+     * - A refusal recorded for it at submission can no longer be the whole story, so it is not
+     *   used to call the transaction failed; the row stays pending until the app's own check of
+     *   finalized blocks has resolved it.
+     * - A row that expired "not included" (the app's scan of the validity window did not find
+     *   it, for example because a block was read from a node that was behind) does not turn the
+     *   listed entry into "nothing was sent, you can try again". The entry stays exactly as the
+     *   indexer gave it: its status, its block, its fee and the explorer link. Sending it again
+     *   on that advice would send it twice.
      */
     private fun TransactionBase.applyJournal(
         row: Sora2PendingSubmissionLocal,
         details: Sora2SubmissionDetails?,
         listedByIndexer: Boolean = false,
     ) {
+        if (
+            listedByIndexer &&
+            row.state == Sora2PendingSubmissionLocal.STATE_EXPIRED_NOT_INCLUDED
+        ) {
+            statusDetail = null
+            return
+        }
         val refusal = details?.nodeRefusal?.takeUnless { listedByIndexer }?.let { refusal ->
             TransactionStatusDetail(
                 kind = when (refusal.reason) {
