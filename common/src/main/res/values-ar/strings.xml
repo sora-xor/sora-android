@@ -680,4 +680,6 @@
   <string name="tx_outcome_pool_unavailable_title">Pool data unavailable</string>
   <string name="tx_outcome_pool_unavailable">SORA couldn\'t read this pool from the network, so the amounts can\'t be checked right now. Nothing was sent. Check your internet connection and try again.</string>
   <string name="tx_outcome_quote_unavailable">Price unavailable</string>
+  <string name="tx_outcome_not_sent_balance">Your balance is no longer enough for this amount and the network fee, so nothing was sent and no fee was charged. An earlier transaction may have been confirmed in the meantime. Check your balance and change the amount.</string>
+  <string name="tx_outcome_not_sent_estimate">SORA couldn\'t check these amounts and the network fee with the network just now, so nothing was sent and no fee was charged. Check your internet connection and try again.</string>
 </resources>
