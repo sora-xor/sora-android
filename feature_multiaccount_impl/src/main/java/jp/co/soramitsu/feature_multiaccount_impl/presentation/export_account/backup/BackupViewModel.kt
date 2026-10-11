@@ -75,19 +75,26 @@ class BackupViewModel @AssistedInject constructor(
         _toolbarState.value = initMediumTitle2("")
         viewModelScope.launch {
             // Only a stored phrase or seed that re-derives this account's address is shown.
-            val material = runCatching { multiAccountInteractor.getBackupMaterial(address) }
-                .getOrElse { error ->
-                    onError(error)
-                    return@launch
+            // The stored secrets are judged once for this screen, off the main thread; the
+            // answer carries what is shown.
+            val material = try {
+                when (type) {
+                    // Also caches the seed where none is stored (as before).
+                    ExportProtectionViewModel.Type.SEED ->
+                        multiAccountInteractor.getSeedBackupMaterial(address)
+                    else -> multiAccountInteractor.getBackupMaterial(address)
                 }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                onError(error)
+                return@launch
+            }
             when (type) {
                 ExportProtectionViewModel.Type.SEED -> {
                     _toolbarState.value = initMediumTitle2(R.string.common_raw_seed)
                     _backupScreenState.value = if (material.hasSeed) {
-                        // Also caches the seed where none is stored (as before).
-                        BackupScreenState(
-                            seedString = multiAccountInteractor.getSeed(address).addHexPrefix(),
-                        )
+                        BackupScreenState(seedString = material.seedHex.addHexPrefix())
                     } else {
                         BackupScreenState(noMatchingSecret = true, canExportJson = material.canSign)
                     }

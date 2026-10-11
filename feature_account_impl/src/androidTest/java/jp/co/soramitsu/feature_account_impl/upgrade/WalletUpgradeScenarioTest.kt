@@ -1441,6 +1441,12 @@ class WalletUpgradeScenarioTest {
             val material = launch.backupMaterial(affected)
             assertEquals(affected.seedHex, material.seedHex)
             assertEquals(TWELVE_WORDS.split(" "), material.phraseWords)
+            // The Raw seed screen (one judgement that carries the seed) shows the same 32 bytes
+            // and, with a seed already stored, writes nothing.
+            assertEquals(
+                affected.seedHex,
+                launch.interactor.getSeedBackupMaterial(affected.address).seedHex,
+            )
             assertEquals(128, launch.credentialsDatasource.retrieveSeed(affected.address).length)
             launch.assertCiphertextsKept(before)
 

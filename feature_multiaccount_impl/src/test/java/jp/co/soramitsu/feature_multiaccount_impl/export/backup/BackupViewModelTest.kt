@@ -96,8 +96,13 @@ class BackupViewModelTest {
             storedSeedDoesNotMatch = false,
         ),
     ) = runTest {
-        given(interactor.getBackupMaterial("address")).willReturn(material)
-        given(interactor.getSeed("address")).willReturn(seed)
+        // One judgement of the stored secrets per screen: the Raw seed screen asks for the
+        // material that carries the seed, the phrase screen for the plain material.
+        if (type == ExportProtectionViewModel.Type.SEED) {
+            given(interactor.getSeedBackupMaterial("address")).willReturn(material)
+        } else {
+            given(interactor.getBackupMaterial("address")).willReturn(material)
+        }
         viewModel =
             BackupViewModel(interactor, resourceManager, router, clipboardManager, type, "address")
     }
@@ -118,6 +123,28 @@ class BackupViewModelTest {
             commonR.string.common_raw_seed,
             toolbarstate.basic.title,
         )
+    }
+
+    @Test
+    fun theRawSeedScreenJudgesTheStoredSecretsOnce() = runTest {
+        setUp(ExportProtectionViewModel.Type.SEED)
+
+        assertEquals(
+            BackupScreenState(seedString = "0x$seed"),
+            viewModel.backupScreenState.getOrAwaitValue(),
+        )
+        // One call that carries the seed; no second or third judgement for the same screen.
+        verify(interactor).getSeedBackupMaterial("address")
+        org.mockito.Mockito.verifyNoMoreInteractions(interactor)
+    }
+
+    @Test
+    fun thePassphraseScreenJudgesTheStoredSecretsOnce() = runTest {
+        setUp(ExportProtectionViewModel.Type.PASSPHRASE)
+
+        viewModel.backupScreenState.getOrAwaitValue()
+        verify(interactor).getBackupMaterial("address")
+        org.mockito.Mockito.verifyNoMoreInteractions(interactor)
     }
 
     @Test

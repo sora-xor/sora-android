@@ -609,9 +609,15 @@ class MultiaccountInteractor @Inject constructor(
         getBackupMaterial(soraAccount ?: userRepository.getCurSoraAccount())
             .phraseWords.joinToString(" ")
 
-    /** What may be shown as a backup of [soraAccount] (only material that re-derives it). */
+    /**
+     * What may be shown as a backup of [soraAccount] (only material that re-derives it).
+     *
+     * Judging the stored secrets decrypts them, derives keys (PBKDF2, sr25519) and signs a
+     * challenge, so it never runs on the caller's thread: the screens that open with it call
+     * from the main thread.
+     */
     suspend fun getBackupMaterial(soraAccount: SoraAccount): WalletBackupMaterial =
-        credentialsRepository.retrieveBackupMaterial(soraAccount)
+        keyWork { credentialsRepository.retrieveBackupMaterial(soraAccount) }
 
     suspend fun getBackupMaterial(address: String): WalletBackupMaterial =
         getBackupMaterial(userRepository.getSoraAccount(address))
@@ -628,10 +634,16 @@ class MultiaccountInteractor @Inject constructor(
      * The 32-byte seed that re-derives the account ("" when neither the stored seed nor the
      * stored phrase does). The first call also caches it where no seed is stored yet.
      */
-    suspend fun getSeed(address: String): String {
-        val account = userRepository.getSoraAccount(address)
-        if (!credentialsRepository.retrieveBackupMaterial(account).hasSeed) return ""
-        return credentialsRepository.retrieveSeed(account)
+    suspend fun getSeed(address: String): String = getSeedBackupMaterial(address).seedHex
+
+    /**
+     * [getBackupMaterial] for the Raw seed screen: the stored secrets are judged once, off the
+     * caller's thread, and the answer carries the seed to show
+     * ([WalletBackupMaterial.seedHex]). The first call also caches the derived seed where no
+     * seed is stored yet.
+     */
+    suspend fun getSeedBackupMaterial(address: String): WalletBackupMaterial = keyWork {
+        credentialsRepository.retrieveBackupMaterialForSeed(userRepository.getSoraAccount(address))
     }
 
     suspend fun getKeypair(address: String): Keypair {

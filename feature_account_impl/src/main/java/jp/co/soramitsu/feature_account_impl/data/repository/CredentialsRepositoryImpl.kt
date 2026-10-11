@@ -571,14 +571,25 @@ class CredentialsRepositoryImpl constructor(
         val seed = checkNotNull(material.canonicalSeedHex) {
             "MNEMONIC_NOT_AVAILABLE_FOR_SEED_DERIVATION"
         }
+        cacheDerivedSeed(soraAccount, material, seed)
+        return seed
+    }
+
+    /**
+     * A cache of the seed a phrase derives: added only where no seed value is stored (an
+     * unreadable stored value is never replaced).
+     */
+    private suspend fun cacheDerivedSeed(
+        soraAccount: SoraAccount,
+        material: StoredSecretsVerdict,
+        seed: String,
+    ) {
         if (material.seed == BackupMatch.ABSENT && material.recoveryPhrase?.wordCount in setOf(12, 24)) {
             WalletMutationCoordinator.withLock {
                 if (
                     WalletRecoveryCapabilityGate.mode() ==
                     WalletRecoveryCapabilityGate.Mode.NORMAL
                 ) {
-                    // A cache of the derived seed: added only where no seed value is stored
-                    // (an unreadable stored value is never replaced).
                     runCatching {
                         credentialsPrefs.writeCredentialsIfAbsent(
                             soraAccount.substrateAddress,
@@ -588,7 +599,6 @@ class CredentialsRepositoryImpl constructor(
                 }
             }
         }
-        return seed
     }
 
     /**
@@ -643,18 +653,27 @@ class CredentialsRepositoryImpl constructor(
         null
     }
 
-    override suspend fun retrieveBackupMaterial(soraAccount: SoraAccount): WalletBackupMaterial {
+    override suspend fun retrieveBackupMaterial(soraAccount: SoraAccount): WalletBackupMaterial =
+        backupMaterial(backupVerdict(soraAccount))
+
+    override suspend fun retrieveBackupMaterialForSeed(
+        soraAccount: SoraAccount,
+    ): WalletBackupMaterial {
+        // One judgement for the screen: what may be shown, and the seed itself.
         val verdict = backupVerdict(soraAccount)
-        return WalletBackupMaterial(
-            canSign = verdict.canSign,
-            phraseWords = verdict.recoveryPhrase?.words.orEmpty(),
-            seedHex = verdict.canonicalSeedHex.orEmpty(),
-            storedPhraseDoesNotMatch = verdict.phrase == BackupMatch.DOES_NOT_MATCH,
-            storedSeedDoesNotMatch = verdict.seed == BackupMatch.DOES_NOT_MATCH,
-            storedPhraseUnreadable = verdict.phrase == BackupMatch.UNREADABLE,
-            storedSeedUnreadable = verdict.seed == BackupMatch.UNREADABLE,
-        )
+        verdict.canonicalSeedHex?.let { seed -> cacheDerivedSeed(soraAccount, verdict, seed) }
+        return backupMaterial(verdict)
     }
+
+    private fun backupMaterial(verdict: StoredSecretsVerdict) = WalletBackupMaterial(
+        canSign = verdict.canSign,
+        phraseWords = verdict.recoveryPhrase?.words.orEmpty(),
+        seedHex = verdict.canonicalSeedHex.orEmpty(),
+        storedPhraseDoesNotMatch = verdict.phrase == BackupMatch.DOES_NOT_MATCH,
+        storedSeedDoesNotMatch = verdict.seed == BackupMatch.DOES_NOT_MATCH,
+        storedPhraseUnreadable = verdict.phrase == BackupMatch.UNREADABLE,
+        storedSeedUnreadable = verdict.seed == BackupMatch.UNREADABLE,
+    )
 
     override suspend fun retrieveStoredSeed(soraAccount: SoraAccount): String {
         val current = try {

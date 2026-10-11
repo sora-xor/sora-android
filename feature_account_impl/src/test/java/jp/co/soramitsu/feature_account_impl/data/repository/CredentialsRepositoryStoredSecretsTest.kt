@@ -475,6 +475,49 @@ class CredentialsRepositoryStoredSecretsTest {
     }
 
     @Test
+    fun `the raw seed screen gets what it may show and the seed from one judgement`() = runTest {
+        store.putKeys(address, keys)
+        store.put(CredentialField.MNEMONIC, address, TWELVE)
+
+        val material = repository.retrieveBackupMaterialForSeed(account)
+
+        assertTrue(material.canSign)
+        assertEquals(TWELVE.split(" "), material.phraseWords)
+        assertEquals(seedHex, material.seedHex)
+        // The stored key was proven once (one challenge signed), not once per question.
+        assertEquals(1, crypto.challenges.size)
+        // As retrieveSeed does: the derived seed is cached where none is stored, add-only.
+        assertEquals(mapOf(CredentialField.SEED to seedHex), store.addOnlyWrites.single())
+        assertTrue(store.replacingWrites.isEmpty())
+        // The next time it is found and nothing more is written.
+        assertEquals(seedHex, repository.retrieveBackupMaterialForSeed(account).seedHex)
+        assertEquals(1, store.addOnlyWrites.size)
+    }
+
+    @Test
+    fun `the raw seed screen never writes next to a stored seed or without a matching one`() =
+        runTest {
+            // A 64-byte cached seed (3.6.0.0 to 3.8.2.0): shown as its 32 bytes, left as it is.
+            store.putKeys(address, keys)
+            store.put(CredentialField.MNEMONIC, address, TWELVE)
+            store.put(CredentialField.SEED, address, fullSeedHex)
+            val before = store.snapshot()
+            assertEquals(seedHex, repository.retrieveBackupMaterialForSeed(account).seedHex)
+            assertEquals(before, store.snapshot())
+
+            // Another wallet's phrase and no seed: nothing to show and nothing to cache.
+            store.put(CredentialField.MNEMONIC, address, TWENTY_FOUR)
+            store.values.remove("prefs_seed$address")
+            val other = store.snapshot()
+            val material = repository.retrieveBackupMaterialForSeed(account)
+            assertTrue(material.canSign)
+            assertFalse(material.hasSeed)
+            assertEquals(other, store.snapshot())
+            assertTrue(store.addOnlyWrites.isEmpty())
+            assertTrue(store.replacingWrites.isEmpty())
+        }
+
+    @Test
     fun `fifteen eighteen and twenty one word wallets keep their seed without a cache write`() = runTest {
         listOf(FIFTEEN, EIGHTEEN, TWENTY_ONE).forEach { text ->
             val legacyPhrase = requireNotNull(RecoveryPhrase.parseOrNull(text))

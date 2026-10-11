@@ -137,6 +137,14 @@ interface CredentialsRepository {
     suspend fun retrieveBackupMaterial(soraAccount: SoraAccount): WalletBackupMaterial
 
     /**
+     * [retrieveBackupMaterial] for a screen that is about to show the raw seed: one judgement of
+     * the stored secrets answers both what may be shown and the seed itself
+     * ([WalletBackupMaterial.seedHex]). As [retrieveSeed] does, the derived seed is cached where
+     * no seed is stored yet (add-only; no stored value is replaced).
+     */
+    suspend fun retrieveBackupMaterialForSeed(soraAccount: SoraAccount): WalletBackupMaterial
+
+    /**
      * Reads only the legacy stored seed. Unlike [retrieveSeed], this never derives or writes one.
      * Upgrade verification uses it so inspecting an installed wallet cannot alter its secret store.
      */
