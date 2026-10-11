@@ -459,13 +459,12 @@ class Navigator :
         }
     }
 
-    override fun showTxDetails(txHash: String, pop: Boolean) {
+    override fun showTxDetails(txHash: String) {
         navController?.navigate(
             R.id.txDetailsFragment,
             withArgs {
                 this.txHash = txHash
             },
-            if (pop) NavOptions.Builder().setPopUpTo(R.id.cardsHubFragment, false).build() else null,
         )
     }
 

@@ -153,4 +153,15 @@ class NavigatorTxResultTest {
     fun `nothing happens without a navigation controller`() {
         assertFalse(Navigator().showTxResult(txHash, TransactionScreen.SEND))
     }
+
+    @Test
+    fun `a tap on a list entry opens the page on top of the list`() {
+        currentDestination(R.id.cardsHubFragment)
+
+        navigator.showTxDetails(txHash)
+
+        verify(exactly = 1) { controller.navigate(R.id.txDetailsFragment, any()) }
+        verify(exactly = 0) { controller.popBackStack() }
+        verify(exactly = 0) { controller.popBackStack(any<Int>(), any()) }
+    }
 }
