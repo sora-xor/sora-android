@@ -211,6 +211,16 @@ class MainnetLiveReadContractTest {
     }
 
     @Test
+    fun `the remote type aliases arrive intact when the config host compresses them`() =
+        runBlocking {
+            // The client asks for gzip. The config CDN compresses, the nodes do not; either
+            // way the text the app parses must be the reviewed file.
+            val remote = http.getUtf8(REMOTE_TYPES_URL, 8 * 1024 * 1024)
+            assertEquals(Sora2RuntimeContract.TYPES_FILE_SHA256, remote.rawSha256())
+            assertEquals(TestRuntimeSnapshots.packagedTypes, remote)
+        }
+
+    @Test
     fun `nonce is read for an account through the production client`() = runBlocking {
         val address = requireNotNull(
             Sora2AddressCodec().toSoraAddressOrNull(ACCOUNTS_WITH_LOCKS.first().fromHex())
@@ -224,6 +234,10 @@ class MainnetLiveReadContractTest {
             Sora2RuntimeContract.RUNTIME_RPC_ENDPOINT,
             Sora2RuntimeContract.SECOND_RUNTIME_RPC_ENDPOINT,
         )
+
+        /** `substrate_types_android` of the SORA remote config (config.polkaswap2.io). */
+        const val REMOTE_TYPES_URL =
+            "https://config.polkaswap2.io/prod/substrate_types_mobile_android.json"
 
         // twox128("System") + twox128("Events")
         const val SYSTEM_EVENTS_KEY =
