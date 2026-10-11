@@ -60,6 +60,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.faucetTransfer
 import jp.co.soramitsu.sora.substrate.substrate.transfer
@@ -207,6 +208,7 @@ class AssetsRepositoryImpl @Inject constructor(
         amount: BigDecimal,
         fee: BigDecimal,
         validateSelectedWallet: suspend () -> Unit,
+        confirmedDuplicate: Boolean,
     ): ExtrinsicSubmitStatus {
         val transferAmount = mapBalance(amount, token.precision)
         val reviewedFee = mapBalance(fee, OptionsProvider.defaultScale)
@@ -217,6 +219,12 @@ class AssetsRepositoryImpl @Inject constructor(
             keypair = keypair,
             reviewedFee = reviewedFee,
             useBatchAll = false,
+            activity = Sora2SubmissionActivity.transfer(
+                tokenId = token.id,
+                amount = amount,
+                recipient = to,
+                fee = fee,
+            ).copy(duplicateConfirmed = confirmedDuplicate),
             preSigningValidation = validateSelectedWallet,
             validateBalances = { exactFee ->
                 validateSelectedWallet()

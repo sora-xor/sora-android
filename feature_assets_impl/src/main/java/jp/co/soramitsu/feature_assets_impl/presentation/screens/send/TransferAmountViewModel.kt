@@ -50,13 +50,18 @@ import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.subtractFee
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
+import jp.co.soramitsu.common.presentation.transaction.TransactionOutcomeTexts
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
+import jp.co.soramitsu.common.presentation.transaction.badge
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.view.ViewHelper
@@ -115,8 +120,10 @@ class TransferAmountViewModel @AssistedInject constructor(
         ): TransferAmountViewModel
     }
 
-    private val _transactionSuccessEvent = SingleLiveEvent<Unit>()
-    val transactionSuccessEvent: LiveData<Unit> = _transactionSuccessEvent
+    private val _transactionSuccessEvent = SingleLiveEvent<TransactionResultBadge>()
+
+    /** Confirmed or submitted (still waiting); never raised for a transfer that failed. */
+    val transactionSuccessEvent: LiveData<TransactionResultBadge> = _transactionSuccessEvent
 
     private val enteredFlow = MutableStateFlow(BigDecimal.ZERO)
 
@@ -422,7 +429,16 @@ class TransferAmountViewModel @AssistedInject constructor(
         copiedToast.trigger()
     }
 
-    fun onConfirmClick() {
+    fun onConfirmClick() = confirmTransfer(confirmedDuplicate = false)
+
+    /**
+     * Sends the reviewed transfer and shows exactly what is known afterwards. Confirmed and
+     * still-waiting transfers open the transaction page, which carries the status and follows
+     * it. A transfer that failed on chain, was refused by the node before broadcast, or could
+     * not be prepared is explained in a dialog and the screen stays; it is never announced as
+     * submitted.
+     */
+    private fun confirmTransfer(confirmedDuplicate: Boolean) {
         val curAsset = curAsset ?: return
         val amount = _sendState.value.input?.amount ?: return
         val fee = fee ?: return
@@ -435,32 +451,43 @@ class TransferAmountViewModel @AssistedInject constructor(
             _sendState.value = _sendState.value.copy(
                 inProgress = true
             )
-            var transactionHash: String? = null
+            var outcome: TransactionOutcome? = null
+            var notSent: Throwable? = null
             try {
-                transactionHash = interactor.observeTransfer(
+                outcome = interactor.observeTransfer(
                     recipientId,
                     curAsset.token,
                     amount,
                     fee,
                     expectedWalletId,
+                    confirmedDuplicate,
                 )
-                if (transactionHash.isNullOrEmpty()) {
-                    throw SoraException.businessError(ResponseCode.BROKEN_TRANSACTION)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: DuplicateWaitingTransactionException) {
+                _sendState.value = _sendState.value.copy(inProgress = false)
+                askBeforeSendingAgain(resourceManager) {
+                    confirmTransfer(confirmedDuplicate = true)
                 }
-                _transactionSuccessEvent.trigger()
+                return@launch
             } catch (t: Throwable) {
-                if (t is CancellationException) throw t
-                onError(
-                    t.takeIf { it is SoraException }
-                        ?: SoraException.unexpectedError(t)
-                )
-                transactionHash = null
-            } finally {
-                _sendState.value = _sendState.value.copy(
-                    inProgress = false
-                )
+                notSent = t
             }
-            transactionHash?.let { assetsRouter.showTxDetails(it, true) }
+            _sendState.value = _sendState.value.copy(inProgress = false)
+            when (outcome) {
+                is TransactionOutcome.Confirmed,
+                is TransactionOutcome.Waiting -> {
+                    _transactionSuccessEvent.value = outcome.badge()
+                    assetsRouter.showTxDetails(outcome.txHash, true)
+                }
+                is TransactionOutcome.FailedOnChain -> {
+                    val text = TransactionOutcomeTexts.describe(resourceManager, outcome)
+                    alertDialogLiveData.setValue(text.title to text.message)
+                }
+                is TransactionOutcome.RefusedByNode ->
+                    showTransactionRefused(resourceManager, outcome)
+                null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
+            }
         }
     }
 

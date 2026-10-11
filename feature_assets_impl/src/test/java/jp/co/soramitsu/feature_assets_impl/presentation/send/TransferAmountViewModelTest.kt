@@ -48,10 +48,15 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.domain.TransactionChainFailure
+import jp.co.soramitsu.common.domain.TransactionNodeRefusal
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.network.BoundedHttpTextException
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -258,6 +263,161 @@ class TransferAmountViewModelTest {
         )
         verify(exactly = 0) { walletRouter.returnToHubFragment() }
         verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+    }
+
+    // --- audit A5: one truthful result for every outcome of Confirm -------------------------
+
+    private val txHash = "0x" + "ab".repeat(32)
+
+    private fun transferAnswers(
+        confirmedDuplicate: Boolean,
+        answer: () -> TransactionOutcome,
+    ) {
+        coEvery {
+            assetsInteractor.observeTransfer(
+                recipientId,
+                any(),
+                any(),
+                any(),
+                WALLET_ID,
+                confirmedDuplicate,
+            )
+        } answers { answer() }
+    }
+
+    private fun kotlinx.coroutines.test.TestScope.readyToConfirm() {
+        every { resourceManager.getString(any()) } answers { "text-${firstArg<Int>()}" }
+        every { assetsRouter.showTxDetails(any(), any()) } returns Unit
+        initViewModel(
+            balance = BigDecimal.TEN,
+            initialSendAmount = BigDecimal.ONE.toPlainString(),
+        )
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun `a confirmed transfer says confirmed and opens its transaction page`() = runTest {
+        readyToConfirm()
+        transferAnswers(false) { TransactionOutcome.Confirmed(txHash, "0xblock") }
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        assertEquals(
+            TransactionResultBadge.CONFIRMED,
+            transferAmountViewModel.transactionSuccessEvent.value,
+        )
+        verify { assetsRouter.showTxDetails(txHash, true) }
+        assertFalse(transferAmountViewModel.sendState.value.inProgress)
+    }
+
+    @Test
+    fun `a transfer that is still waiting says submitted and opens its transaction page`() =
+        runTest {
+            readyToConfirm()
+            transferAnswers(false) { TransactionOutcome.Waiting(txHash, acceptedByNode = false) }
+
+            transferAmountViewModel.onConfirmClick()
+            advanceUntilIdle()
+
+            assertEquals(
+                TransactionResultBadge.SUBMITTED,
+                transferAmountViewModel.transactionSuccessEvent.value,
+            )
+            verify { assetsRouter.showTxDetails(txHash, true) }
+            assertNull(transferAmountViewModel.alertDialogLiveData.value)
+        }
+
+    @Test
+    fun `a transfer the node refused is shown as a failure and never as submitted`() = runTest {
+        readyToConfirm()
+        // The node's explicit JSON-RPC rejection, for example when locked XOR cannot pay the fee.
+        transferAnswers(false) {
+            TransactionOutcome.RefusedByNode(
+                txHash = txHash,
+                reason = TransactionNodeRefusal.CANNOT_PAY_FEE,
+                nodeMessage = "Inability to pay some fees (e.g. account balance too low)",
+            )
+        }
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        // Before the fix: the green "Transaction submitted" toast and the transaction page.
+        assertNull(transferAmountViewModel.transactionSuccessEvent.value)
+        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+        assertEquals(
+            "text-${R.string.tx_outcome_refused_title}" to
+                "text-${R.string.tx_outcome_note_refused_fee}",
+            transferAmountViewModel.alertDialogLiveData.value,
+        )
+        assertFalse(transferAmountViewModel.sendState.value.inProgress)
+    }
+
+    @Test
+    fun `a transfer that failed on chain is explained with the network's reason`() = runTest {
+        readyToConfirm()
+        transferAnswers(false) {
+            TransactionOutcome.FailedOnChain(
+                txHash = txHash,
+                blockHash = "0xblock",
+                reason = TransactionChainFailure.EXECUTION_FAILED,
+                detail = "Token.FundsUnavailable",
+            )
+        }
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        assertNull(transferAmountViewModel.transactionSuccessEvent.value)
+        assertEquals(
+            "text-${R.string.tx_outcome_failed_title}" to
+                "text-${R.string.tx_outcome_note_failed_on_chain}\n\n" +
+                "text-${R.string.tx_outcome_note_failed_on_chain_reason}",
+            transferAmountViewModel.alertDialogLiveData.value,
+        )
+        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+    }
+
+    @Test
+    fun `a transfer that could not be prepared says nothing was sent`() = runTest {
+        readyToConfirm()
+        transferAnswers(false) {
+            throw IllegalStateException(
+                "EXTRINSIC_PRE_TRANSPORT_VALIDATION_FAILED",
+                IllegalStateException("SORA2_TRANSFER_FEE_CHANGED"),
+            )
+        }
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        assertNull(transferAmountViewModel.transactionSuccessEvent.value)
+        assertEquals(
+            "text-${R.string.tx_outcome_not_sent_title}" to
+                "text-${R.string.tx_outcome_not_sent_fee_changed}",
+            transferAmountViewModel.alertDialogLiveData.value,
+        )
+        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+    }
+
+    @Test
+    fun `the same transfer still waiting needs a deliberate second confirmation`() = runTest {
+        readyToConfirm()
+        transferAnswers(false) { throw DuplicateWaitingTransactionException(txHash, 1L) }
+        transferAnswers(true) { TransactionOutcome.Waiting("0x" + "cd".repeat(32), true) }
+
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        val question = checkNotNull(transferAmountViewModel.confirmDialogLiveData.value)
+        assertEquals("text-${R.string.tx_outcome_duplicate_title}", question.title)
+        assertNull(transferAmountViewModel.transactionSuccessEvent.value)
+        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
+
+        question.onConfirm()
+        advanceUntilIdle()
+        verify { assetsRouter.showTxDetails("0x" + "cd".repeat(32), true) }
     }
 
     @Test
