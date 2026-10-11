@@ -56,6 +56,12 @@ import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
 @AndroidEntryPoint
 class ClaimFragment : SoraBaseFragment<ClaimViewModel>() {
 
+    /**
+     * The claim signs with the selected account. When that account cannot sign on this phone, the
+     * screen says so above the form and offers the repair (`SoraBaseFragment`).
+     */
+    override val explainsReadOnlyAccount: Boolean = true
+
     override val viewModel: ClaimViewModel by viewModels()
 
     @OptIn(ExperimentalUnitApi::class)

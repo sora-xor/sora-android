@@ -73,6 +73,12 @@ import kotlinx.coroutines.FlowPreview
 @AndroidEntryPoint
 class SwapFragment : SoraBaseFragment<SwapViewModel>() {
 
+    /**
+     * Swap signs with the selected account. When that account cannot sign on this phone, the
+     * screen says so above the form and offers the repair (`SoraBaseFragment`).
+     */
+    override val explainsReadOnlyAccount: Boolean = true
+
     @Inject
     lateinit var vmf: SwapViewModel.AssistedSwapViewModelFactory
 

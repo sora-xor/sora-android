@@ -90,6 +90,8 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyNotice
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyBanner
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyLearnMoreSheet
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteChecks
@@ -224,10 +226,14 @@ private fun CardsMainScreen(
     onNexusSend: (NexusPortfolioBalance) -> Unit,
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
 ) {
+    // The selected account cannot sign on this phone: its name carries the Read-only chip, and
+    // the notice below says why and offers the repair (Account options).
+    val accountReadOnly = LocalSelectedAccountReadOnly.current
     TopBar(
         account = state.curAccount,
         onAccountClick = onAccountClick,
         onQrClick = onQrClick,
+        readOnly = accountReadOnly,
     )
     Spacer(modifier = Modifier.size(size = 16.dp))
     Column(
@@ -238,6 +244,12 @@ private fun CardsMainScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         ReadOnlyHomeBanner()
+        if (accountReadOnly) {
+            AccountReadOnlyNotice(
+                modifier = Modifier.padding(bottom = 16.dp),
+                onRepair = onBackupBannerClick,
+            )
+        }
         if (state.loading) {
             CircularProgressIndicator(
                 color = MaterialTheme.customColors.fgPrimary,

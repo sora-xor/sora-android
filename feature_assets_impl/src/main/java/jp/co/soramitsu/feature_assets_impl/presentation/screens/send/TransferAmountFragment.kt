@@ -65,6 +65,12 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 @AndroidEntryPoint
 class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
 
+    /**
+     * Send signs with the selected account. When that account cannot sign on this phone, the
+     * screen says so above the form and offers the repair (`SoraBaseFragment`).
+     */
+    override val explainsReadOnlyAccount: Boolean = true
+
     @Inject
     lateinit var vmf: TransferAmountViewModel.TransferAmountViewModelFactory
 

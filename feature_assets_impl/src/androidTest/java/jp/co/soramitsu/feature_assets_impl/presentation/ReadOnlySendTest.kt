@@ -33,17 +33,28 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_assets_impl.presentation
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyNotice
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyTags
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeTags
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsBalanceCard
@@ -128,5 +139,88 @@ class ReadOnlySendTest {
         }
         rule.onNode(tagEndsWith("ReviewButton")).assertIsNotEnabled()
         rule.onNodeWithTag(SafeModeTags.READ_ONLY_REASON).assertExists()
+    }
+
+    // ---- An account that cannot sign on this phone (the rest of the app works) -----------------
+
+    @Composable
+    private fun SendForm(onReview: () -> Unit) {
+        SendScreen(
+            address = "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm",
+            icon = null,
+            onAddressClick = {},
+            onAddressLongClick = {},
+            inputState = previewAssetAmountInputState,
+            onAmountChange = {},
+            onSelectToken = {},
+            onFocusChange = {},
+            onReviewClick = onReview,
+            feeAmount = "0.007 XOR",
+            feeFiat = "$0.01",
+            feeLoading = false,
+            reviewEnabled = true,
+            shouldTransactionReminderInsufficientWarningBeShown = false,
+        )
+    }
+
+    @Test
+    fun aReadOnlyAccountIsExplainedAboveTheSendFormWithItsRepairAndReviewIsOff() {
+        // What the screen host (SoraBaseFragment) provides for the Send screen when the selected
+        // account's stored key cannot be used: the notice above the form, and the state the
+        // form reads.
+        var repairs = 0
+        var reviews = 0
+        var accountReadOnly by mutableStateOf(true)
+        rule.setContent {
+            SoraAppTheme(darkTheme = true) {
+                CompositionLocalProvider(LocalSelectedAccountReadOnly provides accountReadOnly) {
+                    Column {
+                        if (accountReadOnly) {
+                            AccountReadOnlyNotice(compact = true, onRepair = { repairs++ })
+                        }
+                        SendForm(onReview = { reviews++ })
+                    }
+                }
+            }
+        }
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+        // Said before anything is filled in, with the reason and the way to repair it.
+        rule.onNodeWithTag(AccountReadOnlyTags.NOTICE).assertIsDisplayed()
+        rule.onNodeWithText(
+            context.getString(jp.co.soramitsu.common.R.string.account_read_only_title)
+        ).assertIsDisplayed()
+        rule.onNodeWithTag(AccountReadOnlyTags.REASON).assertIsDisplayed()
+        rule.onNodeWithTag(AccountReadOnlyTags.REPAIR).performClick()
+        assertEquals(1, repairs)
+
+        // The form cannot be sent from, and says why next to its button.
+        rule.onNode(tagEndsWith("ReviewButton")).assertIsNotEnabled()
+        rule.onNodeWithTag(AccountReadOnlyTags.BUTTON_REASON).assertExists()
+        // The whole app is not in read-only mode: that reason is not shown.
+        rule.onNodeWithTag(SafeModeTags.READ_ONLY_REASON).assertDoesNotExist()
+
+        // Once its keys are restored, Send works again without leaving the screen.
+        accountReadOnly = false
+        rule.waitForIdle()
+        rule.onNodeWithTag(AccountReadOnlyTags.NOTICE).assertDoesNotExist()
+        rule.onNodeWithTag(AccountReadOnlyTags.BUTTON_REASON).assertDoesNotExist()
+        rule.onNode(tagEndsWith("ReviewButton")).assertIsEnabled().performClick()
+        assertEquals(1, reviews)
+    }
+
+    @Test
+    fun anAccountThatSignsSeesNoNoticeAndCanReview() {
+        var reviews = 0
+        rule.setContent {
+            SoraAppTheme(darkTheme = false) {
+                Column { SendForm(onReview = { reviews++ }) }
+            }
+        }
+
+        rule.onNodeWithTag(AccountReadOnlyTags.NOTICE).assertDoesNotExist()
+        rule.onNodeWithTag(AccountReadOnlyTags.BUTTON_REASON).assertDoesNotExist()
+        rule.onNode(tagEndsWith("ReviewButton")).assertIsEnabled().performClick()
+        assertEquals(1, reviews)
     }
 }
