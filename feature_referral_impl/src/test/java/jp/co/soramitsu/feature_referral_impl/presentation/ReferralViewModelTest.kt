@@ -57,6 +57,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -70,6 +71,7 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -214,6 +216,61 @@ class ReferralViewModelTest {
         advanceUntilIdle()
         navEvent = referralViewModel.navToStart.getOrAwaitValue()
         assertEquals(ReferralFeatureRoutes.WELCOME_PAGE, navEvent)
+    }
+
+    private suspend fun TestScope.openReferrerInputWith(link: String) {
+        whenever(interactor.getReferrals()).thenReturn(emptyFlow())
+        whenever(interactor.observeReferrals()).thenReturn(emptyFlow())
+        setupViewModel()
+        advanceUntilIdle()
+        referrerBalanceFlowEmit(BigDecimal.ZERO)
+        advanceUntilIdle()
+        whenever(interactor.isLinkOrAddressOk("")).thenReturn(false to "")
+        referralViewModel.openReferrerInput()
+        advanceUntilIdle()
+        whenever(interactor.isLinkOrAddressOk(link)).thenReturn(true to link)
+        referralViewModel.onReferrerInputChange(TextFieldValue(link))
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun `an Activate that the signer refuses says why and gives the button back`() = runTest {
+        // The candidate showed nothing and the screen lost its button: the refusal is not a
+        // SoraException, and the progress state was never reset.
+        openReferrerInputWith("cnVko")
+        whenever(interactor.observeSetReferrer("cnVko"))
+            .thenThrow(IllegalStateException("SIGNING_WALLET_UNAVAILABLE"))
+
+        referralViewModel.onActivateLinkClick()
+        advanceUntilIdle()
+
+        assertEquals(false, referralViewModel.referralScreenState.value.common.progress)
+        assertEquals(true, referralViewModel.referralScreenState.value.common.activate)
+        assertEquals(
+            R.string.account_read_only_title to R.string.account_read_only_refused,
+            referralViewModel.errorFromResourceLiveData.value,
+        )
+        verify(assetsRouter, never()).showTxDetails(any(), any())
+    }
+
+    @Test
+    fun `a Bond that fails for any other reason also says so and gives the button back`() = runTest {
+        whenever(interactor.getReferrals()).thenReturn(emptyFlow())
+        whenever(interactor.observeReferrals()).thenReturn(emptyFlow())
+        setupViewModel()
+        advanceUntilIdle()
+        referrerBalanceFlowEmit(BigDecimal.ZERO)
+        advanceUntilIdle()
+        whenever(interactor.observeBond(any())).thenThrow(IllegalStateException("anything"))
+
+        referralViewModel.onBondButtonClick()
+        advanceUntilIdle()
+
+        assertEquals(false, referralViewModel.referralScreenState.value.common.progress)
+        assertEquals(
+            R.string.failure_generic_title to R.string.failure_generic_message,
+            referralViewModel.errorFromResourceLiveData.value,
+        )
     }
 
     @Test
