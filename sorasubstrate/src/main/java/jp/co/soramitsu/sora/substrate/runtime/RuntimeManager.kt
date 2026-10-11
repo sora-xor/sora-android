@@ -62,6 +62,7 @@ import jp.co.soramitsu.xsubstrate.runtime.metadata.RuntimeMetadataReader
 import jp.co.soramitsu.xsubstrate.runtime.metadata.builder.VersionedRuntimeBuilder
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.RuntimeMetadataSchemaV14
+import jp.co.soramitsu.xsubstrate.scale.EncodableStruct
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAddress
@@ -84,6 +85,9 @@ private const val RUNTIME_CACHE_SCHEMA_VERSION = 2
 private const val RUNTIME_CACHE_MANIFEST_FILE = "sora2_runtime_cache_manifest_v2.json"
 private const val RUNTIME_CACHE_GENERATION_PREFIX = "sora2_runtime_cache_v2"
 private const val MAX_RUNTIME_CACHE_MANIFEST_BYTES = 16 * 1024
+private const val RUNTIME_CODE_BINDING_SCHEMA_VERSION = 1
+private const val RUNTIME_CODE_BINDING_FILE = "sora2_runtime_code_binding_v1.json"
+private const val MAX_RUNTIME_CODE_BINDING_BYTES = 4 * 1024
 private const val MAX_RUNTIME_METADATA_BYTES = 16 * 1024 * 1024
 private const val MAX_RUNTIME_TYPES_BYTES = 8 * 1024 * 1024
 private const val MAX_RUNTIME_GENERATION_SCAN = 32
@@ -156,7 +160,58 @@ private data class RuntimeCandidate(
     val typesSha256: String,
     val runtimeVersion: Int,
     val sora2TypesToCache: String? = null,
+    /** See [Sora2SignedExtensionAdmission]; not empty means this runtime cannot be signed for. */
+    val unsupportedSignedExtensions: List<String> = emptyList(),
 )
+
+/**
+ * Says that the metadata identified by [metadataSha256] was read from the chain at a finalized
+ * block whose runtime code (`:code`) had the hash [runtimeCodeHash], with the given versions.
+ *
+ * Metadata is produced by the runtime code and by nothing else, so while a finalized block still
+ * reports the same code hash and versions, its metadata is this metadata and does not have to be
+ * downloaded again (about 1.25 MB on mainnet). A runtime upgrade always replaces the code, which
+ * changes the hash and ends the binding.
+ */
+internal data class RuntimeCodeBinding(
+    @SerializedName("schemaVersion")
+    val schemaVersion: Int,
+    @SerializedName("genesisHash")
+    val genesisHash: String?,
+    @SerializedName("specVersion")
+    val specVersion: Int,
+    @SerializedName("transactionVersion")
+    val transactionVersion: Int,
+    @SerializedName("metadataSha256")
+    val metadataSha256: String?,
+    @SerializedName("runtimeCodeHash")
+    val runtimeCodeHash: String?,
+) {
+    fun isWellFormed(): Boolean =
+        schemaVersion == RUNTIME_CODE_BINDING_SCHEMA_VERSION &&
+            specVersion > 0 &&
+            transactionVersion >= 0 &&
+            genesisHash != null && BLOCK_HASH_HEX.matches(genesisHash) &&
+            metadataSha256 != null && SHA256_HEX.matches(metadataSha256) &&
+            runtimeCodeHash != null && BLOCK_HASH_HEX.matches(runtimeCodeHash)
+
+    /** True when this binding is about exactly this snapshot and this live checkpoint. */
+    fun covers(
+        snapshotGenesisHash: String?,
+        snapshotSpecVersion: Int?,
+        snapshotMetadataSha256: String?,
+        liveVersion: RuntimeVersion,
+        liveRuntimeCodeHash: String,
+    ): Boolean =
+        isWellFormed() &&
+            snapshotGenesisHash != null &&
+            genesisHash.equals(snapshotGenesisHash, ignoreCase = true) &&
+            specVersion == snapshotSpecVersion &&
+            metadataSha256 == snapshotMetadataSha256 &&
+            specVersion == liveVersion.specVersion &&
+            transactionVersion == liveVersion.transactionVersion &&
+            runtimeCodeHash.equals(liveRuntimeCodeHash, ignoreCase = true)
+}
 
 internal data class RuntimeCacheManifest(
     @SerializedName("schemaVersion")
@@ -527,7 +582,15 @@ class RuntimeManager @Inject constructor(
     private var runtimeSpecVersion: Int? = null
     @Volatile
     private var runtimeGenesisHash: String? = null
+    @Volatile
+    private var runtimeUnsupportedSignedExtensions: List<String> = emptyList()
     private var prefix: Short = SORA2_SS58_PREFIX
+
+    /** What is known about the active snapshot's runtime code. Guarded by [mutex]. */
+    private var runtimeCodeBinding: RuntimeCodeBinding? = null
+
+    /** False until the saved binding was looked at for the active snapshot. Guarded by [mutex]. */
+    private var runtimeCodeBindingFileRead = false
 
     private val pruneRequested = AtomicBoolean(false)
 
@@ -831,7 +894,69 @@ class RuntimeManager @Inject constructor(
         runtimeTypesSha256 = candidate.typesSha256
         runtimeSpecVersion = candidate.runtimeVersion
         runtimeGenesisHash = candidate.genesisHash
+        runtimeUnsupportedSignedExtensions = candidate.unsupportedSignedExtensions
+        // A binding belongs to one snapshot. The saved one is looked at again for this one.
+        runtimeCodeBinding = null
+        runtimeCodeBindingFileRead = false
         runtimeSnapshot = candidate.snapshot
+    }
+
+    /**
+     * The binding of the active snapshot, from memory or, once per snapshot, from the file the
+     * last download left. A missing, unreadable or foreign file only means one more download.
+     */
+    private fun activeRuntimeCodeBindingLocked(): RuntimeCodeBinding? {
+        runtimeCodeBinding?.let { return it }
+        if (runtimeCodeBindingFileRead) return null
+        runtimeCodeBindingFileRead = true
+        val saved = try {
+            fileManager.readInternalCacheFileAtomically(
+                RUNTIME_CODE_BINDING_FILE,
+                MAX_RUNTIME_CODE_BINDING_BYTES,
+            )?.let { gson.fromJson(it, RuntimeCodeBinding::class.java) }
+        } catch (error: Exception) {
+            FirebaseWrapper.recordException(error)
+            null
+        }
+        return saved
+            ?.takeIf { binding ->
+                binding.isWellFormed() &&
+                    binding.genesisHash.equals(runtimeGenesisHash, ignoreCase = true) &&
+                    binding.specVersion == runtimeSpecVersion &&
+                    binding.metadataSha256 == runtimeMetadataSha256
+            }
+            ?.also { runtimeCodeBinding = it }
+    }
+
+    /** Remembers [binding] for the active snapshot and, best effort, for the next process. */
+    private fun rememberRuntimeCodeBindingLocked(binding: RuntimeCodeBinding) {
+        if (runtimeCodeBinding == binding) return
+        runtimeCodeBinding = binding
+        runtimeCodeBindingFileRead = true
+        try {
+            fileManager.writeInternalCacheFileAtomically(
+                RUNTIME_CODE_BINDING_FILE,
+                gson.toJson(binding),
+                MAX_RUNTIME_CODE_BINDING_BYTES,
+            )
+        } catch (error: Exception) {
+            // Only an optimization for the next process; a full disk must not stop a transfer.
+            FirebaseWrapper.recordException(error)
+        }
+    }
+
+    /**
+     * The runtime code hash at an admitted finalized block, or null when no reviewed endpoint
+     * gives one. Null is never an error for the caller: the metadata is then downloaded and
+     * compared by its own hash, as before this shortcut existed.
+     */
+    private suspend fun runtimeCodeHashOrNull(finalizedHash: String): String? = try {
+        sora2RuntimeRpcClient.getRuntimeCodeHashAtFinalized(finalizedHash)
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        FirebaseWrapper.recordException(error)
+        null
     }
 
     private suspend fun createMutationRuntimeContextLocked(): Sora2MutationRuntimeContext {
@@ -860,6 +985,41 @@ class RuntimeManager @Inject constructor(
             "SORA2_FINALIZED_HASH_INVALID"
         )
         val liveRuntimeVersion = liveIdentity.runtimeVersion
+
+        // Metadata is downloaded once per runtime, not once per fee quote or signature. The
+        // runtime code hash at this finalized block is a 32-byte answer; while it and both
+        // versions equal what the active snapshot's metadata was read for, that metadata is the
+        // live metadata. Any difference, or no answer, falls through to the download below.
+        val liveRuntimeCodeHash = runtimeCodeHashOrNull(finalizedHash)
+        val activeSnapshot = runtimeSnapshot
+        val activeMetadataSha256 = runtimeMetadataSha256
+        val activeTypesSha256 = runtimeTypesSha256
+        if (
+            activeSnapshot != null &&
+            activeMetadataSha256 != null &&
+            activeTypesSha256 != null &&
+            liveRuntimeCodeHash != null &&
+            activeRuntimeCodeBindingLocked()?.covers(
+                snapshotGenesisHash = runtimeGenesisHash,
+                snapshotSpecVersion = runtimeSpecVersion,
+                snapshotMetadataSha256 = activeMetadataSha256,
+                liveVersion = liveRuntimeVersion,
+                liveRuntimeCodeHash = liveRuntimeCodeHash,
+            ) == true &&
+            runtimeGenesisHash == liveGenesisHash
+        ) {
+            requireSignedExtensionsSupported(runtimeUnsupportedSignedExtensions)
+            return Sora2MutationRuntimeContext(
+                snapshot = activeSnapshot,
+                runtimeVersion = liveRuntimeVersion,
+                genesisHash = liveGenesisHash,
+                finalizedHash = finalizedHash,
+                metadataSha256 = activeMetadataSha256,
+                typesSha256 = activeTypesSha256,
+                finalizedBlockNumber = liveIdentity.finalizedBlockNumber,
+            )
+        }
+
         val liveMetadata = sora2RuntimeRpcClient.getMetadataAtFinalized(finalizedHash)
             .let { metadata ->
                 requireRuntimePayloadWithinLimit(
@@ -870,7 +1030,6 @@ class RuntimeManager @Inject constructor(
             }
         val liveMetadataSha256 = liveMetadata.runtimeMetadataSha256()
 
-        val activeSnapshot = runtimeSnapshot
         val activeMatchesCheckpoint =
             activeSnapshot != null &&
                 runtimeSpecVersion == liveRuntimeVersion.specVersion &&
@@ -885,6 +1044,7 @@ class RuntimeManager @Inject constructor(
                 metadataSha256 = liveMetadataSha256,
                 typesSha256 = checkNotNull(runtimeTypesSha256),
                 runtimeVersion = liveRuntimeVersion.specVersion,
+                unsupportedSignedExtensions = runtimeUnsupportedSignedExtensions,
             )
         } else {
             buildLiveRuntimeCandidate(
@@ -927,6 +1087,22 @@ class RuntimeManager @Inject constructor(
             }
             publishRuntimeCandidate(candidate)
         }
+        // The metadata just read and the code hash belong to the same finalized block.
+        if (liveRuntimeCodeHash != null) {
+            rememberRuntimeCodeBindingLocked(
+                RuntimeCodeBinding(
+                    schemaVersion = RUNTIME_CODE_BINDING_SCHEMA_VERSION,
+                    genesisHash = liveGenesisHash,
+                    specVersion = liveRuntimeVersion.specVersion,
+                    transactionVersion = liveRuntimeVersion.transactionVersion,
+                    metadataSha256 = liveMetadataSha256,
+                    runtimeCodeHash = liveRuntimeCodeHash.lowercase(),
+                )
+            )
+        }
+
+        // Reads keep working with this runtime; only signing is refused.
+        requireSignedExtensionsSupported(candidate.unsupportedSignedExtensions)
 
         return Sora2MutationRuntimeContext(
             snapshot = candidate.snapshot,
@@ -937,6 +1113,12 @@ class RuntimeManager @Inject constructor(
             typesSha256 = candidate.typesSha256,
             finalizedBlockNumber = liveIdentity.finalizedBlockNumber,
         )
+    }
+
+    private fun requireSignedExtensionsSupported(unsupported: List<String>) {
+        if (unsupported.isNotEmpty()) {
+            throw Sora2AppUpdateRequiredException(unsupported)
+        }
     }
 
     private suspend fun initFromCache(): RuntimeCandidate {
@@ -1488,6 +1670,14 @@ class RuntimeManager @Inject constructor(
         val runtimeMetadata =
             VersionedRuntimeBuilder.buildMetadata(runtimeMetadataReader, typeRegistry)
         val snapshot = RuntimeSnapshot(typeRegistry, runtimeMetadata)
+        val unsupportedSignedExtensions = if (runtimeMetadataReader.metadataVersion < 14) {
+            emptyList()
+        } else {
+            @Suppress("UNCHECKED_CAST")
+            Sora2SignedExtensionAdmission.unsupportedExtensions(
+                runtimeMetadataReader.metadata as EncodableStruct<RuntimeMetadataSchemaV14>
+            )
+        }
         val valueConstant =
             snapshot.metadata.module(Pallete.SYSTEM.palletName).constants[Constants.SS58Prefix.constantName]
         val observedPrefix = valueConstant?.type?.fromByteArrayOrNull(
@@ -1506,6 +1696,7 @@ class RuntimeManager @Inject constructor(
             typesSha256 = typesSha256,
             runtimeVersion = runtimeVersion,
             sora2TypesToCache = sora2TypesToCache,
+            unsupportedSignedExtensions = unsupportedSignedExtensions,
         )
     }
 
