@@ -716,15 +716,18 @@ class UserRepositoryImpl(
     }
 
     /**
-     * A PIN that is set while no readable PIN is stored (the first set-up, the set-up after
-     * "Remove all accounts", or a new PIN in place of one that cannot be read) was never proven
-     * by whoever used this phone before. It must not open what was on the phone before it: every
-     * key set that no account uses is marked, before the PIN is saved, as needing its own
-     * recovery phrase. Changing a PIN (the old one was just entered) marks nothing, and nothing
-     * is written when no such key set exists. Accounts are never affected.
+     * A PIN that is set while no PIN is stored (the first set-up, or the set-up after "Remove
+     * all accounts") was never proven by whoever used this phone before. It must not open what
+     * was on the phone before it: every key set that no account uses is marked, before the PIN
+     * is saved, as needing its own recovery phrase. Nothing is written when no such key set
+     * exists, and accounts are never affected.
+     *
+     * Changing a PIN (the old one was just entered) marks nothing. Neither does a new PIN in
+     * place of a stored one that cannot be read: that state comes from damaged data, not from a
+     * hand-over, and marking then could leave a wallet without a phrase with no way back.
      */
     private suspend fun markKeySetsOlderThanThePin() {
-        val readablePinStored = try {
+        val pinStored = try {
             userDatasource.retrievePin().isNotEmpty()
         } catch (error: CancellationException) {
             throw error
@@ -736,9 +739,10 @@ class UserRepositoryImpl(
                 // Not known right now: the PIN is not saved either, and the person tries again.
                 throw error
             }
-            false
+            // A PIN is stored; it cannot be read.
+            true
         }
-        if (readablePinStored) return
+        if (pinStored) return
         val accounts = walletAccounts().map(SoraAccountLocal::substrateAddress).toSet()
         // The release-era unsuffixed set is in use when its recorded owner is an account.
         val releaseEraInUse = credentialsDatasource.getAddress().let { it.isNotBlank() && it in accounts }
