@@ -371,7 +371,20 @@ data class UpgradeCompleteChecks(
      * says so instead of showing a plain tick, and says how to repair the others.
      */
     val signingAccountCount: Int = 0,
-)
+) {
+    /**
+     * A person with several accounts can hold a JSON backup file of several accounts made by an
+     * earlier version. Built for release (minified), the code up to 3.8.6.3 writes that file
+     * without its content (see `JsonAccountsEncoder.generate`), so the sheet asks for a new
+     * export. The app cannot know whether such a file was made, so the note is shown to
+     * everyone it can concern: people with two or more accounts.
+     */
+    val mayHoldEmptyBatchExport: Boolean get() = accountCount >= BATCH_EXPORT_MIN_ACCOUNTS
+
+    private companion object {
+        const val BATCH_EXPORT_MIN_ACCOUNTS = 2
+    }
+}
 
 /**
  * U11 (design spec 9.2, 9.1-7): shown once, only after a successful upgrade, never over the PIN
@@ -441,6 +454,14 @@ fun UpgradeCompleteSheet(
             )
             if (checks.needsBackup) {
                 add(SafeStep(stringResource(R.string.safe_mode_whats_new_backup), SafeStepState.NEEDS_ACTION))
+            }
+            if (checks.mayHoldEmptyBatchExport) {
+                add(
+                    SafeStep(
+                        stringResource(R.string.safe_mode_whats_new_batch_export),
+                        SafeStepState.NEEDS_ACTION,
+                    ),
+                )
             }
         }
         StepList(steps)
