@@ -2,6 +2,7 @@ package jp.co.soramitsu.common.presentation.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import java.io.IOException
+import jp.co.soramitsu.common.network.BoundedHttpTextException
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
@@ -98,10 +99,43 @@ class BaseViewModelErrorTest {
     fun `a failed request says to check the connection`() {
         val screen = Screen()
 
-        screen.onError(RuntimeException("wrapped", IOException("BOUNDED_HTTP_IO")))
+        screen.onError(RuntimeException("wrapped", BoundedHttpTextException("BOUNDED_HTTP_IO")))
 
         assertEquals(
             R.string.common_error_general_title to R.string.common_error_network,
+            screen.errorFromResourceLiveData.value,
+        )
+    }
+
+    @Test
+    fun `a submission whose outcome is unknown says to check Activity and not to try again later`() {
+        // Swap, liquidity and referral pass ExtrinsicSubmissionUnknownException to onError as
+        // it is. Its cause is the network error that hid the answer.
+        val screen = Screen().apply { progress = true }
+
+        screen.onError(
+            IllegalStateException(
+                FailureNotice.EXTRINSIC_SUBMISSION_UNKNOWN,
+                BoundedHttpTextException("BOUNDED_HTTP_DEADLINE"),
+            )
+        )
+
+        assertEquals(
+            R.string.failure_submission_unknown_title to R.string.failure_submission_unknown_message,
+            screen.errorFromResourceLiveData.value,
+        )
+        assertEquals(false, screen.progress)
+    }
+
+    @Test
+    fun `a storage failure does not send anyone to check the internet connection`() {
+        val screen = Screen()
+
+        // Saving the PIN on a full disk (PinCodeViewModel.registerPinCode).
+        screen.onError(IOException("No space left on device"))
+
+        assertEquals(
+            R.string.failure_generic_title to R.string.failure_generic_message,
             screen.errorFromResourceLiveData.value,
         )
     }
