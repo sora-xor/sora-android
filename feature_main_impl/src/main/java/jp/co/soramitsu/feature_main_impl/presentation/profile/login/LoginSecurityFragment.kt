@@ -48,6 +48,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.feature_multiaccount_api.OnboardingNavigator
 @AndroidEntryPoint
 class LoginSecurityFragment : SoraBaseFragment<LoginSecurityViewModel>() {
 
@@ -56,6 +57,11 @@ class LoginSecurityFragment : SoraBaseFragment<LoginSecurityViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
+        viewModel.importAccountEvent.observe {
+            // Import account: entering a wallet's own recovery phrase adopts the keys that are
+            // saved for it on this phone.
+            (requireActivity() as OnboardingNavigator).showOnboardingFlow()
+        }
     }
 
     @OptIn(ExperimentalAnimationApi::class)
@@ -78,8 +84,10 @@ class LoginSecurityFragment : SoraBaseFragment<LoginSecurityViewModel>() {
                         restoring = state.restoring,
                         restored = state.restored,
                         notRestorable = state.notRestorable,
+                        needRecoveryPhrase = state.needRecoveryPhrase,
                     ),
                     onRestoreRetained = viewModel::restoreRetainedWallet,
+                    onImportRecoveryPhrase = viewModel::importRecoveryPhrase,
                 )
             }
         }

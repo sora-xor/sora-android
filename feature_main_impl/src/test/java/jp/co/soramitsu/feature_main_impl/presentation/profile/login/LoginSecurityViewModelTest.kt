@@ -5,25 +5,25 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
-import jp.co.soramitsu.core_db.WalletQuarantine
-import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_account_api.domain.model.RetainedWallet
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 
-/** "Wallets found on this phone": only unused complete key sets, adopted through the repository. */
+/**
+ * "Wallets found on this phone": the key sets the repository reports
+ * (`UserRepository.retainedWallets`), restored through the repository. A key set that was left
+ * by "Remove all accounts" is listed with its own way back and is never restored from here.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginSecurityViewModelTest {
 
@@ -39,30 +39,21 @@ class LoginSecurityViewModelTest {
         every { it.getString(any()) } returns "Restored wallet"
     }
 
-    @After
-    fun tearDown() {
-        unmockkObject(WalletUpgradeBackup)
-        WalletRecoveryCapabilityGate.enterNormal()
-    }
-
-    private fun quarantine(vararg unlinked: String) {
-        mockkObject(WalletUpgradeBackup)
-        every { WalletUpgradeBackup.quarantine() } returns
-            WalletQuarantine(unlinkedWalletIds = unlinked.toSet())
-    }
+    private fun viewModel() = LoginSecurityViewModel(mockk(relaxed = true), interactor, users, resources)
 
     @Test
-    fun `lists only key sets that no account uses and restores through the repository`() = runTest {
-        quarantine("cnB", "cnA", "cnUsed")
-        coEvery { users.accountExists("cnUsed") } returns true
-        coEvery { users.accountExists("cnA") } returns false
-        coEvery { users.accountExists("cnB") } returns false
+    fun `lists the key sets no account uses and restores through the repository`() = runTest {
+        coEvery { users.retainedWallets() } returns listOf(
+            RetainedWallet("cnA", needsRecoveryPhrase = false),
+            RetainedWallet("cnB", needsRecoveryPhrase = false),
+        )
         coEvery { users.adoptRetainedWallet("cnA", "Restored wallet", false) } returns SoraAccount("cnA", "Restored wallet")
         coEvery { users.adoptRetainedWallet("cnB", any(), any()) } throws IllegalStateException("RETAINED_WALLET_ADDRESS_MISMATCH")
 
-        val vm = LoginSecurityViewModel(mockk(relaxed = true), interactor, users, resources)
+        val vm = viewModel()
         advanceUntilIdle()
         assertEquals(listOf("cnA", "cnB"), vm.state.retainedWallets)
+        assertEquals(emptyList<String>(), vm.state.needRecoveryPhrase)
 
         vm.restoreRetainedWallet("cnA")
         advanceUntilIdle()
@@ -74,13 +65,40 @@ class LoginSecurityViewModelTest {
     }
 
     @Test
-    fun `nothing is offered while wallet changes are off`() = runTest {
-        quarantine("cnA")
-        coEvery { users.accountExists(any()) } returns false
-        WalletRecoveryCapabilityGate.enterBlocked()
-        WalletRecoveryCapabilityGate.enterLegacyReadOnly()
-        val vm = LoginSecurityViewModel(mockk(relaxed = true), interactor, users, resources)
+    fun `a wallet left by Remove all accounts is listed with its recovery phrase as the way back and is never restored from here`() =
+        runTest {
+            coEvery { users.retainedWallets() } returns listOf(
+                RetainedWallet("cnLeft", needsRecoveryPhrase = true),
+                RetainedWallet("cnOpen", needsRecoveryPhrase = false),
+            )
+
+            val vm = viewModel()
+            advanceUntilIdle()
+            assertEquals(listOf("cnLeft", "cnOpen"), vm.state.retainedWallets)
+            assertEquals(listOf("cnLeft"), vm.state.needRecoveryPhrase)
+
+            vm.restoreRetainedWallet("cnLeft")
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { users.adoptRetainedWallet("cnLeft", any(), any()) }
+            assertNull(vm.state.restoring)
+            assertEquals(emptyList<String>(), vm.state.restored)
+
+            // Its way back: Import account, with its own recovery phrase.
+            assertNull(vm.importAccountEvent.value)
+            vm.importRecoveryPhrase()
+            assertEquals(Unit, vm.importAccountEvent.value)
+        }
+
+    @Test
+    fun `when the list cannot be read the section is not shown and no dialog opens`() = runTest {
+        coEvery { users.retainedWallets() } throws IllegalStateException("KEYSTORE_BUSY")
+
+        val vm = viewModel()
         advanceUntilIdle()
+
         assertEquals(emptyList<String>(), vm.state.retainedWallets)
+        assertNull(vm.errorFromResourceLiveData.value)
+        assertNull(vm.errorLiveData.value)
     }
 }

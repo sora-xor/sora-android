@@ -41,4 +41,10 @@ data class LoginSecurityState(
     val restored: List<String> = emptyList(),
     /** Addresses whose keys could not be proven to match; the phrase import is the way back. */
     val notRestorable: List<String> = emptyList(),
+    /**
+     * Key sets that were on the phone when every account was removed. The PIN that protected
+     * them is gone, so they are not restored from here: importing their own recovery phrase,
+     * raw seed or backup file brings them back (the stored keys are adopted unchanged).
+     */
+    val needRecoveryPhrase: List<String> = emptyList(),
 )

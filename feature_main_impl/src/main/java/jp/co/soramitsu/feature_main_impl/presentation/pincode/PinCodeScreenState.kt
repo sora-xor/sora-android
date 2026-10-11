@@ -45,3 +45,46 @@ internal data class PinCodeScreenState(
     val checkNeedsNetwork: Boolean = false,
     val isConnected: Boolean = true,
 )
+
+/**
+ * "Remove this account from this phone", shown after the PIN or biometrics and before anything
+ * is removed. The backup that re-derives each account is shown first; the account is removed
+ * only after the person acknowledged it and confirmed.
+ */
+internal data class AccountRemovalState(
+    val accounts: List<Account>,
+    /** Every account is removed: the PIN and custom nodes go too, and the app starts again. */
+    val removesEverything: Boolean,
+    /** Wallet key sets no account uses that stay on the phone (only when everything goes). */
+    val retainedKeySets: Int = 0,
+    /** The person tapped the veil: the phrase or seed is drawn. */
+    val revealed: Boolean = false,
+    /** "I have written it down", for the accounts whose backup is shown. */
+    val writtenDown: Boolean = false,
+    /** "I understand that this phone can't bring it back", for accounts without a backup. */
+    val understoodNoBackup: Boolean = false,
+    val working: Boolean = false,
+) {
+    data class Account(
+        val address: String,
+        val name: String,
+        val phraseWords: List<String> = emptyList(),
+        val seed: String = "",
+        val canExportJson: Boolean = false,
+    ) {
+        val hasBackupToShow: Boolean get() = phraseWords.isNotEmpty() || seed.isNotEmpty()
+    }
+
+    /** At least one account has a matching phrase or seed, which is shown first. */
+    val showsBackup: Boolean get() = accounts.any { it.hasBackupToShow }
+
+    /** At least one account has nothing on this phone that re-derives it. */
+    val hasAccountWithoutBackup: Boolean get() = accounts.any { !it.hasBackupToShow }
+
+    /** The acknowledgements this removal needs are all given. */
+    val acknowledged: Boolean
+        get() = (!showsBackup || (revealed && writtenDown)) &&
+            (!hasAccountWithoutBackup || understoodNoBackup)
+
+    val canRemove: Boolean get() = acknowledged && !working
+}
