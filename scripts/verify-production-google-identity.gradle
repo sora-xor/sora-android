@@ -1,0 +1,170 @@
+// Applied by app/build.gradle.kts (and, on a small fixture project, by
+// scripts/test-google-identity-pin.py).
+//
+// A Google Play build (productionRelease) must talk to the same Google services as the builds
+// people already have:
+//
+//   - the Google Drive backup OAuth client (SORA_GOOGLE_TOKEN_PROD). With another client the
+//     build works, but people who update cannot see the Drive backups they made before.
+//   - the Firebase app in google-services.json. With another app, crash reports and the
+//     rollout signals go to a project nobody is watching.
+//
+// Both IDs are public (they are inside every released APK), so their SHA-256 is pinned in
+// config/android-production-google-identity.json and compared here. An empty Drive pin is a
+// problem by itself: the build is refused until someone fills it in. The Firebase pin is
+// checked when it is set.
+//
+// This script provides:
+//   ext.productionGoogleIdentityProblems   closure () -> List<String>, empty when all is well
+//   ext.productionGoogleIdentityNotes      closure () -> List<String>, things worth a warning
+//   task verifyProductionGoogleIdentity    fails with the list of problems
+//
+// It never prints an ID, only SHA-256 values.
+
+import groovy.json.JsonSlurper
+import java.security.MessageDigest
+
+def identityPinFile = rootProject.file('config/android-production-google-identity.json')
+def identityLocalProperties = rootProject.file('local.properties')
+def identityProjectDir = project.projectDir
+def identityPinPath = 'config/android-production-google-identity.json'
+def identityHelp = 'See "Google identity pins" in scripts/README.md.'
+
+def sha256Hex = { String value ->
+    MessageDigest.getInstance('SHA-256').digest(value.getBytes('UTF-8')).encodeHex().toString()
+}
+
+// Same lookup as secret() in common/build.gradle.kts: local.properties wins over the environment.
+def readReleaseSecret = { String name ->
+    String fromFile = null
+    if (identityLocalProperties.isFile()) {
+        def properties = new Properties()
+        identityLocalProperties.withInputStream { properties.load(it) }
+        fromFile = properties.getProperty(name)
+    }
+    fromFile != null ? fromFile : (System.getenv(name) ?: '')
+}
+
+// What common/build.gradle.kts compiles into BuildConfig.GOOGLE_API_TOKEN: the value itself, or,
+// when it is already written as a quoted literal, the text between the quotes. null: malformed.
+def compiledSecretValue = { String raw ->
+    if (!raw.startsWith('"')) {
+        return raw
+    }
+    (raw.length() >= 2 && raw.endsWith('"')) ? raw.substring(1, raw.length() - 1) : null
+}
+
+def isSha256 = { value -> value instanceof String && value ==~ /[0-9a-f]{64}/ }
+
+ext.productionGoogleIdentityNotes = { ->
+    List<String> notes = []
+    try {
+        def pins = new JsonSlurper().parse(identityPinFile, 'UTF-8')
+        if (pins instanceof Map && pins.firebaseAppIdSha256 == '') {
+            notes << ("Firebase app: not pinned (firebaseAppIdSha256 in ${identityPinPath} is empty), " +
+                "so google-services.json is only checked for its package name and a well-formed app ID. ${identityHelp}").toString()
+        }
+    } catch (Exception ignored) {
+        // productionGoogleIdentityProblems reports an unreadable pin file.
+    }
+    notes
+}
+
+ext.productionGoogleIdentityProblems = { ->
+    List<String> problems = []
+    def pins
+    try {
+        pins = new JsonSlurper().parse(identityPinFile, 'UTF-8')
+    } catch (Exception error) {
+        problems << "${identityPinPath} cannot be read: ${error.message ?: error.class.simpleName}".toString()
+        return problems
+    }
+    if (!(pins instanceof Map) || !(pins.applicationId instanceof String) || pins.applicationId.isEmpty()) {
+        problems << "${identityPinPath} must be a JSON object with an applicationId".toString()
+        return problems
+    }
+
+    // --- Google Drive backup client ---------------------------------------------------------
+    String rawClient = readReleaseSecret('SORA_GOOGLE_TOKEN_PROD')
+    String clientId = compiledSecretValue(rawClient)
+    boolean clientUsable = false
+    if (rawClient.trim().isEmpty() || clientId == '') {
+        problems << 'SORA_GOOGLE_TOKEN_PROD is missing (Google Drive backup)'
+    } else if (clientId == null || !(clientId ==~ /[!-~]+/) || clientId.contains('"') || clientId.contains('\\')) {
+        problems << 'SORA_GOOGLE_TOKEN_PROD must be the bare Google Drive backup client ID: it has ' +
+            'spaces, line breaks, quotes or other characters around or inside it'
+    } else {
+        clientUsable = true
+    }
+    def drivePin = pins.googleDriveClientIdSha256
+    if (drivePin == '') {
+        problems << ("Google Drive backup client: no pin yet. googleDriveClientIdSha256 in ${identityPinPath} " +
+            'is empty, so this build cannot be checked and is refused. Someone who has the Google Play ' +
+            '3.8.6.3 APK or the SORA_GOOGLE_TOKEN_PROD secret must run scripts/google-identity-pin.py and ' +
+            "commit the value it prints. ${identityHelp}").toString()
+    } else if (!isSha256(drivePin)) {
+        problems << "${identityPinPath}: googleDriveClientIdSha256 must be 64 lowercase hex characters".toString()
+    } else if (clientUsable && sha256Hex(clientId) != drivePin) {
+        problems << ("Google Drive backup client: SORA_GOOGLE_TOKEN_PROD (SHA-256 ${sha256Hex(clientId)}) is not " +
+            "the pinned client (SHA-256 ${drivePin}). With another client, people who update cannot see " +
+            'the Google Drive backups they made with earlier versions.').toString()
+    }
+
+    // --- Firebase app -----------------------------------------------------------------------
+    def firebasePin = pins.firebaseAppIdSha256
+    if (firebasePin != '' && !isSha256(firebasePin)) {
+        problems << ("${identityPinPath}: firebaseAppIdSha256 must be empty or 64 lowercase hex " +
+            'characters').toString()
+        firebasePin = ''
+    }
+    // The google-services plugin prefers a file in a variant directory over the one in the module
+    // directory, so every copy has to be the right one.
+    def googleServicesFiles = fileTree(identityProjectDir) {
+        include 'google-services.json'
+        include 'src/**/google-services.json'
+    }.files.sort { it.path }
+    googleServicesFiles.each { File file ->
+        String shown = identityProjectDir.toPath().relativize(file.toPath()).toString()
+        def services
+        try {
+            services = new JsonSlurper().parse(file, 'UTF-8')
+        } catch (Exception error) {
+            problems << "${shown} is not valid JSON".toString()
+            return
+        }
+        def clients = (services instanceof Map && services.client instanceof List) ? services.client : []
+        def appIds = clients.findAll {
+            it instanceof Map && it.client_info instanceof Map &&
+                it.client_info.android_client_info instanceof Map &&
+                it.client_info.android_client_info.package_name == pins.applicationId
+        }.collect { it.client_info.mobilesdk_app_id }
+        if (appIds.size() != 1 || !(appIds[0] instanceof String)) {
+            problems << "${shown} must have exactly one client for ${pins.applicationId}, found ${appIds.size()}".toString()
+            return
+        }
+        String appId = appIds[0]
+        def shape = appId =~ /^1:([0-9]+):android:([0-9a-f]+)$/
+        if (!shape.matches() || shape.group(1) ==~ /0+/ || shape.group(2) ==~ /0+/) {
+            problems << "${shown}: the Firebase app ID of ${pins.applicationId} is a placeholder or malformed".toString()
+        } else if (firebasePin != '' && sha256Hex(appId) != firebasePin) {
+            problems << ("Firebase app: ${shown} is for another Firebase app (SHA-256 ${sha256Hex(appId)}) " +
+                "than the pinned one (SHA-256 ${firebasePin}). Crash reports and the rollout signals " +
+                'would go to another project.').toString()
+        }
+    }
+    problems
+}
+
+tasks.register('verifyProductionGoogleIdentity') {
+    group = 'verification'
+    description = 'Fails unless the Google Drive backup client and the Firebase app are the pinned ones.'
+    doLast {
+        List<String> problems = project.ext.productionGoogleIdentityProblems.call()
+        if (!problems.isEmpty()) {
+            throw new GradleException(
+                'productionRelease cannot be built:\n' + problems.collect { "- ${it}" }.join('\n'))
+        }
+        project.ext.productionGoogleIdentityNotes.call().each { logger.warn(it) }
+        logger.lifecycle('Google identity check passed: SORA_GOOGLE_TOKEN_PROD is the pinned Google Drive backup client.')
+    }
+}
