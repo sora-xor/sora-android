@@ -2582,7 +2582,8 @@ class WalletUpgradeScenarioTest {
             // Send explains itself: the signer refuses this account with the code the screens
             // turn into "This account can't send from this phone ... nothing was signed or
             // sent", also when a screen wrapped it as an unexpected error (as Send does).
-            val refusal = requireNotNull(WalletSigningGate.unavailableReason(launch.database, broken.address))
+            val refusal =
+                requireNotNull(WalletSigningGate.unavailableReason(launch.database, broken.address))
             assertEquals(FailureNotice.SIGNING_WALLET_UNAVAILABLE, refusal)
             assertEquals(
                 FailureNotice.ACCOUNT_READ_ONLY,
