@@ -42,12 +42,19 @@ import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.nullZero
 import jp.co.soramitsu.androidfoundation.format.orZero
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.base.ConfirmDialogData
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
+import jp.co.soramitsu.common.presentation.transaction.badge
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
@@ -70,6 +77,7 @@ import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -109,6 +117,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     private var token2Id = token2IdStart
 
     private companion object {
+        const val RESULT_BADGE_MILLIS = 700L
         const val ASSET_PRECISION = 8
     }
 
@@ -180,47 +189,53 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
             ),
         )
         viewModelScope.launch {
-            assetsInteractor.subscribeAssetsActiveOfCurAccount()
-                .catch { onError(it) }
-                .distinctUntilChanged()
-                .debounce(500)
-                .collectLatest { assets ->
-                    assetList.clear()
-                    assetList.addAll(assets)
-                    onAssetsActiveCollect()
-                }
+            // A failure while collecting must never leave viewModelScope uncaught.
+            tryCatch {
+                assetsInteractor.subscribeAssetsActiveOfCurAccount()
+                    .catch { onError(it) }
+                    .distinctUntilChanged()
+                    .debounce(500)
+                    .collectLatest { assets ->
+                        assetList.clear()
+                        assetList.addAll(assets)
+                        onAssetsActiveCollect()
+                    }
+            }
         }
         viewModelScope.launch {
-            poolsInteractor.subscribePoolCacheOfCurAccount(token1Id, token2Id)
-                .map {
-                    it?.let {
-                        CommonUserPoolData(
-                            it.basic,
-                            it.user!!,
-                        )
-                    }
-                }
-                .catch { onError(it) }
-                .distinctUntilChanged()
-                .debounce(500)
-                .map { poolDataLocal ->
-                    poolDataReal = poolDataLocal
-                    poolInFarming = false
-                    if (poolDataLocal != null) {
-                        val maxPercent = demeterFarmingInteractor.getFarmedPools()?.filter { pool ->
-                            pool.tokenBase.id == token1Id && pool.tokenTarget.id == token2Id
-                        }?.maxOfOrNull {
-                            PolkaswapFormulas.calculateShareOfPoolFromAmount(
-                                it.amount,
-                                poolDataLocal.user.poolProvidersBalance,
+            // A failure while collecting must never leave viewModelScope uncaught.
+            tryCatch {
+                poolsInteractor.subscribePoolCacheOfCurAccount(token1Id, token2Id)
+                    .map {
+                        it?.let {
+                            CommonUserPoolData(
+                                it.basic,
+                                it.user!!,
                             )
                         }
-                        userPoolDataFixDemeter(poolDataLocal, maxPercent)
-                    } else {
-                        null
                     }
-                }
-                .collectLatest(::onPoolCollect)
+                    .catch { onError(it) }
+                    .distinctUntilChanged()
+                    .debounce(500)
+                    .map { poolDataLocal ->
+                        poolDataReal = poolDataLocal
+                        poolInFarming = false
+                        if (poolDataLocal != null) {
+                            val maxPercent = demeterFarmingInteractor.getFarmedPools()?.filter { pool ->
+                                pool.tokenBase.id == token1Id && pool.tokenTarget.id == token2Id
+                            }?.maxOfOrNull {
+                                PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                                    it.amount,
+                                    poolDataLocal.user.poolProvidersBalance,
+                                )
+                            }
+                            userPoolDataFixDemeter(poolDataLocal, maxPercent)
+                        } else {
+                            null
+                        }
+                    }
+                    .collectLatest(::onPoolCollect)
+            }
         }
         viewModelScope.launch {
             amount1Flow
@@ -299,14 +314,46 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
         }
     }
 
+    private fun onFeeUnavailable(error: Throwable) {
+        onError(error)
+        val unreachable =
+            NetworkFeeUnavailable.from(error) == NetworkFeeUnavailable.NETWORK_UNREACHABLE
+        confirmDialogLiveData.setValue(
+            ConfirmDialogData(
+                title = resourceManager.getString(R.string.network_fee_unavailable_short),
+                message = resourceManager.getString(
+                    if (unreachable) {
+                        R.string.tx_outcome_screen_needs_network
+                    } else {
+                        R.string.network_fee_unavailable
+                    }
+                ),
+                confirmText = resourceManager.getString(R.string.common_try_again),
+                dismissText = resourceManager.getString(R.string.common_close),
+                onDismiss = { _navigationPop.trigger() },
+                onConfirm = {
+                    viewModelScope.launch { tryCatch { onAssetsActiveCollect() } }
+                },
+            )
+        )
+    }
+
     private suspend fun onAssetsActiveCollect() {
         val asset1 = assetList.first { it.token.id == token1Id }
         val asset2 = assetList.first { it.token.id == token2Id }
         if (networkFee == null) {
-            networkFee = poolsInteractor.fetchRemoveLiquidityNetworkFee(
-                asset1.token,
-                asset2.token,
-            )
+            // Asked from the SORA network; while it cannot be reached the user is told so.
+            networkFee = try {
+                poolsInteractor.fetchRemoveLiquidityNetworkFee(
+                    asset1.token,
+                    asset2.token,
+                )
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (t: Throwable) {
+                onFeeUnavailable(t)
+                return
+            }
         }
         if (removeState.assetState1 == null) {
             removeState = removeState.copy(
@@ -507,7 +554,15 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
         }
     }
 
-    fun onConfirmClick() {
+    fun onConfirmClick() = confirmRemoveLiquidity(confirmedDuplicate = false)
+
+    /**
+     * Sends the reviewed withdrawal and shows exactly what is known afterwards. A transaction
+     * that reached the network (confirmed, failed on chain, or still waiting) opens its
+     * transaction page, which carries the status and follows it. One that did not reach the
+     * network is explained in a dialog and this screen stays with Confirm available again.
+     */
+    private fun confirmRemoveLiquidity(confirmedDuplicate: Boolean) {
         viewModelScope.launch {
             removeState.assetState1?.let { fromToken ->
                 removeState.assetState2?.let { toToken ->
@@ -529,50 +584,72 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                                 poolData.basic.baseToken.precision
                             )
 
-                        removeState = removeState.copy(
-                            confirm = removeState.confirm.copy(
-                                btnState = removeState.confirm.btnState.copy(
-                                    enabled = false,
-                                    loading = true,
-                                )
-                            )
-                        )
-                        var result = ""
+                        setConfirmButton(enabled = false, loading = true)
+                        var outcome: TransactionOutcome? = null
+                        var notSent: Throwable? = null
                         try {
-                            result = poolsInteractor.removeLiquidity(
+                            outcome = poolsInteractor.removeLiquidity(
                                 fromToken.token,
                                 toToken.token,
                                 desired,
                                 firstAmountMin,
                                 secondAmountMin,
                                 networkFee.orZero(),
+                                confirmedDuplicate,
                             )
+                        } catch (cancellation: CancellationException) {
+                            throw cancellation
+                        } catch (_: DuplicateWaitingTransactionException) {
+                            setConfirmButton(enabled = true, loading = false)
+                            askBeforeSendingAgain(resourceManager) {
+                                confirmRemoveLiquidity(confirmedDuplicate = true)
+                            }
+                            return@launch
                         } catch (t: Throwable) {
-                            onError(t)
-                        } finally {
-                            removeState = removeState.copy(
-                                confirm = removeState.confirm.copy(
-                                    btnState = removeState.confirm.btnState.copy(
-                                        enabled = false,
-                                        loading = false,
-                                    ),
-                                    confirmResult = result.isNotEmpty()
-                                )
+                            notSent = t
+                        }
+                        removeState = removeState.copy(
+                            confirm = removeState.confirm.copy(
+                                btnState = removeState.confirm.btnState.copy(
+                                    enabled = false,
+                                    loading = false,
+                                ),
+                                confirmResult = outcome?.badge() ?: TransactionResultBadge.NOT_SENT,
                             )
-                            delay(500)
-                            removeState = removeState.copy(
-                                confirm = removeState.confirm.copy(
-                                    confirmResult = null
-                                )
-                            )
-                            if (result.isNotEmpty())
-                                assetsRouter.showTxDetails(result, true)
-                            else router.returnToHubFragment()
+                        )
+                        delay(RESULT_BADGE_MILLIS)
+                        removeState = removeState.copy(
+                            confirm = removeState.confirm.copy(confirmResult = null)
+                        )
+                        when (outcome) {
+                            is TransactionOutcome.Confirmed,
+                            is TransactionOutcome.Waiting,
+                            is TransactionOutcome.FailedOnChain ->
+                                assetsRouter.showTxDetails(outcome.txHash, true)
+                            is TransactionOutcome.RefusedByNode -> {
+                                setConfirmButton(enabled = true, loading = false)
+                                showTransactionRefused(resourceManager, outcome)
+                            }
+                            null -> {
+                                setConfirmButton(enabled = true, loading = false)
+                                showTransactionNotSent(resourceManager, checkNotNull(notSent))
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    private fun setConfirmButton(enabled: Boolean, loading: Boolean) {
+        removeState = removeState.copy(
+            confirm = removeState.confirm.copy(
+                btnState = removeState.confirm.btnState.copy(
+                    enabled = enabled,
+                    loading = loading,
+                )
+            )
+        )
     }
 
     private suspend fun reCalcDetails() {

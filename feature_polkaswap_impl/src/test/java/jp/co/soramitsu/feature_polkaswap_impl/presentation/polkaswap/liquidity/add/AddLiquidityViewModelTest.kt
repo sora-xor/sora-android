@@ -40,7 +40,12 @@ import jp.co.soramitsu.androidfoundation.format.equalTo
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.TransactionChainFailure
+import jp.co.soramitsu.common.domain.TransactionNodeRefusal
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -60,10 +65,13 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -75,6 +83,8 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify as kVerify
 
@@ -396,4 +406,156 @@ class AddLiquidityViewModelTest {
                 networkFeeInXor = LIQUIDITY_DETAILS.networkFee,
             )
         }
+
+    // --- audit A5: one truthful result for every outcome of Confirm -------------------------
+
+    private val txHash = "0x" + "ab".repeat(32)
+
+    private suspend fun TestScope.readyToConfirm() {
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        setUpViewModel(TestTokens.valToken.id)
+        advanceUntilIdle()
+    }
+
+    private suspend fun answers(confirmedDuplicate: Boolean, answer: () -> TransactionOutcome) {
+        given(
+            poolsInteractor.observeAddLiquidity(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(confirmedDuplicate),
+            )
+        ).willAnswer { answer() }
+    }
+
+    private fun confirm() = viewModel.onConfirmClick()
+
+    private fun shownBadge() = viewModel.addState.value.confirm.confirmResult
+
+    private fun confirmButton() = viewModel.addState.value.confirm.btnState
+
+    private fun stubOutcomeTexts() {
+        listOf(
+            R.string.tx_outcome_refused_title,
+            R.string.tx_outcome_note_refused_busy,
+            R.string.tx_outcome_duplicate_title,
+            R.string.tx_outcome_duplicate_message,
+            R.string.tx_outcome_duplicate_send_again,
+            R.string.tx_outcome_duplicate_wait,
+        ).forEach { id ->
+            given(resourceManager.getString(id)).willReturn("text-$id")
+        }
+    }
+
+    @Test
+    fun `a confirmed transaction shows confirmed and opens its transaction page`() = runTest {
+        readyToConfirm()
+        answers(false) { TransactionOutcome.Confirmed(txHash, "0xblock") }
+
+        confirm()
+        runCurrent()
+
+        assertEquals(TransactionResultBadge.CONFIRMED, shownBadge())
+        advanceUntilIdle()
+        assertEquals(null, shownBadge())
+        kVerify(assetsRouter).showTxDetails(txHash, true)
+    }
+
+    @Test
+    fun `a transaction that is still waiting is shown as submitted and never as rejected`() =
+        runTest {
+            readyToConfirm()
+            // What a failed status read or an unfinished finality wait gives after a broadcast.
+            answers(false) { TransactionOutcome.Waiting(txHash, acceptedByNode = true) }
+
+            confirm()
+            runCurrent()
+
+            assertEquals(TransactionResultBadge.SUBMITTED, shownBadge())
+            assertEquals(R.string.wallet_transaction_submitted_1, shownBadge()?.text)
+            advanceUntilIdle()
+            // The transaction page carries "waiting for confirmation" and follows the result.
+            kVerify(assetsRouter).showTxDetails(txHash, true)
+            kVerify(router, never()).returnToHubFragment()
+            assertEquals(null, viewModel.alertDialogLiveData.value)
+        }
+
+    @Test
+    fun `a transaction that failed on chain shows failed and opens its transaction page`() =
+        runTest {
+            readyToConfirm()
+            answers(false) {
+                TransactionOutcome.FailedOnChain(
+                    txHash = txHash,
+                    blockHash = "0xblock",
+                    reason = TransactionChainFailure.EXECUTION_FAILED,
+                    detail = "PoolXYK.InsufficientLiquidity",
+                )
+            }
+
+            confirm()
+            runCurrent()
+
+            assertEquals(TransactionResultBadge.FAILED, shownBadge())
+            advanceUntilIdle()
+            kVerify(assetsRouter).showTxDetails(txHash, true)
+        }
+
+    @Test
+    fun `a transaction the node refused is a failure with its reason and is not submitted`() =
+        runTest {
+            readyToConfirm()
+            stubOutcomeTexts()
+            answers(false) {
+                TransactionOutcome.RefusedByNode(
+                    txHash = txHash,
+                    reason = TransactionNodeRefusal.NETWORK_BUSY,
+                    nodeMessage = "Immediately Dropped",
+                )
+            }
+
+            confirm()
+            runCurrent()
+
+            assertEquals(TransactionResultBadge.NOT_SENT, shownBadge())
+            advanceUntilIdle()
+            assertEquals(
+                "text-${R.string.tx_outcome_refused_title}" to
+                    "text-${R.string.tx_outcome_note_refused_busy}",
+                viewModel.alertDialogLiveData.value,
+            )
+            kVerify(assetsRouter, never()).showTxDetails(any(), any())
+            // The dialog is on this screen, so the screen stays and offers Confirm again.
+            kVerify(router, never()).returnToHubFragment()
+            assertTrue(confirmButton().enabled)
+            assertFalse(confirmButton().loading)
+        }
+
+    @Test
+    fun `the same action still waiting needs a deliberate second confirmation`() = runTest {
+        readyToConfirm()
+        stubOutcomeTexts()
+        answers(false) { throw DuplicateWaitingTransactionException(txHash, 1L) }
+        answers(true) { TransactionOutcome.Waiting("0x" + "cd".repeat(32), true) }
+
+        confirm()
+        advanceUntilIdle()
+
+        val question = checkNotNull(viewModel.confirmDialogLiveData.value)
+        assertEquals("text-${R.string.tx_outcome_duplicate_title}", question.title)
+        assertEquals(null, shownBadge())
+        kVerify(assetsRouter, never()).showTxDetails(any(), any())
+        assertTrue(confirmButton().enabled)
+
+        question.onConfirm()
+        advanceUntilIdle()
+        kVerify(assetsRouter).showTxDetails("0x" + "cd".repeat(32), true)
+    }
 }

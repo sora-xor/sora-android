@@ -40,11 +40,16 @@ import jp.co.soramitsu.androidfoundation.testing.anyNonNull
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.PoolDex
+import jp.co.soramitsu.common.domain.TransactionChainFailure
+import jp.co.soramitsu.common.domain.TransactionNodeRefusal
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.network.BoundedHttpTextException
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
@@ -61,7 +66,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -77,6 +84,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify as kVerify
 
@@ -515,5 +523,213 @@ class SwapViewModelTest {
             anyNonNull(),
             anyDouble(),
         )
+    }
+
+    // --- audit A5: one truthful result for every outcome of Confirm -------------------------
+
+    private val txHash = "0x" + "ab".repeat(32)
+
+    /** Brings the screen to the reviewed state in which Confirm is available. */
+    private suspend fun TestScope.readyToConfirmSwap() {
+        initViewModel(xorBalance = 100.toBigDecimal())
+        given(resourceManager.getString(R.string.review)).willReturn("Review")
+        given(
+            swapInteractor.fetchAvailableSources(
+                assetsListItems.first().tokenId,
+                assetsListItems.last().tokenId,
+            )
+        ).willReturn(setOf(Market.SMART))
+        given(
+            swapInteractor.calcDetails(
+                anyNonNull(),
+                anyNonNull(),
+                anyNonNull(),
+                anyNonNull(),
+                anyNonNull(),
+                anyDouble(),
+            )
+        ).willReturn(
+            SwapDetails(
+                BigDecimal("0.02"),
+                BigDecimal("12.2"),
+                BigDecimal("18.3"),
+                BigDecimal("22.33"),
+                networkFee,
+                PoolDex(0, assetsListItems.first().tokenId, assetsListItems.last().tokenId),
+                null,
+            )
+        )
+        advanceUntilIdle()
+        viewModel.fromAssetSelected(assetsListItems.first().tokenId)
+        advanceUntilIdle()
+        viewModel.toAssetSelected(assetsListItems.last().tokenId)
+        advanceUntilIdle()
+        viewModel.onFromAmountChange(BigDecimal.ONE)
+        advanceUntilIdle()
+    }
+
+    private suspend fun swapAnswers(confirmedDuplicate: Boolean, answer: () -> TransactionOutcome) {
+        given(
+            swapInteractor.swap(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(confirmedDuplicate),
+            )
+        ).willAnswer { answer() }
+    }
+
+    private fun stubOutcomeTexts() {
+        listOf(
+            R.string.tx_outcome_refused_title,
+            R.string.tx_outcome_note_refused_fee,
+            R.string.tx_outcome_not_sent_title,
+            R.string.tx_outcome_not_sent_network,
+            R.string.tx_outcome_duplicate_title,
+            R.string.tx_outcome_duplicate_message,
+            R.string.tx_outcome_duplicate_send_again,
+            R.string.tx_outcome_duplicate_wait,
+        ).forEach { id ->
+            given(resourceManager.getString(id)).willReturn("text-$id")
+        }
+    }
+
+    @Test
+    fun `a confirmed swap shows confirmed and opens its transaction page`() = runTest {
+        readyToConfirmSwap()
+        swapAnswers(false) { TransactionOutcome.Confirmed(txHash, "0xblock") }
+
+        viewModel.onConfirmClicked()
+        runCurrent()
+
+        assertEquals(TransactionResultBadge.CONFIRMED, viewModel.swapMainState.value.confirmResult)
+        advanceUntilIdle()
+        assertEquals(null, viewModel.swapMainState.value.confirmResult)
+        kVerify(assetsRouter).showTxDetails(txHash, true)
+        assertEquals(null, viewModel.alertDialogLiveData.value)
+    }
+
+    @Test
+    fun `a swap that is still waiting is shown as submitted and never as rejected`() = runTest {
+        readyToConfirmSwap()
+        // What a failed status read or an unfinished finality wait gives after a broadcast.
+        swapAnswers(false) { TransactionOutcome.Waiting(txHash, acceptedByNode = true) }
+
+        viewModel.onConfirmClicked()
+        runCurrent()
+
+        val badge = viewModel.swapMainState.value.confirmResult
+        assertEquals(TransactionResultBadge.SUBMITTED, badge)
+        assertEquals(R.string.wallet_transaction_submitted_1, badge?.text)
+        advanceUntilIdle()
+        // The transaction page carries "waiting for confirmation" and follows the result.
+        kVerify(assetsRouter).showTxDetails(txHash, true)
+        assertEquals(null, viewModel.alertDialogLiveData.value)
+        assertEquals(null, viewModel.errorFromResourceLiveData.value)
+        // Confirm stays off: the swap is on its way and must not be sent again from here.
+        assertFalse(viewModel.swapMainState.value.confirmButtonState.enabled)
+    }
+
+    @Test
+    fun `a swap that failed on chain shows failed and opens its transaction page`() = runTest {
+        readyToConfirmSwap()
+        swapAnswers(false) {
+            TransactionOutcome.FailedOnChain(
+                txHash = txHash,
+                blockHash = "0xblock",
+                reason = TransactionChainFailure.EXECUTION_FAILED,
+                detail = "LiquidityProxy.SlippageNotTolerated",
+            )
+        }
+
+        viewModel.onConfirmClicked()
+        runCurrent()
+
+        assertEquals(TransactionResultBadge.FAILED, viewModel.swapMainState.value.confirmResult)
+        advanceUntilIdle()
+        kVerify(assetsRouter).showTxDetails(txHash, true)
+    }
+
+    @Test
+    fun `a swap the node refused is a failure with its reason and is not submitted`() = runTest {
+        readyToConfirmSwap()
+        stubOutcomeTexts()
+        swapAnswers(false) {
+            TransactionOutcome.RefusedByNode(
+                txHash = txHash,
+                reason = TransactionNodeRefusal.CANNOT_PAY_FEE,
+                nodeMessage = "Inability to pay some fees",
+            )
+        }
+
+        viewModel.onConfirmClicked()
+        runCurrent()
+
+        assertEquals(TransactionResultBadge.NOT_SENT, viewModel.swapMainState.value.confirmResult)
+        advanceUntilIdle()
+        assertEquals(
+            "text-${R.string.tx_outcome_refused_title}" to
+                "text-${R.string.tx_outcome_note_refused_fee}",
+            viewModel.alertDialogLiveData.value,
+        )
+        kVerify(assetsRouter, org.mockito.kotlin.never()).showTxDetails(any(), any())
+        // Nothing was sent, so the same screen offers Confirm again.
+        org.junit.Assert.assertTrue(viewModel.swapMainState.value.confirmButtonState.enabled)
+        assertFalse(viewModel.swapMainState.value.confirmButtonState.loading)
+    }
+
+    @Test
+    fun `a swap that could not be prepared says nothing was sent`() = runTest {
+        readyToConfirmSwap()
+        stubOutcomeTexts()
+        swapAnswers(false) { throw BoundedHttpTextException("BOUNDED_HTTP_IO") }
+
+        viewModel.onConfirmClicked()
+        advanceUntilIdle()
+
+        // Before the fix this path showed "Transaction rejected" and no explanation.
+        assertEquals(
+            "text-${R.string.tx_outcome_not_sent_title}" to
+                "text-${R.string.tx_outcome_not_sent_network}",
+            viewModel.alertDialogLiveData.value,
+        )
+        kVerify(assetsRouter, org.mockito.kotlin.never()).showTxDetails(any(), any())
+        org.junit.Assert.assertTrue(viewModel.swapMainState.value.confirmButtonState.enabled)
+    }
+
+    @Test
+    fun `the same swap still waiting needs a deliberate second confirmation`() = runTest {
+        readyToConfirmSwap()
+        stubOutcomeTexts()
+        swapAnswers(false) { throw DuplicateWaitingTransactionException(txHash, 1L) }
+        swapAnswers(true) { TransactionOutcome.Waiting("0x" + "cd".repeat(32), true) }
+
+        viewModel.onConfirmClicked()
+        advanceUntilIdle()
+
+        // The user is asked; nothing is sent and no result is claimed.
+        val question = checkNotNull(viewModel.confirmDialogLiveData.value)
+        assertEquals("text-${R.string.tx_outcome_duplicate_title}", question.title)
+        assertEquals("text-${R.string.tx_outcome_duplicate_send_again}", question.confirmText)
+        assertEquals(null, viewModel.swapMainState.value.confirmResult)
+        kVerify(assetsRouter, org.mockito.kotlin.never()).showTxDetails(any(), any())
+        org.junit.Assert.assertTrue(viewModel.swapMainState.value.confirmButtonState.enabled)
+
+        // Dismissing changes nothing; only the explicit answer sends it again.
+        question.onDismiss()
+        advanceUntilIdle()
+        kVerify(swapInteractor, org.mockito.kotlin.never())
+            .swap(any(), any(), any(), any(), any(), any(), any(), any(), eq(true))
+
+        question.onConfirm()
+        advanceUntilIdle()
+        kVerify(swapInteractor)
+            .swap(any(), any(), any(), any(), any(), any(), any(), any(), eq(true))
+        kVerify(assetsRouter).showTxDetails("0x" + "cd".repeat(32), true)
     }
 }
