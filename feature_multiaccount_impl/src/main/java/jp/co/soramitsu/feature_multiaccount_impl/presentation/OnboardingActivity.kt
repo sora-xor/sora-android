@@ -73,6 +73,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -103,6 +104,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.create_account.Cre
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.enter_passphrase.EnterPassphraseScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.BackupScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection.ExportProtection
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.found_wallets.FoundWalletsScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.ImportAccountListScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_password.ImportAccountPasswordScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_success.ImportAccountSuccessScreen
@@ -138,11 +140,14 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             BiometricManager.Authenticators.BIOMETRIC_WEAK or
                 BiometricManager.Authenticators.DEVICE_CREDENTIAL
 
-        fun start(context: Context, isClearTask: Boolean) {
+        private const val EXTRA_ENTRY = "jp.co.soramitsu.feature_multiaccount_impl.extra.ENTRY"
+
+        fun start(context: Context, isClearTask: Boolean, entry: Entry = Entry.WELCOME) {
             val intent = Intent(context, OnboardingActivity::class.java).apply {
                 if (isClearTask) {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
+                putExtra(EXTRA_ENTRY, entry.name)
             }
             val options = ActivityOptions.makeCustomAnimation(
                 context,
@@ -152,6 +157,26 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             context.startActivity(intent, options.toBundle())
         }
     }
+
+    /** Where the flow opens. */
+    enum class Entry {
+        /** The welcome screen: create, import, Google. */
+        WELCOME,
+
+        /**
+         * Straight to "enter your recovery phrase". Opened from the options of an account that
+         * cannot sign on this phone: importing its phrase there restores its keys in place.
+         */
+        IMPORT_RECOVERY_PHRASE,
+
+        /** Straight to the Google sign-in, to restore a read-only account from its backup. */
+        IMPORT_FROM_GOOGLE,
+    }
+
+    private val entry: Entry
+        get() = intent?.getStringExtra(EXTRA_ENTRY)
+            ?.let { name -> Entry.entries.firstOrNull { it.name == name } }
+            ?: Entry.WELCOME
 
     /** Lets the person pick the encrypted backup file (JSON) they exported earlier. */
     private val backupFilePicker =
@@ -270,6 +295,17 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         viewModel.consentExceptionHandler.observe(this) {
             consentHandlerLauncher.launch(it)
         }
+        viewModel.returnToPassphraseEvent.observe(this) {
+            // The new account was not saved: back to the screen that still shows its phrase.
+            if (::navController.isInitialized) {
+                navController.popBackStack(OnboardingFeatureRoutes.PASSPHRASE, false)
+            }
+        }
+        viewModel.restartCreateEvent.observe(this) {
+            if (::navController.isInitialized) {
+                navController.popBackStack(OnboardingFeatureRoutes.TUTORIAL, false)
+            }
+        }
     }
 
     @OptIn(
@@ -360,6 +396,21 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                     }
                 },
             )
+        }
+
+        // Opened to restore the keys of an account that is already listed: go straight to the
+        // step that does it, once (not again after a rotation).
+        var entryHandled by rememberSaveable { mutableStateOf(false) }
+        LaunchedEffect(Unit) {
+            if (!entryHandled) {
+                entryHandled = true
+                when (entry) {
+                    Entry.WELCOME -> Unit
+                    Entry.IMPORT_RECOVERY_PHRASE ->
+                        viewModel.onRecoveryClicked(navController, 1, asFirstScreen = true)
+                    Entry.IMPORT_FROM_GOOGLE -> viewModel.onGoogleSignin(navController, launcher)
+                }
+            }
         }
 
         NavHost(
@@ -463,6 +514,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             state = it,
                             onCreateAccount = { viewModel.onCreateAccountClicked(navController) },
                             onImportAccount = viewModel::onRecoveryDialogShow,
+                            onFoundWallets = { viewModel.onFoundWalletsClicked(navController) },
                             onGoogleSignin = {
                                 debounceClickHandler.debounceClick {
                                     viewModel.onGoogleSignin(
@@ -484,6 +536,19 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             }
                         )
                     }
+                }
+            }
+
+            animatedComposable(
+                route = OnboardingFeatureRoutes.FOUND_WALLETS
+            ) {
+                viewModel.foundWallets.collectAsStateWithLifecycle().value?.let { found ->
+                    FoundWalletsScreen(
+                        state = found,
+                        onRestore = { pin ->
+                            viewModel.onRestoreFoundWallets(pin, this@OnboardingActivity)
+                        },
+                    )
                 }
             }
 

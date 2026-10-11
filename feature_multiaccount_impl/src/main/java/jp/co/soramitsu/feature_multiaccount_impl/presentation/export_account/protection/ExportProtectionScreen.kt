@@ -78,7 +78,7 @@ internal fun ExportProtection(
                     .fillMaxWidth()
                     .wrapContentHeight()
                     .padding(bottom = Dimens.x3),
-                text = stringResource(id = state.descriptionResource),
+                text = state.descriptionText ?: stringResource(id = state.descriptionResource),
                 style = MaterialTheme.customTypography.paragraphM,
                 color = MaterialTheme.customColors.fgPrimary,
             )

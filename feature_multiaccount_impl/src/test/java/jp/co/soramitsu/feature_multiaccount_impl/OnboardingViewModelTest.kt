@@ -101,6 +101,8 @@ class OnboardingViewModelTest {
 
     @Before
     fun setUp() = runTest {
+        // No key set on the phone waits to be restored, unless a test says so.
+        whenever(multiAccInteractor.walletsRestorableWithPin()).thenReturn(emptyList())
         onboardingViewModel = OnboardingViewModel(
             invitationHandler,
             multiAccInteractor,
@@ -184,8 +186,304 @@ class OnboardingViewModelTest {
         assertNull(onboardingViewModel?.recoveryState?.value)
     }
 
+    private fun stubWordCountText() {
+        whenever(resourceManager.getString(R.string.export_protection_passphrase_description_words))
+            .thenReturn("the %1\$s-word passphrase")
+    }
+
+    private fun viewModel() = OnboardingViewModel(
+        invitationHandler,
+        multiAccInteractor,
+        mainStarter,
+        resourceManager,
+        jp.co.soramitsu.common.backup.CloudBackupProvider(true) { backupService },
+        avatarGenerator,
+        coroutineManager,
+    )
+
+    // ---- Create account: nothing fails silently, and nothing crashes ------------------------
+
+    @Test
+    fun `the warning before a new wallet's phrase names its real number of words`() = runTest {
+        // It said "24-word" for every wallet.
+        stubWordCountText()
+        whenever(multiAccInteractor.createDraft(org.mockito.kotlin.any())).thenReturn(testDraft(words = 12))
+
+        onboardingViewModel.onCreateAccountContinueClicked(navController)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(
+            "the 12-word passphrase",
+            onboardingViewModel.disclaimerCardState.value?.descriptionText,
+        )
+        org.mockito.kotlin.verify(navController)
+            .navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.DISCLAIMER)
+    }
+
+    @Test
+    fun `a new wallet that cannot be prepared is explained and nothing crashes`() = runTest {
+        // The candidate crashed here: the call had no handler.
+        whenever(multiAccInteractor.createDraft(org.mockito.kotlin.any()))
+            .thenThrow(IllegalStateException("KEYSTORE_BUSY"))
+
+        onboardingViewModel.onCreateAccountContinueClicked(navController)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(
+            R.string.create_account_unavailable_title to R.string.create_account_unavailable,
+            onboardingViewModel.errorFromResourceLiveData.value,
+        )
+        // The person stays on the name screen, which works again.
+        org.mockito.kotlin.verify(navController, org.mockito.kotlin.never())
+            .navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.DISCLAIMER)
+        assertEquals(true, onboardingViewModel.createAccountCardState.value?.btnEnabled)
+        assertEquals(false, onboardingViewModel.createAccountCardState.value?.loading)
+        assertNull(onboardingViewModel.passphraseCardState.value)
+    }
+
+    @Test
+    fun `a new wallet refused in read-only mode says so`() = runTest {
+        whenever(multiAccInteractor.createDraft(org.mockito.kotlin.any()))
+            .thenThrow(IllegalStateException("WALLET_RECOVERY_READ_ONLY"))
+
+        onboardingViewModel.onCreateAccountContinueClicked(navController)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(
+            R.string.create_account_unavailable_title to R.string.create_account_unavailable_read_only,
+            onboardingViewModel.errorFromResourceLiveData.value,
+        )
+    }
+
+    @Test
+    fun `a failed final save is explained, returns to the phrase screen and keeps the wallet for another try`() =
+        runTest {
+            // The candidate showed nothing and left the person on the last step.
+            stubWordCountText()
+            val draft = testDraft()
+            val context = org.mockito.kotlin.mock<android.content.Context>()
+            whenever(multiAccInteractor.createDraft(org.mockito.kotlin.any())).thenReturn(draft)
+            whenever(multiAccInteractor.createUserFromDraft(draft))
+                .thenThrow(IllegalStateException("KEYSTORE_BUSY"))
+                .thenReturn(jp.co.soramitsu.common.account.SoraAccount(draft.address, draft.accountName))
+            onboardingViewModel.onCreateAccountContinueClicked(navController)
+            testScheduler.advanceUntilIdle()
+
+            onboardingViewModel.skipDialogConfirm(context)
+            testScheduler.advanceUntilIdle()
+
+            assertEquals(
+                R.string.create_account_not_saved_title to R.string.create_account_not_saved,
+                onboardingViewModel.errorFromResourceLiveData.value,
+            )
+            assertEquals(Unit, onboardingViewModel.returnToPassphraseEvent.value)
+            org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+            // The phrase is still there to be read, and the wallet is still held for the retry.
+            assertEquals(
+                draft.mnemonicWords,
+                onboardingViewModel.passphraseCardState.value?.mnemonicWords,
+            )
+
+            onboardingViewModel.skipDialogConfirm(context)
+            testScheduler.advanceUntilIdle()
+
+            org.mockito.kotlin.verify(multiAccInteractor, org.mockito.kotlin.times(2))
+                .createUserFromDraft(draft)
+            org.mockito.kotlin.verify(mainStarter).start(context)
+        }
+
+    @Test
+    fun `finishing after the wallet being created is gone says so and starts again`() = runTest {
+        // After a process restart in the middle of the flow there is no draft any more.
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+
+        onboardingViewModel.skipDialogConfirm(context)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(
+            R.string.create_account_unavailable_title to R.string.create_account_interrupted,
+            onboardingViewModel.errorFromResourceLiveData.value,
+        )
+        assertEquals(Unit, onboardingViewModel.restartCreateEvent.value)
+        org.mockito.kotlin.verify(multiAccInteractor, org.mockito.kotlin.never())
+            .createUserFromDraft(org.mockito.kotlin.any())
+        org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+    }
+
+    // ---- "Wallets found on this phone", from the welcome screen -----------------------------
+
+    @Test
+    fun `wallets found on this phone are offered on the welcome screen when the stored PIN protects them`() =
+        runTest {
+            whenever(multiAccInteractor.walletsRestorableWithPin()).thenReturn(listOf("cnA", "cnB"))
+
+            val viewModel = viewModel()
+            testScheduler.advanceUntilIdle()
+
+            assertEquals(2, viewModel.tutorialScreenState.value?.foundWalletsCount)
+            assertEquals(listOf("cnA", "cnB"), viewModel.foundWallets.value?.addresses)
+
+            viewModel.onFoundWalletsClicked(navController)
+            org.mockito.kotlin.verify(navController)
+                .navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.FOUND_WALLETS)
+        }
+
+    @Test
+    fun `nothing is offered when no key set can be restored with the PIN`() = runTest {
+        whenever(multiAccInteractor.walletsRestorableWithPin()).thenReturn(emptyList())
+
+        val viewModel = viewModel()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(0, viewModel.tutorialScreenState.value?.foundWalletsCount)
+        assertNull(viewModel.foundWallets.value)
+        viewModel.onFoundWalletsClicked(navController)
+        org.mockito.kotlin.verify(navController, org.mockito.kotlin.never())
+            .navigate(jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingFeatureRoutes.FOUND_WALLETS)
+    }
+
+    @Test
+    fun `when the key sets cannot be read the option is not offered and the welcome screen works`() = runTest {
+        whenever(multiAccInteractor.walletsRestorableWithPin())
+            .thenThrow(IllegalStateException("KEYSTORE_BUSY"))
+
+        val viewModel = viewModel()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(0, viewModel.tutorialScreenState.value?.foundWalletsCount)
+        assertNull(viewModel.errorFromResourceLiveData.value)
+    }
+
+    @Test
+    fun `the right PIN restores the wallets found on this phone and opens the wallet`() = runTest {
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+        whenever(resourceManager.getString(R.string.safe_mode_restored_wallet_name))
+            .thenReturn("Restored wallet")
+        whenever(multiAccInteractor.walletsRestorableWithPin()).thenReturn(listOf("cnA"))
+        whenever(multiAccInteractor.restoreRetainedWallets("123456", "Restored wallet")).thenReturn(
+            MultiaccountInteractor.RetainedRestoreResult(
+                restored = listOf(jp.co.soramitsu.common.account.SoraAccount("cnA", "Restored wallet")),
+                notRestorable = emptyList(),
+            )
+        )
+        val viewModel = viewModel()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.onRestoreFoundWallets("123456", context)
+        testScheduler.advanceUntilIdle()
+
+        org.mockito.kotlin.verify(mainStarter).start(context)
+        assertNull(viewModel.batchImportNotice.value)
+    }
+
+    @Test
+    fun `a wrong PIN restores nothing and says so`() = runTest {
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+        whenever(resourceManager.getString(R.string.safe_mode_restored_wallet_name))
+            .thenReturn("Restored wallet")
+        whenever(multiAccInteractor.walletsRestorableWithPin()).thenReturn(listOf("cnA"))
+        whenever(multiAccInteractor.restoreRetainedWallets("000000", "Restored wallet"))
+            .thenThrow(SoraException.businessError(ResponseCode.WRONG_PIN_CODE))
+        val viewModel = viewModel()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.onRestoreFoundWallets("000000", context)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(true, viewModel.foundWallets.value?.wrongPin)
+        assertEquals(false, viewModel.foundWallets.value?.working)
+        org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+    }
+
+    @Test
+    fun `too many wrong PINs lock PIN entry and restore nothing`() = runTest {
+        val context = org.mockito.kotlin.mock<android.content.Context>()
+        whenever(resourceManager.getString(R.string.safe_mode_restored_wallet_name))
+            .thenReturn("Restored wallet")
+        whenever(resourceManager.getString(R.string.account_repair_pin_locked_title))
+            .thenReturn("Too many wrong PINs")
+        whenever(resourceManager.getString(R.string.onboarding_found_wallets_pin_locked))
+            .thenReturn("locked for about %1\$s min")
+        whenever(multiAccInteractor.walletsRestorableWithPin()).thenReturn(listOf("cnA"))
+        whenever(multiAccInteractor.restoreRetainedWallets("000000", "Restored wallet")).thenAnswer {
+            throw jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException(61_000L)
+        }
+        val viewModel = viewModel()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.onRestoreFoundWallets("000000", context)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(
+            "Too many wrong PINs" to "locked for about 2 min",
+            viewModel.alertDialogLiveData.value,
+        )
+        assertEquals(false, viewModel.foundWallets.value?.working)
+        org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+    }
+
+    @Test
+    fun `wallets that cannot be restored are named in a message and the app goes on to the restored ones`() =
+        runTest {
+            val context = org.mockito.kotlin.mock<android.content.Context>()
+            whenever(resourceManager.getString(R.string.safe_mode_restored_wallet_name))
+                .thenReturn("Restored wallet")
+            whenever(resourceManager.getString(R.string.onboarding_found_wallets_some_restored))
+                .thenReturn("Restored %1\$s of %2\$s")
+            whenever(multiAccInteractor.walletsRestorableWithPin()).thenReturn(listOf("cnA", "cnB"))
+            whenever(multiAccInteractor.restoreRetainedWallets("123456", "Restored wallet")).thenReturn(
+                MultiaccountInteractor.RetainedRestoreResult(
+                    restored = listOf(jp.co.soramitsu.common.account.SoraAccount("cnA", "Restored wallet")),
+                    notRestorable = listOf("cnB"),
+                )
+            )
+            val viewModel = viewModel()
+            testScheduler.advanceUntilIdle()
+
+            viewModel.onRestoreFoundWallets("123456", context)
+            testScheduler.advanceUntilIdle()
+
+            assertEquals("Restored 1 of 2", viewModel.batchImportNotice.value?.message)
+            org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+
+            viewModel.onBatchImportNoticeDismissed(context)
+
+            org.mockito.kotlin.verify(mainStarter).start(context)
+        }
+
+    @Test
+    fun `when none of the wallets can be restored the person stays and is pointed to the recovery phrase`() =
+        runTest {
+            val context = org.mockito.kotlin.mock<android.content.Context>()
+            whenever(resourceManager.getString(R.string.safe_mode_restored_wallet_name))
+                .thenReturn("Restored wallet")
+            whenever(resourceManager.getString(R.string.safe_mode_retained_title))
+                .thenReturn("Wallets found on this phone")
+            whenever(resourceManager.getString(R.string.safe_mode_retained_not_restorable))
+                .thenReturn("Import its recovery phrase or seed instead.")
+            whenever(multiAccInteractor.walletsRestorableWithPin()).thenReturn(listOf("cnA"))
+            whenever(multiAccInteractor.restoreRetainedWallets("123456", "Restored wallet")).thenReturn(
+                MultiaccountInteractor.RetainedRestoreResult(
+                    restored = emptyList(),
+                    notRestorable = listOf("cnA"),
+                )
+            )
+            val viewModel = viewModel()
+            testScheduler.advanceUntilIdle()
+
+            viewModel.onRestoreFoundWallets("123456", context)
+            testScheduler.advanceUntilIdle()
+
+            assertEquals(
+                "Wallets found on this phone" to "Import its recovery phrase or seed instead.",
+                viewModel.alertDialogLiveData.value,
+            )
+            org.mockito.kotlin.verify(mainStarter, org.mockito.kotlin.never()).start(context)
+        }
+
     @Test
     fun `backing out after Continue stores no key material`() = runTest {
+        stubWordCountText()
         val draft = testDraft()
         whenever(multiAccInteractor.createDraft(org.mockito.kotlin.any())).thenReturn(draft)
 
@@ -203,6 +501,7 @@ class OnboardingViewModelTest {
 
     @Test
     fun `finishing the create flow commits the draft once and opens the wallet`() = runTest {
+        stubWordCountText()
         val draft = testDraft()
         val context = org.mockito.kotlin.mock<android.content.Context>()
         whenever(multiAccInteractor.createDraft(org.mockito.kotlin.any())).thenReturn(draft)
@@ -1070,10 +1369,10 @@ class OnboardingViewModelTest {
         testScheduler.advanceUntilIdle()
     }
 
-    private fun testDraft() = jp.co.soramitsu.feature_account_api.domain.model.WalletDraft(
+    private fun testDraft(words: Int = 24) = jp.co.soramitsu.feature_account_api.domain.model.WalletDraft(
         address = "cnDraftWallet",
         accountName = "",
-        mnemonic = List(24) { "word$it" }.joinToString(" "),
+        mnemonic = List(words) { "word$it" }.joinToString(" "),
         seedHex = "00".repeat(32),
         keypair = jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair(
             ByteArray(64),

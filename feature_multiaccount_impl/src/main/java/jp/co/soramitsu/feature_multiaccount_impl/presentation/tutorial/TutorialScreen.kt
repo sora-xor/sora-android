@@ -84,7 +84,8 @@ internal fun TutorialScreen(
     onCreateAccount: () -> Unit,
     onImportAccount: () -> Unit,
     onGoogleSignin: () -> Unit,
-    onTermsAndPrivacyClicked: (TermsAndPrivacyEnum) -> Unit
+    onTermsAndPrivacyClicked: (TermsAndPrivacyEnum) -> Unit,
+    onFoundWallets: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier.fillMaxHeight(),
@@ -142,7 +143,9 @@ internal fun TutorialScreen(
                     onRecoveryAccount = onImportAccount,
                     onGoogleSignin = onGoogleSignin,
                     isGoogleSignInLoading = state.isGoogleSigninLoading,
-                    isGoogleBackupAvailable = state.isGoogleBackupAvailable
+                    isGoogleBackupAvailable = state.isGoogleBackupAvailable,
+                    foundWalletsCount = state.foundWalletsCount,
+                    onFoundWallets = onFoundWallets,
                 )
 
                 val annotatedLinkString: AnnotatedString = buildAnnotatedString {
@@ -244,12 +247,30 @@ private fun TutorialButtons(
     onRecoveryAccount: () -> Unit,
     isGoogleSignInLoading: Boolean = false,
     isGoogleBackupAvailable: Boolean = true,
+    foundWalletsCount: Int = 0,
+    onFoundWallets: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
+        if (foundWalletsCount > 0) {
+            // Keys of earlier wallets are still on this phone behind the PIN that was used here.
+            // Offered first: it brings them back as they are, without typing a phrase.
+            OutlinedButton(
+                modifier = Modifier
+                    .testTagAsId("FoundWallets")
+                    .padding(top = Dimens.x1)
+                    .fillMaxWidth(),
+                text = stringResource(R.string.safe_mode_retained_title),
+                onClick = onFoundWallets,
+                size = Size.Large,
+                order = Order.PRIMARY
+            )
+            ChoiceExplanation(R.string.onboarding_found_wallets_explanation)
+        }
+
         LoaderWrapper(
             modifier = Modifier
                 .padding(top = Dimens.x1)

@@ -66,6 +66,11 @@ data class RecoveryAccountNameState(
 data class TutorialScreenState(
     val isGoogleSigninLoading: Boolean = false,
     val isGoogleBackupAvailable: Boolean = true,
+    /**
+     * Wallets whose keys are on this phone without an account and that the stored PIN still
+     * protects. Above zero, the screen offers "Wallets found on this phone".
+     */
+    val foundWalletsCount: Int = 0,
 )
 
 data class TermsAndPrivacyState(

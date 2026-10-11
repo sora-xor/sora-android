@@ -59,6 +59,7 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateBackupPasswordState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountDetailsScreenState
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ReadOnlyAccountUi
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.common.backup.CloudBackupProvider
 import jp.co.soramitsu.xbackup.domain.exceptions.AuthConsentException
@@ -70,9 +71,12 @@ import jp.co.soramitsu.xbackup.domain.models.DecryptedBackupAccount
 import jp.co.soramitsu.xbackup.domain.models.Json
 import jp.co.soramitsu.xbackup.domain.models.Seed
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -122,6 +126,14 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val _consentExceptionHandler = SingleLiveEvent<Intent>()
     val consentExceptionHandler: LiveData<Intent> = _consentExceptionHandler
 
+    /** How the person chose to restore a read-only account's keys in place. */
+    enum class RestoreKeys { WITH_PHRASE, FROM_GOOGLE }
+
+    private val _restoreKeysEvent = SingleLiveEvent<RestoreKeys>()
+
+    /** Opens Import account at the chosen step; the import repairs this account in place. */
+    val restoreKeysEvent: LiveData<RestoreKeys> = _restoreKeysEvent
+
     private val changeNameFlow = MutableStateFlow("")
     private var account: SoraAccount? = null
     private var isFromAuthorization = false
@@ -157,8 +169,23 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     isBackupAvailable = isAccountBackedUp,
                     address,
                     isCloudBackupAvailable = cloudBackupProvider.isAvailable,
+                    readOnly = _accountDetailsScreenState.value?.readOnly,
                 )
             }
+        }
+
+        viewModelScope.launch {
+            // Whether this account can sign is followed, so the panel disappears as soon as its
+            // keys are restored. A failed read shows no panel; nothing depends on it.
+            interactor.flowUnavailableWalletIds()
+                .map { address in it }
+                .distinctUntilChanged()
+                .catch { emit(false) }
+                .collectLatest { readOnly ->
+                    val panel = if (readOnly) readOnlyPanel() else null
+                    _accountDetailsScreenState.value =
+                        _accountDetailsScreenState.value?.copy(readOnly = panel)
+                }
         }
 
         viewModelScope.launch {
@@ -174,6 +201,50 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     override fun startScreen(): String = AccountDetailsRoutes.ACCOUNT_DETAILS
+
+    /**
+     * What a read-only account's panel offers, from `UserRepository.unavailableWalletOptions`.
+     * Null when the account signs, or when the options cannot be read right now (the label on
+     * the other screens still says that it cannot send).
+     */
+    private suspend fun readOnlyPanel(): ReadOnlyAccountUi? = try {
+        interactor.unavailableWalletOptions(address)?.let { options ->
+            ReadOnlyAccountUi(
+                reason = options.reason,
+                canRestoreWithPhrase = options.canRepairWithPhrase,
+                canRestoreFromGoogle = options.canRepairWithPhrase && cloudBackupProvider.isAvailable,
+                canShowBackup = options.canShowPhraseAfterPin,
+                canRemove = options.canRemoveAndImport,
+            )
+        }
+    } catch (error: kotlinx.coroutines.CancellationException) {
+        throw error
+    } catch (error: Throwable) {
+        onError(error)
+        null
+    }
+
+    /** "Restore keys with recovery phrase": Import account, where the phrase repairs in place. */
+    fun onRestoreKeysWithPhrase() {
+        if (_accountDetailsScreenState.value?.readOnly?.canRestoreWithPhrase != true) return
+        _restoreKeysEvent.value = RestoreKeys.WITH_PHRASE
+    }
+
+    /** "Restore from Google Drive": Import account, Google, where its backup repairs in place. */
+    fun onRestoreKeysFromGoogle() {
+        if (_accountDetailsScreenState.value?.readOnly?.canRestoreFromGoogle != true) return
+        _restoreKeysEvent.value = RestoreKeys.FROM_GOOGLE
+    }
+
+    /**
+     * "Show the backup saved on this phone": the Passphrase or Raw seed screen, after the PIN.
+     * Those screens show only material that re-derives this account, or say that none does.
+     */
+    fun onShowSavedBackup() {
+        val state = _accountDetailsScreenState.value ?: return
+        if (state.readOnly?.canShowBackup != true) return
+        if (state.isMnemonicAvailable) onShowPassphrase() else onShowRawSeed()
+    }
 
     fun onNameChange(textValue: TextFieldValue) {
         _accountDetailsScreenState.value?.let {

@@ -47,11 +47,13 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.mod
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportAccountData
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -62,6 +64,7 @@ import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
+import org.mockito.Mockito.lenient
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -119,6 +122,7 @@ class AccountListViewModelTest {
         )
 
         given(multiAccInteractor.flowSoraAccountsList()).willReturn(flow { emit(soraAccounts) })
+        given(multiAccInteractor.flowUnavailableWalletIds()).willReturn(flow { emit(emptySet()) })
         given(multiAccInteractor.getCurrentSoraAccount()).willReturn(soraAccounts.first())
         given(avatarGenerator.createAvatar(anyString(), anyInt())).willReturn(drawable)
 
@@ -136,6 +140,83 @@ class AccountListViewModelTest {
         assertTrue(s.type is SoramitsuToolbarType.Small)
         assertEquals(R.string.settings_accounts, s.basic.title)
         assertEquals(expectedState, accountListViewModel.accountListScreenState.value)
+    }
+
+    @Test
+    fun `an account that cannot sign is labelled, and the label follows a repair`() = runTest {
+        val readOnly = MutableStateFlow(setOf("address"))
+        given(multiAccInteractor.flowUnavailableWalletIds()).willReturn(readOnly)
+        val viewModel = AccountListViewModel(
+            multiAccInteractor,
+            avatarGenerator,
+            mainRouter,
+            clipboardManager,
+        )
+        advanceUntilIdle()
+
+        val labelled = requireNotNull(viewModel.accountListScreenState.value).accountList
+        assertTrue(labelled.first { it.account.substrateAddress == "address" }.readOnly)
+        assertFalse(labelled.first { it.account.substrateAddress == "curAddress" }.readOnly)
+        // A read-only account stays listed and selectable.
+        assertEquals(2, labelled.size)
+
+        readOnly.value = emptySet()
+        advanceUntilIdle()
+
+        assertTrue(
+            requireNotNull(viewModel.accountListScreenState.value).accountList.none { it.readOnly }
+        )
+    }
+
+    @Test
+    fun `removing the last account empties the list without asking for a selected account`() = runTest {
+        // The candidate crashed here: the list emitted no accounts right after the removal and
+        // the screen (still on the back stack) asked the repository for the selected account.
+        val accounts = MutableStateFlow(soraAccounts)
+        given(multiAccInteractor.flowSoraAccountsList()).willReturn(accounts)
+        val viewModel = AccountListViewModel(
+            multiAccInteractor,
+            avatarGenerator,
+            mainRouter,
+            clipboardManager,
+        )
+        advanceUntilIdle()
+        assertEquals(2, requireNotNull(viewModel.accountListScreenState.value).accountList.size)
+        // What the repository answers once no account is left. It must not be asked.
+        lenient().`when`(multiAccInteractor.getCurrentSoraAccount())
+            .thenThrow(IllegalArgumentException("Required value was null."))
+
+        accounts.value = emptyList()
+        advanceUntilIdle()
+
+        assertEquals(
+            emptyList<ExportAccountData>(),
+            requireNotNull(viewModel.accountListScreenState.value).accountList,
+        )
+        assertNull(viewModel.errorFromResourceLiveData.value)
+    }
+
+    @Test
+    fun `a failure while the list is built is reported, not thrown`() = runTest {
+        val accounts = MutableStateFlow(soraAccounts)
+        given(multiAccInteractor.flowSoraAccountsList()).willReturn(accounts)
+        val viewModel = AccountListViewModel(
+            multiAccInteractor,
+            avatarGenerator,
+            mainRouter,
+            clipboardManager,
+        )
+        advanceUntilIdle()
+        given(multiAccInteractor.getCurrentSoraAccount())
+            .willThrow(IllegalStateException("WALLET_DATABASE_RECOVERY_BLOCKED"))
+
+        accounts.value = listOf(soraAccounts.first())
+        advanceUntilIdle()
+
+        assertEquals(
+            R.string.failure_generic_title to R.string.failure_generic_message,
+            viewModel.errorFromResourceLiveData.value,
+        )
     }
 
     @Test

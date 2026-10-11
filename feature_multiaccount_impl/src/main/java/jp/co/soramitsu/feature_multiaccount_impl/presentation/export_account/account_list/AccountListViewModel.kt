@@ -49,6 +49,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountListScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportAccountData
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -74,23 +75,36 @@ class AccountListViewModel @Inject constructor(
             title = R.string.settings_accounts,
         )
         interactor.flowSoraAccountsList()
-            .catch { onError(it) }
-            .onEach {
-                val currentAddress = interactor.getCurrentSoraAccount().substrateAddress
+            .combine(interactor.flowUnavailableWalletIds()) { accounts, readOnly ->
+                accounts to readOnly
+            }
+            .onEach { (accounts, readOnly) ->
+                // With no account left (the last one was just removed and the app is about to
+                // restart) there is no selected account to ask for.
+                val currentAddress = if (accounts.isEmpty()) {
+                    null
+                } else {
+                    interactor.getCurrentSoraAccount().substrateAddress
+                }
 
-                val accountList = it.map { soraAccount ->
+                val accountList = accounts.map { soraAccount ->
                     ExportAccountData(
                         currentAddress == soraAccount.substrateAddress,
                         false,
                         avatarGenerator.createAvatar(soraAccount.substrateAddress, 40),
                         soraAccount,
+                        readOnly = soraAccount.substrateAddress in readOnly,
                     )
                 }
 
                 _accountListScreenState.value =
                     AccountListScreenState(toolbarActionModeEnabled, accountList)
                 setToolbarState(toolbarActionModeEnabled, 0)
-            }.launchIn(viewModelScope)
+            }
+            // After the work above, so that a failure inside it is reported, not thrown out of
+            // the view model's scope.
+            .catch { onError(it) }
+            .launchIn(viewModelScope)
     }
 
     fun onAccountOptionsClicked(address: String) {

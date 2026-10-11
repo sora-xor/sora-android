@@ -49,6 +49,7 @@ import java.net.SocketTimeoutException
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -56,6 +57,8 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.presentation.viewmodel.FailureNotice
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -217,6 +220,124 @@ class OnboardingViewModel @Inject constructor(
 
     private val _repairPrompt = MutableStateFlow<RepairPrompt?>(null)
     val repairPrompt = _repairPrompt.asStateFlow()
+
+    /**
+     * "Wallets found on this phone": complete key sets that no account uses and that the PIN
+     * stored on this phone still protects (for example after "Set up this device again", or
+     * when the database was lost). Entering that PIN restores them; nothing is written, moved
+     * or deleted. Null when there is none, when no PIN is stored, or when the key sets were left
+     * by "Remove all accounts" (those need their recovery phrase).
+     */
+    data class FoundWalletsState(
+        val addresses: List<String>,
+        val wrongPin: Boolean = false,
+        val working: Boolean = false,
+    )
+
+    private val _foundWallets = MutableStateFlow<FoundWalletsState?>(null)
+    val foundWallets = _foundWallets.asStateFlow()
+
+    private val _returnToPassphraseEvent = SingleLiveEvent<Unit>()
+
+    /** The new account could not be saved: back to the screen that shows its recovery phrase. */
+    val returnToPassphraseEvent: LiveData<Unit> = _returnToPassphraseEvent
+
+    private val _restartCreateEvent = SingleLiveEvent<Unit>()
+
+    /** The wallet being created is gone (the app was restarted in between): back to the start. */
+    val restartCreateEvent: LiveData<Unit> = _restartCreateEvent
+
+    private suspend fun refreshFoundWallets() {
+        val addresses = try {
+            multiaccountInteractor.walletsRestorableWithPin()
+        } catch (error: kotlinx.coroutines.CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            // Not known right now: the option is not offered. Create and Import still work, and
+            // importing a wallet's recovery phrase adopts the keys saved for it.
+            emptyList()
+        }
+        _foundWallets.value = addresses.takeIf { it.isNotEmpty() }?.let { FoundWalletsState(it) }
+        _tutorialScreenState.value =
+            _tutorialScreenState.value?.copy(foundWalletsCount = addresses.size)
+    }
+
+    fun onFoundWalletsClicked(navController: NavController) {
+        if (_foundWallets.value == null) return
+        navController.navigate(OnboardingFeatureRoutes.FOUND_WALLETS)
+    }
+
+    /**
+     * "Restore these wallets" with the PIN the person typed. A wrong PIN is counted like on the
+     * PIN screen and changes nothing. Wallets whose stored keys cannot be proven are left as
+     * they are and named in a message.
+     */
+    fun onRestoreFoundWallets(pin: String, context: Context) {
+        val state = _foundWallets.value ?: return
+        if (state.working) return
+        _foundWallets.value = state.copy(working = true, wrongPin = false)
+        viewModelScope.launch {
+            try {
+                val result = multiaccountInteractor.restoreRetainedWallets(
+                    pin = pin,
+                    accountName = resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.safe_mode_restored_wallet_name
+                    ),
+                )
+                when {
+                    result.restored.isEmpty() -> {
+                        _foundWallets.value = state.copy(working = false)
+                        alertDialogLiveData.value = Pair(
+                            resourceManager.getString(
+                                jp.co.soramitsu.common.R.string.safe_mode_retained_title
+                            ),
+                            resourceManager.getString(
+                                jp.co.soramitsu.common.R.string.safe_mode_retained_not_restorable
+                            ),
+                        )
+                    }
+                    result.notRestorable.isNotEmpty() -> {
+                        _foundWallets.value = state.copy(working = false)
+                        // Said once, then the app continues to the wallets that were restored.
+                        _batchImportNotice.value = BatchImportNotice(
+                            message = resourceManager.getString(
+                                jp.co.soramitsu.common.R.string.onboarding_found_wallets_some_restored
+                            ).format(
+                                result.restored.size.toString(),
+                                (result.restored.size + result.notRestorable.size).toString(),
+                            ),
+                            anyImported = true,
+                        )
+                    }
+                    else -> mainStarter.start(context)
+                }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (locked: RepairPinLockedException) {
+                _foundWallets.value = state.copy(working = false)
+                val minutes = ((locked.remainingMillis + MINUTE_MILLIS - 1) / MINUTE_MILLIS)
+                    .coerceAtLeast(1)
+                alertDialogLiveData.value = Pair(
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.account_repair_pin_locked_title
+                    ),
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.onboarding_found_wallets_pin_locked
+                    ).format(minutes.toString()),
+                )
+            } catch (error: SoraException) {
+                if (error.errorResponseCode == ResponseCode.WRONG_PIN_CODE) {
+                    _foundWallets.value = state.copy(working = false, wrongPin = true)
+                } else {
+                    _foundWallets.value = state.copy(working = false)
+                    onError(error)
+                }
+            } catch (error: Throwable) {
+                _foundWallets.value = state.copy(working = false)
+                onError(error)
+            }
+        }
+    }
 
     /** What the person entered, kept in memory only while the repair prompt is open. */
     private class PendingRepair(
@@ -450,6 +571,8 @@ class OnboardingViewModel @Inject constructor(
                 label = resourceManager.getString(R.string.personal_info_username_v1)
             )
         )
+
+        viewModelScope.launch { refreshFoundWallets() }
     }
 
     fun startedWithInviteAction() {
@@ -767,6 +890,9 @@ class OnboardingViewModel @Inject constructor(
                                 _termsAndPrivacyState.value?.title
                                     ?: R.string.common_terms_title
 
+                            OnboardingFeatureRoutes.FOUND_WALLETS ->
+                                jp.co.soramitsu.common.R.string.safe_mode_retained_title
+
                             else -> R.string.tutorial_many_world
                         }
                     ),
@@ -791,13 +917,26 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onCreateAccountContinueClicked(navController: NavController) {
-        navController.navigate(OnboardingFeatureRoutes.DISCLAIMER)
-
+        val state = _createAccountCardState.value ?: return
+        if (state.loading) return
+        _createAccountCardState.value = state.copy(btnEnabled = false, loading = true)
         viewModelScope.launch {
-            _createAccountCardState.value?.let {
-                val accountName = it.accountNameInputState.value.text
+            val draft = try {
                 // Nothing is stored yet: the keys are written only when the flow finishes.
-                val draft = multiaccountInteractor.createDraft(accountName)
+                multiaccountInteractor.createDraft(state.accountNameInputState.value.text)
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                // A new wallet cannot be prepared right now (for example while wallet changes
+                // are off). Nothing was created or stored; the person stays on this screen and
+                // is told, instead of the app closing.
+                reportCreateRefused(error)
+                null
+            } finally {
+                _createAccountCardState.value =
+                    (_createAccountCardState.value ?: state).copy(btnEnabled = true, loading = false)
+            }
+            if (draft != null) {
                 tempDraft?.destroy()
                 tempDraft = draft
                 _passphraseCardState.value = BackupScreenState(
@@ -805,8 +944,26 @@ class OnboardingViewModel @Inject constructor(
                     isCreatingFlow = true,
                     isViaGoogleDrive = isFromGoogleDrive
                 )
+                // The warning names the number of words this wallet's phrase really has.
+                _disclaimerCardState.value = _disclaimerCardState.value?.copy(
+                    descriptionText = resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.export_protection_passphrase_description_words
+                    ).format(draft.mnemonicWords.size.toString()),
+                )
+                navController.navigate(OnboardingFeatureRoutes.DISCLAIMER)
             }
         }
+    }
+
+    private fun reportCreateRefused(error: Throwable) {
+        FirebaseWrapper.recordException(error)
+        val message = if (FailureNotice.of(error) == FailureNotice.WALLET_READ_ONLY) {
+            jp.co.soramitsu.common.R.string.create_account_unavailable_read_only
+        } else {
+            jp.co.soramitsu.common.R.string.create_account_unavailable
+        }
+        errorFromResourceLiveData.value =
+            jp.co.soramitsu.common.R.string.create_account_unavailable_title to message
     }
 
     fun onPassphraseContinueClicked(navController: NavController) {
@@ -860,7 +1017,12 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    fun onRecoveryClicked(navController: NavController, index: Int) {
+    /**
+     * Opens the screen where a recovery phrase (1), raw seed (2) or backup file (3) is entered.
+     * With [asFirstScreen] it replaces the welcome screen: Import account was opened to restore
+     * the keys of an account that is already listed, and Back returns to that account.
+     */
+    fun onRecoveryClicked(navController: NavController, index: Int, asFirstScreen: Boolean = false) {
         _recoveryDialog.value = false
         chosenFileText = null
         recoveryInputValid = false
@@ -916,22 +1078,49 @@ class OnboardingViewModel @Inject constructor(
             else -> null
         }
 
-        navController.navigate(OnboardingFeatureRoutes.RECOVERY)
+        navController.navigate(OnboardingFeatureRoutes.RECOVERY) {
+            if (asFirstScreen) {
+                popUpTo(OnboardingFeatureRoutes.TUTORIAL) { inclusive = true }
+            }
+        }
     }
 
     private fun finishCreateAccountProcess(context: Context) {
         viewModelScope.launch {
+            val draft = tempDraft
+            if (draft == null) {
+                // The wallet that was being created is gone (the app was restarted in between).
+                // Nothing was stored for it: say so and start again from the first screen.
+                _createBackupPasswordState.value =
+                    _createBackupPasswordState.value?.copy(isLoading = false)
+                errorFromResourceLiveData.value =
+                    jp.co.soramitsu.common.R.string.create_account_unavailable_title to
+                    jp.co.soramitsu.common.R.string.create_account_interrupted
+                _restartCreateEvent.trigger()
+                return@launch
+            }
             try {
                 // Stores the keys and adds the account in one step, only now that the person
                 // has finished the flow.
-                multiaccountInteractor.createUserFromDraft(requireNotNull(tempDraft))
+                multiaccountInteractor.createUserFromDraft(draft)
                 tempDraft?.destroy()
                 tempDraft = null
                 mainStarter.start(context)
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error
             } catch (error: Throwable) {
-                onError(error)
+                // The account was not saved (a busy Keystore, a full disk). The wallet is still
+                // held in memory and its phrase is still on the phrase screen: the person is
+                // taken back there, told what happened, and Continue tries again.
+                FirebaseWrapper.recordException(error)
+                _createBackupPasswordState.value =
+                    _createBackupPasswordState.value?.copy(isLoading = false)
+                _passphraseConfirmationState.value =
+                    _passphraseConfirmationState.value?.copy(confirmationStep = 0)
+                _returnToPassphraseEvent.trigger()
+                errorFromResourceLiveData.value =
+                    jp.co.soramitsu.common.R.string.create_account_not_saved_title to
+                    jp.co.soramitsu.common.R.string.create_account_not_saved
             }
         }
     }
