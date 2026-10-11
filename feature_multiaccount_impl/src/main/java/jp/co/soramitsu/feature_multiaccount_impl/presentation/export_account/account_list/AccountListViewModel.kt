@@ -75,7 +75,8 @@ class AccountListViewModel @Inject constructor(
             title = R.string.settings_accounts,
         )
         interactor.flowSoraAccountsList()
-            .combine(interactor.flowUnavailableWalletIds()) { accounts, readOnly ->
+            // The labels are an addition: when they cannot be read, the list is shown without.
+            .combine(interactor.flowUnavailableWalletIds().catch { emit(emptySet()) }) { accounts, readOnly ->
                 accounts to readOnly
             }
             .onEach { (accounts, readOnly) ->
