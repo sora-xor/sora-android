@@ -25,13 +25,16 @@ import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.ClaimDemeterViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.test_data.TestTokens
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -218,6 +221,59 @@ class ClaimDemeterViewModelTest {
         advanceUntilIdle()
         coVerify(exactly = 1) { demeter.claimDemeterRewards(ids, BigDecimal.ONE, fee, true) }
         verify { assetsRouter.showTxResult("0x" + "cd".repeat(32), TransactionScreen.DEMETER_CLAIM) }
+    }
+
+    @Test
+    fun `a second tap on Claim while the claim is followed does nothing`() = runTest {
+        val viewModel = screen()
+        val result = CompletableDeferred<TransactionOutcome>()
+        var started = 0
+        coEvery { demeter.claimDemeterRewards(ids, BigDecimal.ONE, fee, false) } coAnswers {
+            started += 1
+            // What the duplicate guard answers a second request while the first is followed.
+            if (started > 1) throw DuplicateWaitingTransactionException(txHash, 1L)
+            result.await()
+        }
+
+        viewModel.onClaim()
+        runCurrent()
+        // The button is still clickable while its progress mark fades in.
+        viewModel.onClaim()
+        runCurrent()
+
+        // Before: a second coroutine ran into the duplicate guard, cleared the progress mark
+        // and asked "send again anyway?" about the claim sent a moment ago.
+        assertEquals(1, started)
+        assertTrue(viewModel.state.value.isButtonLoading)
+        assertNull(viewModel.confirmDialogLiveData.value)
+
+        result.complete(TransactionOutcome.Waiting(txHash, acceptedByNode = true))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isButtonLoading)
+        verify(exactly = 1) { assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_CLAIM) }
+        assertEquals(1, started)
+    }
+
+    @Test
+    fun `Claim works again after a claim that did not reach the network`() = runTest {
+        val viewModel = screen()
+        var attempts = 0
+        claimAnswers(false) {
+            attempts += 1
+            if (attempts == 1) throw IOException("BOUNDED_HTTP_IO")
+            TransactionOutcome.Confirmed(txHash, "0xblock")
+        }
+
+        viewModel.onClaim()
+        advanceUntilIdle()
+        verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
+
+        viewModel.onClaim()
+        advanceUntilIdle()
+
+        assertEquals(2, attempts)
+        verify(exactly = 1) { assetsRouter.showTxResult(txHash, TransactionScreen.DEMETER_CLAIM) }
     }
 
     // --- the result arrives while the screen is not in front -------------------------------

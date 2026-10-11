@@ -123,6 +123,15 @@ class ReferralViewModel @Inject constructor(
     private var referrer: String? = null
     private var programJob: Job? = null
 
+    /**
+     * A tapped bond, unbond or set-referrer is on its way and reports its own result. Set before
+     * the coroutine starts, so a second tap is ignored whatever the button shows at that moment
+     * (it stays clickable while its progress mark fades in). Without this a second tap started a
+     * second coroutine; the duplicate guard stopped it from signing, but it cleared the progress
+     * mark and asked "send again anyway?" about a transaction sent a moment ago.
+     */
+    private var submitInFlight = false
+
     override fun startScreen(): String = ReferralFeatureRoutes.WELCOME_PROGRESS
 
     init {
@@ -381,42 +390,55 @@ class ReferralViewModel @Inject constructor(
         confirmedDuplicate: Boolean = false,
         send: suspend (confirmedDuplicate: Boolean) -> TransactionOutcome,
     ) {
-        // A referral transaction reached the network and its page has not opened yet.
-        if (resultHeld) return
+        // One is on its way, or one reached the network and its page has not opened yet.
+        if (submitInFlight || resultHeld) return
+        submitInFlight = true
         viewModelScope.launch {
-            setProgress(true)
-            var outcome: TransactionOutcome? = null
-            var notSent: Throwable? = null
             try {
-                outcome = send(confirmedDuplicate)
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (_: DuplicateWaitingTransactionException) {
-                setProgress(false)
-                askBeforeSendingAgain(resourceManager) {
-                    submit(destinationAfter, confirmedDuplicate = true, send = send)
-                }
-                return@launch
-            } catch (t: Throwable) {
-                notSent = t
+                sendAndShowResult(destinationAfter, confirmedDuplicate, send)
+            } finally {
+                submitInFlight = false
             }
+        }
+    }
+
+    private suspend fun sendAndShowResult(
+        destinationAfter: String?,
+        confirmedDuplicate: Boolean,
+        send: suspend (confirmedDuplicate: Boolean) -> TransactionOutcome,
+    ) {
+        setProgress(true)
+        var outcome: TransactionOutcome? = null
+        var notSent: Throwable? = null
+        try {
+            outcome = send(confirmedDuplicate)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: DuplicateWaitingTransactionException) {
             setProgress(false)
-            when (outcome) {
-                is TransactionOutcome.Confirmed,
-                is TransactionOutcome.Waiting,
-                is TransactionOutcome.FailedOnChain -> {
-                    openTransactionPage(outcome.txHash)
-                    _navToStart.value = destinationAfter
-                        ?: if (_referralScreenState.value.isInitialized()) {
-                            REFERRAL_PROGRAM
-                        } else {
-                            WELCOME_PAGE
-                        }
-                }
-                is TransactionOutcome.RefusedByNode ->
-                    showTransactionRefused(resourceManager, outcome)
-                null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
+            askBeforeSendingAgain(resourceManager) {
+                submit(destinationAfter, confirmedDuplicate = true, send = send)
             }
+            return
+        } catch (t: Throwable) {
+            notSent = t
+        }
+        setProgress(false)
+        when (outcome) {
+            is TransactionOutcome.Confirmed,
+            is TransactionOutcome.Waiting,
+            is TransactionOutcome.FailedOnChain -> {
+                openTransactionPage(outcome.txHash)
+                _navToStart.value = destinationAfter
+                    ?: if (_referralScreenState.value.isInitialized()) {
+                        REFERRAL_PROGRAM
+                    } else {
+                        WELCOME_PAGE
+                    }
+            }
+            is TransactionOutcome.RefusedByNode ->
+                showTransactionRefused(resourceManager, outcome)
+            null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
         }
     }
 
@@ -459,7 +481,9 @@ class ReferralViewModel @Inject constructor(
         _referralScreenState.value =
             _referralScreenState.value.copy(
                 common = _referralScreenState.value.common.copy(
-                    progress = false,
+                    // A balance update during the wait for a result must not bring the button
+                    // back: the progress mark stays until the transaction reported its result.
+                    progress = submitInFlight,
                     activate = buttonActiveValidation
                 ),
                 bondState = _referralScreenState.value.bondState.copy(

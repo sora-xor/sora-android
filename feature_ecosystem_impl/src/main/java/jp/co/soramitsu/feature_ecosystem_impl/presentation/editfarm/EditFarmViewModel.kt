@@ -116,6 +116,15 @@ class EditFarmViewModel @AssistedInject constructor(
     private var feeAsset: Asset? = null
     private var stakeFee: BigDecimal = BigDecimal.ZERO
 
+    /**
+     * A tapped Confirm is on its way and reports its own result. Set before the coroutine starts,
+     * so a second tap is ignored whatever the button shows at that moment (it stays clickable
+     * while its progress mark fades in). Without this a second tap started a second coroutine;
+     * the duplicate guard stopped it from signing, but it cleared the progress mark and asked
+     * "send again anyway?" about a transaction sent a moment ago.
+     */
+    private var confirmInFlight = false
+
     init {
         _toolbarState.value = SoramitsuToolbarState(
             type = SoramitsuToolbarType.SmallCentered(),
@@ -239,52 +248,64 @@ class EditFarmViewModel @AssistedInject constructor(
      * then the button stays off.
      */
     private fun confirm(confirmedDuplicate: Boolean) {
-        // A stake or unstake of this screen reached the network and its page has not opened yet.
-        if (resultHeld) return
+        // One is on its way, or one reached the network and its page has not opened yet.
+        if (confirmInFlight || resultHeld) return
         val current = _state.value
         if (stakingAmount <= BigDecimal.ZERO) return
+        confirmInFlight = true
         viewModelScope.launch {
-            _state.value = _state.value.copy(isButtonLoading = true)
-            var outcome: TransactionOutcome? = null
-            var notSent: Throwable? = null
             try {
-                outcome = if (current.sliderProgressState * 100 > currentStackedPercent) {
-                    demeterFarmingInteractor.depositDemeterFarming(
-                        current.farmIds,
-                        stakingAmount,
-                        stakingNetworkFee,
-                        confirmedDuplicate,
-                    )
-                } else {
-                    demeterFarmingInteractor.withdrawDemeterFarming(
-                        current.farmIds,
-                        stakingAmount,
-                        unStakingNetworkFee,
-                        confirmedDuplicate,
-                    )
-                }
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (_: DuplicateWaitingTransactionException) {
-                _state.value = _state.value.copy(isButtonLoading = false)
-                askBeforeSendingAgain(resourceManager) { confirm(confirmedDuplicate = true) }
-                return@launch
-            } catch (t: Throwable) {
-                notSent = t
+                sendAndShowResult(current, confirmedDuplicate)
+            } finally {
+                confirmInFlight = false
             }
+        }
+    }
+
+    private suspend fun sendAndShowResult(
+        current: EditFarmScreenState,
+        confirmedDuplicate: Boolean,
+    ) {
+        _state.value = _state.value.copy(isButtonLoading = true)
+        var outcome: TransactionOutcome? = null
+        var notSent: Throwable? = null
+        try {
+            outcome = if (current.sliderProgressState * 100 > currentStackedPercent) {
+                demeterFarmingInteractor.depositDemeterFarming(
+                    current.farmIds,
+                    stakingAmount,
+                    stakingNetworkFee,
+                    confirmedDuplicate,
+                )
+            } else {
+                demeterFarmingInteractor.withdrawDemeterFarming(
+                    current.farmIds,
+                    stakingAmount,
+                    unStakingNetworkFee,
+                    confirmedDuplicate,
+                )
+            }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: DuplicateWaitingTransactionException) {
             _state.value = _state.value.copy(isButtonLoading = false)
-            when (outcome) {
-                is TransactionOutcome.Confirmed,
-                is TransactionOutcome.Waiting,
-                is TransactionOutcome.FailedOnChain -> {
-                    // This screen is replaced by the transaction's page and sends nothing more.
-                    _state.value = _state.value.copy(isButtonActive = false)
-                    openTransactionPage(outcome.txHash)
-                }
-                is TransactionOutcome.RefusedByNode ->
-                    showTransactionRefused(resourceManager, outcome)
-                null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
+            askBeforeSendingAgain(resourceManager) { confirm(confirmedDuplicate = true) }
+            return
+        } catch (t: Throwable) {
+            notSent = t
+        }
+        _state.value = _state.value.copy(isButtonLoading = false)
+        when (outcome) {
+            is TransactionOutcome.Confirmed,
+            is TransactionOutcome.Waiting,
+            is TransactionOutcome.FailedOnChain -> {
+                // This screen is replaced by the transaction's page and sends nothing more.
+                _state.value = _state.value.copy(isButtonActive = false)
+                openTransactionPage(outcome.txHash)
             }
+            is TransactionOutcome.RefusedByNode ->
+                showTransactionRefused(resourceManager, outcome)
+            null -> showTransactionNotSent(resourceManager, checkNotNull(notSent))
         }
     }
 
