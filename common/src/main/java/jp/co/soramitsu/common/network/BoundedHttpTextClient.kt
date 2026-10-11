@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import java.util.zip.GZIPInputStream
+import java.util.zip.ZipException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -371,30 +372,25 @@ private fun BoundedHttpTextException.withRequestPhase(
 
 /**
  * Decodes a gzip body while reading at most [maximumBytes] decoded bytes (plus the one byte that
- * proves an overrun). A truncated or corrupt stream is a malformed response, not a network error.
+ * proves an overrun).
+ *
+ * Only data that is not valid gzip ([ZipException]: wrong magic, a corrupt block, a wrong
+ * checksum) is a malformed response. Every other [IOException] is thrown on unchanged for the
+ * caller to classify exactly as on the uncompressed path: a read that timed out, a connection
+ * that was cut, a deadline that closed the socket, and a body that ended before the gzip stream
+ * was complete are network failures, not bad data. Reporting them as malformed kept callers from
+ * the offline data they reserve for network failures.
  */
 internal fun readBoundedGzipUtf8(
     input: InputStream,
     maximumBytes: Int,
-): String {
-    val decoded = try {
-        GZIPInputStream(input, IO_BUFFER_BYTES)
-    } catch (error: BoundedHttpTextException) {
-        throw error
-    } catch (_: IOException) {
-        throw BoundedHttpTextException("BOUNDED_HTTP_ENCODING_INVALID")
+): String = try {
+    // The constructor already reads the gzip header from the connection.
+    GZIPInputStream(input, IO_BUFFER_BYTES).use { stream ->
+        readBoundedStrictUtf8(stream, maximumBytes)
     }
-    return decoded.use { stream ->
-        try {
-            readBoundedStrictUtf8(stream, maximumBytes)
-        } catch (error: BoundedHttpTextException) {
-            throw error
-        } catch (_: java.util.zip.ZipException) {
-            throw BoundedHttpTextException("BOUNDED_HTTP_ENCODING_INVALID")
-        } catch (_: java.io.EOFException) {
-            throw BoundedHttpTextException("BOUNDED_HTTP_ENCODING_INVALID")
-        }
-    }
+} catch (_: ZipException) {
+    throw BoundedHttpTextException("BOUNDED_HTTP_ENCODING_INVALID")
 }
 
 private fun requireBoundedUtf8RequestBody(content: String): ByteArray {
