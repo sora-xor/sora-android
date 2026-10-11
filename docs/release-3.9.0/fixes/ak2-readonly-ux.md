@@ -16,15 +16,19 @@ about what a person sees and can do when an account cannot sign, and about remov
 |---|---|---|
 | Main screen | A read-only account looked like any other. | The Read-only chip next to the account's name, and a card: "This account can't send from this phone", why, and **Restore its keys** (opens Account options). |
 | Account list | No label. | The row says "Read-only · Can't send from this phone". The account stays selectable. |
-| Account options | The normal screen. | A panel on top: the reason (no key, part of the key missing, key unreadable, key not usable for the address), then the actions `UserRepository.unavailableWalletOptions` computes: **Restore keys with recovery phrase**, **Restore from Google Drive** (where Google backup exists in the build), **Show the backup saved on this phone**, and last **Remove from this phone**. It says that removing is never needed to repair. |
+| Account options | The normal screen. | A panel on top: the reason (no key, part of the key missing, key unreadable, key not usable for the address, or not checked yet), then the actions `UserRepository.unavailableWalletOptions` computes: **Restore keys with recovery phrase**, **Use a raw seed or backup file** (Import account with its list of sources), **Restore from Google Drive** (where Google backup exists in the build), **Show the backup saved on this phone**, and last **Remove from this phone**. It says that removing is never needed to repair. |
+| The whole app in read-only mode (for example an upgrade check that was interrupted) | n/a | No account is labelled read-only and Account options shows no panel: nothing was judged, and repair and removal are off in that mode. The app-wide banner with **Try upgrade again** is the way forward. |
 | Send (recipient and amount), Swap, add and remove liquidity, referral, farm staking, reward claim, SORA v1 claim | The form worked until the last step. Send then said "Something went wrong", Swap closed without a word, the referral screen lost its button. | A notice above the form, before anything is filled in, with **Restore its keys**. The action button is off (Send also says why next to it). |
 | A signing refusal that still happens | Nothing, or "Something went wrong". | "This account can't send from this phone ... nothing was signed or sent. To use the account here again, open Account options and restore its keys." |
-| Any other failure a screen reports | Nothing, when it was not a `SoraException`. | A calm message: check the connection, or "SORA couldn't complete this just now ... If you were making a transaction, check Activity first, so that nothing is sent twice." |
+| A transaction whose result did not come back (swap, liquidity, referral) | Nothing. | "Check Activity before you try again: SORA passed this transaction to the network but couldn't confirm the result. It may still go through ..." Never "check the connection and try again". |
+| Any other failure a screen reports | Nothing, when it was not a `SoraException`. | A calm message: check the connection (only for a failed network request), or "SORA couldn't complete this just now ... If you were making a transaction, check Activity first, so that nothing is sent twice." A full disk is not called a connection problem. |
 | Forget account | PIN, then a "Logout" dialog. | PIN or biometrics once, then a screen that shows the account's matching recovery phrase (or raw seed) behind a veil. **I have written it down** can be ticked only after it was shown; only then is **Remove from this phone** enabled. **Keep this account** is the main button. |
 | Forget account, no matching backup on the phone | The same dialog. | "SORA found no recovery phrase or raw seed on this phone that matches this account ... this phone can't bring it back", **Export JSON first** when the account still signs, and its own acknowledgement. |
 | Forget the only account | The app crashed (2 of 2 runs in the audit). | The screen says that the PIN and custom nodes go too and that SORA starts again; the app restarts at the welcome screen. |
+| Forget the only account while found wallets can still be restored with the PIN | Not said. | The screen says how many, that this removal takes the PIN away and leaves them restorable by their own recovery phrase only, and where to restore them first (Login & Security, Wallets found on this phone). Its own acknowledgement is needed. |
+| Forget an account that has an unfinished transaction, or while the app is in read-only mode | Refused after the PIN with a code. | Said right after the PIN, before any phrase is shown, with what has to happen first. |
 | The removal screen, "What stays on this phone" | Not said. | Other accounts, PIN and settings (one of several), or: wallet keys that no account uses (with their number) and that they then need their own recovery phrase; and the encrypted safety copies, which leave the phone only when SORA is uninstalled. |
-| After "Remove all accounts" | Leftover key sets could be restored from Login & Security under whatever PIN the next person set. | They are marked. "Restore this wallet" is not offered and the repository refuses it; Login & Security shows "Import its recovery phrase". Importing the phrase adopts the stored keys unchanged. |
+| After "Remove all accounts" | Leftover key sets could be restored from Login & Security under whatever PIN the next person set. | They are marked. "Restore this wallet" is not offered and the repository refuses it; Login & Security shows "Import its recovery phrase". Importing the phrase adopts the stored keys unchanged and takes the mark off: from then on the wallet is the person's own again (Safe Mode shows its phrase after their PIN, and it is found again after a database loss). |
 | Onboarding after a database-only restore (or a lost database) | Only Create and Import. "Wallets found on this phone" was under Login & Security, which needs a wallet first. | **Wallets found on this phone** on the welcome screen, when key sets exist behind a PIN that is stored and readable. The PIN is asked for first. |
 | Passphrase warning (Account options, and Create account) | "the 24-word passphrase" for every wallet. | The number of words the phrase really has; no number when no stored phrase matches the account. |
 | Referral program opened without network | The app closed (seen once in the audit, SEED64-DYN). | "Please, check internet connection and try again later." The screen stays. |
@@ -44,16 +48,28 @@ about what a person sees and can do when an account cannot sign, and about remov
   every screen, collects it once and provides `LocalSelectedAccountReadOnly`. A fragment that sets
   `explainsReadOnlyAccount = true` gets the notice above its content; its composables read the
   local to switch their action button off. No view model of a signing screen was changed.
-- While the whole app is in read-only mode (the upgrade banner), the account notice is not shown:
-  an account cannot be repaired until that ends.
+- While the whole app is in read-only mode (the upgrade banner), no account is labelled and no
+  panel is shown: `flowUnavailableWalletIds` is empty there and `unavailableWalletOptions` returns
+  null. After an upgrade from Room 73 or older every account starts as `PENDING_VERIFICATION`;
+  if the first check is interrupted, "not verified" only means "not checked", and repair and
+  removal are refused in that mode anyway.
+- A complete, readable key whose identity was never judged as unavailable gets the reason
+  `NOT_CHECKED` ("SORA hasn't checked this account's signing key on this phone yet ..."), never
+  "can't be used for its address".
+- The host logic is one composable, `SelectedAccountSigningHost`, which `SoraBaseFragment` sets
+  as its content, so the device test renders the production wiring with a stand-in source.
 - This is display only. The signer still applies its own rule to the stored key every time.
 
 ### Every failure ends in a message (`BaseViewModel`)
 
 - `onError` shows the failure's own text when it has one. Everything else is classified by
-  `FailureNotice.of` from the failure and its causes: the signing gate's refusal
-  (`SIGNING_WALLET_UNAVAILABLE`), read-only mode (`WALLET_RECOVERY_READ_ONLY`), an `IOException`,
-  or generic. A `SoraException` of kind `UNEXPECTED` is classified the same way, so "Something went
+  `FailureNotice.of` from the failure and its causes, in this order: the signing gate's refusal
+  (`SIGNING_WALLET_UNAVAILABLE`), read-only mode (`WALLET_RECOVERY_READ_ONLY`), a submission
+  whose outcome is unknown (`EXTRINSIC_SUBMISSION_UNKNOWN`, before its cause is looked at,
+  because the cause is the network error that hid the answer), a failed network request
+  (`BoundedHttpTextException`, unknown host, socket, timeout, TLS, and `IOException`s of
+  `java.net`, `javax.net`, `io.ktor`, `okhttp3`), or generic. A plain `IOException` is how local
+  storage reports a full disk and gets the generic text. A `SoraException` of kind `UNEXPECTED` is classified the same way, so "Something went
   wrong ... Telegram chat" is no longer shown from this path.
 - `onErrorResetProgress` is called for every reported failure. The referral screen puts its
   button back; the PIN screen clears a row of dots that would take no more digits.
@@ -73,8 +89,13 @@ about what a person sees and can do when an account cannot sign, and about remov
   `CredentialsRepository.retrieveBackupMaterial` (ak1's judge): the phrase only when it re-derives
   the account, else the seed that does, else nothing (invariant 4). The PIN is not asked for again
   to show it, and coming back to the screen (for example from the JSON export) asks for nothing.
-- The deletion preview (valid for two minutes) is created when the person confirms, not when the
-  screen opens, so writing a phrase down is not cut short. If the accounts on the phone changed
+- The checks of the deletion itself (wallet changes allowed, no unfinished transaction, no
+  removal in progress, keys readable) run once right after the PIN, read-only
+  (`createWalletDeletionPreview`, whose result is not used): a removal that cannot happen is
+  refused before a phrase is shown. An unfinished transaction and read-only mode have their own
+  text; they are not followed by "try again".
+- The deletion preview that is used (valid for two minutes) is created when the person confirms,
+  so writing a phrase down is not cut short. If the accounts on the phone changed
   meanwhile, nothing is removed and the screen is described again.
 - A check that does not pass shows "This account wasn't removed ... nothing was removed (code)"
   and leaves the screen as it is, but only when no deletion failure is journaled and every target
@@ -82,6 +103,12 @@ about what a person sees and can do when an account cannot sign, and about remov
   removal, as before.
 - The window carries `FLAG_SECURE` while a phrase or seed can be on the screen. The phrase is in
   the activity window (never a dialog) and its words are not composed before the veil is lifted.
+  It is veiled again whenever the screen is left (`PincodeFragment.onStop`); what was already
+  acknowledged stays.
+- "Export JSON first" opens the JSON export on top of the removal screen, and Back there returns
+  to it (`MainRouter.leaveBackupJson`); the PIN is not asked for again.
+- The acknowledgement rows are `toggleable` checkboxes, so a screen reader says whether they are
+  ticked.
 - The crash: `AccountListViewModel` (still on the back stack) asked for the selected account as
   soon as the account list emitted no account; its `catch` sat before the code that threw. It no
   longer asks when the list is empty, and a failure inside is reported.
@@ -103,9 +130,22 @@ about what a person sees and can do when an account cannot sign, and about remov
   read (damaged data, not a hand-over; marking then could leave a wallet without a phrase with no
   way back). Nothing is written when there is no such key set. Accounts are never affected.
 - Importing a wallet's recovery phrase, raw seed or backup file adopts its stored keys unchanged
-  (ak1's `commitDraft`), marked or not.
-- Safe Mode "Show my recovery phrase" no longer lists a marked key set: the PIN or screen lock
-  confirmed there never protected it.
+  (ak1's `commitDraft`), marked or not. The same import takes the mark off
+  (`UserRepository.keySetProvenByItsBackup`, called by `MultiaccountInteractor` after the commit
+  or the confirmed repair and before the account row is added): the address's own id, and
+  `unsuffixed` when the release-era keys derive that address. Only the marker is written; it is
+  removed when it names nothing. "Restore this wallet" (the PIN) is not such a proof and never
+  unmarks. Entering the secret of an account that already signs also clears a mark that an
+  earlier import could not clear.
+- Safe Mode "Show my recovery phrase" does not list a marked key set: the PIN or screen lock
+  confirmed there never protected it. A wallet that is an account is always listed. The 2.x
+  owner whose only phrase is the release-era one stands for the `unsuffixed` set and is hidden
+  when that set is marked (`RecoveryFacts.scopedPhraseWalletIds` tells the two apart). When a
+  wallet is left out the list says so, and when the marks cannot be read it says that the list
+  may be incomplete and to try again, instead of "nothing is saved".
+- Removing the only account turns found wallets that the PIN could still restore into "recovery
+  phrase only". The removal screen counts them, says where to restore them first and asks for
+  its own acknowledgement.
 - `UserRepository.retainedWallets()` is the one list of key sets no account uses, with
   `needsRecoveryPhrase`. Login & Security and onboarding both use it.
 - Nothing is deleted. A person who wants the leftover key sets gone from the phone still has to
@@ -180,7 +220,19 @@ JVM (`testProductionDebugUnitTest`):
 - `feature_referral_impl`: `ReferralViewModelTest` (a refused Activate and a failed Bond say why
   and give the button back; opening the screen and changing the invitations without network is
   reported and does not end the app).
-- `app`: `SafeModeVaultTest` (a marked key set is never listed for a reveal).
+- `app`: `SafeModeVaultTest` (a marked key set is never listed for a reveal; a marked set that is
+  an account is listed; the 2.x owner is hidden with the marked release-era set; unreadable marks
+  are reported), `SafeModeViewModelTest` (the list says when a wallet is withheld and when it may
+  be incomplete).
+- Review round (12 October): `FailureNoticeTest`, `BaseViewModelErrorTest` and
+  `sorasubstrate` `ExtrinsicSubmissionUnknownNoticeTest` (unknown submission before its network
+  cause, storage is not network); `UserRepositoryTest` (no label and no options in read-only
+  mode, `NOT_CHECKED`, mark removal and its limits); `MultiaccountInteractorTest` (unmark before
+  the account is added, a failed unmark ends the import, the PIN never unmarks, options read off
+  the caller's thread); `AccountDetailsViewModelTest` (list of sources, Keystore failure on open);
+  `OnboardingViewModelTest` (the list of sources leads to raw seed and backup file);
+  `PinCodeViewModelTest` and `PinCodeInteractorTest` (preflight, found-wallets acknowledgement,
+  re-veil, return from the JSON export).
 
 Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
 
@@ -188,28 +240,40 @@ Device (Android 14 emulator, real Keystore, DataStore, Room and native sr25519):
 |---|---|
 | A read-only account (stored key of another wallet, written by 3.8.6.3 code) is reported as the selected read-only account, its row is labelled, Account options show the reason and "Restore keys with recovery phrase", the signer's refusal maps to the read-only message, and after the in-place repair every label goes without a restart | `WalletUpgradeScenarioTest.readOnlyAccountShowsItsLabelItsRepairAndSendExplainsItself` |
 | Removing the only account with the account list still open: no crash, an empty list, no selected account; the phrase brings it back at the same address | `...removingTheOnlyAccountEndsCleanlyWithTheAccountListStillOpen` |
-| Remove-all with an abandoned 3.8.6.3 "Create account" on the phone: PIN gone, leftover ciphertext unchanged, marked; not offered in onboarding, refused by "Restore this wallet" under a new PIN; its phrase adopts it unchanged | `...removeAllAccountsLeavesKeySetsThatOnlyTheirOwnPhraseBringsBack` |
+| Remove-all with an abandoned 3.8.6.3 "Create account" on the phone: PIN gone, leftover ciphertext unchanged, marked; not offered in onboarding, refused by "Restore this wallet" under a new PIN; its phrase adopts it unchanged and takes the mark off; after a later database loss it is found and restored behind the new owner's PIN | `...removeAllAccountsLeavesKeySetsThatOnlyTheirOwnPhraseBringsBack` |
+| The same for a 2.3.3 wallet migrated by 2.4.0 whose account was removed in 3.8.x: the unsuffixed set is marked by its own id, refused, byte-identical, and its phrase brings the wallet back and unmarks it; the recovery facts Safe Mode goes by name the owner without a phrase of its own before the import and with one after it | `...removeAllAccountsMarksTheReleaseEraSetAndItsPhraseBringsItBack` |
 | Database set aside: both wallets (one a raw-seed wallet without a phrase) are offered in onboarding; a wrong PIN restores nothing and is counted; the right PIN restores both with every byte kept | `...walletsFoundOnThisPhoneAreRestoredFromOnboardingBehindThePin` |
 | A PIN set for the first time does not unlock a key set that was on the phone before it | `...aPinSetForTheFirstTimeNeverUnlocksKeySetsThatWereOnThePhoneBeforeIt` |
-| Send form: the notice with its repair action above the form, Review off with the reason, both gone once the account signs | `feature_assets_impl` `ReadOnlySendTest.aReadOnlyAccountIsExplainedAboveTheSendFormWithItsRepairAndReviewIsOff` |
+| Send form inside the production screen host (`SelectedAccountSigningHost`) with a stand-in source: the notice with its repair action (which gets the selected address) above the form, Review off with the reason, both gone once the account signs; no account notice in read-only mode of the whole app; no notice on a screen that does not sign | `feature_assets_impl` `ReadOnlySendTest` (3 tests) |
+| Every signing fragment (send, contacts, swap, add and remove liquidity, referral, farm staking, reward claim, SORA v1 claim) sets `explainsReadOnlyAccount`; the home and account screens do not | `app` `ReadOnlyAccountScreensTest.everySigningScreenExplainsAReadOnlyAccountAndOtherScreensDoNot` |
+| The real `SoraBaseFragment` (its own `onCreateView`, stand-ins for the injected source and router): notice, repair opens Account options of the selected address, the state the form reads, both follow a repair; nothing about the account in read-only mode of the whole app; no notice on a screen that does not sign | `app` `ReadOnlyHostFragmentTest` (3 tests) |
 | Main screen header chip and notice; account list rows; Account options panel (every reason, every action, only what is possible); removal screen (the only account, one of several, no backup with and without export, raw seed); found wallets in onboarding; Login & Security for a marked wallet | `app` `ReadOnlyAccountScreensTest` (10 tests) |
 
 ### Results on this branch
 
-Run on 12 October 2026 on the final tree, offline, JDK 17, emulator `SORA-Api34` (Android 14).
+Run on 12 October 2026 on the final tree of the review round, offline, JDK 17, emulator
+`SORA-Api34` (Android 14).
 
 | Command | Result |
 |---|---|
 | `./gradlew --offline :app:assembleProductionDebug` | BUILD SUCCESSFUL |
-| `./gradlew --offline testProductionDebugUnitTest --continue` (every module) | BUILD SUCCESSFUL; 1400 tests, 0 failed, 10 skipped (the 10 are in `feature_blockexplorer_api` and were skipped before this change) |
-| `./gradlew --offline :feature_account_impl:connectedProductionDebugAndroidTest` | 77 run, 73 passed. All 63 `WalletUpgradeScenarioTest` scenarios (the 5 new ones included), `HistoricalSr25519NativeParityTest` (6) and `Sr25519NativeContractTest` (3) pass. The 4 that fail are `EncryptedWalletMigrationStorageTest.phase02` to `phase05`: an ordered sequence that needs a process restart between its phases and is run with `scripts/run-encrypted-wallet-upgrade-qualification.sh` (see `ak1-signing-compat.md`). This change does not touch that test or the code it covers. |
-| `./gradlew --offline :feature_assets_impl:connectedProductionDebugAndroidTest` (class `ReadOnlySendTest`) | 4 of 4 |
-| `./gradlew --offline :app:connectedProductionDebugAndroidTest` (classes `ReadOnlyAccountScreensTest`, `SafeModeScreensTest`) | 22 of 22 |
-| `./gradlew --offline :app:lintProductionDebug` | BUILD SUCCESSFUL, no new error (179 errors are filtered by the existing baseline, as before) |
-| `./gradlew --offline ktlintCheck` | Fails for the project as it did before this change (about 1000 findings in files this task did not write). No finding is on a line this task added or changed. |
+| `./gradlew --offline testProductionDebugUnitTest --continue` (every module) | BUILD SUCCESSFUL; 1434 tests, 0 failed, 10 skipped (the 10 are in `feature_blockexplorer_api` and were skipped before this change) |
+| `./gradlew --offline :feature_account_impl:connectedProductionDebugAndroidTest` (class `WalletUpgradeScenarioTest`) | 64 of 64 (the 6 scenarios of this task included) |
+| `./gradlew --offline :feature_assets_impl:connectedProductionDebugAndroidTest` (class `ReadOnlySendTest`) | 6 of 6 |
+| `./gradlew --offline :app:connectedProductionDebugAndroidTest` (classes `ReadOnlyAccountScreensTest`, `ReadOnlyHostFragmentTest`, `SafeModeScreensTest`) | 13 of 13, 3 of 3, 12 of 12 |
+| `./gradlew --offline :app:lintProductionDebug` | BUILD SUCCESSFUL, no new error |
+| `./gradlew --offline ktlintCheck` | Fails for the project as before this task (1007 findings in files this task did not write). No finding is on a line this round added or changed. |
 
-Walk-through on the emulator with the production debug build (screens read with `uiautomator`,
-because the windows that show secrets are `FLAG_SECURE`). The wallets are the two published
+Not run again in the review round: `EncryptedWalletMigrationStorageTest` (an ordered sequence
+that needs a process restart between its phases and its own script,
+`scripts/run-encrypted-wallet-upgrade-qualification.sh`; this task does not change that test or
+the code it covers), `HistoricalSr25519NativeParityTest` and `Sr25519NativeContractTest`
+(unchanged code; they passed in the first round).
+
+Walk-through on the emulator with the production debug build, done in the first round (screens
+read with `uiautomator`, because the windows that show secrets are `FLAG_SECURE`). The screens
+changed in the review round are covered by the device tests above and were not walked through
+by hand again. The wallets are the two published
 BIP-39 test phrases; one account was made read-only by putting the other wallet's key values
 under its key names.
 
@@ -268,6 +332,18 @@ under its key names.
   7. Open Passphrase for a 12-word and a 24-word account: the warning names 12 and 24.
 
 ## Limits
+- No test starts Send or Swap as a whole fragment through Hilt with a replaced binding: that
+  needs `hilt-android-testing` and `fragment-testing`, which this project does not have, and no
+  dependency may be added. Instead, `ReadOnlyHostFragmentTest` runs the real
+  `SoraBaseFragment.onCreateView` on a device with stand-ins for what Hilt injects (a signing
+  and a plain probe fragment), `ReadOnlySendTest` renders the real Send form inside the same
+  host composable, and one test reads `explainsReadOnlyAccount` from every signing fragment.
+  The Swap form itself is not rendered by a device test; its button reads the same local.
+- "Use a raw seed or backup file" opens Import account at its list of sources on the welcome
+  screen, so Create account is also visible behind that list. It is the same screen that
+  Accounts, Add account opens.
+- In Safe Mode, when one wallet may be shown and another is withheld, the list is shown (with
+  the note) instead of opening the one wallet directly: one more tap.
 
 - The encrypted copies under `no_backup` (`wallet-upgrade-backup-*`, `wallet-quarantine-*`) are
   still not erased by a removal (SEC-AND, low). The removal screen now says so. No screen reads
