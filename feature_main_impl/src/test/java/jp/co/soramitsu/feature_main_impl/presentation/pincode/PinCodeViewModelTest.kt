@@ -886,7 +886,7 @@ class PinCodeViewModelTest {
         }
 
     @Test
-    fun `when the backup cannot be read nothing is removed and the screen is left`() = runTest {
+    fun `when the backup cannot be read nothing is removed and the message stays on the screen`() = runTest {
         given(interactor.walletRemovalBriefing(listOf("address")))
             .willThrow(IllegalStateException("KEYSTORE_BUSY"))
         pinCodeViewModel.addresses = listOf("address")
@@ -901,7 +901,8 @@ class PinCodeViewModelTest {
             R.string.failure_generic_title to R.string.failure_generic_message,
             pinCodeViewModel.errorFromResourceLiveData.value,
         )
-        verify(mainRouter).popBackStack()
+        // Leaving the screen at once would take the message with it.
+        verify(mainRouter, never()).popBackStack()
         verify(interactor, never()).createWalletDeletionPreview(anyOrNull())
     }
 
