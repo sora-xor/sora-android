@@ -107,4 +107,9 @@ dependencies {
     androidTestImplementation(libs.mockkAndroidDep)
     // Same Preferences DataStore as :common; the tests write it like the released apps did.
     androidTestImplementation(libs.datastoreDep)
+    // The upgrade scenarios import and repair through the production MultiaccountInteractor
+    // (not a copy of it) on the real repositories. :feature_wallet_api is only the type of a
+    // constructor parameter the import never uses.
+    androidTestImplementation(project(":feature_multiaccount_impl"))
+    androidTestImplementation(project(":feature_wallet_api"))
 }
