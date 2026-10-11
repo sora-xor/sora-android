@@ -77,25 +77,53 @@ class RecoveryPhrase private constructor(
 object StoredSecretHex {
 
     /**
-     * Decodes a stored hex value. An optional `0x` or `0X` prefix and both letter cases are
-     * accepted, because the value identifies the same bytes. Null when it is not hex.
+     * Decodes a stored hex value the way every released version read it. An optional `0x` or
+     * `0X` prefix and both letter cases are accepted, and spaces, tabs and line breaks anywhere
+     * in the text are skipped: the released reader (BouncyCastle `Hex.decode`, through the
+     * library's `fromHex`) skipped them too, and 3.8.x stored a typed raw seed exactly as it was
+     * typed, so a seed pasted with a line break in the middle is stored with that line break.
+     * Null when what remains is not hex (only `0-9`, `a-f`, `A-F`, an even number of digits).
      */
     fun decodeOrNull(text: String): ByteArray? {
-        val body = text.trim().let {
-            if (it.startsWith("0x") || it.startsWith("0X")) it.substring(2) else it
-        }
-        if (body.length % 2 != 0) return null
-        val out = ByteArray(body.length / 2)
-        for (index in out.indices) {
-            val high = Character.digit(body[index * 2], 16)
-            val low = Character.digit(body[index * 2 + 1], 16)
-            if (high < 0 || low < 0) {
-                out.fill(0)
-                return null
+        val trimmed = text.trim()
+        val start = if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) 2 else 0
+        var digits = 0
+        for (index in start until trimmed.length) {
+            val char = trimmed[index]
+            when {
+                isSkipped(char) -> Unit
+                nibble(char) < 0 -> return null
+                else -> digits += 1
             }
-            out[index] = ((high shl 4) or low).toByte()
+        }
+        if (digits % 2 != 0) return null
+        val out = ByteArray(digits / 2)
+        var position = 0
+        var high = -1
+        for (index in start until trimmed.length) {
+            val char = trimmed[index]
+            if (isSkipped(char)) continue
+            val value = nibble(char)
+            if (high < 0) {
+                high = value
+            } else {
+                out[position] = ((high shl 4) or value).toByte()
+                position += 1
+                high = -1
+            }
         }
         return out
+    }
+
+    /** The characters the released hex reader ignored between digits. */
+    private fun isSkipped(char: Char): Boolean =
+        char == ' ' || char == '\t' || char == '\r' || char == '\n'
+
+    private fun nibble(char: Char): Int = when (char) {
+        in '0'..'9' -> char - '0'
+        in 'a'..'f' -> char - 'a' + 10
+        in 'A'..'F' -> char - 'A' + 10
+        else -> -1
     }
 
     /** Decodes like [decodeOrNull]; an empty array for a blank or undecodable value. */

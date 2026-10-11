@@ -118,6 +118,32 @@ class StoredWalletSecretFormatsTest {
         assertFalse(StoredSecretHex.sameBytes("zz", "zz"))
     }
 
+    @Test
+    fun `stored hex skips the spaces tabs and line breaks the released reader skipped`() {
+        val bytes = org.bouncycastle.util.encoders.Hex.decode(TWELVE_SEED)
+        // 3.8.x stored a typed raw seed as it was typed and read it with BouncyCastle Hex.decode.
+        listOf(
+            TWELVE_SEED.take(32) + "\n" + TWELVE_SEED.drop(32),
+            TWELVE_SEED.take(31) + "\r\n" + TWELVE_SEED.drop(31),
+            TWELVE_SEED.chunked(8).joinToString(" "),
+            "0x" + TWELVE_SEED.take(10) + "\t" + TWELVE_SEED.drop(10) + " \n",
+        ).forEach { stored ->
+            assertArrayEquals(stored, org.bouncycastle.util.encoders.Hex.decode(stored.trim().removePrefix("0x")), bytes)
+            assertArrayEquals(stored, bytes, StoredSecretHex.decodeOrNull(stored))
+            assertTrue(stored, StoredSecretHex.sameBytes(stored, TWELVE_SEED))
+            assertTrue(
+                stored,
+                StoredSecretHex.seedBelongsToPhrase(stored, requireNotNull(RecoveryPhrase.parseOrNull(TWELVE))),
+            )
+        }
+        // Still not hex: other separators, non-ASCII digits and letters, an odd number of digits.
+        assertNull(StoredSecretHex.decodeOrNull("ab,cd"))
+        assertNull(StoredSecretHex.decodeOrNull("ab-cd"))
+        assertNull(StoredSecretHex.decodeOrNull("١٢"))
+        assertNull(StoredSecretHex.decodeOrNull("ａｂ"))
+        assertNull(StoredSecretHex.decodeOrNull("a b c"))
+    }
+
     private companion object {
         const val TWELVE =
             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
