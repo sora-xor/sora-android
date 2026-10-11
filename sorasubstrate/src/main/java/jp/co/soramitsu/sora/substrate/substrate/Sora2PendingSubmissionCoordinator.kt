@@ -682,10 +682,13 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         val setAside = mutableSetOf<String>()
 
         val heights = linkedSetOf<Long>()
+        // Rows for which this pass's finalized head offers nothing new. The two reviewed
+        // endpoints finalize the same chain but not at the same instant, so the endpoint that
+        // answers now can be a few blocks behind the one that served the signature or an
+        // earlier pass. Such a row is simply still unresolved: what was scanned before stays
+        // valid (it was final where it was read) and the next pass continues from there.
+        val behindFinality = mutableSetOf<String>()
         admitted.forEach { row ->
-            check(finalizedHeight >= row.eraBirthBlock) {
-                "SORA2_RECOVERY_FINALITY_BEFORE_BIRTH"
-            }
             val lastHeight = minOf(
                 finalizedHeight,
                 row.eraDeathBlockExclusive - 1L,
@@ -693,8 +696,12 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
             val cacheKey = row.recoveryCacheKey()
             val cachedThrough = scannedThroughBlockExclusive[cacheKey]
                 ?: row.eraBirthBlock
-            check(cachedThrough <= Math.addExact(lastHeight, 1L)) {
-                "SORA2_RECOVERY_FINALIZED_HEIGHT_REGRESSION"
+            if (
+                finalizedHeight < row.eraBirthBlock ||
+                cachedThrough > Math.addExact(lastHeight, 1L)
+            ) {
+                behindFinality += row.localId
+                return@forEach
             }
             var height = maxOf(
                 row.eraBirthBlock,
@@ -719,6 +726,7 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
             )
         }
         admitted.forEach { row ->
+            if (row.localId in behindFinality) return@forEach
             val cacheKey = row.recoveryCacheKey()
             if ((scannedThroughBlockExclusive[cacheKey] ?: row.eraBirthBlock) == row.eraBirthBlock) {
                 if (blocks.getValue(row.eraBirthBlock).blockHash != row.eraBirthBlockHash) {
@@ -794,6 +802,10 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         var unresolved = 0
         admitted.forEach { row ->
             if (row.localId in setAside) return@forEach
+            if (row.localId in behindFinality) {
+                unresolved += 1
+                return@forEach
+            }
             val inclusion = inclusions[row.transactionHash]
             val outcomes = eventOutcomes[row.localId]
             if (inclusion != null && outcomes == null) {
@@ -875,6 +887,8 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         admitted.filterNot { row ->
             row.localId in undecodedInclusions ||
                 row.localId in setAside ||
+                // Never moved back: its earlier scan reached further than this pass could.
+                row.localId in behindFinality ||
                 resolutions.any { it.row.localId == row.localId }
         }
             .forEach { row ->
