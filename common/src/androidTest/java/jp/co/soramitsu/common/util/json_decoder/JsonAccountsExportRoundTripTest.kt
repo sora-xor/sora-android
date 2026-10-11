@@ -1,10 +1,14 @@
 package jp.co.soramitsu.common.util.json_decoder
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
+import com.google.gson.ReflectionAccessFilter
+import com.google.gson.ReflectionAccessFilter.FilterResult
 import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.SodiumAndroid
 import com.goterl.lazysodium.utils.Base64MessageEncoder
-import com.google.gson.Gson
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import jp.co.soramitsu.common.util.CryptoAssistant
@@ -23,11 +27,29 @@ import org.junit.runner.RunWith
  * The encrypted JSON export read back by the import, through the production encoder exactly as
  * the app wires it (CommonModule): the one-account export and the batch export restore the same
  * key pairs, byte for byte, and only with the right password.
+ *
+ * The release build is minified, and R8 removes or renames fields that only Gson reflection
+ * reads (the batch export of a release build was `{}`). So the encoder runs here with a Gson
+ * that refuses reflection for every class the release rules do not keep whole: writing or
+ * reading an export through a model class of this app fails these tests.
  */
 @RunWith(AndroidJUnit4::class)
 class JsonAccountsExportRoundTripTest {
 
-    private val gson = Gson()
+    private val gson: Gson = GsonBuilder()
+        .addReflectionAccessFilter(
+            object : ReflectionAccessFilter {
+                // app/proguard-rules.pro keeps jp.co.soramitsu.xsubstrate.** whole; the library
+                // writes and reads the one-account export through its own model.
+                override fun check(rawClass: Class<*>): FilterResult =
+                    if (rawClass.name.startsWith("jp.co.soramitsu.xsubstrate.")) {
+                        FilterResult.ALLOW
+                    } else {
+                        FilterResult.BLOCK_ALL
+                    }
+            }
+        )
+        .create()
     private val encoder = JsonAccountsEncoder(
         gson,
         CryptoAssistant(
@@ -77,6 +99,26 @@ class JsonAccountsExportRoundTripTest {
         )
 
         assertTrue(encoder.looksLikeExport(json))
+        // The file itself: every key of the polkadot.js batch format, by name.
+        val root = gson.fromJson(json, JsonObject::class.java)
+        assertEquals(setOf("accounts", "encoded", "encoding"), root.keySet())
+        assertEquals(
+            listOf("batch-pkcs8"),
+            root.getAsJsonObject("encoding").getAsJsonArray("content").map { it.asString },
+        )
+        assertEquals(
+            listOf("scrypt", "xsalsa20-poly1305"),
+            root.getAsJsonObject("encoding").getAsJsonArray("type").map { it.asString },
+        )
+        assertEquals("3", root.getAsJsonObject("encoding").get("version").asString)
+        val listed = root.getAsJsonArray("accounts").map { it.asJsonObject }
+        assertEquals(listOf("First", "Second"), listed.map { it.getAsJsonObject("meta").get("name").asString })
+        listed.forEach { account ->
+            assertEquals("cnTon6cV8Ze8ATHT1tZdHregCc3wBc8vfg7P5o2TtwdUoRf4m", account.get("address").asString)
+            assertEquals(GENESIS, account.getAsJsonObject("meta").get("genesisHash").asString)
+            assertTrue(account.getAsJsonObject("meta").get("whenCreated").asLong > 0)
+        }
+
         val restored = encoder.decode(json, PASSWORD)
         assertEquals(listOf("First", "Second"), restored.map { it.name })
         listOf(first, second).zip(restored).forEach { (expected, actual) ->
@@ -93,7 +135,7 @@ class JsonAccountsExportRoundTripTest {
         val json = encoder.generate(account(keys(4), "Main"), PASSWORD, GENESIS)
         // One changed character of the encrypted body fails authentication: reported as a
         // password that does not open the file, and nothing is returned.
-        val encoded = gson.fromJson(json, com.google.gson.JsonObject::class.java).get("encoded").asString
+        val encoded = gson.fromJson(json, JsonObject::class.java).get("encoded").asString
         val position = encoded.length / 2
         val replacement = if (encoded[position] == 'A') 'B' else 'A'
         val altered = json.replace(

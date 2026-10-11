@@ -191,3 +191,11 @@ val validateProductionCloudBackupConfiguration by tasks.registering {
 tasks.matching { it.name == "preProductionReleaseBuild" }.configureEach {
     dependsOn(validateProductionCloudBackupConfiguration)
 }
+
+// JsonAccountsEncoderExportTest reads the release keep rules: the one-account JSON export is
+// written through a library model that only those rules protect from R8.
+tasks.withType<Test>().configureEach {
+    inputs.file(rootProject.file("app/proguard-rules.pro"))
+        .withPropertyName("releaseKeepRules")
+        .withPathSensitivity(PathSensitivity.NONE)
+}
