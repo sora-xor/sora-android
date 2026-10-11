@@ -11,27 +11,30 @@ import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.model.Sora2PendingSubmissionLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.Events
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Sora2BoundedRuntimeRpcClient
 import jp.co.soramitsu.sora.substrate.runtime.Sora2CanonicalBlock
-import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
-import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
 import jp.co.soramitsu.xcrypto.util.toHexString
+import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.DictEnum
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.generics.GenericEvent
+import jp.co.soramitsu.xsubstrate.runtime.metadata.RuntimeMetadata
 import jp.co.soramitsu.xsubstrate.runtime.metadata.event
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Narrow dependency implemented by the app's WorkManager scheduler. Journal durability never
@@ -129,6 +132,7 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
     private val runtimeRpcClient: Sora2BoundedRuntimeRpcClient,
     private val addressCodec: Sora2AddressCodec,
     private val recoveryKick: Sora2PendingRecoveryKick,
+    private val detailsStore: Sora2SubmissionDetailsStore,
 ) {
     private data class RecoveryCacheKey(
         val localId: String,
@@ -289,7 +293,16 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         )
     }
 
-    /** Waits only for status; it never retries submission and returns only terminal chain proof. */
+    /**
+     * Waits only for status; it never retries submission and returns only terminal chain proof.
+     *
+     * A status read that fails or is slow is not a result and never an error for the user: it is
+     * repeated with a growing pause, at most [MAXIMUM_CONSECUTIVE_STATUS_READ_FAILURES] times in
+     * a row. The whole wait, including a request that is still in flight, ends after
+     * [maximumWaitMillis]. When the wait ends without a final answer the transaction is simply
+     * still pending ([Sora2FinalityPendingException]); the durable journal row is untouched and
+     * the background status worker keeps resolving it.
+     */
     suspend fun awaitTerminalStatus(
         staged: Sora2PendingSubmissionLocal,
         maximumWaitMillis: Long = MAXIMUM_FOREGROUND_FINALITY_WAIT_MILLIS,
@@ -297,46 +310,134 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         check(maximumWaitMillis in 1L..MAXIMUM_FOREGROUND_FINALITY_WAIT_MILLIS) {
             "SORA2_FINALITY_WAIT_INVALID"
         }
-        val startedNanos = System.nanoTime()
-        val maximumWaitNanos = Math.multiplyExact(maximumWaitMillis, 1_000_000L)
-        while (System.nanoTime() - startedNanos < maximumWaitNanos) {
-            currentCoroutineContext().ensureActive()
-            recoveryMutex.withLock {
-                recoverStatusOnlyLocked(
-                    maximumTransactions = 1,
-                    priorityLocalId = staged.localId,
-                    startOffset = null,
-                )
+        val terminal = withTimeoutOrNull(maximumWaitMillis) {
+            var consecutiveReadFailures = 0
+            var result: ExtrinsicSubmitStatus? = null
+            while (result == null) {
+                currentCoroutineContext().ensureActive()
+                val readSucceeded = try {
+                    recoveryMutex.withLock {
+                        recoverStatusOnlyLocked(
+                            maximumTransactions = 1,
+                            priorityLocalId = staged.localId,
+                            startOffset = null,
+                        )
+                    }
+                    result = terminalStatusOrNull(staged)
+                    true
+                } catch (error: CancellationException) {
+                    // Includes the overall time limit, which interrupts a slow request.
+                    throw error
+                } catch (_: Exception) {
+                    false
+                }
+                if (result != null) break
+                if (readSucceeded) {
+                    consecutiveReadFailures = 0
+                    delay(FINALITY_POLL_INTERVAL_MILLIS)
+                } else {
+                    consecutiveReadFailures += 1
+                    if (consecutiveReadFailures >= MAXIMUM_CONSECUTIVE_STATUS_READ_FAILURES) break
+                    delay(statusReadBackoffMillis(consecutiveReadFailures))
+                }
             }
-            val current = database.walletIdentityDao()
-                .getSora2PendingSubmission(staged.localId)
-                ?: throw IllegalStateException("SORA2_PENDING_SUBMISSION_MISSING")
-            WalletIdentityDao.validateSora2PendingSubmission(current)
-            requireSameRecoveryWitness(staged, current)
-            when (current.state) {
-                Sora2PendingSubmissionLocal.STATE_FINALIZED_SUCCESS ->
-                    return ExtrinsicSubmitStatus(
-                        success = true,
-                        txHash = current.transactionHash,
-                        blockHash = checkNotNull(current.terminalBlockHash),
-                    )
-                Sora2PendingSubmissionLocal.STATE_FINALIZED_FAILURE ->
-                    return ExtrinsicSubmitStatus(
-                        success = false,
-                        txHash = current.transactionHash,
-                        blockHash = checkNotNull(current.terminalBlockHash),
-                    )
-                Sora2PendingSubmissionLocal.STATE_EXPIRED_NOT_INCLUDED ->
-                    return ExtrinsicSubmitStatus(
-                        success = false,
-                        txHash = current.transactionHash,
-                        blockHash = null,
-                    )
-            }
-            delay(FINALITY_POLL_INTERVAL_MILLIS)
+            result
         }
-        throw IllegalStateException("SORA2_FINALITY_PENDING")
+        // The time limit may have fired just after a pass stored the final state.
+        return terminal
+            ?: terminalStatusAfterWaitOrNull(staged)
+            ?: throw Sora2FinalityPendingException()
     }
+
+    private suspend fun terminalStatusAfterWaitOrNull(
+        staged: Sora2PendingSubmissionLocal,
+    ): ExtrinsicSubmitStatus? = try {
+        terminalStatusOrNull(staged)
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Exception) {
+        null
+    }
+
+    /** Reads the journal row only; the row is the single authority for a final state. */
+    private suspend fun terminalStatusOrNull(
+        staged: Sora2PendingSubmissionLocal,
+    ): ExtrinsicSubmitStatus? {
+        val current = database.walletIdentityDao()
+            .getSora2PendingSubmission(staged.localId)
+            ?: throw IllegalStateException("SORA2_PENDING_SUBMISSION_MISSING")
+        WalletIdentityDao.validateSora2PendingSubmission(current)
+        requireSameRecoveryWitness(staged, current)
+        return when (current.state) {
+            Sora2PendingSubmissionLocal.STATE_FINALIZED_SUCCESS ->
+                ExtrinsicSubmitStatus(
+                    success = true,
+                    txHash = current.transactionHash,
+                    blockHash = checkNotNull(current.terminalBlockHash),
+                )
+            Sora2PendingSubmissionLocal.STATE_FINALIZED_FAILURE ->
+                ExtrinsicSubmitStatus(
+                    success = false,
+                    txHash = current.transactionHash,
+                    blockHash = checkNotNull(current.terminalBlockHash),
+                    failureDetail = detailsStore
+                        .get(current.walletId, current.transactionHash)
+                        ?.chainFailure,
+                )
+            Sora2PendingSubmissionLocal.STATE_EXPIRED_NOT_INCLUDED ->
+                ExtrinsicSubmitStatus(
+                    success = false,
+                    txHash = current.transactionHash,
+                    blockHash = null,
+                )
+            else -> null
+        }
+    }
+
+    /**
+     * The earliest transaction of [walletId] that does the same thing as [activity] and has no
+     * final status yet. A transaction the node explicitly refused is not waiting. Used to warn
+     * before the same action is signed a second time.
+     */
+    suspend fun findWaitingSameAction(
+        walletId: String,
+        activity: Sora2SubmissionActivity,
+    ): Sora2SubmissionDetails? {
+        val unresolved = database.walletIdentityDao()
+            .getUnresolvedSora2PendingSubmissions()
+            .filter { it.walletId == walletId }
+        if (unresolved.isEmpty()) return null
+        val unresolvedHashes = unresolved.mapTo(hashSetOf()) { it.transactionHash }
+        return detailsStore.list(walletId)
+            .filter { details ->
+                details.transactionHash in unresolvedHashes &&
+                    details.nodeRefusal == null &&
+                    details.activity?.isSameActionAs(activity) == true
+            }
+            .minByOrNull(Sora2SubmissionDetails::createdAt)
+    }
+
+    /** Remembers what a staged transaction does. Best effort; never part of the result. */
+    suspend fun recordActivity(
+        staged: Sora2PendingSubmissionLocal,
+        activity: Sora2SubmissionActivity,
+    ) {
+        detailsStore.recordActivity(staged.walletId, staged.transactionHash, activity)
+    }
+
+    /** Remembers the node's explicit refusal next to the unchanged journal row. Best effort. */
+    suspend fun recordNodeRefusal(
+        staged: Sora2PendingSubmissionLocal,
+        refusal: Sora2NodeRefusal,
+    ) {
+        detailsStore.recordNodeRefusal(staged.walletId, staged.transactionHash, refusal)
+    }
+
+    private fun statusReadBackoffMillis(consecutiveFailures: Int): Long =
+        minOf(
+            STATUS_READ_BACKOFF_BASE_MILLIS shl (consecutiveFailures - 1).coerceIn(0, 16),
+            STATUS_READ_BACKOFF_MAXIMUM_MILLIS,
+        )
 
     private suspend fun recoverStatusOnlyLocked(
         maximumTransactions: Int,
@@ -482,9 +583,10 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
                 }
             }
         }
-        val eventOutcomes = mutableMapOf<String, Map<Long, Boolean>>()
+        val eventOutcomes = mutableMapOf<String, Map<Long, Sora2ExtrinsicEventOutcome>>()
         val rawStorage = mutableMapOf<Pair<String, String>, String>()
-        val decodedEvents = mutableMapOf<Pair<String, RecoveryFixtureKey>, Map<Long, Boolean>>()
+        val decodedEvents =
+            mutableMapOf<Pair<String, RecoveryFixtureKey>, Map<Long, Sora2ExtrinsicEventOutcome>>()
         admitted.forEach { row ->
             val inclusion = inclusions[row.transactionHash] ?: return@forEach
             currentCoroutineContext().ensureActive()
@@ -513,6 +615,7 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
             val state: String,
             val blockNumber: Long?,
             val blockHash: String?,
+            val failureDetail: String? = null,
         )
 
         val resolutions = mutableListOf<Resolution>()
@@ -528,17 +631,18 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
                 unavailableFixtures += 1
                 undecodedInclusions += row.localId
             } else if (inclusion != null) {
-                val success = checkNotNull(outcomes)
+                val outcome = checkNotNull(outcomes)
                     .getValue(inclusion.extrinsicIndex.toLong())
                 resolutions += Resolution(
                     row = row,
-                    state = if (success) {
+                    state = if (outcome.success) {
                         Sora2PendingSubmissionLocal.STATE_FINALIZED_SUCCESS
                     } else {
                         Sora2PendingSubmissionLocal.STATE_FINALIZED_FAILURE
                     },
                     blockNumber = inclusion.block.blockNumber,
                     blockHash = inclusion.block.blockHash,
+                    failureDetail = outcome.failureDetail,
                 )
             } else if (finalizedHeight >= row.eraDeathBlockExclusive) {
                 // Every height in [birth, death) was fetched above before this branch is reachable.
@@ -556,6 +660,14 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
         var resolved = 0
         resolutions.forEach { resolution ->
             currentCoroutineContext().ensureActive()
+            resolution.failureDetail?.let { detail ->
+                // Stored before the state so the reason is there when the final state is seen.
+                detailsStore.recordChainFailure(
+                    walletId = resolution.row.walletId,
+                    transactionHash = resolution.row.transactionHash,
+                    detail = detail,
+                )
+            }
             WalletMutationCoordinator.withLock {
                 val current = dao.getSora2PendingSubmission(resolution.row.localId)
                     ?: throw IllegalStateException("SORA2_PENDING_SUBMISSION_MISSING")
@@ -646,7 +758,7 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
     private fun requireSystemEventOutcomes(
         snapshot: RuntimeSnapshot,
         storageHex: String,
-    ): Map<Long, Boolean> {
+    ): Map<Long, Sora2ExtrinsicEventOutcome> {
         val metadata = snapshot.metadata
         val eventStorage = metadata.module(Pallete.SYSTEM.palletName).storage("Events")
         val eventType = checkNotNull(eventStorage.type.value) {
@@ -664,6 +776,7 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
             .event(Events.EXTRINSIC_FAILED.eventName).index
         val successes = mutableMapOf<Long, Int>()
         val failures = mutableMapOf<Long, Int>()
+        val failureDetails = mutableMapOf<Long, String?>()
         records.filterIsInstance<Struct.Instance>().forEach { record ->
             val phase = record.get<DictEnum.Entry<*>>("phase")
             if (phase?.name != "ApplyExtrinsic") return@forEach
@@ -688,8 +801,14 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
                     successes[number] = (successes[number] ?: 0) + 1
                 numericIdentity == failedIndex ||
                     namedIdentity ==
-                    (Pallete.SYSTEM.palletName to Events.EXTRINSIC_FAILED.eventName) ->
+                    (Pallete.SYSTEM.palletName to Events.EXTRINSIC_FAILED.eventName) -> {
                     failures[number] = (failures[number] ?: 0) + 1
+                    failureDetails[number] = Sora2DispatchErrorDescriber.describeOrNull(
+                        metadata = metadata,
+                        genericEvent = generic,
+                        namedEvent = named,
+                    )
+                }
             }
         }
         val indices = successes.keys + failures.keys
@@ -700,7 +819,10 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
                 (successCount == 1 && failureCount == 0) ||
                     (successCount == 0 && failureCount == 1)
             ) { "SORA2_RECOVERY_SYSTEM_EVENT_AMBIGUOUS" }
-            successCount == 1
+            Sora2ExtrinsicEventOutcome(
+                success = successCount == 1,
+                failureDetail = failureDetails[index].takeIf { successCount == 0 },
+            )
         }
     }
 
@@ -740,6 +862,83 @@ class Sora2PendingSubmissionCoordinator @Inject constructor(
             SORA2_MORTAL_ERA_PERIOD * MAXIMUM_TRANSACTIONS_PER_PASS
         const val FINALITY_POLL_INTERVAL_MILLIS = 3_000L
         const val MAXIMUM_FOREGROUND_FINALITY_WAIT_MILLIS = 120_000L
+
+        /**
+         * Pauses of 1, 2, 4, 8 and 8 seconds separate six failed reads. A short interruption (one
+         * lost request, a Wi-Fi to mobile handover) is absorbed; when the network stays away the
+         * screen stops waiting after roughly half a minute and reports "waiting for
+         * confirmation" instead of holding a spinner for the whole time limit.
+         */
+        const val MAXIMUM_CONSECUTIVE_STATUS_READ_FAILURES = 6
+        const val STATUS_READ_BACKOFF_BASE_MILLIS = 1_000L
+        const val STATUS_READ_BACKOFF_MAXIMUM_MILLIS = 8_000L
+    }
+}
+
+/** The foreground wait ended and the transaction has no final status yet. Not a failure. */
+class Sora2FinalityPendingException : IllegalStateException("SORA2_FINALITY_PENDING")
+
+internal data class Sora2ExtrinsicEventOutcome(
+    val success: Boolean,
+    /** Runtime error of a failed extrinsic, when its `ExtrinsicFailed` event could be read. */
+    val failureDetail: String?,
+)
+
+/**
+ * Turns the `DispatchError` of a `System.ExtrinsicFailed` event into a short name such as
+ * `LiquidityProxy.SlippageNotTolerated` or `Token.FundsUnavailable`. It only describes a failure
+ * that the event counts above have already proven; any shape it does not recognise yields null
+ * and never changes the status.
+ */
+internal object Sora2DispatchErrorDescriber {
+
+    fun describeOrNull(
+        metadata: RuntimeMetadata,
+        genericEvent: GenericEvent.Instance?,
+        namedEvent: DictEnum.Entry<*>?,
+    ): String? = try {
+        val dispatchError = genericEvent?.arguments?.firstOrNull()
+            ?: (namedEvent?.value as? DictEnum.Entry<*>)?.value.firstField()
+        describe(metadata, dispatchError as? DictEnum.Entry<*>)
+    } catch (_: Exception) {
+        null
+    }
+
+    private fun Any?.firstField(): Any? = when (this) {
+        is Struct.Instance -> mapping["dispatchError"] ?: mapping.values.firstOrNull()
+        is List<*> -> firstOrNull()
+        else -> this
+    }
+
+    private fun describe(metadata: RuntimeMetadata, error: DictEnum.Entry<*>?): String? {
+        error ?: return null
+        if (error.name != "Module") {
+            val inner = (error.value as? DictEnum.Entry<*>)?.name
+            return listOfNotNull(error.name, inner).joinToString(".").sanitizedStatusText()
+        }
+        val moduleError = error.value as? Struct.Instance ?: return null
+        val moduleIndex = moduleError.mapping["index"].toSmallIntOrNull() ?: return null
+        val module = metadata.modules.values.firstOrNull { it.index.toInt() == moduleIndex }
+            ?: return null
+        // Pallet error enums are numbered in declaration order, which is the order of this map.
+        val errorIndex = moduleError.mapping["error"].firstByteOrNull()
+        val errorName = errorIndex?.let { module.errors.values.elementAtOrNull(it)?.name }
+        return listOfNotNull(module.name, errorName ?: errorIndex?.let { "Error $it" })
+            .joinToString(".")
+            .sanitizedStatusText()
+    }
+
+    private fun Any?.toSmallIntOrNull(): Int? = when (this) {
+        is BigInteger -> takeIf { it.signum() >= 0 && it.bitLength() <= 16 }?.toInt()
+        is Number -> toInt().takeIf { it in 0..0xFFFF }
+        is UByte -> toInt()
+        else -> null
+    }
+
+    private fun Any?.firstByteOrNull(): Int? = when (this) {
+        is ByteArray -> firstOrNull()?.let { it.toInt() and 0xFF }
+        is List<*> -> firstOrNull().toSmallIntOrNull()
+        else -> toSmallIntOrNull()
     }
 }
 
