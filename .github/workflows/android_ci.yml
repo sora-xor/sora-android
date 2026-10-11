@@ -64,6 +64,7 @@ jobs:
         run: |
           python3 scripts/test-android-native-16kb.py
           python3 scripts/test-verify-release-signing.py
+          python3 scripts/test-verify-release-json-export.py
           node scripts/test-production-release-lock-coverage.mjs
 
       - name: Upload test reports
