@@ -283,6 +283,15 @@ class SoraPreferences(
         }
     }
 
+    /**
+     * The ids of the key sets that only their own recovery phrase may bring back
+     * ([WalletPreferenceKeys.RETAINED_NEEDS_PHRASE]). Reads only.
+     */
+    suspend fun retainedKeySetsNeedingPhrase(): Set<String> =
+        WalletPreferenceKeys.decodeRetainedNeedsPhrase(
+            dataStore.data.first()[stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)]
+        )
+
     suspend fun previewWalletDeletion(
         stringFields: Set<String>,
         booleanFields: Set<String>,
@@ -378,10 +387,23 @@ class SoraPreferences(
                             key.name !in stringFields &&
                             key.name !in booleanFields
                     }
+                    // Removing every account removes the PIN too. The key sets that stay are
+                    // marked in this same edit: from now on only their own recovery phrase
+                    // brings them back. Earlier marks are kept.
+                    val needPhrase = WalletPreferenceKeys.decodeRetainedNeedsPhrase(
+                        preferences[stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)]
+                    ) + retained.keys.mapNotNull { key ->
+                        WalletPreferenceKeys.retainedKeySetId(key.name)
+                    }
                     preferences.clear()
                     retained.forEach { (key, value) ->
                         @Suppress("UNCHECKED_CAST")
                         preferences[key as Preferences.Key<Any>] = value
+                    }
+                    if (needPhrase.isNotEmpty()) {
+                        preferences[
+                            stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)
+                        ] = WalletPreferenceKeys.encodeRetainedNeedsPhrase(needPhrase)
                     }
                 } else {
                     stringFields.forEach { field ->
@@ -411,7 +433,7 @@ class SoraPreferences(
         preferences.walletState().hash() == expectedAfterHash &&
             if (clearAll) {
                 preferences.asMap().keys.all { key ->
-                    WalletPreferenceKeys.isRetainedKeyMaterial(key.name) &&
+                    WalletPreferenceKeys.isKeptByRemoveAll(key.name) &&
                         key.name !in stringFields &&
                         key.name !in booleanFields
                 }

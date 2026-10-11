@@ -65,6 +65,44 @@ object WalletPreferenceKeys {
             encryptedCredentialPrefixes.any { prefix -> key.startsWith(prefix) } ||
             (key.length > WATCH_ONLY.length && key.startsWith(WATCH_ONLY))
 
+    /**
+     * Names the key sets that "Remove all accounts" left on this phone. Removing every account
+     * also removes the app PIN, so nothing the previous owner knew protects those key sets any
+     * more: they can be brought back only by entering their own recovery phrase, raw seed or
+     * backup file (which adopts the stored keys unchanged), never by "Restore this wallet".
+     *
+     * The value is a comma-separated list of key-set ids: the address a credential key is
+     * suffixed with, or [RETAINED_UNSUFFIXED_ID] for the release-era unsuffixed set. It is
+     * written in the same atomic edit as the removal. It is not key material and not part of the
+     * wallet-state hash; no key value is changed, moved or deleted because of it.
+     */
+    const val RETAINED_NEEDS_PHRASE = "wallet.retainedNeedsPhrase"
+
+    /** The id of the release-era unsuffixed key set inside [RETAINED_NEEDS_PHRASE]. */
+    const val RETAINED_UNSUFFIXED_ID = "unsuffixed"
+
+    private const val RETAINED_ID_SEPARATOR = ","
+
+    fun decodeRetainedNeedsPhrase(value: String?): Set<String> =
+        value.orEmpty().split(RETAINED_ID_SEPARATOR).filter(String::isNotBlank).toSet()
+
+    fun encodeRetainedNeedsPhrase(ids: Set<String>): String =
+        ids.filter(String::isNotBlank).sorted().joinToString(RETAINED_ID_SEPARATOR)
+
+    /**
+     * The id of the key set a retained credential key belongs to, or null when [key] is not an
+     * encrypted credential (for example `prefs_address_pure` or a watch-only marker, which hold
+     * no secret).
+     */
+    fun retainedKeySetId(key: String): String? {
+        val prefix = encryptedCredentialPrefixes.firstOrNull(key::startsWith) ?: return null
+        return key.removePrefix(prefix).ifEmpty { RETAINED_UNSUFFIXED_ID }
+    }
+
+    /** What may remain in the preferences after "Remove all accounts". */
+    fun isKeptByRemoveAll(key: String): Boolean =
+        isRetainedKeyMaterial(key) || key == RETAINED_NEEDS_PHRASE
+
     fun isWalletStateKey(key: String): Boolean =
         key in generalEvidenceKeys ||
             key in legacyUnsuffixedStringKeys ||

@@ -39,7 +39,9 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.unmockkObject
 import io.mockk.slot
 import java.security.MessageDigest
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
@@ -62,7 +64,15 @@ import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletIdentityLocal
 import jp.co.soramitsu.feature_account_impl.domain.keys.FakeStoredKeyCrypto
 import jp.co.soramitsu.feature_account_impl.domain.keys.realSr25519Keypair
+import jp.co.soramitsu.common.account.SelectedAccountSigning
+import jp.co.soramitsu.common.data.WalletPreferenceKeys
+import jp.co.soramitsu.core_db.WalletQuarantine
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
+import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
+import jp.co.soramitsu.feature_account_api.domain.model.RetainedWallet
+import jp.co.soramitsu.feature_account_api.domain.model.UnavailableWalletReason
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
@@ -74,8 +84,12 @@ import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -1038,6 +1052,217 @@ class UserRepositoryTest {
         userRepository.saveTimerStartedTimestamp(1)
 
         coVerify { userDatasource.saveTimerStartedTimestamp(1) }
+    }
+
+    // ---- Read-only accounts: label, reason and forward paths ----------------------------------
+
+    private fun identity(address: String, state: String) = WalletIdentityLocal(
+        walletId = address,
+        displayName = "name",
+        secretSource = if (state == "VERIFIED") "MNEMONIC" else "SECRET_UNAVAILABLE",
+        migrationState = state,
+        derivationVersion = 1,
+    )
+
+    @Test
+    fun `the selected account's ability to sign follows the database and the selection`() = runTest {
+        val notVerified = MutableStateFlow(listOf("accountAddress"))
+        every { accountDao.flowAccountsNotVerified() } returns notVerified
+        assertEquals("accountAddress", userRepository.getCurSoraAccount().substrateAddress)
+
+        val seen = mutableListOf<SelectedAccountSigning>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            userRepository.flowSelectedAccountSigning().collect { seen += it }
+        }
+
+        assertEquals(SelectedAccountSigning("accountAddress", readOnly = true), seen.last())
+
+        // Its keys are restored in place: the label goes without a restart.
+        notVerified.value = emptyList()
+        assertEquals(SelectedAccountSigning("accountAddress", readOnly = false), seen.last())
+
+        // Another account is selected that cannot sign.
+        notVerified.value = listOf("a")
+        coEvery { userDatasource.setCurAccountAddress("a") } returns Unit
+        userRepository.setCurSoraAccount(soraAccount)
+        assertEquals(SelectedAccountSigning("a", readOnly = true), seen.last())
+        job.cancel()
+    }
+
+    @Test
+    fun `a label that cannot be read is no label and never an error for the screen`() = runTest {
+        every { accountDao.flowAccountsNotVerified() } returns
+            flow { throw IllegalStateException("WALLET_DATABASE_RECOVERY_BLOCKED") }
+        userRepository.getCurSoraAccount()
+
+        assertEquals(SelectedAccountSigning.NONE, userRepository.flowSelectedAccountSigning().first())
+    }
+
+    @Test
+    fun `accounts that cannot sign are listed for labels without blank rows`() = runTest {
+        every { accountDao.flowAccountsNotVerified() } returns flowOf(listOf("cnReadOnly", ""))
+
+        assertEquals(setOf("cnReadOnly"), userRepository.flowUnavailableWalletIds().first())
+    }
+
+    private suspend fun readOnlyAccountWith(
+        privateKey: StoredCredential,
+        publicKey: StoredCredential,
+        nonce: StoredCredential,
+        mnemonic: StoredCredential = StoredCredential.Absent,
+    ) {
+        coEvery { accountDao.getAccount("cnReadOnly") } returns SoraAccountLocal("cnReadOnly", "Read only")
+        coEvery { walletIdentityDao.getWallet("cnReadOnly") } returns identity("cnReadOnly", "UNAVAILABLE")
+        coEvery { credentialsDatasource.readStoredCredential(any(), "") } returns StoredCredential.Absent
+        coEvery { credentialsDatasource.readStoredCredential(any(), "cnReadOnly") } returns StoredCredential.Absent
+        coEvery {
+            credentialsDatasource.readStoredCredential(CredentialField.PRIVATE_KEY, "cnReadOnly")
+        } returns privateKey
+        coEvery {
+            credentialsDatasource.readStoredCredential(CredentialField.PUBLIC_KEY, "cnReadOnly")
+        } returns publicKey
+        coEvery {
+            credentialsDatasource.readStoredCredential(CredentialField.KEY_NONCE, "cnReadOnly")
+        } returns nonce
+        coEvery {
+            credentialsDatasource.readStoredCredential(CredentialField.MNEMONIC, "cnReadOnly")
+        } returns mnemonic
+    }
+
+    @Test
+    fun `a read-only account says why from its stored signing key alone`() = runTest {
+        val present = StoredCredential.Present("value")
+
+        readOnlyAccountWith(StoredCredential.Absent, StoredCredential.Absent, StoredCredential.Absent)
+        assertEquals(
+            UnavailableWalletReason.KEY_MISSING,
+            userRepository.unavailableWalletOptions("cnReadOnly")?.reason,
+        )
+
+        readOnlyAccountWith(present, StoredCredential.Absent, present)
+        assertEquals(
+            UnavailableWalletReason.KEY_INCOMPLETE,
+            userRepository.unavailableWalletOptions("cnReadOnly")?.reason,
+        )
+
+        readOnlyAccountWith(StoredCredential.Unreadable, present, present)
+        assertEquals(
+            UnavailableWalletReason.KEY_UNREADABLE,
+            userRepository.unavailableWalletOptions("cnReadOnly")?.reason,
+        )
+
+        // A complete, readable key that the judge refused (it is another address's key).
+        readOnlyAccountWith(present, present, present, mnemonic = present)
+        val options = requireNotNull(userRepository.unavailableWalletOptions("cnReadOnly"))
+        assertEquals(UnavailableWalletReason.KEY_NOT_USABLE, options.reason)
+        // Whatever the reason: the repair keeps the account, and a stored phrase can be shown.
+        assertTrue(options.canRepairWithPhrase)
+        assertTrue(options.canShowPhraseAfterPin)
+        assertTrue(options.showPhraseBeforeRemoval)
+    }
+
+    @Test
+    fun `an account that signs has no read-only options`() = runTest {
+        assertEquals(null, userRepository.unavailableWalletOptions("accountAddress"))
+    }
+
+    // ---- Key sets no account uses: what "Remove all accounts" left needs its phrase -----------
+
+    private fun retainedOnThisPhone(vararg addresses: String) {
+        mockkObject(WalletUpgradeBackup)
+        every { WalletUpgradeBackup.quarantine() } returns
+            WalletQuarantine(unlinkedWalletIds = addresses.toSet())
+    }
+
+    @Test
+    fun `key sets left by Remove all accounts are listed as needing their recovery phrase`() = runTest {
+        try {
+            retainedOnThisPhone("cnLeft", "cnKept", "accountAddress")
+            coEvery { accountDao.getAccount("cnLeft") } returns null
+            coEvery { accountDao.getAccount("cnKept") } returns null
+            coEvery { credentialsDatasource.retainedKeySetsNeedingPhrase() } returns setOf("cnLeft")
+            coEvery { credentialsDatasource.readStoredCredential(any(), any()) } returns
+                StoredCredential.Present("value")
+
+            assertEquals(
+                listOf(
+                    RetainedWallet("cnKept", needsRecoveryPhrase = false),
+                    RetainedWallet("cnLeft", needsRecoveryPhrase = true),
+                ),
+                // An address that is an account is not a wallet to restore.
+                userRepository.retainedWallets(),
+            )
+        } finally {
+            unmockkObject(WalletUpgradeBackup)
+        }
+    }
+
+    @Test
+    fun `the release-era unsuffixed set is marked by its own id`() = runTest {
+        try {
+            retainedOnThisPhone("cnLegacyOwner")
+            coEvery { accountDao.getAccount("cnLegacyOwner") } returns null
+            coEvery { credentialsDatasource.retainedKeySetsNeedingPhrase() } returns
+                setOf(WalletPreferenceKeys.RETAINED_UNSUFFIXED_ID)
+            // Nothing is stored under the address: its keys are the unsuffixed set.
+            coEvery { credentialsDatasource.readStoredCredential(any(), "cnLegacyOwner") } returns
+                StoredCredential.Absent
+
+            assertEquals(
+                listOf(RetainedWallet("cnLegacyOwner", needsRecoveryPhrase = true)),
+                userRepository.retainedWallets(),
+            )
+        } finally {
+            unmockkObject(WalletUpgradeBackup)
+        }
+    }
+
+    @Test
+    fun `when the marks cannot be read every key set needs its phrase`() = runTest {
+        try {
+            retainedOnThisPhone("cnKept")
+            coEvery { accountDao.getAccount("cnKept") } returns null
+            coEvery { credentialsDatasource.retainedKeySetsNeedingPhrase() } throws
+                IllegalStateException("STORAGE_IO")
+
+            assertEquals(
+                listOf(RetainedWallet("cnKept", needsRecoveryPhrase = true)),
+                userRepository.retainedWallets(),
+            )
+        } finally {
+            unmockkObject(WalletUpgradeBackup)
+        }
+    }
+
+    @Test
+    fun `nothing is offered to restore while wallet changes are off`() = runTest {
+        try {
+            retainedOnThisPhone("cnKept")
+            WalletRecoveryCapabilityGate.enterBlocked()
+            WalletRecoveryCapabilityGate.enterLegacyReadOnly()
+
+            assertEquals(emptyList<RetainedWallet>(), userRepository.retainedWallets())
+        } finally {
+            WalletRecoveryCapabilityGate.enterNormal()
+            unmockkObject(WalletUpgradeBackup)
+        }
+    }
+
+    @Test
+    fun `Restore this wallet refuses a key set left by Remove all accounts and reads no key`() = runTest {
+        coEvery { accountDao.getAccount("cnLeft") } returns null
+        coEvery { credentialsDatasource.retainedKeySetsNeedingPhrase() } returns setOf("cnLeft")
+        coEvery { credentialsDatasource.readStoredCredential(any(), "cnLeft") } returns
+            StoredCredential.Present("value")
+
+        val error = runCatching {
+            userRepository.adoptRetainedWallet("cnLeft", "Restored wallet", makeCurrent = false)
+        }.exceptionOrNull()
+
+        assertEquals("RETAINED_WALLET_NEEDS_RECOVERY_PHRASE", error?.message)
+        coVerify(exactly = 0) { credentialsDatasource.retrieveKeys(any()) }
+        coVerify(exactly = 0) { accountDao.insertSoraAccount(any()) }
+        coVerify(exactly = 0) { userDatasource.setCurAccountAddress(any()) }
     }
 
     private fun retainedFifteenWordKeyPair(): Sr25519Keypair {
