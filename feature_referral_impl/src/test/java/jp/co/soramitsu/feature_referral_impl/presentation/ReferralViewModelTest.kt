@@ -34,12 +34,17 @@ package jp.co.soramitsu.feature_referral_impl.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
+import java.io.IOException
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.TransactionChainFailure
+import jp.co.soramitsu.common.domain.TransactionNodeRefusal
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -56,6 +61,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -70,6 +76,8 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -210,10 +218,14 @@ class ReferralViewModelTest {
             "cnVko",
             referralViewModel.referralScreenState.value.referrerInputState.value.text
         )
+        whenever(interactor.observeSetReferrer("cnVko", false))
+            .thenReturn(TransactionOutcome.Confirmed(txHash, "0xblock"))
         referralViewModel.onActivateLinkClick()
         advanceUntilIdle()
         navEvent = referralViewModel.navToStart.getOrAwaitValue()
         assertEquals(ReferralFeatureRoutes.WELCOME_PAGE, navEvent)
+        verify(assetsRouter).showTxDetails(txHash, false)
+        assertEquals(false, referralViewModel.referralScreenState.value.common.progress)
     }
 
     @Test
@@ -243,5 +255,198 @@ class ReferralViewModelTest {
         referralViewModel.onBondMinus()
         advanceUntilIdle()
         verify(assetsInteractor, atLeast(1)).isNotEnoughXorLeftAfterTransaction(any(), any())
+    }
+
+    // --- audit A5: one truthful result for every outcome, and no crash offline --------------
+
+    private val txHash = "0x" + "ab".repeat(32)
+
+    private suspend fun TestScope.programLoaded() {
+        whenever(interactor.getReferrals()).thenReturn(emptyFlow())
+        whenever(interactor.observeReferrals()).thenReturn(emptyFlow())
+        setupViewModel()
+        advanceUntilIdle()
+        referrerBalanceFlowEmit(BigDecimal.ZERO)
+        advanceUntilIdle()
+    }
+
+    private fun stubOutcomeTexts() {
+        listOf(
+            R.string.tx_outcome_refused_title,
+            R.string.tx_outcome_note_refused_fee,
+            R.string.tx_outcome_not_sent_title,
+            R.string.tx_outcome_not_sent_network,
+            R.string.tx_outcome_duplicate_title,
+            R.string.tx_outcome_duplicate_message,
+            R.string.tx_outcome_duplicate_send_again,
+            R.string.tx_outcome_duplicate_wait,
+            R.string.network_fee_unavailable_short,
+            R.string.tx_outcome_screen_needs_network,
+            R.string.common_try_again,
+            R.string.common_close,
+        ).forEach { id ->
+            whenever(resourceManager.getString(id)).thenReturn("text-$id")
+        }
+    }
+
+    private fun assertProgressCleared() =
+        assertEquals(false, referralViewModel.referralScreenState.value.common.progress)
+
+    @Test
+    fun `a confirmed bond opens its transaction page`() = runTest {
+        programLoaded()
+        whenever(interactor.observeBond(any(), eq(false)))
+            .thenReturn(TransactionOutcome.Confirmed(txHash, "0xblock"))
+
+        referralViewModel.onBondButtonClick()
+        advanceUntilIdle()
+
+        verify(assetsRouter).showTxDetails(txHash, false)
+        assertEquals(
+            ReferralFeatureRoutes.REFERRAL_PROGRAM,
+            referralViewModel.navToStart.getOrAwaitValue(),
+        )
+        assertProgressCleared()
+    }
+
+    @Test
+    fun `a bond that is still waiting opens its transaction page and shows no error`() = runTest {
+        programLoaded()
+        // What a failed status read or an unfinished finality wait gives after a broadcast.
+        whenever(interactor.observeBond(any(), eq(false)))
+            .thenReturn(TransactionOutcome.Waiting(txHash, acceptedByNode = true))
+
+        referralViewModel.onBondButtonClick()
+        advanceUntilIdle()
+
+        // The transaction page carries "waiting for confirmation" and follows the result.
+        verify(assetsRouter).showTxDetails(txHash, false)
+        assertNull(referralViewModel.alertDialogLiveData.value)
+        assertNull(referralViewModel.errorFromResourceLiveData.value)
+        // Before the fix nothing was shown at all and the progress mark stayed on.
+        assertProgressCleared()
+    }
+
+    @Test
+    fun `an unbond that failed on chain opens its transaction page`() = runTest {
+        programLoaded()
+        whenever(interactor.observeUnbond(any(), eq(false))).thenReturn(
+            TransactionOutcome.FailedOnChain(
+                txHash = txHash,
+                blockHash = "0xblock",
+                reason = TransactionChainFailure.EXECUTION_FAILED,
+                detail = "Referrals.ReferrerInsufficientBalance",
+            )
+        )
+
+        referralViewModel.onUnbondButtonClick()
+        advanceUntilIdle()
+
+        verify(assetsRouter).showTxDetails(txHash, false)
+        assertProgressCleared()
+    }
+
+    @Test
+    fun `a bond the node refused is a failure with its reason and is not submitted`() = runTest {
+        programLoaded()
+        stubOutcomeTexts()
+        whenever(interactor.observeBond(any(), eq(false))).thenReturn(
+            TransactionOutcome.RefusedByNode(
+                txHash = txHash,
+                reason = TransactionNodeRefusal.CANNOT_PAY_FEE,
+                nodeMessage = "Inability to pay some fees",
+            )
+        )
+
+        referralViewModel.onBondButtonClick()
+        advanceUntilIdle()
+
+        assertEquals(
+            "text-${R.string.tx_outcome_refused_title}" to
+                "text-${R.string.tx_outcome_note_refused_fee}",
+            referralViewModel.alertDialogLiveData.value,
+        )
+        verify(assetsRouter, never()).showTxDetails(any(), any())
+        assertProgressCleared()
+    }
+
+    @Test
+    fun `a bond that could not be prepared says nothing was sent`() = runTest {
+        programLoaded()
+        stubOutcomeTexts()
+        // The signing gate and the network raise plain exceptions, not SoraException.
+        whenever(interactor.observeBond(any(), eq(false)))
+            .thenAnswer { throw IOException("BOUNDED_HTTP_IO") }
+
+        referralViewModel.onBondButtonClick()
+        advanceUntilIdle()
+
+        // Before the fix: no message, and the button never came back.
+        assertEquals(
+            "text-${R.string.tx_outcome_not_sent_title}" to
+                "text-${R.string.tx_outcome_not_sent_network}",
+            referralViewModel.alertDialogLiveData.value,
+        )
+        verify(assetsRouter, never()).showTxDetails(any(), any())
+        assertProgressCleared()
+    }
+
+    @Test
+    fun `the same bond still waiting needs a deliberate second confirmation`() = runTest {
+        programLoaded()
+        stubOutcomeTexts()
+        whenever(interactor.observeBond(any(), eq(false)))
+            .thenAnswer { throw DuplicateWaitingTransactionException(txHash, 1L) }
+        whenever(interactor.observeBond(any(), eq(true)))
+            .thenReturn(TransactionOutcome.Waiting("0x" + "cd".repeat(32), true))
+
+        referralViewModel.onBondButtonClick()
+        advanceUntilIdle()
+
+        val question = checkNotNull(referralViewModel.confirmDialogLiveData.value)
+        assertEquals("text-${R.string.tx_outcome_duplicate_send_again}", question.confirmText)
+        verify(assetsRouter, never()).showTxDetails(any(), any())
+        assertProgressCleared()
+
+        question.onConfirm()
+        advanceUntilIdle()
+        verify(assetsRouter).showTxDetails("0x" + "cd".repeat(32), false)
+    }
+
+    @Test
+    fun `opening the screen offline explains and recovers instead of crashing`() = runTest {
+        stubOutcomeTexts()
+        whenever(interactor.getReferrals()).thenReturn(emptyFlow())
+        whenever(interactor.observeReferrals()).thenReturn(emptyFlow())
+        // RuntimeManager.getMutationRuntimeContext failing with BOUNDED_HTTP_IO, as in the
+        // audit's crash log: the fee cannot be read while the XOR balance arrives.
+        var offline = true
+        whenever(interactor.calcBondFee()).thenAnswer {
+            if (offline) throw IOException("BOUNDED_HTTP_IO")
+            BigDecimal("0.07")
+        }
+
+        setupViewModel()
+        advanceUntilIdle()
+        assetFlowEmit(xorAsset)
+        advanceUntilIdle()
+
+        // Not crashed (an uncaught exception in viewModelScope would fail this test), and the
+        // user is told what is wrong, with Try again and Close.
+        val question = checkNotNull(referralViewModel.confirmDialogLiveData.value)
+        assertEquals("text-${R.string.tx_outcome_screen_needs_network}", question.message)
+        assertEquals("text-${R.string.common_try_again}", question.confirmText)
+        assertEquals("text-${R.string.common_close}", question.dismissText)
+
+        offline = false
+        question.onConfirm()
+        advanceUntilIdle()
+        referrerBalanceFlowEmit(BigDecimal.ZERO)
+        advanceUntilIdle()
+
+        assertEquals(
+            ReferralFeatureRoutes.WELCOME_PAGE,
+            referralViewModel.navToStart.getOrAwaitValue(),
+        )
     }
 }
