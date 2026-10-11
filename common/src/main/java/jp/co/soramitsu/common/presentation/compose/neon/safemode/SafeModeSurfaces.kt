@@ -422,8 +422,8 @@ fun UpgradeCompleteSheet(
                     SafeStep(
                         stringResource(
                             R.string.safe_mode_whats_new_accounts_some_read_only,
-                            checks.signingAccountCount,
-                            checks.accountCount,
+                            checks.signingAccountCount.toString(),
+                            checks.accountCount.toString(),
                         ),
                         SafeStepState.NEEDS_ACTION,
                     ),

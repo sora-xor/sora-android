@@ -151,12 +151,33 @@ class BackupViewModelTest {
         listOf(ExportProtectionViewModel.Type.PASSPHRASE, ExportProtectionViewModel.Type.SEED).forEach { type ->
             setUp(type, noMatch)
             // Said plainly, with the JSON export as the way to back the account up.
-            assertEquals(BackupScreenState(noMatchingSecret = true), viewModel.backupScreenState.getOrAwaitValue())
+            assertEquals(
+                BackupScreenState(noMatchingSecret = true, canExportJson = true),
+                viewModel.backupScreenState.getOrAwaitValue(),
+            )
             viewModel.backupPressed()
             viewModel.exportJsonPressed()
         }
         org.mockito.Mockito.verifyNoInteractions(clipboardManager)
         verify(router, org.mockito.Mockito.times(2)).showExportJSONProtection(listOf("address"))
+    }
+
+    @Test
+    fun aReadOnlyAccountWithoutAMatchingSecretIsNotOfferedAnExportThatCannotWork() = runTest {
+        val readOnly = WalletBackupMaterial(
+            canSign = false,
+            phraseWords = emptyList(),
+            seedHex = "",
+            storedPhraseDoesNotMatch = false,
+            storedSeedDoesNotMatch = false,
+        )
+        setUp(ExportProtectionViewModel.Type.PASSPHRASE, readOnly)
+        assertEquals(
+            BackupScreenState(noMatchingSecret = true, canExportJson = false),
+            viewModel.backupScreenState.getOrAwaitValue(),
+        )
+        viewModel.exportJsonPressed()
+        org.mockito.Mockito.verifyNoInteractions(router)
     }
 
     @Test
