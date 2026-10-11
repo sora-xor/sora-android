@@ -26,6 +26,10 @@ usage: run-production-connected-device-qualification.sh [--offline] [--report-di
 Runs every group even when one fails, prints a summary with the commit and the device, and
 exits with 1 when any group failed or ran no test.
 
+The release gate is the run on a device with 4 KB pages. On a 16 KB device the tests that
+need MockK's agent library cannot be loaded (WalletUxAcceptanceTest and the MigrationManager
+phases); they are left out and the summary says that it covers the 16 KB subset only.
+
 Environment: SORA_GRADLE_FLAGS (extra Gradle arguments), ANDROID_SERIAL (emulator to use),
 ANDROID_HOME (to find adb, apkanalyzer or aapt2).
 USAGE
@@ -75,9 +79,15 @@ rm -f "${report_dir}"/[0-9][0-9]-*.log "${summary_file}"
 # runs them. Everything else in :feature_account_impl runs in the ordinary connected task.
 readonly phased_storage_class="jp.co.soramitsu.feature_account_impl.data.repository.datasource.EncryptedWalletMigrationStorageTest"
 
+# On a 16 KB device these cannot be loaded; see sora_mockk_agent_note.
+readonly mockk_agent_app_class="jp.co.soramitsu.sora.ux.WalletUxAcceptanceTest"
+device_page_size="$(sora_device_page_size)"
+readonly device_page_size
+
 group_names=()
 group_results=()
 failed_groups=0
+not_run=()
 
 # Prints "tests failures skipped" summed over the JUnit XML files Gradle wrote for a module.
 count_connected_results() {
@@ -178,8 +188,15 @@ run_connected_group "03-feature-account-upgrade-scenarios" "feature_account_impl
 # Every device test of the app module: the recovery (Safe Mode) screens, the sr25519
 # known-answer test, the PIN lock and the wallet acceptance tests. No class filter, so a test
 # class added later is part of the gate without a change here.
-run_connected_group "04-app" "app" \
-  :app:connectedProductionDebugAndroidTest
+if [ "${device_page_size}" = "4096" ]; then
+  run_connected_group "04-app" "app" \
+    :app:connectedProductionDebugAndroidTest
+else
+  not_run+=("WalletUxAcceptanceTest in 04-app")
+  run_connected_group "04-app" "app" \
+    :app:connectedProductionDebugAndroidTest \
+    "-Pandroid.testInstrumentationRunnerArguments.notClass=${mockk_agent_app_class}"
+fi
 
 # Screens that depend on the state of an account: Send for a read-only account, locked XOR.
 run_connected_group "05-feature-screens" "feature_assets_impl feature_blockexplorer_api" \
@@ -188,8 +205,14 @@ run_connected_group "05-feature-screens" "feature_assets_impl feature_blockexplo
 
 run_script_group "06-encrypted-wallet-storage-phases" 5 \
   scripts/run-encrypted-wallet-upgrade-qualification.sh
-run_script_group "07-migration-manager-production-path-phases" 10 \
-  scripts/run-migration-manager-production-path-qualification.sh
+if [ "${device_page_size}" = "4096" ]; then
+  run_script_group "07-migration-manager-production-path-phases" 10 \
+    scripts/run-migration-manager-production-path-qualification.sh
+else
+  not_run+=("07-migration-manager-production-path-phases")
+  group_names+=("07-migration-manager-production-path-phases")
+  group_results+=("NOT RUN (needs 4 KB pages)")
+fi
 
 commit="$(git rev-parse HEAD 2>/dev/null || echo unknown)"
 if [ -n "$(git status --porcelain 2>/dev/null || true)" ]; then
@@ -217,8 +240,17 @@ device_property() {
     index=$((index + 1))
   done
   echo
-  if [ "${failed_groups}" -eq 0 ]; then
+  if [ "${#not_run[@]}" -ne 0 ]; then
+    echo "Not run on this device, ${sora_mockk_agent_note}:"
+    for item in "${not_run[@]}"; do
+      echo "  ${item}"
+    done
+    echo
+  fi
+  if [ "${failed_groups}" -eq 0 ] && [ "${#not_run[@]}" -eq 0 ]; then
     echo "Result: PASS"
+  elif [ "${failed_groups}" -eq 0 ]; then
+    echo "Result: PASS for the 16 KB subset. This is not the release gate; that is the run on a 4 KB device."
   else
     echo "Result: FAIL (${failed_groups} of ${#group_names[@]} groups)"
   fi

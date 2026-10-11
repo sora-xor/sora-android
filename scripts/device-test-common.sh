@@ -86,6 +86,18 @@ sora_require_one_device() {
   fi
 }
 
+# Prints the memory page size of the selected device: 4096, or 16384 on a 16 KB device.
+sora_device_page_size() {
+  adb shell getconf PAGE_SIZE | tr -d '\r\n'
+}
+
+# Tests that mock a final class load MockK's Android agent, a native library of the test APK
+# (mockk-agent-android 1.13.11). It is built for 4 KB pages and a 16 KB device refuses to load
+# it. That is a limit of the test tool; the app's own libraries are 16 KB aligned and checked
+# by scripts/verify-android-native-16kb.py.
+# shellcheck disable=SC2034  # used by the scripts that source this file
+readonly sora_mockk_agent_note="needs 4 KB pages: the MockK agent library of the test APK is not 16 KB aligned"
+
 # Stops unless the selected device is an emulator.
 sora_require_emulator() {
   local emulator_flags=""

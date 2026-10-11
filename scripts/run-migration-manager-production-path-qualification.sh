@@ -17,6 +17,8 @@ usage: run-migration-manager-production-path-qualification.sh [--offline]
 
   --offline   build with Gradle's --offline (local Gradle cache, no network)
 
+Needs a device with 4 KB pages; on a 16 KB device it stops with exit code 3.
+
 Environment: SORA_GRADLE_FLAGS (extra Gradle arguments), ANDROID_SERIAL (device to use),
 ANDROID_HOME (to find apkanalyzer or aapt2).
 USAGE
@@ -40,6 +42,14 @@ done
 sora_read_gradle_environment
 cd "${script_dir}/.."
 sora_require_one_device
+
+# Every phase mocks final classes. Saying so here is clearer than ten phases that fail with a
+# linker error, and it must not look like a pass.
+device_page_size="$(sora_device_page_size)"
+if [ "${device_page_size}" != "4096" ]; then
+  echo "error: these phases cannot run on a device with ${device_page_size}-byte pages (${sora_mockk_agent_note}). Use a 4 KB emulator, for example the AVD SORA-Api34." >&2
+  exit 3
+fi
 
 readonly qualification_class="jp.co.soramitsu.sora.splash.domain.MigrationManagerProductionPathQualificationTest"
 readonly qualification_target_package="jp.co.soramitsu.sora.qualification"

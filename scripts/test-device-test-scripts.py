@@ -69,7 +69,7 @@ case "$1" in
       "getprop ro.build.version.release") echo "14" ;;
       "getprop ro.build.version.sdk") echo "34" ;;
       "getprop ro.product.cpu.abi") echo "x86_64" ;;
-      "getconf PAGE_SIZE") echo "4096" ;;
+      "getconf PAGE_SIZE") echo "${STUB_PAGE_SIZE:-4096}" ;;
       "pm list instrumentation")
         echo "instrumentation:jp.co.soramitsu.feature_account_impl.test/androidx.test.runner.AndroidJUnitRunner (target=jp.co.soramitsu.feature_account_impl.test)"
         echo "instrumentation:jp.co.soramitsu.sora.qualification.test/androidx.test.runner.AndroidJUnitRunner (target=jp.co.soramitsu.sora.qualification)"
@@ -292,6 +292,49 @@ class DeviceScriptsTest(unittest.TestCase):
         result = self.run_script(STUB_DEVICES="")
         self.assertEqual(1, result.returncode)
         self.assertIn("no device is attached", result.stderr)
+
+    def test_sixteen_kb_device_runs_the_subset_and_says_so(self):
+        result = self.run_script(STUB_PAGE_SIZE="16384")
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        calls = self.lines("gradle.log")
+        # No build of the qualification APKs: their phases cannot run here.
+        self.assertEqual(GRADLE_CALLS - 1, len(calls), calls)
+        app_call = next(call for call in calls if ":app:connectedProductionDebugAndroidTest" in call)
+        self.assertIn(
+            "-Pandroid.testInstrumentationRunnerArguments.notClass=jp.co.soramitsu.sora.ux.WalletUxAcceptanceTest",
+            app_call,
+        )
+        self.assertEqual(ENCRYPTED_PHASES, self.lines("instrument.log"))
+        summary = self.summary()
+        self.assertIn("page size 16384", summary)
+        self.assertRegex(summary, r"07-migration-manager-production-path-phases\s+NOT RUN \(needs 4 KB pages\)")
+        self.assertIn("  WalletUxAcceptanceTest in 04-app", summary)
+        self.assertIn("  07-migration-manager-production-path-phases", summary)
+        self.assertIn("Result: PASS for the 16 KB subset. This is not the release gate", summary)
+        self.assertNotIn("Result: PASS\n", summary)
+
+        # A failure on a 16 KB device is still a failure.
+        result = self.run_script(STUB_PAGE_SIZE="16384", STUB_FAILURES_core_db="1")
+        self.assertEqual(1, result.returncode)
+        self.assertIn("Result: FAIL (1 of 7 groups)", self.summary())
+
+    def test_four_kb_device_leaves_nothing_out(self):
+        result = self.run_script()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        summary = self.summary()
+        self.assertIn("Result: PASS\n", summary)
+        self.assertNotIn("NOT RUN", summary)
+        self.assertNotIn("Not run on this device", summary)
+        self.assertNotIn("WalletUxAcceptanceTest", " ".join(self.lines("gradle.log")))
+
+    def test_migration_manager_phases_refuse_a_sixteen_kb_device(self):
+        result = self.run_script(
+            "run-migration-manager-production-path-qualification.sh", STUB_PAGE_SIZE="16384"
+        )
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("cannot run on a device with 16384-byte pages", result.stderr)
+        self.assertEqual([], self.lines("gradle.log"))
+        self.assertEqual([], self.lines("instrument.log"))
 
     def test_unknown_option_and_help(self):
         for name in COPIED[1:]:
