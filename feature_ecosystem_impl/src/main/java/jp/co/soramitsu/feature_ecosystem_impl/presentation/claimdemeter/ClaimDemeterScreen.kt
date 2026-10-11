@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
@@ -148,7 +149,7 @@ internal fun ClaimDemeterScreen(
                             text = stringResource(id = R.string.common_claim),
                             size = Size.Large,
                             order = Order.PRIMARY,
-                            enabled = state.isButtonActive,
+                            enabled = state.isButtonActive && !LocalSelectedAccountReadOnly.current,
                             onClick = onClaimPressed
                         )
                     }

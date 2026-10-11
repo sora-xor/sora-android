@@ -44,6 +44,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 import androidx.compose.material.Icon
@@ -198,7 +199,7 @@ internal fun SwapMainScreen(
         ) { modifier, elevation ->
             FilledButton(
                 modifier = modifier.testTagAsId("SwapButton"),
-                enabled = state.swapButtonState.enabled,
+                enabled = state.swapButtonState.enabled && !LocalSelectedAccountReadOnly.current,
                 size = Size.Large,
                 order = Order.PRIMARY,
                 text = state.swapButtonState.text,
