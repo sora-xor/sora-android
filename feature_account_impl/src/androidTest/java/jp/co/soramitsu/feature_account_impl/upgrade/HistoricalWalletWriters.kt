@@ -38,8 +38,11 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import javax.security.auth.x500.X500Principal
+import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
+import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -83,6 +86,22 @@ import org.json.JSONObject
  *   file only in imports (spongycastle Arrays/Base64 instead of bouncycastle, same encodings), the
  *   Hilt annotations and line wrapping, so both releases share [Release3863EncryptionUtil].
  *   SoraPreferences and EncryptedPreferences write identically in both releases.
+ *
+ * 3.8.2.0 = release/sora/3.8.2.0 (the same blob in 3.6.0.0, 3.7.0.0, 3.8.0.0, 3.8.1.0, 3.8.1.1)
+ *   feature_account_impl/.../repository/CredentialsRepositoryImpl.kt lines 150-158 and 245-248
+ *   (retrieveSeed, convertPassphraseToSeed: the uncropped 64-byte seed cache)   -> [Release3820SeedCache]
+ *   The same lines at b7b0f0fc (3.8.6.3: deriveSeed32)                          -> [Release3863SeedCache]
+ *   `git diff release/sora/3.8.2.0 release/sora/3.8.6.3` is empty for PrefsCredentialsDatasource.kt,
+ *   EncryptedPreferences.kt, EncryptionUtil.kt and SoraPreferences.kt, so both seed caches run on
+ *   [Release3863PrefsCredentialsDatasource].
+ *
+ * 2.3.2 = release/sora/2.3.2
+ *   common/.../credentials/repository/datasource/PrefsCredentialsDatasource.kt  -> [Release232PrefsCredentialsDatasource]
+ *   common/.../credentials/repository/CredentialsRepositoryImpl.kt lines 39-49 and 74-76
+ *   (restoreUserCredentials -> generateEntropyAndKeys: the phrase is saved exactly as typed)
+ *                                                                               -> [Release232CredentialsRepository]
+ *   EncryptedPreferences, SoraPreferences, EncryptionUtil and PrefsUserDatasource are identical
+ *   at 2.3.2 and 2.3.3 (`git diff release/sora/2.3.2 release/sora/2.3.3` on those files is empty).
  *
  * Mechanical changes only, each marked "HARNESS:": class names, removed interfaces/`override`
  * and Hilt annotations, the DataStore is passed in (the released class built the same DataStore
@@ -338,9 +357,18 @@ class Release3863SoraPreferences(
             it[booleanPreferencesKey(field)] = value
         }
     }
+
+    /** `getString` at b7b0f0fc (lines 102-105), used by the seed cache readers below. */
+    suspend fun getString(field: String): String =
+        dataStore.data.map {
+            it[stringPreferencesKey(field)] ?: ""
+        }.first()
 }
 
-/** Write half of `EncryptedPreferences` at b7b0f0fc (identical at 2.3.3). HARNESS: names. */
+/**
+ * `EncryptedPreferences` at b7b0f0fc (identical at 2.3.3 and 3.8.2.0) without its two `clear`
+ * functions. HARNESS: names.
+ */
 class Release3863EncryptedPreferences(
     private val soraPreferences: Release3863SoraPreferences,
     private val encryptionUtil: Release3863EncryptionUtil
@@ -348,6 +376,12 @@ class Release3863EncryptedPreferences(
 
     suspend fun putEncryptedString(field: String, value: String) {
         soraPreferences.putString(field, encryptionUtil.encrypt(value))
+    }
+
+    suspend fun getDecryptedString(field: String): String {
+        val encryptedString = soraPreferences.getString(field)
+
+        return if (encryptedString.isEmpty()) "" else encryptionUtil.decrypt(encryptedString)
     }
 }
 
@@ -378,6 +412,150 @@ class Release3863PrefsCredentialsDatasource constructor(
 
     suspend fun saveSeed(seed: String, suffixAddress: String) {
         encryptedPreferences.putEncryptedString(PREFS_SEED + suffixAddress, seed)
+    }
+
+    /** `retrieveMnemonic` at b7b0f0fc (lines 82-84; the same at 3.8.2.0). */
+    suspend fun retrieveMnemonic(suffixAddress: String): String {
+        return encryptedPreferences.getDecryptedString(PREFS_MNEMONIC + suffixAddress)
+    }
+
+    /** `retrieveSeed` at b7b0f0fc (lines 90-92; the same at 3.8.2.0). */
+    suspend fun retrieveSeed(suffixAddress: String): String {
+        return encryptedPreferences.getDecryptedString(PREFS_SEED + suffixAddress)
+    }
+}
+
+/**
+ * `CredentialsRepositoryImpl.retrieveSeed` (lines 150-158) and `convertPassphraseToSeed` (lines
+ * 245-248) at release/sora/3.8.2.0, verbatim. The same blob shipped in 3.6.0.0, 3.7.0.0, 3.8.0.0,
+ * 3.8.1.0 and 3.8.1.1. The first "Show raw seed" or account-screen Google backup of a phrase
+ * account ran this and cached the UNCROPPED derivation (64 bytes, 128 hex characters) under
+ * `prefs_seed<address>`.
+ *
+ * HARNESS: class name; the `SoraAccount` argument is its address. The test classpath has
+ * xsubstrate 1.2.7 where 3.8.2.0 linked 1.1.4; `SubstrateSeedFactory.deriveSeed` returns the full
+ * 64-byte PBKDF2 output in 1.2.7 (SeedCreator.FULL_SEED_LENGTH = 64), which is what the fix
+ * commit cb6f5614 says the older library returned too.
+ */
+class Release3820SeedCache(
+    private val credentialsPrefs: Release3863PrefsCredentialsDatasource,
+) {
+
+    suspend fun retrieveSeed(substrateAddress: String): String {
+        var seed = credentialsPrefs.retrieveSeed(substrateAddress)
+
+        if (seed.isEmpty()) {
+            seed = convertPassphraseToSeed(credentialsPrefs.retrieveMnemonic(substrateAddress))
+            credentialsPrefs.saveSeed(seed, substrateAddress)
+        }
+
+        return seed
+    }
+
+    fun convertPassphraseToSeed(mnemonic: String): String {
+        val derivationResult = SubstrateSeedFactory.deriveSeed(MnemonicCreator.fromWords(mnemonic).words, null)
+        return derivationResult.seed.toHexString()
+    }
+}
+
+/**
+ * The same two functions at b7b0f0fc (Play 3.8.6.3, lines 150-158 and 245-248), verbatim: a stored
+ * seed is returned unchanged and never compared; an empty cache is filled with the cropped
+ * 32-byte seed. HARNESS: class name; the `SoraAccount` argument is its address.
+ */
+class Release3863SeedCache(
+    private val credentialsPrefs: Release3863PrefsCredentialsDatasource,
+) {
+
+    suspend fun retrieveSeed(substrateAddress: String): String {
+        var seed = credentialsPrefs.retrieveSeed(substrateAddress)
+
+        if (seed.isEmpty()) {
+            seed = convertPassphraseToSeed(credentialsPrefs.retrieveMnemonic(substrateAddress))
+            credentialsPrefs.saveSeed(seed, substrateAddress)
+        }
+
+        return seed
+    }
+
+    fun convertPassphraseToSeed(mnemonic: String): String {
+        val derivationResult = SubstrateSeedFactory.deriveSeed32(MnemonicCreator.fromWords(mnemonic).words, null)
+        return derivationResult.seed.toHexString()
+    }
+}
+
+/**
+ * Write half of `PrefsCredentialsDatasource` at release/sora/2.3.2 (address, SORA2 keys and
+ * phrase). HARNESS: name, no interface, Hex; fearless_utils `Keypair` is [FearlessKeypair].
+ */
+class Release232PrefsCredentialsDatasource(
+    private val encryptedPreferences: Release3863EncryptedPreferences,
+    private val soraPreferences: Release3863SoraPreferences,
+) {
+
+    companion object {
+        private const val PREFS_PRIVATE_KEY = "prefs_priv_key"
+        private const val PREFS_PUBLIC_KEY = "prefs_pub_key"
+        private const val PREFS_KEY_NONCE = "prefs_key_nonce"
+        private const val PREFS_MNEMONIC = "prefs_mnemonic"
+        private const val PREFS_ADDRESS = "prefs_address_pure"
+    }
+
+    suspend fun saveAddress(address: String) {
+        soraPreferences.putString(PREFS_ADDRESS, address)
+    }
+
+    suspend fun saveKeys(keyPair: FearlessKeypair) {
+        encryptedPreferences.putEncryptedString(PREFS_PRIVATE_KEY, Hex.toHexString(keyPair.privateKey))
+        encryptedPreferences.putEncryptedString(PREFS_PUBLIC_KEY, Hex.toHexString(keyPair.publicKey))
+        keyPair.nonce?.let {
+            if (it.isNotEmpty()) {
+                encryptedPreferences.putEncryptedString(PREFS_KEY_NONCE, Hex.toHexString(it))
+            }
+        }
+    }
+
+    suspend fun saveMnemonic(mnemonic: String) {
+        encryptedPreferences.putEncryptedString(PREFS_MNEMONIC, mnemonic)
+    }
+
+    /** HARNESS: spongycastle `Hex.toHexString` (lower-case, no prefix). */
+    private object Hex {
+        fun toHexString(bytes: ByteArray): String =
+            bytes.joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
+    }
+}
+
+/**
+ * `CredentialsRepositoryImpl.restoreUserCredentials` -> `generateEntropyAndKeys(mnemonic)` at
+ * release/sora/2.3.2 (lines 39-49 and 74-76). [mnemonic] is the recovery text exactly as the
+ * person typed it: RecoveryFragment (lines 70-87) passed `mnemonicInput.text.toString()`, which
+ * an InputFilter only lower-cased. The fearless_utils 1.0.x parser accepted `[\s,]+` between
+ * words, so "word,word" and "word, word" restored the wallet, and the text was saved with its
+ * commas.
+ *
+ * HARNESS: `cryptoAssistant.bip39.generateEntropy/generateSeed` and `keyPairFactory.generate`
+ * (fearless_utils, not on the test classpath) are replaced by [keyPairOf], which derives the
+ * same sr25519 key pair from the same words with the packaged library; `toSoraAddress()` is
+ * [toSoraAddress]. The Iroha claim data written by `generateAndSaveClaimData` (prefs_iroha_*,
+ * prefs_signature) is not key material that 3.9.0 reads and is left out.
+ */
+class Release232CredentialsRepository(
+    private val credentialsPrefs: Release232PrefsCredentialsDatasource,
+    private val keyPairOf: (mnemonic: String) -> FearlessKeypair,
+    private val toSoraAddress: (ByteArray) -> String,
+) {
+
+    suspend fun restoreUserCredentials(mnemonic: String) {
+        generateEntropyAndKeys(mnemonic)
+    }
+
+    private suspend fun generateEntropyAndKeys(mnemonic: String) {
+        val keyPair = keyPairOf(mnemonic)
+
+        credentialsPrefs.saveAddress(toSoraAddress(keyPair.publicKey))
+        credentialsPrefs.saveKeys(keyPair)
+        credentialsPrefs.saveMnemonic(mnemonic)
     }
 }
 
