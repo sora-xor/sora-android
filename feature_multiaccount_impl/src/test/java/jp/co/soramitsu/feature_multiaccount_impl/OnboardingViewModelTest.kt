@@ -852,6 +852,43 @@ class OnboardingViewModelTest {
         }
 
     @Test
+    fun `a Google backup that holds nothing usable says so and what to do next`() = runTest {
+        whenever(coroutineManager.io)
+            .thenReturn(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler))
+        // The backup opens with its password, but its phrase is not a valid phrase and it
+        // holds no seed and no JSON.
+        whenever(backupService.importBackupAccount("cnBackedUp", "backup password")).thenReturn(
+            googleBackup(
+                types = listOf(jp.co.soramitsu.xbackup.domain.models.BackupAccountType.PASSPHRASE),
+                phrase = "not a phrase",
+                seed = "",
+            )
+        )
+        whenever(multiAccInteractor.isMnemonicValid("not a phrase")).thenReturn(false)
+        onboardingViewModel.onImportAccountSelected(
+            navController,
+            jp.co.soramitsu.feature_multiaccount_impl.presentation.BackupAccountMetaWithIcon(
+                jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta("Backed up", "cnBackedUp"),
+                null,
+            ),
+        )
+        onboardingViewModel.onImportPasswordChanged(
+            androidx.compose.ui.text.input.TextFieldValue("backup password")
+        )
+        onboardingViewModel.onImportContinueClicked(navController)
+        testScheduler.advanceUntilIdle()
+
+        // Not "Something went wrong": nothing was changed, and Import account is the way on.
+        assertEquals(
+            R.string.google_backup_unreadable_title to R.string.google_backup_unreadable,
+            onboardingViewModel.errorFromResourceLiveData.value,
+        )
+        org.mockito.kotlin.verify(multiAccInteractor, org.mockito.kotlin.never())
+            .importFromMnemonic(org.mockito.kotlin.any(), org.mockito.kotlin.any())
+        assertEquals(false, onboardingViewModel.importAccountPasswordState.value?.isLoading)
+    }
+
+    @Test
     fun `a phone without a file picker says that the backup text can be pasted`() = runTest {
         onboardingViewModel.onRecoveryFilePickerUnavailable()
 

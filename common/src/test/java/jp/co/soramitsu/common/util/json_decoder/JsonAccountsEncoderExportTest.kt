@@ -212,7 +212,7 @@ class JsonAccountsEncoderExportTest {
             add(
                 "encoding",
                 JsonObject().apply {
-                    add("content", JsonArray().apply { add("pkcs8"); add("sr25519") })
+                    add("content", JsonArray().apply { listOf("pkcs8", "sr25519").forEach { add(it) } })
                     add("type", JsonArray().apply { ENCRYPTION.forEach { add(it) } })
                     addProperty("version", "3")
                 },

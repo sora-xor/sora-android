@@ -112,7 +112,8 @@ class JsonAccountsExportRoundTripTest {
         )
         assertEquals("3", root.getAsJsonObject("encoding").get("version").asString)
         val listed = root.getAsJsonArray("accounts").map { it.asJsonObject }
-        assertEquals(listOf("First", "Second"), listed.map { it.getAsJsonObject("meta").get("name").asString })
+        val names = listed.map { account -> account.getAsJsonObject("meta").get("name").asString }
+        assertEquals(listOf("First", "Second"), names)
         listed.forEach { account ->
             assertEquals("cnTon6cV8Ze8ATHT1tZdHregCc3wBc8vfg7P5o2TtwdUoRf4m", account.get("address").asString)
             assertEquals(GENESIS, account.getAsJsonObject("meta").get("genesisHash").asString)

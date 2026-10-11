@@ -1283,8 +1283,10 @@ class OnboardingViewModel @Inject constructor(
         decryptedBackupAccount: DecryptedBackupAccount,
         backupPassword: String,
     ): SoraAccount {
+        // A backup that holds no valid phrase, seed or JSON cannot restore anything: said in
+        // Google backup words, with the way forward, not as "Something went wrong".
         val secret = backupSecret(decryptedBackupAccount)
-            ?: throw SoraException.businessError(ResponseCode.GENERAL_ERROR)
+            ?: throw SoraException.businessError(ResponseCode.GOOGLE_BACKUP_UNREADABLE)
         return when (secret.kind) {
             ImportKind.PHRASE ->
                 multiaccountInteractor.importFromMnemonic(secret.input, decryptedBackupAccount.name)
@@ -1420,11 +1422,11 @@ class OnboardingViewModel @Inject constructor(
         val restores = multiaccountInteractor.backupRestores(backups.map { it.address })
         val restorable = backups.mapNotNull { backup ->
             val restore = restores[backup.address] ?: return@mapNotNull null
+            val readOnly = restore == MultiaccountInteractor.BackupRestore.REPAIRS_READ_ONLY_ACCOUNT
             BackupAccountMetaWithIcon(
                 backupAccountMeta = backup,
                 icon = getDrawableFromGoogleBackup(backup.address),
-                readOnlyOnThisPhone =
-                    restore == MultiaccountInteractor.BackupRestore.REPAIRS_READ_ONLY_ACCOUNT,
+                readOnlyOnThisPhone = readOnly,
             )
         }
         return GoogleBackups(restorable, allUsableHere = restorable.isEmpty())
