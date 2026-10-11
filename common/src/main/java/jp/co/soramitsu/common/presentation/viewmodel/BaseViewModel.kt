@@ -156,7 +156,8 @@ open class BaseViewModel : ViewModel() {
      * always tells the user, whatever the error type: a confirm button must never end in silence.
      */
     protected fun showTransactionNotSent(resourceManager: ResourceManager, error: Throwable) {
-        if (error is SoraException) {
+        if (error is SoraException && error.hasOwnMessage()) {
+            // A business error names its own reason (for example an unavailable fee rate).
             onError(error)
             return
         }
@@ -164,6 +165,15 @@ open class BaseViewModel : ViewModel() {
         val text = TransactionOutcomeTexts.notSent(resourceManager, error)
         alertDialogLiveData.setValue(text.title to text.message)
     }
+
+    /**
+     * True only when [onError] shows a specific message for this error. Every other error,
+     * including a [SoraException] that [onError] would pass over in silence or answer with a
+     * generic "unexpected error", gets the "Not sent" explanation instead.
+     */
+    private fun SoraException.hasOwnMessage(): Boolean =
+        kind == SoraException.Kind.BUSINESS &&
+            errorResponseCode?.messageResource?.let { it != 0 } == true
 
     /** The node refused the transaction before broadcast: a failure, with its reason. */
     protected fun showTransactionRefused(
