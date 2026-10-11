@@ -784,9 +784,11 @@ class CredentialsRepositoryImpl constructor(
         // stale, or compromised remote configuration rewrite the chain identity embedded in it.
         val localGenesis = Sora2RuntimeContract.SORA_MAINNET_GENESIS_HASH
         // Every account is proven before anything is encoded, so a file is either a backup of
-        // all the chosen accounts or it is not made.
-        val exported = accounts.map { exportAccount(it) }
+        // all the chosen accounts or it is not made. Key pairs read so far are wiped when a
+        // later account is refused.
+        val exported = mutableListOf<JsonAccountsEncoder.ExportAccount>()
         try {
+            accounts.forEach { exported += exportAccount(it) }
             if (exported.size == 1) {
                 jsonSeedEncoder.generate(
                     account = exported.single(),

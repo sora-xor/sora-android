@@ -709,6 +709,18 @@ class WalletUpgradeScenarioTest {
             launch.assertCiphertextsKept(before)
             launch.assertUsable(listOf(first), unavailable = listOf(broken.address), selected = first)
 
+            // Accounts, batch export: one backup file for both accounts is refused, and the
+            // refusal names the account that has to be left out. No file is written.
+            val refused = runCatching {
+                launch.interactor.getJsonFileUri(listOf(first.address, broken.address), JSON_PASSWORD)
+            }.exceptionOrNull()
+            assertEquals(
+                listOf(broken.address),
+                (refused as? MultiaccountInteractor.AccountsNotExportableException)
+                    ?.accounts?.map(SoraAccount::substrateAddress),
+            )
+            launch.assertCiphertextsKept(before)
+
             // Importing the phrase never asks to remove the account. A stored value cannot be
             // read, so nothing is written and the confirmed repair is offered.
             val offer = runCatching { launch.importPhrase(TWENTY_FOUR_WORDS, "Broken") }

@@ -40,6 +40,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.presentation.compose.components.initMediumTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
@@ -50,9 +52,13 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.mod
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import kotlinx.coroutines.launch
 
+/** Characters kept from each end of an address when an account is named in a message. */
+private const val SHORT_ADDRESS_CHARS = 8
+
 class BackupJsonViewModel @AssistedInject constructor(
     private val interactor: MultiaccountInteractor,
     private val router: MainRouter,
+    private val resourceManager: ResourceManager,
     @Assisted("addresses") private val addresses: List<String>,
 ) : BaseViewModel() {
 
@@ -148,6 +154,17 @@ class BackupJsonViewModel @AssistedInject constructor(
                     interactor.getJsonFileUri(addresses, current.confirmationState.value.text)
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error
+            } catch (error: MultiaccountInteractor.AccountsNotExportableException) {
+                // Several accounts were chosen and some cannot be exported: no file is made,
+                // and the message names them, so they need not be found by trial and error.
+                alertDialogLiveData.value = Pair(
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.export_json_keys_unusable_named_title
+                    ),
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.export_json_keys_unusable_named
+                    ).format(error.accounts.joinToString("\n", transform = ::accountLine)),
+                )
             } catch (error: Throwable) {
                 // For example an account whose stored keys cannot be used: no file is made
                 // and the screen says why and what to do.
@@ -156,6 +173,17 @@ class BackupJsonViewModel @AssistedInject constructor(
                 _backupJsonScreenState.value = _backupJsonScreenState.value?.copy(loading = false)
             }
         }
+    }
+
+    /** One account in a message: its name and enough of its address to tell it apart. */
+    private fun accountLine(account: SoraAccount): String {
+        val address = account.substrateAddress
+        val short = if (address.length <= SHORT_ADDRESS_CHARS * 2) {
+            address
+        } else {
+            "${address.take(SHORT_ADDRESS_CHARS)}…${address.takeLast(SHORT_ADDRESS_CHARS)}"
+        }
+        return if (account.accountName.isBlank()) short else "${account.accountName} ($short)"
     }
 
     override fun onNavIcon() {

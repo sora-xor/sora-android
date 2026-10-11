@@ -72,6 +72,9 @@ class BackupJsonViewModelTest {
     private lateinit var interactor: MultiaccountInteractor
 
     @Mock
+    private lateinit var resourceManager: jp.co.soramitsu.androidfoundation.resource.ResourceManager
+
+    @Mock
     private lateinit var uri: Uri
 
     private lateinit var viewModel: BackupJsonViewModel
@@ -90,7 +93,7 @@ class BackupJsonViewModelTest {
 
     @Before
     fun setUp() = runTest {
-        viewModel = BackupJsonViewModel(interactor, router, addresses)
+        viewModel = BackupJsonViewModel(interactor, router, resourceManager, addresses)
     }
 
     @Test
@@ -119,6 +122,40 @@ class BackupJsonViewModelTest {
             R.string.export_json_keys_unusable_title to R.string.export_json_keys_unusable,
             viewModel.errorFromResourceLiveData.value,
         )
+    }
+
+    @Test
+    fun `accounts that cannot be exported with the others are named`() = runTest {
+        val longAddress = "cnTon6cV8Ze8ATHT1tZdHregCc3wBc8vfg7P5o2TtwdUoRf4m"
+        org.mockito.kotlin.whenever(interactor.getJsonFileUri(addresses, "password")).thenAnswer {
+            throw MultiaccountInteractor.AccountsNotExportableException(
+                listOf(
+                    jp.co.soramitsu.common.account.SoraAccount(longAddress, "Savings"),
+                    jp.co.soramitsu.common.account.SoraAccount("address2", ""),
+                )
+            )
+        }
+        org.mockito.kotlin.whenever(
+            resourceManager.getString(R.string.export_json_keys_unusable_named_title)
+        ).thenReturn("Some accounts can't be exported")
+        org.mockito.kotlin.whenever(
+            resourceManager.getString(R.string.export_json_keys_unusable_named)
+        ).thenReturn("These accounts can't be exported:\n%1\$s\nNo file was made.")
+        viewModel.passwordInputChanged(TextFieldValue("password"))
+        viewModel.confirmationInputChanged(TextFieldValue("password"))
+
+        viewModel.downloadJsonClicked()
+        testScheduler.advanceUntilIdle()
+
+        // No file. The message names each account that has to be left out: its name and
+        // enough of its address to tell it apart, or the address alone when it has no name.
+        assertEquals(null, viewModel.jsonTextLiveData.value)
+        assertEquals(
+            "Some accounts can't be exported" to
+                "These accounts can't be exported:\nSavings (cnTon6cV…wdUoRf4m)\naddress2\nNo file was made.",
+            viewModel.alertDialogLiveData.value,
+        )
+        assertEquals(false, viewModel.backupJsonScreenState.value?.loading)
     }
 
     @Test
