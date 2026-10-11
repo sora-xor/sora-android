@@ -2,18 +2,26 @@ package jp.co.soramitsu.sora.substrate.substrate
 
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.sora.substrate.runtime.Sora2RuntimeRpcRemoteException
+import jp.co.soramitsu.sora.substrate.runtime.Sora2SubmissionNotSentException
 
 /**
- * Decides whether an error from the single `author_submitExtrinsic` call proves that the node did
- * not take the transaction.
+ * Decides whether an error from the single `author_submitExtrinsic` call proves that no node
+ * took the transaction.
  *
- * Only an explicit JSON-RPC error object whose code is one of the transaction-pool refusals of
- * the Substrate author RPC counts. For those the node validated the transaction, rejected it and
- * therefore neither queued nor gossiped it, and this app sends each signed transaction to exactly
- * one node exactly once. Everything else stays "submission unknown" and is resolved from
- * finalized blocks only:
+ * Two things count:
  *
- * - transport errors, timeouts, malformed answers, unknown error codes;
+ * - an explicit JSON-RPC error object whose code is one of the transaction-pool refusals of the
+ *   Substrate author RPC. For those the node validated the transaction, rejected it and
+ *   therefore neither queued nor gossiped it, and this app delivers each signed transaction to
+ *   at most one node;
+ * - [Sora2SubmissionNotSentException]: every attempt failed before the request body was handed
+ *   to a connection, so the signed bytes never left this device
+ *   ([TransactionNodeRefusal.NOT_REACHED]).
+ *
+ * Everything else stays "submission unknown" and is resolved from finalized blocks only:
+ *
+ * - transport errors after the request was handed over, timeouts, malformed answers, unknown
+ *   error codes;
  * - `1012` (temporarily banned) and `1013` (already imported), which mean the node has seen the
  *   same transaction before;
  * - an "outdated"/"stale" answer, which means the account nonce is already used and could be the
@@ -26,6 +34,13 @@ import jp.co.soramitsu.sora.substrate.runtime.Sora2RuntimeRpcRemoteException
 internal object Sora2SubmissionRefusalClassifier {
 
     fun refusalOrNull(error: Throwable): Sora2NodeRefusal? {
+        if (error is Sora2SubmissionNotSentException) {
+            return Sora2NodeRefusal(
+                reason = TransactionNodeRefusal.NOT_REACHED,
+                code = NOT_REACHED_CODE,
+                message = null,
+            )
+        }
         val remote = error as? Sora2RuntimeRpcRemoteException ?: return null
         val text = listOfNotNull(remote.remoteData, remote.remoteMessage).joinToString(" ")
         val reason = when (remote.code) {
@@ -46,6 +61,9 @@ internal object Sora2SubmissionRefusalClassifier {
             message = (remote.remoteData ?: remote.remoteMessage).sanitizedStatusText(),
         )
     }
+
+    /** Not a node's code: no node answered. Stored with the refusal for Activity. */
+    private const val NOT_REACHED_CODE = 0L
 
     // sc-rpc-api author error codes (client/rpc-api/src/author/error.rs).
     private const val BAD_FORMAT = 1001L
@@ -79,8 +97,9 @@ internal object Sora2SubmissionRefusalClassifier {
 }
 
 /**
- * The single submission attempt was answered with an explicit refusal ([refusal]). The
- * transaction was not broadcast. It is a definitive failure for the user and never "submitted".
+ * The submission was answered with an explicit refusal, or no node could be connected to at all
+ * ([refusal]). The transaction was not broadcast. It is a definitive failure for the user and
+ * never "submitted".
  */
 class ExtrinsicRefusedByNodeException(
     val transactionHash: String,

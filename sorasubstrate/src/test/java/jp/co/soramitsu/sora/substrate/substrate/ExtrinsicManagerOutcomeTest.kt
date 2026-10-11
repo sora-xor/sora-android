@@ -12,6 +12,7 @@ import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.TransactionOutcome
+import jp.co.soramitsu.common.network.BoundedHttpTextException
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.AccountDao
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
@@ -129,6 +130,81 @@ class ExtrinsicManagerOutcomeTest {
             outcome,
         )
     }
+
+    @Test
+    fun `a transaction that reached no endpoint is not sent and never waiting`() = runTest {
+        // Neither reviewed endpoint could be connected to: no byte of the signed transaction
+        // left the phone.
+        val (fixture, first, second) = twoEndpointFixture(
+            first = { throw BoundedHttpTextException("BOUNDED_HTTP_IO", requestNotSent = true) },
+            second = {
+                throw BoundedHttpTextException("BOUNDED_HTTP_DEADLINE", requestNotSent = true)
+            },
+        )
+
+        val outcome = sora2TransactionOutcome { fixture.submit() }
+
+        assertEquals(
+            TransactionOutcome.RefusedByNode(
+                txHash = fixture.transactionHash,
+                reason = TransactionNodeRefusal.NOT_REACHED,
+                nodeMessage = null,
+            ),
+            outcome,
+        )
+        assertEquals(1, first.submitAttempts)
+        assertEquals(1, second.submitAttempts)
+        // Remembered for Activity, which then says "Not sent" instead of "Submitted".
+        assertEquals(TransactionNodeRefusal.NOT_REACHED, fixture.recordedRefusal.captured.reason)
+        coVerify(exactly = 0) { fixture.coordinator.markSubmitted(any()) }
+        coVerify(exactly = 0) { fixture.coordinator.awaitTerminalStatus(any(), any()) }
+    }
+
+    @Test
+    fun `the second endpoint takes a transaction the first was never connected to`() = runTest {
+        val (fixture, first, second) = twoEndpointFixture(
+            first = { throw BoundedHttpTextException("BOUNDED_HTTP_IO", requestNotSent = true) },
+            second = { ACCEPTED },
+        )
+        coEvery { fixture.coordinator.awaitTerminalStatus(any(), any()) } returns
+            ExtrinsicSubmitStatus(true, fixture.transactionHash, "0x${"22".repeat(32)}")
+
+        val outcome = sora2TransactionOutcome { fixture.submit() }
+
+        assertTrue(outcome is TransactionOutcome.Confirmed)
+        assertEquals(1, first.submitAttempts)
+        assertEquals(1, second.submitAttempts)
+        coVerify(exactly = 1) { fixture.coordinator.markSubmitted(any()) }
+        assertFalse(fixture.recordedRefusal.isCaptured)
+    }
+
+    @Test
+    fun `a transaction the first endpoint may have received is not offered to the second`() =
+        runTest {
+            listOf(
+                // The request body was handed over; the answer never came.
+                BoundedHttpTextException("BOUNDED_HTTP_IO", requestNotSent = false),
+                BoundedHttpTextException("BOUNDED_HTTP_DEADLINE", requestNotSent = false),
+                // A gateway answered instead of the node. It may have passed the request on.
+                BoundedHttpTextException("BOUNDED_HTTP_STATUS_502", requestNotSent = false),
+            ).forEach { failure ->
+                val (fixture, first, second) = twoEndpointFixture(
+                    first = { throw failure },
+                    second = { ACCEPTED },
+                )
+
+                val outcome = sora2TransactionOutcome { fixture.submit() }
+
+                assertEquals(
+                    failure.safeCode,
+                    TransactionOutcome.Waiting(fixture.transactionHash, acceptedByNode = false),
+                    outcome,
+                )
+                assertEquals(1, first.submitAttempts)
+                assertEquals(failure.safeCode, 0, second.submitAttempts)
+                assertFalse(fixture.recordedRefusal.isCaptured)
+            }
+        }
 
     @Test
     fun `an accepted transaction whose finality wait ends early is waiting`() = runTest {
@@ -272,9 +348,58 @@ class ExtrinsicManagerOutcomeTest {
             ) {}
     }
 
+    /**
+     * One reviewed endpoint as the production client sees it. [onSubmit] decides what happens to
+     * `author_submitExtrinsic`: it returns the node's answer without id, or throws what the HTTPS
+     * transport would throw. The chain identity request that admits an endpoint is answered.
+     */
+    private class Endpoint(
+        private val transactionHash: String,
+        private val onSubmit: () -> String,
+    ) : Sora2RuntimeRpcTransport {
+        var submitAttempts = 0
+
+        override suspend fun post(requestBody: String, maximumResponseBytes: Int): String {
+            val request = JsonParser.parseString(requestBody).asJsonObject
+            val id = request.get("id").asLong
+            return when (val method = request.get("method").asString) {
+                "chain_getBlockHash" -> """{"jsonrpc":"2.0","id":$id,"result":"$GENESIS"}"""
+                "author_submitExtrinsic" -> {
+                    submitAttempts += 1
+                    val answer = onSubmit().replace(HASH_PLACEHOLDER, transactionHash)
+                    """{"jsonrpc":"2.0","id":$id,$answer}"""
+                }
+                else -> error("Unexpected method $method")
+            }
+        }
+    }
+
+    /** The production client over two endpoints, as in the app. */
+    private fun twoEndpointFixture(
+        first: () -> String,
+        second: () -> String,
+    ): Triple<Fixture, Endpoint, Endpoint> {
+        val transactionHash = ENCODED.extrinsicHash().canonicalExtrinsicHash()
+        val firstEndpoint = Endpoint(transactionHash, first)
+        val secondEndpoint = Endpoint(transactionHash, second)
+        val fixture = fixture(
+            submitAnswer = null,
+            rpcClient = Sora2BoundedRuntimeRpcClient(
+                transport = firstEndpoint,
+                gson = Gson(),
+                secondTransport = secondEndpoint,
+                expectedGenesisHash = GENESIS,
+            ),
+        )
+        return Triple(fixture, firstEndpoint, secondEndpoint)
+    }
+
     /** [submitAnswer] is the node's JSON-RPC answer without id; null closes the connection. */
-    private fun fixture(submitAnswer: String?): Fixture {
-        val encoded = "0x00"
+    private fun fixture(
+        submitAnswer: String?,
+        rpcClient: Sora2BoundedRuntimeRpcClient? = null,
+    ): Fixture {
+        val encoded = ENCODED
         val transactionHash = encoded.extrinsicHash().canonicalExtrinsicHash()
         var submitRequests = 0
         val transport = Sora2RuntimeRpcTransport { requestBody, _ ->
@@ -285,7 +410,9 @@ class ExtrinsicManagerOutcomeTest {
             val id = request.get("id").asLong
             """{"jsonrpc":"2.0","id":$id,${answer.replace(HASH_PLACEHOLDER, transactionHash)}}"""
         }
-        val rpcClient = Sora2BoundedRuntimeRpcClient(transport = transport, gson = Gson())
+        @Suppress("NAME_SHADOWING")
+        val rpcClient = rpcClient
+            ?: Sora2BoundedRuntimeRpcClient(transport = transport, gson = Gson())
 
         val factory = mockk<ExtrinsicBuilderFactory>()
         val runtimeManager = mockk<RuntimeManager>()
@@ -385,6 +512,9 @@ class ExtrinsicManagerOutcomeTest {
 
     private companion object {
         const val WALLET_ID = "cnRetainedWallet"
+        const val ENCODED = "0x00"
+        const val GENESIS =
+            "0x7e4e32d0feafd4f9c9414b0be86373f9a1efa904809b683453a9af6856d38ad5"
         const val HASH_PLACEHOLDER = "{hash}"
         const val ACCEPTED = """"result":"{hash}""""
         val SWAP = Sora2SubmissionActivity(
