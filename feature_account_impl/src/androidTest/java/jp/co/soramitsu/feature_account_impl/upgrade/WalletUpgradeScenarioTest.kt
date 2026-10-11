@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.google.gson.Gson
 import io.mockk.mockk
 import java.io.File
 import java.security.KeyPair
@@ -28,6 +29,7 @@ import jp.co.soramitsu.common.nexus.NexusNetworks
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.EncryptionUtil
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
+import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.SetUpAgainScope
 import jp.co.soramitsu.core_db.WalletMigrationIntegrity
@@ -47,6 +49,7 @@ import jp.co.soramitsu.feature_account_impl.data.repository.datasource.PrefsUser
 import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationManager
 import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationOutcome
 import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationSr25519Crypto
+import jp.co.soramitsu.feature_account_impl.historical.HistoricalSr25519Vectors
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.xcrypto.encryption.sr25519.Sr25519JNI
 import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
@@ -54,6 +57,7 @@ import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.EncryptionType
 import jp.co.soramitsu.xsubstrate.encrypt.MultiChainEncryption
 import jp.co.soramitsu.xsubstrate.encrypt.SignWrapper
+import jp.co.soramitsu.xsubstrate.encrypt.json.JsonSeedEncoder
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.SubstrateKeypairFactory
 import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
@@ -1542,6 +1546,314 @@ class WalletUpgradeScenarioTest {
     }
 
     @Test
+    fun keyBytesOfTheReleasedLibraryUpgradeUnchangedSignAndExport() = runBlocking {
+        // Every checked-in vector of the released native library: phrases of 12, 15, 18, 21 and
+        // 24 words (two of them asserted by fearless-utils' own tests) and a raw seed.
+        val vectors = HistoricalSr25519Vectors.ALL
+        val wallets = vectors.map { vector ->
+            vector.phrase?.let(::phraseWallet) ?: rawSeedWallet(vector.seed)
+        }
+        val before = release3863 {
+            wallets.forEach { wallet ->
+                if (wallet.mnemonic != null) created(wallet) else importedSeed(wallet)
+                finishedAccount(wallet)
+            }
+            select(wallets.first())
+            registrationFinished()
+        }
+        room(73, *wallets.mapIndexed { index, wallet -> wallet to "Wallet $index" }.toTypedArray())
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            // The same addresses, and a fresh signature of every stored key verifies.
+            launch.assertUsable(wallets, selected = wallets.first())
+            assertEquals(wallets.size, launch.journal().verifiedAccountCount)
+            launch.assertCiphertextsKept(before)
+            vectors.zip(wallets).forEach { (vector, wallet) ->
+                val account = SoraAccount(wallet.address, "Wallet")
+                // The stored bytes are still exactly the ones the released library derived.
+                val stored = launch.credentials.retrieveKeyPair(account)
+                assertEquals(vector.id, vector.privateKey, stored.privateKey.toHexString())
+                assertEquals(vector.id, vector.nonce, stored.nonce.toHexString())
+                assertEquals(vector.id, vector.publicKey, stored.publicKey.toHexString())
+                val report = launch.report(wallet)
+                assertTrue(vector.id, report.canSign)
+                assertTrue(vector.id, report.diagnostics.none { "DIFFER_FROM_DERIVATION" in it })
+                // The export works and holds the same key pair.
+                val json = launch.credentials.generateJson(listOf(account), JSON_PASSWORD)
+                val draft = launch.credentials.draftsFromJson(json, JSON_PASSWORD, "Wallet").single()
+                try {
+                    assertEquals(vector.id, wallet.address, draft.address)
+                    assertEquals(vector.id, vector.privateKey, draft.keypair.privateKey.toHexString())
+                    assertEquals(vector.id, vector.nonce, draft.keypair.nonce.toHexString())
+                } finally {
+                    draft.destroy()
+                }
+            }
+            launch.assertCiphertextsKept(before)
+        }
+    }
+
+    @Test
+    fun everyBackupFormatTheAppOffersRestoresTheSameAccount() = runBlocking {
+        val wallet = phraseWallet(TWELVE_WORDS)
+        release3863 {
+            created(wallet)
+            finishedAccount(wallet)
+            select(wallet)
+            registrationFinished()
+            // The seed cache holds the uncropped 64 bytes (audit A1).
+            assertEquals(128, showRawSeedOn3820(wallet).length)
+        }
+        room(73, wallet to "Main")
+        val account = SoraAccount(wallet.address, "Main")
+
+        // What the app shows, exports or backs up for this account.
+        var phrase = ""
+        var rawSeed = ""
+        var json = ""
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            phrase = launch.backupMaterial(wallet).phraseWords.joinToString(" ")
+            rawSeed = launch.credentials.retrieveSeed(account)
+            json = launch.credentials.generateJson(listOf(account), JSON_PASSWORD)
+        }
+        assertEquals(TWELVE_WORDS, phrase)
+        assertEquals(64, rawSeed.length)
+
+        // Each of them, alone, on a phone that holds nothing.
+        val restores = listOf<Pair<String, suspend (CandidateProcess) -> SoraAccount>>(
+            "phrase" to { launch -> launch.importPhrase(phrase, "Restored") },
+            "raw seed" to { launch -> launch.importSeed(rawSeed, "Restored") },
+            "JSON" to { launch -> launch.importJson(json, JSON_PASSWORD, "Restored") },
+        )
+        restores.forEach { (format, restore) ->
+            cleanInstall()
+            candidate(newProcess = true) { launch ->
+                assertTrue(format, launch.prepare.isSuccess)
+                assertEquals(format, MigrationOutcome.Verified, launch.verify())
+                assertEquals(format, wallet.address, restore(launch).substrateAddress)
+            }
+            candidate(newProcess = true) { launch ->
+                assertTrue(format, launch.prepare.isSuccess)
+                assertEquals(format, MigrationOutcome.Verified, launch.verify())
+                launch.assertUsable(listOf(wallet), selected = wallet)
+                if (format == "JSON") {
+                    // A wallet that is only a key pair: no phrase or seed is offered, the
+                    // account signs, and its own export restores it again.
+                    assertEquals("LEGACY_SECRET", launch.identity(wallet).secretSource)
+                    val material = launch.backupMaterial(wallet)
+                    assertTrue(material.canSign && material.onlyJsonExport)
+                    val again = launch.credentials.generateJson(listOf(account), JSON_PASSWORD)
+                    val draft = launch.credentials.draftsFromJson(again, JSON_PASSWORD, "").single()
+                    try {
+                        assertEquals(wallet.address, draft.address)
+                        assertArrayEquals(wallet.keypair.privateKey, draft.keypair.privateKey)
+                    } finally {
+                        draft.destroy()
+                    }
+                    // A wrong password or another file changes nothing and says why.
+                    val wrong = runCatching {
+                        launch.credentials.draftsFromJson(again, "another password", "")
+                    }.exceptionOrNull()
+                    assertEquals(
+                        ResponseCode.JSON_BACKUP_WRONG_PASSWORD,
+                        (wrong as? SoraException)?.errorResponseCode,
+                    )
+                    // The same file again: the wallet is already here.
+                    val twice = runCatching {
+                        launch.importJson(json, JSON_PASSWORD, "Again")
+                    }.exceptionOrNull()
+                    assertEquals(
+                        ResponseCode.ACCOUNT_ALREADY_IMPORTED,
+                        (twice as? SoraException)?.errorResponseCode,
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun storedKeyOfAnotherWalletIsRepairedWithItsEncryptedJsonExport() = runBlocking {
+        val broken = phraseWallet(TWELVE_WORDS)
+        val foreign = rawSeedWallet(RAW_SEED)
+        // The export made while the account still worked.
+        var json = ""
+        release3863 {
+            created(broken)
+            finishedAccount(broken)
+            select(broken)
+            registrationFinished()
+        }
+        room(73, broken to "Main")
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            json = launch.credentials.generateJson(listOf(SoraAccount(broken.address, "Main")), JSON_PASSWORD)
+        }
+        // Later the stored private key and nonce are another wallet's (they do not derive the
+        // address), and no phrase is stored any more.
+        cleanInstall()
+        release3863 {
+            credentials.saveKeys(
+                Sr25519Keypair(foreign.keypair.privateKey, broken.keypair.publicKey, foreign.keypair.nonce),
+                broken.address,
+            )
+            finishedAccount(broken)
+            select(broken)
+            registrationFinished()
+        }
+        room(73, broken to "Main")
+
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(emptyList(), unavailable = listOf(broken.address), selected = broken)
+            assertEquals("SIGNING_KEY_NOT_OF_ADDRESS", launch.report(broken).signingRefusal)
+            assertEquals(0, launch.journal().verifiedAccountCount)
+            // Keys that do not belong to the account are never exported as its backup.
+            val refused = runCatching {
+                launch.credentials.generateJson(listOf(SoraAccount(broken.address, "Main")), JSON_PASSWORD)
+            }.exceptionOrNull()
+            assertEquals(
+                ResponseCode.ACCOUNT_KEYS_NOT_EXPORTABLE,
+                (refused as? SoraException)?.errorResponseCode,
+            )
+
+            // Importing the backup file offers the repair and writes nothing.
+            val offer = runCatching { launch.importJson(json, JSON_PASSWORD, "Main") }.exceptionOrNull()
+            assertTrue(offer.toString(), offer is WalletRepairAvailableException)
+            assertTrue(repairCopies().isEmpty())
+            // Confirmed with the PIN: the old values are copied first, then the key pair of the
+            // file is written, and the account signs again under the same address.
+            val repaired = launch.repairWithJson(json, JSON_PASSWORD, "Main", pin = "135790")
+            assertEquals(broken.address, repaired.substrateAddress)
+            assertEquals(1, repairCopies().size)
+            launch.assertUsable(listOf(broken), selected = broken)
+        }
+        candidate(newProcess = true) { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(broken), selected = broken)
+            assertEquals(1, launch.journal().verifiedAccountCount)
+        }
+    }
+
+    @Test
+    fun backupMaterialThatCannotBeReadNeverBlocksSigning() = runBlocking {
+        val wallet = phraseWallet(TWELVE_WORDS)
+        val control = phraseWallet(TWENTY_FOUR_WORDS)
+        val before = release3863 {
+            created(wallet)
+            created(control)
+            finishedAccount(wallet)
+            finishedAccount(control)
+            select(wallet)
+            registrationFinished()
+            assertEquals(64, showRawSeedOn3863(wallet).length)
+            // The phrase and the cached seed of one account no longer decrypt; its key does.
+            prefs.putString("prefs_mnemonic${wallet.address}", UNDECRYPTABLE)
+            prefs.putString("prefs_seed${wallet.address}", UNDECRYPTABLE)
+        }
+        room(73, wallet to "Main", control to "Control")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            // The stored key signs, so the account signs.
+            launch.assertUsable(listOf(wallet, control), selected = wallet)
+            launch.assertCiphertextsKept(before)
+            assertEquals(2, launch.journal().verifiedAccountCount)
+            assertEquals("LEGACY_SECRET", launch.identity(wallet).secretSource)
+            assertEquals("UNREADABLE", launch.report(wallet).phrase)
+            assertEquals("UNREADABLE", launch.report(wallet).seed)
+            // Nothing unreadable is offered as a backup; the encrypted JSON export is.
+            val material = launch.backupMaterial(wallet)
+            assertTrue(material.canSign && material.onlyJsonExport)
+            assertTrue(material.storedPhraseUnreadable && material.storedSeedUnreadable)
+            assertFalse(material.storedPhraseDoesNotMatch || material.storedSeedDoesNotMatch)
+            val json = launch.credentials.generateJson(listOf(SoraAccount(wallet.address, "Main")), JSON_PASSWORD)
+            val draft = launch.credentials.draftsFromJson(json, JSON_PASSWORD, "Main").single()
+            try {
+                assertEquals(wallet.address, draft.address)
+            } finally {
+                draft.destroy()
+            }
+            // Importing its phrase says the wallet is already here; nothing is rewritten.
+            val again = runCatching { launch.importPhrase(TWELVE_WORDS, "Again") }.exceptionOrNull()
+            assertEquals(
+                ResponseCode.ACCOUNT_ALREADY_IMPORTED,
+                (again as? SoraException)?.errorResponseCode,
+            )
+            launch.assertCiphertextsKept(before)
+        }
+    }
+
+    @Test
+    fun nexusAccountFirstDerivedFromACommaTextKeepsItsIdentity() = runBlocking {
+        val wallet = phraseWallet(TWELVE_WORDS)
+        val typed = TWELVE_WORDS.replace(" ", ", ")
+        val before = release233 { restoredOn232(wallet, typed = typed, name = "Main wallet") }
+        room(50)
+
+        // A new derivation uses the words: the identities of the phrase written with spaces.
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+        }
+        // An earlier build of this version derived them from the stored text, commas included.
+        val earlier = NexusNetworks.admitted.associate { network ->
+            val derived = IrohaKeyDerivation.derive(
+                mnemonic = typed,
+                profile = network.derivationProfile,
+                phraseText = IrohaKeyDerivation.PhraseText.AS_FIRST_DERIVED,
+            )
+            try {
+                network.id.wireId to (derived.address to derived.publicKey.toHexString())
+            } finally {
+                derived.destroy()
+            }
+        }
+        earlier.forEach { (networkId, identity) ->
+            updateDatabase(
+                "UPDATE networkAccounts SET address = '${identity.first}', " +
+                    "publicKey = '${identity.second}' " +
+                    "WHERE walletId = '${wallet.address}' AND networkId = '$networkId'"
+            )
+        }
+
+        repeat(2) {
+            candidate(newProcess = true) { launch ->
+                assertTrue(launch.prepare.isSuccess)
+                assertEquals(MigrationOutcome.Verified, launch.verify())
+                launch.assertUsable(listOf(wallet), selected = wallet)
+                launch.assertCiphertextsKept(before)
+                // Address and public key are still the ones first derived, on every start.
+                val stored = launch.database.walletIdentityDao().getNetworkAccounts(wallet.address)
+                    .filter { it.networkId != "sora2" }
+                    .associate { it.networkId to (it.address to it.publicKey) }
+                assertEquals(earlier, stored)
+                // And signing re-derives exactly that account from the stored text.
+                NexusNetworks.admitted.forEach { network ->
+                    val (address, publicKey) = earlier.getValue(network.id.wireId)
+                    val derived = requireNotNull(
+                        IrohaKeyDerivation.deriveExisting(
+                            mnemonic = launch.credentials.retrieveMnemonic(SoraAccount(wallet.address, "")),
+                            profile = network.derivationProfile,
+                            existingAddress = address,
+                            existingPublicKey = HistoricalSr25519Vectors.hex(publicKey),
+                        )
+                    )
+                    derived.destroy()
+                }
+            }
+        }
+    }
+
+    @Test
     fun upperCaseHexAndPrefixedValuesUpgradeAndSign() = runBlocking {
         val phrase = phraseWallet(TWELVE_WORDS)
         val seed = rawSeedWallet(RAW_SEED)
@@ -2102,7 +2414,9 @@ class WalletUpgradeScenarioTest {
             credentialsDatasource,
             mockk(relaxed = true),
             codec,
-            mockk(relaxed = true),
+            // The production encoder of the encrypted JSON export and its import. (Only the
+            // batch export uses CryptoAssistant; JsonAccountsExportRoundTripTest covers it.)
+            JsonAccountsEncoder(Gson(), mockk(relaxed = true), JsonSeedEncoder(Gson())),
         )
         private var databaseOpened = false
         val database: AppDatabase by lazy {
@@ -2167,6 +2481,59 @@ class WalletUpgradeScenarioTest {
                 return finishImport(draft.address, draft.accountName, exists)
             } finally {
                 draft.destroy()
+            }
+        }
+
+        /** MultiaccountInteractor.importFromRawSeed (importDraft), step for step. */
+        suspend fun importSeed(seedHex: String, name: String): SoraAccount {
+            val draft = credentials.draftFromRawSeed(seedHex, name)
+            try {
+                val exists = requireNotAlreadyUsable(draft.address)
+                credentials.commitDraft(draft)
+                return finishImport(draft.address, draft.accountName, exists)
+            } finally {
+                draft.destroy()
+            }
+        }
+
+        /** MultiaccountInteractor.importFromJson for a one-account file, step for step. */
+        suspend fun importJson(json: String, password: String, name: String): SoraAccount {
+            val drafts = credentials.draftsFromJson(json, password, name)
+            try {
+                val draft = drafts.single()
+                val exists = requireNotAlreadyUsable(draft.address)
+                try {
+                    credentials.commitDraft(draft)
+                } catch (error: SoraException) {
+                    if (error.errorResponseCode == ResponseCode.ACCOUNT_STORAGE_CONFLICT) {
+                        throw WalletRepairAvailableException(
+                            address = draft.address,
+                            accountExists = exists,
+                            pinRequired = userRepository.retrievePin().isNotEmpty(),
+                        )
+                    }
+                    throw error
+                }
+                return finishImport(draft.address, draft.accountName, exists)
+            } finally {
+                drafts.forEach { it.destroy() }
+            }
+        }
+
+        /** MultiaccountInteractor.repairFromJson, step for step. */
+        suspend fun repairWithJson(json: String, password: String, name: String, pin: String): SoraAccount {
+            val stored = userRepository.retrievePin()
+            if (stored.isNotEmpty() && stored != pin) {
+                throw SoraException.businessError(ResponseCode.WRONG_PIN_CODE)
+            }
+            val drafts = credentials.draftsFromJson(json, password, name)
+            try {
+                val draft = drafts.single()
+                val exists = requireNotAlreadyUsable(draft.address)
+                credentials.repairWithDraft(draft)
+                return finishImport(draft.address, draft.accountName, exists)
+            } finally {
+                drafts.forEach { it.destroy() }
             }
         }
 
@@ -2293,26 +2660,43 @@ class WalletUpgradeScenarioTest {
         val seedHex: String,
     )
 
+    /**
+     * A wallet as a released app stored it. The stored key bytes are the checked-in vector of
+     * the released native library for this phrase (HistoricalSr25519Vectors: schnorrkel 0.9.1
+     * called as the shipped `sr25519-java` calls it), not whatever today's library returns.
+     * Today's library must derive exactly those bytes, which is asserted here for every fixture.
+     */
     private fun phraseWallet(phrase: String): Fixture {
         val words = MnemonicCreator.fromWords(phrase).words
+        val vector = requireNotNull(HistoricalSr25519Vectors.byPhrase(words)) {
+            "no historical key vector for this phrase"
+        }
         val seed = SubstrateSeedFactory.deriveSeed32(words, null).seed
-        val keypair = SubstrateKeypairFactory.generate(EncryptionType.SR25519, seed) as Sr25519Keypair
-        return Fixture(
-            address = requireNotNull(codec.toSoraAddressOrNull(keypair.publicKey)),
-            keypair = keypair,
-            mnemonic = words,
-            seedHex = seed.toHexString(),
-        )
+        assertEquals(vector.seed, seed.toHexString())
+        return historicalWallet(vector.id, mnemonic = words)
     }
 
     private fun rawSeedWallet(seedHex: String): Fixture {
-        val seed = seedHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-        val keypair = SubstrateKeypairFactory.generate(EncryptionType.SR25519, seed) as Sr25519Keypair
+        val vector = requireNotNull(HistoricalSr25519Vectors.bySeed(seedHex)) {
+            "no historical key vector for this seed"
+        }
+        return historicalWallet(vector.id, mnemonic = null)
+    }
+
+    private fun historicalWallet(vectorId: String, mnemonic: String?): Fixture {
+        val vector = HistoricalSr25519Vectors.byId(vectorId)
+        val hex = HistoricalSr25519Vectors::hex
+        val today = SubstrateKeypairFactory.generate(EncryptionType.SR25519, hex(vector.seed))
+            as Sr25519Keypair
+        assertEquals(vector.privateKey, today.privateKey.toHexString())
+        assertEquals(vector.nonce, today.nonce.toHexString())
+        assertEquals(vector.publicKey, today.publicKey.toHexString())
+        assertEquals(vector.soraAddress, codec.toSoraAddressOrNull(hex(vector.publicKey)))
         return Fixture(
-            address = requireNotNull(codec.toSoraAddressOrNull(keypair.publicKey)),
-            keypair = keypair,
-            mnemonic = null,
-            seedHex = seedHex,
+            address = vector.soraAddress,
+            keypair = Sr25519Keypair(hex(vector.privateKey), hex(vector.publicKey), hex(vector.nonce)),
+            mnemonic = mnemonic,
+            seedHex = vector.seed,
         )
     }
 
@@ -2423,6 +2807,7 @@ class WalletUpgradeScenarioTest {
             "fabric expire sight menu twenty pretty piano eager weasel unit name submit buffalo " +
                 "lemon drift prefer glide cat"
         const val RAW_SEED = "cf0010cf0010cf0010cf0010cf0010cfcf0010cf0010cf0010cf0010cf0010cf"
+        const val JSON_PASSWORD = "Export-Password-1"
 
         /**
          * The Iroha Ed25519 DID key pair as SORA v1 stored it (`KeyPair.private/public.encoded`),
