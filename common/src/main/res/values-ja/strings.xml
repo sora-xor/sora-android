@@ -650,4 +650,6 @@
   <string name="tx_outcome_pool_unavailable_title">プール情報を取得できません</string>
   <string name="tx_outcome_pool_unavailable">ネットワークからこのプールの情報を取得できなかったため、現在は数量を確認できません。何も送信されていません。インターネット接続を確認して、もう一度お試しください。</string>
   <string name="tx_outcome_quote_unavailable">価格を取得できません</string>
+  <string name="tx_outcome_not_sent_balance">残高がこの金額とネットワーク手数料の合計に足りなくなったため、何も送信されておらず、手数料もかかっていません。以前のトランザクションがその間に確定した可能性があります。残高を確認して、金額を変更してください。</string>
+  <string name="tx_outcome_not_sent_estimate">数量とネットワーク手数料をネットワークで確認できなかったため、何も送信されておらず、手数料もかかっていません。インターネット接続を確認して、もう一度お試しください。</string>
 </resources>
