@@ -255,12 +255,15 @@ class PolkaswapIndexerClient private constructor(
     private val responseCache: PiIndexerResponseCache,
     private val nowEpochMillis: () -> Long,
     private val nowMonotonicNanos: () -> Long,
+    /** Receives the clock difference each passed health check measured; see [PiIndexerClock]. */
+    private val indexerClock: PiIndexerClock = PiIndexerClock(),
 ) {
     @Inject
     constructor(
         boundedHttpTextClient: BoundedHttpTextClient,
         json: Json,
         @ApplicationContext context: Context,
+        indexerClock: PiIndexerClock,
     ) : this(
         graphQlTransport = BoundedGraphQlTransport(boundedHttpTextClient, json),
         json = json,
@@ -269,6 +272,7 @@ class PolkaswapIndexerClient private constructor(
         responseCache = FilePiIndexerResponseCache(context, json),
         nowEpochMillis = System::currentTimeMillis,
         nowMonotonicNanos = System::nanoTime,
+        indexerClock = indexerClock,
     )
 
     /**
@@ -297,6 +301,7 @@ class PolkaswapIndexerClient private constructor(
         responseCache: PiIndexerResponseCache,
         nowEpochMillis: () -> Long,
         nowMonotonicNanos: () -> Long,
+        indexerClock: PiIndexerClock = PiIndexerClock(),
     ) : this(
         graphQlTransport = BoundedGraphQlTransport(boundedHttpTextClient, json),
         json = json,
@@ -305,6 +310,7 @@ class PolkaswapIndexerClient private constructor(
         responseCache = responseCache,
         nowEpochMillis = nowEpochMillis,
         nowMonotonicNanos = nowMonotonicNanos,
+        indexerClock = indexerClock,
     )
 
     internal constructor(
@@ -1450,6 +1456,12 @@ class PolkaswapIndexerClient private constructor(
                 indexedAt in (referenceEpochSeconds - MAX_CHECKPOINT_AGE_SECONDS)..
                 (referenceEpochSeconds + MAX_FUTURE_SKEW_SECONDS)
         ) { "PI_INDEXER_CHECKPOINT_STALE" }
+        // The stores that keep validated data for offline use check these timestamps again
+        // when they save; they must judge them against the same clock.
+        indexerClock.recordHealthReference(
+            deviceEpochSeconds = nowEpochSeconds,
+            referenceEpochSeconds = referenceEpochSeconds,
+        )
         check(
             (health.workerLastError == null) ==
                 (health.workerLastErrorTimestamp == null)
