@@ -57,6 +57,16 @@ jobs:
           ./gradlew $GRADLE_FLAGS -I scripts/verify-production-release-lock-coverage.gradle
           verifyProductionReleaseLockCoverage resolveReleaseDependencyLocks
 
+      - name: Test the release manifest and Google identity checks
+        # The last one also runs the real release gate (:app:verifyProductionReleaseSigning)
+        # without inputs and expects it to refuse the build.
+        env:
+          SORA_TEST_RELEASE_GATE: "1"
+          SORA_GRADLE_FLAGS: ${{ env.GRADLE_FLAGS }}
+        run: |
+          python3 scripts/test-verify-release-manifest.py
+          python3 scripts/test-google-identity-pin.py
+
       - name: Run unit tests
         run: ./gradlew $GRADLE_FLAGS testProductionDebugUnitTest
 
@@ -124,3 +134,62 @@ jobs:
           path: app/build/reports/lint-results-productionDebug.*
           if-no-files-found: ignore
           retention-days: 14
+
+  minified-bundle:
+    # The Play artifact is a minified bundle, and only "Android Release" builds the real one,
+    # with secrets and an approval. This job builds the same thing without secrets
+    # (productionBenchmarkRelease: the release R8 rules, shrinker and bundle packaging, signed
+    # with the debug key), so that an R8 failure, a manifest that breaks the release policy, or
+    # a dependency that only the bundle needs is found here and not on release day.
+    name: Minified bundle rehearsal (R8, AAB, manifest, 16 KB)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      # Made up. :common only requires that a production Drive client is set for a release
+      # variant; this artifact is never distributed. productionRelease builds need the client
+      # pinned in config/android-production-google-identity.json.
+      SORA_GOOGLE_TOKEN_PROD: ci-rehearsal-not-a-real-client
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          packages: platform-tools platforms;android-36 build-tools;36.0.0
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: Build the minified bundle and APK (productionBenchmarkRelease)
+        # The bundle needs org.jetbrains.kotlin:compose-group-mapping (Compose stack-trace
+        # mapping). No debug build resolves it, and it is missing from the offline cache of the
+        # release machine, so this online step is its first check against
+        # gradle/verification-metadata.xml.
+        run: >-
+          ./gradlew $GRADLE_FLAGS
+          :app:bundleProductionBenchmarkRelease
+          :app:assembleProductionBenchmarkRelease
+
+      - name: Check the merged manifest and 16 KB alignment of the minified artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          aabs=(app/build/outputs/bundle/productionBenchmarkRelease/*.aab)
+          apks=(app/build/outputs/apk/production/benchmarkRelease/*.apk)
+          if [[ ${#aabs[@]} -ne 1 || ${#apks[@]} -ne 1 ]]; then
+            echo "Expected one AAB and one APK, found ${#aabs[@]} and ${#apks[@]}" >&2
+            exit 1
+          fi
+          python3 scripts/verify-release-manifest.py "${aabs[0]}" "${apks[0]}"
+          python3 scripts/verify-android-native-16kb.py "${aabs[0]}"
+          python3 scripts/verify-android-native-16kb.py "${apks[0]}"
