@@ -2,6 +2,17 @@
 
 Each section covers one release task: what changed, why, and what users see.
 
+## Preserve the historical Android Drive sign-in client
+
+Verified Google Play APKs 121 (3.8.6.2) and 122 (3.8.6.3) pass a separate OAuth
+client to `GoogleSignInOptions.Builder.requestIdToken`. The release Drive pin now
+matches that compiled client; the official Firebase app configuration remains
+unchanged. Helper and actual Gradle-gate regressions reject substituting the
+Firebase web client even when the Firebase app ID is correct. The provisional
+3090000 artifact using that substitute is rejected and must be rebuilt before upload.
+Drive scopes and backup behavior are unchanged. Cloud binding and a retained
+upgrade with a Play-signed new binary remain release checks.
+
 ## a1: Qualification gates retired, lean CI
 
 ### Why

@@ -88,3 +88,10 @@ secret matches itself. To check a machine or the CI secrets against the pins:
 SORA_GOOGLE_TOKEN_PROD=... python3 scripts/google-identity-pin.py check --google-services app/google-services.json
 ./gradlew :app:verifyProductionGoogleIdentity
 ```
+
+The verified Play 3.8.6.2/3.8.6.3 APKs use different clients for Drive and Firebase.
+Their compiled `requestIdToken` Drive client has SHA-256 `398674a0b4925677d8f4041c88bffd42e64ef7f6a9b4ba4e26c356699d744277`.
+The `default_web_client_id` in Firebase resources has SHA-256 `f9200c28c6a38cc326f89e92e5ee6134e4c21e84194ffb7fd408a9aa175a9059`;
+it must not be substituted into `SORA_GOOGLE_TOKEN_PROD`. Keep the official Firebase
+configuration unchanged and provide the verified historical Drive client separately.
+The pin provenance records both authentic APK hashes and the compiled sign-in call site.
