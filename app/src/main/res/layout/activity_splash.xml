@@ -15,7 +15,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:lottie_autoPlay="true"
+        app:lottie_autoPlay="false"
         app:lottie_rawRes="@raw/splash_animation" />
 
     <!-- Slow start (design spec 8.1): text.secondary on the canvas, then a thin cyan line. -->
