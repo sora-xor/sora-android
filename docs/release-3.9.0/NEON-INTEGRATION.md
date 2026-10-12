@@ -76,6 +76,16 @@ Evidence is saved in `../audit-2026-10-12/android/` relative to the repository.
   `neon-production` directory contains focused production-composable captures. These are
   public synthetic wallets, with no funded transfer or real recovery phrase.
 
+## Startup profile
+
+`neon-final-profile-lint-8.log` collected the fresh-install startup path on the owned API 36
+ARM64 emulator (one test, zero failures). Every iteration had to reach the actual onboarding
+Activity. `neon-profile-save-10.log` merged that exact collection through the Gradle plugin
+into `app/src/main/generated/baselineProfiles/{baseline-prof,startup-prof}.txt`.
+`neon-baseline-profile-receipt.json` records commands and hashes. The copy step excludes the
+already-passed connected test so it reuses the verified collection. This is not a physical-device
+startup-speed measurement.
+
 ## Deferred visual polish
 
 The release preserves current functional screen structures rather than adding new money-flow
