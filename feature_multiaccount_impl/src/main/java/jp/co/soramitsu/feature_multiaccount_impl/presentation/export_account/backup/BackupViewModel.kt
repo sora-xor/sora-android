@@ -40,7 +40,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import jp.co.soramitsu.androidfoundation.format.addHexPrefix
 import jp.co.soramitsu.androidfoundation.fragment.trigger
-import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
+import jp.co.soramitsu.common.util.SensitiveClipboard
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.presentation.compose.components.initMediumTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -55,7 +55,7 @@ class BackupViewModel @AssistedInject constructor(
     private val multiAccountInteractor: MultiaccountInteractor,
     private val resourceManager: ResourceManager,
     private val mainRouter: MainRouter,
-    private val clipboardManager: BasicClipboardManager,
+    private val clipboardManager: SensitiveClipboard,
     @Assisted("type") private val type: ExportProtectionViewModel.Type,
     @Assisted("address") private val address: String
 ) : BaseViewModel() {
@@ -123,12 +123,10 @@ class BackupViewModel @AssistedInject constructor(
     fun backupPressed() {
         _backupScreenState.value?.let {
             if (it.noMatchingSecret) return
-            if (it.seedString.isNotEmpty()) {
-                clipboardManager.addToClipboard(it.seedString)
-            } else {
-                clipboardManager.addToClipboard(it.mnemonicWords.joinToString(" "))
-            }
-            copiedToast.trigger()
+            runCatching {
+                if (it.seedString.isNotEmpty()) clipboardManager.copy(it.seedString)
+                else clipboardManager.copy(it.mnemonicWords.joinToString(" "))
+            }.onSuccess { copiedToast.trigger() }.onFailure(::onError)
         }
     }
 

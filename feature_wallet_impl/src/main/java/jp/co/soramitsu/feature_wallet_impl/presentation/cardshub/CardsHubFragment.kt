@@ -113,7 +113,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCa
 import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -278,6 +278,7 @@ private fun CardsMainScreen(
                 is TitledAmountCardState -> {
                     CommonHubCard(
                         title = cardState.title,
+                        hero = cardState.state is FavoriteAssetsCardState,
                         amount = cardState.amount,
                         onOpenFullCardClick = { onOpenFullCardClick.invoke(cardState.state) },
                         collapseState = cardState.collapsedState,

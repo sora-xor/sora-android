@@ -43,4 +43,5 @@
     <color name="neon_info_container">#0B2128</color>
     <color name="neon_toast">#222233</color>
     <color name="neon_on_toast">#F5F6FB</color>
+    <color name="neon_swap_end">#FF3DDC</color>
 </resources>

@@ -35,8 +35,8 @@
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_error_no_funds">Lo sentimos, no tiene fondos suficientes para transferir la cantidad especificada.</string>
   <string name="appearance_title">Appearance</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
+  <string name="appearance_reduce_effects">Reducir efectos</string>
+  <string name="appearance_reduce_effects_description">Desactiva los efectos de brillo, cristal y movimiento. Útil en teléfonos antiguos o para ahorrar batería.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">¿Le gustaría utilizar la biometría para la autenticación?</string>
   <string name="asset_details_asset_id">ID del Activo</string>
@@ -165,7 +165,7 @@
   <string name="common_japanese">Japonés</string>
   <string name="common_khmer">Jemer</string>
   <string name="common_korean">Coreano</string>
-  <string name="common_loading">Loading</string>
+  <string name="common_loading">Cargando</string>
   <string name="common_malay">Malayo</string>
   <string name="common_max">max</string>
   <string name="common_min">Min</string>
@@ -792,4 +792,11 @@
     <string name="wallet_preserved_data_partial">No se pudieron verificar algunos datos guardados de la cartera. Todos los archivos siguen en este teléfono. Abajo se muestran las demás opciones verificadas.</string>
     <string name="wallet_preserved_database_label">Solo la base de datos de cuentas</string>
     <string name="wallet_preserved_database_confirm">¿Usar esta base de datos de cuentas anterior? Se conservará la base actual. Las claves, las copias de seguridad y tu PIN actual de SORA no cambiarán. La aplicación se reiniciará y verificará cada cuenta antes de usarla.</string>
+  <string name="neon_pin_digits_entered">%1$d de %2$d dígitos introducidos</string>
+  <string name="neon_pin_clear">Borrar el PIN introducido</string>
+  <string name="neon_welcome_headline">Tus claves. Tu SORA.</string>
+  <string name="neon_restore_google">Restaurar desde Google Drive</string>
+  <string name="neon_theme_system">Sistema</string>
+  <string name="neon_theme_dark">Oscuro</string>
+  <string name="neon_theme_light">Claro</string>
 </resources>

@@ -1007,4 +1007,11 @@
     <string name="wallet_preserved_database_confirm">Use this earlier account database? Your current database will be kept. Keys, backups and your current SORA PIN stay unchanged. The app will restart and verify every account before use.</string>
     <string name="wallet_restore_backup_confirm">I have a recovery phrase or a working backup for every wallet on this phone.</string>
     <string name="wallet_restore_cancel_pending">Cancel restart and restore</string>
+  <string name="neon_pin_digits_entered">%1$d of %2$d digits entered</string>
+  <string name="neon_pin_clear">Clear PIN entry</string>
+  <string name="neon_welcome_headline">Your keys. Your SORA.</string>
+  <string name="neon_restore_google">Restore from Google Drive</string>
+  <string name="neon_theme_system">System</string>
+  <string name="neon_theme_dark">Dark</string>
+  <string name="neon_theme_light">Light</string>
 </resources>

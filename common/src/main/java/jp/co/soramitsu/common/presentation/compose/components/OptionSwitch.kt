@@ -101,9 +101,9 @@ fun OptionSwitch(
             ) {
                 Text(
                     text = label,
+                    modifier = Modifier.weight(1f).padding(end = Dimens.x1),
                     color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.textM,
-                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Switch(

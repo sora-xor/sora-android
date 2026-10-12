@@ -65,7 +65,7 @@ import jp.co.soramitsu.common.presentation.compose.components.AccountWithIcon
 import jp.co.soramitsu.common.presentation.compose.neon.InputText
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
 import jp.co.soramitsu.common.util.testTagAsId
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.borderRadius

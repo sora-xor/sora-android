@@ -35,8 +35,8 @@
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_error_no_funds">Beklager, du har ikke nok midler til å overføre spesifisert beløp.</string>
   <string name="appearance_title">Appearance</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
+  <string name="appearance_reduce_effects">Reduser effekter</string>
+  <string name="appearance_reduce_effects_description">Slår av glød-, glass- og bevegelseseffekter. Nyttig på eldre telefoner eller for å spare batteri.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Vil du bruke biometri til autentisering?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -165,7 +165,7 @@
   <string name="common_japanese">Japansk</string>
   <string name="common_khmer">Khmer</string>
   <string name="common_korean">Koreansk</string>
-  <string name="common_loading">Loading</string>
+  <string name="common_loading">Laster</string>
   <string name="common_malay">Malaysisk</string>
   <string name="common_max">max</string>
   <string name="common_min">min</string>
@@ -788,4 +788,11 @@
     <string name="wallet_preserved_data_partial">Noen lagrede lommebokdata kunne ikke bekreftes. Alle filene blir værende på denne telefonen. Andre bekreftede valg vises nedenfor.</string>
     <string name="wallet_preserved_database_label">Bare kontodatabasen</string>
     <string name="wallet_preserved_database_confirm">Bruke denne tidligere kontodatabasen? Den nåværende databasen blir tatt vare på. Nøkler, sikkerhetskopier og din nåværende SORA-PIN forblir uendret. Appen starter på nytt og kontrollerer hver konto før bruk.</string>
+  <string name="neon_pin_digits_entered">%1$d av %2$d sifre angitt</string>
+  <string name="neon_pin_clear">Tøm PIN-feltet</string>
+  <string name="neon_welcome_headline">Dine nøkler. Din SORA.</string>
+  <string name="neon_restore_google">Gjenopprett fra Google Disk</string>
+  <string name="neon_theme_system">System</string>
+  <string name="neon_theme_dark">Mørk</string>
+  <string name="neon_theme_light">Lys</string>
 </resources>

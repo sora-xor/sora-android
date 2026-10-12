@@ -691,27 +691,28 @@ class OnboardingViewModel @Inject constructor(
 
     /** Whether the entered text (or the chosen file) is valid input; checked when it changes. */
     private var recoveryInputValid = false
+    private var recoveryInputGeneration = 0L
 
     /** What will be imported: the chosen file, or what is typed in the field. */
     private fun recoveryInput(state: RecoveryState): String =
         chosenFileText ?: state.recoveryInputState.value.text
 
     fun onRecoveryInputChanged(textFieldValue: TextFieldValue) {
+        val generation = ++recoveryInputGeneration
         viewModelScope.launch {
-            _recoveryState.value?.let {
-                val textChanged = textFieldValue.text != it.recoveryInputState.value.text
-                // Typing or pasting replaces a file that was chosen before.
+            _recoveryState.value?.let { state ->
+                val textChanged = textFieldValue.text != state.recoveryInputState.value.text
+                val valid = if (textChanged || chosenFileText == null) isValidMethod(textFieldValue.text) else recoveryInputValid
+                // An older validation must not put phrase text back into a newly selected source.
+                if (generation != recoveryInputGeneration) return@launch
                 if (textChanged) chosenFileText = null
-                if (textChanged || chosenFileText == null) {
-                    recoveryInputValid = isValidMethod(textFieldValue.text)
-                }
-                _recoveryState.value = it.copy(
-                    recoveryInputState = it.recoveryInputState.copy(
-                        value = textFieldValue,
-                    ),
-                    chosenFileName = it.chosenFileName.takeIf { chosenFileText != null },
-                    isButtonEnabled = recoveryInputValid &&
-                        (it.recoveryType != RecoveryType.JSON || it.passwordInputState.value.text.isNotEmpty())
+                recoveryInputValid = valid
+                val current = _recoveryState.value ?: return@launch
+                _recoveryState.value = current.copy(
+                    recoveryInputState = current.recoveryInputState.copy(value = textFieldValue),
+                    chosenFileName = current.chosenFileName.takeIf { chosenFileText != null },
+                    isButtonEnabled = valid &&
+                        (current.recoveryType != RecoveryType.JSON || current.passwordInputState.value.text.isNotEmpty())
                 )
             }
         }
@@ -734,23 +735,27 @@ class OnboardingViewModel @Inject constructor(
      * further. The screen shows the file's name, not its text.
      */
     fun onRecoveryFileChosen(text: String, fileName: String = "") {
+        val generation = ++recoveryInputGeneration
         viewModelScope.launch {
             val state = _recoveryState.value ?: return@launch
             if (state.recoveryType != RecoveryType.JSON) return@launch
-            if (!multiaccountInteractor.isJsonBackupValid(text)) {
+            val valid = multiaccountInteractor.isJsonBackupValid(text)
+            if (generation != recoveryInputGeneration) return@launch
+            if (!valid) {
                 onRecoveryFileUnreadable()
                 return@launch
             }
             chosenFileText = text
             recoveryInputValid = true
-            _recoveryState.value = state.copy(
-                recoveryInputState = state.recoveryInputState.copy(value = TextFieldValue("")),
+            val current = _recoveryState.value ?: return@launch
+            _recoveryState.value = current.copy(
+                recoveryInputState = current.recoveryInputState.copy(value = TextFieldValue("")),
                 chosenFileName = fileName.ifBlank {
                     resourceManager.getString(
                         jp.co.soramitsu.common.R.string.recovery_json_file_unnamed
                     )
                 },
-                isButtonEnabled = state.passwordInputState.value.text.isNotEmpty(),
+                isButtonEnabled = current.passwordInputState.value.text.isNotEmpty(),
             )
         }
     }
@@ -1024,6 +1029,7 @@ class OnboardingViewModel @Inject constructor(
      */
     fun onRecoveryClicked(navController: NavController, index: Int, asFirstScreen: Boolean = false) {
         _recoveryDialog.value = false
+        recoveryInputGeneration++
         chosenFileText = null
         recoveryInputValid = false
         _recoveryState.value = when (index) {
@@ -1079,6 +1085,7 @@ class OnboardingViewModel @Inject constructor(
         }
 
         navController.navigate(OnboardingFeatureRoutes.RECOVERY) {
+            launchSingleTop = true
             if (asFirstScreen) {
                 popUpTo(OnboardingFeatureRoutes.TUTORIAL) { inclusive = true }
             }

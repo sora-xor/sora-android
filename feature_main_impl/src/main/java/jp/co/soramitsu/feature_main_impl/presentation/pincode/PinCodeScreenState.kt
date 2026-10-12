@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
-internal data class PinCodeScreenState(
+data class PinCodeScreenState(
     val checkedDotsCount: Int = 0,
     val maxDotsCount: Int = 6,
     val isBackButtonVisible: Boolean = false,

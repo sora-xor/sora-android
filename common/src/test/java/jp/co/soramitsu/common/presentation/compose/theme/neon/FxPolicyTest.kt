@@ -103,6 +103,8 @@ class FxPolicyTest {
         val reduced = FxPolicy.from(signals, reduceEffects = true)
         assertEquals(FxTier.MINIMAL, reduced.tier)
         assertTrue(reduced.opaqueGlass)
+        assertTrue(reduced.reduceMotion)
+        assertFalse(reduced.loops)
         assertFalse(reduced.realBlur)
         assertFalse(reduced.shadows)
         assertFalse(reduced.ambientDetail)

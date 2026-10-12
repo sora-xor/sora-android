@@ -82,6 +82,29 @@ fun GlassCard(
     )
 }
 
+/** Financial review and secret surfaces never show content through their fill. */
+@Composable
+fun OpaqueContentCard(
+    modifier: Modifier = Modifier,
+    cornerRadius: Dp = 24.dp,
+    innerPadding: PaddingValues = PaddingValues(0.dp),
+    backgroundColor: Color = MaterialTheme.neon.glassSolid,
+    onClick: (() -> Unit)? = null,
+    content: @Composable BoxScope.() -> Unit,
+) = GlassCard(modifier, cornerRadius, innerPadding, backgroundColor, onClick = onClick, content = content)
+
+/** Backup/import surfaces are opaque, with the safe palette frame. */
+@Composable
+fun SafeContentCard(
+    modifier: Modifier = Modifier,
+    cornerRadius: Dp = 24.dp,
+    innerPadding: PaddingValues = PaddingValues(0.dp),
+    backgroundColor: Color = MaterialTheme.neon.glassSolid,
+    onClick: (() -> Unit)? = null,
+    content: @Composable BoxScope.() -> Unit,
+) = GlassCard(modifier, cornerRadius, innerPadding, backgroundColor,
+    border = MaterialTheme.neon.borderSafe, onClick = onClick, content = content)
+
 /**
  * Drop-in replacement for `jp.co.soramitsu.ui_core.component.card.ContentCard` with the same
  * parameter names and order: migrate by swapping the import. It removes ui-core's grey 10 dp
@@ -125,6 +148,24 @@ fun ContentCardEndless(
     onClick = onClick,
     content = content,
 )
+
+/** Balance/receive hero: one spectrum frame, no card glow. */
+@Composable
+fun HeroCard(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    grid: Boolean = true,
+    content: @Composable BoxScope.() -> Unit,
+) = NeonCardSurface(
+    modifier = modifier,
+    shape = ChamferShape(),
+    innerPadding = PaddingValues(0.dp),
+    backgroundColor = Color.Unspecified,
+    border = MaterialTheme.neon.borderSpectrum,
+    onClick = onClick,
+) {
+    Box(Modifier.neonGrid(MaterialTheme.neon, grid && LocalFx.current.ambientDetail), content = content)
+}
 
 @Composable
 private fun NeonCardSurface(

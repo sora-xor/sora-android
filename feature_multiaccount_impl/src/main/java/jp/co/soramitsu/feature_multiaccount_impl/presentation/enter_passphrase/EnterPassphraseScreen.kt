@@ -52,14 +52,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.neon.ProtectWalletSecrets
+import jp.co.soramitsu.common.presentation.compose.neon.NeonSegments
 import jp.co.soramitsu.common.presentation.compose.neon.InputText
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.RecoveryState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.RecoveryType
-import jp.co.soramitsu.ui_core.component.button.FilledButton
-import jp.co.soramitsu.ui_core.component.button.TextButton
+import jp.co.soramitsu.common.presentation.compose.neon.SafeFilledButton as FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.SafeContentCard as ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -70,8 +72,10 @@ fun EnterPassphraseScreen(
     onRecoveryInputChanged: (TextFieldValue) -> Unit,
     onPasswordChanged: (TextFieldValue) -> Unit = {},
     onChooseFile: () -> Unit = {},
+    onSourceChanged: ((RecoveryType) -> Unit)? = null,
     onNextClicked: () -> Unit,
 ) {
+    ProtectWalletSecrets()
     ContentCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -91,6 +95,16 @@ fun EnterPassphraseScreen(
                 color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )
+
+            onSourceChanged?.let { select ->
+                NeonSegments(
+                    labels = listOf(stringResource(R.string.common_passphrase_title),
+                        stringResource(R.string.common_raw_seed), "JSON"),
+                    selected = recoveryState.recoveryType.ordinal,
+                    onSelect = { index -> if (index != recoveryState.recoveryType.ordinal) select(RecoveryType.values()[index]) },
+                    modifier = Modifier.padding(bottom = Dimens.x2),
+                )
+            }
 
             InputText(
                 modifier = Modifier

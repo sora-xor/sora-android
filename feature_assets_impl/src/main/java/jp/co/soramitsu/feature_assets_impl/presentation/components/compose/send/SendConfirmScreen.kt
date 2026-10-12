@@ -52,11 +52,11 @@ import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
 import jp.co.soramitsu.common.util.testTagAsId
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.OpaqueContentCard as ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography

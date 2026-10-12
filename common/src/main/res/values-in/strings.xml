@@ -35,8 +35,8 @@
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_error_no_funds">Maaf, Anda tidak memiliki cukup dana untuk mentransfer jumlah yang ditentukan.</string>
   <string name="appearance_title">Appearance</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
+  <string name="appearance_reduce_effects">Kurangi efek</string>
+  <string name="appearance_reduce_effects_description">Menonaktifkan efek cahaya, kaca, dan gerakan. Berguna pada ponsel lama atau untuk menghemat baterai.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Apakah Anda ingin menggunakan biometri untuk otentikasi?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -164,7 +164,7 @@
   <string name="common_japanese">Jepang</string>
   <string name="common_khmer">Khmer</string>
   <string name="common_korean">Korea</string>
-  <string name="common_loading">Loading</string>
+  <string name="common_loading">Memuat</string>
   <string name="common_malay">Malaysia</string>
   <string name="common_max">max</string>
   <string name="common_min">menit</string>
@@ -785,4 +785,11 @@
     <string name="wallet_preserved_data_partial">Sebagian data dompet yang tersimpan tidak dapat diverifikasi. Semua file tetap ada di ponsel ini. Pilihan lain yang telah diverifikasi ditampilkan di bawah.</string>
     <string name="wallet_preserved_database_label">Hanya database akun</string>
     <string name="wallet_preserved_database_confirm">Gunakan database akun terdahulu ini? Database saat ini akan disimpan. Kunci, cadangan, dan PIN SORA Anda saat ini tidak berubah. Aplikasi akan dimulai ulang dan memverifikasi setiap akun sebelum digunakan.</string>
+  <string name="neon_pin_digits_entered">%1$d dari %2$d digit dimasukkan</string>
+  <string name="neon_pin_clear">Hapus PIN yang dimasukkan</string>
+  <string name="neon_welcome_headline">Kunci Anda. SORA Anda.</string>
+  <string name="neon_restore_google">Pulihkan dari Google Drive</string>
+  <string name="neon_theme_system">Sistem</string>
+  <string name="neon_theme_dark">Gelap</string>
+  <string name="neon_theme_light">Terang</string>
 </resources>

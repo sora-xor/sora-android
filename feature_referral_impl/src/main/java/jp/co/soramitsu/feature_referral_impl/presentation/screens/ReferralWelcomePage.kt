@@ -59,7 +59,7 @@ import jp.co.soramitsu.feature_referral_impl.presentation.ReferralCommonState
 import jp.co.soramitsu.feature_referral_impl.presentation.ReferralInvitationsCardState
 import jp.co.soramitsu.feature_referral_impl.presentation.ReferralProgramState
 import jp.co.soramitsu.feature_referral_impl.presentation.ReferralsCardState
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.component.wrappedtext.WrappedTextState
 import jp.co.soramitsu.ui_core.resources.Dimens

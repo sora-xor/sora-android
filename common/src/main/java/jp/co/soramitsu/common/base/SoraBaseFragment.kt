@@ -41,6 +41,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -58,6 +60,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
@@ -76,6 +79,7 @@ import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.AlertDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.ConfirmDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
+import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SelectedAccountSigningHost
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -243,44 +247,47 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                         }
                     }
 
-                    Scaffold(
-                        scaffoldState = scaffoldState,
-                        backgroundColor = backgroundColorComposable(),
-                        topBar = {
-                            Toolbar(
-                                toolbarState = viewModel.toolbarState.observeAsState().value,
-                                scrollState = scrollState,
-                                backgroundColor = backgroundColorComposable(),
-                                tintColor = MaterialTheme.customColors.fgPrimary,
-                                onNavClick = { debounceClickHandler.debounceClick(::onNavClicked) },
-                                onActionClick = viewModel::onAction,
-                                onMenuItemClick = viewModel::onMenuItem,
-                                onSearch = viewModel::onToolbarSearch,
-                            )
-                        }
-                    ) { padding ->
-                        // Whether the selected account can sign on this phone, for every
-                        // screen this fragment hosts: the notice above a signing form, and the
-                        // state its action button reads.
-                        SelectedAccountSigningHost(
-                            source = selectedAccountSigningSource,
-                            explainsReadOnlyAccount = explainsReadOnlyAccount,
-                            onRepair = accountOptionsRouter::showAccountDetails,
-                            modifier = Modifier.padding(padding),
-                        ) {
-                            NavHost(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f),
-                                navController = navController,
-                                contentAlignment = Alignment.TopCenter,
-                                startDestination = viewModel.startScreen(),
-                            ) {
-                                content(scrollState, navController)
+                    Box(Modifier.fillMaxSize()) {
+                        NeonBackground(safe = useSafeAurora)
+                        Scaffold(
+                            scaffoldState = scaffoldState,
+                            backgroundColor = Color.Transparent,
+                            topBar = {
+                                Toolbar(
+                                    toolbarState = viewModel.toolbarState.observeAsState().value,
+                                    scrollState = scrollState,
+                                    backgroundColor = Color.Transparent,
+                                    tintColor = MaterialTheme.customColors.fgPrimary,
+                                    onNavClick = { debounceClickHandler.debounceClick(::onNavClicked) },
+                                    onActionClick = viewModel::onAction,
+                                    onMenuItemClick = viewModel::onMenuItem,
+                                    onSearch = viewModel::onToolbarSearch,
+                                )
                             }
+                        ) { padding ->
+                            // Whether the selected account can sign on this phone, for every
+                            // screen this fragment hosts: the notice above a signing form, and the
+                            // state its action button reads.
+                            SelectedAccountSigningHost(
+                                source = selectedAccountSigningSource,
+                                explainsReadOnlyAccount = explainsReadOnlyAccount,
+                                onRepair = accountOptionsRouter::showAccountDetails,
+                                modifier = Modifier.padding(padding),
+                            ) {
+                                NavHost(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
+                                    navController = navController,
+                                    contentAlignment = Alignment.TopCenter,
+                                    startDestination = viewModel.startScreen(),
+                                ) {
+                                    content(scrollState, navController)
+                                }
+                            }
+                            AlertDialogContent(openAlertDialog)
+                            ConfirmDialogContent(openConfirmDialog)
                         }
-                        AlertDialogContent(openAlertDialog)
-                        ConfirmDialogContent(openConfirmDialog)
                     }
                 }
             }
@@ -301,6 +308,8 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     open fun onNavClicked() {
         viewModel.onNavIcon()
     }
+
+    protected open val useSafeAurora: Boolean = false
 
     abstract fun NavGraphBuilder.content(scrollState: ScrollState, navController: NavHostController)
 

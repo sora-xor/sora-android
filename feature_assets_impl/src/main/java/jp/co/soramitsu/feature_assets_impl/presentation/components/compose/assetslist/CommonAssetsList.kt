@@ -53,7 +53,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
 import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
 import jp.co.soramitsu.feature_assets_impl.presentation.states.FullAssetListState
-import jp.co.soramitsu.ui_core.component.button.TonalButton
+import jp.co.soramitsu.common.presentation.compose.neon.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens

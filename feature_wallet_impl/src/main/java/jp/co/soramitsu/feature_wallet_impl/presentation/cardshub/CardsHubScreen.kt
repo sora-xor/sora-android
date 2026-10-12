@@ -69,11 +69,11 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyChip
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.extension.noRippleClickable
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
-import jp.co.soramitsu.ui_core.component.button.TextButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -154,13 +154,11 @@ fun CommonHubCard(
     collapseState: Boolean,
     onOpenFullCardClick: () -> Unit,
     onCollapseClick: () -> Unit,
+    hero: Boolean = false,
     content: @Composable (ColumnScope) -> Unit
 ) {
     val collapseLabel = stringResource(if (collapseState) R.string.wallet_collapsed else R.string.wallet_expanded)
-    ContentCard(
-        modifier = Modifier.padding(top = Dimens.x1_5),
-        onClick = onOpenFullCardClick
-    ) {
+    val cardContent: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit = {
         Column(
             modifier = Modifier
                 .padding(top = Dimens.x3, bottom = Dimens.x4)
@@ -193,7 +191,7 @@ fun CommonHubCard(
                         contentDescription = null
                     )
                 }
-                Text(
+                if (!hero) Text(
                     text = amount,
                     textAlign = TextAlign.End,
                     maxLines = 1,
@@ -201,6 +199,11 @@ fun CommonHubCard(
                     style = MaterialTheme.customTypography.headline2,
                     color = MaterialTheme.customColors.fgPrimary,
                 )
+            }
+            if (hero) {
+                Text(amount, modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.x3, vertical = Dimens.x1),
+                    style = jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType.displayHero,
+                    color = MaterialTheme.customColors.fgPrimary)
             }
             if (!collapseState) {
                 Spacer(modifier = Modifier.size(size = Dimens.x2))
@@ -216,6 +219,11 @@ fun CommonHubCard(
             }
         }
     }
+    if (hero) jp.co.soramitsu.common.presentation.compose.neon.HeroCard(
+        modifier = Modifier.padding(top = Dimens.x1_5), onClick = onOpenFullCardClick, content = cardContent)
+    else ContentCard(modifier = Modifier.padding(top = Dimens.x1_5),
+        onClick = onOpenFullCardClick, content = cardContent)
+
 }
 
 @Preview(showBackground = true)

@@ -1,9 +1,5 @@
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
-import android.view.WindowManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,10 +17,8 @@ import androidx.compose.material.CheckboxDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -32,6 +26,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.neon.ProtectWalletSecrets
 import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.PhraseGrid
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReassuranceCallout
@@ -64,19 +59,7 @@ internal object AccountRemovalTags {
  */
 @Composable
 internal fun SecureWindow(enabled: Boolean) {
-    val activity = LocalContext.current.findActivity()
-    DisposableEffect(activity, enabled) {
-        if (enabled) activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        onDispose {
-            if (enabled) activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
-    }
-}
-
-private tailrec fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is ContextWrapper -> baseContext.findActivity()
-    else -> null
+    if (enabled) ProtectWalletSecrets()
 }
 
 /**

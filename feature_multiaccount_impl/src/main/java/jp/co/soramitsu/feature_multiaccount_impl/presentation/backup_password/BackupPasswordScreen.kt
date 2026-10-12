@@ -54,11 +54,11 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.CheckboxButton
 import jp.co.soramitsu.common.presentation.compose.neon.InputText
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateBackupPasswordState
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.SafeFilledButton as FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.SafeContentCard as ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography

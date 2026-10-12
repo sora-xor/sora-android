@@ -2,6 +2,10 @@
 
 Human and operations actions for the release. Each task adds its items here.
 
+Current 12 October 2026 screen/privacy integration and scoped evidence are summarized in
+[NEON-INTEGRATION.md](NEON-INTEGRATION.md). Earlier task sections are historical checklists;
+local validation does not imply store acceptance or physical-device qualification.
+
 ## a1: Retired qualification gates, lean CI
 
 ### GitHub secrets and settings
@@ -45,11 +49,9 @@ has another `appVersionName`, and fails after the build if the APK's
       "Block Explorer Connected Test". Require "Unit tests (productionDebug)"
       (it also checks the release dependency locks) and "Build, lint and 16 KB
       check" from `Android CI`.
-- [ ] Watch the first `Android CI` run of the release branch. Lint could not
-      be run on the offline build machine (the lint tool is not in its Gradle
-      cache), so this is the first lint result for these changes. Fix any new
-      lint errors; update `app/lint-baseline.xml` only when a finding cannot
-      be fixed, and say so in the pull request.
+- [ ] Watch the first `Android CI` run of the release branch. Local final lint now
+      passes (12 October evidence in NEON-INTEGRATION.md), with the existing baseline
+      unchanged. CI execution and branch settings still need their own confirmation.
 - [ ] Optional cleanup: delete the secrets and variables that only the retired
       qualification workflow read: `ANDROID_DEPENDENCY_SIGNING_REVIEW_*`,
       `ANDROID_MIGRATION_QUALIFICATION_*`, `ANDROID_MIGRATION_CONTROLLER_*`,
@@ -87,8 +89,11 @@ now, so it is listed here.
 - [ ] Check the run: every blocking step is green, "Check package name and
       version" shows `versionName='3.9.0'` and the requested versionCode (the
       step fails on any other value), and "Check signing certificate" reports
-      `b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0`
-      for both the AAB and the APK.
+      upload certificate `26a76e0d3f736f3614dcec04725c439f7165babc8a1e9cb7203a4cdbd233adb1`
+      for both the AAB and the locally signed APK. Play's app-signing certificate
+      remains `b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0`;
+      Play-delivered APKs use that certificate. The upload-key reset is pending
+      until Play confirms eligibility (expected 13 October 2026, 10:21 JST).
 - [ ] If the run shows the warning "lintProductionDebug failed", read
       `lint-results-productionDebug.html` in the artifact and decide whether
       to fix the findings before uploading.
@@ -96,8 +101,8 @@ now, so it is listed here.
       (e.g. `sora-android-release-3.9.0-3090001`) and check it
       with `sha256sum -c SHA256SUMS.txt`. Keep `mapping.txt` with the release.
 - [ ] Upload the AAB to the Play Console internal track by hand. In the Play
-      Console, confirm that the upload key is accepted and that App Signing shows
-      the same certificate.
+      Console, confirm that the replacement upload key is accepted and that
+      the separate app-signing certificate still matches existing installations.
 
 ### Device checks before rollout
 
@@ -577,8 +582,9 @@ Engineering decision to confirm:
       because it could not check every existing account yet. Nothing was
       deleted or replaced, and your funds stay safe on the blockchain. Try
       again, or contact support for help."
-- [ ] Product decision: should new installs default to dark (spec principle
-      9)? Not implemented; existing users keep their stored theme either way.
+- [x] New installs default to dark (spec principle 9). Existing data/preferences
+      preserve the former default; explicit theme choices still win. Device regression
+      passed. See [NEON-INTEGRATION.md](NEON-INTEGRATION.md).
 - [ ] Product decision: the Android 12+ system starting window follows the
       system theme, so a person who chose dark inside the app but uses a
       light phone sees a light launch window for a moment (the splash
@@ -602,9 +608,9 @@ Engineering decision to confirm:
 
 ### Translations
 
-- [ ] Translate `appearance_reduce_effects`,
-      `appearance_reduce_effects_description` and `common_loading` (English
-      placeholders in every locale except Japanese).
+- [x] Translate `appearance_reduce_effects`,
+      `appearance_reduce_effects_description` and `common_loading` in all ten production
+      languages. Native review remains pending; non-shipping/test locale fallback is explicit.
 - [ ] `scripts/verify-middle-egyptian-localization.mjs` (manual) already
       failed before this task on the a4 English placeholders; it now also
       lists these three keys and `wallet_upgrade_recovery_message`. Middle
@@ -705,11 +711,11 @@ Engineering decision to confirm:
 
 ### Follow-ups
 
-- [ ] A per-account read-only label (account list and home) for accounts
-      whose keys are unavailable on this phone (a4 follow-up). Signing is
-      already refused for them.
-- [ ] Fix `WalletUxAcceptanceTest` (stale reflection on
-      `OnboardingViewModel.tempAccount`, removed in a4).
+- [x] A per-account read-only label, reason and recovery route on account list/home.
+      Covered by ReadOnlyAccountScreensTest and ReadOnlyHostFragmentTest; signing stays gated.
+- [x] Fix `WalletUxAcceptanceTest` (stale reflection on
+      `OnboardingViewModel.tempAccount`, removed in a4). The actual create/PIN/wallet/Swap
+      journey passes in the clean device suite recorded in NEON-INTEGRATION.md.
 - [ ] Regenerate the baseline profile once the screen migration lands (the
       splash now has a Compose view; `animation_view` is unchanged).
 
@@ -757,5 +763,7 @@ Engineering decision to confirm:
 - [ ] Authorize the team physical phone and run API 26–30 provider/recovery QA.
 - [ ] Verify replacement Play upload-key eligibility after 13 October 2026,
       10:21 JST; verify actual Play signing certificate and Google identity pins.
-- [ ] Build and inspect the signed release artifact only after the release gates
-      above and elsewhere in this checklist have evidence. No upload was made.
+- [ ] Build and inspect the signed release artifact with the verified upload key
+      and production Google identity. Local preparation does not require waiting
+      for Play's upload-key activation; publication still requires acceptance and
+      the applicable store/device checks. No upload was made by the audit pass.

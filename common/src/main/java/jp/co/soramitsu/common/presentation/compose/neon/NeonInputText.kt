@@ -40,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.FocusState
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
@@ -77,6 +79,9 @@ fun InputText(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions(),
 ) {
+    if (keyboardOptions.keyboardType == KeyboardType.Password ||
+        keyboardOptions.keyboardType == KeyboardType.NumberPassword ||
+        visualTransformation is PasswordVisualTransformation) ProtectWalletSecrets()
     val base = MaterialTheme.customColors
     val border = MaterialTheme.neon.borderInput
     val colors = remember(base, border) { base.copy(fgOutline = border) }

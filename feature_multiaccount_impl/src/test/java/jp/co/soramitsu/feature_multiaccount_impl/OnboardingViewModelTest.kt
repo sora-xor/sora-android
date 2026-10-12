@@ -207,6 +207,33 @@ class OnboardingViewModelTest {
         assertEquals(RecoveryType.JSON, onboardingViewModel.recoveryState.value?.recoveryType)
     }
 
+    @Test
+    fun `switching import source invalidates earlier phrase and file validation`() = runTest {
+        whenever(resourceManager.getString(org.mockito.kotlin.any())).thenReturn("label")
+        onboardingViewModel.onRecoveryClicked(navController, 1)
+        whenever(multiAccInteractor.isMnemonicValid("public phrase")).thenAnswer {
+            // Completion of an earlier validation races with choosing the next source.
+            onboardingViewModel.onRecoveryClicked(navController, 2)
+            true
+        }
+        onboardingViewModel.onRecoveryInputChanged(androidx.compose.ui.text.input.TextFieldValue("public phrase"))
+        testScheduler.advanceUntilIdle()
+        assertEquals(RecoveryType.SEED, onboardingViewModel.recoveryState.value?.recoveryType)
+        assertEquals("", onboardingViewModel.recoveryState.value?.recoveryInputState?.value?.text)
+        assertEquals(false, onboardingViewModel.recoveryState.value?.isButtonEnabled)
+
+        onboardingViewModel.onRecoveryClicked(navController, 3)
+        whenever(multiAccInteractor.isJsonBackupValid("{public file}")).thenAnswer {
+            onboardingViewModel.onRecoveryClicked(navController, 1)
+            true
+        }
+        onboardingViewModel.onRecoveryFileChosen("{public file}", "public.json")
+        testScheduler.advanceUntilIdle()
+        assertEquals(RecoveryType.PASSPHRASE, onboardingViewModel.recoveryState.value?.recoveryType)
+        assertNull(onboardingViewModel.recoveryState.value?.chosenFileName)
+        assertEquals(false, onboardingViewModel.recoveryState.value?.isButtonEnabled)
+    }
+
     private fun stubWordCountText() {
         whenever(resourceManager.getString(R.string.export_protection_passphrase_description_words))
             .thenReturn("the %1\$s-word passphrase")

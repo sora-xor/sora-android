@@ -32,6 +32,16 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.rotate
+import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -73,7 +83,7 @@ import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.defaultSwapDetailsState
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledPolkaswapButton as FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -137,27 +147,36 @@ internal fun SwapMainScreen(
                 },
                 focusRequester = focus2,
             )
-            Icon(
+            val interaction = remember { MutableInteractionSource() }
+            var turns by remember { mutableStateOf(0f) }
+            val rotation by animateFloatAsState(turns, tween(if (LocalFx.current.reduceMotion) 0 else 240), label = "swap direction")
+            NeumorphicSurface(
+                shape = CircleShape,
+                interactionSource = interaction,
                 modifier = Modifier
-                    .clickable {
+                    .size(48.dp)
+                    .constrainAs(arrow) {
+                        top.linkTo(token1.bottom, (-20).dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+                    .clickable(interactionSource = interaction, indication = null) {
+                        turns += 180f
                         onTokenSwapClick()
                         if (focusPosition1.value) {
                             focus2.requestFocus()
                         } else if (focusPosition2.value) {
                             focus1.requestFocus()
                         }
-                    }
-                    .size(48.dp)
-                    .padding(12.dp)
-                    .constrainAs(arrow) {
-                        top.linkTo(token1.bottom, (-8).dp)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
                     },
-                painter = painterResource(id = R.drawable.ic_round_swap),
-                tint = Color.Unspecified,
-                contentDescription = stringResource(R.string.wallet_swap_direction)
-            )
+            ) {
+                Icon(
+                    modifier = Modifier.size(24.dp).rotate(rotation),
+                    painter = painterResource(id = R.drawable.ic_neon_swap_direction),
+                    tint = MaterialTheme.neon.cyan,
+                    contentDescription = stringResource(R.string.wallet_swap_direction),
+                )
+            }
         }
         Spacer(modifier = Modifier.size(Dimens.x2))
         SwapMarketSlippageSelector(

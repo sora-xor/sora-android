@@ -35,8 +35,8 @@
   <string name="address_not_found_1">Destinataire non trouvé</string>
   <string name="amount_error_no_funds">Désolé, vous n\'avez pas les fonds suffisants pour transférer le montant spécifié.</string>
   <string name="appearance_title">Apparence</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
+  <string name="appearance_reduce_effects">Réduire les effets</string>
+  <string name="appearance_reduce_effects_description">Désactive les effets de lueur, de verre et de mouvement. Utile sur les anciens téléphones ou pour économiser la batterie.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Souhaitez-vous utiliser l\'authentification biométrique ?</string>
   <string name="asset_details_asset_id">ID de l\'actif</string>
@@ -165,7 +165,7 @@
   <string name="common_japanese">Japonais</string>
   <string name="common_khmer">Khmer</string>
   <string name="common_korean">Coréen</string>
-  <string name="common_loading">Loading</string>
+  <string name="common_loading">Chargement</string>
   <string name="common_malay">Malaisien</string>
   <string name="common_max">max</string>
   <string name="common_min">min</string>
@@ -794,4 +794,11 @@
     <string name="wallet_preserved_data_partial">Certaines données de portefeuille enregistrées n’ont pas pu être vérifiées. Tous les fichiers restent sur ce téléphone. Les autres options vérifiées sont affichées ci-dessous.</string>
     <string name="wallet_preserved_database_label">Base de données des comptes uniquement</string>
     <string name="wallet_preserved_database_confirm">Utiliser cette ancienne base de données des comptes ? La base actuelle sera conservée. Les clés, les sauvegardes et votre code PIN SORA actuel resteront inchangés. L’application redémarrera et vérifiera chaque compte avant utilisation.</string>
+  <string name="neon_pin_digits_entered">%1$d chiffres saisis sur %2$d</string>
+  <string name="neon_pin_clear">Effacer le PIN saisi</string>
+  <string name="neon_welcome_headline">Vos clés. Votre SORA.</string>
+  <string name="neon_restore_google">Restaurer depuis Google Drive</string>
+  <string name="neon_theme_system">Système</string>
+  <string name="neon_theme_dark">Sombre</string>
+  <string name="neon_theme_light">Clair</string>
 </resources>

@@ -61,10 +61,10 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.testTagAsId
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.extensions.withOpacity
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -186,7 +186,7 @@ internal fun AssetDetailsBalanceCard(
                     .height(1.dp)
                     .fillMaxWidth()
             )
-            Row(
+            androidx.compose.foundation.layout.FlowRow(
                 modifier = Modifier
                     .wrapContentHeight()
                     .fillMaxWidth()
@@ -198,6 +198,7 @@ internal fun AssetDetailsBalanceCard(
                         end = Dimens.x2,
                     ),
                 horizontalArrangement = Arrangement.SpaceEvenly,
+                maxItemsInEachRow = if (androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f) 2 else 4,
             ) {
                 if (isTransferableAmountAvailable) {
                     AmountCardIcon(
@@ -233,37 +234,9 @@ internal fun AssetDetailsBalanceCard(
 }
 
 @Composable
-private fun AmountCardIcon(
-    @DrawableRes res: Int,
-    text: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.wrapContentSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(modifier = Modifier.size(Size.Large)) {
-            BleachedButton(
-                modifier = Modifier.testTagAsId("${text}Button"),
-                shape = CircleShape,
-                size = Size.Large,
-                order = Order.TERTIARY,
-                enabled = enabled,
-                leftIcon = painterResource(res),
-                onClick = onClick,
-            )
-        }
-        Text(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(top = Dimens.x1),
-            text = text,
-            style = MaterialTheme.customTypography.textXSBold,
-            color = MaterialTheme.customColors.fgSecondary.withOpacity(opacity = if (enabled) 1.0f else 0.3f),
-        )
-    }
-}
+private fun AmountCardIcon(@DrawableRes res: Int, text: String, enabled: Boolean, onClick: () -> Unit) =
+    jp.co.soramitsu.common.view.AmountCardIcon(testTagId = "${text}Button", res = res, text = text,
+        isEnabled = enabled, onClick = onClick)
 
 @Preview
 @Composable

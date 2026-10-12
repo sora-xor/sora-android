@@ -785,4 +785,11 @@
     <string name="wallet_preserved_database_confirm">以前のアカウントデータベースを使いますか？現在のデータベースは保管されます。鍵、バックアップ、現在のSORA PINは変更されません。アプリが再起動し、各アカウントを確認してから開きます。</string>
     <string name="wallet_restore_backup_confirm">この端末にあるすべてのウォレットのリカバリーフレーズ、または復元できるバックアップを持っています。</string>
     <string name="wallet_restore_cancel_pending">再起動と復元をキャンセル</string>
+  <string name="neon_pin_digits_entered">%2$d桁中%1$d桁を入力済み</string>
+  <string name="neon_pin_clear">入力したPINを消去</string>
+  <string name="neon_welcome_headline">あなたの鍵。あなたのSORA。</string>
+  <string name="neon_restore_google">Googleドライブから復元</string>
+  <string name="neon_theme_system">システム</string>
+  <string name="neon_theme_dark">ダーク</string>
+  <string name="neon_theme_light">ライト</string>
 </resources>
