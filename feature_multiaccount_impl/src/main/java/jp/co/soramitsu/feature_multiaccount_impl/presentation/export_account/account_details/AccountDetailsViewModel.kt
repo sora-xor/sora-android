@@ -204,8 +204,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
 
         viewModelScope.launch {
             changeNameFlow
-                .debounce(500)
                 .drop(1)
+                .debounce(500)
                 .collectLatest {
                     if (it.toByteArray().size <= OptionsProvider.nameByteLimit) {
                         interactor.updateName(address, it)

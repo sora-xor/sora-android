@@ -67,6 +67,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -415,6 +416,18 @@ class AccountDetailsViewModelTest {
         accountDetailsViewModel.onNameChange(TextFieldValue(text = "Foo Ba"))
         advanceUntilIdle()
         verify(multiAccInteractor).updateName(account.substrateAddress, "Foo Ba")
+    }
+
+    @Test
+    fun `first name edit within initial debounce window is persisted`() = runTest {
+        val fresh = viewModel()
+        runCurrent()
+        advanceTimeBy(100)
+        fresh.onNameChange(TextFieldValue("Quickly pasted name"))
+        advanceTimeBy(501)
+        runCurrent()
+        verify(multiAccInteractor).updateName(account.substrateAddress, "Quickly pasted name")
+        verify(multiAccInteractor, never()).updateName(account.substrateAddress, "")
     }
 
     @Test
