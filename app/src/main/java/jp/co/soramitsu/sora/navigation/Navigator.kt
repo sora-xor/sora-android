@@ -53,6 +53,7 @@ import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment
@@ -466,13 +467,63 @@ class Navigator :
         navController?.popBackStack()
     }
 
-    override fun showTxDetails(txHash: String, pop: Boolean) {
+    /**
+     * Pops the claim screen only while it is the screen in front. A blind pop from a timer or a
+     * late network answer would remove whatever is on top instead, and after a pause that is the
+     * PIN lock.
+     */
+    override fun closeClaimScreen() {
+        val controller = navController ?: return
+        if (controller.currentDestination?.id == R.id.claimFragment) {
+            controller.popBackStack(R.id.claimFragment, true)
+        }
+    }
+
+    override fun showTxDetails(txHash: String) {
         navController?.navigate(
             R.id.txDetailsFragment,
             withArgs {
                 this.txHash = txHash
             },
-            if (pop) NavOptions.Builder().setPopUpTo(R.id.cardsHubFragment, false).build() else null,
         )
+    }
+
+    /**
+     * Opens the page of a transaction that [from] has just sent, only while [from] is the screen
+     * in front. The result arrives after a wait of up to two minutes. By then the PIN lock can
+     * be on top, and it is only a destination on this stack: navigating with a pop back to the
+     * hub would remove it and open the wallet without the PIN, and navigating without a pop
+     * would cover it. So nothing is popped and nothing is opened unless [from] itself is the
+     * current destination; everything the pop then removes was put there by the user on the way
+     * to [from].
+     *
+     * The answer is what the stack says afterwards, so a navigation that was dropped (the
+     * fragment manager had already saved its state) is reported as not done.
+     */
+    override fun showTxResult(txHash: String, from: TransactionScreen): Boolean {
+        val controller = navController ?: return false
+        if (controller.currentDestination?.id != from.destinationId()) return false
+        controller.navigate(
+            R.id.txDetailsFragment,
+            withArgs {
+                this.txHash = txHash
+            },
+            if (from.replacedByPage) {
+                NavOptions.Builder().setPopUpTo(R.id.cardsHubFragment, false).build()
+            } else {
+                null
+            },
+        )
+        return controller.currentDestination?.id == R.id.txDetailsFragment
+    }
+
+    private fun TransactionScreen.destinationId(): Int = when (this) {
+        TransactionScreen.SEND -> R.id.transferAmountFragment
+        TransactionScreen.SWAP -> R.id.swapFragment
+        TransactionScreen.ADD_LIQUIDITY -> R.id.addLiquidityFragment
+        TransactionScreen.REMOVE_LIQUIDITY -> R.id.liquidityRemoveFragment
+        TransactionScreen.DEMETER_CLAIM -> R.id.claimDemeterFragment
+        TransactionScreen.DEMETER_STAKE -> R.id.editFarmFragment
+        TransactionScreen.REFERRAL -> R.id.referralFragment
     }
 }

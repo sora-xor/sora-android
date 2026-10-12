@@ -155,6 +155,17 @@ fun BasicTxDetails(
                         value1 = stringResource(id = state.txStatus.toName()),
                         valueColor = state.txStatus.toColor(),
                     )
+                    state.statusNote?.let { note ->
+                        Text(
+                            modifier = Modifier
+                                .testTagAsId("TransactionStatusNote")
+                                .fillMaxWidth()
+                                .padding(bottom = Dimens.x1),
+                            text = note,
+                            style = MaterialTheme.customTypography.textXS,
+                            color = MaterialTheme.customColors.fgPrimary,
+                        )
+                    }
                     Divider(
                         modifier = Modifier.padding(bottom = Dimens.x1),
                         thickness = 1.dp,

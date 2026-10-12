@@ -5,7 +5,6 @@ import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
-import java.util.Properties
 
 plugins {
     id("maven-publish")
@@ -268,16 +267,14 @@ baselineProfile {
     }
 }
 
-fun releaseSecretPresent(name: String): Boolean {
-    val localProperties = rootProject.file("local.properties")
-    val fromFile = if (localProperties.isFile) {
-        Properties().apply { localProperties.inputStream().use { load(it) } }
-            .getProperty(name)
-    } else {
-        null
-    }
-    return (fromFile ?: System.getenv(name)).orEmpty().trim().trim('"').isNotBlank()
-}
+// Compares the Google Drive backup client (SORA_GOOGLE_TOKEN_PROD) and the Firebase app in
+// google-services.json with the SHA-256 pins in config/android-production-google-identity.json.
+// Provides the two closures used below and the task verifyProductionGoogleIdentity.
+apply(from = rootProject.file("scripts/verify-production-google-identity.gradle"))
+
+@Suppress("UNCHECKED_CAST")
+fun googleIdentityMessages(name: String): List<String> =
+    (extra[name] as groovy.lang.Closure<List<String>>).call()
 
 val verifyProductionReleaseSigning by tasks.registering {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
@@ -308,11 +305,11 @@ val verifyProductionReleaseSigning by tasks.registering {
         if (!hasGoogleServicesJson) {
             problems += "app/google-services.json is missing (Crashlytics would be off)"
         }
-        // Must be the Google Drive backup client that 3.8.6.3 used, or users cannot see their
-        // existing Drive backups. :common checks it again before packaging.
-        if (!releaseSecretPresent("SORA_GOOGLE_TOKEN_PROD")) {
-            problems += "SORA_GOOGLE_TOKEN_PROD is missing (Google Drive backup)"
-        }
+        // The Google Drive backup client must be the one 3.8.6.3 used, or people cannot see their
+        // existing Drive backups. "Present" is not enough: the value is compared with its pinned
+        // SHA-256, and while nobody has filled in that pin the build is refused. A pinned
+        // Firebase app is compared the same way. :common checks again that a client is set.
+        problems += googleIdentityMessages("productionGoogleIdentityProblems")
         if (problems.isNotEmpty()) {
             throw GradleException(
                 "productionRelease cannot be built:\n" + problems.joinToString("\n") { "- $it" },
@@ -345,6 +342,7 @@ val verifyProductionReleaseSigning by tasks.registering {
         if (Files.getPosixFilePermissions(realKeystore).any(forbiddenPermissions::contains)) {
             throw GradleException("Production release keystore must be owner-only.")
         }
+        googleIdentityMessages("productionGoogleIdentityNotes").forEach { logger.warn(it) }
     }
 }
 

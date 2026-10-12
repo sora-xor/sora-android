@@ -96,6 +96,7 @@ internal fun AssetDetailsScreen(
             amountFiat = stateData.transferableBalanceFiat,
             frozenAmount = stateData.frozenBalance,
             frozenAmountFiat = stateData.frozenBalanceFiat,
+            lockedNote = stateData.lockedNote,
             isTransferableAmountAvailable = stateData.isTransferableBalanceAvailable,
             onSendClick = onSendClick,
             onReceiveClick = onReceiveClick,

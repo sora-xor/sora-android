@@ -179,8 +179,11 @@ class SubstrateCalls @Inject constructor(
         )
 
         hexString.result?.let {
-            val value = storage.type.value?.fromHex(runtimeManager.getRuntimeSnapshot(), it)
-            val data = value?.safeCast<Struct.Instance>()?.get<Struct.Instance>("data")
+            val account = decodeXorAccountData(
+                runtime = runtimeManager.getRuntimeSnapshot(),
+                accountStorage = storage,
+                storageHex = it,
+            )
 
             val stakingLedgerXorBalance = fetchStakingLedgerXORBalance(accountId)
             val activeEra = fetchActiveEra()
@@ -200,10 +203,10 @@ class SubstrateCalls @Inject constructor(
             }
 
             return XorBalanceDto(
-                data?.get<BigInteger>("free") ?: BigInteger.ZERO,
-                data?.get<BigInteger>("reserved") ?: BigInteger.ZERO,
-                data?.get<BigInteger>("miscFrozen") ?: BigInteger.ZERO,
-                data?.get<BigInteger>("feeFrozen") ?: BigInteger.ZERO,
+                account.free,
+                account.reserved,
+                account.miscFrozen,
+                account.feeFrozen,
                 bonded,
                 redeemable,
                 unbonding,

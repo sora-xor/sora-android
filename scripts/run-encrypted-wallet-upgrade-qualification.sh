@@ -1,6 +1,42 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Encrypted wallet storage across real process restarts: five ordered phases, each in its own
+# instrumentation process, in the isolated feature_account_impl test package.
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/device-test-common.sh
+source "${script_dir}/device-test-common.sh"
+
+usage() {
+  cat <<'USAGE'
+usage: run-encrypted-wallet-upgrade-qualification.sh [--offline]
+
+  --offline   build with Gradle's --offline (local Gradle cache, no network)
+
+Environment: SORA_GRADLE_FLAGS (extra Gradle arguments), ANDROID_SERIAL (device to use).
+USAGE
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --offline) sora_use_offline_gradle ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "error: unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
+sora_read_gradle_environment
+cd "${script_dir}/.."
+sora_require_one_device
+
 readonly qualification_class="jp.co.soramitsu.feature_account_impl.data.repository.datasource.EncryptedWalletMigrationStorageTest"
 readonly qualification_package="jp.co.soramitsu.feature_account_impl.test"
 readonly qualification_runner="${qualification_package}/androidx.test.runner.AndroidJUnitRunner"
@@ -11,9 +47,7 @@ cleanup_qualification_tmp() {
 }
 trap cleanup_qualification_tmp EXIT
 
-./gradlew \
-  :feature_account_impl:installProductionDebugAndroidTest \
-  --stacktrace --no-daemon --no-parallel
+sora_gradle :feature_account_impl:installProductionDebugAndroidTest
 
 adb wait-for-device
 instrumentation_listing="$(adb shell pm list instrumentation | tr -d '\r')"

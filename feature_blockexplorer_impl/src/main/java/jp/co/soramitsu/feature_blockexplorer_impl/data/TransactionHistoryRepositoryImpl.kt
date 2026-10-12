@@ -37,7 +37,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.SuspendableProperty
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.Sora2PendingSubmissionLocal
@@ -48,18 +50,34 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.PiIndexerOfflineFallbackPo
 import jp.co.soramitsu.feature_blockexplorer_api.data.PiValidatedHistoryCache
 import jp.co.soramitsu.feature_blockexplorer_api.data.PolkaswapIndexerClient
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatusDetail
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionsInfo
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingSubmissionCoordinator
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionDetails
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionDetailsStore
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.canonicalExtrinsicHash
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -71,6 +89,8 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
     private val substrateCalls: SubstrateCalls,
     private val validatedHistoryCache: PiValidatedHistoryCache,
     private val database: AppDatabase,
+    private val detailsStore: Sora2SubmissionDetailsStore,
+    private val pendingSubmissionCoordinator: Sora2PendingSubmissionCoordinator,
 ) : TransactionHistoryRepository {
 
     init {
@@ -78,7 +98,25 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
     }
 
     private val _state = SuspendableProperty<Boolean>(1)
-    override val state = _state.observe().debounce(700)
+
+    /**
+     * Ticks when a local transaction is added or resolved in this process, and also whenever the
+     * durable status journal is written. The second source is what makes a waiting entry change
+     * on screen when the background status worker resolves it.
+     */
+    override val state = merge(_state.observe(), journalChanges()).debounce(700)
+
+    private fun journalChanges(): Flow<Boolean> = flow {
+        emitAll(
+            database.walletIdentityDao().observeSora2PendingSubmissionChanges()
+                // The first value is the current content, not a change.
+                .drop(1)
+                .map { true }
+        )
+    }.catch {
+        // Observing the journal is a convenience. If the database is unavailable the screens
+        // still refresh on their own events and on pull-to-refresh.
+    }
 
     private data class LocalPendingTransactionKey(
         val walletId: String,
@@ -184,6 +222,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             indexedTransactions = mapped,
             filterTokenId = filterTokenId,
             includeLocalOverlay = true,
+            tokens = tokens,
         ).take(count)
     }
 
@@ -218,6 +257,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             indexedTransactions = indexedTransactions,
             filterTokenId = null,
             includeLocalOverlay = true,
+            tokens = tokens,
         ).firstOrNull {
             canonicalTransactionHashOrNull(it.base.txHash) == requestedHash
         }
@@ -250,6 +290,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
                                 indexedTransactions = emptyList(),
                                 filterTokenId = filterTokenId,
                                 includeLocalOverlay = true,
+                                tokens = tokens,
                             )
                         )
                     }
@@ -285,6 +326,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
                 indexedTransactions = referralTransactions,
                 filterTokenId = filterTokenId,
                 includeLocalOverlay = page == 1L,
+                tokens = tokens,
             ),
             historyInfo.endReached,
         )
@@ -302,6 +344,25 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             ] = transfer
         }
         _state.set(true)
+    }
+
+    /**
+     * One status-only pass for the transaction a screen is showing, the same read the background
+     * worker makes for a whole batch. It exists so that the screen does not have to wait for the
+     * worker's next attempt, which can be minutes away after a few unsuccessful ones, and it
+     * looks at that one transaction only: a batch fails as a whole when the network cannot be
+     * read for one of its rows, and the screen must not depend on the other rows. The coordinator
+     * used here has no signer and cannot submit anything.
+     */
+    override suspend fun checkWaitingTransaction(walletId: String, txHash: String) {
+        try {
+            pendingSubmissionCoordinator.recoverStatusOnlyFor(walletId, txHash)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            // Offline, a slow node or an unreadable block: the entry stays as it is and the
+            // background check keeps trying. Never an error for the screen.
+        }
     }
 
     private fun isReferral(item: IndexerHistoryElement, tokenId: String): Boolean {
@@ -333,6 +394,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         indexedTransactions: List<Transaction>,
         filterTokenId: String?,
         includeLocalOverlay: Boolean,
+        tokens: List<Token>,
     ): List<Transaction> {
         removeIndexedLocalTransactions(walletId, indexedHashes)
         val localSnapshot = synchronized(localPendingTransactionsLock) {
@@ -346,6 +408,16 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         check(rowsByHash.size == journalRows.size) {
             "SORA2_PENDING_OVERLAY_DUPLICATE_HASH"
         }
+        // What each journaled transaction does and why it failed, when known. Never an authority
+        // for status: the journal row decides, the details only describe.
+        val detailsByHash = detailsStore.list(walletId).associateBy { it.transactionHash }
+        if (detailsByHash.keys.any { it !in rowsByHash }) {
+            detailsStore.retainOnly(
+                walletId = walletId,
+                transactionHashes = rowsByHash.keys,
+                createdBefore = System.currentTimeMillis() - ORPHAN_DETAILS_GRACE_MILLIS,
+            )
+        }
 
         // A validated PI row supplies semantic history, but the exact generic
         // status-only witness remains authoritative for pending/terminal
@@ -354,8 +426,11 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             canonicalTransactionHashOrNull(transaction.base.txHash)
                 ?.let(rowsByHash::get)
                 ?.let { row ->
-                    transaction.base.status = row.toTransactionStatus()
-                    transaction.base.blockHash = row.terminalBlockHash
+                    transaction.base.applyJournal(
+                        row = row,
+                        details = detailsByHash[row.transactionHash],
+                        listedByIndexer = true,
+                    )
                 }
         }
 
@@ -368,8 +443,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             val hash = requireCanonicalLocalPendingHash(rawHash)
             if (hash in indexedHashes) return@forEach
             rowsByHash[hash]?.let { row ->
-                transaction.base.status = row.toTransactionStatus()
-                transaction.base.blockHash = row.terminalBlockHash
+                transaction.base.applyJournal(row, detailsByHash[hash])
             }
             localOverlay[hash] = transaction
         }
@@ -379,7 +453,12 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
                 row.transactionHash !in localOverlay &&
                 row.operationKind == Sora2PendingSubmissionLocal.OPERATION_GENERIC
             ) {
-                localOverlay[row.transactionHash] = row.toActivityTransaction()
+                val details = detailsByHash[row.transactionHash]
+                // After a restart the in-memory entry is gone. The stored description still
+                // shows the transaction as what it is, so it also appears under its tokens.
+                localOverlay[row.transactionHash] =
+                    details?.activity?.toActivityTransactionOrNull(row, details, tokens)
+                        ?: row.toActivityTransaction(details)
             }
         }
         return (
@@ -438,15 +517,11 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun Sora2PendingSubmissionLocal.toActivityTransaction(): Transaction =
+    private fun Sora2PendingSubmissionLocal.toActivityTransaction(
+        details: Sora2SubmissionDetails?,
+    ): Transaction =
         Transaction.Sora2Submission(
-            base = jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase(
-                txHash = transactionHash,
-                blockHash = terminalBlockHash,
-                fee = BigDecimal.ZERO,
-                status = toTransactionStatus(),
-                timestamp = createdAt,
-            ),
+            base = journalBase(this, details, fee = BigDecimal.ZERO),
             networkId = networkId,
             // A crash-restored pre-arm witness proves only that the durable UNKNOWN transition was
             // not observed. Recovery deliberately keeps it and scans by hash, so the activity UI
@@ -457,17 +532,183 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             terminalBlockNumber = terminalBlockNumber,
         )
 
-    private fun Sora2PendingSubmissionLocal.toTransactionStatus(): TransactionStatus =
-        when (state) {
-            Sora2PendingSubmissionLocal.STATE_FINALIZED_SUCCESS -> TransactionStatus.COMMITTED
-            Sora2PendingSubmissionLocal.STATE_FINALIZED_FAILURE,
-            Sora2PendingSubmissionLocal.STATE_EXPIRED_NOT_INCLUDED -> TransactionStatus.REJECTED
+    private fun journalBase(
+        row: Sora2PendingSubmissionLocal,
+        details: Sora2SubmissionDetails?,
+        fee: BigDecimal,
+    ): TransactionBase = TransactionBase(
+        txHash = row.transactionHash,
+        blockHash = row.terminalBlockHash,
+        fee = fee,
+        status = TransactionStatus.PENDING,
+        timestamp = row.createdAt,
+    ).apply { applyJournal(row, details) }
+
+    /**
+     * The journal row is the only authority for status; the details explain it.
+     *
+     * [listedByIndexer] is true for a transaction the indexer lists, which means it is in a
+     * block. Nothing recorded on this device may then say that it never reached one:
+     *
+     * - A refusal recorded for it at submission can no longer be the whole story, so it is not
+     *   used to call the transaction failed; the row stays pending until the app's own check of
+     *   finalized blocks has resolved it.
+     * - A row that expired "not included" (the app's scan of the validity window did not find
+     *   it, for example because a block was read from a node that was behind) does not turn the
+     *   listed entry into "nothing was sent, you can try again". The entry stays exactly as the
+     *   indexer gave it: its status, its block, its fee and the explorer link. Sending it again
+     *   on that advice would send it twice.
+     */
+    private fun TransactionBase.applyJournal(
+        row: Sora2PendingSubmissionLocal,
+        details: Sora2SubmissionDetails?,
+        listedByIndexer: Boolean = false,
+    ) {
+        if (
+            listedByIndexer &&
+            row.state == Sora2PendingSubmissionLocal.STATE_EXPIRED_NOT_INCLUDED
+        ) {
+            statusDetail = null
+            return
+        }
+        val refusal = details?.nodeRefusal?.takeUnless { listedByIndexer }?.let { refusal ->
+            TransactionStatusDetail(
+                kind = when (refusal.reason) {
+                    TransactionNodeRefusal.CANNOT_PAY_FEE ->
+                        TransactionStatusDetail.Kind.REFUSED_CANNOT_PAY_FEE
+                    TransactionNodeRefusal.NETWORK_BUSY ->
+                        TransactionStatusDetail.Kind.REFUSED_NETWORK_BUSY
+                    TransactionNodeRefusal.NOT_VALID ->
+                        TransactionStatusDetail.Kind.REFUSED_NOT_VALID
+                    TransactionNodeRefusal.NOT_REACHED ->
+                        TransactionStatusDetail.Kind.NOT_REACHED
+                },
+                text = refusal.message,
+            )
+        }
+        blockHash = row.terminalBlockHash
+        when (row.state) {
+            Sora2PendingSubmissionLocal.STATE_FINALIZED_SUCCESS -> {
+                // Chain proof wins over everything recorded earlier.
+                status = TransactionStatus.COMMITTED
+                statusDetail = null
+            }
+            Sora2PendingSubmissionLocal.STATE_FINALIZED_FAILURE -> {
+                status = TransactionStatus.REJECTED
+                statusDetail = TransactionStatusDetail(
+                    kind = TransactionStatusDetail.Kind.FAILED_ON_CHAIN,
+                    text = details?.chainFailure,
+                )
+            }
+            Sora2PendingSubmissionLocal.STATE_EXPIRED_NOT_INCLUDED -> {
+                status = TransactionStatus.REJECTED
+                statusDetail = refusal
+                    ?: TransactionStatusDetail(TransactionStatusDetail.Kind.NOT_INCLUDED)
+            }
+            Sora2PendingSubmissionLocal.STATE_SUBMITTED_AWAITING_FINALITY -> {
+                status = TransactionStatus.PENDING
+                statusDetail = TransactionStatusDetail(
+                    TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION
+                )
+            }
             Sora2PendingSubmissionLocal.STATE_SIGNED_BEFORE_TRANSPORT,
-            Sora2PendingSubmissionLocal.STATE_SUBMISSION_UNKNOWN,
-            Sora2PendingSubmissionLocal.STATE_SUBMITTED_AWAITING_FINALITY ->
-                TransactionStatus.PENDING
+            Sora2PendingSubmissionLocal.STATE_SUBMISSION_UNKNOWN -> if (refusal != null) {
+                // The node refused it explicitly: a failure, shown as one at once. The row itself
+                // stays unresolved until its validity window has been scanned.
+                status = TransactionStatus.REJECTED
+                statusDetail = refusal
+            } else {
+                status = TransactionStatus.PENDING
+                statusDetail = TransactionStatusDetail(
+                    if (listedByIndexer) {
+                        // It did reach the network; only the final confirmation is outstanding.
+                        TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION
+                    } else {
+                        TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN
+                    }
+                )
+            }
             else -> error("SORA2_PENDING_OVERLAY_STATE_INVALID")
         }
+    }
+
+    /**
+     * Rebuilds the Activity entry of a journaled transaction from its stored description. Returns
+     * null (generic entry) when a token is unknown or the description does not fit its kind.
+     */
+    private fun Sora2SubmissionActivity.toActivityTransactionOrNull(
+        row: Sora2PendingSubmissionLocal,
+        details: Sora2SubmissionDetails,
+        tokens: List<Token>,
+    ): Transaction? {
+        val resolved = tokenIds.map { id -> tokens.firstOrNull { it.id == id } ?: return null }
+        val parsedAmounts = amounts.map { it.toBigDecimalOrNull() ?: return null }
+        val base = journalBase(row, details, fee = fee?.toBigDecimalOrNull() ?: BigDecimal.ZERO)
+        fun token(index: Int) = resolved.getOrNull(index)
+        fun amount(index: Int) = parsedAmounts.getOrNull(index)
+        return when (kind) {
+            Sora2SubmissionActivity.Kind.TRANSFER -> Transaction.Transfer(
+                base = base,
+                amount = amount(0) ?: return null,
+                peer = peer ?: return null,
+                transferType = TransactionTransferType.OUTGOING,
+                token = token(0) ?: return null,
+            )
+            Sora2SubmissionActivity.Kind.SWAP -> Transaction.Swap(
+                base = base,
+                tokenFrom = token(0) ?: return null,
+                tokenTo = token(1) ?: return null,
+                amountFrom = amount(0) ?: return null,
+                amountTo = amount(1) ?: return null,
+                market = Market.entries.firstOrNull { it.name == market } ?: Market.SMART,
+            )
+            Sora2SubmissionActivity.Kind.LIQUIDITY_ADD,
+            Sora2SubmissionActivity.Kind.LIQUIDITY_REMOVE -> Transaction.Liquidity(
+                base = base,
+                token1 = token(0) ?: return null,
+                token2 = token(1) ?: return null,
+                amount1 = amount(0) ?: return null,
+                amount2 = amount(1) ?: return null,
+                type = if (kind == Sora2SubmissionActivity.Kind.LIQUIDITY_ADD) {
+                    TransactionLiquidityType.ADD
+                } else {
+                    TransactionLiquidityType.WITHDRAW
+                },
+            )
+            Sora2SubmissionActivity.Kind.REFERRAL_BOND -> Transaction.ReferralBond(
+                base = base,
+                amount = amount(0) ?: return null,
+                token = token(0) ?: return null,
+            )
+            Sora2SubmissionActivity.Kind.REFERRAL_UNBOND -> Transaction.ReferralUnbond(
+                base = base,
+                amount = amount(0) ?: return null,
+                token = token(0) ?: return null,
+            )
+            Sora2SubmissionActivity.Kind.REFERRAL_SET_REFERRER -> Transaction.ReferralSetReferrer(
+                base = base,
+                who = peer ?: return null,
+                myReferrer = true,
+                token = token(0) ?: return null,
+            )
+            Sora2SubmissionActivity.Kind.DEMETER_STAKE,
+            Sora2SubmissionActivity.Kind.DEMETER_UNSTAKE,
+            Sora2SubmissionActivity.Kind.DEMETER_CLAIM -> Transaction.DemeterFarming(
+                base = base,
+                type = when (kind) {
+                    Sora2SubmissionActivity.Kind.DEMETER_STAKE -> DemeterType.STAKE
+                    Sora2SubmissionActivity.Kind.DEMETER_UNSTAKE -> DemeterType.UNSTAKE
+                    else -> DemeterType.REWARD
+                },
+                amount = amount(0) ?: return null,
+                baseToken = token(0) ?: return null,
+                targetToken = token(1) ?: return null,
+                rewardToken = token(2) ?: return null,
+            )
+            // No dedicated Activity entry exists for the legacy claim; the generic one is used.
+            Sora2SubmissionActivity.Kind.LEGACY_CLAIM -> null
+        }
+    }
 
     private fun filterLocalPendingTx(
         transactions: Collection<Transaction>,
@@ -491,6 +732,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
 
     private companion object {
         const val RECENT_PEERS_TTL_NANOS = 60_000_000_000L
+        const val ORPHAN_DETAILS_GRACE_MILLIS = 60L * 60L * 1000L
         val CANONICAL_LOCAL_SORA2_TRANSACTION_HASH = Regex("^0x[0-9a-f]{64}$")
         val SORA2_TRANSACTION_HASH = Regex(
             "^0x[0-9a-f]{64}$",

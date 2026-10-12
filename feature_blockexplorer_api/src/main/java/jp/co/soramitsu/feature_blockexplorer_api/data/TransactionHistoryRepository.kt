@@ -60,6 +60,15 @@ interface TransactionHistoryRepository {
     ): Transaction?
 
     fun saveTransaction(walletId: String, transfer: Transaction)
+
+    /**
+     * Asks the network once for the final status of one transaction of [walletId] that this
+     * device sent and that is still waiting for confirmation. Only that transaction is looked
+     * at, so another waiting transaction that cannot be checked never holds it back. Read-only:
+     * it never signs or sends anything. A read that fails changes nothing and is not an error;
+     * [state] ticks when the status became final.
+     */
+    suspend fun checkWaitingTransaction(walletId: String, txHash: String)
     suspend fun getLastTransactions(
         soraAccount: SoraAccount,
         tokens: List<Token>,

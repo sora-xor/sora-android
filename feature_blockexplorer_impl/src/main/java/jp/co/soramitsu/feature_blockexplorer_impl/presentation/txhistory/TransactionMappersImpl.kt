@@ -49,6 +49,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionMappers
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.genericTitle
 
 @Singleton
 class TransactionMappersImpl @Inject constructor(
@@ -65,11 +66,7 @@ class TransactionMappersImpl @Inject constructor(
                     timestamp = tx.base.timestamp,
                     status = tx.base.status,
                     tokenIcon = DEFAULT_ICON_URI,
-                    title = if (tx.submissionIsAmbiguous) {
-                        R.string.wallet_transaction_status_unknown
-                    } else {
-                        R.string.wallet_transaction_submitted
-                    },
+                    title = tx.genericTitle(),
                     description = tx.networkId.uppercase(),
                     plusAmount = false,
                     dateTime = dateTimeFormatter.formatTimeWithoutSeconds(

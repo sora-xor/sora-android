@@ -46,6 +46,7 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapExtrinsi
 import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.SwapMarketMapper
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.depositLiquidity
 import jp.co.soramitsu.sora.substrate.substrate.initializePool
 import jp.co.soramitsu.sora.substrate.substrate.register
@@ -96,10 +97,12 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
         token2: Token,
         markerAssetDesired: BigDecimal,
         firstAmountMin: BigDecimal,
-        secondAmountMin: BigDecimal
+        secondAmountMin: BigDecimal,
+        activity: Sora2SubmissionActivity?,
     ): ExtrinsicSubmitStatus = extrinsicManager.submitAndWatchExtrinsic(
         from = address,
         keypair = keypair,
+        activity = activity,
     ) {
         removeLiquidity(
             dexId = getPoolBaseTokenDexId(token1.id),
@@ -121,6 +124,7 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
         amount: BigDecimal,
         limit: BigDecimal,
         dexId: Int,
+        activity: Sora2SubmissionActivity?,
     ): ExtrinsicSubmitStatus {
         val (amount2, limit2) = if (swapVariant == WithDesired.INPUT) mapBalance(
             amount,
@@ -132,6 +136,7 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
         return extrinsicManager.submitAndWatchExtrinsic(
             from = address,
             keypair = keypair,
+            activity = activity,
         ) {
             swap(
                 dexId = dexId,
@@ -155,7 +160,8 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
         tokenToAmount: BigDecimal,
         pairEnabled: Boolean,
         pairPresented: Boolean,
-        slippageTolerance: Double
+        slippageTolerance: Double,
+        activity: Sora2SubmissionActivity?,
     ): ExtrinsicSubmitStatus {
         val amountFromMin = PolkaswapFormulas.calculateMinAmount(tokenFromAmount, slippageTolerance)
         val amountToMin = PolkaswapFormulas.calculateMinAmount(tokenToAmount, slippageTolerance)
@@ -164,6 +170,7 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
             from = address,
             keypair = keypair,
             useBatchAll = !pairPresented,
+            activity = activity,
         ) {
             if (!pairPresented) {
                 if (!pairEnabled) {

@@ -46,7 +46,9 @@ import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.sora.substrate.runtime.Sora2RecoveryRuntimeRetention
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import jp.co.soramitsu.sora.substrate.substrate.FileSora2SubmissionDetailsStore
 import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingSubmissionRuntimeRetention
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionDetailsStore
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApiImpl
 import jp.co.soramitsu.sora.substrate.substrate.WsConnectionManager
@@ -107,6 +109,18 @@ class SubstrateModule {
     @Provides
     @Singleton
     fun provideSubstrateApi(api: SubstrateApiImpl): SubstrateApi = api
+
+    /**
+     * Non-secret Activity details of locally signed transactions. A plain file in the app's
+     * private files directory: no database schema change, and nothing here is wallet key material.
+     */
+    @Provides
+    @Singleton
+    fun provideSora2SubmissionDetailsStore(
+        @ApplicationContext context: Context,
+    ): Sora2SubmissionDetailsStore = FileSora2SubmissionDetailsStore(
+        file = java.io.File(context.filesDir, FileSora2SubmissionDetailsStore.FILE_NAME),
+    )
 
     @Provides
     @Singleton

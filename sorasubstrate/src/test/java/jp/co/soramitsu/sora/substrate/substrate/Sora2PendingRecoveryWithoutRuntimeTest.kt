@@ -146,6 +146,7 @@ class Sora2PendingRecoveryWithoutRuntimeTest {
         runtimeRpcClient = rpc,
         addressCodec = codec,
         recoveryKick = {},
+        detailsStore = InMemorySora2SubmissionDetailsStore(),
     )
 
     @Test
@@ -203,6 +204,47 @@ class Sora2PendingRecoveryWithoutRuntimeTest {
         assertEquals(0, pass.resolved)
         assertEquals(1, pass.unresolved)
         assertEquals(emptyList<String>(), writtenStates)
+    }
+
+    @Test
+    fun `an endpoint that is behind the signing block leaves the submission pending`() = runTest {
+        // The transaction was signed at a block the first endpoint had finalized. This pass is
+        // answered by the second endpoint, which has not finalized that block yet.
+        chainAt(finalizedHeight = BIRTH - 2)
+
+        val pass = coordinator().recoverStatusOnly()
+
+        assertEquals(0, pass.resolved)
+        assertEquals(1, pass.unresolved)
+        assertEquals(0, pass.failures)
+        assertEquals(emptyList<String>(), writtenStates)
+        coVerify(exactly = 0) { rpc.getCanonicalBlock(any(), any(), any()) }
+    }
+
+    @Test
+    fun `finality that steps back between passes neither fails nor repeats the scan`() = runTest {
+        val coordinator = coordinator()
+        chainAt(finalizedHeight = BIRTH + 20)
+        coordinator.recoverStatusOnly()
+        coVerify(exactly = 1) { rpc.getCanonicalBlock(BIRTH + 20, any(), any()) }
+
+        // The next pass is answered by an endpoint three blocks behind the previous one.
+        chainAt(finalizedHeight = BIRTH + 17)
+        val behind = coordinator.recoverStatusOnly()
+
+        assertEquals(0, behind.failures)
+        assertEquals(1, behind.unresolved)
+        assertEquals(emptyList<String>(), writtenStates)
+        // Nothing was read again, and what was scanned before is not forgotten: once finality
+        // is ahead again, the scan continues after block BIRTH + 20.
+        chainAt(finalizedHeight = BIRTH + 100)
+        val ahead = coordinator.recoverStatusOnly()
+
+        assertEquals(1, ahead.resolved)
+        assertEquals(listOf(Sora2PendingSubmissionLocal.STATE_EXPIRED_NOT_INCLUDED), writtenStates)
+        coVerify(exactly = 1) { rpc.getCanonicalBlock(BIRTH + 17, any(), any()) }
+        coVerify(exactly = 1) { rpc.getCanonicalBlock(BIRTH + 20, any(), any()) }
+        coVerify(exactly = 1) { rpc.getCanonicalBlock(BIRTH + 63, any(), any()) }
     }
 
     private companion object {

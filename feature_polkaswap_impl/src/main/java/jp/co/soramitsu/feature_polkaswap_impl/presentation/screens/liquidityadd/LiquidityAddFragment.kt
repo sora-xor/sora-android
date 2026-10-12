@@ -237,6 +237,7 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                     onReview = onReview,
                     onSelect1 = onToken1Click,
                     onSelect2 = onToken2Click,
+                    onRetryEstimate = viewModel::onRetryEstimate,
                 )
             }
         }

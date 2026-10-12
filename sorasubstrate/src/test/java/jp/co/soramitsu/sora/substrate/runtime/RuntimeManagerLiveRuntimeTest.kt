@@ -12,10 +12,23 @@ import java.io.File
 import java.io.IOException
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.network.BoundedHttpTextClient
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
+import jp.co.soramitsu.sora.substrate.testing.TestRuntimeSnapshots
+import jp.co.soramitsu.xcrypto.util.fromHex
+import jp.co.soramitsu.xcrypto.util.toHexString
+import jp.co.soramitsu.xsubstrate.runtime.metadata.RuntimeMetadataReader
+import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.ExtrinsicMetadataV14
+import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.LookupSchema
+import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.PortableType
+import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.RegistryType
+import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.RuntimeMetadataSchemaV14
+import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.SignedExtensionMetadataV14
+import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.TypeDefEnum
+import jp.co.soramitsu.xsubstrate.scale.EncodableStruct
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.chain.RuntimeVersion
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -488,7 +501,256 @@ class RuntimeManagerLiveRuntimeTest {
             }
         }
 
+    @Test
+    fun `metadata is downloaded once per runtime and not for every quote or signature`() =
+        runTest {
+            liveChain()
+            coEvery { rpc.getRuntimeCodeHashAtFinalized(any()) } returns CODE_HASH
+            coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+            val manager = runtimeManager()
+
+            val first = manager.getMutationRuntimeContext()
+            // Later quotes and signatures see newer finalized blocks of the same runtime.
+            liveChain(finalizedHash = UPGRADED_HASH)
+            val second = manager.getMutationRuntimeContext()
+            val third = manager.getMutationRuntimeContext()
+
+            assertSame(first.snapshot, second.snapshot)
+            assertSame(first.snapshot, third.snapshot)
+            assertEquals(UPGRADED_HASH, second.finalizedHash)
+            assertEquals(first.metadataSha256, second.metadataSha256)
+            assertEquals(first.typesSha256, third.typesSha256)
+            assertEquals(133, third.runtimeVersion.specVersion)
+            // One download of 1.25 MB instead of three; each later context costs one 32-byte
+            // answer.
+            coVerify(exactly = 1) { rpc.getMetadataAtFinalized(any()) }
+            coVerify(exactly = 3) { rpc.getRuntimeCodeHashAtFinalized(any()) }
+        }
+
+    @Test
+    fun `the download that refreshed the runtime for reading also serves the first quote`() =
+        runTest {
+            // First start after a chain upgrade: the packaged runtime is 130, mainnet is at 133.
+            liveChain(specVersion = 133, transactionVersion = 131)
+            coEvery { rpc.getRuntimeCodeHashAtFinalized(any()) } returns CODE_HASH
+            coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+            val manager = runtimeManager()
+
+            manager.getRuntimeSnapshot()
+            assertEquals(133, manager.getRuntimeSpecVersion())
+            coVerify(exactly = 1) { rpc.getMetadataAtFinalized(any()) }
+
+            val context = manager.getMutationRuntimeContext()
+
+            assertEquals(133, context.runtimeVersion.specVersion)
+            assertSame(manager.getRuntimeSnapshot(), context.snapshot)
+            coVerify(exactly = 1) { rpc.getMetadataAtFinalized(any()) }
+        }
+
+    @Test
+    fun `new runtime code or a new version always reads the metadata again`() = runTest {
+        liveChain()
+        coEvery { rpc.getRuntimeCodeHashAtFinalized(any()) } returns CODE_HASH
+        coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+        val manager = runtimeManager()
+        manager.getMutationRuntimeContext()
+        coVerify(exactly = 1) { rpc.getMetadataAtFinalized(any()) }
+
+        // Other runtime code under the same version numbers is another runtime.
+        coEvery { rpc.getRuntimeCodeHashAtFinalized(any()) } returns OTHER_CODE_HASH
+        manager.getMutationRuntimeContext()
+        coVerify(exactly = 2) { rpc.getMetadataAtFinalized(any()) }
+        manager.getMutationRuntimeContext()
+        coVerify(exactly = 2) { rpc.getMetadataAtFinalized(any()) }
+
+        // The same code reported with another transaction version is not trusted either.
+        liveChain(specVersion = 133, transactionVersion = 132)
+        manager.getMutationRuntimeContext()
+        coVerify(exactly = 3) { rpc.getMetadataAtFinalized(any()) }
+
+        // A runtime upgrade: new version, new code.
+        liveChain(specVersion = 134, transactionVersion = 132, finalizedHash = UPGRADED_HASH)
+        coEvery { rpc.getRuntimeCodeHashAtFinalized(UPGRADED_HASH) } returns CODE_HASH
+        val upgraded = manager.getMutationRuntimeContext()
+        assertEquals(134, upgraded.runtimeVersion.specVersion)
+        coVerify(exactly = 4) { rpc.getMetadataAtFinalized(any()) }
+    }
+
+    @Test
+    fun `without a code hash the metadata is compared by its own hash as before`() = runTest {
+        liveChain()
+        coEvery { rpc.getRuntimeCodeHashAtFinalized(any()) } throws IOException("offline")
+        coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+        val manager = runtimeManager()
+
+        val first = manager.getMutationRuntimeContext()
+        val second = manager.getMutationRuntimeContext()
+
+        assertSame(first.snapshot, second.snapshot)
+        coVerify(exactly = 2) { rpc.getMetadataAtFinalized(any()) }
+        assertNull(cache[CODE_BINDING_FILE])
+    }
+
+    @Test
+    fun `the next app start does not download the metadata again`() = runTest {
+        liveChain()
+        coEvery { rpc.getRuntimeCodeHashAtFinalized(any()) } returns CODE_HASH
+        coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+        val firstProcess = runtimeManager().getMutationRuntimeContext()
+        coVerify(exactly = 1) { rpc.getMetadataAtFinalized(any()) }
+        assertNotNull(cache[CODE_BINDING_FILE])
+
+        // A new process: the saved runtime is loaded for reading, then a fee is quoted.
+        coEvery { preferences.getInt(RUNTIME_VERSION_PREF, any()) } returns 133
+        val restarted = runtimeManager()
+        restarted.getRuntimeSnapshot()
+        val context = restarted.getMutationRuntimeContext()
+
+        assertEquals(firstProcess.metadataSha256, context.metadataSha256)
+        assertEquals(133, context.runtimeVersion.specVersion)
+        coVerify(exactly = 1) { rpc.getMetadataAtFinalized(any()) }
+
+        // A saved binding that is about other metadata is ignored, not trusted.
+        cache[CODE_BINDING_FILE] = checkNotNull(cache[CODE_BINDING_FILE])
+            .replace(firstProcess.metadataSha256, "0".repeat(64))
+        val foreign = runtimeManager()
+        foreign.getRuntimeSnapshot()
+        foreign.getMutationRuntimeContext()
+        coVerify(exactly = 2) { rpc.getMetadataAtFinalized(any()) }
+    }
+
+    @Test
+    fun `mainnet runtimes 130 and 133 list only signed extensions the encoder writes`() {
+        listOf(bundledMetadata, TestRuntimeSnapshots.mainnet133MetadataHex).forEach { metadata ->
+            val parsed = v14Metadata(metadata)
+            assertEquals(
+                listOf(
+                    "CheckSpecVersion",
+                    "CheckTxVersion",
+                    "CheckGenesis",
+                    "CheckMortality",
+                    "CheckNonce",
+                    "CheckWeight",
+                    "ChargeTransactionPayment",
+                ),
+                parsed[RuntimeMetadataSchemaV14.extrinsic][ExtrinsicMetadataV14.signedExtensions]
+                    .map { it[SignedExtensionMetadataV14.identifier] },
+            )
+            assertEquals(
+                emptyList<String>(),
+                Sora2SignedExtensionAdmission.unsupportedExtensions(parsed),
+            )
+        }
+    }
+
+    @Test
+    fun `a new signed extension with data stops signing with an update-the-app error`() =
+        runTest {
+            // What a runtime with CheckMetadataHash looks like: one more extension whose part
+            // of the extrinsic is a byte. The encoder would leave that byte out.
+            val upgraded = metadataWithSignedExtension(
+                identifier = "CheckMetadataHash",
+                carriesDataInExtrinsic = true,
+            )
+            liveChain(specVersion = 140, transactionVersion = 135)
+            coEvery { rpc.getMetadataAtFinalized(FINALIZED_HASH) } returns upgraded
+            coEvery { rpc.getRuntimeCodeHashAtFinalized(any()) } returns CODE_HASH
+            coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+            val manager = runtimeManager()
+
+            val error = runCatching { manager.getMutationRuntimeContext() }.exceptionOrNull()
+
+            assertTrue(error is Sora2AppUpdateRequiredException)
+            assertEquals(
+                listOf("CheckMetadataHash"),
+                (error as Sora2AppUpdateRequiredException).signedExtensions,
+            )
+            assertEquals(
+                NetworkFeeUnavailable.APP_UPDATE_REQUIRED,
+                NetworkFeeUnavailable.from(IllegalStateException("fee", error)),
+            )
+            // Balances are still decoded with the new runtime; only signing is refused.
+            assertEquals(140, manager.getRuntimeSpecVersion())
+            assertEquals(upgraded.runtimeMetadataSha256(), manager.getRuntimeMetadataSha256())
+            // It stays refused when the metadata is no longer downloaded.
+            val again = runCatching { manager.getMutationRuntimeContext() }.exceptionOrNull()
+            assertTrue(again is Sora2AppUpdateRequiredException)
+            coVerify(exactly = 1) { rpc.getMetadataAtFinalized(any()) }
+        }
+
+    @Test
+    fun `a new signed extension in the signed payload only is refused as well`() = runTest {
+        val upgraded = metadataWithSignedExtension(
+            identifier = "CheckSomethingNew",
+            carriesDataInExtrinsic = false,
+            carriesDataInSignedPayload = true,
+        )
+        liveChain(specVersion = 140, transactionVersion = 135)
+        coEvery { rpc.getMetadataAtFinalized(FINALIZED_HASH) } returns upgraded
+        coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+
+        val error = runCatching { runtimeManager().getMutationRuntimeContext() }.exceptionOrNull()
+
+        assertEquals(
+            listOf("CheckSomethingNew"),
+            (error as Sora2AppUpdateRequiredException).signedExtensions,
+        )
+    }
+
+    @Test
+    fun `a new signed extension without data does not stop signing`() = runTest {
+        val upgraded = metadataWithSignedExtension(
+            identifier = "CheckNonZeroSender",
+            carriesDataInExtrinsic = false,
+        )
+        liveChain(specVersion = 140, transactionVersion = 135)
+        coEvery { rpc.getMetadataAtFinalized(FINALIZED_HASH) } returns upgraded
+        coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+
+        val context = runtimeManager().getMutationRuntimeContext()
+
+        assertEquals(140, context.runtimeVersion.specVersion)
+        assertTrue("CheckNonZeroSender" in context.snapshot.metadata.extrinsic.signedExtensions)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun v14Metadata(metadataHex: String): EncodableStruct<RuntimeMetadataSchemaV14> =
+        RuntimeMetadataReader.read(metadataHex.trim()).metadata
+            as EncodableStruct<RuntimeMetadataSchemaV14>
+
+    /** The packaged metadata with one more signed extension, re-encoded as a node sends it. */
+    private fun metadataWithSignedExtension(
+        identifier: String,
+        carriesDataInExtrinsic: Boolean,
+        carriesDataInSignedPayload: Boolean = false,
+    ): String {
+        val metadata = v14Metadata(bundledMetadata)
+        val types = metadata[RuntimeMetadataSchemaV14.lookup][LookupSchema.types]
+        val emptyTuple = types.first { type ->
+            (type[PortableType.type][RegistryType.def] as? List<*>)?.isEmpty() == true
+        }[PortableType.id]
+        val oneByte = types.first { type ->
+            type[PortableType.type][RegistryType.def] == TypeDefEnum.u8
+        }[PortableType.id]
+        val extrinsic = metadata[RuntimeMetadataSchemaV14.extrinsic]
+        extrinsic[ExtrinsicMetadataV14.signedExtensions] =
+            extrinsic[ExtrinsicMetadataV14.signedExtensions] +
+            EncodableStruct(SignedExtensionMetadataV14).also { extension ->
+                extension[SignedExtensionMetadataV14.identifier] = identifier
+                extension[SignedExtensionMetadataV14.type] =
+                    if (carriesDataInExtrinsic) oneByte else emptyTuple
+                extension[SignedExtensionMetadataV14.additionalSigned] =
+                    if (carriesDataInSignedPayload) oneByte else emptyTuple
+            }
+        val magicAndVersion = bundledMetadata.trim().fromHex().copyOfRange(0, 5)
+        return (magicAndVersion + RuntimeMetadataSchemaV14.toByteArray(metadata))
+            .toHexString(withPrefix = true)
+    }
+
     private companion object {
+        const val CODE_BINDING_FILE = "sora2_runtime_code_binding_v1.json"
+        val CODE_HASH = "0x${"fe".repeat(32)}"
+        val OTHER_CODE_HASH = "0x${"0c".repeat(32)}"
         const val LEGACY_METADATA_FILE = "sora2_metadata"
         const val LEGACY_TYPES_FILE = "types_scalecodec_mobile.json"
         const val MANIFEST_FILE = "sora2_runtime_cache_manifest_v2.json"
