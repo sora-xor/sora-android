@@ -44,9 +44,16 @@ adb -s emulator-5560 emu kill
 - The summary and one log per group are written to `build/device-qualification/` (or
   `--report-dir`). Keep `summary.txt` with the release record: it names the commit and the device.
 - A group that ran no test counts as failed, so a wrong class name cannot pass.
+- The release gate is the run on a device with 4 KB pages (the default image of the
+  workflow, the AVD `SORA-Api34`).
 - Repeat on Android 16 with 16 KB pages before a release: locally with the AVD
   `SORA-Api36-16k`; on GitHub by starting "Android Upgrade Device Tests" with the system image
-  `system-images;android-36;google_apis_ps16k;x86_64`.
+  `system-images;android-36;google_apis_ps16k;x86_64`. Two things cannot run there and are
+  left out: `WalletUxAcceptanceTest` and the MigrationManager phases. They mock final
+  classes, which loads MockK's agent library from the test APK (mockk-agent-android 1.13.11),
+  and that library is built for 4 KB pages. The summary lists them and ends with "PASS for
+  the 16 KB subset". The app's own native libraries are 16 KB aligned
+  (`verify-android-native-16kb.py`).
 - The MigrationManager script proves that its two APKs use the isolated package before it
   installs them, with `apkanalyzer` or, when the SDK command-line tools are not installed,
   with `aapt2` from build-tools (`SORA_APK_INSPECTOR=aapt2` forces the second).
