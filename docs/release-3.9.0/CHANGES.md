@@ -2062,7 +2062,11 @@ layout in both themes and checks every rendered text colour.
   all-caps buttons (`before/launch.png`). The emulator reports the REDUCED
   tier (it has less than 3.5 GiB of memory).
 
-### Not in this task (next UI task)
+### Not in the original foundation task (subsequently integrated)
+
+The 12 October follow-up implements the production component/screen migration and new-install
+theme behavior below; see [NEON-INTEGRATION.md](NEON-INTEGRATION.md) for exact scope and evidence.
+This historical list describes what the initial foundation alone did not include.
 
 - Migrating screens to `GlassCard` / `NeonButton` (import swaps),
   `NeonBackground` in `SoraBaseFragment` with a transparent toolbar, the

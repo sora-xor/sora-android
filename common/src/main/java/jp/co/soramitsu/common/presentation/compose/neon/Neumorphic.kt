@@ -80,13 +80,13 @@ fun NeumorphicSurface(
     val pressed by interactionSource.collectIsPressedAsState()
     val p by animateFloatAsState(
         targetValue = if (pressed) 1f else 0f,
-        animationSpec = tween(if (pressed) NeonMotion.PRESS else NeonMotion.FAST),
+        animationSpec = tween(if (fx.reduceMotion) 0 else if (pressed) NeonMotion.PRESS else NeonMotion.FAST),
         label = "neu",
     )
     val rich = fx.shadows
     Box(
         modifier.graphicsLayer {
-            val s = 1f - .04f * p
+            val s = if (fx.reduceMotion) 1f else 1f - .04f * p
             scaleX = s
             scaleY = s
         },

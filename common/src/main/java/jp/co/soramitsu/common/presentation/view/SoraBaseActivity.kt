@@ -124,7 +124,7 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
 
                 Box(modifier = Modifier.fillMaxSize()) {
                     // Static SORA Neon aurora in both themes (replaces the full-screen bitmap).
-                    NeonBackground()
+                    NeonBackground(safe = useSafeAurora())
                     Scaffold(
                         modifier = Modifier
                             .navigationBarsPadding()
@@ -167,6 +167,9 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
     abstract fun onToolbarNavigation()
 
     open fun backgroundColor() = R.attr.baseBackground
+
+    @Composable
+    protected open fun useSafeAurora(): Boolean = false
 
     @Composable
     abstract fun Content(padding: PaddingValues, scrollState: ScrollState)

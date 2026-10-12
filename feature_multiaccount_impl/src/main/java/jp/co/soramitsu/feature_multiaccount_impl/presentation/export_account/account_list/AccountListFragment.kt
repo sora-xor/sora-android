@@ -58,13 +58,15 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_multiaccount_api.OnboardingNavigator
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.SafeFilledButton as FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @AndroidEntryPoint
 class AccountListFragment : SoraBaseFragment<AccountListViewModel>() {
+
+    override val useSafeAurora = true
 
     override val viewModel: AccountListViewModel by viewModels()
 

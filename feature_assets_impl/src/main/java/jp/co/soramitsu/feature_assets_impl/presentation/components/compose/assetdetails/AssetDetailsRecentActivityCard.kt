@@ -47,7 +47,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.screen.ReceivedTra
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.screen.TxHistoryListItem
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
-import jp.co.soramitsu.ui_core.component.button.TextButton
+import jp.co.soramitsu.common.presentation.compose.neon.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens

@@ -34,6 +34,7 @@ package jp.co.soramitsu.common.domain
 
 import android.content.Context
 import android.content.res.Configuration
+import java.io.File
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -174,7 +175,8 @@ class DarkThemeManager @Inject constructor(
                     ),
                     isDarkModeEnabled = soraPreferences.getBoolean(
                         field = KEY_DARK_THEME_ENABLED,
-                        defaultValue = false
+                        defaultValue = context.getSharedPreferences(NIGHT_MODE_MIRROR_FILE, Context.MODE_PRIVATE)
+                            .getBoolean(KEY_NEW_INSTALL_DARK, false)
                     )
                 )
             )
@@ -238,6 +240,25 @@ class DarkThemeManager @Inject constructor(
         private const val KEY_SYSTEM_DRIVEN_UI_ENABLED = "KEY_SYSTEM_DRIVEN_UI_ENABLED"
         private const val NIGHT_MODE_MIRROR_FILE = "sora_night_mode_mirror"
         private const val KEY_NIGHT_MODE_MIRROR = "night_mode"
+        private const val KEY_NEW_INSTALL_DARK = "new_install_dark_default"
+
+        /** Capture before startup creates wallet/preferences files. Upgrades retain the old light
+         * default and every explicit theme choice still wins. This writes presentation metadata
+         * only, never wallet settings or credentials. Any existing app data means "not new". */
+        fun captureNewInstallDefault(context: Context) {
+            runCatching {
+                val mirror = context.getSharedPreferences(NIGHT_MODE_MIRROR_FILE, Context.MODE_PRIVATE)
+                if (!mirror.contains(KEY_NEW_INSTALL_DARK)) {
+                    val roots = listOf(File(context.applicationInfo.dataDir, "databases"),
+                        File(context.applicationInfo.dataDir, "shared_prefs"), context.filesDir, context.noBackupFilesDir)
+                    val newInstall = roots.all { directory ->
+                        !directory.exists() || directory.listFiles()?.isEmpty() == true
+                    }
+                    check(mirror.edit().putBoolean(KEY_NEW_INSTALL_DARK, newInstall).commit())
+                    if (newInstall) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                }
+            }.onFailure { Timber.w(it, "Could not capture the initial theme default") }
+        }
 
         /**
          * Applies the night mode mirrored on the previous run, before any Activity exists, so a
@@ -247,7 +268,11 @@ class DarkThemeManager @Inject constructor(
         fun applyCachedNightMode(context: Context) {
             runCatching {
                 val mode = context.getSharedPreferences(NIGHT_MODE_MIRROR_FILE, Context.MODE_PRIVATE)
-                    .getInt(KEY_NIGHT_MODE_MIRROR, AppCompatDelegate.MODE_NIGHT_UNSPECIFIED)
+                    .let { mirror ->
+                        mirror.getInt(KEY_NIGHT_MODE_MIRROR,
+                            if (mirror.getBoolean(KEY_NEW_INSTALL_DARK, false)) AppCompatDelegate.MODE_NIGHT_YES
+                            else AppCompatDelegate.MODE_NIGHT_UNSPECIFIED)
+                    }
                 if (
                     mode == AppCompatDelegate.MODE_NIGHT_YES ||
                     mode == AppCompatDelegate.MODE_NIGHT_NO ||

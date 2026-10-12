@@ -62,7 +62,7 @@ import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_account_api.domain.model.UnavailableWalletReason
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountDetailsScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ReadOnlyAccountUi
-import jp.co.soramitsu.ui_core.component.button.TonalButton
+import jp.co.soramitsu.common.presentation.compose.neon.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.input.InputTextState

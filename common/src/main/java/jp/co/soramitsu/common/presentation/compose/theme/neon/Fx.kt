@@ -106,7 +106,7 @@ data class FxPolicy(
             )
             return FxPolicy(
                 tier = tier,
-                reduceMotion = !signals.animatorsEnabled,
+                reduceMotion = reduceEffects || !signals.animatorsEnabled,
                 opaqueGlass = tier == FxTier.MINIMAL,
                 highContrast = signals.highContrast,
             )

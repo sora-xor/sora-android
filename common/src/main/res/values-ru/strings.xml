@@ -35,8 +35,8 @@
   <string name="address_not_found_1">Получатели не найдены</string>
   <string name="amount_error_no_funds">Извините, у вас недостаточно средств для осуществления перевода.</string>
   <string name="appearance_title">Внешний вид</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
+  <string name="appearance_reduce_effects">Уменьшить эффекты</string>
+  <string name="appearance_reduce_effects_description">Отключает свечение, эффекты стекла и движения. Полезно на старых телефонах и для экономии заряда батареи.</string>
   <string name="apr_description">APR в фарминге обозначает годовую доходность инвестиций за участие в предоставлении ликвидности DeFi или стейкинге.</string>
   <string name="ask_biometry_message">Хотите ли Вы использовать биометрию для входа в приложение?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -168,7 +168,7 @@
   <string name="common_japanese">Японский</string>
   <string name="common_khmer">Кхмерский</string>
   <string name="common_korean">Корейский</string>
-  <string name="common_loading">Loading</string>
+  <string name="common_loading">Загрузка</string>
   <string name="common_malay">Малайзийский</string>
   <string name="common_max">max</string>
   <string name="common_min">мин</string>
@@ -811,4 +811,11 @@
     <string name="wallet_preserved_data_partial">Не удалось проверить часть сохранённых данных кошелька. Все файлы остаются на этом телефоне. Другие проверенные варианты показаны ниже.</string>
     <string name="wallet_preserved_database_label">Только база данных аккаунтов</string>
     <string name="wallet_preserved_database_confirm">Использовать эту прежнюю базу данных аккаунтов? Текущая база будет сохранена. Ключи, резервные копии и текущий PIN SORA не изменятся. Приложение перезапустится и проверит каждый аккаунт перед использованием.</string>
+  <string name="neon_pin_digits_entered">Введено %1$d из %2$d цифр</string>
+  <string name="neon_pin_clear">Очистить ввод PIN</string>
+  <string name="neon_welcome_headline">Ваши ключи. Ваша SORA.</string>
+  <string name="neon_restore_google">Восстановить из Google Диска</string>
+  <string name="neon_theme_system">Система</string>
+  <string name="neon_theme_dark">Тёмная</string>
+  <string name="neon_theme_light">Светлая</string>
 </resources>

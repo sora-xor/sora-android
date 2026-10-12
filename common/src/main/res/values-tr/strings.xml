@@ -35,8 +35,8 @@
   <string name="address_not_found_1">Alıcılar bulunamadı</string>
   <string name="amount_error_no_funds">Üzgünüz, belirtilen tutarı transfer etmek için yeterli bakiyeniz yok.</string>
   <string name="appearance_title">Appearance</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
+  <string name="appearance_reduce_effects">Efektleri azalt</string>
+  <string name="appearance_reduce_effects_description">Parıltı, cam ve hareket efektlerini kapatır. Eski telefonlarda veya pil tasarrufu için yararlıdır.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Doğrulama için biyometri kullanmak ister misiniz?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -165,7 +165,7 @@
   <string name="common_japanese">Japonca</string>
   <string name="common_khmer">Kmerce</string>
   <string name="common_korean">Korece</string>
-  <string name="common_loading">Loading</string>
+  <string name="common_loading">Yükleniyor</string>
   <string name="common_malay">Malayca</string>
   <string name="common_max">max</string>
   <string name="common_min">dk</string>
@@ -790,4 +790,11 @@
     <string name="wallet_preserved_data_partial">Kaydedilmiş bazı cüzdan verileri doğrulanamadı. Tüm dosyalar bu telefonda kalır. Doğrulanmış diğer seçenekler aşağıda gösterilir.</string>
     <string name="wallet_preserved_database_label">Yalnızca hesap veritabanı</string>
     <string name="wallet_preserved_database_confirm">Bu önceki hesap veritabanı kullanılsın mı? Mevcut veritabanınız saklanacak. Anahtarlar, yedekler ve mevcut SORA PIN’iniz değişmeyecek. Uygulama yeniden başlatılacak ve kullanılmadan önce her hesap doğrulanacak.</string>
+  <string name="neon_pin_digits_entered">%2$d haneden %1$d tanesi girildi</string>
+  <string name="neon_pin_clear">Girilen PIN’i temizle</string>
+  <string name="neon_welcome_headline">Anahtarlarınız. SORA’nız.</string>
+  <string name="neon_restore_google">Google Drive’dan geri yükle</string>
+  <string name="neon_theme_system">Sistem</string>
+  <string name="neon_theme_dark">Koyu</string>
+  <string name="neon_theme_light">Açık</string>
 </resources>

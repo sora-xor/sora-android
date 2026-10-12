@@ -43,9 +43,9 @@
         android:id="@+id/bottomNavigationView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?attr/pureWhiteOnDay"
+        android:background="@drawable/bg_neon_chrome_nav"
         android:visibility="gone"
-        app:elevation="2dp"
+        app:elevation="0dp"
         app:itemIconTint="@drawable/bottom_navigation_icon_color_selector"
         app:itemTextAppearanceActive="@style/TextAppearance.Soramitsu.Neu.BottomNavigation"
         app:itemTextAppearanceInactive="@style/TextAppearance.Soramitsu.Neu.BottomNavigation"
@@ -58,21 +58,29 @@
         tools:background="@color/neu_color_100"
         tools:visibility="visible" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <FrameLayout
         android:id="@+id/fabMain"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="28dp"
-        android:backgroundTint="#ffffff"
-        app:maxImageSize="40dp"
-        android:src="@drawable/ic_polkaswap_40"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_neon_swap_glow"
+        android:clickable="true"
+        android:focusable="true"
         android:visibility="gone"
-        app:borderWidth="0dp"
-        app:elevation="4dp"
+        android:contentDescription="@string/polkaswap_swap_title"
         app:layout_constraintBottom_toBottomOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="@id/bottomNavigationView"
-        app:layout_constraintStart_toStartOf="@id/bottomNavigationView"
-        app:tint="#ff0066"
-        tools:ignore="ContentDescription" />
+        app:layout_constraintStart_toStartOf="@id/bottomNavigationView">
+        <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_neon_swap_disc"
+            android:duplicateParentState="true"
+            android:padding="16dp"
+            android:src="@drawable/ic_polkaswap_40"
+            app:tint="@color/neon_on_accent"
+            android:importantForAccessibility="no" />
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

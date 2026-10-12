@@ -34,41 +34,68 @@ package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.neon.ProtectWalletSecrets
+import jp.co.soramitsu.common.presentation.compose.neon.NeonGlow
+import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountCheckProgress
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LegacyPinUpgradePanel
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeScreen
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.common.util.ext.shake
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_main_impl.R
-import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
+import kotlinx.coroutines.delay
 
 @Composable
-internal fun PincodeScreen(
+fun PincodeScreen(
     pinCodeScreenState: PinCodeScreenState,
     onNumClick: (String) -> Unit,
     onBiometricClick: () -> Unit,
@@ -78,217 +105,175 @@ internal fun PincodeScreen(
     onNewPinContinue: () -> Unit = {},
     onGetHelp: () -> Unit = {},
 ) {
+    ProtectWalletSecrets()
     if (pinCodeScreenState.isLengthInfoAlertVisible) {
-        // U10 (design spec 9.2): unlocked with the old 4-digit PIN; the 6-digit setup follows.
-        SafeModeScreen {
-            LegacyPinUpgradePanel(onContinue = onNewPinContinue)
-        }
+        SafeModeScreen { LegacyPinUpgradePanel(onContinue = onNewPinContinue) }
         return
     }
-    Box(modifier = Modifier.fillMaxSize()) {
+    if (pinCodeScreenState.migrating) {
+        AccountCheckProgress(
+            connected = pinCodeScreenState.isConnected,
+            needsNetwork = pinCodeScreenState.checkNeedsNetwork,
+            onSwitchNode = onSwitchNode,
+            onGetHelp = onGetHelp,
+            silentMillis = 0,
+        )
+        return
+    }
+    val n = MaterialTheme.neon
+    val fx = LocalFx.current
+    LaunchedEffect(pinCodeScreenState.enableShakeAnimation, fx.reduceMotion) {
+        if (pinCodeScreenState.enableShakeAnimation && fx.reduceMotion) {
+            delay(600)
+            onWrongPinAnimationEnd()
+        }
+    }
+    BoxWithConstraints(Modifier.fillMaxSize().background(n.neuBg)) {
+        val keySize = if (maxWidth >= 400.dp && maxHeight >= 760.dp) 80.dp else 72.dp
         Column(
-            modifier = Modifier
-                .background(MaterialTheme.customColors.bgPage)
-                .fillMaxSize(),
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f, true),
+                Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    modifier = Modifier.padding(bottom = Dimens.x2),
-                    textAlign = TextAlign.Center,
                     text = pinCodeScreenState.toolbarTitleString,
-                    color = MaterialTheme.customColors.fgPrimary,
-                    style = MaterialTheme.customTypography.headline2
+                    textAlign = TextAlign.Center,
+                    color = n.textPrimary,
+                    style = MaterialTheme.customTypography.headline2,
+                    modifier = Modifier.padding(bottom = 24.dp),
                 )
-
-                // The dots and digits keep their positions in RTL locales (design spec 7.9);
-                // the text and the Safe Mode panels follow the device's direction.
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     DotsProgress(
-                        modifier = Modifier.shake(
+                        modifier = if (fx.reduceMotion) Modifier else Modifier.shake(
                             enabled = pinCodeScreenState.enableShakeAnimation,
-                            onAnimationEnd = onWrongPinAnimationEnd
+                            onAnimationEnd = onWrongPinAnimationEnd,
                         ),
                         maxDotsCount = pinCodeScreenState.maxDotsCount,
-                        checkedDotsCount = pinCodeScreenState.checkedDotsCount
+                        checkedDotsCount = pinCodeScreenState.checkedDotsCount,
+                        wrong = pinCodeScreenState.enableShakeAnimation,
                     )
                 }
             }
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 PincodeInputView(
+                    keySize = keySize,
                     onNumClick = onNumClick,
                     isDeleteVisible = pinCodeScreenState.isBackButtonVisible,
                     onDeleteClick = onDeleteClick,
+                    onClear = { repeat(pinCodeScreenState.maxDotsCount) { onDeleteClick() } },
                     isBiometricVisible = pinCodeScreenState.isBiometricButtonVisible,
                     onBiometricClick = onBiometricClick,
                 )
             }
         }
-        if (pinCodeScreenState.migrating) {
-            AccountCheckProgress(
-                connected = pinCodeScreenState.isConnected,
-                needsNetwork = pinCodeScreenState.checkNeedsNetwork,
-                onSwitchNode = onSwitchNode,
-                onGetHelp = onGetHelp,
-            )
-        }
+
     }
 }
 
-
 @Composable
-private fun DotsProgress(modifier: Modifier = Modifier, maxDotsCount: Int, checkedDotsCount: Int) {
+private fun DotsProgress(modifier: Modifier, maxDotsCount: Int, checkedDotsCount: Int, wrong: Boolean) {
+    val n = MaterialTheme.neon
+    val entered = checkedDotsCount.coerceIn(0, maxDotsCount)
+    val description = stringResource(jp.co.soramitsu.common.R.string.neon_pin_digits_entered, entered, maxDotsCount)
     Row(
-        modifier = modifier
+        modifier.clearAndSetSemantics {
+            contentDescription = description
+            liveRegion = LiveRegionMode.Polite
+        },
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        repeat(checkedDotsCount) {
-            Dot(true)
-        }
-        repeat(maxDotsCount - checkedDotsCount) {
-            Dot(false)
+        repeat(maxDotsCount) { index ->
+            val filled = index < entered
+            Box(Modifier.size(14.dp)) {
+                if (filled && !wrong) NeonGlow(n.glowDot, CircleShape, Modifier.matchParentSize())
+                Box(
+                    Modifier.matchParentSize()
+                        .background(if (filled) (if (wrong) n.error else n.cyan) else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
+                        .border(1.5.dp, if (wrong) n.error else if (filled) n.cyan else n.textTertiary, CircleShape),
+                )
+            }
         }
     }
-}
-
-@Composable
-private fun Dot(isChecked: Boolean = false) {
-    Icon(
-        modifier = Modifier
-            .padding(horizontal = Dimens.x1_2)
-            .size(Dimens.x3),
-        painter = painterResource(id = R.drawable.ic_dot_unchecked),
-        tint = if (isChecked) {
-            MaterialTheme.customColors.accentPrimary
-        } else {
-            MaterialTheme.customColors.accentSecondaryContainer
-        },
-        contentDescription = ""
-    )
 }
 
 @Composable
 private fun PincodeInputView(
-    modifier: Modifier = Modifier,
+    keySize: Dp,
     onNumClick: (String) -> Unit,
     onDeleteClick: () -> Unit,
-    isDeleteVisible: Boolean = false,
+    onClear: () -> Unit,
+    isDeleteVisible: Boolean,
     onBiometricClick: () -> Unit,
-    isBiometricVisible: Boolean = false
+    isBiometricVisible: Boolean,
 ) {
     Column(
-        modifier = modifier.padding(bottom = Dimens.x4),
-        verticalArrangement = Arrangement.Bottom
+        Modifier.padding(top = 24.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Row(modifier = Modifier.padding(vertical = Dimens.x1)) {
-            PinTextButton(modifier = Modifier.padding(horizontal = Dimens.x1), "1", onNumClick)
-            PinTextButton(modifier = Modifier.padding(horizontal = Dimens.x1), "2", onNumClick)
-            PinTextButton(modifier = Modifier.padding(horizontal = Dimens.x1), "3", onNumClick)
+        listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9")).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                row.forEach { PinTextButton(it, keySize, onNumClick) }
+            }
         }
-        Row(modifier = Modifier.padding(vertical = Dimens.x1)) {
-            PinTextButton(modifier = Modifier.padding(horizontal = Dimens.x1), "4", onNumClick)
-            PinTextButton(modifier = Modifier.padding(horizontal = Dimens.x1), "5", onNumClick)
-            PinTextButton(modifier = Modifier.padding(horizontal = Dimens.x1), "6", onNumClick)
-        }
-        Row(modifier = Modifier.padding(vertical = Dimens.x1)) {
-            PinTextButton(modifier = Modifier.padding(horizontal = Dimens.x1), "7", onNumClick)
-            PinTextButton(modifier = Modifier.padding(horizontal = Dimens.x1), "8", onNumClick)
-            PinTextButton(modifier = Modifier.padding(horizontal = Dimens.x1), "9", onNumClick)
-        }
-        Row(modifier = Modifier.padding(vertical = Dimens.x1)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             if (isBiometricVisible) {
-                PinIconButton(
-                    modifier = Modifier
-                        .padding(horizontal = Dimens.x1)
-                        .testTagAsId("Biometric"),
-                    R.drawable.ic_pin_biometric,
-                    onBiometricClick
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = Dimens.x1)
-                        .size(Dimens.x9)
-                )
-            }
-            PinTextButton(modifier = Modifier.padding(horizontal = Dimens.x1), "0", onNumClick)
+                PinIconButton(R.drawable.ic_pin_biometric, keySize, "Biometric",
+                    stringResource(jp.co.soramitsu.common.R.string.pincode_touch_fingerprint_scanner), onBiometricClick)
+            } else Box(Modifier.size(keySize))
+            PinTextButton("0", keySize, onNumClick)
             if (isDeleteVisible) {
-                PinIconButton(
-                    modifier = Modifier
-                        .padding(horizontal = Dimens.x1)
-                        .testTagAsId("Biometric"),
-                    R.drawable.ic_neu_chevron_back,
-                    onDeleteClick
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = Dimens.x1)
-                        .size(Dimens.x9)
-                )
-            }
+                PinIconButton(R.drawable.ic_neu_chevron_back, keySize, "Delete",
+                    stringResource(jp.co.soramitsu.common.R.string.common_delete), onDeleteClick, onClear)
+            } else Box(Modifier.size(keySize))
         }
     }
 }
 
 @Composable
-private fun PinTextButton(modifier: Modifier = Modifier, text: String, onClick: (String) -> Unit) {
-    Button(
-        modifier = modifier
-            .size(Dimens.x9)
-            .testTagAsId(text),
-        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.customColors.bgSurface),
+private fun PinTextButton(text: String, keySize: Dp, onClick: (String) -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    NeumorphicSurface(
         shape = CircleShape,
-        onClick = { onClick(text) }
+        interactionSource = interaction,
+        modifier = Modifier.size(keySize).testTagAsId(text).clickable(
+            interactionSource = interaction, indication = null, role = Role.Button,
+            onClick = { onClick(text) },
+        ),
     ) {
-        Text(
-            text = text,
-            color = MaterialTheme.customColors.fgSecondary,
-            style = MaterialTheme.customTypography.displayL
-        )
+        val density = LocalDensity.current
+        CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale.coerceAtMost(1.3f))) {
+            Text(text, color = MaterialTheme.neon.textPrimary, style = NeonType.pinDigit)
+        }
     }
 }
 
 @Composable
 private fun PinIconButton(
-    modifier: Modifier = Modifier,
     @DrawableRes icon: Int,
-    onIconClicked: () -> Unit
+    keySize: Dp,
+    tag: String,
+    description: String,
+    onClick: () -> Unit,
+    onClear: (() -> Unit)? = null,
 ) {
-    Button(
-        modifier = modifier.size(Dimens.x9),
-        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.customColors.bgSurface),
-        shape = CircleShape,
-        onClick = onIconClicked
+    val haptic = LocalHapticFeedback.current
+    val clearLabel = stringResource(jp.co.soramitsu.common.R.string.neon_pin_clear)
+    Box(
+        Modifier.size(keySize).testTagAsId(tag)
+            .combinedClickable(role = Role.Button, onClick = onClick,
+                onLongClick = onClear?.let { { haptic.performHapticFeedback(HapticFeedbackType.LongPress); it() } })
+            .semantics {
+                contentDescription = description
+                if (onClear != null) customActions = listOf(CustomAccessibilityAction(clearLabel) { onClear(); true })
+            },
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            painter = painterResource(id = icon),
-            tint = MaterialTheme.customColors.fgSecondary,
-            contentDescription = ""
-        )
+        Icon(painterResource(icon), contentDescription = null,
+            modifier = Modifier.size(if (onClear == null) 28.dp else 24.dp),
+            tint = if (onClear == null) MaterialTheme.neon.cyan else MaterialTheme.neon.textSecondary)
     }
-}
-
-@Preview
-@Composable
-fun PincodeScreenPreview() {
-    PincodeScreen(
-        PinCodeScreenState(
-            toolbarTitleString = "Enter your pincode",
-            checkedDotsCount = 3,
-            migrating = false,
-            isConnected = false,
-        ),
-        {},
-        {},
-        {},
-        {},
-        {},
-    )
 }

@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "description": "Public SHA-256 fingerprints of the SORA Wallet production signing certificates. scripts/verify-release-signing.py requires every release APK and AAB to be signed by uploadCertificateSha256. No private key material or password belongs in this file.",
   "applicationId": "jp.co.soramitsu.sora",
-  "uploadCertificateSha256": "b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0",
+  "uploadCertificateSha256": "26a76e0d3f736f3614dcec04725c439f7165babc8a1e9cb7203a4cdbd233adb1",
   "playAppSigningCertificateSha256": "b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0",
   "keystoreLocation": {
     "jenkinsKeystoreFileCredentialId": "android_keystore_sora",

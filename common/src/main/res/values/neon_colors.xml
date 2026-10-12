@@ -49,4 +49,5 @@
     <!-- bg.toast (inverted in light, design spec 7.13) and its text -->
     <color name="neon_toast">#14141F</color>
     <color name="neon_on_toast">#FFFFFF</color>
+    <color name="neon_swap_end">#A3128A</color>
 </resources>

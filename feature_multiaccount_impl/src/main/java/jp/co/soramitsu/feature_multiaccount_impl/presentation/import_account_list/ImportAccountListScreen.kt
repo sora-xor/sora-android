@@ -48,10 +48,10 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.BackupAccountMetaW
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.ImportAccountListScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_password.AccountWithIcon
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_password.readOnlyNote
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.SafeFilledButton as FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @Composable

@@ -33,7 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_multiaccount_impl.export.backup
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
+import jp.co.soramitsu.common.util.SensitiveClipboard
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
@@ -79,7 +79,7 @@ class BackupViewModelTest {
     private lateinit var interactor: MultiaccountInteractor
 
     @Mock
-    private lateinit var clipboardManager: BasicClipboardManager
+    private lateinit var clipboardManager: SensitiveClipboard
 
     private lateinit var viewModel: BackupViewModel
 
@@ -211,7 +211,7 @@ class BackupViewModelTest {
     fun backupPressedWithSeed() {
         setUp(ExportProtectionViewModel.Type.SEED)
         viewModel.backupPressed()
-        verify(clipboardManager).addToClipboard("0x$seed")
+        verify(clipboardManager).copy("0x$seed")
         viewModel.copiedToast.getOrAwaitValue()
     }
 
@@ -219,7 +219,7 @@ class BackupViewModelTest {
     fun backupPressedWithPassphrase() {
         setUp(ExportProtectionViewModel.Type.PASSPHRASE)
         viewModel.backupPressed()
-        verify(clipboardManager).addToClipboard(mnemo)
+        verify(clipboardManager).copy(mnemo)
         viewModel.copiedToast.getOrAwaitValue()
     }
 }

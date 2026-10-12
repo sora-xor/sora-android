@@ -175,8 +175,8 @@ fun NeonButton(
     val focused by interaction.collectIsFocusedAsState()
     val style = styleFor(variant, n, enabled)
     val scale by animateFloatAsState(
-        targetValue = if (pressed && enabled && !loading) .98f else 1f,
-        animationSpec = tween(NeonMotion.PRESS),
+        targetValue = if (pressed && enabled && !loading && !fx.reduceMotion) .98f else 1f,
+        animationSpec = tween(if (fx.reduceMotion) 0 else NeonMotion.PRESS),
         label = "neonButtonScale",
     )
     val pulseAlpha = rememberCtaPulse(
@@ -353,6 +353,23 @@ fun FilledButton(
     onClick: () -> Unit,
 ) = NeonButton(
     modifier = modifier, size = size, variant = order.toNeon(), enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+)
+
+@Composable
+fun SafeFilledButton(
+    modifier: Modifier = Modifier,
+    shape: Shape = NeonPillShape,
+    size: Dp,
+    order: Order,
+    enabled: Boolean = true,
+    text: String? = null,
+    leftIcon: Painter? = null,
+    rightIcon: Painter? = null,
+    maxLines: Int = 1,
+    onClick: () -> Unit,
+) = NeonButton(
+    modifier = modifier, size = size, variant = if (order == Order.PRIMARY) NeonVariant.Safe else NeonVariant.Secondary, enabled = enabled, text = text,
     leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
 )
 

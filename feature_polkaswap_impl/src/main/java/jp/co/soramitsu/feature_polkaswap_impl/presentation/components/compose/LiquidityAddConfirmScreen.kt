@@ -69,11 +69,11 @@ import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemov
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveEstimatedState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemovePricesState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveState
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledPolkaswapButton as FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.OpaqueContentCard as ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography

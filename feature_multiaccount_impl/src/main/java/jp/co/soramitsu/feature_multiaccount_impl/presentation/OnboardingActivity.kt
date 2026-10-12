@@ -316,6 +316,10 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         }
     }
 
+    @Composable
+    override fun useSafeAurora(): Boolean =
+        viewModel.toolbarState.observeAsState().value?.basic?.visibility == true
+
     @OptIn(
         ExperimentalAnimationApi::class, ExperimentalUnitApi::class,
     )
@@ -645,6 +649,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             onRecoveryInputChanged = viewModel::onRecoveryInputChanged,
                             onPasswordChanged = viewModel::onRecoveryPasswordChanged,
                             onChooseFile = ::chooseBackupFile,
+                            onSourceChanged = { source -> viewModel.onRecoveryClicked(navController, source.ordinal + 1) },
                         ) {
                             navController.navigate(OnboardingFeatureRoutes.RECOVERY_ACCOUNT_NAME)
                         }

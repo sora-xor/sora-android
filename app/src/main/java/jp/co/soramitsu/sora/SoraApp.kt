@@ -84,6 +84,7 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
         StartupTimeTrace.begin()
+        DarkThemeManager.captureNewInstallDefault(this)
         // Hilt injects eager singletons before this class's onCreate body. Prepare the immutable
         // wallet backup first so no injected database consumer can race the upgrade gate.
         WalletUpgradeBackup.prepare(this)
@@ -103,6 +104,9 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
+
+    // Instantiate the expiry watcher on every app process, even when the backup screen is not reopened.
+    @Inject lateinit var sensitiveClipboard: jp.co.soramitsu.common.util.SensitiveClipboard
 
     override fun onCreate() {
         super.onCreate()

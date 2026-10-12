@@ -35,8 +35,8 @@
   <string name="address_not_found_1">未找到接收人</string>
   <string name="amount_error_no_funds">很抱歉，您没有足够的资金来转账指定的金额。</string>
   <string name="appearance_title">外观</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
+  <string name="appearance_reduce_effects">减少效果</string>
+  <string name="appearance_reduce_effects_description">关闭发光、玻璃和动态效果。适用于旧款手机，也可节省电量。</string>
   <string name="apr_description">在农业中，APR代表参与DeFi流动性提供或质押活动的年化投资回报率。</string>
   <string name="ask_biometry_message">您想使用生物特征识别进行认证吗？</string>
   <string name="asset_details_asset_id">资产ID</string>
@@ -164,7 +164,7 @@
   <string name="common_japanese">日语</string>
   <string name="common_khmer">高棉语</string>
   <string name="common_korean">韩语</string>
-  <string name="common_loading">Loading</string>
+  <string name="common_loading">正在加载</string>
   <string name="common_malay">马来语</string>
   <string name="common_max">最大</string>
   <string name="common_min">分</string>
@@ -787,4 +787,11 @@
     <string name="wallet_preserved_data_partial">部分已保存的钱包数据无法验证。所有文件仍保留在这部手机上。其他已验证的选项显示在下方。</string>
     <string name="wallet_preserved_database_label">仅账户数据库</string>
     <string name="wallet_preserved_database_confirm">使用这个较早的账户数据库吗？当前数据库将会保留。密钥、备份和当前的 SORA PIN 均保持不变。应用将重新启动，并在使用前验证每个账户。</string>
+  <string name="neon_pin_digits_entered">已输入 %1$d 位，共 %2$d 位</string>
+  <string name="neon_pin_clear">清除已输入的 PIN</string>
+  <string name="neon_welcome_headline">你的密钥。你的SORA。</string>
+  <string name="neon_restore_google">从Google云端硬盘恢复</string>
+  <string name="neon_theme_system">跟随系统</string>
+  <string name="neon_theme_dark">深色</string>
+  <string name="neon_theme_light">浅色</string>
 </resources>

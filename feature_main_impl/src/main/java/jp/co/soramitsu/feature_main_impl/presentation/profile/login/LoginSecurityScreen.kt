@@ -57,7 +57,7 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeAction
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeCard
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customTypography
 
