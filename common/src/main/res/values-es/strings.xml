@@ -780,11 +780,16 @@
   <string name="send_fee_locked_hint">Not enough unlocked XOR for the network fee</string>
   <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
     <string name="wallet_preserved_data">Datos de monederos conservados en este teléfono</string>
-    <string name="wallet_preserved_data_body">Elige un conjunto anterior de datos de monederos. Tus monederos actuales también se conservarán aquí. La aplicación se reiniciará y comprobará los datos elegidos antes de abrirlos. Su PIN original sigue vigente.</string>
+    <string name="wallet_preserved_data_body">Elige un conjunto anterior de datos de la cartera. Tus carteras actuales también se conservarán aquí. La aplicación se reiniciará y verificará los datos seleccionados antes de abrirlos. Los datos completos de una cartera usan su PIN original; solo la base de datos de cuentas conserva tu PIN actual.</string>
     <string name="wallet_preserved_data_confirm">¿Conservar los datos actuales y usar este conjunto anterior? Puedes volver al conjunto actual desde esta misma pantalla.</string>
     <string name="wallet_preserved_data_use">Usar estos datos de monederos</string>
     <string name="wallet_preserved_data_failed">No se pueden comprobar los datos de los monederos ahora. Se ha conservado todo. Reinicia la aplicación e inténtalo de nuevo.</string>
     <string name="wallet_preserved_data_screen_lock">Configura un bloqueo de pantalla en este teléfono antes de cambiar los datos de monederos.</string>
     <string name="wallet_restore_backup_confirm">Tengo una frase de recuperación o una copia válida de cada monedero de este teléfono.</string>
     <string name="wallet_restore_cancel_pending">Cancelar reinicio y restauración</string>
+
+    <!-- Preserved generation scope and availability -->
+    <string name="wallet_preserved_data_partial">No se pudieron verificar algunos datos guardados de la cartera. Todos los archivos siguen en este teléfono. Abajo se muestran las demás opciones verificadas.</string>
+    <string name="wallet_preserved_database_label">Solo la base de datos de cuentas</string>
+    <string name="wallet_preserved_database_confirm">¿Usar esta base de datos de cuentas anterior? Se conservará la base actual. Las claves, las copias de seguridad y tu PIN actual de SORA no cambiarán. La aplicación se reiniciará y verificará cada cuenta antes de usarla.</string>
 </resources>

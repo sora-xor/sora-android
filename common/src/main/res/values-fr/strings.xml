@@ -782,11 +782,16 @@
   <string name="send_fee_locked_hint">Not enough unlocked XOR for the network fee</string>
   <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
     <string name="wallet_preserved_data">Données de portefeuille conservées sur ce téléphone</string>
-    <string name="wallet_preserved_data_body">Choisissez un ancien ensemble de données de portefeuille. Vos portefeuilles actuels seront aussi conservés ici. L’application redémarrera et vérifiera les données choisies avant de les ouvrir. Leur PIN d’origine reste applicable.</string>
+    <string name="wallet_preserved_data_body">Choisissez un ancien ensemble de données de portefeuille. Vos portefeuilles actuels seront aussi conservés ici. L’application redémarrera et vérifiera les données sélectionnées avant de les ouvrir. Les données complètes utilisent leur code PIN d’origine ; la base de données des comptes seule conserve votre code PIN actuel.</string>
     <string name="wallet_preserved_data_confirm">Conserver vos données actuelles et utiliser cet ancien ensemble ? Vous pourrez revenir à l’ensemble actuel depuis ce même écran.</string>
     <string name="wallet_preserved_data_use">Utiliser ces données de portefeuille</string>
     <string name="wallet_preserved_data_failed">Les données du portefeuille ne peuvent pas être vérifiées pour le moment. Tout a été conservé. Redémarrez l’application et réessayez.</string>
     <string name="wallet_preserved_data_screen_lock">Configurez un verrouillage d’écran sur ce téléphone avant de changer de données de portefeuille.</string>
     <string name="wallet_restore_backup_confirm">Je dispose d’une phrase de récupération ou d’une sauvegarde valide pour chaque portefeuille de ce téléphone.</string>
     <string name="wallet_restore_cancel_pending">Annuler le redémarrage et la restauration</string>
+
+    <!-- Preserved generation scope and availability -->
+    <string name="wallet_preserved_data_partial">Certaines données de portefeuille enregistrées n’ont pas pu être vérifiées. Tous les fichiers restent sur ce téléphone. Les autres options vérifiées sont affichées ci-dessous.</string>
+    <string name="wallet_preserved_database_label">Base de données des comptes uniquement</string>
+    <string name="wallet_preserved_database_confirm">Utiliser cette ancienne base de données des comptes ? La base actuelle sera conservée. Les clés, les sauvegardes et votre code PIN SORA actuel resteront inchangés. L’application redémarrera et vérifiera chaque compte avant utilisation.</string>
 </resources>

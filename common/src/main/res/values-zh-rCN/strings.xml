@@ -775,11 +775,16 @@
   <string name="send_fee_locked_hint">Not enough unlocked XOR for the network fee</string>
   <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
     <string name="wallet_preserved_data">此手机上保留的钱包数据</string>
-    <string name="wallet_preserved_data_body">选择一组较早的钱包数据。当前钱包也会保留在此处。应用将重启并在打开所选数据前进行检查。其原有 PIN 码仍然适用。</string>
+    <string name="wallet_preserved_data_body">选择一组较早的钱包数据。您当前的钱包也会保留在这里。应用将重新启动，并在打开所选数据前进行验证。完整的钱包数据使用原来的 PIN；仅恢复账户数据库时，仍使用当前的 PIN。</string>
     <string name="wallet_preserved_data_confirm">保留当前钱包数据并使用这组较早的数据吗？您可以从此页面切换回当前数据。</string>
     <string name="wallet_preserved_data_use">使用此钱包数据</string>
     <string name="wallet_preserved_data_failed">暂时无法检查钱包数据。所有内容均已保留。请重启应用后重试。</string>
     <string name="wallet_preserved_data_screen_lock">切换钱包数据前，请先在此手机上设置屏幕锁。</string>
     <string name="wallet_restore_backup_confirm">我有此手机上每个钱包的恢复助记词或可用备份。</string>
     <string name="wallet_restore_cancel_pending">取消重启和恢复</string>
+
+    <!-- Preserved generation scope and availability -->
+    <string name="wallet_preserved_data_partial">部分已保存的钱包数据无法验证。所有文件仍保留在这部手机上。其他已验证的选项显示在下方。</string>
+    <string name="wallet_preserved_database_label">仅账户数据库</string>
+    <string name="wallet_preserved_database_confirm">使用这个较早的账户数据库吗？当前数据库将会保留。密钥、备份和当前的 SORA PIN 均保持不变。应用将重新启动，并在使用前验证每个账户。</string>
 </resources>
