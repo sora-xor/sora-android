@@ -773,11 +773,16 @@
   <string name="send_fee_locked_hint">Not enough unlocked XOR for the network fee</string>
   <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
     <string name="wallet_preserved_data">Data dompet yang disimpan di ponsel ini</string>
-    <string name="wallet_preserved_data_body">Pilih kumpulan data dompet sebelumnya. Dompet saat ini juga akan disimpan di sini. Aplikasi akan dimulai ulang dan memeriksa data terpilih sebelum membukanya. PIN aslinya tetap berlaku.</string>
+    <string name="wallet_preserved_data_body">Pilih kumpulan data dompet terdahulu. Dompet Anda saat ini juga akan tetap disimpan di sini. Aplikasi akan dimulai ulang dan memeriksa data yang dipilih sebelum membukanya. Data dompet lengkap menggunakan PIN aslinya; database akun saja tetap menggunakan PIN Anda saat ini.</string>
     <string name="wallet_preserved_data_confirm">Simpan data dompet saat ini dan gunakan kumpulan data sebelumnya ini? Anda dapat kembali ke kumpulan data saat ini dari layar yang sama.</string>
     <string name="wallet_preserved_data_use">Gunakan data dompet ini</string>
     <string name="wallet_preserved_data_failed">Data dompet belum dapat diperiksa. Semuanya tetap disimpan. Coba lagi setelah memulai ulang aplikasi.</string>
     <string name="wallet_preserved_data_screen_lock">Atur kunci layar di ponsel ini sebelum beralih data dompet.</string>
     <string name="wallet_restore_backup_confirm">Saya memiliki frasa pemulihan atau cadangan yang berfungsi untuk setiap dompet di ponsel ini.</string>
     <string name="wallet_restore_cancel_pending">Batalkan mulai ulang dan pemulihan</string>
+
+    <!-- Preserved generation scope and availability -->
+    <string name="wallet_preserved_data_partial">Sebagian data dompet yang tersimpan tidak dapat diverifikasi. Semua file tetap ada di ponsel ini. Pilihan lain yang telah diverifikasi ditampilkan di bawah.</string>
+    <string name="wallet_preserved_database_label">Hanya database akun</string>
+    <string name="wallet_preserved_database_confirm">Gunakan database akun terdahulu ini? Database saat ini akan disimpan. Kunci, cadangan, dan PIN SORA Anda saat ini tidak berubah. Aplikasi akan dimulai ulang dan memverifikasi setiap akun sebelum digunakan.</string>
 </resources>

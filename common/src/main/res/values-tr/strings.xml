@@ -778,11 +778,16 @@
   <string name="send_fee_locked_hint">Not enough unlocked XOR for the network fee</string>
   <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
     <string name="wallet_preserved_data">Bu telefonda saklanan cüzdan verileri</string>
-    <string name="wallet_preserved_data_body">Önceki bir cüzdan veri kümesini seçin. Mevcut cüzdanlarınız da burada saklanacak. Uygulama yeniden başlayacak ve seçilen verileri açmadan önce denetleyecek. Bu verilerin özgün PIN’i geçerli olmaya devam eder.</string>
+    <string name="wallet_preserved_data_body">Önceki bir cüzdan veri kümesini seçin. Mevcut cüzdanlarınız da burada saklanacak. Uygulama yeniden başlayacak ve seçilen verileri açmadan önce doğrulayacak. Tam cüzdan verileri kendi önceki PIN’ini kullanır; yalnızca hesap veritabanı geri alındığında mevcut PIN’iniz korunur.</string>
     <string name="wallet_preserved_data_confirm">Mevcut cüzdan verilerinizi saklayıp bu önceki kümeyi kullanmak istiyor musunuz? Aynı ekrandan mevcut kümeye geri dönebilirsiniz.</string>
     <string name="wallet_preserved_data_use">Bu cüzdan verilerini kullan</string>
     <string name="wallet_preserved_data_failed">Cüzdan verileri şu anda denetlenemiyor. Her şey korundu. Uygulamayı yeniden başlattıktan sonra tekrar deneyin.</string>
     <string name="wallet_preserved_data_screen_lock">Cüzdan verilerini değiştirmeden önce bu telefona ekran kilidi ayarlayın.</string>
     <string name="wallet_restore_backup_confirm">Bu telefondaki her cüzdan için kurtarma ifadem veya çalışan bir yedeğim var.</string>
     <string name="wallet_restore_cancel_pending">Yeniden başlat ve geri yükle işlemini iptal et</string>
+
+    <!-- Preserved generation scope and availability -->
+    <string name="wallet_preserved_data_partial">Kaydedilmiş bazı cüzdan verileri doğrulanamadı. Tüm dosyalar bu telefonda kalır. Doğrulanmış diğer seçenekler aşağıda gösterilir.</string>
+    <string name="wallet_preserved_database_label">Yalnızca hesap veritabanı</string>
+    <string name="wallet_preserved_database_confirm">Bu önceki hesap veritabanı kullanılsın mı? Mevcut veritabanınız saklanacak. Anahtarlar, yedekler ve mevcut SORA PIN’iniz değişmeyecek. Uygulama yeniden başlatılacak ve kullanılmadan önce her hesap doğrulanacak.</string>
 </resources>

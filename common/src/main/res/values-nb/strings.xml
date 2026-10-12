@@ -776,11 +776,16 @@
   <string name="send_fee_locked_hint">Not enough unlocked XOR for the network fee</string>
   <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
     <string name="wallet_preserved_data">Lommebokdata beholdt på denne telefonen</string>
-    <string name="wallet_preserved_data_body">Velg et tidligere sett med lommebokdata. Dine nåværende lommebøker beholdes også her. Appen starter på nytt og kontrollerer de valgte dataene før de åpnes. Den opprinnelige PIN-koden gjelder fortsatt.</string>
+    <string name="wallet_preserved_data_body">Velg et tidligere sett med lommebokdata. De nåværende lommebøkene dine blir også tatt vare på her. Appen starter på nytt og kontrollerer de valgte dataene før de åpnes. Fullstendige lommebokdata bruker sin opprinnelige PIN; bare kontodatabasen beholder din nåværende PIN.</string>
     <string name="wallet_preserved_data_confirm">Beholde de nåværende lommebokdataene og bruke dette tidligere settet? Du kan gå tilbake til det nåværende settet fra samme skjerm.</string>
     <string name="wallet_preserved_data_use">Bruk disse lommebokdataene</string>
     <string name="wallet_preserved_data_failed">Lommebokdataene kan ikke kontrolleres akkurat nå. Alt er beholdt. Start appen på nytt og prøv igjen.</string>
     <string name="wallet_preserved_data_screen_lock">Sett opp en skjermlås på telefonen før du bytter lommebokdata.</string>
     <string name="wallet_restore_backup_confirm">Jeg har en gjenopprettingsfrase eller en fungerende sikkerhetskopi for hver lommebok på telefonen.</string>
     <string name="wallet_restore_cancel_pending">Avbryt omstart og gjenoppretting</string>
+
+    <!-- Preserved generation scope and availability -->
+    <string name="wallet_preserved_data_partial">Noen lagrede lommebokdata kunne ikke bekreftes. Alle filene blir værende på denne telefonen. Andre bekreftede valg vises nedenfor.</string>
+    <string name="wallet_preserved_database_label">Bare kontodatabasen</string>
+    <string name="wallet_preserved_database_confirm">Bruke denne tidligere kontodatabasen? Den nåværende databasen blir tatt vare på. Nøkler, sikkerhetskopier og din nåværende SORA-PIN forblir uendret. Appen starter på nytt og kontrollerer hver konto før bruk.</string>
 </resources>

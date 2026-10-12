@@ -776,11 +776,16 @@
   <string name="send_fee_locked_hint">Not enough unlocked XOR for the network fee</string>
   <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
     <string name="wallet_preserved_data">Auf diesem Telefon aufbewahrte Wallet-Daten</string>
-    <string name="wallet_preserved_data_body">Wähle einen früheren Wallet-Datenbestand. Auch deine aktuellen Wallets bleiben hier erhalten. Die App startet neu und prüft die ausgewählten Daten, bevor sie sie öffnet. Deren ursprüngliche PIN gilt weiterhin.</string>
+    <string name="wallet_preserved_data_body">Wählen Sie einen früheren Stand Ihrer Wallet-Daten. Ihre aktuellen Wallets werden ebenfalls hier aufbewahrt. Die App startet neu und überprüft die ausgewählten Daten vor dem Öffnen. Vollständige Wallet-Daten verwenden ihre ursprüngliche PIN; bei einer Kontodatenbank allein bleibt Ihre aktuelle PIN bestehen.</string>
     <string name="wallet_preserved_data_confirm">Die aktuellen Wallet-Daten behalten und diesen früheren Bestand nutzen? Auf diesem Bildschirm kannst du zum aktuellen Bestand zurückkehren.</string>
     <string name="wallet_preserved_data_use">Diese Wallet-Daten verwenden</string>
     <string name="wallet_preserved_data_failed">Die Wallet-Daten können gerade nicht geprüft werden. Alles wurde behalten. Starte die App neu und versuche es erneut.</string>
     <string name="wallet_preserved_data_screen_lock">Richte auf diesem Telefon eine Bildschirmsperre ein, bevor du den Wallet-Datenbestand wechselst.</string>
     <string name="wallet_restore_backup_confirm">Ich habe für jede Wallet auf diesem Telefon eine Wiederherstellungsphrase oder ein funktionierendes Backup.</string>
     <string name="wallet_restore_cancel_pending">Neustart und Wiederherstellung abbrechen</string>
+
+    <!-- Preserved generation scope and availability -->
+    <string name="wallet_preserved_data_partial">Einige gespeicherte Wallet-Daten konnten nicht überprüft werden. Alle Dateien bleiben auf diesem Telefon. Andere überprüfte Optionen werden unten angezeigt.</string>
+    <string name="wallet_preserved_database_label">Nur Kontodatenbank</string>
+    <string name="wallet_preserved_database_confirm">Diese frühere Kontodatenbank verwenden? Ihre aktuelle Datenbank wird aufbewahrt. Schlüssel, Sicherungen und Ihre aktuelle SORA-PIN bleiben unverändert. Die App startet neu und überprüft jedes Konto vor der Verwendung.</string>
 </resources>
