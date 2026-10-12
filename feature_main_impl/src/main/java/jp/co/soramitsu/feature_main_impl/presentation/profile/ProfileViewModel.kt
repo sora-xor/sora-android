@@ -51,6 +51,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -72,9 +73,10 @@ class ProfileViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             tryCatch {
-                _state.value = _state.value.copy(
-                    polkamarktVisible = productionFeatureManager.getState().polkamarktVisible,
-                )
+                val features = productionFeatureManager.getState()
+                // Await the feature lookup before reading current presentation state. A
+                // delayed result must not replace a newer node name or connection status.
+                _state.update { it.copy(polkamarktVisible = features.polkamarktVisible) }
             }
         }
         interactor.flowSelectedNode().combine(nodeManager.connectionState) { node, connection ->

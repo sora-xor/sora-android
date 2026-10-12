@@ -49,8 +49,11 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
 import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureState
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -137,5 +140,22 @@ class ProfileViewModelTest {
             assertEquals("node", it.nodeName)
             assertEquals(true, it.nodeConnected)
         }
+    }
+
+    @Test
+    fun `late feature configuration preserves the already connected node`() = runTest {
+        coEvery { productionFeatureManager.getState() } coAnswers {
+            delay(2000)
+            ProductionFeatureState(false, false, false, false, false, false, false)
+        }
+        initViewModel()
+        advanceTimeBy(1500)
+        runCurrent()
+        assertEquals("node", profileViewModel.state.value.nodeName)
+        assertEquals(true, profileViewModel.state.value.nodeConnected)
+        advanceUntilIdle()
+        assertEquals("node", profileViewModel.state.value.nodeName)
+        assertEquals(true, profileViewModel.state.value.nodeConnected)
+        assertEquals(false, profileViewModel.state.value.polkamarktVisible)
     }
 }
