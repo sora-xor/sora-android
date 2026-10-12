@@ -624,13 +624,13 @@ Engineering decision to confirm:
 - [ ] Support: the upgrade-recovery email now arrives with "Recovery code:
       …" in its body. The code is also under "Show technical details" on
       the panel.
-- [ ] Translations (release blocker per spec §9.1-6): translate the
-      recovery panel strings in every production locale. Today only English
-      and Japanese exist (`app/src/main/res/values*/strings.xml`); other
-      locales show English. Keys: `wallet_upgrade_recovery_title`,
-      `_message`, `_code`, `_retry`, `_export`, `_continue_legacy`,
-      `_support`, `_keep_installed`, `_working`, `_still_working`,
-      `_details_show`, `_details_hide`, `_support_no_email`.
+- [x] Recovery panel translations implemented for every offered production
+      language (English plus ru/es/fr/de/nb/zh-CN/in/tr). Japanese resources
+      remain available for QA. See `fixes/recovery-localization.md` and its
+      checked string inventory; no production recovery key relies on English.
+- [ ] Native-language review of those translations and every new preserved-data
+      choice. Automated placeholder/XML checks and the nine-language U6
+      screenshot review do not establish linguistic accuracy.
 - [ ] QA (real device, light theme): open Scan on Android 14 and on 15+;
       the clock and icons are white over the camera and no light strip
       shows above the scanner.
@@ -659,12 +659,12 @@ Engineering decision to confirm:
 
 ### Translations (release blocker per spec §9.1-6)
 
-- [ ] Translate every `safe_mode_*` (common) and `recovery_*` (app) string
-      into all production locales (ar, az, de, es, fa, fi, fr, hi, in, iw,
-      ms, nb, nl, pt, ru, sr, tr, vi, zh-CN, zh-TW). English and Japanese
-      are done; the other locale files carry the English text so nothing is
-      missing at runtime. The app module has no other production locale
-      folders: add `values-<locale>` there for the `recovery_*` strings.
+- [x] Translate the scoped Safe Mode/recovery/account/transaction messages
+      into all eight non-English production languages. The actual production
+      picker and locale configuration define the shipping set; ar/az/fa/fi/hi/
+      iw/ms/nl/pt/sr/vi/zh-TW and historical test locales retain the documented
+      test-only English fallback policy, rather than being claimed as translated.
+- [ ] Native review and full state/large-font/RTL QA beyond the captured U6 screen.
 
 ### QA (team test phones only, never a phone with real funds)
 
@@ -721,10 +721,9 @@ Engineering decision to confirm:
       `recovery_phrase_unreadable` and the extended
       `recovery_restore_sheet_keys_kept` (other wallets are listed in Login &
       Security after a database-only restore).
-- [ ] Translations: the strings above and `recovery_restore_pending_title`,
-      `recovery_restart_continue`, `recovery_detail_last_attempt`,
-      `recovery_seed_unchecked` are English-only outside Japanese (same
-      release blocker as the rest of Safe Mode).
+- [x] The additional recovery-result and pending-restore messages above are
+      included in the production translation inventory. Native review remains
+      open under the common translation gate.
 - [ ] QA (team test phone, debug build): force a wallet-check failure after
       startup by making the VERIFIED journal finish before it started
       (`run-as jp.co.soramitsu.sora sqlite3 databases/app.db "update
@@ -744,3 +743,19 @@ Engineering decision to confirm:
 - [ ] QA (RTL, Arabic or Hebrew system language): the PIN screen's
       "Choose a new 6-digit PIN" panel and the account check follow RTL;
       the keypad keeps its order.
+
+## Integrated recovery review — 12 October 2026
+
+- [x] Independent review fixes committed as `10e8ef51`: database-only generations
+      are returnable without moving keys/PIN; damaged siblings no longer hide
+      intact return choices. New choice text translations: `ac1a5f9f`.
+- [x] All 123 preserved-generation instrumentation tests passed on isolated
+      API 34; all 1,766 JVM tests passed in each of DevelopDebug and ProductionDebug
+      (17 intentional skips each), and both debug APK variants assembled.
+- [ ] Obtain and verify original store-signed APKs before claiming exact old-app
+      upgrade continuity. The denied historical download was not bypassed.
+- [ ] Authorize the team physical phone and run API 26–30 provider/recovery QA.
+- [ ] Verify replacement Play upload-key eligibility after 13 October 2026,
+      10:21 JST; verify actual Play signing certificate and Google identity pins.
+- [ ] Build and inspect the signed release artifact only after the release gates
+      above and elsewhere in this checklist have evidence. No upload was made.
