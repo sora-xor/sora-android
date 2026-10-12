@@ -50,13 +50,46 @@ object FirebaseWrapper {
         UNCLASSIFIED_FAILURE,
     }
 
+    /** No addresses, key names, exception text, balances, or transaction payloads are accepted. */
+    enum class WalletRecoveryEvent {
+        GATE_STORAGE_FULL, GATE_DATABASE_LOCKED, GATE_DATABASE_IO, GATE_DATABASE_OPEN_FAILED,
+        GATE_DATABASE_PATH_UNREADABLE, GATE_PREFERENCES_INVALID, GATE_KEYSTORE_UNAVAILABLE,
+        GATE_SOURCE_CHANGED, GATE_OTHER,
+        JOURNAL_RECOVERED, READ_ONLY_ENTERED, ACCOUNT_READ_ONLY,
+        PANEL_STORAGE, PANEL_TRANSIENT, PANEL_KEYS_UNAVAILABLE, PANEL_RECOVERY, PANEL_RESTORE_PENDING,
+    }
+
+    private val recoveryEvents = java.util.Collections.synchronizedSet(mutableSetOf<WalletRecoveryEvent>())
+    private val pendingRecoveryEvents = java.util.Collections.synchronizedSet(mutableSetOf<WalletRecoveryEvent>())
+
+    /** One fixed non-fatal per event per process, respecting the existing diagnostics consent. */
+    fun recordWalletRecovery(event: WalletRecoveryEvent) {
+        if (!crashlyticsEnabled) {
+            if (!diagnosticsConfigured) pendingRecoveryEvents.add(event)
+            return
+        }
+        val instance = crashlyticsInstance() ?: return
+        if (!recoveryEvents.add(event)) return
+        instance.recordException(PrivacySafeTelemetryException("WALLET_RECOVERY_${event.name}"))
+    }
+
     private val blackList = listOf(CancellationException::class)
 
     @Volatile
     private var crashlyticsEnabled = false
 
+    @Volatile
+    private var diagnosticsConfigured = false
+
     fun setCrashlyticsEnabled(enabled: Boolean) {
+        diagnosticsConfigured = true
         crashlyticsEnabled = enabled
+        if (enabled) {
+            val pending = synchronized(pendingRecoveryEvents) { pendingRecoveryEvents.toList().also { pendingRecoveryEvents.clear() } }
+            pending.forEach(::recordWalletRecovery)
+        } else {
+            pendingRecoveryEvents.clear()
+        }
     }
 
     fun recordException(t: Throwable) {

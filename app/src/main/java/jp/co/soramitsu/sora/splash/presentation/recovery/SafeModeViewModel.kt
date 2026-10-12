@@ -46,6 +46,8 @@ import java.io.File
 import java.text.DateFormat
 import java.util.Date
 import javax.inject.Inject
+import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.FirebaseWrapper.WalletRecoveryEvent
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.backup.CloudBackupProvider
@@ -236,6 +238,13 @@ class SafeModeViewModel @Inject constructor(
             driveAvailable = cloudBackupProvider.isAvailable,
             restorePending = isRestorePending(code) || isRestorePending(resolved.code),
         )
+        FirebaseWrapper.recordWalletRecovery(when (model.kind) {
+            RecoveryPanelKind.STORAGE -> WalletRecoveryEvent.PANEL_STORAGE
+            RecoveryPanelKind.TRANSIENT -> WalletRecoveryEvent.PANEL_TRANSIENT
+            RecoveryPanelKind.KEYS_UNAVAILABLE -> WalletRecoveryEvent.PANEL_KEYS_UNAVAILABLE
+            RecoveryPanelKind.RECOVERY -> WalletRecoveryEvent.PANEL_RECOVERY
+            RecoveryPanelKind.RESTORE_PENDING -> WalletRecoveryEvent.PANEL_RESTORE_PENDING
+        })
         stopProgress()
         mutableState.update {
             it.copy(
@@ -333,6 +342,13 @@ class SafeModeViewModel @Inject constructor(
     fun onAction(action: RecoveryAction) {
         if (state.value.running != null && action != RecoveryAction.CONTACT_SUPPORT) return
         when (action) {
+            RecoveryAction.CANCEL_RESTORE -> {
+                if (WalletUpgradeBackup.cancelSetUpAgain(context).isSuccess) {
+                    mutableState.update { it.copy(panel = null) }
+                    runTryAgain(automatic = false)
+                }
+                else mutableState.update { it.copy(lastAttemptCode = "SET_UP_AGAIN_ALREADY_STARTED") }
+            }
             RecoveryAction.TRY_AGAIN -> runTryAgain(automatic = false)
             RecoveryAction.RESTORE_PHRASE -> openSheet(SafeSheetKind.RESTORE_PHRASE)
             RecoveryAction.RESTORE_DRIVE -> openSheet(SafeSheetKind.RESTORE_DRIVE)

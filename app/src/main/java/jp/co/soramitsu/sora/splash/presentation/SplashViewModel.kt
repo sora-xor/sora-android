@@ -101,9 +101,7 @@ class SplashViewModel @Inject constructor(
     fun start() {
         if (verificationStarted) return
         verificationStarted = true
-        viewModelScope.launch(coroutineManager.io) {
-            interactor.checkMigration()
-        }
+        interactor.startMigration()
     }
 
     fun nextScreen() {

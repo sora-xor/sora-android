@@ -33,6 +33,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.splash.domain
 
 import android.content.Context
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import android.os.SystemClock
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -53,10 +56,12 @@ class SplashInteractor @Inject constructor(
     private val userRepository: UserRepository,
     private val migrationManager: MigrationManager,
     @param:ApplicationContext private val context: Context,
+    private val coroutineManager: CoroutineManager,
 ) {
 
     @Volatile
     private var migrationsDone = CompletableDeferred<Boolean>()
+    private var verificationJob: Job? = null
 
     /**
      * True when this start resumes an interrupted verification (automatic retry), so the
@@ -78,26 +83,30 @@ class SplashInteractor @Inject constructor(
     var verificationStartedAtElapsed: Long? = null
         private set
 
-    suspend fun checkMigration() {
+    /** Publishes the new run before navigation can await it. The work belongs to the
+     * application; losing a splash screen does not cancel a wallet verification halfway. */
+    @Synchronized
+    fun startMigration(): Deferred<Boolean> {
+        if (verificationJob?.isActive == true) return migrationsDone
+        if (migrationsDone.isCompleted) migrationsDone = CompletableDeferred()
+        val target = migrationsDone
         verificationStartedAtElapsed = SystemClock.elapsedRealtime()
-        // The app's screens are starting and will run the wallet verification now: an
-        // interrupted verification may use one of its automatic retries. Background process
-        // starts never get here, so they cannot use up that budget.
         resumingInterruptedUpgrade =
-            runCatching { WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context) }
-                .getOrDefault(false)
-        checkMigration(migrationsDone)
+            runCatching { WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context) }.getOrDefault(false)
+        verificationJob = coroutineManager.applicationScope.launch(coroutineManager.io) {
+            try {
+                checkMigration(target)
+            } catch (error: CancellationException) {
+                target.cancel(error)
+                throw error
+            }
+        }
+        return target
     }
 
-    suspend fun retryMigration(): Boolean {
-        verificationStartedAtElapsed = SystemClock.elapsedRealtime()
-        val retry = CompletableDeferred<Boolean>()
-        synchronized(this) {
-            migrationsDone = retry
-        }
-        checkMigration(retry)
-        return retry.await()
-    }
+    suspend fun checkMigration() { startMigration().await() }
+
+    suspend fun retryMigration(): Boolean = startMigration().await()
 
     private suspend fun checkMigration(target: CompletableDeferred<Boolean>) {
         val result = try {

@@ -19,6 +19,7 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.DataOutputStream
 import java.util.UUID
 import java.util.zip.ZipFile
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
@@ -68,6 +69,145 @@ class WalletUpgradeBackupTest {
         // Reset the process-wide gate for the next instrumentation test without exposing a
         // production reset API. An actually empty sandbox is the only state allowed to clear it.
         assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+    }
+
+    @Test
+    fun databaseSpecificFailureEscalatesOnThirdColdStartButNeverOnRepeatedRetry() {
+        val parent = File(context.filesDir, "inaccessible-database").apply { mkdirs() }
+        File(parent, DATABASE_NAME).writeBytes(byteArrayOf(1))
+        val wrapped = object : ContextWrapper(context) {
+            override fun getApplicationContext(): Context = this
+            override fun getDatabasePath(name: String): File = File(parent, name)
+        }
+        Os.chmod(parent.path, 0)
+        try {
+            repeat(2) {
+                WalletUpgradeBackup.simulateProcessStartForTest()
+                assertTrue(WalletUpgradeBackup.prepare(wrapped).isFailure)
+                assertEquals("DATABASE_PATH_UNREADABLE", WalletUpgradeBackup.blockingFailure()?.code)
+                assertEquals(SetUpAgainScope.NONE, WalletUpgradeBackup.recoveryOptions()?.setUpAgainScope)
+                repeat(4) { assertTrue(WalletUpgradeBackup.retry(wrapped).isFailure) }
+                assertEquals(SetUpAgainScope.NONE, WalletUpgradeBackup.recoveryOptions()?.setUpAgainScope)
+            }
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(wrapped).isFailure)
+            assertEquals(SetUpAgainScope.DATABASE_ONLY, WalletUpgradeBackup.recoveryOptions()?.setUpAgainScope)
+        } finally {
+            Os.chmod(parent.path, 448) // 0700
+            parent.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun repeatingStorageOrKeystoreFailuresNeverAuthorizesADatabaseReset() {
+        listOf("IO", "PERMISSION", "STORAGE_FULL", "STORAGE_IO", "KEYSTORE_UNAVAILABLE",
+            "SOURCE_CHANGED", "BACKUP_PUBLICATION_LOCK_FAILED", "CREATE_STAGING").forEach { code ->
+            val options = WalletRecoveryOptions.forState(code, false, RecoveryFacts(), consecutiveFailedStarts = 3)
+            assertEquals(code, SetUpAgainScope.NONE, options.setUpAgainScope)
+            assertTrue(options.canRetry)
+            assertTrue(options.canContactSupport)
+        }
+    }
+
+    @Test
+    fun hotRollbackJournalRecoversOnlyAfterPreservingTheCompleteOriginalGeneration() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val journal = makeHotRollbackJournal(database)
+        val databaseBefore = database.readBytes()
+        val journalBefore = journal.readBytes()
+        val preferencesFile = File(context.applicationInfo.dataDir, "shared_prefs/$PREFERENCES_NAME.xml")
+        val preferencesBefore = preferencesFile.readBytes()
+        // Prove this fixture exercises the actual regression, rather than a harmless sidecar.
+        val readOnly = runCatching {
+            SQLiteDatabase.openDatabase(database.path, null, SQLiteDatabase.OPEN_READONLY).use {
+                it.rawQuery("SELECT accountName FROM accounts", null).use { cursor -> cursor.moveToFirst() }
+            }
+        }
+        assertTrue(readOnly.exceptionOrNull() is android.database.sqlite.SQLiteReadOnlyDatabaseException)
+
+        val result = WalletUpgradeBackup.prepare(context)
+
+        assertTrue(result.exceptionOrNull()?.toString(), result.isSuccess)
+        SQLiteDatabase.openDatabase(database.path, null, SQLiteDatabase.OPEN_READONLY).use {
+            it.rawQuery("SELECT substrateAddress, accountName FROM accounts", null).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(WALLET_ID, cursor.getString(0))
+                assertEquals("Retained", cursor.getString(1))
+                assertFalse(cursor.moveToNext())
+            }
+        }
+        val preserved = context.noBackupFilesDir.listFiles().orEmpty().single {
+            it.name.startsWith("wallet-upgrade-backup-") && File(it, "databases/app.db-journal").isFile
+        }
+        assertArrayEquals(databaseBefore, File(preserved, "databases/app.db").readBytes())
+        assertArrayEquals(journalBefore, File(preserved, "databases/app.db-journal").readBytes())
+        assertArrayEquals(preferencesBefore, File(preserved, "shared_prefs/$PREFERENCES_NAME.xml").readBytes())
+        assertArrayEquals(preferencesBefore, preferencesFile.readBytes())
+        assertEquals("verified", File(preserved, ".complete").readText())
+        // Revalidation must replay another disposable copy without changing the raw backup.
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertArrayEquals(journalBefore, File(preserved, "databases/app.db-journal").readBytes())
+    }
+
+    @Test
+    fun hotRollbackJournalWithInsufficientBackupSpaceLeavesEveryOriginalByteUntouched() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val journal = makeHotRollbackJournal(database)
+        val databaseBefore = database.readBytes()
+        val journalBefore = journal.readBytes()
+
+        assertTrue(WalletUpgradeBackup.prepareWithAvailableBackupBytesForTest(context, 0).isFailure)
+
+        assertEquals("INSUFFICIENT_BACKUP_STORAGE", WalletUpgradeBackup.blockingFailure()?.code)
+        assertArrayEquals(databaseBefore, database.readBytes())
+        assertArrayEquals(journalBefore, journal.readBytes())
+    }
+
+    /**
+     * A real SQLite rollback journal, containing the pre-transaction pages with their checksums.
+     * The live DB carries a later row value as if a process died after page writes but before
+     * commit. No writer remains holding the RESERVED lock, so SQLite must roll it back on read.
+     */
+    private fun makeHotRollbackJournal(database: File): File {
+        val original = database.readBytes()
+        val encodedPageSize = ((original[16].toInt() and 255) shl 8) or (original[17].toInt() and 255)
+        val pageSize = if (encodedPageSize == 1) 65536 else encodedPageSize
+        val pages = original.size / pageSize
+        SQLiteDatabase.openDatabase(database.path, null, SQLiteDatabase.OPEN_READWRITE).use {
+            it.rawQuery("PRAGMA journal_mode = TRUNCATE", null).use { cursor -> cursor.moveToFirst() }
+            it.execSQL("UPDATE accounts SET accountName = 'Uncommitted'")
+        }
+        val journal = File("${database.path}-journal")
+        FileOutputStream(journal).use { file ->
+            val output = DataOutputStream(file)
+            output.write(byteArrayOf(0xd9.toByte(), 0xd5.toByte(), 0x05, 0xf9.toByte(),
+                0x20, 0xa1.toByte(), 0x63, 0xd7.toByte()))
+            output.writeInt(pages)
+            output.writeInt(0) // Checksum nonce.
+            output.writeInt(pages) // Original database length in pages.
+            output.writeInt(512) // Sector/header size.
+            output.writeInt(pageSize)
+            output.write(ByteArray(512 - 28))
+            repeat(pages) { index ->
+                val page = original.copyOfRange(index * pageSize, (index + 1) * pageSize)
+                output.writeInt(index + 1)
+                output.write(page)
+                var checksum = 0
+                var position = pageSize - 200
+                while (position > 0) {
+                    checksum += page[position].toInt() and 255
+                    position -= 200
+                }
+                output.writeInt(checksum)
+            }
+            output.flush()
+            file.fd.sync()
+        }
+        return journal
     }
 
     @Test
@@ -1289,6 +1429,7 @@ class WalletUpgradeBackupTest {
     fun unexpectedMigrationFailureCannotDemoteExistingBackupBlocker() {
         createLegacyDatabase(withAccount = true)
         writeSharedPreferencesBackup("<map><string")
+        WalletUpgradeBackup.simulateProcessStartForTest()
         assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
         assertEquals(
             "PREFERENCES_INVENTORY_INVALID",
@@ -1312,7 +1453,14 @@ class WalletUpgradeBackupTest {
         assertFalse(WalletUpgradeBackup.canAuthorizeMigrationRetry())
         assertTrue(WalletUpgradeBackup.authorizeMigrationRetry(context).isFailure)
         val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
-        assertTrue(options.canRetry && options.canRestoreFromPhrase && options.canExport)
+        assertTrue(options.canRetry && options.canExport)
+        assertFalse(options.canRestoreFromPhrase)
+        // One unreadable preferences observation can be a temporary filesystem failure.
+        // A later cold process must see the same blocker before set-aside is offered.
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        val repeated = requireNotNull(WalletUpgradeBackup.recoveryOptions())
+        assertTrue(repeated.canRestoreFromPhrase)
         assertEquals(1, legacyAccountCount())
     }
 
@@ -2425,6 +2573,9 @@ class WalletUpgradeBackupTest {
                 .edit().putString(WRAPPED_AES_KEY, "wrapped-key-from-another-phone").commit()
         )
         putDataStoreStringMarker("prefs_mnemonic$WALLET_ID")
+        // The missing key was observed in an earlier process; this fresh-process recheck must
+        // confirm the same failure before any file moves.
+        File(context.noBackupFilesDir, "wallet-key-observation").writeText("MISSING_ALIAS\n00000000-0000-0000-0000-000000000001")
         // The wallet check found that this phone has no Keystore key for the stored keys.
         WalletUpgradeBackup.noteTransientVerificationFailure(
             WalletRecoveryOptions.KEYSTORE_KEY_UNAVAILABLE,
@@ -2477,6 +2628,104 @@ class WalletUpgradeBackupTest {
         // The app now starts like a new install; nothing blocks onboarding.
         assertEquals(null, WalletUpgradeBackup.blockingFailure())
         assertFalse(WalletUpgradeBackup.quarantine().hasRetainedMaterial)
+    }
+
+    @Test
+    fun interruptedSetAsideResumesOneManifestAndCanSwitchBackAfterANewWalletExists() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Original")))
+        context.getSharedPreferences(KEYSTORE_PREFERENCES_NAME, Context.MODE_PRIVATE)
+            .edit().putString(WRAPPED_AES_KEY, "original-wrapped-key").commit()
+        putDataStoreStringMarker("prefs_mnemonic$WALLET_ID")
+        File(context.noBackupFilesDir, "wallet-key-observation").writeText("MISSING_ALIAS\n00000000-0000-0000-0000-000000000001")
+        WalletUpgradeBackup.noteTransientVerificationFailure(WalletRecoveryOptions.KEYSTORE_KEY_UNAVAILABLE, accountsReadable = true)
+        val dataDir = File(context.applicationInfo.dataDir)
+        val paths = listOf("databases/app.db", "files/datastore/sora_prefs_datastore.preferences_pb", "shared_prefs/key_alias.xml", "shared_prefs/sora_prefs.xml")
+        val original = paths.associateWith { File(dataDir, it).readBytes() }
+        assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        var renameCount = 0
+        WalletUpgradeBackup.afterSetAsideRenameForTest = { if (++renameCount == 1) error("simulated power loss") }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        } finally { WalletUpgradeBackup.afterSetAsideRenameForTest = null }
+        assertTrue(WalletUpgradeBackup.cancelSetUpAgain(context).isFailure)
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val first = WalletUpgradeBackup.preservedGenerations(context).single()
+        original.forEach { (path, bytes) -> assertArrayEquals(bytes, File(File(context.noBackupFilesDir, first.id), path).readBytes()) }
+
+        // A new live database and preference generation must not hide the original generation.
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "New")))
+        paths.filter { it != "databases/app.db" }.forEach { path ->
+            val file = File(dataDir, path); file.parentFile!!.mkdirs(); file.writeBytes(original.getValue(path))
+        }
+        val newer = paths.associateWith { File(dataDir, it).readBytes() }
+        assertTrue(WalletUpgradeBackup.requestUsePreservedGeneration(context, first.id).isSuccess)
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        original.forEach { (path, bytes) -> assertArrayEquals(path, bytes, File(dataDir, path).readBytes()) }
+        val second = WalletUpgradeBackup.preservedGenerations(context).single()
+        assertFalse(first.id == second.id)
+
+        // Switching back is resumable even when power is lost after the first restore rename.
+        assertTrue(WalletUpgradeBackup.requestUsePreservedGeneration(context, second.id).isSuccess)
+        renameCount = 0
+        WalletUpgradeBackup.afterSetAsideRenameForTest = { if (++renameCount == paths.size + 1) error("simulated restore power loss") }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        } finally { WalletUpgradeBackup.afterSetAsideRenameForTest = null }
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        newer.forEach { (path, bytes) -> assertArrayEquals(path, bytes, File(dataDir, path).readBytes()) }
+        assertEquals(1, WalletUpgradeBackup.preservedGenerations(context).size)
+    }
+
+    @Test
+    fun legacySplitFoldersAreJoinedWithoutChangingEitherOriginalFragment() {
+        val first = File(context.noBackupFilesDir, "wallet-quarantine-1000000000001-set-up-again")
+        val second = File(context.noBackupFilesDir, "wallet-quarantine-1000000000002-set-up-again")
+        val databaseBytes = byteArrayOf(1, 2, 3, 4)
+        val wrappedBytes = "<map><string name=\"secret_key\">retained</string></map>".toByteArray()
+        val database = File(first, "databases/app.db").apply { parentFile!!.mkdirs(); writeBytes(databaseBytes) }
+        val wrapped = File(second, "shared_prefs/key_alias.xml").apply { parentFile!!.mkdirs(); writeBytes(wrappedBytes) }
+        WalletUpgradeBackup.reconcileLegacyPreservedGenerations(context).getOrThrow()
+        val joined = WalletUpgradeBackup.preservedGenerations(context).single()
+        val root = File(context.noBackupFilesDir, joined.id)
+        assertArrayEquals(databaseBytes, File(root, "databases/app.db").readBytes())
+        assertArrayEquals(wrappedBytes, File(root, "shared_prefs/key_alias.xml").readBytes())
+        assertArrayEquals(databaseBytes, database.readBytes())
+        assertArrayEquals(wrappedBytes, wrapped.readBytes())
+        WalletUpgradeBackup.reconcileLegacyPreservedGenerations(context).getOrThrow()
+        assertEquals(joined.id, WalletUpgradeBackup.preservedGenerations(context).single().id)
+    }
+
+    @Test
+    fun pendingSetAsideCanBeCancelledBeforeAnythingMoves() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Retained")))
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val bytes = database.readBytes()
+        WalletUpgradeBackup.noteDatabaseCorruption(context)
+        assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        assertTrue(WalletUpgradeBackup.cancelSetUpAgain(context).isSuccess)
+        assertFalse(WalletUpgradeBackup.isSetUpAgainRequested(context))
+        assertArrayEquals(bytes, database.readBytes())
+    }
+
+    @Test
+    fun freshProcessCancelsKeySetAsideWhenTheOriginalKeyWorksAgain() {
+        val encryption = jp.co.soramitsu.common.util.EncryptionUtil(context)
+        encryption.encrypt("retained")
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Retained")))
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val bytes = database.readBytes()
+        WalletUpgradeBackup.noteTransientVerificationFailure(WalletRecoveryOptions.KEYSTORE_KEY_UNAVAILABLE, accountsReadable = true)
+        assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertFalse(WalletUpgradeBackup.isSetUpAgainRequested(context))
+        assertArrayEquals(bytes, database.readBytes())
+        assertTrue(WalletUpgradeBackup.preservedGenerations(context).isEmpty())
     }
 
     @Test
@@ -4230,6 +4479,10 @@ class WalletUpgradeBackupTest {
             .single()
 
     private fun clearTestStorage() {
+        check(context.packageName.endsWith(".test"))
+        java.security.KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.let { store ->
+            store.aliases().toList().filter { it == "key_alias" || it.startsWith("sora_wallet_") }.forEach(store::deleteEntry)
+        }
         context.deleteDatabase(DATABASE_NAME)
         context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
             .edit()
@@ -4265,6 +4518,10 @@ class WalletUpgradeBackupTest {
                     it.name.startsWith("wallet-corrupt-quarantine-") ||
                     it.name == "wallet-migration-auto-retry" ||
                     it.name == ".wallet-migration-auto-retry.tmp" ||
+                    it.name == "wallet-key-observation" ||
+                    it.name == ".wallet-key-observation.tmp" ||
+                    it.name == "wallet-startup-failure-count" ||
+                    it.name == ".wallet-startup-failure-count.tmp" ||
                     it.name == "wallet-set-up-again-requested" ||
                     it.name == ".wallet-set-up-again-requested.tmp" ||
                     it.name == "wallet-snapshot-backoff" ||

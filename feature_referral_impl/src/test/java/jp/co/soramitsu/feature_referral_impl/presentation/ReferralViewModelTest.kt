@@ -261,6 +261,9 @@ class ReferralViewModelTest {
         // The candidate showed nothing and the screen lost its button: the refusal is not a
         // SoraException, and the progress state was never reset.
         openReferrerInputWith("cnVko")
+        stubOutcomeTexts()
+        whenever(resourceManager.getString(R.string.tx_outcome_not_sent_account_unavailable))
+            .thenReturn("account unavailable")
         whenever(interactor.observeSetReferrer("cnVko"))
             .thenThrow(IllegalStateException("SIGNING_WALLET_UNAVAILABLE"))
 
@@ -270,10 +273,10 @@ class ReferralViewModelTest {
         assertEquals(false, referralViewModel.referralScreenState.value.common.progress)
         assertEquals(true, referralViewModel.referralScreenState.value.common.activate)
         assertEquals(
-            R.string.account_read_only_title to R.string.account_read_only_refused,
-            referralViewModel.errorFromResourceLiveData.value,
+            "text-${R.string.tx_outcome_not_sent_title}" to "account unavailable",
+            referralViewModel.alertDialogLiveData.value,
         )
-        verify(assetsRouter, never()).showTxDetails(any(), any())
+        verify(assetsRouter, never()).showTxDetails(any())
     }
 
     @Test
@@ -284,20 +287,23 @@ class ReferralViewModelTest {
         advanceUntilIdle()
         referrerBalanceFlowEmit(BigDecimal.ZERO)
         advanceUntilIdle()
-        whenever(interactor.observeBond(any())).thenThrow(IllegalStateException("anything"))
+        stubOutcomeTexts()
+        whenever(resourceManager.getString(R.string.tx_outcome_not_sent_generic)).thenReturn("nothing sent")
+        whenever(interactor.observeBond(any(), eq(false))).thenThrow(IllegalStateException("anything"))
 
         referralViewModel.onBondButtonClick()
         advanceUntilIdle()
 
         assertEquals(false, referralViewModel.referralScreenState.value.common.progress)
         assertEquals(
-            R.string.failure_generic_title to R.string.failure_generic_message,
-            referralViewModel.errorFromResourceLiveData.value,
+            "text-${R.string.tx_outcome_not_sent_title}" to "nothing sent",
+            referralViewModel.alertDialogLiveData.value,
         )
     }
 
     @Test
     fun `opening the screen without network reports it and does not end the app`() = runTest {
+        stubOutcomeTexts()
         // Audit (SEED64-DYN): the candidate crashed here with BOUNDED_HTTP_IO. The fee is read
         // again when the XOR balance arrives, in a place no handler covered.
         whenever(interactor.getReferrals()).thenReturn(emptyFlow())

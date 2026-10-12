@@ -33,6 +33,18 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.splash.domain
 
 import android.content.Context
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
+import io.mockk.coEvery
+import io.mockk.mockk
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
@@ -85,7 +97,10 @@ class SplashInteractorTest {
     @Before
     fun setUp() {
         WalletRecoveryCapabilityGate.enterNormal()
-        splashInteractor = SplashInteractor(userRepository, migrationManager, context)
+        val manager = mock<CoroutineManager>()
+        whenever(manager.applicationScope).thenReturn(CoroutineScope(SupervisorJob() + Dispatchers.Main))
+        whenever(manager.io).thenReturn(Dispatchers.Main)
+        splashInteractor = SplashInteractor(userRepository, migrationManager, context, manager)
     }
 
     @After
@@ -160,7 +175,7 @@ class SplashInteractorTest {
         }
 
         assertTrue(cancellationObserved)
-        assertFalse(splashInteractor.getMigrationDoneAsync().isCompleted)
+        assertTrue(splashInteractor.getMigrationDoneAsync().isCancelled)
         assertEquals(
             WalletRecoveryCapabilityGate.Mode.NORMAL,
             WalletRecoveryCapabilityGate.mode(),
@@ -186,6 +201,36 @@ class SplashInteractorTest {
         } finally {
             WalletUpgradeBackup.noteMigrationVerified()
         }
+    }
+
+    @Test
+    fun `normal later start replaces a completed result before navigation`() = runTest {
+        given(migrationManager.start()).willReturn(false, true)
+        splashInteractor.checkMigration()
+        val prior = splashInteractor.getMigrationDoneAsync()
+        val next = splashInteractor.startMigration()
+        assertFalse(prior === next)
+        assertTrue(next.await())
+        verify(migrationManager, times(2)).start()
+    }
+
+    @Test
+    fun `losing a caller does not cancel verification and another screen joins the same run`() = runTest {
+        val finish = CompletableDeferred<Boolean>()
+        val migrations = mockk<MigrationManager>()
+        coEvery { migrations.start() } coAnswers { finish.await() }
+        val manager = mock<CoroutineManager>()
+        whenever(manager.applicationScope).thenReturn(backgroundScope)
+        whenever(manager.io).thenReturn(kotlinx.coroutines.test.StandardTestDispatcher(testScheduler))
+        val interactor = SplashInteractor(userRepository, migrations, context, manager)
+        val caller = launch { interactor.checkMigration() }
+        runCurrent()
+        val current = interactor.getMigrationDoneAsync()
+        caller.cancel()
+        assertFalse(current.isCompleted)
+        assertTrue(current === interactor.startMigration())
+        finish.complete(true)
+        assertTrue(current.await())
     }
 
     @Test

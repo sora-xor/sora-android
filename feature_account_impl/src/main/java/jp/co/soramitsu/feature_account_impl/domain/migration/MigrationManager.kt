@@ -201,6 +201,22 @@ class MigrationManager @Inject constructor(
             }
             lastOutcome = outcome
             outcome
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            // The first Room/selection read happens before startLocked's transaction handling.
+            // Keep storage and Keystore failures retryable even when that first read failed.
+            val outcome = when {
+                WalletStorageFailures.isTransient(error) || WalletStorageFailures.isKeyMaterialUnavailable(error) ->
+                    abortWithoutWrites(Preparation.Abort.from(error), accountsReadable = false)
+                error is android.database.sqlite.SQLiteException -> {
+                    WalletUpgradeBackup.noteDatabaseOpenFailure()
+                    MigrationOutcome.Recovery("DATABASE_OPEN_FAILED")
+                }
+                else -> throw error
+            }
+            lastOutcome = outcome
+            outcome
         } finally {
             progressState.value = MigrationProgress.Finished
         }

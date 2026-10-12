@@ -144,7 +144,7 @@ class RecoveryPanelModelTest {
             assertEquals(RecoveryPanelKind.RESTORE_PENDING, model.kind)
             assertEquals(RecoveryAction.TRY_AGAIN, model.primary)
             assertFalse("$code never retries by itself", model.retryAutomatically)
-            assertTrue(model.secondary.isEmpty())
+            assertEquals(listOf(RecoveryAction.CANCEL_RESTORE), model.secondary)
             assertFalse(RecoveryAction.READ_ONLY in model.actions)
             assertEquals(SetUpAgainScope.NONE, model.setUpAgainScope)
             assertTrue(RecoveryAction.CONTACT_SUPPORT in model.actions)

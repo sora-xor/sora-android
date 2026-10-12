@@ -1,1 +1,6 @@
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name="jp.co.soramitsu.core_db.WalletGenerationRecoveryActivity"
+            android:exported="false" android:excludeFromRecents="true" />
+    </application>
+</manifest>

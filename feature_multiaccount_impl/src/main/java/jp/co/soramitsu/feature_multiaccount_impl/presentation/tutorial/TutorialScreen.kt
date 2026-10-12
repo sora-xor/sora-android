@@ -255,6 +255,7 @@ private fun TutorialButtons(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
+        jp.co.soramitsu.common.presentation.compose.components.PreservedWalletDataButton()
         if (foundWalletsCount > 0) {
             // Keys of earlier wallets are still on this phone behind the PIN that was used here.
             // Offered first: it brings them back as they are, without typing a phrase.
