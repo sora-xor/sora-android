@@ -74,10 +74,12 @@ import jp.co.soramitsu.common.account.SelectedAccountSigningSource
 import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.AlertDialogContent
+import jp.co.soramitsu.common.presentation.compose.components.ConfirmDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SelectedAccountSigningHost
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.AppStoreListing
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -118,6 +120,14 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     override fun onResume() {
         super.onResume()
         activity?.safeCast<BarsColorHandler>()?.setColor(backgroundColor())
+        // A result the view model held while this screen was not in front is shown now.
+        viewModel.onScreenResumed()
+    }
+
+    override fun onPause() {
+        // From here on the view model opens nothing and closes nothing until the next resume.
+        viewModel.onScreenPaused()
+        super.onPause()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -147,6 +157,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                     val scrollState = rememberScrollState()
                     val coroutineScope = rememberCoroutineScope()
                     val openAlertDialog = remember { mutableStateOf(AlertDialogData()) }
+                    val openConfirmDialog = remember { mutableStateOf<ConfirmDialogData?>(null) }
 
                     val navController = rememberNavController()
                     LaunchedEffect(Unit) {
@@ -204,6 +215,12 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                                 title = title,
                                 message = message,
                             )
+                        }
+                        viewModel.confirmDialogLiveData.observe {
+                            openConfirmDialog.value = it
+                        }
+                        viewModel.openAppStoreLiveData.observe {
+                            AppStoreListing.open(requireContext())
                         }
 
                         viewModel.snackBarLiveData.observe {
@@ -263,6 +280,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                             }
                         }
                         AlertDialogContent(openAlertDialog)
+                        ConfirmDialogContent(openConfirmDialog)
                     }
                 }
             }

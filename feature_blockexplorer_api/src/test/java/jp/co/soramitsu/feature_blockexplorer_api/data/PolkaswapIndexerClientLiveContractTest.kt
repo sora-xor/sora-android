@@ -62,7 +62,7 @@ class PolkaswapIndexerClientLiveContractTest {
     /** The same client and cache with every HTTPS request failing as it does offline. */
     private val offlineClient by lazy {
         val offline = mockk<BoundedHttpTextClient>()
-        coEvery { offline.postJsonUtf8(any(), any(), any()) } throws
+        coEvery { offline.postJson(any(), any(), any(), any(), any()) } throws
             BoundedHttpTextException("BOUNDED_HTTP_IO")
         coEvery { offline.getUtf8(any(), any()) } throws BoundedHttpTextException("BOUNDED_HTTP_IO")
         PolkaswapIndexerClient(offline, json, cache)
@@ -137,6 +137,62 @@ class PolkaswapIndexerClientLiveContractTest {
                 health = offline.health,
                 maximumRecords = 100,
             )
+        }
+
+    @Test
+    fun `history coverage is found out at run time and a wrong phone clock passes health`() =
+        runBlocking {
+            // The app asks for every role first; the indexer deployed in October 2026 rejects
+            // that and the signer-only question answers. Either way the page must load.
+            val page = client.getTransactionHistoryQualified(ACTIVE_ACCOUNT, page = 1, pageCount = 25)
+            val everyRole = PiHistoryCoverage.listsReceivedTransfers.value
+            println("LIVE PI history lists received transfers: $everyRole")
+            assertThat(page.value.items).isNotEmpty()
+            if (!everyRole) {
+                assertThat(page.value.items.all { it.address == ACTIVE_ACCOUNT }).isTrue()
+            }
+
+            // The health check follows the indexer host's own clock (HTTP Date): a phone ten
+            // minutes slow or three hours fast still qualifies the live indexer.
+            listOf(-10 * 60_000L, 3 * 60 * 60_000L).forEach { offsetMillis ->
+                val phoneClock = { System.currentTimeMillis() + offsetMillis }
+                val indexerClock = PiIndexerClock()
+                val skewed = PolkaswapIndexerClient(
+                    boundedHttpTextClient = http,
+                    json = json,
+                    responseCache = cache,
+                    nowEpochMillis = phoneClock,
+                    nowMonotonicNanos = System::nanoTime,
+                    indexerClock = indexerClock,
+                )
+                assertThat(skewed.requireHealthy().ok).isTrue()
+
+                // What that phone loaded is also saved for offline use, and read back.
+                val last = skewed.getLastTransactionsQualified(ACTIVE_ACCOUNT, count = 5)
+                val receipt = PiHistoryCheckpointValidator.validate(
+                    elements = last.value,
+                    expectedAddress = ACTIVE_ACCOUNT,
+                    health = last.health,
+                    maximumRecords = 5,
+                    canonicalBlockHash = ::canonicalBlockHash,
+                )
+                val directory = File(cacheDirectory, "validated-$offsetMillis")
+                val store = PiValidatedHistoryCache(
+                    directory = directory,
+                    json = json,
+                    nowEpochMillis = phoneClock,
+                    testOnly = Unit,
+                    indexerClock = indexerClock,
+                )
+                store.storeLast(ACTIVE_ACCOUNT, count = 5, validation = receipt)
+                val reopened = PiValidatedHistoryCache(
+                    directory = directory,
+                    json = json,
+                    nowEpochMillis = phoneClock,
+                    testOnly = Unit,
+                )
+                assertThat(reopened.readLast(ACTIVE_ACCOUNT, 5)?.items).isEqualTo(last.value)
+            }
         }
 
     @Test

@@ -40,9 +40,8 @@ import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
-import jp.co.soramitsu.common.domain.ResponseCode
-import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
@@ -57,7 +56,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicSubmissionUnknown
+import jp.co.soramitsu.sora.substrate.substrate.sora2TransactionOutcome
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import kotlinx.coroutines.flow.Flow
@@ -72,12 +71,6 @@ class AssetsInteractorImpl constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val userRepository: UserRepository,
 ) : AssetsInteractor {
-
-    private data class TransferSubmissionOutcome(
-        val transactionHash: String,
-        val blockHash: String?,
-        val keepPending: Boolean,
-    )
 
     override suspend fun calcTransactionFee(
         to: String,
@@ -144,64 +137,59 @@ class AssetsInteractorImpl constructor(
         return assetsRepository.tokensList()
     }
 
+    /**
+     * Signs and submits one transfer and reports what is known about it afterwards. All four
+     * outcomes are returned, never thrown: confirmed, failed on chain, refused by the node before
+     * broadcast, or submitted and still waiting. An exception from here means the transfer never
+     * reached the network.
+     */
     override suspend fun observeTransfer(
         to: String,
         token: Token,
         amount: BigDecimal,
         fee: BigDecimal,
         expectedWalletId: String,
-    ): String {
+        confirmedDuplicate: Boolean,
+    ): TransactionOutcome {
         val soraAccount = userRepository.getCurSoraAccount()
         check(soraAccount.substrateAddress == expectedWalletId) {
             "SORA2_SELECTED_WALLET_CHANGED"
         }
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
         val outcome = try {
-            val status = assetsRepository.observeTransfer(
-                keypair,
-                soraAccount.substrateAddress,
-                to,
-                token,
-                amount,
-                fee,
-                validateSelectedWallet = {
-                    check(
-                        userRepository.getCurSoraAccount().substrateAddress ==
-                            expectedWalletId
-                    ) { "SORA2_SELECTED_WALLET_CHANGED" }
-                },
-            )
-            if (!status.success) {
-                throw SoraException.businessError(ResponseCode.BROKEN_TRANSACTION)
+            sora2TransactionOutcome {
+                assetsRepository.observeTransfer(
+                    keypair,
+                    soraAccount.substrateAddress,
+                    to,
+                    token,
+                    amount,
+                    fee,
+                    validateSelectedWallet = {
+                        check(
+                            userRepository.getCurSoraAccount().substrateAddress ==
+                                expectedWalletId
+                        ) { "SORA2_SELECTED_WALLET_CHANGED" }
+                    },
+                    confirmedDuplicate = confirmedDuplicate,
+                )
             }
-            TransferSubmissionOutcome(
-                transactionHash = status.txHash,
-                blockHash = status.blockHash,
-                keepPending = true,
-            )
-        } catch (error: Throwable) {
-            if (error !is ExtrinsicSubmissionUnknown) throw error
-            TransferSubmissionOutcome(
-                transactionHash = error.transactionHash,
-                blockHash = null,
-                keepPending = true,
-            )
         } finally {
             keypair.privateKey.fill(0)
             keypair.nonce.fill(0)
         }
-        if (outcome.keepPending) {
-            persistTransferHistoryBestEffort(
-                walletId = soraAccount.substrateAddress,
-                transactionHash = outcome.transactionHash,
-                blockHash = outcome.blockHash,
-                to = to,
-                token = token,
-                amount = amount,
-                fee = fee,
-            )
-        }
-        return if (outcome.keepPending) outcome.transactionHash else ""
+        // Every outcome is listed in Activity as this transfer; its status (pending, confirmed,
+        // failed, not sent) comes from the durable journal, not from what is saved here.
+        persistTransferHistoryBestEffort(
+            walletId = soraAccount.substrateAddress,
+            transactionHash = outcome.txHash,
+            blockHash = (outcome as? TransactionOutcome.Confirmed)?.blockHash,
+            to = to,
+            token = token,
+            amount = amount,
+            fee = fee,
+        )
+        return outcome
     }
 
     private fun persistTransferHistoryBestEffort(

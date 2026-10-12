@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "description": "SHA-256 pins of the two public Google identifiers a Google Play build (productionRelease) must carry. googleDriveClientIdSha256: the Google Drive backup OAuth client ID (SORA_GOOGLE_TOKEN_PROD), which must be the client 3.8.6.3 used or people cannot see their existing Drive backups. While it is empty, every productionRelease build is refused. firebaseAppIdSha256: the Firebase app ID (mobilesdk_app_id) of jp.co.soramitsu.sora in google-services.json; checked when it is set. Both IDs are inside every released APK, so they are not secrets; only their hashes are stored. scripts/google-identity-pin.py prints the values to put here (see scripts/README.md). scripts/verify-production-google-identity.gradle enforces them.",
+  "applicationId": "jp.co.soramitsu.sora",
+  "googleDriveClientIdSha256": "",
+  "firebaseAppIdSha256": ""
+}

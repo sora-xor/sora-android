@@ -53,6 +53,7 @@ import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.mapToToken
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.claimDemeter
 import jp.co.soramitsu.sora.substrate.substrate.depositDemeter
@@ -84,6 +85,7 @@ interface DemeterFarmingRepository {
         rewardTokenId: String,
         isFarm: Boolean,
         amount: BigDecimal,
+        activity: Sora2SubmissionActivity? = null,
     ): ExtrinsicSubmitStatus
 
     suspend fun calcDepositFarmFee(
@@ -103,6 +105,7 @@ interface DemeterFarmingRepository {
         rewardTokenId: String,
         isFarm: Boolean,
         amount: BigDecimal,
+        activity: Sora2SubmissionActivity? = null,
     ): ExtrinsicSubmitStatus
 
     suspend fun calcWithdrawFarmFee(
@@ -121,6 +124,7 @@ interface DemeterFarmingRepository {
         targetTokenId: String,
         rewardTokenId: String,
         isFarm: Boolean,
+        activity: Sora2SubmissionActivity? = null,
     ): ExtrinsicSubmitStatus
 
     suspend fun calcClaimDemeterRewards(
@@ -223,10 +227,12 @@ internal class DemeterFarmingRepositoryImpl(
         rewardTokenId: String,
         isFarm: Boolean,
         amount: BigDecimal,
+        activity: Sora2SubmissionActivity?,
     ): ExtrinsicSubmitStatus {
         return extrinsicManager.submitAndWatchExtrinsic(
             from = address,
             keypair = keypair,
+            activity = activity,
         ) {
             depositDemeter(
                 baseTokenId,
@@ -269,11 +275,13 @@ internal class DemeterFarmingRepositoryImpl(
         targetTokenId: String,
         rewardTokenId: String,
         isFarm: Boolean,
-        amount: BigDecimal
+        amount: BigDecimal,
+        activity: Sora2SubmissionActivity?,
     ): ExtrinsicSubmitStatus {
         return extrinsicManager.submitAndWatchExtrinsic(
             from = address,
             keypair = keypair,
+            activity = activity,
         ) {
             withdrawDemeter(
                 baseTokenId,
@@ -315,11 +323,13 @@ internal class DemeterFarmingRepositoryImpl(
         baseTokenId: String,
         targetTokenId: String,
         rewardTokenId: String,
-        isFarm: Boolean
+        isFarm: Boolean,
+        activity: Sora2SubmissionActivity?,
     ): ExtrinsicSubmitStatus {
         return extrinsicManager.submitAndWatchExtrinsic(
             from = address,
             keypair = keypair,
+            activity = activity,
         ) {
             claimDemeter(
                 baseTokenId,

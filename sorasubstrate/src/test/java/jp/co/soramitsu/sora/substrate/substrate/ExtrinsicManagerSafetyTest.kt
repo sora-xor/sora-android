@@ -5,6 +5,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.AccountDao
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
@@ -32,65 +33,175 @@ import org.junit.Test
 
 class ExtrinsicManagerSafetyTest {
 
-    @Test
-    fun `legacy migration refuses an unresolved witness before signing`() = runTest {
-        val calls = mockk<SubstrateCalls>()
-        val factory = mockk<ExtrinsicBuilderFactory>()
+    /**
+     * The legacy-claim gate through the production manager and the production coordinator. Only
+     * the database, the description store and the network are doubles. [afterGate] is thrown by
+     * the first step after the gate (reading the signing runtime), so a claim that passed the
+     * gate ends with it and one the gate stopped never gets there.
+     */
+    private class ClaimGateFixture(
+        unresolved: List<Sora2PendingSubmissionLocal>,
+        val details: InMemorySora2SubmissionDetailsStore = InMemorySora2SubmissionDetailsStore(),
+    ) {
         val runtime = mockk<RuntimeManager>()
-        val database = mockk<AppDatabase>()
-        val accountDao = mockk<AccountDao>()
         val walletDao = mockk<WalletIdentityDao>()
-        val pendingCoordinator = mockk<Sora2PendingSubmissionCoordinator>()
         val runtimeRpcClient = mockk<Sora2BoundedRuntimeRpcClient>()
-        val keypair = mockk<Sr25519Keypair>()
-        val unresolved = mockk<Sora2PendingSubmissionLocal>()
+        val afterGate = java.io.IOException("BOUNDED_HTTP_IO")
+        private val database = mockk<AppDatabase>()
+        private val accountDao = mockk<AccountDao>()
 
-        every { database.accountDao() } returns accountDao
-        every { database.walletIdentityDao() } returns walletDao
-        coEvery { walletDao.hasActiveDeletionOperation() } returns false
-        coEvery { walletDao.getMigrationJournal(any()) } returns null
-        coEvery { accountDao.getAccount(WALLET_ID) } returns
-            SoraAccountLocal(WALLET_ID, "Primary")
-        coEvery { walletDao.getWallet(WALLET_ID) } returns
-            WalletIdentityLocal(
-                walletId = WALLET_ID,
-                displayName = "Primary",
-                secretSource = "MNEMONIC",
-                migrationState = "VERIFIED",
-                derivationVersion = 1,
-            )
-        coEvery { walletDao.getNetworkAccount(WALLET_ID, "sora2") } returns
-            NetworkAccountLocal(
-                walletId = WALLET_ID,
-                networkId = "sora2",
-                publicKey = "01",
-                address = WALLET_ID,
-                derivationPath = "",
-                derivationVersion = 0,
-                enabled = true,
-            )
-        every { unresolved.walletId } returns WALLET_ID
-        every { unresolved.operationKind } returns
-            Sora2PendingSubmissionLocal.OPERATION_GENERIC
-        coEvery { walletDao.getUnresolvedSora2PendingSubmissions() } returns listOf(unresolved)
+        init {
+            every { database.accountDao() } returns accountDao
+            every { database.walletIdentityDao() } returns walletDao
+            coEvery { walletDao.hasActiveDeletionOperation() } returns false
+            coEvery { walletDao.getMigrationJournal(any()) } returns null
+            coEvery { accountDao.getAccount(WALLET_ID) } returns
+                SoraAccountLocal(WALLET_ID, "Primary")
+            coEvery { walletDao.getWallet(WALLET_ID) } returns
+                WalletIdentityLocal(
+                    walletId = WALLET_ID,
+                    displayName = "Primary",
+                    secretSource = "MNEMONIC",
+                    migrationState = "VERIFIED",
+                    derivationVersion = 1,
+                )
+            coEvery { walletDao.getNetworkAccount(WALLET_ID, "sora2") } returns
+                NetworkAccountLocal(
+                    walletId = WALLET_ID,
+                    networkId = "sora2",
+                    publicKey = "01",
+                    address = WALLET_ID,
+                    derivationPath = "",
+                    derivationVersion = 0,
+                    enabled = true,
+                )
+            coEvery { walletDao.getUnresolvedSora2PendingSubmissions() } returns unresolved
+            coEvery { runtime.getMutationRuntimeContext() } throws afterGate
+        }
 
-        val error = captureFailure {
+        suspend fun claim() {
             ExtrinsicManager(
-                factory = factory,
+                factory = mockk(),
                 runtimeManager = runtime,
                 database = database,
-                pendingSubmissionCoordinator = pendingCoordinator,
+                pendingSubmissionCoordinator = Sora2PendingSubmissionCoordinator(
+                    database = database,
+                    runtimeManager = runtime,
+                    runtimeRpcClient = runtimeRpcClient,
+                    addressCodec = jp.co.soramitsu.common.account.Sora2AddressCodec(),
+                    recoveryKick = {},
+                    detailsStore = details,
+                ),
                 runtimeRpcClient = runtimeRpcClient,
             ).submitLegacyMigrationAndWaitExtrinsic(
                 from = WALLET_ID,
-                keypair = keypair,
+                keypair = mockk(),
             ) {}
         }
+    }
+
+    private fun unresolvedRow(
+        hash: String,
+        state: String,
+        walletId: String = WALLET_ID,
+    ): Sora2PendingSubmissionLocal = mockk<Sora2PendingSubmissionLocal>().also { row ->
+        every { row.walletId } returns walletId
+        every { row.transactionHash } returns hash
+        every { row.state } returns state
+        every { row.operationKind } returns Sora2PendingSubmissionLocal.OPERATION_GENERIC
+    }
+
+    private val busy = Sora2NodeRefusal(
+        reason = jp.co.soramitsu.common.domain.TransactionNodeRefusal.NETWORK_BUSY,
+        code = 1016L,
+        message = "Immediately Dropped",
+    )
+
+    @Test
+    fun `legacy migration refuses an unresolved witness before signing`() = runTest {
+        val fixture = ClaimGateFixture(
+            unresolved = listOf(
+                unresolvedRow(HASH_1, Sora2PendingSubmissionLocal.STATE_SUBMISSION_UNKNOWN),
+            ),
+        )
+
+        val error = captureFailure { fixture.claim() }
 
         assertEquals("SORA2_LEGACY_MIGRATION_ALREADY_UNRESOLVED", error.message)
-        coVerify(exactly = 0) { runtime.getMutationRuntimeContext() }
-        coVerify(exactly = 0) { pendingCoordinator.stageBeforeTransport(any()) }
-        coVerify(exactly = 0) { runtimeRpcClient.submitExtrinsicOnce(any()) }
+        coVerify(exactly = 0) { fixture.runtime.getMutationRuntimeContext() }
+        coVerify(exactly = 0) { fixture.walletDao.insertSora2PendingSubmission(any()) }
+        coVerify(exactly = 0) { fixture.runtimeRpcClient.submitExtrinsicOnce(any()) }
+    }
+
+    @Test
+    fun `a claim the node refused does not hold back the next claim`() = runTest {
+        // The node answered 1014 or 1016: "too busy ... please try again in a moment". The
+        // refused row stays unresolved for its whole validity window (about six and a half
+        // minutes), and the gate used to answer every further Submit in that time with "an
+        // earlier transaction is still being checked", on a screen that cannot be left.
+        val fixture = ClaimGateFixture(
+            unresolved = listOf(
+                unresolvedRow(HASH_1, Sora2PendingSubmissionLocal.STATE_SUBMISSION_UNKNOWN),
+            ),
+        )
+        fixture.details.recordNodeRefusal(WALLET_ID, HASH_1, busy)
+
+        val error = captureFailure { fixture.claim() }
+
+        // The gate let the claim through: it went on to read the signing runtime.
+        assertEquals(fixture.afterGate.toString(), error.deepestCause().toString())
+        coVerify(exactly = 1) { fixture.runtime.getMutationRuntimeContext() }
+    }
+
+    @Test
+    fun `a refused claim next to one that is still waiting does not open the gate`() = runTest {
+        val fixture = ClaimGateFixture(
+            unresolved = listOf(
+                unresolvedRow(HASH_1, Sora2PendingSubmissionLocal.STATE_SUBMISSION_UNKNOWN),
+                // Sent without an answer: it may be on its way.
+                unresolvedRow(HASH_2, Sora2PendingSubmissionLocal.STATE_SUBMISSION_UNKNOWN),
+            ),
+        )
+        fixture.details.recordNodeRefusal(WALLET_ID, HASH_1, busy)
+
+        val error = captureFailure { fixture.claim() }
+
+        assertEquals("SORA2_LEGACY_MIGRATION_ALREADY_UNRESOLVED", error.message)
+        coVerify(exactly = 0) { fixture.runtime.getMutationRuntimeContext() }
+    }
+
+    @Test
+    fun `a transaction the node accepted holds the claim back whatever was recorded`() = runTest {
+        // A refusal can only be recorded for a row that never left "submission unknown". Should
+        // one ever stand next to an accepted row, the row decides: it may still be included.
+        val fixture = ClaimGateFixture(
+            unresolved = listOf(
+                unresolvedRow(
+                    HASH_1,
+                    Sora2PendingSubmissionLocal.STATE_SUBMITTED_AWAITING_FINALITY,
+                ),
+            ),
+        )
+        fixture.details.recordNodeRefusal(WALLET_ID, HASH_1, busy)
+
+        val error = captureFailure { fixture.claim() }
+
+        assertEquals("SORA2_LEGACY_MIGRATION_ALREADY_UNRESOLVED", error.message)
+        coVerify(exactly = 0) { fixture.runtime.getMutationRuntimeContext() }
+    }
+
+    @Test
+    fun `a refusal recorded for another account does not open this account's gate`() = runTest {
+        val fixture = ClaimGateFixture(
+            unresolved = listOf(
+                unresolvedRow(HASH_1, Sora2PendingSubmissionLocal.STATE_SUBMISSION_UNKNOWN),
+            ),
+        )
+        fixture.details.recordNodeRefusal("cnAnotherWallet", HASH_1, busy)
+
+        val error = captureFailure { fixture.claim() }
+
+        assertEquals("SORA2_LEGACY_MIGRATION_ALREADY_UNRESOLVED", error.message)
     }
 
     @Test
@@ -579,6 +690,85 @@ class ExtrinsicManagerSafetyTest {
     }
 
     @Test
+    fun `a head a few blocks lower from the other endpoint still reaches transport`() = runTest {
+        // Signed against block 64 of the first endpoint, which then dropped. The check before
+        // transport is answered by the second endpoint, whose finalized head is a block or a
+        // few behind. Before the fix this ended the Send as "Not sent".
+        listOf(63L, 64L - Sora2BoundedRuntimeRpcClient.FINALITY_LAG_TOLERANCE_BLOCKS).forEach { height ->
+            val fixture = preparedFixture(
+                activeDeletion = listOf(false, false, false),
+                signingRuntime = mutationContext(finalizedByte = "31", finalizedBlockNumber = 64),
+                currentRuntime = mutationContext(
+                    finalizedByte = "30",
+                    finalizedBlockNumber = height,
+                ),
+            )
+            val handoffError = IllegalStateException("transport entered")
+            coEvery { fixture.runtimeRpcClient.submitExtrinsicOnce(any()) } throws handoffError
+
+            val error = captureFailure {
+                fixture.manager.submitPreparedAndWait(fixture.prepared)
+            }
+
+            assertTrue(error.cause === handoffError)
+            coVerify(exactly = 1) {
+                fixture.runtimeRpcClient.submitExtrinsicOnce(any())
+            }
+        }
+    }
+
+    @Test
+    fun `a head far behind is not handed the transaction and is told as a network problem`() =
+        runTest {
+            val fixture = preparedFixture(
+                activeDeletion = listOf(false, false, false),
+                signingRuntime = mutationContext(finalizedByte = "31", finalizedBlockNumber = 64),
+                currentRuntime = mutationContext(
+                    finalizedByte = "30",
+                    finalizedBlockNumber =
+                    63L - Sora2BoundedRuntimeRpcClient.FINALITY_LAG_TOLERANCE_BLOCKS,
+                ),
+            )
+
+            val error = captureFailure {
+                fixture.manager.submitPreparedAndWait(fixture.prepared)
+            }
+
+            assertTrue(error is DefinitelyNotSubmitted)
+            assertFalse(error is ExtrinsicSubmissionUnknown)
+            assertEquals("SORA2_RUNTIME_RPC_ENDPOINT_BEHIND", error.deepestCause().message)
+            // "SORA couldn't reach the network ... Nothing was sent ... try again".
+            assertEquals(
+                NetworkFeeUnavailable.NETWORK_UNREACHABLE,
+                NetworkFeeUnavailable.from(error),
+            )
+            coVerify(exactly = 0) {
+                fixture.runtimeRpcClient.submitExtrinsicOnce(any())
+            }
+        }
+
+    @Test
+    fun `runtime drift is still refused when the head is lower`() = runTest {
+        val signing = mutationContext(finalizedByte = "31", finalizedBlockNumber = 64)
+        val fixture = preparedFixture(
+            activeDeletion = listOf(false, false, false),
+            signingRuntime = signing,
+            currentRuntime = mutationContext(finalizedByte = "30", finalizedBlockNumber = 63)
+                .copy(metadataSha256 = "e".repeat(64)),
+        )
+
+        val error = captureFailure {
+            fixture.manager.submitPreparedAndWait(fixture.prepared)
+        }
+
+        assertTrue(error is DefinitelyNotSubmitted)
+        assertEquals("SORA2_MUTATION_METADATA_DRIFT", error.deepestCause().message)
+        coVerify(exactly = 0) {
+            fixture.runtimeRpcClient.submitExtrinsicOnce(any())
+        }
+    }
+
+    @Test
     fun `expired mortal era is definitive and never opens RPC`() = runTest {
         val fixture = preparedFixture(
             activeDeletion = listOf(false, false, false),
@@ -855,5 +1045,7 @@ class ExtrinsicManagerSafetyTest {
 
     private companion object {
         const val WALLET_ID = "cnRetainedWallet"
+        val HASH_1 = "0x${"a1".repeat(32)}"
+        val HASH_2 = "0x${"b2".repeat(32)}"
     }
 }

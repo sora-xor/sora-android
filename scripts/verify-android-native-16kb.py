@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Fail closed when a packaged 64-bit Android native library is not 16 KB ready."""
 
+# Keeps the "int | bytes" annotations below from being evaluated, so the check also runs on
+# Python 3.9 (the system python3 of the macOS release machine). CI runs Python 3.12.
+from __future__ import annotations
+
 import hashlib
 import re
 import struct

@@ -185,6 +185,7 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
                         shouldTransactionReminderInsufficientWarningBeShown = state.shouldTransactionReminderInsufficientWarningBeShown,
                         feeUnavailable = state.feeUnavailable,
                         onRetryFee = viewModel::onRetryFee,
+                        lockedNote = state.lockedNote,
                     )
                 }
 
@@ -198,11 +199,12 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-        viewModel.transactionSuccessEvent.observe {
+        viewModel.transactionSuccessEvent.observe { badge ->
             activity?.let {
+                // "Transaction confirmed" or "Transaction submitted", as the outcome says.
                 ToastDialog(
                     R.drawable.ic_green_pin,
-                    R.string.wallet_transaction_submitted_1,
+                    badge.text,
                     1000,
                     it
                 ).show()

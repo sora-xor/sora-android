@@ -76,6 +76,7 @@ internal fun AssetDetailsBalanceCard(
     amountFiat: String,
     frozenAmount: String? = null,
     frozenAmountFiat: String? = null,
+    lockedNote: String? = null,
     isTransferableAmountAvailable: Boolean = false,
     onSendClick: () -> Unit,
     onReceiveClick: () -> Unit,
@@ -157,10 +158,24 @@ internal fun AssetDetailsBalanceCard(
                 Text(
                     modifier = Modifier
                         .padding(horizontal = Dimens.x3)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTagAsId("AssetFrozenAmount"),
                     text = frozenAmount,
                     style = MaterialTheme.customTypography.textXSBold,
                     color = MaterialTheme.customColors.fgSecondary
+                )
+            }
+            if (lockedNote != null) {
+                // Says why the liquid balance is smaller than what the account holds. An
+                // account whose XOR is all locked would otherwise only see "0".
+                Text(
+                    modifier = Modifier
+                        .padding(start = Dimens.x3, end = Dimens.x3, top = Dimens.x1)
+                        .fillMaxWidth()
+                        .testTagAsId("AssetLockedNote"),
+                    text = lockedNote,
+                    style = MaterialTheme.customTypography.paragraphXS,
+                    color = MaterialTheme.customColors.fgSecondary,
                 )
             }
             Divider(

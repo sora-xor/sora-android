@@ -160,6 +160,15 @@ class TransactionHistoryHandlerImpl @Inject constructor(
         }
     }
 
+    override suspend fun checkWaitingTransaction(txHash: String) {
+        withContext(coroutineManager.io) {
+            transactionHistoryRepository.checkWaitingTransaction(
+                walletId = userRepository.getCurSoraAccount().substrateAddress,
+                txHash = txHash,
+            )
+        }
+    }
+
     private suspend fun reloadHistoryEvents(): HistoryState =
         try {
             historyPage = 1

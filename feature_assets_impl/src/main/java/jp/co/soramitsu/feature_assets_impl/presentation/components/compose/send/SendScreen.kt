@@ -95,6 +95,7 @@ internal fun SendScreen(
     shouldTransactionReminderInsufficientWarningBeShown: Boolean,
     feeUnavailable: NetworkFeeUnavailable? = null,
     onRetryFee: () -> Unit = {},
+    lockedNote: String? = null,
     readOnly: Boolean = rememberWalletReadOnly(),
     accountReadOnly: Boolean = LocalSelectedAccountReadOnly.current,
 ) {
@@ -115,6 +116,17 @@ internal fun SendScreen(
         onSelectToken = onSelectToken,
         onFocusChange = onFocusChange,
     )
+    if (lockedNote != null) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Dimens.x1, start = Dimens.x1, end = Dimens.x1)
+                .testTagAsId("SendLockedBalanceNote"),
+            text = lockedNote,
+            style = MaterialTheme.customTypography.paragraphS,
+            color = MaterialTheme.customColors.fgSecondary,
+        )
+    }
     Divider(thickness = Dimens.x3, color = Color.Transparent)
     SendScreenNetworkFee(
         amount = feeAmount,

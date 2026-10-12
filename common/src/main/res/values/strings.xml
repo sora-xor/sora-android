@@ -950,4 +950,50 @@
   <!-- recovery_wallets_withheld: verified: SafeModeVault.listing sets withheld only when an entry was left out because its key set is named in WalletPreferenceKeys.RETAINED_NEEDS_PHRASE -->
   <string name="recovery_wallets_withheld">Wallet keys that were on this phone before the current SORA PIN was set are not listed here. Their recovery phrase can\'t be shown after this confirmation.</string>
   <string name="recovery_wallets_unreadable">SORA couldn\'t read just now which wallets may be shown, so some may be missing from this list. Go back and try again.</string>
+  <!-- at1-submit-status: truthful transaction status on every screen (audit A5) -->
+  <string name="tx_outcome_badge_confirmed">Transaction\nconfirmed</string>
+  <string name="tx_outcome_badge_failed">Transaction\nfailed</string>
+  <string name="tx_outcome_badge_not_sent">Not sent</string>
+  <string name="tx_outcome_confirmed_title">Confirmed</string>
+  <string name="tx_outcome_confirmed_message">The network confirmed this transaction.</string>
+  <string name="tx_outcome_waiting_title">Submitted, waiting for confirmation</string>
+  <string name="tx_outcome_failed_title">Transaction failed</string>
+  <string name="tx_outcome_refused_title">The network did not accept this transaction</string>
+  <string name="tx_outcome_not_sent_title">Not sent</string>
+  <string name="tx_outcome_note_waiting">Submitted. The network has not confirmed it yet; this usually takes less than a minute. Please don\'t send it again. The status here and in Activity updates by itself.</string>
+  <string name="tx_outcome_note_uncertain">SORA could not confirm that the network received this transaction. It is being checked, and the status here and in Activity updates by itself. Please don\'t send it again until the result is shown.</string>
+  <string name="tx_outcome_note_failed_on_chain">The network processed this transaction and it failed. It did not move any funds. The network fee was charged.</string>
+  <string name="tx_outcome_note_failed_on_chain_reason">Reason reported by the network: %1$s</string>
+  <string name="tx_outcome_note_not_included">The network did not include this transaction before it expired. Nothing was sent and no fee was charged. You can try again.</string>
+  <string name="tx_outcome_note_refused_fee">The network did not accept this transaction because the account can\'t pay the network fee right now. Some of your XOR may be locked, for example by staking or voting. Nothing was sent and no fee was charged.</string>
+  <string name="tx_outcome_note_refused_busy">The network was too busy to take this transaction. Nothing was sent and no fee was charged. Please try again in a moment.</string>
+  <string name="tx_outcome_note_refused_invalid">The network checked this transaction and did not accept it. Nothing was sent and no fee was charged.</string>
+  <string name="tx_outcome_note_network_message">Network message: %1$s</string>
+  <string name="tx_outcome_not_sent_network">SORA couldn\'t reach the network to prepare this transaction. Nothing was sent. Check your internet connection and try again.</string>
+  <string name="tx_outcome_not_sent_fee_changed">The network fee changed while you were reviewing. Nothing was sent. Check the new fee and confirm again.</string>
+  <string name="tx_outcome_not_sent_generic">This transaction couldn\'t be prepared. Nothing was sent and no fee was charged. Please try again.</string>
+  <string name="tx_outcome_duplicate_title">An earlier one is still waiting</string>
+  <string name="tx_outcome_duplicate_message">You already sent this action from this account, and the network has not confirmed it yet. If you send it again, it may be carried out twice. You can follow the first one in Activity.</string>
+  <string name="tx_outcome_duplicate_send_again">Send again anyway</string>
+  <string name="tx_outcome_duplicate_wait">Wait</string>
+  <string name="tx_outcome_claim_waiting">Your claim was submitted and the network has not confirmed it yet. Please don\'t submit it again. This screen continues by itself once the claim is confirmed. You can also close the app and come back later.</string>
+  <string name="tx_outcome_claim_blocked">An earlier transaction from this account is still being checked, so the claim was not sent. Please try again in a few minutes.</string>
+  <string name="tx_outcome_screen_needs_network">This screen needs the SORA network to check fees, and it can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
+  <string name="tx_outcome_not_sent_account_unavailable">This account can\'t sign transactions on this phone right now, so nothing was sent and no fee was charged. Your keys were not changed and your funds are safe on the blockchain.</string>
+  <string name="tx_outcome_claim_uncertain">SORA could not confirm that the network received your claim. It is being checked. Please don\'t submit it again until the result is shown. This screen continues by itself once the claim is confirmed, and tells you if it was not. You can also close the app and come back later.</string>
+  <!-- tx_outcome_not_sent_key_unavailable: verified: shown only when the stored signing key is absent or cannot be decrypted, never for a Keystore that is only busy; the confirm path reads keys and never writes, moves or deletes them -->
+  <string name="tx_outcome_not_sent_key_unavailable">SORA can\'t read this account\'s signing key on this phone, so nothing was sent and no fee was charged. Trying again won\'t change this. Your funds are safe on the blockchain, and nothing on this phone was changed. To sign with this account again, you need its recovery phrase or backup.</string>
+  <string name="tx_outcome_pool_unavailable_title">Pool data unavailable</string>
+  <string name="tx_outcome_pool_unavailable">SORA couldn\'t read this pool from the network, so the amounts can\'t be checked right now. Nothing was sent. Check your internet connection and try again.</string>
+  <string name="tx_outcome_quote_unavailable">Price unavailable</string>
+  <string name="tx_outcome_not_sent_balance">Your balance is no longer enough for this amount and the network fee, so nothing was sent and no fee was charged. An earlier transaction may have been confirmed in the meantime. Check your balance and change the amount.</string>
+  <string name="tx_outcome_not_sent_estimate">SORA couldn\'t check these amounts and the network fee with the network just now, so nothing was sent and no fee was charged. Check your internet connection and try again.</string>
+  <!-- at2-endpoints-balances: two reviewed endpoints, locked XOR, chain-upgrade headroom (audit F1, F3, F4, F6, F9) -->
+  <string name="tx_outcome_note_not_reached">SORA couldn\'t connect to the SORA network, so this transaction never left your phone. Nothing was sent and no fee was charged. Check your internet connection and try again.</string>
+  <string name="network_fee_needs_app_update">The SORA network was upgraded, and this version of the app can\'t prepare transactions for it yet. Please update the app to send, swap or claim. Your balances still update, and your funds are safe on the blockchain.</string>
+  <string name="tx_outcome_not_sent_needs_app_update">The SORA network was upgraded, and this version of the app can\'t prepare transactions for it yet. Nothing was sent and no fee was charged. Please update the app and try again. Your funds are safe on the blockchain.</string>
+  <string name="send_locked_balance_note">%1$s is locked on the network, for example by staking or voting, and can\'t be sent.</string>
+  <string name="tx_outcome_not_sent_fee_locked">This account can\'t pay the network fee right now, because the XOR it would be paid from is locked on the network, for example by staking or voting. Nothing was sent and no fee was charged.</string>
+  <string name="send_fee_locked_hint">Not enough unlocked XOR for the network fee</string>
+  <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
 </resources>

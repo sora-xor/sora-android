@@ -6,6 +6,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.data.network.dto.PolkamarktMarketId
@@ -15,6 +16,9 @@ import jp.co.soramitsu.common.network.requireStrictJsonDocumentWithoutDuplicateK
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.models.AbstractRestServerRequest
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.DeserializationStrategy
@@ -160,13 +164,75 @@ data class IndexerReferralReward(
 )
 
 /**
- * What account history the deployed PI indexer can list. Its only timestamp-ordered account plan
- * is "extrinsics this account signed" (an exact `address` filter), so transfers received from
- * other accounts are not listed until the indexer adds a recipient plan. Screens that show
- * account history say so; balances always come from the chain and are not affected.
+ * The clock that the indexer's "last indexed" time is compared with, in epoch seconds.
+ *
+ * The HTTP `Date` of the health response is the answering server's own clock, received over the
+ * same authenticated channel as the data. Using it measures how far behind the indexer is, not
+ * how wrong the phone's clock is: a phone set a few minutes off, or to the wrong time zone, used
+ * to get no history, prices or APY at all.
+ *
+ * The device clock is used when the response has no usable `Date`, and when the two clocks
+ * differ by more than [PI_MAX_DEVICE_CLOCK_SKEW_SECONDS]. A gap that large is not an ordinary
+ * mis-set phone clock, and the check then stays as strict as it was.
+ */
+internal fun piFreshnessReferenceEpochSeconds(
+    deviceEpochSeconds: Long,
+    serverDateEpochMillis: Long?,
+): Long {
+    val serverEpochSeconds = serverDateEpochMillis?.takeIf { it > 0 }?.div(1_000)
+        ?: return deviceEpochSeconds
+    val skew = serverEpochSeconds - deviceEpochSeconds
+    return if (skew in -PI_MAX_DEVICE_CLOCK_SKEW_SECONDS..PI_MAX_DEVICE_CLOCK_SKEW_SECONDS) {
+        serverEpochSeconds
+    } else {
+        deviceEpochSeconds
+    }
+}
+
+/** Covers any wrong time zone (UTC-12 to UTC+14) on top of an otherwise right clock. */
+internal const val PI_MAX_DEVICE_CLOCK_SKEW_SECONDS = 26L * 60 * 60
+
+/**
+ * What account history the PI indexer lists for this app right now.
+ *
+ * The app asks for every role of the account: operations it signed, and transfers it sent or
+ * received (`or` over `address`, `dataFrom`, `dataTo`). The indexer deployed in October 2026 has
+ * a timestamp-ordered plan only for "extrinsics this account signed" and rejects that question
+ * with `BAD_USER_INPUT`; the app then asks for the signer only, and transfers received from
+ * other accounts are not listed. The full question is asked again every
+ * [RETRY_INTERVAL_MILLIS], so the day the indexer gains a recipient plan, received transfers
+ * appear without an app update. Balances always come from the chain and are not affected.
+ *
+ * Screens that show account history observe [listsReceivedTransfers] and say so while it is
+ * false.
  */
 object PiHistoryCoverage {
-    const val LISTS_RECEIVED_TRANSFERS = false
+    /** How long a rejection of the every-role question stands before it is asked again. */
+    const val RETRY_INTERVAL_MILLIS = 30L * 60 * 1_000
+
+    /**
+     * After an every-role question that got no usable answer (no connection, indexer not
+     * ready), how long the signer-only question is asked directly.
+     */
+    const val RETRY_AFTER_FAILURE_MILLIS = 60L * 1_000
+
+    private val coversEveryRole = MutableStateFlow(false)
+
+    /** True while the latest account history read was answered for every role. */
+    val listsReceivedTransfers: StateFlow<Boolean> = coversEveryRole.asStateFlow()
+
+    internal fun publish(everyRole: Boolean) {
+        coversEveryRole.value = everyRole
+    }
+}
+
+/** The account roles one history read covers. */
+internal enum class PiHistoryRoles {
+    /** Operations the account signed, and transfers it sent or received. */
+    EVERY_ROLE,
+
+    /** Only operations the account signed: the shape every deployed indexer accepts. */
+    SIGNED_BY_ACCOUNT,
 }
 
 /**
@@ -189,12 +255,15 @@ class PolkaswapIndexerClient private constructor(
     private val responseCache: PiIndexerResponseCache,
     private val nowEpochMillis: () -> Long,
     private val nowMonotonicNanos: () -> Long,
+    /** Receives the clock difference each passed health check measured; see [PiIndexerClock]. */
+    private val indexerClock: PiIndexerClock = PiIndexerClock(),
 ) {
     @Inject
     constructor(
         boundedHttpTextClient: BoundedHttpTextClient,
         json: Json,
         @ApplicationContext context: Context,
+        indexerClock: PiIndexerClock,
     ) : this(
         graphQlTransport = BoundedGraphQlTransport(boundedHttpTextClient, json),
         json = json,
@@ -203,6 +272,7 @@ class PolkaswapIndexerClient private constructor(
         responseCache = FilePiIndexerResponseCache(context, json),
         nowEpochMillis = System::currentTimeMillis,
         nowMonotonicNanos = System::nanoTime,
+        indexerClock = indexerClock,
     )
 
     /**
@@ -222,6 +292,25 @@ class PolkaswapIndexerClient private constructor(
         responseCache = responseCache,
         nowEpochMillis = System::currentTimeMillis,
         nowMonotonicNanos = System::nanoTime,
+    )
+
+    /** The production wire path with caller-supplied clocks, for deterministic tests. */
+    internal constructor(
+        boundedHttpTextClient: BoundedHttpTextClient,
+        json: Json,
+        responseCache: PiIndexerResponseCache,
+        nowEpochMillis: () -> Long,
+        nowMonotonicNanos: () -> Long,
+        indexerClock: PiIndexerClock = PiIndexerClock(),
+    ) : this(
+        graphQlTransport = BoundedGraphQlTransport(boundedHttpTextClient, json),
+        json = json,
+        enforceChainIdentityPreflight = true,
+        enforceResponseCheckpointPostflight = true,
+        responseCache = responseCache,
+        nowEpochMillis = nowEpochMillis,
+        nowMonotonicNanos = nowMonotonicNanos,
+        indexerClock = indexerClock,
     )
 
     internal constructor(
@@ -301,6 +390,13 @@ class PolkaswapIndexerClient private constructor(
     @Volatile
     private var mobileConfigUsesLegacySchema = false
 
+    /** While the monotonic clock is before this, history asks for the signer only. */
+    @Volatile
+    private var everyRoleQuestionNotBeforeNanos: Long? = null
+
+    /** The question page one of each account's list was answered with. */
+    private val pagedHistoryRoles = ConcurrentHashMap<String, PiHistoryRoles>()
+
     /**
      * Counterparties of the newest operations [address] signed (one page of up to
      * [MAX_HISTORY_PAGE_SIZE] rows), newest first and without duplicates or the account itself.
@@ -373,16 +469,18 @@ class PolkaswapIndexerClient private constructor(
         val canonicalAddress = validatedIdentifier(address)
         // Deliberately one page: this API promises the newest `count` rows,
         // unlike contacts/full history, which must exhaust bounded cursors.
-        return getHistoryElementsQualified(
-            first = count,
-            filter = accountHistoryFilter(canonicalAddress),
-            responseIdentityValidator = { page ->
-                PiHistoryResponseIdentityValidator.requireAccount(
-                    items = page.items,
-                    expectedAccount = canonicalAddress,
-                )
-            },
-        ).map { it.items }
+        return withAccountHistoryRoles(canonicalAddress) { filter ->
+            getHistoryElementsQualified(
+                first = count,
+                filter = filter,
+                responseIdentityValidator = { page ->
+                    PiHistoryResponseIdentityValidator.requireAccount(
+                        items = page.items,
+                        expectedAccount = canonicalAddress,
+                    )
+                },
+            )
+        }.first.map { it.items }
     }
 
     suspend fun getTransactionHistory(
@@ -402,6 +500,39 @@ class PolkaswapIndexerClient private constructor(
         }
         require(pageCount in 1..MAX_HISTORY_PAGE_SIZE) { "PI_INDEXER_INVALID_PAGE_SIZE" }
         val canonicalAddress = validatedIdentifier(address)
+        // A list is paged with one question. Page one decides it (and may fall back); later
+        // pages of the same account repeat it, so rows are neither repeated nor skipped when
+        // the every-role question is retried between two pages.
+        val pagedRoles = if (page == 1L) null else pagedHistoryRoles[canonicalAddress]
+        if (pagedRoles != null) {
+            return walkTransactionHistoryQualified(
+                canonicalAddress = canonicalAddress,
+                page = page,
+                pageCount = pageCount,
+                filter = accountHistoryFilter(canonicalAddress, pagedRoles),
+            ).also { PiHistoryCoverage.publish(pagedRoles == PiHistoryRoles.EVERY_ROLE) }
+        }
+        val (result, roles) = withAccountHistoryRoles(canonicalAddress) { filter ->
+            walkTransactionHistoryQualified(
+                canonicalAddress = canonicalAddress,
+                page = page,
+                pageCount = pageCount,
+                filter = filter,
+            )
+        }
+        if (page == 1L) {
+            if (pagedHistoryRoles.size >= MAX_PAGED_HISTORY_ACCOUNTS) pagedHistoryRoles.clear()
+            pagedHistoryRoles[canonicalAddress] = roles
+        }
+        return result
+    }
+
+    private suspend fun walkTransactionHistoryQualified(
+        canonicalAddress: String,
+        page: Long,
+        pageCount: Int,
+        filter: JsonObject,
+    ): PiQualifiedRead<IndexerHistoryPage> {
         val seenCursors = mutableSetOf<String>()
         val seenTransactionIds = mutableSetOf<String>()
         var after: String? = null
@@ -414,7 +545,7 @@ class PolkaswapIndexerClient private constructor(
             val qualifiedPage = getHistoryElementsQualified(
                 first = pageCount,
                 after = after,
-                filter = accountHistoryFilter(canonicalAddress),
+                filter = filter,
                 responseIdentityValidator = { historyPage ->
                     PiHistoryResponseIdentityValidator.requireAccount(
                         items = historyPage.items,
@@ -489,6 +620,61 @@ class PolkaswapIndexerClient private constructor(
         }
 
         error("PI_INDEXER_UNREACHABLE_PAGE")
+    }
+
+    /**
+     * Runs one account history read with the question the indexer is expected to answer and
+     * says which roles the answer covers.
+     *
+     * The every-role question is asked first unless the indexer rejected it within the last
+     * [PiHistoryCoverage.RETRY_INTERVAL_MILLIS]. A schema or query-plan rejection is remembered
+     * and the signer-only question is asked instead. When the indexer could not be reached at
+     * all ([PiIndexerOfflineFallbackPolicy]) and no every-role answer is saved, the signer-only
+     * question is still asked, because an earlier answer to it may be saved for offline use; if
+     * that fails too, the first error is the one reported. An answer that was received and
+     * failed validation is an error and is not asked for again in another shape.
+     */
+    private suspend fun <T> withAccountHistoryRoles(
+        canonicalAddress: String,
+        read: suspend (filter: JsonObject) -> PiQualifiedRead<T>,
+    ): Pair<PiQualifiedRead<T>, PiHistoryRoles> {
+        suspend fun signedByAccount(): Pair<PiQualifiedRead<T>, PiHistoryRoles> {
+            val result = read(
+                accountHistoryFilter(canonicalAddress, PiHistoryRoles.SIGNED_BY_ACCOUNT)
+            )
+            PiHistoryCoverage.publish(everyRole = false)
+            return result to PiHistoryRoles.SIGNED_BY_ACCOUNT
+        }
+        if (!mayAskForEveryRole()) return signedByAccount()
+        val everyRole = try {
+            read(accountHistoryFilter(canonicalAddress, PiHistoryRoles.EVERY_ROLE))
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: PiIndexerSchemaUnsupportedException) {
+            postponeEveryRoleQuestion(PiHistoryCoverage.RETRY_INTERVAL_MILLIS)
+            return signedByAccount()
+        } catch (error: Exception) {
+            if (!PiIndexerOfflineFallbackPolicy.allows(error)) throw error
+            postponeEveryRoleQuestion(PiHistoryCoverage.RETRY_AFTER_FAILURE_MILLIS)
+            return try {
+                signedByAccount()
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: Exception) {
+                throw error
+            }
+        }
+        PiHistoryCoverage.publish(everyRole = true)
+        return everyRole to PiHistoryRoles.EVERY_ROLE
+    }
+
+    private fun mayAskForEveryRole(): Boolean {
+        val notBefore = everyRoleQuestionNotBeforeNanos ?: return true
+        return nowMonotonicNanos() - notBefore >= 0
+    }
+
+    private fun postponeEveryRoleQuestion(millis: Long) {
+        everyRoleQuestionNotBeforeNanos = nowMonotonicNanos() + millis * 1_000_000L
     }
 
     suspend fun getAllTransactionHistory(
@@ -837,12 +1023,17 @@ class PolkaswapIndexerClient private constructor(
             }
         }.value
 
-    suspend fun getHealth(): PiIndexerHealth =
-        execute(
+    suspend fun getHealth(): PiIndexerHealth = getHealthWithServerTime().first
+
+    /** The health answer and the HTTP `Date` of the response that carried it, when it had one. */
+    private suspend fun getHealthWithServerTime(): Pair<PiIndexerHealth, Long?> {
+        val live = executeLive(
             query = HEALTH_QUERY,
             variables = buildJsonObject { },
             deserializer = HealthData.serializer(),
         ) { it.health.toModel() }
+        return live.value to live.serverDateEpochMillis
+    }
 
     /**
      * Reads `mobileConfig`. The deployed indexer predates the capability flags and rejects a
@@ -1192,7 +1383,7 @@ class PolkaswapIndexerClient private constructor(
         nowEpochSeconds: Long,
         recordQualification: Boolean = true,
     ): PiIndexerHealth {
-        val health = getHealth()
+        val (health, serverDateEpochMillis) = getHealthWithServerTime()
         check(health.chainId.equals(expectedChainId, ignoreCase = true)) {
             "PI_INDEXER_CHAIN_MISMATCH"
         }
@@ -1250,14 +1441,27 @@ class PolkaswapIndexerClient private constructor(
                 workerFinalized >= workerIndexed &&
                 workerFinalized - workerIndexed == workerLag
         ) { "PI_INDEXER_CHECKPOINT_MISMATCH" }
+        // "Recently indexed" is judged by the clock of the server that answered, read from the
+        // HTTP Date of this very response, so a phone whose clock is wrong still gets history,
+        // prices and APY (audit LIVE-13).
+        val referenceEpochSeconds = piFreshnessReferenceEpochSeconds(
+            deviceEpochSeconds = nowEpochSeconds,
+            serverDateEpochMillis = serverDateEpochMillis,
+        )
         check(
             workerSuccessfulAt > 0 &&
                 workerSuccessfulAt in
-                (nowEpochSeconds - MAX_CHECKPOINT_AGE_SECONDS)..
-                (nowEpochSeconds + MAX_FUTURE_SKEW_SECONDS) &&
-                indexedAt in (nowEpochSeconds - MAX_CHECKPOINT_AGE_SECONDS)..
-                (nowEpochSeconds + MAX_FUTURE_SKEW_SECONDS)
+                (referenceEpochSeconds - MAX_CHECKPOINT_AGE_SECONDS)..
+                (referenceEpochSeconds + MAX_FUTURE_SKEW_SECONDS) &&
+                indexedAt in (referenceEpochSeconds - MAX_CHECKPOINT_AGE_SECONDS)..
+                (referenceEpochSeconds + MAX_FUTURE_SKEW_SECONDS)
         ) { "PI_INDEXER_CHECKPOINT_STALE" }
+        // The stores that keep validated data for offline use check these timestamps again
+        // when they save; they must judge them against the same clock.
+        indexerClock.recordHealthReference(
+            deviceEpochSeconds = nowEpochSeconds,
+            referenceEpochSeconds = referenceEpochSeconds,
+        )
         check(
             (health.workerLastError == null) ==
                 (health.workerLastErrorTimestamp == null)
@@ -1628,7 +1832,7 @@ class PolkaswapIndexerClient private constructor(
                 variables = variables,
                 deserializer = deserializer,
                 transform = transform,
-            ).first
+            ).value
         }
         return executeQualified(
             query = query,
@@ -1655,12 +1859,14 @@ class PolkaswapIndexerClient private constructor(
         try {
             val preflight =
                 requireResponsePreflight() ?: testBypassQualification()
-            val (value, encodedResponse) = executeLive(
+            val live = executeLive(
                 query = query,
                 variables = variables,
                 deserializer = deserializer,
                 transform = transform,
             )
+            val value = live.value
+            val encodedResponse = live.encodedResponse
             // The indexer keeps indexing new blocks (about one every six seconds) while a
             // response is produced. The response is attributed to the checkpoint observed after
             // it, which bounds every row it can contain.
@@ -1738,17 +1944,25 @@ class PolkaswapIndexerClient private constructor(
         }
     }
 
+    private class LiveResult<Result>(
+        val value: Result,
+        /** The exact response text, when it is small enough to be saved for offline use. */
+        val encodedResponse: String?,
+        val serverDateEpochMillis: Long?,
+    )
+
     private suspend fun <Wire, Result> executeLive(
         query: String,
         variables: JsonObject,
         deserializer: KSerializer<Wire>,
         transform: (Wire) -> Result,
-    ): Pair<Result, String?> {
+    ): LiveResult<Result> {
         val responseSerializer = GraphQlResponse.serializer(deserializer)
-        val (response, admittedResponse) = graphQlTransport.post(
+        val exchange = graphQlTransport.post(
             body = GraphQlBody(query = query, variables = variables),
             responseSerializer = responseSerializer,
         )
+        val response = exchange.response
         if (
             response.errors.isNotEmpty() &&
             response.data == null &&
@@ -1769,7 +1983,11 @@ class PolkaswapIndexerClient private constructor(
         }
         check(response.errors.isEmpty()) { "PI_INDEXER_GRAPHQL_ERROR" }
         val value = transform(checkNotNull(response.data))
-        return value to admittedResponse
+        return LiveResult(
+            value = value,
+            encodedResponse = exchange.admittedResponse,
+            serverDateEpochMillis = exchange.serverDateEpochMillis,
+        )
     }
 
     private fun requestCacheKey(
@@ -2569,11 +2787,18 @@ class PolkaswapIndexerClient private constructor(
         override val requestContentType: RestClient.ContentType = RestClient.ContentType.JSON,
     ) : AbstractRestServerRequest.WithBody<Deserializer>()
 
+    private class GraphQlExchange<Wire>(
+        val response: GraphQlResponse<Wire>,
+        val admittedResponse: String?,
+        /** The response's HTTP `Date` in epoch milliseconds, when the transport knows it. */
+        val serverDateEpochMillis: Long? = null,
+    )
+
     private interface GraphQlTransport {
         suspend fun <Wire> post(
             body: GraphQlBody,
             responseSerializer: KSerializer<GraphQlResponse<Wire>>,
-        ): Pair<GraphQlResponse<Wire>, String?>
+        ): GraphQlExchange<Wire>
     }
 
     private class BoundedGraphQlTransport(
@@ -2592,18 +2817,23 @@ class PolkaswapIndexerClient private constructor(
         override suspend fun <Wire> post(
             body: GraphQlBody,
             responseSerializer: KSerializer<GraphQlResponse<Wire>>,
-        ): Pair<GraphQlResponse<Wire>, String?> {
+        ): GraphQlExchange<Wire> {
             val requestBody = wireJson.encodeToString(GraphQlBody.serializer(), body)
-            val admittedResponse = client.postJsonUtf8(
+            val admitted = client.postJson(
                 rawUrl = OptionsProvider.polkaswapIndexerEndpoint,
                 requestBody = requestBody,
                 maximumBytes = MAXIMUM_LIVE_RESPONSE_BYTES,
             )
+            val admittedResponse = admitted.body
             requireStrictJsonDocumentWithoutDuplicateKeys(admittedResponse)
             val response = wireJson.decodeFromString(responseSerializer, admittedResponse)
-            return response to admittedResponse.takeIf {
-                it.toByteArray(Charsets.UTF_8).size <= MAXIMUM_CACHED_RESPONSE_BYTES
-            }
+            return GraphQlExchange(
+                response = response,
+                admittedResponse = admittedResponse.takeIf {
+                    it.toByteArray(Charsets.UTF_8).size <= MAXIMUM_CACHED_RESPONSE_BYTES
+                },
+                serverDateEpochMillis = admitted.serverDateEpochMillis,
+            )
         }
     }
 
@@ -2615,7 +2845,7 @@ class PolkaswapIndexerClient private constructor(
         override suspend fun <Wire> post(
             body: GraphQlBody,
             responseSerializer: KSerializer<GraphQlResponse<Wire>>,
-        ): Pair<GraphQlResponse<Wire>, String?> {
+        ): GraphQlExchange<Wire> {
             val response: GraphQlResponse<Wire> = restClient.post(
                 GraphQlPostRequest(
                     responseDeserializer = responseSerializer,
@@ -2632,7 +2862,7 @@ class PolkaswapIndexerClient private constructor(
             } catch (_: Exception) {
                 null
             }
-            return response to encoded
+            return GraphQlExchange(response = response, admittedResponse = encoded)
         }
     }
 
@@ -3036,6 +3266,7 @@ class PolkaswapIndexerClient private constructor(
         const val MAX_HISTORY_PAGE_SIZE = 100
         const val MAX_CURSOR_LENGTH = 2_048
         const val MAX_PENDING_TRANSACTION_LOOKUP = 100
+        const val MAX_PAGED_HISTORY_ACCOUNTS = 32
         const val HASH_HEX_LENGTH = 64
         const val MAX_INDEXER_IDENTIFIER_LENGTH = 256
         const val MAX_HISTORY_IDENTIFIER_BYTES = 512
@@ -3412,14 +3643,25 @@ class PolkaswapIndexerClient private constructor(
         """
 
         /**
-         * Account history as the indexer can serve it: timestamp-ordered pages need an exact
-         * `address` (the signer of the extrinsic). An `or` over `dataFrom`/`dataTo` has no
-         * bounded storage plan and is rejected with `BAD_USER_INPUT`, so transfers received from
-         * other accounts are not listed until the indexer adds a recipient plan
-         * ([PiHistoryCoverage]; change both together).
+         * Account history filters ([PiHistoryCoverage]).
+         *
+         * [PiHistoryRoles.SIGNED_BY_ACCOUNT]: an exact `address` (the signer of the extrinsic),
+         * the only timestamp-ordered account plan of the indexer deployed in October 2026.
+         * [PiHistoryRoles.EVERY_ROLE]: an `or` over `address`, `dataFrom` and `dataTo`, which
+         * also lists transfers received from other accounts. That indexer rejects it with
+         * `BAD_USER_INPUT`; the iOS app sends the same filter, so one indexer change serves both.
          */
-        fun accountHistoryFilter(address: String): JsonObject =
-            fieldFilter("address", "equalTo", address)
+        fun accountHistoryFilter(
+            address: String,
+            roles: PiHistoryRoles = PiHistoryRoles.SIGNED_BY_ACCOUNT,
+        ): JsonObject = when (roles) {
+            PiHistoryRoles.SIGNED_BY_ACCOUNT -> fieldFilter("address", "equalTo", address)
+            PiHistoryRoles.EVERY_ROLE -> orFilter(
+                fieldFilter("address", "equalTo", address),
+                fieldFilter("dataFrom", "equalTo", address),
+                fieldFilter("dataTo", "equalTo", address),
+            )
+        }
 
         fun orFilter(vararg filters: JsonObject): JsonObject =
             buildJsonObject {

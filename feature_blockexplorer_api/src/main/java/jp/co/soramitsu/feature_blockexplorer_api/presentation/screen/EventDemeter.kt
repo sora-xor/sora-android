@@ -62,6 +62,7 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.toName
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -173,7 +174,9 @@ internal fun EventDemeterStake(
                             .padding(start = Dimens.x1_2)
                             .size(Dimens.x2),
                         painter = painterResource(id = statusIcon),
-                        contentDescription = null,
+                        // Said aloud by a screen reader: a waiting or failed entry is not
+                        // distinguishable from a completed one by its icon alone.
+                        contentDescription = stringResource(id = eventUiModel.status.toName()),
                         tint = Color.Unspecified
                     )
                 }
@@ -267,7 +270,9 @@ internal fun EventDemeterReward(
                                 .padding(start = Dimens.x1_2)
                                 .size(Dimens.x2),
                             painter = painterResource(id = statusIcon),
-                            contentDescription = null,
+                            // Said aloud by a screen reader: a waiting or failed entry is not
+                            // distinguishable from a completed one by its icon alone.
+                            contentDescription = stringResource(id = eventUiModel.status.toName()),
                             tint = Color.Unspecified
                         )
                     }

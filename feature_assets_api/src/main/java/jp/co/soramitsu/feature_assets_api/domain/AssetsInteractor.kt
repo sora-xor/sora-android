@@ -37,6 +37,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import kotlinx.coroutines.flow.Flow
 
@@ -78,7 +79,9 @@ interface AssetsInteractor {
         amount: BigDecimal,
         fee: BigDecimal,
         expectedWalletId: String,
-    ): String
+        /** True only after the user confirmed sending the same transfer again while one waits. */
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome
 
     fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset?>
 

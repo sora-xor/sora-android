@@ -33,12 +33,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_wallet_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import java.io.IOException
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.model.AssetLocal
@@ -51,6 +53,9 @@ import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalle
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingRecoveryPass
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingSubmissionCoordinator
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -68,9 +73,12 @@ import org.mockito.BDDMockito.anyBoolean
 import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -100,6 +108,9 @@ class WalletRepositoryTest {
     @Mock
     private lateinit var runtimeManager: RuntimeManager
 
+    @Mock
+    private lateinit var pendingSubmissionCoordinator: Sora2PendingSubmissionCoordinator
+
     private val mockedUri = DEFAULT_ICON_URI
 
     // private lateinit var runtime: RuntimeSnapshot
@@ -115,7 +126,73 @@ class WalletRepositoryTest {
             extrinsicManager,
             substrateCalls,
             runtimeManager,
+            pendingSubmissionCoordinator,
         )
+    }
+
+    // --- following a claim this device already sent: status only, never a submission ----------
+
+    private val claimHash = "0x" + "ab".repeat(32)
+
+    @Test
+    fun `a submitted claim is checked by its hash and reported from the journal`() = runTest {
+        val waiting = TransactionOutcome.Waiting(claimHash, acceptedByNode = true)
+        given(pendingSubmissionCoordinator.recoverStatusOnlyFor("wallet", claimHash))
+            .willReturn(Sora2PendingRecoveryPass(1, 0, 1, 0, 0))
+        given(pendingSubmissionCoordinator.currentOutcomeOrNull("wallet", claimHash))
+            .willReturn(waiting)
+
+        assertEquals(waiting, walletRepository.checkSubmittedClaim("wallet", claimHash))
+
+        verify(pendingSubmissionCoordinator, never()).latestSubmissionHashOrNull(any(), any())
+        // Nothing is prepared, signed or submitted by the check.
+        org.mockito.Mockito.verifyNoInteractions(extrinsicManager)
+    }
+
+    @Test
+    fun `without a hash the newest claim this device recorded is checked`() = runTest {
+        val expired = TransactionOutcome.FailedOnChain(
+            txHash = claimHash,
+            blockHash = null,
+            reason = jp.co.soramitsu.common.domain.TransactionChainFailure.NOT_INCLUDED,
+        )
+        given(
+            pendingSubmissionCoordinator.latestSubmissionHashOrNull(
+                "wallet",
+                Sora2SubmissionActivity.Kind.LEGACY_CLAIM,
+            )
+        ).willReturn(claimHash)
+        given(pendingSubmissionCoordinator.recoverStatusOnlyFor("wallet", claimHash))
+            .willReturn(null)
+        given(pendingSubmissionCoordinator.currentOutcomeOrNull("wallet", claimHash))
+            .willReturn(expired)
+
+        assertEquals(expired, walletRepository.checkSubmittedClaim("wallet", null))
+    }
+
+    @Test
+    fun `no recorded claim means there is nothing to follow and nothing is asked`() = runTest {
+        given(
+            pendingSubmissionCoordinator.latestSubmissionHashOrNull(
+                "wallet",
+                Sora2SubmissionActivity.Kind.LEGACY_CLAIM,
+            )
+        ).willReturn(null)
+
+        assertEquals(null, walletRepository.checkSubmittedClaim("wallet", null))
+
+        verify(pendingSubmissionCoordinator, never()).recoverStatusOnlyFor(any(), any())
+    }
+
+    @Test
+    fun `a failed status read still reports what the journal says`() = runTest {
+        val uncertain = TransactionOutcome.Waiting(claimHash, acceptedByNode = false)
+        given(pendingSubmissionCoordinator.recoverStatusOnlyFor("wallet", claimHash))
+            .willAnswer { throw IOException("BOUNDED_HTTP_IO") }
+        given(pendingSubmissionCoordinator.currentOutcomeOrNull("wallet", claimHash))
+            .willReturn(uncertain)
+
+        assertEquals(uncertain, walletRepository.checkSubmittedClaim("wallet", claimHash))
     }
 
     @Test
@@ -141,6 +218,7 @@ class WalletRepositoryTest {
                 any(),
                 anyBoolean(),
                 anyString(),
+                anyOrNull(),
                 any(),
             )
         ).willReturn(
@@ -160,6 +238,8 @@ class WalletRepositoryTest {
             any(),
             anyBoolean(),
             anyString(),
+            // The claim is described for Activity, so a waiting claim is not a nameless entry.
+            eq(Sora2SubmissionActivity.legacyClaim()),
             any(),
         )
     }
