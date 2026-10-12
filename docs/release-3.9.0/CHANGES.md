@@ -15,6 +15,11 @@ at larger text sizes. Regressions cover rename, switching accounts with stale or
 missing metadata, quick first edits, and the compact layout at normal/double text
 sizes in both themes. Native screenshots use an unfunded synthetic wallet.
 
+More also preserves its current node name and connection indicator when a slower
+feature-configuration request completes. The connection was healthy; only an older
+presentation-state snapshot was replacing the current values. A delayed-response
+regression verifies that the connected node remains visible.
+
 ## Firebase usage metrics without advertising
 
 The Android app previously linked Firebase Core/Crashlytics but did not include the
