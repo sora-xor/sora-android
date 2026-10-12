@@ -15,6 +15,7 @@
     "android.permission.USE_FINGERPRINT",
     "android.permission.VIBRATE",
     "android.permission.WAKE_LOCK",
+    "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE",
     "jp.co.soramitsu.sora.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
   ],
   "queries": [],
@@ -38,5 +39,13 @@
   "forbiddenComponentNameParts": [
     "IrohaConnect",
     "SafeModePreview"
-  ]
+  ],
+  "requiredApplicationMetadata": {
+    "firebase_analytics_collection_enabled": true,
+    "google_analytics_default_allow_analytics_storage": true,
+    "google_analytics_default_allow_ad_storage": false,
+    "google_analytics_default_allow_ad_user_data": false,
+    "google_analytics_default_allow_ad_personalization_signals": false,
+    "google_analytics_adid_collection_enabled": false
+  }
 }

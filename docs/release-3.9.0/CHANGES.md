@@ -2,6 +2,22 @@
 
 Each section covers one release task: what changed, why, and what users see.
 
+## Firebase usage metrics without advertising
+
+The Android app previously linked Firebase Core/Crashlytics but did not include the
+Analytics SDK. It now includes Analytics 23.0.0 through the existing Firebase
+BOM 34.6.0. Manifest defaults enable analytics storage and deny ad storage,
+ad user data, ad personalization, and advertising-ID collection before SDK
+initialization. The SDK's advertising-ID/ad-services permissions are removed.
+The app reapplies all four consent values and disables ad-personalization signals
+on every start, before explicitly enabling metrics, so a retained runtime grant
+cannot remain the app's policy. No new consent screen is introduced.
+
+Firebase project/app IDs, the verified historical Drive client, backup scopes,
+Crashlytics and messaging remain in place. The release manifest verifier enforces
+these defaults in both APK and AAB. Google Analytics property access and incoming
+metrics are separate console/runtime checks; local checks do not prove ingestion.
+
 ## Preserve the historical Android Drive sign-in client
 
 Verified Google Play APKs 121 (3.8.6.2) and 122 (3.8.6.3) pass a separate OAuth

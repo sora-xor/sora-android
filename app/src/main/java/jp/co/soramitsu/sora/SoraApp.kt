@@ -42,6 +42,7 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
 import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -118,6 +119,10 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         val firebaseApp = runCatching { FirebaseApp.initializeApp(this) }
             .onFailure { Timber.e(it) }
             .getOrNull()
+        if (firebaseApp != null) {
+            runCatching { FirebaseAnalyticsPolicy.apply(FirebaseAnalytics.getInstance(this)) }
+                .onFailure { Timber.w("Firebase Analytics policy could not be applied") }
+        }
         FirebaseWrapper.setCrashlyticsEnabled(firebaseApp != null)
 
         OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE

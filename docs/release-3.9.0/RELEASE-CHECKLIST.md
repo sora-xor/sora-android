@@ -224,6 +224,17 @@ missing, unless all of these are present:
       writes it from `GOOGLE_SERVICES_JSON`); without it Crashlytics is off.
 - [ ] Signing credentials (unchanged).
 
+### Firebase metrics configuration
+
+Analytics 23.0.0 is enabled with analytics storage allowed and advertising storage,
+ad user data, ad personalization and advertising-ID collection denied. Packaged
+manifest defaults apply at SDK initialization; startup reapplies the public consent
+API to replace retained runtime values. The APK/AAB manifest verifier rejects
+missing or conflicting defaults and advertising permissions. Crashlytics, messaging,
+the official Firebase app configuration and the historical Drive client stay unchanged.
+Verify access to the existing Analytics property and actual event ingestion in the
+Firebase/Google Analytics console; a successful build alone does not prove ingestion.
+
 ### Before each release candidate (mainnet changes often)
 
 SORA mainnet upgraded its runtime three times in 19 days. The app now signs

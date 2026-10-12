@@ -118,6 +118,10 @@ def production_manifest():
             {"name": "androidx.core.content.FileProvider", "exported": False},
         ),
     )
+    application["children"].extend(
+        el("meta-data", {"name": name, "value": value})
+        for name, value in policy["requiredApplicationMetadata"].items()
+    )
     return el(
         "manifest",
         {"package": policy["applicationId"], "versionCode": 3090001, "versionName": "3.9.0"},
@@ -324,6 +328,29 @@ class ReleaseManifestTest(unittest.TestCase):
                 self.assertEqual(0, result.returncode, result.stdout + result.stderr)
                 self.assertIn("targetSdk 36", result.stdout)
                 self.assertIn("merged manifest matches", result.stdout)
+
+    def test_packaged_firebase_defaults_keep_metrics_and_deny_advertising(self):
+        policy = json.loads(checker.DEFAULT_POLICY_FILE.read_text())
+        for name, expected in policy["requiredApplicationMetadata"].items():
+            with self.subTest(name=name):
+                manifest = production_manifest()
+                metadata = component(manifest, name)
+                metadata["attributes"]["value"] = not expected
+                self.assert_rejected(manifest, name)
+                application_of(manifest)["children"].remove(metadata)
+                self.assert_rejected(manifest, name)
+
+    def test_duplicate_defaults_and_permanent_analytics_deactivation_are_rejected(self):
+        manifest = production_manifest()
+        application_of(manifest)["children"].append(
+            el("meta-data", {"name": "google_analytics_adid_collection_enabled", "value": True})
+        )
+        self.assert_rejected(manifest, "google_analytics_adid_collection_enabled")
+        manifest = production_manifest()
+        application_of(manifest)["children"].append(
+            el("meta-data", {"name": "firebase_analytics_collection_deactivated", "value": True})
+        )
+        self.assert_rejected(manifest, "must not be permanently deactivated")
 
     def test_backup_must_be_off(self):
         manifest = production_manifest()

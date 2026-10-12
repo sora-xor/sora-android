@@ -45,6 +45,7 @@ ANDROID_ATTRIBUTE_IDS = {
     0x0101000E: "enabled",
     0x0101000F: "debuggable",
     0x01010010: "exported",
+    0x01010024: "value",
     0x01010026: "mimeType",
     0x01010027: "scheme",
     0x01010028: "host",
@@ -407,9 +408,14 @@ def load_policy(path: Path) -> dict:
         ("queries", list),
         ("exportedComponents", dict),
         ("forbiddenComponentNameParts", list),
+        ("requiredApplicationMetadata", dict),
     ):
         if not isinstance(policy.get(key), kind) or isinstance(policy.get(key), bool):
             problems.append(f"{key} must be a {kind.__name__}")
+    if isinstance(policy.get("requiredApplicationMetadata"), dict):
+        for name, value in policy["requiredApplicationMetadata"].items():
+            if not isinstance(name, str) or not isinstance(value, bool):
+                problems.append("requiredApplicationMetadata must map names to booleans")
     if not problems:
         for name, rule in policy["exportedComponents"].items():
             if not isinstance(rule, dict) or not (
@@ -503,6 +509,14 @@ def check_manifest(manifest: Element, policy: dict, version_code=None, version_n
     if len(applications) != 1:
         return issues + [f"expected one <application>, found {len(applications)}"]
     application = applications[0]
+
+    for name, expected in policy.get("requiredApplicationMetadata", {}).items():
+        entries = [node for node in application.child_elements("meta-data") if node.get("name") == name]
+        if len(entries) != 1 or not isinstance(expected, bool) or as_bool(entries[0].get("value")) is not expected:
+            issues.append(f"<application> metadata {name} must occur once with boolean value {shown(expected)}")
+    for node in application.child_elements("meta-data"):
+        if node.get("name") == "firebase_analytics_collection_deactivated" and as_bool(node.get("value")) is not False:
+            issues.append("Firebase Analytics must not be permanently deactivated")
     for attribute in ("allowBackup", "fullBackupContent"):
         # allowBackup defaults to true when it is absent, so absence is a failure too.
         if as_bool(application.get(attribute)) is not False:

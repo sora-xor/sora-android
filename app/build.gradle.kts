@@ -462,6 +462,7 @@ dependencies {
 
     implementation(platform(libs.googleFirebaseBomDep))
     implementation(libs.googleCrashlyticsDep)
+    implementation(libs.firebaseAnalyticsDep)
 
     implementation(libs.webSocketLibDep)
 
