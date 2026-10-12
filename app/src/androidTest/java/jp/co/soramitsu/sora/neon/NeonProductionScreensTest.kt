@@ -43,6 +43,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.mnemonic_confirmat
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Modifier
@@ -100,6 +101,46 @@ class NeonProductionScreensTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val minimal = FxPolicy(FxTier.MINIMAL, true, true, true)
+
+    @Test fun receiveActionsRemainSeparateAndReachableOnCompactLargeTextScreens() {
+        var fontScale by mutableStateOf(1f)
+        var dark by mutableStateOf(true)
+        var shared = 0
+        var scanned = 0
+        val address = "cnT65V7vJnPkR2Y2AxXwV1Bpcbab7vNaHGd3ZxXjrTpPuxvj2"
+        val qr = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
+        val state = jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.ReceiveTokenByQrScreenState(
+            jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus.READY_TO_RENDER,
+            qr, "My Wallet", android.graphics.drawable.BitmapDrawable(context.resources, qr), address,
+        )
+        rule.setContent {
+            SoraAppTheme(darkTheme = dark) {
+                val density = LocalDensity.current
+                CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale), LocalFx provides minimal) {
+                    Box(Modifier.size(width = 320.dp, height = 520.dp)) {
+                        NeonBackground()
+                        jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.ReceiveTokenByQrScreen(
+                            rememberScrollState(), state, {}, { shared++ }, { scanned++ }, {},
+                        )
+                    }
+                }
+            }
+        }
+        val share = context.getString(jp.co.soramitsu.common.R.string.common_share)
+        val scan = context.getString(jp.co.soramitsu.common.R.string.commom_scan_qr)
+        for (theme in listOf(true, false)) for (scale in listOf(1f, 2f)) {
+            rule.runOnIdle { dark = theme; fontScale = scale }
+            rule.onNodeWithText(address).performScrollTo().assertIsDisplayed()
+            rule.onNodeWithText(share).performScrollTo().assertIsDisplayed().performClick()
+            rule.onNodeWithText(scan).performScrollTo().assertIsDisplayed()
+            val shareBounds = rule.onNodeWithText(share).fetchSemanticsNode().boundsInRoot
+            val scanBounds = rule.onNodeWithText(scan).fetchSemanticsNode().boundsInRoot
+            assertTrue("Share and Scan must not overlap", shareBounds.bottom <= scanBounds.top)
+            rule.onNodeWithText(scan).performClick()
+            capture("receive-actions-${if (theme) "dark" else "light"}-$scale")
+        }
+        rule.runOnIdle { assertEquals(4, shared); assertEquals(4, scanned) }
+    }
 
     @Test fun keypadStaysReachableAtLargeTextAndDoesNotExposeDigitsToAccessibility() {
         var dark by mutableStateOf(true)

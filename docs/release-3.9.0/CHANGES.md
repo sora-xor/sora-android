@@ -2,6 +2,19 @@
 
 Each section covers one release task: what changed, why, and what users see.
 
+## Wallet names and compact Receive layouts
+
+Renaming the selected account now refreshes its existing wallet header immediately.
+Display metadata is matched by the current address; the shared account-identity and
+signing flows are unchanged. An initial name edit made within the first 500 ms is
+also saved instead of being discarded with the initial empty debounce value.
+
+Receive places Share and Scan QR code in one scrollable column with bottom inset
+padding. They no longer overlap on shorter phones, and both actions remain reachable
+at larger text sizes. Regressions cover rename, switching accounts with stale or
+missing metadata, quick first edits, and the compact layout at normal/double text
+sizes in both themes. Native screenshots use an unfunded synthetic wallet.
+
 ## Firebase usage metrics without advertising
 
 The Android app previously linked Firebase Core/Crashlytics but did not include the

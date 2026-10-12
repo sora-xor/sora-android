@@ -42,6 +42,7 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
@@ -63,15 +64,24 @@ class CardsHubInteractorImpl @Inject constructor(
     }
 
     fun subscribeVisibleCardsHubList(): Flow<Pair<SoraAccount, List<CardHub>>> {
-        return userRepository.flowCurSoraAccount().flatMapLatest { account ->
-            walletRepository.subscribeVisibleGlobalCardsHubList()
-                .combine(walletRepository.subscribeCardsHubList(account.substrateAddress)) { global, local ->
-                    global + local
-                }
-                .map {
-                    account to it
-                }
-        }
+        // The shared current-account stream emits identity changes only. Resolve display
+        // metadata separately so renaming the selected wallet refreshes its existing header.
+        return userRepository.flowCurSoraAccount()
+            .combine(userRepository.flowSoraAccountsList()) { selected, accounts ->
+                accounts.firstOrNull { it.substrateAddress == selected.substrateAddress }
+                    ?.let { selected.copy(accountName = it.accountName) }
+                    ?: selected
+            }
+            .distinctUntilChanged()
+            .flatMapLatest { account ->
+                walletRepository.subscribeVisibleGlobalCardsHubList()
+                    .combine(walletRepository.subscribeCardsHubList(account.substrateAddress)) { global, local ->
+                        global + local
+                    }
+                    .map {
+                        account to it
+                    }
+            }
     }
 
     suspend fun updateCardVisibilityOnCardHub(cardId: String, visible: Boolean) {
