@@ -2,6 +2,17 @@
 
 Each section covers one release task: what changed, why, and what users see.
 
+## Original launch animation
+
+The original three-second SORA ring animation plays through its historical exit
+point again. A fast wallet verification no longer cuts it off after half a second.
+Verification still runs in parallel; Reduce Effects and disabled system animations
+bypass motion, and a four-second fallback prevents a stalled renderer from holding
+startup. The original motion asset and page background are unchanged; its light-only ring
+gradients now use the active theme colours so dark mode stays dark. The OS launch
+window uses a neutral dark canvas before the saved app appearance is available;
+runtime content then switches to the saved theme.
+
 ## Wallet names and compact Receive layouts
 
 Renaming the selected account now refreshes its existing wallet header immediately.

@@ -55,6 +55,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.airbnb.lottie.LottieProperty
+import com.airbnb.lottie.model.KeyPath
+import com.airbnb.lottie.value.LottieValueCallback
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import javax.inject.Inject
@@ -112,6 +115,7 @@ class SplashActivity : AppCompatActivity() {
     private var isSplashViewModelBound = false
     private var openedForRetry = false
     private var progressWatchdog: Job? = null
+    private var animationFallback: Job? = null
 
     private val animatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
         val progress = it.animatedFraction
@@ -129,9 +133,12 @@ class SplashActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // The OS uses a neutral launch window; runtime content uses the saved app theme.
+        setTheme(R.style.AppTheme)
         super.onCreate(savedInstanceState)
         setContentView(ActivitySplashBinding.inflate(layoutInflater).also { viewBinding = it }.root)
         setUpSafeMode()
+        applySplashTheme()
 
         val retryInProgress = savedInstanceState?.getBoolean(STATE_OPENED_FOR_RETRY) == true &&
             safeModeViewModel.state.value.visible
@@ -160,6 +167,21 @@ class SplashActivity : AppCompatActivity() {
         val startupFailure = WalletUpgradeBackup.startupFailureToShow(applicationContext)
         if (startupFailure == null) {
             viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
+            if (shouldReduceSplashMotion()) {
+                finishSplashWithoutMotion()
+            } else {
+                viewBinding.animationView.playAnimation()
+            }
+            // Motion is presentation only: a renderer failure must never block wallet checks.
+            animationFallback = lifecycleScope.launch {
+                delay(ANIMATION_FALLBACK_MILLIS)
+                if (!isSafeModeVisible()) goNext()
+            }
+            lifecycleScope.launch {
+                darkThemeManager.reduceEffectsFlow.collect { reduced ->
+                    if (reduced && !isSafeModeVisible()) finishSplashWithoutMotion()
+                }
+            }
         } else {
             showRecovery(startupFailure.code)
         }
@@ -178,10 +200,14 @@ class SplashActivity : AppCompatActivity() {
         isSplashViewModelBound = true
         splashViewModel.runtimeInitiated.observe(this) {
             if (it && !isSafeModeVisible()) {
-                // Navigation still awaits the wallet migration result in SplashViewModel. Start
-                // that wait after the short launch floor instead of making a completed migration
-                // sit behind 89% of the three-second Lottie animation.
-                goNext()
+                // Wallet verification starts independently in start(). Let the historical
+                // introduction finish even when that work is ready before the animation.
+                if (shouldReduceSplashMotion()) {
+                    finishSplashWithoutMotion()
+                } else if (isFirstPartFinished && !isSecondPartStarted) {
+                    isSecondPartStarted = true
+                    viewBinding.animationView.resumeAnimation()
+                }
             }
         }
         splashViewModel.loadingTextVisiblity.observe(this) {
@@ -317,9 +343,38 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
+    private fun applySplashTheme() {
+        // Preserve the original ring motion while adapting its light-only gradients.
+        viewBinding.animationView.addValueCallback(
+            KeyPath("**", "Gradient Fill 1"),
+            LottieProperty.GRADIENT_COLOR,
+            LottieValueCallback(arrayOf(
+                ContextCompat.getColor(this, jp.co.soramitsu.common.R.color.neon_canvas),
+                ContextCompat.getColor(this, jp.co.soramitsu.common.R.color.neon_surface),
+                ContextCompat.getColor(this, jp.co.soramitsu.common.R.color.neon_surface_variant),
+            )),
+        )
+        viewBinding.animationView.addValueCallback(
+            KeyPath("**", "Fill 1"),
+            LottieProperty.COLOR,
+            LottieValueCallback(ContextCompat.getColor(this, jp.co.soramitsu.common.R.color.neon_brand_red)),
+        )
+    }
+
+    private fun shouldReduceSplashMotion(): Boolean =
+        darkThemeManager.reduceEffectsFlow.value || !ValueAnimator.areAnimatorsEnabled()
+
+    private fun finishSplashWithoutMotion() {
+        viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
+        viewBinding.animationView.cancelAnimation()
+        viewBinding.animationView.progress = 0.89f
+        if (splashViewModel.runtimeInitiated.value == true) goNext()
+    }
+
     private fun goNext() {
         if (isNavigationRequested) return
         isNavigationRequested = true
+        animationFallback?.cancel()
         viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
         splashViewModel.nextScreen()
         // U0: a verification that finishes within 1.5 s stays silent; after that the progress
@@ -353,6 +408,7 @@ class SplashActivity : AppCompatActivity() {
     private fun isSafeModeVisible(): Boolean = safeModeViewModel.state.value.visible
 
     private fun hideStartAnimation() {
+        animationFallback?.cancel()
         viewBinding.animationView.cancelAnimation()
         viewBinding.animationView.visibility = View.GONE
         viewBinding.loadingDisclaimerTextView.visibility = View.GONE
@@ -495,6 +551,7 @@ class SplashActivity : AppCompatActivity() {
 
     private companion object {
         const val FINISH_TICK_MILLIS = 300L
+        const val ANIMATION_FALLBACK_MILLIS = 4_000L
         const val STATE_OPENED_FOR_RETRY = "safeModeOpenedForRetry"
         const val STATE_SPLASH_BOUND = "safeModeSplashBound"
     }
