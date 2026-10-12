@@ -603,8 +603,8 @@ Engineering decision to confirm:
       rounded corners and cyan actions in both themes.
 - [ ] QR scanner: title clear of the status bar, brackets visible, scanning
       works with the darker 55% scrim.
-- [ ] Regenerate the baseline profile after the screen migration task
-      (`baselineprofile/`).
+- [x] Regenerate the baseline profile after screen integration; emulator collection
+      and exact generated profile hashes are recorded in NEON-INTEGRATION.md.
 
 ### Translations
 
@@ -716,8 +716,7 @@ Engineering decision to confirm:
 - [x] Fix `WalletUxAcceptanceTest` (stale reflection on
       `OnboardingViewModel.tempAccount`, removed in a4). The actual create/PIN/wallet/Swap
       journey passes in the clean device suite recorded in NEON-INTEGRATION.md.
-- [ ] Regenerate the baseline profile once the screen migration lands (the
-      splash now has a Compose view; `animation_view` is unchanged).
+- [x] Regenerate the baseline profile after screen integration (see NEON-INTEGRATION.md).
 
 ### a6 review fixes (round 1)
 
