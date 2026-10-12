@@ -775,11 +775,14 @@
   <string name="send_fee_locked_hint">ネットワーク手数料に使える、ロックされていないXORが不足しています</string>
   <string name="asset_frozen_amount_suffix">・凍結中 %1$s</string>
     <string name="wallet_preserved_data">この端末に保管されたウォレットデータ</string>
-    <string name="wallet_preserved_data_body">以前のウォレットデータを選んでください。現在のウォレットもこの端末に保管されます。アプリが再起動し、選んだデータを確認してから開きます。そのデータで使用していたPINが必要です。</string>
+    <string name="wallet_preserved_data_body">以前のウォレットデータを選んでください。現在のウォレットもこの端末に保管されます。アプリが再起動し、選んだデータを確認してから開きます。ウォレット全体のデータには当時のPINが適用されます。アカウントデータベースのみの場合は、現在のPINが引き続き適用されます。</string>
     <string name="wallet_preserved_data_confirm">現在のウォレットデータを保管して、このデータを使いますか？同じ画面から現在のデータに戻せます。</string>
     <string name="wallet_preserved_data_use">このウォレットデータを使う</string>
     <string name="wallet_preserved_data_failed">ウォレットデータを現在確認できません。すべてのデータは保管されています。アプリを再起動してから、もう一度お試しください。</string>
     <string name="wallet_preserved_data_screen_lock">ウォレットデータを切り替える前に、この端末の画面ロックを設定してください。</string>
+    <string name="wallet_preserved_data_partial">一部の保管データを確認できませんでした。すべてのファイルはこの端末に残っています。確認できたデータを以下から選べます。</string>
+    <string name="wallet_preserved_database_label">アカウントのデータベースのみ</string>
+    <string name="wallet_preserved_database_confirm">以前のアカウントデータベースを使いますか？現在のデータベースは保管されます。鍵、バックアップ、現在のSORA PINは変更されません。アプリが再起動し、各アカウントを確認してから開きます。</string>
     <string name="wallet_restore_backup_confirm">この端末にあるすべてのウォレットのリカバリーフレーズ、または復元できるバックアップを持っています。</string>
     <string name="wallet_restore_cancel_pending">再起動と復元をキャンセル</string>
 </resources>

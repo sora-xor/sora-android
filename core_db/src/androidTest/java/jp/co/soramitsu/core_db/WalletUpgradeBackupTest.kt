@@ -2701,6 +2701,96 @@ class WalletUpgradeBackupTest {
     }
 
     @Test
+    fun databaseOnlyGenerationCanReturnAfterNewDataAndResumeWithoutMovingAnyKey() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Original database")))
+        context.getSharedPreferences(KEYSTORE_PREFERENCES_NAME, Context.MODE_PRIVATE)
+            .edit().putString(WRAPPED_AES_KEY, "retained-wrapped-key").commit()
+        putDataStoreStringMarker("prefs_mnemonic$WALLET_ID")
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val original = database.readBytes()
+        val dataDir = File(context.applicationInfo.dataDir)
+        val keyFiles = listOf("files/datastore/sora_prefs_datastore.preferences_pb", "shared_prefs/key_alias.xml", "shared_prefs/sora_prefs.xml")
+            .associateWith { File(dataDir, it).readBytes() }
+        WalletUpgradeBackup.noteDatabaseCorruption(null)
+        WalletUpgradeBackup.requestSetUpAgain(context).getOrThrow()
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        WalletUpgradeBackup.prepare(context).getOrThrow()
+        val first = WalletUpgradeBackup.preservedGenerations(context).single()
+        assertEquals(SetUpAgainScope.DATABASE_ONLY, first.scope)
+        assertArrayEquals(original, File(context.noBackupFilesDir, "${first.id}/databases/app.db").readBytes())
+
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "New database")))
+        val newer = database.readBytes()
+        WalletUpgradeBackup.requestUsePreservedGeneration(context, first.id).getOrThrow()
+        assertEquals(SetUpAgainScope.DATABASE_ONLY, WalletUpgradeBackup.pendingSetUpAgainScope(context))
+        var moves = 0
+        WalletUpgradeBackup.afterSetAsideRenameForTest = { if (++moves == 2) error("power loss after database restore") }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        } finally { WalletUpgradeBackup.afterSetAsideRenameForTest = null }
+        keyFiles.forEach { (path, bytes) -> assertArrayEquals(path, bytes, File(dataDir, path).readBytes()) }
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        WalletUpgradeBackup.prepare(context).getOrThrow()
+        assertArrayEquals(original, database.readBytes())
+        val second = WalletUpgradeBackup.preservedGenerations(context).single()
+        assertEquals(SetUpAgainScope.DATABASE_ONLY, second.scope)
+        assertArrayEquals(newer, File(context.noBackupFilesDir, "${second.id}/databases/app.db").readBytes())
+
+        WalletUpgradeBackup.requestUsePreservedGeneration(context, second.id).getOrThrow()
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        WalletUpgradeBackup.prepare(context).getOrThrow()
+        assertArrayEquals(newer, database.readBytes())
+        keyFiles.forEach { (path, bytes) -> assertArrayEquals(path, bytes, File(dataDir, path).readBytes()) }
+    }
+
+    @Test
+    fun invalidPreservedSiblingsNeverHideIntactGenerationOrChangeTheirBytes() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Intact")))
+        WalletUpgradeBackup.noteDatabaseCorruption(null)
+        WalletUpgradeBackup.requestSetUpAgain(context).getOrThrow()
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        WalletUpgradeBackup.prepare(context).getOrThrow()
+        val intact = WalletUpgradeBackup.preservedGenerations(context).single()
+        val originalRoot = File(context.noBackupFilesDir, intact.id)
+        val badManifest = File(context.noBackupFilesDir, "wallet-quarantine-${java.util.UUID.randomUUID()}-set-up-again")
+        val missingFile = File(context.noBackupFilesDir, "wallet-quarantine-${java.util.UUID.randomUUID()}-set-up-again")
+        val changedFile = File(context.noBackupFilesDir, "wallet-quarantine-${java.util.UUID.randomUUID()}-set-up-again")
+        listOf(badManifest, missingFile, changedFile).forEach { assertTrue(originalRoot.copyRecursively(it)) }
+        File(badManifest, "generation.json").writeText("{incomplete")
+        assertTrue(File(missingFile, "databases/app.db").delete())
+        File(changedFile, "databases/app.db").appendBytes(byteArrayOf(0x7f))
+        val before = listOf(originalRoot, badManifest, missingFile, changedFile).flatMap { it.walkTopDown().filter(File::isFile).toList() }
+            .associateWith { it.readBytes() }
+        val inventory = WalletUpgradeBackup.preservedGenerationInventory(context)
+        assertTrue(inventory.hasUnavailable)
+        assertEquals(listOf(intact), inventory.available)
+        listOf(badManifest, missingFile, changedFile).forEach {
+            assertTrue(WalletUpgradeBackup.requestUsePreservedGeneration(context, it.name).isFailure)
+        }
+        assertFalse(WalletUpgradeBackup.isSetUpAgainRequested(context))
+        WalletUpgradeBackup.requestUsePreservedGeneration(context, intact.id).getOrThrow()
+        before.forEach { (file, bytes) -> assertArrayEquals(file.name, bytes, file.readBytes()) }
+    }
+
+    @Test
+    fun databaseOnlyManifestCannotMovePreferenceOrWrappedKeyFiles() {
+        val directory = File(context.noBackupFilesDir, "wallet-quarantine-${java.util.UUID.randomUUID()}-set-up-again")
+        val file = File(directory, "shared_prefs/key_alias.xml").apply { parentFile!!.mkdirs(); writeText("retained key metadata") }
+        val original = file.readBytes()
+        val hash = java.security.MessageDigest.getInstance("SHA-256").digest(original).joinToString("") { "%02x".format(it) }
+        File(directory, "generation.json").writeText(JSONObject().put("scope", SetUpAgainScope.DATABASE_ONLY.name)
+            .put("state", "PRESERVED").put("created", 1L).put("files", org.json.JSONArray().put(JSONObject()
+                .put("name", "shared_prefs/key_alias.xml").put("size", original.size).put("sha256", hash))).toString())
+        val inventory = WalletUpgradeBackup.preservedGenerationInventory(context)
+        assertTrue(inventory.available.isEmpty())
+        assertTrue(inventory.hasUnavailable)
+        assertTrue(WalletUpgradeBackup.requestUsePreservedGeneration(context, directory.name).isFailure)
+        assertFalse(WalletUpgradeBackup.isSetUpAgainRequested(context))
+        assertArrayEquals(original, file.readBytes())
+    }
+
+    @Test
     fun pendingSetAsideCanBeCancelledBeforeAnythingMoves() {
         createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Retained")))
         val database = context.getDatabasePath(DATABASE_NAME)

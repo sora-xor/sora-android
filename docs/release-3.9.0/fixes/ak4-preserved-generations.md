@@ -37,7 +37,28 @@ working backup for every wallet. Numeric legacy split folders are reconciled by
 copying compatible fragments into a new verified generation; original fragments
 are kept. Conflicting legacy folders remain separate choices.
 
+The independent final review found two return-path gaps: database-only generations
+were excluded from the picker, and one damaged sibling could hide every intact
+generation. Both are corrected. A database-only return preserves the current
+database before replacing it, leaves every live key/preference/wrapped-key file
+unchanged, and uses the current PIN. Full-wallet returns still use their original
+PIN. Both routes remain device-authenticated, require a cold start, verify every
+manifest byte, and leave account/signing verification to the normal startup gates.
+The picker isolates unreadable or invalid generations, keeps their bytes, warns
+without exposing paths, and continues to show independent verified choices.
+
 ## Validation
+
+- The final independent-review rerun passes all 123 `WalletUpgradeBackupTest`
+  instrumentation tests on its own API 34 ATD emulator, with no skips. The three
+  added regressions cover returning a database-only generation after new data
+  exists (including interruption during reverse activation), refusing preference
+  paths in a database-only manifest, and retaining intact choices alongside
+  malformed manifests/missing files/changed bytes. Key files and all unselected
+  generations are compared byte-for-byte. Log and JUnit XML:
+  `audit-2026-10-12/android/pin-review-generations-tests-2.{log,xml}` in the parent
+  workspace. The first run's fixture-only copy-counter interference was fixed in
+  the new fixtures; no production check was weakened.
 
 - 14 real-device-API instrumentation tests on the dedicated API 34 emulator pass
   for wrapped-key handling, including a fake provider that returns null for the
