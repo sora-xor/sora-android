@@ -547,20 +547,30 @@ object WalletUpgradeBackup {
         fsyncDirectory(context.noBackupFilesDir)
     }
 
-    data class PreservedGeneration(val id: String, val createdAtMillis: Long)
+    data class PreservedGeneration(val id: String, val createdAtMillis: Long, val scope: SetUpAgainScope)
 
-    /** Every complete full-wallet generation remains available even when live wallets exist. */
-    fun preservedGenerations(context: Context): List<PreservedGeneration> {
+    data class PreservedGenerationInventory(val available: List<PreservedGeneration>, val hasUnavailable: Boolean)
+
+    /** A damaged sibling must never hide a different, byte-verified generation. */
+    fun preservedGenerations(context: Context): List<PreservedGeneration> = preservedGenerationInventory(context).available
+
+    fun preservedGenerationInventory(context: Context): PreservedGenerationInventory {
         val children = context.noBackupFilesDir.listFiles() ?: throw WalletUpgradeBackupException("GENERATION_INVENTORY_UNAVAILABLE")
-        return children.filter { it.name.startsWith(STORAGE_QUARANTINE_PREFIX) && it.name.contains(SET_UP_AGAIN_SUFFIX) }
+        var hasUnavailable = false
+        val available = children.filter { it.name.startsWith(STORAGE_QUARANTINE_PREFIX) && it.name.contains(SET_UP_AGAIN_SUFFIX) }
             .mapNotNull { directory ->
-                val manifest = File(directory, "generation.json")
-                if (!manifest.existsNoFollow()) return@mapNotNull null
-                val value = JSONObject(manifest.readBoundedUtf8NoFollow(1, MAX_MANIFEST_BYTES, "GENERATION_INVALID"))
-                if (value.optString("scope") != SetUpAgainScope.ALL_WALLET_FILES.name || value.optString("state") != "PRESERVED") return@mapNotNull null
-                verifyGeneration(directory, value.getJSONArray("files"))
-                PreservedGeneration(directory.name, value.getLong("created"))
+                runCatching {
+                    requireGenerationId(directory.name)
+                    val manifest = File(directory, "generation.json")
+                    if (!manifest.existsNoFollowOrThrow("GENERATION_INVALID")) return@runCatching null
+                    val value = JSONObject(manifest.readBoundedUtf8NoFollow(1, MAX_MANIFEST_BYTES, "GENERATION_INVALID"))
+                    if (value.optString("state") != "PRESERVED") return@runCatching null
+                    val scope = generationScope(value)
+                    verifyGeneration(directory, value.getJSONArray("files"))
+                    PreservedGeneration(directory.name, value.getLong("created"), scope)
+                }.getOrElse { hasUnavailable = true; null }
             }.sortedByDescending { it.createdAtMillis }
+        return PreservedGenerationInventory(available, hasUnavailable)
     }
 
     /** Index older set-asides without changing a byte in them. Older builds could split one
@@ -634,9 +644,10 @@ object WalletUpgradeBackup {
     @Synchronized
     fun requestUsePreservedGeneration(context: Context, id: String): Result<Unit> = runCatching {
         if (isSetUpAgainRequested(context)) throw WalletUpgradeBackupException("SET_UP_AGAIN_INCOMPLETE")
-        if (preservedGenerations(context).none { it.id == id }) throw WalletUpgradeBackupException("GENERATION_INVALID")
+        val selected = preservedGenerations(context).singleOrNull { it.id == id }
+            ?: throw WalletUpgradeBackupException("GENERATION_INVALID")
         val request = JSONObject().put("format", 2).put("id", UUID.randomUUID().toString())
-            .put("scope", SetUpAgainScope.ALL_WALLET_FILES.name).put("cause", "SWITCH_GENERATION")
+            .put("scope", selected.scope.name).put("cause", "SWITCH_GENERATION")
             .put("created", System.currentTimeMillis()).put("phase", "REQUESTED").put("target", id)
         writeOperation(context, request)
     }
@@ -3972,6 +3983,9 @@ object WalletUpgradeBackup {
                 }
                 operation.optString("target").takeIf { it.isNotEmpty() }?.let { target ->
                     val generation = generationManifest(context, target)
+                    if (generation.optString("state") != "PRESERVED" || generationScope(generation) != scope) {
+                        throw WalletUpgradeBackupException("GENERATION_INVALID")
+                    }
                     verifyGeneration(File(noBackup, target), generation.getJSONArray("files"))
                     operation.put("restoreFiles", generation.getJSONArray("files"))
                 }
@@ -4037,6 +4051,15 @@ object WalletUpgradeBackup {
         File(File(context.noBackupFilesDir, requireGenerationId(id)), "generation.json")
             .readBoundedUtf8NoFollow(1, MAX_MANIFEST_BYTES, "GENERATION_INVALID"),
     )
+
+    private fun generationScope(manifest: JSONObject): SetUpAgainScope {
+        val scope = SetUpAgainScope.valueOf(manifest.getString("scope"))
+        if (scope == SetUpAgainScope.NONE) throw WalletUpgradeBackupException("GENERATION_INVALID")
+        if (scope == SetUpAgainScope.DATABASE_ONLY && generationRecords(manifest.getJSONArray("files")).any { !it.first.startsWith("databases/") }) {
+            throw WalletUpgradeBackupException("GENERATION_INVALID")
+        }
+        return scope
+    }
 
     private fun writeGeneration(directory: File, manifest: JSONObject) {
         val staging = File(directory, ".generation.json.tmp")

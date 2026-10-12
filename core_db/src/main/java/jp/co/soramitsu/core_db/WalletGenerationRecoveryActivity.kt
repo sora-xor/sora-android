@@ -37,20 +37,23 @@ class WalletGenerationRecoveryActivity : Activity() {
         setContentView(ScrollView(this).apply { addView(layout) })
         layout.addView(TextView(this).apply { setText(R.string.wallet_preserved_data_body) })
         work.launch {
-            val generations = withContext(Dispatchers.IO) { runCatching {
-                    WalletUpgradeBackup.reconcileLegacyPreservedGenerations(this@WalletGenerationRecoveryActivity).getOrThrow()
-                    WalletUpgradeBackup.preservedGenerations(this@WalletGenerationRecoveryActivity)
-                } }.getOrElse {
-                layout.addView(TextView(this@WalletGenerationRecoveryActivity).apply { setText(R.string.wallet_preserved_data_failed) })
-                emptyList()
+            val inventory = withContext(Dispatchers.IO) {
+                val reconciled = WalletUpgradeBackup.reconcileLegacyPreservedGenerations(this@WalletGenerationRecoveryActivity).isSuccess
+                val inventory = runCatching { WalletUpgradeBackup.preservedGenerationInventory(this@WalletGenerationRecoveryActivity) }
+                    .getOrDefault(WalletUpgradeBackup.PreservedGenerationInventory(emptyList(), true))
+                inventory.copy(hasUnavailable = inventory.hasUnavailable || !reconciled)
             }
-            generations.forEach { generation ->
+            if (inventory.hasUnavailable) {
+                layout.addView(TextView(this@WalletGenerationRecoveryActivity).apply { setText(R.string.wallet_preserved_data_partial) })
+            }
+            inventory.available.forEach { generation ->
                 layout.addView(Button(this@WalletGenerationRecoveryActivity).apply {
-                    text = DateFormat.getDateTimeInstance().format(Date(generation.createdAtMillis))
+                    text = DateFormat.getDateTimeInstance().format(Date(generation.createdAtMillis)) +
+                        if (generation.scope == SetUpAgainScope.DATABASE_ONLY) " · " + getString(R.string.wallet_preserved_database_label) else ""
                     setOnClickListener {
                         AlertDialog.Builder(this@WalletGenerationRecoveryActivity)
                             .setTitle(R.string.wallet_preserved_data)
-                            .setMessage(R.string.wallet_preserved_data_confirm)
+                            .setMessage(if (generation.scope == SetUpAgainScope.DATABASE_ONLY) R.string.wallet_preserved_database_confirm else R.string.wallet_preserved_data_confirm)
                             .setNegativeButton(android.R.string.cancel, null)
                             .setPositiveButton(R.string.wallet_preserved_data_use) { _, _ -> authenticate(generation.id) }
                             .show()
