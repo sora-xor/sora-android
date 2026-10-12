@@ -195,6 +195,18 @@ class HelperTest(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn(f"must have exactly one client for {PACKAGE}, found 0", result.stderr)
 
+    def test_firebase_web_client_does_not_authorize_a_different_drive_client(self):
+        services = write_google_services(self.directory / "google-services.json")
+        data = json.loads(services.read_text())
+        data["client"][1]["oauth_client"] = [{"client_type": 3, "client_id": OTHER_CLIENT}]
+        services.write_text(json.dumps(data))
+        pins = write_pins(self.directory / "pins.json", drive=sha256(CLIENT), firebase=sha256(APP_ID))
+        self.assertEqual(0, helper("check", "--pin-file", pins, "--google-services", services, client=CLIENT).returncode)
+        result = helper("check", "--pin-file", pins, "--google-services", services, client=OTHER_CLIENT)
+        self.assertEqual(1, result.returncode)
+        self.assertIn("is not the pinned client", result.stderr)
+        self.assertNotIn("is for another Firebase app", result.stderr)
+
     def test_check_rejects_a_malformed_pin_file(self):
         pins = write_pins(self.directory / "pins.json", drive=sha256(CLIENT).upper())
         result = helper("check", "--pin-file", pins, client=CLIENT)
@@ -323,6 +335,16 @@ class GradleScriptTest(unittest.TestCase):
         )
         self.assert_refused(self.gradle(None), "SORA_GOOGLE_TOKEN_PROD is missing (Google Drive backup)")
         self.assert_refused(self.gradle(CLIENT + " "), "must be the bare Google Drive backup client ID")
+
+    def test_firebase_web_client_cannot_substitute_for_historical_drive_client(self):
+        write_pins(self.pins, drive=sha256(CLIENT), firebase=sha256(APP_ID))
+        services = write_google_services(self.fixture / "google-services.json")
+        data = json.loads(services.read_text())
+        data["client"][1]["oauth_client"] = [{"client_type": 3, "client_id": OTHER_CLIENT}]
+        services.write_text(json.dumps(data))
+        result = self.gradle(CLIENT)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assert_refused(self.gradle(OTHER_CLIENT), "is not the pinned client")
 
     def test_local_properties_wins_over_the_environment_like_the_build(self):
         write_pins(self.pins, drive=sha256(CLIENT))
