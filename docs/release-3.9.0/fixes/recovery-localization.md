@@ -36,3 +36,8 @@ Validation on 12 October 2026:
 
 These are implementation translations. Native-language review has not been
 performed; resource validation does not establish linguistic or layout quality.
+
+Final preserved-generation review also adds localized invalid-sibling warnings,
+database-only labels/confirmation, and an updated full/database PIN explanation
+in all eight production translations (`ac1a5f9f`). Both debug variants rebuilt
+successfully afterwards, and each full JVM suite passed 1,766 tests with 17 skips.
