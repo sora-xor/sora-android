@@ -1409,7 +1409,8 @@ class UserRepositoryImpl(
             )
         } catch (error: CancellationException) {
             throw error
-        } catch (_: Throwable) {
+        } catch (error: Throwable) {
+            if (WalletStorageFailures.isTransient(error) || WalletStorageFailures.isKeyMaterialUnavailable(error)) throw error
             throw WalletDeletionInvariantException(
                 "WALLET_DELETION_PENDING_JOURNAL_INVALID"
             )
@@ -1437,7 +1438,8 @@ class UserRepositoryImpl(
             )
         } catch (error: CancellationException) {
             throw error
-        } catch (_: Throwable) {
+        } catch (error: Throwable) {
+            if (WalletStorageFailures.isTransient(error) || WalletStorageFailures.isKeyMaterialUnavailable(error)) throw error
             throw WalletDeletionInvariantException(
                 "WALLET_DELETION_PREFERENCES_UNAVAILABLE"
             )
@@ -1464,7 +1466,8 @@ class UserRepositoryImpl(
         }
     } catch (error: CancellationException) {
         throw error
-    } catch (_: Throwable) {
+    } catch (error: Throwable) {
+            if (WalletStorageFailures.isTransient(error) || WalletStorageFailures.isKeyMaterialUnavailable(error)) throw error
         throw WalletDeletionInvariantException("WALLET_DELETION_LEGACY_OWNER_UNVERIFIED")
     }
 
@@ -1492,7 +1495,8 @@ class UserRepositoryImpl(
             }
         } catch (error: CancellationException) {
             throw error
-        } catch (_: Throwable) {
+        } catch (error: Throwable) {
+            if (WalletStorageFailures.isTransient(error) || WalletStorageFailures.isKeyMaterialUnavailable(error)) throw error
             throw WalletDeletionInvariantException("WALLET_DELETION_SECRET_VERIFICATION_FAILED")
         }
     }
@@ -1570,7 +1574,12 @@ class UserRepositoryImpl(
             throw error
         } catch (error: WalletDeletionInvariantException) {
             throw error
-        } catch (_: Throwable) {
+        } catch (error: Throwable) {
+            // A busy Keystore, disk-full or preference I/O failure is not a deletion invariant.
+            // Preserve the phase and retry it; recording it would permanently latch the journal.
+            if (WalletStorageFailures.isTransient(error) || WalletStorageFailures.isKeyMaterialUnavailable(error)) {
+                throw error
+            }
             throw WalletDeletionInvariantException(
                 "WALLET_DELETION_SECRET_VERIFICATION_FAILED"
             )
@@ -1591,7 +1600,12 @@ class UserRepositoryImpl(
         )
     } catch (error: CancellationException) {
         throw error
-    } catch (_: Throwable) {
+    } catch (error: Throwable) {
+            // A busy Keystore, disk-full or preference I/O failure is not a deletion invariant.
+            // Preserve the phase and retry it; recording it would permanently latch the journal.
+            if (WalletStorageFailures.isTransient(error) || WalletStorageFailures.isKeyMaterialUnavailable(error)) {
+                throw error
+            }
         throw WalletDeletionInvariantException(
             "WALLET_DELETION_PREFERENCES_UNAVAILABLE"
         )
@@ -1616,7 +1630,12 @@ class UserRepositoryImpl(
             )
         } catch (error: CancellationException) {
             throw error
-        } catch (_: Throwable) {
+        } catch (error: Throwable) {
+            // A busy Keystore, disk-full or preference I/O failure is not a deletion invariant.
+            // Preserve the phase and retry it; recording it would permanently latch the journal.
+            if (WalletStorageFailures.isTransient(error) || WalletStorageFailures.isKeyMaterialUnavailable(error)) {
+                throw error
+            }
             throw WalletDeletionInvariantException(
                 "WALLET_DELETION_PREFERENCES_UNAVAILABLE"
             )

@@ -104,11 +104,11 @@ class SplashViewModelTest {
     fun `the verification starts only when asked, and only once`() = runTest {
         // A screen opened for "Try upgrade again" or read-only never starts one of its own.
         advanceUntilIdle()
-        verify(interactor, never()).checkMigration()
+        verify(interactor, never()).startMigration()
         splashViewModel.start()
         splashViewModel.start()
         advanceUntilIdle()
-        verify(interactor, times(1)).checkMigration()
+        verify(interactor, times(1)).startMigration()
     }
 
     @Test
@@ -416,7 +416,7 @@ class SplashViewModelTest {
             assertEquals(code, SetUpAgainScope.DATABASE_ONLY, options(code).setUpAgainScope)
         }
         // Keys that cannot be used here, or preference files that cannot be read.
-        listOf("KEYSTORE_KEY_UNAVAILABLE", "PREFERENCES_INVENTORY_INVALID").forEach { code ->
+        listOf("KEYSTORE_KEY_UNAVAILABLE").forEach { code ->
             assertEquals(code, SetUpAgainScope.ALL_WALLET_FILES, options(code).setUpAgainScope)
         }
     }
@@ -444,6 +444,14 @@ class SplashViewModelTest {
         // A readable database with a usable key: read-only works.
         assertEquals(true, options("STORAGE_IO").canReadOnly)
         assertEquals(true, options("WALLET_MIGRATION_RECOVERY_REQUIRED").canReadOnly)
+    }
+
+    @Test
+    fun `preference read failure needs a second cold start before offering preserved restore`() {
+        assertEquals(SetUpAgainScope.NONE, options("PREFERENCES_INVENTORY_INVALID").setUpAgainScope)
+        assertEquals(SetUpAgainScope.ALL_WALLET_FILES, WalletRecoveryOptions.forState(
+            "PREFERENCES_INVENTORY_INVALID", false, RecoveryFacts(), consecutiveFailedStarts = 2,
+        ).setUpAgainScope)
     }
 
     private fun options(code: String) = WalletRecoveryOptions.forState(

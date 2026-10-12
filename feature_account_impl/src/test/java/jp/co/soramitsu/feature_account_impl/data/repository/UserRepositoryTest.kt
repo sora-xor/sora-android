@@ -94,6 +94,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -743,7 +744,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `deletion preview is non destructive and names exact target`() = runTest {
+    fun `deletion preview stays non destructive across transient credential failure and retry`() = runTest {
         val address = "accountAddress"
         coEvery { accountDao.getAccounts() } returns listOf(
             SoraAccountLocal(address, "Primary")
@@ -764,6 +765,14 @@ class UserRepositoryTest {
         coEvery { credentialsDatasource.getAddress() } returns ""
         coEvery { credentialsDatasource.isExplicitWatchOnly(address) } returns true
         every { runtimeManager.soraPublicKeyOrNull(address) } returns byteArrayOf(1)
+
+        val temporary = KeyMaterialUnavailableException("temporary read", transient = true)
+        coEvery { credentialsDatasource.isExplicitWatchOnly(address) } throws temporary
+        assertSame(temporary, runCatching {
+            userRepository.createWalletDeletionPreview(listOf(address))
+        }.exceptionOrNull())
+        coVerify(exactly = 0) { walletIdentityDao.beginDeletionOperation(any(), any()) }
+        coEvery { credentialsDatasource.isExplicitWatchOnly(address) } returns true
 
         val preview = userRepository.createWalletDeletionPreview(listOf(address))
 

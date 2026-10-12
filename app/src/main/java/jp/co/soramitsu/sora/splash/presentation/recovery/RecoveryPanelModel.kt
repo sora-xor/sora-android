@@ -38,6 +38,7 @@ import jp.co.soramitsu.core_db.WalletRecoveryOptions
 
 /** Every action the recovery screen can offer (design spec 9.2 U4, U6). */
 enum class RecoveryAction {
+    CANCEL_RESTORE,
     TRY_AGAIN,
     RESTORE_PHRASE,
     RESTORE_DRIVE,
@@ -124,6 +125,7 @@ object RecoveryPanels {
             }
         }
         val secondary = buildList {
+            if (kind == RecoveryPanelKind.RESTORE_PENDING) add(RecoveryAction.CANCEL_RESTORE)
             if (kind != RecoveryPanelKind.STORAGE && kind != RecoveryPanelKind.RESTORE_PENDING) {
                 if (options.canRestoreFromPhrase) add(RecoveryAction.RESTORE_PHRASE)
                 if (options.canRestoreFromDrive && driveAvailable) add(RecoveryAction.RESTORE_DRIVE)

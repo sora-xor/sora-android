@@ -53,8 +53,8 @@ class EncryptionUtilKeySafetyTest {
         val failure = runCatching { util.encrypt("must-not-be-encrypted") }.exceptionOrNull()
 
         assertTrue(failure is KeyMaterialUnavailableException)
-        assertFalse((failure as KeyMaterialUnavailableException).transient)
-        assertFalse(WalletStorageFailures.isTransient(failure))
+        assertTrue((failure as KeyMaterialUnavailableException).transient)
+        assertTrue(WalletStorageFailures.isTransient(failure))
         assertTrue(database.isFile)
         assertArrayEquals(recoveryBytes, database.readBytes())
         assertFalse(androidKeyStore().containsAlias(KEY_ALIAS))
@@ -73,7 +73,7 @@ class EncryptionUtilKeySafetyTest {
             .exceptionOrNull()
 
         assertTrue(failure is KeyMaterialUnavailableException)
-        assertFalse((failure as KeyMaterialUnavailableException).transient)
+        assertTrue((failure as KeyMaterialUnavailableException).transient)
         assertFalse(androidKeyStore().containsAlias(KEY_ALIAS))
         assertEquals(
             "retained-wrapped-wallet-key",
@@ -227,10 +227,112 @@ class EncryptionUtilKeySafetyTest {
             .exceptionOrNull()
 
         assertTrue(failure is KeyMaterialUnavailableException)
-        assertFalse((failure as KeyMaterialUnavailableException).transient)
+        assertTrue((failure as KeyMaterialUnavailableException).transient)
         assertFalse(androidKeyStore().containsAlias(KEY_ALIAS))
         assertEquals(wrapped, wrappedKeyPreferences().getString(SECRET_KEY, null))
         assertTrue(encrypted.isNotEmpty())
+    }
+
+    @Test
+    fun preservedGenerationsUseDifferentAliasesAndBothCiphertextsRemainReadable() {
+        val old = EncryptionUtil(context).encrypt("original wallet")
+        val prefs = File(context.applicationInfo.dataDir, "shared_prefs/key_alias.xml")
+        val oldBytes = prefs.readBytes()
+        val preserved = File(context.noBackupFilesDir, "wallet-quarantine-test/shared_prefs/key_alias.xml")
+        preserved.parentFile!!.mkdirs()
+        preserved.writeBytes(oldBytes)
+        assertTrue(wrappedKeyPreferences().edit().clear().commit())
+
+        val fresh = EncryptionUtil(context).encrypt("new wallet")
+        val freshAlias = wrappedKeyPreferences().getString("wrapping_alias", null)
+        assertTrue(freshAlias?.startsWith("sora_wallet_") == true)
+        assertTrue(androidKeyStore().containsAlias(KEY_ALIAS))
+        assertEquals("new wallet", EncryptionUtil(context).decrypt(fresh))
+        val newBytes = prefs.readBytes()
+
+        // A new process reads the original generation's on-disk metadata, even if the
+        // SharedPreferences object cached a different generation in this test process.
+        prefs.writeBytes(oldBytes)
+        assertEquals("original wallet", EncryptionUtil(context).decrypt(old))
+        prefs.writeBytes(newBytes)
+        assertEquals("new wallet", EncryptionUtil(context).decrypt(fresh))
+    }
+
+    @Test
+    fun cachedEmptyWrappedKeyPreferencesNeverCauseAReplacementKey() {
+        val encrypted = EncryptionUtil(context).encrypt("retained")
+        val prefs = File(context.applicationInfo.dataDir, "shared_prefs/key_alias.xml")
+        val bytes = prefs.readBytes()
+        assertTrue(wrappedKeyPreferences().edit().clear().commit())
+        prefs.writeBytes(bytes)
+        assertEquals("retained", EncryptionUtil(context).decrypt(encrypted))
+        assertArrayEquals(bytes, prefs.readBytes())
+    }
+
+    @Test
+    fun missingAliasMustBeObservedInAnotherProcessBeforeItIsPermanent() {
+        EncryptionUtil(context).encrypt("value")
+        androidKeyStore().deleteEntry(KEY_ALIAS)
+        val first = runCatching { EncryptionUtil(context).requireKeyMaterialReadable() }.exceptionOrNull()
+        assertTrue((first as KeyMaterialUnavailableException).transient)
+        File(context.noBackupFilesDir, "wallet-key-observation").writeText("MISSING_ALIAS\n00000000-0000-0000-0000-000000000001")
+        val before = File(context.noBackupFilesDir, "wallet-key-observation").readBytes()
+        val repeated = runCatching { EncryptionUtil(context, readOnlyInspection = true).requireKeyMaterialReadable() }.exceptionOrNull()
+        assertFalse((repeated as KeyMaterialUnavailableException).transient)
+        assertArrayEquals(before, File(context.noBackupFilesDir, "wallet-key-observation").readBytes())
+        assertFalse(androidKeyStore().containsAlias(KEY_ALIAS))
+    }
+
+    @Test
+    fun nullProviderKeyIsRetriedAndOriginalCiphertextRecoversWithoutReplacingAnyKey() {
+        val encrypted = EncryptionUtil(context).encrypt("original signing seed")
+        val originalPublic = androidKeyStore().getCertificate(KEY_ALIAS).publicKey.encoded
+        val prefs = File(context.applicationInfo.dataDir, "shared_prefs/key_alias.xml")
+        val originalMetadata = prefs.readBytes()
+        var remainingNulls = 4 // constructor probe plus all three attempts in the first call
+        val store = nullReturningStore { remainingNulls-- > 0 }
+        val util = EncryptionUtil(context, keyStoreFactory = { store }, retryDelaysMillis = listOf(0L, 0L, 0L), sleeper = {})
+        val failure = runCatching { util.decrypt(encrypted) }.exceptionOrNull()
+        assertTrue((failure as KeyMaterialUnavailableException).transient)
+        assertArrayEquals(originalMetadata, prefs.readBytes())
+        assertArrayEquals(originalPublic, androidKeyStore().getCertificate(KEY_ALIAS).publicKey.encoded)
+        assertEquals("original signing seed", util.decrypt(encrypted))
+        assertArrayEquals(originalMetadata, prefs.readBytes())
+    }
+
+    @Test
+    fun malformedWrappedMetadataCannotBeTreatedAsEmptyCachedPreferences() {
+        val file = File(context.applicationInfo.dataDir, "shared_prefs/key_alias.xml")
+        file.parentFile!!.mkdirs()
+        val original = "<map><int name=\"secret_key\" value=\"123\" /></map>".toByteArray()
+        file.writeBytes(original)
+        val failure = runCatching { EncryptionUtil(context).encrypt("new") }.exceptionOrNull()
+        assertTrue((failure as KeyMaterialUnavailableException).transient)
+        assertArrayEquals(original, file.readBytes())
+        assertFalse(androidKeyStore().containsAlias(KEY_ALIAS))
+    }
+
+    private fun nullReturningStore(returnNull: () -> Boolean): KeyStore {
+        val delegate = androidKeyStore()
+        val spi = object : java.security.KeyStoreSpi() {
+            override fun engineGetKey(alias: String, password: CharArray?) = if (returnNull()) null else delegate.getKey(alias, password)
+            override fun engineGetCertificate(alias: String) = delegate.getCertificate(alias)
+            override fun engineGetCertificateChain(alias: String) = delegate.getCertificateChain(alias)
+            override fun engineGetCreationDate(alias: String) = delegate.getCreationDate(alias)
+            override fun engineAliases() = delegate.aliases()
+            override fun engineContainsAlias(alias: String) = delegate.containsAlias(alias)
+            override fun engineSize() = delegate.size()
+            override fun engineIsKeyEntry(alias: String) = delegate.isKeyEntry(alias)
+            override fun engineIsCertificateEntry(alias: String) = delegate.isCertificateEntry(alias)
+            override fun engineGetCertificateAlias(certificate: java.security.cert.Certificate) = delegate.getCertificateAlias(certificate)
+            override fun engineLoad(stream: java.io.InputStream?, password: CharArray?) = Unit
+            override fun engineStore(stream: java.io.OutputStream?, password: CharArray?) = error("read-only test store")
+            override fun engineDeleteEntry(alias: String) = error("read-only test store")
+            override fun engineSetCertificateEntry(alias: String, certificate: java.security.cert.Certificate) = error("read-only test store")
+            override fun engineSetKeyEntry(alias: String, key: ByteArray, chain: Array<java.security.cert.Certificate>?) = error("read-only test store")
+            override fun engineSetKeyEntry(alias: String, key: java.security.Key, password: CharArray?, chain: Array<java.security.cert.Certificate>?) = error("read-only test store")
+        }
+        return object : KeyStore(spi, object : java.security.Provider("Faulting", 1.0, "Read-only key fault fixture") {}, "Faulting") {}
     }
 
     /**
@@ -256,7 +358,9 @@ class EncryptionUtilKeySafetyTest {
         context.getSharedPreferences(KEY_ALIAS, Context.MODE_PRIVATE)
 
     private fun clearSandbox() {
-        androidKeyStore().deleteEntry(KEY_ALIAS)
+        val store = androidKeyStore()
+        store.aliases().toList().filter { it == KEY_ALIAS || it.startsWith("sora_wallet_") }.forEach(store::deleteEntry)
+        context.noBackupFilesDir.listFiles().orEmpty().filter { it.name.startsWith("wallet-") || it.name.startsWith(".wallet-") }.forEach { it.deleteRecursively() }
         assertTrue(wrappedKeyPreferences().edit().clear().commit())
         assertTrue(
             context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -268,6 +372,8 @@ class EncryptionUtilKeySafetyTest {
         listOf("", "-wal", "-shm", "-journal").forEach { File("${database.path}$it").delete() }
         File(context.filesDir, "datastore/sora_prefs_datastore.preferences_pb").delete()
         File(context.applicationInfo.dataDir, "shared_prefs/$PREFERENCES_NAME.xml.bak").delete()
+        File(context.applicationInfo.dataDir, "shared_prefs/key_alias.xml").delete()
+        File(context.applicationInfo.dataDir, "shared_prefs/key_alias.xml.bak").delete()
     }
 
     private companion object {

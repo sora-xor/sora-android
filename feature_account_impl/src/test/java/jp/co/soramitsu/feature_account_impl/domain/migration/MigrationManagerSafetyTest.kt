@@ -95,6 +95,32 @@ class MigrationManagerSafetyTest {
     }
 
     @Test
+    fun `disk full on the first database read returns a retryable storage outcome without a journal`() = runTest {
+        val storage = successfulMigrationStorage(emptyList())
+        val userRepository = mockk<UserRepository>()
+        stubWalletMutationLock(userRepository, null, OnboardingState.INITIAL)
+        coEvery { storage.accountDao.getAccounts() } throws android.database.sqlite.SQLiteFullException("disk full")
+        val manager = MigrationManager(userRepository, mockk(), Sora2AddressCodec(), storage.database, testMigrationSr25519Crypto)
+
+        assertEquals(MigrationOutcome.Transient("STORAGE_FULL"), manager.startWithOutcome())
+        assertEquals(MigrationOutcome.Transient("STORAGE_FULL"), manager.lastOutcome)
+        assertEquals(MigrationProgress.Finished, manager.progress.value)
+        assertTrue(storage.journals.isEmpty())
+        coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+    }
+
+    @Test
+    fun `a busy Keystore before the locked snapshot returns a retryable outcome`() = runTest {
+        val userRepository = mockk<UserRepository>()
+        coEvery { userRepository.withWalletMigrationLocked<MigrationOutcome>(any()) } throws
+            KeyMaterialUnavailableException("busy", transient = true)
+        val manager = MigrationManager(userRepository, mockk(), Sora2AddressCodec(), mockk(), testMigrationSr25519Crypto)
+
+        assertEquals(MigrationOutcome.Transient("KEYSTORE_UNAVAILABLE"), manager.startWithOutcome())
+        assertEquals(MigrationProgress.Finished, manager.progress.value)
+    }
+
+    @Test
     fun `successful first migration activates every legacy account with exact selection`() =
         runTest {
             val primaryPublicKey = ByteArray(32) { index -> (index + 1).toByte() }

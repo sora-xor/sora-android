@@ -153,7 +153,7 @@ class SafeModeViewModelTest {
         try {
             // MigrationManager.recordFailure after the startup checks had passed.
             WalletUpgradeBackup.noteMigrationRecoveryRequired("VERIFIED_RECEIPT_INVALID")
-            val splash = SplashInteractor(mockk(relaxed = true), mockk(relaxed = true), context)
+            val splash = SplashInteractor(mockk(relaxed = true), mockk(relaxed = true), context, mockk(relaxed = true))
             every { interactor.recoveryOptions(any()) } answers { splash.recoveryOptions(firstArg()) }
             every { WalletUpgradeBackup.requestSetUpAgain(any()) } returns Result.success(Unit)
             val events = mutableListOf<SafeModeEvent>()
@@ -183,7 +183,7 @@ class SafeModeViewModelTest {
     fun `without a recorded recovery state no restore is offered`() = runTest {
         val vm = viewModel(recoveryFacts)
         WalletUpgradeBackup.noteMigrationVerified()
-        val splash = SplashInteractor(mockk(relaxed = true), mockk(relaxed = true), context)
+        val splash = SplashInteractor(mockk(relaxed = true), mockk(relaxed = true), context, mockk(relaxed = true))
         every { interactor.recoveryOptions(any()) } answers { splash.recoveryOptions(firstArg()) }
         vm.showPanel("WALLET_VERIFICATION_FAILED")
         val panel = requireNotNull(vm.state.value.panel)

@@ -72,6 +72,7 @@ internal fun LoginSecurityScreen(
     onImportRecoveryPhrase: () -> Unit = {},
 ) {
     Column {
+        jp.co.soramitsu.common.presentation.compose.components.PreservedWalletDataButton()
         ContentCard(
             modifier = Modifier
                 .padding(horizontal = Dimens.x2)

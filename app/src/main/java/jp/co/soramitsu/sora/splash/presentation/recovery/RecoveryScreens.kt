@@ -60,6 +60,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -222,6 +225,7 @@ private fun UpgradeProgress(progress: ProgressUi, callbacks: SafeModeCallbacks, 
 @Composable
 private fun actionLabel(action: RecoveryAction, kind: RecoveryPanelKind): String = stringResource(
     when (action) {
+        RecoveryAction.CANCEL_RESTORE -> CommonR.string.wallet_restore_cancel_pending
         RecoveryAction.TRY_AGAIN -> when (kind) {
             RecoveryPanelKind.STORAGE -> R.string.recovery_check_again
             RecoveryPanelKind.RESTORE_PENDING -> R.string.recovery_restart_continue
@@ -331,6 +335,7 @@ private fun RecoveryPanel(
                 onClick = { callbacks.onAction(action) },
             )
         }
+        jp.co.soramitsu.common.presentation.compose.components.PreservedWalletDataButton()
         TechnicalDetails(items = details, onCopy = callbacks.onCopyDetail)
     }
 }
@@ -404,6 +409,8 @@ private fun RestoreSheet(state: SafeModeUiState, callbacks: SafeModeCallbacks) {
     val drive = state.sheet == SafeSheetKind.RESTORE_DRIVE
     val running = state.running == RecoveryAction.RESTORE_PHRASE || state.running == RecoveryAction.RESTORE_DRIVE
     val model = state.panel
+    var backupConfirmed by remember { mutableStateOf(false) }
+    val needsBackupConfirmation = model?.setUpAgainScope == SetUpAgainScope.ALL_WALLET_FILES
     SafeSheet(
         title = stringResource(if (drive) R.string.recovery_restore_drive else R.string.recovery_restore_phrase),
         onClose = callbacks.onCloseSheet,
@@ -414,6 +421,7 @@ private fun RestoreSheet(state: SafeModeUiState, callbacks: SafeModeCallbacks) {
                 text = stringResource(R.string.recovery_restore_confirm),
                 variant = NeonVariant.Safe,
                 loading = running,
+                enabled = (!needsBackupConfirmation || backupConfirmed) && !running,
                 onClick = callbacks.onConfirmRestore,
             )
             SafeAction(
@@ -425,6 +433,12 @@ private fun RestoreSheet(state: SafeModeUiState, callbacks: SafeModeCallbacks) {
         },
     ) {
         SheetText(stringResource(R.string.recovery_restore_sheet_body))
+        if (needsBackupConfirmation) {
+            androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                androidx.compose.material.Checkbox(checked = backupConfirmed, onCheckedChange = { backupConfirmed = it })
+                SheetText(stringResource(CommonR.string.wallet_restore_backup_confirm))
+            }
+        }
         when (model?.setUpAgainScope) {
             SetUpAgainScope.DATABASE_ONLY -> SheetText(stringResource(R.string.recovery_restore_sheet_keys_kept))
             SetUpAgainScope.ALL_WALLET_FILES -> SheetText(stringResource(R.string.recovery_restore_sheet_keys_unavailable))

@@ -1207,9 +1207,9 @@ class RuntimeManager @Inject constructor(
                 legacyTypes.state != RuntimeCacheReadState.ABSENT) &&
             !legacyPairMatchesAssets
         ) {
-            FirebaseWrapper.recordException(
-                Sora2RuntimeIdentityException("SORA2_RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH")
-            )
+            // An older runtime cache is expected on upgrade; the bundled/live contract replaces
+            // it. A fixed breadcrumb records that path without counting it as an app failure.
+            FirebaseWrapper.log("SORA2_RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH")
         }
         return buildBundledCandidate(
             metadata = if (legacyPairMatchesAssets) {

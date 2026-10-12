@@ -120,8 +120,8 @@ enum class SetUpAgainScope {
      * The database, the encrypted preference files and the wrapped-key file. Used only when this
      * phone cannot use the stored keys at all (the Keystore key is missing) or the preference
      * files cannot be read. The files are kept in `no_backup/wallet-quarantine-*-set-up-again/`;
-     * the app cannot read keys from there, so the UI asks the person to write down every phrase
-     * it can still show first.
+     * the generation switcher can reactivate them after device authentication, preserving the
+     * current generation first. The UI also asks for a recovery phrase or backup for every wallet.
      */
     ALL_WALLET_FILES,
 }
@@ -227,7 +227,14 @@ data class WalletRecoveryOptions(
                 WalletRecoveryKind.MIGRATION -> SetUpAgainScope.DATABASE_ONLY
             }
 
-        private val transientCodes = setOf(
+        // Only a database-specific cause can offer a database-only reset after repeated starts.
+        // Repetition alone never reclassifies preference, Keystore, or whole-device storage faults.
+        private val retryableDatabaseCodes = setOf(
+            DATABASE_LOCKED, "DATABASE_OPEN_UNAVAILABLE", "DATABASE_IO", "DATABASE_READ_ONLY",
+            "DATABASE_PATH_UNREADABLE", "DATABASE_SIDECAR_QUARANTINE_FAILED",
+        )
+
+        private val transientCodes = retryableDatabaseCodes + setOf(
             KEYSTORE_TRANSIENT,
             STORAGE_IO,
             DATABASE_LOCKED,
@@ -265,9 +272,18 @@ data class WalletRecoveryOptions(
             facts: RecoveryFacts,
             requiredBytes: Long? = null,
             availableBytes: Long? = null,
+            consecutiveFailedStarts: Int = 0,
         ): WalletRecoveryOptions {
-            val kind = kindOf(code, inMemoryOnly = transientFailure)
-            val setUpAgainScope = setUpAgainScopeFor(code, kind)
+            val kind = if (code == PREFERENCES_INVENTORY_INVALID && consecutiveFailedStarts < 2) {
+                WalletRecoveryKind.TRANSIENT
+            } else {
+                kindOf(code, inMemoryOnly = transientFailure)
+            }
+            val setUpAgainScope = if (code in retryableDatabaseCodes && consecutiveFailedStarts >= 3) {
+                SetUpAgainScope.DATABASE_ONLY
+            } else {
+                setUpAgainScopeFor(code, kind)
+            }
             val canSetUpAgain = setUpAgainScope != SetUpAgainScope.NONE
             val keyMaterialUnavailable =
                 isKeyMaterialUnavailable(code) || facts.keyMaterialUnavailable
