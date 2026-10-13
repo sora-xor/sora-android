@@ -9720,6 +9720,17 @@ const nexusSendQualificationProviderMatches = [
     /@Provides\s+@Singleton\s+fun\s+provideNexusSendQualification\s*\(\s*signer\s*:\s*NexusTransactionSigner\s*,\s*finalityReader\s*:\s*NexusFinalityReader\s*,?\s*\)\s*:\s*NexusSendQualification\s*=\s*DefaultNexusSendQualification\s*\(\s*signer\s*,\s*finalityReader\s*,?\s*\)/g,
   ),
 ];
+// Public Taira testnet has its own local writer and HTTPS confirmation policy.
+// This exact binding does not promote the missing production/native adapter.
+const tairaSignerSource = stripGradleComments(read("feature_wallet_impl/src/main/java/jp/co/soramitsu/feature_wallet_impl/data/nexus/TairaTransactionSigner.kt"));
+const tairaOnlySignerBound =
+  /fun\s+provideNexusTransactionSigner\(credentials: CredentialsRepository, users: UserRepository\): NexusTransactionSigner\s*=\s*TairaTransactionSigner\(credentials, users\)/.test(signerBinding) &&
+  /fun\s+provideNexusFinalityReader\(\): NexusFinalityReader\s*=\s*TairaHttpsConfirmationReader\(\)/.test(signerBinding) &&
+  (tairaSignerSource.match(/override fun isQualifiedFor\(network: NexusNetwork\): Boolean = network == NexusNetworks.taira/g) ?? []).length === 2 &&
+  tairaSignerSource.includes('check(isQualifiedFor(request.network))') &&
+  tairaSignerSource.includes('check(isQualifiedFor(network))') &&
+  tairaSignerSource.includes('derived.destroy()') &&
+  tairaSignerSource.includes('TairaTransferCodec.envelope(payload, signature, derived.publicKey)');
 const unavailableSignerFailureOccurrences =
   nexusTransactionSignerSource.match(
     /throw\s+IllegalStateException\("NEXUS_SIGNER_NOT_QUALIFIED"\)/g,
@@ -9749,9 +9760,9 @@ assert(
     ) &&
     unavailableSignerFailureOccurrences.length === 2 &&
     unavailableFinalityReaderFailureOccurrences.length === 1 &&
-    /fun\s+provideNexusFinalityReader\s*\(\s*\)\s*:\s*NexusFinalityReader\s*=\s*UnavailableNexusFinalityReader\s*\(\s*\)/.test(
+    (tairaOnlySignerBound || /fun\s+provideNexusFinalityReader\s*\(\s*\)\s*:\s*NexusFinalityReader\s*=\s*UnavailableNexusFinalityReader\s*\(\s*\)/.test(
       signerBinding,
-    ),
+    )),
   "IROHA_UNAVAILABLE_SIGNER_IMPLEMENTATION_NOT_FAIL_CLOSED",
 );
 const nexusSendQualificationInterface =
@@ -10060,8 +10071,7 @@ const signerPromotionClaimed =
     "artifactCoordinate",
     "artifactSha256",
   ].some((field) => productionSignerBinding?.[field] !== null) ||
-  !unavailableSignerIsExactlyBound ||
-  !unavailableFinalityReaderIsExactlyBound;
+  (!tairaOnlySignerBound && (!unavailableSignerIsExactlyBound || !unavailableFinalityReaderIsExactlyBound));
 let reviewedSignerAdapterSourceQualified = false;
 let exactReviewedSignerProviderBound = false;
 const reviewedAdapterType = productionSignerBinding?.adapterType;
@@ -10300,7 +10310,7 @@ if (signerPromotionClaimed) {
   );
 } else {
   assert(
-    unavailableSignerIsExactlyBound && unavailableFinalityReaderIsExactlyBound,
+    tairaOnlySignerBound || (unavailableSignerIsExactlyBound && unavailableFinalityReaderIsExactlyBound),
     "IROHA_UNAVAILABLE_SIGNER_BLOCKED_DEFAULT_CHANGED",
   );
 }
@@ -10353,8 +10363,8 @@ assert(
     ) &&
     nexusNetwork.includes('const val XOR_ASSET_ALIAS = "xor#universal"') &&
     nexusNetwork.includes("const val XOR_SCALE = 9") &&
-    nexusNetwork.includes('const val MCP_PROTOCOL_VERSION = "2025-06-18"') &&
-    nexusNetwork.includes('const val PENDING_JOURNAL_PREFIX = "taira:$CONTRACT_SHA256:"') &&
+    nexusNetwork.includes('const val MCP_PROTOCOL_VERSION = "2026-07-28"') &&
+    nexusNetwork.includes('const val PENDING_JOURNAL_PREFIX = "taira:$NETWORK_HEX:"') &&
     !nexusNetwork.includes("TairaDeploymentBinding") &&
     !nexusNetwork.includes("TAIRA_EPOCH_A") &&
     !nexusNetwork.includes("TAIRA_EPOCH_B") &&
@@ -10363,11 +10373,19 @@ assert(
     nexusNetwork.includes("val taira = NexusNetwork(") &&
     nexusNetwork.includes("val admitted: List<NexusNetwork> = listOf(minamoto, taira)") &&
     nexusNetwork.includes("val admittedIds: Set<WalletNetworkId>") &&
+    nexusNetwork.includes("val liveIds: Set<WalletNetworkId> = setOf(WalletNetworkId.TAIRA)") &&
+    nexusTorii.includes("NexusNetworks.requireLive(network)") &&
+    tairaMcpContract.includes('"io.modelcontextprotocol/protocolVersion"') &&
+    tairaMcpContract.includes('"io.modelcontextprotocol/clientCapabilities"') &&
+    tairaMcpContract.includes('put("MCP-Protocol-Version"') &&
     nexusNetwork.includes("fun requireAdmitted(network: NexusNetwork)") &&
     walletIdentityDao.includes("TairaTestnetContract.CHAIN_ID") &&
     walletIdentityDao.includes("TairaTestnetContract.PENDING_JOURNAL_PREFIX") &&
     nexusToriiRoutes.includes("NexusNetworks.requireAdmitted(network)") &&
-    nexusToriiRoutes.includes('require(network.id != WalletNetworkId.TAIRA) { "TAIRA_MCP_REQUIRED" }') &&
+    !nexusToriiRoutes.includes('"TAIRA_MCP_REQUIRED"') &&
+    nexusToriiRoutes.includes("fun accountAssetPage(") &&
+    nexusToriiRoutes.includes("fun accountHistory(") &&
+    nexusToriiRoutes.includes("fun isPublicTairaRoute(url: String)") &&
     nexusToriiRoutesTest.includes(
       "Taira MCP route is immutable and alternate topology is rejected",
     ) &&
@@ -10381,23 +10399,28 @@ assert(
       '"iroha.health"',
       '"iroha.accounts.assets"',
       '"iroha.assets.definitions.get"',
-      '"iroha.instructions.list"',
+      '"iroha.accounts.history"',
       '"iroha.transactions.status"',
       '"iroha.transactions.submit_and_wait"',
     ].every((tool) => tairaMcpContract.includes(tool)) &&
     tairaMcpContract.includes('"body_base64" to JsonPrimitive') &&
     tairaMcpContract.includes('"hash" to JsonPrimitive(canonicalHash)') &&
     tairaMcpContract.includes('"status_accept" to JsonPrimitive') &&
-    tairaMcpContract.includes('"terminal_statuses" to JsonArray') &&
+    !tairaMcpContract.includes('"terminal_statuses" to JsonArray') &&
     tairaMcpContract.includes('"timeout_ms" to JsonPrimitive(120_000)') &&
     tairaMcpContract.includes('structured.string("terminal_kind") != "Applied"') &&
     tairaMcpContract.includes("NEXUS_TRANSACTION_HASH_MISMATCH") &&
     tairaMcpContract.includes("fun validateToolPage(") &&
-    tairaMcpContract.includes('"toolset_version" to JsonPrimitive(toolsetVersion)') &&
+    tairaMcpContract.includes('"toolsetVersion" to JsonPrimitive(toolsetVersion)') &&
     tairaMcpContract.includes('root["nextCursor"]') &&
-    tairaMcpContract.includes('"asset" to JsonPrimitive(definitionId)') &&
-    nexusTorii.includes("ensureTairaTools(network") &&
-    nexusTorii.includes("MAX_MCP_TOOL_PAGES") &&
+    tairaMcpContract.includes('JsonPrimitive("asset"), JsonPrimitive(definitionId)') &&
+    tairaMcpContract.includes('method = "server/discover"') &&
+    tairaMcpContract.includes('put("Mcp-Method", request.method)') &&
+    !nexusTorii.includes("ensureTairaTools(") &&
+    !nexusTorii.includes("serverDiscoveryRequest(") &&
+    !nexusTorii.includes("discoveryRequest(") &&
+    nexusTorii.includes("NexusToriiRoutes.accountAssetPage(") &&
+    nexusTorii.includes("NexusToriiRoutes.accountHistory(") &&
     nexusTorii.includes("TairaMcpContract.submitAndWaitRequest(") &&
     nexusTorii.includes("TairaMcpContract.validateSubmitAndWaitResult(") &&
     nexusTorii.includes('"NEXUS_PUBLIC_INGRESS_UNAVAILABLE"') &&
@@ -10716,10 +10739,8 @@ assert(
     tairaMcpContract.includes(
       "NexusToriiRoutes.HEALTH_RESPONSE_MEDIA_TYPE",
     ) &&
-    nexusTorii.includes(
-      "ensureTairaTools(network, setOf(TairaMcpContract.HEALTH_TOOL))",
-    ) &&
-    nexusTorii.includes("TairaMcpContract.validateHealthResult(result)") &&
+    nexusTorii.includes("get(NexusToriiRoutes.health(network))") &&
+    !nexusTorii.includes("TairaMcpContract.healthRequest(") &&
     nexusTorii.includes(
       'setRequestProperty("Accept", NexusToriiRoutes.responseAccept(url))',
     ) &&
@@ -10755,7 +10776,7 @@ assert(
       "expectedAssetName == null ||",
     ) &&
     nexusBalanceValidatorImplementation.includes(
-      "balance.assetName == expectedAssetName",
+      "balance.assetName?.equals(expectedAssetName, ignoreCase = network.id == WalletNetworkId.TAIRA) == true",
     ) &&
     nexusBalanceValidatorImplementation.includes(
       "expectedAssetAlias == null ||",
@@ -10933,56 +10954,35 @@ assert(
     nexusBalanceValidatorTest.includes('"NEXUS_PAGE_LIMIT_EXCEEDED"'),
   "NEXUS_EXACT_ASSET_PAGE_PROOF_MISSING",
 );
+const tairaCurrentContractTest = read(
+  "common/src/test/java/jp/co/soramitsu/common/nexus/TairaCurrentContractTest.kt",
+);
 assert(
-  tairaMcpContract.includes(
-    'const val INSTRUCTIONS_TOOL = "iroha.instructions.list"',
-  ) &&
-    tairaMcpContract.includes(
-      '"asset_definition_id" to JsonPrimitive(definitionId)',
-    ) &&
-    !nexusTorii.includes("iroha.accounts.history") &&
-    nexusHistory.includes(
-      "Parser for the current \`iroha.instructions.list\` explorer projection",
-    ) &&
-    nexusHistory.includes(
-      'val rawHash = element.exactString("transaction_hash")',
-    ) &&
-    nexusHistory.includes(
-      "val hash = NexusTransactionHash.normalized(rawHash)",
-    ) &&
-    nexusHistory.includes("?.takeIf { it == rawHash }") &&
-    nexusHistory.includes('element.canonicalLong("block")') &&
-    nexusHistory.includes('element.exactString("authority")') &&
-    nexusHistory.includes('element.exactString("created_at")') &&
-    nexusHistory.includes('element.exactString("kind") != "Transfer"') &&
-    nexusHistory.includes('(element["box"] as? JsonObject)') &&
-    nexusHistory.includes('payload.exactString("variant")') &&
-    nexusHistory.includes('"AssetBatch"') &&
-    nexusHistory.includes('pagination.canonicalLong("total_pages")') &&
-    nexusHistory.includes('pagination.canonicalLong("total_items")') &&
-    nexusHistory.includes("TairaTestnetContract.XOR_SCALE") &&
-    nexusCommittedHistoryImplementation.includes(
-      "TairaMcpContract.instructionsRequest(",
-    ) &&
-    nexusCommittedHistoryImplementation.includes(
-      "requireFanout = network.id != WalletNetworkId.TAIRA",
-    ) &&
-    nexusCommittedHistoryImplementation.includes(
-      "parsedPage.requirePageContract(pageNumber, HISTORY_PAGE_SIZE)",
-    ) &&
-    nexusHistoryTest.includes(
-      "current instruction projection parses bidirectional Taira transfer history",
-    ) &&
-    nexusHistoryTest.includes(
-      "instruction history request uses the bidirectional definition selector",
-    ) &&
-    nexusHistoryTest.includes(
-      "Taira history rejects more than nine fractional digits",
-    ) &&
-    nexusHistoryTest.includes(
-      "Taira history requires canonical committed explorer evidence",
-    ),
-  "NEXUS_BOUNDED_EXACT_HISTORY_MISSING",
+  tairaMcpContract.includes('const val HISTORY_TOOL = "iroha.accounts.history"') &&
+    tairaMcpContract.includes('equal("asset_definition_id", JsonPrimitive(definitionId))') &&
+    tairaMcpContract.includes('equal("tx_hash", JsonPrimitive(canonicalHash(it)))') &&
+    tairaMcpContract.includes('"cursor" to SchemaType.STRING') &&
+    nexusHistory.includes("object NexusAccountHistoryParser") &&
+    nexusHistory.includes('text("tx_hash")') &&
+    nexusHistory.includes('text("account_id")') &&
+    nexusHistory.includes('text("asset_definition_id")') &&
+    nexusHistory.includes('row["result_ok"]') &&
+    nexusHistory.includes('body["next_cursor"]') &&
+    nexusCommittedHistoryImplementation.includes("NexusToriiRoutes.accountHistory(") &&
+    !nexusCommittedHistoryImplementation.includes("mcp(") &&
+    nexusCommittedHistoryImplementation.includes("NexusAccountHistoryParser.pageBody(") &&
+    nexusCommittedHistoryImplementation.includes("override suspend fun committedXorTransferPage(") &&
+    nexusCommittedHistoryImplementation.includes("override suspend fun committedXorTransfersForHash(") &&
+    nexusHistory.includes("while (true)") &&
+    nexusHistory.includes("if (cursor == null) return items") &&
+    nexusHistory.includes('"NEXUS_HISTORY_REPEATED_PAGE"') &&
+    nexusCommittedHistoryImplementation.includes("NexusHistoryCursorCollector.collect") &&
+    !nexusCommittedHistoryImplementation.includes("MAX_PAGES") &&
+    tairaCurrentContractTest.includes("exact hash reconciliation traverses more than twenty empty cursor pages") &&
+    tairaCurrentContractTest.includes("live discovery schemas admit every current wallet request") &&
+    tairaCurrentContractTest.includes("public movement cursor can continue after an empty page") &&
+    tairaCurrentContractTest.includes("movement evidence binds account asset success hash and transfer direction"),
+  "NEXUS_CURSOR_HISTORY_AND_EXACT_HASH_EVIDENCE_MISSING",
 );
 assert(
   nexusPendingOverlayValidator.includes("NEXUS_PENDING_SCOPE_INVALID") &&
@@ -11054,11 +11054,11 @@ assert(
       "val pending = if (!portfolioAccess.projectsPending)",
     ) &&
     nexusPortfolioRepository.includes("portfolioAccess.allowsSends &&") &&
-    /check\(portfolioAccess\.allowsQualifiedReads\)[\s\S]{0,300}?val balance = torii\.getXorBalance\(/.test(
+    /check\(portfolioAccess\.allowsQualifiedReads\)[\s\S]{0,300}?val balance = (?:scopedCache\[account\]\?\.balance\s*\?:\s*)?torii\.getXorBalance\(/.test(
       nexusPortfolioRepository,
     ) &&
     nexusPortfolioRepository.includes("confirmedTransfers = history.items") &&
-    /val pendingRecoveryRequired\s*=[\s\S]{0,3000}?val balance = torii\.getXorBalance\(/.test(
+    /val pendingRecoveryRequired\s*=[\s\S]{0,3000}?val balance = (?:scopedCache\[account\]\?\.balance\s*\?:\s*)?torii\.getXorBalance\(/.test(
       nexusPortfolioRepository,
     ) &&
     !nexusPortfolioRepository.includes("pendingRecoveryBalance(") &&
@@ -11072,8 +11072,8 @@ assert(
       "normalAccess.allowsQualifiedReads",
     ) &&
     nexusPendingOverlayValidatorTest.includes("recoveryAccess.allowsSends") &&
-    nexusWalletScreens.includes('WalletErrorMessage(balance.errorCode ?: "NEXUS_UNAVAILABLE", onRecovery = onRecovery)') &&
-    nexusWalletScreens.includes("balance.errorCode?.let { WalletErrorMessage(it, onRecovery = onRecovery) }") &&
+    nexusWalletScreens.includes("R.string.nexus_send_not_available") &&
+    nexusWalletScreens.includes("balance.errorCode?.let { WalletErrorMessage(it, onRetry = onRefresh, onRecovery = onRecovery) }") &&
     /"RECOVERY" in code[^\n]*-> WalletIssue\.RECOVERY/.test(walletDisplay) &&
     walletStatus.includes("val issue = walletIssue(code)") &&
     walletStatus.includes("WalletIssue.RECOVERY -> R.string.wallet_issue_recovery") &&
@@ -11311,11 +11311,14 @@ assert(
     nexusWalletScreens.includes("uriHandler.openUri(balance.explorerBaseUrl)") &&
     nexusWalletScreens.includes("balance.pendingTransactions.forEach") &&
     nexusWalletScreens.includes("balance.confirmedTransfers.forEach { NexusTransferRow(it, balance.address) }") &&
-    nexusWalletScreens.includes("WalletSheet(title = stringResource(R.string.wallet_network_activity)") &&
+    nexusWalletScreens.includes("WalletSheet(title = stringResource(if (balance.networkLive) R.string.wallet_network_activity") &&
+    nexusWalletScreens.includes("R.string.nexus_production_name") &&
+    nexusWalletScreens.includes("else R.string.nexus_production_address") &&
+    nexusWalletScreens.includes("else R.string.nexus_copy_production_address") &&
     walletSheet.includes("Dialog(onDismissRequest") &&
     walletSheet.includes("Modifier.fillMaxSize()") &&
     walletSheet.includes("Column(Modifier.weight(1f).verticalScroll(rememberScrollState())") &&
-    nexusWalletScreens.includes("balance.historyErrorCode?.let { WalletErrorMessage(it) }") &&
+    nexusWalletScreens.includes("balance.historyErrorCode?.let { WalletErrorMessage(it, onRetry = onRefresh) }") &&
     nexusWalletScreens.includes("balance.historyErrorCode == null") &&
     nexusWalletScreens.includes("var expanded by remember(transfer.transactionHash)") &&
     nexusWalletScreens.includes("expanded = !expanded") &&
@@ -11364,7 +11367,7 @@ assert(
       "missing cache keeps tester default but interrupted cache hides Taira",
     ) &&
     nexusPortfolioRepository.includes(
-      "featureManager.observeTairaVisible()",
+      "featureManager.observeState()",
     ) &&
     !nexusPortfolioRepository.includes(
       "featureManager.observeTairaVisible(featureState.tairaVisible)",
@@ -11376,7 +11379,7 @@ assert(
       "coVerify(exactly = 0) { torii.getXorBalance(any(), any()) }",
     ) &&
     nexusPortfolioTairaVisibilityTest.includes(
-      "coVerify(exactly = 0) { torii.committedXorTransfers(any(), any(), any()) }",
+      "coVerify(exactly = 0) { torii.committedXorTransferPage(any(), any(), any(), any()) }",
     ),
   "UNIFIED_NEXUS_NETWORK_SCOPE_OR_ACCOUNT_SWITCH_CLEAR_MISSING",
 );
@@ -11427,7 +11430,7 @@ assert(
     ) &&
     !nexusReconcileImplementation.includes("resolveXorDefinition") &&
     !nexusReconcileImplementation.includes("getXorBalance") &&
-    /hasAuthoritativeCommittedTransaction\([\s\S]*?assetDefinitionId\s*=\s*pending\.assetId[\s\S]*?transactionHash\s*=\s*hash[\s\S]*?NEXUS_TRANSACTION_HISTORY_PROOF_MISSING[\s\S]*?getAssetBalanceByDefinition\([\s\S]*?assetDefinitionId\s*=\s*pending\.assetId[\s\S]*?committedXorTransfers\([\s\S]*?assetDefinitionId\s*=\s*pending\.assetId/.test(
+    /hasAuthoritativeCommittedTransaction\([\s\S]*?assetDefinitionId\s*=\s*pending\.assetId[\s\S]*?transactionHash\s*=\s*hash[\s\S]*?NEXUS_TRANSACTION_HISTORY_PROOF_MISSING[\s\S]*?getAssetBalanceByDefinition\([\s\S]*?assetDefinitionId\s*=\s*pending\.assetId[\s\S]*?committedXorTransfersForHash\([\s\S]*?assetDefinitionId\s*=\s*pending\.assetId/.test(
       nexusReconcileImplementation,
     ) &&
     nexusCoordinatorTest.includes("entrypointHash = hash") &&
@@ -11520,7 +11523,7 @@ assert(
     (nexusCoordinator.match(/requireSendEnabled\([^)]*request\.networkId\)/g) ?? [])
       .length >= 4 &&
     nexusCoordinator.includes(
-      "(state.tairaAvailable && state.tairaVisible)",
+      "state.sendsEnabledFor(networkId)",
     ) &&
     nexusCoordinator.includes("val finalQuote = signer.quote") &&
     nexusCoordinator.includes("canonicalPositiveFee(quote.fee)") &&
@@ -11534,14 +11537,14 @@ assert(
       "signing and pending journal are locked and confirmation is one shot",
     ) &&
     nexusCoordinatorTest.includes(
-      "prepare rejects a zero fee before signing or submission",
+      "prepare accepts an authenticated zero testnet fee without signing",
     ) &&
     nexusCoordinatorTest.includes("competingMutationEntered") &&
     nexusCoordinatorTest.includes("ambiguous submission keeps exact hash and cannot be retried") &&
     nexusCoordinator.includes("var transportStarted = false") &&
     nexusCoordinator.includes("val transportXorDefinition = torii.resolveXorDefinition(") &&
     nexusCoordinator.includes("transportXorDefinition.id == prepared.assetDefinitionId") &&
-    /val receipt = WalletMutationCoordinator\.withLock \{[\s\S]*?featureManager\.getState\(\)[\s\S]*?requireSendEnabled\(transportState, request\.networkId\)[\s\S]*?signer\.isQualifiedFor\(network\)[\s\S]*?validatePreparedContract\(prepared, network\)[\s\S]*?requireActiveAccount\([\s\S]*?NEXUS_ACCOUNT_CHANGED[\s\S]*?WALLET_DELETION_ACTIVE[\s\S]*?transportStarted = true[\s\S]*?torii\.submit/.test(
+    /val receipt = WalletMutationCoordinator\.withLock \{[\s\S]*?featureManager\.getStateForNetwork\(request\.networkId\)[\s\S]*?requireSendEnabled\(transportState, request\.networkId\)[\s\S]*?signer\.isQualifiedFor\(network\)[\s\S]*?validatePreparedContract\(prepared, network\)[\s\S]*?requireActiveAccount\([\s\S]*?NEXUS_ACCOUNT_CHANGED[\s\S]*?WALLET_DELETION_ACTIVE[\s\S]*?transportStarted = true[\s\S]*?torii\.submit/.test(
       nexusCoordinator,
     ) &&
     nexusCoordinator.includes(

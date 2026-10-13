@@ -10,9 +10,10 @@ class TairaTestnetContractTest {
     @Test
     fun `first release exposes one canonical public contract`() {
         assertEquals(
-            "taira:${TairaTestnetContract.CONTRACT_SHA256}:",
+            "taira:${TairaTestnetContract.NETWORK_HEX}:",
             TairaTestnetContract.PENDING_JOURNAL_PREFIX,
         )
+        org.junit.Assert.assertFalse("taira:${TairaTestnetContract.CONTRACT_SHA256}:pending".startsWith(TairaTestnetContract.PENDING_JOURNAL_PREFIX))
         assertTrue(
             "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}pending"
                 .startsWith(TairaTestnetContract.PENDING_JOURNAL_PREFIX)
@@ -27,6 +28,14 @@ class TairaTestnetContractTest {
         assertEquals(TairaTestnetContract.TORII_ROOT, NexusNetworks.taira.toriiBaseUrl)
         assertEquals(TairaTestnetContract.TORII_ROOT, NexusNetworks.taira.explorerBaseUrl)
         assertEquals(TairaTestnetContract.MCP_ENDPOINT, NexusToriiRoutes.mcp(NexusNetworks.taira))
+    }
+
+    @Test
+    fun `production accounts remain derivable while only Taira can use live transport`() {
+        assertSame(NexusNetworks.minamoto, NexusNetworks.require(WalletNetworkId.MINAMOTO))
+        assertEquals(setOf(WalletNetworkId.TAIRA), NexusNetworks.liveIds)
+        assertThrows(IllegalStateException::class.java) { NexusNetworks.requireLive(NexusNetworks.minamoto) }
+        assertSame(NexusNetworks.taira, NexusNetworks.requireLive(NexusNetworks.taira))
     }
 
     @Test

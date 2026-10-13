@@ -595,6 +595,14 @@ class PinCodeViewModel @Inject constructor(
     }
 
     private suspend fun proceed() {
+        // Authentication is local. A disconnected SORA2 node must not prevent
+        // access to independent networks or offline account addresses. Leave
+        // migration state untouched so it is checked on a connected unlock.
+        if (!state.isConnected) {
+            state = state.copy(migrating = false)
+            mainRouter.popBackStack()
+            return
+        }
         state = state.copy(
             migrating = true
         )

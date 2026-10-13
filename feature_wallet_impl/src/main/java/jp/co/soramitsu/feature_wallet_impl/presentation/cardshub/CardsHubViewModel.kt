@@ -391,6 +391,15 @@ class CardsHubViewModel @Inject constructor(
         }
     }
 
+    fun refreshNexusPortfolio() = nexusPortfolioRepository.refresh()
+
+    fun loadMoreNexusHistory(balance: NexusPortfolioBalance) {
+        val current = currentNexusBalance(balance) ?: return
+        if (current.historyHasMore) {
+            nexusPortfolioRepository.loadMoreHistory(current.walletId, current.networkId)
+        }
+    }
+
     fun openNexusSend(balance: NexusPortfolioBalance) {
         if (_nexusSend.value.preparing || _nexusSend.value.submitting) return
         val currentBalance = currentNexusBalance(balance)

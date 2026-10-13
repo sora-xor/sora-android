@@ -19,7 +19,9 @@ object TairaTestnetContract {
     const val XOR_ASSET_ALIAS = "xor#universal"
     const val XOR_SCALE = 9
     const val I105_DISCRIMINANT = 369
-    const val MCP_PROTOCOL_VERSION = "2025-06-18"
+    const val NETWORK_LITERAL = "hash:5C3E66C94E079079FF4FC46F59810B9C4EC7B2646DD45CE937831C0FDCE20C9B#44D9"
+    const val NETWORK_HEX = "5c3e66c94e079079ff4fc46f59810b9c4ec7b2646dd45ce937831c0fdce20c9b"
+    const val MCP_PROTOCOL_VERSION = "2026-07-28"
 
     /**
      * SHA-256 of `taira-v1|<root>|<chain>|<xor-definition>|<scale>`, used to namespace durable
@@ -27,7 +29,9 @@ object TairaTestnetContract {
      */
     const val CONTRACT_SHA256 =
         "2bda6642b02735dd0ae287eef4b5e37b8845c8b8b9bd191bc036f808fca02b5d"
-    const val PENDING_JOURNAL_PREFIX = "taira:$CONTRACT_SHA256:"
+    // The immutable local ID binds every newly signed transaction to its genesis. Existing
+    // pre-send contract namespaces remain stored as recovery evidence, never reinterpreted.
+    const val PENDING_JOURNAL_PREFIX = "taira:$NETWORK_HEX:"
 }
 
 object WalletNetworkChainIdentity {
@@ -129,6 +133,16 @@ object NexusNetworks {
 
     val admitted: List<NexusNetwork> = listOf(minamoto, taira)
     val admittedIds: Set<WalletNetworkId> = admitted.mapTo(linkedSetOf()) { it.id }
+
+    // Account creation and recovery retain both derivation profiles. Production has no live
+    // deployment yet; it must never inherit Taira's transport availability.
+    val liveIds: Set<WalletNetworkId> = setOf(WalletNetworkId.TAIRA)
+
+    fun isLive(network: NexusNetwork): Boolean = network in admitted && network.id in liveIds
+
+    fun requireLive(network: NexusNetwork): NexusNetwork = requireAdmitted(network).also {
+        check(isLive(it)) { "NEXUS_NETWORK_NOT_LIVE" }
+    }
 
     fun find(networkId: WalletNetworkId): NexusNetwork? =
         admitted.firstOrNull { it.id == networkId }

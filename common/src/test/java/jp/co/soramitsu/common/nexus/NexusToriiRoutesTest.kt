@@ -109,17 +109,14 @@ class NexusToriiRoutesTest {
             NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE,
             NexusToriiRoutes.responseAccept(submission),
         )
-        listOf(
-            { NexusToriiRoutes.health(NexusNetworks.taira) },
-            { NexusToriiRoutes.submitTransaction(NexusNetworks.taira) },
-        ).forEach { rawTairaRoute ->
-            assertEquals(
-                "TAIRA_MCP_REQUIRED",
-                assertThrows(IllegalArgumentException::class.java) {
-                    rawTairaRoute()
-                }.message,
-            )
-        }
+        assertEquals(
+            "https://taira.sora.org/health",
+            NexusToriiRoutes.health(NexusNetworks.taira),
+        )
+        assertEquals(
+            "https://taira.sora.org/v1/pipeline/transactions",
+            NexusToriiRoutes.submitTransaction(NexusNetworks.taira),
+        )
         assertThrows(IllegalArgumentException::class.java) {
             NexusToriiRoutes.requestContentType(
                 "POST",

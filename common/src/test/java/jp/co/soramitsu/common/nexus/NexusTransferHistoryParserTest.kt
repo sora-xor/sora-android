@@ -16,265 +16,6 @@ class NexusTransferHistoryParserTest {
     private val receiver = IrohaAddressCodec.encode(ByteArray(32) { 2 }, 369)
 
     @Test
-    fun `submit and wait request uses the exact public Taira contract`() {
-        val request = TairaMcpContract.submitAndWaitRequest(
-            requestId = "submit-1",
-            signedNorito = byteArrayOf(1, 2, 3, 4),
-            expectedHash = HASH,
-        )
-        val params = request.params as JsonObject
-        assertEquals("tools/call", request.method)
-        assertEquals(TairaMcpContract.SUBMIT_AND_WAIT_TOOL, params.string("name"))
-        val arguments = params["arguments"] as JsonObject
-        assertEquals(
-            setOf(
-                "body_base64",
-                "hash",
-                "status_accept",
-                "terminal_statuses",
-                "timeout_ms",
-            ),
-            arguments.keys,
-        )
-        assertEquals(Base64.getEncoder().encodeToString(byteArrayOf(1, 2, 3, 4)), arguments.string("body_base64"))
-        assertEquals(HASH, arguments.string("hash"))
-        assertEquals("application/json", arguments.string("status_accept"))
-        assertEquals(JsonArray(listOf(JsonPrimitive("Applied"))), arguments["terminal_statuses"])
-        assertEquals(JsonPrimitive(120_000), arguments["timeout_ms"])
-    }
-
-    @Test
-    fun `account assets request uses the current routed query selector`() {
-        val request = TairaMcpContract.accountAssetsRequest(
-            requestId = "assets-1",
-            accountId = sender,
-            definitionId = TairaTestnetContract.XOR_ASSET_DEFINITION_ID,
-            limit = 100,
-            offset = 0,
-        )
-        val params = request.params as JsonObject
-        assertEquals(TairaMcpContract.ACCOUNT_ASSETS_TOOL, params.string("name"))
-        val arguments = params["arguments"] as JsonObject
-        assertEquals(
-            TairaTestnetContract.XOR_ASSET_DEFINITION_ID,
-            arguments.string("asset"),
-        )
-        assertTrue("asset_id" !in arguments)
-        assertTrue("count_mode" !in arguments)
-        assertEquals("global", arguments.string("scope"))
-    }
-
-    @Test
-    fun `instruction history request uses the bidirectional definition selector`() {
-        val request = TairaMcpContract.instructionsRequest(
-            requestId = "history-1",
-            accountId = sender,
-            definitionId = TairaTestnetContract.XOR_ASSET_DEFINITION_ID,
-            page = 1,
-            perPage = 100,
-        )
-        val arguments = (request.params as JsonObject)["arguments"] as JsonObject
-        assertEquals(
-            TairaTestnetContract.XOR_ASSET_DEFINITION_ID,
-            arguments.string("asset_definition_id"),
-        )
-        assertTrue("asset_id" !in arguments)
-        assertEquals("Transfer", arguments.string("kind"))
-        assertEquals("committed", arguments.string("transaction_status"))
-    }
-
-    @Test
-    fun `instruction discovery requires the explicit definition selector`() {
-        fun listing(selector: String): JsonObject = json.parseToJsonElement(
-            """
-            {
-              "tools": [{
-                "name": "iroha.instructions.list",
-                "inputSchema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "properties": {
-                    "account": {"type": "string"},
-                    "$selector": {"type": "string"},
-                    "kind": {"type": "string"},
-                    "page": {"type": "integer"},
-                    "per_page": {"type": "integer"},
-                    "transaction_hash": {"type": "string"},
-                    "transaction_status": {"type": "string"},
-                    "accept": {"type": "string"}
-                  }
-                }
-              }],
-              "nextCursor": null,
-              "listChanged": false,
-              "toolsetVersion": "${"c".repeat(64)}"
-            }
-            """.trimIndent()
-        ) as JsonObject
-
-        assertEquals(
-            "TAIRA_MCP_CONTRACT_MISMATCH",
-            assertThrows(NexusToriiException::class.java) {
-                TairaMcpContract.validateToolPage(
-                    result = listing("asset_id"),
-                    tools = setOf(TairaMcpContract.INSTRUCTIONS_TOOL),
-                    expectedToolsetVersion = "c".repeat(64),
-                )
-            }.safeCode,
-        )
-        assertEquals(
-            setOf(TairaMcpContract.INSTRUCTIONS_TOOL),
-            TairaMcpContract.validateToolPage(
-                result = listing("asset_definition_id"),
-                tools = setOf(TairaMcpContract.INSTRUCTIONS_TOOL),
-                expectedToolsetVersion = "c".repeat(64),
-            ).matched,
-        )
-    }
-
-    @Test
-    fun `account assets discovery requires extension query names to be admitted`() {
-        fun listing(additionalProperties: Boolean): JsonObject = json.parseToJsonElement(
-            """
-            {
-              "tools": [{
-                "name": "iroha.accounts.assets",
-                "inputSchema": {
-                  "type": "object",
-                  "additionalProperties": $additionalProperties,
-                  "properties": {
-                    "account_id": {"type": "string"},
-                    "asset_id": {"type": "string"},
-                    "limit": {"type": "integer"},
-                    "offset": {"type": "integer"},
-                    "accept": {"type": "string"}
-                  }
-                }
-              }],
-              "nextCursor": null,
-              "listChanged": false,
-              "toolsetVersion": "${"b".repeat(64)}"
-            }
-            """.trimIndent()
-        ) as JsonObject
-
-        assertEquals(
-            setOf(TairaMcpContract.ACCOUNT_ASSETS_TOOL),
-            TairaMcpContract.validateToolPage(
-                result = listing(additionalProperties = true),
-                tools = setOf(TairaMcpContract.ACCOUNT_ASSETS_TOOL),
-                expectedToolsetVersion = "b".repeat(64),
-            ).matched,
-        )
-        assertEquals(
-            "TAIRA_MCP_CONTRACT_MISMATCH",
-            assertThrows(NexusToriiException::class.java) {
-                TairaMcpContract.validateToolPage(
-                    result = listing(additionalProperties = false),
-                    tools = setOf(TairaMcpContract.ACCOUNT_ASSETS_TOOL),
-                    expectedToolsetVersion = "b".repeat(64),
-                )
-            }.safeCode,
-        )
-
-        val corrected = json.parseToJsonElement(
-            """
-            {
-              "tools": [{
-                "name": "iroha.accounts.assets",
-                "inputSchema": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "account_id": {"type": "string"},
-                    "asset": {"type": "string"},
-                    "limit": {"type": "integer"},
-                    "offset": {"type": "integer"},
-                    "scope": {"type": "string"},
-                    "accept": {"type": "string"}
-                  }
-                }
-              }],
-              "nextCursor": null,
-              "listChanged": false,
-              "toolsetVersion": "${"b".repeat(64)}"
-            }
-            """.trimIndent()
-        )
-        assertEquals(
-            setOf(TairaMcpContract.ACCOUNT_ASSETS_TOOL),
-            TairaMcpContract.validateToolPage(
-                result = corrected,
-                tools = setOf(TairaMcpContract.ACCOUNT_ASSETS_TOOL),
-                expectedToolsetVersion = "b".repeat(64),
-            ).matched,
-        )
-    }
-
-    @Test
-    fun `discovery validates relevant current schemas without exact full schema equality`() {
-        val initialize = json.parseToJsonElement(
-            """
-            {
-              "protocolVersion": "2025-06-18",
-              "capabilities": {"tools": {"toolsetVersion": "${"a".repeat(64)}", "extra": true}},
-              "serverInfo": {"name": "iroha-torii-mcp", "version": "next"}
-            }
-            """.trimIndent()
-        )
-        assertEquals("a".repeat(64), TairaMcpContract.toolsetVersion(initialize))
-
-        val listing = json.parseToJsonElement(
-            """
-            {
-              "tools": [
-                {
-                  "name": "iroha.transactions.submit_and_wait",
-                  "description": "current",
-                  "inputSchema": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": ["body_base64"],
-                    "properties": {
-                      "body_base64": {"type": "string"},
-                      "hash": {"type": "string"},
-                      "status_accept": {"type": "string"},
-                      "terminal_statuses": {
-                        "type": "array",
-                        "items": {"type": "string"}
-                      },
-                      "timeout_ms": {"type": "integer"},
-                      "future_optional_field": {"type": "string"}
-                    }
-                  },
-                  "outputSchema": {"type": "object"}
-                }
-              ],
-              "nextCursor": null,
-              "listChanged": false,
-              "toolsetVersion": "${"a".repeat(64)}"
-            }
-            """.trimIndent()
-        )
-        val page = TairaMcpContract.validateToolPage(
-            result = listing,
-            tools = setOf(TairaMcpContract.SUBMIT_AND_WAIT_TOOL),
-            expectedToolsetVersion = "a".repeat(64),
-        )
-        assertEquals(setOf(TairaMcpContract.SUBMIT_AND_WAIT_TOOL), page.matched)
-        assertEquals(null, page.nextCursor)
-
-        val request = TairaMcpContract.discoveryRequest(
-            requestId = "tools-2",
-            toolsetVersion = "a".repeat(64),
-            cursor = "64",
-        )
-        val params = request.params as JsonObject
-        assertEquals("a".repeat(64), params.string("toolset_version"))
-        assertEquals("64", params.string("cursor"))
-    }
-
-    @Test
     fun `submit and wait accepts only matching final Applied result`() {
         val receipt = TairaMcpContract.validateSubmitAndWaitResult(
             json = json,
@@ -283,7 +24,7 @@ class NexusTransferHistoryParserTest {
         )
 
         assertEquals(HASH, receipt.payload.transactionHash)
-        assertEquals(null, receipt.payload.entrypointHash)
+        assertEquals(HASH, receipt.payload.entrypointHash)
     }
 
     @Test
@@ -490,7 +231,8 @@ class NexusTransferHistoryParserTest {
             """
             {
               "payload": {
-                "tx_hash": "$receiptHash",
+                "entrypoint_hash": "$receiptHash",
+                "signed_transaction_hash": "$receiptHash",
                 "submitted_at_ms": 1775251200000,
                 "submitted_at_height": 42,
                 "signer": "ed0120example"
@@ -536,7 +278,8 @@ class NexusTransferHistoryParserTest {
             "content-type" to JsonPrimitive("application/json")
         )
         transactionHash?.let {
-            headers["x-iroha-transaction-hash"] = JsonPrimitive(it)
+            headers["x-iroha-entrypoint-hash"] = JsonPrimitive(it)
+            headers["x-iroha-signed-transaction-hash"] = JsonPrimitive(it)
         }
         return JsonObject(
             mapOf(

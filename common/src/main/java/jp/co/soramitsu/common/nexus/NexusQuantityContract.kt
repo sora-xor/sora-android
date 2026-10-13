@@ -5,7 +5,8 @@ package jp.co.soramitsu.common.nexus
  * pending records. The value stays a decimal string/BigDecimal throughout transaction handling.
  */
 object NexusQuantityContract {
-    // Reviewed Nexus Norito quantities encode scale as an unsigned byte.
+    // General read/display admission bound. The current Taira XOR signing writer separately
+    // enforces scale <= 9 and the signed-512 magnitude encoded by current Norito.
     const val MAX_SCALE = 255
     const val MAX_WIRE_CHARACTERS = 4_096
 

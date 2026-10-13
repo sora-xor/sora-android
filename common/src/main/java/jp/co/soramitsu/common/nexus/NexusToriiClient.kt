@@ -10,8 +10,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.network.requireStrictNexusJsonDocument
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -20,7 +18,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.intOrNull
 
 @Serializable
@@ -48,11 +45,12 @@ internal data class NexusAssetBalancePage(
     val total: Long,
 )
 
-/** Current `/v1/accounts/{account}/assets` projection exposed by curated Torii MCP. */
+/** Current direct `/v1/accounts/{account}/assets` projection. */
 @Serializable
 internal data class TairaAccountAssetPage(
     val items: List<NexusAssetBalance>,
     val total: Long,
+    @SerialName("next_cursor") val nextCursor: String?,
 )
 
 /** Exact-count validation for the canonical account-assets query. */
@@ -190,7 +188,7 @@ object NexusAssetDefinitionIdentity {
             // econometrics, not mutable alias metadata. Bind Taira to its immutable native ID and
             // validate the optional descriptive fields only when the server includes them.
             return definition.id == TairaTestnetContract.XOR_ASSET_DEFINITION_ID &&
-                (definition.name == null || definition.name == XOR_NAME) &&
+                (definition.name == null || definition.name.equals(XOR_NAME, ignoreCase = true)) &&
                 (definition.alias == null || definition.alias == NexusToriiRoutes.XOR_ASSET_ALIAS) &&
                 (bindingIsValid == null || bindingIsValid)
         }
@@ -465,6 +463,7 @@ object NexusToriiResponseContract {
     fun validateFanout(
         headerValue: (String) -> String?,
         requireFanout: Boolean = false,
+        allowPublicTairaRoute: Boolean = false,
     ) {
         val firstFailureHeader = headerValue(FIRST_FAILURE)
         val firstFailure = NexusFanoutFailureReason.fromWireValue(firstFailureHeader)
@@ -488,7 +487,11 @@ object NexusToriiResponseContract {
         if (rawCounts.all { it == null }) {
             // A lane/dataspace pair without the complete fanout counters is
             // partial provenance, not authoritative local-route evidence.
-            if (routeLaneId != null) throw invalidHeaders()
+            if (routeLaneId != null) {
+                if (allowPublicTairaRoute && routeLaneId == "0" && routeDataspaceId == "0" &&
+                    routedBy == "local" && firstFailureHeader == null) return
+                throw invalidHeaders()
+            }
             if (firstFailure != null) {
                 throw deploymentHealthFailure(firstFailure, null)
             }
@@ -734,6 +737,7 @@ internal object NexusMcpResultContract {
     fun validateEmbeddedRoute(
         result: JsonElement,
         requireFanout: Boolean = false,
+        allowPublicTairaRoute: Boolean = false,
     ): JsonObject {
         val direct = result as? JsonObject
             ?: throw NexusToriiException("NEXUS_MCP_RESULT_INVALID")
@@ -763,6 +767,7 @@ internal object NexusMcpResultContract {
         NexusToriiResponseContract.validateFanout(
             headerValue = headers::get,
             requireFanout = false,
+            allowPublicTairaRoute = allowPublicTairaRoute,
         )
         val status = (structured["status"] as? JsonPrimitive)
             ?.takeIf { !it.isString }
@@ -800,6 +805,7 @@ internal object NexusMcpResultContract {
         NexusToriiResponseContract.validateFanout(
             headerValue = headers::get,
             requireFanout = requireFanout,
+            allowPublicTairaRoute = allowPublicTairaRoute,
         )
         return structured
     }
@@ -860,7 +866,7 @@ object NexusBalanceValidator {
                     (balance.assetId == null ||
                         balance.assetId == assetDefinitionId) &&
                     (expectedAssetName == null ||
-                        balance.assetName == expectedAssetName) &&
+                        balance.assetName?.equals(expectedAssetName, ignoreCase = network.id == WalletNetworkId.TAIRA) == true) &&
                     (expectedAssetAlias == null ||
                         balance.assetAlias == expectedAssetAlias) &&
                     accountMatches &&
@@ -905,33 +911,37 @@ interface NexusToriiReadClient {
         accountId: String,
         assetDefinitionId: String,
     ): List<NexusTransferHistoryItem>
+
+    suspend fun committedXorTransferPage(
+        network: NexusNetwork,
+        accountId: String,
+        assetDefinitionId: String,
+        cursor: String?,
+    ): NexusTransferHistorySlice
+
+    suspend fun committedXorTransfersForHash(
+        network: NexusNetwork,
+        accountId: String,
+        assetDefinitionId: String,
+        transactionHash: String,
+    ): List<NexusTransferHistoryItem>
 }
 
-/**
- * Small typed Torii client with fixed production endpoints, bounded responses, bounded pagination,
- * strict I105 routing, and no automatic retry.
- */
+internal fun interface NexusToriiReadTransport {
+    suspend fun get(url: String, requireFanout: Boolean): ByteArray
+}
+
+/** Fixed Torii queries with bounded responses, strict I105 routing, and no automatic retry. */
 @Singleton
-class NexusToriiClient @Inject constructor(
+class NexusToriiClient internal constructor(
     private val json: Json,
+    private val readTransport: NexusToriiReadTransport?,
 ) : NexusToriiReadClient {
-    private val tairaToolRegistryMutex = Mutex()
-    private var tairaToolsetVersion: String? = null
-    private val verifiedTairaTools = mutableSetOf<String>()
+    @Inject constructor(json: Json) : this(json, null)
 
     suspend fun health(network: NexusNetwork): String {
-        if (network.id == WalletNetworkId.TAIRA) {
-            ensureTairaTools(network, setOf(TairaMcpContract.HEALTH_TOOL))
-            val result = mcp(
-                network,
-                TairaMcpContract.healthRequest("taira-health"),
-            ).result ?: throw NexusToriiException("NEXUS_HEALTH_RESULT_MISSING")
-            return TairaMcpContract.validateHealthResult(result)
-        }
-        val payload = requestBytes(
-            "GET",
-            NexusToriiRoutes.health(network),
-        ).decodeToString()
+        NexusNetworks.requireLive(network)
+        val payload = get(NexusToriiRoutes.health(network)).decodeToString()
         if (!NexusToriiRoutes.isHealthyResponse(payload)) {
             throw NexusToriiException("NEXUS_HEALTH_INVALID")
         }
@@ -976,6 +986,7 @@ class NexusToriiClient @Inject constructor(
         expectedAssetName: String?,
         expectedAssetAlias: String?,
     ): NexusAssetBalance {
+        NexusNetworks.requireLive(network)
         check(
             NexusAssetDefinitionIdentity.hasCanonicalWireShape(assetDefinitionId)
         ) { "NEXUS_INVALID_ASSET_SELECTOR" }
@@ -1014,29 +1025,15 @@ class NexusToriiClient @Inject constructor(
     }
 
     suspend fun resolveXorDefinition(network: NexusNetwork): NexusAssetDefinition {
-        val definition: NexusAssetDefinition = if (network.id == WalletNetworkId.TAIRA) {
-            ensureTairaTools(network, setOf(TairaMcpContract.ASSET_DEFINITION_TOOL))
-            val result = mcp(
-                network,
-                TairaMcpContract.assetDefinitionRequest("taira-xor-definition"),
-            ).result ?: throw NexusToriiException("NEXUS_XOR_DEFINITION_RESULT_MISSING")
-            val routed = NexusMcpResultContract.validateEmbeddedRoute(
-                result,
-                requireFanout = false,
-            )
-            decodeElement(routed.getValue("body"))
+        NexusNetworks.requireLive(network)
+        val selector = if (network.id == WalletNetworkId.TAIRA) {
+            TairaTestnetContract.XOR_ASSET_DEFINITION_ID
         } else {
-            decode(
-                requestBytes(
-                    method = "GET",
-                    url = NexusToriiRoutes.assetDefinition(
-                        network,
-                        NexusToriiRoutes.XOR_ASSET_ALIAS,
-                    ),
-                    requireFanout = true,
-                )
-            )
+            NexusToriiRoutes.XOR_ASSET_ALIAS
         }
+        val definition: NexusAssetDefinition = decode(
+            get(NexusToriiRoutes.assetDefinition(network, selector), requireFanout = true)
+        )
         return definition.also {
             check(
                 NexusAssetDefinitionIdentity.isQualifiedXorDefinition(definition, network)
@@ -1049,13 +1046,13 @@ class NexusToriiClient @Inject constructor(
         signedNorito: ByteArray,
         expectedHash: String,
     ): NexusSubmissionReceipt {
+        NexusNetworks.requireLive(network)
         require(signedNorito.isNotEmpty()) { "NEXUS_EMPTY_SIGNED_TRANSACTION" }
         require(signedNorito.size <= MAX_TRANSACTION_BYTES) { "NEXUS_TRANSACTION_TOO_LARGE" }
         val canonicalExpectedHash = requireNotNull(NexusTransactionHash.normalized(expectedHash)) {
             "NEXUS_INVALID_TRANSACTION_HASH"
         }
         if (network.id == WalletNetworkId.TAIRA) {
-            ensureTairaTools(network, setOf(TairaMcpContract.SUBMIT_AND_WAIT_TOOL))
             return try {
                 val response = mcp(
                     network = network,
@@ -1113,24 +1110,8 @@ class NexusToriiClient @Inject constructor(
         network: NexusNetwork,
         transactionHash: String,
     ): NexusTransactionStatus {
-        if (network.id == WalletNetworkId.TAIRA) {
-            ensureTairaTools(network, setOf(TairaMcpContract.TRANSACTION_STATUS_TOOL))
-            val result = mcp(
-                network,
-                TairaMcpContract.transactionStatusRequest(
-                    requestId = "taira-status-${transactionHash.take(12)}",
-                    hash = transactionHash,
-                ),
-            ).result ?: throw NexusToriiException("NEXUS_STATUS_RESULT_MISSING")
-            val routed = NexusMcpResultContract.validateEmbeddedRoute(result)
-            return decodeElement(routed.getValue("body"))
-        }
-        return decode(
-            requestBytes(
-                method = "GET",
-                url = NexusToriiRoutes.transactionStatus(network, transactionHash),
-            )
-        )
+        NexusNetworks.requireLive(network)
+        return decode(get(NexusToriiRoutes.transactionStatus(network, transactionHash)))
     }
 
     /**
@@ -1145,47 +1126,13 @@ class NexusToriiClient @Inject constructor(
         assetDefinitionId: String,
         transactionHash: String,
     ): Boolean {
+        NexusNetworks.requireLive(network)
         val account = NexusToriiRoutes.canonicalAccount(network, accountId)
         require(NexusAssetDefinitionIdentity.hasCanonicalWireShape(assetDefinitionId)) {
             "NEXUS_INVALID_ASSET_SELECTOR"
         }
         if (network.id == WalletNetworkId.TAIRA) {
-            check(assetDefinitionId == TairaTestnetContract.XOR_ASSET_DEFINITION_ID) {
-                "TAIRA_XOR_ASSET_DEFINITION_MISMATCH"
-            }
-            ensureTairaTools(network, setOf(TairaMcpContract.INSTRUCTIONS_TOOL))
-            val canonicalHash = requireNotNull(NexusTransactionHash.normalized(transactionHash)) {
-                "NEXUS_INVALID_TRANSACTION_HASH"
-            }
-            val result = mcp(
-                network,
-                TairaMcpContract.instructionsRequest(
-                    requestId = "taira-committed-${canonicalHash.take(12)}",
-                    accountId = account,
-                    definitionId = assetDefinitionId,
-                    page = 1,
-                    perPage = HISTORY_PAGE_SIZE,
-                    transactionHash = canonicalHash,
-                ),
-            ).result ?: throw NexusToriiException("NEXUS_HISTORY_RESULT_MISSING")
-            val routed = NexusMcpResultContract.validateEmbeddedRoute(
-                result,
-                requireFanout = false,
-            )
-            val page = NexusTransferHistoryParser.page(
-                result = routed,
-                network = network,
-                account = account,
-                assetDefinitionId = assetDefinitionId,
-            )
-            page.requirePageContract(expectedPage = 1, maximum = HISTORY_PAGE_SIZE)
-            if (page.totalPages > 1) {
-                throw NexusToriiException("NEXUS_TRANSACTION_HISTORY_PAGE_LIMIT_EXCEEDED")
-            }
-            check(page.items.all { it.transactionHash == canonicalHash }) {
-                "NEXUS_TRANSACTION_HISTORY_IDENTITY_MISMATCH"
-            }
-            return page.items.isNotEmpty()
+            return committedXorTransfersForHash(network, account, assetDefinitionId, transactionHash).isNotEmpty()
         }
         val proof = NexusAccountTransactionProof(
             network = network,
@@ -1221,6 +1168,7 @@ class NexusToriiClient @Inject constructor(
         request: NexusMcpRequest,
         submission: Boolean = false,
     ): NexusMcpResponse {
+        NexusNetworks.requireLive(network)
         require(request.jsonrpc == "2.0") { "NEXUS_INVALID_MCP_VERSION" }
         require(MCP_ID.matches(request.id)) { "NEXUS_INVALID_MCP_ID" }
         require(MCP_METHOD.matches(request.method)) { "NEXUS_INVALID_MCP_METHOD" }
@@ -1231,6 +1179,7 @@ class NexusToriiClient @Inject constructor(
                 requestBody = json.encodeToString(NexusMcpRequest.serializer(), request)
                     .encodeToByteArray(),
                 requestContentType = "application/json",
+                requestHeaders = TairaMcpContract.requestHeaders(request),
                 submission = submission,
             )
         )
@@ -1261,139 +1210,36 @@ class NexusToriiClient @Inject constructor(
         return response
     }
 
-    private suspend fun ensureTairaTools(network: NexusNetwork, tools: Set<String>) {
-        require(network.id == WalletNetworkId.TAIRA) { "TAIRA_MCP_WRONG_NETWORK" }
-        tairaToolRegistryMutex.withLock {
-            val initialize = mcp(
-                network,
-                TairaMcpContract.initializeRequest("taira-tools-initialize"),
-            ).result ?: throw NexusToriiException("TAIRA_MCP_INITIALIZE_MISSING")
-            val version = TairaMcpContract.toolsetVersion(initialize)
-            if (version != tairaToolsetVersion) {
-                tairaToolsetVersion = version
-                verifiedTairaTools.clear()
-            }
-            if (verifiedTairaTools.containsAll(tools)) return@withLock
-            val matched = mutableSetOf<String>()
-            val advertised = mutableSetOf<String>()
-            val cursors = mutableSetOf<String>()
-            var cursor: String? = null
-            repeat(MAX_MCP_TOOL_PAGES) { pageIndex ->
-                val listing = mcp(
-                    network,
-                    TairaMcpContract.discoveryRequest(
-                        requestId = "taira-tools-list-${pageIndex + 1}",
-                        toolsetVersion = version,
-                        cursor = cursor,
-                    ),
-                ).result ?: throw NexusToriiException("TAIRA_MCP_TOOL_DISCOVERY_MISSING")
-                val page = TairaMcpContract.validateToolPage(
-                    result = listing,
-                    tools = tools,
-                    expectedToolsetVersion = version,
-                )
-                if (advertised.any(page.advertisedNames::contains)) {
-                    throw NexusToriiException("TAIRA_MCP_TOOL_DISCOVERY_INVALID")
-                }
-                advertised += page.advertisedNames
-                matched += page.matched
-                if (matched.containsAll(tools)) {
-                    verifiedTairaTools += tools
-                    return@withLock
-                }
-                cursor = page.nextCursor
-                if (cursor == null) {
-                    throw NexusToriiException("TAIRA_MCP_TOOL_UNAVAILABLE")
-                }
-                if (!cursors.add(checkNotNull(cursor))) {
-                    throw NexusToriiException("TAIRA_MCP_TOOL_DISCOVERY_INVALID")
-                }
-            }
-            throw NexusToriiException("TAIRA_MCP_TOOL_DISCOVERY_LIMIT_EXCEEDED")
+    /** Compatibility entry point: the newest page, never an unbounded account-history scan. */
+    override suspend fun committedXorTransfers(network: NexusNetwork, accountId: String,
+        assetDefinitionId: String): List<NexusTransferHistoryItem> =
+        committedXorTransferPage(network, accountId, assetDefinitionId, null).items
+
+    override suspend fun committedXorTransferPage(network: NexusNetwork, accountId: String,
+        assetDefinitionId: String, cursor: String?): NexusTransferHistorySlice =
+        readCommittedTransferPage(network, accountId, assetDefinitionId, cursor)
+
+    /** Exact-hash evidence is independent of the size of the account's lifetime history. */
+    override suspend fun committedXorTransfersForHash(network: NexusNetwork, accountId: String,
+        assetDefinitionId: String, transactionHash: String): List<NexusTransferHistoryItem> {
+        val hash = requireNotNull(NexusTransactionHash.normalized(transactionHash)) { "NEXUS_INVALID_TRANSACTION_HASH" }
+        return NexusHistoryCursorCollector.collect { cursor ->
+            readCommittedTransferPage(network, accountId, assetDefinitionId, cursor, hash)
         }
     }
 
-    override suspend fun committedXorTransfers(
-        network: NexusNetwork,
-        accountId: String,
-        assetDefinitionId: String,
-    ): List<NexusTransferHistoryItem> {
+    private suspend fun readCommittedTransferPage(network: NexusNetwork, accountId: String,
+        assetDefinitionId: String, cursor: String?, transactionHash: String? = null): NexusTransferHistorySlice {
+        NexusNetworks.requireLive(network)
         val account = NexusToriiRoutes.canonicalAccount(network, accountId)
-        require(
-            NexusAssetDefinitionIdentity.hasCanonicalWireShape(assetDefinitionId)
-        ) { "NEXUS_INVALID_ASSET_SELECTOR" }
-        if (network.id == WalletNetworkId.TAIRA) {
-            check(assetDefinitionId == TairaTestnetContract.XOR_ASSET_DEFINITION_ID) {
-                "TAIRA_XOR_ASSET_DEFINITION_MISMATCH"
-            }
-            ensureTairaTools(network, setOf(TairaMcpContract.INSTRUCTIONS_TOOL))
-        }
-
-        val history = mutableListOf<NexusTransferHistoryItem>()
-        val pageFingerprints = mutableSetOf<String>()
-        val sourceItemIds = mutableSetOf<String>()
-        var expectedTotalPages: Long? = null
-        var expectedTotalItems: Long? = null
-        var consumedSourceItems = 0L
-        repeat(MAX_PAGES) { pageIndex ->
-            val pageNumber = pageIndex + 1
-            val response = mcp(
-                network = network,
-                request = TairaMcpContract.instructionsRequest(
-                    requestId = "history-$pageNumber",
-                    accountId = account,
-                    definitionId = assetDefinitionId,
-                    page = pageNumber,
-                    perPage = HISTORY_PAGE_SIZE,
-                ),
-            )
-            val result = response.result
-                ?: throw NexusToriiException("NEXUS_HISTORY_RESULT_MISSING")
-            val structuredResult = NexusMcpResultContract.validateEmbeddedRoute(
-                result = result,
-                // Explorer instruction history is a committed local-ledger projection; unlike
-                // account-assets, the current route does not emit fanout counters.
-                requireFanout = network.id != WalletNetworkId.TAIRA,
-            )
-            val parsedPage = NexusTransferHistoryParser.page(
-                result = structuredResult,
-                network = network,
-                account = account,
-                assetDefinitionId = assetDefinitionId,
-            )
-            parsedPage.requirePageContract(pageNumber, HISTORY_PAGE_SIZE)
-            check(expectedTotalPages == null || expectedTotalPages == parsedPage.totalPages) {
-                "NEXUS_HISTORY_PAGE_INVALID"
-            }
-            check(expectedTotalItems == null || expectedTotalItems == parsedPage.totalItems) {
-                "NEXUS_HISTORY_PAGE_INVALID"
-            }
-            expectedTotalPages = parsedPage.totalPages
-            expectedTotalItems = parsedPage.totalItems
-            check(consumedSourceItems + parsedPage.sourceItemCount <= parsedPage.totalItems) {
-                "NEXUS_HISTORY_PAGE_INVALID"
-            }
-            check(parsedPage.sourceItemIds.none(sourceItemIds::contains)) {
-                "NEXUS_HISTORY_DUPLICATE_ITEM"
-            }
-            sourceItemIds += parsedPage.sourceItemIds
-            val fingerprint = structuredResult.getValue("body").toString()
-            if (parsedPage.sourceItemCount > 0 && !pageFingerprints.add(fingerprint)) {
-                throw NexusToriiException("NEXUS_HISTORY_REPEATED_PAGE")
-            }
-            consumedSourceItems += parsedPage.sourceItemCount
-            history += parsedPage.items
-            if (history.size > MAX_PAGINATED_ITEMS) {
-                throw NexusToriiException("NEXUS_RESULT_LIMIT_EXCEEDED")
-            }
-            if (pageNumber.toLong() >= parsedPage.totalPages) {
-                check(consumedSourceItems == parsedPage.totalItems) {
-                    "NEXUS_HISTORY_PAGE_INVALID"
-                }
-                return history
-            }
-        }
-        throw NexusToriiException("NEXUS_HISTORY_PAGE_LIMIT_EXCEEDED")
+        check(assetDefinitionId == TairaTestnetContract.XOR_ASSET_DEFINITION_ID) { "TAIRA_XOR_ASSET_DEFINITION_MISMATCH" }
+        val body: JsonObject = decode(get(
+            NexusToriiRoutes.accountHistory(network, account, assetDefinitionId,
+                limit = HISTORY_PAGE_SIZE, cursor = cursor, transactionHash = transactionHash),
+            requireFanout = true,
+        ))
+        return NexusAccountHistoryParser.pageBody(body, network, account, assetDefinitionId,
+            HISTORY_PAGE_SIZE, transactionHash)
     }
 
     private suspend fun getAllAccountAssets(
@@ -1405,39 +1251,33 @@ class NexusToriiClient @Inject constructor(
             check(assetDefinitionId == TairaTestnetContract.XOR_ASSET_DEFINITION_ID) {
                 "TAIRA_XOR_ASSET_DEFINITION_MISMATCH"
             }
-            ensureTairaTools(network, setOf(TairaMcpContract.ACCOUNT_ASSETS_TOOL))
         }
         val proof = NexusExactAssetPageProof(
             pageSize = NexusToriiRoutes.DEFAULT_PAGE_SIZE,
             maxPages = MAX_PAGES,
             maxItems = MAX_PAGINATED_ITEMS,
         )
+        var cursor: String? = null
+        val cursors = mutableSetOf<String>()
         while (true) {
             val page: NexusAssetBalancePage = if (network.id == WalletNetworkId.TAIRA) {
-                val result = mcp(
-                    network,
-                    TairaMcpContract.accountAssetsRequest(
-                        requestId = "taira-assets-${proof.nextOffset}",
-                        accountId = accountId,
-                        definitionId = assetDefinitionId,
-                        limit = NexusToriiRoutes.DEFAULT_PAGE_SIZE,
-                        offset = proof.nextOffset,
-                    ),
-                ).result ?: throw NexusToriiException("NEXUS_ASSETS_RESULT_MISSING")
-                val routed = NexusMcpResultContract.validateEmbeddedRoute(
-                    result,
+                val current: TairaAccountAssetPage = decode(get(
+                    NexusToriiRoutes.accountAssetPage(network, accountId, assetDefinitionId,
+                        limit = NexusToriiRoutes.DEFAULT_PAGE_SIZE, cursor = cursor),
                     requireFanout = true,
-                )
-                val current: TairaAccountAssetPage = decodeElement(
-                    routed.getValue("body")
-                )
+                ))
                 val consumed = proof.nextOffset + current.items.size
                 check(current.total >= 0 && consumed >= proof.nextOffset) {
                     "NEXUS_ASSET_PAGE_INVALID"
                 }
+                cursor = current.nextCursor?.also {
+                    check(it.length in 1..4096 && it.matches(Regex("^[A-Za-z0-9_-]+$")) && cursors.add(it)) {
+                        "NEXUS_ASSET_REPEATED_PAGE"
+                    }
+                }
                 NexusAssetBalancePage(
                     items = current.items,
-                    hasMore = consumed < current.total,
+                    hasMore = cursor != null,
                     countMode = "exact",
                     total = current.total,
                 )
@@ -1459,11 +1299,16 @@ class NexusToriiClient @Inject constructor(
         }
     }
 
+    private suspend fun get(url: String, requireFanout: Boolean = false): ByteArray =
+        readTransport?.get(url, requireFanout)
+            ?: requestBytes(method = "GET", url = url, requireFanout = requireFanout)
+
     private suspend fun requestBytes(
         method: String,
         url: String,
         requestBody: ByteArray? = null,
         requestContentType: String? = null,
+        requestHeaders: Map<String, String> = emptyMap(),
         submission: Boolean = false,
         requireFanout: Boolean = false,
     ): ByteArray = withContext(Dispatchers.IO) {
@@ -1484,6 +1329,7 @@ class NexusToriiClient @Inject constructor(
             instanceFollowRedirects = false
             setRequestProperty("Accept", NexusToriiRoutes.responseAccept(url))
             setRequestProperty("User-Agent", "SORA-Wallet")
+            requestHeaders.forEach { (name, value) -> setRequestProperty(name, value) }
             if (requestBody != null) {
                 doOutput = true
                 setFixedLengthStreamingMode(requestBody.size)
@@ -1505,6 +1351,7 @@ class NexusToriiClient @Inject constructor(
             NexusToriiResponseContract.validateFanout(
                 connection::getHeaderField,
                 requireFanout = false,
+                allowPublicTairaRoute = NexusToriiRoutes.isPublicTairaRoute(url),
             )
             if (status !in 200..299) {
                 val errorBody = connection.errorStream
@@ -1546,6 +1393,7 @@ class NexusToriiClient @Inject constructor(
             NexusToriiResponseContract.validateFanout(
                 connection::getHeaderField,
                 requireFanout,
+                allowPublicTairaRoute = NexusToriiRoutes.isPublicTairaRoute(url),
             )
             connection.inputStream.use { readBounded(it, MAX_RESPONSE_BYTES) }
         } catch (error: NexusToriiException) {
@@ -1590,10 +1438,6 @@ class NexusToriiClient @Inject constructor(
         runCatching { json.decodeFromString<T>(admitNexusJsonResponse(bytes)) }
             .getOrElse { throw NexusToriiException("NEXUS_INVALID_RESPONSE", cause = it) }
 
-    private inline fun <reified T> decodeElement(element: JsonElement): T =
-        runCatching { json.decodeFromJsonElement<T>(element) }
-            .getOrElse { throw NexusToriiException("NEXUS_INVALID_RESPONSE", cause = it) }
-
     private fun canonicalQuantity(value: String, network: NexusNetwork): String {
         require(
             if (network.id == WalletNetworkId.TAIRA) {
@@ -1615,13 +1459,12 @@ class NexusToriiClient @Inject constructor(
         const val READ_TIMEOUT_MILLIS = 30_000
         const val SUBMIT_AND_WAIT_READ_TIMEOUT_MILLIS = 135_000
         const val MAX_PAGES = 20
-        const val MAX_MCP_TOOL_PAGES = 64
         const val MAX_RESPONSE_BYTES = 2 * 1024 * 1024
         const val MAX_ERROR_BYTES = 16 * 1024
         const val MAX_TRANSACTION_BYTES = 2 * 1024 * 1024
         const val MAX_MCP_ERROR_MESSAGE_LENGTH = 4_096
         const val MAX_MCP_ERROR_DATA_LENGTH = 16_384
-        const val HISTORY_PAGE_SIZE = NexusToriiRoutes.MAX_PAGE_SIZE
+        const val HISTORY_PAGE_SIZE = 100
         const val ACCOUNT_TRANSACTION_PAGE_SIZE = 100
         const val MAX_PAGINATED_ITEMS = MAX_PAGES * NexusToriiRoutes.MAX_PAGE_SIZE
         val MCP_ID = Regex("^[A-Za-z0-9._:-]{1,64}$")

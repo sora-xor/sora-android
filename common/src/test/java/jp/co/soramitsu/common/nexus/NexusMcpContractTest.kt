@@ -2,6 +2,8 @@ package jp.co.soramitsu.common.nexus
 
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -24,6 +26,29 @@ class NexusMcpContractTest {
         )
 
         assertTrue(encoded.contains("\"jsonrpc\":\"2.0\""))
+    }
+
+    @Test
+    fun `modern server discovery and tool calls include protocol metadata`() {
+        val requests = listOf(
+            TairaMcpContract.serverDiscoveryRequest("init"),
+            TairaMcpContract.discoveryRequest("list", "current", null),
+            TairaMcpContract.healthRequest("health"),
+        )
+        requests.forEach { request ->
+            val headers = TairaMcpContract.requestHeaders(request)
+            org.junit.Assert.assertEquals(request.method, headers["Mcp-Method"])
+            org.junit.Assert.assertEquals(TairaTestnetContract.MCP_PROTOCOL_VERSION, headers["MCP-Protocol-Version"])
+            org.junit.Assert.assertEquals(if (request.method == "tools/call") TairaMcpContract.HEALTH_TOOL else null, headers["Mcp-Name"])
+            val metadata = request.params?.get("_meta") as JsonObject
+            org.junit.Assert.assertEquals(
+                JsonPrimitive(TairaTestnetContract.MCP_PROTOCOL_VERSION),
+                metadata["io.modelcontextprotocol/protocolVersion"],
+            )
+            org.junit.Assert.assertEquals(
+                JsonObject(emptyMap()), metadata["io.modelcontextprotocol/clientCapabilities"],
+            )
+        }
     }
 
     @Test

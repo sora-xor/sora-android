@@ -1,0 +1,36 @@
+{
+  "id": "wallet-contract-check",
+  "jsonrpc": "2.0",
+  "result": {
+    "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+        "name": "iroha-torii-mcp",
+        "version": "2.0.0-rc.2.0"
+      }
+    },
+    "cacheScope": "private",
+    "capabilities": {
+      "extensions": {
+        "org.hyperledger.iroha/tools": {
+          "callBatch": {
+            "maxDispatches": 64,
+            "method": "tools/call_batch"
+          },
+          "toolsetVersion": "70e43ee6d824e209e968b79f763feec890963eefdbb9aaa30e5af82a9cce9a36"
+        }
+      },
+      "resources": {
+        "listChanged": false
+      },
+      "tools": {
+        "listChanged": false
+      }
+    },
+    "instructions": "Prefer curated iroha.* capabilities and rediscover schemas before each workflow. Keep signing keys and authentication secrets outside MCP. Prepare and inspect unsigned operations, sign with an external wallet or deployment-owned signer, then submit only the signed envelope.",
+    "resultType": "complete",
+    "supportedVersions": [
+      "2026-07-28"
+    ],
+    "ttlMs": 30000
+  }
+}

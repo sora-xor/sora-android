@@ -67,7 +67,7 @@ class NexusPendingReconciler @Inject constructor(
         check(WalletIdentityDao.hasCurrentChainIdentity(pending)) {
             "PENDING_TRANSACTION_CHAIN_IDENTITY_RECOVERY_REQUIRED"
         }
-        val network = requireNetwork(networkId)
+        val network = NexusNetworks.requireLive(requireNetwork(networkId))
         val hash = canonicalHash(checkNotNull(pending.transactionHash) {
             "NEXUS_AMBIGUOUS_WITHOUT_HASH"
         })
@@ -162,12 +162,14 @@ class NexusPendingReconciler @Inject constructor(
         )
         check(readBack.asset == pending.assetId) { "NEXUS_PENDING_ASSET_MISMATCH" }
 
-        val transfersForSignedHash = torii.committedXorTransfers(
+        val transfersForSignedHash = torii.committedXorTransfersForHash(
             network = network,
             accountId = account.address,
             assetDefinitionId = pending.assetId,
-        ).filter { transfer ->
-            canonicalHash(transfer.transactionHash) == hash
+            transactionHash = hash,
+        )
+        check(transfersForSignedHash.all { transfer -> canonicalHash(transfer.transactionHash) == hash }) {
+            "NEXUS_TRANSACTION_HISTORY_IDENTITY_MISMATCH"
         }
         val exactHistoryMatch = transfersForSignedHash.singleOrNull()?.let { transfer ->
             transfer.sender == account.address &&
@@ -222,7 +224,7 @@ class NexusPendingReconciler @Inject constructor(
         require(startOffset >= 0)
         val candidates = database.walletIdentityDao().getUnresolvedTransactions()
             .filter {
-                WalletNetworkId.fromWireId(it.networkId) in NexusNetworks.admittedIds
+                WalletNetworkId.fromWireId(it.networkId) in NexusNetworks.liveIds
             }
         val normalizedOffset = if (candidates.isEmpty()) {
             0

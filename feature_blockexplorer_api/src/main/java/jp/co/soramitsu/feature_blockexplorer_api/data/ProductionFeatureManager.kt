@@ -7,8 +7,11 @@ import jp.co.soramitsu.common.nexus.NexusNetworks
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.EmergencyFeatureFlags
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 
 data class ProductionFeatureState(
     val nexusAvailable: Boolean,
@@ -18,7 +21,14 @@ data class ProductionFeatureState(
     val tairaAvailable: Boolean,
     val tairaVisible: Boolean,
     val tairaPreferenceIsExplicit: Boolean,
-)
+) {
+    // Public testnet sends use the local current-protocol signer. The production rollout flag
+    // must not disable Taira; Nexus visibility remains an emergency switch and user choice.
+    fun sendsEnabledFor(network: WalletNetworkId): Boolean = when (network) {
+        WalletNetworkId.TAIRA -> nexusAvailable && tairaAvailable && tairaVisible
+        else -> nexusAvailable && nexusSendsAvailable
+    }
+}
 
 internal data class TairaVisibilityDecision(
     val visible: Boolean,
@@ -69,6 +79,11 @@ class ProductionFeatureManager @Inject constructor(
     private val preferences: SoraPreferences,
     private val indexerClient: PolkaswapIndexerClient,
 ) {
+    private val remoteConfigFlags = MutableStateFlow<EmergencyFeatureFlags?>(null)
+
+    suspend fun getStateForNetwork(network: WalletNetworkId): ProductionFeatureState =
+        if (network == WalletNetworkId.TAIRA) observeState().first() else getState()
+
     suspend fun getState(): ProductionFeatureState {
         // PI is the authoritative capability source for the modernization
         // features. Cache only a completely decoded and validated PI flag set;
@@ -77,6 +92,7 @@ class ProductionFeatureManager @Inject constructor(
         val piConfig = try {
             indexerClient.requireMobileConfig()
         } catch (error: Throwable) {
+            remoteConfigFlags.value = null
             if (!PiIndexerOfflineFallbackPolicy.allows(error)) throw error
             null
         }
@@ -88,7 +104,9 @@ class ProductionFeatureManager @Inject constructor(
                 polkamarktMutationsAvailable = piConfig.polkamarktMutationsAvailable,
                 tairaDefaultVisible = piConfig.tairaDefaultVisible,
             )
+            remoteConfigFlags.value = null
             cache(decoded)
+            remoteConfigFlags.value = decoded
             decoded
         } else {
             cachedOrSafeFlags()
@@ -135,6 +153,41 @@ class ProductionFeatureManager @Inject constructor(
                 ).visible
             }
             .distinctUntilChanged()
+
+    /** Observe the whole atomic capability snapshot, including enablement while a wallet is open. */
+    fun observeState(): Flow<ProductionFeatureState> = combine(
+        preferences.getBooleanSnapshotFlow(FEATURE_CACHE_KEYS + TAIRA_EXPLICIT_PREFERENCE_KEYS),
+        remoteConfigFlags,
+    ) { snapshot, remoteFlags ->
+        val flags = when (snapshot[PI_FLAGS_CACHED]) {
+            null -> SAFE_DEFAULT_FLAGS
+            false -> INCOMPLETE_CACHE_FLAGS
+            true -> EmergencyFeatureFlags(
+                nexusAvailable = snapshot[PI_NEXUS_AVAILABLE] ?: false,
+                nexusSendsAvailable = snapshot[PI_NEXUS_SENDS_AVAILABLE] ?: false,
+                polkamarktVisible = snapshot[PI_POLKAMARKT_VISIBLE] ?: false,
+                polkamarktMutationsAvailable = snapshot[PI_POLKAMARKT_MUTATIONS_AVAILABLE] ?: false,
+                tairaDefaultVisible = snapshot[PI_TAIRA_DEFAULT_VISIBLE] ?: false,
+            )
+        }
+        // DataStore and this flow may deliver independently. Only the exact remotely validated
+        // flag snapshot can authorize capabilities; an older cached snapshot never borrows it.
+        val remoteAvailable = snapshot[PI_FLAGS_CACHED] == true && remoteFlags == flags
+        val visibility = TairaVisibilityPolicy.resolve(
+            flags.nexusAvailable, flags.tairaDefaultVisible, snapshot[TAIRA_VISIBLE],
+        )
+        ProductionFeatureState(
+            nexusAvailable = flags.nexusAvailable,
+            nexusSendsAvailable = LOCAL_NEXUS_SENDS_QUALIFIED && remoteAvailable &&
+                flags.nexusAvailable && flags.nexusSendsAvailable,
+            polkamarktVisible = flags.polkamarktVisible,
+            polkamarktMutationsAvailable = LOCAL_POLKAMARKT_MUTATIONS_QUALIFIED && remoteAvailable &&
+                flags.polkamarktVisible && flags.polkamarktMutationsAvailable,
+            tairaAvailable = WalletNetworkId.TAIRA in NexusNetworks.liveIds,
+            tairaVisible = visibility.visible,
+            tairaPreferenceIsExplicit = visibility.preferenceIsExplicit,
+        )
+    }.distinctUntilChanged()
 
     private suspend fun cache(flags: EmergencyFeatureFlags) {
         // DataStore commits this map in one edit. Readers therefore observe the

@@ -58,8 +58,8 @@ import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPendingReconciler
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPendingRecovery
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendQualification
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusTransactionSigner
-import jp.co.soramitsu.feature_wallet_impl.data.nexus.UnavailableNexusFinalityReader
-import jp.co.soramitsu.feature_wallet_impl.data.nexus.UnavailableNexusTransactionSigner
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.TairaHttpsConfirmationReader
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.TairaTransactionSigner
 import jp.co.soramitsu.feature_wallet_impl.data.recovery.Sora2PendingRecoveryScheduler
 import jp.co.soramitsu.feature_wallet_impl.data.repository.BuyCryptoRepositoryImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.WalletRepositoryImpl
@@ -85,13 +85,13 @@ class WalletFeatureModule {
 
     @Provides
     @Singleton
-    fun provideNexusTransactionSigner(): NexusTransactionSigner =
-        UnavailableNexusTransactionSigner()
+    fun provideNexusTransactionSigner(credentials: CredentialsRepository, users: UserRepository): NexusTransactionSigner =
+        TairaTransactionSigner(credentials, users)
 
     @Provides
     @Singleton
     fun provideNexusFinalityReader(): NexusFinalityReader =
-        UnavailableNexusFinalityReader()
+        TairaHttpsConfirmationReader()
 
     @Provides
     @Singleton

@@ -22,6 +22,7 @@ import jp.co.soramitsu.common.nexus.NexusTransactionStatus
 import jp.co.soramitsu.common.nexus.NexusTransactionStatusValue
 import jp.co.soramitsu.common.nexus.NexusTransferHistoryItem
 import jp.co.soramitsu.common.nexus.WalletNetworkId
+import jp.co.soramitsu.common.nexus.TairaTestnetContract
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.model.NetworkAccountLocal
@@ -72,13 +73,24 @@ class NexusTransactionCoordinatorTest {
     )
 
     @Test
+    fun `production send is rejected before feature lookup or network access`() = runTest {
+        val error = runCatching {
+            coordinator.prepare(NexusSendRequest(WALLET_ID, WalletNetworkId.MINAMOTO, "unused", "1"))
+        }.exceptionOrNull()
+        assertEquals("NEXUS_NETWORK_NOT_LIVE", error?.message)
+        coVerify(exactly = 0) { featureManager.getStateForNetwork(any()) }
+        coVerify(exactly = 0) { torii.health(any()) }
+        coVerify(exactly = 0) { signer.sign(any(), any()) }
+    }
+
+    @Test
     fun `restart recovery rotates bounded passes so failed exact hashes cannot starve later rows`() =
         runTest {
-            val first = unresolvedTransaction("first", WalletNetworkId.MINAMOTO)
-            val second = unresolvedTransaction("second", WalletNetworkId.MINAMOTO)
+            val first = unresolvedTransaction("first", WalletNetworkId.TAIRA)
+            val second = unresolvedTransaction("second", WalletNetworkId.TAIRA)
             every { database.walletIdentityDao() } returns dao
             coEvery { dao.getUnresolvedTransactions() } returns listOf(first, second)
-            coEvery { dao.getPendingTransaction("second") } returns null
+            coEvery { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}second") } returns null
 
             val pass = coordinator.recoverAfterRestart(
                 maxTransactions = 1,
@@ -91,8 +103,8 @@ class NexusTransactionCoordinatorTest {
             assertEquals(1, pass.failures)
             assertEquals(1, pass.remainingUnattempted)
             assertTrue(pass.requiresRetry)
-            coVerify(exactly = 0) { dao.getPendingTransaction("first") }
-            coVerify(exactly = 1) { dao.getPendingTransaction("second") }
+            coVerify(exactly = 0) { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}first") }
+            coVerify(exactly = 1) { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}second") }
         }
 
     @Test
@@ -108,7 +120,7 @@ class NexusTransactionCoordinatorTest {
 
     @Test
     fun `unbound and retired Taira journals remain immutable without Torii calls`() = runTest {
-        val retained = unresolvedTransaction("retained", WalletNetworkId.MINAMOTO).copy(
+        val retained = unresolvedTransaction("retained", WalletNetworkId.TAIRA).copy(
             networkId = WalletNetworkId.TAIRA.wireId,
         )
         val chainIds = listOf(
@@ -140,17 +152,17 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `historical chain evidence blocks prepare before Torii quote or signing`() = runTest {
         every { database.walletIdentityDao() } returns dao
-        coEvery { featureManager.getState() } returns enabledFeatureState()
-        every { signer.isQualifiedFor(NexusNetworks.minamoto) } returns true
-        every { finalityReader.isQualifiedFor(NexusNetworks.minamoto) } returns true
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
+        every { signer.isQualifiedFor(NexusNetworks.taira) } returns true
+        every { finalityReader.isQualifiedFor(NexusNetworks.taira) } returns true
         coEvery { dao.countPendingTransactionsRequiringChainRecovery() } returns 1
 
         val error = runCatching {
             coordinator.prepare(
                 NexusSendRequest(
                     walletId = WALLET_ID,
-                    networkId = WalletNetworkId.MINAMOTO,
-                    recipient = verifiedNetworkAccount(WalletNetworkId.MINAMOTO).address,
+                    networkId = WalletNetworkId.TAIRA,
+                    recipient = verifiedNetworkAccount(WalletNetworkId.TAIRA).address,
                     amount = "1",
                 )
             )
@@ -170,13 +182,13 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `status tracking reaches finality without resubmitting`() = runTest {
         val hash = "ab".repeat(32)
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
         every { database.walletIdentityDao() } returns dao
-        coEvery { dao.getPendingTransaction("local") } returns PendingNetworkTransactionLocal(
-            localId = "local",
+        coEvery { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") } returns PendingNetworkTransactionLocal(
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
             walletId = WALLET_ID,
-            networkId = WalletNetworkId.MINAMOTO.wireId,
-            chainId = NexusNetworks.minamoto.chainId,
+            networkId = WalletNetworkId.TAIRA.wireId,
+            chainId = NexusNetworks.taira.chainId,
             transactionHash = hash,
             assetId = XOR_DEFINITION_ID,
             amount = "1",
@@ -187,25 +199,26 @@ class NexusTransactionCoordinatorTest {
             updatedAt = 1,
         )
         stubVerifiedWallet(account)
-        every { signer.isQualifiedFor(NexusNetworks.minamoto) } returns false
+        every { signer.isQualifiedFor(NexusNetworks.taira) } returns false
         coEvery {
-            torii.transactionStatus(NexusNetworks.minamoto, hash)
+            torii.transactionStatus(NexusNetworks.taira, hash)
         } returnsMany listOf(
             transactionStatus(hash, "pending"),
             transactionStatus(hash, "committed"),
         )
         coEvery {
             torii.getAssetBalanceByDefinition(
-                NexusNetworks.minamoto,
+                NexusNetworks.taira,
                 account.address,
                 XOR_DEFINITION_ID,
             )
         } returns NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "9")
         coEvery {
-            torii.committedXorTransfers(
-                NexusNetworks.minamoto,
+            torii.committedXorTransfersForHash(
+                NexusNetworks.taira,
                 account.address,
                 XOR_DEFINITION_ID,
+                hash,
             )
         } returns listOf(
             NexusTransferHistoryItem(
@@ -221,14 +234,16 @@ class NexusTransactionCoordinatorTest {
         } returns Unit
 
         val result = coordinator.reconcileUntilTerminal(
-            localId = "local",
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
             maxAttempts = 2,
             pollDelayMillis = 0,
         )
 
         assertEquals("FINALIZED", result.state)
+        coVerify(exactly = 0) { torii.committedXorTransfers(any(), any(), any()) }
+        coVerify(exactly = 1) { torii.committedXorTransfersForHash(NexusNetworks.taira, account.address, XOR_DEFINITION_ID, hash) }
         coVerify(exactly = 2) {
-            torii.transactionStatus(NexusNetworks.minamoto, hash)
+            torii.transactionStatus(NexusNetworks.taira, hash)
         }
         verify(exactly = 0) { signer.isQualifiedFor(any()) }
         coVerify(exactly = 0) { signer.quote(any()) }
@@ -240,13 +255,13 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `committed status remains pending until exact history reconciliation`() = runTest {
         val hash = "cd".repeat(32)
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
         every { database.walletIdentityDao() } returns dao
-        coEvery { dao.getPendingTransaction("local") } returns PendingNetworkTransactionLocal(
-            localId = "local",
+        coEvery { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") } returns PendingNetworkTransactionLocal(
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
             walletId = WALLET_ID,
-            networkId = WalletNetworkId.MINAMOTO.wireId,
-            chainId = NexusNetworks.minamoto.chainId,
+            networkId = WalletNetworkId.TAIRA.wireId,
+            chainId = NexusNetworks.taira.chainId,
             transactionHash = hash,
             assetId = XOR_DEFINITION_ID,
             amount = "1",
@@ -258,20 +273,21 @@ class NexusTransactionCoordinatorTest {
         )
         stubVerifiedWallet(account)
         coEvery {
-            torii.transactionStatus(NexusNetworks.minamoto, hash)
+            torii.transactionStatus(NexusNetworks.taira, hash)
         } returns transactionStatus(hash, "committed")
         coEvery {
             torii.getAssetBalanceByDefinition(
-                NexusNetworks.minamoto,
+                NexusNetworks.taira,
                 account.address,
                 XOR_DEFINITION_ID,
             )
         } returns NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "9")
         coEvery {
-            torii.committedXorTransfers(
-                NexusNetworks.minamoto,
+            torii.committedXorTransfersForHash(
+                NexusNetworks.taira,
                 account.address,
                 XOR_DEFINITION_ID,
+                hash,
             )
         } returns emptyList()
         coEvery {
@@ -279,7 +295,7 @@ class NexusTransactionCoordinatorTest {
         } returns Unit
 
         val result = coordinator.reconcileUntilTerminal(
-            localId = "local",
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
             maxAttempts = 1,
             pollDelayMillis = 0,
         )
@@ -291,13 +307,13 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `conflicting transfer under the signed hash cannot finalize a committed send`() = runTest {
         val hash = "cf".repeat(32)
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
         every { database.walletIdentityDao() } returns dao
-        coEvery { dao.getPendingTransaction("local") } returns PendingNetworkTransactionLocal(
-            localId = "local",
+        coEvery { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") } returns PendingNetworkTransactionLocal(
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
             walletId = WALLET_ID,
-            networkId = WalletNetworkId.MINAMOTO.wireId,
-            chainId = NexusNetworks.minamoto.chainId,
+            networkId = WalletNetworkId.TAIRA.wireId,
+            chainId = NexusNetworks.taira.chainId,
             transactionHash = hash,
             assetId = XOR_DEFINITION_ID,
             amount = "1",
@@ -309,11 +325,11 @@ class NexusTransactionCoordinatorTest {
         )
         stubVerifiedWallet(account)
         coEvery {
-            torii.transactionStatus(NexusNetworks.minamoto, hash)
+            torii.transactionStatus(NexusNetworks.taira, hash)
         } returns transactionStatus(hash, "committed")
         coEvery {
             torii.getAssetBalanceByDefinition(
-                NexusNetworks.minamoto,
+                NexusNetworks.taira,
                 account.address,
                 XOR_DEFINITION_ID,
             )
@@ -326,10 +342,11 @@ class NexusTransactionCoordinatorTest {
             receiver = account.address,
         )
         coEvery {
-            torii.committedXorTransfers(
-                NexusNetworks.minamoto,
+            torii.committedXorTransfersForHash(
+                NexusNetworks.taira,
                 account.address,
                 XOR_DEFINITION_ID,
+                hash,
             )
         } returns listOf(
             duplicate,
@@ -339,7 +356,7 @@ class NexusTransactionCoordinatorTest {
             dao.updatePendingTransaction(any(), any(), any(), any(), any())
         } returns Unit
 
-        val result = coordinator.reconcile("local")
+        val result = coordinator.reconcile("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local")
 
         assertEquals("COMMITTED_PENDING_RECONCILIATION", result.state)
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
@@ -348,13 +365,13 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `finality checkpoint from another chain cannot finalize a committed send`() = runTest {
         val hash = "d0".repeat(32)
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
         every { database.walletIdentityDao() } returns dao
-        coEvery { dao.getPendingTransaction("local") } returns PendingNetworkTransactionLocal(
-            localId = "local",
+        coEvery { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") } returns PendingNetworkTransactionLocal(
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
             walletId = WALLET_ID,
-            networkId = WalletNetworkId.MINAMOTO.wireId,
-            chainId = NexusNetworks.minamoto.chainId,
+            networkId = WalletNetworkId.TAIRA.wireId,
+            chainId = NexusNetworks.taira.chainId,
             transactionHash = hash,
             assetId = XOR_DEFINITION_ID,
             amount = "1",
@@ -366,22 +383,22 @@ class NexusTransactionCoordinatorTest {
         )
         stubVerifiedWallet(account)
         coEvery {
-            torii.transactionStatus(NexusNetworks.minamoto, hash)
+            torii.transactionStatus(NexusNetworks.taira, hash)
         } returns transactionStatus(hash, "committed")
         coEvery {
-            finalityReader.finalizedCheckpoint(NexusNetworks.minamoto)
+            finalityReader.finalizedCheckpoint(NexusNetworks.taira)
         } returns NexusFinalityCheckpoint(
-            networkId = WalletNetworkId.TAIRA,
-            chainId = TEST_TAIRA_NETWORK.chainId,
+            networkId = WalletNetworkId.MINAMOTO,
+            chainId = NexusNetworks.minamoto.chainId,
             finalizedBlockHeight = 10,
             finalizedBlockHash = "ab".repeat(32),
         )
 
-        val error = runCatching { coordinator.reconcile("local") }.exceptionOrNull()
+        val error = runCatching { coordinator.reconcile("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") }.exceptionOrNull()
 
         assertEquals("NEXUS_FINALITY_NETWORK_MISMATCH", error?.message)
         coVerify(exactly = 0) { torii.getAssetBalanceByDefinition(any(), any(), any()) }
-        coVerify(exactly = 0) { torii.committedXorTransfers(any(), any(), any()) }
+        coVerify(exactly = 0) { torii.committedXorTransfersForHash(any(), any(), any(), any()) }
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
@@ -389,13 +406,13 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `approved status remains nonterminal until committed or applied`() = runTest {
         val hash = "ce".repeat(32)
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
         every { database.walletIdentityDao() } returns dao
-        coEvery { dao.getPendingTransaction("local") } returns PendingNetworkTransactionLocal(
-            localId = "local",
+        coEvery { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") } returns PendingNetworkTransactionLocal(
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
             walletId = WALLET_ID,
-            networkId = WalletNetworkId.MINAMOTO.wireId,
-            chainId = NexusNetworks.minamoto.chainId,
+            networkId = WalletNetworkId.TAIRA.wireId,
+            chainId = NexusNetworks.taira.chainId,
             transactionHash = hash,
             assetId = XOR_DEFINITION_ID,
             amount = "1",
@@ -406,20 +423,20 @@ class NexusTransactionCoordinatorTest {
             updatedAt = 1,
         )
         coEvery {
-            torii.transactionStatus(NexusNetworks.minamoto, hash)
+            torii.transactionStatus(NexusNetworks.taira, hash)
         } returns transactionStatus(hash, "approved")
         coEvery {
             dao.updatePendingTransaction(any(), any(), any(), any(), any())
         } returns Unit
 
-        val result = coordinator.reconcile("local")
+        val result = coordinator.reconcile("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local")
 
         assertEquals("SUBMITTED", result.state)
         coVerify(exactly = 0) { torii.resolveXorDefinition(any()) }
         coVerify(exactly = 0) { finalityReader.finalizedCheckpoint(any()) }
         coVerify(exactly = 0) { torii.getXorBalance(any(), any()) }
         coVerify(exactly = 0) { torii.getAssetBalanceByDefinition(any(), any(), any()) }
-        coVerify(exactly = 0) { torii.committedXorTransfers(any(), any(), any()) }
+        coVerify(exactly = 0) { torii.committedXorTransfersForHash(any(), any(), any(), any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
@@ -427,13 +444,13 @@ class NexusTransactionCoordinatorTest {
     fun `stale status cannot regress finality and recovery does not require wallet selection`() =
         runTest {
             val hash = "de".repeat(32)
-            val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-            val network = NexusNetworks.minamoto
+            val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+            val network = NexusNetworks.taira
             var persisted = PendingNetworkTransactionLocal(
-                localId = "local",
+                localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO.wireId,
-                chainId = NexusNetworks.minamoto.chainId,
+                networkId = WalletNetworkId.TAIRA.wireId,
+                chainId = NexusNetworks.taira.chainId,
                 transactionHash = hash,
                 assetId = XOR_DEFINITION_ID,
                 amount = "1",
@@ -445,7 +462,7 @@ class NexusTransactionCoordinatorTest {
             )
             every { database.walletIdentityDao() } returns dao
             stubVerifiedWallet(account)
-            coEvery { dao.getPendingTransaction("local") } coAnswers { persisted }
+            coEvery { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") } coAnswers { persisted }
             coEvery {
                 dao.updatePendingTransaction(any(), any(), any(), any(), any())
             } coAnswers {
@@ -464,10 +481,11 @@ class NexusTransactionCoordinatorTest {
                 )
             } returns NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "9")
             coEvery {
-                torii.committedXorTransfers(
+                torii.committedXorTransfersForHash(
                     network,
                     account.address,
                     XOR_DEFINITION_ID,
+                    hash,
                 )
             } returns listOf(
                 NexusTransferHistoryItem(
@@ -492,9 +510,9 @@ class NexusTransactionCoordinatorTest {
                 }
             }
 
-            val staleReconciliation = async { coordinator.reconcile("local") }
+            val staleReconciliation = async { coordinator.reconcile("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") }
             staleStatusStarted.await()
-            val finalized = coordinator.reconcile("local")
+            val finalized = coordinator.reconcile("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local")
             releaseStaleStatus.complete(Unit)
             val staleResult = staleReconciliation.await()
 
@@ -508,13 +526,13 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `signed restart record becomes ambiguous before status lookup failure`() = runTest {
         val hash = "ed".repeat(32)
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        val network = NexusNetworks.minamoto
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
         var persisted = PendingNetworkTransactionLocal(
-            localId = "local",
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
             walletId = WALLET_ID,
-            networkId = WalletNetworkId.MINAMOTO.wireId,
-            chainId = NexusNetworks.minamoto.chainId,
+            networkId = WalletNetworkId.TAIRA.wireId,
+            chainId = NexusNetworks.taira.chainId,
             transactionHash = hash,
             assetId = XOR_DEFINITION_ID,
             amount = "1",
@@ -526,7 +544,7 @@ class NexusTransactionCoordinatorTest {
         )
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { dao.getPendingTransaction("local") } coAnswers { persisted }
+        coEvery { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") } coAnswers { persisted }
         coEvery {
             dao.updatePendingTransaction(any(), any(), any(), any(), any())
         } coAnswers {
@@ -541,7 +559,7 @@ class NexusTransactionCoordinatorTest {
             safeCode = "NEXUS_NETWORK_IO",
         )
 
-        val error = runCatching { coordinator.reconcile("local") }.exceptionOrNull()
+        val error = runCatching { coordinator.reconcile("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") }.exceptionOrNull()
 
         assertTrue(error is NexusToriiException)
         assertEquals("UNKNOWN", persisted.state)
@@ -552,10 +570,10 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `live signed journal cannot be reconciled before submit handoff completes`() = runTest {
         val hash = "ee".repeat(32)
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        val network = NexusNetworks.minamoto
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
         val quote = NexusTransferFeeQuote(
-            networkId = WalletNetworkId.MINAMOTO.wireId,
+            networkId = WalletNetworkId.TAIRA.wireId,
             authority = account.address,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -569,7 +587,7 @@ class NexusTransactionCoordinatorTest {
         var persisted: PendingNetworkTransactionLocal? = null
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
         coEvery { torii.getXorBalance(network, account.address) } returns
             NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
         coEvery { signer.quote(any()) } returns quote
@@ -613,7 +631,7 @@ class NexusTransactionCoordinatorTest {
         val prepared = coordinator.prepare(
             NexusSendRequest(
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO,
+                networkId = WalletNetworkId.TAIRA,
                 recipient = account.address,
                 amount = "1",
             )
@@ -647,21 +665,21 @@ class NexusTransactionCoordinatorTest {
 
     @Test
     fun `prepare rejects an address from another network before quote or submission`() = runTest {
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
-        every { signer.isQualifiedFor(NexusNetworks.minamoto) } returns true
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
+        every { signer.isQualifiedFor(NexusNetworks.taira) } returns true
         val tairaRecipient = IrohaAddressCodec.encode(
             ByteArray(32) { 2 },
-            TEST_TAIRA_NETWORK.chainDiscriminant,
+            NexusNetworks.minamoto.chainDiscriminant,
         )
 
         val error = runCatching {
             coordinator.prepare(
                 NexusSendRequest(
                     walletId = WALLET_ID,
-                    networkId = WalletNetworkId.MINAMOTO,
+                    networkId = WalletNetworkId.TAIRA,
                     recipient = tairaRecipient,
                     amount = "1",
                 )
@@ -682,7 +700,7 @@ class NexusTransactionCoordinatorTest {
         val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns
+        coEvery { featureManager.getStateForNetwork(any()) } returns
             enabledFeatureState().copy(tairaVisible = false)
 
         val error = runCatching {
@@ -704,18 +722,18 @@ class NexusTransactionCoordinatorTest {
 
     @Test
     fun `prepare rejects stored I105 address and public key mismatch`() = runTest {
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO).copy(
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA).copy(
             publicKey = "02".repeat(32),
         )
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
 
         val error = runCatching {
             coordinator.prepare(
                 NexusSendRequest(
                     walletId = WALLET_ID,
-                    networkId = WalletNetworkId.MINAMOTO,
+                    networkId = WalletNetworkId.TAIRA,
                     recipient = account.address,
                     amount = "1",
                 )
@@ -729,17 +747,17 @@ class NexusTransactionCoordinatorTest {
     }
 
     @Test
-    fun `prepare preserves exact amount and fee at the shared 255 scale boundary`() = runTest {
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        val network = NexusNetworks.minamoto
-        val quantity = quantityWithScale(NexusQuantityContract.MAX_SCALE)
+    fun `prepare preserves exact amount and fee at the Taira nine digit scale boundary`() = runTest {
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
+        val quantity = quantityWithScale(9)
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
         coEvery { torii.getXorBalance(network, account.address) } returns
             NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "1")
         coEvery { signer.quote(any()) } returns NexusTransferFeeQuote(
-            networkId = WalletNetworkId.MINAMOTO.wireId,
+            networkId = WalletNetworkId.TAIRA.wireId,
             authority = account.address,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -752,7 +770,7 @@ class NexusTransactionCoordinatorTest {
         val prepared = coordinator.prepare(
             NexusSendRequest(
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO,
+                networkId = WalletNetworkId.TAIRA,
                 recipient = account.address,
                 amount = quantity,
             )
@@ -763,16 +781,16 @@ class NexusTransactionCoordinatorTest {
     }
 
     @Test
-    fun `prepare rejects a zero fee before signing or submission`() = runTest {
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        val network = NexusNetworks.minamoto
+    fun `prepare accepts an authenticated zero testnet fee without signing`() = runTest {
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
         coEvery { torii.getXorBalance(network, account.address) } returns
             NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
         coEvery { signer.quote(any()) } returns NexusTransferFeeQuote(
-            networkId = WalletNetworkId.MINAMOTO.wireId,
+            networkId = WalletNetworkId.TAIRA.wireId,
             authority = account.address,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -786,24 +804,24 @@ class NexusTransactionCoordinatorTest {
             coordinator.prepare(
                 NexusSendRequest(
                     walletId = WALLET_ID,
-                    networkId = WalletNetworkId.MINAMOTO,
+                    networkId = WalletNetworkId.TAIRA,
                     recipient = account.address,
                     amount = "1",
                 )
             )
         }.exceptionOrNull()
 
-        assertEquals("NEXUS_FEE_NOT_POSITIVE", error?.message)
+        assertEquals(null, error)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
     @Test
     fun `submit rejects a zero fresh fee before signing or submission`() = runTest {
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        val network = NexusNetworks.minamoto
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
         val quote = NexusTransferFeeQuote(
-            networkId = WalletNetworkId.MINAMOTO.wireId,
+            networkId = WalletNetworkId.TAIRA.wireId,
             authority = account.address,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -814,7 +832,7 @@ class NexusTransactionCoordinatorTest {
         )
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
         coEvery { torii.getXorBalance(network, account.address) } returns
             NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
         coEvery { signer.quote(any()) } returnsMany listOf(
@@ -825,14 +843,14 @@ class NexusTransactionCoordinatorTest {
         val prepared = coordinator.prepare(
             NexusSendRequest(
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO,
+                networkId = WalletNetworkId.TAIRA,
                 recipient = account.address,
                 amount = "1",
             )
         )
         val error = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
 
-        assertEquals("NEXUS_FEE_NOT_POSITIVE", error?.message)
+        assertEquals("NEXUS_QUOTE_CHANGED", error?.message)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
@@ -840,10 +858,10 @@ class NexusTransactionCoordinatorTest {
 
     @Test
     fun `submit rejects a zero final-lock fee before signing or submission`() = runTest {
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        val network = NexusNetworks.minamoto
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
         val quote = NexusTransferFeeQuote(
-            networkId = WalletNetworkId.MINAMOTO.wireId,
+            networkId = WalletNetworkId.TAIRA.wireId,
             authority = account.address,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -854,7 +872,7 @@ class NexusTransactionCoordinatorTest {
         )
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
         coEvery { torii.getXorBalance(network, account.address) } returns
             NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
         coEvery { signer.quote(any()) } returnsMany listOf(
@@ -866,14 +884,14 @@ class NexusTransactionCoordinatorTest {
         val prepared = coordinator.prepare(
             NexusSendRequest(
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO,
+                networkId = WalletNetworkId.TAIRA,
                 recipient = account.address,
                 amount = "1",
             )
         )
         val error = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
 
-        assertEquals("NEXUS_FEE_NOT_POSITIVE", error?.message)
+        assertEquals("NEXUS_QUOTE_CHANGED", error?.message)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
@@ -881,16 +899,16 @@ class NexusTransactionCoordinatorTest {
 
     @Test
     fun `prepare rejects scale 256 before quote or network quantity lookup`() = runTest {
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
 
         val error = runCatching {
             coordinator.prepare(
                 NexusSendRequest(
                     walletId = WALLET_ID,
-                    networkId = WalletNetworkId.MINAMOTO,
+                    networkId = WalletNetworkId.TAIRA,
                     recipient = account.address,
                     amount = quantityWithScale(NexusQuantityContract.MAX_SCALE + 1),
                 )
@@ -905,12 +923,12 @@ class NexusTransactionCoordinatorTest {
 
     @Test
     fun `submit rejects a prepared signing route from another network`() = runTest {
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
-        every { signer.isQualifiedFor(NexusNetworks.minamoto) } returns true
-        every { finalityReader.isQualifiedFor(NexusNetworks.minamoto) } returns true
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
+        every { signer.isQualifiedFor(NexusNetworks.taira) } returns true
+        every { finalityReader.isQualifiedFor(NexusNetworks.taira) } returns true
         val signingRequest = NexusTransferSigningRequest(
-            network = TEST_TAIRA_NETWORK,
+            network = NexusNetworks.minamoto,
             account = account,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -919,7 +937,7 @@ class NexusTransactionCoordinatorTest {
         val prepared = NexusPreparedSend(
             request = NexusSendRequest(
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO,
+                networkId = WalletNetworkId.TAIRA,
                 recipient = account.address,
                 amount = "1",
             ),
@@ -953,12 +971,12 @@ class NexusTransactionCoordinatorTest {
 
     @Test
     fun `submit rejects a prepared signing asset outside the displayed contract`() = runTest {
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
-        every { signer.isQualifiedFor(NexusNetworks.minamoto) } returns true
-        every { finalityReader.isQualifiedFor(NexusNetworks.minamoto) } returns true
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
+        every { signer.isQualifiedFor(NexusNetworks.taira) } returns true
+        every { finalityReader.isQualifiedFor(NexusNetworks.taira) } returns true
         val signingRequest = NexusTransferSigningRequest(
-            network = NexusNetworks.minamoto,
+            network = NexusNetworks.taira,
             account = account,
             recipient = account.address,
             assetDefinitionId = "not-xor",
@@ -967,7 +985,7 @@ class NexusTransactionCoordinatorTest {
         val prepared = NexusPreparedSend(
             request = NexusSendRequest(
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO,
+                networkId = WalletNetworkId.TAIRA,
                 recipient = account.address,
                 amount = "1",
             ),
@@ -979,7 +997,7 @@ class NexusTransactionCoordinatorTest {
             quoteIdentity = "quote-asset",
             signingRequest = signingRequest,
             quote = NexusTransferFeeQuote(
-                networkId = WalletNetworkId.MINAMOTO.wireId,
+                networkId = WalletNetworkId.TAIRA.wireId,
                 authority = account.address,
                 recipient = account.address,
                 assetDefinitionId = "not-xor",
@@ -1001,10 +1019,10 @@ class NexusTransactionCoordinatorTest {
 
     @Test
     fun `emergency send disablement immediately before signing fails closed`() = runTest {
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        val network = NexusNetworks.minamoto
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
         val quote = NexusTransferFeeQuote(
-            networkId = WalletNetworkId.MINAMOTO.wireId,
+            networkId = WalletNetworkId.TAIRA.wireId,
             authority = account.address,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -1015,10 +1033,10 @@ class NexusTransactionCoordinatorTest {
         )
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returnsMany listOf(
+        coEvery { featureManager.getStateForNetwork(any()) } returnsMany listOf(
             enabledFeatureState(),
             enabledFeatureState(),
-            enabledFeatureState().copy(nexusSendsAvailable = false),
+            enabledFeatureState().copy(nexusAvailable = false),
         )
         coEvery { torii.getXorBalance(network, account.address) } returns
             NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
@@ -1027,7 +1045,7 @@ class NexusTransactionCoordinatorTest {
         val prepared = coordinator.prepare(
             NexusSendRequest(
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO,
+                networkId = WalletNetworkId.TAIRA,
                 recipient = account.address,
                 amount = "1",
             )
@@ -1043,10 +1061,10 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `signing and pending journal are locked and confirmation is one shot`() = runTest {
         val hash = "ef".repeat(32)
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        val network = NexusNetworks.minamoto
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
         val quote = NexusTransferFeeQuote(
-            networkId = WalletNetworkId.MINAMOTO.wireId,
+            networkId = WalletNetworkId.TAIRA.wireId,
             authority = account.address,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -1057,7 +1075,7 @@ class NexusTransactionCoordinatorTest {
         )
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
         coEvery { torii.getXorBalance(network, account.address) } returns
             NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
         coEvery { signer.quote(any()) } returns quote
@@ -1107,7 +1125,7 @@ class NexusTransactionCoordinatorTest {
         val prepared = coordinator.prepare(
             NexusSendRequest(
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO,
+                networkId = WalletNetworkId.TAIRA,
                 recipient = account.address,
                 amount = "1",
             )
@@ -1141,10 +1159,10 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `emergency disablement before Torii handoff is definitively not submitted`() = runTest {
         val hash = "f1".repeat(32)
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        val network = NexusNetworks.minamoto
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
         val quote = NexusTransferFeeQuote(
-            networkId = WalletNetworkId.MINAMOTO.wireId,
+            networkId = WalletNetworkId.TAIRA.wireId,
             authority = account.address,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -1157,11 +1175,11 @@ class NexusTransactionCoordinatorTest {
         var persisted: PendingNetworkTransactionLocal? = null
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returnsMany listOf(
+        coEvery { featureManager.getStateForNetwork(any()) } returnsMany listOf(
             enabledFeatureState(),
             enabledFeatureState(),
             enabledFeatureState(),
-            enabledFeatureState().copy(nexusSendsAvailable = false),
+            enabledFeatureState().copy(nexusAvailable = false),
         )
         coEvery { torii.getXorBalance(network, account.address) } returns
             NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
@@ -1188,7 +1206,7 @@ class NexusTransactionCoordinatorTest {
         val prepared = coordinator.prepare(
             NexusSendRequest(
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO,
+                networkId = WalletNetworkId.TAIRA,
                 recipient = account.address,
                 amount = "1",
             )
@@ -1206,10 +1224,10 @@ class NexusTransactionCoordinatorTest {
     @Test
     fun `ambiguous submission keeps exact hash and cannot be retried`() = runTest {
         val hash = "fa".repeat(32)
-        val account = verifiedNetworkAccount(WalletNetworkId.MINAMOTO)
-        val network = NexusNetworks.minamoto
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
         val quote = NexusTransferFeeQuote(
-            networkId = WalletNetworkId.MINAMOTO.wireId,
+            networkId = WalletNetworkId.TAIRA.wireId,
             authority = account.address,
             recipient = account.address,
             assetDefinitionId = XOR_DEFINITION_ID,
@@ -1222,7 +1240,7 @@ class NexusTransactionCoordinatorTest {
         var persisted: PendingNetworkTransactionLocal? = null
         every { database.walletIdentityDao() } returns dao
         stubVerifiedWallet(account)
-        coEvery { featureManager.getState() } returns enabledFeatureState()
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
         coEvery { torii.getXorBalance(network, account.address) } returns
             NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
         coEvery { signer.quote(any()) } returns quote
@@ -1252,7 +1270,7 @@ class NexusTransactionCoordinatorTest {
         val prepared = coordinator.prepare(
             NexusSendRequest(
                 walletId = WALLET_ID,
-                networkId = WalletNetworkId.MINAMOTO,
+                networkId = WalletNetworkId.TAIRA,
                 recipient = account.address,
                 amount = "1",
             )
@@ -1277,7 +1295,7 @@ class NexusTransactionCoordinatorTest {
     ): PendingNetworkTransactionLocal {
         val network = NexusNetworks.require(networkId)
         return PendingNetworkTransactionLocal(
-            localId = localId,
+            localId = TairaTestnetContract.PENDING_JOURNAL_PREFIX + localId,
             walletId = WALLET_ID,
             networkId = networkId.wireId,
             chainId = network.chainId,

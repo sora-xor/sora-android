@@ -1,0 +1,59 @@
+{
+  "id": "wallet-contract-check",
+  "jsonrpc": "2.0",
+  "result": {
+    "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+        "name": "iroha-torii-mcp",
+        "version": "2.0.0-rc.2.0"
+      }
+    },
+    "content": [
+      {
+        "text": "http 200",
+        "type": "text"
+      }
+    ],
+    "isError": false,
+    "resultType": "complete",
+    "structuredContent": {
+      "body": {
+        "assets": 42,
+        "circulating_quantity": null,
+        "id": "6TEAJqbb8oEPmLncoNiMRbLEK6tw",
+        "locked_quantity": null,
+        "logo": null,
+        "metadata": {
+          "zk.policy": {
+            "features_digest": "c648bf87dd4806d5bef58b4fa3efeee9d96d8d596a82dd6c6a22448553d2b335",
+            "mode": "Convertible",
+            "pending_transition": null,
+            "vk_unshield": "pipa-r/pasta::vk_unshield",
+            "vk_unshield_commitment": "29b9abd27a25f290aca47d25523a7a16851fdade9b495ec4e82f546e2818f80d"
+          }
+        },
+        "mintable": "Infinitely",
+        "owned_by": "testu\uff9b1N\uff7cXCe\uff71\uff88\uff81R\uff74U\uff80PW\uff8fV\uff71r\uff8bhESEbp\uff82\uff7e9V\uff975\uff87J\uff75avs\uff7726TMSNN",
+        "owning_dataspace": null,
+        "owning_domain": null,
+        "total_quantity": "2116136022.4202"
+      },
+      "content_type": "application/json; charset=utf-8",
+      "headers": {
+        "cache-control": "private, no-store",
+        "content-length": "607",
+        "content-type": "application/json; charset=utf-8",
+        "vary": "Accept",
+        "x-iroha-fanout-routes-attempted": "2",
+        "x-iroha-fanout-routes-denied": "0",
+        "x-iroha-fanout-routes-failed": "0",
+        "x-iroha-fanout-routes-not-found": "0",
+        "x-iroha-fanout-routes-succeeded": "2",
+        "x-iroha-fanout-routes-unavailable": "0",
+        "x-iroha-routed-by": "local",
+        "x-request-id": "013c3d74b97b35b9c14cda448262a2baa12ba05ae88db903c1e87677b7d5dd06"
+      },
+      "status": 200
+    }
+  }
+}
