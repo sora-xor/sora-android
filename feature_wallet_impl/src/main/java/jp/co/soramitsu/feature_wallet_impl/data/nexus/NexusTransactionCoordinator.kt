@@ -102,8 +102,8 @@ class NexusTransactionCoordinator @Inject constructor(
      * without signing. The returned values are the confirmation contract shown to the user.
      */
     suspend fun prepare(request: NexusSendRequest): NexusPreparedSend {
-        val network = requireNetwork(request.networkId)
-        val state = featureManager.getState()
+        val network = NexusNetworks.requireLive(requireNetwork(request.networkId))
+        val state = featureManager.getStateForNetwork(request.networkId)
         requireSendEnabled(state, request.networkId)
         check(signer.isQualifiedFor(network)) { "NEXUS_SIGNER_NOT_QUALIFIED" }
         check(finalityReader.isQualifiedFor(network)) {
@@ -165,8 +165,8 @@ class NexusTransactionCoordinator @Inject constructor(
             "NEXUS_CONFIRMATION_ALREADY_SUBMITTED"
         }
         val request = prepared.request
-        val network = requireNetwork(request.networkId)
-        val state = featureManager.getState()
+        val network = NexusNetworks.requireLive(requireNetwork(request.networkId))
+        val state = featureManager.getStateForNetwork(request.networkId)
         requireSendEnabled(state, request.networkId)
         check(signer.isQualifiedFor(network)) { "NEXUS_SIGNER_NOT_QUALIFIED" }
         check(finalityReader.isQualifiedFor(network)) {
@@ -210,7 +210,7 @@ class NexusTransactionCoordinator @Inject constructor(
                 prepared.canonicalAmount.toBigDecimalExact() + freshFee.toBigDecimalExact()
         ) { "NEXUS_BALANCE_CHANGED" }
         val staged = WalletMutationCoordinator.withLock {
-            val finalState = featureManager.getState()
+            val finalState = featureManager.getStateForNetwork(request.networkId)
             requireSendEnabled(finalState, request.networkId)
             check(signer.isQualifiedFor(network)) { "NEXUS_SIGNER_NOT_QUALIFIED" }
             check(finalityReader.isQualifiedFor(network)) {
@@ -302,7 +302,7 @@ class NexusTransactionCoordinator @Inject constructor(
         try {
             try {
                 val receipt = WalletMutationCoordinator.withLock {
-                    val transportState = featureManager.getState()
+                    val transportState = featureManager.getStateForNetwork(request.networkId)
                     requireSendEnabled(transportState, request.networkId)
                     check(signer.isQualifiedFor(network)) {
                         "NEXUS_SIGNER_NOT_QUALIFIED"
@@ -625,14 +625,7 @@ class NexusTransactionCoordinator @Inject constructor(
         state: jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureState,
         networkId: WalletNetworkId,
     ) {
-        check(
-            state.nexusAvailable &&
-                state.nexusSendsAvailable &&
-                (
-                    networkId != WalletNetworkId.TAIRA ||
-                        (state.tairaAvailable && state.tairaVisible)
-                    )
-        ) { "NEXUS_SEND_DISABLED" }
+        check(state.sendsEnabledFor(networkId)) { "NEXUS_SEND_DISABLED" }
     }
 
     private fun canonicalPositiveQuantity(value: String): String {
@@ -643,7 +636,7 @@ class NexusTransactionCoordinator @Inject constructor(
 
     private fun canonicalPositiveFee(value: String): String {
         val canonical = canonicalNonNegativeQuantity(value)
-        check(canonical.toBigDecimalExact().signum() > 0) { "NEXUS_FEE_NOT_POSITIVE" }
+        check(canonical.toBigDecimalExact().signum() >= 0) { "NEXUS_FEE_NEGATIVE" }
         return canonical
     }
 

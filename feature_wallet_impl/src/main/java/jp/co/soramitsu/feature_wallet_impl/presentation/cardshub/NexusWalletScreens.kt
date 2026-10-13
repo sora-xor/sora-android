@@ -42,6 +42,8 @@ internal fun NexusPortfolioCard(
     onSend: (NexusPortfolioBalance) -> Unit,
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
     onRecovery: () -> Unit,
+    onRefresh: () -> Unit = {},
+    onLoadMore: (NexusPortfolioBalance) -> Unit = {},
 ) {
     val scopedBalances = balances.filter { it.walletId == sora2?.address }
     var selected by remember(sora2?.address) { mutableStateOf<NexusPortfolioBalance?>(null) }
@@ -63,7 +65,8 @@ internal fun NexusPortfolioCard(
                     selected = null
                     onSend(balance)
                 }
-            }, onRecovery = { selected = null; onRecovery() })
+            }, onRecovery = { selected = null; onRecovery() },
+            onRefresh = onRefresh, onLoadMore = { onLoadMore(balance) })
     }
     Column(Modifier.fillMaxWidth().padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -78,8 +81,10 @@ internal fun NexusPortfolioCard(
                 Text(stringResource(R.string.common_receive))
             }
         }
+        TextButton(onClick = onRefresh) { Text(stringResource(R.string.common_refresh)) }
         scopedBalances.forEach { balance ->
-            NetworkSummary(balance.networkName, balance.isTestnet, balance.xorQuantity, onOpen = {
+            NetworkSummary(balance.networkName, balance.isTestnet, balance.xorQuantity,
+                networkLive = balance.networkLive, onOpen = {
                 if (isNexusBalanceCurrent(balance)) { receiving = false; selected = balance }
             })
             val pendingCount = balance.pendingTransactions.size + balance.recoveryPendingTransactions.size
@@ -90,18 +95,22 @@ internal fun NexusPortfolioCard(
 }
 
 @Composable
-private fun NetworkSummary(name: String, testnet: Boolean, quantity: String?, onOpen: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable(onClickLabel = stringResource(R.string.wallet_network_activity),
+private fun NetworkSummary(name: String, testnet: Boolean, quantity: String?, networkLive: Boolean = true, onOpen: () -> Unit) {
+    Row(Modifier.fillMaxWidth().clickable(onClickLabel = stringResource(
+        if (networkLive) R.string.wallet_network_activity else R.string.nexus_production_address),
         onClick = onOpen).padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(name, style = MaterialTheme.customTypography.headline3, color = MaterialTheme.customColors.fgPrimary)
-            Text(stringResource(if (testnet) R.string.network_badge_testnet else R.string.network_badge_mainnet),
+            Text(if (networkLive) name else stringResource(R.string.nexus_production_name),
+                style = MaterialTheme.customTypography.headline3, color = MaterialTheme.customColors.fgPrimary)
+            Text(stringResource(if (!networkLive) R.string.nexus_production_address
+                else if (testnet) R.string.network_badge_testnet else R.string.network_badge_mainnet),
                 style = MaterialTheme.customTypography.textS, color = MaterialTheme.customColors.fgPrimary)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(quantity?.let { "$it XOR" } ?: stringResource(R.string.balance_unavailable),
+            Text(if (!networkLive) stringResource(R.string.nexus_production_not_live)
+                else quantity?.let { "$it XOR" } ?: stringResource(R.string.balance_unavailable),
                 style = MaterialTheme.customTypography.headline3, color = MaterialTheme.customColors.fgPrimary)
-            Text(stringResource(R.string.wallet_network_activity) + " ›",
+            Text(stringResource(if (networkLive) R.string.wallet_network_activity else R.string.wallet_network_details) + " ›",
                 style = MaterialTheme.customTypography.textS, color = MaterialTheme.customColors.accentPrimary)
         }
     }
@@ -113,18 +122,21 @@ private fun NexusReceiveSheet(balance: NexusPortfolioBalance, onClose: () -> Uni
     val clipboard = LocalClipboardManager.current
     var copied by remember(balance.address) { mutableStateOf(false) }
     val qr = remember(balance.address) { QrCodeGenerator(Color.BLACK).generateQrBitmap(balance.address).asImageBitmap() }
-    WalletSheet(title = stringResource(R.string.wallet_receive_xor), onClose = onClose,
+    val title = stringResource(if (balance.networkLive) R.string.wallet_receive_xor else R.string.nexus_production_address)
+    WalletSheet(title = title, onClose = onClose,
         footer = {
             FilledButton(modifier = Modifier.fillMaxWidth(), text = stringResource(
-                if (copied) R.string.wallet_copied else R.string.copy_receive_address),
+                if (copied) R.string.wallet_copied else if (balance.networkLive) R.string.copy_receive_address
+                else R.string.nexus_copy_production_address),
                 size = Size.Large, order = Order.PRIMARY, onClick = {
                     if (isCurrent()) { clipboard.setText(AnnotatedString(balance.address)); copied = true }
                 })
         }) {
         NetworkLabel(balance)
-        Text(stringResource(R.string.wallet_receive_notice, balance.networkName),
+        Text(if (balance.networkLive) stringResource(R.string.wallet_receive_notice, balance.networkName)
+            else stringResource(R.string.nexus_production_address_notice),
             style = MaterialTheme.customTypography.paragraphM)
-        Image(qr, contentDescription = stringResource(R.string.wallet_receive_xor),
+        Image(qr, contentDescription = title,
             modifier = Modifier.fillMaxWidth().widthIn(max = 320.dp).aspectRatio(1f))
         SelectionContainer { Text(balance.address, style = MaterialTheme.customTypography.paragraphM) }
     }
@@ -132,20 +144,31 @@ private fun NexusReceiveSheet(balance: NexusPortfolioBalance, onClose: () -> Uni
 
 @Composable
 private fun NexusActivitySheet(balance: NexusPortfolioBalance, onClose: () -> Unit,
-    onReceive: () -> Unit, onSend: () -> Unit, onRecovery: () -> Unit) {
+    onReceive: () -> Unit, onSend: () -> Unit, onRecovery: () -> Unit,
+    onRefresh: () -> Unit, onLoadMore: () -> Unit) {
     val uriHandler = LocalUriHandler.current
-    WalletSheet(title = stringResource(R.string.wallet_network_activity), onClose = onClose) {
+    WalletSheet(title = stringResource(if (balance.networkLive) R.string.wallet_network_activity
+        else R.string.nexus_production_address), onClose = onClose) {
         NetworkLabel(balance)
-        Text(balance.xorQuantity?.let { "$it XOR" } ?: stringResource(R.string.balance_unavailable),
+        Text(if (!balance.networkLive) stringResource(R.string.nexus_production_not_live)
+            else balance.xorQuantity?.let { "$it XOR" } ?: stringResource(R.string.balance_unavailable),
             style = MaterialTheme.customTypography.displayS)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             FilledButton(modifier = Modifier.weight(1f), text = stringResource(R.string.common_send),
                 size = Size.Large, order = Order.PRIMARY, enabled = balance.sendAvailable, onClick = onSend)
-            FilledButton(modifier = Modifier.weight(1f), text = stringResource(R.string.common_receive),
+            FilledButton(modifier = Modifier.weight(1f), text = stringResource(
+                if (balance.networkLive) R.string.common_receive else R.string.nexus_production_address),
                 size = Size.Large, order = Order.SECONDARY, onClick = onReceive)
         }
-        if (!balance.sendAvailable) WalletErrorMessage(balance.errorCode ?: "NEXUS_UNAVAILABLE", onRecovery = onRecovery)
-        else balance.errorCode?.let { WalletErrorMessage(it, onRecovery = onRecovery) }
+        if (!balance.networkLive) {
+            Text(stringResource(R.string.nexus_production_address_notice), style = MaterialTheme.customTypography.paragraphM)
+        } else {
+            if (!balance.sendAvailable && balance.errorCode == null) {
+                Text(stringResource(R.string.nexus_send_not_available), style = MaterialTheme.customTypography.paragraphM)
+            }
+            balance.errorCode?.let { WalletErrorMessage(it, onRetry = onRefresh, onRecovery = onRecovery) }
+            TextButton(onClick = onRefresh) { Text(stringResource(R.string.common_refresh)) }
+        }
         balance.pendingTransactions.forEach { pending ->
             Text(walletStatusLabel(pending.state, pending.submissionIsAmbiguous),
                 style = MaterialTheme.customTypography.headline3)
@@ -153,16 +176,19 @@ private fun NexusActivitySheet(balance: NexusPortfolioBalance, onClose: () -> Un
             Text(stringResource(R.string.wallet_pending_notice), style = MaterialTheme.customTypography.paragraphS)
         }
         if (balance.recoveryPendingTransactions.isNotEmpty()) WalletErrorMessage("NEXUS_RECOVERY_REQUIRED", onRecovery = onRecovery)
-        if (balance.confirmedTransfers.isEmpty() && balance.pendingTransactions.isEmpty() && balance.historyErrorCode == null) {
+        if (balance.networkLive && balance.confirmedTransfers.isEmpty() && balance.pendingTransactions.isEmpty() && balance.historyErrorCode == null && !balance.historyHasMore) {
             Text(stringResource(R.string.wallet_no_activity), style = MaterialTheme.customTypography.paragraphM)
         }
         balance.confirmedTransfers.forEach { NexusTransferRow(it, balance.address) }
-        balance.historyErrorCode?.let { WalletErrorMessage(it) }
+        balance.historyErrorCode?.let { WalletErrorMessage(it, onRetry = onRefresh) }
+        if (balance.historyHasMore) TextButton(onClick = onLoadMore) {
+            Text(stringResource(R.string.nexus_history_load_more))
+        }
         var details by remember(balance.address) { mutableStateOf(false) }
         TextButton(onClick = { details = !details }) { Text(stringResource(R.string.wallet_network_details)) }
         if (details) {
             SelectionContainer { Text(balance.address, style = MaterialTheme.customTypography.paragraphS) }
-            TextButton(onClick = { uriHandler.openUri(balance.explorerBaseUrl) }) { Text(stringResource(R.string.wallet_open_block_explorer)) }
+            if (balance.networkLive) TextButton(onClick = { uriHandler.openUri(balance.explorerBaseUrl) }) { Text(stringResource(R.string.wallet_open_block_explorer)) }
         }
     }
 }
@@ -189,8 +215,9 @@ private fun NexusTransferRow(transfer: NexusTransferHistoryItem, address: String
 
 @Composable
 private fun NetworkLabel(network: NexusPortfolioBalance) {
-    Text("${network.networkName} · " + stringResource(
-        if (network.isTestnet) R.string.network_badge_testnet else R.string.network_badge_mainnet),
+    val name = if (network.networkLive) network.networkName else stringResource(R.string.nexus_production_name)
+    Text("$name · " + stringResource(if (!network.networkLive) R.string.nexus_production_not_live
+        else if (network.isTestnet) R.string.network_badge_testnet else R.string.network_badge_mainnet),
         style = MaterialTheme.customTypography.headline3, color = MaterialTheme.customColors.fgPrimary)
 }
 

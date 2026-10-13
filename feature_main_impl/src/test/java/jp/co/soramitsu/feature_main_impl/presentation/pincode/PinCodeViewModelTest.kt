@@ -50,7 +50,7 @@ import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -66,6 +66,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.verifyNoInteractions
 import org.mockito.Mock
 import org.mockito.Mockito.times
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -109,6 +110,7 @@ class PinCodeViewModelTest {
     private val setupTitle = "Set pincode"
     private val enterPincode = "Enter pincode"
     private val confirmTitle = "Confirm title"
+    private val connected = MutableStateFlow(true)
 
     @Before
     fun setUp() = runTest {
@@ -117,7 +119,7 @@ class PinCodeViewModelTest {
         given(resourceManager.getString(R.string.pincode_confirm_your_pin_code)).willReturn(
             confirmTitle
         )
-        given(connectionManager.connectionState).willReturn(flowOf(true))
+        given(connectionManager.connectionState).willReturn(connected)
 
         given(interactor.isBiometryEnabled()).willReturn(true)
         given(interactor.needsMigration()).willReturn(false)
@@ -411,6 +413,42 @@ class PinCodeViewModelTest {
         verify(interactor).isCodeSet()
         verify(interactor).checkPin(anyString())
         verify(mainRouter).popBackStack()
+    }
+
+    @Test
+    fun `offline unlock grants access only after correct PIN without marking migration checked`() = runTest {
+        connected.value = false
+        given(interactor.isCodeSet()).willReturn(true)
+        given(interactor.checkPin(anyString())).willReturn(false, true)
+        pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+
+        "123456".forEach { pinCodeViewModel.pinCodeNumberClicked(it.toString()) }
+        advanceUntilIdle()
+        verify(mainRouter, never()).popBackStack()
+
+        "123456".forEach { pinCodeViewModel.pinCodeNumberClicked(it.toString()) }
+        advanceUntilIdle()
+        verify(interactor, times(2)).checkPin("123456")
+        verify(mainRouter).popBackStack()
+        verify(interactor, never()).needsMigration()
+        assertEquals(false, pinCodeViewModel.state.migrating)
+    }
+
+    @Test
+    fun `offline onboarding enters wallet after PIN confirmation`() = runTest {
+        connected.value = false
+        given(interactor.isBiometryAvailable()).willReturn(false)
+        pinCodeViewModel.startAuth(PinCodeAction.CREATE_PIN_CODE)
+        advanceUntilIdle()
+        "123456".forEach { pinCodeViewModel.pinCodeNumberClicked(it.toString()) }
+        advanceUntilIdle()
+        verify(mainRouter, never()).popBackStack()
+        "123456".forEach { pinCodeViewModel.pinCodeNumberClicked(it.toString()) }
+        advanceUntilIdle()
+        verify(interactor).savePin("123456")
+        verify(mainRouter).popBackStack()
+        verify(interactor, never()).needsMigration()
     }
 
     @Test

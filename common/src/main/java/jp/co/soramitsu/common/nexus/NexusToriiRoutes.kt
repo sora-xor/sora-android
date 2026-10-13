@@ -10,8 +10,9 @@ object NexusToriiRoutes {
     const val JSON_RESPONSE_MEDIA_TYPE = "application/json"
     const val HEALTH_RESPONSE_MEDIA_TYPE = "text/plain"
     const val NORITO_TRANSACTION_REQUEST_MEDIA_TYPE = "application/x-norito"
+    private val PAGE_CURSOR = Regex("^[A-Za-z0-9_-]{1,4096}$")
 
-    fun health(network: NexusNetwork): String = "${directBase(network)}/health"
+    fun health(network: NexusNetwork): String = "${base(network)}/health"
 
     /**
      * Torii's liveness route is deliberately plain text and rejects a JSON-only Accept header.
@@ -67,7 +68,54 @@ object NexusToriiRoutes {
     fun isHealthyResponse(payload: String): Boolean = payload == "Healthy"
 
     fun account(network: NexusNetwork, accountId: String): String =
-        "${directBase(network)}/v1/accounts/${pathSegment(canonicalAccount(network, accountId))}"
+        "${base(network)}/v1/accounts/${pathSegment(canonicalAccount(network, accountId))}"
+
+    /** Current Torii collection query with an exact count and an opaque continuation cursor. */
+    fun accountAssetPage(
+        network: NexusNetwork,
+        accountId: String,
+        assetDefinitionId: String,
+        limit: Int = DEFAULT_PAGE_SIZE,
+        cursor: String? = null,
+    ): String {
+        requireTairaAsset(network, assetDefinitionId)
+        require(limit in 1..MAX_PAGE_SIZE) { "NEXUS_INVALID_PAGE_SIZE" }
+        val filter = "asset = \"$assetDefinitionId\" and scope = \"global\""
+        val query = mutableListOf(
+            "filter=${queryValue(filter)}",
+            "limit=$limit",
+            "include_total=true",
+        )
+        cursor?.let { query += "cursor=${queryValue(canonicalCursor(it))}" }
+        return "${account(network, accountId)}/assets?${query.joinToString("&")}"
+    }
+
+    /** Torii serves account movements newest first, continuing until next_cursor is null. */
+    fun accountHistory(
+        network: NexusNetwork,
+        accountId: String,
+        assetDefinitionId: String,
+        limit: Int = DEFAULT_PAGE_SIZE,
+        cursor: String? = null,
+        transactionHash: String? = null,
+    ): String {
+        requireTairaAsset(network, assetDefinitionId)
+        require(limit in 1..100) { "NEXUS_INVALID_PAGE_SIZE" }
+        val filters = mutableListOf(
+            "asset_definition_id = \"$assetDefinitionId\"",
+            "source = \"transaction\"",
+            "type = \"TRANSFER\"",
+            "status = \"SUCCESS\"",
+            "result_ok = true",
+        )
+        transactionHash?.let { filters += "tx_hash = \"${canonicalHash(it)}\"" }
+        val query = mutableListOf(
+            "filter=${queryValue(filters.joinToString(" and "))}",
+            "limit=$limit",
+        )
+        cursor?.let { query += "cursor=${queryValue(canonicalCursor(it))}" }
+        return "${account(network, accountId)}/history?${query.joinToString("&")}"
+    }
 
     fun accountAssets(
         network: NexusNetwork,
@@ -95,12 +143,12 @@ object NexusToriiRoutes {
     ): String {
         require(limit in 1..MAX_PAGE_SIZE) { "NEXUS_INVALID_PAGE_SIZE" }
         require(offset >= 0) { "NEXUS_INVALID_OFFSET" }
-        return "${directBase(network)}/v1/assets/definitions" +
+        return "${base(network)}/v1/assets/definitions" +
             "?limit=$limit&offset=$offset&count_mode=bounded"
     }
 
     fun assetDefinition(network: NexusNetwork, selector: String): String =
-        "${directBase(network)}/v1/assets/definitions/${pathSegment(canonicalAssetSelector(selector))}"
+        "${base(network)}/v1/assets/definitions/${pathSegment(canonicalAssetSelector(selector))}"
 
     fun accountTransactions(
         network: NexusNetwork,
@@ -121,10 +169,10 @@ object NexusToriiRoutes {
     }
 
     fun submitTransaction(network: NexusNetwork): String =
-        "${directBase(network)}/v1/pipeline/transactions"
+        "${base(network)}/v1/pipeline/transactions"
 
     fun transactionStatus(network: NexusNetwork, hash: String): String =
-        "${directBase(network)}/v1/pipeline/transactions/status" +
+        "${base(network)}/v1/pipeline/transactions/status" +
             "?hash=${canonicalHash(hash)}&scope=global"
 
     fun mcp(network: NexusNetwork): String = "${base(network)}/v1/mcp".also { endpoint ->
@@ -135,6 +183,13 @@ object NexusToriiRoutes {
 
     fun canonicalAccount(network: NexusNetwork, accountId: String): String =
         IrohaAddressCodec.parse(accountId, network.chainDiscriminant).address
+
+    /** Only canonical Taira responses may use the public lane-zero provenance contract. */
+    fun isPublicTairaRoute(url: String): Boolean {
+        val uri = runCatching { URI(url) }.getOrNull() ?: return false
+        return uri.scheme == "https" && uri.host == "taira.sora.org" &&
+            uri.port == -1 && uri.userInfo == null && uri.fragment == null
+    }
 
     private fun base(network: NexusNetwork): String {
         NexusNetworks.requireAdmitted(network)
@@ -151,9 +206,16 @@ object NexusToriiRoutes {
         return normalized
     }
 
-    private fun directBase(network: NexusNetwork): String {
-        require(network.id != WalletNetworkId.TAIRA) { "TAIRA_MCP_REQUIRED" }
-        return base(network)
+    private fun requireTairaAsset(network: NexusNetwork, assetDefinitionId: String) {
+        NexusNetworks.requireAdmitted(network)
+        require(network.id == WalletNetworkId.TAIRA) { "TAIRA_QUERY_WRONG_NETWORK" }
+        require(assetDefinitionId == TairaTestnetContract.XOR_ASSET_DEFINITION_ID) {
+            "TAIRA_XOR_ASSET_DEFINITION_MISMATCH"
+        }
+    }
+
+    private fun canonicalCursor(value: String): String = value.also {
+        require(PAGE_CURSOR.matches(it)) { "NEXUS_INVALID_CURSOR" }
     }
 
     private fun canonicalAssetSelector(value: String): String {

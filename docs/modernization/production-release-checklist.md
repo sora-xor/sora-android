@@ -1,5 +1,7 @@
 # SORA Wallet Production Release Checklist
 
+Current Nexus availability (2026-10-13): only Taira is live. Production Minamoto accounts can be created/restored and their addresses copied offline; production reads and transfers are disabled. The production/funded-canary requirements below are future release gates, not evidence that production exists. Taira uses the local current-protocol Ed25519 writer and canonical HTTPS Torii confirmations. The false production send gate and unavailable production qualification remain separate from public testnet sending. See `qualification/taira-deployment-manifest-README.md` for the fixed direct Torii queries, submission contract and read-only validation.
+
 This release is fail-closed. A build is not a production candidate while
 `node scripts/verify-production-modernization.mjs --release` reports any blocker.
 

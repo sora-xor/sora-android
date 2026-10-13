@@ -149,6 +149,11 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshNexusPortfolio()
+    }
+
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController,
@@ -201,6 +206,8 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     onSora2Open = viewModel::openSora2Xor,
                     isSora2WalletCurrent = viewModel::isCurrentSora2Wallet,
                     onNexusSend = viewModel::openNexusSend,
+                    onNexusRefresh = viewModel::refreshNexusPortfolio,
+                    onNexusLoadMore = viewModel::loadMoreNexusHistory,
                     isNexusBalanceCurrent = viewModel::isCurrentNexusBalance,
                 )
             }
@@ -232,6 +239,8 @@ private fun CardsMainScreen(
     onSora2Open: (String) -> Unit,
     isSora2WalletCurrent: (String) -> Boolean,
     onNexusSend: (NexusPortfolioBalance) -> Unit,
+    onNexusRefresh: () -> Unit = {},
+    onNexusLoadMore: (NexusPortfolioBalance) -> Unit = {},
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
 ) {
     TopBar(
@@ -261,6 +270,8 @@ private fun CardsMainScreen(
                 onSora2Open = onSora2Open,
                 isSora2WalletCurrent = isSora2WalletCurrent,
                 onSend = onNexusSend,
+                onRefresh = onNexusRefresh,
+                onLoadMore = onNexusLoadMore,
                 isNexusBalanceCurrent = isNexusBalanceCurrent,
                 onRecovery = onBackupBannerClick,
             )

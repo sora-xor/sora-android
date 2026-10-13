@@ -18,82 +18,66 @@ internal object TairaMcpContract {
     const val ACCOUNT_ASSETS_TOOL = "iroha.accounts.assets"
     const val ASSET_DEFINITION_TOOL = "iroha.assets.definitions.get"
     const val TRANSACTION_STATUS_TOOL = "iroha.transactions.status"
-    const val INSTRUCTIONS_TOOL = "iroha.instructions.list"
+    const val HISTORY_TOOL = "iroha.accounts.history"
     const val SUBMIT_AND_WAIT_TOOL = "iroha.transactions.submit_and_wait"
 
     private enum class SchemaType(val scalarName: String?) {
         STRING("string"),
         INTEGER("integer"),
         STRING_ARRAY(null),
+        OBJECT("object"),
+        BOOLEAN("boolean"),
+        FILTER(null),
     }
 
     /** Every property this client may emit, including routed names absent from the old schema. */
     private val requestPropertyTypes = mapOf(
         HEALTH_TOOL to emptyMap(),
         ACCOUNT_ASSETS_TOOL to mapOf(
-            "account_id" to SchemaType.STRING,
-            "asset" to SchemaType.STRING,
-            "limit" to SchemaType.INTEGER,
-            "offset" to SchemaType.INTEGER,
-            "scope" to SchemaType.STRING,
-            "accept" to SchemaType.STRING,
+            "path" to SchemaType.OBJECT, "filter" to SchemaType.FILTER,
+            "limit" to SchemaType.INTEGER, "cursor" to SchemaType.STRING,
+            "include_total" to SchemaType.BOOLEAN, "accept" to SchemaType.STRING,
         ),
-        ASSET_DEFINITION_TOOL to mapOf(
-            "definition_id" to SchemaType.STRING,
-            "accept" to SchemaType.STRING,
-        ),
-        TRANSACTION_STATUS_TOOL to mapOf(
-            "hash" to SchemaType.STRING,
-            "scope" to SchemaType.STRING,
-            "accept" to SchemaType.STRING,
-        ),
-        INSTRUCTIONS_TOOL to mapOf(
-            "account" to SchemaType.STRING,
-            "asset_definition_id" to SchemaType.STRING,
-            "kind" to SchemaType.STRING,
-            "page" to SchemaType.INTEGER,
-            "per_page" to SchemaType.INTEGER,
-            "transaction_hash" to SchemaType.STRING,
-            "transaction_status" to SchemaType.STRING,
+        ASSET_DEFINITION_TOOL to mapOf("path" to SchemaType.OBJECT, "accept" to SchemaType.STRING),
+        TRANSACTION_STATUS_TOOL to mapOf("query" to SchemaType.OBJECT, "accept" to SchemaType.STRING),
+        HISTORY_TOOL to mapOf(
+            "path" to SchemaType.OBJECT, "filter" to SchemaType.FILTER,
+            "limit" to SchemaType.INTEGER, "cursor" to SchemaType.STRING,
             "accept" to SchemaType.STRING,
         ),
         SUBMIT_AND_WAIT_TOOL to mapOf(
-            "body_base64" to SchemaType.STRING,
-            "hash" to SchemaType.STRING,
-            "status_accept" to SchemaType.STRING,
-            "terminal_statuses" to SchemaType.STRING_ARRAY,
-            "timeout_ms" to SchemaType.INTEGER,
+            "body_base64" to SchemaType.STRING, "hash" to SchemaType.STRING,
+            "status_accept" to SchemaType.STRING, "timeout_ms" to SchemaType.INTEGER,
         ),
     )
 
-    /** Properties present on every request for a tool; schemas may require only these. */
     private val alwaysProvidedProperties = requestPropertyTypes.mapValues { (tool, properties) ->
-        if (tool == INSTRUCTIONS_TOOL) properties.keys - "transaction_hash" else properties.keys
+        properties.keys - when (tool) {
+            HISTORY_TOOL -> setOf("cursor")
+            ACCOUNT_ASSETS_TOOL -> setOf("cursor")
+            else -> emptySet()
+        }
     }
 
-    /** Undeclared routed names known to be consumed by the currently deployed handlers. */
-    private val legacyUndeclaredProperties = mapOf(
-        ACCOUNT_ASSETS_TOOL to setOf("asset", "scope"),
-        TRANSACTION_STATUS_TOOL to setOf("scope"),
-    )
+    private fun protocolMetadata(): JsonObject = JsonObject(mapOf(
+        "io.modelcontextprotocol/protocolVersion" to JsonPrimitive(TairaTestnetContract.MCP_PROTOCOL_VERSION),
+        "io.modelcontextprotocol/clientCapabilities" to JsonObject(emptyMap()),
+    ))
 
-    fun initializeRequest(requestId: String): NexusMcpRequest = NexusMcpRequest(
+    fun serverDiscoveryRequest(requestId: String): NexusMcpRequest = NexusMcpRequest(
         jsonrpc = "2.0",
         id = requestId,
-        method = "initialize",
-        params = JsonObject(
-            mapOf(
-                "protocolVersion" to JsonPrimitive(TairaTestnetContract.MCP_PROTOCOL_VERSION),
-                "capabilities" to JsonObject(emptyMap()),
-                "clientInfo" to JsonObject(
-                    mapOf(
-                        "name" to JsonPrimitive("sora-wallet-android"),
-                        "version" to JsonPrimitive("1"),
-                    )
-                ),
-            )
-        ),
+        method = "server/discover",
+        params = JsonObject(mapOf("_meta" to protocolMetadata())),
     )
+
+    fun requestHeaders(request: NexusMcpRequest): Map<String, String> = buildMap {
+        put("MCP-Protocol-Version", TairaTestnetContract.MCP_PROTOCOL_VERSION)
+        put("Mcp-Method", request.method)
+        if (request.method == "tools/call") {
+            put("Mcp-Name", checkNotNull(request.params?.string("name")))
+        }
+    }
 
     fun discoveryRequest(
         requestId: String,
@@ -101,7 +85,8 @@ internal object TairaMcpContract {
         cursor: String?,
     ): NexusMcpRequest {
         val params = mutableMapOf<String, JsonElement>(
-            "toolset_version" to JsonPrimitive(toolsetVersion),
+            "_meta" to protocolMetadata(),
+            "toolsetVersion" to JsonPrimitive(toolsetVersion),
         )
         cursor?.let { params["cursor"] = JsonPrimitive(it) }
         return NexusMcpRequest(
@@ -120,6 +105,7 @@ internal object TairaMcpContract {
             method = "tools/call",
             params = JsonObject(
                 mapOf(
+                    "_meta" to protocolMetadata(),
                     "name" to JsonPrimitive(tool),
                     "arguments" to arguments,
                 )
@@ -135,9 +121,9 @@ internal object TairaMcpContract {
         ASSET_DEFINITION_TOOL,
         JsonObject(
             mapOf(
-                "definition_id" to JsonPrimitive(
+                "path" to JsonObject(mapOf("definition_id" to JsonPrimitive(
                     TairaTestnetContract.XOR_ASSET_DEFINITION_ID
-                ),
+                ))),
                 "accept" to JsonPrimitive(NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE),
             )
         ),
@@ -148,58 +134,65 @@ internal object TairaMcpContract {
         accountId: String,
         definitionId: String,
         limit: Int,
-        offset: Long,
-    ): NexusMcpRequest = call(
-        requestId,
-        ACCOUNT_ASSETS_TOOL,
-        JsonObject(
-            mapOf(
-                "account_id" to JsonPrimitive(accountId),
-                // Unpatched Torii advertises `asset_id` while its GET handler consumes `asset`.
-                // Discovery admits only that known drift; patched Torii advertises this key.
-                "asset" to JsonPrimitive(definitionId),
-                "limit" to JsonPrimitive(limit),
-                "offset" to JsonPrimitive(offset),
-                "scope" to JsonPrimitive("global"),
-                "accept" to JsonPrimitive(NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE),
-            )
-        ),
-    )
+        cursor: String? = null,
+    ): NexusMcpRequest {
+        require(limit in 1..NexusToriiRoutes.MAX_PAGE_SIZE)
+        val arguments = mutableMapOf<String, JsonElement>(
+            "path" to JsonObject(mapOf("account_id" to JsonPrimitive(accountId))),
+            "filter" to JsonObject(mapOf(
+                "op" to JsonPrimitive("and"),
+                "args" to JsonArray(listOf(
+                    JsonObject(mapOf("op" to JsonPrimitive("eq"), "args" to JsonArray(listOf(JsonPrimitive("asset"), JsonPrimitive(definitionId))))),
+                    JsonObject(mapOf("op" to JsonPrimitive("eq"), "args" to JsonArray(listOf(JsonPrimitive("scope"), JsonPrimitive("global"))))),
+                )),
+            )),
+            "limit" to JsonPrimitive(limit),
+            "include_total" to JsonPrimitive(true),
+            "accept" to JsonPrimitive(NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE),
+        )
+        cursor?.let { arguments["cursor"] = JsonPrimitive(it) }
+        return call(requestId, ACCOUNT_ASSETS_TOOL, JsonObject(arguments))
+    }
 
     fun transactionStatusRequest(requestId: String, hash: String): NexusMcpRequest = call(
         requestId,
         TRANSACTION_STATUS_TOOL,
         JsonObject(
             mapOf(
-                "hash" to JsonPrimitive(canonicalHash(hash)),
-                "scope" to JsonPrimitive("global"),
+                "query" to JsonObject(mapOf("hash" to JsonPrimitive(canonicalHash(hash)))) ,
                 "accept" to JsonPrimitive(NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE),
             )
         ),
     )
 
-    fun instructionsRequest(
+    fun historyRequest(
         requestId: String,
         accountId: String,
         definitionId: String,
-        page: Int,
-        perPage: Int,
+        limit: Int,
+        cursor: String? = null,
         transactionHash: String? = null,
     ): NexusMcpRequest {
-        require(page > 0 && perPage > 0)
+        require(limit in 1..100)
+        fun equal(field: String, value: JsonElement) = JsonObject(mapOf(
+            "op" to JsonPrimitive("eq"), "args" to JsonArray(listOf(JsonPrimitive(field), value)),
+        ))
+        val filters = mutableListOf(
+            equal("asset_definition_id", JsonPrimitive(definitionId)),
+            equal("source", JsonPrimitive("transaction")),
+            equal("type", JsonPrimitive("TRANSFER")),
+            equal("status", JsonPrimitive("SUCCESS")),
+            equal("result_ok", JsonPrimitive(true)),
+        )
+        transactionHash?.let { filters += equal("tx_hash", JsonPrimitive(canonicalHash(it))) }
         val arguments = mutableMapOf<String, JsonElement>(
-            "account" to JsonPrimitive(accountId),
-            // A full `asset_id` is a source-owned balance bucket and would exclude incoming
-            // transfers. The first-release Torii contract exposes the definition selector.
-            "asset_definition_id" to JsonPrimitive(definitionId),
-            "kind" to JsonPrimitive("Transfer"),
-            "page" to JsonPrimitive(page),
-            "per_page" to JsonPrimitive(perPage),
-            "transaction_status" to JsonPrimitive("committed"),
+            "path" to JsonObject(mapOf("account_id" to JsonPrimitive(accountId))),
+            "filter" to JsonObject(mapOf("op" to JsonPrimitive("and"), "args" to JsonArray(filters))),
+            "limit" to JsonPrimitive(limit),
             "accept" to JsonPrimitive(NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE),
         )
-        transactionHash?.let { arguments["transaction_hash"] = JsonPrimitive(canonicalHash(it)) }
-        return call(requestId, INSTRUCTIONS_TOOL, JsonObject(arguments))
+        cursor?.let { arguments["cursor"] = JsonPrimitive(it) }
+        return call(requestId, HISTORY_TOOL, JsonObject(arguments))
     }
 
     fun submitAndWaitRequest(
@@ -219,20 +212,22 @@ internal object TairaMcpContract {
                     "status_accept" to JsonPrimitive(
                         NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE
                     ),
-                    "terminal_statuses" to JsonArray(listOf(JsonPrimitive("Applied"))),
                     "timeout_ms" to JsonPrimitive(120_000),
                 )
             ),
         )
     }
 
-    fun toolsetVersion(initializeResult: JsonElement): String {
-        val root = initializeResult as? JsonObject ?: contractMismatch()
-        if (root.string("protocolVersion") != TairaTestnetContract.MCP_PROTOCOL_VERSION) {
-            contractMismatch()
-        }
+    fun toolsetVersion(discoveryResult: JsonElement): String {
+        val root = discoveryResult as? JsonObject ?: contractMismatch()
+        val supported = root["supportedVersions"] as? JsonArray ?: contractMismatch()
+        if (JsonPrimitive(TairaTestnetContract.MCP_PROTOCOL_VERSION) !in supported) contractMismatch()
+        val serverInfo = (root["_meta"] as? JsonObject)
+            ?.get("io.modelcontextprotocol/serverInfo") as? JsonObject ?: contractMismatch()
+        if (serverInfo.string("name") != "iroha-torii-mcp") contractMismatch()
         val capabilities = root["capabilities"] as? JsonObject ?: contractMismatch()
-        val tools = capabilities["tools"] as? JsonObject ?: contractMismatch()
+        val extensions = capabilities["extensions"] as? JsonObject ?: contractMismatch()
+        val tools = extensions["org.hyperledger.iroha/tools"] as? JsonObject ?: contractMismatch()
         return tools.string("toolsetVersion")
             ?.takeIf { NexusTransactionHash.normalized(it) == it }
             ?: contractMismatch()
@@ -246,9 +241,10 @@ internal object TairaMcpContract {
         require(tools.isNotEmpty() && requestPropertyTypes.keys.containsAll(tools))
         val root = result as? JsonObject ?: contractMismatch()
         val advertised = root["tools"] as? JsonArray ?: contractMismatch()
+        val metadata = (root["_meta"] as? JsonObject)?.get("iroha") as? JsonObject ?: contractMismatch()
         if (
-            root.strictBoolean("listChanged") != false ||
-            root.string("toolsetVersion") != expectedToolsetVersion
+            metadata.strictBoolean("listChanged") != false ||
+            metadata.string("toolsetVersion") != expectedToolsetVersion
         ) {
             contractMismatch()
         }
@@ -263,19 +259,21 @@ internal object TairaMcpContract {
             val schema = descriptor["inputSchema"] as? JsonObject ?: contractMismatch()
             if (schema.string("type") != "object") contractMismatch()
             val properties = schema["properties"] as? JsonObject ?: contractMismatch()
-            val admitsAdditionalProperties = schema.strictBoolean("additionalProperties") == true
             requestPropertyTypes.getValue(requiredTool).forEach { (name, expectedType) ->
                 val property = properties[name]
-                if (property == null) {
-                    if (
-                        !admitsAdditionalProperties ||
-                        name !in legacyUndeclaredProperties[requiredTool].orEmpty()
-                    ) {
-                        contractMismatch()
-                    }
-                } else if (!property.matches(expectedType)) {
-                    contractMismatch()
-                }
+                if (property == null || !property.matches(expectedType)) contractMismatch()
+            }
+            val nested = when (requiredTool) {
+                ACCOUNT_ASSETS_TOOL, HISTORY_TOOL -> "path" to "account_id"
+                ASSET_DEFINITION_TOOL -> "path" to "definition_id"
+                TRANSACTION_STATUS_TOOL -> "query" to "hash"
+                else -> null
+            }
+            nested?.let { (container, key) ->
+                val nestedSchema = properties[container] as? JsonObject ?: contractMismatch()
+                val nestedProperties = nestedSchema["properties"] as? JsonObject ?: contractMismatch()
+                if (nestedProperties[key]?.matches(SchemaType.STRING) != true ||
+                    !setOf(key).containsAll(schemaRequiredNames(nestedSchema["required"]))) contractMismatch()
             }
             val required = schemaRequiredNames(schema["required"])
             if (!alwaysProvidedProperties.getValue(requiredTool).containsAll(required)) {
@@ -286,7 +284,7 @@ internal object TairaMcpContract {
             }
         }
         val nextCursor = when (val raw = root["nextCursor"]) {
-            JsonNull -> null
+            null, JsonNull -> null
             is JsonPrimitive -> raw.takeIf { it.isString }?.content
                 ?.takeIf { it.matches(Regex("^[1-9][0-9]{0,5}$")) }
                 ?: contractMismatch()
@@ -310,7 +308,10 @@ internal object TairaMcpContract {
         return when (expectedType) {
             SchemaType.STRING,
             SchemaType.INTEGER,
+            SchemaType.OBJECT,
+            SchemaType.BOOLEAN,
             -> schema.string("type") == expectedType.scalarName
+            SchemaType.FILTER -> (schema["type"] as? JsonArray)?.contains(JsonPrimitive("object")) == true
             SchemaType.STRING_ARRAY ->
                 schema.string("type") == "array" &&
                     ((schema["items"] as? JsonObject)?.string("type") == "string")
@@ -372,8 +373,7 @@ internal object TairaMcpContract {
         if (status !in 200..299) submissionFailed(status)
         requireMatchingHash(structured.string("hash"), canonicalExpected)
         if (
-            structured.string("terminal_kind") != "Applied" ||
-            structured["terminal_statuses"] != JsonArray(listOf(JsonPrimitive("Applied")))
+            structured.string("terminal_kind") != "Applied"
         ) {
             submissionFailed()
         }
@@ -385,10 +385,12 @@ internal object TairaMcpContract {
         val submitRoute = NexusMcpResultContract.validateEmbeddedRoute(
             wrapStructured(submit),
             requireFanout = false,
+            allowPublicTairaRoute = true,
         )
         val finalRoute = NexusMcpResultContract.validateEmbeddedRoute(
             wrapStructured(final),
             requireFanout = false,
+            allowPublicTairaRoute = true,
         )
         val submitHeaders = submitRoute["headers"] as? JsonObject ?: submissionInvalid()
         val submitContentType = submitHeaders.string("content-type") ?: submissionInvalid()
@@ -401,13 +403,23 @@ internal object TairaMcpContract {
             submissionInvalid()
         }
         requireMatchingHash(
-            submitHeaders.string("x-iroha-transaction-hash"),
+            submitHeaders.string("x-iroha-entrypoint-hash"),
             canonicalExpected,
         )
+        requireMatchingHash(submitHeaders.string("x-iroha-signed-transaction-hash"), canonicalExpected)
+        val receiptBody = submitRoute["body"] as? JsonObject ?: submissionInvalid()
+        val payload = receiptBody["payload"] as? JsonObject ?: submissionInvalid()
+        val entrypointHash = payload.string("entrypoint_hash") ?: submissionInvalid()
+        requireMatchingHash(entrypointHash, canonicalExpected)
+        requireMatchingHash(payload.string("signed_transaction_hash"), canonicalExpected)
+        payload.string("tx_hash")?.let { requireMatchingHash(it, canonicalExpected) }
+        // Internal journal DTO retains its historical tx_hash property; current Torii returns
+        // entrypoint_hash and signed_transaction_hash, both checked before this projection.
+        val projectedBody = JsonObject(receiptBody + ("payload" to JsonObject(payload + ("tx_hash" to JsonPrimitive(entrypointHash)))))
         val receipt = runCatching {
             json.decodeFromJsonElement(
                 NexusSubmissionReceipt.serializer(),
-                submitRoute.getValue("body"),
+                projectedBody,
             )
         }.getOrElse { submissionInvalid(it) }
         listOf(

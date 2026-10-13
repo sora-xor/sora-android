@@ -4,6 +4,15 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class TairaVisibilityPolicyTest {
+    @Test
+    fun `Taira sending is independent of production rollout and respects network visibility`() {
+        val state = ProductionFeatureState(true, false, true, false, true, true, false)
+        assertThat(state.sendsEnabledFor(jp.co.soramitsu.common.nexus.WalletNetworkId.TAIRA)).isTrue()
+        assertThat(state.sendsEnabledFor(jp.co.soramitsu.common.nexus.WalletNetworkId.MINAMOTO)).isFalse()
+        assertThat(state.copy(tairaVisible = false).sendsEnabledFor(jp.co.soramitsu.common.nexus.WalletNetworkId.TAIRA)).isFalse()
+        assertThat(state.copy(nexusAvailable = false).sendsEnabledFor(jp.co.soramitsu.common.nexus.WalletNetworkId.TAIRA)).isFalse()
+    }
+
 
     @Test
     fun `remote value is only a default before an explicit choice`() {
