@@ -47,12 +47,14 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.base.ProgressDialog
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
@@ -96,6 +98,10 @@ class AccountListFragment : SoraBaseFragment<AccountListViewModel>() {
                     .fillMaxSize()
             ) {
                 val state = viewModel.accountListScreenState.observeAsState().value
+                val isSwitchingAccount = viewModel.isSwitchingAccount.observeAsState(false).value
+                if (isSwitchingAccount) {
+                    ProgressDialog(message = stringResource(R.string.account_switching))
+                }
                 state?.let {
                     AccountListScreen(state = it, viewModel = viewModel, scrollState)
                 }

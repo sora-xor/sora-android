@@ -106,6 +106,33 @@ fun EnterPassphraseScreen(
                 )
             }
 
+            if (recoveryState.recoveryType == RecoveryType.JSON) {
+                // An encrypted backup file: choose the file (only its name is shown; its text
+                // is not put into the field below) or paste the text, then the password it was
+                // exported with.
+                recoveryState.chosenFileName?.let { fileName ->
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = Dimens.x1)
+                            .testTag("RecoveryChosenFile"),
+                        text = stringResource(id = R.string.recovery_json_file_chosen, fileName),
+                        color = MaterialTheme.customColors.fgPrimary,
+                        style = MaterialTheme.customTypography.textXS,
+                    )
+                }
+                TextButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Dimens.x1)
+                        .testTag("RecoveryChooseFile"),
+                    size = Size.Small,
+                    order = Order.TERTIARY,
+                    text = stringResource(id = R.string.recovery_json_choose_file),
+                    onClick = onChooseFile,
+                )
+            }
+
             InputText(
                 modifier = Modifier
                     .background(MaterialTheme.customColors.bgSurface)
@@ -132,30 +159,6 @@ fun EnterPassphraseScreen(
             )
 
             if (recoveryState.recoveryType == RecoveryType.JSON) {
-                // An encrypted backup file: choose the file (only its name is shown; its text
-                // is not put into the field above) or paste the text, then the password it was
-                // exported with.
-                recoveryState.chosenFileName?.let { fileName ->
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = Dimens.x1)
-                            .testTag("RecoveryChosenFile"),
-                        text = stringResource(id = R.string.recovery_json_file_chosen, fileName),
-                        color = MaterialTheme.customColors.fgPrimary,
-                        style = MaterialTheme.customTypography.textXS,
-                    )
-                }
-                TextButton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = Dimens.x1)
-                        .testTag("RecoveryChooseFile"),
-                    size = Size.Small,
-                    order = Order.TERTIARY,
-                    text = stringResource(id = R.string.recovery_json_choose_file),
-                    onClick = onChooseFile,
-                )
                 InputText(
                     modifier = Modifier
                         .background(MaterialTheme.customColors.bgSurface)
@@ -176,6 +179,12 @@ fun EnterPassphraseScreen(
                         imeAction = ImeAction.Done,
                         keyboardType = KeyboardType.Password
                     ),
+                )
+                Text(
+                    modifier = Modifier.padding(top = Dimens.x1),
+                    text = stringResource(R.string.recovery_json_password_help),
+                    color = MaterialTheme.customColors.fgSecondary,
+                    style = MaterialTheme.customTypography.textXS,
                 )
             }
 

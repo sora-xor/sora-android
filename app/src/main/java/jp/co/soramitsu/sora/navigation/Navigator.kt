@@ -35,7 +35,6 @@ package jp.co.soramitsu.sora.navigation
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import java.math.BigDecimal
-import jp.co.soramitsu.androidfoundation.intent.ShareUtil.openAppSettings
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
 import jp.co.soramitsu.common.presentation.args.address
@@ -49,7 +48,6 @@ import jp.co.soramitsu.common.presentation.args.txHash
 import jp.co.soramitsu.common.presentation.args.withArgs
 import jp.co.soramitsu.common.presentation.compose.webview.title
 import jp.co.soramitsu.common.presentation.compose.webview.url
-import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -164,11 +162,7 @@ class Navigator :
     }
 
     override fun showSelectLanguage() {
-        if (BuildUtils.sdkAtLeast(33)) {
-            navController?.context?.openAppSettings()
-        } else {
-            navController?.navigate(R.id.selectLanguageFragment)
-        }
+        navController?.navigate(R.id.selectLanguageFragment)
     }
 
     override fun showPoolDetails(ids: StringPair) {
