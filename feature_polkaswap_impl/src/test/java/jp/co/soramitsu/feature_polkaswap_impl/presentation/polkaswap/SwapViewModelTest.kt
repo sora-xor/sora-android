@@ -58,12 +58,15 @@ import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -76,6 +79,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.clearInvocations
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify as kVerify
 
@@ -128,6 +132,7 @@ class SwapViewModelTest {
         firstTokenId: String? = null,
         secondTokenId: String? = null,
         emptyCatalog: Boolean = false,
+        poolUpdates: Flow<String> = flowOf(""),
     ) = runTest {
         assets = if (emptyCatalog) emptyList() else listOf(
             TestAssets.xorAsset(xorBalance),
@@ -142,7 +147,7 @@ class SwapViewModelTest {
             )
         ).willReturn(false)
 
-        setUpAfterViewModelInit()
+        setUpAfterViewModelInit(poolUpdates)
         viewModel = SwapViewModel(
             assetsInteractor,
             walletInteractor,
@@ -157,7 +162,7 @@ class SwapViewModelTest {
         )
     }
 
-    private fun setUpAfterViewModelInit() = runTest {
+    private fun setUpAfterViewModelInit(poolUpdates: Flow<String>) = runTest {
         given(swapInteractor.observeSwap()).willReturn(
             flow {
                 emit(true)
@@ -168,11 +173,7 @@ class SwapViewModelTest {
                 emit(Market.TBC)
             }
         )
-        given(swapInteractor.observePoolReserves()).willReturn(
-            flow {
-                emit("")
-            }
-        )
+        given(swapInteractor.observePoolReserves()).willReturn(poolUpdates)
         assets.forEach {
             given(assetsInteractor.getAssetOrThrow(it.token.id)).willReturn(it)
         }
@@ -184,7 +185,7 @@ class SwapViewModelTest {
         given(resourceManager.getString(R.string.common_confirm)).willReturn("Confirm")
         given(resourceManager.getString(R.string.common_enter_amount)).willReturn("Enter amount")
         given(resourceManager.getString(R.string.polkaswap_pool_not_created)).willReturn("Pool not created")
-        // given(resourceManager.getString(R.string.review)).willReturn("Review")
+        given(resourceManager.getString(R.string.review)).willReturn("Review")
         given(resourceManager.getString(R.string.polkaswap_insufficient_balance)).willReturn("Insufficient balance")
         given(resourceManager.getString(R.string.polkaswap_insufficient_liqudity)).willReturn("Insufficient liquidity")
     }
@@ -214,6 +215,90 @@ class SwapViewModelTest {
         viewModel.navigationDisclaimerEvent.getOrAwaitValue()
 
         assertEquals(buttonState, viewModel.swapMainState.value.swapButtonState)
+    }
+
+    @Test
+    fun `preselected VAL to XOR loads markets and can review a quote`() = runTest {
+        given(swapInteractor.fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id))
+            .willReturn(setOf(Market.SMART, Market.XYK))
+        given(swapInteractor.calcDetails(any(), any(), any(), any(), any(), anyDouble()))
+            .willReturn(
+                SwapDetails(
+                    BigDecimal.TEN,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    networkFee,
+                    PoolDex(0, TestTokens.xorToken.id, "XOR"),
+                    null,
+                )
+            )
+
+        initViewModel(
+            xorBalance = BigDecimal("100"),
+            valBalance = BigDecimal("100"),
+            firstTokenId = TestTokens.valToken.id,
+            secondTokenId = TestTokens.xorToken.id,
+        )
+        advanceUntilIdle()
+
+        kVerify(swapInteractor).fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id)
+        assertEquals("Enter amount", viewModel.swapMainState.value.swapButtonState.text)
+
+        viewModel.onFromAmountChange(BigDecimal.ONE)
+        advanceUntilIdle()
+
+        assertEquals(BigDecimal.TEN, viewModel.swapMainState.value.tokenToState?.amount)
+        assertEquals("Review", viewModel.swapMainState.value.swapButtonState.text)
+        assertTrue(viewModel.swapMainState.value.swapButtonState.enabled)
+    }
+
+    @Test
+    fun `reversing XOR to VAL reloads markets for VAL to XOR`() = runTest {
+        given(swapInteractor.fetchAvailableSources(TestTokens.xorToken.id, TestTokens.valToken.id))
+            .willReturn(setOf(Market.SMART, Market.XYK))
+        given(swapInteractor.fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id))
+            .willReturn(setOf(Market.SMART, Market.TBC))
+        initViewModel(
+            firstTokenId = TestTokens.xorToken.id,
+            secondTokenId = TestTokens.valToken.id,
+        )
+        advanceUntilIdle()
+
+        viewModel.onTokensSwapClick()
+        advanceUntilIdle()
+
+        kVerify(swapInteractor).fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id)
+        viewModel.onMarketClick()
+        assertEquals(
+            listOf(Market.SMART, Market.TBC),
+            viewModel.swapMainState.value.selectMarketState?.second,
+        )
+        assertEquals("Enter amount", viewModel.swapMainState.value.swapButtonState.text)
+    }
+
+    @Test
+    fun `empty markets are retried on the next block after pool sync`() = runTest {
+        val poolUpdates = MutableSharedFlow<String>()
+        given(swapInteractor.fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id))
+            .willReturn(null)
+        initViewModel(
+            firstTokenId = TestTokens.valToken.id,
+            secondTokenId = TestTokens.xorToken.id,
+            poolUpdates = poolUpdates,
+        )
+        advanceUntilIdle()
+        assertEquals("Pool not created", viewModel.swapMainState.value.swapButtonState.text)
+
+        given(swapInteractor.fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id))
+            .willReturn(setOf(Market.SMART, Market.XYK))
+        clearInvocations(swapInteractor)
+        poolUpdates.emit("next block")
+        advanceUntilIdle()
+
+        kVerify(swapInteractor)
+            .fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id)
+        assertEquals("Enter amount", viewModel.swapMainState.value.swapButtonState.text)
     }
 
     @Test

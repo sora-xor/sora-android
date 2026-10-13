@@ -48,12 +48,14 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_wallet_api.data.BuyCryptoDataSource
+import jp.co.soramitsu.feature_wallet_api.data.NetworkActivityRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BuyCryptoRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.DefaultNexusSendQualification
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusFinalityReader
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NetworkActivityRepositoryImpl
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPendingReconciler
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPendingRecovery
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendQualification
@@ -76,6 +78,11 @@ import kotlinx.serialization.json.Json
 @Module
 @InstallIn(SingletonComponent::class)
 class WalletFeatureModule {
+
+    @Provides
+    fun provideNetworkActivityRepository(
+        repository: NetworkActivityRepositoryImpl,
+    ): NetworkActivityRepository = repository
 
     @Provides
     @Singleton

@@ -33,92 +33,141 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_blockexplorer_impl.presentation.screen
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.feature_wallet_api.data.NetworkAccountActivity
+import jp.co.soramitsu.feature_wallet_api.data.NetworkActivityRepository
 import jp.co.soramitsu.test_data.TestAccounts
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 
-@ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class ActivitiesViewModelTest {
+    @get:Rule val rule = InstantTaskExecutorRule()
+    @get:Rule val mainCoroutineRule = MainCoroutineRule()
 
-    @Rule
-    @JvmField
-    val rule: TestRule = InstantTaskExecutorRule()
-
-    @get:Rule
-    var mainCoroutineRule = MainCoroutineRule()
-
-    @Mock
-    private lateinit var assetsInteractor: AssetsInteractor
-
-    @Mock
-    private lateinit var walletInteractor: WalletInteractor
-
-    @Mock
-    private lateinit var transactionHistoryHandler: TransactionHistoryHandler
-
-    @Mock
-    private lateinit var assetsRouter: AssetsRouter
-
-    @Mock
-    private lateinit var router: MainRouter
-
-    private lateinit var viewModel: ActivitiesViewModel
+    private val assetsInteractor = mockk<AssetsInteractor>()
+    private val assetsRouter = mockk<AssetsRouter>(relaxed = true)
+    private val handler = mockk<TransactionHistoryHandler>(relaxed = true)
+    private val networkRepository = mockk<NetworkActivityRepository>(relaxed = true)
+    private val accounts = MutableStateFlow(TestAccounts.soraAccount)
+    private val soraHistory = MutableStateFlow<HistoryState>(HistoryState.NoData)
+    private val networks = MutableStateFlow(listOf(network()))
 
     @Before
-    fun setUp() = runTest {
-        whenever(assetsInteractor.flowCurSoraAccount()).thenReturn(flowOf(TestAccounts.soraAccount))
-        whenever(transactionHistoryHandler.flowLocalTransactions()).thenReturn(flowOf(true))
-        whenever(transactionHistoryHandler.historyState).thenReturn(MutableStateFlow(HistoryState.Loading))
+    fun setUp() {
+        every { assetsInteractor.flowCurSoraAccount() } returns accounts
+        every { handler.flowLocalTransactions() } returns flowOf(true)
+        every { handler.historyState } returns soraHistory
+        every { networkRepository.observeCurrentWallet() } returns networks
+    }
 
-        viewModel = ActivitiesViewModel(
-            assetsInteractor,
-            assetsRouter,
-            walletInteractor,
-            transactionHistoryHandler,
-            router,
-        )
+    private fun viewModel() = ActivitiesViewModel(assetsInteractor, assetsRouter, handler, networkRepository)
+
+    @Test
+    fun `loads both history sources on entry and refresh`() = runTest {
+        val model = viewModel()
+        advanceUntilIdle()
+        assertEquals(networks.value, model.networkActivity.value.accounts)
+        assertEquals(HistoryState.NoData, model.historyState.value)
+        coVerify(exactly = 2) { handler.refreshHistoryEvents() }
+        model.refresh()
+        advanceUntilIdle()
+        coVerify(exactly = 3) { handler.refreshHistoryEvents() }
+        verify { networkRepository.refresh() }
     }
 
     @Test
-    fun `init successful`() = runTest {
+    fun `SORA2 transaction details and pagination retain their routes`() = runTest {
+        val model = viewModel()
         advanceUntilIdle()
-        verify(transactionHistoryHandler, times(2)).refreshHistoryEvents()
+        model.onTxHistoryItemClick("hash")
+        model.onMoreHistoryEventsRequested()
+        advanceUntilIdle()
+        verify { assetsRouter.showTxDetails("hash") }
+        coVerify { handler.onMoreHistoryEventsRequested() }
     }
 
     @Test
-    fun `onTxHistoryItemClick() called`() = runTest {
+    fun `wallet switch clears network and SORA2 rows before replacement reads finish`() = runTest {
+        val oldHistory = HistoryState.History(true, emptyList())
+        soraHistory.value = oldHistory
+        val gate = CompletableDeferred<Unit>()
+        coEvery { handler.refreshHistoryEvents() } coAnswers {
+            if (accounts.value == TestAccounts.soraAccount2) gate.await()
+        }
+        val model = viewModel()
         advanceUntilIdle()
-        val txHash = "txHash"
-        viewModel.onTxHistoryItemClick(txHash)
-        assetsRouter.showTxDetails(txHash)
+        assertEquals(oldHistory, model.historyState.value)
+        accounts.value = TestAccounts.soraAccount2
+        advanceUntilIdle()
+        assertTrue(model.networkActivity.value.accounts.isEmpty())
+        assertEquals(HistoryState.Loading, model.historyState.value)
+        // Late emissions for the previous account must never reappear.
+        networks.value = listOf(network().copy(address = "late-old-address"))
+        advanceUntilIdle()
+        assertTrue(model.networkActivity.value.accounts.isEmpty())
+        val replacement = network().copy(walletId = TestAccounts.soraAccount2.substrateAddress)
+        networks.value = listOf(replacement)
+        soraHistory.value = HistoryState.NoData
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(listOf(replacement), model.networkActivity.value.accounts)
+        assertEquals(HistoryState.NoData, model.historyState.value)
     }
 
     @Test
-    fun `onMoreHistoryEventsRequested() called`() = runTest {
+    fun `pagination uses current wallet and prevents repeated or stale requests`() = runTest {
+        val model = viewModel()
         advanceUntilIdle()
-        viewModel.onMoreHistoryEventsRequested()
-        advanceUntilIdle()
-        verify(transactionHistoryHandler).onMoreHistoryEventsRequested()
+        model.loadMoreNetworkHistory(network().copy(walletId = "other-wallet"))
+        model.loadMoreNetworkHistory(network())
+        model.loadMoreNetworkHistory(network())
+        verify(exactly = 1) { networkRepository.loadMore(TestAccounts.soraAccount.substrateAddress, WalletNetworkId.TAIRA) }
     }
+
+    @Test
+    fun `refresh retries a failed network subscription`() = runTest {
+        every { networkRepository.observeCurrentWallet() } returns flow { error("offline") } andThen networks
+        val model = viewModel()
+        advanceUntilIdle()
+        assertTrue(model.networkActivity.value.error)
+        model.refresh()
+        advanceUntilIdle()
+        assertFalse(model.networkActivity.value.error)
+        assertFalse(model.networkActivity.value.loading)
+        assertEquals(networks.value, model.networkActivity.value.accounts)
+    }
+
+    private fun network() = NetworkAccountActivity(
+        walletId = TestAccounts.soraAccount.substrateAddress,
+        networkId = WalletNetworkId.TAIRA,
+        networkName = "Taira",
+        isTestnet = true,
+        address = "taira-account",
+        confirmedTransfers = emptyList(),
+        pendingTransactions = emptyList(),
+        errorCode = null,
+        hasMore = true,
+    )
 }
