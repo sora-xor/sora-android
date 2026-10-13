@@ -632,8 +632,8 @@
   <string name="json_backup_wrong_password">このパスワードではバックアップファイルを開けません。エクスポートしたときに設定したパスワードを入力してください。何も変更されていません。</string>
   <string name="recovery_json_option">バックアップファイル（JSON）</string>
   <string name="onboarding_enter_json">バックアップファイルをインポート</string>
-  <string name="recovery_enter_json_title">暗号化されたバックアップファイル（JSON）を選ぶか、その内容を貼り付けてください。次に、エクスポートしたときに設定したパスワードを入力してください。</string>
-  <string name="recovery_json_input_label">バックアップファイルの内容</string>
+  <string name="recovery_enter_json_title">以前保存したバックアップファイルからアカウントを復元します。下のボタンでJSONファイルを選ぶか、ファイルの内容を貼り付けてください。</string>
+  <string name="recovery_json_input_label">またはファイルの内容を貼り付け</string>
   <string name="recovery_json_password_label">バックアップファイルのパスワード</string>
   <string name="recovery_json_choose_file">ファイルを選ぶ</string>
   <string name="recovery_json_file_unreadable">そのファイルを読み取れませんでした。SORAからエクスポートしたJSONファイルを選んでください。何も変更されていません。</string>
@@ -792,4 +792,6 @@
   <string name="neon_theme_system">システム</string>
   <string name="neon_theme_dark">ダーク</string>
   <string name="neon_theme_light">ライト</string>
+  <string name="recovery_json_password_help">バックアップを保存したときに設定したパスワードを入力してください。アプリのPINコードとは異なります。</string>
+  <string name="account_switching">アカウントを切り替えています…</string>
 </resources>

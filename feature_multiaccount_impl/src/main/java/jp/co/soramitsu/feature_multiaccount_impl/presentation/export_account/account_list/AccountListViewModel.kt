@@ -68,6 +68,9 @@ class AccountListViewModel @Inject constructor(
     private val _showOnboardingFlowEvent = SingleLiveEvent<Unit>()
     val showOnboardingFlowEvent: LiveData<Unit> = _showOnboardingFlowEvent
 
+    private val _isSwitchingAccount = MutableLiveData(false)
+    val isSwitchingAccount: LiveData<Boolean> = _isSwitchingAccount
+
     private var toolbarActionModeEnabled = false
 
     init {
@@ -109,28 +112,32 @@ class AccountListViewModel @Inject constructor(
     }
 
     fun onAccountOptionsClicked(address: String) {
+        if (_isSwitchingAccount.value == true) return
         router.showAccountDetails(address)
     }
 
     fun onAccountClicked(address: String) {
+        if (_isSwitchingAccount.value == true) return
+        val account = _accountListScreenState.value?.accountList
+            ?.find { it.account.substrateAddress == address } ?: return
+        // Set this before launching so a second tap cannot queue another account change.
+        _isSwitchingAccount.value = true
         viewModelScope.launch {
-            tryCatch {
-                val account =
-                    _accountListScreenState.value?.accountList?.find { it.account.substrateAddress == address }
-                if (account != null) {
-                    interactor.setCurSoraAccount(account.account)
-                    router.popBackStack()
-                }
+            tryCatchFinally(finally = { _isSwitchingAccount.value = false }) {
+                interactor.setCurSoraAccount(account.account)
+                router.popBackStack()
             }
         }
     }
 
     fun onAccountLongClicked(address: String) {
+        if (_isSwitchingAccount.value == true) return
         clipboardManager.addToClipboard(address)
         copiedToast.trigger()
     }
 
     fun onAccountSelected(address: String) {
+        if (_isSwitchingAccount.value == true) return
         accountListScreenState.value?.let { state ->
             val newList = state.accountList.map { accounts ->
                 if (accounts.account.substrateAddress == address) {
@@ -150,6 +157,7 @@ class AccountListViewModel @Inject constructor(
     }
 
     fun onAddAccountClicked() {
+        if (_isSwitchingAccount.value == true) return
         _showOnboardingFlowEvent.value = Unit
     }
 
@@ -162,6 +170,7 @@ class AccountListViewModel @Inject constructor(
     }
 
     private fun onToolbarNavigation() {
+        if (_isSwitchingAccount.value == true) return
         _accountListScreenState.value?.let {
             if (toolbarActionModeEnabled) {
                 toolbarActionModeEnabled = false
@@ -202,6 +211,7 @@ class AccountListViewModel @Inject constructor(
     }
 
     override fun onAction() {
+        if (_isSwitchingAccount.value == true) return
         _accountListScreenState.value?.let { state ->
             val addresses = state.accountList
                 .filter { it.isSelectedAction }

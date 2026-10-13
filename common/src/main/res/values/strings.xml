@@ -821,8 +821,8 @@
   <string name="json_backup_wrong_password">That password doesn\'t open this backup file. Enter the password you chose when you exported it. Nothing was changed.</string>
   <string name="recovery_json_option">Backup file (JSON)</string>
   <string name="onboarding_enter_json">Import backup file</string>
-  <string name="recovery_enter_json_title">Choose your encrypted backup file (JSON), or paste its text. Then enter the password you chose when you exported it.</string>
-  <string name="recovery_json_input_label">Backup file text</string>
+  <string name="recovery_enter_json_title">Restore an account from a backup file you previously saved. Choose the JSON file below, or paste its contents.</string>
+  <string name="recovery_json_input_label">Or paste backup file contents</string>
   <string name="recovery_json_password_label">Backup file password</string>
   <string name="recovery_json_choose_file">Choose file</string>
   <string name="recovery_json_file_unreadable">SORA couldn\'t read that file. Choose the JSON file you exported from SORA. Nothing was changed.</string>
@@ -1014,4 +1014,6 @@
   <string name="neon_theme_system">System</string>
   <string name="neon_theme_dark">Dark</string>
   <string name="neon_theme_light">Light</string>
+  <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
+  <string name="account_switching">Switching account…</string>
 </resources>
