@@ -78,6 +78,7 @@ import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -144,6 +145,7 @@ class SwapViewModel @AssistedInject constructor(
     private val onChangedProperty = SuspendableProperty<PropertyValue>(1)
 
     private val availableMarkets = mutableListOf<Market>()
+    private var marketsTokenPair: Pair<String, String>? = null
     private var desired: WithDesired = WithDesired.INPUT
     private var swapDetails: SwapDetails? = null
     private var networkFee: BigDecimal? = null
@@ -380,11 +382,13 @@ class SwapViewModel @AssistedInject constructor(
                         resetLoading()
                         return@collectLatest
                     }
-                    if (it.reloadMarkets) {
+                    if (it.reloadMarkets || selectedTokenPair() != marketsTokenPair || availableMarkets.isEmpty()) {
                         getMarkets()
                         property.reset()
                     }
-                    recalcDetails()
+                    if (selectedTokenPair() == marketsTokenPair) {
+                        recalcDetails()
+                    }
                     toggleSwapButtonStatus()
                     updateTransactionReminderWarningVisibility()
                     resetLoading()
@@ -640,17 +644,29 @@ class SwapViewModel @AssistedInject constructor(
         )
     }
 
+    private fun selectedTokenPair(): Pair<String, String>? {
+        val tokenFromId = _swapMainState.value.tokenFromState?.token?.id ?: return null
+        val tokenToId = _swapMainState.value.tokenToState?.token?.id ?: return null
+        return tokenFromId to tokenToId
+    }
+
     private suspend fun getMarkets() {
-        _swapMainState.value.tokenFromState?.let { from ->
-            _swapMainState.value.tokenToState?.let { to ->
-                tryCatch {
-                    val m = swapInteractor.fetchAvailableSources(from.token.id, to.token.id)
-                    availableMarkets.clear()
-                    if (!m.isNullOrEmpty()) {
-                        availableMarkets.addAll(m)
-                    }
-                }
+        val tokenPair = selectedTokenPair() ?: return
+        availableMarkets.clear()
+        marketsTokenPair = null
+        swapDetails = null
+        updateDetailsView()
+        try {
+            val markets = swapInteractor.fetchAvailableSources(tokenPair.first, tokenPair.second)
+            // Token selection can change before the debounced collector cancels this lookup.
+            if (selectedTokenPair() == tokenPair) {
+                availableMarkets.addAll(markets.orEmpty())
+                marketsTokenPair = tokenPair
             }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            onError(error)
         }
     }
 

@@ -35,6 +35,7 @@ package jp.co.soramitsu.common_wallet.data
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.WhitelistTokensManager
 import jp.co.soramitsu.common_wallet.domain.BalanceWrapper
@@ -52,8 +53,8 @@ class AssetLocalToAssetMapper @Inject constructor(
     suspend fun map(token: TokenFiatLocal): Token {
         return Token(
             id = token.token.id,
-            name = token.token.name,
-            symbol = token.token.symbol,
+            name = AssetHolder.displayName(token.token.id, token.token.name),
+            symbol = AssetHolder.displaySymbol(token.token.id, token.token.symbol),
             precision = token.token.precision,
             isHidable = token.token.isHidable,
             iconFile = whitelistTokensManager.getTokenIconUri(token.token.id),
@@ -84,8 +85,8 @@ class AssetLocalToAssetMapper @Inject constructor(
     suspend fun map(tokenLocal: TokenWithFiatLocal): Token =
         Token(
             id = tokenLocal.token.id,
-            name = tokenLocal.token.name,
-            symbol = tokenLocal.token.symbol,
+            name = AssetHolder.displayName(tokenLocal.token.id, tokenLocal.token.name),
+            symbol = AssetHolder.displaySymbol(tokenLocal.token.id, tokenLocal.token.symbol),
             precision = tokenLocal.token.precision,
             isHidable = tokenLocal.token.isHidable,
             iconFile = whitelistTokensManager.getTokenIconUri(tokenLocal.token.id),

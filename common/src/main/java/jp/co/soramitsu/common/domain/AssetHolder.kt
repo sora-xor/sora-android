@@ -34,6 +34,7 @@ package jp.co.soramitsu.common.domain
 
 object AssetHolder {
 
+    const val XOR_ASSET_ID = "0x0200000000000000000000000000000000000000000000000000000000000000"
     const val DEFAULT_WHITE_LIST_NAME = "tokens_white_list"
     const val ACTIVITY_LIST_ROUNDING = 3
     const val ROUNDING = 8
@@ -50,9 +51,9 @@ object AssetHolder {
     )
     private val knownAssets: Map<String, AssetDefault> = mapOf(
         // xor
-        "0x0200000000000000000000000000000000000000000000000000000000000000" to
+        XOR_ASSET_ID to
             AssetDefault(
-                "SORA", "XOR",
+                "XOR", "XOR",
                 true, false,
                 1,
             ),
@@ -101,6 +102,8 @@ object AssetHolder {
     fun getIds(): List<String> = knownAssets.keys.toList()
     fun getName(id: String): String = getAsset(id).name
     fun getSymbol(id: String): String = getAsset(id).symbol
+    fun displayName(id: String, name: String): String = if (id == XOR_ASSET_ID) "XOR" else name
+    fun displaySymbol(id: String, symbol: String): String = if (id == XOR_ASSET_ID) "XOR" else symbol
     fun knownCount(): Int = knownAssets.size
 
     private data class AssetDefault(
