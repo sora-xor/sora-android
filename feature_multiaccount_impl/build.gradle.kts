@@ -1,21 +1,23 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
-    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
     jvmToolchain(17)
+    compilerOptions {
+        freeCompilerArgs.add("-Xstring-concat=inline")
+    }
 }
 
 android {
     namespace = "jp.co.soramitsu.feature_multiaccount_impl"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -25,7 +27,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -38,12 +40,9 @@ android {
         }
     }
 
-    kotlinOptions {
-        freeCompilerArgs += listOf("-Xstring-concat=inline")
-    }
-
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 
     flavorDimensions += listOf("default")
@@ -105,8 +104,6 @@ dependencies {
 
     implementation(libs.lifecycleProcessDep)
 
-    kapt(libs.lifecycleKaptDep)
-
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
@@ -129,7 +126,7 @@ dependencies {
 
     implementation(libs.daggerDep)
     implementation(libs.hiltNavComposeDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
 
     testImplementation(libs.coroutineTestDep)
     testImplementation(libs.junitDep)

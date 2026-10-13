@@ -123,6 +123,7 @@ internal class DemeterFarmingInteractorImpl(
                 TransactionStatus.COMMITTED
             }
             transactionHistoryRepository.saveTransaction(
+                curAcc.substrateAddress,
                 transactionBuilder.buildDemeterStaking(
                     result.txHash,
                     result.blockHash,
@@ -176,6 +177,7 @@ internal class DemeterFarmingInteractorImpl(
                 TransactionStatus.COMMITTED
             }
             transactionHistoryRepository.saveTransaction(
+                curAcc.substrateAddress,
                 transactionBuilder.buildDemeterStaking(
                     result.txHash,
                     result.blockHash,
@@ -228,6 +230,7 @@ internal class DemeterFarmingInteractorImpl(
                 TransactionStatus.COMMITTED
             }
             transactionHistoryRepository.saveTransaction(
+                curAcc.substrateAddress,
                 transactionBuilder.buildDemeterRewards(
                     result.txHash,
                     result.blockHash,

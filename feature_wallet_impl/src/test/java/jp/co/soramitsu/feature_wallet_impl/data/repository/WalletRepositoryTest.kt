@@ -138,7 +138,7 @@ class WalletRepositoryTest {
     fun `observe migrate`() = runTest {
         val key = Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6))
         given(
-            extrinsicManager.submitAndWaitExtrinsic(
+            extrinsicManager.submitLegacyMigrationAndWaitExtrinsic(
                 anyString(),
                 any(),
                 anyBoolean(),
@@ -157,6 +157,13 @@ class WalletRepositoryTest {
         )
 
         assertEquals(true, test.success)
+        verify(extrinsicManager).submitLegacyMigrationAndWaitExtrinsic(
+            anyString(),
+            any(),
+            anyBoolean(),
+            anyString(),
+            any(),
+        )
     }
 
     @Test

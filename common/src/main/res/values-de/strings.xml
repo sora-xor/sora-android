@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Asset auswählen</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Schließen</string>
+  <string name="tx_details_view_on_explorer">Im Explorer anzeigen</string>
   <string name="common_confirm">Bestätigen</string>
   <string name="common_connected">Verbunden</string>
   <string name="common_connecting">Verbinden...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Du hast bereits einen anderen Einladungscode verwendet</string>
   <string name="common_error_invitation_code_not_found">Der Einladungscode ist ungültig</string>
   <string name="common_error_inviter_registered_after_invitee">Der angegebene Einladungscode kann nicht angewendet werden, da er von einem Benutzer stammt, der sich nach dir registriert hat</string>
-  <string name="common_error_mnemonic_is_not_valid">Bitte stell sicher, dass die Passphrase aus 12 oder 15 Wörtern besteht und dass sie alle korrekt sind.</string>
-  <string name="common_error_mnemonic_length_error">Die Passphrase muss 15 Wörter enthalten</string>
+  <string name="common_error_mnemonic_is_not_valid">Bitte stell sicher, dass die Passphrase aus 12 oder 24 Wörtern besteht und dass sie alle korrekt sind.</string>
+  <string name="common_error_mnemonic_length_error">Die Passphrase muss 12 oder 24 Wörter enthalten</string>
   <string name="common_error_network">Bitte überprüfe die Internetverbindung und versuche es später noch einmal.</string>
   <string name="common_error_no_browser_error">Bitte installiere einen Browser, um den Link zu öffnen</string>
   <string name="common_error_not_enough_invitations">Tut uns leid, Du hast keine Einladungen zum Teilen</string>
@@ -277,7 +278,7 @@
   <string name="export_protection_passphrase_1">Wenn ich meine Passphrase verliere, sind meine Assets für immer verloren.</string>
   <string name="export_protection_passphrase_2">Wenn ich meine Passphrase offenlege oder mit jemandem teile, können meine Assets gestohlen werden.</string>
   <string name="export_protection_passphrase_3">Es liegt in meiner vollen Verantwortung, meine Passphrase sicher aufzubewahren.</string>
-  <string name="export_protection_passphrase_description">Im nächsten Schritt siehst du deine Passphrase (12 Wörter), mit dem du dein Konto wiederherstellen kannst.</string>
+  <string name="export_protection_passphrase_description">Im nächsten Schritt siehst du deine Passphrase (24 Wörter), mit dem du dein Konto wiederherstellen kannst.</string>
   <string name="export_protection_seed_1">Wenn ich meinen Raw Seed verliere, sind meine Assets für immer verloren.</string>
   <string name="export_protection_seed_2">Wenn ich meinen Raw Seed preisgebe oder mit anderen teile, können meine Assets gestohlen werden.</string>
   <string name="export_protection_seed_3">Es liegt in meiner vollen Verantwortung, meinen Raw Seed sicher aufzubewahren.</string>
@@ -448,10 +449,10 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">Link oder Adresse des Referrers</string>
   <string name="referral_referrer_address">Adresse des Referrers</string>
-  <string name="referral_referrer_description">Jedes Mal, wenn du eine Transaktion durchführst, gehen 10 % der gezahlten Netzwerkgebühr als Belohnung an deinen Referrer.</string>
+  <string name="referral_referrer_description">Jedes Mal, wenn du eine Transaktion durchführst, gehen 10 %% der gezahlten Netzwerkgebühr als Belohnung an deinen Referrer.</string>
   <string name="referral_start_inviting">Beginne mit dem Einladen</string>
-  <string name="referral_subtitle">Jedes Mal, wenn deine Empfehlung eine Transaktion durchführt, erhälst du 10 % der gezahlten Netzwerkgebühr als Belohnung.</string>
-  <string name="referral_title">Erhalte 10 % der Netzwerkgebühren für deine Empfehlungen</string>
+  <string name="referral_subtitle">Jedes Mal, wenn deine Empfehlung eine Transaktion durchführt, erhälst du 10 %% der gezahlten Netzwerkgebühr als Belohnung.</string>
+  <string name="referral_title">Erhalte 10 %% der Netzwerkgebühren für deine Empfehlungen</string>
   <string name="referral_toolbar_title">Empfehlungsprogramm</string>
   <string name="referral_total_rewards">Gesamte Belohnung</string>
   <string name="referral_unbond_button_title">Unbond XOR</string>

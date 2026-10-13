@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "contractId": "sora-android-dependency-signing-review-admission-v1",
+  "status": "blocked",
+  "platform": "android",
+  "applicationId": "jp.co.soramitsu.sora",
+  "manifestSha256": null,
+  "reviewSequenceNumber": null,
+  "sourceRevision": null,
+  "reviewContractSha256": null,
+  "producerKeySha256": null,
+  "reviewerKeySha256": null,
+  "authorization": {
+    "authorizesDependencySigningQualification": false,
+    "authorizesArtifactSigning": false,
+    "authorizesRelease": false,
+    "authorizesProductionMutation": false
+  },
+  "blockingReasons": [
+    "No authenticated external Android dependency/signing review has been admitted."
+  ]
+}

@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Aktiv seçin</string>
   <string name="common_claim">iddia</string>
   <string name="common_close">Bağlayın</string>
+  <string name="tx_details_view_on_explorer">Eksplorerdə bax</string>
   <string name="common_confirm">Təsdiqləyin</string>
   <string name="common_connected">Əlaqədar</string>
   <string name="common_connecting">Qoşulur ...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Artıq başqa bir dəvət kodu tətbiq etmisiniz</string>
   <string name="common_error_invitation_code_not_found">Dəvət kodu etibarsızdır</string>
   <string name="common_error_inviter_registered_after_invitee">Təqdim olunan dəvət kodu tətbiq oluna bilməz, çünki bu sizdən sonra qeydiyyatdan keçən istifadəçiyə aiddir</string>
-  <string name="common_error_mnemonic_is_not_valid">Parol keçidiniz yanlışdır. Xahiş edirik başqa birini sınayın.</string>
-  <string name="common_error_mnemonic_length_error">Parol keçidi 15 sözdən ibarət olmalıdır</string>
+  <string name="common_error_mnemonic_is_not_valid">Parol ifadənizin 12 və ya 24 sözdən ibarət olduğunu və bütün sözlərin düzgün olduğunu yoxlayın.</string>
+  <string name="common_error_mnemonic_length_error">Parol keçidi 12 və ya 24 sözdən ibarət olmalıdır</string>
   <string name="common_error_network">Xahiş edirəm internet bağlantısını yoxlayın və sonra yenidən cəhd edin.</string>
   <string name="common_error_no_browser_error">Linki açmaq üçün brauzer quraşdırın</string>
   <string name="common_error_not_enough_invitations">Bağışlayın, ancaq paylaşmaq üçün dəvətiniz yoxdur</string>
@@ -277,7 +278,7 @@
   <string name="export_protection_passphrase_1">Əgər parolumu itirsəm, vəsaitim həmişəlik itiriləcək.</string>
   <string name="export_protection_passphrase_2">Parol ifadəmi kiməsə ifşa etsəm və ya paylaşsam, vəsaitim oğurlana bilər.</string>
   <string name="export_protection_passphrase_3">Parolumu təhlükəsiz saxlamaq mənim tam məsuliyyətimdir.</string>
-  <string name="export_protection_passphrase_description">Növbəti addımda siz hesabı bərpa etməyə imkan verən Parolu (12 söz) görəcəksiniz.</string>
+  <string name="export_protection_passphrase_description">Növbəti addımda siz hesabı bərpa etməyə imkan verən Parolu (24 söz) görəcəksiniz.</string>
   <string name="export_protection_seed_1">Xam toxumumu itirsəm, vəsaitim əbədi olaraq itiriləcək.</string>
   <string name="export_protection_seed_2">Xam toxumumu kiməsə ifşa etsəm və ya paylaşsam, vəsaitim oğurlana bilər.</string>
   <string name="export_protection_seed_3">Xam toxumumu təhlükəsiz saxlamaq mənim tam məsuliyyətimdir.</string>

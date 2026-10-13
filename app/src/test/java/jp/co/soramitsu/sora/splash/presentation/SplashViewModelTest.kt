@@ -40,6 +40,7 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.sora.splash.domain.PendingRecoveryStartupScheduler
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -55,6 +56,8 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
@@ -74,15 +77,22 @@ class SplashViewModelTest {
     @Mock
     private lateinit var coroutineManager: CoroutineManager
 
+    @Mock
+    private lateinit var pendingRecoveryStartupScheduler: PendingRecoveryStartupScheduler
+
     private lateinit var splashViewModel: SplashViewModel
 
     @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
         mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log("Splash next screen true") } returns Unit
+        every { FirebaseWrapper.log(any()) } returns Unit
         whenever(coroutineManager.io).thenReturn(this.coroutineContext[CoroutineDispatcher]!!)
-        splashViewModel = SplashViewModel(interactor, coroutineManager)
+        splashViewModel = SplashViewModel(
+            interactor,
+            coroutineManager,
+            pendingRecoveryStartupScheduler,
+        )
     }
 
     @Test
@@ -96,15 +106,144 @@ class SplashViewModelTest {
     }
 
     @Test
+    fun `nextScreen never navigates before wallet migration completes`() = runTest {
+        val migrationResult = CompletableDeferred<Boolean>()
+        given(interactor.getMigrationDoneAsync()).willReturn(migrationResult)
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+
+        verify(interactor, never()).getRegistrationState()
+
+        migrationResult.complete(true)
+        advanceUntilIdle()
+
+        verify(interactor).getRegistrationState()
+        verify(pendingRecoveryStartupScheduler).scheduleAfterWalletMigration()
+        assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+    }
+
+    @Test
     fun `nextScreen with INITIAL`() = runTest {
         val state = OnboardingState.INITIAL
 
         given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
         given(interactor.getRegistrationState()).willReturn(state)
+        given(interactor.hasExistingWallet()).willReturn(false)
 
         splashViewModel.nextScreen()
         advanceUntilIdle()
         val r = splashViewModel.showOnBoardingScreen.getOrAwaitValue()
         assertEquals(OnboardingState.INITIAL, r)
+    }
+
+    @Test
+    fun `missing onboarding preference with existing wallet opens wallet`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.INITIAL)
+        given(interactor.hasExistingWallet()).willReturn(true)
+
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+
+        assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+    }
+
+    @Test
+    fun `migration recovery never evaluates onboarding or implicit wallet creation`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(false))
+        given(interactor.getMigrationFailureCode()).willReturn("SECRET_DECRYPTION_FAILED")
+        given(interactor.canContinueLegacyWallet()).willReturn(true)
+
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+
+        assertEquals(
+            WalletMigrationRecoveryUiState(
+                code = "SECRET_DECRYPTION_FAILED",
+                canContinueLegacyWallet = true,
+            ),
+            splashViewModel.showMigrationRecovery.getOrAwaitValue(),
+        )
+        verify(interactor, never()).getRegistrationState()
+        verify(interactor, never()).hasExistingWallet()
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
+    }
+
+    @Test
+    fun `legacy continuation revalidates exact selection immediately before navigation`() = runTest {
+        given(interactor.canContinueLegacyWallet()).willReturn(true)
+
+        splashViewModel.continueLegacyWallet()
+        advanceUntilIdle()
+
+        assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+    }
+
+    @Test
+    fun `legacy continuation selection race stays on recovery screen`() = runTest {
+        given(interactor.canContinueLegacyWallet()).willReturn(false)
+        given(interactor.getMigrationFailureCode()).willReturn("SELECTED_ACCOUNT_MISMATCH")
+
+        splashViewModel.continueLegacyWallet()
+        advanceUntilIdle()
+
+        assertEquals(
+            WalletMigrationRecoveryUiState(
+                code = "SELECTED_ACCOUNT_MISMATCH",
+                canContinueLegacyWallet = false,
+            ),
+            splashViewModel.showMigrationRecovery.getOrAwaitValue(),
+        )
+    }
+
+    @Test
+    fun `explicit retry reruns migration and opens main only after verification`() = runTest {
+        // The same ViewModel survives Activity recreation. A completed preflight failure must
+        // be replaced by retryMigration rather than awaited again through nextScreen.
+        val failedInitialMigration = CompletableDeferred(false)
+        given(interactor.getMigrationDoneAsync()).willReturn(failedInitialMigration)
+        given(interactor.getMigrationFailureCode()).willReturn("INSUFFICIENT_BACKUP_STORAGE")
+        given(interactor.canContinueLegacyWallet()).willReturn(false)
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+        assertEquals(
+            WalletMigrationRecoveryUiState("INSUFFICIENT_BACKUP_STORAGE", false),
+            splashViewModel.showMigrationRecovery.getOrAwaitValue(),
+        )
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
+        given(interactor.retryMigration()).willReturn(true)
+
+        splashViewModel.retryWalletMigration()
+        advanceUntilIdle()
+
+        assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+        assertEquals(false, failedInitialMigration.await())
+        verify(interactor).retryMigration()
+        verify(interactor, never()).getRegistrationState()
+        verify(interactor, never()).hasExistingWallet()
+        verify(pendingRecoveryStartupScheduler).scheduleAfterWalletMigration()
+    }
+
+    @Test
+    fun `failed explicit retry remains recovery and preserves legacy option`() = runTest {
+        given(interactor.retryMigration()).willReturn(false)
+        given(interactor.getMigrationFailureCode()).willReturn("KEY_UNAVAILABLE")
+        given(interactor.canContinueLegacyWallet()).willReturn(true)
+
+        splashViewModel.retryWalletMigration()
+        advanceUntilIdle()
+
+        assertEquals(
+            WalletMigrationRecoveryUiState(
+                code = "KEY_UNAVAILABLE",
+                canContinueLegacyWallet = true,
+            ),
+            splashViewModel.showMigrationRecovery.getOrAwaitValue(),
+        )
+        verify(interactor, never()).getRegistrationState()
+        verify(interactor, never()).hasExistingWallet()
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
     }
 }

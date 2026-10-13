@@ -135,7 +135,8 @@ class TransactionHistoryHandlerImpl @Inject constructor(
 
     override suspend fun refreshHistoryEvents(tokenId: String?) {
         withContext(coroutineManager.io) {
-            if (mutex.isLocked) return@withContext
+            // Account changes must wait for the current read, not silently drop the refresh
+            // and leave the previous wallet's cached history on screen.
             mutex.withLock {
                 tokenIdFilter = tokenId
                 if (historyEvents.isEmpty()) {

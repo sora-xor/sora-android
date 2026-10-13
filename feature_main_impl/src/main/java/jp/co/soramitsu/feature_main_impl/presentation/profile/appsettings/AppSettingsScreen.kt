@@ -51,8 +51,11 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 internal fun AppSettingsScreen(
     checkedSystem: Boolean,
     checkedDark: Boolean,
+    testNetworksAvailable: Boolean,
+    checkedTestNetworks: Boolean,
     onSystemToggle: (Boolean) -> Unit,
     onDarkToggle: (Boolean) -> Unit,
+    onTestNetworksToggle: (Boolean) -> Unit,
 ) {
     ContentCard {
         Column(
@@ -80,6 +83,27 @@ internal fun AppSettingsScreen(
                 checked = checkedDark,
                 onClick = onDarkToggle,
             )
+            if (testNetworksAvailable) {
+                Text(
+                    text = stringResource(id = R.string.networks_title).uppercase(),
+                    style = MaterialTheme.customTypography.headline4,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    maxLines = 1,
+                )
+                OptionSwitch(
+                    icon = null,
+                    label = stringResource(id = R.string.test_networks),
+                    bottomDivider = false,
+                    available = true,
+                    checked = checkedTestNetworks,
+                    onClick = onTestNetworksToggle,
+                )
+                Text(
+                    text = stringResource(id = R.string.test_networks_description),
+                    style = MaterialTheme.customTypography.paragraphXS,
+                    color = MaterialTheme.customColors.fgSecondary,
+                )
+            }
         }
     }
 }
@@ -90,7 +114,10 @@ private fun PreviewAppSettingsScreen() {
     AppSettingsScreen(
         checkedSystem = false,
         checkedDark = false,
+        testNetworksAvailable = true,
+        checkedTestNetworks = true,
         onSystemToggle = { },
         onDarkToggle = { },
+        onTestNetworksToggle = { },
     )
 }

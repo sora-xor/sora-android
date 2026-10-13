@@ -32,34 +32,107 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_api.data
 
+import java.net.URLEncoder
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.format.addHexPrefix
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.network.BoundedHttpTextClient
+import jp.co.soramitsu.common.network.requireStrictJsonDocumentWithoutDuplicateKeys
 import jp.co.soramitsu.common.util.CachingFactory
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.ConfigExplorerType
+import jp.co.soramitsu.feature_blockexplorer_api.data.models.EmergencyFeatureFlags
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraConfig
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraConfigNode
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraCurrency
-import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
-import jp.co.soramitsu.xnetworking.lib.engines.utils.getAsString
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
+internal fun buildTransactionExplorerUrl(
+    blockExplorerUrl: String,
+    txHash: String,
+): String? {
+    val trimmedHash = txHash.trim()
+    if (trimmedHash.isEmpty()) return null
+
+    val baseUrl = blockExplorerUrl.trim()
+        .ifEmpty { OptionsProvider.blockExplorerUrl }
+        .trimEnd('/')
+    val encodedHash = URLEncoder.encode(trimmedHash, Charsets.UTF_8.name())
+
+    return "$baseUrl/sorav2?tab=extrinsics&q=$encodedHash"
+}
+
+internal fun requireSoraConfigPayloadWithinLimit(
+    content: String,
+    maximumBytes: Int,
+): String {
+    require(maximumBytes > 0) { "SORA_CONFIG_LIMIT_INVALID" }
+    var index = 0
+    var encodedBytes = 0L
+    while (index < content.length) {
+        val character = content[index]
+        val width = when {
+            character.code <= 0x7f -> 1
+            character.code <= 0x7ff -> 2
+            Character.isHighSurrogate(character) -> {
+                if (
+                    index + 1 >= content.length ||
+                    !Character.isLowSurrogate(content[index + 1])
+                ) {
+                    throw IllegalArgumentException("SORA_CONFIG_UTF8_INVALID")
+                }
+                index += 1
+                4
+            }
+            Character.isLowSurrogate(character) ->
+                throw IllegalArgumentException("SORA_CONFIG_UTF8_INVALID")
+            else -> 3
+        }
+        encodedBytes += width
+        if (encodedBytes > maximumBytes.toLong()) {
+            throw IllegalArgumentException("SORA_CONFIG_RESPONSE_TOO_LARGE")
+        }
+        index += 1
+    }
+    return content
+}
+
+internal fun requireUnambiguousSoraConfigPayload(
+    content: String,
+    maximumBytes: Int,
+): String = requireSoraConfigPayloadWithinLimit(content, maximumBytes).also {
+    requireStrictJsonDocumentWithoutDuplicateKeys(it)
+}
+
+internal fun requireSoraConfigCacheFallbackEligible(error: Exception) {
+    if (!PiIndexerOfflineFallbackPolicy.allows(error)) throw error
+}
+
 @Singleton
 class SoraConfigManager @Inject constructor(
     private val json: Json,
-    private val restClient: RestClient,
+    private val boundedHttpTextClient: BoundedHttpTextClient,
     private val soraPreferences: SoraPreferences,
 ) {
 
     private companion object {
         const val SELECTED_CURRENCY = "selected_currency"
+        const val MAX_CONFIG_RESPONSE_BYTES = 1024 * 1024
+
+        val SAFE_DEFAULT_FLAGS = EmergencyFeatureFlags(
+            nexusAvailable = true,
+            nexusSendsAvailable = false,
+            polkamarktVisible = true,
+            polkamarktMutationsAvailable = false,
+            tairaDefaultVisible = true,
+        )
 
         val DEFAULT_SORA_CURRENCY = SoraCurrency(
             code = "USD",
@@ -107,14 +180,22 @@ class SoraConfigManager @Inject constructor(
         }
 
         return@CachingFactory SoraConfig(
-            blockExplorerUrl = commonConfig.subquery,
+            blockExplorerUrl = OptionsProvider.blockExplorerUrl,
+            indexerUrl = OptionsProvider.polkaswapIndexerEndpoint,
             blockExplorerType = blockExplorerType,
             nodes = nodes,
             genesis = commonConfig.genesis,
             joinUrl = mobileConfig.joinLink,
             substrateTypesUrl = mobileConfig.substrateTypesAndroid,
             soracard = mobileConfig.soracard,
-            currencies = currencies
+            currencies = currencies,
+            emergencyFlags = EmergencyFeatureFlags(
+                nexusAvailable = mobileConfig.nexusAvailable,
+                nexusSendsAvailable = mobileConfig.nexusSendsAvailable,
+                polkamarktVisible = mobileConfig.polkamarktVisible,
+                polkamarktMutationsAvailable = mobileConfig.polkamarktMutationsAvailable,
+                tairaDefaultVisible = mobileConfig.tairaDefaultVisible,
+            ),
         )
     }
 
@@ -123,25 +204,57 @@ class SoraConfigManager @Inject constructor(
         nameToSaveWith: () -> String,
         deserializer: () -> DeserializationStrategy<T>
     ): T? {
-        val result = runCatching {
-            restClient.getAsString(url())
-        }.onSuccess { configAsString ->
-            soraPreferences.putString(
-                field = nameToSaveWith(),
-                value = configAsString
-            )
-        }.recoverCatching {
-            soraPreferences.getString(
-                field = nameToSaveWith()
-            )
-        }.mapCatching { configAsString ->
-            json.decodeFromString(
+        return try {
+            val admittedRemote = boundedHttpTextClient.getUtf8(
+                rawUrl = url(),
+                maximumBytes = MAX_CONFIG_RESPONSE_BYTES,
+            ).let { remoteConfig ->
+                requireUnambiguousSoraConfigPayload(
+                    remoteConfig,
+                    MAX_CONFIG_RESPONSE_BYTES,
+                )
+            }
+            // Decode before publication. A malformed but transport-admitted response must never
+            // replace the last known-good cache used for node and display recovery.
+            val decoded = json.decodeFromString(
                 deserializer = deserializer(),
-                string = configAsString
+                string = admittedRemote,
             )
-        }.getOrNull()
-
-        return result
+            try {
+                soraPreferences.putString(
+                    field = nameToSaveWith(),
+                    value = admittedRemote,
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                // Cache publication is best effort; a qualified live value remains usable.
+            }
+            decoded
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            // A stale display cache is an offline aid, not a way to hide malformed, ambiguous,
+            // schema-invalid, or otherwise authoritative live configuration failures.
+            requireSoraConfigCacheFallbackEligible(error)
+            try {
+                val cached = soraPreferences.getString(
+                    field = nameToSaveWith(),
+                )
+                val admittedCached = requireUnambiguousSoraConfigPayload(
+                    cached,
+                    MAX_CONFIG_RESPONSE_BYTES,
+                )
+                json.decodeFromString(
+                    deserializer = deserializer(),
+                    string = admittedCached,
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                null
+            }
+        }
     }
 
     suspend fun getNodes(): List<SoraConfigNode> =
@@ -164,6 +277,24 @@ class SoraConfigManager @Inject constructor(
         soraConfigFactory.nullableValue(EmptyArgs)
             ?.substrateTypesUrl.orEmpty()
 
+    suspend fun getBlockExplorerUrl(): String =
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.blockExplorerUrl ?: OptionsProvider.blockExplorerUrl
+
+    suspend fun getTransactionExplorerUrl(txHash: String): String? =
+        buildTransactionExplorerUrl(
+            blockExplorerUrl = getBlockExplorerUrl(),
+            txHash = txHash
+        )
+
+    suspend fun getIndexerUrl(): String =
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.indexerUrl ?: OptionsProvider.polkaswapIndexerEndpoint
+
+    suspend fun getEmergencyFeatureFlags(): EmergencyFeatureFlags =
+        soraConfigFactory.nullableValue(EmptyArgs)
+            ?.emergencyFlags ?: SAFE_DEFAULT_FLAGS
+
     private suspend fun getCurrencies(): List<SoraCurrency> =
         soraConfigFactory.nullableValue(EmptyArgs)
             ?.currencies ?: listOf(DEFAULT_SORA_CURRENCY)
@@ -181,8 +312,6 @@ class SoraConfigManager @Inject constructor(
 
 @Serializable
 private data class ConfigDto(
-    @SerialName("SUBQUERY_ENDPOINT")
-    val subquery: String,
     @SerialName("DEFAULT_NETWORKS")
     val nodes: List<NodeInfo>,
     @SerialName("CHAIN_GENESIS_HASH")
@@ -219,6 +348,16 @@ private data class MobileDto(
     val soracard: Boolean = false,
     @SerialName("currencies")
     val currencies: List<CurrencyDto>,
+    @SerialName("nexus_available")
+    val nexusAvailable: Boolean = true,
+    @SerialName("nexus_sends_available")
+    val nexusSendsAvailable: Boolean = false,
+    @SerialName("polkamarkt_visible")
+    val polkamarktVisible: Boolean = true,
+    @SerialName("polkamarkt_mutations_available")
+    val polkamarktMutationsAvailable: Boolean = false,
+    @SerialName("taira_default_visible")
+    val tairaDefaultVisible: Boolean = true,
 )
 
 @Serializable

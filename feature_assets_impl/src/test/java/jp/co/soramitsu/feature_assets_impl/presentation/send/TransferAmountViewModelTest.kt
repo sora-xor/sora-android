@@ -39,6 +39,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.verify
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.equalTo
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
@@ -46,9 +47,13 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
+import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.Sora2TransferFeePreviewRequest
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountViewModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.PolkaswapTestData
@@ -59,6 +64,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -118,10 +124,16 @@ class TransferAmountViewModelTest {
         coEvery {
             assetsInteractor.calcTransactionFee(
                 recipientId,
-                TestTokens.xorToken,
-                BigDecimal.ONE
+                any(),
+                any(),
+                any(),
             )
         } returns networkFee
+        every { assetsInteractor.flowCurSoraAccount() } returns flowOf(
+            SoraAccount(WALLET_ID, "Primary")
+        )
+        coEvery { assetsInteractor.getCurSoraAccount() } returns
+            SoraAccount(WALLET_ID, "Primary")
     }
 
     @Test
@@ -133,6 +145,82 @@ class TransferAmountViewModelTest {
             "recipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientId",
             state.value.address
         )
+    }
+
+    @Test
+    fun `fee preview failure stops loading and keeps amount editable`() = runTest {
+        coEvery {
+            assetsInteractor.calcTransactionFee(
+                recipientId,
+                any(),
+                any(),
+                any(),
+            )
+        } returns null
+
+        initViewModel(BigDecimal.TEN)
+        advanceUntilIdle()
+
+        val state = transferAmountViewModel.sendState.value
+        assertFalse(state.feeLoading)
+        assertFalse(state.reviewEnabled)
+        assertTrue(state.input?.enabled == true)
+        assertEquals(
+            R.string.common_error_general_title to R.string.common_error_fee_rate_not_available,
+            transferAmountViewModel.errorFromResourceLiveData.value,
+        )
+    }
+
+    @Test
+    fun `fee preview exception stops loading and shows retryable error`() = runTest {
+        coEvery {
+            assetsInteractor.calcTransactionFee(
+                recipientId,
+                any(),
+                any(),
+                any(),
+            )
+        } throws IllegalStateException("fee RPC unavailable")
+
+        initViewModel(BigDecimal.TEN)
+        advanceUntilIdle()
+
+        val state = transferAmountViewModel.sendState.value
+        assertFalse(state.feeLoading)
+        assertFalse(state.reviewEnabled)
+        assertTrue(state.input?.enabled == true)
+        assertEquals(
+            R.string.something_went_wrong to R.string.unexpected_error,
+            transferAmountViewModel.errorFromResourceLiveData.value,
+        )
+    }
+
+    @Test
+    fun `finalized transfer failure stays on send screen and shows error`() = runTest {
+        coEvery {
+            assetsInteractor.observeTransfer(
+                recipientId,
+                any(),
+                any(),
+                any(),
+                WALLET_ID,
+            )
+        } throws SoraException.businessError(ResponseCode.BROKEN_TRANSACTION)
+
+        initViewModel(
+            balance = BigDecimal.TEN,
+            initialSendAmount = BigDecimal.ONE.toPlainString(),
+        )
+        advanceUntilIdle()
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        assertEquals(
+            R.string.common_error_general_title to R.string.common_error_general_message,
+            transferAmountViewModel.errorFromResourceLiveData.value,
+        )
+        verify(exactly = 0) { walletRouter.returnToHubFragment() }
+        verify(exactly = 0) { assetsRouter.showTxDetails(any(), any()) }
     }
 
     @Test
@@ -191,6 +279,14 @@ class TransferAmountViewModelTest {
             advanceUntilIdle()
             transferAmountViewModel.amountChanged(BigDecimal.ONE)
             advanceUntilIdle()
+            coVerify {
+                assetsInteractor.calcTransactionFee(
+                    recipientId,
+                    TestTokens.xorToken,
+                    BigDecimal.ONE,
+                    WALLET_ID,
+                )
+            }
             coVerify(atMost = 1) {
                 assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                     xorChange = BigDecimal.ONE,
@@ -234,4 +330,43 @@ class TransferAmountViewModelTest {
                 )
             }
         }
+
+    @Test
+    fun `fee preview request is bound to wallet token amount and revision`() {
+        val request = Sora2TransferFeePreviewRequest(
+            revision = 7L,
+            walletId = WALLET_ID,
+            tokenId = TestTokens.xorToken.id,
+            amount = BigDecimal("1.00"),
+        )
+
+        assertTrue(
+            request.matches(
+                currentRevision = 7L,
+                currentWalletId = WALLET_ID,
+                currentTokenId = TestTokens.xorToken.id,
+                currentAmount = BigDecimal.ONE,
+            )
+        )
+        assertFalse(
+            request.matches(
+                currentRevision = 8L,
+                currentWalletId = WALLET_ID,
+                currentTokenId = TestTokens.xorToken.id,
+                currentAmount = BigDecimal.ONE,
+            )
+        )
+        assertFalse(
+            request.matches(
+                currentRevision = 7L,
+                currentWalletId = "another-wallet",
+                currentTokenId = TestTokens.xorToken.id,
+                currentAmount = BigDecimal.ONE,
+            )
+        )
+    }
+
+    private companion object {
+        const val WALLET_ID = "wallet-id"
+    }
 }

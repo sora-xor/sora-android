@@ -45,11 +45,8 @@ interface AccountDao {
     @Query("select * from accounts")
     suspend fun getAccounts(): List<SoraAccountLocal>
 
-    @Query("delete from accounts where substrateAddress = :address")
-    suspend fun clearAccount(address: String)
-
-    @Query("delete from accounts")
-    suspend fun clearAll()
+    @Query("delete from accounts where substrateAddress in (:addresses)")
+    suspend fun deleteAccountsForJournal(addresses: List<String>): Int
 
     @Query("select * from accounts")
     fun flowAccounts(): Flow<List<SoraAccountLocal>>

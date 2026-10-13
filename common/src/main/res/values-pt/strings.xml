@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
   <string name="about_announcements">Receber Anúncios</string>
   <string name="about_ask_support">Solicitar Suporte</string>
   <string name="about_contact_us">Email de contacto</string>
@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Escolha o ativo</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Fechar</string>
+  <string name="tx_details_view_on_explorer">Ver no explorador</string>
   <string name="common_confirm">Confirmar</string>
   <string name="common_connected">Conectado</string>
   <string name="common_connecting">Conectando...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Já aplicou outro código de convite</string>
   <string name="common_error_invitation_code_not_found">O código do convite é inválido</string>
   <string name="common_error_inviter_registered_after_invitee">O código de convite fornecido não pode ser aplicado porque é de um utilizador que se registou depois de você</string>
-  <string name="common_error_mnemonic_is_not_valid">Por favor, certifique-se de que sua senha consiste em 12 ou 15 palavras e todas elas estão corretas.</string>
-  <string name="common_error_mnemonic_length_error">A passphrase deve conter 15 palavras</string>
+  <string name="common_error_mnemonic_is_not_valid">Por favor, certifique-se de que sua senha consiste em 12 ou 24 palavras e todas elas estão corretas.</string>
+  <string name="common_error_mnemonic_length_error">A passphrase deve conter 12 ou 24 palavras</string>
   <string name="common_error_network">Por favor, verifique a conexão com a internet e tente novamente mais tarde.</string>
   <string name="common_error_no_browser_error">Por favor instale um browser de internet para abrir o link.</string>
   <string name="common_error_not_enough_invitations">Lamentamos, mas você não tem nenhum convite para partilhar</string>
@@ -154,7 +155,7 @@
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
+  <plurals name="common_hour" tools:ignore="ImpliedQuantity">
     <item quantity="one">hora</item>
     <item quantity="other">horas</item>
   </plurals>
@@ -277,7 +278,7 @@
   <string name="export_protection_passphrase_1">If I lose my passphrase, my funds will be lost forever.</string>
   <string name="export_protection_passphrase_2">If I expose or share my passphrase to anybody, my funds can get stolen.</string>
   <string name="export_protection_passphrase_3">It is my full reponsibility to keep my passphrase secure.</string>
-  <string name="export_protection_passphrase_description">In the next step you will see Passphrase (12 words) that allow you to recover an account.</string>
+  <string name="export_protection_passphrase_description">No próximo passo, verá a passphrase (24 palavras) que permite recuperar uma conta.</string>
   <string name="export_protection_seed_1">If I lose my raw seed, my funds will be lost forever.</string>
   <string name="export_protection_seed_2">If I expose or share my raw seed to anybody, my funds can get stolen.</string>
   <string name="export_protection_seed_3">It is my full reponsibility to keep my raw seed secure.</string>
@@ -441,7 +442,7 @@
   <string name="referral_input_reward_title">Enter desired amount of invitations</string>
   <string name="referral_invitaion_link_title">Available invitations</string>
   <string name="referral_invitation_link">Invitation link</string>
-  <plurals name="referral_invitations">
+  <plurals name="referral_invitations" tools:ignore="ImpliedQuantity">
     <item quantity="one">invitation</item>
     <item quantity="other">invitations</item>
   </plurals>

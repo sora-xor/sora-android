@@ -34,6 +34,8 @@ package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
+import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xcrypto.util.toHexString
@@ -45,12 +47,13 @@ class PrefsCredentialsDatasource constructor(
 ) : CredentialsDatasource {
 
     companion object {
-        private const val PREFS_PRIVATE_KEY = "prefs_priv_key"
-        private const val PREFS_PUBLIC_KEY = "prefs_pub_key"
-        private const val PREFS_KEY_NONCE = "prefs_key_nonce"
-        private const val PREFS_MNEMONIC = "prefs_mnemonic"
-        private const val PREFS_SEED = "prefs_seed"
-        private const val PREFS_ADDRESS = "prefs_address_pure"
+        private const val PREFS_PRIVATE_KEY = WalletPreferenceKeys.PRIVATE_KEY
+        private const val PREFS_PUBLIC_KEY = WalletPreferenceKeys.PUBLIC_KEY
+        private const val PREFS_KEY_NONCE = WalletPreferenceKeys.KEY_NONCE
+        private const val PREFS_MNEMONIC = WalletPreferenceKeys.MNEMONIC
+        private const val PREFS_SEED = WalletPreferenceKeys.SEED
+        private const val PREFS_ADDRESS = WalletPreferenceKeys.LEGACY_ADDRESS
+        private const val PREFS_WATCH_ONLY = WalletPreferenceKeys.WATCH_ONLY
     }
 
     override suspend fun getAddress(): String {
@@ -91,10 +94,82 @@ class PrefsCredentialsDatasource constructor(
         return encryptedPreferences.getDecryptedString(PREFS_SEED + suffixAddress)
     }
 
-    override suspend fun clearAllDataForAddress(suffixAddress: String) {
-        val fields =
-            listOf(PREFS_ADDRESS, PREFS_PRIVATE_KEY, PREFS_PUBLIC_KEY, PREFS_KEY_NONCE, PREFS_MNEMONIC, PREFS_SEED)
-                .map { it + suffixAddress }
-        encryptedPreferences.clear(fields)
+    override suspend fun isExplicitWatchOnly(suffixAddress: String): Boolean =
+        soraPreferences.getBoolean(PREFS_WATCH_ONLY + suffixAddress)
+
+    override suspend fun setExplicitWatchOnly(suffixAddress: String, watchOnly: Boolean) {
+        soraPreferences.putBoolean(PREFS_WATCH_ONLY + suffixAddress, watchOnly)
+    }
+
+    override suspend fun requireWalletPreferenceCoverage(
+        walletIds: Set<String>,
+        selectedAddress: String,
+    ) {
+        soraPreferences.requireWalletPreferenceCoverage(walletIds, selectedAddress)
+    }
+
+    override suspend fun previewWalletDeletionPreferences(
+        walletIds: Set<String>,
+        selectedAfter: String,
+        removeLegacyUnsuffixed: Boolean,
+        clearAll: Boolean,
+    ): WalletPreferenceIntegrity.Hashes {
+        val stringFields = walletIds.flatMap { walletId ->
+            WalletPreferenceKeys.scopedStringKeys(walletId)
+        }
+            .toMutableSet()
+        if (removeLegacyUnsuffixed) {
+            stringFields += WalletPreferenceKeys.legacyUnsuffixedStringKeys
+        }
+        val booleanFields = walletIds
+            .flatMap { walletId ->
+                WalletPreferenceKeys.scopedBooleanKeys(walletId)
+            }
+            .toSet()
+        return soraPreferences.previewWalletDeletion(
+            stringFields = stringFields,
+            booleanFields = booleanFields,
+            selectedAddress = selectedAfter,
+            clearAll = clearAll,
+        )
+    }
+
+    override suspend fun commitWalletDeletionPreferences(
+        walletIds: Set<String>,
+        selectedAfter: String,
+        removeLegacyUnsuffixed: Boolean,
+        clearAll: Boolean,
+        expectedBeforeHash: String,
+        expectedAfterHash: String,
+    ) {
+        val stringFields = walletIds.flatMap { walletId ->
+            WalletPreferenceKeys.scopedStringKeys(walletId)
+        }
+            .toMutableSet()
+        if (removeLegacyUnsuffixed) {
+            stringFields += WalletPreferenceKeys.legacyUnsuffixedStringKeys
+        }
+        val booleanFields = walletIds
+            .flatMap { walletId ->
+                WalletPreferenceKeys.scopedBooleanKeys(walletId)
+            }
+            .toSet()
+        soraPreferences.commitWalletDeletion(
+            stringFields = stringFields,
+            booleanFields = booleanFields,
+            selectedAddress = selectedAfter,
+            clearAll = clearAll,
+            expectedBeforeHash = expectedBeforeHash,
+            expectedAfterHash = expectedAfterHash,
+        )
+        check(
+            soraPreferences.walletDeletionPreferencesMatch(
+                stringFields = stringFields,
+                booleanFields = booleanFields,
+                selectedAddress = selectedAfter,
+                clearAll = clearAll,
+                expectedAfterHash = expectedAfterHash,
+            )
+        ) { "WALLET_DELETION_PREFERENCES_MISMATCH" }
     }
 }

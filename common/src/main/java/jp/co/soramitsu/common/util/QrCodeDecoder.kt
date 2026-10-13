@@ -34,8 +34,10 @@ package jp.co.soramitsu.common.util
 
 import android.content.ContentResolver
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
-import android.provider.MediaStore
+import android.os.Build
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
 import com.google.zxing.RGBLuminanceSource
@@ -59,7 +61,7 @@ class QrCodeDecoder(
     private fun decode(data: Uri): String {
         var qrBitmap: Bitmap? = null
         try {
-            qrBitmap = MediaStore.Images.Media.getBitmap(contentResolver, data)
+            qrBitmap = decodeBitmap(data)
             val pixels = IntArray(qrBitmap.height * qrBitmap.width)
             qrBitmap.getPixels(pixels, 0, qrBitmap.width, 0, 0, qrBitmap.width, qrBitmap.height)
             val source = RGBLuminanceSource(qrBitmap.width, qrBitmap.height, pixels)
@@ -78,4 +80,14 @@ class QrCodeDecoder(
             qrBitmap?.recycle()
         }
     }
+
+    private fun decodeBitmap(data: Uri): Bitmap =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, data)) { decoder, _, _ ->
+                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            }
+        } else {
+            contentResolver.openInputStream(data)?.use(BitmapFactory::decodeStream)
+                ?: throw QrException.decodeError()
+        }
 }

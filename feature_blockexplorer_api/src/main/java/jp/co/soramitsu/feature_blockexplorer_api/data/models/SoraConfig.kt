@@ -2,6 +2,7 @@ package jp.co.soramitsu.feature_blockexplorer_api.data.models
 
 data class SoraConfig(
     val blockExplorerUrl: String,
+    val indexerUrl: String,
     val blockExplorerType: ConfigExplorerType,
     val nodes: List<SoraConfigNode>,
     val genesis: String,
@@ -9,6 +10,15 @@ data class SoraConfig(
     val substrateTypesUrl: String,
     val soracard: Boolean,
     val currencies: List<SoraCurrency>,
+    val emergencyFlags: EmergencyFeatureFlags,
+)
+
+data class EmergencyFeatureFlags(
+    val nexusAvailable: Boolean,
+    val nexusSendsAvailable: Boolean,
+    val polkamarktVisible: Boolean,
+    val polkamarktMutationsAvailable: Boolean,
+    val tairaDefaultVisible: Boolean,
 )
 
 data class SoraConfigNode(

@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Chọn tài sản</string>
   <string name="common_claim">Lấy</string>
   <string name="common_close">Đóng</string>
+  <string name="tx_details_view_on_explorer">Xem trong trình khám phá</string>
   <string name="common_confirm">Xác nhận</string>
   <string name="common_connected">Đã kết nối</string>
   <string name="common_connecting">Đang kết nối...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Bạn đã áp dụng một mã mời khác</string>
   <string name="common_error_invitation_code_not_found">Mã lời mời không hợp lệ</string>
   <string name="common_error_inviter_registered_after_invitee">Không thể áp dụng mã lời mời đã cung cấp vì mã này từ người dùng đã đăng ký sau bạn</string>
-  <string name="common_error_mnemonic_is_not_valid">Hãy kiểm tra, chuỗi từ khóa khôi phục của bạn gồm 12 hoặc 15 từ được nhập chính xác.</string>
-  <string name="common_error_mnemonic_length_error">Chuỗi từ khóa khôi phục chứa 15 từ</string>
+  <string name="common_error_mnemonic_is_not_valid">Hãy kiểm tra, chuỗi từ khóa khôi phục của bạn gồm 12 hoặc 24 từ được nhập chính xác.</string>
+  <string name="common_error_mnemonic_length_error">Chuỗi từ khóa khôi phục gồm 12 hoặc 24 từ</string>
   <string name="common_error_network">Vui lòng kiểm tra kết nối internet và thử lại sau.</string>
   <string name="common_error_no_browser_error">Vui lòng cài đặt trình duyệt để mở liên kết</string>
   <string name="common_error_not_enough_invitations">Xin lỗi, nhưng bạn không có bất kỳ lời mời nào để chia sẻ</string>
@@ -276,7 +277,7 @@
   <string name="export_protection_passphrase_1">Nếu tôi mất mật khẩu, tiền của tôi sẽ bị mất vĩnh viễn.</string>
   <string name="export_protection_passphrase_2">Nếu tôi tiết lộ hoặc chia sẻ cụm mật khẩu của mình với bất kỳ ai, tiền của tôi có thể bị đánh cắp.</string>
   <string name="export_protection_passphrase_3">Tôi hoàn toàn có trách nhiệm giữ cho cụm mật khẩu của mình được an toàn.</string>
-  <string name="export_protection_passphrase_description">Trong bước tiếp theo, bạn sẽ thấy Cụm từ mật khẩu (12 từ) cho phép bạn khôi phục tài khoản.</string>
+  <string name="export_protection_passphrase_description">Trong bước tiếp theo, bạn sẽ thấy Cụm từ mật khẩu (24 từ) cho phép bạn khôi phục tài khoản.</string>
   <string name="export_protection_seed_1">Nếu tôi đánh mất raw seed của mình, tiền của tôi sẽ mất vĩnh viễn.</string>
   <string name="export_protection_seed_2">Nếu tôi tiết lộ hoặc chia sẻ raw seed của mình cho bất kỳ ai, tiền của tôi có thể bị đánh cắp.</string>
   <string name="export_protection_seed_3">Tôi hoàn toàn có trách nhiệm giữ an toàn cho raw seed của mình.</string>

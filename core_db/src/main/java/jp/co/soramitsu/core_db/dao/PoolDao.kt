@@ -37,6 +37,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import jp.co.soramitsu.core_db.model.BasePoolWithTokenLocal
 import jp.co.soramitsu.core_db.model.BasicPoolLocal
@@ -56,6 +57,7 @@ interface PoolDao {
         """
     }
 
+    @Transaction
     @Query("select * from allpools")
     fun subscribeBasicPoolsWithToken(): Flow<List<BasicPoolWithTokenFiatLocal>>
 

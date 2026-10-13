@@ -1,0 +1,12 @@
+{
+  "purpose": "Public Taira single Ed25519 XOR transfer; not production native SDK qualification",
+  "upstream": "https://github.com/hyperledger-iroha/iroha",
+  "revision": "4008dcf54a214cd62360307558f11552cbf8a04d",
+  "sources": {
+    "kotlin/core-jvm/src/main/java/org/hyperledger/iroha/sdk/core/util/HashLiteral.kt": "746ad80a0fff1765fad74f72ba5cdf63a9e9effe4395b40b31ac5acef029a9f4",
+    "fixtures/sdk/nexus_connect_transfer_v1.json": "fce091824784420ff7654391ea584489a577a67dfafa5a71da044fe1a94ca4ce",
+    "crates/iroha_torii/src/mcp.rs": "5e20539d71113010f782a3689dafd2ce137ecb3b0c2cc2a0d70ee1161d9c9dcf",
+    "kotlin/core-jvm/src/main/java/org/hyperledger/iroha/sdk/tx/norito/TransactionPayloadAdapter.kt": "346f15ad004ee9a7a7380732774cd8e00b7484e1f4e1f585a2748f3ace8df0a2",
+    "kotlin/core-jvm/src/main/java/org/hyperledger/iroha/sdk/core/model/instructions/TransferWirePayloadEncoder.kt": "80d8fd7caaeee7b5987bf7641fa3272abab81ceffe5459f9094bce68935edc56"
+  }
+}

@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Varlık seçin</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Kapat</string>
+  <string name="tx_details_view_on_explorer">Gezginde görüntüle</string>
   <string name="common_confirm">Onayla</string>
   <string name="common_connected">Bağlandı</string>
   <string name="common_connecting">Bağlanıyor...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Başka bir davet kodu uygulanmış</string>
   <string name="common_error_invitation_code_not_found">Davet kodu geçersiz</string>
   <string name="common_error_inviter_registered_after_invitee">Bu davet kodu, sizden sonra kaydolan bir kullanıcıdan geldiği için uygulanamaz</string>
-  <string name="common_error_mnemonic_is_not_valid">Anımsatıcı Dizi geçersiz. Lütfen başka bir Dizi deneyin.</string>
-  <string name="common_error_mnemonic_length_error">Anımsatıcı Dizi 15 kelime içermelidir</string>
+  <string name="common_error_mnemonic_is_not_valid">Parolanızın 12 veya 24 kelimeden oluştuğundan ve tüm kelimelerin doğru olduğundan emin olun.</string>
+  <string name="common_error_mnemonic_length_error">Anımsatıcı Dizi 12 veya 24 kelime içermelidir</string>
   <string name="common_error_network">Lütfen internet bağlantısını kontrol edin ve daha sonra tekrar deneyin.</string>
   <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">Maalesef paylaşacak herhangi bir davetiyen yok</string>
@@ -277,7 +278,7 @@
   <string name="export_protection_passphrase_1">If I lose my passphrase, my funds will be lost forever.</string>
   <string name="export_protection_passphrase_2">If I expose or share my passphrase to anybody, my funds can get stolen.</string>
   <string name="export_protection_passphrase_3">It is my full reponsibility to keep my passphrase secure.</string>
-  <string name="export_protection_passphrase_description">In the next step you will see Passphrase (12 words) that allow you to recover an account.</string>
+  <string name="export_protection_passphrase_description">Bir sonraki adımda hesabınızı kurtarmanızı sağlayan parolayı (24 kelime) göreceksiniz.</string>
   <string name="export_protection_seed_1">If I lose my raw seed, my funds will be lost forever.</string>
   <string name="export_protection_seed_2">If I expose or share my raw seed to anybody, my funds can get stolen.</string>
   <string name="export_protection_seed_3">It is my full reponsibility to keep my raw seed secure.</string>

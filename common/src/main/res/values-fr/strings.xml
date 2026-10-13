@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
   <string name="about_announcements">Recevoir les annonces</string>
   <string name="about_ask_support">Demander l\'aide du Support</string>
   <string name="about_contact_us">Nous contacter</string>
@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Sélectionner un actif</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Fermer</string>
+  <string name="tx_details_view_on_explorer">Voir dans l\'explorateur</string>
   <string name="common_confirm">Confirmer</string>
   <string name="common_connected">Connecté</string>
   <string name="common_connecting">Connexion en cours...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Vous avez déjà appliqué un autre code d\'invitation</string>
   <string name="common_error_invitation_code_not_found">Le code d\'invitation est invalide.</string>
   <string name="common_error_inviter_registered_after_invitee">Le code d\'invitation fourni ne peut pas être appliqué car il provient d\'un utilisateur qui s\'est inscrit après vous.</string>
-  <string name="common_error_mnemonic_is_not_valid">Veuillez vous assurer que votre phrase secrète contient 12 ou 15 mots et qu\'ils sont tous corrects.</string>
-  <string name="common_error_mnemonic_length_error">La phrase secrète doit contenir 15 mots</string>
+  <string name="common_error_mnemonic_is_not_valid">Veuillez vous assurer que votre phrase secrète contient 12 ou 24 mots et qu\'ils sont tous corrects.</string>
+  <string name="common_error_mnemonic_length_error">La phrase secrète doit contenir 12 ou 24 mots</string>
   <string name="common_error_network">Veuillez vérifier votre connexion Internet et réessayer plus tard.</string>
   <string name="common_error_no_browser_error">Veuillez installer un navigateur pour ouvrir le lien</string>
   <string name="common_error_not_enough_invitations">Désolé, vous n\'avez aucune invitation à partager</string>
@@ -154,7 +155,7 @@
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hébreu</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
+  <plurals name="common_hour" tools:ignore="ImpliedQuantity">
     <item quantity="one">heure</item>
     <item quantity="other">heures</item>
   </plurals>
@@ -277,7 +278,7 @@
   <string name="export_protection_passphrase_1">Si je perds ma phrase secrète, mes fonds seront définitivement perdus.</string>
   <string name="export_protection_passphrase_2">Si j\'expose ou partage ma phrase secrète avec qui que ce soit, mes fonds peuvent être volés.</string>
   <string name="export_protection_passphrase_3">Il est de mon entière responsabilité de garder ma phrase secrète en sécurité.</string>
-  <string name="export_protection_passphrase_description">À l\'étape suivante, vous verrez Passphrase (12 mots) qui vous permet de récupérer un compte.</string>
+  <string name="export_protection_passphrase_description">À l\'étape suivante, vous verrez Passphrase (24 mots) qui vous permet de récupérer un compte.</string>
   <string name="export_protection_seed_1">Si je perds ma phrase mnémonique, mes fonds seront perdus à jamais.</string>
   <string name="export_protection_seed_2">Si j\'expose ou partage ma phrase mnémonique avec qui que ce soit, mes fonds peuvent être volés.</string>
   <string name="export_protection_seed_3">Il est de mon entière responsabilité de garder ma phrase mnémonique en sécurité.</string>
@@ -441,7 +442,7 @@
   <string name="referral_input_reward_title">Entrez le nombre d\'invitations souhaité</string>
   <string name="referral_invitaion_link_title">Invitations disponibles</string>
   <string name="referral_invitation_link">Lien d\'invitation</string>
-  <plurals name="referral_invitations">
+  <plurals name="referral_invitations" tools:ignore="ImpliedQuantity">
     <item quantity="one">invitation</item>
     <item quantity="other">invitations</item>
   </plurals>
@@ -450,8 +451,8 @@
   <string name="referral_referrer_address">Adresse du référent</string>
   <string name="referral_referrer_description">Chaque fois que vous effectuez une transaction, 10% des frais de réseau payés sont reversés à votre parrain en guise de récompense.</string>
   <string name="referral_start_inviting">Commencez à inviter</string>
-  <string name="referral_subtitle">Chaque fois qu\'une adresse que vous parrainez effectue une transaction, 10 % des frais de réseau payés vous reviennent à titre de récompense.</string>
-  <string name="referral_title">Recevez 10 % des frais de réseau des adresses que vous parrainez.</string>
+  <string name="referral_subtitle">Chaque fois qu\'une adresse que vous parrainez effectue une transaction, 10 %% des frais de réseau payés vous reviennent à titre de récompense.</string>
+  <string name="referral_title">Recevez 10 %% des frais de réseau des adresses que vous parrainez.</string>
   <string name="referral_toolbar_title">Programme de parrainage</string>
   <string name="referral_total_rewards">Total des récompenses</string>
   <string name="referral_unbond_button_title">Délier XOR</string>

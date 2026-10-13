@@ -46,11 +46,13 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsItem
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsState
@@ -81,6 +83,7 @@ class TxDetailsViewModel @AssistedInject constructor(
     private val resourceManager: ResourceManager,
     private val dateTimeFormatter: DateTimeFormatter,
     private val numbersFormatter: NumbersFormatter,
+    private val soraConfigManager: SoraConfigManager,
     @Assisted private val txHash: String,
 ) : BaseViewModel() {
 
@@ -117,7 +120,41 @@ class TxDetailsViewModel @AssistedInject constructor(
         val currentAddress = assetsInteractor.getCurSoraAccount().substrateAddress
         val feeToken = walletInteractor.getFeeToken()
         val transaction = transactionHistoryHandler.getTransaction(txHash)
-        _txDetailsScreenState.value = when (transaction) {
+        val explorerUrl = transaction?.base?.txHash?.let {
+            soraConfigManager.getTransactionExplorerUrl(it)
+        }
+        val screenState = when (transaction) {
+            is Transaction.Sora2Submission -> {
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        txHash = transaction.base.txHash,
+                        blockHash = transaction.base.blockHash,
+                        sender = currentAddress,
+                        infos = emptyList(),
+                        txStatus = transaction.base.status,
+                        time = dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM,
+                        ),
+                        networkFee = null,
+                        networkFeeFiat = null,
+                        txTypeIcon = R.drawable.ic_refresh_24,
+                        txTypeTitle = resourceManager.getString(
+                            if (transaction.submissionIsAmbiguous) {
+                                R.string.wallet_transaction_status_unknown
+                            } else {
+                                R.string.wallet_transaction_submitted
+                            }
+                        ),
+                        txTypeSubTitle = transaction.networkId.uppercase(),
+                    ),
+                    amount1 = "",
+                    amountFiat = "",
+                    icon1 = DEFAULT_ICON_URI,
+                    txType = TxType.REFERRAL_TRANSFER,
+                )
+            }
+
             is Transaction.EthTransfer -> {
                 TxDetailsScreenState(
                     basicTxDetailsState = BasicTxDetailsState(
@@ -549,6 +586,11 @@ class TxDetailsViewModel @AssistedInject constructor(
 
             null -> emptyTxDetailsState
         }
+        _txDetailsScreenState.value = explorerUrl?.let {
+            screenState.copy(
+                basicTxDetailsState = screenState.basicTxDetailsState.copy(explorerUrl = it)
+            )
+        } ?: screenState
     }
 
     fun onCopyClicked(text: String) {

@@ -90,7 +90,17 @@ class AssetsRepositoryImpl @Inject constructor(
 
     init {
         coroutineManager.applicationScope.launch {
-            updateTokens()
+            try {
+                updateTokens()
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                tokensDeferred.completeExceptionally(error)
+                throw error
+            } catch (error: Exception) {
+                // Catalog availability must not terminate the wallet host. Consumers still fail
+                // closed; no unverified runtime, token catalog or balance is substituted.
+                tokensDeferred.completeExceptionally(error)
+                jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+            }
         }
     }
 
@@ -132,7 +142,8 @@ class AssetsRepositoryImpl @Inject constructor(
             )
         }
         return fee?.let {
-            mapBalance(it, token.precision)
+            // Transaction payment is always denominated in XOR, independently of the asset sent.
+            mapBalance(it, OptionsProvider.defaultScale)
         }
     }
 
@@ -194,18 +205,65 @@ class AssetsRepositoryImpl @Inject constructor(
         to: String,
         token: Token,
         amount: BigDecimal,
-        fee: BigDecimal
+        fee: BigDecimal,
+        validateSelectedWallet: suspend () -> Unit,
     ): ExtrinsicSubmitStatus {
-        return extrinsicManager.submitAndWatchExtrinsic(
+        val transferAmount = mapBalance(amount, token.precision)
+        val reviewedFee = mapBalance(fee, OptionsProvider.defaultScale)
+        check(transferAmount > BigInteger.ZERO) { "SORA2_TRANSFER_AMOUNT_INVALID" }
+        check(reviewedFee > BigInteger.ZERO) { "SORA2_TRANSFER_REVIEWED_FEE_INVALID" }
+        return extrinsicManager.submitFeeQualifiedAndWatchExtrinsic(
             from = from,
             keypair = keypair,
+            reviewedFee = reviewedFee,
             useBatchAll = false,
+            preSigningValidation = validateSelectedWallet,
+            validateBalances = { exactFee ->
+                validateSelectedWallet()
+                requireExactTransferBalances(
+                    from = from,
+                    token = token,
+                    transferAmount = transferAmount,
+                    exactFee = exactFee,
+                )
+            },
         ) {
             transfer(
                 assetId = token.id,
                 to = to,
-                amount = mapBalance(amount, token.precision)
+                amount = transferAmount
             )
+        }
+    }
+
+    /** Runs at ExtrinsicManager's last pre-transport boundary against fresh chain storage. */
+    private suspend fun requireExactTransferBalances(
+        from: String,
+        token: Token,
+        transferAmount: BigInteger,
+        exactFee: BigInteger,
+    ) {
+        val xorTransferable = BalanceWrapper.calcTransferable(
+            substrateCalls.fetchXORBalances(from)
+        )
+        val xorRequired = exactFee + if (
+            token.id == SubstrateOptionsProvider.feeAssetId
+        ) {
+            transferAmount
+        } else {
+            BigInteger.ZERO
+        }
+        check(xorTransferable >= xorRequired) {
+            "SORA2_TRANSFER_XOR_BALANCE_INSUFFICIENT"
+        }
+        if (token.id != SubstrateOptionsProvider.feeAssetId) {
+            val assetBalances = substrateCalls.fetchTransferableBalances(
+                from,
+                listOf(token.id),
+            )
+            check(assetBalances.size == 1 && assetBalances.single() >= transferAmount) {
+                "SORA2_TRANSFER_ASSET_BALANCE_INSUFFICIENT"
+            }
         }
     }
 

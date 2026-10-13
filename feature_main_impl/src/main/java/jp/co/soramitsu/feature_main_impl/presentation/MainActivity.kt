@@ -64,6 +64,8 @@ import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.getColorAttr
 import jp.co.soramitsu.common.util.ext.gone
+import jp.co.soramitsu.common.util.ext.setNavigationBarColorCompat
+import jp.co.soramitsu.common.util.ext.setStatusBarColorCompat
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -291,8 +293,9 @@ class MainActivity :
 
     override fun setColor(@AttrRes color: Int) {
         curBarsColor = color
-        window.statusBarColor = attrColor(color)
-        window.navigationBarColor = attrColor(color)
+        val barColor = attrColor(color)
+        window.setStatusBarColorCompat(barColor)
+        window.setNavigationBarColorCompat(barColor)
     }
 
     private fun showBadConnectionView(@StringRes content: Int = R.string.common_connecting) {
@@ -304,7 +307,7 @@ class MainActivity :
             animation.duration = ANIM_DURATION
             binding.badConnectionView.startAnimation(animation)
             binding.badConnectionView.show()
-            window.statusBarColor = errorColor
+            window.setStatusBarColorCompat(errorColor)
         }
     }
 
@@ -313,7 +316,7 @@ class MainActivity :
             val successColor = binding.badConnectionView.getColorAttr(R.attr.statusSuccess)
             binding.badConnectionView.setText(content)
             binding.badConnectionView.setBackgroundColor(successColor)
-            window.statusBarColor = successColor
+            window.setStatusBarColorCompat(successColor)
             val animation = TranslateAnimation(0f, 0f, 0f, -ANIM_START_POSITION)
             animation.duration = ANIM_DURATION
             animation.startOffset = 500
@@ -323,7 +326,9 @@ class MainActivity :
 
                 override fun onAnimationEnd(p0: Animation?) {
                     binding.badConnectionView.gone()
-                    window.statusBarColor = binding.badConnectionView.getColorAttr(curBarsColor)
+                    window.setStatusBarColorCompat(
+                        binding.badConnectionView.getColorAttr(curBarsColor)
+                    )
                 }
 
                 override fun onAnimationStart(p0: Animation?) {

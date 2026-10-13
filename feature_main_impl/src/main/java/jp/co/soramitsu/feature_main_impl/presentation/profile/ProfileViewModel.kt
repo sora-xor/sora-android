@@ -45,6 +45,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
@@ -80,6 +81,7 @@ class ProfileViewModel @Inject constructor(
     private val selectNodeRouter: SelectNodeRouter,
     private val soraConfigManager: SoraConfigManager,
     private val soraCardInteractor: SoraCardInteractor,
+    private val productionFeatureManager: ProductionFeatureManager,
     nodeManager: NodeManager,
     private val darkThemeManager: DarkThemeManager,
 ) : BaseViewModel() {
@@ -95,6 +97,13 @@ class ProfileViewModel @Inject constructor(
     private var currentSoraCardContractData: SoraCardContractData? = null
 
     init {
+        viewModelScope.launch {
+            tryCatch {
+                _state.value = _state.value.copy(
+                    polkamarktVisible = productionFeatureManager.getState().polkamarktVisible,
+                )
+            }
+        }
         interactor.flowSelectedNode().combine(nodeManager.connectionState) { node, connection ->
             node to connection
         }
@@ -211,6 +220,10 @@ class ProfileViewModel @Inject constructor(
 
     fun showBuyCrypto() {
         _launchSoraCardSignIn.value = createSoraCardGateHubContract()
+    }
+
+    fun showPolkamarkt() {
+        polkaswapRouter.showPolkamarkt()
     }
 
     fun showSelectNode() {

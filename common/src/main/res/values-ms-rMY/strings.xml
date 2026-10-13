@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Pilih aset</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Tutup</string>
+  <string name="tx_details_view_on_explorer">Lihat di explorer</string>
   <string name="common_confirm">Sahkan</string>
   <string name="common_connected">Disambungkan</string>
   <string name="common_connecting">Menyambung ...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Anda telah menggunakan kod jemputan yang lain</string>
   <string name="common_error_invitation_code_not_found">Kod jemputan tidak sah</string>
   <string name="common_error_inviter_registered_after_invitee">Kod jemputan yang disediakan tidak dapat digunakan kerana dari pengguna yang mendaftar selepas anda</string>
-  <string name="common_error_mnemonic_is_not_valid">Sila pastikan frasa laluan anda terdiri daripada 12 atau 15 perkataan dan semuanya betul.</string>
-  <string name="common_error_mnemonic_length_error">Frasa Laluan mesti mengandungi 15 perkataan</string>
+  <string name="common_error_mnemonic_is_not_valid">Sila pastikan frasa laluan anda terdiri daripada 12 atau 24 perkataan dan semuanya betul.</string>
+  <string name="common_error_mnemonic_length_error">Frasa Laluan mesti mengandungi 12 atau 24 perkataan</string>
   <string name="common_error_network">Sila, periksa sambungan internet dan cuba lagi kemudian.</string>
   <string name="common_error_no_browser_error">Sila pasang pelayar untuk membuka pautan</string>
   <string name="common_error_not_enough_invitations">Maaf, tetapi anda tidak mempunyai jemputan untuk dikongsi</string>
@@ -276,7 +277,7 @@
   <string name="export_protection_passphrase_1">Jika saya kehilangan frasa laluan saya, dana saya akan hilang selama-lamanya.</string>
   <string name="export_protection_passphrase_2">Jika saya mendedahkan atau berkongsi frasa laluan saya kepada sesiapa sahaja, dana saya boleh dicuri.</string>
   <string name="export_protection_passphrase_3">Saya bertanggungjawab sepenuhnya untuk memastikan frasa laluan saya selamat.</string>
-  <string name="export_protection_passphrase_description">Dalam langkah seterusnya anda akan melihat Frasa Laluan (12 perkataan) yang membolehkan anda memulihkan akaun.</string>
+  <string name="export_protection_passphrase_description">Dalam langkah seterusnya anda akan melihat Frasa Laluan (24 perkataan) yang membolehkan anda memulihkan akaun.</string>
   <string name="export_protection_seed_1">Sekiranya saya kehilangan Raw Seed saya, dana saya akan hilang selama-lamanya.</string>
   <string name="export_protection_seed_2">Jika saya mendedahkan atau berkongsi Raw Seed saya kepada sesiapa sahaja, dana saya boleh dicuri.</string>
   <string name="export_protection_seed_3">Saya bertanggungjawab sepenuhnya untuk memastikan Raw Seed saya selamat.</string>

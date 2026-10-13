@@ -1,0 +1,191 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "jp.co.soramitsu",
+    "module": "xcrypto",
+    "version": "1.2.7",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.9"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.bouncycastle",
+          "module": "bcprov-jdk18on",
+          "version": {
+            "requires": "1.77"
+          }
+        },
+        {
+          "group": "net.i2p.crypto",
+          "module": "eddsa",
+          "version": {
+            "requires": "0.3.0"
+          }
+        },
+        {
+          "group": "org.web3j",
+          "module": "crypto",
+          "version": {
+            "requires": "4.8.7-android"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "bcprov-jdk15on"
+            }
+          ]
+        },
+        {
+          "group": "org.lz4",
+          "module": "lz4-java",
+          "version": {
+            "requires": "1.8.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "xcrypto-1.2.7.aar",
+          "url": "xcrypto-1.2.7.aar",
+          "size": 1901645,
+          "sha512": "1895b17aa233fa8bd03488ddbcb9732aa22b529d73753db6b4915b362ce54b4d7a97c5db87feb3358ff20cbe96370277e9a54a1b65bed8e5e4eb91efb52a75d8",
+          "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b",
+          "sha1": "1657a771387609d09c93b85758964470129b1c92",
+          "md5": "826b38e70113fa5b80e3b433cef3de07"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-parcelize-runtime",
+          "version": {
+            "requires": "1.9.24"
+          }
+        },
+        {
+          "group": "org.bouncycastle",
+          "module": "bcprov-jdk18on",
+          "version": {
+            "requires": "1.77"
+          }
+        },
+        {
+          "group": "net.i2p.crypto",
+          "module": "eddsa",
+          "version": {
+            "requires": "0.3.0"
+          }
+        },
+        {
+          "group": "org.web3j",
+          "module": "crypto",
+          "version": {
+            "requires": "4.8.7-android"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "bcprov-jdk15on"
+            }
+          ]
+        },
+        {
+          "group": "org.lz4",
+          "module": "lz4-java",
+          "version": {
+            "requires": "1.8.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "xcrypto-1.2.7.aar",
+          "url": "xcrypto-1.2.7.aar",
+          "size": 1901645,
+          "sha512": "1895b17aa233fa8bd03488ddbcb9732aa22b529d73753db6b4915b362ce54b4d7a97c5db87feb3358ff20cbe96370277e9a54a1b65bed8e5e4eb91efb52a75d8",
+          "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b",
+          "sha1": "1657a771387609d09c93b85758964470129b1c92",
+          "md5": "826b38e70113fa5b80e3b433cef3de07"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "xcrypto-1.2.7-sources.jar",
+          "url": "xcrypto-1.2.7-sources.jar",
+          "size": 151095,
+          "sha512": "1609ff1cfd8fa845bf7568051e937b1336a0d37dfb05241f1ccbd02d59527a72b140352cf9a512bbe31fb46328aff2d555735ee7a6d369756afd2cd9700eec33",
+          "sha256": "1e019d6cbcc14224461a5057ef3b691ebe73203a2f693954d8f779484c866b86",
+          "sha1": "61fe5cd311b6eba0f4408f33317a9cdab333af0d",
+          "md5": "115c885b916db5b8f41f84905672080f"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseJavaDocPublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "xcrypto-1.2.7-javadoc.jar",
+          "url": "xcrypto-1.2.7-javadoc.jar",
+          "size": 652366,
+          "sha512": "15300256c8ccbfbc3d1896bdb8a4f2fa2cec1752f7c7ca094c7b6a3036ace005e2555bab93a206bc7120b29590416eece4b56e41053888c6f7b56edee768bd63",
+          "sha256": "6b8effeb34088008f80f2ed6bf36635f72045690bfbc23fdaab39b04e37013d2",
+          "sha1": "533ae24b32b841d3e75d9a35dbc430d5591ca02a",
+          "md5": "91da0111b66d3e51bdbf194c44b3fa8a"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "contractId": "sora-android-production-rollout-trust-v1",
+  "platform": "android",
+  "assessedAt": "2026-08-07",
+  "status": "blocked",
+  "signatureAlgorithm": "Ed25519",
+  "telemetrySourceId": null,
+  "completenessPolicySha256": null,
+  "authorities": {
+    "telemetryCollector": {
+      "role": "privacy-aggregate-telemetry-collector",
+      "keyId": null,
+      "publicKeyPem": null,
+      "publicKeySha256": null,
+      "enabled": false
+    },
+    "releaseAuthorizer": {
+      "role": "production-rollout-authorizer",
+      "keyId": null,
+      "publicKeyPem": null,
+      "publicKeySha256": null,
+      "enabled": false
+    }
+  },
+  "blockingReasons": [
+    "No reviewed privacy-aggregate telemetry collector Ed25519 trust root is pinned.",
+    "No reviewed production rollout authorizer Ed25519 trust root is pinned.",
+    "No reviewed telemetry source identity or completeness-policy digest is pinned."
+  ]
+}

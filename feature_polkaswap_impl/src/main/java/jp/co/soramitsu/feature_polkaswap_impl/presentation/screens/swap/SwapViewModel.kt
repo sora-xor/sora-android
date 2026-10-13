@@ -78,6 +78,7 @@ import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -116,6 +117,7 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     private val assetsList = mutableListOf<Asset>()
+    private var assetCatalogUnavailable = false
     private val feeTokenAsync by viewModelScope.lazyAsync { walletInteractor.getFeeToken() }
     private suspend fun feeToken() = feeTokenAsync.await()
 
@@ -143,6 +145,7 @@ class SwapViewModel @AssistedInject constructor(
     private val onChangedProperty = SuspendableProperty<PropertyValue>(1)
 
     private val availableMarkets = mutableListOf<Market>()
+    private var marketsTokenPair: Pair<String, String>? = null
     private var desired: WithDesired = WithDesired.INPUT
     private var swapDetails: SwapDetails? = null
     private var networkFee: BigDecimal? = null
@@ -284,6 +287,22 @@ class SwapViewModel @AssistedInject constructor(
             .onEach { assets ->
                 assetsList.clear()
                 assetsList.addAll(assets)
+                assetCatalogUnavailable = assets.isEmpty()
+                _swapMainState.value = _swapMainState.value.copy(assetCatalogUnavailable = assetCatalogUnavailable)
+                if (assetCatalogUnavailable) {
+                    _swapMainState.value = _swapMainState.value.copy(
+                        tokenFromState = null,
+                        tokenToState = null,
+                        swapButtonState = _swapMainState.value.swapButtonState.copy(
+                            text = resourceManager.getString(R.string.wallet_assets_unavailable),
+                            enabled = false,
+                            loading = false,
+                        ),
+                        confirmButtonState = _swapMainState.value.confirmButtonState.copy(enabled = false, loading = false),
+                        confirmResult = null,
+                    )
+                    return@onEach
+                }
 
                 if (_swapMainState.value.tokenFromState == null && token1Id.isNotEmpty()) {
                     assetsInteractor.getAssetOrThrow(token1Id).let { assetFrom ->
@@ -339,6 +358,7 @@ class SwapViewModel @AssistedInject constructor(
 
                 onChangedProperty.set(property.newReloadMarkets(false))
             }
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         swapInteractor.observePoolReserves()
@@ -357,11 +377,18 @@ class SwapViewModel @AssistedInject constructor(
                     onError(it)
                 }
                 .collectLatest {
-                    if (it.reloadMarkets) {
+                    if (assetCatalogUnavailable) {
+                        toggleSwapButtonStatus()
+                        resetLoading()
+                        return@collectLatest
+                    }
+                    if (it.reloadMarkets || selectedTokenPair() != marketsTokenPair || availableMarkets.isEmpty()) {
                         getMarkets()
                         property.reset()
                     }
-                    recalcDetails()
+                    if (selectedTokenPair() == marketsTokenPair) {
+                        recalcDetails()
+                    }
                     toggleSwapButtonStatus()
                     updateTransactionReminderWarningVisibility()
                     resetLoading()
@@ -552,6 +579,7 @@ class SwapViewModel @AssistedInject constructor(
         val ok = isBalanceOk()
 
         val (text, enabled) = when {
+            assetCatalogUnavailable -> resourceManager.getString(R.string.wallet_assets_unavailable) to false
             _swapMainState.value.tokenFromState == null || _swapMainState.value.tokenToState == null -> {
                 resourceManager.getString(R.string.choose_tokens) to false
             }
@@ -588,6 +616,7 @@ class SwapViewModel @AssistedInject constructor(
         }
 
         val (text2, enabled2) = when {
+            assetCatalogUnavailable -> resourceManager.getString(R.string.wallet_assets_unavailable) to false
             ok?.isNotEmpty() == true -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_balance)
                     .format(ok) to false
@@ -615,17 +644,29 @@ class SwapViewModel @AssistedInject constructor(
         )
     }
 
+    private fun selectedTokenPair(): Pair<String, String>? {
+        val tokenFromId = _swapMainState.value.tokenFromState?.token?.id ?: return null
+        val tokenToId = _swapMainState.value.tokenToState?.token?.id ?: return null
+        return tokenFromId to tokenToId
+    }
+
     private suspend fun getMarkets() {
-        _swapMainState.value.tokenFromState?.let { from ->
-            _swapMainState.value.tokenToState?.let { to ->
-                tryCatch {
-                    val m = swapInteractor.fetchAvailableSources(from.token.id, to.token.id)
-                    availableMarkets.clear()
-                    if (!m.isNullOrEmpty()) {
-                        availableMarkets.addAll(m)
-                    }
-                }
+        val tokenPair = selectedTokenPair() ?: return
+        availableMarkets.clear()
+        marketsTokenPair = null
+        swapDetails = null
+        updateDetailsView()
+        try {
+            val markets = swapInteractor.fetchAvailableSources(tokenPair.first, tokenPair.second)
+            // Token selection can change before the debounced collector cancels this lookup.
+            if (selectedTokenPair() == tokenPair) {
+                availableMarkets.addAll(markets.orEmpty())
+                marketsTokenPair = tokenPair
             }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            onError(error)
         }
     }
 

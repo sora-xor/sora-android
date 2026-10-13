@@ -39,6 +39,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -58,6 +59,26 @@ class TransactionMappersImpl @Inject constructor(
 
     override fun mapTransaction(tx: Transaction, curAddress: String): EventUiModel.EventTxUiModel =
         when (tx) {
+            is Transaction.Sora2Submission -> {
+                EventUiModel.EventTxUiModel.EventReferralProgramUiModel(
+                    hash = tx.base.txHash,
+                    timestamp = tx.base.timestamp,
+                    status = tx.base.status,
+                    tokenIcon = DEFAULT_ICON_URI,
+                    title = if (tx.submissionIsAmbiguous) {
+                        R.string.wallet_transaction_status_unknown
+                    } else {
+                        R.string.wallet_transaction_submitted
+                    },
+                    description = tx.networkId.uppercase(),
+                    plusAmount = false,
+                    dateTime = dateTimeFormatter.formatTimeWithoutSeconds(
+                        Date(tx.base.timestamp)
+                    ),
+                    amountFormatted = "",
+                )
+            }
+
             is Transaction.EthTransfer -> {
                 EventUiModel.EventTxUiModel.EventEthTransfer(
                     hash = tx.base.txHash,

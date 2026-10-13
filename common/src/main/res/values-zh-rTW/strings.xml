@@ -87,6 +87,7 @@
   <string name="common_choose_asset">選擇資產</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">關閉</string>
+  <string name="tx_details_view_on_explorer">在區塊瀏覽器中查看</string>
   <string name="common_confirm">確認交換</string>
   <string name="common_connected">連接的</string>
   <string name="common_connecting">正在連線...</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">您已經應用了另一個邀請代碼</string>
   <string name="common_error_invitation_code_not_found">邀請碼短語無效</string>
   <string name="common_error_inviter_registered_after_invitee">提供的邀請代碼不可用，因為它來自您之後註冊的用戶</string>
-  <string name="common_error_mnemonic_is_not_valid">請確保您的密碼由 12 或 15 個單詞組成，並且它們都是正確的。</string>
-  <string name="common_error_mnemonic_length_error">密碼短語必須包含15個單詞</string>
+  <string name="common_error_mnemonic_is_not_valid">請確保您的密碼由 12 或 24 個單詞組成，並且它們都是正確的。</string>
+  <string name="common_error_mnemonic_length_error">密碼短語必須包含12或24個單詞</string>
   <string name="common_error_network">請檢查網絡連接，稍後再試。</string>
   <string name="common_error_no_browser_error">請安裝瀏覽器打開鏈接</string>
   <string name="common_error_not_enough_invitations">抱歉，您沒有可用的邀請函來分享</string>
@@ -276,7 +277,7 @@
   <string name="export_protection_passphrase_1">如果我丟失了密碼，我的資金將永遠丟失。</string>
   <string name="export_protection_passphrase_2">如果我向任何人公開或分享我的密碼，我的資金可能會被盜。</string>
   <string name="export_protection_passphrase_3">確保我的密碼安全是我的全部責任。</string>
-  <string name="export_protection_passphrase_description">在下一步中，您將看到允許您恢復賬戶的密碼（12 個字）。</string>
+  <string name="export_protection_passphrase_description">在下一步中，您將看到允許您恢復賬戶的密碼（24 個單詞）。</string>
   <string name="export_protection_seed_1">如果我失去了原始種子詞，我的資金將永遠丟失。</string>
   <string name="export_protection_seed_2">如果我將我的原始種子暴露或分享給任何人，我的資金可能會被盜。</string>
   <string name="export_protection_seed_3">確保我的原始種子詞安全是我的全部責任。</string>

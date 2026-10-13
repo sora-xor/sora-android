@@ -240,13 +240,13 @@ class SwapInteractorImpl(
 //    }
 
     override suspend fun fetchAvailableSources(tokenId1: String, tokenId2: String): Set<Market>? {
+        availableMarkets.clear()
         poolReservesFlowToken.value = tokenId1 to tokenId2
         val allBaseDexs = getPoolDexList()
         val swapsAvailable = allBaseDexs.map {
             polkaswapSubscriptionRepository.isSwapAvailable(tokenId1, tokenId2, it.dexId)
         }
         if (swapsAvailable.none { it }) return null
-        availableMarkets.clear()
         allBaseDexs.forEachIndexed { index, poolDex ->
             availableMarkets[poolDex] =
                 if (swapsAvailable[index]) polkaswapSubscriptionRepository.getAvailableSources(
@@ -305,6 +305,7 @@ class SwapInteractorImpl(
         swapResult.set(result.success)
         if (result.success) {
             transactionHistoryRepository.saveTransaction(
+                soraAccount.substrateAddress,
                 transactionBuilder.buildSwap(
                     txHash = result.txHash,
                     blockHash = result.blockHash,

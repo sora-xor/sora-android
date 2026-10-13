@@ -42,7 +42,12 @@ import kotlinx.coroutines.flow.Flow
 
 interface AssetsInteractor {
 
-    suspend fun calcTransactionFee(to: String, token: Token, amount: BigDecimal): BigDecimal?
+    suspend fun calcTransactionFee(
+        to: String,
+        token: Token,
+        amount: BigDecimal,
+        expectedWalletId: String,
+    ): BigDecimal?
 
     suspend fun isNotEnoughXorLeftAfterTransaction(
         networkFeeInXor: BigDecimal,
@@ -71,10 +76,18 @@ interface AssetsInteractor {
         to: String,
         token: Token,
         amount: BigDecimal,
-        fee: BigDecimal
+        fee: BigDecimal,
+        expectedWalletId: String,
     ): String
 
     fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset?>
+
+    /**
+     * Observes one asset for an explicitly bound account. Presentation that combines an address
+     * with a balance must use this overload so an account switch cannot transiently pair the old
+     * address with the newly selected account's asset stream.
+     */
+    fun subscribeAssetOfAccount(soraAccount: SoraAccount, tokenId: String): Flow<Asset?>
 
     fun subscribeAssetsActiveOfCurAccount(): Flow<List<Asset>>
 

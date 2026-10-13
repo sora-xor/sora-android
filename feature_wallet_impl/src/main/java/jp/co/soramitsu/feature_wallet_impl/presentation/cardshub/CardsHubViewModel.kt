@@ -49,6 +49,7 @@ import jp.co.soramitsu.common.domain.fiatSum
 import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.iconUri
+import jp.co.soramitsu.common.nexus.NexusQuantityContract
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -81,6 +82,12 @@ import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
 import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioRepository
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPreparedSend
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendRequest
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusTransactionCoordinator
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
@@ -88,6 +95,8 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -100,6 +109,46 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
+
+data class NexusSendUiState(
+    val visible: Boolean = false,
+    val network: NexusPortfolioBalance? = null,
+    val recipient: String = "",
+    val amount: String = "",
+    val preparing: Boolean = false,
+    val submitting: Boolean = false,
+    val prepared: NexusPreparedSend? = null,
+    val result: NexusSendResult? = null,
+    val errorCode: String? = null,
+    val submissionNeedsCheck: Boolean = false,
+    val scannerPermissionDenied: Boolean = false,
+)
+
+internal fun NexusSendUiState.editableDraft(): NexusSendUiState? =
+    if (!visible || preparing || submitting || result != null || submissionNeedsCheck) null
+    else copy(prepared = null, errorCode = null)
+
+internal fun NexusSendUiState.canConfirmSend(): Boolean =
+    visible && !preparing && !submitting && result == null && !submissionNeedsCheck && prepared != null
+
+internal fun NexusSendUiState.afterSubmissionFailure(error: Throwable): NexusSendUiState = copy(
+    submitting = false, prepared = null, result = null,
+    errorCode = error.message ?: "NEXUS_SUBMISSION_FAILED",
+    submissionNeedsCheck = error !is jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusNotSubmittedException,
+)
+
+internal data class NexusRecipientScan(val generation: Long, val walletId: String, val networkId: jp.co.soramitsu.common.nexus.WalletNetworkId, val address: String)
+
+internal fun NexusSendUiState.acceptsScan(scan: NexusRecipientScan, generation: Long): Boolean =
+    visible && !preparing && !submitting && prepared == null && result == null && !submissionNeedsCheck &&
+        scan.generation == generation && network?.let {
+            it.walletId == scan.walletId && it.networkId == scan.networkId && it.address == scan.address
+        } == true
+
+data class Sora2PortfolioBalance(
+    val address: String,
+    val xorQuantity: String?,
+)
 
 @HiltViewModel
 class CardsHubViewModel @Inject constructor(
@@ -118,6 +167,8 @@ class CardsHubViewModel @Inject constructor(
     private val soraCardInteractor: SoraCardInteractor,
     private val coroutineManager: CoroutineManager,
     private val darkThemeManager: DarkThemeManager,
+    private val nexusPortfolioRepository: NexusPortfolioRepository,
+    private val nexusTransactionCoordinator: NexusTransactionCoordinator,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(
@@ -130,6 +181,20 @@ class CardsHubViewModel @Inject constructor(
     )
     val state = _state.asStateFlow()
 
+    private val _nexusPortfolio = MutableStateFlow<List<NexusPortfolioBalance>>(emptyList())
+    val nexusPortfolio = _nexusPortfolio.asStateFlow()
+
+    private val _sora2Portfolio = MutableStateFlow<Sora2PortfolioBalance?>(null)
+    val sora2Portfolio = _sora2Portfolio.asStateFlow()
+
+    private val _nexusSend = MutableStateFlow(NexusSendUiState())
+    val nexusSend = _nexusSend.asStateFlow()
+
+    private var nexusSendOperation: Job? = null
+    private var nexusSendGeneration = 0L
+    private var recipientScan: NexusRecipientScan? = null
+    private var selectedPortfolioWalletId: String? = null
+
     private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
     val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
 
@@ -137,7 +202,72 @@ class CardsHubViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-
+            assetsInteractor.flowCurSoraAccount()
+                .distinctUntilChanged()
+                .flatMapLatest { account ->
+                    selectedPortfolioWalletId = account.substrateAddress
+                    _sora2Portfolio.value = Sora2PortfolioBalance(
+                        address = account.substrateAddress,
+                        xorQuantity = null,
+                    )
+                    // A prepared Nexus confirmation belongs to the wallet
+                    // that reviewed it. Account switching dismisses that UI;
+                    // the durable transaction coordinator still owns any
+                    // already-staged status reconciliation.
+                    resetNexusSend()
+                    assetsInteractor.subscribeAssetOfAccount(
+                        account,
+                        SubstrateOptionsProvider.feeAssetId,
+                    ).map { asset ->
+                        check(
+                            asset == null ||
+                                asset.token.id == SubstrateOptionsProvider.feeAssetId
+                        ) { "SORA2_XOR_ASSET_IDENTITY_MISMATCH" }
+                        Sora2PortfolioBalance(
+                            address = account.substrateAddress,
+                            xorQuantity = asset?.balance?.transferable
+                                ?.stripTrailingZeros()
+                                ?.toPlainString(),
+                        )
+                    }.onStart {
+                        // Replace the previous wallet row before waiting for
+                        // this explicitly bound account's asset stream.
+                        emit(
+                            Sora2PortfolioBalance(
+                                address = account.substrateAddress,
+                                xorQuantity = null,
+                            )
+                        )
+                    }.catch { error ->
+                        if (error is CancellationException) throw error
+                        emit(
+                            Sora2PortfolioBalance(
+                                address = account.substrateAddress,
+                                xorQuantity = null,
+                            )
+                        )
+                    }
+                }
+                .collectLatest { _sora2Portfolio.value = it }
+        }
+        viewModelScope.launch {
+            nexusPortfolioRepository.observeCurrentWallet()
+                .catch { emit(emptyList()) }
+                .collectLatest { balances ->
+                    _nexusPortfolio.value = balances
+                    val boundNetwork = _nexusSend.value.network
+                    if (
+                        boundNetwork != null &&
+                        currentNexusBalance(boundNetwork)?.sendAvailable != true
+                    ) {
+                        // This also closes a Taira dialog as soon as Test
+                        // Networks is disabled. A removed or disabled row can
+                        // never remain an actionable confirmation surface.
+                        resetNexusSend()
+                    }
+                }
+        }
+        viewModelScope.launch {
             cardsHubInteractorImpl
                 .subscribeVisibleCardsHubList()
                 .catch { onError(it) }
@@ -240,6 +370,13 @@ class CardsHubViewModel @Inject constructor(
                     }
                     combine(flows) { it.toList() }
                 }
+                .catch { error ->
+                    if (error is CancellationException) throw error
+                    // A failed balance/pool read must not crash the host or leave another
+                    // wallet's holdings visible. Network rows independently show availability.
+                    jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                    _state.value = _state.value.copy(loading = false, cards = emptyList())
+                }
                 .distinctUntilChanged()
                 .collectLatest { cards ->
                     val usableCards = cards.filterNot {
@@ -252,6 +389,236 @@ class CardsHubViewModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    fun refreshNexusPortfolio() = nexusPortfolioRepository.refresh()
+
+    fun loadMoreNexusHistory(balance: NexusPortfolioBalance) {
+        val current = currentNexusBalance(balance) ?: return
+        if (current.historyHasMore) {
+            nexusPortfolioRepository.loadMoreHistory(current.walletId, current.networkId)
+        }
+    }
+
+    fun openNexusSend(balance: NexusPortfolioBalance) {
+        if (_nexusSend.value.preparing || _nexusSend.value.submitting) return
+        val currentBalance = currentNexusBalance(balance)
+            ?.takeIf { it.sendAvailable }
+            ?: return
+        invalidateNexusSendOperation()
+        _nexusSend.value = NexusSendUiState(visible = true, network = currentBalance)
+    }
+
+    fun closeNexusSend() {
+        if (_nexusSend.value.preparing || _nexusSend.value.submitting) return
+        invalidateNexusSendOperation()
+        _nexusSend.value = NexusSendUiState()
+    }
+
+    fun editNexusSend() {
+        val current = _nexusSend.value
+        val draft = current.editableDraft() ?: return
+        invalidateNexusSendOperation()
+        _nexusSend.value = draft
+    }
+
+    fun beginNexusRecipientScan(): Boolean {
+        if (recipientScan != null) return false
+        val state = _nexusSend.value
+        val network = state.network?.let(::currentNexusBalance)?.takeIf { it.sendAvailable } ?: return false
+        val scan = NexusRecipientScan(nexusSendGeneration, network.walletId, network.networkId, network.address)
+        if (!state.acceptsScan(scan, nexusSendGeneration)) return false
+        recipientScan = scan
+        return true
+    }
+
+    fun finishNexusRecipientScan(value: String?, cameraPermissionDenied: Boolean = false) {
+        val scan = recipientScan ?: return
+        recipientScan = null
+        val current = _nexusSend.value
+        if (!current.acceptsScan(scan, nexusSendGeneration) ||
+            current.network?.let(::currentNexusBalance)?.sendAvailable != true) return
+        // Scanning only fills this immutable draft. Canonical network/address validation remains in prepare.
+        invalidateNexusSendOperation()
+        _nexusSend.value = current.afterRecipientScan(value, cameraPermissionDenied)
+    }
+
+    fun setNexusRecipient(value: String) {
+        val current = _nexusSend.value
+        if (!current.visible || current.submitting || current.result != null || current.prepared != null || current.submissionNeedsCheck) return
+        invalidateNexusSendOperation()
+        _nexusSend.value = current.copy(
+            recipient = value.trim(),
+            preparing = false,
+            prepared = null,
+            result = null,
+            errorCode = null,
+        )
+    }
+
+    fun setNexusAmount(value: String) {
+        val current = _nexusSend.value
+        if (!current.visible || current.submitting || current.result != null || current.prepared != null || current.submissionNeedsCheck) return
+        if (value.isEmpty() || NexusQuantityContract.isInputQuantity(value)) {
+            invalidateNexusSendOperation()
+            _nexusSend.value = current.copy(
+                amount = value,
+                preparing = false,
+                prepared = null,
+                result = null,
+                errorCode = null,
+            )
+        }
+    }
+
+    fun prepareNexusSend() {
+        val current = _nexusSend.value
+        if (
+            !current.visible ||
+            current.preparing ||
+            current.submitting ||
+            current.submissionNeedsCheck || current.result != null ||
+            current.prepared != null
+        ) return
+        val network = current.network
+            ?.let(::currentNexusBalance)
+            ?.takeIf { it.sendAvailable }
+            ?: run {
+                resetNexusSend()
+                return
+            }
+        // The immutable row owns the request. CardsState is fed by a separate
+        // stream and can briefly still describe the previous selected wallet.
+        val walletId = network.walletId
+        val generation = beginNexusSendOperation()
+        _nexusSend.value = current.copy(
+            network = network,
+            preparing = true,
+            errorCode = null,
+        )
+        nexusSendOperation = viewModelScope.launch {
+            try {
+                val prepared = nexusTransactionCoordinator.prepare(
+                    NexusSendRequest(
+                        walletId = walletId,
+                        networkId = network.networkId,
+                        recipient = current.recipient,
+                        amount = current.amount,
+                    )
+                )
+                if (!nexusSendOperationIsCurrent(generation, network)) return@launch
+                _nexusSend.value = _nexusSend.value.copy(
+                    preparing = false,
+                    prepared = prepared,
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                if (!nexusSendOperationIsCurrent(generation, network)) return@launch
+                _nexusSend.value = _nexusSend.value.copy(
+                    preparing = false,
+                    prepared = null,
+                    errorCode = error.message ?: "NEXUS_QUOTE_FAILED",
+                )
+            } finally {
+                if (generation == nexusSendGeneration) nexusSendOperation = null
+            }
+        }
+    }
+
+    fun confirmNexusSend() {
+        val current = _nexusSend.value
+        if (!current.canConfirmSend()) return
+        val prepared = current.prepared ?: return
+        val network = current.network
+            ?.let(::currentNexusBalance)
+            ?.takeIf { it.sendAvailable }
+            ?: run {
+                resetNexusSend()
+                return
+            }
+        if (
+            prepared.request.walletId != network.walletId ||
+            prepared.request.networkId != network.networkId
+        ) {
+            resetNexusSend()
+            return
+        }
+        val generation = beginNexusSendOperation()
+        _nexusSend.value = current.copy(network = network, submitting = true, errorCode = null)
+        nexusSendOperation = viewModelScope.launch {
+            try {
+                val result = nexusTransactionCoordinator.submitAndTrack(prepared)
+                if (!nexusSendOperationIsCurrent(generation, network)) return@launch
+                _nexusSend.value = _nexusSend.value.copy(
+                    submitting = false,
+                    result = result,
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                if (!nexusSendOperationIsCurrent(generation, network)) return@launch
+                _nexusSend.value = _nexusSend.value.afterSubmissionFailure(error)
+            } finally {
+                if (generation == nexusSendGeneration) nexusSendOperation = null
+            }
+        }
+    }
+
+    fun isCurrentNexusBalance(balance: NexusPortfolioBalance): Boolean =
+        currentNexusBalance(balance) != null
+
+    fun isCurrentSora2Wallet(walletId: String): Boolean =
+        walletId == selectedPortfolioWalletId &&
+            walletId == _sora2Portfolio.value?.address
+
+    fun openSora2Receive(walletId: String) {
+        if (isCurrentSora2Wallet(walletId)) router.openQrCodeFlow()
+    }
+
+    fun openSora2Xor(walletId: String) {
+        if (isCurrentSora2Wallet(walletId)) {
+            assetsRouter.showAssetDetails(SubstrateOptionsProvider.feeAssetId)
+        }
+    }
+
+    private fun currentNexusBalance(
+        expected: NexusPortfolioBalance,
+    ): NexusPortfolioBalance? {
+        if (
+            expected.walletId != selectedPortfolioWalletId ||
+            expected.walletId != _sora2Portfolio.value?.address
+        ) return null
+        return _nexusPortfolio.value.firstOrNull {
+            it.walletId == expected.walletId &&
+                it.networkId == expected.networkId &&
+                it.address == expected.address
+        }
+    }
+
+    private fun nexusSendOperationIsCurrent(
+        generation: Long,
+        network: NexusPortfolioBalance,
+    ): Boolean =
+        generation == nexusSendGeneration &&
+            _nexusSend.value.visible &&
+            currentNexusBalance(network)?.sendAvailable == true
+
+    private fun beginNexusSendOperation(): Long {
+        invalidateNexusSendOperation()
+        return nexusSendGeneration
+    }
+
+    private fun invalidateNexusSendOperation() {
+        nexusSendGeneration += 1
+        recipientScan = null
+        nexusSendOperation?.cancel()
+        nexusSendOperation = null
+    }
+
+    private fun resetNexusSend() {
+        invalidateNexusSendOperation()
+        _nexusSend.value = NexusSendUiState()
     }
 
     private fun mapKycStatus(kycStatus: SoraCardCommonVerification): Pair<String?, Boolean> {
@@ -475,5 +842,14 @@ class CardsHubViewModel @Inject constructor(
                 _launchSoraCardSignIn.value = createSoraCardGateHubContract()
             }
         }
+    }
+}
+
+internal fun NexusSendUiState.afterRecipientScan(value: String?, cameraPermissionDenied: Boolean = false): NexusSendUiState {
+    if (!visible || preparing || submitting || prepared != null || result != null || submissionNeedsCheck) return this
+    return when {
+        value != null -> copy(recipient = value, scannerPermissionDenied = false, errorCode = null)
+        cameraPermissionDenied -> copy(scannerPermissionDenied = true)
+        else -> this
     }
 }

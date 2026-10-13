@@ -43,19 +43,23 @@ import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class AppSettingsViewModel @Inject constructor(
     private val mainRouter: MainRouter,
-    private val darkThemeManager: DarkThemeManager
+    private val darkThemeManager: DarkThemeManager,
+    private val productionFeatureManager: ProductionFeatureManager,
 ) : BaseViewModel() {
 
     internal var state by mutableStateOf(
         AppSettingsState(
             systemAppearanceChecked = false,
             darkModeChecked = false,
+            testNetworksAvailable = false,
+            testNetworksChecked = false,
         )
     )
         private set
@@ -72,6 +76,15 @@ class AppSettingsViewModel @Inject constructor(
                         darkModeChecked = it.isDarkModeEnabled,
                         systemAppearanceChecked = it.isSystemDrivenUiEnabled
                     )
+            }
+        }
+        viewModelScope.launch {
+            tryCatch {
+                val productionState = productionFeatureManager.getState()
+                state = state.copy(
+                    testNetworksAvailable = productionState.tairaAvailable,
+                    testNetworksChecked = productionState.tairaVisible,
+                )
             }
         }
     }
@@ -99,6 +112,16 @@ class AppSettingsViewModel @Inject constructor(
                 systemAppearanceChecked = false,
                 darkModeChecked = checked,
             )
+        }
+    }
+
+    fun toggleTestNetworks(checked: Boolean) {
+        if (!state.testNetworksAvailable) return
+        viewModelScope.launch {
+            tryCatch {
+                productionFeatureManager.setTairaVisible(checked)
+                state = state.copy(testNetworksChecked = checked)
+            }
         }
     }
 }

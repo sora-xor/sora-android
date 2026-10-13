@@ -46,4 +46,71 @@
         app:layout_constraintStart_toStartOf="@+id/loadingDisclaimerTextView"
         app:layout_constraintTop_toBottomOf="@+id/loadingDisclaimerTextView" />
 
+    <LinearLayout
+        android:id="@+id/walletRecoveryPanel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/x4"
+        android:background="?attr/secondaryBackground"
+        android:orientation="vertical"
+        android:padding="@dimen/x4"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/sora_bold"
+            android:text="@string/wallet_upgrade_recovery_title"
+            android:textColor="?attr/contentPrimary"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:text="@string/wallet_upgrade_recovery_message"
+            android:textColor="?attr/contentPrimary" />
+
+        <TextView
+            android:id="@+id/walletRecoveryCodeTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:textColor="?attr/contentPrimary"
+            tools:text="Recovery code: SECRET_DECRYPTION_FAILED" />
+
+        <Button
+            android:id="@+id/retryWalletMigrationButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x4"
+            android:text="@string/wallet_upgrade_recovery_retry" />
+
+        <Button
+            android:id="@+id/exportWalletRecoveryButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:text="@string/wallet_upgrade_recovery_export" />
+
+        <Button
+            android:id="@+id/continueLegacyWalletButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:text="@string/wallet_upgrade_recovery_continue_legacy"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/contactWalletSupportButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:text="@string/wallet_upgrade_recovery_support" />
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

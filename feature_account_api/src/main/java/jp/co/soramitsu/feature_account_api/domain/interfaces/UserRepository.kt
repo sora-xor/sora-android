@@ -35,6 +35,9 @@ package jp.co.soramitsu.feature_account_api.domain.interfaces
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
+import jp.co.soramitsu.feature_account_api.domain.model.WalletMutationSnapshot
 import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
@@ -42,6 +45,23 @@ interface UserRepository {
     suspend fun getSoraAccountsCount(): Int
 
     suspend fun getCurSoraAccount(): SoraAccount
+
+    /**
+     * Holds the same lock used by account creation, selection, and explicit wallet deletion for
+     * the entire [block]. The nullable selected-account snapshot is immutable for that boundary.
+     * Callers must not invoke another locking [UserRepository] method from [block].
+     */
+    suspend fun <T> withWalletMutationLocked(
+        block: suspend (WalletMutationSnapshot) -> T,
+    ): T
+
+    /**
+     * Privileged copy-on-write migration boundary. Implementations must reject this call unless
+     * normal startup or an explicit recovery-journal retry authorization is active.
+     */
+    suspend fun <T> withWalletMigrationLocked(
+        block: suspend (WalletMutationSnapshot) -> T,
+    ): T
 
     suspend fun setCurSoraAccount(soraAccount: SoraAccount)
 
@@ -63,11 +83,19 @@ interface UserRepository {
 
     suspend fun saveRegistrationState(onboardingState: OnboardingState)
 
-    suspend fun fullLogout()
+    suspend fun createWalletDeletionPreview(
+        targetWalletIds: List<String>,
+    ): WalletDeletionPreview
+
+    suspend fun confirmAndExecuteWalletDeletion(
+        preview: WalletDeletionPreview,
+    ): WalletDeletionResult
+
+    suspend fun resumePendingWalletDeletion()
+
+    suspend fun walletDeletionFailureCode(): String?
 
     suspend fun defaultGlobalCards()
-
-    suspend fun clearAccountData(address: String)
 
     suspend fun saveParentInviteCode(inviteCode: String)
 

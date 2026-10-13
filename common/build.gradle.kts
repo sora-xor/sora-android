@@ -1,34 +1,30 @@
 import java.io.FileInputStream
 import java.util.Properties
-import org.gradle.kotlin.dsl.kapt
 
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
-    alias(libs.plugins.compose.compiler)
 }
 
 fun secret(name: String): String {
     val fileProperties = File(rootProject.projectDir.absolutePath, "local.properties")
-    val pr = runCatching { FileInputStream(fileProperties) }.getOrNull()?.let { file ->
+    val pr = runCatching { FileInputStream(fileProperties) }.getOrNull()?.use { file ->
         Properties().apply {
             load(file)
         }
     }
-    return pr?.getProperty(name) ?: System.getenv(name)!!
+    return pr?.getProperty(name) ?: System.getenv(name).orEmpty()
 }
 
 fun maybeWrapQuotes(s: String): String {
     return if (s.startsWith("\"")) s else "\"" + s + "\""
 }
-
-val composeCompilerVersion: String by project
 
 kotlin {
     jvmToolchain(17)
@@ -36,17 +32,18 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.common"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -60,6 +57,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        compose = true
         buildConfig = true
     }
 
@@ -146,7 +144,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":network"))
+    api(project(":network"))
 
     implementation(libs.activityKtxDep)
     implementation(libs.coreKtxDep)
@@ -159,38 +157,38 @@ dependencies {
     implementation(libs.coroutineDep)
 
     implementation(libs.uiCoreDep)
-    implementation(libs.soramitsu.android.foundation)
+    api(libs.soramitsu.android.foundation)
 
-    implementation(libs.kotlinxSerializationJsonDep)
+    api(libs.kotlinxSerializationJsonDep)
 
-    implementation(libs.coilSvgDep)
+    api(libs.coilSvgDep)
 
     implementation(libs.webSocketLibDep)
     implementation(libs.uiCoreDep)
 
     implementation(libs.lifecycleProcessDep)
-    kapt(libs.lifecycleKaptDep)
 
     implementation(libs.timberDep)
     implementation(libs.svgDep)
     implementation(libs.jdenticonDep)
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
 
     implementation(libs.datastoreDep)
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
-    implementation(libs.xbackupDep)
-    implementation(libs.xsubstrateDep)
+    api(libs.xbackupDep)
+    api(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)
     implementation(libs.ed25519Dep) {
 //        exclude(module = "bcpkix-jdk15on")
     }
+    implementation(libs.bcprovDep)
     implementation(libs.xercesDep)
 
-    implementation(libs.gsonDep)
+    api(libs.gsonDep)
     implementation(libs.zXingCoreDep)
 
     implementation(platform(libs.googleFirebaseBomDep))
@@ -215,6 +213,7 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
     implementation(libs.composeLiveDataDep)
+    implementation(libs.composeLifecycleDep)
     implementation(libs.composeFoundationDep)
     implementation(libs.composeMaterialDep)
     implementation(libs.composeConstraintLayoutDep)
@@ -226,8 +225,20 @@ dependencies {
     testImplementation(libs.mockitoDep)
     testImplementation(libs.archCoreTestDep)
     testImplementation(libs.coroutineTestDep)
+    androidTestImplementation(libs.androidxTestExtJunitDep)
+    androidTestImplementation(libs.androidxTestEspressoCoreDep)
 }
 
-kapt {
-    correctErrorTypes = true
+// Development builds support local recovery without Google; distributed production builds must retain cloud recovery.
+val validateProductionCloudBackupConfiguration by tasks.registering {
+    group = "verification"
+    description = "Checks that production Google backup has an OAuth client configured without exposing its value."
+    doLast {
+        check(secret("SORA_GOOGLE_TOKEN_PROD").trim().trim('"').isNotBlank()) {
+            "Production Google backup requires SORA_GOOGLE_TOKEN_PROD. Configure the release OAuth client before packaging."
+        }
+    }
+}
+tasks.matching { it.name == "preProductionReleaseBuild" }.configureEach {
+    dependsOn(validateProductionCloudBackupConfiguration)
 }

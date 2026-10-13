@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
   <string name="about_announcements">Получайте анонсы</string>
   <string name="about_ask_support">Обратиться за поддержкой</string>
   <string name="about_contact_us">Свяжитесь с нами по почте</string>
@@ -87,6 +87,7 @@
   <string name="common_choose_asset">Выбор ассета</string>
   <string name="common_claim">Claim</string>
   <string name="common_close">Закрыть</string>
+  <string name="tx_details_view_on_explorer">Посмотреть в обозревателе</string>
   <string name="common_confirm">Подтвердить</string>
   <string name="common_connected">Подключено</string>
   <string name="common_connecting">Подключение…</string>
@@ -116,8 +117,8 @@
   <string name="common_error_invitation_already_accepted">Вы уже приняли другое приглашение</string>
   <string name="common_error_invitation_code_not_found">Код приглашения недействителен</string>
   <string name="common_error_inviter_registered_after_invitee">Вы не можете использовать код приглашения пользователя, зарегистрированного позже вас</string>
-  <string name="common_error_mnemonic_is_not_valid">Пожалуйста, убедитесь, что ваша кодовая фраза состоит из 12 или 15 слов и все они верны.</string>
-  <string name="common_error_mnemonic_length_error">Парольная фраза содержит 15 слов</string>
+  <string name="common_error_mnemonic_is_not_valid">Пожалуйста, убедитесь, что ваша кодовая фраза состоит из 12 или 24 слов и все они верны.</string>
+  <string name="common_error_mnemonic_length_error">Парольная фраза должна содержать 12 или 24 слова</string>
   <string name="common_error_network">Пожалуйста, проверьте подключение к Интернету и повторите попытку.</string>
   <string name="common_error_no_browser_error">Пожалуйста, установите браузер, чтобы открыть ссылку</string>
   <string name="common_error_not_enough_invitations">Извините, но у Вас не осталось кодов приглашения</string>
@@ -154,7 +155,7 @@
   <string name="common_google_backup_decryption_failed_2">Возможно, введенный вами пароль неверен.</string>
   <string name="common_hebrew">Иврит</string>
   <string name="common_hindi">Хинди</string>
-  <plurals name="common_hour">
+  <plurals name="common_hour" tools:ignore="ImpliedQuantity">
     <item quantity="zero">часов</item>
     <item quantity="one">час</item>
     <item quantity="few">часа</item>
@@ -280,7 +281,7 @@
   <string name="export_protection_passphrase_1">Если я потеряю парольную фразу, мои средства будут утеряны навсегда.</string>
   <string name="export_protection_passphrase_2">Если я раскрою или передам свою парольную фразу кому-либо, мои средства могут быть украдены.</string>
   <string name="export_protection_passphrase_3">Я несу полную ответственность за сохранность моей парольной фразы.</string>
-  <string name="export_protection_passphrase_description">На следующем шаге вы увидите парольную фразу (12 слов), которая позволит вам восстановить учетную запись.</string>
+  <string name="export_protection_passphrase_description">На следующем шаге вы увидите парольную фразу (24 слова), которая позволит вам восстановить учетную запись.</string>
   <string name="export_protection_seed_1">Если я потеряю свой raw seed, мои средства будут потеряны навсегда.</string>
   <string name="export_protection_seed_2">Если я раскрою или поделюсь с кем-либо своими raw seed, мои средства могут быть украдены.</string>
   <string name="export_protection_seed_3">Я несу полную ответственность за сохранность моего raw seed.</string>
@@ -456,7 +457,7 @@
   <string name="referral_input_reward_title">Введите желаемое количество приглашений</string>
   <string name="referral_invitaion_link_title">Доступные приглашения</string>
   <string name="referral_invitation_link">Invitation link</string>
-  <plurals name="referral_invitations">
+  <plurals name="referral_invitations" tools:ignore="ImpliedQuantity">
     <item quantity="zero"></item>
     <item quantity="one">приглашение</item>
     <item quantity="few">приглашения</item>
