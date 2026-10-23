@@ -71,6 +71,7 @@ import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -127,6 +128,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     private val amount1Flow = MutableStateFlow(BigDecimal.ZERO)
     private val amount2Flow = MutableStateFlow(BigDecimal.ZERO)
     private var percent: Double = 0.0
+    private var submissionJob: Job? = null
 
     var removeState by mutableStateOf(
         LiquidityRemoveState(
@@ -508,69 +510,70 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     }
 
     fun onConfirmClick() {
-        viewModelScope.launch {
-            removeState.assetState1?.let { fromToken ->
-                removeState.assetState2?.let { toToken ->
-                    poolDataUsable?.let { poolData ->
-                        val firstAmountMin =
-                            PolkaswapFormulas.calculateMinAmount(
-                                fromToken.amount.orZero(),
-                                removeState.slippage
-                            )
-                        val secondAmountMin =
-                            PolkaswapFormulas.calculateMinAmount(
-                                toToken.amount.orZero(),
-                                removeState.slippage
-                            )
-                        val desired =
-                            if (percent == 100.0) poolData.user.poolProvidersBalance else PolkaswapFormulas.calculateAmountByPercentage(
-                                poolData.user.poolProvidersBalance,
-                                percent,
-                                poolData.basic.baseToken.precision
-                            )
+        if (submissionJob?.isActive == true || !removeState.confirm.btnState.enabled ||
+            removeState.confirm.btnState.loading
+        ) return
 
-                        removeState = removeState.copy(
-                            confirm = removeState.confirm.copy(
-                                btnState = removeState.confirm.btnState.copy(
-                                    enabled = false,
-                                    loading = true,
-                                )
-                            )
-                        )
-                        var result = ""
-                        try {
-                            result = poolsInteractor.removeLiquidity(
-                                fromToken.token,
-                                toToken.token,
-                                desired,
-                                firstAmountMin,
-                                secondAmountMin,
-                                networkFee.orZero(),
-                            )
-                        } catch (t: Throwable) {
-                            onError(t)
-                        } finally {
-                            removeState = removeState.copy(
-                                confirm = removeState.confirm.copy(
-                                    btnState = removeState.confirm.btnState.copy(
-                                        enabled = false,
-                                        loading = false,
-                                    ),
-                                    confirmResult = result.isNotEmpty()
-                                )
-                            )
-                            delay(500)
-                            removeState = removeState.copy(
-                                confirm = removeState.confirm.copy(
-                                    confirmResult = null
-                                )
-                            )
-                            if (result.isNotEmpty())
-                                assetsRouter.showTxDetails(result, true)
-                            else router.returnToHubFragment()
-                        }
-                    }
-                }
+        val fromToken = removeState.assetState1 ?: return
+        val toToken = removeState.assetState2 ?: return
+        val poolData = poolDataUsable ?: return
+        val firstAmountMin =
+            PolkaswapFormulas.calculateMinAmount(
+                fromToken.amount.orZero(),
+                removeState.slippage
+            )
+        val secondAmountMin =
+            PolkaswapFormulas.calculateMinAmount(
+                toToken.amount.orZero(),
+                removeState.slippage
+            )
+        val desired =
+            if (percent == 100.0) poolData.user.poolProvidersBalance else PolkaswapFormulas.calculateAmountByPercentage(
+                poolData.user.poolProvidersBalance,
+                percent,
+                poolData.basic.baseToken.precision
+            )
+
+        removeState = removeState.copy(
+            confirm = removeState.confirm.copy(
+                btnState = removeState.confirm.btnState.copy(
+                    enabled = false,
+                    loading = true,
+                )
+            )
+        )
+        submissionJob = viewModelScope.launch {
+            var result = ""
+            try {
+                result = poolsInteractor.removeLiquidity(
+                    fromToken.token,
+                    toToken.token,
+                    desired,
+                    firstAmountMin,
+                    secondAmountMin,
+                    networkFee.orZero(),
+                )
+            } catch (t: Throwable) {
+                onError(t)
+            } finally {
+                removeState = removeState.copy(
+                    confirm = removeState.confirm.copy(
+                        btnState = removeState.confirm.btnState.copy(
+                            enabled = false,
+                            loading = false,
+                        ),
+                        confirmResult = result.isNotEmpty()
+                    )
+                )
+                delay(500)
+                removeState = removeState.copy(
+                    confirm = removeState.confirm.copy(
+                        confirmResult = null
+                    )
+                )
+                if (result.isNotEmpty())
+                    assetsRouter.showTxDetails(result, true)
+                else router.returnToHubFragment()
             }
         }
     }
@@ -694,9 +697,9 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                     enabled = enabled,
                 ),
                 confirm = removeState.confirm.copy(
-                    btnState = removeState.btnState.copy(
+                    btnState = removeState.confirm.btnState.copy(
                         text = text ?: resourceManager.getString(R.string.common_confirm),
-                        enabled = enabled,
+                        enabled = enabled && submissionJob?.isActive != true,
                     ),
                 )
             )
