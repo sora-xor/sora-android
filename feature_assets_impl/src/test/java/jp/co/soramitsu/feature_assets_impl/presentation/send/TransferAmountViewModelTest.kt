@@ -59,6 +59,7 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.PolkaswapTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -193,6 +194,76 @@ class TransferAmountViewModelTest {
             R.string.something_went_wrong to R.string.unexpected_error,
             transferAmountViewModel.errorFromResourceLiveData.value,
         )
+    }
+
+    @Test
+    fun `entering the same amount again completes the fee preview`() = runTest {
+        initViewModel(BigDecimal.TEN)
+        advanceUntilIdle()
+
+        repeat(2) {
+            transferAmountViewModel.amountChanged(BigDecimal.ONE)
+            advanceUntilIdle()
+
+            assertFalse(transferAmountViewModel.sendState.value.feeLoading)
+            assertTrue(transferAmountViewModel.sendState.value.reviewEnabled)
+        }
+    }
+
+    @Test
+    fun `selecting the same percentage again completes the fee preview`() = runTest {
+        initViewModel(BigDecimal.TEN)
+        advanceUntilIdle()
+
+        repeat(2) {
+            transferAmountViewModel.optionSelected(50)
+            advanceUntilIdle()
+
+            assertFalse(transferAmountViewModel.sendState.value.feeLoading)
+            assertTrue(transferAmountViewModel.sendState.value.reviewEnabled)
+        }
+    }
+
+    @Test
+    fun `the same amount can retry a failed fee preview`() = runTest {
+        initViewModel(BigDecimal.TEN)
+        advanceUntilIdle()
+        coEvery { assetsInteractor.calcTransactionFee(any(), any(), any(), any()) } returns null
+
+        transferAmountViewModel.amountChanged(BigDecimal.ONE)
+        advanceUntilIdle()
+        assertFalse(transferAmountViewModel.sendState.value.reviewEnabled)
+
+        coEvery { assetsInteractor.calcTransactionFee(any(), any(), any(), any()) } returns networkFee
+        transferAmountViewModel.amountChanged(BigDecimal.ONE)
+        advanceUntilIdle()
+
+        assertFalse(transferAmountViewModel.sendState.value.feeLoading)
+        assertTrue(transferAmountViewModel.sendState.value.reviewEnabled)
+    }
+
+    @Test
+    fun `repeated confirmation submits only one transfer while it is pending`() = runTest {
+        val result = CompletableDeferred<String>()
+        coEvery {
+            assetsInteractor.observeTransfer(any(), any(), any(), any(), WALLET_ID)
+        } coAnswers { result.await() }
+        every { assetsRouter.showTxDetails(any(), any()) } returns Unit
+        initViewModel(BigDecimal.TEN, initialSendAmount = "1")
+        advanceUntilIdle()
+
+        transferAmountViewModel.onConfirmClick()
+        transferAmountViewModel.onConfirmClick()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            assetsInteractor.observeTransfer(any(), any(), any(), any(), WALLET_ID)
+        }
+        assertTrue(transferAmountViewModel.sendState.value.inProgress)
+        result.complete("transaction-hash")
+        advanceUntilIdle()
+        assertFalse(transferAmountViewModel.sendState.value.inProgress)
+        verify(exactly = 1) { assetsRouter.showTxDetails("transaction-hash", true) }
     }
 
     @Test

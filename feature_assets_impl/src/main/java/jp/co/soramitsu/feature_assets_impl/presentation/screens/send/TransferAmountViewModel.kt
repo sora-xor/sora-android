@@ -116,7 +116,8 @@ class TransferAmountViewModel @AssistedInject constructor(
     private val _transactionSuccessEvent = SingleLiveEvent<Unit>()
     val transactionSuccessEvent: LiveData<Unit> = _transactionSuccessEvent
 
-    private val enteredFlow = MutableStateFlow(BigDecimal.ZERO)
+    // A repeated amount must still emit so it can refresh or retry its fee quote.
+    private val enteredFlow = MutableStateFlow(0L to BigDecimal.ZERO)
 
     private var curAsset: Asset? = null
     private var feeAsset: Asset? = null
@@ -175,7 +176,7 @@ class TransferAmountViewModel @AssistedInject constructor(
             enteredFlow
                 .drop(1)
                 .debounce(ViewHelper.debounce)
-                .collectLatest { amount ->
+                .collectLatest { (_, amount) ->
                     feeAsset?.let { calcTransactionFee(it, amount) }
                     checkEnteredAmount(amount)
                     if (
@@ -406,6 +407,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     }
 
     fun onConfirmClick() {
+        if (_sendState.value.inProgress || !_sendState.value.reviewEnabled) return
         val curAsset = curAsset ?: return
         val amount = _sendState.value.input?.amount ?: return
         val fee = fee ?: return
@@ -414,10 +416,8 @@ class TransferAmountViewModel @AssistedInject constructor(
             invalidateFeeReview()
             return
         }
+        _sendState.value = _sendState.value.copy(inProgress = true)
         viewModelScope.launch {
-            _sendState.value = _sendState.value.copy(
-                inProgress = true
-            )
             var transactionHash: String? = null
             try {
                 transactionHash = interactor.observeTransfer(
@@ -523,7 +523,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     }
 
     fun amountChanged(value: BigDecimal) {
-        invalidateFeeReview()
+        val revision = invalidateFeeReview()
         _sendState.value = _sendState.value.copy(
             input = _sendState.value.input?.copy(
                 amount = value,
@@ -533,7 +533,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                 ).orEmpty()
             )
         )
-        enteredFlow.value = value
+        enteredFlow.value = revision to value
     }
 
     fun optionSelected(percent: Int) {
@@ -556,8 +556,8 @@ class TransferAmountViewModel @AssistedInject constructor(
                 ).orEmpty()
             )
         )
-        invalidateFeeReview()
-        enteredFlow.value = amount
+        val revision = invalidateFeeReview()
+        enteredFlow.value = revision to amount
     }
 
     private fun invalidateFeeReview(): Long {
