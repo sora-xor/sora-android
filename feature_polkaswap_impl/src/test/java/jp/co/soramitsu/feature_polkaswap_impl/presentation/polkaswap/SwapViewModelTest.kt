@@ -56,6 +56,7 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.test_data.PolkaswapTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -80,7 +81,9 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.clearInvocations
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.times
+import org.mockito.kotlin.whenever
 import org.mockito.kotlin.verify as kVerify
 
 @FlowPreview
@@ -251,6 +254,80 @@ class SwapViewModelTest {
         assertEquals(BigDecimal.TEN, viewModel.swapMainState.value.tokenToState?.amount)
         assertEquals("Review", viewModel.swapMainState.value.swapButtonState.text)
         assertTrue(viewModel.swapMainState.value.swapButtonState.enabled)
+    }
+
+    @Test
+    fun `repeated confirmation submits a swap only once while pending`() = runTest {
+        val submitted = CompletableDeferred<String>()
+        doSuspendableAnswer { submitted.await() }.whenever(swapInteractor)
+            .swap(any(), any(), any(), any(), any(), any(), any(), any())
+        given(swapInteractor.fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id))
+            .willReturn(setOf(Market.SMART, Market.XYK))
+        given(swapInteractor.calcDetails(any(), any(), any(), any(), any(), anyDouble()))
+            .willReturn(
+                SwapDetails(
+                    BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE,
+                    networkFee, PoolDex(0, TestTokens.xorToken.id, "XOR"), null,
+                )
+            )
+        initViewModel(
+            xorBalance = BigDecimal("100"),
+            valBalance = BigDecimal("100"),
+            firstTokenId = TestTokens.valToken.id,
+            secondTokenId = TestTokens.xorToken.id,
+        )
+        advanceUntilIdle()
+        viewModel.onFromAmountChange(BigDecimal.ONE)
+        advanceUntilIdle()
+        assertTrue(viewModel.swapMainState.value.confirmButtonState.enabled)
+
+        viewModel.onConfirmClicked()
+        viewModel.onConfirmClicked()
+        advanceUntilIdle()
+        assertTrue(viewModel.swapMainState.value.confirmButtonState.loading)
+        submitted.complete("swap-hash")
+        advanceUntilIdle()
+
+        kVerify(swapInteractor, times(1))
+            .swap(any(), any(), any(), any(), any(), any(), any(), any())
+        kVerify(assetsRouter, times(1)).showTxDetails("swap-hash", true)
+        assertFalse(viewModel.swapMainState.value.confirmButtonState.loading)
+    }
+
+    @Test
+    fun `swap without a transaction hash can be retried after refreshing the quote`() = runTest {
+        given(swapInteractor.swap(any(), any(), any(), any(), any(), any(), any(), any()))
+            .willReturn("", "retry-hash")
+        given(swapInteractor.fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id))
+            .willReturn(setOf(Market.SMART, Market.XYK))
+        given(swapInteractor.calcDetails(any(), any(), any(), any(), any(), anyDouble()))
+            .willReturn(
+                SwapDetails(
+                    BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE,
+                    networkFee, PoolDex(0, TestTokens.xorToken.id, "XOR"), null,
+                )
+            )
+        initViewModel(
+            xorBalance = BigDecimal("100"),
+            valBalance = BigDecimal("100"),
+            firstTokenId = TestTokens.valToken.id,
+            secondTokenId = TestTokens.xorToken.id,
+        )
+        advanceUntilIdle()
+        viewModel.onFromAmountChange(BigDecimal.ONE)
+        advanceUntilIdle()
+        viewModel.onConfirmClicked()
+        advanceUntilIdle()
+
+        viewModel.onFromAmountChange(BigDecimal("2"))
+        advanceUntilIdle()
+        assertTrue(viewModel.swapMainState.value.confirmButtonState.enabled)
+        viewModel.onConfirmClicked()
+        advanceUntilIdle()
+
+        kVerify(swapInteractor, times(2))
+            .swap(any(), any(), any(), any(), any(), any(), any(), any())
+        kVerify(assetsRouter).showTxDetails("retry-hash", true)
     }
 
     @Test

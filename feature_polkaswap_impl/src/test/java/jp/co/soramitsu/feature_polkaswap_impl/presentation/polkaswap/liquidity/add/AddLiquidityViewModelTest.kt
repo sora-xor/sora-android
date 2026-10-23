@@ -56,6 +56,7 @@ import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XSTXAU_ASSET
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -64,6 +65,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -75,7 +77,9 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.times
+import org.mockito.kotlin.whenever
 import org.mockito.kotlin.verify as kVerify
 
 @FlowPreview
@@ -190,6 +194,97 @@ class AddLiquidityViewModelTest {
         setUpViewModel(null)
         advanceUntilIdle()
         assertEquals("Choose tokens", viewModel.addState.value.btnState.text)
+    }
+
+    @Test
+    fun `maximum XOR amount reserves the quoted network fee`() = runTest {
+        val quotedFee = BigDecimal("0.1")
+        given(poolsInteractor.calcLiquidityDetails(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+            .willReturn(LIQUIDITY_DETAILS.copy(networkFee = quotedFee))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        setUpViewModel(VAL_ASSET.token.id)
+        advanceUntilIdle()
+        viewModel.onAmount1Change(BigDecimal("0.1"))
+        advanceUntilIdle()
+
+        viewModel.optionSelected(100)
+        advanceUntilIdle()
+
+        assertEquals(
+            0,
+            (BigDecimal.ONE - quotedFee)
+                .compareTo(viewModel.addState.value.assetState1!!.amount),
+        )
+        assertTrue(viewModel.addState.value.btnState.enabled)
+    }
+
+    @Test
+    fun `maximum XOR amount is zero and disabled when the fee exceeds the balance`() = runTest {
+        given(poolsInteractor.calcLiquidityDetails(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+            .willReturn(LIQUIDITY_DETAILS.copy(networkFee = BigDecimal.TEN))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        setUpViewModel(VAL_ASSET.token.id)
+        advanceUntilIdle()
+        viewModel.onAmount1Change(BigDecimal("0.1"))
+        advanceUntilIdle()
+
+        viewModel.optionSelected(100)
+        advanceUntilIdle()
+
+        assertEquals(0, viewModel.addState.value.assetState1!!.amount!!.signum())
+        assertFalse(viewModel.addState.value.btnState.enabled)
+    }
+
+    @Test
+    fun `scaled zero and negative amounts keep supply disabled`() = runTest {
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        setUpViewModel(VAL_ASSET.token.id)
+        advanceUntilIdle()
+        viewModel.onAmount1Change(BigDecimal("0.1"))
+        advanceUntilIdle()
+        assertTrue(viewModel.addState.value.btnState.enabled)
+
+        for (amount in listOf(BigDecimal("0.000"), BigDecimal("-0.1"))) {
+            viewModel.onAmount1Change(amount)
+            advanceUntilIdle()
+            assertFalse(viewModel.addState.value.btnState.enabled)
+        }
+    }
+
+    @Test
+    fun `repeated confirmation submits liquidity only once while pending`() = runTest {
+        val submitted = CompletableDeferred<String>()
+        doSuspendableAnswer { submitted.await() }.whenever(poolsInteractor)
+            .observeAddLiquidity(any(), any(), any(), any(), any(), any(), any())
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(flowOf(true))
+        setUpViewModel(VAL_ASSET.token.id)
+        advanceUntilIdle()
+        viewModel.onAmount1Change(BigDecimal("0.1"))
+        advanceUntilIdle()
+
+        viewModel.onConfirmClick()
+        viewModel.onConfirmClick()
+        advanceUntilIdle()
+        assertTrue(viewModel.addState.value.confirm.btnState.loading)
+        submitted.complete("liquidity-hash")
+        advanceUntilIdle()
+
+        kVerify(poolsInteractor, times(1))
+            .observeAddLiquidity(any(), any(), any(), any(), any(), any(), any())
+        kVerify(assetsRouter, times(1)).showTxDetails("liquidity-hash", true)
+        assertFalse(viewModel.addState.value.confirm.btnState.loading)
     }
 
     @Test

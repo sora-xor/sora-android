@@ -140,6 +140,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private var liquidityDataSubscriptionJob: Job? = null
     private var pairEnabledJob: Job? = null
     private var pairPresentedJob: Job? = null
+    private var submissionJob: Job? = null
     private var liquidityDetails: LiquidityDetails? = null
     private val assets = mutableListOf<Asset>()
     private var hasXorReminderWarningBeenChecked = false
@@ -340,11 +341,11 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 resourceManager.getString(R.string.choose_tokens) to false
             }
 
-            (_addState.value.assetState1?.token != null && amountFrom == BigDecimal.ZERO) -> {
+            (_addState.value.assetState1?.token != null && amountFrom <= BigDecimal.ZERO) -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
 
-            (_addState.value.assetState2?.token != null && amountTo == BigDecimal.ZERO) -> {
+            (_addState.value.assetState2?.token != null && amountTo <= BigDecimal.ZERO) -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
 
@@ -764,12 +765,13 @@ class LiquidityAddViewModel @AssistedInject constructor(
         val tokenTo = _addState.value.assetState2?.token
 
         if (desired == WithDesired.INPUT && tokenFrom != null) {
+            val availableBalance = if (tokenFrom.id == SubstrateOptionsProvider.feeAssetId) {
+                (balance1 - networkFee).max(BigDecimal.ZERO)
+            } else {
+                balance1
+            }
             val amount = PolkaswapFormulas.calculateAmountByPercentage(
-                balance1.apply {
-                    if (tokenFrom.id == SubstrateOptionsProvider.feeAssetId) this.subtract(
-                        networkFee
-                    )
-                },
+                availableBalance,
                 percent.toDouble(), tokenFrom.precision
             )
             _addState.value = _addState.value.copy(
@@ -797,17 +799,21 @@ class LiquidityAddViewModel @AssistedInject constructor(
     }
 
     fun onConfirmClick() {
+        if (submissionJob?.isActive == true || !_addState.value.confirm.btnState.enabled ||
+            _addState.value.confirm.btnState.loading
+        ) return
+
         _addState.value.assetState1?.let { state1 ->
             _addState.value.assetState2?.let { state2 ->
-                viewModelScope.launch {
-                    _addState.value = _addState.value.copy(
-                        confirm = _addState.value.confirm.copy(
-                            btnState = _addState.value.confirm.btnState.copy(
-                                enabled = false,
-                                loading = true,
-                            )
+                _addState.value = _addState.value.copy(
+                    confirm = _addState.value.confirm.copy(
+                        btnState = _addState.value.confirm.btnState.copy(
+                            enabled = false,
+                            loading = true,
                         )
                     )
+                )
+                submissionJob = viewModelScope.launch {
                     var result = ""
                     try {
                         result = poolsInteractor.observeAddLiquidity(

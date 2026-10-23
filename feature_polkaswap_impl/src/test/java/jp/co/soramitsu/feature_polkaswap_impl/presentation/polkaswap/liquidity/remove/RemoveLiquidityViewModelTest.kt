@@ -52,8 +52,10 @@ import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET_ZERO_BALANCE
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -69,8 +71,10 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -174,6 +178,41 @@ class RemoveLiquidityViewModelTest {
         setUpViewModel()
         advanceUntilIdle()
         assertEquals("Enter amount", viewModel.removeState.btnState.text)
+    }
+
+    @Test
+    fun `repeated confirmation removes liquidity only once while pending`() = runTest {
+        val submitted = CompletableDeferred<String>()
+        val poolUpdates = MutableStateFlow(COMMON_POOL_DATA)
+        given(poolsInteractor.subscribePoolCacheOfCurAccount(XOR_ASSET.token.id, VAL_ASSET.token.id))
+            .willReturn(poolUpdates)
+        doSuspendableAnswer { submitted.await() }.whenever(poolsInteractor)
+            .removeLiquidity(any(), any(), any(), any(), any(), any())
+        setUpViewModel()
+        advanceUntilIdle()
+        viewModel.onAmount1Change(BigDecimal("0.5"))
+        advanceUntilIdle()
+
+        viewModel.onConfirmClick()
+        viewModel.onConfirmClick()
+        advanceUntilIdle()
+        assertTrue(viewModel.removeState.confirm.btnState.loading)
+
+        poolUpdates.value = COMMON_POOL_DATA.copy(
+            user = COMMON_POOL_DATA.user!!.copy(poolProvidersBalance = BigDecimal("11")),
+        )
+        advanceUntilIdle()
+        assertTrue(viewModel.removeState.confirm.btnState.loading)
+        assertFalse(viewModel.removeState.confirm.btnState.enabled)
+        viewModel.onConfirmClick()
+        advanceUntilIdle()
+        submitted.complete("removal-hash")
+        advanceUntilIdle()
+
+        verify(poolsInteractor, times(1))
+            .removeLiquidity(any(), any(), any(), any(), any(), any())
+        verify(assetsRouter, times(1)).showTxDetails("removal-hash", true)
+        assertFalse(viewModel.removeState.confirm.btnState.loading)
     }
 
     @Test

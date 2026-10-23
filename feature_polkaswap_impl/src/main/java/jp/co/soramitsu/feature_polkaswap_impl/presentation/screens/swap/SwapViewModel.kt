@@ -81,6 +81,7 @@ import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -138,7 +139,7 @@ class SwapViewModel @AssistedInject constructor(
 
     private val fromAmountFlow = MutableStateFlow(BigDecimal.ZERO)
     private val toAmountFlow = MutableStateFlow(BigDecimal.ZERO)
-    private var isExtrinsicSubmitted = false
+    private var submissionJob: Job? = null
 
     private val property = PropertyValue()
 
@@ -639,7 +640,7 @@ class SwapViewModel @AssistedInject constructor(
             ),
             confirmButtonState = _swapMainState.value.confirmButtonState.copy(
                 text = text2,
-                enabled = enabled2 && !isExtrinsicSubmitted,
+                enabled = enabled2 && submissionJob?.isActive != true,
             )
         )
     }
@@ -948,17 +949,20 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     fun onConfirmClicked() {
-        isExtrinsicSubmitted = true
+        if (submissionJob?.isActive == true || !_swapMainState.value.confirmButtonState.enabled ||
+            _swapMainState.value.confirmButtonState.loading
+        ) return
+
         swapDetails?.let { details ->
             _swapMainState.value.tokenFromState?.let { fromState ->
                 _swapMainState.value.tokenToState?.let { toState ->
-                    viewModelScope.launch {
-                        _swapMainState.value = _swapMainState.value.copy(
-                            confirmButtonState = _swapMainState.value.confirmButtonState.copy(
-                                enabled = false,
-                                loading = true,
-                            )
+                    _swapMainState.value = _swapMainState.value.copy(
+                        confirmButtonState = _swapMainState.value.confirmButtonState.copy(
+                            enabled = false,
+                            loading = true,
                         )
+                    )
+                    submissionJob = viewModelScope.launch {
                         var swapResult = ""
                         try {
                             swapResult = swapInteractor.swap(
