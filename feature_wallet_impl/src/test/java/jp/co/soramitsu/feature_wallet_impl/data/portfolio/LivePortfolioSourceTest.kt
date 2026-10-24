@@ -19,10 +19,14 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioRepository
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.FreshnessKind
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioCalculator
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFreshness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioHolding
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioSnapshot
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.TestTokens
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -43,6 +47,7 @@ class LivePortfolioSourceTest {
     private val savings = SoraAccount("cnSavings", "Savings")
     private val accounts = MutableStateFlow(listOf(main, savings))
     private val current = MutableStateFlow(main)
+    private val connected = MutableStateFlow(true)
 
     private val xorToken: Token = TestTokens.xorToken.copy(isHidable = false, fiatPrice = 0.004, fiatPriceChange = 0.05, fiatSymbol = "$")
     private val valToken: Token = TestTokens.valToken.copy(fiatPrice = 0.1, fiatSymbol = "$")
@@ -72,8 +77,8 @@ class LivePortfolioSourceTest {
         every { nexus.observeWallet("cnMain") } returns mainNexus
         every { nexus.observeWallet("cnSavings") } returns MutableStateFlow(emptyList())
         every { nexus.refresh() } just Runs
-        every { connection.connectionState } returns MutableStateFlow(true)
-        every { connection.isConnected } returns true
+        every { connection.connectionState } returns connected
+        every { connection.isConnected } answers { connected.value }
         LivePortfolioSource(userRepository, assetsRepository, nexus, connection).also { it.clock = { now } }
     }
 
@@ -201,11 +206,35 @@ class LivePortfolioSourceTest {
     }
 
     @Test
+    fun `a read that never answers times out and counts as failed`() = runTest {
+        coEvery { assetsRepository.getAssetsActive("cnSavings") } coAnswers { awaitCancellation() }
+        source.observe().first { it.wallets.isNotEmpty() }
+        now = 5_000L
+        source.refresh(listOf("cnSavings"))
+        assertEquals(LivePortfolioSource.READ_TIMEOUT_MS, testScheduler.currentTime)
+        assertEquals(5_000L, source.lastReads.value["cnSavings"])
+        assertNull(source.observe().first().sync["cnSavings"]!!.refreshedAtMillis)
+    }
+
+    @Test
     fun `an unreachable Nexus network makes the wallet partial`() = runTest {
         mainNexus.value = listOf(nexusRow("cnMain", WalletNetworkId.TAIRA, null))
         val snapshot = source.observe().first { it.addresses["cnMain"].orEmpty().size > 1 }
         assertEquals(setOf(WalletNetworkId.TAIRA), snapshot.sync["cnMain"]!!.unreachable)
         assertNull(snapshot.holding("cnMain", WalletNetworkId.TAIRA, xorToken.id))
+    }
+
+    @Test
+    fun `without a node connection every wallet is offline, the selected one too`() = runTest {
+        connected.value = false
+        val snapshot = loaded()
+        assertFalse(snapshot.connected)
+        val ids = snapshot.wallets.map { it.id }
+        assertEquals(FreshnessKind.OFFLINE, PortfolioCalculator.worstFreshness(snapshot, ids, now)?.kind)
+        assertEquals(FreshnessKind.OFFLINE, PortfolioFreshness.of(snapshot.sync["cnMain"], snapshot.connected, now).kind)
+        connected.value = true
+        val back = source.observe().first { it.connected }
+        assertEquals(FreshnessKind.LIVE, PortfolioFreshness.of(back.sync["cnMain"], back.connected, now).kind)
     }
 
     @Test

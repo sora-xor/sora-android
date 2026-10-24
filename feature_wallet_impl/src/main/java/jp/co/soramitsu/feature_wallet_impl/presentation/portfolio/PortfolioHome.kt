@@ -163,7 +163,7 @@ internal fun PortfolioHero(
         }
         Box(Modifier.padding(top = SkyGeometry.HEIGHT - 22.dp, start = 16.dp, end = 16.dp)) {
             if (model.empty) {
-                EmptyCard(onReceive = actions::onReceive)
+                EmptyCard(model, actions)
             } else {
                 PortfolioHeroCard(model, format, actions)
             }
@@ -212,7 +212,7 @@ private fun ScopeChip(model: PortfolioModel, onClick: () -> Unit, modifier: Modi
 }
 
 @Composable
-private fun EmptyCard(onReceive: () -> Unit) {
+private fun EmptyCard(model: PortfolioModel, actions: PortfolioHomeActions) {
     val n = MaterialTheme.neon
     HeroCard(Modifier.fillMaxWidth()) {
         Column(
@@ -222,6 +222,10 @@ private fun EmptyCard(onReceive: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // An empty list is only "empty" if it could be read: the state says how fresh it is.
+            model.freshness?.let {
+                FreshnessChip(it, model.nowMillis, actions::onFreshness, Modifier.align(Alignment.End))
+            }
             Text(
                 text = stringResource(R.string.portfolio_wallet_ready),
                 style = MaterialTheme.customTypography.headline1,
@@ -244,7 +248,7 @@ private fun EmptyCard(onReceive: () -> Unit) {
                 text = stringResource(R.string.common_receive),
                 // The empty-wallet Receive is one of the two CTAs allowed to pulse (design spec 4.7.2).
                 pulse = true,
-                onClick = onReceive,
+                onClick = actions::onReceive,
             )
         }
     }
