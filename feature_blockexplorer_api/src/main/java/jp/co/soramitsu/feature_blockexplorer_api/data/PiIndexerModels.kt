@@ -66,6 +66,12 @@ data class PiMobileConfig(
      * callers must continue to use runtime/RPC for authoritative balances.
      */
     val typedAccountBalancesAvailable: Boolean = false,
+    /**
+     * False when the indexer predates the capability flags and the config was read with the
+     * older schema. The five capability values above are then not the indexer's answer: they are
+     * never cached and never authorize anything (see ProductionFeatureManager).
+     */
+    val capabilitiesReported: Boolean = true,
 )
 
 data class PiCursorPage<T>(

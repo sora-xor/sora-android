@@ -2229,6 +2229,7 @@ class PolkaswapIndexerClient private constructor(
         polkamarktMutationsAvailable = false,
         tairaDefaultVisible = false,
         typedAccountBalancesAvailable = false,
+        capabilitiesReported = false,
     )
 
     private fun MarketDto.toModel(): PolkamarktMarket {
