@@ -1,6 +1,7 @@
 package jp.co.soramitsu.feature_wallet_impl.domain.portfolio
 
 import java.math.BigDecimal
+import jp.co.soramitsu.common.nexus.WalletNetworkDirectory
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 
 /** Lenses over the portfolio list and the hero fan (portfolio-view SPEC §4). */
@@ -117,9 +118,15 @@ data class PortfolioSnapshot(
     }
 }
 
-/** Networks in display order. Taira is the Nexus testnet; it is shown but never counted. */
-val PORTFOLIO_NETWORKS: List<WalletNetworkId> =
-    listOf(WalletNetworkId.SORA2, WalletNetworkId.MINAMOTO, WalletNetworkId.TAIRA)
+/**
+ * Networks in display order, from the wallet's one network directory: the main network first,
+ * then the other mainnets, then testnets. Taira is the Nexus testnet; it is shown but never counted.
+ */
+val PORTFOLIO_NETWORKS: List<WalletNetworkId>
+    get() = WalletNetworkDirectory.current.let { directory ->
+        val all = WalletNetworkId.entries
+        directory.ordered(all, directory.mainNetwork(all.toSet()))
+    }
 
 val WalletNetworkId.isTestnet: Boolean
-    get() = this == WalletNetworkId.TAIRA
+    get() = WalletNetworkDirectory.current.info(this).isTestnet

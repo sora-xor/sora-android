@@ -69,6 +69,7 @@ import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.nexus.WalletNetworkDirectory
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.presentation.compose.neon.GlassCard
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
@@ -112,16 +113,13 @@ internal object PortfolioPalette {
 internal val isDarkTheme: Boolean
     @Composable get() = MaterialTheme.neon.isDark
 
-/** Network names are proper names; Taira is the Nexus testnet. */
-internal fun networkName(network: WalletNetworkId): String = when (network) {
-    WalletNetworkId.SORA2 -> "SORA2"
-    WalletNetworkId.MINAMOTO -> "Minamoto"
-    WalletNetworkId.TAIRA -> "Taira"
-}
+/** The same proper names the home and the Send/Receive network choices use; never translated. */
+internal fun networkName(network: WalletNetworkId): String =
+    WalletNetworkDirectory.current.info(network).name
 
 private fun networkMonogram(network: WalletNetworkId): String = when (network) {
     WalletNetworkId.SORA2 -> "S2"
-    WalletNetworkId.MINAMOTO -> "MI"
+    WalletNetworkId.MINAMOTO -> "SN"
     WalletNetworkId.TAIRA -> "TA"
 }
 
