@@ -49,11 +49,50 @@ class ProductionFeatureManagerTest {
     }
 
     @Test
-    fun `deployed indexer without capability flags keeps every feature off`() = runTest {
+    fun `an indexer that reports every capability off keeps every feature off`() = runTest {
         coEvery { preferences.getBooleanSnapshot(any()) } returns emptyMap()
         coEvery { indexer.requireMobileConfig() } returns config(enabled = false)
 
         manager().getState().assertAllOff()
+    }
+
+    // An indexer that predates the capability flags (read with the older schema) is not the
+    // authority for them: on the SORA Nexus line the tester defaults or the last complete flag
+    // set stay, nothing is cached and nothing is authorized.
+    @Test
+    fun `an indexer without capability flags keeps the tester defaults and caches nothing`() =
+        runTest {
+            coEvery { preferences.getBooleanSnapshot(any()) } returns emptyMap()
+            coEvery { indexer.requireMobileConfig() } returns
+                config(enabled = false).copy(capabilitiesReported = false)
+
+            val state = manager().getState()
+
+            assertThat(state.nexusAvailable).isTrue()
+            assertThat(state.polkamarktVisible).isTrue()
+            assertThat(state.tairaVisible).isTrue()
+            assertThat(state.nexusSendsAvailable).isFalse()
+            assertThat(state.polkamarktMutationsAvailable).isFalse()
+            coVerify(exactly = 0) { preferences.putBooleans(any()) }
+        }
+
+    @Test
+    fun `an indexer without capability flags keeps the last complete flags`() = runTest {
+        coEvery { preferences.getBooleanSnapshot(any()) } returns mapOf(
+            "pi_mobile_flags_cached_v1" to true,
+            "pi_nexus_available" to true,
+            "pi_polkamarkt_visible" to false,
+            "pi_taira_default_visible" to true,
+        )
+        coEvery { indexer.requireMobileConfig() } returns
+            config(enabled = true).copy(capabilitiesReported = false)
+
+        val state = manager().getState()
+
+        assertThat(state.nexusAvailable).isTrue()
+        assertThat(state.polkamarktVisible).isFalse()
+        assertThat(state.tairaVisible).isTrue()
+        coVerify(exactly = 0) { preferences.putBooleans(any()) }
     }
 
     @Test

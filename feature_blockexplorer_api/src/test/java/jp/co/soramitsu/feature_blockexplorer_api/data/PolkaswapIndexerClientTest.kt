@@ -2004,6 +2004,7 @@ class PolkaswapIndexerClientTest {
         assertThat(config.tairaDefaultVisible).isTrue()
         assertThat(config.nexusSendsAvailable).isFalse()
         assertThat(config.typedAccountBalancesAvailable).isFalse()
+        assertThat(config.capabilitiesReported).isTrue()
     }
 
     @Test
@@ -2024,6 +2025,8 @@ class PolkaswapIndexerClientTest {
             assertThat(config.polkamarktMutationsAvailable).isFalse()
             assertThat(config.tairaDefaultVisible).isFalse()
             assertThat(config.typedAccountBalancesAvailable).isFalse()
+            // The older schema does not report the capabilities; these values are placeholders.
+            assertThat(config.capabilitiesReported).isFalse()
         }
         assertThat(restClient.requests).hasSize(3)
         assertThat(restClient.requests[0].query).contains("nexusAvailable")

@@ -45,6 +45,7 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -85,10 +86,14 @@ class AppSettingsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             tryCatch {
-                val productionState = productionFeatureManager.getState()
+                // Refreshes the PI flags, then shows the switch as the wallet applies it: from
+                // the same snapshot the Nexus portfolio uses. A rejected indexer read (features
+                // off for that read only) then never shows the switch off while Taira is shown.
+                productionFeatureManager.getState()
+                val shown = productionFeatureManager.observeState().first()
                 state = state.copy(
-                    testNetworksAvailable = productionState.tairaAvailable,
-                    testNetworksChecked = productionState.tairaVisible,
+                    testNetworksAvailable = shown.tairaAvailable,
+                    testNetworksChecked = shown.tairaVisible,
                 )
             }
         }

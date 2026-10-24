@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 data class ProductionFeatureState(
     val nexusAvailable: Boolean,
@@ -79,10 +79,10 @@ internal object TairaVisibilityPolicy {
  * - [ReleaseSurfacePolicy] decides which builds offer test networks, the Nexus portfolio and
  *   Polkamarkt at all. On the SORA Nexus line every flavor offers them; where a build does not
  *   (the 3.9.x store policy's production flavor), the PI flags cannot switch them on.
- * - Where they are offered, the PI indexer flags decide. An unreachable indexer keeps the last
- *   complete flag set, or the tester defaults before any was cached. An older indexer without
- *   capability flags, or a rejected `mobileConfig`, turns features off quietly instead of
- *   showing an error.
+ * - Where they are offered, the PI indexer flags decide. An unreachable indexer, or an older one
+ *   without capability flags, keeps the last complete flag set, or the tester defaults before
+ *   any was cached. A rejected `mobileConfig` turns features off for that read, quietly instead
+ *   of showing an error, and is not cached.
  * - A remote default update never overwrites a user's explicit test-network choice.
  */
 @Singleton
@@ -126,19 +126,26 @@ class ProductionFeatureManager internal constructor(
             offlineFallback = PiIndexerOfflineFallbackPolicy.allows(error)
             null
         }
-        val remoteFlags = if (piConfig != null) {
+        // Only an indexer that reports the capability flags is the authority for them. A config
+        // read with the older schema (capabilitiesReported = false) carries placeholders.
+        val reportedConfig = piConfig?.takeIf { it.capabilitiesReported }
+        val remoteFlags = if (reportedConfig != null) {
             val decoded = EmergencyFeatureFlags(
-                nexusAvailable = piConfig.nexusAvailable,
-                nexusSendsAvailable = piConfig.nexusSendsAvailable,
-                polkamarktVisible = piConfig.polkamarktVisible,
-                polkamarktMutationsAvailable = piConfig.polkamarktMutationsAvailable,
-                tairaDefaultVisible = piConfig.tairaDefaultVisible,
+                nexusAvailable = reportedConfig.nexusAvailable,
+                nexusSendsAvailable = reportedConfig.nexusSendsAvailable,
+                polkamarktVisible = reportedConfig.polkamarktVisible,
+                polkamarktMutationsAvailable = reportedConfig.polkamarktMutationsAvailable,
+                tairaDefaultVisible = reportedConfig.tairaDefaultVisible,
             )
             remoteConfigFlags.value = null
             cache(decoded)
             remoteConfigFlags.value = decoded
             decoded
-        } else if (offlineFallback) {
+        } else if (piConfig != null || offlineFallback) {
+            // Offline, or an indexer that predates the capability flags: the last complete flag
+            // set stays, or the tester defaults before any was cached (the SORA Nexus line keeps
+            // its surfaces on screen here). Nothing is cached and nothing is authorized.
+            remoteConfigFlags.value = null
             cachedOrSafeFlags()
         } else {
             INCOMPLETE_CACHE_FLAGS
@@ -156,13 +163,13 @@ class ProductionFeatureManager internal constructor(
             nexusAvailable = flags.nexusAvailable,
             nexusSendsAvailable =
                 LOCAL_NEXUS_SENDS_QUALIFIED &&
-                    piConfig != null &&
+                    reportedConfig != null &&
                     flags.nexusAvailable &&
                     flags.nexusSendsAvailable,
             polkamarktVisible = flags.polkamarktVisible,
             polkamarktMutationsAvailable =
                 LOCAL_POLKAMARKT_MUTATIONS_QUALIFIED &&
-                    piConfig != null &&
+                    reportedConfig != null &&
                     flags.polkamarktVisible &&
                     flags.polkamarktMutationsAvailable,
             tairaAvailable = testNetworksAllowed &&
