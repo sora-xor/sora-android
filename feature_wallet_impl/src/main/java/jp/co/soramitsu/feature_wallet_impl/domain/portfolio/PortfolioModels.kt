@@ -3,6 +3,7 @@ package jp.co.soramitsu.feature_wallet_impl.domain.portfolio
 import java.math.BigDecimal
 import jp.co.soramitsu.common.nexus.WalletNetworkDirectory
 import jp.co.soramitsu.common.nexus.WalletNetworkId
+import jp.co.soramitsu.common.nexus.WalletNetworkTag
 
 /** Lenses over the portfolio list and the hero fan (portfolio-view SPEC §4). */
 enum class PortfolioLens(val key: String) {
@@ -118,15 +119,25 @@ data class PortfolioSnapshot(
     }
 }
 
+/** The wallet's main network, as the directory picks it: listed first and tagged "Main". */
+val PORTFOLIO_MAIN_NETWORK: WalletNetworkId
+    get() = WalletNetworkDirectory.current.mainNetwork(WalletNetworkId.entries.toSet())
+
 /**
  * Networks in display order, from the wallet's one network directory: the main network first,
  * then the other mainnets, then testnets. Taira is the Nexus testnet; it is shown but never counted.
  */
 val PORTFOLIO_NETWORKS: List<WalletNetworkId>
-    get() = WalletNetworkDirectory.current.let { directory ->
-        val all = WalletNetworkId.entries
-        directory.ordered(all, directory.mainNetwork(all.toSet()))
-    }
+    get() = WalletNetworkDirectory.current.ordered(WalletNetworkId.entries, PORTFOLIO_MAIN_NETWORK)
 
 val WalletNetworkId.isTestnet: Boolean
     get() = WalletNetworkDirectory.current.info(this).isTestnet
+
+/**
+ * The directory's tag on a portfolio network row: Main or Testnet. The portfolio only has
+ * balances on networks this build reads, so "Coming soon" (an address and nothing else) never
+ * labels a row here.
+ */
+val WalletNetworkId.portfolioTag: WalletNetworkTag?
+    get() = WalletNetworkDirectory.current.tag(this, PORTFOLIO_MAIN_NETWORK)
+        ?.takeUnless { it == WalletNetworkTag.COMING_SOON }

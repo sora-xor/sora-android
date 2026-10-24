@@ -1069,7 +1069,6 @@
     <item quantity="other">%1$d assets, not included</item>
   </plurals>
   <string name="portfolio_swap_ready" tools:ignore="MissingTranslation">Swap-ready</string>
-  <string name="portfolio_test_tag" tools:ignore="MissingTranslation">TEST</string>
   <string name="portfolio_swap" tools:ignore="MissingTranslation">Swap</string>
   <string name="portfolio_swap_on_polkaswap" tools:ignore="MissingTranslation">Swap on Polkaswap</string>
   <string name="portfolio_open_polkaswap" tools:ignore="MissingTranslation">Open Polkaswap</string>
