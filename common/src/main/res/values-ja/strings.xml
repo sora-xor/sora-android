@@ -794,4 +794,15 @@
   <string name="neon_theme_light">ライト</string>
   <string name="recovery_json_password_help">バックアップを保存したときに設定したパスワードを入力してください。アプリのPINコードとは異なります。</string>
   <string name="account_switching">アカウントを切り替えています…</string>
+  <string name="network_tag_main">メイン</string>
+  <string name="network_tag_coming_soon">近日公開</string>
+  <string name="network_tag_testnet">テストネット</string>
+  <string name="wallet_receive_on">受け取るネットワーク</string>
+  <string name="wallet_send_on">送るネットワーク</string>
+  <string name="wallet_receive_on_notice">アドレスはネットワークごとに異なります。送り手が使うネットワークのアドレスを伝えてください。</string>
+  <string name="wallet_send_on_notice">受取人には、選んだネットワークのアドレスが必要です。</string>
+  <string name="wallet_send_not_live">%1$s での送信は、ネットワークの開始後に利用できます。</string>
+  <string name="wallet_send_paused">%1$s での送信は現在一時停止中です。</string>
+  <string name="network_address_ready">アドレス準備済み</string>
+  <string name="wallet_other_networks">他のネットワークの XOR</string>
 </resources>

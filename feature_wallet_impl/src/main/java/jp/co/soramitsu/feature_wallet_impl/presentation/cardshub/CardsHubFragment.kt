@@ -92,6 +92,9 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.nexus.WalletNetworkAction
+import jp.co.soramitsu.common.nexus.WalletNetworkChoice
+import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyNotice
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyBanner
@@ -239,8 +242,8 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                         onBackupBannerClick = viewModel::onBackupBannerClick,
                         onEdit = viewModel::onEditViewClick,
                         onSora2Receive = viewModel::openSora2Receive,
-                        onSora2Open = viewModel::openSora2Xor,
-                        isSora2WalletCurrent = viewModel::isCurrentSora2Wallet,
+                        onSora2Send = viewModel::openSora2Send,
+                        networkChoices = viewModel::networkChoices,
                         onNexusSend = viewModel::openNexusSend,
                         onNexusRefresh = viewModel::refreshNexusPortfolio,
                         onNexusLoadMore = viewModel::loadMoreNexusHistory,
@@ -282,13 +285,26 @@ private fun CardsMainScreen(
     onBackupBannerClick: () -> Unit,
     onEdit: () -> Unit,
     onSora2Receive: (String) -> Unit,
-    onSora2Open: (String) -> Unit,
-    isSora2WalletCurrent: (String) -> Boolean,
+    onSora2Send: (String) -> Unit,
+    networkChoices: (WalletNetworkAction) -> List<WalletNetworkChoice>,
     onNexusSend: (NexusPortfolioBalance) -> Unit,
     onNexusRefresh: () -> Unit = {},
     onNexusLoadMore: (NexusPortfolioBalance) -> Unit = {},
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
 ) {
+    // One wallet: other networks' XOR are rows of the asset list, and Send and Receive ask which
+    // network only when there is a choice. There is no network mode to switch.
+    val walletNetworks = nexusPortfolio.filter { it.walletId == sora2Portfolio?.address }
+    val networkSheets = rememberNetworkSheetsState(sora2Portfolio?.address)
+    NetworkSheets(
+        state = networkSheets,
+        balances = walletNetworks,
+        isNexusBalanceCurrent = isNexusBalanceCurrent,
+        onSend = onNexusSend,
+        onRecovery = onBackupBannerClick,
+        onRefresh = onNexusRefresh,
+        onLoadMore = onNexusLoadMore,
+    )
     // The selected account cannot sign on this phone: its name carries the Read-only chip, and
     // the notice below says why and offers the repair (Account options).
     val accountReadOnly = LocalSelectedAccountReadOnly.current
@@ -313,32 +329,30 @@ private fun CardsMainScreen(
                 onRepair = onBackupBannerClick,
             )
         }
+        WalletSendReceive(
+            modifier = Modifier.padding(bottom = 16.dp),
+            networkChoices = networkChoices,
+            onOpen = { action, choice ->
+                if (choice.id == WalletNetworkId.SORA2) {
+                    if (action == WalletNetworkAction.SEND) onSora2Send(choice.address)
+                    else onSora2Receive(choice.address)
+                } else {
+                    walletNetworks.firstOrNull {
+                        it.networkId == choice.id && it.address == choice.address && isNexusBalanceCurrent(it)
+                    }?.let { balance ->
+                        if (action == WalletNetworkAction.SEND) onNexusSend(balance)
+                        else networkSheets.openReceive(balance)
+                    }
+                }
+            },
+        )
         if (state.loading) {
             CircularProgressIndicator(
                 color = MaterialTheme.customColors.fgPrimary,
             )
         }
-        val networkSection: @Composable () -> Unit = {
-        if (sora2Portfolio != null || nexusPortfolio.isNotEmpty()) {
-            NexusPortfolioCard(
-                sora2 = sora2Portfolio,
-                balances = nexusPortfolio,
-                onSora2Receive = onSora2Receive,
-                onSora2Open = onSora2Open,
-                isSora2WalletCurrent = isSora2WalletCurrent,
-                onSend = onNexusSend,
-                onRefresh = onNexusRefresh,
-                onLoadMore = onNexusLoadMore,
-                isNexusBalanceCurrent = isNexusBalanceCurrent,
-                onRecovery = onBackupBannerClick,
-            )
-            Spacer(modifier = Modifier.size(size = 16.dp))
-        }
-        }
         val orderedCards = state.cards.sortedBy { if (it is TitledAmountCardState) 0 else 1 }
-        val firstBanner = orderedCards.indexOfFirst { it !is TitledAmountCardState }
-        orderedCards.forEachIndexed { index, cardState ->
-            if (index == firstBanner) networkSection()
+        orderedCards.forEach { cardState ->
             when (cardState) {
                 is TitledAmountCardState -> {
                     CommonHubCard(
@@ -350,10 +364,18 @@ private fun CardsMainScreen(
                         onCollapseClick = cardState.onCollapseClick
                     ) {
                         when (cardState.state) {
-                            is FavoriteAssetsCardState -> AssetsCard(
-                                cardState.state as FavoriteAssetsCardState,
-                                onAssetClick,
-                            )
+                            is FavoriteAssetsCardState -> {
+                                AssetsCard(
+                                    cardState.state as FavoriteAssetsCardState,
+                                    onAssetClick,
+                                )
+                                NetworkAssetRows(
+                                    balances = walletNetworks.filter(isNexusBalanceCurrent),
+                                    xorIcon = sora2Portfolio?.xorIcon,
+                                    xorName = sora2Portfolio?.xorName,
+                                    onOpen = networkSheets::openActivity,
+                                )
+                            }
                             is FavoritePoolsCardState -> PoolsList(
                                 (cardState.state as FavoritePoolsCardState).state,
                                 onPoolClick,
@@ -380,8 +402,6 @@ private fun CardsMainScreen(
             }
             Spacer(modifier = Modifier.size(size = 16.dp))
         }
-
-        if (firstBanner == -1) networkSection()
 
         if (state.cards.isNotEmpty())
             BleachedButton(
@@ -485,8 +505,8 @@ private fun PreviewCardsMainScreen() {
             onBackupBannerClick = {},
             onEdit = {},
             onSora2Receive = {},
-            onSora2Open = {},
-            isSora2WalletCurrent = { true },
+            onSora2Send = {},
+            networkChoices = { emptyList() },
             onNexusSend = {},
             isNexusBalanceCurrent = { true },
         )

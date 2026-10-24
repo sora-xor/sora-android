@@ -342,9 +342,12 @@ class WalletUxAcceptanceTest {
             scenario.onActivity { activity ->
                 activity.setContent {
                     SoraAppTheme {
-                        NexusPortfolioCard(Sora2PortfolioBalance(network.walletId, "125.25"), listOf(network),
-                            {}, {}, { true }, { selected -> send.value = NexusSendUiState(visible = true, network = selected) },
-                            { it.walletId == network.walletId }, {})
+                        OtherNetworksCard(
+                            balances = listOf(network), xorIcon = null, xorName = null,
+                            isNexusBalanceCurrent = { it.walletId == network.walletId },
+                            onSend = { selected -> send.value = NexusSendUiState(visible = true, network = selected) },
+                            onRecovery = {}, onRefresh = {}, onLoadMore = {}, walletId = network.walletId,
+                        )
                         NexusSendDialog(send.value, { send.value = NexusSendUiState() }, {}, {}, {}, {}, {}, {}, {})
                     }
                 }
@@ -363,6 +366,57 @@ class WalletUxAcceptanceTest {
             waitUntil { findText("Send XOR") != null }
             assertEquals(network, send.value.network)
             capture("network-to-send")
+        }
+    }
+
+    @Test fun sendAndReceiveAskWhichNetworkOnlyWhenThereIsAChoice() {
+        val taira = sampleNetwork()
+        val opened = mutableListOf<Pair<WalletNetworkAction, WalletNetworkId>>()
+        val directory = WalletNetworkDirectory.current
+        fun choices(action: WalletNetworkAction, withTaira: Boolean) = WalletNetworkChoices.make(
+            action = action,
+            addresses = mapOf(WalletNetworkId.SORA2 to "cnSampleSora2AddressForLayoutOnly", WalletNetworkId.MINAMOTO to "nexusSampleAddressForLayoutOnly") +
+                (if (withTaira) mapOf(WalletNetworkId.TAIRA to taira.address) else emptyMap()),
+            balances = mapOf(WalletNetworkId.SORA2 to "120.5", WalletNetworkId.TAIRA to "125.25"),
+            canSend = { it != WalletNetworkId.MINAMOTO },
+            directory = directory,
+        )
+        val withTaira = mutableStateOf(true)
+        ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                activity.setContent {
+                    SoraAppTheme {
+                        WalletSendReceive(
+                            networkChoices = { choices(it, withTaira.value) },
+                            onOpen = { action, choice -> opened += action to choice.id },
+                        )
+                    }
+                }
+            }
+            waitUntil { findText("Receive") != null }
+            clickText("Receive")
+            waitUntil { findText("Receive on") != null }
+            assertNotNull(findText("Main"))
+            assertNotNull(findText("Coming soon"))
+            assertNotNull(findText("Testnet"))
+            capture("network-choice-receive")
+            clickText("Taira")
+            waitUntil { opened.isNotEmpty() }
+            assertEquals(WalletNetworkAction.RECEIVE to WalletNetworkId.TAIRA, opened.last())
+            // The sample Taira address contains "Send": wait until the sheet has closed.
+            waitUntil { findText("Receive on") == null }
+            clickText("Send")
+            waitUntil { findText("Send on") != null }
+            assertNotNull(findText("Sending on SORA Nexus starts when the network launches."))
+            capture("network-choice-send")
+            clickText("Close")
+            waitUntil { findText("Send on") == null }
+            // Without Taira only SORA2 is live: Send opens it straight away.
+            withTaira.value = false
+            instrumentation.waitForIdleSync()
+            clickText("Send")
+            waitUntil { opened.size == 2 }
+            assertEquals(WalletNetworkAction.SEND to WalletNetworkId.SORA2, opened.last())
         }
     }
 

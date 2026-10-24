@@ -45,6 +45,10 @@ import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.nexus.NexusQuantityContract
+import jp.co.soramitsu.common.nexus.WalletNetworkAction
+import jp.co.soramitsu.common.nexus.WalletNetworkChoice
+import jp.co.soramitsu.common.nexus.WalletNetworkChoices
+import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
@@ -130,6 +134,9 @@ internal fun NexusSendUiState.acceptsScan(scan: NexusRecipientScan, generation: 
 data class Sora2PortfolioBalance(
     val address: String,
     val xorQuantity: String?,
+    /** XOR's icon and name, for other networks' XOR rows in the same asset list. */
+    val xorIcon: String? = null,
+    val xorName: String? = null,
 )
 
 @HiltViewModel
@@ -211,6 +218,8 @@ class CardsHubViewModel @Inject constructor(
                             xorQuantity = asset?.balance?.transferable
                                 ?.stripTrailingZeros()
                                 ?.toPlainString(),
+                            xorIcon = asset?.token?.iconUri(),
+                            xorName = asset?.token?.name,
                         )
                     }.onStart {
                         // Replace the previous wallet row before waiting for
@@ -510,6 +519,27 @@ class CardsHubViewModel @Inject constructor(
 
     fun openSora2Receive(walletId: String) {
         if (isCurrentSora2Wallet(walletId)) router.openQrCodeFlow()
+    }
+
+    fun openSora2Send(walletId: String) {
+        if (isCurrentSora2Wallet(walletId)) assetsRouter.showContacts(SubstrateOptionsProvider.feeAssetId)
+    }
+
+    /**
+     * What Send or Receive can offer for the selected wallet, main network first. Only that
+     * wallet's rows count: account selection is a privacy boundary.
+     */
+    fun networkChoices(action: WalletNetworkAction): List<WalletNetworkChoice> {
+        val sora2 = _sora2Portfolio.value?.takeIf { isCurrentSora2Wallet(it.address) } ?: return emptyList()
+        val nexus = _nexusPortfolio.value.filter { it.walletId == sora2.address }
+        val addresses = mapOf(WalletNetworkId.SORA2 to sora2.address) +
+            nexus.associate { it.networkId to it.address }
+        val balances = buildMap {
+            sora2.xorQuantity?.let { put(WalletNetworkId.SORA2, it) }
+            nexus.forEach { balance -> balance.xorQuantity?.let { put(balance.networkId, it) } }
+        }
+        val sendable = nexus.filter { it.sendAvailable }.mapTo(mutableSetOf(WalletNetworkId.SORA2)) { it.networkId }
+        return WalletNetworkChoices.make(action, addresses, balances, canSend = { it in sendable })
     }
 
     fun openSora2Xor(walletId: String) {
