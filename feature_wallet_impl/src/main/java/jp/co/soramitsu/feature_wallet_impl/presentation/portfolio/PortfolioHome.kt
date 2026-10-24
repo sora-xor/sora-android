@@ -643,7 +643,7 @@ private fun ChangeBadge(change: Double?, format: PortfolioFormat) {
     val n = MaterialTheme.neon
     val up = change > 0
     Text(
-        text = (if (up) "▲ " else "▼ ") + format.percent(change),
+        text = (if (up) "▲ " else "▼ ") + format.signedPercent(change),
         style = MaterialTheme.customTypography.textXSBold,
         color = if (up) n.success else n.error,
         maxLines = 1,
@@ -704,7 +704,7 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TokenOrb(token.iconUri, token.symbol, 40.dp)
+            TokenOrb(token.iconUri, 40.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -779,7 +779,7 @@ internal fun HoldingRow(
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (showToken) TokenOrb(holding.token.iconUri, holding.token.symbol, 30.dp) else NetworkBadge(holding.network, 30.dp)
+        if (showToken) TokenOrb(holding.token.iconUri, 30.dp) else NetworkBadge(holding.network, 30.dp)
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -895,7 +895,7 @@ private fun NetworkRow(model: PortfolioModel, group: PortfolioGroup, format: Por
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        TokenOrb(token.iconUri, token.symbol, 30.dp)
+                        TokenOrb(token.iconUri, 30.dp)
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
                             Text(token.symbol, style = MaterialTheme.customTypography.textMBold, color = n.textPrimary)

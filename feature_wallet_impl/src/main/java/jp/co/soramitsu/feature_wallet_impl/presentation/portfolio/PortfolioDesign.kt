@@ -41,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -102,18 +101,6 @@ internal object PortfolioPalette {
     val nightBottom = Color(0xFF1B0C24)
     val dawnTop = Color(0xFFFFF6FA)
     val dawnBottom = Color(0xFFFFE3EE)
-
-    /** A token's monogram colour: the main SORA tokens' own colours, others by name. */
-    fun monogram(symbol: String): Color = when (symbol.uppercase()) {
-        "XOR" -> Color(0xFFE2242F)
-        "VAL" -> Color(0xFFD9A321)
-        "PSWAP" -> Color(0xFFFF0066)
-        "XSTUSD" -> Color(0xFF2F9E73)
-        "XST" -> Color(0xFF5B5F73)
-        "ETH" -> Color(0xFF627EEA)
-        "DAI" -> Color(0xFFE5A92E)
-        else -> slots[Math.floorMod(symbol.uppercase().hashCode(), slots.size)]
-    }
 
     fun network(network: WalletNetworkId): Color = when (network) {
         WalletNetworkId.SORA2 -> Color(0xFFE2242F)
@@ -296,57 +283,13 @@ internal fun WalletDots(colors: List<Color>, modifier: Modifier = Modifier) {
 }
 
 /**
- * A token's icon. Without one (the whitelist has not been read yet, or the token has none) it is
- * a monogram orb in the token's colour rather than the generic question mark.
+ * A token's icon from the app's own icon source (the whitelist icons the asset list and asset
+ * details show); a token without one shows the app's default token icon, as everywhere else.
  */
 @Composable
-internal fun TokenOrb(iconUri: String?, symbol: String, size: Dp, modifier: Modifier = Modifier) {
+internal fun TokenOrb(iconUri: String?, size: Dp, modifier: Modifier = Modifier) {
     Box(modifier.size(size).clip(CircleShape), contentAlignment = Alignment.Center) {
-        if (iconUri.isNullOrBlank() || iconUri == DEFAULT_ICON_URI) {
-            TokenMonogram(symbol, size)
-        } else {
-            TokenIcon(uri = iconUri, size = size)
-        }
-    }
-}
-
-@Composable
-private fun TokenMonogram(symbol: String, size: Dp) {
-    val color = PortfolioPalette.monogram(symbol)
-    val text = symbol.take(4).uppercase()
-    val scale = when (text.length) {
-        1, 2 -> 0.38f
-        3 -> 0.30f
-        else -> 0.24f
-    }
-    Box(
-        Modifier
-            .size(size)
-            .drawBehind {
-                // A lit sphere: light from the upper left, the token's colour, a darker rim.
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        0f to lerp(color, Color.White, 0.32f),
-                        0.6f to color,
-                        1f to lerp(color, Color.Black, 0.38f),
-                        center = Offset(this.size.width * 0.36f, this.size.height * 0.3f),
-                        radius = this.size.minDimension * 0.8f,
-                    ),
-                )
-            }
-            .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            color = Color.White,
-            maxLines = 1,
-            style = MaterialTheme.customTypography.textXSBold.copy(
-                fontSize = (size.value * scale).sp,
-                lineHeight = (size.value * scale * 1.15f).sp,
-                fontWeight = FontWeight.Bold,
-            ),
-        )
+        TokenIcon(uri = iconUri ?: DEFAULT_ICON_URI, size = size)
     }
 }
 

@@ -348,7 +348,7 @@ private fun Orbit(
                 .border(2.dp, Color.White.copy(alpha = 0.35f), CircleShape)
                 .semantics { hideFromAccessibility() }
         ) {
-            TokenOrb(locations.token.iconUri, locations.token.symbol, 76.dp)
+            TokenOrb(locations.token.iconUri, 76.dp)
         }
         // Links and satellites.
         Box(
@@ -503,7 +503,7 @@ private fun TokenHeader(model: PortfolioModel, locations: TokenLocations, format
             token.change24h?.takeIf { kotlin.math.abs(it) >= 0.0005 && !testnetOnly }?.let { change ->
                 val up = change > 0
                 Text(
-                    (if (up) "▲ " else "▼ ") + format.percent(change),
+                    (if (up) "▲ " else "▼ ") + format.signedPercent(change),
                     style = NeonType.amountM,
                     color = if (up) n.success else n.error,
                 )
