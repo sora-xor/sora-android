@@ -42,6 +42,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
@@ -69,6 +70,8 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 
 @RunWith(MockitoJUnitRunner::class)
 @ExperimentalCoroutinesApi
@@ -133,9 +136,25 @@ class WalletInteractorTest {
     }
 
     @Test
+    fun `a submitted claim is checked for the current account`() = runTest {
+        val outcome = jp.co.soramitsu.common.domain.TransactionOutcome.Waiting(
+            txHash = "0xhash",
+            acceptedByNode = true,
+        )
+        given(walletRepository.checkSubmittedClaim("address", "0xhash")).willReturn(outcome)
+
+        assertEquals(outcome, interactor.checkSubmittedClaim("0xhash"))
+    }
+
+    @Test
     fun `find other users`() = runTest {
         given(runtimeManager.isAddressOk(anyString())).willReturn(true)
-        given(transactionHistoryRepository.getContacts(anyString())).willReturn(
+        given(
+            transactionHistoryRepository.getContacts(
+                soraAccount.substrateAddress,
+                "use",
+            )
+        ).willReturn(
             setOf(
                 "contact1",
                 "contact2"
@@ -147,7 +166,12 @@ class WalletInteractorTest {
     @Test
     fun `migrate extrinsic`() = runTest {
         given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
-        val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
+        given(walletRepository.needsMigration(irohaData.address)).willReturn(true)
+        val kp = Sr25519Keypair(
+            ByteArray(32) { 1 },
+            ByteArray(32) { 2 },
+            ByteArray(32) { 3 },
+        )
         given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(kp)
         given(
             walletRepository.migrate(
@@ -164,84 +188,37 @@ class WalletInteractorTest {
             "justification",
             BlockEntry("header", listOf("0x112323345", "0x35456472"))
         )
-        assertEquals(true, interactor.migrate())
+        assertEquals(TransactionOutcome.Confirmed("", ""), interactor.migrate())
+        verify(walletRepository).needsMigration(irohaData.address)
+        verify(walletRepository).migrate(
+            irohaData.address,
+            irohaData.publicKey,
+            irohaData.claimSignature,
+            kp,
+            soraAccount.substrateAddress,
+        )
+        assertEquals(true, kp.privateKey.all { it == 0.toByte() })
+        assertEquals(true, kp.nonce.all { it == 0.toByte() })
     }
 
-//    @Ignore
-//    @Test
-//    fun `poll while pending EXPECT polling is continued until status is not changed`() =
-//        runTest {
-//            `when`(walletRepository.getSoraCardInfo())
-//                .thenReturn(
-//                    SoraCardInformation(
-//                        accessToken = "accessToken",
-//                        accessTokenExpirationTime = System.currentTimeMillis() + 1_000,
-//                        kycStatus = "${SoraCardCommonVerification.Pending}"
-//                    )
-//                )
-//                .thenReturn(
-//                    SoraCardInformation(
-//                        accessToken = "accessToken",
-//                        accessTokenExpirationTime = System.currentTimeMillis() + 31_000,
-//                        kycStatus = "${SoraCardCommonVerification.Successful}"
-//                    )
-//                )
-//
-//            given(kycRepository.getKycLastFinalStatus(any()))
-//                .willReturn(
-//                    Result.success(SoraCardCommonVerification.Successful)
-//                )
-//
-//            verify(walletRepository, times(2))
-//                .getSoraCardInfo()
-//            verify(kycRepository, times(1))
-//                .getKycLastFinalStatus(any())
-//            verify(walletRepository, times(1))
-//                .updateSoraCardKycStatus(SoraCardCommonVerification.Successful.toString())
-//        }
-//
-//    @Ignore
-//    @Test
-//    fun `poll with exception EXPECT polling is continued until status is not changed`() =
-//        runTest {
-//            `when`(walletRepository.getSoraCardInfo())
-//                .thenReturn(
-//                    SoraCardInformation(
-//                        accessToken = "accessToken",
-//                        accessTokenExpirationTime = System.currentTimeMillis() + 1_000,
-//                        kycStatus = "${SoraCardCommonVerification.Pending}"
-//                    )
-//                )
-//                .thenReturn(
-//                    SoraCardInformation(
-//                        accessToken = "accessToken",
-//                        accessTokenExpirationTime = System.currentTimeMillis() + 1_500,
-//                        kycStatus = "${SoraCardCommonVerification.Pending}"
-//                    )
-//                )
-//                .thenReturn(
-//                    SoraCardInformation(
-//                        accessToken = "accessToken",
-//                        accessTokenExpirationTime = System.currentTimeMillis() + 31_000,
-//                        kycStatus = "${SoraCardCommonVerification.Successful}"
-//                    )
-//                )
-//
-//            `when`(kycRepository.getKycLastFinalStatus(any()))
-//                .thenReturn(
-//                    Result.failure(RuntimeException())
-//                )
-//                .thenReturn(
-//                    Result.success(SoraCardCommonVerification.Successful)
-//                )
-//
-//            verify(walletRepository, times(3))
-//                .getSoraCardInfo()
-//            verify(kycRepository, times(2))
-//                .getKycLastFinalStatus(any())
-//            verify(walletRepository, times(1))
-//                .updateSoraCardKycStatus(SoraCardCommonVerification.Successful.toString())
-//        }
+    @Test
+    fun `migrate rechecks authoritative account state before loading the signing key`() = runTest {
+        given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
+        given(walletRepository.needsMigration(irohaData.address)).willReturn(false)
+
+        // Nothing to send: the network already has the claim.
+        assertEquals(null, interactor.migrate())
+
+        verify(userRepository).saveNeedsMigration(false, soraAccount)
+        verify(credentialsRepository, never()).retrieveKeyPair(soraAccount)
+        verify(walletRepository, never()).migrate(
+            anyString(),
+            anyString(),
+            anyString(),
+            any(),
+            anyString(),
+        )
+    }
 
     private fun accountList() = listOf(
         "use", "contact1", "contact2",

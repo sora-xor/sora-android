@@ -42,6 +42,7 @@ import android.widget.Toast
 import androidx.annotation.DimenRes
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import jp.co.soramitsu.common.domain.ResponseCode
@@ -92,8 +93,10 @@ fun Fragment.dp2px(dp: Int): Int =
 fun Fragment.dpRes2px(@DimenRes res: Int): Int =
     requireContext().resources.getDimensionPixelSize(res)
 
-fun <T : Parcelable> Fragment.requireParcelable(key: String): T {
-    return requireNotNull(requireArguments().getParcelable(key), { "Argument [$key] not found" })
+inline fun <reified T : Parcelable> Fragment.requireParcelable(key: String): T {
+    return requireNotNull(
+        BundleCompat.getParcelable(requireArguments(), key, T::class.java),
+    ) { "Argument [$key] not found" }
 }
 
 fun Fragment.runDelayed(
@@ -116,9 +119,9 @@ fun Fragment.openSoftKeyboard(view: View) {
 }
 
 fun Fragment.setStatusBarColor(color: Color) {
-    this.requireActivity().window.statusBarColor = color.toArgb()
+    this.requireActivity().window.setStatusBarColorCompat(color.toArgb())
 }
 
 fun Fragment.setNavbarColor(color: Color) {
-    this.requireActivity().window.navigationBarColor = color.toArgb()
+    this.requireActivity().window.setNavigationBarColorCompat(color.toArgb())
 }

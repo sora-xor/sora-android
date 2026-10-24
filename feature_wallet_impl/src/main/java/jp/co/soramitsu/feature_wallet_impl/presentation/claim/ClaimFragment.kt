@@ -34,15 +34,12 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.claim
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
@@ -54,9 +51,16 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
 
 @AndroidEntryPoint
 class ClaimFragment : SoraBaseFragment<ClaimViewModel>() {
+
+    /**
+     * The claim signs with the selected account. When that account cannot sign on this phone, the
+     * screen says so above the form and offers the repair (`SoraBaseFragment`).
+     */
+    override val explainsReadOnlyAccount: Boolean = true
 
     override val viewModel: ClaimViewModel by viewModels()
 
@@ -72,12 +76,7 @@ class ClaimFragment : SoraBaseFragment<ClaimViewModel>() {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.BottomCenter
             ) {
-                Image(
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.FillBounds,
-                    painter = painterResource(id = R.drawable.bg_image),
-                    contentDescription = ""
-                )
+                NeonBackground()
                 viewModel.claimScreenState.observeAsState().value?.let {
                     ClaimScreen(
                         claimState = it,
@@ -104,8 +103,6 @@ class ClaimFragment : SoraBaseFragment<ClaimViewModel>() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.checkMigrationIsAlreadyFinished()
-    }
+    // SoraBaseFragment tells the view model when this screen comes to the front and when it
+    // leaves it. Nothing is followed, and the screen is not closed, while it is not in front.
 }

@@ -42,17 +42,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.OptionSwitch
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
-internal fun AppSettingsScreen(
+fun AppSettingsScreen(
     checkedSystem: Boolean,
     checkedDark: Boolean,
+    testNetworksAvailable: Boolean,
+    checkedTestNetworks: Boolean,
     onSystemToggle: (Boolean) -> Unit,
     onDarkToggle: (Boolean) -> Unit,
+    onTestNetworksToggle: (Boolean) -> Unit,
+    checkedReduceEffects: Boolean = false,
+    onReduceEffectsToggle: (Boolean) -> Unit = {},
 ) {
     ContentCard {
         Column(
@@ -64,22 +69,53 @@ internal fun AppSettingsScreen(
                 color = MaterialTheme.customColors.fgSecondary,
                 maxLines = 1,
             )
-            OptionSwitch(
-                icon = null,
-                label = stringResource(id = R.string.system_appearance),
-                bottomDivider = false,
-                available = true,
-                checked = checkedSystem,
-                onClick = onSystemToggle,
+            jp.co.soramitsu.common.presentation.compose.neon.NeonSegments(
+                labels = listOf(stringResource(R.string.neon_theme_system),
+                    stringResource(R.string.neon_theme_dark), stringResource(R.string.neon_theme_light)),
+                selected = if (checkedSystem) 0 else if (checkedDark) 1 else 2,
+                onSelect = { choice ->
+                    when (choice) {
+                        0 -> onSystemToggle(true)
+                        1 -> onDarkToggle(true)
+                        2 -> onDarkToggle(false)
+                    }
+                },
+                modifier = Modifier.padding(vertical = Dimens.x2),
             )
             OptionSwitch(
                 icon = null,
-                label = stringResource(id = R.string.dark_mode),
+                label = stringResource(id = R.string.appearance_reduce_effects),
                 bottomDivider = false,
                 available = true,
-                checked = checkedDark,
-                onClick = onDarkToggle,
+                checked = checkedReduceEffects,
+                onClick = onReduceEffectsToggle,
             )
+            Text(
+                text = stringResource(id = R.string.appearance_reduce_effects_description),
+                style = MaterialTheme.customTypography.paragraphXS,
+                color = MaterialTheme.customColors.fgSecondary,
+            )
+            if (testNetworksAvailable) {
+                Text(
+                    text = stringResource(id = R.string.networks_title).uppercase(),
+                    style = MaterialTheme.customTypography.headline4,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    maxLines = 1,
+                )
+                OptionSwitch(
+                    icon = null,
+                    label = stringResource(id = R.string.test_networks),
+                    bottomDivider = false,
+                    available = true,
+                    checked = checkedTestNetworks,
+                    onClick = onTestNetworksToggle,
+                )
+                Text(
+                    text = stringResource(id = R.string.test_networks_description),
+                    style = MaterialTheme.customTypography.paragraphXS,
+                    color = MaterialTheme.customColors.fgSecondary,
+                )
+            }
         }
     }
 }
@@ -90,7 +126,10 @@ private fun PreviewAppSettingsScreen() {
     AppSettingsScreen(
         checkedSystem = false,
         checkedDark = false,
+        testNetworksAvailable = true,
+        checkedTestNetworks = true,
         onSystemToggle = { },
         onDarkToggle = { },
+        onTestNetworksToggle = { },
     )
 }

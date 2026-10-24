@@ -53,13 +53,14 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.ext.highlightWordsCompose
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -152,6 +153,9 @@ internal fun ClaimScreen(
                         size = Size.Large,
                         order = Order.PRIMARY,
                         text = stringResource(id = R.string.common_confirm),
+                        // An account that cannot sign here cannot claim; the notice above the
+                        // screen says why and offers the repair.
+                        enabled = !LocalSelectedAccountReadOnly.current,
                         onClick = onSubmitClicked
                     )
                 }

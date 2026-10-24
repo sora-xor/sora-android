@@ -49,12 +49,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.neon.InputText
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateAccountState
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.SafeFilledButton as FilledButton
+import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
-import jp.co.soramitsu.ui_core.component.input.InputText
+import jp.co.soramitsu.common.presentation.compose.neon.SafeContentCard as ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -107,16 +108,24 @@ fun CreateAccountScreen(
                 color = MaterialTheme.customColors.fgSecondary
             )
 
-            FilledButton(
+            // While an import runs (keys are derived, a backup file is opened) the button
+            // shows a progress indicator instead of looking frozen.
+            LoaderWrapper(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = Dimens.x3),
-                size = Size.Large,
-                order = Order.PRIMARY,
-                text = stringResource(id = R.string.common_continue),
-                onClick = onNextClicked,
-                enabled = createAccountState.btnEnabled,
-            )
+                loading = createAccountState.loading,
+                loaderSize = Size.Large,
+            ) { modifier, _ ->
+                FilledButton(
+                    modifier = modifier.fillMaxWidth(),
+                    size = Size.Large,
+                    order = Order.PRIMARY,
+                    text = stringResource(id = R.string.common_continue),
+                    onClick = onNextClicked,
+                    enabled = createAccountState.btnEnabled,
+                )
+            }
         }
     }
 }

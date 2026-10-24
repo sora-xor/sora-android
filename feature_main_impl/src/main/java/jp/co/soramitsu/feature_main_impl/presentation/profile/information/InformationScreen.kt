@@ -48,7 +48,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.compose.components.Option
 import jp.co.soramitsu.common.util.ext.removeWebPrefix
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @Composable

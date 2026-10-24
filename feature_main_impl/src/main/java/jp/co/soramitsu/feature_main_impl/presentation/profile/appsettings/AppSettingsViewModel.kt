@@ -43,19 +43,24 @@ import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class AppSettingsViewModel @Inject constructor(
     private val mainRouter: MainRouter,
-    private val darkThemeManager: DarkThemeManager
+    private val darkThemeManager: DarkThemeManager,
+    private val productionFeatureManager: ProductionFeatureManager,
 ) : BaseViewModel() {
 
     internal var state by mutableStateOf(
         AppSettingsState(
             systemAppearanceChecked = false,
             darkModeChecked = false,
+            testNetworksAvailable = false,
+            testNetworksChecked = false,
         )
     )
         private set
@@ -72,6 +77,24 @@ class AppSettingsViewModel @Inject constructor(
                         darkModeChecked = it.isDarkModeEnabled,
                         systemAppearanceChecked = it.isSystemDrivenUiEnabled
                     )
+            }
+        }
+        viewModelScope.launch {
+            darkThemeManager.reduceEffectsFlow.collectLatest {
+                state = state.copy(reduceEffectsChecked = it)
+            }
+        }
+        viewModelScope.launch {
+            tryCatch {
+                // Refreshes the PI flags, then shows the switch as the wallet applies it: from
+                // the same snapshot the Nexus portfolio uses. A rejected indexer read (features
+                // off for that read only) then never shows the switch off while Taira is shown.
+                productionFeatureManager.getState()
+                val shown = productionFeatureManager.observeState().first()
+                state = state.copy(
+                    testNetworksAvailable = shown.tairaAvailable,
+                    testNetworksChecked = shown.tairaVisible,
+                )
             }
         }
     }
@@ -99,6 +122,22 @@ class AppSettingsViewModel @Inject constructor(
                 systemAppearanceChecked = false,
                 darkModeChecked = checked,
             )
+        }
+    }
+
+    fun toggleReduceEffects(checked: Boolean) {
+        viewModelScope.launch {
+            tryCatch { darkThemeManager.setReduceEffects(checked) }
+        }
+    }
+
+    fun toggleTestNetworks(checked: Boolean) {
+        if (!state.testNetworksAvailable) return
+        viewModelScope.launch {
+            tryCatch {
+                productionFeatureManager.setTairaVisible(checked)
+                state = state.copy(testNetworksChecked = checked)
+            }
         }
     }
 }

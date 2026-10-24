@@ -42,6 +42,12 @@ interface WalletRouter {
 
     fun popBackStackFragment()
 
+    /**
+     * Closes the legacy claim screen, and only that screen: nothing happens while another screen
+     * is on top of it (for example the PIN lock shown after the app was in the background).
+     */
+    fun closeClaimScreen()
+
     fun showContactsFilled(tokenId: String, address: String)
 
     fun showAssetSettings()

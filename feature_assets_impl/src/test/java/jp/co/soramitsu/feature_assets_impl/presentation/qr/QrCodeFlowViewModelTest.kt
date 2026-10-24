@@ -37,6 +37,7 @@ import android.graphics.drawable.PictureDrawable
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
@@ -53,6 +54,7 @@ import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.io.FileManager
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -139,18 +141,7 @@ class QrCodeFlowViewModelTest {
         every { walletRouter.showValTransferAmount(any(), any(), any()) } returns Unit
         every { clipboardManager.addToClipboard(any(), any()) } returns Unit
 
-        viewModel = QRCodeFlowViewModel(
-            interactor = assetsInteractor,
-            qrCodeInteractor = qrCodeInteractor,
-            coroutineManager = coroutineManager,
-            qrCodeGenerator = qrCodeGenerator,
-            avatarGenerator = avatarGenerator,
-            clipboardManager = clipboardManager,
-            numbersFormatter = numbersFormatter,
-            resourceManager = resourceManager,
-            fileManager = fileManager,
-            walletRouter = walletRouter,
-        )
+        viewModel = createViewModel()
     }
 
     @Test
@@ -187,6 +178,44 @@ class QrCodeFlowViewModelTest {
             Assert.assertEquals(
                 viewModel.requestTokenScreenState.value.assetAmountInputState?.amount,
                 viewModel.requestTokenConfirmScreenState.value.assetAmountInputState?.amount
+            )
+        }
+
+    @Test
+    fun `WHEN user opens confirmation screen without amount EXPECT QR input has null amount`() =
+        runTest {
+            advanceUntilIdle()
+            viewModel.onLoadRequestConfirmScreenDataAgainClick()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) {
+                qrCodeInteractor.createQrInput(
+                    userAddress = "this is sora substrate address",
+                    userPublicKey = "this is sor public hex key",
+                    userName = "my account name",
+                    tokenId = TestAssets.xorAsset(balance = Big100).token.id,
+                    amount = null,
+                )
+            }
+        }
+
+    @Test
+    fun `WHEN active assets list is empty EXPECT request QR screen is error`() =
+        runTest {
+            every {
+                assetsInteractor.subscribeAssetsActiveOfCurAccount()
+            } returns testAssetsListFlow(emptyList())
+            viewModel = createViewModel()
+
+            advanceUntilIdle()
+
+            Assert.assertEquals(
+                ScreenStatus.ERROR,
+                viewModel.requestTokenScreenState.value.screenStatus
+            )
+            Assert.assertEquals(
+                null,
+                viewModel.requestTokenScreenState.value.assetAmountInputState
             )
         }
 
@@ -291,4 +320,17 @@ class QrCodeFlowViewModelTest {
 
         return@with this.toString()
     }
+
+    private fun createViewModel() = QRCodeFlowViewModel(
+        interactor = assetsInteractor,
+        qrCodeInteractor = qrCodeInteractor,
+        coroutineManager = coroutineManager,
+        qrCodeGenerator = qrCodeGenerator,
+        avatarGenerator = avatarGenerator,
+        clipboardManager = clipboardManager,
+        numbersFormatter = numbersFormatter,
+        resourceManager = resourceManager,
+        fileManager = fileManager,
+        walletRouter = walletRouter,
+    )
 }

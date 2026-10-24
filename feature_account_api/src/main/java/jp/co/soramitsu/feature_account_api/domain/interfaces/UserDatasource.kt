@@ -44,8 +44,6 @@ interface UserDatasource {
 
     suspend fun retrieveRegistratrionState(): OnboardingState
 
-    suspend fun clearAllData()
-
     suspend fun saveParentInviteCode(inviteCode: String)
 
     suspend fun getParentInviteCode(): String
@@ -71,6 +69,9 @@ interface UserDatasource {
     suspend fun getCurAccountAddress(): String
 
     suspend fun setCurAccountAddress(accountAddress: String)
+
+    /** Atomically publishes the verified owner of retained, unsuffixed legacy credentials. */
+    suspend fun completeLegacyAccountUpgrade(accountAddress: String)
 
     suspend fun savePinTriesUsed(triesUsed: Int)
 

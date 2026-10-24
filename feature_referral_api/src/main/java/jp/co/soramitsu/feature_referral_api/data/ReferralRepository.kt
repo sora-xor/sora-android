@@ -34,10 +34,15 @@ package jp.co.soramitsu.feature_referral_api.data
 
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.flow.Flow
+
+data class ReferralReward(
+    val referral: String,
+    val amount: String,
+)
 
 interface ReferralRepository {
 
@@ -57,8 +62,9 @@ interface ReferralRepository {
         keypair: Sr25519Keypair,
         from: String,
         referrer: String,
-        feeToken: Token
-    ): Transaction.ReferralSetReferrer
+        feeToken: Token,
+        activity: Sora2SubmissionActivity? = null,
+    ): ExtrinsicSubmitStatus
 
     suspend fun observeUnbond(
         keypair: Sr25519Keypair,
@@ -66,7 +72,8 @@ interface ReferralRepository {
         amount: BigDecimal,
         token: Token,
         fee: BigDecimal,
-    ): Transaction.ReferralUnbond
+        activity: Sora2SubmissionActivity? = null,
+    ): ExtrinsicSubmitStatus
 
     suspend fun observeBond(
         keypair: Sr25519Keypair,
@@ -74,7 +81,8 @@ interface ReferralRepository {
         amount: BigDecimal,
         token: Token,
         fee: BigDecimal,
-    ): Transaction.ReferralBond
+        activity: Sora2SubmissionActivity? = null,
+    ): ExtrinsicSubmitStatus
 
     suspend fun calcBondFee(
         from: String,

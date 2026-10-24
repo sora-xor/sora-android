@@ -60,10 +60,10 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.AccountIcon
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -82,6 +82,7 @@ internal fun ReceiveScreen(
             .fillMaxWidth()
             .wrapContentSize(),
         innerPadding = PaddingValues(Dimens.x3),
+        backgroundColor = androidx.compose.ui.graphics.Color.White,
     ) {
         if (qr != null) {
             Image(
@@ -89,7 +90,7 @@ internal fun ReceiveScreen(
                     .wrapContentSize()
                     .aspectRatio(1f),
                 bitmap = qr.asImageBitmap(),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.wallet_receive_xor),
             )
         } else {
             Spacer(
@@ -146,6 +147,9 @@ internal fun ReceiveScreen(
         }
     }
     Spacer(modifier = Modifier.size(Dimens.x2))
+    androidx.compose.material.TextButton(onClick = onCopyClick, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.copy_receive_address))
+    }
     FilledButton(
         modifier = Modifier.fillMaxWidth(),
         size = Size.Large,

@@ -41,12 +41,22 @@ data class RecoveryState(
     val recoveryType: RecoveryType,
     val title: Int,
     val recoveryInputState: InputTextState = InputTextState(),
-    val isButtonEnabled: Boolean = false
+    val isButtonEnabled: Boolean = false,
+    /** The password of an encrypted backup file; only used by [RecoveryType.JSON]. */
+    val passwordInputState: InputTextState = InputTextState(),
+    /**
+     * The name of the backup file that was chosen ([RecoveryType.JSON]). The file's text is kept
+     * by the view model and is not put into the text field.
+     */
+    val chosenFileName: String? = null,
 )
 
 enum class RecoveryType {
     PASSPHRASE,
-    SEED
+    SEED,
+
+    /** The encrypted JSON export (Account details, Export JSON), pasted or chosen as a file. */
+    JSON,
 }
 
 data class RecoveryAccountNameState(
@@ -54,7 +64,13 @@ data class RecoveryAccountNameState(
 )
 
 data class TutorialScreenState(
-    val isGoogleSigninLoading: Boolean = false
+    val isGoogleSigninLoading: Boolean = false,
+    val isGoogleBackupAvailable: Boolean = true,
+    /**
+     * Wallets whose keys are on this phone without an account and that the stored PIN still
+     * protects. Above zero, the screen offers "Wallets found on this phone".
+     */
+    val foundWalletsCount: Int = 0,
 )
 
 data class TermsAndPrivacyState(
@@ -65,6 +81,8 @@ data class TermsAndPrivacyState(
 data class CreateAccountState(
     val accountNameInputState: InputTextState = InputTextState(),
     val btnEnabled: Boolean = true,
+    /** The import is running (keys are derived, a backup file is opened). */
+    val loading: Boolean = false,
 )
 
 data class CreateBackupPasswordState(
@@ -90,6 +108,11 @@ data class ImportAccountPasswordState(
 data class BackupAccountMetaWithIcon(
     val backupAccountMeta: BackupAccountMeta,
     val icon: Drawable?,
+    /**
+     * The account of this backup is already listed on this phone but cannot sign here. Restoring
+     * the backup completes or repairs its keys in place; the list says so under the address.
+     */
+    val readOnlyOnThisPhone: Boolean = false,
 )
 
 data class MnemonicConfirmationState(

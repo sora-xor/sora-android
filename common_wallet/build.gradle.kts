@@ -1,13 +1,12 @@
 plugins {
     id("maven-publish")
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
-    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
@@ -16,7 +15,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.common_wallet"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -26,7 +25,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -38,9 +37,9 @@ android {
             )
         }
     }
-
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 
     flavorDimensions += listOf("default")
@@ -94,18 +93,19 @@ dependencies {
     implementation(libs.uiCoreDep)
 
     implementation(libs.lifecycleProcessDep)
-    kapt(libs.lifecycleKaptDep)
 
     implementation(libs.timberDep)
     implementation(libs.svgDep)
     implementation(libs.jdenticonDep)
 
-    api(libs.soramitsu.sora.card) {
-        exclude(group = "com.paywings.onboarding.kyc.android-libs", module = "java-websocket-lib")
+    // xcrypto/xbackup bring bcprov 1.77; keep every consumer on the wallet's BouncyCastle
+    // version (also used by :common for SCrypt, SHA3 and Base64).
+    constraints {
+        api(libs.bcprovDep)
     }
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
 
     implementation(libs.datastoreDep)
 

@@ -1,0 +1,120 @@
+{
+  "connect": {
+    "app_id": "fixture-app",
+    "approval_frame": {
+      "account_id": "testuﾛ1PﾀR2LBﾃﾋQ8ﾅﾚHｱﾍmtX5Aﾉｽ2ｽヱﾙVｳﾁoJXWpﾄﾖFｸｼ8RC99U",
+      "signature_algorithm": "ed25519",
+      "signing_public_key_hex": "c050c5637a44fa8629fff3cccce2300cb362a63d99d95fc54145266f4332445a"
+    },
+    "chain_id": "test-chain",
+    "sid": "sid-fixture-1",
+    "wallet_launch_uri": "iroha://connect?sid=sid-fixture-1&role=wallet"
+  },
+  "description": "Deterministic SORA Nexus app facade transfer fixture for SDK parity tests.",
+  "error_cases": [
+    {
+      "expected_code": "unsupported_signature_algorithm",
+      "name": "unsupported signature algorithm",
+      "signature_algorithm": "secp256k1"
+    },
+    {
+      "approval_frame": {
+        "account_id": "testuﾛ1PﾀR2LBﾃﾋQ8ﾅﾚHｱﾍmtX5Aﾉｽ2ｽヱﾙVｳﾁoJXWpﾄﾖFｸｼ8RC99U"
+      },
+      "expected_code": "missing_signing_public_key",
+      "name": "approval without signing key"
+    },
+    {
+      "expected_code": "approval_account_mismatch",
+      "name": "authority mismatch",
+      "transfer_authority": "testuﾛ1Nﾛ5ﾃPefCWUﾆﾔaxCRﾈﾅｶubGPﾘｼX9hﾀ8vHGVﾗsﾒJｼF7HF5W"
+    },
+    {
+      "approval_frame": {
+        "account_id": "testuﾛ1PﾀR2LBﾃﾋQ8ﾅﾚHｱﾍmtX5Aﾉｽ2ｽヱﾙVｳﾁoJXWpﾄﾖFｸｼ8RC99U",
+        "signing_public_key_hex": "f80cccdce4ae1c07ae208a2adf99a310ae4207e0306fa0236110b06827bbb8d0"
+      },
+      "expected_code": "approval_account_mismatch",
+      "name": "approval signing key mismatch"
+    },
+    {
+      "approval_frame": {
+        "account_id": "testuﾛ1PﾀR2LBﾃﾋQ8ﾅﾚHｱﾍmtX5Aﾉｽ2ｽヱﾙVｳﾁoJXWpﾄﾖFｸｼ8RC99U",
+        "session": {
+          "sid": "sid-substituted",
+          "wallet_launch_uri": "iroha://connect?sid=sid-substituted&role=wallet"
+        },
+        "signing_public_key_hex": "c050c5637a44fa8629fff3cccce2300cb362a63d99d95fc54145266f4332445a"
+      },
+      "expected_code": "approval_session_mismatch",
+      "name": "approval session substitution"
+    },
+    {
+      "expected_code": "connect_transport_unavailable",
+      "name": "connect transport unavailable"
+    },
+    {
+      "expected_code": "missing_authority",
+      "name": "missing authority"
+    },
+    {
+      "expected_code": "invalid_signing_public_key",
+      "name": "invalid signing public key"
+    },
+    {
+      "expected_code": "invalid_signature",
+      "name": "invalid signature length",
+      "signature_bytes_hex": "070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707"
+    },
+    {
+      "expected_code": "torii_client_unavailable",
+      "name": "torii client unavailable"
+    },
+    {
+      "expected_code": "transaction_hash_mismatch",
+      "name": "transaction hash mismatch",
+      "submitted_transaction_hash_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    {
+      "expected_code": "submit_failed",
+      "name": "submit failure"
+    },
+    {
+      "expected_code": "status_wait_failed",
+      "name": "status wait failure"
+    }
+  ],
+  "expected": {
+    "payload_bytes_hex": "25000000002032c903e5b3497e34c2b844ebfe8a39c19e6cf8f95d44c1ffb8ba9dcb42f911494f000000004a2100000000000000010001c0015001c50163017a014401fa0186012901ff01f301cc01cc01e20130010c01b3016201a6013d019901d9015f01c5014101450126016f014301320144015a080068e5cf8b010000ac0200000000a60201000000000000009c020f0e69726f68612e7472616e736665728a0202010000000000004e5254300000a4174c78d6341f8f98fc2adae8ed67b900da00000000000000dc6643a630c64e2b0202000000d401764f000000004a2100000000000000010001c0015001c50163017a014401fa0186012901ff01f301cc01cc01e20130010c01b3016201a6013d019901d9015f01c5014101450126016f014301320144015a20012201220122012201220122014201220182012201220122012201220122012204000000000c0602000000d20404020000004f000000004a210000000000000001000120011201cb019001ca016001e801e501d801da01f6016e0122017201d20123013e0104018601d5015701e801c60161014101ed018901200117017d017e01b70a010830750000000000000601040700000010000000000b08000000000000000001002801000000000000001f0807707572706f7365151413226e657875732d6170702d66697874757265220100",
+    "payload_hash_hex": "2cacc93dde41f87f33da6c74281c887bdf2e54d6e11ef7e3cf6eb970a7df7db9",
+    "signed_transaction_hash_hex": "ef1e1042fb07356fa96d6d51898837f5d2030b8e6286acb1c31076501360aad5",
+    "status_sequence": [
+      "Submitted",
+      "Applied"
+    ],
+    "wallet_signature_hex": "f0facd1407187402d6d3de380e44bdc157fa81601ea057df525f2284fbb29a65e7b0f9c237339dd64057503f679e733ea44f74fc277f02eaec60b7604b103607"
+  },
+  "fixture": "nexus_connect_transfer_v1",
+  "transfer_input": {
+    "account_chain_discriminant": 369,
+    "authority": "testuﾛ1PﾀR2LBﾃﾋQ8ﾅﾚHｱﾍmtX5Aﾉｽ2ｽヱﾙVｳﾁoJXWpﾄﾖFｸｼ8RC99U",
+    "creation_time_ms": 1700000000000,
+    "destination_account_id": "testuﾛ1Nﾛ5ﾃPefCWUﾆﾔaxCRﾈﾅｶubGPﾘｼX9hﾀ8vHGVﾗsﾒJｼF7HF5W",
+    "fee_payment": {
+      "payer": "authority",
+      "value": {
+        "charge_limits": [],
+        "gas_limit": null
+      }
+    },
+    "metadata": {
+      "purpose": "nexus-app-fixture"
+    },
+    "network_id": "hash:32C903E5B3497E34C2B844EBFE8A39C19E6CF8F95D44C1FFB8BA9DCB42F91149#A2F0",
+    "nonce": 7,
+    "quantity": "12.34",
+    "source_asset_id": "53SSUt68Qn5PdKMMrViDK57X6DG2#testuﾛ1PﾀR2LBﾃﾋQ8ﾅﾚHｱﾍmtX5Aﾉｽ2ｽヱﾙVｳﾁoJXWpﾄﾖFｸｼ8RC99U",
+    "ttl_ms": 30000
+  },
+  "version": 1
+}

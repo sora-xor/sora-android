@@ -32,27 +32,32 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.screens.scan
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
 import android.widget.Toast
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.zxing.client.android.Intents
+import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.CaptureManager
+import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.androidfoundation.format.retrieveString
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.feature_assets_impl.databinding.QrCodeScannerLayoutBinding
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.scan.QrCodeScannerScreen
@@ -67,6 +72,7 @@ class QRCodeScannerActivity : AppCompatActivity() {
     private val binding by lazy { QrCodeScannerLayoutBinding.inflate(layoutInflater) }
 
     private var capture: CaptureManager? = null
+    private val recipientOnly: Boolean get() = intent.getBooleanExtra(RECIPIENT_SCAN_EXTRA, false)
 
     private val startForResultFromGallery: ActivityResultLauncher<PickVisualMediaRequest> =
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { resultUri: Uri? ->
@@ -82,6 +88,7 @@ class QRCodeScannerActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         capture?.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -95,6 +102,14 @@ class QRCodeScannerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // The scanner is always dark (camera under a dark scrim), whatever the app theme: draw
+        // edge to edge on every API level with transparent bars and light status/navigation
+        // icons. AppTheme would give dark icons in light mode (and a light bar strip before
+        // Android 15), which are unreadable over the camera.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         setContentView(binding.root)
 
         initScreen(savedInstanceState)
@@ -121,8 +136,9 @@ class QRCodeScannerActivity : AppCompatActivity() {
             viewFinder?.setLaserVisibility(false)
         }
 
-        capture = CaptureManager(this, barcodeScannerView).apply {
+        capture = IrohaAwareCaptureManager(barcodeScannerView).apply {
             initializeFromIntent(intent, savedInstanceState)
+            if (recipientOnly) setShowMissingCameraPermissionDialog(false)
             decode()
         }
 
@@ -131,11 +147,14 @@ class QRCodeScannerActivity : AppCompatActivity() {
         binding.screenContent.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                MaterialTheme {
+                // The scanner always uses the dark SORA Neon palette: its surface is the camera
+                // under a dark scrim, where light-theme text would be unreadable.
+                SoraAppTheme(darkTheme = true) {
                     QrCodeScannerScreen(
                         onNavIconClick = ::finish,
                         onUploadFromGalleryClick = ::selectQrFromGallery,
                         onShowUserQrClick = ::finish,
+                        recipientOnly = recipientOnly,
                     )
                 }
             }
@@ -146,6 +165,10 @@ class QRCodeScannerActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(state = Lifecycle.State.STARTED) {
                 viewModel.qrCodeDecodedSharedFlow.collectLatest {
+                    if (openIrohaConnect(it)) {
+                        finish()
+                        return@collectLatest
+                    }
                     val resultIntent = Intent().apply {
                         putExtra(Intents.Scan.RESULT, it)
                     }
@@ -178,4 +201,34 @@ class QRCodeScannerActivity : AppCompatActivity() {
             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         startForResultFromGallery.launch(pickVisualMediaRequest)
     }
+
+    private fun openIrohaConnect(value: String): Boolean {
+        val uri = runCatching { Uri.parse(value) }.getOrNull() ?: return false
+        if (!shouldOpenScannedConnect(recipientOnly, uri.scheme, uri.host)) {
+            return false
+        }
+        return try {
+            startActivity(
+                Intent(Intent.ACTION_VIEW, uri)
+                    .setPackage(packageName),
+            )
+            true
+        } catch (_: ActivityNotFoundException) {
+            // No IrohaConnect screen in this build: hand the text back like any other scan.
+            false
+        }
+    }
+
+    private inner class IrohaAwareCaptureManager(
+        barcodeView: DecoratedBarcodeView,
+    ) : CaptureManager(this@QRCodeScannerActivity, barcodeView) {
+        override fun returnResult(rawResult: BarcodeResult) {
+            if (openIrohaConnect(rawResult.text)) {
+                finish()
+            } else {
+                super.returnResult(rawResult)
+            }
+        }
+    }
+
 }

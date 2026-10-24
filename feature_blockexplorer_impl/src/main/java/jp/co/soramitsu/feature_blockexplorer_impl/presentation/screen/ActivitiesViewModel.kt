@@ -39,10 +39,15 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
+import jp.co.soramitsu.feature_wallet_api.data.NetworkAccountActivity
+import jp.co.soramitsu.feature_wallet_api.data.NetworkActivityRepository
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -51,19 +56,51 @@ import kotlinx.coroutines.launch
 class ActivitiesViewModel @Inject constructor(
     private val assetsInteractor: AssetsInteractor,
     private val assetsRouter: AssetsRouter,
-    private val walletInteractor: WalletInteractor,
     private val transactionHistoryHandler: TransactionHistoryHandler,
-    private val mainRouter: MainRouter,
+    private val networkActivityRepository: NetworkActivityRepository,
 ) : BaseViewModel() {
 
-    val historyState = transactionHistoryHandler.historyState
+    private val _historyState = MutableStateFlow<HistoryState>(HistoryState.Loading)
+    val historyState = _historyState.asStateFlow()
+    private val _networkActivity = MutableStateFlow(NetworkActivityState())
+    val networkActivity = _networkActivity.asStateFlow()
+    private val networkRetries = MutableStateFlow(0L)
 
     init {
         viewModelScope.launch {
             assetsInteractor.flowCurSoraAccount()
+                .distinctUntilChangedBy { it.substrateAddress }
                 .catch { onError(it) }
-                .collectLatest {
-                    refresh()
+                .collectLatest { account ->
+                    // Clear account-specific rows before collecting a replacement subscription.
+                    val walletId = account.substrateAddress
+                    _historyState.value = HistoryState.Loading
+                    _networkActivity.value = NetworkActivityState(walletId = walletId)
+                    coroutineScope {
+                        launch {
+                            // The handler is shared with asset details. Do not expose its cached
+                            // rows until a refresh for this wallet has actually completed.
+                            transactionHistoryHandler.refreshHistoryEvents()
+                            transactionHistoryHandler.historyState.collect { _historyState.value = it }
+                        }
+                        networkRetries.collectLatest {
+                            networkActivityRepository.observeCurrentWallet()
+                                .catch {
+                                    _networkActivity.value = NetworkActivityState(
+                                        walletId = walletId,
+                                        loading = false,
+                                        error = true,
+                                    )
+                                }
+                                .collect { networks ->
+                                    _networkActivity.value = NetworkActivityState(
+                                        walletId = walletId,
+                                        accounts = networks.filter { it.walletId == walletId },
+                                        loading = false,
+                                    )
+                                }
+                        }
+                    }
                 }
         }
         transactionHistoryHandler.flowLocalTransactions()
@@ -85,8 +122,23 @@ class ActivitiesViewModel @Inject constructor(
     }
 
     fun refresh() {
+        val previous = _networkActivity.value
+        _networkActivity.value = previous.copy(loading = true)
+        networkActivityRepository.refresh()
+        networkRetries.value++
         viewModelScope.launch {
             transactionHistoryHandler.refreshHistoryEvents()
         }
+    }
+
+    fun loadMoreNetworkHistory(account: NetworkAccountActivity) {
+        val current = _networkActivity.value
+        if (current.loading || account.walletId != current.walletId) return
+        val active = current.accounts.singleOrNull {
+            it.networkId == account.networkId && it.address == account.address
+        } ?: return
+        if (!active.hasMore) return
+        _networkActivity.value = current.copy(loading = true)
+        networkActivityRepository.loadMore(active.walletId, active.networkId)
     }
 }

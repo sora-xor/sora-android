@@ -58,11 +58,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.testTagAsId
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.extensions.withOpacity
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -74,13 +76,13 @@ internal fun AssetDetailsBalanceCard(
     amountFiat: String,
     frozenAmount: String? = null,
     frozenAmountFiat: String? = null,
+    lockedNote: String? = null,
     isTransferableAmountAvailable: Boolean = false,
-    buyCryptoAvailable: Boolean = false,
     onSendClick: () -> Unit,
     onReceiveClick: () -> Unit,
     onSwapClick: () -> Unit,
     onBalanceClick: () -> Unit,
-    onBuyCryptoClick: (() -> Unit)? = null
+    readOnly: Boolean = rememberWalletReadOnly(),
 ) {
     ContentCard(
         modifier = Modifier
@@ -156,10 +158,24 @@ internal fun AssetDetailsBalanceCard(
                 Text(
                     modifier = Modifier
                         .padding(horizontal = Dimens.x3)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTagAsId("AssetFrozenAmount"),
                     text = frozenAmount,
                     style = MaterialTheme.customTypography.textXSBold,
                     color = MaterialTheme.customColors.fgSecondary
+                )
+            }
+            if (lockedNote != null) {
+                // Says why the liquid balance is smaller than what the account holds. An
+                // account whose XOR is all locked would otherwise only see "0".
+                Text(
+                    modifier = Modifier
+                        .padding(start = Dimens.x3, end = Dimens.x3, top = Dimens.x1)
+                        .fillMaxWidth()
+                        .testTagAsId("AssetLockedNote"),
+                    text = lockedNote,
+                    style = MaterialTheme.customTypography.paragraphXS,
+                    color = MaterialTheme.customColors.fgSecondary,
                 )
             }
             Divider(
@@ -170,7 +186,7 @@ internal fun AssetDetailsBalanceCard(
                     .height(1.dp)
                     .fillMaxWidth()
             )
-            Row(
+            androidx.compose.foundation.layout.FlowRow(
                 modifier = Modifier
                     .wrapContentHeight()
                     .fillMaxWidth()
@@ -182,12 +198,13 @@ internal fun AssetDetailsBalanceCard(
                         end = Dimens.x2,
                     ),
                 horizontalArrangement = Arrangement.SpaceEvenly,
+                maxItemsInEachRow = if (androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f) 2 else 4,
             ) {
                 if (isTransferableAmountAvailable) {
                     AmountCardIcon(
                         res = R.drawable.ic_new_arrow_up_24,
                         text = stringResource(id = R.string.common_send),
-                        enabled = true,
+                        enabled = !readOnly,
                         onClick = onSendClick,
                     )
                 }
@@ -200,55 +217,26 @@ internal fun AssetDetailsBalanceCard(
                 AmountCardIcon(
                     res = R.drawable.ic_refresh_24,
                     text = stringResource(id = R.string.polkaswap_swap_title),
-                    enabled = true,
+                    enabled = !readOnly,
                     onClick = onSwapClick,
                 )
-
-                if (buyCryptoAvailable && onBuyCryptoClick != null) {
-                    AmountCardIcon(
-                        res = R.drawable.ic_buy_crypto,
-                        text = stringResource(id = R.string.common_buy),
-                        enabled = true,
-                        onClick = onBuyCryptoClick,
-                    )
-                }
+            }
+            if (readOnly) {
+                // U9: Send and Swap are off in read-only mode, with the reason.
+                ReadOnlyReason(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(start = Dimens.x3, end = Dimens.x3, bottom = Dimens.x3),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun AmountCardIcon(
-    @DrawableRes res: Int,
-    text: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.wrapContentSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(modifier = Modifier.size(Size.Large)) {
-            BleachedButton(
-                modifier = Modifier.testTagAsId("${text}Button"),
-                shape = CircleShape,
-                size = Size.Large,
-                order = Order.TERTIARY,
-                enabled = enabled,
-                leftIcon = painterResource(res),
-                onClick = onClick,
-            )
-        }
-        Text(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(top = Dimens.x1),
-            text = text,
-            style = MaterialTheme.customTypography.textXSBold,
-            color = MaterialTheme.customColors.fgSecondary.withOpacity(opacity = if (enabled) 1.0f else 0.3f),
-        )
-    }
-}
+private fun AmountCardIcon(@DrawableRes res: Int, text: String, enabled: Boolean, onClick: () -> Unit) =
+    jp.co.soramitsu.common.view.AmountCardIcon(testTagId = "${text}Button", res = res, text = text,
+        isEnabled = enabled, onClick = onClick)
 
 @Preview
 @Composable
@@ -258,12 +246,10 @@ private fun PreviewAssetDetailsBalanceCard() {
         amountFiat = "$4 923.34",
         frozenAmount = "12.3 XOR",
         frozenAmountFiat = "$ 1000.1",
-        buyCryptoAvailable = true,
         isTransferableAmountAvailable = true,
         onSendClick = { },
         onReceiveClick = { },
         onSwapClick = { },
         onBalanceClick = { },
-        onBuyCryptoClick = { }
     )
 }

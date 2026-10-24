@@ -57,6 +57,12 @@ import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 @AndroidEntryPoint
 class ClaimDemeterFragment : SoraBaseFragment<ClaimDemeterViewModel>() {
 
+    /**
+     * Claiming rewards signs with the selected account. When that account cannot sign on this phone, the
+     * screen says so above the form and offers the repair (`SoraBaseFragment`).
+     */
+    override val explainsReadOnlyAccount: Boolean = true
+
     companion object {
         private const val ARG_TOKEN_1 = "arg_token_1"
         private const val ARG_TOKEN_2 = "arg_token_2"

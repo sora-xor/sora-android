@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
 import jp.co.soramitsu.common.domain.CardHub
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -55,6 +56,14 @@ interface WalletRepository {
         keypair: Sr25519Keypair,
         from: String,
     ): ExtrinsicSubmitStatus
+
+    /**
+     * What is known now about a legacy claim this device already sent for [walletId], after one
+     * read-only status check of that transaction. [txHash] names the claim; when it is null the
+     * newest claim this device recorded for the account is used. Null when there is none.
+     * Nothing is signed or sent, and a status read that fails only leaves the answer as it was.
+     */
+    suspend fun checkSubmittedClaim(walletId: String, txHash: String?): TransactionOutcome?
 
     fun observeStorageAccount(address: String): Flow<String>
 

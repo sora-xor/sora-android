@@ -57,19 +57,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import java.math.BigDecimal
 import java.text.DecimalFormatSymbols
-import java.util.Locale
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.common.presentation.compose.neon.FilledPolkaswapButton as FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.component.input.number.BasicNumberInput
 import jp.co.soramitsu.ui_core.component.input.number.CurrencyGroupingVisualTransformation
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -99,10 +100,11 @@ internal fun SwapSlippageScreen(
         FocusRequester()
     }
 
+    val currentLocale = LocalLocale.current.platformLocale
     val visualTransformation =
-        remember(Locale.getDefault()) {
+        remember(currentLocale) {
             CurrencyGroupingVisualTransformation(
-                decimalFormatSymbols = DecimalFormatSymbols(Locale.getDefault()),
+                decimalFormatSymbols = DecimalFormatSymbols(currentLocale),
                 suffix = "%"
             )
         }
@@ -149,8 +151,9 @@ internal fun SwapSlippageScreen(
                         .border(
                             border = BorderStroke(
                                 width = 1.dp,
+                                // Text-field border: border.input (3:1), not the divider colour.
                                 color = if (focused.value) MaterialTheme.customColors.fgPrimary
-                                else MaterialTheme.customColors.fgOutline
+                                else MaterialTheme.neon.borderInput
                             ),
                             shape = RoundedCornerShape(MaterialTheme.borderRadius.ml)
                         )

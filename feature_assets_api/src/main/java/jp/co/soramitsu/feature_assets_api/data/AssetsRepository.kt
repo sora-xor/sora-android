@@ -79,7 +79,10 @@ interface AssetsRepository {
         to: String,
         token: Token,
         amount: BigDecimal,
-        fee: BigDecimal
+        fee: BigDecimal,
+        validateSelectedWallet: suspend () -> Unit,
+        /** True only after the user confirmed sending the same transfer again while one waits. */
+        confirmedDuplicate: Boolean = false,
     ): ExtrinsicSubmitStatus
 
     fun subscribeAsset(

@@ -52,8 +52,8 @@ val migration_CardHub_63_64 = object : Migration(63, 64) {
 
         val assetsCursor = database.query("select * from assets where displayAsset = 1")
         val displayedAssets = assetsCursor.map {
-            val tokenId = getString(getColumnIndex("tokenId"))
-            val account = getString(getColumnIndex("accountAddress"))
+            val tokenId = getString(getColumnIndexOrThrow("tokenId"))
+            val account = getString(getColumnIndexOrThrow("accountAddress"))
             tokenId to account
         }
         displayedAssets.forEach { pair ->
@@ -127,7 +127,7 @@ val migration_CardHub_63_64 = object : Migration(63, 64) {
 
         val cursor = database.query("select substrateAddress from accounts")
         val addresses = cursor.map {
-            getString(getColumnIndex("substrateAddress"))
+            getString(getColumnIndexOrThrow("substrateAddress"))
         }
         addresses.forEach { address ->
             CardHubType.values()

@@ -74,6 +74,12 @@ import kotlinx.coroutines.FlowPreview
 @AndroidEntryPoint
 class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
 
+    /**
+     * Adding liquidity signs with the selected account. When that account cannot sign on this phone, the
+     * screen says so above the form and offers the repair (`SoraBaseFragment`).
+     */
+    override val explainsReadOnlyAccount: Boolean = true
+
     companion object {
         private const val ARG_TOKEN_1 = "arg_token_1"
         private const val ARG_TOKEN_2 = "arg_token_2"
@@ -231,6 +237,7 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                     onReview = onReview,
                     onSelect1 = onToken1Click,
                     onSelect2 = onToken2Click,
+                    onRetryEstimate = viewModel::onRetryEstimate,
                 )
             }
         }

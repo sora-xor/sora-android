@@ -41,6 +41,8 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.mapBalance
@@ -54,6 +56,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.substrate.sora2TransactionOutcome
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import kotlinx.coroutines.flow.Flow
@@ -72,11 +75,19 @@ class AssetsInteractorImpl constructor(
     override suspend fun calcTransactionFee(
         to: String,
         token: Token,
-        amount: BigDecimal
+        amount: BigDecimal,
+        expectedWalletId: String,
     ): BigDecimal? {
-        return userRepository.getCurSoraAccount().let {
-            assetsRepository.calcTransactionFee(it.substrateAddress, to, token, amount)
+        val selected = userRepository.getCurSoraAccount()
+        check(selected.substrateAddress == expectedWalletId) {
+            "SORA2_SELECTED_WALLET_CHANGED"
         }
+        return assetsRepository.calcTransactionFee(
+            selected.substrateAddress,
+            to,
+            token,
+            amount,
+        )
     }
 
     override suspend fun isNotEnoughXorLeftAfterTransaction(
@@ -126,27 +137,76 @@ class AssetsInteractorImpl constructor(
         return assetsRepository.tokensList()
     }
 
+    /**
+     * Signs and submits one transfer and reports what is known about it afterwards. All four
+     * outcomes are returned, never thrown: confirmed, failed on chain, refused by the node before
+     * broadcast, or submitted and still waiting. An exception from here means the transfer never
+     * reached the network.
+     */
     override suspend fun observeTransfer(
         to: String,
         token: Token,
         amount: BigDecimal,
-        fee: BigDecimal
-    ): String {
+        fee: BigDecimal,
+        expectedWalletId: String,
+        confirmedDuplicate: Boolean,
+    ): TransactionOutcome {
         val soraAccount = userRepository.getCurSoraAccount()
+        check(soraAccount.substrateAddress == expectedWalletId) {
+            "SORA2_SELECTED_WALLET_CHANGED"
+        }
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        val status = assetsRepository.observeTransfer(
-            keypair,
-            soraAccount.substrateAddress,
-            to,
-            token,
-            amount,
-            fee
+        val outcome = try {
+            sora2TransactionOutcome {
+                assetsRepository.observeTransfer(
+                    keypair,
+                    soraAccount.substrateAddress,
+                    to,
+                    token,
+                    amount,
+                    fee,
+                    validateSelectedWallet = {
+                        check(
+                            userRepository.getCurSoraAccount().substrateAddress ==
+                                expectedWalletId
+                        ) { "SORA2_SELECTED_WALLET_CHANGED" }
+                    },
+                    confirmedDuplicate = confirmedDuplicate,
+                )
+            }
+        } finally {
+            keypair.privateKey.fill(0)
+            keypair.nonce.fill(0)
+        }
+        // Every outcome is listed in Activity as this transfer; its status (pending, confirmed,
+        // failed, not sent) comes from the durable journal, not from what is saved here.
+        persistTransferHistoryBestEffort(
+            walletId = soraAccount.substrateAddress,
+            transactionHash = outcome.txHash,
+            blockHash = (outcome as? TransactionOutcome.Confirmed)?.blockHash,
+            to = to,
+            token = token,
+            amount = amount,
+            fee = fee,
         )
-        if (status.success) {
+        return outcome
+    }
+
+    private fun persistTransferHistoryBestEffort(
+        walletId: String,
+        transactionHash: String,
+        blockHash: String?,
+        to: String,
+        token: Token,
+        amount: BigDecimal,
+        fee: BigDecimal,
+    ) {
+        try {
             transactionHistoryRepository.saveTransaction(
+                walletId,
                 transactionBuilder.buildTransfer(
-                    txHash = status.txHash,
-                    blockHash = status.blockHash,
+                    txHash = transactionHash,
+                    blockHash = blockHash,
                     fee = fee,
                     status = TransactionStatus.PENDING,
                     date = Date().time,
@@ -156,15 +216,29 @@ class AssetsInteractorImpl constructor(
                     token = token,
                 )
             )
+        } catch (_: Throwable) {
+            // The chain result is authoritative. Local history and telemetry are best-effort and
+            // must never turn a confirmed or submission-unknown transfer into a retryable failure.
+            try {
+                FirebaseWrapper.recordErrorClass(
+                    FirebaseWrapper.PrivacySafeErrorClass.STATE_FAILURE
+                )
+            } catch (_: Throwable) {
+                // Telemetry is outside the transaction result boundary.
+            }
         }
-        return if (status.success) status.txHash else ""
     }
 
     override fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset?> {
         return userRepository.flowCurSoraAccount().flatMapLatest {
-            assetsRepository.subscribeAsset(it.substrateAddress, tokenId)
+            subscribeAssetOfAccount(it, tokenId)
         }
     }
+
+    override fun subscribeAssetOfAccount(
+        soraAccount: SoraAccount,
+        tokenId: String,
+    ): Flow<Asset?> = assetsRepository.subscribeAsset(soraAccount.substrateAddress, tokenId)
 
     override fun subscribeAssetsActiveOfCurAccount(): Flow<List<Asset>> {
         return userRepository.flowCurSoraAccount().flatMapLatest {

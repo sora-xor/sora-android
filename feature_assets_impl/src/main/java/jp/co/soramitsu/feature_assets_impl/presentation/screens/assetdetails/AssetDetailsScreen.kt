@@ -67,7 +67,6 @@ internal fun AssetDetailsScreen(
     onSendClick: () -> Unit,
     onReceiveClick: () -> Unit,
     onSwapClick: () -> Unit,
-    onBuyCrypto: () -> Unit,
     onPoolClick: (StringPair) -> Unit,
     onRecentClick: () -> Unit,
     onHistoryItemClick: (String) -> Unit,
@@ -97,13 +96,12 @@ internal fun AssetDetailsScreen(
             amountFiat = stateData.transferableBalanceFiat,
             frozenAmount = stateData.frozenBalance,
             frozenAmountFiat = stateData.frozenBalanceFiat,
-            buyCryptoAvailable = stateData.buyCryptoAvailable,
+            lockedNote = stateData.lockedNote,
             isTransferableAmountAvailable = stateData.isTransferableBalanceAvailable,
             onSendClick = onSendClick,
             onReceiveClick = onReceiveClick,
             onSwapClick = onSwapClick,
             onBalanceClick = onBalanceClick,
-            onBuyCryptoClick = onBuyCrypto,
         )
         if (stateData.poolsState.pools.isNotEmpty()) {
             Spacer(modifier = Modifier.size(Dimens.x2))
@@ -171,10 +169,9 @@ private fun PreviewAssetDetailsScreen01() {
                 true,
                 true,
                 emptyList(),
-                true,
             ),
             rememberScrollState(),
-            {}, {}, {}, {}, {}, {}, {}, {}, {}
+            {}, {}, {}, {}, {}, {}, {}, {}
         )
     }
 }
@@ -231,10 +228,9 @@ private fun PreviewAssetDetailsScreen02() {
                         "$78.23",
                     )
                 ),
-                true,
             ),
             rememberScrollState(),
-            {}, {}, {}, {}, {}, {}, {}, {}, {}
+            {}, {}, {}, {}, {}, {}, {}, {}
         )
     }
 }

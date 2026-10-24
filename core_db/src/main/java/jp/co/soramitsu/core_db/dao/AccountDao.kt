@@ -45,17 +45,30 @@ interface AccountDao {
     @Query("select * from accounts")
     suspend fun getAccounts(): List<SoraAccountLocal>
 
-    @Query("delete from accounts where substrateAddress = :address")
-    suspend fun clearAccount(address: String)
-
-    @Query("delete from accounts")
-    suspend fun clearAll()
+    @Query("delete from accounts where substrateAddress in (:addresses)")
+    suspend fun deleteAccountsForJournal(addresses: List<String>): Int
 
     @Query("select * from accounts")
     fun flowAccounts(): Flow<List<SoraAccountLocal>>
 
     @Query("select * from accounts where substrateAddress = :address")
     suspend fun getAccount(address: String): SoraAccountLocal?
+
+    /**
+     * The addresses of accounts that are listed but not verified to sign on this phone (their
+     * identity is missing or not `VERIFIED`). Emits again whenever an account or an identity
+     * changes, so a label follows a repair, a removal and every start-up check. Reads only.
+     */
+    @Query(
+        """
+        select substrateAddress from accounts
+        where substrateAddress not in (
+            select walletId from walletIdentities where migrationState = 'VERIFIED'
+        )
+        order by substrateAddress
+        """
+    )
+    fun flowAccountsNotVerified(): Flow<List<String>>
 
     @Query("select count(*) from accounts")
     suspend fun getAccountsCount(): Int

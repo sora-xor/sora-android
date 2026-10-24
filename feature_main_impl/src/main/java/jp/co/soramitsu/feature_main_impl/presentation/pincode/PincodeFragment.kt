@@ -40,9 +40,6 @@ import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.ScrollState
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -54,6 +51,7 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.io.MainThreadExecutor
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeSupport
 import jp.co.soramitsu.common.presentation.args.addresses
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.ext.runDelayed
@@ -125,15 +123,6 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
             Toast.makeText(requireContext(), R.string.pincode_change_success, Toast.LENGTH_LONG)
                 .show()
         }
-        viewModel.logoutEvent.observe { message ->
-            AlertDialog.Builder(requireActivity())
-                .setTitle(R.string.profile_logout_title)
-                .setMessage(message)
-                .setCancelable(false)
-                .setPositiveButton(R.string.profile_logout_title) { _, _ -> viewModel.logoutOkPressed() }
-                .setNegativeButton(R.string.common_cancel) { _, _ -> viewModel.onBackPressed() }
-                .show()
-        }
         viewModel.biometryInitialDialogEvent.observe {
             AlertDialog.Builder(requireActivity())
                 .setTitle(R.string.biometric_dialog_title)
@@ -184,21 +173,28 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
             (activity as? MainActivity)?.checkInviteAction()
         }
 
-        viewModel.pincodeLengthInfoAlertLiveData.observe {
-            AlertDialog.Builder(requireActivity())
-                .setTitle(R.string.pincode_length_info_title)
-                .setMessage(R.string.pincode_length_info_message)
-                .setPositiveButton(R.string.pincode_length_info_button_text) { _, _ ->
-                    viewModel.setNewLengthPinCodeClicked()
-                }
-                .setCancelable(false)
-                .show()
+    }
+
+    private fun contactSupport() {
+        val context = context ?: return
+        if (!SafeModeSupport.email(context, "SORA wallet check", "")) {
+            Toast.makeText(
+                context,
+                getString(jp.co.soramitsu.common.R.string.safe_mode_support_no_email, SafeModeSupport.EMAIL),
+                Toast.LENGTH_LONG,
+            ).show()
         }
     }
 
     override fun onPause() {
         super.onPause()
         fingerprintWrapper.cancel()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Leaving the screen veils a phrase or seed that the removal screen was showing.
+        viewModel.onRemovalHidden()
     }
 
     override fun onResume() {
@@ -213,16 +209,35 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         composable(
             route = theOnlyRoute,
         ) {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                PincodeScreen(
-                    pinCodeScreenState = viewModel.state,
-                    onNumClick = viewModel::pinCodeNumberClicked,
-                    onBiometricClick = fingerprintWrapper::toggleScanner,
-                    onDeleteClick = viewModel::pinCodeDeleteClicked,
-                    onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd,
-                    onSwitchNode = viewModel::onSwitchNode,
+            // Only the keypad and dots are pinned left-to-right (inside PincodeScreen); the
+            // Safe Mode panels on this screen follow the device's layout direction.
+            val removal = viewModel.removal
+            if (removal != null) {
+                // "Forget account", after the PIN: the backup is shown before anything is
+                // removed. The window is secure while a phrase or seed can be on screen.
+                SecureWindow(enabled = removal.showsBackup)
+                AccountRemovalScreen(
+                    state = removal,
+                    onReveal = viewModel::onRemovalRevealed,
+                    onWrittenDown = viewModel::onRemovalWrittenDown,
+                    onUnderstoodNoBackup = viewModel::onRemovalUnderstoodNoBackup,
+                    onUnderstoodFoundWallets = viewModel::onRemovalUnderstoodFoundWallets,
+                    onExportJson = viewModel::onRemovalExportJson,
+                    onRemove = viewModel::onRemovalConfirmed,
+                    onCancel = viewModel::onRemovalCancelled,
                 )
+                return@composable
             }
+            PincodeScreen(
+                pinCodeScreenState = viewModel.state,
+                onNumClick = viewModel::pinCodeNumberClicked,
+                onBiometricClick = fingerprintWrapper::toggleScanner,
+                onDeleteClick = viewModel::pinCodeDeleteClicked,
+                onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd,
+                onSwitchNode = viewModel::onSwitchNode,
+                onNewPinContinue = viewModel::setNewLengthPinCodeClicked,
+                onGetHelp = ::contactSupport,
+            )
         }
     }
 }

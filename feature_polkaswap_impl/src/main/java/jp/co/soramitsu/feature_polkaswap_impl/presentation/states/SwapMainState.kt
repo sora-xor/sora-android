@@ -37,7 +37,9 @@ import androidx.compose.ui.text.AnnotatedString
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 
 data class SwapMainState(
     val tokenFromState: AssetAmountInputState?,
@@ -49,7 +51,11 @@ data class SwapMainState(
     val swapButtonState: ButtonState,
     val confirmButtonState: ButtonState,
     val confirmText: AnnotatedString,
-    val confirmResult: Boolean?,
+    /** Result mark shown briefly after Confirm; taken from the transaction outcome. */
+    val confirmResult: TransactionResultBadge?,
+    val assetCatalogUnavailable: Boolean = false,
+    /** Set when the network fee can't be checked; the screen says why and offers Try again. */
+    val feeUnavailable: NetworkFeeUnavailable? = null,
 )
 
 data class SwapDetailsState(

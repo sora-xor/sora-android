@@ -39,6 +39,7 @@ import jp.co.soramitsu.androidfoundation.format.safeDivide
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
@@ -51,6 +52,7 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsReposito
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
@@ -59,6 +61,8 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapReposito
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
+import jp.co.soramitsu.sora.substrate.substrate.sora2TransactionOutcome
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -264,8 +268,9 @@ class PoolsInteractorImpl(
         amountTo: BigDecimal,
         enabled: Boolean,
         presented: Boolean,
-        slippageTolerance: Double
-    ): String {
+        slippageTolerance: Double,
+        confirmedDuplicate: Boolean,
+    ): TransactionOutcome {
         val soraAccount = userRepository.getCurSoraAccount()
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
         val networkFee = getLiquidityNetworkFee(
@@ -278,34 +283,51 @@ class PoolsInteractorImpl(
             slippageTolerance
         )
 
-        val status = polkaswapExtrinsicRepository.observeAddLiquidity(
-            soraAccount.substrateAddress,
-            keypair,
-            tokenFrom,
-            tokenTo,
-            amountFrom,
-            amountTo,
-            enabled,
-            presented,
-            slippageTolerance
-        )
-        if (status.success) {
-            transactionHistoryRepository.saveTransaction(
-                transactionBuilder.buildLiquidity(
-                    txHash = status.txHash,
-                    blockHash = status.blockHash,
-                    fee = networkFee,
-                    status = TransactionStatus.PENDING,
-                    date = Date().time,
-                    token1 = tokenFrom,
-                    token2 = tokenTo,
+        val outcome = sora2TransactionOutcome {
+            polkaswapExtrinsicRepository.observeAddLiquidity(
+                soraAccount.substrateAddress,
+                keypair,
+                tokenFrom,
+                tokenTo,
+                amountFrom,
+                amountTo,
+                enabled,
+                presented,
+                slippageTolerance,
+                Sora2SubmissionActivity.liquidity(
+                    add = true,
+                    token1Id = tokenFrom.id,
+                    token2Id = tokenTo.id,
                     amount1 = amountFrom,
                     amount2 = amountTo,
-                    type = TransactionLiquidityType.ADD,
-                )
+                    fee = networkFee,
+                ).copy(duplicateConfirmed = confirmedDuplicate),
             )
         }
-        return if (status.success) status.txHash else ""
+        saveToActivityBestEffort(soraAccount.substrateAddress) {
+            transactionBuilder.buildLiquidity(
+                txHash = outcome.txHash,
+                blockHash = (outcome as? TransactionOutcome.Confirmed)?.blockHash,
+                fee = networkFee,
+                status = TransactionStatus.PENDING,
+                date = Date().time,
+                token1 = tokenFrom,
+                token2 = tokenTo,
+                amount1 = amountFrom,
+                amount2 = amountTo,
+                type = TransactionLiquidityType.ADD,
+            )
+        }
+        return outcome
+    }
+
+    /** Every outcome is listed in Activity with what it was; its status comes from the journal. */
+    private fun saveToActivityBestEffort(walletId: String, build: () -> Transaction) {
+        try {
+            transactionHistoryRepository.saveTransaction(walletId, build())
+        } catch (_: Exception) {
+            // Activity is rebuilt from the durable journal; it never changes a result.
+        }
     }
 
     override suspend fun updatePools() {
@@ -409,36 +431,45 @@ class PoolsInteractorImpl(
         markerAssetDesired: BigDecimal,
         firstAmountMin: BigDecimal,
         secondAmountMin: BigDecimal,
-        networkFee: BigDecimal
-    ): String {
+        networkFee: BigDecimal,
+        confirmedDuplicate: Boolean,
+    ): TransactionOutcome {
         val soraAccount = userRepository.getCurSoraAccount()
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        val status = polkaswapExtrinsicRepository.observeRemoveLiquidity(
-            soraAccount.substrateAddress,
-            keypair,
-            token1,
-            token2,
-            markerAssetDesired,
-            firstAmountMin,
-            secondAmountMin
-        )
-        if (status.success) {
-            transactionHistoryRepository.saveTransaction(
-                transactionBuilder.buildLiquidity(
-                    txHash = status.txHash,
-                    blockHash = status.blockHash,
-                    fee = networkFee,
-                    status = TransactionStatus.PENDING,
-                    date = Date().time,
-                    token1 = token1,
-                    token2 = token2,
+        val outcome = sora2TransactionOutcome {
+            polkaswapExtrinsicRepository.observeRemoveLiquidity(
+                soraAccount.substrateAddress,
+                keypair,
+                token1,
+                token2,
+                markerAssetDesired,
+                firstAmountMin,
+                secondAmountMin,
+                Sora2SubmissionActivity.liquidity(
+                    add = false,
+                    token1Id = token1.id,
+                    token2Id = token2.id,
                     amount1 = firstAmountMin,
                     amount2 = secondAmountMin,
-                    type = TransactionLiquidityType.WITHDRAW,
-                )
+                    fee = networkFee,
+                ).copy(duplicateConfirmed = confirmedDuplicate),
             )
         }
-        return if (status.success) status.txHash else ""
+        saveToActivityBestEffort(soraAccount.substrateAddress) {
+            transactionBuilder.buildLiquidity(
+                txHash = outcome.txHash,
+                blockHash = (outcome as? TransactionOutcome.Confirmed)?.blockHash,
+                fee = networkFee,
+                status = TransactionStatus.PENDING,
+                date = Date().time,
+                token1 = token1,
+                token2 = token2,
+                amount1 = firstAmountMin,
+                amount2 = secondAmountMin,
+                type = TransactionLiquidityType.WITHDRAW,
+            )
+        }
+        return outcome
     }
 
     override suspend fun getRewardToken(): Token {

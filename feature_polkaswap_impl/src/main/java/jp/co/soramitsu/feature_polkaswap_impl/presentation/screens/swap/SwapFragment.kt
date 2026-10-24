@@ -55,7 +55,6 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.Market
-import jp.co.soramitsu.common.presentation.args.isLaunchedFromSoraCard
 import jp.co.soramitsu.common.presentation.args.tokenFromId
 import jp.co.soramitsu.common.presentation.args.tokenToId
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
@@ -74,6 +73,12 @@ import kotlinx.coroutines.FlowPreview
 @AndroidEntryPoint
 class SwapFragment : SoraBaseFragment<SwapViewModel>() {
 
+    /**
+     * Swap signs with the selected account. When that account cannot sign on this phone, the
+     * screen says so above the form and offers the repair (`SoraBaseFragment`).
+     */
+    override val explainsReadOnlyAccount: Boolean = true
+
     @Inject
     lateinit var vmf: SwapViewModel.AssistedSwapViewModelFactory
 
@@ -82,7 +87,6 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
             vmf.create(
                 idFrom = requireArguments().tokenFromId,
                 idTo = requireArguments().tokenToId,
-                isLaunchedFromSoraCard = requireArguments().isLaunchedFromSoraCard
             )
         }
     }
@@ -220,6 +224,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
                     onAmountChangeTo = viewModel::onToAmountChange,
                     onTokenSwapClick = viewModel::onTokensSwapClick,
                     onSwapClick = onSwapReview,
+                    onRetryFee = viewModel::onRetryFee,
                 )
             }
         }

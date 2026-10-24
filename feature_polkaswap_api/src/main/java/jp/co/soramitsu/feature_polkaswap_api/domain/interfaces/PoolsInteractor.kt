@@ -36,6 +36,7 @@ import java.math.BigDecimal
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
@@ -98,8 +99,10 @@ interface PoolsInteractor : PolkaswapInteractor {
         amountTo: BigDecimal,
         enabled: Boolean,
         presented: Boolean,
-        slippageTolerance: Double
-    ): String
+        slippageTolerance: Double,
+        /** True only after the user confirmed sending the same action again while one is waiting. */
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome
 
     fun isPairEnabled(
         inputAssetId: String,
@@ -117,8 +120,10 @@ interface PoolsInteractor : PolkaswapInteractor {
         markerAssetDesired: BigDecimal,
         firstAmountMin: BigDecimal,
         secondAmountMin: BigDecimal,
-        networkFee: BigDecimal
-    ): String
+        networkFee: BigDecimal,
+        /** True only after the user confirmed sending the same action again while one is waiting. */
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome
 
     suspend fun getLiquidityData(
         tokenFrom: Token,

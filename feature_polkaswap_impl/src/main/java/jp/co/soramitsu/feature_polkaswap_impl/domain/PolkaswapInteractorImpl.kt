@@ -39,13 +39,8 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapReposito
 abstract class PolkaswapInteractorImpl(
     private val polkaswapRepository: PolkaswapRepository,
 ) : PolkaswapInteractor {
-    private var baseDex: List<PoolDex>? = null
-
     override suspend fun getPoolDexList(): List<PoolDex> {
-        return baseDex ?: (
-            polkaswapRepository.getPoolBaseTokens().also {
-                baseDex = it
-            }
-            )
+        // Pool synchronization can populate or replace this list after the screen opens.
+        return polkaswapRepository.getPoolBaseTokens()
     }
 }

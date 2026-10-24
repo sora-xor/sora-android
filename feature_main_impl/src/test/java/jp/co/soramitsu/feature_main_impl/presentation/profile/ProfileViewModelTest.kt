@@ -37,36 +37,23 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
-import io.mockk.just
-import io.mockk.runs
-import io.mockk.verify
-import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
-import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.domain.ChainNode
-import jp.co.soramitsu.common.domain.DarkThemeManager
-import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
-import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
-import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
-import jp.co.soramitsu.test_data.SoraCardTestData.soraCardBasicStatusTest
+import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureState
 import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertNotNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -90,19 +77,10 @@ class ProfileViewModelTest {
     private lateinit var interactor: MainInteractor
 
     @MockK
-    private lateinit var assetsRouter: AssetsRouter
-
-    @MockK
     private lateinit var polkaswapRouter: PolkaswapRouter
 
     @MockK
-    private lateinit var soraCardInteractor: SoraCardInteractor
-
-    @MockK
     private lateinit var router: MainRouter
-
-    @MockK
-    private lateinit var walletRouter: WalletRouter
 
     @MockK
     private lateinit var referralRouter: ReferralRouter
@@ -114,41 +92,24 @@ class ProfileViewModelTest {
     private lateinit var nodeManager: NodeManager
 
     @MockK
-    private lateinit var soraConfigManager: SoraConfigManager
-
-    @MockK
-    private lateinit var darkThemeManager: DarkThemeManager
+    private lateinit var productionFeatureManager: ProductionFeatureManager
 
     private lateinit var profileViewModel: ProfileViewModel
 
     private fun initViewModel() {
         profileViewModel = ProfileViewModel(
-            assetsRouter,
             interactor,
             polkaswapRouter,
             router,
-            walletRouter,
             referralRouter,
             selectNodeRouter,
-            soraConfigManager,
-            soraCardInteractor,
+            productionFeatureManager,
             nodeManager,
-            darkThemeManager
         )
     }
 
     @Before
     fun setUp() = runTest {
-        every { soraCardInteractor.basicStatus } returns
-            MutableStateFlow(
-                soraCardBasicStatusTest.copy(
-                    initialized = true,
-                    availabilityInfo = SoraCardAvailabilityInfo(
-                        xorBalance = BigDecimal.ONE,
-                        enoughXor = true,
-                    )
-                )
-            )
         every { interactor.flowSelectedNode() } returns
             flowOf(
                 ChainNode(
@@ -159,12 +120,16 @@ class ProfileViewModelTest {
                     isDefault = true
                 )
             )
-        coEvery { soraConfigManager.getSoraCard() } returns true
+        coEvery { productionFeatureManager.getState() } returns ProductionFeatureState(
+            nexusAvailable = true,
+            nexusSendsAvailable = false,
+            polkamarktVisible = true,
+            polkamarktMutationsAvailable = false,
+            tairaAvailable = true,
+            tairaVisible = true,
+            tairaPreferenceIsExplicit = false,
+        )
         every { nodeManager.connectionState } returns flowOf(true)
-        every { router.showGetSoraCard(any(), any()) } returns Unit
-        every { router.showSoraCardDetails() } just runs
-        every { assetsRouter.showBuyCrypto(any()) } returns Unit
-        every { darkThemeManager.darkModeStatusFlow } returns MutableStateFlow(true)
     }
 
     @Test
@@ -178,42 +143,19 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `call showSoraCard with no state EXPECT navigate to get sora card`() = runTest {
+    fun `late feature configuration preserves the already connected node`() = runTest {
+        coEvery { productionFeatureManager.getState() } coAnswers {
+            delay(2000)
+            ProductionFeatureState(false, false, false, false, false, false, false)
+        }
         initViewModel()
+        advanceTimeBy(1500)
+        runCurrent()
+        assertEquals("node", profileViewModel.state.value.nodeName)
+        assertEquals(true, profileViewModel.state.value.nodeConnected)
         advanceUntilIdle()
-        profileViewModel.showSoraCard()
-        verify { router.showGetSoraCard(any(), any()) }
-    }
-
-    @Test
-    fun `call showSoraCard with state EXPECT navigate to sora card sdk state screen`() = runTest {
-        initViewModel()
-        every { soraCardInteractor.basicStatus } returns
-            MutableStateFlow(
-                soraCardBasicStatusTest.copy(
-                    initialized = true,
-                    verification = SoraCardCommonVerification.Pending,
-                )
-            )
-        advanceUntilIdle()
-        profileViewModel.showSoraCard()
-        advanceUntilIdle()
-        assertNotNull(profileViewModel.launchSoraCardSignIn.value)
-    }
-
-    @Test
-    fun `call showBuyCrypto EXPECT navigate to buy crypto screen`() {
-        every { soraCardInteractor.basicStatus } returns
-            MutableStateFlow(
-                soraCardBasicStatusTest.copy(
-                    initialized = true,
-                    verification = SoraCardCommonVerification.Pending,
-                    ibanInfo = IbanInfo("", IbanStatus.ACTIVE, "", "")
-                )
-            )
-        initViewModel()
-        profileViewModel.showBuyCrypto()
-        val launch = profileViewModel.launchSoraCardSignIn.getOrAwaitValue()
-        assertEquals(SoraCardFlow.SoraCardGateHubFlow, launch.flow)
+        assertEquals("node", profileViewModel.state.value.nodeName)
+        assertEquals(true, profileViewModel.state.value.nodeConnected)
+        assertEquals(false, profileViewModel.state.value.polkamarktVisible)
     }
 }

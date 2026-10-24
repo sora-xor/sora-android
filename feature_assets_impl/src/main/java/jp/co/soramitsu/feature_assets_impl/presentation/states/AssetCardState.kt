@@ -59,7 +59,8 @@ internal data class AssetCardStateData(
     val isTransferableBalanceAvailable: Boolean = false,
     val hasTokens: Boolean = false,
     val events: List<EventUiModel>,
-    val buyCryptoAvailable: Boolean,
+    /** Names the XOR that is free on the chain and locked; null when nothing is locked. */
+    val lockedNote: String? = null,
 )
 
 internal val emptyAssetCardState = AssetCardStateData(
@@ -76,5 +77,4 @@ internal val emptyAssetCardState = AssetCardStateData(
     poolsState = PoolsListState(emptyList()),
     poolsSum = "",
     events = emptyList(),
-    buyCryptoAvailable = false,
 )

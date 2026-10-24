@@ -1,7 +1,15 @@
 <resources>
 
-  <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
-    <item name="android:windowBackground">@drawable/bg_splash</item>
+  <!-- The OS draws this before the saved in-app theme is available. -->
+  <style name="SplashTheme" parent="AppTheme">
+    <item name="android:windowBackground">#06060B</item>
+    <item name="android:colorBackground">#06060B</item>
+    <item name="android:statusBarColor">#06060B</item>
+    <item name="android:navigationBarColor">#06060B</item>
+    <item name="android:windowLightStatusBar">false</item>
+    <item name="android:windowLightNavigationBar">false</item>
   </style>
+
+  <style name="IrohaConnectTheme" parent="AppTheme" />
 
 </resources>

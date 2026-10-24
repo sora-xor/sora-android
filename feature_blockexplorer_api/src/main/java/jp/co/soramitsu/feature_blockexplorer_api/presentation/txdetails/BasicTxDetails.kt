@@ -62,10 +62,10 @@ import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetwork
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.toColor
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.toName
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -78,6 +78,7 @@ fun BasicTxDetails(
     amountContent: @Composable BoxScope.() -> Unit,
     onCloseClick: () -> Unit,
     onCopy: (String) -> Unit,
+    onOpenExplorer: (String) -> Unit,
 ) {
     Column(
         modifier = modifier.padding(vertical = Dimens.x1_5, horizontal = Dimens.x2),
@@ -154,6 +155,17 @@ fun BasicTxDetails(
                         value1 = stringResource(id = state.txStatus.toName()),
                         valueColor = state.txStatus.toColor(),
                     )
+                    state.statusNote?.let { note ->
+                        Text(
+                            modifier = Modifier
+                                .testTagAsId("TransactionStatusNote")
+                                .fillMaxWidth()
+                                .padding(bottom = Dimens.x1),
+                            text = note,
+                            style = MaterialTheme.customTypography.textXS,
+                            color = MaterialTheme.customColors.fgPrimary,
+                        )
+                    }
                     Divider(
                         modifier = Modifier.padding(bottom = Dimens.x1),
                         thickness = 1.dp,
@@ -225,6 +237,18 @@ fun BasicTxDetails(
                 )
             }
         }
+        state.explorerUrl?.let { explorerUrl ->
+            BleachedButton(
+                size = Size.Large,
+                modifier = Modifier
+                    .testTagAsId("ViewOnExplorerButton")
+                    .fillMaxWidth()
+                    .padding(bottom = Dimens.x1),
+                order = Order.SECONDARY,
+                text = stringResource(id = R.string.tx_details_view_on_explorer),
+                onClick = { onOpenExplorer(explorerUrl) },
+            )
+        }
         BleachedButton(
             size = Size.Large,
             modifier = Modifier
@@ -274,7 +298,8 @@ private fun PreviewBasicTxDetails() {
         state = previewBasicTxDetailsItem,
         imageContent = { Text(text = "imageContent") },
         amountContent = { Text(text = "amountContent") },
-        onCloseClick = { /*TODO*/ },
+        onCloseClick = {},
         onCopy = {},
+        onOpenExplorer = {},
     )
 }

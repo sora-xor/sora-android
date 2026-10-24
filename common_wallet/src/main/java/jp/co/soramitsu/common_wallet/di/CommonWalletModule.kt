@@ -40,9 +40,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import jp.co.soramitsu.common.util.QrCodeDecoder
-import jp.co.soramitsu.common_wallet.data.SoraCardNetworkClientImpl
-import jp.co.soramitsu.oauth.network.SoraCardNetworkClient
-import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -52,15 +49,5 @@ class CommonWalletModule {
     @Provides
     fun provideQrCodeDecoder(@ApplicationContext context: Context): QrCodeDecoder {
         return QrCodeDecoder(context.contentResolver)
-    }
-
-    @Singleton
-    @Provides
-    fun provideSoraCardNetworkClient(
-        restClient: RestClient
-    ): SoraCardNetworkClient {
-        return SoraCardNetworkClientImpl(
-            restClient = restClient
-        )
     }
 }

@@ -60,6 +60,7 @@ internal fun EditAccountList(
                 address = account.substrateAddress,
                 accountName = account.accountName,
                 accountIcon = icon,
+                readOnly = readOnly,
                 selectableIcon = if (isSelectedAction) R.drawable.ic_selected_accent_pin_24 else R.drawable.ic_selected_pin_empty_24,
                 tint = MaterialTheme.customColors.accentPrimary,
                 showSelectableIcon = true,

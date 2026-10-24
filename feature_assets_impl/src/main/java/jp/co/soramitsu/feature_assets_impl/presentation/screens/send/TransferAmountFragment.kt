@@ -65,6 +65,12 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 @AndroidEntryPoint
 class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
 
+    /**
+     * Send signs with the selected account. When that account cannot sign on this phone, the
+     * screen says so above the form and offers the repair (`SoraBaseFragment`).
+     */
+    override val explainsReadOnlyAccount: Boolean = true
+
     @Inject
     lateinit var vmf: TransferAmountViewModel.TransferAmountViewModelFactory
 
@@ -177,6 +183,9 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
                         feeAmount = state.fee,
                         reviewEnabled = state.reviewEnabled,
                         shouldTransactionReminderInsufficientWarningBeShown = state.shouldTransactionReminderInsufficientWarningBeShown,
+                        feeUnavailable = state.feeUnavailable,
+                        onRetryFee = viewModel::onRetryFee,
+                        lockedNote = state.lockedNote,
                     )
                 }
 
@@ -190,11 +199,12 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-        viewModel.transactionSuccessEvent.observe {
+        viewModel.transactionSuccessEvent.observe { badge ->
             activity?.let {
+                // "Transaction confirmed" or "Transaction submitted", as the outcome says.
                 ToastDialog(
                     R.drawable.ic_green_pin,
-                    R.string.wallet_transaction_submitted_1,
+                    badge.text,
                     1000,
                     it
                 ).show()

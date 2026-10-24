@@ -1,0 +1,20 @@
+{
+  "origin": "git@github.com:sora-xor/sora-android.git",
+  "current_branch": "modernize",
+  "recovery_refs": [
+    "refs/heads/recovery/20261009/android-combined-upgrade",
+    "refs/heads/recovery/20261009/android-staging-retry",
+    "refs/heads/recovery/20261009/sora-android",
+    "refs/heads/recovery/20261009/sora-android-camerax-16kb-20260925",
+    "refs/heads/recovery/20261009/sora-android-datastore-16kb-20260924",
+    "refs/heads/recovery/20261009/sora-android-develop-integration",
+    "refs/heads/recovery/20261009/sora-android-full-lock-guard-20260924",
+    "refs/heads/recovery/20261009/sora-android-full-locks-20260924",
+    "refs/heads/recovery/20261009/sora-android-graphics-path-16kb-20260925",
+    "refs/heads/recovery/20261009/sora-android-index",
+    "refs/heads/recovery/20261009/sora-android-locale-fallback-20260925",
+    "refs/heads/recovery/20261009/sora-android-release-candidate-20260924",
+    "refs/heads/recovery/20261009/sora-android-rootbeer-16kb-20260924",
+    "refs/heads/recovery/20261009/sora-android-xcrypto-16kb-integration-20260924"
+  ]
+}
