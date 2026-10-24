@@ -95,7 +95,12 @@ class NexusPortfolioRepository @Inject constructor(
             }
         }
 
-    private fun observeWallet(walletId: String): Flow<List<NexusPortfolioBalance>> = flow {
+    /**
+     * One wallet's Nexus rows, read-only, whether or not it is the selected wallet. The
+     * Portfolio view reads every wallet this way; it never sends from a wallet that is not
+     * selected (the home's Nexus send only takes [observeCurrentWallet] rows).
+     */
+    internal fun observeWallet(walletId: String): Flow<List<NexusPortfolioBalance>> = flow {
         val migration = database.walletIdentityDao()
             .getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
         val identity = database.walletIdentityDao().getWallet(walletId)
