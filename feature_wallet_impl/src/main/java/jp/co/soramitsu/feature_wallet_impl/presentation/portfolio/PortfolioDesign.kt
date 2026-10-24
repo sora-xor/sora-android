@@ -71,12 +71,14 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.nexus.WalletNetworkDirectory
 import jp.co.soramitsu.common.nexus.WalletNetworkId
+import jp.co.soramitsu.common.nexus.WalletNetworkTag
 import jp.co.soramitsu.common.presentation.compose.neon.GlassCard
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
 import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
 import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NetworkTagChip
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
 import jp.co.soramitsu.ui_core.component.icons.TokenIcon
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -291,7 +293,7 @@ internal fun TokenOrb(iconUri: String?, size: Dp, modifier: Modifier = Modifier)
     }
 }
 
-/** Small uppercase tag, e.g. TEST. */
+/** Small tag, e.g. Selected. */
 @Composable
 internal fun PortfolioTag(text: String, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
@@ -307,7 +309,7 @@ internal fun PortfolioTag(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** Readiness chip: Swap-ready (with the flower) or TEST. "No route" has no chip. */
+/** Readiness chip: Swap-ready (with the flower) or the directory's Testnet tag. "No route" has no chip. */
 @Composable
 internal fun ReadinessChip(ready: Boolean, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
@@ -330,7 +332,7 @@ internal fun ReadinessChip(ready: Boolean, modifier: Modifier = Modifier) {
             )
         }
     } else {
-        PortfolioTag(stringResource(R.string.portfolio_test_tag), modifier)
+        NetworkTagChip(WalletNetworkTag.TESTNET, modifier)
     }
 }
 

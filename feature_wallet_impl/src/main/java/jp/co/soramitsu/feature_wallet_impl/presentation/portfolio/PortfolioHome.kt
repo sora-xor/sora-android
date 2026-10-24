@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.nexus.WalletNetworkId
+import jp.co.soramitsu.common.nexus.WalletNetworkTag
 import jp.co.soramitsu.common.presentation.compose.neon.HeroCard
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
 import jp.co.soramitsu.common.presentation.compose.neon.NeonSegments
@@ -84,6 +85,8 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioTotals
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.Readiness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.WalletFreshness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.portfolioTag
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NetworkTagChip
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -714,7 +717,7 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(token.symbol, style = MaterialTheme.customTypography.headline3, color = n.textPrimary, maxLines = 1)
                     Spacer(Modifier.width(8.dp))
-                    if (group.testnetOnly) PortfolioTag(stringResource(R.string.portfolio_test_tag)) else ChangeBadge(token.change24h, format)
+                    if (group.testnetOnly) NetworkTagChip(WalletNetworkTag.TESTNET) else ChangeBadge(token.change24h, format)
                 }
                 Spacer(Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -859,9 +862,9 @@ private fun NetworkRow(model: PortfolioModel, group: PortfolioGroup, format: Por
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(networkName(network), style = MaterialTheme.customTypography.headline3, color = n.textPrimary, maxLines = 1)
-                    if (network.isTestnet) {
+                    network.portfolioTag?.let { tag ->
                         Spacer(Modifier.width(8.dp))
-                        PortfolioTag(stringResource(R.string.portfolio_test_tag))
+                        NetworkTagChip(tag)
                     }
                 }
                 Spacer(Modifier.height(4.dp))
