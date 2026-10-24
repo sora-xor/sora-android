@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_blockexplorer_impl.domain
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigDecimal
+import java.util.Calendar
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.androidfoundation.format.unsafeCast
@@ -305,6 +306,52 @@ class TransactionHistoryHandlerTest {
                 state.events[1].unsafeCast<EventUiModel.EventTxUiModel.EventTransferOutUiModel>().txHash,
             )
             this.finishAssertion()
+        }
+    }
+
+    @Test
+    fun `loading history separates matching day numbers across months and years`() = runTest {
+        advanceUntilIdle()
+        val timestamps = listOf(2026 to 10, 2026 to 9, 2025 to 9).map { (year, month) ->
+            Calendar.getInstance().apply {
+                clear()
+                set(year, month - 1, 24, 12, 0, 0)
+            }.timeInMillis
+        }
+        val transfers = timestamps.mapIndexed { index, timestamp ->
+            Transaction.Transfer(
+                TransactionBase(
+                    txHash = "history-date-$index",
+                    blockHash = "blockHash",
+                    fee = BigDecimal.ONE,
+                    status = TransactionStatus.COMMITTED,
+                    timestamp = timestamp,
+                ),
+                BigDecimal.TEN,
+                "cnRuoXdU9t5bv5EQAiXT2gQozAvrVawqZkT2AQS1Msr8T8ZZu",
+                TransactionTransferType.OUTGOING,
+                TestTokens.valToken,
+            )
+        }
+        transactionHistoryRepository.stub {
+            onBlocking { getTransactionHistory(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull()) }
+                .thenReturn(
+                    TransactionsInfo(transfers.take(1), false),
+                    TransactionsInfo(transfers.drop(1), true),
+                )
+        }
+        transactionHistoryHandler.refreshHistoryEvents()
+        transactionHistoryHandler.onMoreHistoryEventsRequested()
+        advanceUntilIdle()
+
+        val events = (transactionHistoryHandler.historyState.value as HistoryState.History).events
+        assertEquals(6, events.size)
+        for (index in transfers.indices) {
+            assertTrue(events[index * 2] is EventUiModel.EventTimeSeparatorUiModel)
+            assertEquals(
+                transfers[index].base.txHash,
+                (events[index * 2 + 1] as EventUiModel.EventTxUiModel).txHash,
+            )
         }
     }
 

@@ -38,11 +38,17 @@ object DateTimeUtils {
     fun isSameMonth(d1: Long, d2: Long): Boolean {
         val date1 = Calendar.getInstance().apply { timeInMillis = d1 }
         val date2 = Calendar.getInstance().apply { timeInMillis = d2 }
-        return date1.get(Calendar.MONTH) == date2.get(Calendar.MONTH)
+        return isSameMonth(date1, date2)
     }
     fun isSameDay(d1: Long, d2: Long): Boolean {
         val date1 = Calendar.getInstance().apply { timeInMillis = d1 }
         val date2 = Calendar.getInstance().apply { timeInMillis = d2 }
-        return date1.get(Calendar.DAY_OF_MONTH) == date2.get(Calendar.DAY_OF_MONTH)
+        return isSameMonth(date1, date2) &&
+            date1.get(Calendar.DAY_OF_MONTH) == date2.get(Calendar.DAY_OF_MONTH)
     }
+
+    private fun isSameMonth(date1: Calendar, date2: Calendar): Boolean =
+        date1.get(Calendar.ERA) == date2.get(Calendar.ERA) &&
+            date1.get(Calendar.YEAR) == date2.get(Calendar.YEAR) &&
+            date1.get(Calendar.MONTH) == date2.get(Calendar.MONTH)
 }
