@@ -282,9 +282,11 @@ class AssetsRepositoryTest {
         )
     )
 
+    // Stored as "SORA" by earlier versions (oneTokenLocal); the mapper shows native XOR by its
+    // symbol (AssetHolder.displayName, modernize 2e49467a).
     private fun oneToken() = Token(
         "0x0200000000000000000000000000000000000000000000000000000000000000",
-        "SORA",
+        "XOR",
         "XOR",
         18,
         false,
