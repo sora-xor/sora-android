@@ -50,12 +50,10 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.androidfoundation.intent.openGooglePlay
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -65,17 +63,9 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
 
     override val viewModel: ProfileViewModel by viewModels()
 
-    private val soraCardSignIn = registerForActivityResult(
-        SoraCardContract()
-    ) { viewModel.handleSoraCardResult(it) }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).showBottomBar()
-
-        viewModel.launchSoraCardSignIn.observe { contractData ->
-            soraCardSignIn.launch(contractData)
-        }
     }
 
     override fun NavGraphBuilder.content(
@@ -106,10 +96,6 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
                 ProfileItems(
                     state = state,
                     onAccountsClick = viewModel::showAccountList,
-                    onSoraCardClick = {
-                        if (state.soraCardNeedUpdate) this@ProfileFragment.context?.openGooglePlay() else viewModel.showSoraCard()
-                    },
-                    onBuyCrypto = viewModel::showBuyCrypto,
                     onPolkamarktClick = viewModel::showPolkamarkt,
                     onNodeClick = viewModel::showSelectNode,
                     onAppSettingsClick = viewModel::showAppSettings,

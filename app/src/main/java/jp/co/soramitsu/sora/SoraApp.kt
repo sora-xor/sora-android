@@ -32,14 +32,17 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.os.Bundle
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
 import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -58,8 +61,11 @@ import timber.log.Timber
 @HiltAndroidApp
 open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
+    // Started with the first activity once the wallet upgrade gate is clear, not in
+    // Application.onCreate: a process that WorkManager starts in the background never opens the
+    // node socket or fetches node lists.
     @Inject
-    lateinit var nodeManager: NodeManager
+    lateinit var nodeManager: dagger.Lazy<NodeManager>
 
     @Inject
     lateinit var resourceManager: ResourceManager
@@ -79,9 +85,13 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
         StartupTimeTrace.begin()
+        DarkThemeManager.captureNewInstallDefault(this)
         // Hilt injects eager singletons before this class's onCreate body. Prepare the immutable
         // wallet backup first so no injected database consumer can race the upgrade gate.
         WalletUpgradeBackup.prepare(this)
+        // Apply last run's light/dark choice before the splash is drawn (no light flash for
+        // dark-theme users). Reads one tiny preferences file; never touches wallet data.
+        DarkThemeManager.applyCachedNightMode(this)
     }
 
     override fun newImageLoader(): ImageLoader {
@@ -96,15 +106,23 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
             .setWorkerFactory(workerFactory)
             .build()
 
+    // Instantiate the expiry watcher on every app process, even when the backup screen is not reopened.
+    @Inject lateinit var sensitiveClipboard: jp.co.soramitsu.common.util.SensitiveClipboard
+
     override fun onCreate() {
         super.onCreate()
 
         initLogger()
 
         registerActivityLifecycleCallbacks(resourceManager)
+        registerActivityLifecycleCallbacks(StartNodeManagerWhenWalletReady())
         val firebaseApp = runCatching { FirebaseApp.initializeApp(this) }
             .onFailure { Timber.e(it) }
             .getOrNull()
+        if (firebaseApp != null) {
+            runCatching { FirebaseAnalyticsPolicy.apply(FirebaseAnalytics.getInstance(this)) }
+                .onFailure { Timber.w("Firebase Analytics policy could not be applied") }
+        }
         FirebaseWrapper.setCrashlyticsEnabled(firebaseApp != null)
 
         OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
@@ -112,6 +130,31 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         OptionsProvider.APPLICATION_ID = BuildConfig.APPLICATION_ID
 
         darkThemeManager.updateUiModeFromCache()
+    }
+
+    /**
+     * While the upgrade gate blocks startup, the wallet database stays closed and the node cannot
+     * be started. Recovery on the splash screen (Try again, Check again, Continue read-only) can
+     * clear the gate without a restart, so every later activity creation or resume tries again
+     * until the node connection has started.
+     */
+    private inner class StartNodeManagerWhenWalletReady : ActivityLifecycleCallbacks {
+        private fun startWhenReady() {
+            if (WalletUpgradeBackup.blockingFailure() != null) return
+            if (nodeManager.get().ensureStarted()) {
+                unregisterActivityLifecycleCallbacks(this)
+            }
+        }
+
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) =
+            startWhenReady()
+
+        override fun onActivityStarted(activity: Activity) = Unit
+        override fun onActivityResumed(activity: Activity) = startWhenReady()
+        override fun onActivityPaused(activity: Activity) = Unit
+        override fun onActivityStopped(activity: Activity) = Unit
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+        override fun onActivityDestroyed(activity: Activity) = Unit
     }
 
     private fun initLogger() {

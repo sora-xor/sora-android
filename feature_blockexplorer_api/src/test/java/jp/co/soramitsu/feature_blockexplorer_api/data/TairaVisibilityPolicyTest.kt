@@ -121,6 +121,8 @@ class TairaVisibilityPolicyTest {
         ).isFalse()
     }
 
+    // SORA Nexus line: before any PI flags were cached, Taira keeps the tester default (shown)
+    // unless the user switched it off; the 3.9.x store line hides it there instead.
     @Test
     fun `missing cache keeps tester default but interrupted cache hides Taira`() {
         assertThat(
@@ -131,6 +133,14 @@ class TairaVisibilityPolicyTest {
                 explicitPreference = null,
             ).visible
         ).isTrue()
+        assertThat(
+            TairaVisibilityPolicy.resolveCachedSnapshot(
+                cacheComplete = null,
+                cachedNexusAvailable = null,
+                cachedRemoteDefaultVisible = null,
+                explicitPreference = false,
+            ).visible
+        ).isFalse()
         assertThat(
             TairaVisibilityPolicy.resolveCachedSnapshot(
                 cacheComplete = false,

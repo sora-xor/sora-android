@@ -25,16 +25,31 @@ class PendingRecoveryStartupScheduler @Inject constructor(
 
     /**
      * Recovery is status-only, but WorkManager initialization and enqueueing do not belong on the
-     * process-start critical path. Start them only after wallet migration has completed safely.
+     * process-start critical path. Start them only after wallet migration has completed safely,
+     * and only when the journal has something to recover, so an idle wallet never wakes up in
+     * the background. If the journal cannot be read, schedule anyway.
      */
     fun scheduleAfterWalletMigration() =
         coroutineManager.applicationScope.launch(coroutineManager.io) {
             scheduleSafely("NEXUS_PENDING_RECOVERY_SCHEDULING_FAILED") {
-                nexusScheduler.ensureOnStartup()
+                if (hasWorkOrUnknown { nexusScheduler.hasRecoverableWork() }) {
+                    nexusScheduler.ensureOnStartup()
+                }
             }
             scheduleSafely("SORA2_PENDING_RECOVERY_SCHEDULING_FAILED") {
-                sora2Scheduler.ensureOnStartup()
+                if (hasWorkOrUnknown { sora2Scheduler.hasRecoverableWork() }) {
+                    sora2Scheduler.ensureOnStartup()
+                }
             }
+        }
+
+    private suspend inline fun hasWorkOrUnknown(probe: () -> Boolean): Boolean =
+        try {
+            probe()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            true
         }
 
     private inline fun scheduleSafely(diagnostic: String, schedule: () -> Unit) {

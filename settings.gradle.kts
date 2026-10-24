@@ -21,20 +21,15 @@ dependencyResolutionManagement {
                 }
             }
             filter {
+                includeModule("androidx.graphics", "graphics-path")
                 includeModule("jp.co.soramitsu", "android-foundation")
-                includeModule("jp.co.soramitsu", "android-sora-card")
                 includeModule("jp.co.soramitsu", "ui-core")
                 includeModule("jp.co.soramitsu", "xbackup")
                 includeModule("jp.co.soramitsu", "xcrypto")
                 includeModule("jp.co.soramitsu", "xsubstrate")
                 includeModule("jp.co.soramitsu.xnetworking", "lib-android")
                 includeModule("io.emeraldpay.polkaj", "polkaj-scale")
-                includeModule("com.paywings.oauth", "android-sdk")
-                includeModule("com.paywings.kyc", "android-sdk")
-                includeModule(
-                    "com.paywings.onboarding.kyc.android-libs",
-                    "idensic-mobile-sdk",
-                )
+                includeModule("com.goterl", "lazysodium-android")
             }
         }
         google()
@@ -79,8 +74,6 @@ include(":feature_referral_api")
 include(":feature_referral_impl")
 include(":feature_select_node_api")
 include(":feature_select_node_impl")
-include(":feature_sora_card_api")
-include(":feature_sora_card_impl")
 include(":feature_wallet_api")
 include(":feature_wallet_impl")
 include(":network")

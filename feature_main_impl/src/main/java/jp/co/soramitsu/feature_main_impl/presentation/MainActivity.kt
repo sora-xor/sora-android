@@ -59,6 +59,14 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.DarkThemeManager
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
+import kotlinx.coroutines.launch
+import jp.co.soramitsu.common.presentation.compose.theme.neon.FxPolicy
+import jp.co.soramitsu.common.presentation.compose.theme.neon.FxTier
+import jp.co.soramitsu.common.presentation.compose.theme.neon.DeviceFxSignals
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.attrColor
@@ -207,6 +215,17 @@ class MainActivity :
 
         binding.bottomNavigationView.menu.getItem(2).isEnabled = false
 
+        ViewCompat.setAccessibilityDelegate(binding.fabMain, object : androidx.core.view.AccessibilityDelegateCompat() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: androidx.core.view.accessibility.AccessibilityNodeInfoCompat) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.className = android.widget.Button::class.java.name
+            }
+        })
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                NeonEffectsPreference.reduceEffects.collect { updateSwapEffects() }
+            }
+        }
         binding.fabMain.setOnClickListener {
             debounceClickHandler.debounceClick {
                 polkaswapRouter.showSwap(SubstrateOptionsProvider.feeAssetId)
@@ -387,6 +406,13 @@ class MainActivity :
 
         timeInBackground = null
         super.onResume()
+        updateSwapEffects()
+    }
+
+    private fun updateSwapEffects() {
+        val policy = FxPolicy.from(DeviceFxSignals.read(this), NeonEffectsPreference.reduceEffects.value)
+        requireBinding()?.fabMain?.setBackgroundResource(
+            if (policy.glows && policy.tier != FxTier.MINIMAL) R.drawable.bg_neon_swap_glow else 0)
     }
 
     private fun idleTimePassedFrom(timeInBackground: Date): Boolean {

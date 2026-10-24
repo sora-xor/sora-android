@@ -96,6 +96,8 @@ class Sora2PendingRecoveryBatchPlannerTest {
         val witness = mockk<Sora2PendingSubmissionLocal>()
         every { witness.walletId } returns "wallet-1"
         every { witness.operationKind } returns Sora2PendingSubmissionLocal.OPERATION_GENERIC
+        every { witness.state } returns Sora2PendingSubmissionLocal.STATE_SUBMISSION_UNKNOWN
+        every { witness.transactionHash } returns "0x${"a1".repeat(32)}"
 
         val error = try {
             Sora2LegacyMigrationAdmissionGate.requireNoUnresolvedWitness(

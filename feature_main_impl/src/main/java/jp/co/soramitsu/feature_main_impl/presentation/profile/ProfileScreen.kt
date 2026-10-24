@@ -36,7 +36,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -45,14 +44,11 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.ui_core.component.item.CategoryItem
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
 internal fun ProfileItems(
     state: ProfileScreenState,
     onAccountsClick: () -> Unit,
-    onSoraCardClick: () -> Unit,
-    onBuyCrypto: () -> Unit,
     onPolkamarktClick: () -> Unit,
     onNodeClick: () -> Unit,
     onAppSettingsClick: () -> Unit,
@@ -72,32 +68,6 @@ internal fun ProfileItems(
         icon = R.drawable.ic_settings_account,
         onClick = onAccountsClick,
     )
-    if (state.soraCardEnabled) {
-        CategoryItem(
-            modifier = Modifier
-                .testTagAsId("SoraCard")
-                .padding(top = Dimens.x2),
-            title = stringResource(id = R.string.more_menu_sora_card_title),
-            subtitle = if (state.soraCardNeedUpdate)
-                stringResource(id = jp.co.soramitsu.oauth.R.string.card_update_title) else
-                state.soraCardIbanError ?: stringResource(id = state.soraCardStatusStringRes),
-            subtitleIcon = if (state.soraCardNeedUpdate) null else state.soraCardStatusIconDrawableRes,
-            subtitleColor = if (state.soraCardNeedUpdate) MaterialTheme.customColors.statusError else MaterialTheme.customColors.fgSecondary,
-            icon = R.drawable.ic_buy_crypto,
-            onClick = onSoraCardClick,
-        )
-        if (state.canStartGatehubOnboarding) {
-            CategoryItem(
-                modifier = Modifier
-                    .testTagAsId("BuyXor")
-                    .padding(top = Dimens.x2),
-                title = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_title),
-                subtitle = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
-                icon = R.drawable.ic_settings_buy_crypto,
-                onClick = onBuyCrypto,
-            )
-        }
-    }
     if (state.polkamarktVisible) {
         CategoryItem(
             modifier = Modifier
@@ -188,17 +158,9 @@ private fun PreviewProfile() {
                 nodeName = "wss://abcdf.df",
                 nodeConnected = true,
                 isDebugMenuAvailable = true,
-                soraCardEnabled = true,
-                soraCardNeedUpdate = false,
-                soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
-                soraCardStatusIconDrawableRes = R.drawable.ic_connection_indicator_green,
-                soraCardIbanError = null,
-                canStartGatehubOnboarding = true,
                 polkamarktVisible = true,
             ),
             onAccountsClick = { },
-            onSoraCardClick = { },
-            onBuyCrypto = { },
             onPolkamarktClick = { },
             onNodeClick = { },
             onAppSettingsClick = { },

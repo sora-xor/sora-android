@@ -37,9 +37,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.core_db.model.WalletMigrationIds
+import jp.co.soramitsu.core_db.WalletSigningGate
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.QualifiedSora2MutationRuntime
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
@@ -62,17 +63,25 @@ interface DefinitelyNotSubmitted
  */
 interface ExtrinsicSubmissionUnknown {
     val transactionHash: String
+
+    /**
+     * True when the node answered the submission with the transaction hash and only the wait for
+     * finality is unfinished. False when even the node's receipt of the transaction is unknown.
+     */
+    val acceptedByNode: Boolean get() = false
 }
 
 class ExtrinsicSubmissionUnknownException(
     override val transactionHash: String,
     cause: Throwable,
+    override val acceptedByNode: Boolean = false,
 ) : IllegalStateException("EXTRINSIC_SUBMISSION_UNKNOWN", cause),
     ExtrinsicSubmissionUnknown
 
 class ExtrinsicSubmissionUnknownCancellation(
     override val transactionHash: String,
     cause: CancellationException,
+    override val acceptedByNode: Boolean = false,
 ) : CancellationException("EXTRINSIC_SUBMISSION_UNKNOWN_CANCELLED"),
     ExtrinsicSubmissionUnknown {
     init {
@@ -108,7 +117,6 @@ internal fun requireExactSora2TransferFee(
 
 @Singleton
 class ExtrinsicManager @Inject constructor(
-    private val calls: SubstrateCalls,
     private val factory: ExtrinsicBuilderFactory,
     private val runtimeManager: RuntimeManager,
     private val database: AppDatabase,
@@ -148,7 +156,7 @@ class ExtrinsicManager @Inject constructor(
         val builder = contextBoundBuilder.builder
         builder.formExtrinsic()
         val extrinsic = builder.build(useBatchAll)
-        return calls.getExtrinsicFee(extrinsic)
+        return runtimeRpcClient.queryPartialFee(extrinsic)
     }
 
     /**
@@ -169,7 +177,7 @@ class ExtrinsicManager @Inject constructor(
         val builder = contextBoundBuilder.builder
         builder.formExtrinsic()
         val extrinsic = builder.build(useBatchAll)
-        return calls.getExtrinsicFee(extrinsic)
+        return runtimeRpcClient.queryPartialFee(extrinsic)
     }
 
     suspend fun submitExtrinsic(
@@ -200,6 +208,7 @@ class ExtrinsicManager @Inject constructor(
         keypair: Sr25519Keypair,
         useBatchAll: Boolean = false,
         untilStatus: String = SubstrateCalls.FINALIZED,
+        activity: Sora2SubmissionActivity? = null,
         formExtrinsic: suspend ExtrinsicBuilder.() -> Unit,
     ): ExtrinsicSubmitStatus = submitAndWaitExtrinsicForPurpose(
         from = from,
@@ -207,6 +216,7 @@ class ExtrinsicManager @Inject constructor(
         useBatchAll = useBatchAll,
         untilStatus = untilStatus,
         purpose = PreparedPurpose.GENERIC,
+        activity = activity,
         formExtrinsic = formExtrinsic,
     )
 
@@ -220,6 +230,7 @@ class ExtrinsicManager @Inject constructor(
         keypair: Sr25519Keypair,
         useBatchAll: Boolean = false,
         untilStatus: String = SubstrateCalls.FINALIZED,
+        activity: Sora2SubmissionActivity? = null,
         formExtrinsic: suspend ExtrinsicBuilder.() -> Unit,
     ): ExtrinsicSubmitStatus = submitAndWaitExtrinsicForPurpose(
         from = from,
@@ -227,6 +238,7 @@ class ExtrinsicManager @Inject constructor(
         useBatchAll = useBatchAll,
         untilStatus = untilStatus,
         purpose = PreparedPurpose.LEGACY_MIGRATION,
+        activity = activity,
         formExtrinsic = formExtrinsic,
     )
 
@@ -236,12 +248,17 @@ class ExtrinsicManager @Inject constructor(
         useBatchAll: Boolean,
         untilStatus: String,
         purpose: PreparedPurpose,
+        activity: Sora2SubmissionActivity?,
         formExtrinsic: suspend ExtrinsicBuilder.() -> Unit,
     ): ExtrinsicSubmitStatus {
         check(untilStatus == SubstrateCalls.FINALIZED) {
             "SORA2_CANONICAL_FINALITY_REQUIRED"
         }
         val submitted = WalletMutationCoordinator.withLock {
+            if (purpose != PreparedPurpose.LEGACY_MIGRATION) {
+                // A second legacy claim is refused outright by its own gate while one is unresolved.
+                requireNoWaitingSameAction(from, activity)
+            }
             val prepared = prepareExtrinsicUnlocked(
                 from = from,
                 keypair = keypair,
@@ -249,7 +266,7 @@ class ExtrinsicManager @Inject constructor(
                 purpose = purpose,
                 formExtrinsic = formExtrinsic,
             )
-            submitGenericPreparedOnceUnlocked(prepared)
+            submitGenericPreparedOnceUnlocked(prepared, activity)
         }
         return awaitSubmittedTerminal(submitted)
     }
@@ -308,11 +325,7 @@ class ExtrinsicManager @Inject constructor(
         ) { "SORA2_PREPARED_PURPOSE_INVALID" }
         requireSigningWalletAvailable(from)
         if (purpose == PreparedPurpose.LEGACY_MIGRATION) {
-            Sora2LegacyMigrationAdmissionGate.requireNoUnresolvedWitness(
-                walletId = from,
-                unresolved = database.walletIdentityDao()
-                    .getUnresolvedSora2PendingSubmissions(),
-            )
+            pendingSubmissionCoordinator.requireLegacyMigrationAdmissible(from)
         }
         val contextBoundBuilder = if (qualifiedPolkamarktRuntime == null) {
             val signingRuntime = runtimeManager.getMutationRuntimeContext()
@@ -367,9 +380,17 @@ class ExtrinsicManager @Inject constructor(
     /** Every prepared purpose stages and arms the exact witness before one bounded HTTP handoff. */
     private suspend fun submitGenericPreparedOnceUnlocked(
         prepared: PreparedExtrinsic,
+        activity: Sora2SubmissionActivity? = null,
         preTransportValidation: suspend () -> Unit = {},
     ): jp.co.soramitsu.core_db.model.Sora2PendingSubmissionLocal {
         val staged = pendingSubmissionCoordinator.stageBeforeTransport(prepared)
+        if (activity != null) {
+            // Stored with the journal row and before transport, so a transaction that is still
+            // waiting is shown as what it is even if the app is closed during the wait.
+            presentationBestEffort {
+                pendingSubmissionCoordinator.recordActivity(staged, activity)
+            }
+        }
         val expectedHash = requireGenericPreparedExtrinsicPreTransport(
             prepared = prepared,
             staged = staged,
@@ -385,6 +406,17 @@ class ExtrinsicManager @Inject constructor(
             runtimeRpcClient.submitExtrinsicOnce(prepared.encoded)
         } catch (error: Throwable) {
             pendingSubmissionCoordinator.kickAfterUnknownBestEffort()
+            val refusal = Sora2SubmissionRefusalClassifier.refusalOrNull(error)
+            if (refusal != null) {
+                // The node answered with an explicit refusal, or no reviewed endpoint could be
+                // connected to: the transaction was not broadcast and the user is told so. The
+                // journal row is left exactly as it is; the status check still scans its
+                // validity window and lets it expire.
+                presentationBestEffort {
+                    pendingSubmissionCoordinator.recordNodeRefusal(armed, refusal)
+                }
+                throw ExtrinsicRefusedByNodeException(expectedHash, refusal, error)
+            }
             throw submissionUnknown(expectedHash, error)
         }
         return try {
@@ -403,10 +435,43 @@ class ExtrinsicManager @Inject constructor(
             pendingSubmissionCoordinator.awaitTerminalStatus(submitted)
         } catch (error: Throwable) {
             pendingSubmissionCoordinator.kickAfterUnknownBestEffort()
-            throw submissionUnknown(submitted.transactionHash, error)
+            throw submissionUnknown(submitted.transactionHash, error, acceptedByNode = true)
         }
         notifyWatchingListenerBestEffort(result)
         return result
+    }
+
+    /**
+     * Refuses to sign the same action for the same account while an earlier one is still waiting
+     * for confirmation, unless the user was told and confirmed again
+     * ([Sora2SubmissionActivity.duplicateConfirmed]). If the check itself cannot be made, the
+     * action proceeds: a failed local read must not block a transaction.
+     */
+    private suspend fun requireNoWaitingSameAction(
+        from: String,
+        activity: Sora2SubmissionActivity?,
+    ) {
+        if (activity == null || activity.duplicateConfirmed) return
+        val waiting = try {
+            pendingSubmissionCoordinator.findWaitingSameAction(from, activity)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            null
+        } ?: return
+        throw DuplicateWaitingTransactionException(
+            waitingTxHash = waiting.transactionHash,
+            waitingSinceMillis = waiting.createdAt,
+        )
+    }
+
+    /** Activity details never decide or delay the result of a transaction. */
+    private suspend fun presentationBestEffort(block: suspend () -> Unit) {
+        try {
+            withContext(NonCancellable) { block() }
+        } catch (_: Exception) {
+            recordErrorClassBestEffort(FirebaseWrapper.PrivacySafeErrorClass.STATE_FAILURE)
+        }
     }
 
     private suspend fun requireGenericPreparedExtrinsicPreTransport(
@@ -477,15 +542,19 @@ class ExtrinsicManager @Inject constructor(
     private fun submissionUnknown(
         transactionHash: String,
         error: Throwable,
+        acceptedByNode: Boolean = false,
     ): Throwable {
         if (error is ExtrinsicSubmissionUnknown) return error
-        recordErrorClassBestEffort(
-            FirebaseWrapper.PrivacySafeErrorClass.EXTRINSIC_SUBMISSION
-        )
+        if (error !is Sora2FinalityPendingException) {
+            // A wait that simply has no final answer yet is the normal pending case, not an error.
+            recordErrorClassBestEffort(
+                FirebaseWrapper.PrivacySafeErrorClass.EXTRINSIC_SUBMISSION
+            )
+        }
         return if (error is CancellationException) {
-            ExtrinsicSubmissionUnknownCancellation(transactionHash, error)
+            ExtrinsicSubmissionUnknownCancellation(transactionHash, error, acceptedByNode)
         } else {
-            ExtrinsicSubmissionUnknownException(transactionHash, error)
+            ExtrinsicSubmissionUnknownException(transactionHash, error, acceptedByNode)
         }
     }
 
@@ -503,16 +572,18 @@ class ExtrinsicManager @Inject constructor(
         from: String,
         keypair: Sr25519Keypair,
         useBatchAll: Boolean = false,
+        activity: Sora2SubmissionActivity? = null,
         formExtrinsic: suspend ExtrinsicBuilder.() -> Unit,
     ): ExtrinsicSubmitStatus {
         val submitted = WalletMutationCoordinator.withLock {
+            requireNoWaitingSameAction(from, activity)
             val prepared = prepareExtrinsicUnlocked(
                 from = from,
                 keypair = keypair,
                 useBatchAll = useBatchAll,
                 formExtrinsic = formExtrinsic,
             )
-            submitGenericPreparedOnceUnlocked(prepared)
+            submitGenericPreparedOnceUnlocked(prepared, activity)
         }
         return awaitSubmittedTerminal(submitted)
     }
@@ -528,12 +599,14 @@ class ExtrinsicManager @Inject constructor(
         keypair: Sr25519Keypair,
         reviewedFee: BigInteger,
         useBatchAll: Boolean = false,
+        activity: Sora2SubmissionActivity? = null,
         preSigningValidation: suspend () -> Unit,
         validateBalances: suspend (exactFee: BigInteger) -> Unit,
         formExtrinsic: suspend ExtrinsicBuilder.() -> Unit,
     ): ExtrinsicSubmitStatus {
         requireExactSora2TransferFee(reviewedFee, reviewedFee)
         val submitted = WalletMutationCoordinator.withLock {
+            requireNoWaitingSameAction(from, activity)
             val prepared = prepareExtrinsicUnlocked(
                 from = from,
                 keypair = keypair,
@@ -541,10 +614,10 @@ class ExtrinsicManager @Inject constructor(
                 preSigningValidation = preSigningValidation,
                 formExtrinsic = formExtrinsic,
             )
-            submitGenericPreparedOnceUnlocked(prepared) {
+            submitGenericPreparedOnceUnlocked(prepared, activity) {
                 val exactFee = requireExactSora2TransferFee(
                     reviewedFee = reviewedFee,
-                    exactFee = calls.getExtrinsicFee(prepared.encoded),
+                    exactFee = runtimeRpcClient.queryPartialFee(prepared.encoded),
                 )
                 validateBalances(exactFee)
             }
@@ -558,22 +631,8 @@ class ExtrinsicManager @Inject constructor(
 
     private suspend fun requireSigningWalletAvailable(walletId: String) {
         WalletRecoveryCapabilityGate.requireUserMutationAllowed()
-        val walletDao = database.walletIdentityDao()
-        check(!walletDao.hasActiveDeletionOperation()) {
-            "WALLET_DELETION_ACTIVE"
-        }
-        val migration = walletDao.getMigrationJournal(
-            WalletMigrationIds.NETWORK_ACCOUNTS_V1
-        )
-        val sora2 = walletDao.getNetworkAccount(walletId, "sora2")
-        check(
-            database.accountDao().getAccount(walletId) != null &&
-                walletDao.getWallet(walletId)?.migrationState == "VERIFIED" &&
-                (migration == null || migration.state == "VERIFIED") &&
-                sora2?.let { account ->
-                    account.enabled && account.address == walletId
-                } == true
-        ) { "SIGNING_WALLET_UNAVAILABLE" }
+        // Shared rule: an account whose keys are unavailable is read-only for that account only.
+        WalletSigningGate.unavailableReason(database, walletId)?.let { reason -> error(reason) }
     }
 
 }

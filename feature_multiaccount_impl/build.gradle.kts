@@ -122,6 +122,9 @@ dependencies {
     implementation(libs.navigationComposeDep)
 
     implementation(libs.xbackupDep)
+    // The phone's screen lock confirms a repair when the stored PIN cannot be read (already
+    // used by :app and :feature_main_impl).
+    implementation(libs.biometricDep)
     debugImplementation(libs.composeToolingDep)
 
     implementation(libs.daggerDep)

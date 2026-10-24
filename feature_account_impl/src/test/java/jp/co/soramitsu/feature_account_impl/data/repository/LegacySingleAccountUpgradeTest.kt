@@ -16,7 +16,7 @@ import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.feature_account_impl.domain.keys.realSr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -34,7 +34,9 @@ class LegacySingleAccountUpgradeTest {
     @Test fun `failed signing proof leaves old storage and selection untouched`() = upgrade(validSignature = false)
 
     private fun upgrade(resume: Boolean = false, validSignature: Boolean = true) = runTest {
-        val publicKey = ByteArray(32) { (it + 1).toByte() }
+        // A real key pair: the upgrade computes the public key from the stored private key.
+        val retained = realSr25519Keypair(ByteArray(32) { 7 })
+        val publicKey = retained.publicKey
         val address = checkNotNull(Sora2AddressCodec().toSoraAddressOrNull(publicKey))
         val expected = SoraAccountLocal(address, "Retained name")
         var rows = if (resume) listOf(expected) else emptyList()
@@ -47,7 +49,7 @@ class LegacySingleAccountUpgradeTest {
         val user = mockk<UserDatasource>(relaxed = true)
         val credentials = mockk<CredentialsDatasource>(relaxed = true)
         val crypto = mockk<UserRepositorySr25519Crypto>()
-        val runtime = mockk<RuntimeManager>()
+        val runtime = mockk<Sora2AddressCodec>()
         val coroutineManager = mockk<CoroutineManager>()
         every { coroutineManager.applicationScope } returns backgroundScope
         every { db.accountDao() } returns accountDao
@@ -58,6 +60,7 @@ class LegacySingleAccountUpgradeTest {
         coEvery { walletDao.getMigrationJournal(any()) } returns null
         coEvery { walletDao.getWallets() } returns emptyList()
         every { runtime.toSoraAddressOrNull(any()) } returns address
+        every { runtime.soraPublicKeyOrNull(address) } returns publicKey.copyOf()
         every { crypto.signAndVerify(any(), any(), any()) } returns validSignature
         coEvery { accountDao.getAccounts() } answers { rows }
         coEvery { accountDao.insertSoraAccount(any()) } answers { rows = listOf(firstArg()) }
@@ -67,7 +70,7 @@ class LegacySingleAccountUpgradeTest {
         coEvery { user.completeLegacyAccountUpgrade(address) } answers { selected = address }
         coEvery { credentials.getAddress() } returns address
         coEvery { credentials.retrieveKeys("") } answers {
-            Sr25519Keypair(ByteArray(32) { 7 }, publicKey.copyOf(), ByteArray(32) { 9 })
+            Sr25519Keypair(retained.privateKey.copyOf(), publicKey.copyOf(), retained.nonce.copyOf())
         }
         val repository = UserRepositoryImpl(user, credentials, db, coroutineManager,
             mockk(), runtime, crypto)

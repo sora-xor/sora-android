@@ -34,7 +34,6 @@ package jp.co.soramitsu.common.util
 
 import android.os.Build
 import jp.co.soramitsu.common.BuildConfig
-import jp.co.soramitsu.common.domain.OptionsProvider
 
 object BuildUtils {
     fun isFlavors(vararg flavors: Flavor): Boolean =
@@ -46,7 +45,6 @@ object BuildUtils {
 
     fun isPlayMarket(): Boolean = isBuildType(BuildType.RELEASE) && isFlavors(Flavor.PROD, Flavor.SORALUTION)
     fun isProdPlayMarket(): Boolean = isBuildType(BuildType.RELEASE) && isFlavors(Flavor.PROD)
-    fun fiatPackageName() = OptionsProvider.soracardFiatPackageProd
 }
 
 enum class BuildType(val type: String) {

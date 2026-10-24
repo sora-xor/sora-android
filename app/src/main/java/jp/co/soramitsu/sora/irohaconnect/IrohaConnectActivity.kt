@@ -19,6 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
+import jp.co.soramitsu.common.util.ReleaseSurfacePolicy
 
 @AndroidEntryPoint
 class IrohaConnectActivity : AppCompatActivity() {
@@ -71,6 +72,13 @@ class IrohaConnectActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!ReleaseSurfacePolicy.irohaConnectAllowed) {
+            // A build whose ReleaseSurfacePolicy does not offer IrohaConnect (the 3.9.x store
+            // policy's production flavor) closes before any pairing state or signing UI is
+            // created. The SORA Nexus line offers it in every flavor.
+            finish()
+            return
+        }
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
@@ -115,6 +123,10 @@ class IrohaConnectActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        if (!ReleaseSurfacePolicy.irohaConnectAllowed) {
+            finish()
+            return
+        }
         if (authorizationInProgress) biometricPrompt.cancelAuthentication()
         setIntent(intent)
         authorizationInProgress = false

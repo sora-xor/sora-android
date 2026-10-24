@@ -35,9 +35,12 @@ package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
+import jp.co.soramitsu.common.account.StoredSecretHex
 import jp.co.soramitsu.common.data.WalletPreferenceKeys
+import jp.co.soramitsu.common.util.WalletDecryptionException
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
-import jp.co.soramitsu.xcrypto.util.fromHex
+import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 
@@ -67,15 +70,26 @@ class PrefsCredentialsDatasource constructor(
     }
 
     override suspend fun retrieveKeys(suffixAddress: String): Sr25519Keypair? {
-        val privateKeyBytes = encryptedPreferences.getDecryptedString(PREFS_PRIVATE_KEY + suffixAddress).fromHex()
-        val publicKeyBytes = encryptedPreferences.getDecryptedString(PREFS_PUBLIC_KEY + suffixAddress).fromHex()
-        val nonce = encryptedPreferences.getDecryptedString(PREFS_KEY_NONCE + suffixAddress).fromHex()
+        val privateKeyBytes = storedKeyBytes(PREFS_PRIVATE_KEY + suffixAddress)
+        val publicKeyBytes = storedKeyBytes(PREFS_PUBLIC_KEY + suffixAddress)
+        val nonce = storedKeyBytes(PREFS_KEY_NONCE + suffixAddress)
 
         return if (privateKeyBytes.isEmpty() || publicKeyBytes.isEmpty()) null else Sr25519Keypair(
             privateKeyBytes,
             publicKeyBytes,
             nonce
         )
+    }
+
+    /**
+     * A stored key value is hex. Either letter case and an optional `0x` or `0X` prefix name the
+     * same bytes, so they are read the same way. A stored value that is not hex is a failure of
+     * that value (never treated as "no key stored").
+     */
+    private suspend fun storedKeyBytes(field: String): ByteArray {
+        val text = encryptedPreferences.getDecryptedString(field)
+        return StoredSecretHex.decodeOrNull(text)
+            ?: throw WalletDecryptionException("WALLET_KEY_VALUE_NOT_HEX")
     }
 
     override suspend fun saveMnemonic(mnemonic: String, suffixAddress: String) {
@@ -94,6 +108,58 @@ class PrefsCredentialsDatasource constructor(
         return encryptedPreferences.getDecryptedString(PREFS_SEED + suffixAddress)
     }
 
+    override suspend fun readStoredCredential(
+        field: CredentialField,
+        address: String,
+    ): StoredCredential {
+        val key = field.preferenceKey(address)
+        if (soraPreferences.getString(key).isEmpty()) return StoredCredential.Absent
+        return try {
+            val value = encryptedPreferences.getDecryptedString(key)
+            if (value.isEmpty()) StoredCredential.Unreadable else StoredCredential.Present(value)
+        } catch (_: WalletDecryptionException) {
+            StoredCredential.Unreadable
+        }
+    }
+
+    override suspend fun writeCredentialsIfAbsent(
+        address: String,
+        values: Map<CredentialField, String>,
+    ) {
+        require(address.isNotBlank()) { "WALLET_CREDENTIAL_ADDRESS_EMPTY" }
+        if (values.isEmpty()) return
+        val encrypted = values.entries.associate { (field, value) ->
+            require(value.isNotEmpty()) { "WALLET_CREDENTIAL_VALUE_EMPTY" }
+            field.preferenceKey(address) to encryptedPreferences.encrypt(value)
+        }
+        soraPreferences.putStringsIfAbsent(encrypted)
+    }
+
+    override suspend fun replaceCredentialsForRepair(
+        address: String,
+        values: Map<CredentialField, String>,
+    ) {
+        require(address.isNotBlank()) { "WALLET_CREDENTIAL_ADDRESS_EMPTY" }
+        require(values.isNotEmpty()) { "WALLET_CREDENTIAL_VALUES_EMPTY" }
+        val encrypted = values.entries.associate { (field, value) ->
+            require(value.isNotEmpty()) { "WALLET_CREDENTIAL_VALUE_EMPTY" }
+            field.preferenceKey(address) to encryptedPreferences.encrypt(value)
+        }
+        soraPreferences.replaceStringsForConfirmedRepair(encrypted)
+    }
+
+    private fun CredentialField.preferenceKey(address: String): String = when (this) {
+        CredentialField.PRIVATE_KEY -> PREFS_PRIVATE_KEY
+        CredentialField.PUBLIC_KEY -> PREFS_PUBLIC_KEY
+        CredentialField.KEY_NONCE -> PREFS_KEY_NONCE
+        CredentialField.MNEMONIC -> PREFS_MNEMONIC
+        CredentialField.SEED -> PREFS_SEED
+    } + address
+
+    override suspend fun requireKeyMaterialReadable() {
+        encryptedPreferences.requireKeyMaterialReadable()
+    }
+
     override suspend fun isExplicitWatchOnly(suffixAddress: String): Boolean =
         soraPreferences.getBoolean(PREFS_WATCH_ONLY + suffixAddress)
 
@@ -101,11 +167,27 @@ class PrefsCredentialsDatasource constructor(
         soraPreferences.putBoolean(PREFS_WATCH_ONLY + suffixAddress, watchOnly)
     }
 
+    override suspend fun retainedKeySetsNeedingPhrase(): Set<String> =
+        soraPreferences.retainedKeySetsNeedingPhrase()
+
+    override suspend fun markKeySetsNeedingPhrase(exceptIds: Set<String>) {
+        soraPreferences.markKeySetsNeedingPhrase(exceptIds)
+    }
+
+    override suspend fun unmarkKeySetsNeedingPhrase(ids: Set<String>) {
+        soraPreferences.unmarkKeySetsNeedingPhrase(ids)
+    }
+
     override suspend fun requireWalletPreferenceCoverage(
         walletIds: Set<String>,
         selectedAddress: String,
+        requiredCoverage: Set<String>,
     ) {
-        soraPreferences.requireWalletPreferenceCoverage(walletIds, selectedAddress)
+        soraPreferences.requireWalletPreferenceCoverage(
+            walletIds = walletIds,
+            selectedAddress = selectedAddress,
+            requiredCoverage = requiredCoverage,
+        )
     }
 
     override suspend fun previewWalletDeletionPreferences(

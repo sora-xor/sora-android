@@ -57,14 +57,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.AccountIcon
+import jp.co.soramitsu.common.presentation.compose.neon.InputText
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.BackupAccountMetaWithIcon
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.ImportAccountPasswordState
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.SafeFilledButton as FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
-import jp.co.soramitsu.ui_core.component.input.InputText
+import jp.co.soramitsu.common.presentation.compose.neon.SafeContentCard as ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -104,7 +104,8 @@ fun ImportAccountPasswordScreen(
                         .padding(vertical = Dimens.x2, horizontal = Dimens.x3),
                     address = it.backupAccountMeta.address,
                     accountName = it.backupAccountMeta.name,
-                    accountIcon = it.icon
+                    accountIcon = it.icon,
+                    note = readOnlyNote(it),
                 )
             }
 
@@ -148,12 +149,25 @@ fun ImportAccountPasswordScreen(
     }
 }
 
+/**
+ * The line under a backup whose account is already on this phone but cannot sign here: it says
+ * why the backup is offered and what restoring it is for. Null for every other backup.
+ */
+@Composable
+fun readOnlyNote(account: BackupAccountMetaWithIcon): String? =
+    if (account.readOnlyOnThisPhone) {
+        stringResource(id = R.string.import_account_list_read_only_note)
+    } else {
+        null
+    }
+
 @Composable
 fun AccountWithIcon(
     modifier: Modifier = Modifier,
     address: String,
     accountName: String,
     accountIcon: Drawable?,
+    note: String? = null,
 ) {
     Row(
         modifier = modifier,
@@ -181,6 +195,15 @@ fun AccountWithIcon(
                 color = MaterialTheme.customColors.fgSecondary,
                 style = MaterialTheme.customTypography.textXSBold,
             )
+
+            if (note != null) {
+                Text(
+                    modifier = Modifier.padding(top = Dimens.x1_2),
+                    text = note,
+                    color = MaterialTheme.customColors.fgPrimary,
+                    style = MaterialTheme.customTypography.textXS,
+                )
+            }
         }
     }
 }

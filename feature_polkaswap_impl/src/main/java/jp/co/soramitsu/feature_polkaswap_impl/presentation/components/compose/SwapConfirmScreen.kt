@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -45,8 +44,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -54,7 +51,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -68,17 +64,17 @@ import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
+import jp.co.soramitsu.common.presentation.compose.components.TransactionResultBadgeOverlay
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.defaultSwapDetailsState
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledPolkaswapButton as FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.OpaqueContentCard as ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -210,35 +206,8 @@ internal fun SwapConfirmScreen(
                     )
                 }
             }
-            if (state.confirmResult != null) {
-                Box(
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .clip(RoundedCornerShape(MaterialTheme.borderRadius.xl))
-                        .background(Color(0xffc5c9d0))
-                        .padding(Dimens.x2),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        modifier = Modifier.wrapContentSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Icon(
-                            modifier = Modifier
-                                .size(size = Dimens.x3),
-                            painter = painterResource(id = if (state.confirmResult == true) R.drawable.ic_green_pin else R.drawable.ic_cross_red_16),
-                            contentDescription = null,
-                            tint = if (state.confirmResult == true) MaterialTheme.customColors.statusSuccess else MaterialTheme.customColors.statusError,
-                        )
-                        Text(
-                            modifier = Modifier.wrapContentSize(),
-                            textAlign = TextAlign.Center,
-                            text = stringResource(id = if (state.confirmResult == true) R.string.wallet_transaction_submitted_1 else R.string.wallet_transaction_rejected),
-                            color = MaterialTheme.customColors.fgPrimary,
-                            style = MaterialTheme.customTypography.paragraphSBold,
-                        )
-                    }
-                }
+            state.confirmResult?.let { badge ->
+                TransactionResultBadgeOverlay(badge)
             }
         }
     }
@@ -263,7 +232,7 @@ private fun Preview() {
                 swapButtonState = ButtonState("", false, false),
                 confirmButtonState = ButtonState("Button", true, false),
                 confirmText = AnnotatedString("Estimated"),
-                confirmResult = true,
+                confirmResult = null,
             ),
             onConfirmClick = {},
         )

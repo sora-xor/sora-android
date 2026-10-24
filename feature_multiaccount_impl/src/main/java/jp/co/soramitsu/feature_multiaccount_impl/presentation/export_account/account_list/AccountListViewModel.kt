@@ -49,6 +49,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountListScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportAccountData
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -67,6 +68,9 @@ class AccountListViewModel @Inject constructor(
     private val _showOnboardingFlowEvent = SingleLiveEvent<Unit>()
     val showOnboardingFlowEvent: LiveData<Unit> = _showOnboardingFlowEvent
 
+    private val _isSwitchingAccount = MutableLiveData(false)
+    val isSwitchingAccount: LiveData<Boolean> = _isSwitchingAccount
+
     private var toolbarActionModeEnabled = false
 
     init {
@@ -74,48 +78,66 @@ class AccountListViewModel @Inject constructor(
             title = R.string.settings_accounts,
         )
         interactor.flowSoraAccountsList()
-            .catch { onError(it) }
-            .onEach {
-                val currentAddress = interactor.getCurrentSoraAccount().substrateAddress
+            // The labels are an addition: when they cannot be read, the list is shown without.
+            .combine(interactor.flowUnavailableWalletIds().catch { emit(emptySet()) }) { accounts, readOnly ->
+                accounts to readOnly
+            }
+            .onEach { (accounts, readOnly) ->
+                // With no account left (the last one was just removed and the app is about to
+                // restart) there is no selected account to ask for.
+                val currentAddress = if (accounts.isEmpty()) {
+                    null
+                } else {
+                    interactor.getCurrentSoraAccount().substrateAddress
+                }
 
-                val accountList = it.map { soraAccount ->
+                val accountList = accounts.map { soraAccount ->
                     ExportAccountData(
                         currentAddress == soraAccount.substrateAddress,
                         false,
                         avatarGenerator.createAvatar(soraAccount.substrateAddress, 40),
                         soraAccount,
+                        readOnly = soraAccount.substrateAddress in readOnly,
                     )
                 }
 
                 _accountListScreenState.value =
                     AccountListScreenState(toolbarActionModeEnabled, accountList)
                 setToolbarState(toolbarActionModeEnabled, 0)
-            }.launchIn(viewModelScope)
+            }
+            // After the work above, so that a failure inside it is reported, not thrown out of
+            // the view model's scope.
+            .catch { onError(it) }
+            .launchIn(viewModelScope)
     }
 
     fun onAccountOptionsClicked(address: String) {
+        if (_isSwitchingAccount.value == true) return
         router.showAccountDetails(address)
     }
 
     fun onAccountClicked(address: String) {
+        if (_isSwitchingAccount.value == true) return
+        val account = _accountListScreenState.value?.accountList
+            ?.find { it.account.substrateAddress == address } ?: return
+        // Set this before launching so a second tap cannot queue another account change.
+        _isSwitchingAccount.value = true
         viewModelScope.launch {
-            tryCatch {
-                val account =
-                    _accountListScreenState.value?.accountList?.find { it.account.substrateAddress == address }
-                if (account != null) {
-                    interactor.setCurSoraAccount(account.account)
-                    router.popBackStack()
-                }
+            tryCatchFinally(finally = { _isSwitchingAccount.value = false }) {
+                interactor.setCurSoraAccount(account.account)
+                router.popBackStack()
             }
         }
     }
 
     fun onAccountLongClicked(address: String) {
+        if (_isSwitchingAccount.value == true) return
         clipboardManager.addToClipboard(address)
         copiedToast.trigger()
     }
 
     fun onAccountSelected(address: String) {
+        if (_isSwitchingAccount.value == true) return
         accountListScreenState.value?.let { state ->
             val newList = state.accountList.map { accounts ->
                 if (accounts.account.substrateAddress == address) {
@@ -135,6 +157,7 @@ class AccountListViewModel @Inject constructor(
     }
 
     fun onAddAccountClicked() {
+        if (_isSwitchingAccount.value == true) return
         _showOnboardingFlowEvent.value = Unit
     }
 
@@ -147,6 +170,7 @@ class AccountListViewModel @Inject constructor(
     }
 
     private fun onToolbarNavigation() {
+        if (_isSwitchingAccount.value == true) return
         _accountListScreenState.value?.let {
             if (toolbarActionModeEnabled) {
                 toolbarActionModeEnabled = false
@@ -187,6 +211,7 @@ class AccountListViewModel @Inject constructor(
     }
 
     override fun onAction() {
+        if (_isSwitchingAccount.value == true) return
         _accountListScreenState.value?.let { state ->
             val addresses = state.accountList
                 .filter { it.isSelectedAction }

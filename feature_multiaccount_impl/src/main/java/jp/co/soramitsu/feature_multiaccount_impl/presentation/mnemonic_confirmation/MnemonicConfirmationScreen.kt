@@ -48,11 +48,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.neon.ProtectWalletSecrets
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.MnemonicConfirmationState
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.SafeContentCard as ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -62,6 +63,7 @@ fun MnemonicConfirmationScreen(
     mnemonicConfirmationState: MnemonicConfirmationState,
     onButtonClicked: (String) -> Unit
 ) {
+    ProtectWalletSecrets()
     Column(
         modifier = Modifier.padding(horizontal = Dimens.x2)
     ) {

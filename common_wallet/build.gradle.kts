@@ -98,8 +98,10 @@ dependencies {
     implementation(libs.svgDep)
     implementation(libs.jdenticonDep)
 
-    api(libs.soramitsu.sora.card) {
-        exclude(group = "com.paywings.onboarding.kyc.android-libs", module = "java-websocket-lib")
+    // xcrypto/xbackup bring bcprov 1.77; keep every consumer on the wallet's BouncyCastle
+    // version (also used by :common for SCrypt, SHA3 and Base64).
+    constraints {
+        api(libs.bcprovDep)
     }
 
     implementation(libs.daggerDep)

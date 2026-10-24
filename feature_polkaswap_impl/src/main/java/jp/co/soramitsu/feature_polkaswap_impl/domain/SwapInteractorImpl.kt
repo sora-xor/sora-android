@@ -40,11 +40,13 @@ import jp.co.soramitsu.androidfoundation.format.isZero
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapExtrinsicRepository
@@ -52,6 +54,8 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapReposito
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
+import jp.co.soramitsu.sora.substrate.substrate.sora2TransactionOutcome
 import kotlin.math.max
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -288,39 +292,62 @@ class SwapInteractorImpl(
         networkFee: BigDecimal,
         dexId: Int,
         amount2: BigDecimal,
-    ): String {
+        confirmedDuplicate: Boolean,
+    ): TransactionOutcome {
         val soraAccount = userRepository.getCurSoraAccount()
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        val result = polkaswapExtrinsicRepository.observeSwap(
-            tokenInput,
-            tokenOutput,
-            keypair,
-            soraAccount.substrateAddress,
-            if (selectedSwapMarket.value == Market.SMART) emptyList() else listOf(selectedSwapMarket.value),
-            desired,
-            amount,
-            limit,
-            dexId,
-        )
-        swapResult.set(result.success)
-        if (result.success) {
-            transactionHistoryRepository.saveTransaction(
+        val market = selectedSwapMarket.value
+        val amountFrom = if (desired == WithDesired.INPUT) amount else amount2
+        val amountTo = if (desired == WithDesired.INPUT) amount2 else amount
+        val outcome = sora2TransactionOutcome {
+            polkaswapExtrinsicRepository.observeSwap(
+                tokenInput,
+                tokenOutput,
+                keypair,
                 soraAccount.substrateAddress,
-                transactionBuilder.buildSwap(
-                    txHash = result.txHash,
-                    blockHash = result.blockHash,
+                if (market == Market.SMART) emptyList() else listOf(market),
+                desired,
+                amount,
+                limit,
+                dexId,
+                Sora2SubmissionActivity.swap(
+                    tokenFromId = tokenInput.id,
+                    tokenToId = tokenOutput.id,
+                    amountFrom = amountFrom,
+                    amountTo = amountTo,
                     fee = networkFee,
-                    status = TransactionStatus.PENDING,
-                    date = Date().time,
-                    tokenFrom = tokenInput,
-                    tokenTo = tokenOutput,
-                    amountFrom = if (desired == WithDesired.INPUT) amount else amount2,
-                    amountTo = if (desired == WithDesired.INPUT) amount2 else amount,
-                    market = selectedSwapMarket.value,
-                )
+                    market = market.name,
+                ).copy(duplicateConfirmed = confirmedDuplicate),
             )
         }
-        return if (result.success) result.txHash else ""
+        if (outcome !is TransactionOutcome.RefusedByNode) {
+            // The amounts are cleared once a swap is on its way, so it is not sent again by habit.
+            swapResult.set(outcome is TransactionOutcome.Confirmed)
+        }
+        // Every outcome is listed in Activity with what it was; its status comes from the journal.
+        saveToActivityBestEffort(soraAccount.substrateAddress) {
+            transactionBuilder.buildSwap(
+                txHash = outcome.txHash,
+                blockHash = (outcome as? TransactionOutcome.Confirmed)?.blockHash,
+                fee = networkFee,
+                status = TransactionStatus.PENDING,
+                date = Date().time,
+                tokenFrom = tokenInput,
+                tokenTo = tokenOutput,
+                amountFrom = amountFrom,
+                amountTo = amountTo,
+                market = market,
+            )
+        }
+        return outcome
+    }
+
+    private fun saveToActivityBestEffort(walletId: String, build: () -> Transaction) {
+        try {
+            transactionHistoryRepository.saveTransaction(walletId, build())
+        } catch (_: Exception) {
+            // Activity is rebuilt from the durable journal; it never changes a result.
+        }
     }
 
     private fun List<PoolDex>.hasToken(id: String): Boolean = find { it.tokenId == id } != null

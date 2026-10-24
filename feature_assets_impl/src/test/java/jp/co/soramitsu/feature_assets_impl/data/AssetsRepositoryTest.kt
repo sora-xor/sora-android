@@ -177,6 +177,7 @@ class AssetsRepositoryTest {
                 BDDMockito.anyBoolean(),
                 any(),
                 any(),
+                any(),
                 any()
             )
         ).willReturn(

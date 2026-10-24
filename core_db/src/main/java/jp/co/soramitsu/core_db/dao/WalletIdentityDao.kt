@@ -194,13 +194,14 @@ interface WalletIdentityDao {
      *
      * Every field from the previously observed checkpoint participates in the compare-and-set. A
      * caller may use this only after re-verifying all current secrets and the exact dual-read
-     * wallet/network model in the same Room transaction.
+     * wallet/network model in the same Room transaction. `verifiedAccountCount` counts only the
+     * accounts that can sign (read-only accounts are classified, not verified).
      */
     @Query(
         """
         update walletMigrationJournal
         set legacyAccountCount = :currentAccountCount,
-            verifiedAccountCount = :currentAccountCount,
+            verifiedAccountCount = :currentVerifiedAccountCount,
             selectedWalletId = :currentSelectedWalletId,
             integrityHash = :currentIntegrityHash,
             failureCode = null,
@@ -225,6 +226,7 @@ interface WalletIdentityDao {
         receiptStartedAt: Long,
         receiptCompletedAt: Long,
         currentAccountCount: Int,
+        currentVerifiedAccountCount: Int,
         currentSelectedWalletId: String,
         currentIntegrityHash: String,
         refreshedAt: Long,
@@ -989,6 +991,14 @@ interface WalletIdentityDao {
     fun observeUnresolvedSora2PendingSubmissions(
         walletId: String,
     ): Flow<List<Sora2PendingSubmissionLocal>>
+
+    /**
+     * Emits again after every write to the SORA2 status journal (Room re-runs the query whenever
+     * the table changes, also when the count stays the same). Activity listens to it so that an
+     * entry changes as soon as the background status worker resolves it. Read-only.
+     */
+    @Query("select count(*) from sora2PendingSubmissions")
+    fun observeSora2PendingSubmissionChanges(): Flow<Int>
 
     @Query(
         """

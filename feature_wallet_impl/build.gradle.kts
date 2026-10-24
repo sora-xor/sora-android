@@ -86,7 +86,6 @@ dependencies {
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":feature_polkaswap_api"))
     implementation(project(":feature_referral_api"))
-    implementation(project(":feature_sora_card_api"))
 
     implementation(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)

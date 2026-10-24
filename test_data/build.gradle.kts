@@ -64,5 +64,4 @@ android {
 dependencies {
     implementation(project(":common"))
     implementation(project(":common_wallet"))
-    implementation(project(":feature_sora_card_api"))
 }

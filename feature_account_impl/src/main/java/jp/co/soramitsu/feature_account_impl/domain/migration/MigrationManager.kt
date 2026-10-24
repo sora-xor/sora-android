@@ -1,0 +1,1008 @@
+package jp.co.soramitsu.feature_account_impl.domain.migration
+
+import android.database.sqlite.SQLiteDatabaseLockedException
+import android.database.sqlite.SQLiteFullException
+import androidx.room.withTransaction
+import javax.inject.Inject
+import javax.inject.Singleton
+import jp.co.soramitsu.common.account.Sora2AddressCodec
+import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
+import jp.co.soramitsu.common.util.WalletDecryptionException
+import jp.co.soramitsu.common.util.WalletStorageFailures
+import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.WalletMigrationIntegrity
+import jp.co.soramitsu.core_db.WalletRecoveryOptions
+import jp.co.soramitsu.core_db.WalletSelectionPolicy
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
+import jp.co.soramitsu.core_db.model.NetworkAccountLocal
+import jp.co.soramitsu.core_db.model.SoraAccountLocal
+import jp.co.soramitsu.core_db.model.WalletIdentityLocal
+import jp.co.soramitsu.core_db.model.WalletMigrationIds
+import jp.co.soramitsu.core_db.model.WalletMigrationJournalLocal
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
+import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_account_impl.domain.keys.NexusChildAccounts
+import jp.co.soramitsu.feature_account_impl.domain.keys.StoredKeyCrypto
+import jp.co.soramitsu.feature_account_impl.domain.keys.StoredSecretsVerdict
+import jp.co.soramitsu.feature_account_impl.domain.keys.StoredWalletSecretsJudge
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.xcrypto.encryption.sr25519.Sr25519JNI
+import jp.co.soramitsu.xsubstrate.encrypt.MultiChainEncryption
+import jp.co.soramitsu.xsubstrate.encrypt.SignWrapper
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.SubstrateKeypairFactory
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+@Singleton
+class MigrationSr25519Crypto @Inject constructor() : StoredKeyCrypto {
+
+    override fun generateKeypair(seed: ByteArray): Sr25519Keypair? =
+        SubstrateKeypairFactory.generate(
+            SubstrateOptionsProvider.encryptionType,
+            seed,
+        ) as? Sr25519Keypair
+
+    override fun signAndVerify(
+        keypair: Sr25519Keypair,
+        challenge: ByteArray,
+        expectedPublicKey: ByteArray,
+    ): Boolean {
+        val signature = SignWrapper.sign(
+            MultiChainEncryption.Substrate(SubstrateOptionsProvider.encryptionType),
+            challenge,
+            keypair,
+        ).signature
+        return try {
+            Sr25519JNI.verify(signature, challenge, expectedPublicKey)
+        } finally {
+            signature.fill(0)
+        }
+    }
+}
+
+/**
+ * What one account's stored secrets proved in the last verification run. Kept in memory only
+ * (never key bytes): the durable part is the account's `secretSource` label.
+ */
+data class WalletSecretsReport(
+    val walletId: String,
+    /** The stored signing key signs for this address. */
+    val canSign: Boolean,
+    /** Why it cannot sign, when it cannot. */
+    val signingRefusal: String?,
+    /**
+     * "MATCHES", "DOES_NOT_MATCH", "UNREADABLE" or "ABSENT" for the stored recovery phrase;
+     * "NOT_JUDGED" when the account cannot sign.
+     */
+    val phrase: String,
+    /** The same for the stored seed. */
+    val seed: String,
+    /** Differences that did not change the decision. */
+    val diagnostics: Set<String>,
+)
+
+/** Result of one wallet verification run. Only [Recovery] was written to the journal. */
+sealed interface MigrationOutcome {
+    val code: String?
+
+    /** Every account was verified or classified; accounts whose keys are unavailable are read-only. */
+    data object Verified : MigrationOutcome {
+        override val code: String? = null
+    }
+
+    /** A transient failure (busy Keystore, full disk, I/O). Nothing was written; retry later. */
+    data class Transient(override val code: String) : MigrationOutcome
+
+    /** The Keystore cannot unlock any stored key on this device. Nothing was written. */
+    data class KeysUnavailable(override val code: String) : MigrationOutcome
+
+    /** An interrupted or failed verification is waiting for an authorized retry. */
+    data class AwaitingRetry(override val code: String) : MigrationOutcome
+
+    /** A deterministic integrity failure that was recorded in the migration journal. */
+    data class Recovery(override val code: String) : MigrationOutcome
+}
+
+/** The real phases of one verification run, shown by the upgrade progress screen. */
+sealed interface MigrationProgress {
+    /** No run in this process yet. */
+    data object Idle : MigrationProgress
+
+    /** Opening the wallet database; any pending schema step runs here. */
+    data object OpeningStorage : MigrationProgress
+
+    /** Reading and checking each account's keys ([checked] of [total] done). */
+    data class CheckingAccounts(val checked: Int, val total: Int) : MigrationProgress
+
+    /** Every account was read; the derived records and the journal are being saved. */
+    data object Saving : MigrationProgress
+
+    /** The run ended (with any outcome). */
+    data object Finished : MigrationProgress
+}
+
+/**
+ * Verifies every wallet's stored keys before the multi-network records become active.
+ *
+ * Account rows and encrypted credentials are never changed here: only the derived
+ * `walletIdentities`, `networkAccounts` and the journal are written (copy-on-write).
+ *
+ * - All keys are read and checked before anything is written, so a transient failure (busy
+ *   Keystore, full disk) leaves no trace and the next start simply runs again.
+ * - Whether an account can sign is decided by its stored signing key alone
+ *   ([StoredWalletSecretsJudge]): the key must be the key of the account's address and sign a
+ *   random challenge. The stored phrase and seed are judged separately as backup material and
+ *   never make an account read-only.
+ * - A signing key that is missing, incomplete, unreadable or not the key of the address makes
+ *   only that account unavailable (read-only); every other account verifies. A later run that
+ *   finds a valid key makes the account available again.
+ * - The journal counts only the accounts that can sign as verified.
+ * - Only genuine integrity failures of the verification itself are journaled.
+ */
+@Singleton
+class MigrationManager @Inject constructor(
+    private val userRepository: UserRepository,
+    private val credentialsRepository: CredentialsRepository,
+    private val sora2AddressCodec: Sora2AddressCodec,
+    private val database: AppDatabase,
+    private val migrationSr25519Crypto: MigrationSr25519Crypto,
+) {
+    private companion object {
+        const val DERIVATION_VERSION = 1
+        const val MAX_WALLET_ID_LENGTH = 256
+        const val UNAVAILABLE_STATE = "UNAVAILABLE"
+        const val UNAVAILABLE_SOURCE = "SECRET_UNAVAILABLE"
+
+        /** The backup material of an account that cannot sign is not looked at by this run. */
+        const val BACKUP_NOT_JUDGED = "NOT_JUDGED"
+        val INTEGRITY_HASH = Regex("^[0-9a-f]{64}$")
+    }
+
+    private val migrationMutex = Mutex()
+    private val secretsJudge = StoredWalletSecretsJudge(sora2AddressCodec, migrationSr25519Crypto)
+
+    @Volatile
+    var lastOutcome: MigrationOutcome? = null
+        private set
+
+    /**
+     * Per account, what its stored secrets proved in the last run of this process: whether the
+     * stored key signs, and whether the stored phrase and seed are valid backups of it.
+     */
+    @Volatile
+    var lastSecretsReports: Map<String, WalletSecretsReport> = emptyMap()
+        private set
+
+    private val progressState = MutableStateFlow<MigrationProgress>(MigrationProgress.Idle)
+
+    /** Progress of the current run. Reporting only: nothing reads it to make a decision. */
+    val progress: StateFlow<MigrationProgress> = progressState.asStateFlow()
+
+    /** Returns true when the wallet is usable (possibly with some accounts read-only). */
+    suspend fun start(): Boolean = startWithOutcome() == MigrationOutcome.Verified
+
+    suspend fun startWithOutcome(): MigrationOutcome = migrationMutex.withLock {
+        progressState.value = MigrationProgress.OpeningStorage
+        try {
+            val outcome = userRepository.withWalletMigrationLocked { snapshot ->
+                startLocked(
+                    registrationFinished =
+                        snapshot.onboardingState == OnboardingState.REGISTRATION_FINISHED,
+                    selectedAccount = snapshot.selectedAccount,
+                )
+            }
+            lastOutcome = outcome
+            outcome
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            // The first Room/selection read happens before startLocked's transaction handling.
+            // Keep storage and Keystore failures retryable even when that first read failed.
+            val outcome = when {
+                WalletStorageFailures.isTransient(error) || WalletStorageFailures.isKeyMaterialUnavailable(error) ->
+                    abortWithoutWrites(Preparation.Abort.from(error), accountsReadable = false)
+                error is android.database.sqlite.SQLiteException -> {
+                    WalletUpgradeBackup.noteDatabaseOpenFailure()
+                    MigrationOutcome.Recovery("DATABASE_OPEN_FAILED")
+                }
+                else -> throw error
+            }
+            lastOutcome = outcome
+            outcome
+        } finally {
+            progressState.value = MigrationProgress.Finished
+        }
+    }
+
+    /** The code of the last unsuccessful run in this process, if any. */
+    fun lastFailureCode(): String? = lastOutcome?.code
+
+    @Suppress("UNUSED_PARAMETER")
+    private suspend fun startLocked(
+        registrationFinished: Boolean,
+        selectedAccount: SoraAccount?,
+    ): MigrationOutcome {
+        val legacyAccounts = database.accountDao().getAccounts()
+            .filter { it.substrateAddress.isNotBlank() && it.substrateAddress.length <= MAX_WALLET_ID_LENGTH }
+        val existingJournal = database.walletIdentityDao()
+            .getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
+        if (legacyAccounts.isEmpty()) {
+            // Nothing to verify: a new install, every account removed, or the database was lost
+            // while keys were kept (those keys are set aside and offered for restore). Onboarding
+            // must still be able to store keys, which is impossible when this phone cannot unlock
+            // the key material kept here (for example app files copied from another phone without
+            // their Keystore key). Prove that first, reading only: nothing is created or written.
+            try {
+                credentialsRepository.requireKeyMaterialReadable()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                if (
+                    WalletStorageFailures.isKeyMaterialUnavailable(error) ||
+                    WalletStorageFailures.isTransient(error)
+                ) {
+                    return abortWithoutWrites(Preparation.Abort.from(error), accountsReadable = false)
+                }
+                throw error
+            }
+            // A journal left by an earlier build protects no account and would only block later
+            // accounts.
+            if (existingJournal != null) {
+                database.walletIdentityDao().deleteMigrationJournal()
+            }
+            WalletUpgradeBackup.noteMigrationVerified()
+            return MigrationOutcome.Verified
+        }
+
+        val startedAt = System.currentTimeMillis()
+        val legacyWalletIds = legacyAccounts.map { it.substrateAddress }
+        val selectedWalletId = selectedAccount?.substrateAddress
+            ?.takeIf { it in legacyWalletIds }
+            ?: requireNotNull(WalletSelectionPolicy.fallback(legacyWalletIds, legacyOwner = null))
+        val integrityHash = integrityHash(
+            legacyAccounts.map { it.substrateAddress to it.accountName },
+            selectedWalletId,
+        )
+        val verifiedReceipt = existingJournal?.takeIf(::isStructurallyValidVerifiedReceipt)
+        if (existingJournal?.state == "VERIFIED" && verifiedReceipt == null) {
+            // A VERIFIED label is not authorization to normalize an inconsistent receipt. Record
+            // it; the next start retries the verification automatically from the account rows.
+            return recordFailure(
+                startedAt = existingJournal.startedAt,
+                legacyAccountCount = existingJournal.legacyAccountCount,
+                selectedWalletId = existingJournal.selectedWalletId,
+                integrityHash = existingJournal.integrityHash,
+                code = "VERIFIED_RECEIPT_INVALID",
+                walletIds = legacyWalletIds,
+            )
+        }
+        var migrationStartedAt = startedAt
+        var authorizedRetry = false
+        if (existingJournal != null && existingJournal.state != "VERIFIED") {
+            // Starting the app alone never retries an interrupted run: the upgrade gate first
+            // performs the compare-and-set journal transition (automatically, at most three times
+            // in a row, or when the person taps Try again).
+            if (!WalletRecoveryCapabilityGate.isMigrationRetryAuthorized()) {
+                return MigrationOutcome.AwaitingRetry("WALLET_MIGRATION_RECOVERY_REQUIRED")
+            }
+            authorizedRetry =
+                existingJournal.state == "VERIFYING" &&
+                    existingJournal.verifiedAccountCount == 0 &&
+                    existingJournal.failureCode == null &&
+                    existingJournal.completedAt == null &&
+                    existingJournal.startedAt > 0L
+            if (!authorizedRetry) {
+                return recordFailure(
+                    startedAt = existingJournal.startedAt.takeIf { it > 0L } ?: startedAt,
+                    legacyAccountCount = legacyAccounts.size,
+                    selectedWalletId = selectedWalletId,
+                    integrityHash = integrityHash,
+                    code = "MIGRATION_RETRY_AUTHORIZATION_MISMATCH",
+                    walletIds = legacyWalletIds,
+                )
+            }
+            migrationStartedAt = existingJournal.startedAt
+        }
+
+        // 1. Read and verify every wallet. Pure reads and crypto: nothing is written yet.
+        val preparedWallets = mutableListOf<PreparedWallet>()
+        progressState.value = MigrationProgress.CheckingAccounts(0, legacyAccounts.size)
+        for (legacy in legacyAccounts) {
+            when (val result = prepareWalletClassified(legacy)) {
+                is Preparation.Abort -> return abortWithoutWrites(result)
+                is Preparation.Ready -> preparedWallets += result.wallet
+            }
+            progressState.value =
+                MigrationProgress.CheckingAccounts(preparedWallets.size, legacyAccounts.size)
+        }
+        val classifiedWallets = preparedWallets.toList()
+        lastSecretsReports = classifiedWallets.mapNotNull(PreparedWallet::report)
+            .associateBy(WalletSecretsReport::walletId)
+        // The journal counts only accounts that can sign. A read-only account is classified,
+        // not verified: the run still completes, and the count says how many accounts work.
+        // (This is the condition of the signing gate. An explicit watch-only identity also
+        // has it; no flow of this version can create one.)
+        val signingAccountCount = classifiedWallets.count {
+            it.identity.migrationState == "VERIFIED"
+        }
+        progressState.value = MigrationProgress.Saving
+
+        // 2. Already verified: re-stage only what changed and advance the checkpoint.
+        if (verifiedReceipt != null) {
+            val receiptMatchesLiveSnapshot =
+                verifiedReceipt.legacyAccountCount == legacyAccounts.size &&
+                    verifiedReceipt.verifiedAccountCount == signingAccountCount &&
+                    verifiedReceipt.selectedWalletId == selectedWalletId &&
+                    verifiedReceipt.integrityHash == integrityHash
+            return try {
+                if (!receiptMatchesLiveSnapshot || !storedModelMatches(classifiedWallets)) {
+                    database.withTransaction {
+                        stagePreparedModel(classifiedWallets)
+                        verifyPreparedModel(classifiedWallets)
+                        if (!receiptMatchesLiveSnapshot) {
+                            refreshVerifiedReceiptLocked(
+                                receipt = verifiedReceipt,
+                                legacyAccounts = legacyAccounts,
+                                signingAccountCount = signingAccountCount,
+                                selectedWalletId = selectedWalletId,
+                                currentIntegrityHash = integrityHash,
+                            )
+                        }
+                    }
+                }
+                WalletUpgradeBackup.noteMigrationVerified()
+                MigrationOutcome.Verified
+            } catch (error: CancellationException) {
+                WalletUpgradeBackup.noteMigrationRecoveryRequired()
+                throw error
+            } catch (error: Throwable) {
+                if (WalletStorageFailures.isTransient(error)) {
+                    abortWithoutWrites(Preparation.Abort.from(error))
+                } else {
+                    recordActivatedModelFailureAfterSnapshotChange(
+                        receipt = verifiedReceipt,
+                        currentAccountCount = legacyAccounts.size,
+                        currentSelectedWalletId = selectedWalletId,
+                        currentIntegrityHash = integrityHash,
+                        walletIds = legacyWalletIds,
+                        code = error.safeFailureCode(),
+                    )
+                }
+            }
+        }
+
+        // 3. First verification (or an authorized retry): journal, stage, then activate.
+        try {
+            if (!authorizedRetry) {
+                database.walletIdentityDao().upsertMigrationJournal(
+                    WalletMigrationJournalLocal(
+                        migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
+                        state = "VERIFYING",
+                        legacyAccountCount = legacyAccounts.size,
+                        verifiedAccountCount = 0,
+                        selectedWalletId = selectedWalletId,
+                        integrityHash = integrityHash,
+                        failureCode = null,
+                        startedAt = migrationStartedAt,
+                        completedAt = null,
+                    )
+                )
+            }
+            database.withTransaction {
+                stagePreparedModel(classifiedWallets)
+                verifyPreparedModel(classifiedWallets)
+                database.walletIdentityDao().upsertMigrationJournal(
+                    WalletMigrationJournalLocal(
+                        migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
+                        state = "VERIFYING",
+                        legacyAccountCount = legacyAccounts.size,
+                        verifiedAccountCount = signingAccountCount,
+                        selectedWalletId = selectedWalletId,
+                        integrityHash = integrityHash,
+                        failureCode = null,
+                        startedAt = migrationStartedAt,
+                        completedAt = null,
+                    )
+                )
+            }
+            database.withTransaction {
+                verifyPreparedModel(classifiedWallets)
+                val finalAccounts = database.accountDao().getAccounts()
+                    .filter { it.substrateAddress.isNotBlank() && it.substrateAddress.length <= MAX_WALLET_ID_LENGTH }
+                val finalHash = integrityHash(
+                    finalAccounts.map { it.substrateAddress to it.accountName },
+                    selectedWalletId,
+                )
+                if (
+                    finalAccounts.size != legacyAccounts.size ||
+                    finalHash != integrityHash
+                ) {
+                    throw MigrationVerificationException("POST_MIGRATION_MISMATCH")
+                }
+                check(
+                    database.walletIdentityDao().activateMigrationJournal(
+                        migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
+                        legacyAccountCount = legacyAccounts.size,
+                        verifiedAccountCount = signingAccountCount,
+                        selectedWalletId = selectedWalletId,
+                        integrityHash = integrityHash,
+                        startedAt = migrationStartedAt,
+                        // Never before the start, even if the clock moved back meanwhile.
+                        completedAt = maxOf(System.currentTimeMillis(), migrationStartedAt),
+                    ) == 1
+                ) { "MIGRATION_JOURNAL_ACTIVATION_MISMATCH" }
+            }
+        } catch (error: CancellationException) {
+            WalletUpgradeBackup.noteMigrationRecoveryRequired()
+            throw error
+        } catch (error: Throwable) {
+            if (WalletStorageFailures.isTransient(error)) {
+                // A VERIFYING journal may remain; it is retried automatically on the next start.
+                return abortWithoutWrites(Preparation.Abort.from(error))
+            }
+            return recordFailure(
+                startedAt = migrationStartedAt,
+                legacyAccountCount = legacyAccounts.size,
+                selectedWalletId = selectedWalletId,
+                integrityHash = integrityHash,
+                code = error.safeFailureCode(),
+                walletIds = legacyWalletIds,
+            )
+        }
+
+        WalletUpgradeBackup.noteMigrationVerified()
+        return MigrationOutcome.Verified
+    }
+
+    private fun abortWithoutWrites(
+        abort: Preparation.Abort,
+        accountsReadable: Boolean = true,
+    ): MigrationOutcome {
+        WalletUpgradeBackup.noteTransientVerificationFailure(abort.code, accountsReadable)
+        return if (abort.keysUnavailable) {
+            MigrationOutcome.KeysUnavailable(abort.code)
+        } else {
+            MigrationOutcome.Transient(abort.code)
+        }
+    }
+
+    private suspend fun prepareWalletClassified(legacy: SoraAccountLocal): Preparation =
+        try {
+            Preparation.Ready(prepareWallet(legacy))
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            if (
+                WalletStorageFailures.isKeyMaterialUnavailable(error) ||
+                WalletStorageFailures.isTransient(error)
+            ) {
+                Preparation.Abort.from(error)
+            } else {
+                // This account's signing key is missing, incomplete, unreadable or does not derive
+                // its address. Only this account becomes read-only.
+                Preparation.Ready(
+                    unavailableWallet(
+                        walletId = legacy.substrateAddress,
+                        displayName = legacy.accountName,
+                        refusal = error.safeFailureCode(),
+                    )
+                )
+            }
+        }
+
+    private fun unavailableWallet(
+        walletId: String,
+        displayName: String,
+        refusal: String,
+    ): PreparedWallet =
+        PreparedWallet(
+            report = WalletSecretsReport(
+                walletId = walletId,
+                canSign = false,
+                signingRefusal = refusal,
+                phrase = BACKUP_NOT_JUDGED,
+                seed = BACKUP_NOT_JUDGED,
+                diagnostics = emptySet(),
+            ),
+            identity = WalletIdentityLocal(
+                walletId = walletId,
+                displayName = displayName,
+                secretSource = UNAVAILABLE_SOURCE,
+                migrationState = UNAVAILABLE_STATE,
+                derivationVersion = DERIVATION_VERSION,
+            ),
+            networkAccounts = listOf(
+                NetworkAccountLocal(
+                    walletId = walletId,
+                    networkId = "sora2",
+                    publicKey = sora2AddressCodec.soraPublicKeyOrNull(walletId)?.toHex().orEmpty(),
+                    address = walletId,
+                    derivationPath = "",
+                    derivationVersion = DERIVATION_VERSION,
+                    enabled = true,
+                )
+            ),
+        )
+
+    private fun isStructurallyValidVerifiedReceipt(
+        receipt: WalletMigrationJournalLocal,
+    ): Boolean =
+        receipt.migrationId == WalletMigrationIds.NETWORK_ACCOUNTS_V1 &&
+            receipt.state == "VERIFIED" &&
+            receipt.legacyAccountCount > 0 &&
+            // Read-only accounts are not counted as verified, so the count may be lower.
+            receipt.verifiedAccountCount in 0..receipt.legacyAccountCount &&
+            receipt.selectedWalletId.isNotBlank() &&
+            receipt.selectedWalletId.length <= MAX_WALLET_ID_LENGTH &&
+            INTEGRITY_HASH.matches(receipt.integrityHash) &&
+            receipt.failureCode == null &&
+            receipt.startedAt > 0L &&
+            receipt.completedAt?.let { it >= receipt.startedAt } == true
+
+    /**
+     * Advances a VERIFIED checkpoint after a legitimate lifecycle change (account creation,
+     * rename, selection or removal). Runs inside the caller's transaction after the current
+     * model has been staged and verified.
+     */
+    private suspend fun refreshVerifiedReceiptLocked(
+        receipt: WalletMigrationJournalLocal,
+        legacyAccounts: List<SoraAccountLocal>,
+        signingAccountCount: Int,
+        selectedWalletId: String,
+        currentIntegrityHash: String,
+    ) {
+        val receiptCompletedAt = checkNotNull(receipt.completedAt) {
+            "VERIFIED_RECEIPT_COMPLETION_MISSING"
+        }
+        val finalAccounts = database.accountDao().getAccounts()
+            .filter { it.substrateAddress.isNotBlank() && it.substrateAddress.length <= MAX_WALLET_ID_LENGTH }
+        check(
+            finalAccounts.size == legacyAccounts.size &&
+                integrityHash(
+                    finalAccounts.map { it.substrateAddress to it.accountName },
+                    selectedWalletId,
+                ) == currentIntegrityHash
+        ) { "POST_ACTIVATION_WALLET_SNAPSHOT_CHANGED" }
+        check(
+            database.walletIdentityDao().refreshVerifiedMigrationJournal(
+                migrationId = receipt.migrationId,
+                receiptAccountCount = receipt.legacyAccountCount,
+                receiptVerifiedAccountCount = receipt.verifiedAccountCount,
+                receiptSelectedWalletId = receipt.selectedWalletId,
+                receiptIntegrityHash = receipt.integrityHash,
+                receiptStartedAt = receipt.startedAt,
+                receiptCompletedAt = receiptCompletedAt,
+                currentAccountCount = finalAccounts.size,
+                currentVerifiedAccountCount = signingAccountCount,
+                currentSelectedWalletId = selectedWalletId,
+                currentIntegrityHash = currentIntegrityHash,
+                refreshedAt = maxOf(
+                    System.currentTimeMillis(),
+                    receipt.startedAt,
+                    receiptCompletedAt,
+                ),
+            ) == 1
+        ) { "VERIFIED_RECEIPT_REFRESH_CAS_MISMATCH" }
+    }
+
+    private suspend fun recordActivatedModelFailureAfterSnapshotChange(
+        receipt: WalletMigrationJournalLocal,
+        currentAccountCount: Int,
+        currentSelectedWalletId: String,
+        currentIntegrityHash: String,
+        walletIds: List<String>,
+        code: String,
+    ): MigrationOutcome {
+        try {
+            val receiptCompletedAt = checkNotNull(receipt.completedAt) {
+                "VERIFIED_RECEIPT_COMPLETION_MISSING"
+            }
+            val completedAt = maxOf(
+                System.currentTimeMillis(),
+                receipt.startedAt,
+                receiptCompletedAt,
+            )
+            check(
+                database.walletIdentityDao().markActivatedMigrationRecoveryRequired(
+                    migrationId = receipt.migrationId,
+                    legacyAccountCount = receipt.legacyAccountCount,
+                    receiptVerifiedAccountCount = receipt.verifiedAccountCount,
+                    receiptSelectedWalletId = receipt.selectedWalletId,
+                    receiptIntegrityHash = receipt.integrityHash,
+                    startedAt = receipt.startedAt,
+                    receiptCompletedAt = receiptCompletedAt,
+                    currentAccountCount = currentAccountCount,
+                    currentSelectedWalletId = currentSelectedWalletId,
+                    currentIntegrityHash = currentIntegrityHash,
+                    failureCode = "ACTIVATED_MODEL_MISMATCH",
+                    completedAt = completedAt,
+                ) == 1
+            ) { "MIGRATION_FAILURE_CAS_MISMATCH" }
+            if (walletIds.isNotEmpty()) {
+                try {
+                    database.walletIdentityDao()
+                        .markWalletsRecoveryRequired(walletIds)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Throwable) {
+                    // The durable journal above is the activation gate.
+                }
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            // The process gate below still closes; the next start inspects the journal again.
+        } finally {
+            WalletUpgradeBackup.noteMigrationRecoveryRequired(code)
+        }
+        return MigrationOutcome.Recovery(code)
+    }
+
+    /**
+     * The code to show on the recovery screen. Never throws: while startup is blocked the
+     * database is closed to every reader, so the blocking code is returned without opening it,
+     * and a database that cannot be read falls back to the codes known in memory.
+     */
+    suspend fun failureCode(): String? {
+        WalletUpgradeBackup.blockingFailure()?.let { return it.code }
+        val stored = try {
+            userRepository.walletDeletionFailureCode()
+                ?: lastOutcome?.code
+                ?: database.walletIdentityDao()
+                    .getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
+                    ?.failureCode
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            null
+        }
+        return stored
+            ?: lastOutcome?.code
+            ?: WalletUpgradeBackup.blockingFailure()?.code
+            ?: WalletUpgradeBackup.transientVerificationFailure()
+    }
+
+    private suspend fun recordFailure(
+        startedAt: Long,
+        legacyAccountCount: Int,
+        selectedWalletId: String,
+        integrityHash: String,
+        code: String,
+        walletIds: List<String>,
+    ): MigrationOutcome {
+        try {
+            // Commit the durable recovery gate first. Even if a later per-wallet marker cannot be
+            // written, the account rows and encrypted keys remain authoritative.
+            check(
+                database.walletIdentityDao().recordMigrationFailure(
+                    WalletMigrationJournalLocal(
+                        migrationId = WalletMigrationIds.NETWORK_ACCOUNTS_V1,
+                        state = "RECOVERY_REQUIRED",
+                        legacyAccountCount = legacyAccountCount,
+                        verifiedAccountCount = 0,
+                        selectedWalletId = selectedWalletId,
+                        integrityHash = integrityHash,
+                        failureCode = code,
+                        startedAt = startedAt,
+                        completedAt = maxOf(System.currentTimeMillis(), startedAt),
+                    )
+                )
+            ) { "MIGRATION_FAILURE_CAS_MISMATCH" }
+            if (walletIds.isNotEmpty()) {
+                try {
+                    database.walletIdentityDao().markWalletsRecoveryRequired(walletIds)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Throwable) {
+                    // The durable journal above is the activation gate.
+                }
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            // A failed journal write (for example a full disk) is not remembered either; the
+            // process stays read-only and the next start verifies again.
+        } finally {
+            // The in-memory gate must close even when the journal write itself fails or a
+            // committed suspend call reports cancellation. A restart will re-inspect durability.
+            // The code lets the recovery screen offer exactly what the next start would offer.
+            WalletUpgradeBackup.noteMigrationRecoveryRequired(code)
+        }
+        return MigrationOutcome.Recovery(code)
+    }
+
+    private fun integrityHash(accounts: List<Pair<String, String>>, selected: String): String =
+        WalletMigrationIntegrity.snapshotHashPairs(accounts, selected)
+
+    /** Writes the prepared identity and network accounts of every wallet whose stored copy differs. */
+    private suspend fun stagePreparedModel(preparedWallets: List<PreparedWallet>) {
+        val identities = database.walletIdentityDao().getWallets()
+            .associateBy(WalletIdentityLocal::walletId)
+        preparedWallets.forEach { prepared ->
+            if (identities[prepared.identity.walletId] != prepared.identity) {
+                database.walletIdentityDao().upsertWallet(prepared.identity)
+            }
+            val actual = database.walletIdentityDao()
+                .getNetworkAccounts(prepared.identity.walletId)
+                .associateBy(NetworkAccountLocal::networkId)
+            val changed = prepared.networkAccounts.filter { actual[it.networkId] != it }
+            if (changed.isNotEmpty()) {
+                database.walletIdentityDao().upsertNetworkAccounts(changed)
+            }
+        }
+    }
+
+    private suspend fun storedModelMatches(preparedWallets: List<PreparedWallet>): Boolean =
+        try {
+            verifyPreparedModel(preparedWallets)
+            true
+        } catch (_: MigrationVerificationException) {
+            false
+        }
+
+    /**
+     * Every account row must carry exactly its prepared identity and prepared network accounts.
+     * Rows for networks that are no longer derived, and identities without an account row, are
+     * left in place and ignored: they cannot sign without a verified identity and account row.
+     */
+    private suspend fun verifyPreparedModel(preparedWallets: List<PreparedWallet>) {
+        val identities = database.walletIdentityDao().getWallets()
+            .associateBy(WalletIdentityLocal::walletId)
+        preparedWallets.forEach { prepared ->
+            if (identities[prepared.identity.walletId] != prepared.identity) {
+                throw MigrationVerificationException("STAGED_IDENTITY_MISMATCH")
+            }
+            val actual = database.walletIdentityDao()
+                .getNetworkAccounts(prepared.identity.walletId)
+                .associateBy(NetworkAccountLocal::networkId)
+            if (prepared.networkAccounts.any { actual[it.networkId] != it }) {
+                throw MigrationVerificationException("STAGED_NETWORK_ACCOUNT_MISMATCH")
+            }
+        }
+    }
+
+    private suspend fun prepareWallet(
+        legacy: SoraAccountLocal,
+    ): PreparedWallet {
+        val account = SoraAccount(
+            substrateAddress = legacy.substrateAddress,
+            accountName = legacy.accountName,
+        )
+        if (credentialsRepository.isExplicitWatchOnly(account)) {
+            return prepareExplicitWatchOnlyWallet(legacy, account)
+        }
+        val keyPair = credentialsRepository.retrieveKeyPair(account)
+        try {
+            // Step 1. The stored signing key alone decides: it must be the key of this address
+            // (computed from the stored private key) and sign a random challenge that verifies
+            // against the address's public key. This is decided before any backup material is
+            // read, so nothing about a phrase or seed can make the account read-only.
+            val signing = secretsJudge.judgeSigningKey(legacy.substrateAddress, keyPair)
+            signing.refusal?.let { throw MigrationVerificationException(it) }
+
+            // Step 2. The phrase and the seed are backup material. A value that cannot be read
+            // has its own status and only limits what is offered as a backup.
+            val mnemonic = readBackupMaterial { credentialsRepository.retrieveMnemonic(account) }
+            val storedSeed = readBackupMaterial { credentialsRepository.retrieveStoredSeed(account) }
+            val verdict = secretsJudge.judgeBackup(
+                address = legacy.substrateAddress,
+                signing = signing,
+                keyPair = keyPair,
+                mnemonic = mnemonic,
+                storedSeed = storedSeed,
+            )
+
+            val networkAccounts = mutableListOf(
+                NetworkAccountLocal(
+                    walletId = legacy.substrateAddress,
+                    networkId = "sora2",
+                    publicKey = keyPair.publicKey.toHex(),
+                    address = legacy.substrateAddress,
+                    derivationPath = "",
+                    derivationVersion = DERIVATION_VERSION,
+                    enabled = true,
+                )
+            )
+            // Nexus accounts belong only to a 12- or 24-word phrase that re-derives this
+            // account's SORA2 address. One that is already recorded as a derivation of this
+            // phrase keeps its identity exactly; a missing one is derived from the canonical
+            // words.
+            val nexusPhrase = verdict.recoveryPhrase
+                ?.takeIf { verdict.secretSource == StoredSecretsVerdict.SOURCE_MNEMONIC }
+            // Preparing them comes after the signing decision and can never undo it: if it
+            // fails for a reason other than storage, the SORA2 account is still verified, the
+            // recorded Nexus rows are left exactly as they are and the next start tries again.
+            var nexusPrepared = true
+            if (nexusPhrase != null) {
+                networkAccounts += try {
+                    NexusChildAccounts.prepare(
+                        walletId = legacy.substrateAddress,
+                        storedPhraseText = mnemonic.orEmpty(),
+                        phrase = nexusPhrase,
+                        existing = database.walletIdentityDao()
+                            .getNetworkAccounts(legacy.substrateAddress)
+                            .associateBy(NetworkAccountLocal::networkId),
+                        derivationVersion = DERIVATION_VERSION,
+                    )
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: OutOfMemoryError) {
+                    throw error
+                } catch (error: Throwable) {
+                    if (
+                        WalletStorageFailures.isKeyMaterialUnavailable(error) ||
+                        WalletStorageFailures.isTransient(error)
+                    ) {
+                        throw error
+                    }
+                    nexusPrepared = false
+                    emptyList()
+                }
+            }
+
+            return PreparedWallet(
+                identity = WalletIdentityLocal(
+                    walletId = legacy.substrateAddress,
+                    displayName = legacy.accountName,
+                    secretSource = verdict.secretSource,
+                    migrationState = "VERIFIED",
+                    derivationVersion = DERIVATION_VERSION,
+                ),
+                networkAccounts = networkAccounts,
+                report = WalletSecretsReport(
+                    walletId = legacy.substrateAddress,
+                    canSign = true,
+                    signingRefusal = null,
+                    phrase = verdict.phrase.name,
+                    seed = verdict.seed.name,
+                    diagnostics = if (nexusPrepared) {
+                        verdict.diagnostics
+                    } else {
+                        verdict.diagnostics + "NEXUS_ACCOUNTS_NOT_PREPARED"
+                    },
+                ),
+            )
+        } finally {
+            keyPair.privateKey.fill(0)
+            keyPair.nonce.fill(0)
+        }
+    }
+
+    /**
+     * Reads one piece of backup material after the signing decision was made. Null when the
+     * stored value cannot be read (a fact about that value, reported as its own status); it
+     * never becomes a failure of the account. Only a Keystore or storage failure is rethrown: it
+     * says nothing about the account and must end the run without any result.
+     */
+    private suspend fun readBackupMaterial(read: suspend () -> String): String? = try {
+        read()
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: OutOfMemoryError) {
+        throw error
+    } catch (error: Throwable) {
+        if (
+            WalletStorageFailures.isKeyMaterialUnavailable(error) ||
+            WalletStorageFailures.isTransient(error)
+        ) {
+            throw error
+        }
+        null
+    }
+
+    private suspend fun prepareExplicitWatchOnlyWallet(
+        legacy: SoraAccountLocal,
+        account: SoraAccount,
+    ): PreparedWallet {
+        val signingKey = credentialsRepository.retrieveKeyPairOrNull(account)
+        try {
+            if (signingKey != null) {
+                throw MigrationVerificationException("WATCH_ONLY_SIGNING_KEY_CONFLICT")
+            }
+        } finally {
+            signingKey?.privateKey?.fill(0)
+            signingKey?.nonce?.fill(0)
+        }
+        if (
+            credentialsRepository.retrieveMnemonic(account).isNotBlank() ||
+            credentialsRepository.retrieveStoredSeed(account).isNotBlank()
+        ) {
+            throw MigrationVerificationException("WATCH_ONLY_SECRET_CONFLICT")
+        }
+
+        val publicKey = sora2AddressCodec.soraPublicKeyOrNull(legacy.substrateAddress)
+            ?: throw MigrationVerificationException("WATCH_ONLY_ADDRESS_INVALID")
+        if (sora2AddressCodec.toSoraAddressOrNull(publicKey) != legacy.substrateAddress) {
+            throw MigrationVerificationException("WATCH_ONLY_ADDRESS_MISMATCH")
+        }
+
+        return PreparedWallet(
+            identity = WalletIdentityLocal(
+                walletId = legacy.substrateAddress,
+                displayName = legacy.accountName,
+                secretSource = "WATCH_ONLY",
+                migrationState = "VERIFIED",
+                derivationVersion = DERIVATION_VERSION,
+            ),
+            networkAccounts = listOf(
+                NetworkAccountLocal(
+                    walletId = legacy.substrateAddress,
+                    networkId = "sora2",
+                    publicKey = publicKey.toHex(),
+                    address = legacy.substrateAddress,
+                    derivationPath = "",
+                    derivationVersion = DERIVATION_VERSION,
+                    enabled = true,
+                )
+            ),
+        )
+    }
+
+    private fun Throwable.safeFailureCode(): String = when (this) {
+        is MigrationVerificationException -> code
+        is KeyMaterialUnavailableException -> WalletRecoveryOptions.KEYSTORE_KEY_UNAVAILABLE
+        is WalletDecryptionException -> "SECRET_DECRYPTION_FAILED"
+        is IllegalStateException -> message?.takeIf { it.matches(Regex("^[A-Z0-9_]{1,64}$")) }
+            ?: "SECRET_MISSING"
+        else -> "VERIFICATION_FAILED"
+    }
+
+    private fun ByteArray.toHex(): String = joinToString("") {
+        (it.toInt() and 0xff).toString(16).padStart(2, '0')
+    }
+
+    private sealed interface Preparation {
+        class Ready(val wallet: PreparedWallet) : Preparation
+
+        class Abort(val code: String, val keysUnavailable: Boolean) : Preparation {
+            companion object {
+                fun from(error: Throwable): Abort {
+                    val keystore = generateSequence(error) { it.cause }
+                        .take(8)
+                        .filterIsInstance<KeyMaterialUnavailableException>()
+                        .firstOrNull()
+                    return when {
+                        keystore != null && !keystore.transient -> Abort(
+                            code = WalletRecoveryOptions.KEYSTORE_KEY_UNAVAILABLE,
+                            keysUnavailable = true,
+                        )
+                        keystore != null -> Abort(
+                            code = WalletRecoveryOptions.KEYSTORE_TRANSIENT,
+                            keysUnavailable = false,
+                        )
+                        generateSequence(error) { it.cause }.take(8)
+                            .any { it is SQLiteFullException } -> Abort(
+                            code = WalletRecoveryOptions.STORAGE_FULL,
+                            keysUnavailable = false,
+                        )
+                        generateSequence(error) { it.cause }.take(8)
+                            .any { it is SQLiteDatabaseLockedException } -> Abort(
+                            code = WalletRecoveryOptions.DATABASE_LOCKED,
+                            keysUnavailable = false,
+                        )
+                        else -> Abort(
+                            code = WalletRecoveryOptions.STORAGE_IO,
+                            keysUnavailable = false,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private data class PreparedWallet(
+        val identity: WalletIdentityLocal,
+        val networkAccounts: List<NetworkAccountLocal>,
+        val report: WalletSecretsReport? = null,
+    )
+
+    private class MigrationVerificationException(val code: String) : IllegalStateException(code)
+}

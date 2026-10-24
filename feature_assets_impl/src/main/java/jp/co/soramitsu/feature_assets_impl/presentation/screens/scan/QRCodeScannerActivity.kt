@@ -32,18 +32,20 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.screens.scan
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
 import android.widget.Toast
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
@@ -55,6 +57,7 @@ import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.androidfoundation.format.retrieveString
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.feature_assets_impl.databinding.QrCodeScannerLayoutBinding
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.scan.QrCodeScannerScreen
@@ -99,6 +102,14 @@ class QRCodeScannerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // The scanner is always dark (camera under a dark scrim), whatever the app theme: draw
+        // edge to edge on every API level with transparent bars and light status/navigation
+        // icons. AppTheme would give dark icons in light mode (and a light bar strip before
+        // Android 15), which are unreadable over the camera.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         setContentView(binding.root)
 
         initScreen(savedInstanceState)
@@ -136,7 +147,9 @@ class QRCodeScannerActivity : AppCompatActivity() {
         binding.screenContent.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                MaterialTheme {
+                // The scanner always uses the dark SORA Neon palette: its surface is the camera
+                // under a dark scrim, where light-theme text would be unreadable.
+                SoraAppTheme(darkTheme = true) {
                     QrCodeScannerScreen(
                         onNavIconClick = ::finish,
                         onUploadFromGalleryClick = ::selectQrFromGallery,
@@ -194,11 +207,16 @@ class QRCodeScannerActivity : AppCompatActivity() {
         if (!shouldOpenScannedConnect(recipientOnly, uri.scheme, uri.host)) {
             return false
         }
-        startActivity(
-            Intent(Intent.ACTION_VIEW, uri)
-                .setPackage(packageName),
-        )
-        return true
+        return try {
+            startActivity(
+                Intent(Intent.ACTION_VIEW, uri)
+                    .setPackage(packageName),
+            )
+            true
+        } catch (_: ActivityNotFoundException) {
+            // No IrohaConnect screen in this build: hand the text back like any other scan.
+            false
+        }
     }
 
     private inner class IrohaAwareCaptureManager(

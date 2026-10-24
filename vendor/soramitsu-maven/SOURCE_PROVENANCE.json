@@ -16,12 +16,68 @@
   },
   "buildInputs": [
     {
+      "path": "build-inputs/GraphicsPathSmoke.java",
+      "sha256": "0ae2dc21debbaf73360a3d5860649172491341ec0bedba39f70b846df4d472f9"
+    },
+    {
+      "path": "build-inputs/LazysodiumSmoke.java",
+      "sha256": "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68"
+    },
+    {
       "path": "build-inputs/README.md",
-      "sha256": "df1d55a57903fcc1f8b21a1d779a23733f974bd495dddae0f67c1e55995b8ded"
+      "sha256": "093e7e7efe86e2ad2e000f7f5d9cbcece6ec8af519b8c9863abf92c67f177fbd"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
+      "sha256": "6f28886b62b5ec6eee6191694c0c78dd36ac1eee06fdd9e57f4d96635bb0ee8a"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-build-16kb.sh",
+      "sha256": "d01272ea5c2be37c64eff6c0f031845efb0071f9704f13a606219a0cd3399e2d"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-original.aar",
+      "sha256": "8ca4032b6d79b351f0b59ad4b580eddbb9423e1652f7c958830687f1eee2ec03"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-original.module",
+      "sha256": "3f6fc7e96f8a1fd21045da7f2e332aef528aa1f56b6455fb8f25043aafa0e1b8"
+    },
+    {
+      "path": "build-inputs/graphics-path-1.0.1-repack-16kb.py",
+      "sha256": "d2de5118a37af9d843c9ffc8340f1071d2ecb14fa53d5cb4c144f76b8aff69ac"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-16kb-rebuild.md",
+      "sha256": "0ca566bc11c25409d398214ef1dbb6094cf221ec069cad04917da1a2584e2707"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-build-16kb.sh",
+      "sha256": "43b1e18beec1df8b6562e21319dcdf19b0f1cf27dbc033a509dded51483e36ed"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-original.aar",
+      "sha256": "e38503013e03a3623bd9da01a0fbbf644a87947a35dbeb4df7b35605b71534ad"
+    },
+    {
+      "path": "build-inputs/lazysodium-5.0.2-repack-16kb.py",
+      "sha256": "ac39c9d93eb7870e8929f1f37a16e970b5ec99b67ea782f551125aaa6c405c4c"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
+      "sha256": "04ceea236a739b81000b2702a26221f91fb945b8e796d0085623d549fe6e65bb"
     },
     {
       "path": "build-inputs/xcrypto-1.2.7-Cargo.lock",
       "sha256": "72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.7-original.aar",
+      "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.7-repack-16kb.py",
+      "sha256": "595d7aa1b4eed24f553e7201ad6510b1ccb0bb1cc9e20a113d8b967e046f317d"
     },
     {
       "path": "build-inputs/xsubstrate-1.2.7-source-normalization.patch",
@@ -30,116 +86,85 @@
   ],
   "modules": [
     {
-      "coordinate": "com.paywings.kyc:android-sdk:1.2.2",
-      "modulePath": "com/paywings/kyc/android-sdk/1.2.2",
+      "coordinate": "androidx.graphics:graphics-path:1.0.1",
+      "modulePath": "androidx/graphics/graphics-path/1.0.1",
       "origin": {
-        "kind": "github-packages-asset",
-        "packagePage": "https://github.com/PayWings/integration/packages/2038085?version=1.2.2",
-        "publisherMd5AndSha1SidecarsMatched": true,
-        "sourceAvailableInPackage": false,
-        "independentBinaryReviewCompleted": false,
+        "kind": "git-source-build",
+        "repository": "https://android.googlesource.com/platform/frameworks/support",
+        "revision": "8a05a22af450d589ef911d772a001a49dcb05b71",
+        "tree": "f1ec6450df09939325e8dbe5cf57b589a673afc3",
+        "commitVerification": {
+          "provider": "gitiles",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [
+          "build-inputs/GraphicsPathSmoke.java",
+          "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
+          "build-inputs/graphics-path-1.0.1-build-16kb.sh",
+          "build-inputs/graphics-path-1.0.1-original.aar",
+          "build-inputs/graphics-path-1.0.1-original.module",
+          "build-inputs/graphics-path-1.0.1-repack-16kb.py"
+        ],
+        "semanticTransformations": [],
         "sourceToBinaryReproductionReviewed": false
       },
       "materializedFiles": [
         {
-          "name": "android-sdk-1.2.2.aar",
-          "sha256": "4cda1f49af0a30c5760dd7ed542b04a1cc09ea4f451c6753a425a477a52b97f3"
+          "name": "graphics-path-1.0.1-sources.jar",
+          "sha256": "9f1b5995b9577a8876525c3411ebb2a49f9ef0e875f6aec3059e807596dc6ca6"
         },
         {
-          "name": "android-sdk-1.2.2.aar.md5",
-          "sha256": "cb228d6392fcaf1dc6f317d84b3e9b357962fb3fdbf37d065e5cbf32bba29dfd"
+          "name": "graphics-path-1.0.1-versionMetadata.json",
+          "sha256": "6f54e010c759a56cfe1a2eeb1a0edfd494184791e7b5f370b3ce064e293c2ce1"
         },
         {
-          "name": "android-sdk-1.2.2.aar.sha1",
-          "sha256": "34a80d7f289f7b5b08fec95b66ec8df2b64794d924185997cc783bad6081679b"
+          "name": "graphics-path-1.0.1.aar",
+          "sha256": "eb4759c27ae0625d9e81fe95d8ce63d0a3846764a3465363ab195109d6785a71"
         },
         {
-          "name": "android-sdk-1.2.2.pom",
-          "sha256": "558f8495b38e6a9eb8ca59b3f8df94c3443c1b062fb99bdda2daa581e645f261"
+          "name": "graphics-path-1.0.1.module",
+          "sha256": "478695824bf314c9d0603ea249e25431b172c485aab20a61856a2cdea6819441"
         },
         {
-          "name": "android-sdk-1.2.2.pom.md5",
-          "sha256": "c0c50abfd0e3eaa4affd55e5babba9501b96d7e248d247cacb39d0367ed6772c"
-        },
-        {
-          "name": "android-sdk-1.2.2.pom.sha1",
-          "sha256": "1f83b7220393959081803b761773130b8636acf02c8b06304c5084db62e2d89b"
+          "name": "graphics-path-1.0.1.pom",
+          "sha256": "866fb357c7146f5f7678ad44e4bc6c2823d568defce1ed2805bb6c899606b228"
         }
       ]
     },
     {
-      "coordinate": "com.paywings.oauth:android-sdk:2.0.0",
-      "modulePath": "com/paywings/oauth/android-sdk/2.0.0",
+      "coordinate": "com.goterl:lazysodium-android:5.0.2",
+      "modulePath": "com/goterl/lazysodium-android/5.0.2",
       "origin": {
-        "kind": "github-packages-asset",
-        "packagePage": "https://github.com/PayWings/integration/packages/1654891?version=2.0.0",
-        "publisherMd5AndSha1SidecarsMatched": true,
-        "sourceAvailableInPackage": false,
-        "independentBinaryReviewCompleted": false,
+        "kind": "git-source-build",
+        "repository": "https://github.com/jedisct1/libsodium.git",
+        "revision": "940ef42797baa0278df6b7fd9e67c7590f87744b",
+        "tree": "a748f0c89c2243e124df3d310915c8a528135582",
+        "commitVerification": {
+          "provider": "github",
+          "status": "unsigned",
+          "observedAt": "2026-09-25",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [
+          "build-inputs/LazysodiumSmoke.java",
+          "build-inputs/lazysodium-5.0.2-16kb-rebuild.md",
+          "build-inputs/lazysodium-5.0.2-build-16kb.sh",
+          "build-inputs/lazysodium-5.0.2-original.aar",
+          "build-inputs/lazysodium-5.0.2-repack-16kb.py"
+        ],
+        "semanticTransformations": [],
         "sourceToBinaryReproductionReviewed": false
       },
       "materializedFiles": [
         {
-          "name": "android-sdk-2.0.0.aar",
-          "sha256": "62ef2b625bcdf6f1fdeea68cdf6c18809b2610f848c68480da3c2c153e87a372"
+          "name": "lazysodium-android-5.0.2.aar",
+          "sha256": "02eb05b96f8236b646f7f642c8e424cdb7f6ad6451d6b3c9eaec0e8c8138f989"
         },
         {
-          "name": "android-sdk-2.0.0.aar.md5",
-          "sha256": "9fe637494b69a1fd23587215169a5fbf083a250b571e7784f71ae43179f3e399"
-        },
-        {
-          "name": "android-sdk-2.0.0.aar.sha1",
-          "sha256": "d2a3b170f202ecd96e149d3d4b559805f69a2650179fab9db95d082e5240009d"
-        },
-        {
-          "name": "android-sdk-2.0.0.pom",
-          "sha256": "5a05d36ed8da5aa934c9b063fd7ae0759ade451a5bf34ed06629fff3dce2aaa6"
-        },
-        {
-          "name": "android-sdk-2.0.0.pom.md5",
-          "sha256": "3ff9744c04622513d30666fa92b2028054fed773ce9300e7ce6d538839f80cb0"
-        },
-        {
-          "name": "android-sdk-2.0.0.pom.sha1",
-          "sha256": "473d0d0557a22f0dae60740efa5e53cf7ae68c6aa6b93168ba830bc096085f66"
-        }
-      ]
-    },
-    {
-      "coordinate": "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3",
-      "modulePath": "com/paywings/onboarding/kyc/android-libs/idensic-mobile-sdk/1.31.3",
-      "origin": {
-        "kind": "github-packages-asset",
-        "packagePage": "https://github.com/PayWings/integration/packages/1527444?version=1.31.3",
-        "publisherMd5AndSha1SidecarsMatched": true,
-        "sourceAvailableInPackage": false,
-        "independentBinaryReviewCompleted": false,
-        "sourceToBinaryReproductionReviewed": false
-      },
-      "materializedFiles": [
-        {
-          "name": "idensic-mobile-sdk-1.31.3.aar",
-          "sha256": "491f006e8c359ebcab71b8118565ecc4caf8d845cd605477db5504dbf66dffb5"
-        },
-        {
-          "name": "idensic-mobile-sdk-1.31.3.aar.md5",
-          "sha256": "8f128ec2cd2b6844e7e556e860984ef10bf21a55b5a97707d88de52bf091179b"
-        },
-        {
-          "name": "idensic-mobile-sdk-1.31.3.aar.sha1",
-          "sha256": "a5d9f924e10555425fd8f66633c83aed699d6cea4a0a1cedbaa6f501d4a94960"
-        },
-        {
-          "name": "idensic-mobile-sdk-1.31.3.pom",
-          "sha256": "92664704573f377be6843ecb882450cdafcdf2cbf01fd2af56b02a1dd8cefae1"
-        },
-        {
-          "name": "idensic-mobile-sdk-1.31.3.pom.md5",
-          "sha256": "c1f9911cf49b77d844f22fb299c3b69455443e5223f023ec9ed4fa771a4e21d0"
-        },
-        {
-          "name": "idensic-mobile-sdk-1.31.3.pom.sha1",
-          "sha256": "411ba613459024ddcc771664d9741484315e11750f5a217abed53abf9797248a"
+          "name": "lazysodium-android-5.0.2.pom",
+          "sha256": "6ae9391bb9f4200e9a104d60bbc00a4c85a726c87d1ba46485fa7fd3679e6a88"
         }
       ]
     },
@@ -169,6 +194,43 @@
         {
           "name": "polkaj-scale-0.2.3.pom",
           "sha256": "df2700261fe4ba871334746cf840f8b215334b4f4681fca43967116e5eb773c6"
+        }
+      ]
+    },
+    {
+      "coordinate": "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
+      "modulePath": "jp/co/soramitsu/xnetworking/lib-android/1.0.15-K2",
+      "origin": {
+        "kind": "git-source-build",
+        "repository": "https://github.com/soramitsu/x-networking.git",
+        "revision": "fa94a1d1c0b5457b50885ec72727934a2fea12d5",
+        "tree": "56a87310923d615819819d682a945496e40b3dd7",
+        "commitVerification": {
+          "provider": "github",
+          "status": "valid",
+          "observedAt": "2026-08-09",
+          "independentlyReviewed": false
+        },
+        "buildInputs": [],
+        "semanticTransformations": [],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "lib-android-1.0.15-K2-sources.jar",
+          "sha256": "789f5cabe03aad144670b0cbefdd54d9ad6029fa5bd6add0d194e932e803e1b7"
+        },
+        {
+          "name": "lib-android-1.0.15-K2.aar",
+          "sha256": "98f62537ad66eb3eac9940bd58fd6c5511f24e3c988062947548af52e714beac"
+        },
+        {
+          "name": "lib-android-1.0.15-K2.module",
+          "sha256": "30dbc67da2ed55f0dd70c93c0f12ae8ceb244372b9d98b5c51a73e043da5a61b"
+        },
+        {
+          "name": "lib-android-1.0.15-K2.pom",
+          "sha256": "9ec37ddd5af6d7e162be5e4677583a6c060a35f7f903642baf18379420cda887"
         }
       ]
     },
@@ -206,43 +268,6 @@
         {
           "name": "android-foundation-0.0.4.pom",
           "sha256": "1ef705cff32cb537f4d297a14e514406fb343bb0a537189de018bc286d59acd7"
-        }
-      ]
-    },
-    {
-      "coordinate": "jp.co.soramitsu:android-sora-card:1.2.1-K2",
-      "modulePath": "jp/co/soramitsu/android-sora-card/1.2.1-K2",
-      "origin": {
-        "kind": "git-source-build",
-        "repository": "https://github.com/sora-xor/sora-card-android.git",
-        "revision": "60113f80237a7c6fa4329eca55ddb22d89e12831",
-        "tree": "f5fbb2e9ca40b90a8efd3265542fd64f71b658de",
-        "commitVerification": {
-          "provider": "github",
-          "status": "valid",
-          "observedAt": "2026-08-09",
-          "independentlyReviewed": false
-        },
-        "buildInputs": [],
-        "semanticTransformations": [],
-        "sourceToBinaryReproductionReviewed": false
-      },
-      "materializedFiles": [
-        {
-          "name": "android-sora-card-1.2.1-K2-sources.jar",
-          "sha256": "707129fe1bf4eac21c94048684047b173ff67b56ceb2617f0f07684893254887"
-        },
-        {
-          "name": "android-sora-card-1.2.1-K2.aar",
-          "sha256": "c3dfd715425124c74fb8d621dc5722fc6880537794e4d06d537b638bc572b4fe"
-        },
-        {
-          "name": "android-sora-card-1.2.1-K2.module",
-          "sha256": "cb5d7a86d781bd5ddefd2f6229351ff03acb2a2665e0573653b9022bcefbfea2"
-        },
-        {
-          "name": "android-sora-card-1.2.1-K2.pom",
-          "sha256": "f3a2a1612af1bb5dbe03801a96f0ec424dbe354a59fe1c9de869045dd2492294"
         }
       ]
     },
@@ -335,7 +360,10 @@
           "independentlyReviewed": false
         },
         "buildInputs": [
-          "build-inputs/xcrypto-1.2.7-Cargo.lock"
+          "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
+          "build-inputs/xcrypto-1.2.7-Cargo.lock",
+          "build-inputs/xcrypto-1.2.7-original.aar",
+          "build-inputs/xcrypto-1.2.7-repack-16kb.py"
         ],
         "semanticTransformations": [],
         "sourceToBinaryReproductionReviewed": false
@@ -347,11 +375,11 @@
         },
         {
           "name": "xcrypto-1.2.7.aar",
-          "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b"
+          "sha256": "bb2cbb157c36430a7843e8db6900fec1ce36cacd966ff8fe00c6eab524f853ef"
         },
         {
           "name": "xcrypto-1.2.7.module",
-          "sha256": "705f5532c4f9bb0ccfec67b919b0cd52a8854ce228555003fb4cb8ea76b7b731"
+          "sha256": "fc57d285886c08492c180fb84754249f10ff12f6d9327d2a148d2d2d071a4236"
         },
         {
           "name": "xcrypto-1.2.7.pom",
@@ -395,43 +423,6 @@
         {
           "name": "xsubstrate-1.2.7.pom",
           "sha256": "6af9914a83fbe7b3b0d48629771fb278019a9e0292eb55ad72445c1bdc21cf7a"
-        }
-      ]
-    },
-    {
-      "coordinate": "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
-      "modulePath": "jp/co/soramitsu/xnetworking/lib-android/1.0.15-K2",
-      "origin": {
-        "kind": "git-source-build",
-        "repository": "https://github.com/soramitsu/x-networking.git",
-        "revision": "fa94a1d1c0b5457b50885ec72727934a2fea12d5",
-        "tree": "56a87310923d615819819d682a945496e40b3dd7",
-        "commitVerification": {
-          "provider": "github",
-          "status": "valid",
-          "observedAt": "2026-08-09",
-          "independentlyReviewed": false
-        },
-        "buildInputs": [],
-        "semanticTransformations": [],
-        "sourceToBinaryReproductionReviewed": false
-      },
-      "materializedFiles": [
-        {
-          "name": "lib-android-1.0.15-K2-sources.jar",
-          "sha256": "789f5cabe03aad144670b0cbefdd54d9ad6029fa5bd6add0d194e932e803e1b7"
-        },
-        {
-          "name": "lib-android-1.0.15-K2.aar",
-          "sha256": "98f62537ad66eb3eac9940bd58fd6c5511f24e3c988062947548af52e714beac"
-        },
-        {
-          "name": "lib-android-1.0.15-K2.module",
-          "sha256": "30dbc67da2ed55f0dd70c93c0f12ae8ceb244372b9d98b5c51a73e043da5a61b"
-        },
-        {
-          "name": "lib-android-1.0.15-K2.pom",
-          "sha256": "9ec37ddd5af6d7e162be5e4677583a6c060a35f7f903642baf18379420cda887"
         }
       ]
     }

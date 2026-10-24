@@ -42,36 +42,83 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.datastore.preferences.preferencesDataStoreFile
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
+private const val SHARED_PREFERENCES_FILE = "sora_prefs"
+private const val SORA_COMMON_PREFS = "sora_prefs_datastore"
+
+/** The process-wide DataStore. DataStore allows one active instance per file and process. */
+private val Context.soraPreferencesDataStore: DataStore<Preferences> by preferencesDataStore(
+    name = SORA_COMMON_PREFS,
+    produceMigrations = { listOf(SharedPreferencesMigration(it, SHARED_PREFERENCES_FILE)) },
+)
+
 class SoraPreferences(
-    context: Context,
+    private val dataStore: DataStore<Preferences>,
 ) {
 
+    constructor(context: Context) : this(context.applicationContext.soraPreferencesDataStore)
+
     companion object {
-        private const val SHARED_PREFERENCES_FILE = "sora_prefs"
-        private const val SORA_COMMON_PREFS = "sora_prefs_datastore"
         private const val MAXIMUM_BOOLEAN_SNAPSHOT_FIELDS = 32
         private const val MAXIMUM_PREFERENCE_KEY_LENGTH = 256
-    }
 
-    private val Context.dataStorePreferences: DataStore<Preferences> by preferencesDataStore(
-        name = SORA_COMMON_PREFS,
-        produceMigrations = {
-            listOf(
-                SharedPreferencesMigration(it, SHARED_PREFERENCES_FILE)
+        /**
+         * Builds a DataStore over the production file with the production migration, owned by
+         * [scope]. Cancelling [scope] releases the file. Device tests use this to model separate
+         * app processes; production code uses the process-wide instance from [SoraPreferences].
+         */
+        fun createDataStore(context: Context, scope: CoroutineScope): DataStore<Preferences> =
+            PreferenceDataStoreFactory.create(
+                migrations = listOf(SharedPreferencesMigration(context, SHARED_PREFERENCES_FILE)),
+                scope = scope,
+                produceFile = { context.preferencesDataStoreFile(SORA_COMMON_PREFS) },
             )
-        }
-    )
-
-    private val dataStore = context.dataStorePreferences
+    }
 
     suspend fun putString(field: String, value: String) {
         dataStore.edit {
             it[stringPreferencesKey(field)] = value
+        }
+    }
+
+    /**
+     * Writes all [values] in one atomic edit, only if none of the keys holds a non-empty value.
+     * Used to add wallet credentials without ever overwriting existing key material.
+     */
+    suspend fun putStringsIfAbsent(values: Map<String, String>) {
+        dataStore.edit { preferences ->
+            values.keys.forEach { field ->
+                check(preferences[stringPreferencesKey(field)].isNullOrEmpty()) {
+                    "WALLET_CREDENTIAL_ALREADY_PRESENT"
+                }
+            }
+            values.forEach { (field, value) ->
+                preferences[stringPreferencesKey(field)] = value
+            }
+        }
+    }
+
+    /**
+     * Replaces all [values] in one atomic edit. The only caller is the repair of one account
+     * with its own recovery phrase, which the person confirms explicitly and which first keeps a
+     * copy of the old preference files (`CredentialsDatasource.replaceCredentialsForRepair`).
+     * Nothing else may overwrite wallet credentials.
+     */
+    suspend fun replaceStringsForConfirmedRepair(values: Map<String, String>) {
+        require(values.isNotEmpty() && values.values.none(String::isEmpty)) {
+            "WALLET_CREDENTIAL_VALUE_EMPTY"
+        }
+        dataStore.edit { preferences ->
+            values.forEach { (field, value) ->
+                preferences[stringPreferencesKey(field)] = value
+            }
         }
     }
 
@@ -236,6 +283,62 @@ class SoraPreferences(
         }
     }
 
+    /**
+     * The ids of the key sets that only their own recovery phrase may bring back
+     * ([WalletPreferenceKeys.RETAINED_NEEDS_PHRASE]). Reads only.
+     */
+    suspend fun retainedKeySetsNeedingPhrase(): Set<String> =
+        WalletPreferenceKeys.decodeRetainedNeedsPhrase(
+            dataStore.data.first()[stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)]
+        )
+
+    /**
+     * Marks every stored key set whose id is not in [exceptIds] as needing its own recovery
+     * phrase ([WalletPreferenceKeys.RETAINED_NEEDS_PHRASE]), in one edit. Earlier marks are
+     * kept. Only the marker is written: no key value is read, changed, moved or removed, and
+     * nothing is written at all when there is nothing new to mark.
+     */
+    suspend fun markKeySetsNeedingPhrase(exceptIds: Set<String>) {
+        val marker = stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)
+        val snapshot = dataStore.data.first()
+        fun toMark(preferences: Preferences): Set<String> =
+            preferences.asMap().keys
+                .mapNotNull { key -> WalletPreferenceKeys.retainedKeySetId(key.name) }
+                .toSet() - exceptIds - WalletPreferenceKeys.decodeRetainedNeedsPhrase(preferences[marker])
+        if (toMark(snapshot).isEmpty()) return
+        dataStore.edit { preferences ->
+            val added = toMark(preferences)
+            if (added.isNotEmpty()) {
+                preferences[marker] = WalletPreferenceKeys.encodeRetainedNeedsPhrase(
+                    WalletPreferenceKeys.decodeRetainedNeedsPhrase(preferences[marker]) + added
+                )
+            }
+        }
+    }
+
+    /**
+     * Takes [ids] out of [WalletPreferenceKeys.RETAINED_NEEDS_PHRASE], in one edit. Called only
+     * after the person proved those key sets with their own recovery phrase, raw seed or backup
+     * file: from then on the key set is theirs again, like any other wallet on this phone.
+     * Only the marker is written (it is removed when no id is left): no key value is read,
+     * changed, moved or removed, and nothing is written at all when none of [ids] is marked.
+     */
+    suspend fun unmarkKeySetsNeedingPhrase(ids: Set<String>) {
+        if (ids.isEmpty()) return
+        val marker = stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)
+        val marked = WalletPreferenceKeys.decodeRetainedNeedsPhrase(dataStore.data.first()[marker])
+        if (marked.none { it in ids }) return
+        dataStore.edit { preferences ->
+            val current = WalletPreferenceKeys.decodeRetainedNeedsPhrase(preferences[marker])
+            val left = current - ids
+            when {
+                left.size == current.size -> Unit
+                left.isEmpty() -> preferences.remove(marker)
+                else -> preferences[marker] = WalletPreferenceKeys.encodeRetainedNeedsPhrase(left)
+            }
+        }
+    }
+
     suspend fun previewWalletDeletion(
         stringFields: Set<String>,
         booleanFields: Set<String>,
@@ -259,6 +362,7 @@ class SoraPreferences(
     suspend fun requireWalletPreferenceCoverage(
         walletIds: Set<String>,
         selectedAddress: String,
+        requiredCoverage: Set<String> = walletIds,
     ) {
         check(walletIds.isNotEmpty()) { "WALLET_PREFERENCE_ACCOUNT_SET_EMPTY" }
         val state = dataStore.data.first().walletState()
@@ -289,14 +393,15 @@ class SoraPreferences(
                     !state.strings[key].isNullOrBlank()
                 }
             }
+        // Key sets with no account row (for example an abandoned create-account flow) and a
+        // stale release-era owner are retained untouched; they are not part of this account set.
         val covered = scopedWalletIds + listOfNotNull(legacyOwner)
         check(
             selectedAddress in walletIds &&
                 state.strings[WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS] ==
                 selectedAddress &&
-                covered.containsAll(walletIds) &&
-                scopedWalletIds.all { it in walletIds } &&
-                (legacyOwner == null || legacyOwner in walletIds)
+                walletIds.containsAll(requiredCoverage) &&
+                covered.containsAll(requiredCoverage)
         ) { "WALLET_PREFERENCE_COVERAGE_MISMATCH" }
     }
 
@@ -324,7 +429,29 @@ class SoraPreferences(
                     "WALLET_DELETION_PREFERENCES_CHANGED"
                 }
                 if (clearAll) {
+                    val retained = preferences.asMap().filterKeys { key ->
+                        WalletPreferenceKeys.isRetainedKeyMaterial(key.name) &&
+                            key.name !in stringFields &&
+                            key.name !in booleanFields
+                    }
+                    // Removing every account removes the PIN too. The key sets that stay are
+                    // marked in this same edit: from now on only their own recovery phrase
+                    // brings them back. Earlier marks are kept.
+                    val needPhrase = WalletPreferenceKeys.decodeRetainedNeedsPhrase(
+                        preferences[stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)]
+                    ) + retained.keys.mapNotNull { key ->
+                        WalletPreferenceKeys.retainedKeySetId(key.name)
+                    }
                     preferences.clear()
+                    retained.forEach { (key, value) ->
+                        @Suppress("UNCHECKED_CAST")
+                        preferences[key as Preferences.Key<Any>] = value
+                    }
+                    if (needPhrase.isNotEmpty()) {
+                        preferences[
+                            stringPreferencesKey(WalletPreferenceKeys.RETAINED_NEEDS_PHRASE)
+                        ] = WalletPreferenceKeys.encodeRetainedNeedsPhrase(needPhrase)
+                    }
                 } else {
                     stringFields.forEach { field ->
                         preferences.remove(stringPreferencesKey(field))
@@ -352,7 +479,11 @@ class SoraPreferences(
     ): Boolean = dataStore.data.map { preferences ->
         preferences.walletState().hash() == expectedAfterHash &&
             if (clearAll) {
-                preferences.asMap().isEmpty()
+                preferences.asMap().keys.all { key ->
+                    WalletPreferenceKeys.isKeptByRemoveAll(key.name) &&
+                        key.name !in stringFields &&
+                        key.name !in booleanFields
+                }
             } else {
                 stringFields.none { preferences.contains(stringPreferencesKey(it)) } &&
                     booleanFields.none { preferences.contains(booleanPreferencesKey(it)) } &&
@@ -389,7 +520,16 @@ class SoraPreferences(
             selectedAddress: String,
             clearAll: Boolean,
         ): WalletPreferenceState {
-            if (clearAll) return WalletPreferenceState(emptyMap(), emptyMap())
+            if (clearAll) {
+                return WalletPreferenceState(
+                    strings = strings.filterKeys { key ->
+                        WalletPreferenceKeys.isRetainedKeyMaterial(key) && key !in stringFields
+                    },
+                    booleans = booleans.filterKeys { key ->
+                        WalletPreferenceKeys.isRetainedKeyMaterial(key) && key !in booleanFields
+                    },
+                )
+            }
             val remainingStrings = strings.toMutableMap().apply {
                 stringFields.forEach(::remove)
                 this[WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS] = selectedAddress

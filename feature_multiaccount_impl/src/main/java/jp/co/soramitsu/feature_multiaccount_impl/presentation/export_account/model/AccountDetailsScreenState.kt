@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model
 
+import jp.co.soramitsu.feature_account_api.domain.model.UnavailableWalletReason
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 
 data class AccountDetailsScreenState(
@@ -41,4 +42,22 @@ data class AccountDetailsScreenState(
     val isBackupAvailable: Boolean?,
     val address: String,
     val isCloudBackupAvailable: Boolean = true,
+    /** Set while this account cannot sign on this phone: why, and what can be done. */
+    val readOnly: ReadOnlyAccountUi? = null,
+)
+
+/**
+ * The read-only panel of Account options. Every action keeps the account; removal is offered
+ * last and is never the repair.
+ */
+data class ReadOnlyAccountUi(
+    val reason: UnavailableWalletReason,
+    /** Import its recovery phrase, raw seed or backup file: the keys are restored in place. */
+    val canRestoreWithPhrase: Boolean,
+    /** Restore its Google Drive backup (the same in-place restore). */
+    val canRestoreFromGoogle: Boolean,
+    /** A phrase or seed saved for it on this phone can be shown after the PIN. */
+    val canShowBackup: Boolean,
+    /** The confirmed removal is offered (the matching backup is shown first). */
+    val canRemove: Boolean,
 )

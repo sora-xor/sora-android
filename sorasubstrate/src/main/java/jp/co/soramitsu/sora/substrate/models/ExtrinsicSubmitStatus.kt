@@ -36,4 +36,9 @@ class ExtrinsicSubmitStatus(
     val success: Boolean,
     val txHash: String,
     val blockHash: String? = null,
+    /**
+     * For a transaction that failed in a finalized block: the runtime error the network reported
+     * (for example `LiquidityProxy.SlippageNotTolerated`), when it could be decoded.
+     */
+    val failureDetail: String? = null,
 )

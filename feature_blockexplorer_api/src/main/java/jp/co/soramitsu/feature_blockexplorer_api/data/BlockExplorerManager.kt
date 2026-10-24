@@ -38,15 +38,12 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.format.toDoubleInfinite
-import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
-import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
-import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -57,7 +54,6 @@ fun String.toDoubleNan(): Double? = this.toDoubleOrNull()?.let {
 
 @Singleton
 class BlockExplorerManager @Inject constructor(
-    private val restClient: RestClient,
     private val polkaswapIndexerClient: PolkaswapIndexerClient,
     private val db: AppDatabase,
     private val appStateProvider: AppStateProvider,
@@ -161,15 +157,6 @@ class BlockExplorerManager @Inject constructor(
             FirebaseWrapper.recordException(it)
         }
     }
-
-    suspend fun getXorPerEurRatio(): Double? = runCatching {
-        restClient.get(
-            request = JsonGetRequest(
-                url = BuildConfigWrapper.soraCardEuroRateUrl,
-                responseDeserializer = SoraCoin.serializer()
-            )
-        ).price.toDoubleNan()
-    }.getOrNull()
 
     private suspend fun updateSbApyInternal() {
         runCatching {

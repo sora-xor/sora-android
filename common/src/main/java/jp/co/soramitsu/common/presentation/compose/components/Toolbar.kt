@@ -32,8 +32,17 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.presentation.compose.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalDensity
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import androidx.compose.foundation.ScrollState
-import androidx.compose.material.AppBarDefaults
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.MaterialTheme
+import androidx.compose.ui.Modifier
+import jp.co.soramitsu.common.presentation.compose.neon.neonChrome
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
@@ -95,29 +104,30 @@ fun Toolbar(
     onSearch: ((String) -> Unit)? = null,
 ) {
     if (toolbarState != null && toolbarState.basic.visibility) {
-        val elevation = remember(scrollState) {
-            derivedStateOf {
-                if (scrollState == null || scrollState.value == 0) {
-                    0.dp
-                } else {
-                    AppBarDefaults.TopAppBarElevation
-                }
-            }
+        val threshold = with(LocalDensity.current) { 8.dp.toPx() }
+        val scrolled = remember(scrollState, threshold) {
+            derivedStateOf { (scrollState?.value ?: 0) > threshold }
         }
-
-        SoramitsuToolbar(
-            state = toolbarState,
-            elevation = elevation.value,
-            backgroundColor = backgroundColor,
-            tint = tintColor,
-            onNavigate = onNavClick,
-            onNavigateTestTag = "$PACKAGE_ID:id/OnNavigate",
-            onAction = onActionClick,
-            onActionTestTag = "$PACKAGE_ID:id/OnAction",
-            onMenuItemClicked = onMenuItemClick,
-            onMenuItemClickedTestTag = "$PACKAGE_ID:id/OnMenuItem",
-            onSearch = onSearch,
-            onSearchTestTag = "$PACKAGE_ID:id/OnSearch",
+        val chrome by animateFloatAsState(
+            targetValue = if (scrolled.value) 1f else 0f,
+            animationSpec = tween(if (LocalFx.current.reduceMotion) 0 else 160),
+            label = "toolbar chrome",
         )
+        Box(Modifier.neonChrome(MaterialTheme.neon) { chrome }) {
+            SoramitsuToolbar(
+                state = toolbarState,
+                elevation = 0.dp,
+                backgroundColor = backgroundColor,
+                tint = tintColor,
+                onNavigate = onNavClick,
+                onNavigateTestTag = "$PACKAGE_ID:id/OnNavigate",
+                onAction = onActionClick,
+                onActionTestTag = "$PACKAGE_ID:id/OnAction",
+                onMenuItemClicked = onMenuItemClick,
+                onMenuItemClickedTestTag = "$PACKAGE_ID:id/OnMenuItem",
+                onSearch = onSearch,
+                onSearchTestTag = "$PACKAGE_ID:id/OnSearch",
+            )
+        }
     }
 }

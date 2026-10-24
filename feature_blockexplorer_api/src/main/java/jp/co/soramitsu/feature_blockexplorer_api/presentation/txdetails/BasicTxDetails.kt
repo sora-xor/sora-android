@@ -62,10 +62,10 @@ import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetwork
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.toColor
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.toName
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -155,6 +155,17 @@ fun BasicTxDetails(
                         value1 = stringResource(id = state.txStatus.toName()),
                         valueColor = state.txStatus.toColor(),
                     )
+                    state.statusNote?.let { note ->
+                        Text(
+                            modifier = Modifier
+                                .testTagAsId("TransactionStatusNote")
+                                .fillMaxWidth()
+                                .padding(bottom = Dimens.x1),
+                            text = note,
+                            style = MaterialTheme.customTypography.textXS,
+                            color = MaterialTheme.customColors.fgPrimary,
+                        )
+                    }
                     Divider(
                         modifier = Modifier.padding(bottom = Dimens.x1),
                         thickness = 1.dp,

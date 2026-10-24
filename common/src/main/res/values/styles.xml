@@ -1,76 +1,102 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+      One DayNight theme. Every colour that differs between light and dark comes from
+      @color/neon_* (values/neon_colors.xml and values-night/neon_colors.xml), the SORA Neon XML
+      mirrors of compose/theme/tokens/*ThemeColors.kt. Keep them in sync.
+    -->
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="searchViewHeight">@dimen/search_view_height</item>
-        <item name="colorSecondary">@color/secondaryGreen</item>
-        <item name="colorControlNormal">@color/neu_on_background</item>
+
+        <!--  Material colour roles (XML buttons, dialogs, progress bars, switches)  -->
+        <item name="colorPrimary">@color/neon_brand_red</item>
+        <item name="colorPrimaryVariant">@color/neon_brand_red</item>
+        <item name="colorOnPrimary">@color/neon_on_accent</item>
+        <item name="colorSecondary">@color/neon_cyan</item>
+        <item name="colorSecondaryVariant">@color/neon_cyan</item>
+        <item name="colorOnSecondary">@color/neon_on_accent</item>
+        <item name="colorSurface">@color/neon_surface</item>
+        <item name="colorOnSurface">@color/neon_text_primary</item>
+        <item name="android:colorBackground">@color/neon_canvas</item>
+        <item name="colorOnBackground">@color/neon_text_primary</item>
+        <item name="colorError">@color/neon_error</item>
+        <item name="colorOnError">@color/neon_on_accent</item>
+        <item name="colorControlNormal">@color/neon_text_secondary</item>
+        <item name="colorControlActivated">@color/neon_cyan</item>
+        <item name="android:textColorPrimary">@color/neon_text_primary</item>
+        <item name="android:textColorSecondary">@color/neon_text_secondary</item>
+        <item name="android:textColorHint">@color/neon_text_tertiary</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.Sora.AlertDialog</item>
+        <item name="android:alertDialogTheme">@style/ThemeOverlay.Sora.AlertDialog.Framework</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Sora.MaterialAlertDialog</item>
+
         <item name="android:statusBarColor">?attr/baseBackground</item>
         <item name="android:navigationBarColor">?attr/baseBackground</item>
         <item name="android:windowBackground">?attr/baseBackground</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+        <item name="android:windowLightStatusBar">@bool/neon_light_system_bars</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">@bool/neon_light_system_bars</item>
         <item name="android:enforceNavigationBarContrast" tools:targetApi="q">true</item>
-        <item name="android:textColorHint">?attr/disabledButtonTextColor</item>
 
         <!--  status colors  -->
-        <item name="statusSuccess">@color/successGreen</item>
-        <item name="statusSuccessBackground">@color/successBackgroundStatus</item>
-        <item name="statusWarning">@color/warningStatus</item>
-        <item name="statusWarningBackground">@color/warningBackgroundStatus</item>
-        <item name="statusError">@color/errorStatus</item>
-        <item name="statusErrorBackground">@color/errorBackgroundStatus</item>
+        <item name="statusSuccess">@color/neon_success</item>
+        <item name="statusSuccessBackground">@color/neon_success_container</item>
+        <item name="statusWarning">@color/neon_warning</item>
+        <item name="statusWarningBackground">@color/neon_warning_container</item>
+        <item name="statusError">@color/neon_error</item>
+        <item name="statusErrorBackground">@color/neon_error_container</item>
 
         <!--  content  -->
-        <item name="contentPrimary">@color/brand_pmsblack</item>
-        <item name="contentSecondary">@color/grey_700</item>
-        <item name="contentTertiary">@color/grey_500</item>
-        <item name="contentQuaternary">@color/grey_400</item>
-        <item name="baseBackground">@color/neu_color_300</item>
-        <item name="baseBackgroundSecond">@color/neu_color_white</item>
-        <item name="baseBackgroundDark">@color/backgroundDarkColor</item>
-        <item name="baseBorderPrimary">@color/grey_300</item>
-        <item name="baseBorderSecondary">@color/grey_200</item>
-        <item name="baseBackgroundHover">@color/grey_200</item>
-        <item name="baseDisabled">@color/grey_100</item>
-        <item name="baseOnDisabled">@color/grey_400</item>
-        <item name="baseOnAccent">@color/brand_white</item>
+        <item name="contentPrimary">@color/neon_text_primary</item>
+        <item name="contentSecondary">@color/neon_text_secondary</item>
+        <item name="contentTertiary">@color/neon_text_tertiary</item>
+        <item name="contentQuaternary">@color/neon_text_disabled</item>
+        <item name="baseBackground">@color/neon_canvas</item>
+        <item name="baseBackgroundSecond">@color/neon_surface</item>
+        <item name="baseBackgroundDark">@color/neon_surface_variant</item>
+        <item name="baseBorderPrimary">@color/neon_border_input</item>
+        <item name="baseBorderSecondary">@color/neon_divider</item>
+        <item name="baseBackgroundHover">@color/neon_surface_variant</item>
+        <item name="baseDisabled">@color/neon_surface_variant</item>
+        <item name="baseOnDisabled">@color/neon_text_disabled</item>
+        <item name="baseOnAccent">@color/neon_on_accent</item>
 
-        <item name="buttonPrimary">@color/brand_soramitsu_red</item>
-        <item name="buttonPrimaryDark">@color/neu_pressed_red</item>
-        <item name="polkaswapPrimary">@color/neu_brand_polkaswap</item>
-        <item name="polkaswapPrimaryDark">@color/neu_pressed_polkaswap</item>
-        <item name="disabledButtonColor">@color/neu_disabled_grey</item>
-        <item name="disabledButtonTextColor">@color/neu_disabled_text_grey</item>
-        <item name="disabledButtonTextColor2">@color/neu_disabled_text_grey_2</item>
+        <item name="buttonPrimary">@color/neon_brand_red</item>
+        <item name="buttonPrimaryDark">@color/neon_brand_red</item>
+        <item name="polkaswapPrimary">@color/neon_polkaswap_text</item>
+        <item name="polkaswapPrimaryDark">@color/neon_polkaswap</item>
+        <item name="disabledButtonColor">@color/neon_surface_variant</item>
+        <item name="disabledButtonTextColor">@color/neon_text_disabled</item>
+        <item name="disabledButtonTextColor2">@color/neon_text_disabled</item>
 
-        <item name="secondaryBackground">@color/grey_100</item>
+        <item name="secondaryBackground">@color/neon_surface</item>
         <item name="secondaryHover">@color/hoverSecondaryColor</item>
         <item name="secondaryPressed">@color/pressedSecondaryColor</item>
         <item name="secondaryFocused">@color/focusedSecondaryColor</item>
 
-        <item name="polkaswapBackground">@color/polkaswap_background_alfa</item>
-        <item name="polkaswapMainColor">@color/neu_brand_polkaswap</item>
-        <item name="dividerColor">@color/neu_divider_color</item>
-        <item name="balanceColorDefault">@color/neu_black_default</item>
-        <item name="balanceColorPositive">@color/neu_positive</item>
+        <item name="polkaswapBackground">@color/neon_canvas</item>
+        <item name="polkaswapMainColor">@color/neon_polkaswap</item>
+        <item name="dividerColor">@color/neon_divider</item>
+        <item name="balanceColorDefault">@color/neon_text_primary</item>
+        <item name="balanceColorPositive">@color/neon_success</item>
         <item name="balanceColorNegative">@color/neu_negative</item>
         <item name="fiatBalanceColorDefault">@color/neu_fiat_balance_color</item>
-        <item name="tintColorDark">@color/neu_tint_dark</item>
-        <item name="bottomMenuInactiveColor">@color/neu_bottom_menu_inactive</item>
+        <item name="tintColorDark">@color/neon_text_secondary</item>
+        <item name="bottomMenuInactiveColor">@color/neon_text_secondary</item>
         <item name="tintColorLight">@color/neu_tint_light</item>
-        <item name="onBackgroundColor">@color/neu_on_background</item>
-        <item name="selectedPrimaryColor">@color/neu_selected_primary</item>
+        <item name="onBackgroundColor">@color/neon_text_secondary</item>
+        <item name="selectedPrimaryColor">@color/neon_brand_red</item>
         <item name="shadowDark">@color/neu_shadow_dark_on_day</item>
         <item name="shadowLight">@color/neu_shadow_light_on_day</item>
         <item name="tintTitles">@color/neu_tint_titles_light</item>
-        <item name="disabledColor">@color/neu_disabled_on_day</item>
-        <item name="titleColor">@color/neu_disabled_on_day</item>
-        <item name="flatAboveBackground">@color/neu_color_200</item>
+        <item name="disabledColor">@color/neon_text_disabled</item>
+        <item name="titleColor">@color/neon_text_disabled</item>
+        <!-- Toast card (custom_toast.xml): bg.toast, with @color/neon_on_toast text. -->
+        <item name="flatAboveBackground">@color/neon_toast</item>
         <item name="backgroundInfo">@color/neu_background_info</item>
         <item name="statusColor">@color/neu_status</item>
         <item name="statusWarningColor">@color/neu_status_warning_day</item>
         <item name="pureBlackOnDay">@color/neu_color_black</item>
-        <item name="pureWhiteOnDay">@color/neu_color_white</item>
+        <item name="pureWhiteOnDay">@color/neon_chrome</item>
         <item name="pureRedOnDay">@color/neu_color_red</item>
         <item name="statusPinkWarning">@color/neu_status_pink_warning_day</item>
         <item name="colorOnGrey">@color/neu_color_grey_100</item>
@@ -80,20 +106,101 @@
         <item name="iconTintColorPositive">@color/neu_positive</item>
         <item name="iconTintColorNegative">@color/neu_selected_primary</item>
         <item name="iconTintAboveBackground">@color/tint_above_background</item>
-        <item name="redesignTokenName">#281818</item>
-        <item name="redesignTokenBalance">#9d8181</item>
+        <item name="redesignTokenName">@color/neon_text_primary</item>
+        <item name="redesignTokenBalance">@color/neon_text_secondary</item>
 
         <item name="uikit_pinCodeButtonTitleColor">@color/neu_disabled_on_night</item>
         <item name="uikit_pinCodeButtonTextColor">@color/neu_brown_color</item>
         <item name="uikit_pinCodeButtonBackground">@drawable/rounded_button_background</item>
     </style>
 
+    <!--
+      Onboarding draws edge to edge (SoraBaseActivity) over the SORA Neon aurora. Transparent bars
+      without the translucent-bar scrim, so the aurora shows behind the status and navigation bars.
+    -->
     <style name="AppTheme.Onboarding">
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="baseBackground">@color/neu_color_300</item>
+        <item name="android:enforceStatusBarContrast" tools:targetApi="q">false</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
+        <item name="baseBackground">@color/neon_canvas</item>
+    </style>
+
+    <!--  Dialogs: opaque sheet colour, 24 dp corners, hairline, cyan text actions  -->
+    <style name="ThemeOverlay.Sora.AlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="colorPrimary">@color/neon_link</item>
+        <item name="colorAccent">@color/neon_link</item>
+        <item name="colorSurface">@color/neon_sheet</item>
+        <item name="colorOnSurface">@color/neon_text_primary</item>
+        <item name="android:windowBackground">@drawable/bg_neon_dialog</item>
+        <item name="android:textColorPrimary">@color/neon_text_primary</item>
+        <item name="android:textColorSecondary">@color/neon_text_secondary</item>
+    </style>
+
+    <style name="ThemeOverlay.Sora.AlertDialog.Framework" parent="@android:style/ThemeOverlay.Material.Dialog.Alert">
+        <item name="android:colorAccent">@color/neon_link</item>
+        <item name="android:colorPrimary">@color/neon_link</item>
+        <item name="android:windowBackground">@drawable/bg_neon_dialog</item>
+        <item name="android:textColorPrimary">@color/neon_text_primary</item>
+        <item name="android:textColorSecondary">@color/neon_text_secondary</item>
+    </style>
+
+    <style name="ThemeOverlay.Sora.MaterialAlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorPrimary">@color/neon_link</item>
+        <item name="colorSurface">@color/neon_sheet</item>
+        <item name="colorOnSurface">@color/neon_text_primary</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Sora.Dialog</item>
+    </style>
+
+    <style name="ShapeAppearance.Sora.Dialog" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+
+    <!--  XML buttons (splash recovery panel). Pill, Sora SemiBold 16, no caps.  -->
+    <style name="Widget.Sora.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:minHeight">56dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">@font/sora_semibold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:letterSpacing">0.0125</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!--
+      Safe Mode CTA: mint (dark) / green (light), ink or white label. Never red.
+      Colours are state lists (res/color/neon_button_*): disabled shows cta.disabled and
+      text.disabled; a running action (activated + disabled) keeps the enabled look.
+    -->
+    <style name="Widget.Sora.Button.Safe">
+        <item name="backgroundTint">@color/neon_button_safe_bg</item>
+        <item name="android:textColor">@color/neon_button_safe_label</item>
+        <item name="rippleColor">@color/neon_hairline</item>
+    </style>
+
+    <style name="Widget.Sora.Button.Secondary">
+        <item name="backgroundTint">@color/neon_button_secondary_bg</item>
+        <item name="android:textColor">@color/neon_button_secondary_label</item>
+        <item name="strokeColor">@color/neon_button_secondary_stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="rippleColor">@color/neon_hairline</item>
+    </style>
+
+    <style name="Widget.Sora.Button.Tertiary" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">@font/sora_semibold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/neon_button_tertiary_label</item>
+        <item name="android:letterSpacing">0.0125</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="rippleColor">@color/neon_hairline</item>
     </style>
 
     <style name="BottomSheetDialog" parent="Theme.MaterialComponents.BottomSheetDialog">
@@ -128,13 +235,13 @@
         <item name="android:clipChildren">false</item>
         <item name="android:clipToPadding">false</item>
         <item name="android:includeFontPadding">false</item>
-        <item name="android:textColor">?attr/uikit_pinCodeButtonTextColor</item>
-        <item name="android:background">?attr/uikit_pinCodeButtonBackground</item>
-        <item name="android:backgroundTint">@color/white</item>
-        <item name="backgroundTint">@color/white</item>
-        <item name="background">?attr/uikit_pinCodeButtonBackground</item>
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Neu.Semibold.34</item>
-        <item name="android:textSize">@dimen/uikit_pin_code_button_text_size</item>
+        <item name="android:textColor">@color/neon_text_primary</item>
+        <item name="android:background">@drawable/bg_neon_pin_key</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="backgroundTint">@null</item>
+        <item name="background">@drawable/bg_neon_pin_key</item>
+        <item name="android:fontFamily">@font/sora_regular</item>
+        <item name="android:textSize">28sp</item>
     </style>
 
     <style name="Widget.Soramitsu.ProgressBar" parent="Widget.AppCompat.ProgressBar">

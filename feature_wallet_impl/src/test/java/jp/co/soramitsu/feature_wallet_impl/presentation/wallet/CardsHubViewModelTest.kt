@@ -44,16 +44,11 @@ import io.mockk.mockkObject
 import io.mockk.verify
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
-import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
-import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
-import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.nexus.WalletNetworkId
@@ -65,21 +60,14 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardAvailabilityInfo
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioRepository
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusTransactionCoordinator
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
-import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
-import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardFlow
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
-import jp.co.soramitsu.test_data.SoraCardTestData.soraCardBasicStatusTest
 import jp.co.soramitsu.test_data.TestAssets
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -122,16 +110,10 @@ class CardsHubViewModelTest {
     @MockK
     private lateinit var cardsHubInteractorImpl: CardsHubInteractorImpl
 
-    @MockK
-    private lateinit var soraCardInteractor: SoraCardInteractor
-
     private val numbersFormatter = NumbersFormatter()
 
     @MockK
     private lateinit var progress: WithProgress
-
-    @MockK
-    private lateinit var resourceManager: ResourceManager
 
     @MockK
     private lateinit var assetsRouter: AssetsRouter
@@ -152,13 +134,7 @@ class CardsHubViewModelTest {
     private lateinit var coroutineManager: CoroutineManager
 
     @MockK
-    private lateinit var connectionManager: ConnectionManager
-
-    @MockK
     private lateinit var demeterFarmingInteractor: DemeterFarmingInteractor
-
-    @MockK
-    private lateinit var darkThemeManager: DarkThemeManager
 
     @MockK
     private lateinit var nexusPortfolioRepository: NexusPortfolioRepository
@@ -179,9 +155,6 @@ class CardsHubViewModelTest {
     @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
-        mockkObject(BuildConfigWrapper)
-        every { BuildConfigWrapper.getSoraCardBackEndUrl() }.returns("soracard backend")
-        every { connectionManager.isConnected } returns true
         nexusPortfolioFlow = MutableStateFlow(emptyList())
         every { nexusPortfolioRepository.observeCurrentWallet() } returns nexusPortfolioFlow
         mockkObject(OptionsProvider)
@@ -216,9 +189,10 @@ class CardsHubViewModelTest {
                 emit(listOf(POOL_DATA))
             }
         coEvery { cardsHubInteractorImpl.updateCardVisibilityOnCardHub(any(), any()) } returns Unit
+        // Three accounts on this phone, one of them read-only.
+        coEvery { cardsHubInteractorImpl.accountSigningCounts() } returns (3 to 2)
         coEvery { demeterFarmingInteractor.getFarmedPools() } returns emptyList()
         every { demeterFarmingInteractor.subscribeFarms(any()) } returns flow { emit("") }
-        every { darkThemeManager.darkModeStatusFlow } returns MutableStateFlow(true)
         every { cardsHubInteractorImpl.subscribeVisibleCardsHubList() } returns
             flow {
                 emit(
@@ -236,7 +210,7 @@ class CardsHubViewModelTest {
                             false
                         ),
                         CardHub(
-                            CardHubType.GET_SORA_CARD,
+                            CardHubType.REFERRAL_SYSTEM,
                             visibility = true,
                             sortOrder = 2,
                             collapsed = false
@@ -245,45 +219,30 @@ class CardsHubViewModelTest {
                 )
             }
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
-        every {
-            soraCardInteractor.basicStatus
-        } returns MutableStateFlow(
-            soraCardBasicStatusTest.copy(
-                initialized = true,
-                availabilityInfo = SoraCardAvailabilityInfo(),
-                ibanInfo = IbanInfo("iban", IbanStatus.ACTIVE, "123", "empty")
-            )
-        )
-        every { assetsRouter.showBuyCrypto(any()) } returns Unit
         every { assetsRouter.showAssetDetails(any()) } returns Unit
         every { router.openQrCodeFlow() } returns Unit
-        every { mainRouter.showGetSoraCard(any()) } just Runs
-        every { mainRouter.showSoraCardDetails() } just Runs
-        every {
-            resourceManager.getString(R.string.sora_card_verification_in_progress)
-        } returns "in progress"
-        every { resourceManager.getString(R.string.sora_card_verification_successful) } returns "success"
-        every { resourceManager.getString(R.string.sora_card_verification_rejected) } returns "rejected"
-        every { resourceManager.getString(R.string.sora_card_verification_failed) } returns "failed"
         cardsHubViewModel = CardsHubViewModel(
             assetsInteractor,
             poolsInteractor,
             cardsHubInteractorImpl,
             demeterFarmingInteractor,
             numbersFormatter,
-            resourceManager,
             router,
             mainRouter,
             assetsRouter,
             referralRouter,
             polkaswapRouter,
-            connectionManager,
-            soraCardInteractor,
             coroutineManager,
-            darkThemeManager,
             nexusPortfolioRepository,
             nexusTransactionCoordinator,
         )
+    }
+
+    @Test
+    fun `the upgrade sheet is given how many accounts can really sign`() = runTest {
+        advanceUntilIdle()
+        assertEquals(3, cardsHubViewModel.state.value.accountCount)
+        assertEquals(2, cardsHubViewModel.state.value.signingAccountCount)
     }
 
     @Test
@@ -312,13 +271,6 @@ class CardsHubViewModelTest {
             assertEquals(before, cardsHubViewModel.state.value)
             io.mockk.verify(exactly = 0) { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) }
         } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper) }
-    }
-
-    @Test
-    fun `connection buy`() = runTest {
-        cardsHubViewModel.onBuyCrypto()
-        val live = cardsHubViewModel.launchSoraCardSignIn.getOrAwaitValue()
-        assertTrue(live.flow is SoraCardFlow.SoraCardGateHubFlow)
     }
 
     @Test
@@ -537,35 +489,15 @@ class CardsHubViewModelTest {
     }
 
     @Test
-    fun `call remove get sora card EXPECT change card visibility`() = runTest {
-        cardsHubViewModel.onRemoveSoraCard()
+    fun `call remove referral card EXPECT change card visibility`() = runTest {
+        cardsHubViewModel.onRemoveReferralCard()
         advanceUntilIdle()
         coVerify {
             cardsHubInteractorImpl.updateCardVisibilityOnCardHub(
-                CardHubType.GET_SORA_CARD.hubName,
+                CardHubType.REFERRAL_SYSTEM.hubName,
                 visible = false,
             )
         }
-    }
-
-    @Test
-    fun `call remove buy xor token card EXPECT change card visibility`() = runTest {
-        cardsHubViewModel.onRemoveBuyXorToken()
-        advanceUntilIdle()
-        coVerify {
-            cardsHubInteractorImpl.updateCardVisibilityOnCardHub(
-                CardHubType.BUY_XOR_TOKEN.hubName,
-                visible = false,
-            )
-        }
-    }
-
-    @Test
-    fun `call onCardStateClicked EXPECT induce launchSoraCard event`() = runTest {
-        advanceUntilIdle()
-        cardsHubViewModel.onCardStateClicked()
-        advanceUntilIdle()
-        verify { mainRouter.showSoraCardDetails() }
     }
 
     private fun nexusBalance(

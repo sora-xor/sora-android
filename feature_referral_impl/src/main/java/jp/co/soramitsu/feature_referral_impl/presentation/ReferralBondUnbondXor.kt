@@ -61,16 +61,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common.view.WarningTextCard
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -158,7 +159,8 @@ fun ReferralBondXor(
                     size = Size.Large,
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.referral_bond_button_title),
-                    enabled = common.activate && state.invitationsCount > 0,
+                    enabled = common.activate && state.invitationsCount > 0 &&
+                        !LocalSelectedAccountReadOnly.current,
                     onClick = onBondClick
                 )
             }
@@ -248,7 +250,8 @@ fun ReferralUnbondXor(
                     size = Size.Large,
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.referral_unbond_button_title),
-                    enabled = common.activate && state.invitationsCount > 0,
+                    enabled = common.activate && state.invitationsCount > 0 &&
+                        !LocalSelectedAccountReadOnly.current,
                     onClick = onUnbondClick
                 )
             }

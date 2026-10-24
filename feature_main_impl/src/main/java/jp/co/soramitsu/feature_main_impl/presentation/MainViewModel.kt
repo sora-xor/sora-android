@@ -48,7 +48,7 @@ import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscription
 import jp.co.soramitsu.feature_select_node_api.NodeManager
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -66,7 +66,6 @@ class MainViewModel @Inject constructor(
     private val blockExplorerManager: BlockExplorerManager,
     private val coroutineManager: CoroutineManager,
     private val poolsUpdateSubscription: PoolsUpdateSubscription,
-    private val soraCardInteractor: SoraCardInteractor,
 ) : BaseViewModel() {
 
     private val _showInviteErrorTimeIsUpLiveData = SingleLiveEvent<Unit>()
@@ -89,7 +88,8 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             globalSubscriptionManager
                 .start()
-                .catch { onError(it) }
+                // Background work: its failures show in the connection banner, not in a dialog.
+                .catch { onBackgroundError(it) }
                 .flowOn(coroutineManager.io)
                 .collect()
         }
@@ -102,11 +102,8 @@ class MainViewModel @Inject constructor(
             }
         }
         viewModelScope.launch(coroutineManager.io) {
-            soraCardInteractor.initialize()
-        }
-        viewModelScope.launch(coroutineManager.io) {
             assetsInteractor.flowCurSoraAccount()
-                .catch { onError(it) }
+                .catch { onBackgroundError(it) }
                 .collectLatest {
                     try {
                         assetsInteractor.updateWhitelistBalances()
@@ -125,8 +122,14 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(coroutineManager.io) {
                 RepeatStrategyBuilder.infinite().repeat {
-                    tryCatch {
+                    // A periodic refresh: a failed round is recorded and tried again; it never
+                    // opens a dialog.
+                    try {
                         blockExplorerManager.updateFiat()
+                    } catch (error: kotlinx.coroutines.CancellationException) {
+                        throw error
+                    } catch (error: Throwable) {
+                        onBackgroundError(error)
                     }
                     delay(20000)
                 }
@@ -136,7 +139,17 @@ class MainViewModel @Inject constructor(
 
     fun showPinFragment() {
         viewModelScope.launch {
-            _isPincodeUpdateNeeded.value = pinCodeInteractor.isPincodeUpdateNeeded()
+            // Reading the PIN decrypts it. If the wallet key is busy or missing that fails; the
+            // PIN screen is still shown (it checks again and never replaces the stored PIN) and
+            // the app does not crash.
+            _isPincodeUpdateNeeded.value = try {
+                pinCodeInteractor.isPincodeUpdateNeeded()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                false
+            }
         }
     }
 }
