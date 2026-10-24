@@ -54,4 +54,20 @@ object ReleaseSurfacePolicy {
         productionFlavor: Boolean,
         productionHidesSurfaces: Boolean = PRODUCTION_HIDES_SURFACES,
     ): Boolean = surfaces(productionFlavor, productionHidesSurfaces).irohaConnect
+
+    /**
+     * The Portfolio view on the Wallet tab (`portfolioView`): hero, lenses and "Where it lives"
+     * in place of the header balance and the Assets card. It is on in every non-production
+     * flavor and off in production whatever [PRODUCTION_HIDES_SURFACES] says, until it has had
+     * a release review. This one constant ships it.
+     */
+    const val PORTFOLIO_VIEW_IN_PRODUCTION = false
+
+    fun portfolioView(
+        productionFlavor: Boolean,
+        inProduction: Boolean = PORTFOLIO_VIEW_IN_PRODUCTION,
+    ): Boolean = !productionFlavor || inProduction
+
+    val portfolioView: Boolean
+        get() = portfolioView(BuildUtils.isFlavors(Flavor.PROD))
 }
