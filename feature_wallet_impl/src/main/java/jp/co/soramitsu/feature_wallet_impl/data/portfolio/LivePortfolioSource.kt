@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Every wallet's real holdings. SORA2 balances come from the app's own asset cache per address
@@ -223,31 +224,39 @@ class LivePortfolioSource @Inject constructor(
         nexusPortfolioRepository.refresh()
     }
 
-    /** Reads one wallet's SORA2 balances from the chain, read-only, and keeps them in memory. */
+    /**
+     * Reads one wallet's SORA2 balances from the chain, read-only, and keeps them in memory. A read
+     * that does not answer within [READ_TIMEOUT_MS] (no node, a stalled socket) counts as failed:
+     * the wallet keeps its last values and shows their age.
+     */
     private suspend fun readWallet(id: String) {
-        try {
-            val assets = assetsRepository.getAssetsActive(id)
-            val tokens = assets.filter { it.token.id != AssetHolder.XOR_ASSET_ID }
-            val tokenIds = tokens.map { it.token.id }
-            val raw = if (tokenIds.isEmpty()) emptyList() else assetsRepository.fetchBalance(id, tokenIds)
-            check(raw.size == tokens.size) { "PORTFOLIO_BALANCE_READ_MISMATCH" }
-            val balances = tokens.zip(raw).associate { (asset, value) ->
-                val amount = mapBalance(value, asset.token.precision)
-                asset.token.id to FreshBalance(amount, amount)
-            }.toMutableMap()
-            val xorPrecision = assets.firstOrNull { it.token.id == AssetHolder.XOR_ASSET_ID }?.token?.precision
-                ?: OptionsProvider.defaultScale
-            val xor = assetsRepository.getXORBalance(id, xorPrecision)
-            balances[AssetHolder.XOR_ASSET_ID] = FreshBalance(xor.totalBalance, xor.transferable)
-            val now = clock()
-            reads.update { it + (id to FreshRead(now, balances)) }
-            lastReadsState.update { it + (id to now) }
+        val read = try {
+            withTimeoutOrNull(READ_TIMEOUT_MS) { readBalances(id) }
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
-            // Keep the previous read: the wallet shows its age instead of pretending to be live.
-            lastReadsState.update { it + (id to clock()) }
+            null
         }
+        val now = clock()
+        if (read != null) reads.update { it + (id to FreshRead(now, read)) }
+        lastReadsState.update { it + (id to now) }
+    }
+
+    private suspend fun readBalances(id: String): Map<String, FreshBalance> {
+        val assets = assetsRepository.getAssetsActive(id)
+        val tokens = assets.filter { it.token.id != AssetHolder.XOR_ASSET_ID }
+        val tokenIds = tokens.map { it.token.id }
+        val raw = if (tokenIds.isEmpty()) emptyList() else assetsRepository.fetchBalance(id, tokenIds)
+        check(raw.size == tokens.size) { "PORTFOLIO_BALANCE_READ_MISMATCH" }
+        val balances = tokens.zip(raw).associate { (asset, value) ->
+            val amount = mapBalance(value, asset.token.precision)
+            asset.token.id to FreshBalance(amount, amount)
+        }.toMutableMap()
+        val xorPrecision = assets.firstOrNull { it.token.id == AssetHolder.XOR_ASSET_ID }?.token?.precision
+            ?: OptionsProvider.defaultScale
+        val xor = assetsRepository.getXORBalance(id, xorPrecision)
+        balances[AssetHolder.XOR_ASSET_ID] = FreshBalance(xor.totalBalance, xor.transferable)
+        return balances
     }
 
     override suspend fun select(walletId: String) {
@@ -257,6 +266,9 @@ class LivePortfolioSource @Inject constructor(
     }
 
     companion object {
+        /** How long one wallet's read may take before it counts as failed. */
+        internal const val READ_TIMEOUT_MS = 20_000L
+
         private val FALLBACK_XOR = PortfolioToken(
             id = AssetHolder.XOR_ASSET_ID,
             symbol = "XOR",

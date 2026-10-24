@@ -35,6 +35,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.WalletFreshness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.WalletSummary
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -178,6 +179,9 @@ class PortfolioViewModel @Inject constructor(
     private val _effects = Channel<PortfolioEffect>(Channel.BUFFERED)
     val effects: Flow<PortfolioEffect> = _effects.receiveAsFlow()
 
+    /** The wallet re-read in flight, if any; one at a time. */
+    private var refreshJob: Job? = null
+
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
 
@@ -218,10 +222,14 @@ class PortfolioViewModel @Inject constructor(
             // While the dashboard is visible: tick the freshness ages and re-read wallets that are
             // due (each wallet at most once a minute). Nothing runs while it is hidden.
             visible.collectLatest { shown ->
-                if (!shown) return@collectLatest
+                if (!shown) {
+                    refreshJob?.cancel()
+                    return@collectLatest
+                }
                 while (true) {
                     clock.value = System.currentTimeMillis()
-                    refreshDue(force = false)
+                    // A read that hangs never holds the clock back: the ages keep counting.
+                    if (refreshJob?.isActive != true) refreshJob = launch { refreshDue(force = false) }
                     delay(TICK_MS)
                 }
             }
@@ -375,10 +383,9 @@ class PortfolioViewModel @Inject constructor(
     }
 
     fun refreshAll() {
-        viewModelScope.launch {
-            clock.value = System.currentTimeMillis()
-            refreshDue(force = true)
-        }
+        clock.value = System.currentTimeMillis()
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch { refreshDue(force = true) }
     }
 
     fun manageWallets() {
