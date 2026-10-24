@@ -5,44 +5,44 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
+import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.formatFiatAmount
+import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.util.DECIMAL_SEPARATOR
 import jp.co.soramitsu.common.util.GROUPING_SEPARATOR
 import jp.co.soramitsu.common.util.NumbersFormatter
 import kotlin.math.abs
 
 /**
- * Number formatting for the dashboard, on the app's own conventions (NumbersFormatter grouping
- * and decimal separators, rounding down so a value is never overstated). Fiat always shows cents.
+ * Numbers on the dashboard come from the app's own formatters, so they read exactly as on the
+ * asset list and asset details in the same build and locale: fiat through formatFiatAmount (the
+ * app's grouping separator, a no-break space outside Arabic, at most two decimals, rounded down),
+ * token amounts through NumbersFormatter.formatBigDecimal with the asset list's precision, and
+ * 24 h changes through formatFiatChange ("+3.37 %").
  */
 internal class PortfolioFormat(
     private val numbers: NumbersFormatter,
     val fiatSymbol: String,
 ) {
-    private val money = DecimalFormat("#,##0.00", symbols()).apply { roundingMode = RoundingMode.FLOOR }
-
     private fun symbols() = DecimalFormatSymbols(Locale.getDefault()).apply {
         groupingSeparator = GROUPING_SEPARATOR
         decimalSeparator = DECIMAL_SEPARATOR
     }
 
-    fun fiat(value: Double): String = fiatSymbol + money.format(value)
+    fun fiat(value: Double): String = formatFiatAmount(value, fiatSymbol, numbers)
 
     /** Currency sign, whole part and cents (".55") for the hero total, where the cents are smaller. */
     fun fiatParts(value: Double): Triple<String, String, String> {
-        val text = money.format(value)
+        val text = numbers.format(value, FIAT_PRECISION)
         val dot = text.lastIndexOf(DECIMAL_SEPARATOR)
         return if (dot < 0) Triple(fiatSymbol, text, "") else Triple(fiatSymbol, text.substring(0, dot), text.substring(dot))
     }
 
-    /** "+$148.20" / "−$12.00": the sign is always shown. */
-    fun signedFiat(value: Double): String = (if (value < 0) MINUS else "+") + fiatSymbol + money.format(abs(value))
+    /** "+$148.2" / "-$12": the sign is always shown. */
+    fun signedFiat(value: Double): String = (if (value < 0) "-" else "+") + fiat(abs(value))
 
-    /** "+1.2%" with one decimal; the sign is always shown. */
-    fun signedPercent(fraction: Double): String =
-        (if (fraction < 0) MINUS else "+") + percentNumber(abs(fraction) * 100, 1) + "%"
-
-    /** "1.2%" without a sign. */
-    fun percent(fraction: Double, decimals: Int = 1): String = percentNumber(abs(fraction) * 100, decimals) + "%"
+    /** A 24 h change as the app shows it: "+3.37 %", "-0.8 %". */
+    fun signedPercent(fraction: Double): String = formatFiatChange(fraction, numbers)
 
     /**
      * Share of the total as a whole percent, rounded as the fan rounds. A part is never shown as
@@ -62,16 +62,8 @@ internal class PortfolioFormat(
     /** Ray count as a percentage (the fan's own rounding), "<1%" for a share without a ray. */
     fun rays(rays: Int, value: Double): String = if (rays == 0 && value > 0.0) "<1%" else "$rays%"
 
-    /** Token amount with a precision that fits its size: "420 000", "0.8512", "0.000012". */
-    fun amount(value: BigDecimal): String {
-        val magnitude = value.abs()
-        val precision = when {
-            magnitude >= BigDecimal(1000) -> 2
-            magnitude >= BigDecimal.ONE -> 4
-            else -> 6
-        }
-        return numbers.formatBigDecimal(value, precision, checkFraction = true)
-    }
+    /** A token amount as the asset list prints it (its precision, rounded down). */
+    fun amount(value: BigDecimal): String = numbers.formatBigDecimal(value, AssetHolder.ROUNDING)
 
     fun amount(value: BigDecimal, symbol: String): String = amount(value) + " " + symbol
 
@@ -99,7 +91,7 @@ internal class PortfolioFormat(
         return DecimalFormat(pattern, symbols()).apply { roundingMode = RoundingMode.HALF_UP }.format(value)
     }
 
-    companion object {
-        const val MINUS = "−"
+    private companion object {
+        const val FIAT_PRECISION = 2
     }
 }

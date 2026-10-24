@@ -251,7 +251,7 @@ private fun HoldingCard(model: PortfolioModel, holding: PortfolioHolding, line: 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box {
-            TokenOrb(holding.token.iconUri, holding.token.symbol, 38.dp)
+            TokenOrb(holding.token.iconUri, 38.dp)
             NetworkBadge(holding.network, 17.dp, Modifier.align(Alignment.BottomEnd))
         }
         Spacer(Modifier.width(12.dp))
@@ -282,7 +282,7 @@ private fun HoldingChooser(model: PortfolioModel, candidates: List<PortfolioHold
                 role = Role.Button,
                 leading = {
                     Box {
-                        TokenOrb(holding.token.iconUri, holding.token.symbol, 38.dp)
+                        TokenOrb(holding.token.iconUri, 38.dp)
                         NetworkBadge(holding.network, 17.dp, Modifier.align(Alignment.BottomEnd))
                     }
                 },
@@ -434,7 +434,7 @@ private fun AmountField(
                     .semantics { contentDescription = symbol },
             )
         }
-        TokenOrb(iconUri, symbol, 24.dp)
+        TokenOrb(iconUri, 24.dp)
         Spacer(Modifier.width(6.dp))
         Text(symbol, style = MaterialTheme.customTypography.headline3, color = n.textPrimary)
         Spacer(Modifier.width(8.dp))
