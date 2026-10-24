@@ -37,13 +37,13 @@ import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -61,8 +61,8 @@ import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTile
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTileState
 import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCard
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -138,70 +138,67 @@ fun ReceiveTokenByQrScreen(
     onScanQrClick: () -> Unit,
     onTryAgainClick: () -> Unit,
 ) {
-    Box(
+    // Keep both actions in the same scroll flow as the QR and address. A bottom-aligned
+    // overlay can cover Share when the phone is short or accessibility text is larger.
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(Dimens.x4)
+            .navigationBarsPadding()
+            .padding(Dimens.x4),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Dimens.x2)
     ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Dimens.x2)
-        ) {
-            LoadableContentCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f),
-                innerPadding = PaddingValues(
-                    all = Dimens.x1_5
-                ),
-                backgroundColor = Color.White,
-                cornerRadius = Dimens.x4,
-                state = state.screenStatus,
-                contentWhenLoaded = {
-                    Image(
-                        painter = state.qrCodeImage.retrievePainter(),
-                        contentDescription = null,
-                    )
-                },
-                onTryAgainClick = onTryAgainClick
-            )
-            LoadableContentCard(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                innerPadding = PaddingValues(
-                    all = Dimens.x1_5
-                ),
-                cornerRadius = Dimens.x4,
-                state = state.screenStatus,
-                onTryAgainClick = onTryAgainClick
-            ) {
-                ListTile(
-                    state = ListTileState(
-                        titleText = state.userAddressTitle,
-                        image = state.userAddressAvatar,
-                        bodyText = state.userAddressBody
-                    ),
-                    onClick = onUserAddressClick
-                )
-            }
-            FilledButton(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                size = Size.Large,
-                order = Order.SECONDARY,
-                leftIcon = painterResource(id = R.drawable.ic_new_arrow_up_24),
-                enabled = state.isShareQRCodeEnabled,
-                text = stringResource(id = R.string.common_share),
-                onClick = onShareCodeClick
-            )
-        }
-        BleachedButton(
+        LoadableContentCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter),
+                .aspectRatio(1f),
+            innerPadding = PaddingValues(
+                all = Dimens.x1_5
+            ),
+            backgroundColor = Color.White,
+            cornerRadius = Dimens.x4,
+            state = state.screenStatus,
+            contentWhenLoaded = {
+                Image(
+                    painter = state.qrCodeImage.retrievePainter(),
+                    contentDescription = null,
+                )
+            },
+            onTryAgainClick = onTryAgainClick
+        )
+        LoadableContentCard(
+            modifier = Modifier
+                .fillMaxWidth(),
+            innerPadding = PaddingValues(
+                all = Dimens.x1_5
+            ),
+            cornerRadius = Dimens.x4,
+            state = state.screenStatus,
+            onTryAgainClick = onTryAgainClick
+        ) {
+            ListTile(
+                state = ListTileState(
+                    titleText = state.userAddressTitle,
+                    image = state.userAddressAvatar,
+                    bodyText = state.userAddressBody
+                ),
+                onClick = onUserAddressClick
+            )
+        }
+        FilledButton(
+            modifier = Modifier
+                .fillMaxWidth(),
+            size = Size.Large,
+            order = Order.SECONDARY,
+            leftIcon = painterResource(id = R.drawable.ic_new_arrow_up_24),
+            enabled = state.isShareQRCodeEnabled,
+            text = stringResource(id = R.string.common_share),
+            onClick = onShareCodeClick
+        )
+        BleachedButton(
+            modifier = Modifier
+                .fillMaxWidth(),
             size = Size.Large,
             order = Order.SECONDARY,
             text = stringResource(id = R.string.commom_scan_qr),

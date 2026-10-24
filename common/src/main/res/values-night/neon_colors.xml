@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SORA Neon XML mirrors, dark values (the default look). Light values are in values/neon_colors.xml.
+  Keep in sync with compose/theme/tokens/NightThemeColors.kt and compose/theme/neon/NeonTokens.kt
+  (NeonDark).
+-->
+<resources>
+    <color name="neon_canvas">#06060B</color>
+    <color name="neon_surface">#14141F</color>
+    <color name="neon_surface_variant">#1C1C28</color>
+    <color name="neon_sheet">#191926</color>
+    <color name="neon_chrome">#F00C0C15</color>
+    <!-- #FFFFFF at 10% -->
+    <color name="neon_hairline">#1AFFFFFF</color>
+    <color name="neon_divider">#26263A</color>
+    <color name="neon_border_input">#6C6F80</color>
+
+    <color name="neon_text_primary">#F5F6FB</color>
+    <color name="neon_text_secondary">#B3B7CB</color>
+    <color name="neon_text_tertiary">#969BB4</color>
+    <color name="neon_text_disabled">#5E6277</color>
+    <color name="neon_on_accent">#06060B</color>
+    <color name="neon_link">#2EE6FF</color>
+
+    <color name="neon_brand_red">#FF3355</color>
+    <color name="neon_cyan">#2EE6FF</color>
+    <color name="neon_polkaswap">#FF0066</color>
+    <color name="neon_polkaswap_text">#FF5C9E</color>
+
+    <color name="neon_success">#2EF2A4</color>
+    <color name="neon_success_container">#0B221D</color>
+    <color name="neon_warning">#FFB547</color>
+    <color name="neon_warning_container">#241B12</color>
+    <color name="neon_error">#FF6B85</color>
+    <color name="neon_error_container">#2A1119</color>
+
+    <color name="neon_safe_start">#2EF2A4</color>
+    <color name="neon_safe_border_start">#992EF2A4</color>
+    <color name="neon_safe_border_end">#732EE6FF</color>
+    <color name="neon_button_secondary">#1C1C28</color>
+    <!-- #FFFFFF at 8% -->
+    <color name="neon_cta_disabled">#14FFFFFF</color>
+    <color name="neon_info_container">#0B2128</color>
+    <color name="neon_toast">#222233</color>
+    <color name="neon_on_toast">#F5F6FB</color>
+    <color name="neon_swap_end">#FF3DDC</color>
+</resources>

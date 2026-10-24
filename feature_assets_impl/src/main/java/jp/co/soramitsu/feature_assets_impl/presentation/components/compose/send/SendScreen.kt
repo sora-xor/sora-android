@@ -55,17 +55,23 @@ import androidx.compose.ui.unit.dp
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.presentation.compose.components.AccountWithIcon
 import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
+import jp.co.soramitsu.common.presentation.compose.components.NetworkFeeUnavailableNotice
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyReason
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common.view.WarningTextCard
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -87,6 +93,11 @@ internal fun SendScreen(
     feeLoading: Boolean,
     reviewEnabled: Boolean,
     shouldTransactionReminderInsufficientWarningBeShown: Boolean,
+    feeUnavailable: NetworkFeeUnavailable? = null,
+    onRetryFee: () -> Unit = {},
+    lockedNote: String? = null,
+    readOnly: Boolean = rememberWalletReadOnly(),
+    accountReadOnly: Boolean = LocalSelectedAccountReadOnly.current,
 ) {
     SendScreenAddress(
         address = address,
@@ -105,12 +116,30 @@ internal fun SendScreen(
         onSelectToken = onSelectToken,
         onFocusChange = onFocusChange,
     )
+    if (lockedNote != null) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Dimens.x1, start = Dimens.x1, end = Dimens.x1)
+                .testTagAsId("SendLockedBalanceNote"),
+            text = lockedNote,
+            style = MaterialTheme.customTypography.paragraphS,
+            color = MaterialTheme.customColors.fgSecondary,
+        )
+    }
     Divider(thickness = Dimens.x3, color = Color.Transparent)
     SendScreenNetworkFee(
         amount = feeAmount,
         fiat = feeFiat,
         loading = feeLoading,
     )
+    if (feeUnavailable != null && !feeLoading) {
+        NetworkFeeUnavailableNotice(
+            modifier = Modifier.padding(top = Dimens.x2),
+            reason = feeUnavailable,
+            onRetry = onRetryFee,
+        )
+    }
     if (shouldTransactionReminderInsufficientWarningBeShown) {
         Divider(
             modifier = Modifier.fillMaxWidth(),
@@ -125,11 +154,19 @@ internal fun SendScreen(
         )
     }
     Divider(thickness = Dimens.x3, color = Color.Transparent)
+    if (readOnly) {
+        // U9: sending is off in read-only mode; the reason sits above the disabled button.
+        ReadOnlyReason(modifier = Modifier.padding(bottom = Dimens.x2))
+    } else if (accountReadOnly) {
+        // The selected account cannot sign on this phone. The notice above the form says why
+        // and offers the repair; the button is off instead of failing at the last step.
+        AccountReadOnlyReason(modifier = Modifier.padding(bottom = Dimens.x2))
+    }
     FilledButton(
         modifier = Modifier
             .testTagAsId("ReviewButton")
             .fillMaxWidth(),
-        enabled = reviewEnabled,
+        enabled = reviewEnabled && !readOnly && !accountReadOnly,
         text = stringResource(id = R.string.review),
         size = Size.Large,
         order = Order.PRIMARY,

@@ -54,7 +54,6 @@ data class PiMobileChainNode(
 data class PiMobileConfig(
     val blockExplorerUrl: String,
     val substrateTypesUrl: String?,
-    val soracard: Boolean,
     val nodes: List<PiMobileChainNode>,
     val nexusAvailable: Boolean,
     val nexusSendsAvailable: Boolean,

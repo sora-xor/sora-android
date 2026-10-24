@@ -13,10 +13,10 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <queries>
-        <package android:name="com.soracard.wallet.iban"/>
-        <package android:name="com.soracard.wallet.iban.test"/>
-    </queries>
+    <!-- Usage metrics do not require advertising identifiers or ad-services access. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
 
     <application
         tools:replace="android:allowBackup"
@@ -31,8 +31,17 @@
         android:localeConfig="@xml/locale_config"
         android:theme="@style/AppTheme">
 
+        <!-- Read by the Analytics SDK before FirebaseInitProvider starts collection. -->
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="true" />
+        <meta-data android:name="google_analytics_default_allow_analytics_storage" android:value="true" />
+        <meta-data android:name="google_analytics_default_allow_ad_storage" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_user_data" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
+        <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
+
         <activity
             android:name=".splash.presentation.SplashActivity"
+            android:theme="@style/SplashTheme"
             android:screenOrientation="portrait"
             android:exported="true">
 

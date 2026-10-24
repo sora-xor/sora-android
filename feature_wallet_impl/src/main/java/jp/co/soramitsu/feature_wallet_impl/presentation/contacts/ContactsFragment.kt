@@ -61,6 +61,12 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 @SuppressLint("CheckResult")
 class ContactsFragment : SoraBaseFragment<ContactsViewModel>() {
 
+    /**
+     * Choosing the recipient is the first step of Send, which signs with the selected account. When that account cannot sign on this phone, the
+     * screen says so before anything is entered and offers the repair (`SoraBaseFragment`).
+     */
+    override val explainsReadOnlyAccount: Boolean = true
+
     override val viewModel: ContactsViewModel by viewModels()
 
     override fun NavGraphBuilder.content(

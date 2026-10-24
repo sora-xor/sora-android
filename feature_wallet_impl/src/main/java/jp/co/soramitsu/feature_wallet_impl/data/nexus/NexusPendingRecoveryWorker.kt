@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.core_db.AppDatabase
 import kotlinx.coroutines.CancellationException
 
 /**
@@ -36,7 +37,14 @@ class NexusPendingRecoveryWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         if (WalletRecoveryCapabilityGate.mode() != WalletRecoveryCapabilityGate.Mode.NORMAL) {
-            return Result.retry()
+            // The wallet is in recovery or upgrade mode. Stop instead of waking the process again
+            // and again: the journal is durable and the next normal start schedules this again.
+            return Result.success()
+        }
+        if (runAttemptCount >= MAX_RUN_ATTEMPTS) {
+            // Bounded background work: rows that are still unresolved stay in the journal and are
+            // picked up by the next app start or journal write.
+            return Result.success()
         }
         return try {
             val pass = recovery.recoverAfterRestart(
@@ -62,14 +70,20 @@ class NexusPendingRecoveryWorker @AssistedInject constructor(
 
     private companion object {
         const val MAX_TRANSACTIONS_PER_RUN = 10
+        const val MAX_RUN_ATTEMPTS = 10
     }
 }
 
 @Singleton
 class NexusPendingRecoveryScheduler @Inject constructor(
     @ApplicationContext context: Context,
+    private val database: AppDatabase,
 ) {
     private val applicationContext = context.applicationContext
+
+    /** True when the journal holds a transaction that is not final yet. */
+    suspend fun hasRecoverableWork(): Boolean =
+        database.walletIdentityDao().countUnresolvedTransactions() > 0
 
     fun ensureOnStartup() {
         enqueue(ExistingWorkPolicy.KEEP)

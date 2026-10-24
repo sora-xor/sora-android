@@ -46,4 +46,5 @@ object OnboardingFeatureRoutes {
     const val IMPORT_ACCOUNT_LIST = "jp.co.soramitsu.feature_multiaccount_impl.ImportAccountList"
     const val IMPORT_ACCOUNT_PASSWORD = "jp.co.soramitsu.feature_multiaccount_impl.ImportAccountPassword"
     const val IMPORT_ACCOUNT_SUCCESS = "jp.co.soramitsu.feature_multiaccount_impl.ImportAccountSuccess"
+    const val FOUND_WALLETS = "jp.co.soramitsu.feature_multiaccount_impl.FoundWallets"
 }

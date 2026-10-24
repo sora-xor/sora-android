@@ -49,9 +49,11 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.presentation.viewmodel.FailureNotice
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.vibration.DeviceVibrator
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
-import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
@@ -104,9 +106,6 @@ class PinCodeViewModel @Inject constructor(
     private val _closeAppLiveData = SingleLiveEvent<Unit>()
     val closeAppLiveData: LiveData<Unit> = _closeAppLiveData
 
-    private val _pincodeLengthInfoAlertLiveData = SingleLiveEvent<Unit>()
-    val pincodeLengthInfoAlertLiveData: LiveData<Unit> = _pincodeLengthInfoAlertLiveData
-
     private val _fingerPrintCanceledFromPromptEvent = SingleLiveEvent<Unit>()
     val fingerPrintCanceledFromPromptEvent: LiveData<Unit> = _fingerPrintCanceledFromPromptEvent
 
@@ -116,9 +115,12 @@ class PinCodeViewModel @Inject constructor(
     private val _pincodeChangedEvent = SingleLiveEvent<Unit>()
     val pincodeChangedEvent: LiveData<Unit> = _pincodeChangedEvent
 
-    private val _logoutEvent = SingleLiveEvent<String>()
-    val logoutEvent: LiveData<String> = _logoutEvent
-    private var pendingDeletionPreview: WalletDeletionPreview? = null
+    /**
+     * Set once the PIN or biometrics were confirmed for "Forget account": the removal screen
+     * replaces the keypad. Nothing is removed before [onRemovalConfirmed].
+     */
+    internal var removal by mutableStateOf<AccountRemovalState?>(null)
+        private set
 
     private val _biometryInitialDialogEvent = SingleLiveEvent<Unit>()
     val biometryInitialDialogEvent: LiveData<Unit> = _biometryInitialDialogEvent
@@ -149,9 +151,14 @@ class PinCodeViewModel @Inject constructor(
         connectionManager.connectionState
             .catch { onError(it) }
             .onEach {
+                val reconnected = it && !state.isConnected
                 state = state.copy(
                     isConnected = it
                 )
+                // U2: "We'll continue as soon as you're back online" - continue by itself.
+                if (reconnected && state.migrating && state.checkNeedsNetwork) {
+                    viewModelScope.launch { tryCatch { proceed() } }
+                }
             }
             .launchIn(viewModelScope)
 
@@ -162,6 +169,18 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * A failure while a typed PIN is checked or saved (for example a busy Keystore) clears the
+     * entry: the message is shown and the PIN can be typed again, instead of a full row of
+     * dots that takes no more digits.
+     */
+    override fun onErrorResetProgress() {
+        if (inputedCode.isNotEmpty()) {
+            inputedCode = ""
+            state = state.copy(checkedDotsCount = 0, isBackButtonVisible = false)
+        }
+    }
+
     private fun startTimer() {
         buttonsDisabled = true
         showFingerPrintEventLiveData.value = false
@@ -169,6 +188,10 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun startAuth(pinCodeAction: PinCodeAction) {
+        // Back on the removal screen (from the JSON export): it is already past the PIN and
+        // keeps its state; nothing is asked or started again.
+        if (removal != null) return
+        if (pinCodeAction == PinCodeAction.TIMEOUT_CHECK) WalletSessionState.markLocked()
         viewModelScope.launch {
             action = pinCodeAction
             when (action) {
@@ -194,6 +217,8 @@ class PinCodeViewModel @Inject constructor(
 
                 PinCodeAction.CHANGE_PIN_CODE -> {
                     isPincodeUpdateNeeded = interactor.isPincodeUpdateNeeded()
+                    // The forced 4-to-6 digit change replaces the unlock (U10).
+                    if (isPincodeUpdateNeeded) WalletSessionState.markLocked()
                     val maxDotsLength = if (isPincodeUpdateNeeded) {
                         PinCodeInteractor.OLD_PINCODE_LENGTH
                     } else {
@@ -226,7 +251,18 @@ class PinCodeViewModel @Inject constructor(
                         }
                     } catch (t: Throwable) {
                         onError(t)
-                        action = PinCodeAction.CREATE_PIN_CODE
+                        if (t is KeyMaterialUnavailableException) {
+                            // The stored PIN exists but the wallet key cannot be used right now
+                            // (busy or missing Keystore key). Keep asking for the existing PIN;
+                            // offering to create a new one would replace the stored PIN.
+                            state = state.copy(
+                                toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
+                                isBackButtonVisible = false
+                            )
+                            showFingerPrintEventLiveData.value = isBiometryEnabled
+                        } else {
+                            action = PinCodeAction.CREATE_PIN_CODE
+                        }
                     }
                 }
             }
@@ -314,6 +350,7 @@ class PinCodeViewModel @Inject constructor(
                 interactor.savePin(inputedCode)
                 if (isChanging) {
                     _pincodeChangedEvent.trigger()
+                    WalletSessionState.markUnlocked()
                     mainRouter.popBackStack()
                 } else {
                     val available = interactor.isBiometryAvailable()
@@ -345,6 +382,11 @@ class PinCodeViewModel @Inject constructor(
     }
 
     override fun onBackPressed() {
+        if (removal != null) {
+            // Back on the removal screen cancels: nothing was removed.
+            onRemovalCancelled()
+            return
+        }
         if (PinCodeAction.CREATE_PIN_CODE == action) {
             if (tempCode.isEmpty()) {
                 if (isChanging && !isPincodeUpdateNeeded) {
@@ -372,6 +414,10 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun onResume() {
+        // The removal screen is already behind the PIN: coming back to it from the JSON export
+        // (whose Back returns here) does not ask for the PIN again. The phrase is veiled again
+        // whenever the screen was left ([onRemovalHidden]).
+        if (removal != null) return
         if (action != PinCodeAction.CREATE_PIN_CODE && !buttonsDisabled) {
             startFingerprintScannerEventLiveData.value = isBiometryEnabled
         }
@@ -455,21 +501,97 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The PIN (or biometrics) was just confirmed for "Forget account". Before anything is
+     * removed the person sees the backup that re-derives the account (its recovery phrase, else
+     * its raw seed), or is told plainly that this phone holds none, and what stays on the phone.
+     * The PIN is not asked for again to show it.
+     */
     private fun logout() {
         viewModelScope.launch {
             try {
                 check(this@PinCodeViewModel::addresses.isInitialized) {
                     "WALLET_DELETION_TARGETS_MISSING"
                 }
-                publishDeletionPreview(
-                    interactor.createWalletDeletionPreview(addresses.toList())
+                val briefing = interactor.walletRemovalBriefing(addresses.toList())
+                removal = AccountRemovalState(
+                    accounts = briefing.accounts.map { account ->
+                        AccountRemovalState.Account(
+                            address = account.address,
+                            name = account.name,
+                            phraseWords = account.phraseWords,
+                            seed = account.seedHex.takeIf(String::isNotEmpty)?.let { "0x$it" }.orEmpty(),
+                            canExportJson = account.canExportJson,
+                        )
+                    },
+                    removesEverything = briefing.removesEverything,
+                    retainedKeySets = briefing.retainedKeySets,
+                    restorableKeySets = briefing.restorableKeySets,
                 )
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Throwable) {
-                handleWalletDeletionError(error, reloadPreview = false)
+                // Nothing was removed and nothing was started. The message is shown on this
+                // screen (leaving it now would take the message away with it); the keypad is
+                // back, and Back leaves.
+                if (!showRemovalPrecondition(error)) onError(error)
             }
         }
+    }
+
+    /**
+     * A removal that cannot happen until something else does gets a text that says what, never
+     * "try again". True when [error] was such a refusal and its message is shown.
+     */
+    private fun showRemovalPrecondition(error: Throwable): Boolean {
+        if (error.message != WALLET_DELETION_PENDING_TRANSACTIONS) return false
+        onErrorResetProgress()
+        alertDialogLiveData.value = Pair(
+            resourceManager.getString(R.string.account_removal_not_removed_title),
+            resourceManager.getString(R.string.account_removal_pending_transactions),
+        )
+        return true
+    }
+
+    fun onRemovalRevealed() {
+        removal = removal?.copy(revealed = true, shownOnce = true)
+    }
+
+    /**
+     * The removal screen is no longer in front (another app, the recents screen, the JSON
+     * export): the phrase or seed is veiled again, like every screen that shows a secret. What
+     * was already acknowledged stays.
+     */
+    fun onRemovalHidden() {
+        val state = removal ?: return
+        if (state.revealed) removal = state.copy(revealed = false)
+    }
+
+    fun onRemovalWrittenDown(checked: Boolean) {
+        val state = removal ?: return
+        // Only after the phrase or seed was actually shown.
+        if (state.shownOnce) removal = state.copy(writtenDown = checked)
+    }
+
+    fun onRemovalUnderstoodNoBackup(checked: Boolean) {
+        removal = removal?.copy(understoodNoBackup = checked)
+    }
+
+    fun onRemovalUnderstoodFoundWallets(checked: Boolean) {
+        removal = removal?.copy(understoodFoundWallets = checked)
+    }
+
+    /** "Export JSON first": the encrypted JSON export of the accounts whose key still signs. */
+    fun onRemovalExportJson() {
+        val exportable = removal?.accounts?.filter { it.canExportJson }?.map { it.address }
+        if (exportable.isNullOrEmpty()) return
+        mainRouter.showBackupJson(exportable)
+    }
+
+    fun onRemovalCancelled() {
+        if (removal?.working == true) return
+        removal = null
+        mainRouter.popBackStack()
     }
 
     fun onAuthenticationFailed() {
@@ -485,15 +607,31 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
-    fun logoutOkPressed() {
+    /**
+     * "Remove from this phone", after the acknowledgement. The deletion is prepared and carried
+     * out only now, so writing the phrase down can take as long as it takes. If what would be
+     * removed is no longer what the screen described, nothing is removed and the screen is
+     * described again.
+     */
+    fun onRemovalConfirmed() {
+        val state = removal ?: return
+        if (!state.canRemove) return
+        removal = state.copy(working = true)
         viewModelScope.launch {
             progress.showProgress()
             try {
-                val preview = checkNotNull(pendingDeletionPreview) {
-                    "WALLET_DELETION_PREVIEW_MISSING"
+                val preview = interactor.createWalletDeletionPreview(addresses.toList())
+                val described = state.accounts.map { it.address }.toSet()
+                val sameAsDescribed =
+                    preview.targets.map { it.walletId }.toSet() == described &&
+                        (preview.scope == WalletDeletionScope.ALL) == state.removesEverything
+                if (!sameAsDescribed) {
+                    // The accounts on this phone changed while the screen was open.
+                    removal = null
+                    logout()
+                    return@launch
                 }
                 val result = interactor.confirmAndExecuteWalletDeletion(preview)
-                pendingDeletionPreview = null
                 when (result.scope) {
                     WalletDeletionScope.ALL -> _resetApplicationEvent.trigger()
                     WalletDeletionScope.SINGLE -> _switchAccountEvent.trigger()
@@ -501,34 +639,15 @@ class PinCodeViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Throwable) {
-                handleWalletDeletionError(error, reloadPreview = true)
+                handleWalletDeletionError(error)
             } finally {
                 progress.hideProgress()
             }
         }
     }
 
-    private fun publishDeletionPreview(preview: WalletDeletionPreview) {
-        pendingDeletionPreview = preview
-        val walletNames = preview.targets.joinToString(separator = "\n\n") {
-            "${it.displayName}\n${it.walletId}"
-        }
-        val baseMessage = resourceManager.getString(R.string.logout_dialog_body)
-        val allWalletSuffix =
-            if (preview.scope == WalletDeletionScope.ALL) {
-                resourceManager.getString(R.string.logout_remove_nodes_body)
-            } else {
-                ""
-            }
-        _logoutEvent.value =
-            "$baseMessage$allWalletSuffix\n\n$walletNames"
-    }
-
-    private suspend fun handleWalletDeletionError(
-        error: Throwable,
-        reloadPreview: Boolean,
-    ) {
-        onError(error)
+    private suspend fun handleWalletDeletionError(error: Throwable) {
+        jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
         val failureCode = try {
             interactor.walletDeletionFailureCode()
         } catch (lookupError: CancellationException) {
@@ -537,7 +656,7 @@ class PinCodeViewModel @Inject constructor(
             null
         }
         if (failureCode != null) {
-            pendingDeletionPreview = null
+            removal = null
             errorLiveData.value = failureCode
             // Startup resumes the durable journal and routes the user to the
             // encrypted-backup recovery screen. Never continue in a partially
@@ -545,26 +664,41 @@ class PinCodeViewModel @Inject constructor(
             _resetApplicationEvent.trigger()
             return
         }
-
-        errorLiveData.value = error.walletDeletionSafeCode()
-        if (!reloadPreview || !this::addresses.isInitialized) {
-            pendingDeletionPreview = null
+        val stillListed = try {
+            interactor.areListed(addresses.toList())
+        } catch (lookupError: CancellationException) {
+            throw lookupError
+        } catch (_: Throwable) {
+            false
+        }
+        if (!stillListed) {
+            // The removal was journaled and has gone past the point where the accounts are
+            // listed (or its state cannot be read). The next start finishes it; this session
+            // must not go on as if nothing had happened.
+            removal = null
+            _resetApplicationEvent.trigger()
             return
         }
-        try {
-            // Confirmation capabilities are one-shot. If no durable journal
-            // exists, present a newly verified preview and require another
-            // explicit confirmation rather than reusing the consumed value.
-            publishDeletionPreview(
-                interactor.createWalletDeletionPreview(addresses.toList())
-            )
-        } catch (reloadError: CancellationException) {
-            throw reloadError
-        } catch (reloadError: Throwable) {
-            pendingDeletionPreview = null
-            onError(reloadError)
-            errorLiveData.value = reloadError.walletDeletionSafeCode()
+        // The accounts are all still listed: nothing was removed. The screen stays, with the
+        // same acknowledgement, and the person can try again or cancel.
+        removal = removal?.copy(working = false)
+        if (showRemovalPrecondition(error)) return
+        if (FailureNotice.of(error) == FailureNotice.WALLET_READ_ONLY) {
+            // Wallet changes went off for the whole app meanwhile: trying again cannot help,
+            // and the read-only text says what does.
+            onError(error)
+            return
         }
+        alertDialogLiveData.value = Pair(
+            resourceManager.getString(R.string.account_removal_not_removed_title),
+            resourceManager.getString(R.string.account_removal_not_removed)
+                .format(error.walletDeletionSafeCode()),
+        )
+    }
+
+    private companion object {
+        /** `UserRepositoryImpl.createWalletDeletionPreview`: a transaction is not finished. */
+        const val WALLET_DELETION_PENDING_TRANSACTIONS = "WALLET_DELETION_PENDING_TRANSACTIONS"
     }
 
     private fun Throwable.walletDeletionSafeCode(): String =
@@ -594,28 +728,59 @@ class PinCodeViewModel @Inject constructor(
         selectNodeRouter.showSelectNode()
     }
 
+    private var proceeding = false
+    private var proceeded = false
+
+    /**
+     * After unlocking: checks whether the account still has an older SORA balance to claim.
+     * Only an unchecked 15-word legacy phrase needs the network for that; every other account is
+     * checked on the phone, so being offline never keeps the person at this screen (U2).
+     */
     private suspend fun proceed() {
-        // Authentication is local. A disconnected SORA2 node must not prevent
-        // access to independent networks or offline account addresses. Leave
-        // migration state untouched so it is checked on a connected unlock.
-        if (!state.isConnected) {
-            state = state.copy(migrating = false)
-            mainRouter.popBackStack()
-            return
-        }
-        state = state.copy(
-            migrating = true
-        )
-        if (state.isConnected) {
-            val needs = interactor.needsMigration()
-            state = state.copy(
-                migrating = false
-            )
-            if (needs) {
-                mainRouter.showClaim()
-            } else {
-                mainRouter.popBackStack()
+        // Set before the first suspension: a second trigger (reconnect, resume, biometrics
+        // dialog) while this one waits must not navigate a second time.
+        if (proceeding || proceeded) return
+        proceeding = true
+        try {
+            val needsNetwork = try {
+                interactor.migrationCheckNeedsNetwork()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Throwable) {
+                // Unreadable right now: the optional check below is skipped, never waited for.
+                false
             }
+            // Only a check that needs the network ever says it waits for it (U2).
+            state = state.copy(
+                migrating = true,
+                checkNeedsNetwork = needsNetwork,
+            )
+            if (state.isConnected || !needsNetwork) {
+                val needs = try {
+                    interactor.needsMigration()
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Throwable) {
+                    // The claim check is optional: it runs again at the next unlock (nothing was
+                    // recorded). It never keeps the person out of the wallet.
+                    jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                    false
+                }
+                state = state.copy(
+                    migrating = false,
+                    checkNeedsNetwork = false,
+                )
+                proceeded = true
+                WalletSessionState.markUnlocked()
+                if (needs) {
+                    mainRouter.showClaim()
+                } else {
+                    mainRouter.popBackStack()
+                }
+            }
+            // Otherwise it waits for the network; the reconnect handler calls this again.
+        } finally {
+            proceeding = false
         }
     }
 
@@ -623,7 +788,6 @@ class PinCodeViewModel @Inject constructor(
         viewModelScope.launch {
             action = PinCodeAction.CREATE_PIN_CODE
             if (state.maxDotsCount != PinCodeInteractor.PINCODE_LENGTH) {
-                _pincodeLengthInfoAlertLiveData.trigger()
                 state = state.copy(
                     maxDotsCount = PinCodeInteractor.PINCODE_LENGTH,
                     isLengthInfoAlertVisible = true

@@ -1,5 +1,9 @@
 package jp.co.soramitsu.common.account
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
 /**
  * Process-wide capability boundary used while wallet modernization is not verified.
  *
@@ -21,8 +25,24 @@ object WalletRecoveryCapabilityGate {
 
     @Volatile
     private var mode: Mode = Mode.NORMAL
+        set(value) {
+            field = value
+            modeState.value = value
+        }
+
+    private val modeState = MutableStateFlow(Mode.NORMAL)
 
     fun mode(): Mode = mode
+
+    /**
+     * The current mode for screens (read-only banner, disabled Send and Swap). The same value as
+     * [mode]; screens never decide anything security-relevant from it, the signer still calls
+     * [requireUserMutationAllowed].
+     */
+    val modeFlow: StateFlow<Mode> = modeState.asStateFlow()
+
+    /** True exactly when [requireUserMutationAllowed] would refuse (any mode but NORMAL). */
+    fun isUserMutationBlocked(mode: Mode = this.mode): Boolean = mode != Mode.NORMAL
 
     @Synchronized
     fun enterNormal() {

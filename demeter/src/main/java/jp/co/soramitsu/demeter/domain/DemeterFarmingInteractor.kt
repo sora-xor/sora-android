@@ -35,6 +35,7 @@ package jp.co.soramitsu.demeter.domain
 import java.math.BigDecimal
 import java.util.Date
 import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.demeter.data.DemeterFarmingRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
@@ -42,9 +43,13 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
+import jp.co.soramitsu.sora.substrate.substrate.sora2TransactionOutcome
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 
 interface DemeterFarmingInteractor {
@@ -60,15 +65,33 @@ interface DemeterFarmingInteractor {
 
     suspend fun getFarmedBasicPool(ids: StringTriple): DemeterFarmingBasicPool?
 
-    suspend fun depositDemeterFarming(ids: StringTriple, amount: BigDecimal, networkFee: BigDecimal): String
+    suspend fun depositDemeterFarming(
+        ids: StringTriple,
+        amount: BigDecimal,
+        networkFee: BigDecimal,
+        /** True only after the user confirmed sending the same action again while one waits. */
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome
 
-    suspend fun withdrawDemeterFarming(ids: StringTriple, amount: BigDecimal, networkFee: BigDecimal): String
+    suspend fun withdrawDemeterFarming(
+        ids: StringTriple,
+        amount: BigDecimal,
+        networkFee: BigDecimal,
+        /** True only after the user confirmed sending the same action again while one waits. */
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome
 
     suspend fun calcDepositDemeterNetworkFee(ids: StringTriple): BigDecimal
 
     suspend fun calcWithdrawDemeterNetworkFee(ids: StringTriple): BigDecimal
 
-    suspend fun claimDemeterRewards(ids: StringTriple, amount: BigDecimal, networkFee: BigDecimal): String
+    suspend fun claimDemeterRewards(
+        ids: StringTriple,
+        amount: BigDecimal,
+        networkFee: BigDecimal,
+        /** True only after the user confirmed sending the same action again while one waits. */
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome
 
     suspend fun calcClaimDemeterRewards(ids: StringTriple): BigDecimal
 }
@@ -104,43 +127,48 @@ internal class DemeterFarmingInteractorImpl(
         }
     }
 
-    override suspend fun depositDemeterFarming(ids: StringTriple, amount: BigDecimal, networkFee: BigDecimal): String {
+    override suspend fun depositDemeterFarming(
+        ids: StringTriple,
+        amount: BigDecimal,
+        networkFee: BigDecimal,
+        confirmedDuplicate: Boolean,
+    ): TransactionOutcome {
         val curAcc = userRepository.getCurSoraAccount()
-        val result = demeterFarmingRepository.depositDemeterFarm(
-            curAcc.substrateAddress,
-            credentialsRepository.retrieveKeyPair(curAcc),
-            ids.first,
-            ids.second,
-            ids.third,
-            true,
-            amount
-        )
-
-        return if (result.success) {
-            val status = if (result.blockHash.isNullOrEmpty()) {
-                TransactionStatus.PENDING
-            } else {
-                TransactionStatus.COMMITTED
-            }
-            transactionHistoryRepository.saveTransaction(
+        val keypair = credentialsRepository.retrieveKeyPair(curAcc)
+        val outcome = sora2TransactionOutcome {
+            demeterFarmingRepository.depositDemeterFarm(
                 curAcc.substrateAddress,
-                transactionBuilder.buildDemeterStaking(
-                    result.txHash,
-                    result.blockHash,
-                    networkFee,
-                    status,
-                    Date().time,
-                    amount,
-                    DemeterType.STAKE,
-                    assetRepository.getToken(ids.first)!!,
-                    assetRepository.getToken(ids.second)!!,
-                    assetRepository.getToken(ids.third)!!,
-                )
+                keypair,
+                ids.first,
+                ids.second,
+                ids.third,
+                true,
+                amount,
+                Sora2SubmissionActivity.demeter(
+                    kind = Sora2SubmissionActivity.Kind.DEMETER_STAKE,
+                    baseTokenId = ids.first,
+                    targetTokenId = ids.second,
+                    rewardTokenId = ids.third,
+                    amount = amount,
+                    fee = networkFee,
+                ).copy(duplicateConfirmed = confirmedDuplicate),
             )
-            result.txHash
-        } else {
-            ""
         }
+        saveToActivityBestEffort(curAcc.substrateAddress) {
+            transactionBuilder.buildDemeterStaking(
+                outcome.txHash,
+                (outcome as? TransactionOutcome.Confirmed)?.blockHash,
+                networkFee,
+                TransactionStatus.PENDING,
+                Date().time,
+                amount,
+                DemeterType.STAKE,
+                assetRepository.getToken(ids.first)!!,
+                assetRepository.getToken(ids.second)!!,
+                assetRepository.getToken(ids.third)!!,
+            )
+        }
+        return outcome
     }
 
     override suspend fun calcDepositDemeterNetworkFee(ids: StringTriple): BigDecimal {
@@ -158,43 +186,48 @@ internal class DemeterFarmingInteractorImpl(
         ) ?: BigDecimal.ZERO
     }
 
-    override suspend fun withdrawDemeterFarming(ids: StringTriple, amount: BigDecimal, networkFee: BigDecimal): String {
+    override suspend fun withdrawDemeterFarming(
+        ids: StringTriple,
+        amount: BigDecimal,
+        networkFee: BigDecimal,
+        confirmedDuplicate: Boolean,
+    ): TransactionOutcome {
         val curAcc = userRepository.getCurSoraAccount()
-        val result = demeterFarmingRepository.withdrawDemeterFarm(
-            curAcc.substrateAddress,
-            credentialsRepository.retrieveKeyPair(curAcc),
-            ids.first,
-            ids.second,
-            ids.third,
-            true,
-            amount
-        )
-
-        return if (result.success) {
-            val status = if (result.blockHash.isNullOrEmpty()) {
-                TransactionStatus.PENDING
-            } else {
-                TransactionStatus.COMMITTED
-            }
-            transactionHistoryRepository.saveTransaction(
+        val keypair = credentialsRepository.retrieveKeyPair(curAcc)
+        val outcome = sora2TransactionOutcome {
+            demeterFarmingRepository.withdrawDemeterFarm(
                 curAcc.substrateAddress,
-                transactionBuilder.buildDemeterStaking(
-                    result.txHash,
-                    result.blockHash,
-                    networkFee,
-                    status,
-                    Date().time,
-                    amount,
-                    DemeterType.UNSTAKE,
-                    assetRepository.getToken(ids.first)!!,
-                    assetRepository.getToken(ids.second)!!,
-                    assetRepository.getToken(ids.third)!!,
-                )
+                keypair,
+                ids.first,
+                ids.second,
+                ids.third,
+                true,
+                amount,
+                Sora2SubmissionActivity.demeter(
+                    kind = Sora2SubmissionActivity.Kind.DEMETER_UNSTAKE,
+                    baseTokenId = ids.first,
+                    targetTokenId = ids.second,
+                    rewardTokenId = ids.third,
+                    amount = amount,
+                    fee = networkFee,
+                ).copy(duplicateConfirmed = confirmedDuplicate),
             )
-            result.txHash
-        } else {
-            ""
         }
+        saveToActivityBestEffort(curAcc.substrateAddress) {
+            transactionBuilder.buildDemeterStaking(
+                outcome.txHash,
+                (outcome as? TransactionOutcome.Confirmed)?.blockHash,
+                networkFee,
+                TransactionStatus.PENDING,
+                Date().time,
+                amount,
+                DemeterType.UNSTAKE,
+                assetRepository.getToken(ids.first)!!,
+                assetRepository.getToken(ids.second)!!,
+                assetRepository.getToken(ids.third)!!,
+            )
+        }
+        return outcome
     }
 
     override suspend fun calcWithdrawDemeterNetworkFee(ids: StringTriple): BigDecimal {
@@ -212,42 +245,47 @@ internal class DemeterFarmingInteractorImpl(
         ) ?: BigDecimal.ZERO
     }
 
-    override suspend fun claimDemeterRewards(ids: StringTriple, amount: BigDecimal, networkFee: BigDecimal): String {
+    override suspend fun claimDemeterRewards(
+        ids: StringTriple,
+        amount: BigDecimal,
+        networkFee: BigDecimal,
+        confirmedDuplicate: Boolean,
+    ): TransactionOutcome {
         val curAcc = userRepository.getCurSoraAccount()
-        val result = demeterFarmingRepository.claimDemeterRewards(
-            curAcc.substrateAddress,
-            credentialsRepository.retrieveKeyPair(curAcc),
-            ids.first,
-            ids.second,
-            ids.third,
-            true,
-        )
-
-        return if (result.success) {
-            val status = if (result.blockHash.isNullOrEmpty()) {
-                TransactionStatus.PENDING
-            } else {
-                TransactionStatus.COMMITTED
-            }
-            transactionHistoryRepository.saveTransaction(
+        val keypair = credentialsRepository.retrieveKeyPair(curAcc)
+        val outcome = sora2TransactionOutcome {
+            demeterFarmingRepository.claimDemeterRewards(
                 curAcc.substrateAddress,
-                transactionBuilder.buildDemeterRewards(
-                    result.txHash,
-                    result.blockHash,
-                    networkFee,
-                    status,
-                    Date().time,
-                    amount,
-                    DemeterType.REWARD,
-                    assetRepository.getToken(ids.first)!!,
-                    assetRepository.getToken(ids.second)!!,
-                    assetRepository.getToken(ids.third)!!,
-                )
+                keypair,
+                ids.first,
+                ids.second,
+                ids.third,
+                true,
+                Sora2SubmissionActivity.demeter(
+                    kind = Sora2SubmissionActivity.Kind.DEMETER_CLAIM,
+                    baseTokenId = ids.first,
+                    targetTokenId = ids.second,
+                    rewardTokenId = ids.third,
+                    amount = amount,
+                    fee = networkFee,
+                ).copy(duplicateConfirmed = confirmedDuplicate),
             )
-            result.txHash
-        } else {
-            ""
         }
+        saveToActivityBestEffort(curAcc.substrateAddress) {
+            transactionBuilder.buildDemeterRewards(
+                outcome.txHash,
+                (outcome as? TransactionOutcome.Confirmed)?.blockHash,
+                networkFee,
+                TransactionStatus.PENDING,
+                Date().time,
+                amount,
+                DemeterType.REWARD,
+                assetRepository.getToken(ids.first)!!,
+                assetRepository.getToken(ids.second)!!,
+                assetRepository.getToken(ids.third)!!,
+            )
+        }
+        return outcome
     }
 
     override suspend fun calcClaimDemeterRewards(ids: StringTriple): BigDecimal {
@@ -270,4 +308,18 @@ internal class DemeterFarmingInteractorImpl(
 
     override suspend fun getFarmedPools(): List<DemeterFarmingPool>? =
         demeterFarmingRepository.getFarmedPools(userRepository.getCurSoraAccount().substrateAddress)
+
+    /** Every outcome is listed in Activity with what it was; its status comes from the journal. */
+    private suspend fun saveToActivityBestEffort(
+        walletId: String,
+        build: suspend () -> Transaction,
+    ) {
+        try {
+            transactionHistoryRepository.saveTransaction(walletId, build())
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            // Activity is rebuilt from the durable journal; it never changes a result.
+        }
+    }
 }

@@ -71,6 +71,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -85,27 +86,34 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.androidfoundation.intent.openGooglePlay
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyNotice
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyBanner
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyLearnMoreSheet
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteChecks
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteSheet
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeWelcome
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberReadOnlyBrowsing
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BasicBannerCardState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.BuyXorState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -115,10 +123,6 @@ import jp.co.soramitsu.ui_core.theme.customColors
 class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
 
     override val viewModel: CardsHubViewModel by viewModels()
-
-    private val soraCardSignIn = registerForActivityResult(
-        SoraCardContract()
-    ) { viewModel.handleSoraCardResult(it) }
 
     @javax.inject.Inject
     lateinit var qrScannerFactory: jp.co.soramitsu.feature_assets_api.presentation.QrScannerContractFactory
@@ -144,9 +148,6 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).showBottomBar()
-        viewModel.launchSoraCardSignIn.observe { contractData ->
-            soraCardSignIn.launch(contractData)
-        }
     }
 
     override fun onResume() {
@@ -183,6 +184,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     onRecovery = viewModel::onBackupBannerClick,
                     onScan = ::scanNexusRecipient,
                 )
+                UpgradeSheets(state = state, onBackUpNow = viewModel::onBackupBannerClick)
                 CardsMainScreen(
                     scrollState = scrollState,
                     state = state,
@@ -193,11 +195,6 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     onAssetClick = viewModel::onAssetClick,
                     onPoolClick = viewModel::onPoolClick,
                     onOpenFullCardClick = viewModel::onOpenFullCard,
-                    onSoraCardClick = viewModel::onCardStateClicked,
-                    onSoraCardNeedUpdateClick = { this@CardsHubFragment.context?.openGooglePlay() },
-                    onSoraCardClose = viewModel::onRemoveSoraCard,
-                    onBuyXorClick = viewModel::onBuyCrypto,
-                    onBuyXorClose = viewModel::onRemoveBuyXorToken,
                     onReferralClick = viewModel::onStartReferral,
                     onReferralClose = viewModel::onRemoveReferralCard,
                     onBackupBannerClick = viewModel::onBackupBannerClick,
@@ -226,11 +223,6 @@ private fun CardsMainScreen(
     onAssetClick: (String) -> Unit,
     onPoolClick: (StringPair) -> Unit,
     onOpenFullCardClick: (AssetCardState) -> Unit,
-    onSoraCardClick: () -> Unit,
-    onSoraCardNeedUpdateClick: () -> Unit,
-    onSoraCardClose: () -> Unit,
-    onBuyXorClick: () -> Unit,
-    onBuyXorClose: () -> Unit,
     onReferralClick: () -> Unit,
     onReferralClose: () -> Unit,
     onBackupBannerClick: () -> Unit,
@@ -243,10 +235,14 @@ private fun CardsMainScreen(
     onNexusLoadMore: (NexusPortfolioBalance) -> Unit = {},
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
 ) {
+    // The selected account cannot sign on this phone: its name carries the Read-only chip, and
+    // the notice below says why and offers the repair (Account options).
+    val accountReadOnly = LocalSelectedAccountReadOnly.current
     TopBar(
         account = state.curAccount,
         onAccountClick = onAccountClick,
         onQrClick = onQrClick,
+        readOnly = accountReadOnly,
     )
     Spacer(modifier = Modifier.size(size = 16.dp))
     Column(
@@ -256,6 +252,13 @@ private fun CardsMainScreen(
             .padding(horizontal = Dimens.x2),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        ReadOnlyHomeBanner()
+        if (accountReadOnly) {
+            AccountReadOnlyNotice(
+                modifier = Modifier.padding(bottom = 16.dp),
+                onRepair = onBackupBannerClick,
+            )
+        }
         if (state.loading) {
             CircularProgressIndicator(
                 color = MaterialTheme.customColors.fgPrimary,
@@ -286,6 +289,7 @@ private fun CardsMainScreen(
                 is TitledAmountCardState -> {
                     CommonHubCard(
                         title = cardState.title,
+                        hero = cardState.state is FavoriteAssetsCardState,
                         amount = cardState.amount,
                         onOpenFullCardClick = { onOpenFullCardClick.invoke(cardState.state) },
                         collapseState = cardState.collapsedState,
@@ -311,25 +315,10 @@ private fun CardsMainScreen(
                                 onStartClicked = onBackupBannerClick,
                             )
                         }
-                        is BuyXorState -> {
-                            BuyXorCard(
-                                buttonEnabled = cardState.canStartGatehub,
-                                onBuyXorClicked = onBuyXorClick,
-                                onCloseCard = onBuyXorClose,
-                            )
-                        }
                         ReferralState -> {
                             ReferralCard(
                                 onStartClicked = onReferralClick,
                                 onCloseCard = onReferralClose,
-                            )
-                        }
-                        is SoraCardState -> {
-                            SoraCard(
-                                state = cardState,
-                                onCardStateClicked = onSoraCardClick,
-                                onCloseClicked = onSoraCardClose,
-                                onNeedUpdate = onSoraCardNeedUpdateClick,
                             )
                         }
                     }
@@ -353,6 +342,66 @@ private fun CardsMainScreen(
     }
 }
 
+/**
+ * U9 (design spec 9.2): in read-only mode the home shows the chip and banner. Balances and
+ * history stay visible; Send and Swap are off with their reason on their own screens.
+ */
+@Composable
+private fun ReadOnlyHomeBanner() {
+    if (!rememberReadOnlyBrowsing()) return
+    val context = LocalContext.current
+    var learnMore by remember { mutableStateOf(false) }
+    ReadOnlyBanner(
+        modifier = Modifier.padding(bottom = 16.dp),
+        onTryAgain = { WalletUpgradeRetry.launch(context) },
+        onLearnMore = { learnMore = true },
+    )
+    if (learnMore) {
+        ReadOnlyLearnMoreSheet(
+            onTryAgain = {
+                learnMore = false
+                WalletUpgradeRetry.launch(context)
+            },
+            onClose = { learnMore = false },
+        )
+    }
+}
+
+/**
+ * U11 (design spec 9.2, 9.1-7): once, after the upgrade succeeded, after the PIN and never in
+ * read-only mode. Each tick is a real check: the selected account exists on this device, the
+ * wallet was unlocked with the PIN, and the balance list has loaded. When some accounts cannot
+ * sign on this phone, the sheet says how many can and how to repair the others.
+ */
+@Composable
+private fun UpgradeSheets(state: CardsState, onBackUpNow: () -> Unit) {
+    val context = LocalContext.current
+    var pending by remember { mutableStateOf(UpgradeWelcome.isPending(context)) }
+    val unlocked by WalletSessionState.unlocked.collectAsStateWithLifecycle()
+    val readOnly = rememberWalletReadOnly()
+    // The account counts are read first, so the sheet never claims more than was checked.
+    if (!pending || !unlocked || readOnly || state.accountAddress.isBlank() || state.accountCount == 0) return
+    UpgradeCompleteSheet(
+        checks = UpgradeCompleteChecks(
+            accountsOnDevice = true,
+            protectedByPin = true,
+            balancesLoaded = !state.loading,
+            needsBackup = state.cards.any { it is BackupWalletState },
+            accountCount = state.accountCount,
+            signingAccountCount = state.signingAccountCount,
+        ),
+        onBackUpNow = {
+            UpgradeWelcome.markDone(context)
+            pending = false
+            onBackUpNow()
+        },
+        onClose = {
+            UpgradeWelcome.markDone(context)
+            pending = false
+        },
+    )
+}
+
 @Composable
 @Preview
 private fun PreviewCardsMainScreen() {
@@ -364,7 +413,7 @@ private fun PreviewCardsMainScreen() {
                 accountAddress = "",
                 loading = true,
                 cards = listOf(
-                    BuyXorState(true), ReferralState, BackupWalletState,
+                    ReferralState, BackupWalletState,
                 ),
             ),
             sora2Portfolio = Sora2PortfolioBalance(
@@ -377,11 +426,6 @@ private fun PreviewCardsMainScreen() {
             onAssetClick = {},
             onPoolClick = {},
             onOpenFullCardClick = {},
-            onSoraCardClick = {},
-            onSoraCardNeedUpdateClick = {},
-            onSoraCardClose = {},
-            onBuyXorClick = {},
-            onBuyXorClose = {},
             onReferralClick = {},
             onReferralClose = {},
             onBackupBannerClick = {},

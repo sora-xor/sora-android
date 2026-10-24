@@ -40,7 +40,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import jp.co.soramitsu.androidfoundation.format.addHexPrefix
 import jp.co.soramitsu.androidfoundation.fragment.trigger
-import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
+import jp.co.soramitsu.common.util.SensitiveClipboard
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.presentation.compose.components.initMediumTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -55,7 +55,7 @@ class BackupViewModel @AssistedInject constructor(
     private val multiAccountInteractor: MultiaccountInteractor,
     private val resourceManager: ResourceManager,
     private val mainRouter: MainRouter,
-    private val clipboardManager: BasicClipboardManager,
+    private val clipboardManager: SensitiveClipboard,
     @Assisted("type") private val type: ExportProtectionViewModel.Type,
     @Assisted("address") private val address: String
 ) : BaseViewModel() {
@@ -74,18 +74,39 @@ class BackupViewModel @AssistedInject constructor(
     init {
         _toolbarState.value = initMediumTitle2("")
         viewModelScope.launch {
+            // Only a stored phrase or seed that re-derives this account's address is shown.
+            // The stored secrets are judged once for this screen, off the main thread; the
+            // answer carries what is shown.
+            val material = try {
+                when (type) {
+                    // Also caches the seed where none is stored (as before).
+                    ExportProtectionViewModel.Type.SEED ->
+                        multiAccountInteractor.getSeedBackupMaterial(address)
+                    else -> multiAccountInteractor.getBackupMaterial(address)
+                }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                onError(error)
+                return@launch
+            }
             when (type) {
                 ExportProtectionViewModel.Type.SEED -> {
-                    val seed = multiAccountInteractor.getSeed(address)
-                    _backupScreenState.value = BackupScreenState(seedString = seed.addHexPrefix())
                     _toolbarState.value = initMediumTitle2(R.string.common_raw_seed)
+                    _backupScreenState.value = if (material.hasSeed) {
+                        BackupScreenState(seedString = material.seedHex.addHexPrefix())
+                    } else {
+                        BackupScreenState(noMatchingSecret = true, canExportJson = material.canSign)
+                    }
                 }
 
                 ExportProtectionViewModel.Type.PASSPHRASE -> {
-                    val mnemonic = multiAccountInteractor.getMnemonic(address)
-                    _backupScreenState.value =
-                        BackupScreenState(mnemonicWords = mnemonic.split(" "))
                     _toolbarState.value = initMediumTitle2(R.string.common_passphrase_title)
+                    _backupScreenState.value = if (material.hasPhrase) {
+                        BackupScreenState(mnemonicWords = material.phraseWords)
+                    } else {
+                        BackupScreenState(noMatchingSecret = true, canExportJson = material.canSign)
+                    }
                 }
 
                 else -> {}
@@ -93,14 +114,19 @@ class BackupViewModel @AssistedInject constructor(
         }
     }
 
+    /** The backup that always works for an account that can sign: the encrypted JSON export. */
+    fun exportJsonPressed() {
+        if (_backupScreenState.value?.canExportJson != true) return
+        mainRouter.showExportJSONProtection(mutableListOf(address))
+    }
+
     fun backupPressed() {
         _backupScreenState.value?.let {
-            if (it.seedString.isNotEmpty()) {
-                clipboardManager.addToClipboard(it.seedString)
-            } else {
-                clipboardManager.addToClipboard(it.mnemonicWords.joinToString(" "))
-            }
-            copiedToast.trigger()
+            if (it.noMatchingSecret) return
+            runCatching {
+                if (it.seedString.isNotEmpty()) clipboardManager.copy(it.seedString)
+                else clipboardManager.copy(it.mnemonicWords.joinToString(" "))
+            }.onSuccess { copiedToast.trigger() }.onFailure(::onError)
         }
     }
 

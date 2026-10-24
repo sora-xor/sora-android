@@ -37,8 +37,6 @@ import jp.co.soramitsu.common.R
 
 const val ASSETS_HUB_NAME = "assets"
 const val POOLS_HUB_NAME = "pools"
-const val GET_SORA_CARD_HUB_NAME = "get sora card"
-const val BUY_XOR_TOKEN_HUB_NAME = "buy xor token"
 const val REFERRAL_SYSTEM_HUB_NAME = "referral system"
 const val BACKUP_WALLET_HUB_NAME = "backup wallet"
 
@@ -57,18 +55,6 @@ enum class CardHubType(
     val boundToAccount: Boolean,
     @StringRes val userName: Int
 ) {
-    GET_SORA_CARD(
-        GET_SORA_CARD_HUB_NAME,
-        order = 0,
-        boundToAccount = false,
-        R.string.more_menu_sora_card_title,
-    ),
-    BUY_XOR_TOKEN(
-        BUY_XOR_TOKEN_HUB_NAME,
-        order = 1,
-        boundToAccount = false,
-        R.string.common_buy_xor,
-    ),
     REFERRAL_SYSTEM(
         REFERRAL_SYSTEM_HUB_NAME,
         order = 2,

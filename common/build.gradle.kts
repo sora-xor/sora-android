@@ -67,66 +67,15 @@ android {
         create("develop") {
             dimension = "default"
 
-            buildConfigField("String", "X1_ENDPOINT_URL", maybeWrapQuotes(secret("X1_ENDPOINT_URL_DEBUG")))
-            buildConfigField("String", "X1_WIDGET_ID", maybeWrapQuotes(secret("X1_WIDGET_ID_DEBUG")))
-            buildConfigField("String", "SORACARD_BACKEND_URL", maybeWrapQuotes(secret("SORA_BACKEND_DEBUG")))
-
-            buildConfigField("String", "SORA_CARD_API_KEY", maybeWrapQuotes(secret("SORA_CARD_API_KEY_TEST")))
-            buildConfigField("String", "SORA_CARD_DOMAIN", maybeWrapQuotes(secret("SORA_CARD_DOMAIN_TEST")))
-            buildConfigField(
-                "String",
-                "SORA_CARD_KYC_ENDPOINT_URL",
-                maybeWrapQuotes(secret("SORA_CARD_KYC_ENDPOINT_URL_TEST"))
-            )
-            buildConfigField("String", "SORA_CARD_KYC_USERNAME", maybeWrapQuotes(secret("SORA_CARD_KYC_USERNAME_TEST")))
-            buildConfigField("String", "SORA_CARD_KYC_PASSWORD", maybeWrapQuotes(secret("SORA_CARD_KYC_PASSWORD_TEST")))
-
-            buildConfigField("String", "SORA_CARD_RECAPTCHA", maybeWrapQuotes(secret("SORA_ANDROID_RECAPTCHA_KEY_TEST")))
-            buildConfigField("String", "SORA_CARD_PLATFORM", maybeWrapQuotes(secret("SORA_ANDROID_PLATFORM_ID_TEST")))
-
             buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_TEST")))
         }
         create("soralution") {
             dimension = "default"
 
-            buildConfigField("String", "X1_ENDPOINT_URL", maybeWrapQuotes(secret("X1_ENDPOINT_URL_DEBUG")))
-            buildConfigField("String", "X1_WIDGET_ID", maybeWrapQuotes(secret("X1_WIDGET_ID_DEBUG")))
-            buildConfigField("String", "SORACARD_BACKEND_URL", maybeWrapQuotes(secret("SORA_BACKEND_DEBUG")))
-
-            buildConfigField("String", "SORA_CARD_API_KEY", maybeWrapQuotes(secret("SORA_CARD_API_KEY_TEST")))
-            buildConfigField("String", "SORA_CARD_DOMAIN", maybeWrapQuotes(secret("SORA_CARD_DOMAIN_TEST")))
-            buildConfigField(
-                "String",
-                "SORA_CARD_KYC_ENDPOINT_URL",
-                maybeWrapQuotes(secret("SORA_CARD_KYC_ENDPOINT_URL_TEST"))
-            )
-            buildConfigField("String", "SORA_CARD_KYC_USERNAME", maybeWrapQuotes(secret("SORA_CARD_KYC_USERNAME_TEST")))
-            buildConfigField("String", "SORA_CARD_KYC_PASSWORD", maybeWrapQuotes(secret("SORA_CARD_KYC_PASSWORD_TEST")))
-
-            buildConfigField("String", "SORA_CARD_RECAPTCHA", maybeWrapQuotes(secret("SORA_ANDROID_RECAPTCHA_KEY_TEST")))
-            buildConfigField("String", "SORA_CARD_PLATFORM", maybeWrapQuotes(secret("SORA_ANDROID_PLATFORM_ID_TEST")))
-
             buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_TEST")))
         }
         create("production") {
             dimension = "default"
-
-            buildConfigField("String", "X1_ENDPOINT_URL", maybeWrapQuotes(secret("X1_ENDPOINT_URL_RELEASE")))
-            buildConfigField("String", "X1_WIDGET_ID", maybeWrapQuotes(secret("X1_WIDGET_ID_RELEASE")))
-            buildConfigField("String", "SORACARD_BACKEND_URL", maybeWrapQuotes(secret("SORA_BACKEND_RELEASE")))
-
-            buildConfigField("String", "SORA_CARD_API_KEY", maybeWrapQuotes(secret("SORA_CARD_API_KEY_PROD")))
-            buildConfigField("String", "SORA_CARD_DOMAIN", maybeWrapQuotes(secret("SORA_CARD_DOMAIN_PROD")))
-            buildConfigField(
-                "String",
-                "SORA_CARD_KYC_ENDPOINT_URL",
-                maybeWrapQuotes(secret("SORA_CARD_KYC_ENDPOINT_URL_PROD"))
-            )
-            buildConfigField("String", "SORA_CARD_KYC_USERNAME", maybeWrapQuotes(secret("SORA_CARD_KYC_USERNAME_PROD")))
-            buildConfigField("String", "SORA_CARD_KYC_PASSWORD", maybeWrapQuotes(secret("SORA_CARD_KYC_PASSWORD_PROD")))
-
-            buildConfigField("String", "SORA_CARD_RECAPTCHA", maybeWrapQuotes(secret("SORA_ANDROID_RECAPTCHA_KEY_PROD")))
-            buildConfigField("String", "SORA_CARD_PLATFORM", maybeWrapQuotes(secret("SORA_ANDROID_PLATFORM_ID_PROD")))
 
             buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_PROD")))
         }
@@ -241,4 +190,12 @@ val validateProductionCloudBackupConfiguration by tasks.registering {
 }
 tasks.matching { it.name == "preProductionReleaseBuild" }.configureEach {
     dependsOn(validateProductionCloudBackupConfiguration)
+}
+
+// JsonAccountsEncoderExportTest reads the release keep rules: the one-account JSON export is
+// written through a library model that only those rules protect from R8.
+tasks.withType<Test>().configureEach {
+    inputs.file(rootProject.file("app/proguard-rules.pro"))
+        .withPropertyName("releaseKeepRules")
+        .withPathSensitivity(PathSensitivity.NONE)
 }

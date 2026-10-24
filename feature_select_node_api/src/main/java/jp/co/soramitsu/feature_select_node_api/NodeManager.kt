@@ -39,6 +39,14 @@ interface NodeManager {
 
     val events: Flow<NodeManagerEvent>
 
+    /**
+     * Connects to the selected node once the wallet database may be opened (the upgrade gate is
+     * clear). Safe to call any number of times; returns true once the node connection has been
+     * started. While the gate is still closed it does nothing and returns false, so the caller
+     * can try again after recovery (Try again, Continue read-only) clears it in this process.
+     */
+    fun ensureStarted(): Boolean
+
     fun tryToConnect(node: ChainNode)
 
     fun checkGenesisHash(url: String)

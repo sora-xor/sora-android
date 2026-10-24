@@ -30,9 +30,20 @@ val productionKeystorePath = System.getenv("CI_KEYSTORE_PATH")?.takeIf { it.isNo
 val productionKeystorePassword = System.getenv("CI_KEYSTORE_PASS")?.takeIf { it.isNotBlank() }
 val productionKeyAlias = System.getenv("CI_KEYSTORE_KEY_ALIAS")?.takeIf { it.isNotBlank() }
 val productionKeyPassword = System.getenv("CI_KEYSTORE_KEY_PASS")?.takeIf { it.isNotBlank() }
-val productionVersionCodeRaw = System.getenv("CI_BUILD_ID")?.takeIf { it.isNotBlank() }
-val productionVersionCode = productionVersionCodeRaw
-    ?.takeIf { it.matches(Regex("[1-9][0-9]{0,8}")) }
+val canonicalVersionCode = Regex("[1-9][0-9]{0,8}")
+// Play production builds take their versionCode only from SORA_VERSION_CODE (Gradle property
+// -PSORA_VERSION_CODE=... or environment variable). verifyProductionReleaseSigning rejects a
+// productionRelease build without it.
+val explicitVersionCodeRaw = (findProperty("SORA_VERSION_CODE") as String?)?.takeIf { it.isNotBlank() }
+    ?: System.getenv("SORA_VERSION_CODE")?.takeIf { it.isNotBlank() }
+val explicitVersionCode = explicitVersionCodeRaw
+    ?.trim()
+    ?.takeIf { it.matches(canonicalVersionCode) }
+    ?.toInt()
+// Jenkins develop and Soralution builds only; never used for a Play production build.
+val ciVersionCode = System.getenv("CI_BUILD_ID")
+    ?.trim()
+    ?.takeIf { it.matches(canonicalVersionCode) }
     ?.toInt()
 val productionReleaseSigningConfigured = listOf(
     productionKeystorePath,
@@ -51,10 +62,16 @@ kotlin {
     jvmToolchain(17)
 }
 
-// soralution 143 3.8.6.3 2024.10.31
-// sora dae 122 3.8.6.3 2024.11.21
-val appVersionCode = productionVersionCode ?: 122
-val appVersionName = "3.8.6.3"
+// Google Play: 3.9.0 is versionCode 3090000; the next release is 3.9.1.
+// From 3.9.0: versionCode = MAJOR * 1_000_000 + MINOR * 10_000 + PATCH * 100 + BUILD (00..99),
+// so 3.9.0 build 1 is 3090001.
+val appVersionName = "3.9.1"
+val appVersionCodeBase = appVersionName.split('.').map(String::toInt)
+    .let { (major, minor, patch) -> major * 1_000_000 + minor * 10_000 + patch * 100 }
+val playLastPublishedVersionCode = 3090000
+// Local and debug builds default to the version base (3090100 for 3.9.1), above the
+// currently published Play code. Release builds still require an explicit code.
+val appVersionCode = explicitVersionCode ?: ciVersionCode ?: appVersionCodeBase
 
 android {
     namespace = "jp.co.soramitsu.sora"
@@ -78,6 +95,7 @@ android {
     lint {
         abortOnError = true
         checkDependencies = true
+        baseline = file("lint-baseline.xml")
     }
 
     signingConfigs {
@@ -249,20 +267,52 @@ baselineProfile {
     }
 }
 
+// Compares the Google Drive backup client (SORA_GOOGLE_TOKEN_PROD) and the Firebase app in
+// google-services.json with the SHA-256 pins in config/android-production-google-identity.json.
+// Provides the two closures used below and the task verifyProductionGoogleIdentity.
+apply(from = rootProject.file("scripts/verify-production-google-identity.gradle"))
+
+@Suppress("UNCHECKED_CAST")
+fun googleIdentityMessages(name: String): List<String> =
+    (extra[name] as groovy.lang.Closure<List<String>>).call()
+
 val verifyProductionReleaseSigning by tasks.registering {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
-    description = "Fail closed unless production release signing inputs are complete and local."
+    description = "Fail closed unless production release signing, version and secret inputs are complete."
     doLast {
+        val problems = mutableListOf<String>()
         if (!productionReleaseSigningConfigured) {
-            throw GradleException(
-                "Production release signing requires CI_KEYSTORE_PATH, CI_KEYSTORE_PASS, " +
-                    "CI_KEYSTORE_KEY_ALIAS, and CI_KEYSTORE_KEY_PASS.",
-            )
+            problems += "signing: set CI_KEYSTORE_PATH, CI_KEYSTORE_PASS, CI_KEYSTORE_KEY_ALIAS " +
+                "and CI_KEYSTORE_KEY_PASS"
         }
-        if (productionVersionCode == null) {
+        if (!appVersionName.matches(Regex("[0-9]+\\.[0-9]+\\.[0-9]+"))) {
+            problems += "versionName $appVersionName is not MAJOR.MINOR.PATCH"
+        }
+        val versionCode = explicitVersionCode
+        when {
+            explicitVersionCodeRaw == null -> problems += "versionCode: set SORA_VERSION_CODE " +
+                "(-PSORA_VERSION_CODE=... or an environment variable); CI_BUILD_ID is not used " +
+                "for Play builds"
+            versionCode == null -> problems += "versionCode: SORA_VERSION_CODE must be a " +
+                "positive whole number with at most nine digits"
+            versionCode <= playLastPublishedVersionCode -> problems += "versionCode: " +
+                "SORA_VERSION_CODE $versionCode is not higher than the last Play code " +
+                "$playLastPublishedVersionCode"
+            versionCode !in appVersionCodeBase..(appVersionCodeBase + 99) -> problems +=
+                "versionCode: SORA_VERSION_CODE $versionCode is outside " +
+                    "$appVersionCodeBase..${appVersionCodeBase + 99} for versionName $appVersionName"
+        }
+        if (!hasGoogleServicesJson) {
+            problems += "app/google-services.json is missing (Crashlytics would be off)"
+        }
+        // The Google Drive backup client must be the one 3.8.6.3 used, or people cannot see their
+        // existing Drive backups. "Present" is not enough: the value is compared with its pinned
+        // SHA-256, and while nobody has filled in that pin the build is refused. A pinned
+        // Firebase app is compared the same way. :common checks again that a client is set.
+        problems += googleIdentityMessages("productionGoogleIdentityProblems")
+        if (problems.isNotEmpty()) {
             throw GradleException(
-                "Production release signing requires CI_BUILD_ID as a canonical positive " +
-                    "version code with at most nine decimal digits.",
+                "productionRelease cannot be built:\n" + problems.joinToString("\n") { "- $it" },
             )
         }
         val configuredKeystore = Paths.get(requireNotNull(productionKeystorePath))
@@ -292,6 +342,7 @@ val verifyProductionReleaseSigning by tasks.registering {
         if (Files.getPosixFilePermissions(realKeystore).any(forbiddenPermissions::contains)) {
             throw GradleException("Production release keystore must be owner-only.")
         }
+        googleIdentityMessages("productionGoogleIdentityNotes").forEach { logger.warn(it) }
     }
 }
 
@@ -313,7 +364,12 @@ androidComponents {
     onVariants { variant ->
         variant.outputs.forEach { output ->
             output.outputFileName.set(
-                "SORA_Wallet_${appVersionName}_${appVersionCode}_${variant.flavorName}_${variant.buildType}.apk"
+                if (variant.name == "productionRelease") {
+                    // .github/workflows/android_release.yml checks and uploads this exact APK path.
+                    "app-production-release.apk"
+                } else {
+                    "SORA_Wallet_${appVersionName}_${appVersionCode}_${variant.flavorName}_${variant.buildType}.apk"
+                }
             )
         }
     }
@@ -327,14 +383,11 @@ play {
     serviceAccountCredentials = file(System.getenv("CI_PLAY_KEY") ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.8.6.5 - SORA Card Improvements"
+    releaseName = "$appVersionName ($appVersionCode)"
     defaultToAppBundles = true
 }
 
 dependencies {
-    // PayWings uses this serializer entry point. The old 1.0 adapter is binary-incompatible
-    // with DataStore 1.1's Okio serializer; retain the same encrypted preferences format.
-    runtimeOnly("io.github.osipxd:security-crypto-datastore-preferences:1.1.1-beta03")
     // implementation(libs.fileTree(dir: 'libs', include: ['*.jar'])
     implementation(project(":common"))
     implementation(project(":common_wallet"))
@@ -359,8 +412,6 @@ dependencies {
     implementation(project(":feature_select_node_impl"))
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":feature_blockexplorer_impl"))
-    implementation(project(":feature_sora_card_api"))
-    implementation(project(":feature_sora_card_impl"))
     implementation(project(":feature_ecosystem_impl"))
     implementation(project(":sorasubstrate"))
     implementation(project(":network"))
@@ -411,6 +462,7 @@ dependencies {
 
     implementation(platform(libs.googleFirebaseBomDep))
     implementation(libs.googleCrashlyticsDep)
+    implementation(libs.firebaseAnalyticsDep)
 
     implementation(libs.webSocketLibDep)
 
@@ -423,12 +475,15 @@ dependencies {
     testImplementation(libs.truthDep)
 
     androidTestImplementation(libs.androidxTestExtJunitDep)
+    // Compose UI tests of the Safe Mode screens (test-only; the ui-test manifest is already in
+    // every debug app through feature_blockexplorer_api).
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.composeUiTestJunit4Dep)
     androidTestImplementation(libs.androidxTestEspressoCoreDep)
     androidTestImplementation(libs.coroutineTestDep)
     androidTestImplementation(libs.junitDep)
     androidTestImplementation(libs.mockkAndroidDep)
     androidTestImplementation(libs.roomTestHelpersDep)
-    androidTestImplementation("io.github.osipxd:security-crypto-datastore-preferences:1.1.1-beta03")
     androidTestImplementation(libs.zXingCoreDep)
     androidTestImplementation(libs.zXingEmbeddedDep)
 
@@ -459,8 +514,6 @@ dependencies {
     kover(project(":feature_wallet_impl"))
     kover(project(":feature_select_node_api"))
     kover(project(":feature_select_node_impl"))
-    kover(project(":feature_sora_card_api"))
-    kover(project(":feature_sora_card_impl"))
     kover(project(":sorasubstrate"))
     kover(project(":network"))
 }

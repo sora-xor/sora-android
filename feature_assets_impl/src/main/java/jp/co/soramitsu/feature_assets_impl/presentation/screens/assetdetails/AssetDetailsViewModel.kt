@@ -35,30 +35,30 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
-import jp.co.soramitsu.androidfoundation.format.isZero
-import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.data.XorAssetBalance
+import jp.co.soramitsu.common_wallet.domain.BalanceWrapper
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -66,20 +66,19 @@ import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetCardState
 import jp.co.soramitsu.feature_assets_impl.presentation.states.FrozenXorDetailsModel
 import jp.co.soramitsu.feature_assets_impl.presentation.states.emptyAssetCardState
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
-import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
-import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 class AssetDetailsViewModel @AssistedInject constructor(
     @Assisted private val assetId: String,
@@ -92,9 +91,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
     private val polkaswapRouter: PolkaswapRouter,
     private val transactionHistoryHandler: TransactionHistoryHandler,
     private val resourceManager: ResourceManager,
-    private val soraConfigManager: SoraConfigManager,
     private val coroutineManager: CoroutineManager,
-    private val soraCardInteractor: SoraCardInteractor,
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -104,10 +101,10 @@ class AssetDetailsViewModel @AssistedInject constructor(
 
     companion object {
         private const val TX_HISTORY_COUNT = 5
-    }
 
-    private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
-    val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
+        /** How long the page waits for the selected node before it shows the saved amounts. */
+        internal const val XOR_BREAKDOWN_READ_TIMEOUT_MILLIS = 10_000L
+    }
 
     internal var state by mutableStateOf(AssetCardState(true, emptyAssetCardState))
         private set
@@ -137,6 +134,12 @@ class AssetDetailsViewModel @AssistedInject constructor(
                     )
                 }
         }
+        // A transaction of this asset that is still waiting for confirmation is listed here as
+        // well, and the list follows it when the background status check resolves it.
+        transactionHistoryHandler.flowLocalTransactions()
+            .catch { }
+            .onEach { refreshActivities() }
+            .launchIn(viewModelScope)
         onPullToRefresh()
     }
 
@@ -146,13 +149,18 @@ class AssetDetailsViewModel @AssistedInject constructor(
         )
         viewModelScope.launch {
             tryCatch {
-                val soraCard = soraConfigManager.getSoraCard()
                 val asset = assetsInteractor.getAssetOrThrow(assetId)
-                if (asset.token.id == SubstrateOptionsProvider.feeAssetId) {
-                    if (asset.balance.transferable.isZero().not()) {
-                        fetchBalanceForXor(asset.token.precision)
-                    }
+                val isXor = asset.token.id == SubstrateOptionsProvider.feeAssetId
+                if (isXor) {
+                    // Whatever the transferable amount is. An account whose XOR is all locked
+                    // has nothing transferable, and it is the one that most needs to see where
+                    // its XOR is: skipping the breakdown for it showed "Frozen 0".
+                    xorAssetBalance = readXorBreakdown(asset)
                 }
+                val xorBalance = xorAssetBalance?.takeIf { isXor }
+                // For XOR every amount on the card comes from the one breakdown, so that the
+                // liquid and the frozen amount always add up to what the account holds.
+                val transferable = xorBalance?.transferable ?: asset.balance.transferable
                 state = state.copy(
                     loading = false,
                     state = state.state.copy(
@@ -171,37 +179,59 @@ class AssetDetailsViewModel @AssistedInject constructor(
                             formatFiatChange(f, numbersFormatter)
                         }.orEmpty(),
                         transferableBalance = asset.token.printBalance(
-                            asset.balance.transferable,
+                            transferable,
                             numbersFormatter,
                             AssetHolder.ROUNDING,
                         ),
                         transferableBalanceFiat = asset.token.printFiat(
-                            asset.balance.transferable,
+                            transferable,
                             numbersFormatter,
                         ),
-                        frozenBalance = if (assetId == SubstrateOptionsProvider.feeAssetId) {
+                        frozenBalance = xorBalance?.let {
                             asset.token.printBalance(
-                                xorAssetBalance?.frozen ?: BigDecimal.ZERO,
+                                it.frozen,
                                 numbersFormatter,
                                 AssetHolder.ROUNDING
                             )
-                        } else {
-                            null
                         },
-                        frozenBalanceFiat = if (assetId == SubstrateOptionsProvider.feeAssetId) {
-                            asset.token.printFiat(
-                                xorAssetBalance?.frozen ?: BigDecimal.ZERO,
-                                numbersFormatter
-                            )
-                        } else {
-                            null
+                        frozenBalanceFiat = xorBalance?.let {
+                            asset.token.printFiat(it.frozen, numbersFormatter)
                         },
-                        isTransferableBalanceAvailable = asset.balance.transferable > BigDecimal.ZERO,
-                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId) && soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
+                        lockedNote = xorBalance?.locked
+                            ?.takeIf { it > BigDecimal.ZERO }
+                            ?.let { locked ->
+                                resourceManager.getString(R.string.send_locked_balance_note).format(
+                                    asset.token.printBalance(
+                                        locked,
+                                        numbersFormatter,
+                                        AssetHolder.ROUNDING,
+                                    )
+                                )
+                            },
+                        isTransferableBalanceAvailable = transferable > BigDecimal.ZERO,
                     )
                 )
             }
         }
+    }
+
+    /**
+     * The parts of the XOR balance, from the network when it answers in time and otherwise from
+     * the row saved at the last balance update. Never an error and never an endless wait: a
+     * selected node that does not answer must not leave the page without its Frozen amount.
+     */
+    private suspend fun readXorBreakdown(asset: Asset): XorAssetBalance {
+        val live = try {
+            withTimeoutOrNull(XOR_BREAKDOWN_READ_TIMEOUT_MILLIS) {
+                assetsInteractor.getXorBalance(asset.token.precision)
+            }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
+            FirebaseWrapper.recordException(error)
+            null
+        }
+        return live ?: BalanceWrapper.mapStoredXorBalance(asset.balance)
     }
 
     fun onPullToRefresh() {
@@ -211,21 +241,18 @@ class AssetDetailsViewModel @AssistedInject constructor(
 
     private fun refreshActivities() {
         viewModelScope.launch {
-            val events =
-                withContext(coroutineManager.io) {
-                    transactionHistoryHandler.getCachedEvents(TX_HISTORY_COUNT, assetId)
-                }
-            state = state.copy(
-                state = state.state.copy(
-                    events = events,
+            // A failed read keeps the list as it is; it is read again on the next refresh.
+            tryCatch {
+                val events =
+                    withContext(coroutineManager.io) {
+                        transactionHistoryHandler.getCachedEvents(TX_HISTORY_COUNT, assetId)
+                    }
+                state = state.copy(
+                    state = state.state.copy(
+                        events = events,
+                    )
                 )
-            )
-        }
-    }
-
-    private suspend fun fetchBalanceForXor(precision: Int) {
-        tryCatch {
-            xorAssetBalance = assetsInteractor.getXorBalance(precision)
+            }
         }
     }
 
@@ -316,9 +343,5 @@ class AssetDetailsViewModel @AssistedInject constructor(
                 }
             }
         }
-    }
-
-    fun onBuyCrypto() {
-        _launchSoraCardSignIn.value = createSoraCardGateHubContract()
     }
 }

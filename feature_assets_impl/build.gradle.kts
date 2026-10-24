@@ -80,7 +80,6 @@ dependencies {
     implementation(project(":feature_account_api"))
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_main_api"))
-    implementation(project(":feature_sora_card_api"))
     implementation(project(":feature_blockexplorer_api"))
 
     implementation(libs.xsubstrateDep)
@@ -143,6 +142,14 @@ dependencies {
             type = "aar"
         }
     }
+
+    // Compose UI tests (read-only mode disables Send and Swap). Test-only; the ui-test manifest
+    // is already in every debug app through feature_blockexplorer_api.
+    debugImplementation(libs.composeUiTestManifestDep)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.composeUiTestJunit4Dep)
+    androidTestImplementation(libs.androidxTestExtJunitDep)
+    androidTestImplementation(libs.androidxTestEspressoCoreDep)
 
     testImplementation(project(":test_data"))
     testImplementation(libs.coroutineTestDep)

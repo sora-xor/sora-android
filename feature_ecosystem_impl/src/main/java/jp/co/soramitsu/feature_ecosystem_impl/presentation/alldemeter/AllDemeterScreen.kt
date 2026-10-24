@@ -55,7 +55,7 @@ import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicFarmListItem
 import jp.co.soramitsu.common_wallet.presentation.compose.previewBasicFarmListItemState
 import jp.co.soramitsu.feature_ecosystem_impl.R
-import jp.co.soramitsu.ui_core.component.card.ContentCardEndless
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCardEndless
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography

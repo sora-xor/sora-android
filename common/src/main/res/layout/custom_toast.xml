@@ -1,3 +1,7 @@
+<!--
+  Toast card (design spec 7.13): bg.toast with its own text colour, so it stays readable in both
+  themes (the TextAppearance colour follows the theme, the card is inverted in light).
+-->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/text"
     style="@style/TextAppearance.Soramitsu.Neu.Light.15"
@@ -8,4 +12,5 @@
     android:drawablePadding="@dimen/x1"
     android:gravity="center"
     android:padding="@dimen/x3"
+    android:textColor="@color/neon_on_toast"
     android:text="@string/wallet_transaction_submitted_1" />

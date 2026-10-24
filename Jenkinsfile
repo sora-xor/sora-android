@@ -9,9 +9,9 @@ def pipeline = new org.android.AppPipeline(steps: this,
     sonar: true,
     sonarProjectName: 'sora-passport-android',
     sonarProjectKey: 'jp.co.soramitsu:sora-passport-android',
-    // The shared pipeline exposes no reviewed post-Bundle hook. Rollout authorization
-    // lives in production_release_qualification.yml, where the exact AAB already exists.
-    testCmd: 'ktlintCheck clean testDevelopDebugUnitTest koverVerifyDevelopDebug',
+    // Signed Play production builds come from .github/workflows/android_release.yml.
+    // Jenkins runs the unit tests of both the develop and the production flavor.
+    testCmd: 'ktlintCheck clean testDevelopDebugUnitTest testProductionDebugUnitTest koverVerifyDevelopDebug',
     publishType: 'Bundle',
     jobParams: jobParams,
     statusNotif: true,

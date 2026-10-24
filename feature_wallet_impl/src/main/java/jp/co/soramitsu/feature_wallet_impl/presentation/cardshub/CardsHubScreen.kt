@@ -53,6 +53,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -64,13 +65,15 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyTags
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyChip
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.extension.noRippleClickable
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
-import jp.co.soramitsu.ui_core.component.button.TextButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -88,6 +91,7 @@ fun TopBar(
     account: String,
     onAccountClick: () -> Unit,
     onQrClick: () -> Unit,
+    readOnly: Boolean = false,
 ) {
     Row(
         modifier = Modifier
@@ -114,6 +118,13 @@ fun TopBar(
                 style = MaterialTheme.customTypography.displayS,
                 color = MaterialTheme.customColors.fgPrimary,
             )
+            if (readOnly) {
+                ReadOnlyChip(
+                    modifier = Modifier
+                        .padding(start = Dimens.x1)
+                        .testTag(AccountReadOnlyTags.CHIP),
+                )
+            }
             Icon(
                 modifier = Modifier.wrapContentWidth(),
                 painter = painterResource(R.drawable.ic_arrows_chevron_right_rounded_24),
@@ -143,13 +154,11 @@ fun CommonHubCard(
     collapseState: Boolean,
     onOpenFullCardClick: () -> Unit,
     onCollapseClick: () -> Unit,
+    hero: Boolean = false,
     content: @Composable (ColumnScope) -> Unit
 ) {
     val collapseLabel = stringResource(if (collapseState) R.string.wallet_collapsed else R.string.wallet_expanded)
-    ContentCard(
-        modifier = Modifier.padding(top = Dimens.x1_5),
-        onClick = onOpenFullCardClick
-    ) {
+    val cardContent: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit = {
         Column(
             modifier = Modifier
                 .padding(top = Dimens.x3, bottom = Dimens.x4)
@@ -182,7 +191,7 @@ fun CommonHubCard(
                         contentDescription = null
                     )
                 }
-                Text(
+                if (!hero) Text(
                     text = amount,
                     textAlign = TextAlign.End,
                     maxLines = 1,
@@ -190,6 +199,11 @@ fun CommonHubCard(
                     style = MaterialTheme.customTypography.headline2,
                     color = MaterialTheme.customColors.fgPrimary,
                 )
+            }
+            if (hero) {
+                Text(amount, modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.x3, vertical = Dimens.x1),
+                    style = jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType.displayHero,
+                    color = MaterialTheme.customColors.fgPrimary)
             }
             if (!collapseState) {
                 Spacer(modifier = Modifier.size(size = Dimens.x2))
@@ -205,6 +219,11 @@ fun CommonHubCard(
             }
         }
     }
+    if (hero) jp.co.soramitsu.common.presentation.compose.neon.HeroCard(
+        modifier = Modifier.padding(top = Dimens.x1_5), onClick = onOpenFullCardClick, content = cardContent)
+    else ContentCard(modifier = Modifier.padding(top = Dimens.x1_5),
+        onClick = onOpenFullCardClick, content = cardContent)
+
 }
 
 @Preview(showBackground = true)

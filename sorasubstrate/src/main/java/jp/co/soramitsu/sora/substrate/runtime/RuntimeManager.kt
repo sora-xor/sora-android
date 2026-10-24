@@ -36,6 +36,7 @@ import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import java.math.BigInteger
 import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
@@ -45,8 +46,7 @@ import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.network.BoundedHttpTextClient
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
-import jp.co.soramitsu.feature_blockexplorer_api.data.PolkaswapIndexerClient
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
 import jp.co.soramitsu.xsubstrate.runtime.definitions.TypeDefinitionParser
 import jp.co.soramitsu.xsubstrate.runtime.definitions.TypeDefinitionsTree
@@ -62,6 +62,7 @@ import jp.co.soramitsu.xsubstrate.runtime.metadata.RuntimeMetadataReader
 import jp.co.soramitsu.xsubstrate.runtime.metadata.builder.VersionedRuntimeBuilder
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.RuntimeMetadataSchemaV14
+import jp.co.soramitsu.xsubstrate.scale.EncodableStruct
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAddress
@@ -84,10 +85,15 @@ private const val RUNTIME_CACHE_SCHEMA_VERSION = 2
 private const val RUNTIME_CACHE_MANIFEST_FILE = "sora2_runtime_cache_manifest_v2.json"
 private const val RUNTIME_CACHE_GENERATION_PREFIX = "sora2_runtime_cache_v2"
 private const val MAX_RUNTIME_CACHE_MANIFEST_BYTES = 16 * 1024
+private const val RUNTIME_CODE_BINDING_SCHEMA_VERSION = 1
+private const val RUNTIME_CODE_BINDING_FILE = "sora2_runtime_code_binding_v1.json"
+private const val MAX_RUNTIME_CODE_BINDING_BYTES = 4 * 1024
 private const val MAX_RUNTIME_METADATA_BYTES = 16 * 1024 * 1024
 private const val MAX_RUNTIME_TYPES_BYTES = 8 * 1024 * 1024
 private const val MAX_RUNTIME_GENERATION_SCAN = 32
 private const val MAX_RUNTIME_GENERATION_PRUNE = 4
+private const val MAX_REMOTE_TYPES_URL_LENGTH = 2_048
+private const val MAX_IN_MEMORY_RECOVERY_RUNTIMES = 1
 private val SHA256_HEX = Regex("^[0-9a-f]{64}$")
 private val RUNTIME_METADATA_HEX = Regex("^0x[0-9a-fA-F]+$")
 private val BLOCK_HASH_HEX = Regex("^0x[0-9a-fA-F]{64}$")
@@ -96,10 +102,22 @@ private val RUNTIME_CACHE_GENERATION_FILE = Regex(
         "[0-9a-f]{64}-[0-9a-f]{64}-[0-9a-f]{64}\\.(?:metadata|types\\.json)$"
 )
 
-internal class Sora2RuntimeIdentityException(
+internal open class Sora2RuntimeIdentityException(
     message: String,
     cause: Throwable? = null,
 ) : IllegalStateException(message, cause)
+
+/**
+ * The node answered a runtime RPC with a JSON-RPC error. The message stays the fixed code
+ * `SORA2_RUNTIME_RPC_REMOTE_ERROR`; [code], [remoteMessage] and [remoteData] keep the node's
+ * bounded error fields for callers that need to tell rejections apart (for example code 1010,
+ * "Invalid Transaction", with data "Inability to pay some fees").
+ */
+internal class Sora2RuntimeRpcRemoteException(
+    val code: Long,
+    val remoteMessage: String,
+    val remoteData: String?,
+) : Sora2RuntimeIdentityException("SORA2_RUNTIME_RPC_REMOTE_ERROR")
 
 /**
  * One immutable, finalized-chain runtime context used for both call encoding and signed-extension
@@ -116,6 +134,24 @@ data class Sora2MutationRuntimeContext(
     val finalizedBlockNumber: Long = 0L,
 )
 
+/** The runtime identity journaled with a pending submission when it was signed. */
+data class Sora2RecoveryRuntimeIdentity(
+    val genesisHash: String,
+    val specVersion: Int,
+    val metadataSha256: String,
+    val typesSha256: String,
+)
+
+/**
+ * Lists the runtimes that unresolved pending submissions still need for status recovery. Their
+ * runtime cache generations are never pruned, so a submission signed before a mainnet runtime
+ * upgrade can still be decoded afterwards. Returns null when the set cannot be read; the runtime
+ * cache is then not pruned at all.
+ */
+fun interface Sora2RecoveryRuntimeRetention {
+    suspend fun retainedRecoveryRuntimes(): Set<Sora2RecoveryRuntimeIdentity>?
+}
+
 private data class RuntimeCandidate(
     val snapshot: RuntimeSnapshot,
     val prefix: Short,
@@ -124,7 +160,60 @@ private data class RuntimeCandidate(
     val typesSha256: String,
     val runtimeVersion: Int,
     val sora2TypesToCache: String? = null,
+    /** See [Sora2SignedExtensionAdmission]; not empty means this runtime cannot be signed for. */
+    val unsupportedSignedExtensions: List<String> = emptyList(),
+    /** Set when the metadata was just read from the chain together with its runtime code hash. */
+    val codeBinding: RuntimeCodeBinding? = null,
 )
+
+/**
+ * Says that the metadata identified by [metadataSha256] was read from the chain at a finalized
+ * block whose runtime code (`:code`) had the hash [runtimeCodeHash], with the given versions.
+ *
+ * Metadata is produced by the runtime code and by nothing else, so while a finalized block still
+ * reports the same code hash and versions, its metadata is this metadata and does not have to be
+ * downloaded again (about 1.25 MB on mainnet). A runtime upgrade always replaces the code, which
+ * changes the hash and ends the binding.
+ */
+internal data class RuntimeCodeBinding(
+    @SerializedName("schemaVersion")
+    val schemaVersion: Int,
+    @SerializedName("genesisHash")
+    val genesisHash: String?,
+    @SerializedName("specVersion")
+    val specVersion: Int,
+    @SerializedName("transactionVersion")
+    val transactionVersion: Int,
+    @SerializedName("metadataSha256")
+    val metadataSha256: String?,
+    @SerializedName("runtimeCodeHash")
+    val runtimeCodeHash: String?,
+) {
+    fun isWellFormed(): Boolean =
+        schemaVersion == RUNTIME_CODE_BINDING_SCHEMA_VERSION &&
+            specVersion > 0 &&
+            transactionVersion >= 0 &&
+            genesisHash != null && BLOCK_HASH_HEX.matches(genesisHash) &&
+            metadataSha256 != null && SHA256_HEX.matches(metadataSha256) &&
+            runtimeCodeHash != null && BLOCK_HASH_HEX.matches(runtimeCodeHash)
+
+    /** True when this binding is about exactly this snapshot and this live checkpoint. */
+    fun covers(
+        snapshotGenesisHash: String?,
+        snapshotSpecVersion: Int?,
+        snapshotMetadataSha256: String?,
+        liveVersion: RuntimeVersion,
+        liveRuntimeCodeHash: String,
+    ): Boolean =
+        isWellFormed() &&
+            snapshotGenesisHash != null &&
+            genesisHash.equals(snapshotGenesisHash, ignoreCase = true) &&
+            specVersion == snapshotSpecVersion &&
+            metadataSha256 == snapshotMetadataSha256 &&
+            specVersion == liveVersion.specVersion &&
+            transactionVersion == liveVersion.transactionVersion &&
+            runtimeCodeHash.equals(liveRuntimeCodeHash, ignoreCase = true)
+}
 
 internal data class RuntimeCacheManifest(
     @SerializedName("schemaVersion")
@@ -220,11 +309,12 @@ internal fun selectUnreachableRuntimeGenerationFiles(
     activeMetadataFile: String,
     activeTypesFile: String,
     maxFiles: Int,
+    retainedFiles: Set<String> = emptySet(),
 ): List<String> {
     require(maxFiles in 0..MAX_RUNTIME_GENERATION_PRUNE) {
         "SORA2_RUNTIME_CACHE_PRUNE_LIMIT_INVALID"
     }
-    val activeFiles = setOf(activeMetadataFile, activeTypesFile)
+    val activeFiles = setOf(activeMetadataFile, activeTypesFile) + retainedFiles
     return fileNames.asSequence()
         .filter(RUNTIME_CACHE_GENERATION_FILE::matches)
         .filterNot(activeFiles::contains)
@@ -361,6 +451,34 @@ private fun runtimeCacheGeneration(
 ): String =
     "$RUNTIME_CACHE_GENERATION_PREFIX-$runtimeVersion-${genesisHash.drop(2)}-$metadataSha256-$typesSha256"
 
+/**
+ * Content-addressed cache file names of the generation that holds [identity], or null when the
+ * journaled identity is not well formed (such a row can never match a cache generation).
+ */
+internal fun runtimeCacheGenerationFilesOrNull(
+    identity: Sora2RecoveryRuntimeIdentity,
+): Pair<String, String>? {
+    val genesisHash = try {
+        identity.genesisHash.requireCanonicalBlockHash("SORA2_RECOVERY_GENESIS_INVALID")
+    } catch (_: Sora2RuntimeIdentityException) {
+        return null
+    }
+    if (
+        identity.specVersion <= 0 ||
+        !SHA256_HEX.matches(identity.metadataSha256) ||
+        !SHA256_HEX.matches(identity.typesSha256)
+    ) {
+        return null
+    }
+    val generation = runtimeCacheGeneration(
+        identity.specVersion,
+        genesisHash,
+        identity.metadataSha256,
+        identity.typesSha256,
+    )
+    return "$generation.metadata" to "$generation.types.json"
+}
+
 internal fun String.requireCanonicalBlockHash(errorCode: String): String {
     if (!BLOCK_HASH_HEX.matches(this)) {
         throw Sora2RuntimeIdentityException(errorCode)
@@ -449,10 +567,10 @@ class RuntimeManager @Inject constructor(
     private val gson: Gson,
     private val soraPreferences: SoraPreferences,
     private val sora2RuntimeRpcClient: Sora2BoundedRuntimeRpcClient,
-    private val connectionManager: ConnectionManager,
     private val boundedHttpTextClient: BoundedHttpTextClient,
     private val coroutineManager: CoroutineManager,
-    private val polkaswapIndexerClient: PolkaswapIndexerClient,
+    private val soraConfigManager: SoraConfigManager,
+    private val recoveryRuntimeRetention: Sora2RecoveryRuntimeRetention,
 ) {
 
     private val mutex = Mutex()
@@ -466,7 +584,20 @@ class RuntimeManager @Inject constructor(
     private var runtimeSpecVersion: Int? = null
     @Volatile
     private var runtimeGenesisHash: String? = null
+    @Volatile
+    private var runtimeUnsupportedSignedExtensions: List<String> = emptyList()
     private var prefix: Short = SORA2_SS58_PREFIX
+
+    /** What is known about the active snapshot's runtime code. Guarded by [mutex]. */
+    private var runtimeCodeBinding: RuntimeCodeBinding? = null
+
+    /** False until the saved binding was looked at for the active snapshot. Guarded by [mutex]. */
+    private var runtimeCodeBindingFileRead = false
+
+    private val pruneRequested = AtomicBoolean(false)
+
+    /** Recovery runtimes rebuilt from the network, guarded by [mutex]. Newest last. */
+    private val recoveryRuntimes = LinkedHashMap<Sora2RecoveryRuntimeIdentity, RuntimeSnapshot>()
 
     init {
         coroutineManager.applicationScope.launch {
@@ -490,9 +621,12 @@ class RuntimeManager @Inject constructor(
         runCatching { byteArray?.toAddress(prefix) }.getOrNull()
 
     suspend fun getRuntimeSnapshot(): RuntimeSnapshot {
-        return runtimeSnapshot ?: mutex.withLock {
+        runtimeSnapshot?.let { return it }
+        val snapshot = mutex.withLock {
             runtimeSnapshot ?: createRuntimeSnapshot()
         }
+        pruneRuntimeCacheIfRequested()
+        return snapshot
     }
 
     /**
@@ -520,17 +654,37 @@ class RuntimeManager @Inject constructor(
      * checkpoint is known is fatal to mutation preparation; the read-only cached snapshot remains
      * available, but it is never returned as mutation authority.
      */
-    suspend fun getMutationRuntimeContext(): Sora2MutationRuntimeContext = mutex.withLock {
-        withContext(coroutineManager.io) {
-            createMutationRuntimeContextLocked()
+    suspend fun getMutationRuntimeContext(): Sora2MutationRuntimeContext {
+        val context = mutex.withLock {
+            withContext(coroutineManager.io) {
+                createMutationRuntimeContextLocked()
+            }
         }
+        pruneRuntimeCacheIfRequested()
+        return context
     }
 
     /**
-     * Loads the exact reviewed packaged runtime fixture for status-only recovery. This method
-     * never substitutes the active cache or live metadata: an older witness is admitted only if
-     * every recorded identity field still matches a checked-in fixture byte-for-byte. A missing
-     * historical fixture returns null so its journal row remains unresolved and non-prunable.
+     * Finds the runtime snapshot that signed a pending submission, for status-only recovery.
+     * A snapshot is admitted only when genesis, spec version, metadata hash and types hash all
+     * equal the values journaled with the submission. Sources, in order:
+     *
+     * 1. the active snapshot (normally the live runtime the submission was signed with);
+     * 2. a snapshot rebuilt earlier in this process (source 5);
+     * 3. the content-addressed runtime cache generation named by those values. Generations that
+     *    unresolved submissions need are kept when the cache is pruned
+     *    ([Sora2RecoveryRuntimeRetention]), so a mainnet runtime upgrade does not remove them;
+     * 4. the packaged fixture;
+     * 5. with [eraBirthBlockHash] (the finalized block the submission's runtime was read at): the
+     *    runtime version and metadata at that block, from the reviewed endpoint or, once that node
+     *    has discarded the block's state, the status archive endpoint. The metadata is admitted
+     *    only when its SHA-256 equals [metadataSha256] and the version equals [specVersion] and
+     *    [transactionVersion]; the type aliases are the cached, packaged or remote-config file
+     *    whose SHA-256 equals [typesSha256]. The rebuilt generation is cached for later passes.
+     *
+     * The operating system may clear the cache directory at any time, which is why source 5
+     * exists. When no source matches, the result is null and the journal row stays unresolved; it
+     * is never pruned or treated as failed.
      */
     internal suspend fun getReviewedRecoveryRuntimeSnapshotOrNull(
         genesisHash: String,
@@ -538,17 +692,189 @@ class RuntimeManager @Inject constructor(
         transactionVersion: Int,
         metadataSha256: String,
         typesSha256: String,
-    ): RuntimeSnapshot? = mutex.withLock {
-        withContext(coroutineManager.io) {
-            val fixture = initFromBundledAssets()
-            fixture.snapshot.takeIf {
-                fixture.genesisHash == genesisHash &&
-                    fixture.runtimeVersion == specVersion &&
-                    transactionVersion == Sora2RuntimeContract.TRANSACTION_VERSION &&
-                    fixture.metadataSha256 == metadataSha256 &&
-                    fixture.typesSha256 == typesSha256
+        eraBirthBlockHash: String? = null,
+    ): RuntimeSnapshot? {
+        val identity = Sora2RecoveryRuntimeIdentity(
+            genesisHash = genesisHash.lowercase(),
+            specVersion = specVersion,
+            metadataSha256 = metadataSha256,
+            typesSha256 = typesSha256,
+        )
+        val local = mutex.withLock {
+            withContext(coroutineManager.io) {
+                findLocalRecoveryRuntimeLocked(identity, transactionVersion)
             }
         }
+        if (local != null || eraBirthBlockHash == null) return local
+        // The download and parse run outside the runtime lock, so a recovery pass never delays a
+        // fee quote or a signature.
+        val rebuilt = withContext(coroutineManager.io) {
+            rebuildRecoveryRuntimeOrNull(identity, transactionVersion, eraBirthBlockHash)
+        } ?: return null
+        return mutex.withLock {
+            withContext(coroutineManager.io) {
+                rememberRecoveryRuntimeLocked(identity, rebuilt)
+            }
+        }
+    }
+
+    private fun Sora2RecoveryRuntimeIdentity.matches(candidate: RuntimeCandidate): Boolean =
+        candidate.genesisHash.equals(genesisHash, ignoreCase = true) &&
+            candidate.runtimeVersion == specVersion &&
+            candidate.metadataSha256 == metadataSha256 &&
+            candidate.typesSha256 == typesSha256
+
+    private suspend fun findLocalRecoveryRuntimeLocked(
+        identity: Sora2RecoveryRuntimeIdentity,
+        transactionVersion: Int,
+    ): RuntimeSnapshot? {
+        val active = runtimeSnapshot
+        if (
+            active != null &&
+            runtimeGenesisHash.equals(identity.genesisHash, ignoreCase = true) &&
+            runtimeSpecVersion == identity.specVersion &&
+            runtimeMetadataSha256 == identity.metadataSha256 &&
+            runtimeTypesSha256 == identity.typesSha256
+        ) {
+            return active
+        }
+        recoveryRuntimes[identity]?.let { return it }
+        loadRetainedRecoveryCandidateOrNull(identity)?.let { return it.snapshot }
+        // Parse the packaged pair only when it can match.
+        if (
+            identity.specVersion != Sora2RuntimeContract.SPEC_VERSION ||
+            transactionVersion != Sora2RuntimeContract.TRANSACTION_VERSION ||
+            identity.metadataSha256 != Sora2RuntimeContract.METADATA_FILE_SHA256 ||
+            identity.typesSha256 != Sora2RuntimeContract.TYPES_FILE_SHA256
+        ) {
+            return null
+        }
+        val fixture = initFromBundledAssets()
+        return fixture.snapshot.takeIf { identity.matches(fixture) }
+    }
+
+    /** Reads the exact content-addressed generation, whether or not the manifest points to it. */
+    private suspend fun loadRetainedRecoveryCandidateOrNull(
+        identity: Sora2RecoveryRuntimeIdentity,
+    ): RuntimeCandidate? {
+        val (metadataFile, typesFile) = runtimeCacheGenerationFilesOrNull(identity) ?: return null
+        return try {
+            val metadata = fileManager.readInternalCacheFileAtomically(
+                metadataFile,
+                MAX_RUNTIME_METADATA_BYTES,
+            ) ?: return null
+            val types = fileManager.readInternalCacheFileAtomically(
+                typesFile,
+                MAX_RUNTIME_TYPES_BYTES,
+            ) ?: return null
+            if (
+                metadata.runtimeMetadataSha256() != identity.metadataSha256 ||
+                types.rawSha256() != identity.typesSha256
+            ) {
+                return null
+            }
+            buildRuntimeCandidate(
+                metadata,
+                MetadataSource.Cache(types),
+                identity.specVersion,
+                identity.genesisHash,
+            ).takeIf { identity.matches(it) }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            FirebaseWrapper.recordException(error)
+            null
+        }
+    }
+
+    private class RebuiltRecoveryRuntime(
+        val candidate: RuntimeCandidate,
+        val metadata: String,
+        val sora2Types: String,
+    )
+
+    private suspend fun rebuildRecoveryRuntimeOrNull(
+        identity: Sora2RecoveryRuntimeIdentity,
+        transactionVersion: Int,
+        eraBirthBlockHash: String,
+    ): RebuiltRecoveryRuntime? {
+        val (_, typesFile) = runtimeCacheGenerationFilesOrNull(identity) ?: return null
+        return try {
+            val version = sora2RuntimeRpcClient.getHistoricRuntimeVersionForStatus(
+                eraBirthBlockHash
+            )
+            if (
+                version.specVersion != identity.specVersion ||
+                version.transactionVersion != transactionVersion
+            ) {
+                return null
+            }
+            val metadata = requireRuntimePayloadWithinLimit(
+                sora2RuntimeRpcClient.getHistoricMetadataForStatus(eraBirthBlockHash),
+                MAX_RUNTIME_METADATA_BYTES,
+                "SORA2_RUNTIME_METADATA_TOO_LARGE",
+            )
+            if (metadata.runtimeMetadataSha256() != identity.metadataSha256) return null
+            val types = recoveryTypeCandidates(typesFile)
+                .firstOrNull { it.rawSha256() == identity.typesSha256 }
+                ?: loadRemoteSora2TypesOrNull()?.takeIf { it.rawSha256() == identity.typesSha256 }
+                ?: return null
+            val candidate = buildRuntimeCandidate(
+                metadata,
+                MetadataSource.Cache(types),
+                identity.specVersion,
+                identity.genesisHash,
+            )
+            if (!identity.matches(candidate)) return null
+            RebuiltRecoveryRuntime(candidate, metadata, types)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            FirebaseWrapper.recordException(error)
+            null
+        }
+    }
+
+    /** Local type-alias files to try before the remote-config file is fetched. */
+    private fun recoveryTypeCandidates(cachedTypesFile: String): Sequence<String> = sequence {
+        val cached = try {
+            fileManager.readInternalCacheFileAtomically(cachedTypesFile, MAX_RUNTIME_TYPES_BYTES)
+        } catch (error: Exception) {
+            FirebaseWrapper.recordException(error)
+            null
+        }
+        cached?.let { yield(it) }
+        yield(fileManager.readAssetFile(SORA2_TYPES_FILE, MAX_RUNTIME_TYPES_BYTES))
+    }
+
+    private suspend fun rememberRecoveryRuntimeLocked(
+        identity: Sora2RecoveryRuntimeIdentity,
+        rebuilt: RebuiltRecoveryRuntime,
+    ): RuntimeSnapshot {
+        val (metadataFile, typesFile) = checkNotNull(runtimeCacheGenerationFilesOrNull(identity))
+        try {
+            // Content-addressed and outside the manifest: later passes in a new process find it
+            // through source 3, and pruning keeps it while the submission is unresolved.
+            fileManager.writeInternalCacheFileAtomically(
+                metadataFile,
+                rebuilt.metadata,
+                MAX_RUNTIME_METADATA_BYTES,
+            )
+            fileManager.writeInternalCacheFileAtomically(
+                typesFile,
+                rebuilt.sora2Types,
+                MAX_RUNTIME_TYPES_BYTES,
+            )
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            FirebaseWrapper.recordException(error)
+        }
+        while (recoveryRuntimes.size >= MAX_IN_MEMORY_RECOVERY_RUNTIMES) {
+            recoveryRuntimes.remove(recoveryRuntimes.keys.first())
+        }
+        recoveryRuntimes[identity] = rebuilt.candidate.snapshot
+        return rebuilt.candidate.snapshot
     }
 
     suspend fun resetRuntimeVersion() {
@@ -559,6 +885,9 @@ class RuntimeManager @Inject constructor(
         withContext(coroutineManager.io) {
             val candidate = checkRuntimeVersion(initFromCache())
             publishRuntimeCandidate(candidate)
+            // A refresh for reading already downloaded the live metadata. Remember what it
+            // belongs to, so the first fee quote does not download it a second time.
+            candidate.codeBinding?.let(::rememberRuntimeCodeBindingLocked)
             candidate.snapshot
         }
 
@@ -570,16 +899,84 @@ class RuntimeManager @Inject constructor(
         runtimeTypesSha256 = candidate.typesSha256
         runtimeSpecVersion = candidate.runtimeVersion
         runtimeGenesisHash = candidate.genesisHash
+        runtimeUnsupportedSignedExtensions = candidate.unsupportedSignedExtensions
+        // A binding belongs to one snapshot. The saved one is looked at again for this one.
+        runtimeCodeBinding = null
+        runtimeCodeBindingFileRead = false
         runtimeSnapshot = candidate.snapshot
     }
 
+    /**
+     * The binding of the active snapshot, from memory or, once per snapshot, from the file the
+     * last download left. A missing, unreadable or foreign file only means one more download.
+     */
+    private fun activeRuntimeCodeBindingLocked(): RuntimeCodeBinding? {
+        runtimeCodeBinding?.let { return it }
+        if (runtimeCodeBindingFileRead) return null
+        runtimeCodeBindingFileRead = true
+        val saved = try {
+            fileManager.readInternalCacheFileAtomically(
+                RUNTIME_CODE_BINDING_FILE,
+                MAX_RUNTIME_CODE_BINDING_BYTES,
+            )?.let { gson.fromJson(it, RuntimeCodeBinding::class.java) }
+        } catch (error: Exception) {
+            FirebaseWrapper.recordException(error)
+            null
+        }
+        return saved
+            ?.takeIf { binding ->
+                binding.isWellFormed() &&
+                    binding.genesisHash.equals(runtimeGenesisHash, ignoreCase = true) &&
+                    binding.specVersion == runtimeSpecVersion &&
+                    binding.metadataSha256 == runtimeMetadataSha256
+            }
+            ?.also { runtimeCodeBinding = it }
+    }
+
+    /** Remembers [binding] for the active snapshot and, best effort, for the next process. */
+    private fun rememberRuntimeCodeBindingLocked(binding: RuntimeCodeBinding) {
+        if (runtimeCodeBinding == binding) return
+        runtimeCodeBinding = binding
+        runtimeCodeBindingFileRead = true
+        try {
+            fileManager.writeInternalCacheFileAtomically(
+                RUNTIME_CODE_BINDING_FILE,
+                gson.toJson(binding),
+                MAX_RUNTIME_CODE_BINDING_BYTES,
+            )
+        } catch (error: Exception) {
+            // Only an optimization for the next process; a full disk must not stop a transfer.
+            FirebaseWrapper.recordException(error)
+        }
+    }
+
+    /**
+     * The runtime code hash at an admitted finalized block, or null when no reviewed endpoint
+     * gives one. Null is never an error for the caller: the metadata is then downloaded and
+     * compared by its own hash, as before this shortcut existed.
+     */
+    private suspend fun runtimeCodeHashOrNull(finalizedHash: String): String? = try {
+        sora2RuntimeRpcClient.getRuntimeCodeHashAtFinalized(finalizedHash)
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        FirebaseWrapper.recordException(error)
+        null
+    }
+
     private suspend fun createMutationRuntimeContextLocked(): Sora2MutationRuntimeContext {
-        // ExtrinsicManager holds WalletMutationCoordinator throughout preparation/signing, while
-        // NodeManager takes that same boundary before switching. This fresh check therefore binds
-        // the fixed HTTPS authority to the actual connected WebSocket for the entire preparation
-        // span. SubstrateCalls takes an additional transport lease for the final handoff.
-        connectionManager.requireReviewedSora2MutationTransport()
-        val enforceReviewedProductionRuntime = !BuildUtils.isFlavors(
+        // Every value that authorizes a mutation (this runtime context, the nonce, the fee
+        // quote) and the single delivery of the signed bytes go through the reviewed HTTPS
+        // endpoints (Sora2BoundedRuntimeRpcClient; two hosts, one set of checks). The node the
+        // app's WebSocket shows balances from is not involved, so an automatic or manual switch
+        // to another node never blocks sending.
+        // Production signs against whatever runtime the canonical mainnet is running now. The
+        // chain is pinned by genesis hash and the SS58 prefix; the runtime version, transaction
+        // version and metadata come from the node at one finalized block and must match the
+        // snapshot that encodes the call (requireMutationRuntimeIdentity below). No runtime
+        // version is hard-coded here: SORA mainnet upgrades its runtime often, and a pinned
+        // version stops every transfer, swap and claim until an app update ships.
+        val enforceCanonicalMainnet = !BuildUtils.isFlavors(
             Flavor.DEVELOP,
             Flavor.SORALUTION,
         )
@@ -587,13 +984,48 @@ class RuntimeManager @Inject constructor(
         val liveGenesisHash = liveIdentity.genesisHash.let { observed ->
             requireCanonicalProductionGenesis(
                 observedGenesisHash = observed,
-                enforceCanonicalMainnet = enforceReviewedProductionRuntime,
+                enforceCanonicalMainnet = enforceCanonicalMainnet,
             )
         }
         val finalizedHash = liveIdentity.finalizedHash.requireCanonicalBlockHash(
             "SORA2_FINALIZED_HASH_INVALID"
         )
         val liveRuntimeVersion = liveIdentity.runtimeVersion
+
+        // Metadata is downloaded once per runtime, not once per fee quote or signature. The
+        // runtime code hash at this finalized block is a 32-byte answer; while it and both
+        // versions equal what the active snapshot's metadata was read for, that metadata is the
+        // live metadata. Any difference, or no answer, falls through to the download below.
+        val liveRuntimeCodeHash = runtimeCodeHashOrNull(finalizedHash)
+        val activeSnapshot = runtimeSnapshot
+        val activeMetadataSha256 = runtimeMetadataSha256
+        val activeTypesSha256 = runtimeTypesSha256
+        if (
+            activeSnapshot != null &&
+            activeMetadataSha256 != null &&
+            activeTypesSha256 != null &&
+            liveRuntimeCodeHash != null &&
+            activeRuntimeCodeBindingLocked()?.covers(
+                snapshotGenesisHash = runtimeGenesisHash,
+                snapshotSpecVersion = runtimeSpecVersion,
+                snapshotMetadataSha256 = activeMetadataSha256,
+                liveVersion = liveRuntimeVersion,
+                liveRuntimeCodeHash = liveRuntimeCodeHash,
+            ) == true &&
+            runtimeGenesisHash == liveGenesisHash
+        ) {
+            requireSignedExtensionsSupported(runtimeUnsupportedSignedExtensions)
+            return Sora2MutationRuntimeContext(
+                snapshot = activeSnapshot,
+                runtimeVersion = liveRuntimeVersion,
+                genesisHash = liveGenesisHash,
+                finalizedHash = finalizedHash,
+                metadataSha256 = activeMetadataSha256,
+                typesSha256 = activeTypesSha256,
+                finalizedBlockNumber = liveIdentity.finalizedBlockNumber,
+            )
+        }
+
         val liveMetadata = sora2RuntimeRpcClient.getMetadataAtFinalized(finalizedHash)
             .let { metadata ->
                 requireRuntimePayloadWithinLimit(
@@ -604,7 +1036,6 @@ class RuntimeManager @Inject constructor(
             }
         val liveMetadataSha256 = liveMetadata.runtimeMetadataSha256()
 
-        val activeSnapshot = runtimeSnapshot
         val activeMatchesCheckpoint =
             activeSnapshot != null &&
                 runtimeSpecVersion == liveRuntimeVersion.specVersion &&
@@ -619,15 +1050,13 @@ class RuntimeManager @Inject constructor(
                 metadataSha256 = liveMetadataSha256,
                 typesSha256 = checkNotNull(runtimeTypesSha256),
                 runtimeVersion = liveRuntimeVersion.specVersion,
+                unsupportedSignedExtensions = runtimeUnsupportedSignedExtensions,
             )
         } else {
-            buildRuntimeCandidate(
+            buildLiveRuntimeCandidate(
                 metadata = liveMetadata,
-                metadataSource = MetadataSource.SoraNet,
                 runtimeVersion = liveRuntimeVersion.specVersion,
                 genesisHash = liveGenesisHash,
-                requireReviewedIdentityBeforeParsing =
-                    enforceReviewedProductionRuntime,
             )
         }
 
@@ -639,41 +1068,47 @@ class RuntimeManager @Inject constructor(
             liveGenesisHash = liveGenesisHash,
             liveMetadataSha256 = liveMetadataSha256,
         )
-        if (enforceReviewedProductionRuntime) {
-            check(liveRuntimeVersion.specVersion == Sora2RuntimeContract.SPEC_VERSION) {
-                "SORA2_SPEC_VERSION_MISMATCH"
-            }
-            check(
-                liveRuntimeVersion.transactionVersion ==
-                    Sora2RuntimeContract.TRANSACTION_VERSION
-            ) { "SORA2_TRANSACTION_VERSION_MISMATCH" }
-            requireReviewedSora2SnapshotIdentity(
-                specVersion = candidate.runtimeVersion,
-                metadataSha256 = candidate.metadataSha256,
-                typesSha256 = candidate.typesSha256,
-            )
-        }
 
         if (!activeMatchesCheckpoint) {
             val refreshedTypes = checkNotNull(candidate.sora2TypesToCache) {
                 "SORA2_RUNTIME_TYPES_NOT_FETCHED"
             }
-            publishRuntimeCache(
-                metadata = liveMetadata,
-                sora2Types = refreshedTypes,
-                runtimeVersion = liveRuntimeVersion.specVersion,
-                genesisHash = liveGenesisHash,
-            )
-            currentCoroutineContext().ensureActive()
-            try {
-                soraPreferences.putInt(RUNTIME_VERSION_PREF, liveRuntimeVersion.specVersion)
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Throwable) {
-                FirebaseWrapper.recordException(error)
+            // Signing needs only the validated candidate. Saving it is an optimization for the
+            // next process; a full disk must not stop a transfer.
+            if (
+                publishRuntimeCacheBestEffort(
+                    metadata = liveMetadata,
+                    sora2Types = refreshedTypes,
+                    runtimeVersion = liveRuntimeVersion.specVersion,
+                    genesisHash = liveGenesisHash,
+                )
+            ) {
+                try {
+                    soraPreferences.putInt(RUNTIME_VERSION_PREF, liveRuntimeVersion.specVersion)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Throwable) {
+                    FirebaseWrapper.recordException(error)
+                }
             }
             publishRuntimeCandidate(candidate)
         }
+        // The metadata just read and the code hash belong to the same finalized block.
+        if (liveRuntimeCodeHash != null) {
+            rememberRuntimeCodeBindingLocked(
+                RuntimeCodeBinding(
+                    schemaVersion = RUNTIME_CODE_BINDING_SCHEMA_VERSION,
+                    genesisHash = liveGenesisHash,
+                    specVersion = liveRuntimeVersion.specVersion,
+                    transactionVersion = liveRuntimeVersion.transactionVersion,
+                    metadataSha256 = liveMetadataSha256,
+                    runtimeCodeHash = liveRuntimeCodeHash.lowercase(),
+                )
+            )
+        }
+
+        // Reads keep working with this runtime; only signing is refused.
+        requireSignedExtensionsSupported(candidate.unsupportedSignedExtensions)
 
         return Sora2MutationRuntimeContext(
             snapshot = candidate.snapshot,
@@ -684,6 +1119,12 @@ class RuntimeManager @Inject constructor(
             typesSha256 = candidate.typesSha256,
             finalizedBlockNumber = liveIdentity.finalizedBlockNumber,
         )
+    }
+
+    private fun requireSignedExtensionsSupported(unsupported: List<String>) {
+        if (unsupported.isNotEmpty()) {
+            throw Sora2AppUpdateRequiredException(unsupported)
+        }
     }
 
     private suspend fun initFromCache(): RuntimeCandidate {
@@ -766,9 +1207,9 @@ class RuntimeManager @Inject constructor(
                 legacyTypes.state != RuntimeCacheReadState.ABSENT) &&
             !legacyPairMatchesAssets
         ) {
-            FirebaseWrapper.recordException(
-                Sora2RuntimeIdentityException("SORA2_RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH")
-            )
+            // An older runtime cache is expected on upgrade; the bundled/live contract replaces
+            // it. A fixed breadcrumb records that path without counting it as an app failure.
+            FirebaseWrapper.log("SORA2_RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH")
         }
         return buildBundledCandidate(
             metadata = if (legacyPairMatchesAssets) {
@@ -869,7 +1310,9 @@ class RuntimeManager @Inject constructor(
                 MAX_RUNTIME_TYPES_BYTES,
             ),
         )
-        pruneUnreachableRuntimeCacheFiles(coordinates)
+        // Pruning needs the pending-submission journal, which is never read under the runtime
+        // lock; the caller prunes after releasing it.
+        pruneRequested.set(true)
         return published
     }
 
@@ -926,11 +1369,10 @@ class RuntimeManager @Inject constructor(
                         "SORA2_RUNTIME_METADATA_TOO_LARGE",
                     )
                 }
-                val refreshedCandidate = buildRuntimeCandidate(
-                    metadata,
-                    MetadataSource.SoraNet,
-                    runtimeVersion.specVersion,
-                    liveGenesisHash,
+                val refreshedCandidate = buildLiveRuntimeCandidate(
+                    metadata = metadata,
+                    runtimeVersion = runtimeVersion.specVersion,
+                    genesisHash = liveGenesisHash,
                     requireReviewedIdentityBeforeParsing =
                         !BuildUtils.isFlavors(
                             Flavor.DEVELOP,
@@ -945,27 +1387,44 @@ class RuntimeManager @Inject constructor(
                 }
                 // Each content-addressed generation file is atomic. The manifest pointer is
                 // published last, so cancellation or process death can leave only unreachable
-                // files or one complete old/new generation, never a mixed active pair.
-                publishRuntimeCache(
-                    metadata = metadata,
-                    sora2Types = refreshedTypes,
-                    runtimeVersion = runtimeVersion.specVersion,
-                    genesisHash = liveGenesisHash,
-                )
-                currentCoroutineContext().ensureActive()
-                try {
-                    soraPreferences.putInt(
-                        RUNTIME_VERSION_PREF,
-                        runtimeVersion.specVersion,
+                // files or one complete old/new generation, never a mixed active pair. A failed
+                // save (for example a full disk) does not fail the refresh: the validated
+                // candidate is used in memory and saving is retried on the next refresh.
+                if (
+                    publishRuntimeCacheBestEffort(
+                        metadata = metadata,
+                        sora2Types = refreshedTypes,
+                        runtimeVersion = runtimeVersion.specVersion,
+                        genesisHash = liveGenesisHash,
                     )
-                } catch (error: CancellationException) {
-                    throw error
-                } catch (error: Throwable) {
-                    // The manifest already contains the authoritative runtime version. A stale
-                    // preference can only trigger a redundant refresh on the next process.
-                    FirebaseWrapper.recordException(error)
+                ) {
+                    try {
+                        soraPreferences.putInt(
+                            RUNTIME_VERSION_PREF,
+                            runtimeVersion.specVersion,
+                        )
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (error: Throwable) {
+                        // The manifest already contains the authoritative runtime version. A
+                        // stale preference can only trigger a redundant refresh next time.
+                        FirebaseWrapper.recordException(error)
+                    }
                 }
-                return refreshedCandidate
+                // The code hash of the same finalized block the metadata was read at.
+                val runtimeCodeHash = runtimeCodeHashOrNull(liveIdentity.finalizedHash)
+                return refreshedCandidate.copy(
+                    codeBinding = runtimeCodeHash?.let { codeHash ->
+                        RuntimeCodeBinding(
+                            schemaVersion = RUNTIME_CODE_BINDING_SCHEMA_VERSION,
+                            genesisHash = liveGenesisHash,
+                            specVersion = runtimeVersion.specVersion,
+                            transactionVersion = runtimeVersion.transactionVersion,
+                            metadataSha256 = refreshedCandidate.metadataSha256,
+                            runtimeCodeHash = codeHash.lowercase(),
+                        )
+                    },
+                )
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Sora2RuntimeIdentityException) {
@@ -981,6 +1440,22 @@ class RuntimeManager @Inject constructor(
             }
         }
         return candidate
+    }
+
+    /** Returns false (and records why) when the generation could not be saved and verified. */
+    private suspend fun publishRuntimeCacheBestEffort(
+        metadata: String,
+        sora2Types: String,
+        runtimeVersion: Int,
+        genesisHash: String,
+    ): Boolean = try {
+        publishRuntimeCache(metadata, sora2Types, runtimeVersion, genesisHash)
+        true
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        FirebaseWrapper.recordException(error)
+        false
     }
 
     private suspend fun publishRuntimeCache(
@@ -1039,25 +1514,124 @@ class RuntimeManager @Inject constructor(
         loadPublishedRuntimeCache(publishedManifest)
     }
 
-    private fun pruneUnreachableRuntimeCacheFiles(active: RuntimeCacheCoordinates) {
+    /**
+     * Bounded best-effort cache hygiene after a generation was loaded or published. The active
+     * generation and every generation an unresolved pending submission was signed with are kept.
+     * When the journal cannot be read (for example while the upgrade gate is closed), nothing is
+     * deleted.
+     */
+    private suspend fun pruneRuntimeCacheIfRequested() {
+        if (!pruneRequested.compareAndSet(true, false)) return
         try {
-            val candidates = fileManager.listInternalCacheFileNames(
-                "$RUNTIME_CACHE_GENERATION_PREFIX-",
-                MAX_RUNTIME_GENERATION_SCAN,
-            )
-            selectUnreachableRuntimeGenerationFiles(
-                fileNames = candidates,
-                activeMetadataFile = active.metadataFile,
-                activeTypesFile = active.typesFile,
-                maxFiles = MAX_RUNTIME_GENERATION_PRUNE,
-            ).forEach { fileName ->
-                fileManager.deleteInternalCacheFile(fileName)
+            val retainedFiles = recoveryRuntimeRetention.retainedRecoveryRuntimes()
+                ?.mapNotNull(::runtimeCacheGenerationFilesOrNull)
+                ?.flatMapTo(mutableSetOf()) { (metadataFile, typesFile) ->
+                    listOf(metadataFile, typesFile)
+                }
+                ?: return
+            mutex.withLock {
+                withContext(coroutineManager.io) {
+                    val manifestRaw = fileManager.readInternalCacheFileAtomically(
+                        RUNTIME_CACHE_MANIFEST_FILE,
+                        MAX_RUNTIME_CACHE_MANIFEST_BYTES,
+                    ) ?: return@withContext
+                    requireRuntimePayloadWithinLimit(
+                        manifestRaw,
+                        MAX_RUNTIME_CACHE_MANIFEST_BYTES,
+                        "SORA2_RUNTIME_CACHE_MANIFEST_TOO_LARGE",
+                    )
+                    val manifest = gson.fromJson(manifestRaw, RuntimeCacheManifest::class.java)
+                        ?: return@withContext
+                    val active = requireRuntimeCacheCoordinates(manifest)
+                    val candidates = fileManager.listInternalCacheFileNames(
+                        "$RUNTIME_CACHE_GENERATION_PREFIX-",
+                        MAX_RUNTIME_GENERATION_SCAN,
+                    )
+                    selectUnreachableRuntimeGenerationFiles(
+                        fileNames = candidates,
+                        activeMetadataFile = active.metadataFile,
+                        activeTypesFile = active.typesFile,
+                        maxFiles = MAX_RUNTIME_GENERATION_PRUNE,
+                        retainedFiles = retainedFiles,
+                    ).forEach { fileName ->
+                        fileManager.deleteInternalCacheFile(fileName)
+                    }
+                }
             }
+        } catch (error: CancellationException) {
+            throw error
         } catch (error: Exception) {
             // Publication already succeeded and the active generation is explicitly excluded.
             // Cache hygiene failure is reportable but cannot invalidate the verified pointer.
             FirebaseWrapper.recordException(error)
         }
+    }
+
+    /**
+     * Builds a candidate from live metadata. Type aliases come from the `substrate_types_android`
+     * file named in the SORA remote config (the source 3.8.6.3 used). When that file cannot be
+     * fetched or does not produce a valid SORA2 snapshot, the packaged file is used instead, so a
+     * config outage never blocks the runtime refresh. The PI indexer's `substrateTypesUrl` is not
+     * used: it names the iOS file, whose aliases are numeric metadata lookup ids.
+     */
+    private suspend fun buildLiveRuntimeCandidate(
+        metadata: String,
+        runtimeVersion: Int,
+        genesisHash: String,
+        requireReviewedIdentityBeforeParsing: Boolean = false,
+    ): RuntimeCandidate {
+        val remoteTypes = loadRemoteSora2TypesOrNull()
+        if (remoteTypes != null) {
+            try {
+                return buildRuntimeCandidate(
+                    metadata = metadata,
+                    metadataSource = MetadataSource.SoraNet(remoteTypes),
+                    runtimeVersion = runtimeVersion,
+                    genesisHash = genesisHash,
+                    requireReviewedIdentityBeforeParsing = requireReviewedIdentityBeforeParsing,
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                // Retry once with the packaged aliases. A wrong network or malformed metadata
+                // fails the same way there, and that second failure is the one reported.
+                FirebaseWrapper.recordException(error)
+            }
+        }
+        return buildRuntimeCandidate(
+            metadata = metadata,
+            metadataSource = MetadataSource.SoraNet(
+                fileManager.readAssetFile(SORA2_TYPES_FILE, MAX_RUNTIME_TYPES_BYTES)
+            ),
+            runtimeVersion = runtimeVersion,
+            genesisHash = genesisHash,
+            requireReviewedIdentityBeforeParsing = requireReviewedIdentityBeforeParsing,
+        )
+    }
+
+    private suspend fun loadRemoteSora2TypesOrNull(): String? = try {
+        val url = soraConfigManager.getSubstrateTypesUrl()
+        if (url.startsWith("https://") && url.length <= MAX_REMOTE_TYPES_URL_LENGTH) {
+            boundedHttpTextClient.getUtf8(
+                rawUrl = url,
+                maximumBytes = MAX_RUNTIME_TYPES_BYTES,
+            ).let { remoteTypes ->
+                requireRuntimePayloadWithinLimit(
+                    remoteTypes,
+                    MAX_RUNTIME_TYPES_BYTES,
+                    "SORA2_RUNTIME_TYPES_TOO_LARGE",
+                )
+            }.takeIf { remoteTypes ->
+                rawTypesToTree(remoteTypes)?.versioning?.isNotEmpty() == true
+            }
+        } else {
+            null
+        }
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        FirebaseWrapper.recordException(error)
+        null
     }
 
     private suspend fun buildRuntimeCandidate(
@@ -1084,21 +1658,8 @@ class RuntimeManager @Inject constructor(
         var sora2TypesToCache: String? = null
         val sora2TypesRaw = when (metadataSource) {
             is MetadataSource.Cache -> metadataSource.sora2Types
-            is MetadataSource.SoraNet -> {
-                val substrateTypesUrl = checkNotNull(
-                    polkaswapIndexerClient.requireMobileConfig().substrateTypesUrl
-                ) { "PI_INDEXER_TYPES_CAPABILITY_UNAVAILABLE" }
-                boundedHttpTextClient.getUtf8(
-                    rawUrl = substrateTypesUrl,
-                    maximumBytes = MAX_RUNTIME_TYPES_BYTES,
-                ).let { remoteTypes ->
-                    requireRuntimePayloadWithinLimit(
-                        remoteTypes,
-                        MAX_RUNTIME_TYPES_BYTES,
-                        "SORA2_RUNTIME_TYPES_TOO_LARGE",
-                    )
-                }.also { sora2TypesToCache = it }
-            }
+            is MetadataSource.SoraNet -> metadataSource.sora2Types
+                .also { sora2TypesToCache = it }
         }.let { types ->
             requireRuntimePayloadWithinLimit(
                 types,
@@ -1128,6 +1689,14 @@ class RuntimeManager @Inject constructor(
         val runtimeMetadata =
             VersionedRuntimeBuilder.buildMetadata(runtimeMetadataReader, typeRegistry)
         val snapshot = RuntimeSnapshot(typeRegistry, runtimeMetadata)
+        val unsupportedSignedExtensions = if (runtimeMetadataReader.metadataVersion < 14) {
+            emptyList()
+        } else {
+            @Suppress("UNCHECKED_CAST")
+            Sora2SignedExtensionAdmission.unsupportedExtensions(
+                runtimeMetadataReader.metadata as EncodableStruct<RuntimeMetadataSchemaV14>
+            )
+        }
         val valueConstant =
             snapshot.metadata.module(Pallete.SYSTEM.palletName).constants[Constants.SS58Prefix.constantName]
         val observedPrefix = valueConstant?.type?.fromByteArrayOrNull(
@@ -1146,6 +1715,7 @@ class RuntimeManager @Inject constructor(
             typesSha256 = typesSha256,
             runtimeVersion = runtimeVersion,
             sora2TypesToCache = sora2TypesToCache,
+            unsupportedSignedExtensions = unsupportedSignedExtensions,
         )
     }
 
@@ -1212,6 +1782,7 @@ class RuntimeManager @Inject constructor(
 
     private sealed class MetadataSource {
         data class Cache(val sora2Types: String) : MetadataSource()
-        data object SoraNet : MetadataSource()
+        /** Live metadata from the node, parsed with [sora2Types] and cached with them. */
+        data class SoraNet(val sora2Types: String) : MetadataSource()
     }
 }

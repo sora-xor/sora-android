@@ -66,7 +66,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountListScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportAccountData
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 
@@ -122,6 +122,7 @@ private fun AccountList(
                 accountIcon = icon,
                 accountName = account.accountName,
                 address = account.substrateAddress,
+                readOnly = readOnly,
                 onAccountClicked = onAccountClicked,
                 onAccountLongClicked = onAccountLongClicked,
                 onSelectOptionsClicked = onSelectOptionsClicked,
@@ -138,6 +139,7 @@ private fun AccountListItem(
     accountIcon: Drawable,
     accountName: String,
     address: String,
+    readOnly: Boolean = false,
     onAccountClicked: (address: String) -> Unit,
     onAccountLongClicked: (address: String) -> Unit,
     onSelectOptionsClicked: (address: String) -> Unit,
@@ -165,6 +167,7 @@ private fun AccountListItem(
             selectableIcon = R.drawable.ic_checkmark_24,
             tint = MaterialTheme.customColors.statusSuccess,
             showSelectableIcon = isSelected,
+            readOnly = readOnly,
         )
 
         Box(

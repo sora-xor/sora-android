@@ -1,12 +1,13 @@
 package jp.co.soramitsu.common.nexus
 
 import java.nio.ByteBuffer
+import java.security.MessageDigest
 import java.text.Normalizer
 import javax.crypto.Mac
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
-import jp.co.soramitsu.xcrypto.seed.MnemonicCreator
+import jp.co.soramitsu.common.account.RecoveryPhrase
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 
 /**
@@ -40,6 +41,29 @@ object IrohaKeyDerivation {
         }
     }
 
+    /**
+     * The text of the recovery phrase that is fed to PBKDF2 as the BIP-39 password. A Nexus
+     * identity is derived from this text, so two texts with the same words but different
+     * separators are two different identities.
+     */
+    enum class PhraseText {
+        /**
+         * The parsed words joined by single spaces (library parser: NFKD, separators `[\s,]+`).
+         * Every NEW derivation uses this, so the same words always derive the same identity
+         * however the phrase was typed or stored.
+         */
+        CANONICAL,
+
+        /**
+         * The stored text as builds before this rule fed it: split on whitespace only and
+         * joined by single spaces, so a comma typed after a word stays part of the password.
+         * Used only to re-derive a Nexus account that already exists and was derived this way
+         * ([deriveExisting]); it is never used for a new account.
+         */
+        AS_FIRST_DERIVED,
+    }
+
+    /** Derives a NEW Nexus account from the canonical phrase text. */
     fun derive(
         mnemonic: String,
         network: NexusNetwork,
@@ -50,20 +74,27 @@ object IrohaKeyDerivation {
         mnemonic: String,
         profile: NexusDerivationProfile,
         passphrase: String = "",
+        phraseText: PhraseText = PhraseText.CANONICAL,
     ): DerivedAccount {
-        val words = mnemonic.trim().split(Regex("\\s+")).filter(String::isNotBlank)
-        require(words.size == 12 || words.size == 24) {
-            "Nexus master phrase must contain 12 or 24 words"
-        }
-
-        val normalizedMnemonic = Normalizer.normalize(words.joinToString(" "), Normalizer.Form.NFKD)
-        require(
-            runCatching {
-                MnemonicCreator.fromWords(normalizedMnemonic)
-            }.isSuccess
-        ) {
+        // Parsed once with the library parser, the same reading the SORA2 derivation uses.
+        val phrase = requireNotNull(RecoveryPhrase.parseOrNull(mnemonic)) {
             "Nexus master phrase has an invalid BIP-39 checksum"
         }
+        require(phrase.wordCount == 12 || phrase.wordCount == 24) {
+            "Nexus master phrase must contain 12 or 24 words"
+        }
+        val text = when (phraseText) {
+            PhraseText.CANONICAL -> phrase.text
+            PhraseText.AS_FIRST_DERIVED -> {
+                val words = mnemonic.trim().split(Regex("\\s+")).filter(String::isNotBlank)
+                require(words.size == 12 || words.size == 24) {
+                    "Nexus master phrase must contain 12 or 24 words"
+                }
+                words.joinToString(" ")
+            }
+        }
+
+        val normalizedMnemonic = Normalizer.normalize(text, Normalizer.Form.NFKD)
         val normalizedPassphrase = Normalizer.normalize(passphrase, Normalizer.Form.NFKD)
         val password = normalizedMnemonic.toCharArray()
         val salt = "mnemonic$normalizedPassphrase".toByteArray(Charsets.UTF_8)
@@ -88,6 +119,37 @@ object IrohaKeyDerivation {
             salt.fill(0)
             spec.clearPassword()
         }
+    }
+
+    /**
+     * Re-derives a Nexus account that already exists, for signing. An existing account keeps
+     * the identity it was first derived with: the canonical text is tried first and, when it
+     * does not derive the stored account, the text form of earlier builds. Returns the account
+     * whose address and public key are exactly the stored ones, or null when the phrase derives
+     * neither (the caller must then refuse to sign; nothing is re-derived or replaced).
+     */
+    fun deriveExisting(
+        mnemonic: String,
+        profile: NexusDerivationProfile,
+        existingAddress: String,
+        existingPublicKey: ByteArray,
+        passphrase: String = "",
+    ): DerivedAccount? {
+        PhraseText.entries.forEach { phraseText ->
+            val derived = try {
+                derive(mnemonic, profile, passphrase, phraseText)
+            } catch (_: IllegalArgumentException) {
+                return@forEach
+            }
+            if (
+                derived.address == existingAddress &&
+                MessageDigest.isEqual(derived.publicKey, existingPublicKey)
+            ) {
+                return derived
+            }
+            derived.destroy()
+        }
+        return null
     }
 
     internal fun derivePrivateKey(seed: ByteArray, path: String): Pair<ByteArray, ByteArray> {

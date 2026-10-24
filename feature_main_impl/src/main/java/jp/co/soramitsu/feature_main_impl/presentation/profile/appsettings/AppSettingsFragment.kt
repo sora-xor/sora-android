@@ -36,6 +36,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -56,7 +57,7 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.Option
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @AndroidEntryPoint
@@ -80,6 +81,7 @@ class AppSettingsFragment : SoraBaseFragment<AppSettingsViewModel>() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(scrollState)
                     .padding(horizontal = Dimens.x2)
             ) {
                 ContentCard(
@@ -108,6 +110,8 @@ class AppSettingsFragment : SoraBaseFragment<AppSettingsViewModel>() {
                         viewModel.toggleDarkMode(it)
                     },
                     onTestNetworksToggle = viewModel::toggleTestNetworks,
+                    checkedReduceEffects = state.reduceEffectsChecked,
+                    onReduceEffectsToggle = viewModel::toggleReduceEffects,
                 )
             }
         }

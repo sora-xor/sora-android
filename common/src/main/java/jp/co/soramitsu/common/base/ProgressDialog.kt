@@ -34,11 +34,13 @@ package jp.co.soramitsu.common.base
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +52,7 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
-fun ProgressDialog() {
+fun ProgressDialog(message: String? = null) {
     Dialog(
         onDismissRequest = {},
         properties = DialogProperties(
@@ -64,10 +66,18 @@ fun ProgressDialog() {
                 .background(MaterialTheme.customColors.bgPage),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(Dimens.x6).padding(Dimens.x1),
-                color = Color(0xFF44E5B2)
-            )
+            Column(
+                modifier = if (message != null) Modifier.padding(Dimens.x2) else Modifier,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(Dimens.x6).padding(Dimens.x1),
+                    color = Color(0xFF44E5B2)
+                )
+                message?.let {
+                    Text(text = it, color = MaterialTheme.customColors.fgPrimary)
+                }
+            }
         }
     }
 }

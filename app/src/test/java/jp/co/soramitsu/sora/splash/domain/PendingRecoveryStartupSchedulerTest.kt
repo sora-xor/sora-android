@@ -1,6 +1,7 @@
 package jp.co.soramitsu.sora.splash.domain
 
 import android.util.Log
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -43,6 +44,8 @@ class PendingRecoveryStartupSchedulerTest {
         val scheduler = PendingRecoveryStartupScheduler(manager, nexus, sora2)
 
         init {
+            coEvery { nexus.hasRecoverableWork() } returns true
+            coEvery { sora2.hasRecoverableWork() } returns true
             mockkStatic(Log::class)
             every { Log.w(any(), any<String>()) } answers {
                 assertEquals("WalletRecoveryStartup", firstArg<String>())
@@ -69,6 +72,46 @@ class PendingRecoveryStartupSchedulerTest {
             advanceUntilIdle()
             assertTrue(job.isCompleted)
             assertFalse(job.isCancelled)
+            verify(exactly = 1) { fixture.nexus.ensureOnStartup() }
+            verify(exactly = 1) { fixture.sora2.ensureOnStartup() }
+            assertTrue(fixture.uncaught.isEmpty())
+            assertTrue(fixture.messages.isEmpty())
+        }
+    }
+
+    @Test
+    fun `an empty journal schedules no background work`() = runTest {
+        Fixture(this).use { fixture ->
+            coEvery { fixture.nexus.hasRecoverableWork() } returns false
+            coEvery { fixture.sora2.hasRecoverableWork() } returns false
+            val job = fixture.scheduler.scheduleAfterWalletMigration()
+            advanceUntilIdle()
+            assertTrue(job.isCompleted)
+            verify(exactly = 0) { fixture.nexus.ensureOnStartup() }
+            verify(exactly = 0) { fixture.sora2.ensureOnStartup() }
+            assertTrue(fixture.uncaught.isEmpty())
+            assertTrue(fixture.messages.isEmpty())
+        }
+    }
+
+    @Test
+    fun `only the network with pending journal rows is scheduled`() = runTest {
+        Fixture(this).use { fixture ->
+            coEvery { fixture.nexus.hasRecoverableWork() } returns false
+            fixture.scheduler.scheduleAfterWalletMigration()
+            advanceUntilIdle()
+            verify(exactly = 0) { fixture.nexus.ensureOnStartup() }
+            verify(exactly = 1) { fixture.sora2.ensureOnStartup() }
+        }
+    }
+
+    @Test
+    fun `an unreadable journal still schedules recovery`() = runTest {
+        Fixture(this).use { fixture ->
+            coEvery { fixture.nexus.hasRecoverableWork() } throws IllegalStateException("db busy")
+            coEvery { fixture.sora2.hasRecoverableWork() } throws IllegalStateException("db busy")
+            fixture.scheduler.scheduleAfterWalletMigration()
+            advanceUntilIdle()
             verify(exactly = 1) { fixture.nexus.ensureOnStartup() }
             verify(exactly = 1) { fixture.sora2.ensureOnStartup() }
             assertTrue(fixture.uncaught.isEmpty())

@@ -33,57 +33,64 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
 import androidx.compose.ui.graphics.Color
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown10
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown30
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown50
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown90
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Green5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Red5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Yellow30
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Yellow5
 
+/**
+ * SORA Neon light ("Daylight") palette mapped onto the ui-core
+ * [jp.co.soramitsu.ui_core.theme.CustomColors] slots (design spec 2.3). Keep in sync with
+ * `res/values/colors.xml` (neon_*) and
+ * [jp.co.soramitsu.common.presentation.compose.theme.neon.NeonLight].
+ *
+ * fgInverted is white: the label on accent fills in light.
+ */
 object DayThemeColors {
 
-    val AccentPrimary = Color(0xFFEE2233)
+    val AccentPrimary = Color(0xFFC80E34)
 
-    val AccentPrimaryContainer = Red5
+    val AccentPrimaryContainer = Color(0xFFFBE7EB)
 
-    val AccentSecondary = Brown90
+    val AccentSecondary = Color(0xFF0B0C14)
 
-    val AccentSecondaryContainer = Brown10
+    val AccentSecondaryContainer = Color(0xFFE9EBF2)
 
-    val AccentTertiary = Brown50
+    val AccentTertiary = Color(0xFF1F6B7C)
 
-    val AccentTertiaryContainer = Brown10
+    val AccentTertiaryContainer = Color(0xFFE2F3F7)
 
-    val BgPage = Brown5
+    val BgPage = Color(0xFFF2F3F8)
 
-    val BgSurface = Color(0xffffffff)
+    val BgSurface = Color(0xFFFFFFFF)
 
-    val BgSurfaceVariant = Brown10
+    val BgSurfaceVariant = Color(0xFFE9EBF2)
 
-    val BgSurfaceInverted = Brown90
+    val BgSurfaceInverted = Color(0xFF14141F)
 
-    val FgPrimary = Brown90
+    val FgPrimary = Color(0xFF0B0C14)
 
-    val FgSecondary = Brown50
+    val FgSecondary = Color(0xFF454A5E)
 
-    val FgTertiary = Brown30
+    val FgTertiary = Color(0xFF5E6278)
 
-    val FgInverted = Brown5
+    val FgInverted = Color(0xFFFFFFFF)
 
-    val FgOutline = Brown5
+    /**
+     * Dividers and decorative outlines only. Text fields use NeonTokens.borderInput (3:1) through
+     * compose.neon.InputText, which replaces this slot for the field border.
+     */
+    val FgOutline = Color(0xFFDADCE5)
 
-    val StatusSuccess = Color(0xFF169974)
+    val StatusSuccess = Color(0xFF08704D)
 
-    val StatusSuccessContainer = Green5
+    val StatusSuccessContainer = Color(0xFFE3F6F0)
 
-    val StatusWarning = Yellow30
+    /** Amber text. Filled warning badges use NeonTokens.warningFill with an ink label. */
+    val StatusWarning = Color(0xFF8A4F00)
 
-    val StatusWarningContainer = Yellow5
+    val StatusWarningContainer = Color(0xFFFFF0DA)
 
-    val StatusError = Color(0xFFCB0F1F)
+    val StatusError = Color(0xFFBC0E2D)
 
-    val StatusErrorContainer = Red5
+    val StatusErrorContainer = Color(0xFFF9E7EA)
+
+    /** ui-core `elevation` slot: #0B0C14 at 8%. */
+    val Elevation = Color(0x140B0C14)
 }

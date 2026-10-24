@@ -19,12 +19,19 @@ import kotlinx.serialization.json.Json
 class PolkamarktCatalogCache @Inject constructor(
     private val preferences: SoraPreferences,
     private val json: Json,
+    private val indexerClock: PiIndexerClock,
 ) {
     suspend fun store(
         qualifiedCatalog: PiQualifiedRead<List<PolkamarktMarket>>,
         nowEpochSeconds: Long = System.currentTimeMillis() / 1_000,
     ) {
-        requireQualifiedLiveCatalog(qualifiedCatalog, nowEpochSeconds)
+        check(nowEpochSeconds >= 0) { "PI_INDEXER_CATALOG_CACHE_TIMESTAMP_INVALID" }
+        // The indexer's timestamps are judged against the indexer's own time, as the health
+        // check measured it. The phone's clock only says when the catalog was saved.
+        requireQualifiedLiveCatalog(
+            catalog = qualifiedCatalog,
+            referenceEpochSeconds = indexerClock.indexerEpochSeconds(nowEpochSeconds),
+        )
         val markets = qualifiedCatalog.value
         require(markets.size <= MAX_MARKETS) { "PI_INDEXER_CACHE_TOO_LARGE" }
         check(hasCanonicalUniqueMarketIdentity(markets)) {
@@ -45,10 +52,10 @@ class PolkamarktCatalogCache @Inject constructor(
 
     private fun requireQualifiedLiveCatalog(
         catalog: PiQualifiedRead<List<PolkamarktMarket>>,
-        nowEpochSeconds: Long,
+        referenceEpochSeconds: Long,
     ) {
         check(!catalog.fromCache) { "PI_INDEXER_CATALOG_CACHE_REQUIRES_LIVE_READ" }
-        check(nowEpochSeconds >= 0) { "PI_INDEXER_CATALOG_CACHE_TIMESTAMP_INVALID" }
+        check(referenceEpochSeconds >= 0) { "PI_INDEXER_CATALOG_CACHE_TIMESTAMP_INVALID" }
         val health = catalog.health
         check(
             health.ok &&
@@ -79,11 +86,11 @@ class PolkamarktCatalogCache @Inject constructor(
         val workerTimestamp =
             health.workerLastSuccessfulIndexTimestamp.exactUnsignedLong()
         val indexedTimestamp = health.latestIndexedAt?.exactUnsignedLong() ?: workerTimestamp
-        val earliest = (nowEpochSeconds - MAX_HEALTH_AGE_SECONDS).coerceAtLeast(0)
-        val latest = if (nowEpochSeconds > Long.MAX_VALUE - MAX_FUTURE_SKEW_SECONDS) {
+        val earliest = (referenceEpochSeconds - MAX_HEALTH_AGE_SECONDS).coerceAtLeast(0)
+        val latest = if (referenceEpochSeconds > Long.MAX_VALUE - MAX_FUTURE_SKEW_SECONDS) {
             Long.MAX_VALUE
         } else {
-            nowEpochSeconds + MAX_FUTURE_SKEW_SECONDS
+            referenceEpochSeconds + MAX_FUTURE_SKEW_SECONDS
         }
         check(
             indexed > 0 &&

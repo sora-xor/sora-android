@@ -38,7 +38,12 @@ data class ExportProtectionScreenState(
     @StringRes val titleResource: Int,
     @StringRes val descriptionResource: Int,
     val selectableItemList: List<ExportProtectionSelectableModel>,
-    val isButtonEnabled: Boolean = false
+    val isButtonEnabled: Boolean = false,
+    /**
+     * Shown instead of [descriptionResource] when set: the text for this very account (for
+     * example the number of words its recovery phrase really has).
+     */
+    val descriptionText: String? = null,
 )
 
 data class ExportProtectionSelectableModel(val isSelected: Boolean = false, @StringRes val textString: Int)

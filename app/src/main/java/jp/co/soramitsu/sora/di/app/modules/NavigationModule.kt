@@ -37,6 +37,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import jp.co.soramitsu.common.account.AccountOptionsRouter
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
@@ -76,4 +77,8 @@ class NavigationModule {
     @Singleton
     @Provides
     fun provideSelectNodeRouter(navigator: Navigator): SelectNodeRouter = navigator
+
+    @Singleton
+    @Provides
+    fun provideAccountOptionsRouter(navigator: Navigator): AccountOptionsRouter = navigator
 }

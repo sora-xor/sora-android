@@ -64,7 +64,7 @@ import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTile
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTileState
 import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCard
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens

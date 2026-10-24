@@ -1,10 +1,109 @@
 <resources>
-    <string name="wallet_upgrade_recovery_title">Your wallet is safe, but needs attention</string>
-    <string name="wallet_upgrade_recovery_message">SORA stopped the upgrade because it could not verify every existing account. Nothing was deleted or replaced. Retry, or contact support before reinstalling or clearing app data.</string>
-    <string name="wallet_upgrade_recovery_code">Recovery code: %1$s</string>
-    <string name="wallet_upgrade_recovery_retry">Retry verification</string>
-    <string name="wallet_upgrade_recovery_export">Export encrypted recovery archive</string>
-    <string name="wallet_upgrade_recovery_continue_legacy">Continue read-only with existing SORA wallet (sending and Nexus disabled)</string>
-    <string name="wallet_upgrade_recovery_support">Contact SORA support</string>
     <string name="splash_from" translatable="false">from</string>
+    <string name="recovery_paused_title">We paused to keep your wallet safe</string>
+    <!-- recovery_paused_body: verified (a4 invariant): WalletUpgradeBackup and MigrationManager never delete, overwrite, re-encrypt or move key preferences or account rows; only derived identity rows and the journal are written -->
+    <string name="recovery_paused_body">SORA found something it couldn\'t check, so it paused. Your keys and accounts were not changed, and they are still on this device.</string>
+    <!-- recovery_transient_body: verified: transient failures are never journaled or written (WalletStorageFailures.isTransient, MigrationOutcome.Transient) -->
+    <string name="recovery_transient_body">SORA couldn\'t read your wallet storage just now. This usually passes in a moment. Your keys and accounts were not changed.</string>
+    <!-- recovery_removal_body: verified: a wallet deletion journal only ever covers the accounts the person confirmed for removal -->
+    <string name="recovery_removal_body">SORA paused while finishing an account removal you started. Accounts you didn\'t choose to remove were not changed.</string>
+    <string name="recovery_keys_title">This phone can\'t unlock your wallet</string>
+    <!-- recovery_keys_body: verified: KEYSTORE_KEY_UNAVAILABLE writes nothing; the app never deletes wallet files -->
+    <string name="recovery_keys_body">The wallet data saved here can\'t be unlocked on this phone, for example after moving to a new phone. Nothing was deleted. Restore with your recovery phrase or a Google Drive backup.</string>
+    <string name="recovery_storage_title">Free up some space</string>
+    <!-- recovery_storage_body: verified: INSUFFICIENT_BACKUP_STORAGE is raised before any schema step runs -->
+    <string name="recovery_storage_body">SORA needs about %1$s MB free to finish updating safely. Your wallet hasn\'t been changed.</string>
+    <!-- recovery_storage_body_generic: verified: a full disk during verification is transient and nothing is written -->
+    <string name="recovery_storage_body_generic">Your phone is almost out of space. Free up some space so SORA can finish safely. Your wallet hasn\'t been changed.</string>
+    <string name="recovery_storage_step">Free space needed</string>
+    <string name="recovery_storage_step_detail">About %1$s MB more</string>
+    <string name="recovery_step_update">Updating your wallet</string>
+    <string name="recovery_try_again">Try again</string>
+    <string name="recovery_check_again">Check again</string>
+    <string name="recovery_restore_phrase">Restore with recovery phrase</string>
+    <string name="recovery_restore_drive">Restore from Google Drive</string>
+    <string name="recovery_show_phrase">Show my recovery phrase</string>
+    <string name="recovery_read_only">Continue in read-only mode</string>
+    <string name="recovery_export">Export recovery file</string>
+    <string name="recovery_support">Contact support</string>
+    <string name="recovery_open_storage">Open storage settings</string>
+    <string name="recovery_auto_retrying">Trying again automatically…</string>
+    <string name="recovery_detail_code">Code</string>
+    <string name="recovery_detail_version">App version</string>
+    <string name="recovery_detail_time">Time</string>
+    <string name="recovery_detail_android">Android version</string>
+    <!-- recovery_read_only_sheet_body: verified: authorizeSafeReadOnly enters LEGACY_READ_ONLY; requireUserMutationAllowed refuses signing and wallet changes; the home banner offers Try upgrade again -->
+    <string name="recovery_read_only_sheet_body">You can view balances and history. Sending, swapping and account changes stay off until the upgrade finishes. You can try the upgrade again from the home screen at any time.</string>
+    <string name="recovery_read_only_confirm">Continue read-only</string>
+    <!-- recovery_restore_sheet_body: verified: WalletUpgradeBackup.requestSetUpAgain renames files into no_backup/wallet-quarantine-*-set-up-again/ at the next start; nothing is deleted; the Keystore key is untouched -->
+    <string name="recovery_restore_sheet_body">SORA will restart like a new install so you can restore your wallet. The wallet data on this phone is kept, and nothing is deleted.</string>
+    <string name="recovery_restore_sheet_keys_unavailable">This phone can\'t unlock the old data, so have your recovery phrase or Google Drive password ready.</string>
+    <string name="recovery_restore_sheet_write_down">If you haven\'t written down your recovery phrase yet, show it and write it down first.</string>
+    <string name="recovery_restore_confirm">Restart and restore</string>
+    <!-- recovery_export_body: verified: createRecoveryArchive packages encrypted app storage; the Keystore key never leaves the device -->
+    <string name="recovery_export_body">This file helps SORA support see what happened. It is not a backup and can\'t restore your wallet on another phone. Share it only with SORA support.</string>
+    <string name="recovery_export_included">Included</string>
+    <string name="recovery_export_included_addresses">Wallet addresses and account names</string>
+    <string name="recovery_export_included_settings">App settings and saved app data, such as transaction history</string>
+    <string name="recovery_export_included_encrypted">Your keys in encrypted form, which only this phone can unlock</string>
+    <string name="recovery_export_never">Never included</string>
+    <string name="recovery_export_never_secrets">Your recovery phrase, seed or private keys in readable form</string>
+    <string name="recovery_export_never_pin">Your PIN in readable form</string>
+    <string name="recovery_export_never_keystore">This phone\'s Keystore key</string>
+    <string name="recovery_export_create">Create export</string>
+    <string name="recovery_export_done">Export created. Your keys stay on this device.</string>
+    <string name="recovery_support_body">Send these details to SORA support so they can help. Never share your recovery phrase with anyone, including support.</string>
+    <string name="recovery_support_email">Email support</string>
+    <string name="recovery_support_copy">Copy details</string>
+    <string name="recovery_support_copied">Details copied</string>
+    <string name="recovery_support_no_email">No email app is set up. You can write to %1$s.</string>
+    <string name="recovery_auth_title">Confirm it\'s you</string>
+    <string name="recovery_auth_body">Enter your SORA PIN to show your recovery phrase.</string>
+    <string name="recovery_auth_biometric">Use biometrics</string>
+    <string name="recovery_auth_wrong">That PIN isn\'t right. Try again.</string>
+    <string name="recovery_auth_locked">Too many tries. Try again in %1$s.</string>
+    <string name="recovery_auth_unavailable">SORA can\'t check your PIN right now. Try again in a moment.</string>
+    <string name="recovery_auth_no_pin">No SORA PIN is set on this phone. Confirm with your phone\'s screen lock instead.</string>
+    <string name="recovery_auth_screen_lock">Use screen lock</string>
+    <string name="recovery_auth_no_screen_lock">To show the phrase here, set a screen lock on this phone first.</string>
+    <string name="recovery_pin_delete">Delete</string>
+    <string name="recovery_pin_progress">%1$d of %2$d digits entered</string>
+    <string name="recovery_wallets_title">Choose a wallet</string>
+    <string name="recovery_wallets_body">These recovery phrases are saved on this phone.</string>
+    <string name="recovery_wallet_unnamed">Wallet</string>
+    <string name="recovery_wallet_older">Phrase saved by an older SORA version</string>
+    <string name="recovery_phrase_title">Recovery phrase</string>
+    <string name="recovery_seed_title">Raw seed</string>
+    <string name="recovery_phrase_warning">Write these words down in order and keep them offline. Anyone with this phrase can take your funds.</string>
+    <string name="recovery_seed_warning">Write this seed down and keep it offline. Anyone with it can take your funds.</string>
+    <string name="recovery_phrase_unavailable">SORA couldn\'t unlock this phrase right now. Try again in a moment.</string>
+    <string name="recovery_phrase_none">No recovery phrase or seed is saved for this wallet on this phone.</string>
+    <string name="recovery_done">Done</string>
+    <string name="recovery_back">Back</string>
+    <!-- recovery_restore_sheet_keys_kept: verified: SetUpAgainScope.DATABASE_ONLY moves only app.db; import adopts a stored key set only when it decrypts to the same keys; WalletUpgradeBackup.quarantine().retainedWalletIds lists key sets without an account and LoginSecurityViewModel.findRetainedWallets shows them (adoptRetainedWallet) -->
+    <string name="recovery_restore_sheet_keys_kept">Keys saved on this phone stay where they are. Restoring the same wallet reuses them after SORA checks that they match. Other wallets whose keys are saved on this phone are then listed in Login &amp; Security, under \"Wallets found on this phone\", so you can restore them one by one.</string>
+    <string name="recovery_restore_pending_title">Finishing the restore you started</string>
+    <!-- recovery_restore_pending_body: verified: WalletUpgradeBackup.performPendingSetUpAgain runs only in a new process (prepare, first preparation) and renames files into no_backup/wallet-quarantine-*-set-up-again (Os.rename, never delete); retry() refuses while the marker is pending; SafeModeViewModel.runTryAgain sends RestartForRestore -->
+    <string name="recovery_restore_pending_body">SORA is setting aside the old wallet data so you can restore. It needs to restart to finish this. The old data stays on this phone, and nothing is deleted. If it keeps stopping here, check that your phone has some free space, or contact support.</string>
+    <string name="recovery_restart_continue">Restart and continue</string>
+    <string name="recovery_detail_last_attempt">Last attempt</string>
+    <!-- recovery_sheet_read_only_unavailable: verified: authorizeSafeReadOnly returns VAULT_ONLY before changing the gate or any file; SafeModeViewModel drops READ_ONLY from the panel afterwards -->
+    <string name="recovery_sheet_read_only_unavailable">Read-only mode can\'t open your wallet data on this phone right now. Nothing was changed. Close this and choose another option.</string>
+    <!-- recovery_sheet_read_only_failed: verified: authorizeLegacyReadOnly/authorizeSafeReadOnly throw before entering LEGACY_READ_ONLY; they write no wallet file -->
+    <string name="recovery_sheet_read_only_failed">SORA couldn\'t open read-only mode. Nothing was changed. Try again, or contact support.</string>
+    <!-- recovery_sheet_export_failed: verified: createRecoveryArchive only reads wallet files and publishes a new archive file; it never writes them -->
+    <string name="recovery_sheet_export_failed">SORA couldn\'t create the file. Your wallet data was not changed. Try again, or contact support.</string>
+    <!-- recovery_sheet_restore_failed: verified: requestSetUpAgain only writes the no_backup marker; files move only at the next start after it succeeded -->
+    <string name="recovery_sheet_restore_failed">SORA couldn\'t prepare the restore. Nothing was moved or deleted. Try again, or contact support.</string>
+    <!-- recovery_phrase_unchecked: verified: SafeModeVault.reveal marks the unsuffixed value checked=false unless SafeModeViewModel.derivedAddress derives exactly this address -->
+    <string name="recovery_phrase_unchecked">An older SORA version saved this phrase. SORA couldn\'t confirm that it belongs to this wallet.</string>
+    <string name="recovery_seed_unchecked">An older SORA version saved this seed. SORA couldn\'t confirm that it belongs to this wallet.</string>
+    <!-- recovery_phrase_unreadable: verified: SafeModeVault returns Unreadable only for WalletDecryptionException or a non-transient KeyMaterialUnavailableException on every stored value -->
+    <string name="recovery_phrase_unreadable">This phone can\'t unlock the saved phrase, so trying again won\'t help. If you wrote it down or backed it up to Google Drive, you can still restore with it.</string>
+    <!-- ak1-signing-compat: a stored phrase or seed proven to open a different wallet is never called this wallet's backup -->
+    <!-- recovery_phrase_other_wallet / recovery_seed_other_wallet: verified: SafeModeVault.reveal sets otherWallet only when SafeModeViewModel.derivedAddress derived an address and it is not this wallet's, and (for a phrase) no stored seed and no release-era value of the 2.x owner derives this wallet either; reveal only reads (no put, no Room); CredentialsRepositoryImpl.generateJson exports an account whose stored key signs without needing a phrase or seed -->
+    <string name="recovery_phrase_other_wallet_title">Phrase of a different wallet</string>
+    <string name="recovery_phrase_other_wallet">This phrase opens a different wallet, not this one, so it is not a backup of this wallet. SORA found no recovery phrase for this wallet on this phone. Showing this changes nothing: everything saved on this phone stays as it is. If this wallet works when SORA opens again, back it up by exporting it as an encrypted JSON file (Account options).</string>
+    <string name="recovery_seed_other_wallet_title">Seed of a different wallet</string>
+    <string name="recovery_seed_other_wallet">This seed opens a different wallet, not this one, so it is not a backup of this wallet. Showing this changes nothing: everything saved on this phone stays as it is. If this wallet works when SORA opens again, back it up by exporting it as an encrypted JSON file (Account options).</string>
 </resources>

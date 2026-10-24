@@ -46,6 +46,7 @@ import io.mockk.verify
 import java.net.UnknownHostException
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
@@ -59,13 +60,21 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryReposito
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatusDetail
 import jp.co.soramitsu.feature_blockexplorer_impl.testdata.TestTransactions
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2NodeRefusal
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionDetails
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingRecoveryPass
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingSubmissionCoordinator
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionDetailsStore
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -104,13 +113,19 @@ class TransactionHistoryRepositoryTest {
     @MockK
     private lateinit var walletIdentityDao: WalletIdentityDao
 
+    @MockK
+    private lateinit var detailsStore: Sora2SubmissionDetailsStore
+
+    @MockK
+    private lateinit var pendingSubmissionCoordinator: Sora2PendingSubmissionCoordinator
+
     private lateinit var health: PiIndexerHealth
 
     private lateinit var validatedHistoryCache: PiValidatedHistoryCache
 
     private val mockedUri = Mockito.mock(Uri::class.java)
 
-    private val peersList = listOf("1", "2")
+    private val peersList = listOf("cnPeerOne", "cnPeerTwo")
 
     private lateinit var transactionHistoryRepository: TransactionHistoryRepository
 
@@ -125,6 +140,8 @@ class TransactionHistoryRepositoryTest {
         every { Uri.parse(any()) } returns mockedUri
         every { FirebaseWrapper.recordErrorClass(any()) } returns Unit
         every { database.walletIdentityDao() } returns walletIdentityDao
+        coEvery { detailsStore.list(any()) } returns emptyList()
+        coEvery { detailsStore.retainOnly(any(), any(), any()) } returns Unit
         coEvery {
             walletIdentityDao.getSora2SubmissionOverlayRows(
                 TestAccounts.soraAccount.substrateAddress
@@ -144,7 +161,11 @@ class TransactionHistoryRepositoryTest {
         } answers {
             watchingListener = firstArg()
         }
-        coEvery { polkaswapIndexerClient.getTransactionPeers("query") } returns peersList.toSet()
+        coEvery {
+            polkaswapIndexerClient.getRecentTransactionPeers(
+                TestAccounts.soraAccount.substrateAddress,
+            )
+        } returns peersList
 
         coEvery {
             polkaswapIndexerClient.getLastTransactionsQualified(
@@ -163,6 +184,8 @@ class TransactionHistoryRepositoryTest {
             substrateCalls,
             validatedHistoryCache,
             database,
+            detailsStore,
+            pendingSubmissionCoordinator,
         )
     }
 
@@ -172,10 +195,23 @@ class TransactionHistoryRepositoryTest {
     }
 
     @Test
-    fun `getContacts() called`() = runTest {
-        val result = transactionHistoryRepository.getContacts("query")
+    fun `getContacts() filters recent counterparties on the device`() = runTest {
+        val account = TestAccounts.soraAccount.substrateAddress
 
-        assertEquals(result, peersList.toSet())
+        assertEquals(
+            peersList.toSet(),
+            transactionHistoryRepository.getContacts(account, ""),
+        )
+        assertEquals(
+            setOf("cnPeerTwo"),
+            transactionHistoryRepository.getContacts(account, " TWO "),
+        )
+        assertEquals(
+            emptySet<String>(),
+            transactionHistoryRepository.getContacts(account, "nobody"),
+        )
+        // One indexer read serves the whole search session.
+        coVerify(exactly = 1) { polkaswapIndexerClient.getRecentTransactionPeers(account) }
     }
 
     @Test
@@ -235,10 +271,10 @@ class TransactionHistoryRepositoryTest {
     @Test
     fun `getContacts returns empty set when indexer fails`() = runTest {
         coEvery {
-            polkaswapIndexerClient.getTransactionPeers("bad query")
+            polkaswapIndexerClient.getRecentTransactionPeers("cnBadAccount")
         } throws IllegalStateException("indexer down")
 
-        val result = transactionHistoryRepository.getContacts("bad query")
+        val result = transactionHistoryRepository.getContacts("cnBadAccount", "bad query")
 
         assertEquals(emptySet<String>(), result)
         verify {
@@ -673,6 +709,334 @@ class TransactionHistoryRepositoryTest {
                 FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
             )
         }
+    }
+
+    // --- audit A5: a waiting transaction is visible where the user looks -------------------
+
+    private fun journal(vararg rows: Sora2PendingSubmissionLocal) {
+        coEvery {
+            walletIdentityDao.getSora2SubmissionOverlayRows(
+                TestAccounts.soraAccount.substrateAddress
+            )
+        } returns rows.toList()
+        coEvery {
+            polkaswapIndexerClient.getLastTransactionsQualified(
+                address = TestAccounts.soraAccount.substrateAddress,
+                count = 10,
+            )
+        } throws IllegalStateException("history unavailable")
+    }
+
+    private fun details(vararg entries: Sora2SubmissionDetails) {
+        coEvery {
+            detailsStore.list(TestAccounts.soraAccount.substrateAddress)
+        } returns entries.toList()
+    }
+
+    private fun swapDetails(hash: String) = Sora2SubmissionDetails(
+        walletId = TestAccounts.soraAccount.substrateAddress,
+        transactionHash = hash,
+        createdAt = System.currentTimeMillis(),
+        activity = Sora2SubmissionActivity.swap(
+            tokenFromId = TestTokens.xorToken.id,
+            tokenToId = TestTokens.valToken.id,
+            amountFrom = java.math.BigDecimal("10"),
+            amountTo = java.math.BigDecimal("2.5"),
+            fee = java.math.BigDecimal("0.0007"),
+            market = "SMART",
+        ),
+    )
+
+    private suspend fun lastTransactions(filterTokenId: String? = null) =
+        transactionHistoryRepository.getLastTransactions(
+            TestAccounts.soraAccount,
+            listOf(TestTokens.xorToken, TestTokens.valToken, TestTokens.pswapToken),
+            10,
+            filterTokenId,
+        )
+
+    @Test
+    fun `a waiting swap keeps its kind tokens and amounts after a restart`() = runTest {
+        val hash = "0x" + "a1".repeat(32)
+        journal(
+            pendingSora2(hash).copy(
+                state = Sora2PendingSubmissionLocal.STATE_SUBMITTED_AWAITING_FINALITY,
+                submissionIsAmbiguous = false,
+            )
+        )
+        details(swapDetails(hash))
+
+        // Nothing was saved in memory: this is what the journal and the stored details give.
+        val swap = lastTransactions().single() as Transaction.Swap
+
+        assertEquals(hash, swap.base.txHash)
+        assertEquals(TestTokens.xorToken.id, swap.tokenFrom.id)
+        assertEquals(TestTokens.valToken.id, swap.tokenTo.id)
+        assertEquals(java.math.BigDecimal("10"), swap.amountFrom)
+        assertEquals(java.math.BigDecimal("2.5"), swap.amountTo)
+        assertEquals(java.math.BigDecimal("0.0007"), swap.base.fee)
+        assertEquals(TransactionStatus.PENDING, swap.base.status)
+        assertEquals(
+            TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION,
+            swap.base.statusDetail?.kind,
+        )
+    }
+
+    @Test
+    fun `a waiting swap is listed in the activity of both of its tokens only`() = runTest {
+        val hash = "0x" + "a2".repeat(32)
+        journal(pendingSora2(hash))
+        details(swapDetails(hash))
+
+        assertEquals(hash, lastTransactions(TestTokens.xorToken.id).single().base.txHash)
+        assertEquals(hash, lastTransactions(TestTokens.valToken.id).single().base.txHash)
+        assertEquals(emptyList<Transaction>(), lastTransactions(TestTokens.pswapToken.id))
+    }
+
+    @Test
+    fun `a journal row without details stays generic and out of token activity`() = runTest {
+        val hash = "0x" + "a3".repeat(32)
+        journal(pendingSora2(hash))
+
+        assertEquals(true, lastTransactions().single() is Transaction.Sora2Submission)
+        assertEquals(emptyList<Transaction>(), lastTransactions(TestTokens.xorToken.id))
+    }
+
+    @Test
+    fun `a waiting entry becomes confirmed when the journal row is resolved`() = runTest {
+        val hash = "0x" + "a4".repeat(32)
+        val waiting = pendingSora2(hash).copy(
+            state = Sora2PendingSubmissionLocal.STATE_SUBMITTED_AWAITING_FINALITY,
+            submissionIsAmbiguous = false,
+        )
+        journal(waiting)
+        details(swapDetails(hash))
+        assertEquals(TransactionStatus.PENDING, lastTransactions().single().base.status)
+
+        // What the background status worker writes.
+        journal(
+            waiting.copy(
+                state = Sora2PendingSubmissionLocal.STATE_FINALIZED_SUCCESS,
+                terminalBlockNumber = 70,
+                terminalBlockHash = "0x" + "66".repeat(32),
+                terminalFinalizedHeight = 72,
+            )
+        )
+
+        val resolved = lastTransactions().single() as Transaction.Swap
+        assertEquals(TransactionStatus.COMMITTED, resolved.base.status)
+        assertEquals("0x" + "66".repeat(32), resolved.base.blockHash)
+        assertEquals(null, resolved.base.statusDetail)
+    }
+
+    @Test
+    fun `a transaction the node refused is a failure at once and never pending`() = runTest {
+        val hash = "0x" + "a5".repeat(32)
+        // The row itself is still unresolved: its validity window has not been scanned yet.
+        journal(pendingSora2(hash))
+        details(
+            swapDetails(hash).copy(
+                nodeRefusal = Sora2NodeRefusal(
+                    reason = TransactionNodeRefusal.CANNOT_PAY_FEE,
+                    code = 1010,
+                    message = "Inability to pay some fees",
+                )
+            )
+        )
+
+        val refused = lastTransactions().single()
+
+        assertEquals(TransactionStatus.REJECTED, refused.base.status)
+        assertEquals(
+            TransactionStatusDetail(
+                TransactionStatusDetail.Kind.REFUSED_CANNOT_PAY_FEE,
+                "Inability to pay some fees",
+            ),
+            refused.base.statusDetail,
+        )
+        assertEquals(true, refused.base.statusDetail?.neverOnChain)
+    }
+
+    @Test
+    fun `chain proof wins over a recorded refusal`() = runTest {
+        val hash = "0x" + "a6".repeat(32)
+        journal(
+            pendingSora2(hash).copy(
+                state = Sora2PendingSubmissionLocal.STATE_FINALIZED_SUCCESS,
+                submissionIsAmbiguous = false,
+                terminalBlockNumber = 70,
+                terminalBlockHash = "0x" + "66".repeat(32),
+                terminalFinalizedHeight = 72,
+            )
+        )
+        details(
+            swapDetails(hash).copy(
+                nodeRefusal = Sora2NodeRefusal(TransactionNodeRefusal.NOT_VALID, 1010, null)
+            )
+        )
+
+        val transaction = lastTransactions().single()
+
+        assertEquals(TransactionStatus.COMMITTED, transaction.base.status)
+        assertEquals(null, transaction.base.statusDetail)
+    }
+
+    @Test
+    fun `a transaction the indexer lists is never called failed because of a recorded refusal`() =
+        runTest {
+            // The indexer lists it, so it is in a block, although the node answered the
+            // submission with a refusal and the journal row has not been resolved yet.
+            val hash = TestTransactions.txHistoryItem.id.lowercase()
+            coEvery {
+                walletIdentityDao.getSora2SubmissionOverlayRows(
+                    TestAccounts.soraAccount.substrateAddress
+                )
+            } returns listOf(pendingSora2(hash))
+            details(
+                swapDetails(hash).copy(
+                    nodeRefusal = Sora2NodeRefusal(TransactionNodeRefusal.NOT_VALID, 1010, null)
+                )
+            )
+
+            val listed = transactionHistoryRepository.getLastTransactions(
+                TestAccounts.soraAccount,
+                listOf(TestTokens.xorToken, TestTokens.valToken),
+                1,
+                null,
+            ).single()
+
+            // Before: REJECTED with the refusal as its reason.
+            assertEquals(TransactionStatus.PENDING, listed.base.status)
+            assertEquals(
+                TransactionStatusDetail(TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION),
+                listed.base.statusDetail,
+            )
+        }
+
+    @Test
+    fun `a transaction the indexer lists is never said to be not sent because its row expired`() =
+        runTest {
+            val hash = TestTransactions.txHistoryItem.id.lowercase()
+            val tokens = listOf(TestTokens.xorToken, TestTokens.valToken)
+            suspend fun listed() = transactionHistoryRepository
+                .getLastTransactions(TestAccounts.soraAccount, tokens, 1, null)
+                .single()
+            // The entry as the indexer gives it while this device has no journal row for it.
+            val asIndexed = listed()
+
+            // The app's own scan of the validity window ended without finding the transaction
+            // (a block read from a node that was behind, for example), so the journal row
+            // expired as "not included". The indexer lists the transaction: it is in a block.
+            coEvery {
+                walletIdentityDao.getSora2SubmissionOverlayRows(
+                    TestAccounts.soraAccount.substrateAddress
+                )
+            } returns listOf(
+                pendingSora2(hash).copy(
+                    state = Sora2PendingSubmissionLocal.STATE_EXPIRED_NOT_INCLUDED,
+                    submissionIsAmbiguous = false,
+                    terminalFinalizedHeight = 130,
+                )
+            )
+            details(swapDetails(hash))
+
+            val shown = listed()
+
+            // Before: REJECTED with "The network did not include this transaction ... Nothing
+            // was sent and no fee was charged. You can try again", and neither the block nor,
+            // on its page, the fee and the explorer link.
+            assertEquals(TransactionStatus.COMMITTED, asIndexed.base.status)
+            assertEquals(asIndexed.base.status, shown.base.status)
+            assertEquals(null, shown.base.statusDetail)
+            assertEquals(TestTransactions.txHistoryItem.blockHash, shown.base.blockHash)
+            assertEquals(asIndexed.base.blockHash, shown.base.blockHash)
+            assertEquals(asIndexed.base.fee, shown.base.fee)
+        }
+
+    @Test
+    fun `a transaction that failed on chain carries the reported runtime error`() = runTest {
+        val hash = "0x" + "a7".repeat(32)
+        journal(
+            pendingSora2(hash).copy(
+                state = Sora2PendingSubmissionLocal.STATE_FINALIZED_FAILURE,
+                submissionIsAmbiguous = false,
+                terminalBlockNumber = 70,
+                terminalBlockHash = "0x" + "66".repeat(32),
+                terminalFinalizedHeight = 72,
+            )
+        )
+        details(swapDetails(hash).copy(chainFailure = "LiquidityProxy.SlippageNotTolerated"))
+
+        val failed = lastTransactions().single()
+
+        assertEquals(TransactionStatus.REJECTED, failed.base.status)
+        assertEquals(
+            TransactionStatusDetail(
+                TransactionStatusDetail.Kind.FAILED_ON_CHAIN,
+                "LiquidityProxy.SlippageNotTolerated",
+            ),
+            failed.base.statusDetail,
+        )
+    }
+
+    @Test
+    fun `an expired transaction says it was never included`() = runTest {
+        val hash = "0x" + "a8".repeat(32)
+        journal(
+            pendingSora2(hash).copy(
+                state = Sora2PendingSubmissionLocal.STATE_EXPIRED_NOT_INCLUDED,
+                submissionIsAmbiguous = false,
+                terminalFinalizedHeight = 130,
+            )
+        )
+        details(swapDetails(hash))
+
+        val expired = lastTransactions().single()
+
+        assertEquals(TransactionStatus.REJECTED, expired.base.status)
+        assertEquals(
+            TransactionStatusDetail.Kind.NOT_INCLUDED,
+            expired.base.statusDetail?.kind,
+        )
+    }
+
+    @Test
+    fun `a screen asks for the status of the one transaction it shows`() = runTest {
+        val wallet = TestAccounts.soraAccount.substrateAddress
+        val hash = "0x" + "a9".repeat(32)
+        coEvery {
+            pendingSubmissionCoordinator.recoverStatusOnlyFor(wallet, hash)
+        } returns Sora2PendingRecoveryPass(1, 1, 0, 0, 0)
+
+        transactionHistoryRepository.checkWaitingTransaction(wallet, hash)
+
+        // The status-only pass of the coordinator: it has no signer and cannot submit. It is
+        // asked for this transaction alone; the batch pass, which fails as a whole when one of
+        // its rows cannot be read, is not what the screen depends on.
+        coVerify(exactly = 1) { pendingSubmissionCoordinator.recoverStatusOnlyFor(wallet, hash) }
+        coVerify(exactly = 0) { pendingSubmissionCoordinator.recoverStatusOnly(any(), any()) }
+    }
+
+    @Test
+    fun `a failed status check is never an error for the screen`() = runTest {
+        val wallet = TestAccounts.soraAccount.substrateAddress
+        val hash = "0x" + "a9".repeat(32)
+        coEvery {
+            pendingSubmissionCoordinator.recoverStatusOnlyFor(any(), any())
+        } throws java.io.IOException("BOUNDED_HTTP_IO")
+
+        transactionHistoryRepository.checkWaitingTransaction(wallet, hash)
+
+        coVerify(exactly = 1) { pendingSubmissionCoordinator.recoverStatusOnlyFor(wallet, hash) }
+    }
+
+    @Test
+    fun `a write to the status journal refreshes the listening screens`() = runTest {
+        // Room emits the current value first and then once per write to the table.
+        every { walletIdentityDao.observeSora2PendingSubmissionChanges() } returns
+            kotlinx.coroutines.flow.flowOf(1, 1)
+
+        assertEquals(true, transactionHistoryRepository.state.first())
     }
 
     private fun pendingSora2(hash: String) = Sora2PendingSubmissionLocal(

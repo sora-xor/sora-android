@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "description": "SHA-256 pins of the two public Google identifiers a Google Play build (productionRelease) must carry. googleDriveClientIdSha256: the Google Drive backup OAuth client ID (SORA_GOOGLE_TOKEN_PROD), which must be the client 3.8.6.3 used or people cannot see their existing Drive backups. While it is empty, every productionRelease build is refused. firebaseAppIdSha256: the Firebase app ID (mobilesdk_app_id) of jp.co.soramitsu.sora in google-services.json; checked when it is set. Both IDs are inside every released APK, so they are not secrets; only their hashes are stored. scripts/google-identity-pin.py prints the values to put here (see scripts/README.md). scripts/verify-production-google-identity.gradle enforces them.",
+  "applicationId": "jp.co.soramitsu.sora",
+  "googleDriveClientIdSha256": "398674a0b4925677d8f4041c88bffd42e64ef7f6a9b4ba4e26c356699d744277",
+  "firebaseAppIdSha256": "afc74181708dc966f8268f448c82c1f6b6ee424b99cdf1409cceface340229a8",
+  "provenance": {
+    "source": "Google Play signed APKs 3.8.6.2 (121) and 3.8.6.3 (122), verified 2026-10-12",
+    "historicalApks": [
+      {
+        "versionCode": 121,
+        "versionName": "3.8.6.2",
+        "sha256": "eb8bb12ec8669cfc7390e5a9c5b16e7fdf9eed8dbbab6c0673ed8ddde463f20a"
+      },
+      {
+        "versionCode": 122,
+        "versionName": "3.8.6.3",
+        "sha256": "8d43fd4f6e02b4b63481d4e6afcb79d4bb59b8b1df345ee8ffc02478f5059088"
+      }
+    ],
+    "playAppSigningCertificateSha256": "b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0",
+    "historicalDriveClientContinuity": "classes3.dex: jp.co.soramitsu.xbackup.repository.m.<init> passes the pinned client to GoogleSignInOptions.Builder.requestIdToken; both APKs match. requestEmail and drive.appdata scope remain unchanged.",
+    "firebaseSource": "The official Firebase Console jp.co.soramitsu.sora configuration (sora-passport-id), downloaded 2026-10-12, has the same Firebase app ID as resources.arsc in both Play APKs.",
+    "firebaseWebClientIsNotDriveClient": true,
+    "androidOAuthBinding": "Verify jp.co.soramitsu.sora plus Play app-signing certificate binding in the historical Drive client project. The downloaded Firebase configuration has no type-1 entry; it does not establish this binding."
+  }
+}

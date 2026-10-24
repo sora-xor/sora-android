@@ -45,7 +45,6 @@ import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.common.BuildConfig
-import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -112,15 +111,6 @@ class DebugMenuViewModel @Inject constructor(
                 )
                 add(SettingOption(name = "Build Type:", value = BuildConfig.BUILD_TYPE))
                 add(SettingOption(name = "Build Flavor:", value = BuildConfig.FLAVOR))
-
-                add(SettingOption(name = "X1:", value = BuildConfig.X1_WIDGET_ID))
-                add(SettingOption(name = "X1:", value = BuildConfig.X1_ENDPOINT_URL))
-                add(
-                    SettingOption(
-                        name = "SoraCard Backend:",
-                        value = BuildConfigWrapper.getSoraCardBackEndUrl()
-                    )
-                )
             }
         )
     }
