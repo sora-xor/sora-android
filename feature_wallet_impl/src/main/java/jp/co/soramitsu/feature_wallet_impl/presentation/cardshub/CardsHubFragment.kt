@@ -132,7 +132,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
 
     override val viewModel: CardsHubViewModel by viewModels()
 
-    // The Portfolio view (portfolio-view SPEC): on in non-production builds, off in production.
+    // The Portfolio view (portfolio-view SPEC): on in every build, production included.
     // With it off, the home below is drawn exactly as before and this view model is never made.
     private val portfolioView = ReleaseSurfacePolicy.portfolioView
     private val portfolioViewModel: PortfolioViewModel by viewModels()

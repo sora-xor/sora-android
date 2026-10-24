@@ -57,11 +57,11 @@ object ReleaseSurfacePolicy {
 
     /**
      * The Portfolio view on the Wallet tab (`portfolioView`): hero, lenses and "Where it lives"
-     * in place of the header balance and the Assets card. It is on in every non-production
-     * flavor and off in production whatever [PRODUCTION_HIDES_SURFACES] says, until it has had
-     * a release review. This one constant ships it.
+     * in place of the header balance and the Assets card. It is on in every flavor, production
+     * included, whatever [PRODUCTION_HIDES_SURFACES] says. False takes it out of production
+     * builds again.
      */
-    const val PORTFOLIO_VIEW_IN_PRODUCTION = false
+    const val PORTFOLIO_VIEW_IN_PRODUCTION = true
 
     fun portfolioView(
         productionFlavor: Boolean,
