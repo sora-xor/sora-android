@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -159,6 +160,7 @@ private fun NavHostController.isCurrent(route: String): Boolean =
 @Composable
 private fun PortfolioEffects(portfolio: PortfolioViewModel, hub: CardsHubViewModel, navController: NavHostController) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(portfolio, hub, navController, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -171,8 +173,8 @@ private fun PortfolioEffects(portfolio: PortfolioViewModel, hub: CardsHubViewMod
 
                     is PortfolioEffect.Message -> {
                         val text = effect.argument?.let {
-                            context.getString(effect.text, it)
-                        } ?: context.getString(effect.text)
+                            resources.getString(effect.text, it)
+                        } ?: resources.getString(effect.text)
                         Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
                     }
                 }
