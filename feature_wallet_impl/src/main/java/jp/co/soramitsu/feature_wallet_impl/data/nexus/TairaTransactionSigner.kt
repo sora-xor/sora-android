@@ -1,6 +1,7 @@
 package jp.co.soramitsu.feature_wallet_impl.data.nexus
 
 import java.security.SecureRandom
+import jp.co.soramitsu.common.account.StoredSecretHex
 import jp.co.soramitsu.common.nexus.*
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -73,7 +74,17 @@ class TairaTransactionSigner(
     private suspend fun derive(request: NexusTransferSigningRequest): IrohaKeyDerivation.DerivedAccount {
         val wallet = users.getSoraAccount(request.account.walletId)
         check(wallet.substrateAddress == request.account.walletId && !credentials.isExplicitWatchOnly(wallet)) { "TAIRA_WALLET_NOT_SIGNABLE" }
-        val derived = IrohaKeyDerivation.derive(credentials.retrieveMnemonic(wallet), request.network)
+        // The recorded account is re-derived exactly as it was first derived (from the canonical
+        // words, or from the stored text of an earlier build). A phrase that derives neither form
+        // of it never signs, and nothing is re-derived in its place.
+        val recordedPublicKey = StoredSecretHex.decodeOrNull(request.account.publicKey)
+            ?: error("TAIRA_DERIVED_ACCOUNT_MISMATCH")
+        val derived = IrohaKeyDerivation.deriveExisting(
+            mnemonic = credentials.retrieveMnemonic(wallet),
+            profile = request.network.derivationProfile,
+            existingAddress = request.account.address,
+            existingPublicKey = recordedPublicKey,
+        ) ?: error("TAIRA_DERIVED_ACCOUNT_MISMATCH")
         if (derived.address != request.account.address || TairaTransferCodec.hex(derived.publicKey) != request.account.publicKey) {
             derived.destroy(); error("TAIRA_DERIVED_ACCOUNT_MISMATCH")
         }
