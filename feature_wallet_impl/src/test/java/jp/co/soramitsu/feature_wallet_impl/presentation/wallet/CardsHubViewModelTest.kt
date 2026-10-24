@@ -51,6 +51,7 @@ import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.nexus.WalletNetworkAction
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
@@ -220,6 +221,7 @@ class CardsHubViewModelTest {
             }
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
         every { assetsRouter.showAssetDetails(any()) } returns Unit
+        every { assetsRouter.showContacts(any()) } returns Unit
         every { router.openQrCodeFlow() } returns Unit
         cardsHubViewModel = CardsHubViewModel(
             assetsInteractor,
@@ -486,6 +488,43 @@ class CardsHubViewModelTest {
         verify(exactly = 1) {
             assetsRouter.showAssetDetails(SubstrateOptionsProvider.feeAssetId)
         }
+    }
+
+    @Test
+    fun `network choices list only the selected wallet main network first`() = runTest {
+        advanceUntilIdle()
+        val taira = nexusBalance(account.substrateAddress, WalletNetworkId.TAIRA)
+        val nexus = nexusBalance(account.substrateAddress, WalletNetworkId.MINAMOTO)
+            .copy(networkLive = false, xorQuantity = null, sendAvailable = false)
+        val otherWallet = nexusBalance(secondAccount.substrateAddress, WalletNetworkId.TAIRA)
+        nexusPortfolioFlow.value = listOf(taira, otherWallet, nexus)
+        advanceUntilIdle()
+
+        val receive = cardsHubViewModel.networkChoices(WalletNetworkAction.RECEIVE)
+        assertEquals(
+            listOf(WalletNetworkId.SORA2, WalletNetworkId.MINAMOTO, WalletNetworkId.TAIRA),
+            receive.map { it.id },
+        )
+        assertEquals(account.substrateAddress, receive.first().address)
+        assertEquals(taira.address, receive.last().address)
+        assertTrue(receive.all { it.isAvailable })
+
+        val send = cardsHubViewModel.networkChoices(WalletNetworkAction.SEND)
+        assertEquals(listOf(true, false, true), send.map { it.isAvailable })
+
+        // Another wallet's rows never become choices.
+        selectedAccountFlow.value = secondAccount
+        advanceUntilIdle()
+        assertTrue(cardsHubViewModel.networkChoices(WalletNetworkAction.RECEIVE).none { it.address == taira.address })
+    }
+
+    @Test
+    fun `SORA2 send opens the existing send flow only for the selected wallet`() = runTest {
+        advanceUntilIdle()
+        cardsHubViewModel.openSora2Send(secondAccount.substrateAddress)
+        verify(exactly = 0) { assetsRouter.showContacts(SubstrateOptionsProvider.feeAssetId) }
+        cardsHubViewModel.openSora2Send(account.substrateAddress)
+        verify(exactly = 1) { assetsRouter.showContacts(SubstrateOptionsProvider.feeAssetId) }
     }
 
     @Test

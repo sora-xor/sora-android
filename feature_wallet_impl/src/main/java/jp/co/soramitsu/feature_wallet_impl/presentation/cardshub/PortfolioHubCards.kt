@@ -30,7 +30,7 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 /**
  * The home's existing secondary cards under the Portfolio view's list: the same cards, in the same
  * order and with the same actions, as the home draws them with the Portfolio view off (pools, the
- * networks section, referral, backup, Edit view). Only the Assets card is left out, because the
+ * other networks' XOR, referral, backup, Edit view). Only the Assets card is left out, because the
  * hero and the Tokens lens replace it. With the Portfolio view off, the home is drawn unchanged.
  */
 @Composable
@@ -44,9 +44,6 @@ internal fun PortfolioSecondaryCards(
     onReferralClose: () -> Unit,
     onBackupBannerClick: () -> Unit,
     onEdit: () -> Unit,
-    onSora2Receive: (String) -> Unit,
-    onSora2Open: (String) -> Unit,
-    isSora2WalletCurrent: (String) -> Boolean,
     onNexusSend: (NexusPortfolioBalance) -> Unit,
     onNexusRefresh: () -> Unit,
     onNexusLoadMore: (NexusPortfolioBalance) -> Unit,
@@ -59,18 +56,18 @@ internal fun PortfolioSecondaryCards(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val networkSection: @Composable () -> Unit = {
-            if (sora2Portfolio != null || nexusPortfolio.isNotEmpty()) {
-                NexusPortfolioCard(
-                    sora2 = sora2Portfolio,
-                    balances = nexusPortfolio,
-                    onSora2Receive = onSora2Receive,
-                    onSora2Open = onSora2Open,
-                    isSora2WalletCurrent = isSora2WalletCurrent,
+            val walletNetworks = nexusPortfolio.filter { it.walletId == sora2Portfolio?.address }
+            if (walletNetworks.isNotEmpty()) {
+                OtherNetworksCard(
+                    balances = walletNetworks,
+                    xorIcon = sora2Portfolio?.xorIcon,
+                    xorName = sora2Portfolio?.xorName,
+                    isNexusBalanceCurrent = isNexusBalanceCurrent,
                     onSend = onNexusSend,
+                    onRecovery = onBackupBannerClick,
                     onRefresh = onNexusRefresh,
                     onLoadMore = onNexusLoadMore,
-                    isNexusBalanceCurrent = isNexusBalanceCurrent,
-                    onRecovery = onBackupBannerClick,
+                    walletId = sora2Portfolio?.address,
                 )
                 Spacer(modifier = Modifier.size(size = 16.dp))
             }

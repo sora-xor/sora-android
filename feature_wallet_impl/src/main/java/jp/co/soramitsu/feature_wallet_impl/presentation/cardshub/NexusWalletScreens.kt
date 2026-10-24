@@ -32,89 +32,84 @@ import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
-@Composable
-internal fun NexusPortfolioCard(
-    sora2: Sora2PortfolioBalance?,
-    balances: List<NexusPortfolioBalance>,
-    onSora2Receive: (String) -> Unit,
-    onSora2Open: (String) -> Unit,
-    isSora2WalletCurrent: (String) -> Boolean,
-    onSend: (NexusPortfolioBalance) -> Unit,
-    isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
-    onRecovery: () -> Unit,
-    onRefresh: () -> Unit = {},
-    onLoadMore: (NexusPortfolioBalance) -> Unit = {},
-) {
-    val scopedBalances = balances.filter { it.walletId == sora2?.address }
-    var selected by remember(sora2?.address) { mutableStateOf<NexusPortfolioBalance?>(null) }
-    var receiving by remember(sora2?.address) { mutableStateOf(false) }
-    LaunchedEffect(scopedBalances) {
-        selected = selected?.let { previous ->
-            scopedBalances.singleOrNull {
-                it.walletId == previous.walletId && it.networkId == previous.networkId &&
-                    it.address == previous.address
-            }?.takeIf(isNexusBalanceCurrent)
-        }
+/**
+ * Which of a network's sheets is open: its XOR page (balance, Send, Receive, history) or its
+ * receive address. Remembered per wallet, so another wallet never inherits an open sheet.
+ */
+@Stable
+internal class NetworkSheetsState {
+    var selected by mutableStateOf<NexusPortfolioBalance?>(null)
+        private set
+    var receiving by mutableStateOf(false)
+        private set
+    private var receiveReturnsToActivity = false
+
+    fun openActivity(balance: NexusPortfolioBalance) {
+        receiving = false
+        selected = balance
     }
-    selected?.takeIf(isNexusBalanceCurrent)?.let { balance ->
-        if (receiving) NexusReceiveSheet(balance, onClose = { receiving = false },
-            isCurrent = { isNexusBalanceCurrent(balance) })
-        else NexusActivitySheet(balance, onClose = { selected = null },
-            onReceive = { receiving = true }, onSend = {
-                if (isNexusBalanceCurrent(balance)) {
-                    selected = null
-                    onSend(balance)
-                }
-            }, onRecovery = { selected = null; onRecovery() },
-            onRefresh = onRefresh, onLoadMore = { onLoadMore(balance) })
+
+    /** Receive opened from the wallet's Receive: closing it closes the sheet. */
+    fun openReceive(balance: NexusPortfolioBalance) {
+        receiveReturnsToActivity = false
+        receiving = true
+        selected = balance
     }
-    Column(Modifier.fillMaxWidth().padding(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(R.string.networks_title), style = MaterialTheme.customTypography.headline2,
-            color = MaterialTheme.customColors.fgPrimary)
-        Text(stringResource(R.string.wallet_network_description),
-            style = MaterialTheme.customTypography.paragraphS, color = MaterialTheme.customColors.fgPrimary)
-        sora2?.let { balance ->
-            NetworkSummary("SORA2", false, balance.xorQuantity,
-                onOpen = { if (isSora2WalletCurrent(balance.address)) onSora2Open(balance.address) })
-            TextButton(onClick = { if (isSora2WalletCurrent(balance.address)) onSora2Receive(balance.address) }) {
-                Text(stringResource(R.string.common_receive))
-            }
-        }
-        TextButton(onClick = onRefresh) { Text(stringResource(R.string.common_refresh)) }
-        scopedBalances.forEach { balance ->
-            NetworkSummary(balance.networkName, balance.isTestnet, balance.xorQuantity,
-                networkLive = balance.networkLive, onOpen = {
-                if (isNexusBalanceCurrent(balance)) { receiving = false; selected = balance }
-            })
-            val pendingCount = balance.pendingTransactions.size + balance.recoveryPendingTransactions.size
-            if (pendingCount > 0) Text("$pendingCount · ${stringResource(R.string.wallet_status_checking)}",
-                style = MaterialTheme.customTypography.textS, color = MaterialTheme.customColors.fgPrimary)
-        }
+
+    fun receiveFromActivity() {
+        receiveReturnsToActivity = true
+        receiving = true
+    }
+
+    fun closeReceive() {
+        receiving = false
+        if (!receiveReturnsToActivity) selected = null
+    }
+
+    fun close() {
+        receiving = false
+        selected = null
+    }
+
+    fun replace(balance: NexusPortfolioBalance?) {
+        if (balance == null) close() else selected = balance
     }
 }
 
 @Composable
-private fun NetworkSummary(name: String, testnet: Boolean, quantity: String?, networkLive: Boolean = true, onOpen: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable(onClickLabel = stringResource(
-        if (networkLive) R.string.wallet_network_activity else R.string.nexus_production_address),
-        onClick = onOpen).padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(if (networkLive) name else stringResource(R.string.nexus_production_name),
-                style = MaterialTheme.customTypography.headline3, color = MaterialTheme.customColors.fgPrimary)
-            Text(stringResource(if (!networkLive) R.string.nexus_production_address
-                else if (testnet) R.string.network_badge_testnet else R.string.network_badge_mainnet),
-                style = MaterialTheme.customTypography.textS, color = MaterialTheme.customColors.fgPrimary)
-        }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(if (!networkLive) stringResource(R.string.nexus_production_not_live)
-                else quantity?.let { "$it XOR" } ?: stringResource(R.string.balance_unavailable),
-                style = MaterialTheme.customTypography.headline3, color = MaterialTheme.customColors.fgPrimary)
-            Text(stringResource(if (networkLive) R.string.wallet_network_activity else R.string.wallet_network_details) + " ›",
-                style = MaterialTheme.customTypography.textS, color = MaterialTheme.customColors.accentPrimary)
+internal fun rememberNetworkSheetsState(walletId: String?): NetworkSheetsState =
+    remember(walletId) { NetworkSheetsState() }
+
+/** The open network sheet, if any. Rows that stop being current close it. */
+@Composable
+internal fun NetworkSheets(
+    state: NetworkSheetsState,
+    balances: List<NexusPortfolioBalance>,
+    isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
+    onSend: (NexusPortfolioBalance) -> Unit,
+    onRecovery: () -> Unit,
+    onRefresh: () -> Unit = {},
+    onLoadMore: (NexusPortfolioBalance) -> Unit = {},
+) {
+    LaunchedEffect(balances) {
+        state.selected?.let { previous ->
+            state.replace(balances.singleOrNull {
+                it.walletId == previous.walletId && it.networkId == previous.networkId &&
+                    it.address == previous.address
+            }?.takeIf(isNexusBalanceCurrent))
         }
     }
-    Divider(color = MaterialTheme.customColors.fgOutline)
+    val balance = state.selected?.takeIf(isNexusBalanceCurrent) ?: return
+    if (state.receiving) NexusReceiveSheet(balance, onClose = state::closeReceive,
+        isCurrent = { isNexusBalanceCurrent(balance) })
+    else NexusActivitySheet(balance, onClose = state::close,
+        onReceive = state::receiveFromActivity, onSend = {
+            if (isNexusBalanceCurrent(balance)) {
+                state.close()
+                onSend(balance)
+            }
+        }, onRecovery = { state.close(); onRecovery() },
+        onRefresh = onRefresh, onLoadMore = { onLoadMore(balance) })
 }
 
 @Composable
@@ -215,10 +210,8 @@ private fun NexusTransferRow(transfer: NexusTransferHistoryItem, address: String
 
 @Composable
 private fun NetworkLabel(network: NexusPortfolioBalance) {
-    val name = if (network.networkLive) network.networkName else stringResource(R.string.nexus_production_name)
-    Text("$name · " + stringResource(if (!network.networkLive) R.string.nexus_production_not_live
-        else if (network.isTestnet) R.string.network_badge_testnet else R.string.network_badge_mainnet),
-        style = MaterialTheme.customTypography.headline3, color = MaterialTheme.customColors.fgPrimary)
+    Text(networkLabel(network.networkId), style = MaterialTheme.customTypography.headline3,
+        color = MaterialTheme.customColors.fgPrimary)
 }
 
 @Composable
