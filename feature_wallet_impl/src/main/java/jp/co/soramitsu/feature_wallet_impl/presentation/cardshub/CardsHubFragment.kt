@@ -84,7 +84,9 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
@@ -102,6 +104,7 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRe
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberReadOnlyBrowsing
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.QrCodeGenerator
+import jp.co.soramitsu.common.util.ReleaseSurfacePolicy
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
@@ -113,6 +116,8 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCa
 import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
+import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioRoutes
+import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioViewModel
 import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -123,6 +128,11 @@ import jp.co.soramitsu.ui_core.theme.customColors
 class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
 
     override val viewModel: CardsHubViewModel by viewModels()
+
+    // The Portfolio view (portfolio-view SPEC): on in non-production builds, off in production.
+    // With it off, the home below is drawn exactly as before and this view model is never made.
+    private val portfolioView = ReleaseSurfacePolicy.portfolioView
+    private val portfolioViewModel: PortfolioViewModel by viewModels()
 
     @javax.inject.Inject
     lateinit var qrScannerFactory: jp.co.soramitsu.feature_assets_api.presentation.QrScannerContractFactory
@@ -155,6 +165,24 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
         viewModel.refreshNexusPortfolio()
     }
 
+    override fun onStart() {
+        super.onStart()
+        // The dashboard reads and ticks only while it is on screen.
+        if (portfolioView) portfolioViewModel.setVisible(true)
+    }
+
+    override fun onStop() {
+        if (portfolioView) portfolioViewModel.setVisible(false)
+        super.onStop()
+    }
+
+    override fun onDestinationChanged(destination: String) {
+        if (!portfolioView) return
+        // "Where it lives" is a pushed screen: like other detail screens, without the bottom bar.
+        val bar = activity as? BottomBarController ?: return
+        if (destination == PortfolioRoutes.TOKEN) bar.hideBottomBar() else bar.showBottomBar()
+    }
+
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController,
@@ -185,27 +213,53 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     onScan = ::scanNexusRecipient,
                 )
                 UpgradeSheets(state = state, onBackUpNow = viewModel::onBackupBannerClick)
-                CardsMainScreen(
-                    scrollState = scrollState,
-                    state = state,
-                    sora2Portfolio = sora2Portfolio,
-                    nexusPortfolio = nexusPortfolio,
-                    onAccountClick = viewModel::onAccountClick,
-                    onQrClick = onQrClick,
-                    onAssetClick = viewModel::onAssetClick,
-                    onPoolClick = viewModel::onPoolClick,
-                    onOpenFullCardClick = viewModel::onOpenFullCard,
-                    onReferralClick = viewModel::onStartReferral,
-                    onReferralClose = viewModel::onRemoveReferralCard,
-                    onBackupBannerClick = viewModel::onBackupBannerClick,
-                    onEdit = viewModel::onEditViewClick,
-                    onSora2Receive = viewModel::openSora2Receive,
-                    onSora2Open = viewModel::openSora2Xor,
-                    isSora2WalletCurrent = viewModel::isCurrentSora2Wallet,
-                    onNexusSend = viewModel::openNexusSend,
-                    onNexusRefresh = viewModel::refreshNexusPortfolio,
-                    onNexusLoadMore = viewModel::loadMoreNexusHistory,
-                    isNexusBalanceCurrent = viewModel::isCurrentNexusBalance,
+                if (portfolioView) {
+                    PortfolioHomeHost(
+                        scrollState = scrollState,
+                        navController = navController,
+                        portfolio = portfolioViewModel,
+                        hub = viewModel,
+                        state = state,
+                        sora2Portfolio = sora2Portfolio,
+                        nexusPortfolio = nexusPortfolio,
+                    )
+                } else {
+                    CardsMainScreen(
+                        scrollState = scrollState,
+                        state = state,
+                        sora2Portfolio = sora2Portfolio,
+                        nexusPortfolio = nexusPortfolio,
+                        onAccountClick = viewModel::onAccountClick,
+                        onQrClick = onQrClick,
+                        onAssetClick = viewModel::onAssetClick,
+                        onPoolClick = viewModel::onPoolClick,
+                        onOpenFullCardClick = viewModel::onOpenFullCard,
+                        onReferralClick = viewModel::onStartReferral,
+                        onReferralClose = viewModel::onRemoveReferralCard,
+                        onBackupBannerClick = viewModel::onBackupBannerClick,
+                        onEdit = viewModel::onEditViewClick,
+                        onSora2Receive = viewModel::openSora2Receive,
+                        onSora2Open = viewModel::openSora2Xor,
+                        isSora2WalletCurrent = viewModel::isCurrentSora2Wallet,
+                        onNexusSend = viewModel::openNexusSend,
+                        onNexusRefresh = viewModel::refreshNexusPortfolio,
+                        onNexusLoadMore = viewModel::loadMoreNexusHistory,
+                        isNexusBalanceCurrent = viewModel::isCurrentNexusBalance,
+                    )
+                }
+            }
+        }
+        if (portfolioView) {
+            composable(
+                route = PortfolioRoutes.TOKEN,
+                arguments = listOf(navArgument(PortfolioRoutes.TOKEN_ARG) { type = NavType.StringType }),
+            ) { entry ->
+                PortfolioWhereItLivesHost(
+                    tokenId = entry.arguments?.getString(PortfolioRoutes.TOKEN_ARG).orEmpty(),
+                    navController = navController,
+                    portfolio = portfolioViewModel,
+                    hub = viewModel,
+                    onScanNexusRecipient = ::scanNexusRecipient,
                 )
             }
         }
@@ -347,7 +401,7 @@ private fun CardsMainScreen(
  * history stay visible; Send and Swap are off with their reason on their own screens.
  */
 @Composable
-private fun ReadOnlyHomeBanner() {
+internal fun ReadOnlyHomeBanner() {
     if (!rememberReadOnlyBrowsing()) return
     val context = LocalContext.current
     var learnMore by remember { mutableStateOf(false) }
