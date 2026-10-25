@@ -128,9 +128,7 @@ class SoraMetricsLiveContractTest {
 
     private fun assumeLiveExplorerTestsEnabled() {
         assumeTrue(
-            System.getenv("RUN_LIVE_EXPLORER_TESTS") == "true" ||
-                System.getenv("CI") == "true" ||
-                System.getenv("JENKINS_URL").isNullOrBlank().not()
+            System.getenv("RUN_LIVE_EXPLORER_TESTS") == "true"
         )
     }
 
