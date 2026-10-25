@@ -37,6 +37,21 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 object FirebaseWrapper {
+    enum class Breadcrumb {
+        KEYS_CREATED,
+        RETAINED_KEYS_ADOPTED,
+        RECOVERY_BACKUP_ADDED,
+        ACCOUNT_KEYS_REPAIRED,
+        RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH,
+        LEGACY_CREDENTIALS_READ,
+        ADDRESS_RECREATED,
+        MIGRATION_ATTEMPT_FINISHED,
+        SPLASH_NAVIGATION,
+        RUNTIME_VERSION_REFRESHED,
+        RUNTIME_NETWORK_SELECTED,
+        RUNTIME_SNAPSHOT_BUILT,
+    }
+
     enum class PrivacySafeErrorClass {
         PI_TRANSACTION_PEERS,
         PI_TRANSACTION_HISTORY,
@@ -117,9 +132,10 @@ object FirebaseWrapper {
         crashlyticsInstance()?.recordException(sanitized)
     }
 
-    fun log(message: String) {
-        Timber.d(message)
-        crashlyticsInstance()?.log(message)
+    // Only fixed labels may cross the telemetry boundary; wallet data cannot be interpolated.
+    fun log(breadcrumb: Breadcrumb) {
+        Timber.d(breadcrumb.name)
+        crashlyticsInstance()?.log(breadcrumb.name)
     }
 
     private fun crashlyticsInstance(): FirebaseCrashlytics? {

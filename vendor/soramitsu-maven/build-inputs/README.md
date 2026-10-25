@@ -35,3 +35,9 @@ SORA Card KYC SDK, their only consumer; they remain in git history.
 These inputs and the current artifact hashes establish a stable, inspectable inventory. The
 isolated xcrypto JNI experiment does not constitute an independent source-to-binary review, full
 wallet runtime test, SBOM, license review, or production approval.
+
+The current xcrypto security fork uses `xcrypto-1.2.8-sora.1-security.patch`,
+`xcrypto-1.2.8-sora.2-native-security.patch`, the pinned Cargo lock and original
+Dalek/Rand crate archives. `xcrypto-1.2.8-sora.2-16kb-rebuild.md` and the matching
+repack script combine those security fixes with 16 KB JNI alignment. The original
+security AAR is retained separately; only its two 64-bit JNI entries are replaced.

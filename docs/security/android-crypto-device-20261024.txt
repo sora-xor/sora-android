@@ -1,0 +1,8 @@
+
+jp.co.soramitsu.sora.ux.CryptoSecurityCompatibilityTest:..
+
+Time: 0.853
+
+OK (2 tests)
+
+

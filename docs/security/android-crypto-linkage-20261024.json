@@ -1,0 +1,1552 @@
+{
+  "scope": "Resolved Android-base production runtime jars; direct BC/JMRTD symbols only",
+  "artifactCount": 323,
+  "referenceCount": 78836,
+  "externalConsumers": [
+    "com.nimbusds:nimbus-jose-jwt:9.37.4",
+    "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3",
+    "com.squareup.okhttp3:okhttp:4.12.0",
+    "jp.co.soramitsu:xcrypto:1.2.8-sora.1",
+    "org.ejbca.cvc:cert-cvc:1.4.13",
+    "org.web3j:crypto:4.8.7-android",
+    "org.web3j:utils:4.8.7-android"
+  ],
+  "missing": [
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/crypto/bc/BouncyCastleFIPSProviderSingleton",
+      "missingClass": "org/bouncycastle/jcajce/provider/BouncyCastleFipsProvider"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/crypto/bc/BouncyCastleFIPSProviderSingleton",
+      "owner": "org/bouncycastle/jcajce/provider/BouncyCastleFipsProvider",
+      "member": "<init>",
+      "descriptor": "()V"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/ECKey",
+      "missingClass": "org/bouncycastle/cert/jcajce/JcaX509CertificateHolder"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/ECKey",
+      "owner": "org/bouncycastle/cert/jcajce/JcaX509CertificateHolder",
+      "member": "<init>",
+      "descriptor": "(Ljava/security/cert/X509Certificate;)V"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/ECKey",
+      "owner": "org/bouncycastle/cert/jcajce/JcaX509CertificateHolder",
+      "member": "getSubjectPublicKeyInfo",
+      "descriptor": "()Lorg/bouncycastle/asn1/x509/SubjectPublicKeyInfo;"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/util/X509CertChainUtils",
+      "missingClass": "org/bouncycastle/cert/X509CertificateHolder"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/util/X509CertChainUtils",
+      "missingClass": "org/bouncycastle/openssl/PEMParser"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/util/X509CertChainUtils",
+      "owner": "org/bouncycastle/openssl/PEMParser",
+      "member": "<init>",
+      "descriptor": "(Ljava/io/Reader;)V"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/util/X509CertChainUtils",
+      "owner": "org/bouncycastle/openssl/PEMParser",
+      "member": "readObject",
+      "descriptor": "()Ljava/lang/Object;"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/util/X509CertChainUtils",
+      "owner": "org/bouncycastle/cert/X509CertificateHolder",
+      "member": "getEncoded",
+      "descriptor": "()[B"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "missingClass": "org/bouncycastle/openssl/PEMKeyPair"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "missingClass": "org/bouncycastle/openssl/jcajce/JcaPEMKeyConverter"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "missingClass": "org/bouncycastle/openssl/PEMException"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "missingClass": "org/bouncycastle/openssl/PEMParser"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "missingClass": "org/bouncycastle/cert/X509CertificateHolder"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "owner": "org/bouncycastle/openssl/PEMParser",
+      "member": "<init>",
+      "descriptor": "(Ljava/io/Reader;)V"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "owner": "org/bouncycastle/openssl/PEMParser",
+      "member": "readObject",
+      "descriptor": "()Ljava/lang/Object;"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "owner": "org/bouncycastle/openssl/jcajce/JcaPEMKeyConverter",
+      "member": "getPublicKey",
+      "descriptor": "(Lorg/bouncycastle/asn1/x509/SubjectPublicKeyInfo;)Ljava/security/PublicKey;"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "owner": "org/bouncycastle/cert/X509CertificateHolder",
+      "member": "getSubjectPublicKeyInfo",
+      "descriptor": "()Lorg/bouncycastle/asn1/x509/SubjectPublicKeyInfo;"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "owner": "org/bouncycastle/openssl/jcajce/JcaPEMKeyConverter",
+      "member": "getKeyPair",
+      "descriptor": "(Lorg/bouncycastle/openssl/PEMKeyPair;)Ljava/security/KeyPair;"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "owner": "org/bouncycastle/openssl/jcajce/JcaPEMKeyConverter",
+      "member": "getPrivateKey",
+      "descriptor": "(Lorg/bouncycastle/asn1/pkcs/PrivateKeyInfo;)Ljava/security/PrivateKey;"
+    },
+    {
+      "artifact": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "class": "com/nimbusds/jose/jwk/PEMEncodedKeyParser",
+      "owner": "org/bouncycastle/openssl/jcajce/JcaPEMKeyConverter",
+      "member": "<init>",
+      "descriptor": "()V"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/BouncyCastlePlatform",
+      "missingClass": "org/bouncycastle/jsse/BCSSLParameters"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/BouncyCastlePlatform",
+      "missingClass": "org/bouncycastle/jsse/provider/BouncyCastleJsseProvider"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/BouncyCastlePlatform",
+      "missingClass": "org/bouncycastle/jsse/BCSSLSocket"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/BouncyCastlePlatform",
+      "owner": "org/bouncycastle/jsse/provider/BouncyCastleJsseProvider",
+      "member": "<init>",
+      "descriptor": "()V"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/BouncyCastlePlatform",
+      "owner": "org/bouncycastle/jsse/BCSSLSocket",
+      "member": "getParameters",
+      "descriptor": "()Lorg/bouncycastle/jsse/BCSSLParameters;"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/BouncyCastlePlatform",
+      "owner": "org/bouncycastle/jsse/BCSSLParameters",
+      "member": "setApplicationProtocols",
+      "descriptor": "([Ljava/lang/String;)V"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/BouncyCastlePlatform",
+      "owner": "org/bouncycastle/jsse/BCSSLSocket",
+      "member": "setParameters",
+      "descriptor": "(Lorg/bouncycastle/jsse/BCSSLParameters;)V"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/BouncyCastlePlatform",
+      "owner": "org/bouncycastle/jsse/BCSSLSocket",
+      "member": "getApplicationProtocol",
+      "descriptor": "()Ljava/lang/String;"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/android/BouncyCastleSocketAdapter",
+      "missingClass": "org/bouncycastle/jsse/BCSSLParameters"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/android/BouncyCastleSocketAdapter",
+      "missingClass": "org/bouncycastle/jsse/BCSSLSocket"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/android/BouncyCastleSocketAdapter",
+      "owner": "org/bouncycastle/jsse/BCSSLSocket",
+      "member": "getApplicationProtocol",
+      "descriptor": "()Ljava/lang/String;"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/android/BouncyCastleSocketAdapter",
+      "owner": "org/bouncycastle/jsse/BCSSLSocket",
+      "member": "getParameters",
+      "descriptor": "()Lorg/bouncycastle/jsse/BCSSLParameters;"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/android/BouncyCastleSocketAdapter",
+      "owner": "org/bouncycastle/jsse/BCSSLParameters",
+      "member": "setApplicationProtocols",
+      "descriptor": "([Ljava/lang/String;)V"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/android/BouncyCastleSocketAdapter",
+      "owner": "org/bouncycastle/jsse/BCSSLSocket",
+      "member": "setParameters",
+      "descriptor": "(Lorg/bouncycastle/jsse/BCSSLParameters;)V"
+    },
+    {
+      "artifact": "com.squareup.okhttp3:okhttp:4.12.0",
+      "class": "okhttp3/internal/platform/android/BouncyCastleSocketAdapter$Companion$factory$1",
+      "missingClass": "org/bouncycastle/jsse/BCSSLSocket"
+    }
+  ],
+  "artifacts": [
+    {
+      "coordinate": "androidx.activity:activity-compose:1.12.1",
+      "sha256": "4abdef710245f64241b539db9fb7ece232d4edcf982d688f1b610ba98a134593"
+    },
+    {
+      "coordinate": "androidx.activity:activity-ktx:1.12.1",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.activity:activity:1.12.1",
+      "sha256": "bcc813cc9d7622183ca568893a34ed8ea6191a9abc2beafaf0a9e6b74ba5cbf5"
+    },
+    {
+      "coordinate": "androidx.annotation:annotation-experimental:1.5.0",
+      "sha256": "3e771f353fa75dc43ff07fc98092213c7477c497eec37c4cc91aeafcaf926524"
+    },
+    {
+      "coordinate": "androidx.annotation:annotation-jvm:1.9.1",
+      "sha256": "1e343917ebf27ba96fe4dc52b1cad7fd32b738fbc6355bb6cd5b3b305d7212d0"
+    },
+    {
+      "coordinate": "androidx.appcompat:appcompat-resources:1.7.1",
+      "sha256": "8ebb7fe38a2505091b1e7084c6ab1300b637b57cefcac420b43d9cb8d3fd0f74"
+    },
+    {
+      "coordinate": "androidx.appcompat:appcompat:1.7.1",
+      "sha256": "0987053a06eafbeb6c9f8fc37853ea8bd15afd44ebff01309510c56096d7184b"
+    },
+    {
+      "coordinate": "androidx.arch.core:core-common:2.2.0",
+      "sha256": "65308a06b1c00ee186cb9e19321383f043b993813f1522c47f4a3e3303bdba41"
+    },
+    {
+      "coordinate": "androidx.arch.core:core-runtime:2.2.0",
+      "sha256": "51046edef4b4b743dff839e8fc89987184d11215ea1524c8d383bd1c05d5c5e9"
+    },
+    {
+      "coordinate": "androidx.autofill:autofill:1.0.0",
+      "sha256": "b005d19ae5536cc724a180d491fae94ce3df09cad786268a27a88190ef264ac0"
+    },
+    {
+      "coordinate": "androidx.biometric:biometric:1.1.0",
+      "sha256": "e6b897381c2e3fcba3bc5a481cb16b0ad0d71ff30e565cb9933659f6890517e3"
+    },
+    {
+      "coordinate": "androidx.camera:camera-camera2:1.3.1",
+      "sha256": "63a956984c1e757d1e035742a832d27909744d8d32adb8f3421b542428a1d280"
+    },
+    {
+      "coordinate": "androidx.camera:camera-core:1.3.1",
+      "sha256": "db1f7739fa1e713118f13604575e9f9a19a33c40f4447f6fd0ba9f1fa5362595"
+    },
+    {
+      "coordinate": "androidx.camera:camera-extensions:1.3.1",
+      "sha256": "1e9ad6f8ab99d4381543064ead9fc90690bdf63cc6180dd99b9199130b92debf"
+    },
+    {
+      "coordinate": "androidx.camera:camera-lifecycle:1.3.1",
+      "sha256": "fd4765b6f810b2b342a2928faf81491216161b79119fe673a3da8ff46ad1f691"
+    },
+    {
+      "coordinate": "androidx.camera:camera-video:1.3.1",
+      "sha256": "ab77757fd355097c5b2923b89cefa4c74ea35ce9535dde9e2b3af902335a5156"
+    },
+    {
+      "coordinate": "androidx.camera:camera-view:1.3.1",
+      "sha256": "28235241b99da1c26459e8f6d030d84b10e8ec244b1012558321f9104805d51f"
+    },
+    {
+      "coordinate": "androidx.cardview:cardview:1.0.0",
+      "sha256": "116659c0c61cbd0dfafb9a3662407fd7561db8350ef61fccd6f6f1a1025ef3da"
+    },
+    {
+      "coordinate": "androidx.collection:collection-jvm:1.5.0",
+      "sha256": "70b35924e4babcdffa37d0e575ee039c56a2d97123342624c48b603233704341"
+    },
+    {
+      "coordinate": "androidx.collection:collection-ktx:1.5.0",
+      "sha256": "939b4a8697640e77d83e4e8b4c4a9d18f8130198c5961194af8dd9db9dc7c353"
+    },
+    {
+      "coordinate": "androidx.compose.animation:animation-android:1.11.1",
+      "sha256": "c7473b47afc1bb4291db1a82b64fd2e52f6966442277582652c8e4e31cae9f5e"
+    },
+    {
+      "coordinate": "androidx.compose.animation:animation-core-android:1.11.1",
+      "sha256": "b7bcc509b5d3fd258baeebc2779f327a75a9daf35c51f6703616d6de1b11262c"
+    },
+    {
+      "coordinate": "androidx.compose.animation:animation-graphics-android:1.11.1",
+      "sha256": "33b0e0bcc2c6f43590f46cd236f869c61105a99d3a94375903aa383c44bb07e2"
+    },
+    {
+      "coordinate": "androidx.compose.foundation:foundation-android:1.11.1",
+      "sha256": "cc794e2d3ae72287c782a2cda16383af394f7dcfe06ed22b7a007ac6892a46f8"
+    },
+    {
+      "coordinate": "androidx.compose.foundation:foundation-layout-android:1.11.1",
+      "sha256": "fe530c09d5f757c43563a24e158eca7bff27366ad08d7eca04524f8d51f61dae"
+    },
+    {
+      "coordinate": "androidx.compose.material3:material3-android:1.4.0",
+      "sha256": "1c8217b178f94790f7080e2d202d7d8f2f374a71db3d9ae1992ed0dca44c7934"
+    },
+    {
+      "coordinate": "androidx.compose.material:material-android:1.11.1",
+      "sha256": "479441207094be6c7c119ec6510b10bc80dcee7720541c732e0316b056079b03"
+    },
+    {
+      "coordinate": "androidx.compose.material:material-ripple-android:1.11.1",
+      "sha256": "df6f453288978ff068f526ebc5dc8aba627c18a858e04d11f8f923b54beafe07"
+    },
+    {
+      "coordinate": "androidx.compose.runtime:runtime-android:1.11.1",
+      "sha256": "742bc13261eb402f52bad3f4cca77c459cec6020619f8e426c9d822ea30124b4"
+    },
+    {
+      "coordinate": "androidx.compose.runtime:runtime-annotation-android:1.11.1",
+      "sha256": "6d51ac3a6fba94408e197e6ffda255bf582f8460c2f31f00560612f12e1a5e3b"
+    },
+    {
+      "coordinate": "androidx.compose.runtime:runtime-livedata:1.11.1",
+      "sha256": "83e0641280be0ae155876e98c4ebd911e8e18617651b13b95811dd2183e49b2b"
+    },
+    {
+      "coordinate": "androidx.compose.runtime:runtime-retain-android:1.11.1",
+      "sha256": "45a206780456bb22bd5471b63e29f846998a879b70fc8b1747f9a9182b4c5f39"
+    },
+    {
+      "coordinate": "androidx.compose.runtime:runtime-saveable-android:1.11.1",
+      "sha256": "1319bac839f8efff799cd33a1e7c03023ac0f8228116a3532036c8667b83a5d3"
+    },
+    {
+      "coordinate": "androidx.compose.ui:ui-android:1.11.1",
+      "sha256": "f1680107d68456e5e6ba0c6633a05bb882041f2d837757ebe9a73193986819c4"
+    },
+    {
+      "coordinate": "androidx.compose.ui:ui-geometry-android:1.11.1",
+      "sha256": "cb46ed31b0969076e9ff3c8f069db8ac909967df942fd9ffe168df4b464f5923"
+    },
+    {
+      "coordinate": "androidx.compose.ui:ui-graphics-android:1.11.1",
+      "sha256": "b39918f5853c28b2f00ded14b19a55bd7adf3783009c3ae3b1b07c74996a5ccd"
+    },
+    {
+      "coordinate": "androidx.compose.ui:ui-text-android:1.11.1",
+      "sha256": "c1b92b7c8ddb205b5ae1270bc47fb27c00541ee3a52df43c97fcdaf4f10f2aae"
+    },
+    {
+      "coordinate": "androidx.compose.ui:ui-tooling-preview-android:1.11.1",
+      "sha256": "a31ad0c065ce8f2009cfcff0281717c77abb57a515431f4ea5f7b1fd4ceaea2c"
+    },
+    {
+      "coordinate": "androidx.compose.ui:ui-unit-android:1.11.1",
+      "sha256": "d82c138522baa15ec9cf53718964470de5bfc91f6e32b69e3edeb5062e3e5155"
+    },
+    {
+      "coordinate": "androidx.compose.ui:ui-util-android:1.11.1",
+      "sha256": "240d857d73e51d911801e37e8afcfcfeccb186732086ed089bbc3047d546709b"
+    },
+    {
+      "coordinate": "androidx.concurrent:concurrent-futures-ktx:1.1.0",
+      "sha256": "1968bf52039e38636aa6f114cd17d7256919d1e8997417716fef9d1da1f24d85"
+    },
+    {
+      "coordinate": "androidx.concurrent:concurrent-futures:1.1.0",
+      "sha256": "0ce067c514a0d1049d1bebdf709e344ed3266fe9744275682937cdcb13334e9e"
+    },
+    {
+      "coordinate": "androidx.constraintlayout:constraintlayout-compose-android:1.1.1",
+      "sha256": "9b308ef2f23bbd84d85473306953db1fba410ebfd35924b44a759c1f78e53d9a"
+    },
+    {
+      "coordinate": "androidx.constraintlayout:constraintlayout-core:1.1.1",
+      "sha256": "3c2054328328831eb6e69b4014f6ef9faa117fd4b811929f3a91d3db375f2c02"
+    },
+    {
+      "coordinate": "androidx.constraintlayout:constraintlayout:2.2.1",
+      "sha256": "a4f2e5f3b252005a850d4d62ca4a698e0c1245f1f40f61e320457e6d44a87112"
+    },
+    {
+      "coordinate": "androidx.coordinatorlayout:coordinatorlayout:1.1.0",
+      "sha256": "db23aa1754f6912317e001db289152a0db23cbf1ebb820fc271dd6f817823c4e"
+    },
+    {
+      "coordinate": "androidx.core:core-ktx:1.17.0",
+      "sha256": "e7fd7e335b11d25b79bfbf3b4b77d4749731dddef3e636c09b9abcbfadfac4e3"
+    },
+    {
+      "coordinate": "androidx.core:core-viewtree:1.0.0",
+      "sha256": "d614e9cb81e7e848b7ae447cf0d97808d81bfd492f0b677d448c1f9cbf4ee99c"
+    },
+    {
+      "coordinate": "androidx.core:core:1.17.0",
+      "sha256": "668415ae5b2855c7ceadc72855cc598d99a16659ea81fda1a2abee89b8846939"
+    },
+    {
+      "coordinate": "androidx.cursoradapter:cursoradapter:1.0.0",
+      "sha256": "d6027979944a46a31bc27d4571a484c7a8f954754923b337ea068a78bf605669"
+    },
+    {
+      "coordinate": "androidx.customview:customview-poolingcontainer:1.0.0",
+      "sha256": "fe02516bf0786f901a7b3509bf0d6d2b959e35f1e2cff7f6501426a03d3b1ae2"
+    },
+    {
+      "coordinate": "androidx.customview:customview:1.1.0",
+      "sha256": "5b504373cf26ce7674114fc8fa20f84a3690683a8d8d06b5f07bdca98c41a313"
+    },
+    {
+      "coordinate": "androidx.databinding:viewbinding:9.2.1",
+      "sha256": "a7071863870738090cee3180f1fbf53084b08d4cd66b4a833d81ec9986cdb954"
+    },
+    {
+      "coordinate": "androidx.datastore:datastore-android:1.1.7",
+      "sha256": "5b25b4bca949fb159e30016b2e71958890bf40dea8922a59af9a6c6c067bd7ab"
+    },
+    {
+      "coordinate": "androidx.datastore:datastore-core-android:1.1.7",
+      "sha256": "16826f8911a52f80b82eb7e62f2e508bfdd85097b8b739fabb42029c2694f6dd"
+    },
+    {
+      "coordinate": "androidx.datastore:datastore-core-okio-jvm:1.1.7",
+      "sha256": "291506b4fce398249793e327207635bd4df25181d9539808d7181a4abd0875f5"
+    },
+    {
+      "coordinate": "androidx.datastore:datastore-preferences-android:1.1.7",
+      "sha256": "9ec9ba6785b147a96f61886f8b4ef7f70e62734a2c71b4d2a2176d30f1643fc4"
+    },
+    {
+      "coordinate": "androidx.datastore:datastore-preferences-core-android:1.1.7",
+      "sha256": "ad4a80b2fe7e0caef51f83cea3c2db0f43f3cc6342ea0dbf0158da1f54e6e686"
+    },
+    {
+      "coordinate": "androidx.datastore:datastore-preferences-external-protobuf:1.1.7",
+      "sha256": "fcb3f373cf743426c85ebb0d3cc644aefaf26f39b7fa55bb90238d41b689eca7"
+    },
+    {
+      "coordinate": "androidx.datastore:datastore-preferences-proto:1.1.7",
+      "sha256": "63686a612f39b8ca603bebe3376d55fb6c9ee28a4a5173efa49c89cbcca8a127"
+    },
+    {
+      "coordinate": "androidx.documentfile:documentfile:1.0.0",
+      "sha256": "bde5edf7b644c0cc0e966080c055d4071855d2ea9ac111dbdc0b4ee18aff1685"
+    },
+    {
+      "coordinate": "androidx.drawerlayout:drawerlayout:1.1.1",
+      "sha256": "50d21a800e5b9e7be734610a3c8be5edd5f9279af47a8410ea312ddd053d4868"
+    },
+    {
+      "coordinate": "androidx.dynamicanimation:dynamicanimation:1.0.0",
+      "sha256": "40844673706274c29ea8b66aad9a19fe951383c4f76647602aa29d5239f1f67e"
+    },
+    {
+      "coordinate": "androidx.emoji2:emoji2-views-helper:1.4.0",
+      "sha256": "9b65eac50bd555be030998a2e4baa177f0f2ced61ac2b21306b2ee4b9b31c651"
+    },
+    {
+      "coordinate": "androidx.emoji2:emoji2:1.4.0",
+      "sha256": "f49df0a0cc5b3cade7967876822bcea280cd1b9e093022d8e5a121548e0e3576"
+    },
+    {
+      "coordinate": "androidx.exifinterface:exifinterface:1.3.7",
+      "sha256": "be0356606334c10c011bf6ca5b2cc00a646b837707f5223decbeed2d9daeaa9b"
+    },
+    {
+      "coordinate": "androidx.fragment:fragment-ktx:1.8.9",
+      "sha256": "212db0d0b974d675ab7cfeee7e5b03461f1905ff3dbf292543543065d0e330b3"
+    },
+    {
+      "coordinate": "androidx.fragment:fragment:1.8.9",
+      "sha256": "37c7639e8d8208cf825799bd6e3088f1a2865115b76b07ffdd8f28c0ab7b74d2"
+    },
+    {
+      "coordinate": "androidx.graphics:graphics-path:1.0.1",
+      "sha256": "93184ef861811f17f6d18d2b79c5b697c6952a04e25de695de07815737fdafad"
+    },
+    {
+      "coordinate": "androidx.hilt:hilt-common:1.3.0",
+      "sha256": "f3bd79f6b830a432574dc734c36bf2c204f75dff963e507c47f6c6c6f91e661f"
+    },
+    {
+      "coordinate": "androidx.hilt:hilt-lifecycle-viewmodel-compose:1.3.0",
+      "sha256": "28b40500db55abfc6ae74b120594474b0bd5f1d4707e5ff61cb89f88da38f4f0"
+    },
+    {
+      "coordinate": "androidx.hilt:hilt-lifecycle-viewmodel:1.3.0",
+      "sha256": "916e5dd287d3b104d2f3d6f7dbe78c97d748449bce9c67fd3887e067371a023e"
+    },
+    {
+      "coordinate": "androidx.hilt:hilt-navigation-compose:1.3.0",
+      "sha256": "9e69d7dd6a4bf448d4e5dd626dfdce6bcf9684fc6c33210d437af3679e968723"
+    },
+    {
+      "coordinate": "androidx.hilt:hilt-work:1.3.0",
+      "sha256": "da812e63b872c2c48763bb2e0dc4f1aa81d58ce788832625aa1f17f9004ba7fa"
+    },
+    {
+      "coordinate": "androidx.interpolator:interpolator:1.0.0",
+      "sha256": "90a9752651d3246ead84e75b5c42054402c6fe64b7bbe653932bb5d433d2c948"
+    },
+    {
+      "coordinate": "androidx.legacy:legacy-support-core-utils:1.0.0",
+      "sha256": "1bcd190969bcc06759b4270ae1cf7f5f66381a1c8704a24a58a305e5ddab5389"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-common-java8:2.10.0",
+      "sha256": "497dd84de9f2fd46324f25f9a3af032d3a23d087e87af515c4b19435f6d6a651"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-common-jvm:2.10.0",
+      "sha256": "15943082d87bcd78830398fa377f2c8b12643de290d0906ed8e49a2d335ddb54"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-livedata-core-ktx:2.10.0",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-livedata-core:2.10.0",
+      "sha256": "eb182aed8c2c87070ee29f6577bf3ee2db9f8f289568c36d617809a541264d30"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-livedata-ktx:2.10.0",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-livedata:2.10.0",
+      "sha256": "9ab546677d134e59dc0c4f072ec3f02d46e8ab7497aff3f680f606df40419e5d"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-process:2.10.0",
+      "sha256": "8ecb83bab6366095793a9502e2e2be3d238013fedacb90071be1d5a7f74dc6f0"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-runtime-android:2.10.0",
+      "sha256": "61e55cafe16652db8d0f8508826764c74f5867bf1856a498ca74bb8b0386049a"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-runtime-compose-android:2.10.0",
+      "sha256": "b800b1b44b7097ca8501e9becfc665cfeadfb1847b921371482bd85b6130e798"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-runtime-ktx-android:2.10.0",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-service:2.10.0",
+      "sha256": "7037f7a2d58754455cc8bce91057245630739458dfe04e7256b3d7eaf3a3a98e"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-android:2.10.0",
+      "sha256": "5dc5e7222aae5081bbf4b8c087b499c1dd545eacfd808e1d7306785d65f875d2"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-compose-android:2.10.0",
+      "sha256": "1680942905eca9c391e9685563b861b14ed1953ab7dab3bfada4361b678954e9"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-savedstate-android:2.10.0",
+      "sha256": "4a0d0c02275c16a9b734d8924741d88610f7379ddef5cf6208aaa69eb83d6ebd"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel:2.10.0",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.loader:loader:1.1.0",
+      "sha256": "fe0118357406564ec420a837b6460dec908710db23f3c597228392e29f4f130c"
+    },
+    {
+      "coordinate": "androidx.localbroadcastmanager:localbroadcastmanager:1.0.0",
+      "sha256": "d87198fc465a3e27a842df4cb1ccb5e08e7d49f86fb55e169e6ed148ab6f6a8e"
+    },
+    {
+      "coordinate": "androidx.navigation:navigation-common-android:2.9.6",
+      "sha256": "c25bd6d5aebe31240da8c38e05bdc507115090dd60fdf561384d1c9d64836ef4"
+    },
+    {
+      "coordinate": "androidx.navigation:navigation-compose-android:2.9.6",
+      "sha256": "b308c54eece0448e8e582b71b0377b9f4248dbace93fa564ea2e5bad8ba6e6a8"
+    },
+    {
+      "coordinate": "androidx.navigation:navigation-fragment-ktx:2.9.6",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.navigation:navigation-fragment:2.9.6",
+      "sha256": "757725de00b932ccbfccdf019167c5231f32c824ab176eca8a64c8f39c830ee6"
+    },
+    {
+      "coordinate": "androidx.navigation:navigation-runtime-android:2.9.6",
+      "sha256": "d06cdcb28f2d8afdf813ccfa9c067c4297cd3782b9345fd803d008f9c6b75d2f"
+    },
+    {
+      "coordinate": "androidx.navigation:navigation-ui-ktx:2.9.6",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.navigation:navigation-ui:2.9.6",
+      "sha256": "f1d5ca02e19a38308ba2009ba94b6f0198e67a34b4f547d2aaea152d07675e8e"
+    },
+    {
+      "coordinate": "androidx.navigationevent:navigationevent-android:1.0.1",
+      "sha256": "a4070dd24c25c041e0b7198357f3d6418efafbcaf6151d2da6a3d89737c5de04"
+    },
+    {
+      "coordinate": "androidx.navigationevent:navigationevent-compose-android:1.0.1",
+      "sha256": "f90b790d28a2c169ebbd761152e7487e6c02ac1d84fada224fb047d97ca2f92c"
+    },
+    {
+      "coordinate": "androidx.print:print:1.0.0",
+      "sha256": "fac1adc5f4e2d0d3d48040295cd7d5139e41eb44c46c3f84b9691ec005e0f92a"
+    },
+    {
+      "coordinate": "androidx.profileinstaller:profileinstaller:1.4.1",
+      "sha256": "0804e24b25228371ee4c7a44c6212b7ad91e466351700d1d395dd5cc302fbd60"
+    },
+    {
+      "coordinate": "androidx.recyclerview:recyclerview:1.1.0",
+      "sha256": "a90332a77cf5931d5376e7a323c06de9c439717b90e3db1d4564066874f3cb41"
+    },
+    {
+      "coordinate": "androidx.resourceinspection:resourceinspection-annotation:1.0.1",
+      "sha256": "8cff870ec6fb31db48a52f4a792335b4bf8de07e03bd37823181526433ccd5cb"
+    },
+    {
+      "coordinate": "androidx.room:room-common-jvm:2.8.4",
+      "sha256": "dc7b4e1a75a790f29c97afd5516b8bf8002d9b6e83e295bc569b33566f3b1ec0"
+    },
+    {
+      "coordinate": "androidx.room:room-ktx:2.8.4",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.room:room-runtime-android:2.8.4",
+      "sha256": "3991c956412ddb3a83a0cf17b80d47031de81e259f0ef9d988535d58c7a12788"
+    },
+    {
+      "coordinate": "androidx.savedstate:savedstate-android:1.4.0",
+      "sha256": "811c3498c8d17072661c40c79b9f95276e9bad67496325b96dc1c9f535cb8841"
+    },
+    {
+      "coordinate": "androidx.savedstate:savedstate-compose-android:1.4.0",
+      "sha256": "d88d3ccdd82fd8b462fa968d9053cda492fb3e03eb5c388ecaf71e3ddfb283b9"
+    },
+    {
+      "coordinate": "androidx.savedstate:savedstate-ktx:1.4.0",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.security:security-crypto-ktx:1.1.0-alpha06",
+      "sha256": "66a7f31413c3e4158de835638bf88bda0ea293b1552e90a521e69438ddb9a0a8"
+    },
+    {
+      "coordinate": "androidx.security:security-crypto:1.1.0-alpha06",
+      "sha256": "a16ed72b592b78db12141535ccc978f89cb63a76d4c8e6003340d3993f9aea0f"
+    },
+    {
+      "coordinate": "androidx.slidingpanelayout:slidingpanelayout:1.2.0",
+      "sha256": "607ce1b6cec1c33caf29624c99284b302a9fcc4c39236db5c52dd6f22125c04e"
+    },
+    {
+      "coordinate": "androidx.sqlite:sqlite-android:2.6.2",
+      "sha256": "389746af87b5868bc9ca75ab10880471353f53bf1be305a0eb4fd036349a1f5d"
+    },
+    {
+      "coordinate": "androidx.sqlite:sqlite-framework-android:2.6.2",
+      "sha256": "b371de59dbb9240d37a2e94d4c2850b5c5ae5a655ca95e479486f3802c2c0180"
+    },
+    {
+      "coordinate": "androidx.startup:startup-runtime:1.1.1",
+      "sha256": "e02adb5fa9aef412645c8d09bb8284815898efb0b0f290eb2cf890051bd26ce5"
+    },
+    {
+      "coordinate": "androidx.tracing:tracing-ktx:1.2.0",
+      "sha256": "0fbfd3517b76302da639189cd0069167174fc91ecae059cd3b532f7cfd20e8dc"
+    },
+    {
+      "coordinate": "androidx.tracing:tracing:1.2.0",
+      "sha256": "026e4142ff017d6192e90840e007775a24c6c078ea875f26ed0bbca347e36445"
+    },
+    {
+      "coordinate": "androidx.transition:transition:1.6.0",
+      "sha256": "173377223e3e2f97335dc6c26c58f577d274cc43727c46cb25bb11933580142d"
+    },
+    {
+      "coordinate": "androidx.vectordrawable:vectordrawable-animated:1.1.0",
+      "sha256": "24b8f8c478973ed9f8dc37490819481f94472334c2a93d5f1194db1a7378941e"
+    },
+    {
+      "coordinate": "androidx.vectordrawable:vectordrawable:1.1.0",
+      "sha256": "6009a2cee60612f4cad2b5fcce9cf91512d53918939f9d43aee03a698bbac52e"
+    },
+    {
+      "coordinate": "androidx.versionedparcelable:versionedparcelable:1.1.1",
+      "sha256": "0bdc9c584773f90f8cf9c3005ed01220b3a490de717dc0b9ba2db1df733ffdb4"
+    },
+    {
+      "coordinate": "androidx.viewpager2:viewpager2:1.0.0",
+      "sha256": "7730f47b2982fe2176068a24d466ce3637b779aead3afd92c944c040b6de1708"
+    },
+    {
+      "coordinate": "androidx.viewpager:viewpager:1.0.0",
+      "sha256": "2bdba2660c2dcb04f4b5654db1c465caebf9d3f7c19d1eb3a08e15b023c5b6f9"
+    },
+    {
+      "coordinate": "androidx.window:window-core-android:1.5.0",
+      "sha256": "bad04ba4ac654b11e598edf11fafb465fd8cab38d8fd03a5e6799951635abd93"
+    },
+    {
+      "coordinate": "androidx.window:window:1.5.0",
+      "sha256": "8a8c388bf05a3504e5403dd92aa09c429d1d7ef9d010849aa9afea313aad7010"
+    },
+    {
+      "coordinate": "androidx.work:work-runtime-ktx:2.11.0",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "androidx.work:work-runtime:2.11.0",
+      "sha256": "9f2d19a01e3831573a8eccdc166997f9f53081ea55614e33cb79fe407daf4e7e"
+    },
+    {
+      "coordinate": "at.yawk.lz4:lz4-java:1.12.1",
+      "sha256": "c75bfbc6980e8b90ee76c75ec5b67058b6b9bfa1e19af6a3cf75dccde533e750"
+    },
+    {
+      "coordinate": "co.touchlab:stately-concurrency-jvm:2.0.6",
+      "sha256": "c57cdb6e15d882461b64c2d35bee474ad5f6bb69f6f76358b0031b8e97627cc5"
+    },
+    {
+      "coordinate": "co.touchlab:stately-concurrent-collections-jvm:2.0.6",
+      "sha256": "7a2673e734bbe9b837397565c3e96f01933556b648a41bf2e7f2c788cd0a26de"
+    },
+    {
+      "coordinate": "co.touchlab:stately-strict-jvm:2.0.6",
+      "sha256": "70cfd46b4500f19e9f17b85a9140ab402f5cf12d5102d2d56c134fa76beda47c"
+    },
+    {
+      "coordinate": "com.airbnb.android:lottie:4.2.0",
+      "sha256": "69fffa7e10cadb3ea6e7d4760f420d061aa3fbfaab8bd427165ae0fa2e458879"
+    },
+    {
+      "coordinate": "com.apollographql.apollo:apollo-annotations-jvm:4.0.0-rc.1",
+      "sha256": "41d4f056a09ffe872fc536137e7e189ac4a669b29969fa9488cffef000eaa401"
+    },
+    {
+      "coordinate": "com.apollographql.apollo:apollo-api-jvm:4.0.0-rc.1",
+      "sha256": "4ec10dc354c4933eb47fc1091ec8373d145b5c359c0719daf683653bb56f8104"
+    },
+    {
+      "coordinate": "com.apollographql.apollo:apollo-mpp-utils-jvm:4.0.0-rc.1",
+      "sha256": "4174eae66c436bb2489c1e07cef750cbc5b77d70b6fdf3f43153a550dd872c00"
+    },
+    {
+      "coordinate": "com.apollographql.apollo:apollo-runtime-android:4.0.0-rc.1",
+      "sha256": "3f67d25596731c31ffcb31c33c334c31c47dcfa0ed1727b32ab808ee49472db8"
+    },
+    {
+      "coordinate": "com.appmattus.certificatetransparency:certificatetransparency-android:2.5.19",
+      "sha256": "89d4c9701640d9052a4d392bdb82c082da59b1261f768790f62c6f6d7e28ca48"
+    },
+    {
+      "coordinate": "com.appmattus.certificatetransparency:certificatetransparency:2.5.19",
+      "sha256": "eda43d88d28c391f1385af61d5f69d63919f3044b540b69338331e1fdd16817e"
+    },
+    {
+      "coordinate": "com.atlassian.commonmark:commonmark:0.13.0",
+      "sha256": "fd38aecef680649894ffd7b434e10081fc609e260c63e16c4323a3eaa2a9f096"
+    },
+    {
+      "coordinate": "com.auth0.android:jwtdecode:2.0.2",
+      "sha256": "0d21a7b4c3d9bd56027dc06adf0c49896ab6756d8a21a4091cbdd12930c921b1"
+    },
+    {
+      "coordinate": "com.benasher44:uuid-jvm:0.8.2",
+      "sha256": "4520ffe0fcccdf8e72c8ce67d9ea6546e38946bbe11cc2963f1864be2eb2c5e3"
+    },
+    {
+      "coordinate": "com.caverock:androidsvg-aar:1.4",
+      "sha256": "5512ca4067ecbe19f9ccd9ed0aeb0fa2a96bb6a8758f06409654d055d07d9f9c"
+    },
+    {
+      "coordinate": "com.fasterxml.jackson.core:jackson-annotations:2.22",
+      "sha256": "21ddb598807d3a51a876704eb979d9296e1c6a6f47ab1826ff88c6d6a127a2d0"
+    },
+    {
+      "coordinate": "com.fasterxml.jackson.core:jackson-core:2.22.4",
+      "sha256": "2d30c375cddea9657a1e1ef97547a2694b663b355facb4de53a097782b312d1a"
+    },
+    {
+      "coordinate": "com.fasterxml.jackson.core:jackson-databind:2.22.4",
+      "sha256": "d4cbf8947087f305869826801913abdc50735a1fab2074a1993e7bc67ca974a3"
+    },
+    {
+      "coordinate": "com.github.WycliffeAssociates:jdenticon-kotlin:1.1",
+      "sha256": "3cda17334290341529b72445bffb074335753ef83282272bfd6233400acc7e2a"
+    },
+    {
+      "coordinate": "com.github.stephenc.jcip:jcip-annotations:1.0-1",
+      "sha256": "4fccff8382aafc589962c4edb262f6aa595e34f1e11e61057d1c6a96e8fc7323"
+    },
+    {
+      "coordinate": "com.github.warchant:ed25519-sha3-java:2.0.1",
+      "sha256": "140ff0507546df77d37bf3ec264fb580802034228a74d1099be0d64f5ad6f3f8"
+    },
+    {
+      "coordinate": "com.google.accompanist:accompanist-drawablepainter:0.32.0",
+      "sha256": "0f3f3e09117641353850b3cfdc50cb92aa071c1923451116c1223fb9ce544e1a"
+    },
+    {
+      "coordinate": "com.google.android.datatransport:transport-api:3.2.0",
+      "sha256": "fdcc9bc9a6057af0c1e87e5b83981681958a341c4d06e5496c1231a71ecfe853"
+    },
+    {
+      "coordinate": "com.google.android.datatransport:transport-backend-cct:3.3.0",
+      "sha256": "a2c8d05bdeb0124046f28798bb182d3dbcdc220715e09811a9908c88ccc252e3"
+    },
+    {
+      "coordinate": "com.google.android.datatransport:transport-runtime:3.3.0",
+      "sha256": "a8a472cd78e5656a9accdb992c659f5fd9013e309ebe086a1bfb252eb12b9718"
+    },
+    {
+      "coordinate": "com.google.android.gms:play-services-auth-api-phone:18.0.2",
+      "sha256": "edbb531745f55c59cce6a9b67959b5440b0ae241a640163d1fc66e3f47e841a3"
+    },
+    {
+      "coordinate": "com.google.android.gms:play-services-auth-base:18.0.10",
+      "sha256": "a8483237a25e0bf47a13c57dd7be639dd64a06683f6e1a2a60760eabdb1de113"
+    },
+    {
+      "coordinate": "com.google.android.gms:play-services-auth:21.0.0",
+      "sha256": "71e07f8f3fda34fa71784bd3dbff6253f502668ed6c816397e84387787711a24"
+    },
+    {
+      "coordinate": "com.google.android.gms:play-services-base:18.3.0",
+      "sha256": "49d517c258e91c6529a112c06437148f3c4ccef717bc1328d5cba163672cd252"
+    },
+    {
+      "coordinate": "com.google.android.gms:play-services-basement:18.9.0",
+      "sha256": "a197a33fba0b11c2dfa94fce42aeb1bd8c6d3e826296363b30e96627bc206315"
+    },
+    {
+      "coordinate": "com.google.android.gms:play-services-fido:20.0.1",
+      "sha256": "e039978576a91aeda80e5457911e37b83f333952753c505d67f0fb1cf053bb8c"
+    },
+    {
+      "coordinate": "com.google.android.gms:play-services-tasks:18.4.0",
+      "sha256": "1444786969b41cb27313f244a722fbe490b886288ff04f39aa315ceedc357abb"
+    },
+    {
+      "coordinate": "com.google.android.material:material:1.12.0",
+      "sha256": "49295bcdcb7da32ef70c5ee7a16562d5f7285f17f84ec0a09ad2d43957e9469c"
+    },
+    {
+      "coordinate": "com.google.android.play:integrity:1.2.0",
+      "sha256": "c40b8b0b6f8f37b0208ddfd29331c38632d57bfe817609376bb6eb0219bd8416"
+    },
+    {
+      "coordinate": "com.google.android.recaptcha:recaptcha:18.4.0",
+      "sha256": "07c86622a424324fccb1c1fa2283267a7ab657da6543310ea27bd2b18bafa514"
+    },
+    {
+      "coordinate": "com.google.api-client:google-api-client-android:1.26.0",
+      "sha256": "9796e4ae28c1e5ebe49229cf1802c37c29350f927d92b08229b6f7df259b1268"
+    },
+    {
+      "coordinate": "com.google.api-client:google-api-client:1.26.0",
+      "sha256": "882ae6185d7396e34f717f30fb225f87dd075bb6a485f742c7d2187474778cc5"
+    },
+    {
+      "coordinate": "com.google.apis:google-api-services-drive:v3-rev197-1.25.0",
+      "sha256": "96f00e43301c4e84f11ef189672acec557a021486d728487bda9165ea3ecd4bf"
+    },
+    {
+      "coordinate": "com.google.auto.value:auto-value-annotations:1.6.3",
+      "sha256": "0e951fee8c31f60270bc46553a8586001b7b93dbb12aec06373aa99a150392c0"
+    },
+    {
+      "coordinate": "com.google.code.findbugs:jsr305:3.0.2",
+      "sha256": "766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7"
+    },
+    {
+      "coordinate": "com.google.code.gson:gson:2.13.2",
+      "sha256": "dd0ce1b55a3ed2080cb70f9c655850cda86c206862310009dcb5e5c95265a5e0"
+    },
+    {
+      "coordinate": "com.google.crypto.tink:tink-android:1.13.0",
+      "sha256": "7d59085d4e1cda5e01d48d5bef164ed6885d3f08bd3ae36d93deeeffaa6dcc34"
+    },
+    {
+      "coordinate": "com.google.dagger:dagger-lint-aar:2.59.2",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "coordinate": "com.google.dagger:dagger:2.59.2",
+      "sha256": "f449e1b07cc65dce15e3df8316d0d3a27ee601601abf957074fe810f545feab5"
+    },
+    {
+      "coordinate": "com.google.dagger:hilt-android:2.59.2",
+      "sha256": "b7f89654dccf85a2648ad65ab83460da82c4808904e542ae85818fc9af5e5466"
+    },
+    {
+      "coordinate": "com.google.dagger:hilt-core:2.59.2",
+      "sha256": "0b10cc6956e2b1d39a8654e6291789c72b787a20720a0884669c2eeb99603ff6"
+    },
+    {
+      "coordinate": "com.google.errorprone:error_prone_annotations:2.50.0",
+      "sha256": "4667724877f1d37a689202da191e23efa7657c62eef93ccdac406eccfe5cdd0a"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-annotations:17.0.0",
+      "sha256": "f80305e6f7b5d111278d4df9504f51f7230e06c6457a0fa7c16e236c7613cc71"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-common:22.2.1",
+      "sha256": "48085b7dd8d41cde46c71ffd4d7b69b0431433b9eeb46dd91d4b9480a70f68d4"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-components:19.0.0",
+      "sha256": "6fee37906a35916bb64ff40bdf0793a8cd870a1f670dbf4e578315db5c29a866"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-config-interop:16.0.1",
+      "sha256": "60b6d94791cce5c03e3d366b657893f9dbe9b7ef325fa487d5eaa1c7133f56bf"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-crashlytics:20.1.1",
+      "sha256": "9391466b4ad02b49e539d950d78cffc7089ef458dd8db8509dbeff2adb9bfb67"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-datatransport:19.0.0",
+      "sha256": "ec3c0b51ded4454c80432c03f2f6335d34a34e73e986a53f308eff1e6f6a63ab"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-encoders-json:18.0.1",
+      "sha256": "0600d532fbb0b08770644e753bc3d45ede16729c2836e00277ee4ceab4c02846"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-encoders-proto:16.0.0",
+      "sha256": "293db96a0d1d43f033167881b638d8fde844e4e5495f5101cf52295765295e0e"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-encoders:17.0.0",
+      "sha256": "282a5a703f9b7eb56508dde97ea918e95d73318b157050f457f7a86dca750150"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-installations-interop:17.3.0",
+      "sha256": "2aef2140d4068fac4b57f26728667a2c0c8ee249fd40caee0aacd17424703c78"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-installations:19.1.2",
+      "sha256": "466338c20561cd7d7d88b997fb3e592b7c04748a982c27e4740bd287a5dea275"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-measurement-connector:20.0.1",
+      "sha256": "a988c03a01a7523d9230a2bc56389e9ed53de83e611fc789414a30c4a5a43316"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-sessions:3.0.8",
+      "sha256": "cea92437c74da92eb2a54a738f8e1348fc67ccac109862e87c072e82dcf710d2"
+    },
+    {
+      "coordinate": "com.google.guava:failureaccess:1.0.3",
+      "sha256": "cbfc3906b19b8f55dd7cfd6dfe0aa4532e834250d7f080bd8d211a3e246b59cb"
+    },
+    {
+      "coordinate": "com.google.guava:guava:33.7.2-android",
+      "sha256": "b949fe975a32421c1a2633c07a4f1578b462f2f467668aa0a4023c5ff7c4a808"
+    },
+    {
+      "coordinate": "com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava",
+      "sha256": "b372a037d4230aa57fbeffdef30fd6123f9c0c2db85d0aced00c91b974f33f99"
+    },
+    {
+      "coordinate": "com.google.http-client:google-http-client-android:1.26.0",
+      "sha256": "258d093020be4f5fff24ed0dde8452c1f372f2c74976faffad6bc058db3a14cf"
+    },
+    {
+      "coordinate": "com.google.http-client:google-http-client-gson:1.43.3",
+      "sha256": "e31a4edcb9c83954a2587e14fa2f3f8f4aad56152381b3321a3bd0bcae03fa26"
+    },
+    {
+      "coordinate": "com.google.http-client:google-http-client-jackson2:1.26.0",
+      "sha256": "a7a8962c05e1acb76686942b5535e8b59a698c9f7189fcc9265e55ddfc4a9a11"
+    },
+    {
+      "coordinate": "com.google.http-client:google-http-client:1.43.3",
+      "sha256": "60aca7428c5a1ff3655b70541a98ff3d70dded48ac1324dae1af39f1b61914af"
+    },
+    {
+      "coordinate": "com.google.j2objc:j2objc-annotations:3.1",
+      "sha256": "84d3a150518485f8140ea99b8a985656749629f6433c92b80c75b36aba3b099b"
+    },
+    {
+      "coordinate": "com.google.oauth-client:google-oauth-client:1.39.0",
+      "sha256": "27fc61ee2d526e33d31350b5ea383091c0879345e261f9b2e6fcc97a20c86f88"
+    },
+    {
+      "coordinate": "com.google.zxing:core:3.4.1",
+      "sha256": "acfa30338c26267b6cab665509c2251bb96e8350bfcad89d59b949ba77011f8d"
+    },
+    {
+      "coordinate": "com.goterl:lazysodium-android:5.0.2",
+      "sha256": "3a6d3e8b5c71770ad0e475e3df090b48708688ec0652756da06ff0496c85fb9c"
+    },
+    {
+      "coordinate": "com.guolindev.permissionx:permissionx:1.7.1",
+      "sha256": "367ce0c23c19f1464d1cf9da474740a22baabdb2ffd65d4fee76d7e7a412c95f"
+    },
+    {
+      "coordinate": "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0",
+      "sha256": "fe3fcb6d2f693867640776eee41989189adc7961797ea88bd2282a1b46b16b77"
+    },
+    {
+      "coordinate": "com.jakewharton.timber:timber:5.0.1",
+      "sha256": "573317a41f2edbb4b3eb0b1ba38e3b588d0ee8427610374d7fd3639b1b937791"
+    },
+    {
+      "coordinate": "com.journeyapps:zxing-android-embedded:4.3.0",
+      "sha256": "c62890894990656f1910d306891c2ed5f66b0f60e6d1b7281abb596455365272"
+    },
+    {
+      "coordinate": "com.madgag.spongycastle:bcpkix-jdk15on:1.58.0.0",
+      "sha256": "89b776cc46caf6f9c29de3fdfe3aad06313b05646778a60873fcfd41f09a87ce"
+    },
+    {
+      "coordinate": "com.madgag.spongycastle:core:1.58.0.0",
+      "sha256": "199617dd5698c5a9312b898c0a4cec7ce9dd8649d07f65d91629f58229d72728"
+    },
+    {
+      "coordinate": "com.madgag.spongycastle:prov:1.58.0.0",
+      "sha256": "092fd09e7006b0814980513b013d4c2b3ffd24a49a635ab4b2d204bb51af1727"
+    },
+    {
+      "coordinate": "com.neovisionaries:nv-websocket-client:2.14",
+      "sha256": "eed0fb6f5ef5db17d087039f1e829cfe827363b2863265258a96f0ed323313b7"
+    },
+    {
+      "coordinate": "com.nimbusds:nimbus-jose-jwt:9.37.4",
+      "sha256": "8fcf4a978bbee7548e8dee6e0528bc85b0ffa84c0f8517c94dd29e590e459449"
+    },
+    {
+      "coordinate": "com.paywings.kyc:android-sdk:1.2.2",
+      "sha256": "d5588d4106610d78d430b74cd69a06c5bbf82af93d0efdd21514fc083445442e"
+    },
+    {
+      "coordinate": "com.paywings.oauth:android-sdk:2.0.0",
+      "sha256": "2daadb23290597d8c69929366554f6ea86a690e4b55af37334f90c3af8567b7c"
+    },
+    {
+      "coordinate": "com.paywings.onboarding.kyc.android-libs:idensic-mobile-sdk:1.31.3",
+      "sha256": "a81e5bcba66b7c26bffdff77428cf15e7a4a16ee734b6626e835f3314e4c9686"
+    },
+    {
+      "coordinate": "com.russhwolf:multiplatform-settings-android:1.0.0",
+      "sha256": "eb1c8ad0ed62af81da61f2dab7ceafcad7b1c629e984aad4e585ab6e435c6ce2"
+    },
+    {
+      "coordinate": "com.russhwolf:multiplatform-settings-serialization-android:1.0.0",
+      "sha256": "a5397c34275275dd3ff3a0e46591f68acd069c0e4f11d70462e0929b6139d407"
+    },
+    {
+      "coordinate": "com.scottyab:rootbeer-lib:0.1.0",
+      "sha256": "57c1d10df67ac04c78075296ba0ff638d9c199034342b679f9a1b37865985be6"
+    },
+    {
+      "coordinate": "com.squareup.okhttp3:logging-interceptor:4.11.0",
+      "sha256": "b99f2d488fce9ac5aebf75783a7848f83fa7a7aac143820c4ebd49db8499db8c"
+    },
+    {
+      "coordinate": "com.squareup.okhttp3:okhttp:4.12.0",
+      "sha256": "b1050081b14bb7a3a7e55a4d3ef01b5dcfabc453b4573a4fc019767191d5f4e0"
+    },
+    {
+      "coordinate": "com.squareup.okio:okio-jvm:3.9.0",
+      "sha256": "ddc386ff14bd25d5c934167196eaf45b18de4f28e1c55a4db37ae594cbfd37e4"
+    },
+    {
+      "coordinate": "com.squareup.picasso:picasso:2.8",
+      "sha256": "32765945b7721d00c9fb12ad8fcd24741bed22fb28de8efb0607fb4d83ca5e4c"
+    },
+    {
+      "coordinate": "com.squareup.retrofit2:converter-gson:2.11.0",
+      "sha256": "3d2b4b668909468465c5776430b57232275d0165513f20fc96b0cfe4aa531326"
+    },
+    {
+      "coordinate": "com.squareup.retrofit2:retrofit:2.11.0",
+      "sha256": "9f4fbbce70728584fbeed38d4061f36d4477e89bca74b4e2ac8aeb6819b0fe43"
+    },
+    {
+      "coordinate": "com.squareup.sqldelight:android-driver:1.5.5",
+      "sha256": "9a9aede331b5ad26e309dcdedb81569283caa69d3ecb4f03204d49a3ee88a1c4"
+    },
+    {
+      "coordinate": "com.squareup.sqldelight:runtime-jvm:1.5.5",
+      "sha256": "61e14863903705c1f2a6996c268d5b3c866013b141372461b564980030437456"
+    },
+    {
+      "coordinate": "commons-codec:commons-codec:1.11",
+      "sha256": "e599d5318e97aa48f42136a2927e6dfa4e8881dff0e6c8e3109ddbbff51d7b7d"
+    },
+    {
+      "coordinate": "commons-logging:commons-logging:1.2",
+      "sha256": "daddea1ea0be0f56978ab3006b8ac92834afeefbd9b7e4e6316fca57df0fa636"
+    },
+    {
+      "coordinate": "dev.chrisbanes.insetter:insetter:0.6.1",
+      "sha256": "31f7bed4983e9eb2d5cff8fa3eb1229e1edab29439b0081961c99a6fde2a0d2a"
+    },
+    {
+      "coordinate": "io.coil-kt:coil-base:2.7.0",
+      "sha256": "804b5d78feed07ce6abd0be84423d884fbd02d28c584cd6ee1f7c1bfe9b42025"
+    },
+    {
+      "coordinate": "io.coil-kt:coil-compose-base:2.7.0",
+      "sha256": "5057d3c76ed1195db15379701df0ec47fcb90e506dc9a6d77aab812414e12e99"
+    },
+    {
+      "coordinate": "io.coil-kt:coil-compose:2.7.0",
+      "sha256": "d20597d2a68a551d9fa4af594a5d307d18bdc0f24cddd94f416e232969a508b8"
+    },
+    {
+      "coordinate": "io.coil-kt:coil-svg:2.7.0",
+      "sha256": "03605d8b870809e499ec617679428631af394882461c35143959a7974ceca990"
+    },
+    {
+      "coordinate": "io.coil-kt:coil:2.7.0",
+      "sha256": "a686464d93664b9ae2b1a09ada15a3bef461ef7c1ea6de2b78037f5a28af8c42"
+    },
+    {
+      "coordinate": "io.emeraldpay.polkaj:polkaj-scale:0.2.3",
+      "sha256": "bea0f3904fef83497b9e5802f36408663a4aba462bf63ded38b89a5f22befa4d"
+    },
+    {
+      "coordinate": "io.github.osipxd:encrypted-datastore-preferences:1.1.1-beta03",
+      "sha256": "2cbc9953a2e6c1f28e19d78dcc9e9c1c8776cf9c4f1987c48ff0475e965def8c"
+    },
+    {
+      "coordinate": "io.github.osipxd:encrypted-datastore:1.1.1-beta03",
+      "sha256": "1a2cf5b00472b3cd034e92e0d7a6e86d32f8a5a2041a7efad5ad3c7a5c02418e"
+    },
+    {
+      "coordinate": "io.github.osipxd:security-crypto-datastore-preferences:1.1.1-beta03",
+      "sha256": "371c42c2c904750462c3163acaa85c82ed7fb06b03ac38a8181ba758c9a60e2d"
+    },
+    {
+      "coordinate": "io.github.osipxd:security-crypto-datastore:1.1.1-beta03",
+      "sha256": "c942d6bd805ebe5df43aebc4a2c1c01f7417c8cd3dc423e8acea350c1b724631"
+    },
+    {
+      "coordinate": "io.grpc:grpc-context:1.27.2",
+      "sha256": "bcbf9055dff453fd6508bd7cca2a0aa2d5f059a9c94beed1f5fda1dc015607b8"
+    },
+    {
+      "coordinate": "io.insert-koin:koin-android:3.5.6",
+      "sha256": "0fea58963b637e5b80c1f17dd04c00a956221e1c898a31e9ac330047add8679f"
+    },
+    {
+      "coordinate": "io.insert-koin:koin-core-jvm:3.5.6",
+      "sha256": "823b9b31588ff90215c1fceae30dfa141d2528e3d4e42c2843ea40c8352bdf69"
+    },
+    {
+      "coordinate": "io.ktor:ktor-client-content-negotiation-jvm:2.3.13",
+      "sha256": "d2930b79843a4da5ea40074f8e905dbd4c5c571bfa004d301d50db241de3a09e"
+    },
+    {
+      "coordinate": "io.ktor:ktor-client-core-jvm:2.3.13",
+      "sha256": "7052849ba4383ca9f6d539db28252e2a02b91d18b4958c80647aba77efa24f45"
+    },
+    {
+      "coordinate": "io.ktor:ktor-client-logging-jvm:2.3.13",
+      "sha256": "0592b54ddec3b0071c4db05bd0e5a9377d50d7625799a3aed8cfff1ef39999f4"
+    },
+    {
+      "coordinate": "io.ktor:ktor-client-okhttp-jvm:2.3.13",
+      "sha256": "b040ca8f5a636183be0e63955edec3a8db1d6dd09b731f4c17b4d40296b61cd7"
+    },
+    {
+      "coordinate": "io.ktor:ktor-client-websockets-jvm:2.3.13",
+      "sha256": "8af99b06884f174eb9647ac6be1f663eac1c40052d0f955a5744ae7bdbf9c400"
+    },
+    {
+      "coordinate": "io.ktor:ktor-events-jvm:2.3.13",
+      "sha256": "87afba70c6dc3e902a14bd2872c7d07e67286aed2a25867e83b75d8fcf9ba072"
+    },
+    {
+      "coordinate": "io.ktor:ktor-http-jvm:2.3.13",
+      "sha256": "a389bf58aaa001c60c289195dbea40c092de8ec4bac5533f34aa71d246811029"
+    },
+    {
+      "coordinate": "io.ktor:ktor-io-jvm:2.3.13",
+      "sha256": "cd5463381fd9e992e09b59eb0f01e6a241513a8e515c2b7ddecf616bbaa8c3f6"
+    },
+    {
+      "coordinate": "io.ktor:ktor-serialization-jvm:2.3.13",
+      "sha256": "2f076e022ff7815decb5810fac3dbc9a757cdfa170f8d990257867268efd91a3"
+    },
+    {
+      "coordinate": "io.ktor:ktor-serialization-kotlinx-json-jvm:2.3.13",
+      "sha256": "c622e10cb9cf0ab733faf637b43111f06359cbd07bf992d92eb5fed52b56acda"
+    },
+    {
+      "coordinate": "io.ktor:ktor-serialization-kotlinx-jvm:2.3.13",
+      "sha256": "833fc47df54c13dd0bac8653560d4d3a68ac1f16bfb26ae46235adf8a034ea7e"
+    },
+    {
+      "coordinate": "io.ktor:ktor-utils-jvm:2.3.13",
+      "sha256": "7a2d6b9308d1d257c71d5a0c61f5838f5c0f0708fa688de4879c20aae8728aba"
+    },
+    {
+      "coordinate": "io.ktor:ktor-websocket-serialization-jvm:2.3.13",
+      "sha256": "db595630988bb7aed56505f273774e1ebe333bc450f3f70aeb227ed2880d4155"
+    },
+    {
+      "coordinate": "io.ktor:ktor-websockets-jvm:2.3.13",
+      "sha256": "7dc3c3087d46a6e9d3a1176650bf56f6ccbd47d1bc615b744777442263579e7b"
+    },
+    {
+      "coordinate": "io.mockk:mockk-agent-api-jvm:1.13.11",
+      "sha256": "24112974f7afbacc89ce8eff7bb1edb7805b425377450a929456176505b7269c"
+    },
+    {
+      "coordinate": "io.mockk:mockk-agent-jvm:1.13.11",
+      "sha256": "efaded148906eb6e967a611d203e321e968b878794038ef7d14648bf0f99de4e"
+    },
+    {
+      "coordinate": "io.mockk:mockk-core-jvm:1.13.11",
+      "sha256": "106ffbd4417a6851209c736c3a93de87dd17340ce75a77ce041b8e64b64a9aff"
+    },
+    {
+      "coordinate": "io.mockk:mockk-dsl-jvm:1.13.11",
+      "sha256": "d1a13dbe7aefc9fbcc9e62c968aaa1c6c2f13bd15fc880d23d6f872c6359661f"
+    },
+    {
+      "coordinate": "io.mockk:mockk-jvm:1.13.11",
+      "sha256": "31535572c69ad432c7b36783683e7c37947b06def45e49a826122ffcc602a13a"
+    },
+    {
+      "coordinate": "io.noties.markwon:core:4.6.2",
+      "sha256": "4b5895c7c5463742365dfc400b95afce8a55ea0e2e76083fd49379f321ff7f6e"
+    },
+    {
+      "coordinate": "io.noties.markwon:html:4.6.2",
+      "sha256": "0cf6d2212522601ca94c0af0c777a35245a7a57890661c8f44dbfff0f4455e26"
+    },
+    {
+      "coordinate": "io.noties.markwon:linkify:4.6.2",
+      "sha256": "4f07d914fca4fe378f3b442da5e687f09b909bb15723717397ee9b8881f5f1df"
+    },
+    {
+      "coordinate": "io.noties.markwon:simple-ext:4.6.2",
+      "sha256": "809a78ff44f87bf42a4f0f2da59504b899a0eff228cb0443a01e53531c9e8413"
+    },
+    {
+      "coordinate": "io.opencensus:opencensus-api:0.31.1",
+      "sha256": "f1474d47f4b6b001558ad27b952e35eda5cc7146788877fc52938c6eba24b382"
+    },
+    {
+      "coordinate": "io.opencensus:opencensus-contrib-http-util:0.31.1",
+      "sha256": "3ea995b55a4068be22989b70cc29a4d788c2d328d1d50613a7a9afd13fdd2d0a"
+    },
+    {
+      "coordinate": "jakarta.inject:jakarta.inject-api:2.0.1",
+      "sha256": "f7dc98062fccf14126abb751b64fab12c312566e8cbdc8483598bffcea93af7c"
+    },
+    {
+      "coordinate": "javax.inject:javax.inject:1",
+      "sha256": "91c77044a50c481636c32d916fd89c9118a72195390452c81065080f957de7ff"
+    },
+    {
+      "coordinate": "javax.xml.bind:jaxb-api:2.3.0",
+      "sha256": "883007989d373d19f352ba9792b25dec21dc7d0e205a710a93a3815101bb3d03"
+    },
+    {
+      "coordinate": "jp.co.soramitsu.xnetworking:lib-android:1.0.15-K2",
+      "sha256": "299fa67e4b9dca846e709fd87014daa6cd55f53d70459cd0f01cdc1eb5f86887"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:android-foundation:0.0.4",
+      "sha256": "04ba7ba127c826ca2c49ee987c4a48fe2ae96f421b1776fc156e04d671ac84a0"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:android-sora-card:1.2.1-K2",
+      "sha256": "23359f25a03149f83694486acf7be80216aa2eac743d110bd68629b23cb79853"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:ui-core:0.2.39",
+      "sha256": "3325748971673a72d00df3c762a8cea6ad9dd3126178d63bcb15c51b2ce68eef"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:xbackup:1.2.3",
+      "sha256": "7cfe566ea8fe027d85a2879be0dc8be0716fedf8c6a21872c32317d6e0acdd58"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:xcrypto:1.2.8-sora.1",
+      "sha256": "784ddd68b11eabff7e0aceb0cd9f95ab91c0ed15be36927a9d5fda554600e24a"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:xsubstrate:1.2.7",
+      "sha256": "256e1822cacee45cad42d9c1f2afd1520000f6b1819307a0a3d9a58489525be6"
+    },
+    {
+      "coordinate": "junit:junit:4.13.2",
+      "sha256": "8e495b634469d64fb8acfa3495a065cbacc8a0fff55ce1e31007be4c16dc57d3"
+    },
+    {
+      "coordinate": "net.bytebuddy:byte-buddy-agent:1.14.9",
+      "sha256": "11ed107d4b78e55f8c3d34250494375081a29bc125a1f5c56db582ccdd48835f"
+    },
+    {
+      "coordinate": "net.bytebuddy:byte-buddy:1.14.9",
+      "sha256": "377352e253282bf86f731ac90ed88348e8f40a63ce033c00a85982de7e790e6f"
+    },
+    {
+      "coordinate": "net.java.dev.jna:jna:5.8.0",
+      "sha256": "a5ea01cf53b982ca083ba2f90209e682fbcd464a55aade09a8102da858f966d8"
+    },
+    {
+      "coordinate": "net.sf.scuba:scuba-sc-android:0.0.23",
+      "sha256": "ec87aff72b035586046974554332cdc160e3b53e8ace8ddf6bd9436b1e2a671d"
+    },
+    {
+      "coordinate": "net.sf.scuba:scuba-smartcards:0.0.21",
+      "sha256": "747f3207e92ad890c55598a40c3c695c3865e7a512b5cb40c2d1f961ec1cf245"
+    },
+    {
+      "coordinate": "org.apache.httpcomponents:httpclient:4.5.14",
+      "sha256": "c8bc7e1c51a6d4ce72f40d2ebbabf1c4b68bfe76e732104b04381b493478e9d6"
+    },
+    {
+      "coordinate": "org.apache.httpcomponents:httpcore:4.4.16",
+      "sha256": "6c9b3dd142a09dc468e23ad39aad6f75a0f2b85125104469f026e52a474e464f"
+    },
+    {
+      "coordinate": "org.bouncycastle:bcprov-jdk18on:1.86",
+      "sha256": "2af190b300cbb0b35e248ccf5f4a06b6072030aeb3da7a98ec73abe5b4cb371f"
+    },
+    {
+      "coordinate": "org.bouncycastle:bcutil-jdk18on:1.86",
+      "sha256": "1c268e15f785aafb1e4670d8d6e5f856f69475e96c162dadcd1ff9b350e9139f"
+    },
+    {
+      "coordinate": "org.eclipse.birt.runtime.3_7_1:org.apache.xerces:2.9.0",
+      "sha256": "6660dd2a1eb1abbc8d841b6e3d5805e6386ee3f555b8073c849c76b641280e28"
+    },
+    {
+      "coordinate": "org.ejbca.cvc:cert-cvc:1.4.13",
+      "sha256": "3e4467de94a36dd3c93eddb816e91abc7035f7e05d4123b1bbfb9dde9df9ab97"
+    },
+    {
+      "coordinate": "org.hamcrest:hamcrest-core:1.3",
+      "sha256": "66fdef91e9739348df7a096aa384a5685f4e875584cce89386a7a47251c4d8e9"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlin:kotlin-parcelize-runtime:2.3.21",
+      "sha256": "a21d5f85475efb27f17dd97d1a289d64874f2ddfdb508ea484477a4cf1afe969"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlin:kotlin-reflect:1.9.10",
+      "sha256": "8a835f5176355083668aff0ed6eef5b3eb030e10e89679ed3eeb703fd2d5b900"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10",
+      "sha256": "ac6361bf9ad1ed382c2103d9712c47cdec166232b4903ed596e8876b0681c9b7"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
+      "sha256": "a4c74d94d64ce1abe53760fe0389dd941f6fc558d0dab35e47c085a11ec80f28"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlin:kotlin-stdlib:2.3.21",
+      "sha256": "6f64eac736db9434dd6925b4a518b9d1d17177652320c37916cf9ba3ce7d7d7a"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:atomicfu-jvm:0.24.0",
+      "sha256": "101ff43ff563fca167af5ade98c3b69bf569010eab745013b84d8955034d3b3c"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2",
+      "sha256": "e713f1f874244115a07571065cffa0f24f5e78300e9720fea16de3af1d75fd41"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2",
+      "sha256": "5ca175b38df331fd64155b35cd8cae1251fa9ee369709b36d42e0a288ccce3fd"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2",
+      "sha256": "f861f9fa3b3088e6f7c59bc92a91adacf687b5bdeb081cf3608c5454f7739625"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2",
+      "sha256": "a84469d683cffc4427270b7144c62047d2a71ece703e063a4880c8dcc42caf72"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.10.2",
+      "sha256": "d65dee3cafa6f7bfaefedb493fc68b5c63abe750734fb8af92fac7a0d3101457"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-coroutines-test-jvm:1.10.2",
+      "sha256": "590a549f8c1db590c9d98a8a20424a1f581a34162a369e6a6bd884ce7d36d3d7"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.9.0",
+      "sha256": "1f0afa172110e45a7231ef1b44ae8fd84c1ebaff96f3fc3ad68ef8c48120b59c"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.9.0",
+      "sha256": "d94cc34cae39246a1af74fda63f9c4812ce12216ef641d5fa3bbbb539a6922d8"
+    },
+    {
+      "coordinate": "org.jetbrains:annotations:23.0.0",
+      "sha256": "7b0f19724082cbfcbc66e5abea2b9bc92cf08a1ea11e191933ed43801eb3cd05"
+    },
+    {
+      "coordinate": "org.jmrtd:jmrtd:0.8.9",
+      "sha256": "89959d0c8cb8cf7b93699b18d135675a7b8760489bddd924ee3174c447fa5409"
+    },
+    {
+      "coordinate": "org.jspecify:jspecify:1.0.1",
+      "sha256": "070d75f261fe4c5b8202508366715f7f2d4660f88c8ef7e6d3575e48c9683b66"
+    },
+    {
+      "coordinate": "org.junit.jupiter:junit-jupiter-api:5.8.2",
+      "sha256": "1808ee87e0f718cd6e25f3b75afc17956ac8a3edc48c7e9bab9f19f9a79e3801"
+    },
+    {
+      "coordinate": "org.junit.jupiter:junit-jupiter-engine:5.8.2",
+      "sha256": "753b7726cdd158bb34cedb94c161e2291896f47832a1e9eda53d970020a8184e"
+    },
+    {
+      "coordinate": "org.junit.jupiter:junit-jupiter-params:5.8.2",
+      "sha256": "d1c22d6fe5483568c08c8913f34abd2303490c3480ce6c18a2ea31c65e44102a"
+    },
+    {
+      "coordinate": "org.junit.jupiter:junit-jupiter:5.8.2",
+      "sha256": "4f5c1cc6432244cd16e36aa0e02b74bce34a81ff95a13d63d50951ec4ce3f4bd"
+    },
+    {
+      "coordinate": "org.junit.platform:junit-platform-commons:1.8.2",
+      "sha256": "d2e015fca7130e79af2f4608dc54415e4b10b592d77333decb4b1a274c185050"
+    },
+    {
+      "coordinate": "org.junit.platform:junit-platform-engine:1.8.2",
+      "sha256": "0b7d000f8c3e8e5f7d6b819649936e7b9938314e87c8f983805218ea57567e59"
+    },
+    {
+      "coordinate": "org.mockito.kotlin:mockito-kotlin:5.2.1",
+      "sha256": "4fd3c7b3119cb021428bceb7ae5b035db4c58b54d5edefa5581a67939b3165d7"
+    },
+    {
+      "coordinate": "org.mockito:mockito-core:5.7.0",
+      "sha256": "dbad5e746654910a11a59ecb4d01e38461f3e5d16161689dc2588d5554432521"
+    },
+    {
+      "coordinate": "org.objenesis:objenesis:3.3",
+      "sha256": "02dfd0b0439a5591e35b708ed2f5474eb0948f53abf74637e959b8e4ef69bfeb"
+    },
+    {
+      "coordinate": "org.opentest4j:opentest4j:1.2.0",
+      "sha256": "58812de60898d976fb81ef3b62da05c6604c18fd4a249f5044282479fc286af2"
+    },
+    {
+      "coordinate": "org.slf4j:slf4j-api:1.7.36",
+      "sha256": "d3ef575e3e4979678dc01bf1dcce51021493b4d11fb7f1be8ad982877c16a1c0"
+    },
+    {
+      "coordinate": "org.tensorflow:tensorflow-lite-api:2.12.0",
+      "sha256": "23398a3ae6a9edd184d9a068357bf4942ce3e2cc76eb94dcf6349a0c1d09d6ec"
+    },
+    {
+      "coordinate": "org.tensorflow:tensorflow-lite:2.12.0",
+      "sha256": "cb03f2902bdf5c1ad300d60a158abcc31fca7ecdddf52ca7687cd7e97e47449a"
+    },
+    {
+      "coordinate": "org.web3j:abi:4.8.7-android",
+      "sha256": "40c40af39b7f6c08bd1f0566062673d10ad59782b9141aec884fbcf95b765763"
+    },
+    {
+      "coordinate": "org.web3j:crypto:4.8.7-android",
+      "sha256": "bca63a8376a1575b95f3eb32edd5d60251a101237799df52ffdb2b0d0650466a"
+    },
+    {
+      "coordinate": "org.web3j:rlp:4.8.7-android",
+      "sha256": "9e5fb5946001b52aa288024df0566590cb479ec5d517c45a474462757fda8083"
+    },
+    {
+      "coordinate": "org.web3j:utils:4.8.7-android",
+      "sha256": "5cce76cd50eccec3cd072ffce7dbecea07f90aacea7e4fc71a5b066b1b1e17e9"
+    }
+  ],
+  "limitations": [
+    "Does not prove reflection, JNI, Android class loading, or physical passport/KYC behavior"
+  ],
+  "compatibilityAssessment": {
+    "upgradedCryptoAndKycConsumersHaveNoMissingSymbols": true,
+    "optionalProviderSymbolCount": 37,
+    "optionalProviderSymbolsAbsentFromPreviousProviderAndUtil": true,
+    "scopeOfOptionalMissingSymbols": "Nimbus FIPS/PKIX and OkHttp BC-JSSE adapters; these provider modules are not installed and were also absent before this upgrade",
+    "priorProviderAndUtilCoordinates": [
+      "org.bouncycastle:bcprov-jdk18on:1.78.1",
+      "org.bouncycastle:bcutil-jdk18on:1.71"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "assessedAtUtc": "2026-10-25T02:48:31.953306+00:00",
+  "source": "https://api.osv.dev/v1/querybatch",
+  "lockSha256": "f77bb226a8335f505d5f0e4a7f1dad38404cbbf40e44e8a83f27c98d85b8b1f2",
+  "packageCount": 51,
+  "affectedPackageCount": 2,
+  "advisoryMatchCount": 4,
+  "findings": [
+    {
+      "name": "curve25519-dalek",
+      "version": "2.1.3",
+      "source": "retained-local-source-backport",
+      "advisories": [
+        "GHSA-x4gp-pqpj-f43q",
+        "RUSTSEC-2024-0344"
+      ]
+    },
+    {
+      "name": "rand",
+      "version": "0.7.3",
+      "source": "retained-local-source-backport",
+      "advisories": [
+        "GHSA-cq8v-f236-94qc",
+        "RUSTSEC-2026-0097"
+      ]
+    }
+  ],
+  "limitations": [
+    "Raw version matches retained even for source backports; consult exact patch/build evidence",
+    "Local JNI wrapper code is not mapped to a registry package"
+  ]
+}

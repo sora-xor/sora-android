@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repositoryPath": "vendor/soramitsu-maven",
-  "assessedAt": "2026-08-09",
+  "assessedAt": "2026-10-25",
   "status": "materialized-unreviewed",
   "productionAllowed": false,
   "repositoryManifest": {
@@ -24,8 +24,8 @@
       "sha256": "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68"
     },
     {
-      "path": "build-inputs/README.md",
-      "sha256": "093e7e7efe86e2ad2e000f7f5d9cbcece6ec8af519b8c9863abf92c67f177fbd"
+      "path": "build-inputs/curve25519-dalek-2.1.3.crate",
+      "sha256": "4a9b85542f99a2dfa2a1b8e192662741c9859a846b296bef1c92ef9b58b5a216"
     },
     {
       "path": "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
@@ -64,6 +64,10 @@
       "sha256": "ac39c9d93eb7870e8929f1f37a16e970b5ec99b67ea782f551125aaa6c405c4c"
     },
     {
+      "path": "build-inputs/rand-0.7.3.crate",
+      "sha256": "6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03"
+    },
+    {
       "path": "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
       "sha256": "04ceea236a739b81000b2702a26221f91fb945b8e796d0085623d549fe6e65bb"
     },
@@ -78,6 +82,30 @@
     {
       "path": "build-inputs/xcrypto-1.2.7-repack-16kb.py",
       "sha256": "595d7aa1b4eed24f553e7201ad6510b1ccb0bb1cc9e20a113d8b967e046f317d"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.8-sora.1-security.patch",
+      "sha256": "f5e99189fdd5e8550a317069f60f3332c2bdc6cfe8c6f6c433b3b6c50136498a"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.8-sora.2-16kb-rebuild.md",
+      "sha256": "7c20036aaee4bfa44caabbf6bb37641bf7e5544c0d1b8b8324fe74c93ee5d5d9"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.8-sora.2-Cargo.lock",
+      "sha256": "f77bb226a8335f505d5f0e4a7f1dad38404cbbf40e44e8a83f27c98d85b8b1f2"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.8-sora.2-native-security.patch",
+      "sha256": "9f17ab44fdb134b8989659de9b4aeda862f949861cde6cbbd354b37091e5d3dc"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.8-sora.2-original.aar",
+      "sha256": "dee65fa2e0aef012a9ac591638da02bf89efc7f77a5969e2e0d2bbb7fdeebdf1"
+    },
+    {
+      "path": "build-inputs/xcrypto-1.2.8-sora.2-repack-16kb.py",
+      "sha256": "a8be142d0fcd6f8b7b14ac300e6a1b4af99d80d35db09e31772ee74da407a3f8"
     },
     {
       "path": "build-inputs/xsubstrate-1.2.7-source-normalization.patch",
@@ -346,8 +374,8 @@
       ]
     },
     {
-      "coordinate": "jp.co.soramitsu:xcrypto:1.2.7",
-      "modulePath": "jp/co/soramitsu/xcrypto/1.2.7",
+      "coordinate": "jp.co.soramitsu:xcrypto:1.2.8-sora.2",
+      "modulePath": "jp/co/soramitsu/xcrypto/1.2.8-sora.2",
       "origin": {
         "kind": "git-source-build",
         "repository": "https://github.com/soramitsu/x-crypto.git",
@@ -360,30 +388,35 @@
           "independentlyReviewed": false
         },
         "buildInputs": [
-          "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
-          "build-inputs/xcrypto-1.2.7-Cargo.lock",
-          "build-inputs/xcrypto-1.2.7-original.aar",
-          "build-inputs/xcrypto-1.2.7-repack-16kb.py"
+          "build-inputs/xcrypto-1.2.8-sora.2-Cargo.lock",
+          "build-inputs/curve25519-dalek-2.1.3.crate",
+          "build-inputs/rand-0.7.3.crate",
+          "build-inputs/xcrypto-1.2.8-sora.2-original.aar",
+          "build-inputs/xcrypto-1.2.8-sora.2-repack-16kb.py",
+          "build-inputs/xcrypto-1.2.8-sora.2-16kb-rebuild.md"
         ],
-        "semanticTransformations": [],
+        "semanticTransformations": [
+          "build-inputs/xcrypto-1.2.8-sora.1-security.patch",
+          "build-inputs/xcrypto-1.2.8-sora.2-native-security.patch"
+        ],
         "sourceToBinaryReproductionReviewed": false
       },
       "materializedFiles": [
         {
-          "name": "xcrypto-1.2.7-sources.jar",
-          "sha256": "1e019d6cbcc14224461a5057ef3b691ebe73203a2f693954d8f779484c866b86"
+          "name": "xcrypto-1.2.8-sora.2-sources.jar",
+          "sha256": "0e1a2d4d8de012e263e7f8094357161891c6c62255e0e004284cce025fa09c21"
         },
         {
-          "name": "xcrypto-1.2.7.aar",
-          "sha256": "bb2cbb157c36430a7843e8db6900fec1ce36cacd966ff8fe00c6eab524f853ef"
+          "name": "xcrypto-1.2.8-sora.2.aar",
+          "sha256": "021e37c8b6f1b9c49a80a2b81af3094de4519b06f75a2fc82f57161630550f7f"
         },
         {
-          "name": "xcrypto-1.2.7.module",
-          "sha256": "fc57d285886c08492c180fb84754249f10ff12f6d9327d2a148d2d2d071a4236"
+          "name": "xcrypto-1.2.8-sora.2.module",
+          "sha256": "7f048032a8876a612eaf723f37b4934656dd2e421f16243aae05d29ea0dc3945"
         },
         {
-          "name": "xcrypto-1.2.7.pom",
-          "sha256": "3063087b80c3f02068bceccc2db81f580a7d2c0a391ae6a084d85b36162d932c"
+          "name": "xcrypto-1.2.8-sora.2.pom",
+          "sha256": "7480b75c8feb24d559fbf126a3c86afc88e928a12a17ceeaf4c0ccb372483336"
         }
       ]
     },

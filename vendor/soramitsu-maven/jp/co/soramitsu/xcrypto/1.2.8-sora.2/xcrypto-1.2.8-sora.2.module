@@ -3,7 +3,7 @@
   "component": {
     "group": "jp.co.soramitsu",
     "module": "xcrypto",
-    "version": "1.2.7",
+    "version": "1.2.8-sora.2",
     "attributes": {
       "org.gradle.status": "release"
     }
@@ -27,14 +27,7 @@
           "group": "org.bouncycastle",
           "module": "bcprov-jdk18on",
           "version": {
-            "requires": "1.77"
-          }
-        },
-        {
-          "group": "net.i2p.crypto",
-          "module": "eddsa",
-          "version": {
-            "requires": "0.3.0"
+            "requires": "1.86"
           }
         },
         {
@@ -51,10 +44,10 @@
           ]
         },
         {
-          "group": "org.lz4",
+          "group": "at.yawk.lz4",
           "module": "lz4-java",
           "version": {
-            "requires": "1.8.0"
+            "requires": "1.12.1"
           }
         },
         {
@@ -67,13 +60,13 @@
       ],
       "files": [
         {
-          "name": "xcrypto-1.2.7.aar",
-          "url": "xcrypto-1.2.7.aar",
-          "size": 1659744,
-          "sha512": "92326c5ecbe548a6b7871437d3cbb97097bac166b1841a45c2e7c7427e5d32818c3412cd87b74c1c2d3158e35188f387f1023de7bc29b5b327a7fe03fa1caa6e",
-          "sha256": "bb2cbb157c36430a7843e8db6900fec1ce36cacd966ff8fe00c6eab524f853ef",
-          "sha1": "90653c4189ce40abc09cc1f955775ae2436ec8ed",
-          "md5": "4d7b4a71d415791b2f86c154d4d6591c"
+          "name": "xcrypto-1.2.8-sora.2.aar",
+          "url": "xcrypto-1.2.8-sora.2.aar",
+          "size": 1665624,
+          "sha512": "d52549970a517651544f10034a3e08bacc102865355f188f9566c701e2dc83ad1773cb40aa8b2113993c0f626b800dcae3177a098ecd04463f91bd0638fc88e0",
+          "sha256": "021e37c8b6f1b9c49a80a2b81af3094de4519b06f75a2fc82f57161630550f7f",
+          "sha1": "436f864368e6a0ce43b217d295adfbc9a502cca1",
+          "md5": "a5173342d0384a198f1dead4dcad6d7b"
         }
       ]
     },
@@ -97,14 +90,7 @@
           "group": "org.bouncycastle",
           "module": "bcprov-jdk18on",
           "version": {
-            "requires": "1.77"
-          }
-        },
-        {
-          "group": "net.i2p.crypto",
-          "module": "eddsa",
-          "version": {
-            "requires": "0.3.0"
+            "requires": "1.86"
           }
         },
         {
@@ -121,10 +107,10 @@
           ]
         },
         {
-          "group": "org.lz4",
+          "group": "at.yawk.lz4",
           "module": "lz4-java",
           "version": {
-            "requires": "1.8.0"
+            "requires": "1.12.1"
           }
         },
         {
@@ -137,13 +123,13 @@
       ],
       "files": [
         {
-          "name": "xcrypto-1.2.7.aar",
-          "url": "xcrypto-1.2.7.aar",
-          "size": 1659744,
-          "sha512": "92326c5ecbe548a6b7871437d3cbb97097bac166b1841a45c2e7c7427e5d32818c3412cd87b74c1c2d3158e35188f387f1023de7bc29b5b327a7fe03fa1caa6e",
-          "sha256": "bb2cbb157c36430a7843e8db6900fec1ce36cacd966ff8fe00c6eab524f853ef",
-          "sha1": "90653c4189ce40abc09cc1f955775ae2436ec8ed",
-          "md5": "4d7b4a71d415791b2f86c154d4d6591c"
+          "name": "xcrypto-1.2.8-sora.2.aar",
+          "url": "xcrypto-1.2.8-sora.2.aar",
+          "size": 1665624,
+          "sha512": "d52549970a517651544f10034a3e08bacc102865355f188f9566c701e2dc83ad1773cb40aa8b2113993c0f626b800dcae3177a098ecd04463f91bd0638fc88e0",
+          "sha256": "021e37c8b6f1b9c49a80a2b81af3094de4519b06f75a2fc82f57161630550f7f",
+          "sha1": "436f864368e6a0ce43b217d295adfbc9a502cca1",
+          "md5": "a5173342d0384a198f1dead4dcad6d7b"
         }
       ]
     },
@@ -157,33 +143,13 @@
       },
       "files": [
         {
-          "name": "xcrypto-1.2.7-sources.jar",
-          "url": "xcrypto-1.2.7-sources.jar",
-          "size": 151095,
-          "sha512": "1609ff1cfd8fa845bf7568051e937b1336a0d37dfb05241f1ccbd02d59527a72b140352cf9a512bbe31fb46328aff2d555735ee7a6d369756afd2cd9700eec33",
-          "sha256": "1e019d6cbcc14224461a5057ef3b691ebe73203a2f693954d8f779484c866b86",
-          "sha1": "61fe5cd311b6eba0f4408f33317a9cdab333af0d",
-          "md5": "115c885b916db5b8f41f84905672080f"
-        }
-      ]
-    },
-    {
-      "name": "releaseVariantReleaseJavaDocPublication",
-      "attributes": {
-        "org.gradle.category": "documentation",
-        "org.gradle.dependency.bundling": "external",
-        "org.gradle.docstype": "javadoc",
-        "org.gradle.usage": "java-runtime"
-      },
-      "files": [
-        {
-          "name": "xcrypto-1.2.7-javadoc.jar",
-          "url": "xcrypto-1.2.7-javadoc.jar",
-          "size": 652366,
-          "sha512": "15300256c8ccbfbc3d1896bdb8a4f2fa2cec1752f7c7ca094c7b6a3036ace005e2555bab93a206bc7120b29590416eece4b56e41053888c6f7b56edee768bd63",
-          "sha256": "6b8effeb34088008f80f2ed6bf36635f72045690bfbc23fdaab39b04e37013d2",
-          "sha1": "533ae24b32b841d3e75d9a35dbc430d5591ca02a",
-          "md5": "91da0111b66d3e51bdbf194c44b3fa8a"
+          "name": "xcrypto-1.2.8-sora.2-sources.jar",
+          "url": "xcrypto-1.2.8-sora.2-sources.jar",
+          "size": 150961,
+          "sha512": "4f09927973194e2d426a02290c94832c864dbf9de337b564e13bfcbb3127f39333b028f17f1a6be70c8717943645cd120b4c5ed059cface5b0da3af774a50721",
+          "sha256": "0e1a2d4d8de012e263e7f8094357161891c6c62255e0e004284cce025fa09c21",
+          "sha1": "c3b6dfa27d90d70a7b8bd972591ffeb56a76a8d5",
+          "md5": "d6097d49d84da5617c69666085f57837"
         }
       ]
     }

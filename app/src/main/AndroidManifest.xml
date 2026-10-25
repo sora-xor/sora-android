@@ -21,6 +21,7 @@
     <application
         tools:replace="android:allowBackup"
         android:allowBackup="false"
+        android:usesCleartextTraffic="false"
         android:fullBackupContent="false"
         android:dataExtractionRules="@xml/deny_data_extraction"
         android:icon="${appIcon}"

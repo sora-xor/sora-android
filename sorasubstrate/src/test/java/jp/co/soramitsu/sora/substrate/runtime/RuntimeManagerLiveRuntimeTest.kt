@@ -375,7 +375,7 @@ class RuntimeManagerLiveRuntimeTest {
 
     private fun verifyLegacyMismatchRecorded(times: Int) {
         verify(exactly = times) {
-            FirebaseWrapper.log("SORA2_RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH)
         }
     }
 

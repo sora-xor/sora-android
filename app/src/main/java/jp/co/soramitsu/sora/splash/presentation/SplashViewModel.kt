@@ -108,7 +108,7 @@ class SplashViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val migrationDone = interactor.getMigrationDoneAsync().await()
-                FirebaseWrapper.log("Splash next screen $migrationDone")
+                FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.SPLASH_NAVIGATION)
                 if (!migrationDone) {
                     showMigrationRecovery.value = recoveryState(
                         code = failureCode("WALLET_VERIFICATION_FAILED"),

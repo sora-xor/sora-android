@@ -1209,7 +1209,7 @@ class RuntimeManager @Inject constructor(
         ) {
             // An older runtime cache is expected on upgrade; the bundled/live contract replaces
             // it. A fixed breadcrumb records that path without counting it as an app failure.
-            FirebaseWrapper.log("SORA2_RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH)
         }
         return buildBundledCandidate(
             metadata = if (legacyPairMatchesAssets) {
@@ -1358,7 +1358,7 @@ class RuntimeManager @Inject constructor(
                 )
         val refreshRequired = liveIdentityDrift || reviewedFixtureNeedsRefresh
         if (refreshRequired || refreshRequested) {
-            FirebaseWrapper.log("Refresh runtime version ${runtimeVersion.specVersion}")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_VERSION_REFRESHED)
             try {
                 val metadata = sora2RuntimeRpcClient.getMetadataAtFinalized(
                     liveIdentity.finalizedHash
@@ -1706,7 +1706,7 @@ class RuntimeManager @Inject constructor(
         val validatedPrefix = requireSora2Ss58Prefix(
             observedPrefix
         )
-        FirebaseWrapper.log("Set Runtime Net ${metadataSource is MetadataSource.SoraNet}")
+        FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_NETWORK_SELECTED)
         return RuntimeCandidate(
             snapshot = snapshot,
             prefix = validatedPrefix,
@@ -1772,7 +1772,7 @@ class RuntimeManager @Inject constructor(
             upto14 = upto14,
         )
         if (sora2ParseResult.unknownTypes.isNotEmpty()) {
-            FirebaseWrapper.log("BuildRuntimeSnapshot. ${sora2ParseResult.unknownTypes.size} unknown types are found")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_SNAPSHOT_BUILT)
         }
         return TypeRegistry(
             types = sora2ParseResult.typePreset,
