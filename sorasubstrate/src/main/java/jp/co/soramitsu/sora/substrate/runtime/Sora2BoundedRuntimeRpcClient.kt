@@ -120,12 +120,11 @@ private enum class Sora2RuntimeRpcResultKind {
  * Bounded JSON-RPC client for the SORA2 values that authorize runtime decoding and signing.
  *
  * This client deliberately has no selected-node or WebSocket dependency. It talks only to the
- * reviewed HTTPS endpoints ([Sora2RuntimeContract.RUNTIME_RPC_ENDPOINT] and
- * [Sora2RuntimeContract.SECOND_RUNTIME_RPC_ENDPOINT]); JSON POST redirects are rejected by
+ * configured HTTPS endpoint ([Sora2RuntimeContract.RUNTIME_RPC_ENDPOINT]); JSON POST redirects are rejected by
  * [BoundedHttpTextClient], and a strict streaming envelope admits each result before Gson may
  * materialize only the small, method-bounded runtime-version object.
  *
- * Two endpoints, one set of rules:
+ * The optional second transport follows the same rules (production currently has one endpoint):
  *
  * - **Reads** (chain identity, metadata, runtime code hash, nonce, fee, blocks, storage) are
  *   answered by the first endpoint that gives an acceptable answer. Every answer passes the same
@@ -153,7 +152,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
     transport: Sora2RuntimeRpcTransport,
     private val gson: Gson,
     private val sora2AddressCodec: Sora2AddressCodec = Sora2AddressCodec(),
-    /** The second reviewed endpoint; see [Sora2RuntimeContract.SECOND_RUNTIME_RPC_ENDPOINT]. */
+    /** Optional independently configured endpoint; absent in production. */
     secondTransport: Sora2RuntimeRpcTransport? = null,
     /**
      * The genesis hash every endpoint must report, or null to pin the endpoints to the first
@@ -174,10 +173,6 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
         ),
         gson = gson,
         sora2AddressCodec = sora2AddressCodec,
-        secondTransport = ManifestBoundSora2RuntimeRpcTransport(
-            client = boundedHttpTextClient,
-            endpoint = Sora2RuntimeContract.SECOND_RUNTIME_RPC_ENDPOINT,
-        ),
         expectedGenesisHash = Sora2RuntimeContract.SORA_MAINNET_GENESIS_HASH.takeUnless {
             BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.SORALUTION)
         },

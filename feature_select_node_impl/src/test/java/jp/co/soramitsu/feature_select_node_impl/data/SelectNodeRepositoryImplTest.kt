@@ -45,6 +45,7 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import java.io.IOException
 import jp.co.soramitsu.common.domain.ChainNode
+import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.NodeDao
 import jp.co.soramitsu.core_db.model.NodeLocal
@@ -183,6 +184,57 @@ class SelectNodeRepositoryImplTest {
         )
         coVerify(exactly = 1) { nodeDao.clearTable() }
         coVerify(exactly = 1) { nodeDao.insertNodes(any()) }
+        coVerify(exactly = 0) { nodeDao.selectNode(any()) }
+    }
+
+    @Test
+    fun `refresh replaces blocked defaults and deselects a blocked saved custom node`() = runTest {
+        val blockedCustom = NodeLocal(
+            address = "wss://ws.mof.sora.org/", chain = "sora", name = "Old custom",
+            isDefault = false, isSelected = true,
+        )
+        val insertedNodes = slot<List<NodeLocal>>()
+        stubSuccessfulDatabaseRefresh()
+        every { nodeDao.getSelectedNode() } returns blockedCustom
+        every { nodeDao.getNodes() } returns listOf(blockedCustom)
+        coEvery { nodeDao.insertNodes(capture(insertedNodes)) } just Runs
+        coEvery { soraConfigManager.getNodes() } returns listOf(
+            remoteNode("wss://mof.sora.org"),
+            remoteNode("wss://mof3.sora.org"),
+        )
+
+        val result = repository.fetchDefaultNodes()
+
+        assertEquals(listOf(FlavorOptionsProvider.wsHostUrl), result.map { it.address })
+        assertTrue(result.single().isSelected)
+        assertEquals(blockedCustom.copy(isSelected = false), insertedNodes.captured.last())
+        assertEquals(
+            listOf(FlavorOptionsProvider.wsHostUrl),
+            insertedNodes.captured.filter { it.isSelected }.map { it.address },
+        )
+    }
+
+    @Test
+    fun `refresh ignores blocked remote nodes while retaining an allowed selection`() = runTest {
+        val selected = NodeLocal(
+            address = "wss://mof2.sora.org/", chain = "sora", name = "Mainnet",
+            isDefault = true, isSelected = true,
+        )
+        val insertedNodes = slot<List<NodeLocal>>()
+        stubSuccessfulDatabaseRefresh()
+        every { nodeDao.getSelectedNode() } returns selected
+        every { nodeDao.getNodes() } returns listOf(selected)
+        coEvery { nodeDao.insertNodes(capture(insertedNodes)) } just Runs
+        coEvery { soraConfigManager.getNodes() } returns listOf(
+            remoteNode("wss://ws.mof.sora.org"),
+            remoteNode(selected.address),
+        )
+
+        val result = repository.fetchDefaultNodes()
+
+        assertEquals(listOf(selected.address), result.map { it.address })
+        assertTrue(result.single().isSelected)
+        assertEquals(listOf(selected.address), insertedNodes.captured.map { it.address })
         coVerify(exactly = 0) { nodeDao.selectNode(any()) }
     }
 

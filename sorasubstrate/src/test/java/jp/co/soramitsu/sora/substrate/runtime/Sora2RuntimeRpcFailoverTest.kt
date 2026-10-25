@@ -42,9 +42,9 @@ class Sora2RuntimeRpcFailoverTest {
     )
 
     @Test
-    fun `the reviewed endpoints are two different hosts`() {
-        assertEquals("https://ws.mof.sora.org", Sora2RuntimeContract.RUNTIME_RPC_ENDPOINT)
-        assertEquals("https://mof2.sora.org", Sora2RuntimeContract.SECOND_RUNTIME_RPC_ENDPOINT)
+    fun `production runtime does not use the compromised host`() {
+        assertEquals("https://mof2.sora.org", Sora2RuntimeContract.RUNTIME_RPC_ENDPOINT)
+        assertEquals("wss://mof2.sora.org", Sora2RuntimeContract.RUNTIME_WS_ENDPOINT)
     }
 
     @Test

@@ -251,7 +251,7 @@ class PolkaswapIndexerClientLiveContractTest {
     private companion object {
         // A public mainnet account with recent swaps; only used as a read-only query input.
         const val ACTIVE_ACCOUNT = "cnRwt3q7DkvJqr3YkuN7dFibTx6yu8rqDDYKmBp4Sko5TW2Dd"
-        const val MAINNET_RPC = "https://ws.mof.sora.org"
+        const val MAINNET_RPC = "https://mof2.sora.org"
         const val INDEXER = "https://pi.soramitsu.io/graphql"
     }
 }

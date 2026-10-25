@@ -195,26 +195,10 @@ class Sora2RuntimeContract @Inject constructor(
 
     companion object {
         const val SOURCE_REVISION = "411dcdb70c5c00b21482a44d02334840d5f338c6"
-        /**
-         * First reviewed HTTPS JSON-RPC endpoint (the one named in sora2_metadata.manifest.json).
-         * It keeps the state of about the last 256 blocks.
-         */
-        const val RUNTIME_RPC_ENDPOINT = "https://ws.mof.sora.org"
+        // The compromised former primary is excluded. Keep metadata provenance unchanged.
+        const val RUNTIME_RPC_ENDPOINT = "https://mof2.sora.org"
         /** Exact selected WebSocket counterpart permitted to carry reviewed SORA2 mutations. */
-        const val RUNTIME_WS_ENDPOINT = "wss://ws.mof.sora.org"
-        /**
-         * Second reviewed HTTPS JSON-RPC endpoint: another SORA mainnet node on another host and
-         * address (an archive node, one of the default nodes of the app). It serves the same
-         * requests as [RUNTIME_RPC_ENDPOINT] under the same checks whenever that endpoint gives
-         * no acceptable answer: chain identity, metadata, nonce, fee and status reads, and the
-         * state of blocks the first endpoint has already discarded.
-         *
-         * A signed transaction is offered to it only when the attempt on the other endpoint
-         * provably never reached that node ([Sora2BoundedRuntimeRpcClient.submitExtrinsicOnce]).
-         * Each endpoint must itself report [SORA_MAINNET_GENESIS_HASH] before it serves anything
-         * else in a production build.
-         */
-        const val SECOND_RUNTIME_RPC_ENDPOINT = "https://mof2.sora.org"
+        const val RUNTIME_WS_ENDPOINT = "wss://mof2.sora.org"
         /** Runtime of the packaged fixture; not a signing requirement (see the class KDoc). */
         const val SPEC_VERSION = 130
         /** Transaction version of the packaged fixture; not a signing requirement. */

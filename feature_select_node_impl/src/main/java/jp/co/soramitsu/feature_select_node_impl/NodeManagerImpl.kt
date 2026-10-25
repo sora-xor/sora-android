@@ -38,6 +38,7 @@ import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.FlavorOptionsProvider
+import jp.co.soramitsu.common.network.SoraNodeEndpointPolicy
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.core_db.AppDatabase
@@ -111,7 +112,7 @@ internal class NodeManagerImpl(
     private fun start() {
         coroutineManager.applicationScope.launch {
             val address =
-                appDatabase.nodeDao().getSelectedNode()?.address
+                appDatabase.nodeDao().getSelectedNode()?.address?.takeIf(SoraNodeEndpointPolicy::isAllowed)
                     ?: FlavorOptionsProvider.wsHostUrl
             connectionManager.setAddress(address)
             connectionManager.observeAppState()
@@ -134,7 +135,7 @@ internal class NodeManagerImpl(
         selectNodeRepository.getNodes()
             .distinctUntilChanged()
             .onEach {
-                availableNodes = it
+                availableNodes = it.filter { node -> SoraNodeEndpointPolicy.isAllowed(node.address) }
             }
             .launchIn(coroutineManager.applicationScope)
 
@@ -142,12 +143,18 @@ internal class NodeManagerImpl(
             .distinctUntilChanged()
             .filterNotNull()
             .onEach {
-                selectedNode = it
+                selectedNode = it.takeIf { node -> SoraNodeEndpointPolicy.isAllowed(node.address) }
             }
             .launchIn(coroutineManager.applicationScope)
     }
 
     override fun tryToConnect(node: ChainNode) {
+        if (!SoraNodeEndpointPolicy.isAllowed(node.address)) {
+            coroutineManager.applicationScope.launch {
+                _events.emit(NodeManagerEvent.ConnectionFailed(node.address))
+            }
+            return
+        }
         if (!connectionManager.isNetworkAvailable) {
             coroutineManager.applicationScope.launch {
                 _events.emit(NodeManagerEvent.NoConnection)
@@ -186,6 +193,12 @@ internal class NodeManagerImpl(
     }
 
     override fun checkGenesisHash(url: String) {
+        if (!SoraNodeEndpointPolicy.isAllowed(url)) {
+            coroutineManager.applicationScope.launch {
+                _events.emit(NodeManagerEvent.GenesisValidated(result = false))
+            }
+            return
+        }
         if (!connectionManager.isNetworkAvailable) {
             coroutineManager.applicationScope.launch {
                 _events.emit(NodeManagerEvent.NoConnection)
@@ -312,6 +325,7 @@ internal class NodeManagerImpl(
      * coordinator.
      */
     private suspend fun switchUrlWithWalletMutationBarrier(url: String) {
+        if (!SoraNodeEndpointPolicy.isAllowed(url)) return
         WalletMutationCoordinator.withLock {
             connectionManager.switchUrl(url)
         }

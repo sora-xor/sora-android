@@ -65,7 +65,7 @@ class Sora2BoundedRuntimeRpcClientTest {
                 "chain_getHeader",
                 gson.toJson(listOf(finalizedHash)),
             )
-            assertEquals("https://ws.mof.sora.org", Sora2RuntimeContract.RUNTIME_RPC_ENDPOINT)
+            assertEquals("https://mof2.sora.org", Sora2RuntimeContract.RUNTIME_RPC_ENDPOINT)
         }
 
     @Test
@@ -490,19 +490,19 @@ class Sora2BoundedRuntimeRpcClientTest {
     fun `mutation transport accepts only exact reviewed websocket counterpart`() {
         assertEquals(
             Sora2RuntimeContract.RUNTIME_WS_ENDPOINT,
-            requireReviewedSora2WebSocketEndpoint("wss://ws.mof.sora.org"),
+            requireReviewedSora2WebSocketEndpoint("wss://mof2.sora.org"),
         )
         assertEquals(
             Sora2RuntimeContract.RUNTIME_WS_ENDPOINT,
-            requireReviewedSora2WebSocketEndpoint("wss://ws.mof.sora.org/"),
+            requireReviewedSora2WebSocketEndpoint("wss://mof2.sora.org/"),
         )
         listOf(
             null,
-            "ws://ws.mof.sora.org",
+            "ws://mof2.sora.org",
             "wss://ws.mof2.sora.org",
-            "wss://ws.mof.sora.org:443",
-            "wss://user@ws.mof.sora.org",
-            "wss://ws.mof.sora.org/?selected=other",
+            "wss://mof2.sora.org:443",
+            "wss://user@mof2.sora.org",
+            "wss://mof2.sora.org/?selected=other",
             "WSS://WS.MOF.SORA.ORG",
         ).forEach { endpoint ->
             assertEquals(
