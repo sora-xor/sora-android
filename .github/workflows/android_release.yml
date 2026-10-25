@@ -258,18 +258,20 @@ jobs:
             echo "::error::APK versionName is not $EXPECTED_VERSION_NAME"; exit 1; }
 
       - name: Check the merged manifest of the AAB and the APK
-        # Target and minimum SDK, backups off, not debuggable, no deep link, no IrohaConnect,
-        # and exactly the reviewed permissions and exported components
-        # (config/android-production-manifest-policy.json). Also the version of the AAB, which
+        # Target and minimum SDK, backups off, not debuggable, and exactly the current Nexus
+        # line's permissions, exported components and two IrohaConnect URI filters
+        # (config/android-nexus-manifest-policy.json). Also the version of the AAB, which
         # the step above reads only from the APK.
         run: >-
           python3 scripts/verify-release-manifest.py
+          --policy config/android-nexus-manifest-policy.json
           --expect-version-code "$SORA_VERSION_CODE"
           --expect-version-name "$EXPECTED_VERSION_NAME"
           "$AAB_PATH" "$APK_PATH"
 
       - name: Check signing certificate against the pinned upload certificate
-        run: python3 scripts/verify-release-signing.py "$AAB_PATH" "$APK_PATH"
+        # Keep certificate output stable across hosted runner image updates.
+        run: APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner" python3 scripts/verify-release-signing.py "$AAB_PATH" "$APK_PATH"
 
       - name: Check 16 KB native page alignment
         run: |
