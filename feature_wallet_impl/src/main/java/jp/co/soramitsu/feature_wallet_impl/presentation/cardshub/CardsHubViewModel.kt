@@ -37,11 +37,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.format.safeCast
-import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
-import jp.co.soramitsu.common.domain.fiatSum
-import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.nexus.NexusQuantityContract
@@ -58,16 +55,13 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
@@ -148,7 +142,6 @@ class CardsHubViewModel @Inject constructor(
     private val numbersFormatter: NumbersFormatter,
     private val router: WalletRouter,
     private val mainRouter: MainRouter,
-    private val assetsRouter: AssetsRouter,
     private val referralRouter: ReferralRouter,
     private val polkaswapRouter: PolkaswapRouter,
     private val coroutineManager: CoroutineManager,
@@ -156,14 +149,7 @@ class CardsHubViewModel @Inject constructor(
     private val nexusTransactionCoordinator: NexusTransactionCoordinator,
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(
-        CardsState(
-            loading = true,
-            cards = emptyList(),
-            curAccount = "",
-            accountAddress = "",
-        )
-    )
+    private val _state = MutableStateFlow(CardsState(accountAddress = ""))
     val state = _state.asStateFlow()
 
     private val _nexusPortfolio = MutableStateFlow<List<NexusPortfolioBalance>>(emptyList())
@@ -267,21 +253,11 @@ class CardsHubViewModel @Inject constructor(
                 .withIndex()
                 .flatMapLatest { indexed ->
                     val data = indexed.value
-                    _state.value = _state.value.copy(
-                        accountAddress = data.first.substrateAddress,
-                        curAccount = data.first.accountTitle(),
-                    )
-                    val flows = data.second.filter { it.visibility }.map { cardHub ->
+                    _state.value = _state.value.copy(accountAddress = data.first.substrateAddress)
+                    // The Portfolio view draws the account's assets: there is no Assets card.
+                    val flows = data.second.filter { it.visibility }.mapNotNull { cardHub ->
                         when (cardHub.cardType) {
-                            CardHubType.ASSETS -> {
-                                assetsInteractor.subscribeAssetsFavoriteOfAccount(data.first)
-                                    .onStart {
-                                        if (indexed.index == 0) this.emit(emptyList())
-                                    }
-                                    .map {
-                                        cardHub to it
-                                    }
-                            }
+                            CardHubType.ASSETS -> null
 
                             CardHubType.POOLS -> {
                                 val poolsFlow =
@@ -313,25 +289,24 @@ class CardsHubViewModel @Inject constructor(
                             }
                         }
                     }
-                    combine(flows) { it.toList() }
+                    // combine() of no flows never emits: with every card hidden, there are none.
+                    if (flows.isEmpty()) flowOf(emptyList<Pair<CardHub, Any>>()) else combine(flows) { it.toList() }
                 }
                 .catch { error ->
                     if (error is CancellationException) throw error
-                    // A failed balance/pool read must not crash the host or leave another
-                    // wallet's holdings visible. Network rows independently show availability.
+                    // A failed pool read must not crash the host or leave another wallet's
+                    // holdings visible. Network rows independently show availability.
                     jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
-                    _state.value = _state.value.copy(loading = false, cards = emptyList())
+                    _state.value = _state.value.copy(cards = emptyList())
                 }
                 .distinctUntilChanged()
                 .collectLatest { cards ->
+                    // A pools card without favorite pools is not shown.
                     val usableCards = cards.filterNot {
-                        (it.first.cardType != CardHubType.ASSETS) &&
-                            ((it.second.safeCast<List<*>>()?.size == 0) || (it.second.safeCast<Pair<*, *>>()?.first?.safeCast<List<*>>())?.size == 0)
+                        (it.second.safeCast<List<*>>()?.size == 0) ||
+                            (it.second.safeCast<Pair<*, *>>()?.first?.safeCast<List<*>>())?.size == 0
                     }
-                    _state.value = _state.value.copy(
-                        loading = false,
-                        cards = mapCardsState(usableCards)
-                    )
+                    _state.value = _state.value.copy(cards = mapCardsState(usableCards))
                 }
         }
     }
@@ -513,17 +488,9 @@ class CardsHubViewModel @Inject constructor(
     fun isCurrentNexusBalance(balance: NexusPortfolioBalance): Boolean =
         currentNexusBalance(balance) != null
 
-    fun isCurrentSora2Wallet(walletId: String): Boolean =
+    private fun isCurrentSora2Wallet(walletId: String): Boolean =
         walletId == selectedPortfolioWalletId &&
             walletId == _sora2Portfolio.value?.address
-
-    fun openSora2Receive(walletId: String) {
-        if (isCurrentSora2Wallet(walletId)) router.openQrCodeFlow()
-    }
-
-    fun openSora2Send(walletId: String) {
-        if (isCurrentSora2Wallet(walletId)) assetsRouter.showContacts(SubstrateOptionsProvider.feeAssetId)
-    }
 
     /**
      * What Send or Receive can offer for the selected wallet, main network first. Only that
@@ -540,12 +507,6 @@ class CardsHubViewModel @Inject constructor(
         }
         val sendable = nexus.filter { it.sendAvailable }.mapTo(mutableSetOf(WalletNetworkId.SORA2)) { it.networkId }
         return WalletNetworkChoices.make(action, addresses, balances, canSend = { it in sendable })
-    }
-
-    fun openSora2Xor(walletId: String) {
-        if (isCurrentSora2Wallet(walletId)) {
-            assetsRouter.showAssetDetails(SubstrateOptionsProvider.feeAssetId)
-        }
     }
 
     private fun currentNexusBalance(
@@ -591,16 +552,8 @@ class CardsHubViewModel @Inject constructor(
         router.openQrCodeFlow()
     }
 
-    fun onAssetClick(tokenId: String) {
-        assetsRouter.showAssetDetails(tokenId)
-    }
-
     fun onPoolClick(poolId: StringPair) {
         polkaswapRouter.showPoolDetails(poolId)
-    }
-
-    fun onAccountClick() {
-        mainRouter.showAccountList()
     }
 
     fun onEditViewClick() {
@@ -609,9 +562,9 @@ class CardsHubViewModel @Inject constructor(
 
     @Suppress("UNCHECKED_CAST")
     private fun mapCardsState(data: List<Pair<CardHub, Any>>): List<CardState> {
-        return data.map {
+        return data.mapNotNull {
             when (it.first.cardType) {
-                CardHubType.ASSETS -> mapAssetsCard(it.first.collapsed, it.second as List<Asset>)
+                CardHubType.ASSETS -> null
                 CardHubType.POOLS -> mapPoolsCard(
                     it.first.collapsed,
                     it.second as Pair<List<CommonUserPoolData>, List<DemeterFarmingPool>>
@@ -621,17 +574,6 @@ class CardsHubViewModel @Inject constructor(
                 CardHubType.REFERRAL_SYSTEM -> (it.second as ReferralState)
             }
         }
-    }
-
-    private fun mapAssetsCard(collapsed: Boolean, assets: List<Asset>): CardState {
-        return TitledAmountCardState(
-            amount = formatFiatAmount(assets.fiatSum(), assets.fiatSymbol(), numbersFormatter),
-            title = CardHubType.ASSETS.userName,
-            state = FavoriteAssetsCardState(mapAssetsToCardState(assets, numbersFormatter)),
-            collapsedState = collapsed,
-            onCollapseClick = { collapseCardToggle(CardHubType.ASSETS.hubName, !collapsed) },
-            loading = false,
-        )
     }
 
     private fun mapPoolsCard(
@@ -670,13 +612,7 @@ class CardsHubViewModel @Inject constructor(
 
     fun onOpenFullCard(state: AssetCardState) {
         when (state) {
-            is FavoriteAssetsCardState -> {
-                router.showAssetSettings()
-            }
-
-            is FavoritePoolsCardState -> {
-                polkaswapRouter.showPoolSettings()
-            }
+            is FavoritePoolsCardState -> polkaswapRouter.showPoolSettings()
         }
     }
 

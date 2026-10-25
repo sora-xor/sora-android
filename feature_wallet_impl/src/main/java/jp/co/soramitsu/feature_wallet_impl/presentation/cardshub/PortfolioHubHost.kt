@@ -50,9 +50,29 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * The Wallet tab's home with the Portfolio view on (portfolio-view SPEC §2). The dashboard
+ * What the home's Send or Receive does with the selected wallet's network choices: the
+ * dashboard's own flow when only SORA2 can be used, the one other network straight away, or the
+ * question which network.
+ */
+internal sealed interface NetworkStart {
+    data object Dashboard : NetworkStart
+    data class Open(val choice: WalletNetworkChoice) : NetworkStart
+    data class Ask(val choices: List<WalletNetworkChoice>) : NetworkStart
+}
+
+internal fun networkStart(choices: List<WalletNetworkChoice>): NetworkStart {
+    val only = WalletNetworkChoices.onlyChoice(choices)
+    return when {
+        choices.isEmpty() || only?.id == WalletNetworkId.SORA2 -> NetworkStart.Dashboard
+        only != null -> NetworkStart.Open(only)
+        else -> NetworkStart.Ask(choices)
+    }
+}
+
+/**
+ * The Wallet tab's home: the Portfolio view (portfolio-view SPEC §2). The dashboard
  * ([PortfolioViewModel]) only reads balances and picks parameters; everything that acts goes
- * through the home's own view model and routers, as with the Portfolio view off.
+ * through the home's own view model and routers.
  */
 @Composable
 internal fun PortfolioHomeHost(
@@ -70,8 +90,8 @@ internal fun PortfolioHomeHost(
     val busy by portfolio.busy.collectAsStateWithLifecycle()
     val pinned by portfolio.pinnedTilt.collectAsStateWithLifecycle()
     val inFront = navController.isCurrent(theOnlyRoute)
-    // Send and Receive ask which network only when the wallet has a real choice, as on the
-    // classic home. All wallets keeps the dashboard's own order: first which wallet, then SORA2.
+    // Send and Receive ask which network only when the wallet has a real choice ([networkStart]).
+    // All wallets keeps the dashboard's own order: first which wallet, then SORA2.
     val networkSheets = rememberNetworkSheetsState(sora2Portfolio?.address)
     val latestSheets by rememberUpdatedState(networkSheets)
     val latestModel by rememberUpdatedState(model)
@@ -93,16 +113,14 @@ internal fun PortfolioHomeHost(
     val startNetworkAction: (WalletNetworkAction) -> Boolean = remember(hub, openNetwork) {
         start@{ action ->
             if (latestModel?.scope == PortfolioScope.ALL) return@start false
-            val choices = hub.networkChoices(action)
-            val only = WalletNetworkChoices.onlyChoice(choices)
-            when {
-                choices.isEmpty() || only?.id == WalletNetworkId.SORA2 -> false
-                only != null -> {
-                    openNetwork(action, only)
+            when (val start = networkStart(hub.networkChoices(action))) {
+                NetworkStart.Dashboard -> false
+                is NetworkStart.Open -> {
+                    openNetwork(action, start.choice)
                     true
                 }
-                else -> {
-                    networkPick = action to choices
+                is NetworkStart.Ask -> {
+                    networkPick = action to start.choices
                     true
                 }
             }

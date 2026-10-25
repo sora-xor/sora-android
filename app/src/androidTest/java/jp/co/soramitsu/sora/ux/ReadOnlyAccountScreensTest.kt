@@ -49,7 +49,6 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.acc
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ReadOnlyAccountUi
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.found_wallets.FoundWalletsScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.found_wallets.FoundWalletsTags
-import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.TopBar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -82,7 +81,7 @@ class ReadOnlyAccountScreensTest {
         "worth", "useful", "legal", "winner", "thank", "yellow",
     )
 
-    // ---- Label: the main screen header and the account list ---------------------------------
+    // ---- Label: the main screen's notice and the account list --------------------------------
 
     @Test
     fun theMainScreenLabelsAReadOnlyAccountSaysWhyAndOffersTheRepair() {
@@ -91,15 +90,12 @@ class ReadOnlyAccountScreensTest {
         rule.setContent {
             SoraAppTheme(darkTheme = true) {
                 Column {
-                    TopBar(account = "Bravo", onAccountClick = {}, onQrClick = {}, readOnly = readOnly)
                     if (readOnly) AccountReadOnlyNotice(onRepair = { repairs++ })
                 }
             }
         }
 
-        rule.onNodeWithText("Bravo").assertIsDisplayed()
-        // The chip next to the account's name, and the chip of the notice.
-        rule.onAllNodesWithText(text(CommonR.string.safe_mode_read_only_chip)).assertCountEquals(2)
+        rule.onAllNodesWithText(text(CommonR.string.safe_mode_read_only_chip)).assertCountEquals(1)
         rule.onNodeWithText(text(CommonR.string.account_read_only_title)).assertIsDisplayed()
         rule.onNodeWithText(text(CommonR.string.account_read_only_body)).assertIsDisplayed()
         rule.onNodeWithTag(AccountReadOnlyTags.REPAIR).assertIsDisplayed().performClick()

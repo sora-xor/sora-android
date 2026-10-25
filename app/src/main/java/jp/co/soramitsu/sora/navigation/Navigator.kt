@@ -189,10 +189,6 @@ class Navigator :
         navController?.navigate(R.id.fullPoolListSettingsFragment)
     }
 
-    override fun showAssetSettings() {
-        navController?.navigate(R.id.navAction_to_FullAssetListFragment)
-    }
-
     override fun showFullAssetsSettings() {
         navController?.navigate(R.id.fullAssetsSettingsFragment)
     }

@@ -94,10 +94,6 @@ interface AssetsInteractor {
 
     fun subscribeAssetsActiveOfCurAccount(): Flow<List<Asset>>
 
-    fun subscribeAssetsFavoriteOfAccount(soraAccount: SoraAccount): Flow<List<Asset>>
-
-    fun subscribeAssetsVisibleOfCurAccount(): Flow<List<Asset>>
-
     suspend fun toggleVisibilityOfToken(tokenId: String, visibility: Boolean)
 
     suspend fun tokenFavoriteOff(assetIds: List<String>)

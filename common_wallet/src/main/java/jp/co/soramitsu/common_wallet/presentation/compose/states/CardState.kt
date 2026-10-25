@@ -48,8 +48,6 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 
 data class CardsState(
     val accountAddress: String,
-    val curAccount: String,
-    val loading: Boolean = false,
     val cards: List<CardState> = emptyList(),
     /** Accounts listed in the app, and how many of them can sign on this phone (0: not read yet). */
     val accountCount: Int = 0,
@@ -74,10 +72,6 @@ data class TitledAmountCardState(
     val onCollapseClick: () -> Unit,
     override val loading: Boolean,
 ) : CardState(loading)
-
-class FavoriteAssetsCardState(
-    val assets: List<AssetItemCardState>
-) : AssetCardState
 
 data class AssetItemCardState(
     val tokenIcon: String,

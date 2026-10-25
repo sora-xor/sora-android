@@ -324,22 +324,6 @@ class AssetsRepositoryImpl @Inject constructor(
         emitAll(f)
     }
 
-    override fun subscribeAssetsFavorite(address: String): Flow<List<Asset>> = flow {
-        val selectedCurrency = soraConfigManager.getSelectedCurrency()
-        val f = db.assetDao().subscribeAssetsFavorite(address, selectedCurrency.code).map {
-            it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
-        }
-        emitAll(f)
-    }
-
-    override fun subscribeAssetsVisible(address: String): Flow<List<Asset>> = flow {
-        val selectedCurrency = soraConfigManager.getSelectedCurrency()
-        val f = db.assetDao().subscribeAssetsVisible(address, selectedCurrency.code).map {
-            it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
-        }
-        emitAll(f)
-    }
-
     override suspend fun toggleVisibilityOfToken(
         tokenId: String,
         visibility: Boolean,
