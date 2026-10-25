@@ -30,6 +30,7 @@ ATTRIBUTE_ID = {name: number for number, name in checker.ANDROID_ATTRIBUTE_IDS.i
 NO_INDEX = 0xFFFFFFFF
 SPLASH = "jp.co.soramitsu.sora.splash.presentation.SplashActivity"
 IROHA = "jp.co.soramitsu.sora.irohaconnect.IrohaConnectActivity"
+NEXUS_POLICY = CHECKER.parent.parent / "config" / "android-nexus-manifest-policy.json"
 
 
 def el(name, attributes=None, *children):
@@ -133,6 +134,15 @@ def production_manifest():
 
 def application_of(manifest):
     return next(child for child in manifest["children"] if child["name"] == "application")
+
+
+def nexus_manifest():
+    manifest = production_manifest()
+    application_of(manifest)["children"].append(el(
+        "activity", {"name": IROHA, "exported": True},
+        deep_link_filter("iroha"), deep_link_filter("irohaconnect"),
+    ))
+    return manifest
 
 
 def component(manifest, name):
@@ -313,10 +323,10 @@ class ReleaseManifestTest(unittest.TestCase):
             ("aab untyped", write_aab(self.directory / "plain.aab", manifest, typed=False)),
         ]
 
-    def assert_rejected(self, manifest, *messages):
+    def assert_rejected(self, manifest, *messages, policy=None):
         for kind, artifact in self.artifacts(manifest):
             with self.subTest(kind=kind):
-                result = run(artifact)
+                result = run(*(["--policy", policy] if policy else []), artifact)
                 self.assertEqual(1, result.returncode, result.stdout + result.stderr)
                 for message in messages:
                     self.assertIn(message, result.stderr)
@@ -446,6 +456,81 @@ class ReleaseManifestTest(unittest.TestCase):
             f"{SPLASH} must only be the launcher entry",
         )
 
+    def test_nexus_links_pass_only_with_explicit_nexus_policy(self):
+        manifest = nexus_manifest()
+        self.assert_rejected(manifest, "deep link", "forbidden component")
+        for kind, artifact in self.artifacts(manifest):
+            with self.subTest(kind=kind):
+                result = run("--policy", NEXUS_POLICY, artifact)
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assert_rejected(production_manifest(), "reviewed exported component is missing", policy=NEXUS_POLICY)
+
+    def test_nexus_policy_retains_all_other_production_checks(self):
+        original = checker.load_policy(checker.DEFAULT_POLICY_FILE)
+        nexus = checker.load_policy(NEXUS_POLICY)
+        nexus.pop("description")
+        original.pop("description")
+        nexus["exportedComponents"].pop(IROHA)
+        self.assertEqual(original, nexus)
+        for attribute in ("allowBackup", "debuggable", "usesCleartextTraffic"):
+            manifest = nexus_manifest()
+            application_of(manifest)["attributes"][attribute] = True
+            self.assert_rejected(manifest, attribute, policy=NEXUS_POLICY)
+
+    def test_nexus_rejects_changed_extra_or_missing_link_filters(self):
+        for change in ("scheme", "host", "pathPrefix", "port", "mimeType"):
+            manifest = nexus_manifest()
+            component(manifest, IROHA)["children"][0]["children"][-1]["attributes"][change] = "unexpected"
+            self.assert_rejected(manifest, "unreviewed deep-link", policy=NEXUS_POLICY)
+        for mutation in ("duplicate", "missing", "extra_action", "extra_category", "extra_data", "extra_filter"):
+            manifest = nexus_manifest()
+            activity = component(manifest, IROHA)
+            intent_filter = activity["children"][0]
+            if mutation == "duplicate":
+                activity["children"].append(copy.deepcopy(intent_filter))
+            elif mutation == "missing":
+                activity["children"].pop()
+            elif mutation == "extra_filter":
+                activity["children"].append(launcher_filter())
+            else:
+                tag = mutation.removeprefix("extra_")
+                intent_filter["children"].append(el(tag, {"name": "unexpected"}))
+            self.assert_rejected(manifest, "deep-link", policy=NEXUS_POLICY)
+
+    def test_nexus_rejects_links_on_other_components_and_iroha_aliases(self):
+        manifest = nexus_manifest()
+        component(manifest, SPLASH)["children"].append(deep_link_filter("iroha"))
+        self.assert_rejected(manifest, "deep link", policy=NEXUS_POLICY)
+        manifest = nexus_manifest()
+        component(manifest, IROHA)["name"] = "activity-alias"
+        component(manifest, IROHA)["attributes"]["targetActivity"] = SPLASH
+        self.assert_rejected(manifest, "must be the reviewed deep-link activity", policy=NEXUS_POLICY)
+        manifest = nexus_manifest()
+        application_of(manifest)["children"].append(el(
+            "activity", {"name": IROHA + "Extra", "exported": False},
+        ))
+        self.assert_rejected(manifest, "forbidden component", policy=NEXUS_POLICY)
+
+    def test_nexus_policy_rejects_ambiguous_or_inexact_rules(self):
+        policy = checker.load_policy(NEXUS_POLICY)
+        valid_links = policy["exportedComponents"][IROHA]["deepLinkFilters"]
+        rules = [
+            {"deepLinkFilters": []},
+            {"deepLinkFilters": "iroha://connect"},
+            {"deepLinkFilters": [{"scheme": "iroha", "host": "*"}]},
+            {"deepLinkFilters": [{"scheme": "iroha", "host": "connect", "pathPrefix": "/"}]},
+            {"deepLinkFilters": [valid_links[0], valid_links[0]]},
+            {"deepLinkFilters": valid_links, "launcherOnly": True},
+            {"deepLinkFilters": valid_links, "permission": "android.permission.DUMP"},
+        ]
+        for rule in rules:
+            with self.subTest(rule=rule):
+                policy["exportedComponents"][IROHA] = rule
+                path = self.directory / "invalid-policy.json"
+                path.write_text(json.dumps(policy))
+                with self.assertRaises(checker.ManifestError):
+                    checker.load_policy(path)
+
     def test_debug_preview_and_alias_are_rejected(self):
         manifest = production_manifest()
         application_of(manifest)["children"].append(
@@ -564,7 +649,7 @@ class ReleaseManifestTest(unittest.TestCase):
         path.write_text(json.dumps(broken))
         result = run("--policy", path, artifact)
         self.assertEqual(2, result.returncode)
-        self.assertIn("exportedComponents[x.Y] needs launcherOnly or permission", result.stderr)
+        self.assertIn("exportedComponents[x.Y] needs exactly one of", result.stderr)
 
         self.assertEqual(2, run("--policy", self.directory / "missing.json", artifact).returncode)
 

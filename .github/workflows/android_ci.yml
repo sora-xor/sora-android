@@ -76,7 +76,8 @@ jobs:
       - name: Test release helper scripts
         run: |
           python3 scripts/test-android-native-16kb.py
-          python3 scripts/test-verify-release-signing.py
+          # Select the build tools installed above, not newer tools preloaded on the runner.
+          APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner" python3 scripts/test-verify-release-signing.py
           python3 scripts/test-verify-release-json-export.py
           node scripts/test-production-release-lock-coverage.mjs
 
@@ -194,6 +195,6 @@ jobs:
             echo "Expected one AAB and one APK, found ${#aabs[@]} and ${#apks[@]}" >&2
             exit 1
           fi
-          python3 scripts/verify-release-manifest.py "${aabs[0]}" "${apks[0]}"
+          python3 scripts/verify-release-manifest.py --policy config/android-nexus-manifest-policy.json "${aabs[0]}" "${apks[0]}"
           python3 scripts/verify-android-native-16kb.py "${aabs[0]}"
           python3 scripts/verify-android-native-16kb.py "${apks[0]}"

@@ -19,10 +19,9 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: html
           message: |
-            ✍️ <b>Commitor</b>: @${{ github.actor }}
-            💬 <b>Commit message</b>: ${{ github.event.head_commit.message }}
-            🔁 <b>Repository</b>: https://github.com/${{ github.repository }}
-            <b>Branch</b>: ${{ github.ref }}
-            <i>Changes</i>: https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            ✍️ Committer: @${{ github.actor }}
+            💬 Commit message: ${{ github.event.head_commit.message }}
+            🔁 Repository: https://github.com/${{ github.repository }}
+            Branch: ${{ github.ref }}
+            Changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}

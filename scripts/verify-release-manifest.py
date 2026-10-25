@@ -10,7 +10,7 @@ artifact Google Play would receive differs from it in any of these:
   - package name, minSdkVersion, targetSdkVersion (and the version, when asked);
   - backups: allowBackup and fullBackupContent must be false, dataExtractionRules must be set;
   - debuggable, testOnly, usesCleartextTraffic and sharedUserId must be off or absent;
-  - deep links: no <data> element, no VIEW action and no BROWSABLE category anywhere;
+  - deep links: none by default; an explicit policy can name exact filters on an activity;
   - forbidden components (IrohaConnect, the debug-only Safe Mode preview);
   - the permission list, the <queries> list and the exported components.
 
@@ -418,10 +418,23 @@ def load_policy(path: Path) -> dict:
                 problems.append("requiredApplicationMetadata must map names to booleans")
     if not problems:
         for name, rule in policy["exportedComponents"].items():
-            if not isinstance(rule, dict) or not (
-                rule.get("launcherOnly") is True or isinstance(rule.get("permission"), str)
-            ):
-                problems.append(f"exportedComponents[{name}] needs launcherOnly or permission")
+            if not isinstance(rule, dict):
+                problems.append(f"exportedComponents[{name}] must be an object")
+                continue
+            modes = [rule.get("launcherOnly") is True, isinstance(rule.get("permission"), str),
+                     "deepLinkFilters" in rule]
+            if sum(modes) != 1:
+                problems.append(f"exportedComponents[{name}] needs exactly one of launcherOnly, permission or deepLinkFilters")
+            if "deepLinkFilters" in rule:
+                links = rule["deepLinkFilters"]
+                if not isinstance(links, list) or not links or any(
+                    not isinstance(link, dict) or set(link) != {"scheme", "host"}
+                    or any(not isinstance(value, str) or not value or "*" in value for value in link.values())
+                    for link in links
+                ):
+                    problems.append(f"exportedComponents[{name}] deepLinkFilters need exact scheme and host strings")
+                elif len({json.dumps(link, sort_keys=True) for link in links}) != len(links):
+                    problems.append(f"exportedComponents[{name}] deepLinkFilters must be unique")
     if problems:
         raise ManifestError(f"{path}: " + "; ".join(problems))
     return policy
@@ -479,6 +492,50 @@ def _filters(component: Element) -> list[tuple[set[str], set[str]]]:
     return result
 
 
+def _reviewed_deep_link_nodes(application: Element, policy: dict, issues: list[str]) -> set[int]:
+    """Exempt only the exact reviewed activity filters from the blanket deep-link rejection."""
+    allowed = set()
+    for component in application.children:
+        name = str(component.get("name") or "")
+        rule = policy["exportedComponents"].get(name, {})
+        expected = rule.get("deepLinkFilters")
+        if expected is None:
+            continue
+        if component.name != "activity" or component.get("targetActivity") is not None:
+            issues.append(f"{name} must be the reviewed deep-link activity, not an alias or other component")
+            continue
+        if component.get("permission") is not None:
+            issues.append(f"{name} must not require a permission")
+        actual = []
+        for intent_filter in component.child_elements("intent-filter"):
+            actions = intent_filter.child_elements("action")
+            categories = intent_filter.child_elements("category")
+            data = intent_filter.child_elements("data")
+            valid = (
+                not intent_filter.attributes
+                and len(intent_filter.children) == 4
+                and len(actions) == 1
+                and actions[0].attributes == {"name": "android.intent.action.VIEW"}
+                and len(categories) == 2
+                and all(set(node.attributes) == {"name"} for node in categories)
+                and {node.get("name") for node in categories} == {
+                    "android.intent.category.DEFAULT", "android.intent.category.BROWSABLE",
+                }
+                and len(data) == 1 and data[0].attributes in expected
+                and all(not node.children for node in intent_filter.children)
+            )
+            if not valid:
+                issues.append(f"{name} has an unreviewed deep-link intent filter")
+                continue
+            actual.append(data[0].attributes)
+            allowed.update(id(node) for node in intent_filter.children)
+        if sorted(json.dumps(link, sort_keys=True) for link in actual) != sorted(
+            json.dumps(link, sort_keys=True) for link in expected
+        ):
+            issues.append(f"{name} must declare each reviewed deep-link filter exactly once")
+    return allowed
+
+
 def check_manifest(manifest: Element, policy: dict, version_code=None, version_name=None) -> list[str]:
     issues: list[str] = []
     if manifest.name != "manifest":
@@ -529,9 +586,12 @@ def check_manifest(manifest: Element, policy: dict, version_code=None, version_n
     for attribute in ("debuggable", "testOnly", "usesCleartextTraffic"):
         _must_be_off(application, attribute, issues)
 
-    # Deep links. Production declares none; any of these would let a web page or another app
-    # start a screen of the wallet.
+    # The public-store policy declares none. The Nexus policy permits only its exact,
+    # explicitly named activity filters; all other deep-link nodes still fail closed.
+    allowed_link_nodes = _reviewed_deep_link_nodes(application, policy, issues)
     for element in manifest.walk():
+        if id(element) in allowed_link_nodes:
+            continue
         if element.name == "data":
             link = ", ".join(f"{key}={shown(value)}" for key, value in sorted(element.attributes.items()))
             issues.append(f"deep link: <data {link}> is declared")
@@ -546,9 +606,13 @@ def check_manifest(manifest: Element, policy: dict, version_code=None, version_n
         if component.name not in COMPONENT_TAGS:
             continue
         name = str(component.get("name") or "")
+        reviewed_link_activity = (
+            component.name == "activity"
+            and "deepLinkFilters" in policy["exportedComponents"].get(name, {})
+        )
         for field in (name, str(component.get("targetActivity") or "")):
             for part in forbidden:
-                if part in field.lower():
+                if part in field.lower() and not (reviewed_link_activity and field == name):
                     issues.append(f"forbidden component is packaged: <{component.name}> {field}")
         declared = component.get("exported")
         flag = as_bool(declared)
@@ -577,7 +641,7 @@ def check_manifest(manifest: Element, policy: dict, version_code=None, version_n
                     )
             if component.get("permission") is not None:
                 issues.append(f"{name} is the launcher entry and must not require a permission")
-        elif component.get("permission") != rule.get("permission"):
+        elif "deepLinkFilters" not in rule and component.get("permission") != rule.get("permission"):
             issues.append(
                 f"exported component {name} is guarded by permission "
                 f"{shown(component.get('permission'))}, expected {rule.get('permission')}"
