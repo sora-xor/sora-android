@@ -107,7 +107,21 @@ class NodeManagerStartTest {
         verify(exactly = 1) { connectionManager.observeAppState() }
     }
 
+    @Test
+    fun `saved compromised node falls back before a socket is opened`() = runTest {
+        coEvery { nodeDao.getSelectedNode() } returns NodeLocal(
+            address = "wss://ws.mof.sora.org/", chain = "SORA", name = "old node",
+            isDefault = false, isSelected = true,
+        )
+        nodeManager { true }
+        advanceUntilIdle()
+        verify(exactly = 0) { connectionManager.setAddress("wss://ws.mof.sora.org/") }
+        verify(exactly = 1) { connectionManager.setAddress(
+            jp.co.soramitsu.common.domain.FlavorOptionsProvider.wsHostUrl,
+        ) }
+    }
+
     private companion object {
-        const val SELECTED_NODE = "wss://ws.mof.sora.org/"
+        const val SELECTED_NODE = "wss://mof2.sora.org/"
     }
 }

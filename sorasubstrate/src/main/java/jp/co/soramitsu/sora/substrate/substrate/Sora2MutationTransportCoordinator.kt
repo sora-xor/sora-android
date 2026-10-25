@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.substrate.substrate
 
 import java.util.concurrent.atomic.AtomicBoolean
+import jp.co.soramitsu.common.network.SoraNodeEndpointPolicy
 import jp.co.soramitsu.sora.substrate.runtime.requireReviewedSora2WebSocketEndpoint
 import jp.co.soramitsu.sora.substrate.runtime.reviewedSora2WebSocketEndpointOrNull
 
@@ -53,6 +54,7 @@ internal class Sora2MutationTransportCoordinator(
     private var deferredSwitchAddress: String? = null
 
     fun setAddress(address: String) {
+        require(SoraNodeEndpointPolicy.isAllowed(address)) { "SORA_NODE_ENDPOINT_BLOCKED" }
         synchronized(lock) {
             check(activeLeases == 0) { "SORA2_MUTATION_TRANSPORT_ACTIVE" }
             requestedAddress = address
@@ -74,6 +76,7 @@ internal class Sora2MutationTransportCoordinator(
 
     /** Returns an address only when the socket switch may happen immediately. */
     fun requestSwitch(address: String): String? = synchronized(lock) {
+        require(SoraNodeEndpointPolicy.isAllowed(address)) { "SORA_NODE_ENDPOINT_BLOCKED" }
         if (activeLeases > 0) {
             deferredSwitchAddress = address
             null

@@ -222,21 +222,21 @@ private fun PreviewSelectNode() {
                     ChainNode(
                         "Sora",
                         "SORA based on SORA Parliament Ministry of Finance",
-                        "wss://ws.mof.sora.org",
+                        "wss://mof2.sora.org",
                         isSelected = true,
                         isDefault = true,
                     ),
                     ChainNode(
                         "Sora",
                         "SORA based on SORA Parliament Ministry of Finance",
-                        "wss://ws.mof2.sora.org",
+                        "wss://node-a.example",
                         isSelected = false,
                         isDefault = true,
                     ),
                     ChainNode(
                         "Sora",
                         "SORA based on SORA Parliament Ministry of Finance",
-                        "wss://ws.mof3.sora.org",
+                        "wss://node-b.example",
                         isSelected = false,
                         isDefault = true,
                     )
@@ -245,7 +245,7 @@ private fun PreviewSelectNode() {
                     ChainNode(
                         "Sora",
                         "SORA based on SORA Parliament Ministry of Finance",
-                        "wss://ws.mof.sora.org",
+                        "wss://mof2.sora.org",
                         isSelected = false,
                         isDefault = true,
                     )

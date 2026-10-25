@@ -16,7 +16,7 @@ class Sora2MutationTransportCoordinatorTest {
         coordinator.setAddress(REVIEWED)
         assertTransportRejected(coordinator)
 
-        coordinator.observeConnectedAddress("wss://mof2.sora.org")
+        coordinator.observeConnectedAddress("wss://other.example")
         assertTransportRejected(coordinator)
 
         coordinator.observeConnectedAddress("$REVIEWED/")
@@ -58,6 +58,31 @@ class Sora2MutationTransportCoordinatorTest {
 
         assertEquals(1, switchCount)
         assertTransportRejected(coordinator)
+    }
+
+    @Test
+    fun `blocked switch cannot replace an admitted socket or its deferred destination`() {
+        val coordinator = admittedCoordinator()
+        val lease = coordinator.acquire()
+        assertNull(coordinator.requestSwitch(DEFERRED))
+
+        listOf<() -> Unit>(
+            { coordinator.setAddress("wss://ws.mof.sora.org/") },
+            { coordinator.requestSwitch("wss://mof3.sora.org/") },
+        ).forEach { action ->
+            try {
+                action()
+                fail("Expected blocked node to be rejected")
+            } catch (error: IllegalArgumentException) {
+                assertEquals("SORA_NODE_ENDPOINT_BLOCKED", error.message)
+            }
+        }
+
+        assertEquals(REVIEWED, coordinator.requestedAddress())
+        coordinator.requireReviewedTransport()
+        var switchedTo: String? = null
+        lease.closeAndRunDeferredSwitch { switchedTo = it }
+        assertEquals(DEFERRED, switchedTo)
     }
 
     private fun admittedCoordinator() = Sora2MutationTransportCoordinator().also {

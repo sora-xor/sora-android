@@ -241,7 +241,6 @@ class MainnetLiveReadContractTest {
     private companion object {
         val ENDPOINTS = listOf(
             Sora2RuntimeContract.RUNTIME_RPC_ENDPOINT,
-            Sora2RuntimeContract.SECOND_RUNTIME_RPC_ENDPOINT,
         )
 
         /** `substrate_types_android` of the SORA remote config (config.polkaswap2.io). */

@@ -36,6 +36,7 @@ import androidx.room.withTransaction
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.FlavorOptionsProvider
+import jp.co.soramitsu.common.network.SoraNodeEndpointPolicy
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.NodeLocal
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
@@ -61,18 +62,27 @@ internal class SelectNodeRepositoryImpl @Inject constructor(
 
         return db.withTransaction {
             val selectedNodeAddress =
-                db.nodeDao().getSelectedNode()?.address ?: FlavorOptionsProvider.wsHostUrl
-            val customNodes = db.nodeDao().getNodes().filter { !it.isDefault }
-            val defaultNodes = remoteNodes.map { nodeInfo ->
+                db.nodeDao().getSelectedNode()?.address?.takeIf(SoraNodeEndpointPolicy::isAllowed)
+                    ?: FlavorOptionsProvider.wsHostUrl
+            val customNodes = db.nodeDao().getNodes().filter { !it.isDefault }.map {
+                if (SoraNodeEndpointPolicy.isAllowed(it.address)) it else it.copy(isSelected = false)
+            }
+            val defaultNodes = remoteNodes.filter { SoraNodeEndpointPolicy.isAllowed(it.address) }.map { nodeInfo ->
                 NodeLocal(
-                    address = "${nodeInfo.address}/",
+                    address = "${nodeInfo.address.trimEnd('/')}/",
                     chain = nodeInfo.chain,
                     name = nodeInfo.name,
                     isDefault = true,
                     isSelected = selectedNodeAddress.compareWithUrl(nodeInfo.address)
                 )
             }
-            val nodes = defaultNodes + customNodes
+            val eligibleDefaults = defaultNodes.ifEmpty {
+                listOf(NodeLocal(
+                    address = FlavorOptionsProvider.wsHostUrl, chain = "SORA", name = "SORA",
+                    isDefault = true, isSelected = selectedNodeAddress.compareWithUrl(FlavorOptionsProvider.wsHostUrl),
+                ))
+            }
+            val nodes = eligibleDefaults + customNodes
             val noneSelected = nodes.none { it.isSelected }
             db.nodeDao().clearTable()
             db.nodeDao().insertNodes(nodes)
@@ -80,7 +90,7 @@ internal class SelectNodeRepositoryImpl @Inject constructor(
                 nodes.getOrNull(0)?.address?.let { db.nodeDao().selectNode(it) }
             }
 
-            defaultNodes.map {
+            eligibleDefaults.map {
                 converter.convert(it)
             }
         }
@@ -89,15 +99,17 @@ internal class SelectNodeRepositoryImpl @Inject constructor(
     override fun getNodes(): Flow<List<ChainNode>> =
         db.nodeDao().flowNodes()
             .map {
-                it.map { nodeLocal -> converter.convert(nodeLocal) }
+                it.filter { nodeLocal -> SoraNodeEndpointPolicy.isAllowed(nodeLocal.address) }
+                    .map { nodeLocal -> converter.convert(nodeLocal) }
             }
 
     override fun getSelectedNode(): Flow<ChainNode?> {
         return db.nodeDao().flowSelectedNode()
-            .map { nodeLocal -> nodeLocal?.let { converter.convert(nodeLocal) } }
+            .map { nodeLocal -> nodeLocal?.takeIf { SoraNodeEndpointPolicy.isAllowed(it.address) }?.let { converter.convert(it) } }
     }
 
     override suspend fun selectNode(selectedNode: ChainNode) {
+        require(SoraNodeEndpointPolicy.isAllowed(selectedNode.address)) { "SORA_NODE_ENDPOINT_BLOCKED" }
         db.withTransaction {
             if (db.nodeDao().getSelectedNode()?.address == selectedNode.address) {
                 return@withTransaction
@@ -108,10 +120,12 @@ internal class SelectNodeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addCustomNode(node: ChainNode) {
+        require(SoraNodeEndpointPolicy.isAllowed(node.address)) { "SORA_NODE_ENDPOINT_BLOCKED" }
         db.nodeDao().insertNode(converter.convert(node))
     }
 
     override suspend fun updateCustomNode(previousAddress: String, node: ChainNode) {
+        require(SoraNodeEndpointPolicy.isAllowed(node.address)) { "SORA_NODE_ENDPOINT_BLOCKED" }
         db.nodeDao().updateNode(
             oldAddress = previousAddress,
             newName = node.name,
