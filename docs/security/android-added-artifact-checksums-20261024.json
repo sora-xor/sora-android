@@ -1,0 +1,1521 @@
+{
+  "source": "Official Maven Central/Google Maven bytes, or explicitly identified local source-build provenance, compared to new strict Gradle checksum entries",
+  "artifactCount": 116,
+  "publisherArtifactCount": 114,
+  "sourceBuiltArtifactCount": 2,
+  "allMatched": true,
+  "artifacts": [
+    {
+      "identity": [
+        "androidx.compose.ui",
+        "ui-geometry",
+        "1.10.0",
+        "ui-geometry-1.10.0.module",
+        "ed47254977efa73d57b1528d1d142cd1e662fb408321cb182affa3f82a2ab569"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-geometry/1.10.0/ui-geometry-1.10.0.module",
+      "bytes": 27298,
+      "sha256": "ed47254977efa73d57b1528d1d142cd1e662fb408321cb182affa3f82a2ab569",
+      "matched": true
+    },
+    {
+      "identity": [
+        "androidx.compose.ui",
+        "ui-text",
+        "1.10.0",
+        "ui-text-1.10.0.module",
+        "9109b898376ca1af4e8748ac437beba461f0e9f806eddfe8384f81561e5733c8"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-text/1.10.0/ui-text-1.10.0.module",
+      "bytes": 27724,
+      "sha256": "9109b898376ca1af4e8748ac437beba461f0e9f806eddfe8384f81561e5733c8",
+      "matched": true
+    },
+    {
+      "identity": [
+        "at.yawk.lz4",
+        "lz4-java",
+        "1.12.1",
+        "lz4-java-1.12.1.jar",
+        "c75bfbc6980e8b90ee76c75ec5b67058b6b9bfa1e19af6a3cf75dccde533e750"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/at/yawk/lz4/lz4-java/1.12.1/lz4-java-1.12.1.jar",
+      "bytes": 901828,
+      "sha256": "c75bfbc6980e8b90ee76c75ec5b67058b6b9bfa1e19af6a3cf75dccde533e750",
+      "matched": true
+    },
+    {
+      "identity": [
+        "at.yawk.lz4",
+        "lz4-java",
+        "1.12.1",
+        "lz4-java-1.12.1.module",
+        "a42d9c588872762c32a8241d2d952cbe028e74e1bd49d5684c8d270c8456015e"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/at/yawk/lz4/lz4-java/1.12.1/lz4-java-1.12.1.module",
+      "bytes": 4391,
+      "sha256": "a42d9c588872762c32a8241d2d952cbe028e74e1bd49d5684c8d270c8456015e",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.fasterxml",
+        "oss-parent",
+        "79",
+        "oss-parent-79.pom",
+        "9206b7dd67fb138036576c3dfca947a2a8f3e2c4d2d9c1f2d1dea519b3a4dae1"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/fasterxml/oss-parent/79/oss-parent-79.pom",
+      "bytes": 24429,
+      "sha256": "9206b7dd67fb138036576c3dfca947a2a8f3e2c4d2d9c1f2d1dea519b3a4dae1",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.fasterxml.jackson",
+        "jackson-bom",
+        "2.22.4",
+        "jackson-bom-2.22.4.pom",
+        "a3c00688a7bf8e128451137b68f90d9137957a372756083d74555a47241d1636"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/fasterxml/jackson/jackson-bom/2.22.4/jackson-bom-2.22.4.pom",
+      "bytes": 20225,
+      "sha256": "a3c00688a7bf8e128451137b68f90d9137957a372756083d74555a47241d1636",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.fasterxml.jackson",
+        "jackson-parent",
+        "2.22",
+        "jackson-parent-2.22.pom",
+        "7d45a7efb69df207bed7cc54b87a0bb012f10952c095570a273b49485da0d129"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/fasterxml/jackson/jackson-parent/2.22/jackson-parent-2.22.pom",
+      "bytes": 6879,
+      "sha256": "7d45a7efb69df207bed7cc54b87a0bb012f10952c095570a273b49485da0d129",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.fasterxml.jackson.core",
+        "jackson-annotations",
+        "2.22",
+        "jackson-annotations-2.22.jar",
+        "21ddb598807d3a51a876704eb979d9296e1c6a6f47ab1826ff88c6d6a127a2d0"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.22/jackson-annotations-2.22.jar",
+      "bytes": 84211,
+      "sha256": "21ddb598807d3a51a876704eb979d9296e1c6a6f47ab1826ff88c6d6a127a2d0",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.fasterxml.jackson.core",
+        "jackson-annotations",
+        "2.22",
+        "jackson-annotations-2.22.module",
+        "3d22704448e98dfd578c5df5646dd0a98aec04080b08a3245cf8beb8a25dcb5d"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.22/jackson-annotations-2.22.module",
+      "bytes": 1915,
+      "sha256": "3d22704448e98dfd578c5df5646dd0a98aec04080b08a3245cf8beb8a25dcb5d",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.fasterxml.jackson.core",
+        "jackson-core",
+        "2.22.4",
+        "jackson-core-2.22.4.jar",
+        "2d30c375cddea9657a1e1ef97547a2694b663b355facb4de53a097782b312d1a"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-core/2.22.4/jackson-core-2.22.4.jar",
+      "bytes": 599548,
+      "sha256": "2d30c375cddea9657a1e1ef97547a2694b663b355facb4de53a097782b312d1a",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.fasterxml.jackson.core",
+        "jackson-core",
+        "2.22.4",
+        "jackson-core-2.22.4.module",
+        "f48a33005b4950f90af0aed735c29c9e7e43df9e2a4d649db7a2dc2e90ce96f5"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-core/2.22.4/jackson-core-2.22.4.module",
+      "bytes": 2426,
+      "sha256": "f48a33005b4950f90af0aed735c29c9e7e43df9e2a4d649db7a2dc2e90ce96f5",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.fasterxml.jackson.core",
+        "jackson-databind",
+        "2.22.4",
+        "jackson-databind-2.22.4.jar",
+        "d4cbf8947087f305869826801913abdc50735a1fab2074a1993e7bc67ca974a3"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.22.4/jackson-databind-2.22.4.jar",
+      "bytes": 1714464,
+      "sha256": "d4cbf8947087f305869826801913abdc50735a1fab2074a1993e7bc67ca974a3",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.fasterxml.jackson.core",
+        "jackson-databind",
+        "2.22.4",
+        "jackson-databind-2.22.4.module",
+        "fdf629a455277b8696a0e79533d99531bea7f5f5edaf6cab38646608b8cbb9c3"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.22.4/jackson-databind-2.22.4.module",
+      "bytes": 4812,
+      "sha256": "fdf629a455277b8696a0e79533d99531bea7f5f5edaf6cab38646608b8cbb9c3",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.android.gms",
+        "play-services-basement",
+        "18.8.0",
+        "play-services-basement-18.8.0.aar",
+        "deb9aea6c5a1874442baa5341117c0c71ce05a729c26fff555cb11f4be0e46e6"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-basement/18.8.0/play-services-basement-18.8.0.aar",
+      "bytes": 438452,
+      "sha256": "deb9aea6c5a1874442baa5341117c0c71ce05a729c26fff555cb11f4be0e46e6",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.android.gms",
+        "play-services-basement",
+        "18.8.0",
+        "play-services-basement-18.8.0.pom",
+        "78e7ff73fc7d7ce9130f070b45be9d30b5e7551bc2f2ca75c9abe0b1b7f70ca2"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-basement/18.8.0/play-services-basement-18.8.0.pom",
+      "bytes": 1336,
+      "sha256": "78e7ff73fc7d7ce9130f070b45be9d30b5e7551bc2f2ca75c9abe0b1b7f70ca2",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.android.gms",
+        "play-services-basement",
+        "18.9.0",
+        "play-services-basement-18.9.0.aar",
+        "c6ed7236b1b3ce0296b508a5c0a09108fd52d83559d35cad2639505cd04ab255"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-basement/18.9.0/play-services-basement-18.9.0.aar",
+      "bytes": 439122,
+      "sha256": "c6ed7236b1b3ce0296b508a5c0a09108fd52d83559d35cad2639505cd04ab255",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.android.gms",
+        "play-services-basement",
+        "18.9.0",
+        "play-services-basement-18.9.0.pom",
+        "601ef047167c6c280b8b190942d9e94a0463e891acd9c6ccf532eb298a5efe5b"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-basement/18.9.0/play-services-basement-18.9.0.pom",
+      "bytes": 1336,
+      "sha256": "601ef047167c6c280b8b190942d9e94a0463e891acd9c6ccf532eb298a5efe5b",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.android.gms",
+        "play-services-tasks",
+        "18.4.0",
+        "play-services-tasks-18.4.0.aar",
+        "e3f7666ca0532142ab7c0c3f4e2dbf34113d590c3542845ce03ce79ea6b83d29"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-tasks/18.4.0/play-services-tasks-18.4.0.aar",
+      "bytes": 99861,
+      "sha256": "e3f7666ca0532142ab7c0c3f4e2dbf34113d590c3542845ce03ce79ea6b83d29",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.android.gms",
+        "play-services-tasks",
+        "18.4.0",
+        "play-services-tasks-18.4.0.pom",
+        "5e2631340ca2a8b85fe4a928fd7f272aa13527c75654b21232c14763c14f0eb3"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-tasks/18.4.0/play-services-tasks-18.4.0.pom",
+      "bytes": 952,
+      "sha256": "5e2631340ca2a8b85fe4a928fd7f272aa13527c75654b21232c14763c14f0eb3",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.errorprone",
+        "error_prone_annotations",
+        "2.50.0",
+        "error_prone_annotations-2.50.0.jar",
+        "4667724877f1d37a689202da191e23efa7657c62eef93ccdac406eccfe5cdd0a"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/errorprone/error_prone_annotations/2.50.0/error_prone_annotations-2.50.0.jar",
+      "bytes": 20252,
+      "sha256": "4667724877f1d37a689202da191e23efa7657c62eef93ccdac406eccfe5cdd0a",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.errorprone",
+        "error_prone_annotations",
+        "2.50.0",
+        "error_prone_annotations-2.50.0.pom",
+        "71a0680d277324bab46bec4b00f6f111c1b794a931d0d8cda79bcb9246982f92"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/errorprone/error_prone_annotations/2.50.0/error_prone_annotations-2.50.0.pom",
+      "bytes": 4252,
+      "sha256": "71a0680d277324bab46bec4b00f6f111c1b794a931d0d8cda79bcb9246982f92",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.errorprone",
+        "error_prone_parent",
+        "2.50.0",
+        "error_prone_parent-2.50.0.pom",
+        "abf45a019db125b50ff55134ec2af94ae3519761038adf0a60b9bd7b4b8b6254"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/errorprone/error_prone_parent/2.50.0/error_prone_parent-2.50.0.pom",
+      "bytes": 15882,
+      "sha256": "abf45a019db125b50ff55134ec2af94ae3519761038adf0a60b9bd7b4b8b6254",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-bom",
+        "34.19.0",
+        "firebase-bom-34.19.0.pom",
+        "81a4d927eb8e31c1f2022cf80d603224b67be784eb8570a93715228e6399cbbf"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-bom/34.19.0/firebase-bom-34.19.0.pom",
+      "bytes": 5411,
+      "sha256": "81a4d927eb8e31c1f2022cf80d603224b67be784eb8570a93715228e6399cbbf",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-common",
+        "22.2.1",
+        "firebase-common-22.2.1.aar",
+        "877c5ff39da0932ac9ecdc23471cbfc4bd48b67167f3f695766e970f531c0780"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-common/22.2.1/firebase-common-22.2.1.aar",
+      "bytes": 121194,
+      "sha256": "877c5ff39da0932ac9ecdc23471cbfc4bd48b67167f3f695766e970f531c0780",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-common",
+        "22.2.1",
+        "firebase-common-22.2.1.pom",
+        "3e4491b8aa9a0b8e5d9e8e16ca2b35b4f0a40a5123a15121dbfe1f7f9b87d114"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-common/22.2.1/firebase-common-22.2.1.pom",
+      "bytes": 2762,
+      "sha256": "3e4491b8aa9a0b8e5d9e8e16ca2b35b4f0a40a5123a15121dbfe1f7f9b87d114",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-crashlytics",
+        "20.1.1",
+        "firebase-crashlytics-20.1.1.aar",
+        "94c317c67cd8544fb281439ceba2b75f7b067ec389fa67328c66d7c763da0fac"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-crashlytics/20.1.1/firebase-crashlytics-20.1.1.aar",
+      "bytes": 424539,
+      "sha256": "94c317c67cd8544fb281439ceba2b75f7b067ec389fa67328c66d7c763da0fac",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-crashlytics",
+        "20.1.1",
+        "firebase-crashlytics-20.1.1.pom",
+        "8ef46e8e32883578a2c6c6759a189ff78bb5aa67e24f17b55ab5279175fc82b0"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-crashlytics/20.1.1/firebase-crashlytics-20.1.1.pom",
+      "bytes": 4491,
+      "sha256": "8ef46e8e32883578a2c6c6759a189ff78bb5aa67e24f17b55ab5279175fc82b0",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-crashlytics-buildtools",
+        "3.0.8",
+        "firebase-crashlytics-buildtools-3.0.8.jar",
+        "fc12e6a06876fac848741cc1f70b2b65725471da039357a7d30df607f9e26569"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-crashlytics-buildtools/3.0.8/firebase-crashlytics-buildtools-3.0.8.jar",
+      "bytes": 8437928,
+      "sha256": "fc12e6a06876fac848741cc1f70b2b65725471da039357a7d30df607f9e26569",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-crashlytics-buildtools",
+        "3.0.8",
+        "firebase-crashlytics-buildtools-3.0.8.module",
+        "c4a0ca01c606c7c8723ef116876c110e5024cc0f49e1a94d133e9fec0f998e20"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-crashlytics-buildtools/3.0.8/firebase-crashlytics-buildtools-3.0.8.module",
+      "bytes": 1131,
+      "sha256": "c4a0ca01c606c7c8723ef116876c110e5024cc0f49e1a94d133e9fec0f998e20",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-crashlytics-gradle",
+        "3.0.8",
+        "firebase-crashlytics-gradle-3.0.8.jar",
+        "61b927a0ba6dc7a7b45c78b92d1a8b99116e21c2caa77895ca1c458f2c4a5cf2"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-crashlytics-gradle/3.0.8/firebase-crashlytics-gradle-3.0.8.jar",
+      "bytes": 77446,
+      "sha256": "61b927a0ba6dc7a7b45c78b92d1a8b99116e21c2caa77895ca1c458f2c4a5cf2",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-crashlytics-gradle",
+        "3.0.8",
+        "firebase-crashlytics-gradle-3.0.8.module",
+        "66700e97501894b328ed74dc3949a5034264a4302677605cb51d386c5af9000f"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-crashlytics-gradle/3.0.8/firebase-crashlytics-gradle-3.0.8.module",
+      "bytes": 3603,
+      "sha256": "66700e97501894b328ed74dc3949a5034264a4302677605cb51d386c5af9000f",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-installations",
+        "19.1.2",
+        "firebase-installations-19.1.2.aar",
+        "3a561cba4bce00fa6ff515857ccc9d5550bc1ee239549799a091486137c2f3da"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-installations/19.1.2/firebase-installations-19.1.2.aar",
+      "bytes": 56450,
+      "sha256": "3a561cba4bce00fa6ff515857ccc9d5550bc1ee239549799a091486137c2f3da",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-installations",
+        "19.1.2",
+        "firebase-installations-19.1.2.pom",
+        "49beea7fe31e142be5b4c1c7f3ab4e6e7487137c74fb43f17c815bff1ac1f4e2"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-installations/19.1.2/firebase-installations-19.1.2.pom",
+      "bytes": 2338,
+      "sha256": "49beea7fe31e142be5b4c1c7f3ab4e6e7487137c74fb43f17c815bff1ac1f4e2",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-installations-interop",
+        "17.3.0",
+        "firebase-installations-interop-17.3.0.aar",
+        "8d8f643fdee27700c4cc865b38c6fe834a9e3f569e4eaa219ba3567dae794276"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-installations-interop/17.3.0/firebase-installations-interop-17.3.0.aar",
+      "bytes": 6646,
+      "sha256": "8d8f643fdee27700c4cc865b38c6fe834a9e3f569e4eaa219ba3567dae794276",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-installations-interop",
+        "17.3.0",
+        "firebase-installations-interop-17.3.0.pom",
+        "ac99cedb507981ea21cc35dc24c70142a14d03369da0fb63ce7c44eda9fc009e"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-installations-interop/17.3.0/firebase-installations-interop-17.3.0.pom",
+      "bytes": 1269,
+      "sha256": "ac99cedb507981ea21cc35dc24c70142a14d03369da0fb63ce7c44eda9fc009e",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-sessions",
+        "3.0.8",
+        "firebase-sessions-3.0.8.aar",
+        "bc8121fcbf99da4112742ebb13b22892ee90b370f5cb72d30bbc65f1b48c368e"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-sessions/3.0.8/firebase-sessions-3.0.8.aar",
+      "bytes": 219596,
+      "sha256": "bc8121fcbf99da4112742ebb13b22892ee90b370f5cb72d30bbc65f1b48c368e",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase",
+        "firebase-sessions",
+        "3.0.8",
+        "firebase-sessions-3.0.8.pom",
+        "259aecf91d9b83228c412d0fdc034d729084ebb2ada80c9cabc1533c95db490b"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-sessions/3.0.8/firebase-sessions-3.0.8.pom",
+      "bytes": 4934,
+      "sha256": "259aecf91d9b83228c412d0fdc034d729084ebb2ada80c9cabc1533c95db490b",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.firebase.crashlytics",
+        "com.google.firebase.crashlytics.gradle.plugin",
+        "3.0.8",
+        "com.google.firebase.crashlytics.gradle.plugin-3.0.8.pom",
+        "66fb050599b5e76871657963d281613d4b105a7f470f8b6a050cfba876aede92"
+      ],
+      "url": "https://dl.google.com/dl/android/maven2/com/google/firebase/crashlytics/com.google.firebase.crashlytics.gradle.plugin/3.0.8/com.google.firebase.crashlytics.gradle.plugin-3.0.8.pom",
+      "bytes": 901,
+      "sha256": "66fb050599b5e76871657963d281613d4b105a7f470f8b6a050cfba876aede92",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.guava",
+        "failureaccess",
+        "1.0.3",
+        "failureaccess-1.0.3.jar",
+        "cbfc3906b19b8f55dd7cfd6dfe0aa4532e834250d7f080bd8d211a3e246b59cb"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/guava/failureaccess/1.0.3/failureaccess-1.0.3.jar",
+      "bytes": 10763,
+      "sha256": "cbfc3906b19b8f55dd7cfd6dfe0aa4532e834250d7f080bd8d211a3e246b59cb",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.guava",
+        "failureaccess",
+        "1.0.3",
+        "failureaccess-1.0.3.pom",
+        "c54beff37f6d42d43e14722d54a522c9ad51ef97fc5b79277e62a3ebf882f3bb"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/guava/failureaccess/1.0.3/failureaccess-1.0.3.pom",
+      "bytes": 5560,
+      "sha256": "c54beff37f6d42d43e14722d54a522c9ad51ef97fc5b79277e62a3ebf882f3bb",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.guava",
+        "guava",
+        "33.7.2-android",
+        "guava-33.7.2-android.jar",
+        "b949fe975a32421c1a2633c07a4f1578b462f2f467668aa0a4023c5ff7c4a808"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/guava/guava/33.7.2-android/guava-33.7.2-android.jar",
+      "bytes": 2982159,
+      "sha256": "b949fe975a32421c1a2633c07a4f1578b462f2f467668aa0a4023c5ff7c4a808",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.guava",
+        "guava",
+        "33.7.2-android",
+        "guava-33.7.2-android.module",
+        "95696fe70d074292b62bc730168a37925aff88add17d3ef028ec774dd9cd8836"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/guava/guava/33.7.2-android/guava-33.7.2-android.module",
+      "bytes": 7149,
+      "sha256": "95696fe70d074292b62bc730168a37925aff88add17d3ef028ec774dd9cd8836",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.guava",
+        "guava",
+        "33.7.2-android",
+        "guava-33.7.2-jre.jar",
+        "b530942257fb935f8b2cfaa5f8eb5bd59c555fd8e8d01b8ce98912e077ea606c"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/guava/guava/33.7.2-jre/guava-33.7.2-jre.jar",
+      "bytes": 3057659,
+      "sha256": "b530942257fb935f8b2cfaa5f8eb5bd59c555fd8e8d01b8ce98912e077ea606c",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.guava",
+        "guava-parent",
+        "33.4.0-android",
+        "guava-parent-33.4.0-android.pom",
+        "7220ede61026596fbc720ee4b93246fa2d14f328058532b59ef053de397c7d83"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/guava/guava-parent/33.4.0-android/guava-parent-33.4.0-android.pom",
+      "bytes": 21526,
+      "sha256": "7220ede61026596fbc720ee4b93246fa2d14f328058532b59ef053de397c7d83",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.guava",
+        "guava-parent",
+        "33.7.2-android",
+        "guava-parent-33.7.2-android.pom",
+        "336126e77147a7bb849750b972f53870577b7427e0ff37d68aca1d1a728a6eb2"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/guava/guava-parent/33.7.2-android/guava-parent-33.7.2-android.pom",
+      "bytes": 30330,
+      "sha256": "336126e77147a7bb849750b972f53870577b7427e0ff37d68aca1d1a728a6eb2",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.http-client",
+        "google-http-client",
+        "1.43.3",
+        "google-http-client-1.43.3.jar",
+        "60aca7428c5a1ff3655b70541a98ff3d70dded48ac1324dae1af39f1b61914af"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/http-client/google-http-client/1.43.3/google-http-client-1.43.3.jar",
+      "bytes": 292922,
+      "sha256": "60aca7428c5a1ff3655b70541a98ff3d70dded48ac1324dae1af39f1b61914af",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.http-client",
+        "google-http-client",
+        "1.43.3",
+        "google-http-client-1.43.3.pom",
+        "54f7533dbbe7691797c623261ee7e26159a82f24cc205091756b2269f2b52deb"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/http-client/google-http-client/1.43.3/google-http-client-1.43.3.pom",
+      "bytes": 6077,
+      "sha256": "54f7533dbbe7691797c623261ee7e26159a82f24cc205091756b2269f2b52deb",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.http-client",
+        "google-http-client-gson",
+        "1.43.3",
+        "google-http-client-gson-1.43.3.jar",
+        "e31a4edcb9c83954a2587e14fa2f3f8f4aad56152381b3321a3bd0bcae03fa26"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/http-client/google-http-client-gson/1.43.3/google-http-client-gson-1.43.3.jar",
+      "bytes": 11941,
+      "sha256": "e31a4edcb9c83954a2587e14fa2f3f8f4aad56152381b3321a3bd0bcae03fa26",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.j2objc",
+        "j2objc-annotations",
+        "3.1",
+        "j2objc-annotations-3.1.jar",
+        "84d3a150518485f8140ea99b8a985656749629f6433c92b80c75b36aba3b099b"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/j2objc/j2objc-annotations/3.1/j2objc-annotations-3.1.jar",
+      "bytes": 16762,
+      "sha256": "84d3a150518485f8140ea99b8a985656749629f6433c92b80c75b36aba3b099b",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.j2objc",
+        "j2objc-annotations",
+        "3.1",
+        "j2objc-annotations-3.1.pom",
+        "14570838500034fc1b47c8205ce1c9d6b255c1ccdd2d1afdcdcbf75e89b24a33"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/j2objc/j2objc-annotations/3.1/j2objc-annotations-3.1.pom",
+      "bytes": 5420,
+      "sha256": "14570838500034fc1b47c8205ce1c9d6b255c1ccdd2d1afdcdcbf75e89b24a33",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.oauth-client",
+        "google-oauth-client",
+        "1.39.0",
+        "google-oauth-client-1.39.0.jar",
+        "27fc61ee2d526e33d31350b5ea383091c0879345e261f9b2e6fcc97a20c86f88"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/oauth-client/google-oauth-client/1.39.0/google-oauth-client-1.39.0.jar",
+      "bytes": 81752,
+      "sha256": "27fc61ee2d526e33d31350b5ea383091c0879345e261f9b2e6fcc97a20c86f88",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.oauth-client",
+        "google-oauth-client",
+        "1.39.0",
+        "google-oauth-client-1.39.0.pom",
+        "8393b042bd2ee5dbf4a1d3e19a6060ca23a24de469a0cdcff44f240e9b3809b5"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/oauth-client/google-oauth-client/1.39.0/google-oauth-client-1.39.0.pom",
+      "bytes": 3441,
+      "sha256": "8393b042bd2ee5dbf4a1d3e19a6060ca23a24de469a0cdcff44f240e9b3809b5",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.google.oauth-client",
+        "google-oauth-client-parent",
+        "1.39.0",
+        "google-oauth-client-parent-1.39.0.pom",
+        "3a7e5a88b19afc57bf89f8ec32c6b91605d7b94277dadaefff49999463da0ea6"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/google/oauth-client/google-oauth-client-parent/1.39.0/google-oauth-client-parent-1.39.0.pom",
+      "bytes": 25739,
+      "sha256": "3a7e5a88b19afc57bf89f8ec32c6b91605d7b94277dadaefff49999463da0ea6",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.nimbusds",
+        "nimbus-jose-jwt",
+        "9.37.4",
+        "nimbus-jose-jwt-9.37.4.jar",
+        "8fcf4a978bbee7548e8dee6e0528bc85b0ffa84c0f8517c94dd29e590e459449"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/nimbusds/nimbus-jose-jwt/9.37.4/nimbus-jose-jwt-9.37.4.jar",
+      "bytes": 788181,
+      "sha256": "8fcf4a978bbee7548e8dee6e0528bc85b0ffa84c0f8517c94dd29e590e459449",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.nimbusds",
+        "nimbus-jose-jwt",
+        "9.37.4",
+        "nimbus-jose-jwt-9.37.4.pom",
+        "39714975c1879fd24efc0d3d24cd5f0e6f27b9414a100faa4d4b8b4e6be858f3"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/nimbusds/nimbus-jose-jwt/9.37.4/nimbus-jose-jwt-9.37.4.pom",
+      "bytes": 12413,
+      "sha256": "39714975c1879fd24efc0d3d24cd5f0e6f27b9414a100faa4d4b8b4e6be858f3",
+      "matched": true
+    },
+    {
+      "identity": [
+        "com.squareup.okio",
+        "okio",
+        "3.7.0",
+        "okio-3.7.0.module",
+        "f3cae009f0b6c842fbbc52ce77542c19d19d56ee99a5e555647f0bafc9d50cfa"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/com/squareup/okio/okio/3.7.0/okio-3.7.0.module",
+      "bytes": 34521,
+      "sha256": "f3cae009f0b6c842fbbc52ce77542c19d19d56ee99a5e555647f0bafc9d50cfa",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-bom",
+        "2.3.13",
+        "ktor-bom-2.3.13.module",
+        "8a2d373f2f9dca1ac0a38526d0a6f1d20359bcf280673bd38441140e39415f84"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-bom/2.3.13/ktor-bom-2.3.13.module",
+      "bytes": 131042,
+      "sha256": "8a2d373f2f9dca1ac0a38526d0a6f1d20359bcf280673bd38441140e39415f84",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-content-negotiation",
+        "2.3.13",
+        "ktor-client-content-negotiation-2.3.13.module",
+        "6f24a0ef015ecff762240646d104a18e32d51d14d7d1a562ec5c89a816f0b650"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-content-negotiation/2.3.13/ktor-client-content-negotiation-2.3.13.module",
+      "bytes": 34594,
+      "sha256": "6f24a0ef015ecff762240646d104a18e32d51d14d7d1a562ec5c89a816f0b650",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-content-negotiation-jvm",
+        "2.3.13",
+        "ktor-client-content-negotiation-jvm-2.3.13.jar",
+        "d2930b79843a4da5ea40074f8e905dbd4c5c571bfa004d301d50db241de3a09e"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-content-negotiation-jvm/2.3.13/ktor-client-content-negotiation-jvm-2.3.13.jar",
+      "bytes": 27402,
+      "sha256": "d2930b79843a4da5ea40074f8e905dbd4c5c571bfa004d301d50db241de3a09e",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-content-negotiation-jvm",
+        "2.3.13",
+        "ktor-client-content-negotiation-jvm-2.3.13.module",
+        "7ff12e5a54460cbe6881e3734199e592c337e3d3e422c3bd7d3e9a46fd6e86ea"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-content-negotiation-jvm/2.3.13/ktor-client-content-negotiation-jvm-2.3.13.module",
+      "bytes": 6661,
+      "sha256": "7ff12e5a54460cbe6881e3734199e592c337e3d3e422c3bd7d3e9a46fd6e86ea",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-core",
+        "2.3.13",
+        "ktor-client-core-2.3.13.module",
+        "093fa5a93d95a98a710e92e39236a4f2d7bfc862505a698a25866547a4b3c434"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-core/2.3.13/ktor-client-core-2.3.13.module",
+      "bytes": 32383,
+      "sha256": "093fa5a93d95a98a710e92e39236a4f2d7bfc862505a698a25866547a4b3c434",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-core-jvm",
+        "2.3.13",
+        "ktor-client-core-jvm-2.3.13.jar",
+        "7052849ba4383ca9f6d539db28252e2a02b91d18b4958c80647aba77efa24f45"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-core-jvm/2.3.13/ktor-client-core-jvm-2.3.13.jar",
+      "bytes": 836602,
+      "sha256": "7052849ba4383ca9f6d539db28252e2a02b91d18b4958c80647aba77efa24f45",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-core-jvm",
+        "2.3.13",
+        "ktor-client-core-jvm-2.3.13.module",
+        "2d4d3a3cacec728f7178d22fee57e39cb805d35bf8bde9dc31f2cadc4ecc0e13"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-core-jvm/2.3.13/ktor-client-core-jvm-2.3.13.module",
+      "bytes": 7024,
+      "sha256": "2d4d3a3cacec728f7178d22fee57e39cb805d35bf8bde9dc31f2cadc4ecc0e13",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-logging",
+        "2.3.13",
+        "ktor-client-logging-2.3.13.module",
+        "d694fbd8fb05659dacc8ee69f0599115c44d7e9d52b07183f424f3c8dcf355ab"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-logging/2.3.13/ktor-client-logging-2.3.13.module",
+      "bytes": 32537,
+      "sha256": "d694fbd8fb05659dacc8ee69f0599115c44d7e9d52b07183f424f3c8dcf355ab",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-logging-jvm",
+        "2.3.13",
+        "ktor-client-logging-jvm-2.3.13.jar",
+        "0592b54ddec3b0071c4db05bd0e5a9377d50d7625799a3aed8cfff1ef39999f4"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-logging-jvm/2.3.13/ktor-client-logging-jvm-2.3.13.jar",
+      "bytes": 62471,
+      "sha256": "0592b54ddec3b0071c4db05bd0e5a9377d50d7625799a3aed8cfff1ef39999f4",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-logging-jvm",
+        "2.3.13",
+        "ktor-client-logging-jvm-2.3.13.module",
+        "37b9ae8d00321099f7e7c2a60348916fb7609843f25f0c42b622621d63daf72e"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-logging-jvm/2.3.13/ktor-client-logging-jvm-2.3.13.module",
+      "bytes": 6231,
+      "sha256": "37b9ae8d00321099f7e7c2a60348916fb7609843f25f0c42b622621d63daf72e",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-okhttp",
+        "2.3.13",
+        "ktor-client-okhttp-2.3.13.module",
+        "84d7b71ff9e2ab06c48eb55379f900c4e5d353943a23fec4c96587f8f511aaa0"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-okhttp/2.3.13/ktor-client-okhttp-2.3.13.module",
+      "bytes": 3888,
+      "sha256": "84d7b71ff9e2ab06c48eb55379f900c4e5d353943a23fec4c96587f8f511aaa0",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-okhttp-jvm",
+        "2.3.13",
+        "ktor-client-okhttp-jvm-2.3.13.jar",
+        "b040ca8f5a636183be0e63955edec3a8db1d6dd09b731f4c17b4d40296b61cd7"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-okhttp-jvm/2.3.13/ktor-client-okhttp-jvm-2.3.13.jar",
+      "bytes": 62843,
+      "sha256": "b040ca8f5a636183be0e63955edec3a8db1d6dd09b731f4c17b4d40296b61cd7",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-okhttp-jvm",
+        "2.3.13",
+        "ktor-client-okhttp-jvm-2.3.13.module",
+        "f457a942ba06b3656710457673418702b04ef92d004e68aa111a68c9a8fe0489"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-okhttp-jvm/2.3.13/ktor-client-okhttp-jvm-2.3.13.module",
+      "bytes": 6858,
+      "sha256": "f457a942ba06b3656710457673418702b04ef92d004e68aa111a68c9a8fe0489",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-websockets",
+        "2.3.13",
+        "ktor-client-websockets-2.3.13.module",
+        "cf34aec214a305a3fc8f4f952ef5c8f26700f2f41ed8587911641372f914edfb"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-websockets/2.3.13/ktor-client-websockets-2.3.13.module",
+      "bytes": 33009,
+      "sha256": "cf34aec214a305a3fc8f4f952ef5c8f26700f2f41ed8587911641372f914edfb",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-websockets-jvm",
+        "2.3.13",
+        "ktor-client-websockets-jvm-2.3.13.jar",
+        "8af99b06884f174eb9647ac6be1f663eac1c40052d0f955a5744ae7bdbf9c400"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-websockets-jvm/2.3.13/ktor-client-websockets-jvm-2.3.13.jar",
+      "bytes": 1895,
+      "sha256": "8af99b06884f174eb9647ac6be1f663eac1c40052d0f955a5744ae7bdbf9c400",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-client-websockets-jvm",
+        "2.3.13",
+        "ktor-client-websockets-jvm-2.3.13.module",
+        "468d8f0282dbce5e404b69295ab67e8ea84947f47d0bbd47734670343c53cf45"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-websockets-jvm/2.3.13/ktor-client-websockets-jvm-2.3.13.module",
+      "bytes": 6255,
+      "sha256": "468d8f0282dbce5e404b69295ab67e8ea84947f47d0bbd47734670343c53cf45",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-events",
+        "2.3.13",
+        "ktor-events-2.3.13.module",
+        "4b996eb7032dc246b25db61b6c5f932e0d45b85ae24c46fdbc5d9609f2e220b0"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-events/2.3.13/ktor-events-2.3.13.module",
+      "bytes": 31418,
+      "sha256": "4b996eb7032dc246b25db61b6c5f932e0d45b85ae24c46fdbc5d9609f2e220b0",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-events-jvm",
+        "2.3.13",
+        "ktor-events-jvm-2.3.13.jar",
+        "87afba70c6dc3e902a14bd2872c7d07e67286aed2a25867e83b75d8fcf9ba072"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-events-jvm/2.3.13/ktor-events-jvm-2.3.13.jar",
+      "bytes": 7397,
+      "sha256": "87afba70c6dc3e902a14bd2872c7d07e67286aed2a25867e83b75d8fcf9ba072",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-events-jvm",
+        "2.3.13",
+        "ktor-events-jvm-2.3.13.module",
+        "071852eeee56d7bd76ec3c8169b87cd73e5d75f72efee9d4ce1e4d32fb67bba5"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-events-jvm/2.3.13/ktor-events-jvm-2.3.13.module",
+      "bytes": 6449,
+      "sha256": "071852eeee56d7bd76ec3c8169b87cd73e5d75f72efee9d4ce1e4d32fb67bba5",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-http",
+        "2.3.13",
+        "ktor-http-2.3.13.module",
+        "5e6cd14687f27f1daf8a8fe5d6a043c4b41cdc0ee34289546d9aa09db70f9b9b"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-http/2.3.13/ktor-http-2.3.13.module",
+      "bytes": 30952,
+      "sha256": "5e6cd14687f27f1daf8a8fe5d6a043c4b41cdc0ee34289546d9aa09db70f9b9b",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-http-jvm",
+        "2.3.13",
+        "ktor-http-jvm-2.3.13.jar",
+        "a389bf58aaa001c60c289195dbea40c092de8ec4bac5533f34aa71d246811029"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-http-jvm/2.3.13/ktor-http-jvm-2.3.13.jar",
+      "bytes": 414700,
+      "sha256": "a389bf58aaa001c60c289195dbea40c092de8ec4bac5533f34aa71d246811029",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-http-jvm",
+        "2.3.13",
+        "ktor-http-jvm-2.3.13.module",
+        "937374e21289a423b374abf057b6966a5337429be3597ebb9c6a5fe7a63200f4"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-http-jvm/2.3.13/ktor-http-jvm-2.3.13.module",
+      "bytes": 6132,
+      "sha256": "937374e21289a423b374abf057b6966a5337429be3597ebb9c6a5fe7a63200f4",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-io",
+        "2.3.13",
+        "ktor-io-2.3.13.module",
+        "dc0351c9659866e08071b38a935398bce7bf72f311f72f29617d61bc04819b4b"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-io/2.3.13/ktor-io-2.3.13.module",
+      "bytes": 30484,
+      "sha256": "dc0351c9659866e08071b38a935398bce7bf72f311f72f29617d61bc04819b4b",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-io-jvm",
+        "2.3.13",
+        "ktor-io-jvm-2.3.13.jar",
+        "cd5463381fd9e992e09b59eb0f01e6a241513a8e515c2b7ddecf616bbaa8c3f6"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-io-jvm/2.3.13/ktor-io-jvm-2.3.13.jar",
+      "bytes": 810514,
+      "sha256": "cd5463381fd9e992e09b59eb0f01e6a241513a8e515c2b7ddecf616bbaa8c3f6",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-io-jvm",
+        "2.3.13",
+        "ktor-io-jvm-2.3.13.module",
+        "0896d08b0774fe9d51250a54a6eeee47c003821f3947f13eacd769675f2c4c46"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-io-jvm/2.3.13/ktor-io-jvm-2.3.13.module",
+      "bytes": 5809,
+      "sha256": "0896d08b0774fe9d51250a54a6eeee47c003821f3947f13eacd769675f2c4c46",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-serialization",
+        "2.3.13",
+        "ktor-serialization-2.3.13.module",
+        "f74d9e71e0948c1e95a6d5d52469b5a49592e051b235e18c370149fa26252355"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization/2.3.13/ktor-serialization-2.3.13.module",
+      "bytes": 32529,
+      "sha256": "f74d9e71e0948c1e95a6d5d52469b5a49592e051b235e18c370149fa26252355",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-serialization-jvm",
+        "2.3.13",
+        "ktor-serialization-jvm-2.3.13.jar",
+        "2f076e022ff7815decb5810fac3dbc9a757cdfa170f8d990257867268efd91a3"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-jvm/2.3.13/ktor-serialization-jvm-2.3.13.jar",
+      "bytes": 24738,
+      "sha256": "2f076e022ff7815decb5810fac3dbc9a757cdfa170f8d990257867268efd91a3",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-serialization-jvm",
+        "2.3.13",
+        "ktor-serialization-jvm-2.3.13.module",
+        "10ac9368039227794564975eeef6c62091e8b76bae15bb0e2e87de6ea0dfa27a"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-jvm/2.3.13/ktor-serialization-jvm-2.3.13.module",
+      "bytes": 6524,
+      "sha256": "10ac9368039227794564975eeef6c62091e8b76bae15bb0e2e87de6ea0dfa27a",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-serialization-kotlinx",
+        "2.3.13",
+        "ktor-serialization-kotlinx-2.3.13.module",
+        "a1d18d7bb284e04d504a90e15417f7ab5dbf94394580dd25d3a29f13d21e0ad1"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx/2.3.13/ktor-serialization-kotlinx-2.3.13.module",
+      "bytes": 33978,
+      "sha256": "a1d18d7bb284e04d504a90e15417f7ab5dbf94394580dd25d3a29f13d21e0ad1",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-serialization-kotlinx-json",
+        "2.3.13",
+        "ktor-serialization-kotlinx-json-2.3.13.module",
+        "9004bf7b42fd237352ddbc532ec2713a3bf9116671fc4fbc6417ec38b44cc8be"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-json/2.3.13/ktor-serialization-kotlinx-json-2.3.13.module",
+      "bytes": 34777,
+      "sha256": "9004bf7b42fd237352ddbc532ec2713a3bf9116671fc4fbc6417ec38b44cc8be",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-serialization-kotlinx-json-jvm",
+        "2.3.13",
+        "ktor-serialization-kotlinx-json-jvm-2.3.13.jar",
+        "c622e10cb9cf0ab733faf637b43111f06359cbd07bf992d92eb5fed52b56acda"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-json-jvm/2.3.13/ktor-serialization-kotlinx-json-jvm-2.3.13.jar",
+      "bytes": 24051,
+      "sha256": "c622e10cb9cf0ab733faf637b43111f06359cbd07bf992d92eb5fed52b56acda",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-serialization-kotlinx-json-jvm",
+        "2.3.13",
+        "ktor-serialization-kotlinx-json-jvm-2.3.13.module",
+        "a1ca91501836b57a0aeb8f7a37b5a00404232d5927f11fb92dc0cf592ec78ee7"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-json-jvm/2.3.13/ktor-serialization-kotlinx-json-jvm-2.3.13.module",
+      "bytes": 7027,
+      "sha256": "a1ca91501836b57a0aeb8f7a37b5a00404232d5927f11fb92dc0cf592ec78ee7",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-serialization-kotlinx-jvm",
+        "2.3.13",
+        "ktor-serialization-kotlinx-jvm-2.3.13.jar",
+        "833fc47df54c13dd0bac8653560d4d3a68ac1f16bfb26ae46235adf8a034ea7e"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-jvm/2.3.13/ktor-serialization-kotlinx-jvm-2.3.13.jar",
+      "bytes": 34503,
+      "sha256": "833fc47df54c13dd0bac8653560d4d3a68ac1f16bfb26ae46235adf8a034ea7e",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-serialization-kotlinx-jvm",
+        "2.3.13",
+        "ktor-serialization-kotlinx-jvm-2.3.13.module",
+        "46ffdaab19a0457e4609d86a7becbab90641bb4dc9701a5a552651130fa3ef5d"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-jvm/2.3.13/ktor-serialization-kotlinx-jvm-2.3.13.module",
+      "bytes": 6966,
+      "sha256": "46ffdaab19a0457e4609d86a7becbab90641bb4dc9701a5a552651130fa3ef5d",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-utils",
+        "2.3.13",
+        "ktor-utils-2.3.13.module",
+        "bb4f3705b065cd6aa21393a0c170226f5fa6d63f95ae143145c9e09e9e722f81"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-utils/2.3.13/ktor-utils-2.3.13.module",
+      "bytes": 31107,
+      "sha256": "bb4f3705b065cd6aa21393a0c170226f5fa6d63f95ae143145c9e09e9e722f81",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-utils-jvm",
+        "2.3.13",
+        "ktor-utils-jvm-2.3.13.jar",
+        "7a2d6b9308d1d257c71d5a0c61f5838f5c0f0708fa688de4879c20aae8728aba"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-utils-jvm/2.3.13/ktor-utils-jvm-2.3.13.jar",
+      "bytes": 335961,
+      "sha256": "7a2d6b9308d1d257c71d5a0c61f5838f5c0f0708fa688de4879c20aae8728aba",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-utils-jvm",
+        "2.3.13",
+        "ktor-utils-jvm-2.3.13.module",
+        "bdf7241a74485774dfbb7a749d973bbc3fe5dd8937faf06b88feb7ce7bac312a"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-utils-jvm/2.3.13/ktor-utils-jvm-2.3.13.module",
+      "bytes": 6135,
+      "sha256": "bdf7241a74485774dfbb7a749d973bbc3fe5dd8937faf06b88feb7ce7bac312a",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-websocket-serialization",
+        "2.3.13",
+        "ktor-websocket-serialization-2.3.13.module",
+        "760db8ee53e76c631f227ae04ea5d010c03bac9f00dac11dccb7de8ca821d300"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websocket-serialization/2.3.13/ktor-websocket-serialization-2.3.13.module",
+      "bytes": 34112,
+      "sha256": "760db8ee53e76c631f227ae04ea5d010c03bac9f00dac11dccb7de8ca821d300",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-websocket-serialization-jvm",
+        "2.3.13",
+        "ktor-websocket-serialization-jvm-2.3.13.jar",
+        "db595630988bb7aed56505f273774e1ebe333bc450f3f70aeb227ed2880d4155"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websocket-serialization-jvm/2.3.13/ktor-websocket-serialization-jvm-2.3.13.jar",
+      "bytes": 6908,
+      "sha256": "db595630988bb7aed56505f273774e1ebe333bc450f3f70aeb227ed2880d4155",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-websocket-serialization-jvm",
+        "2.3.13",
+        "ktor-websocket-serialization-jvm-2.3.13.module",
+        "b658b2ccdf2c0eabf91f35e61d4ff5eb2157b584c80593c09e28dc67de0a429e"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websocket-serialization-jvm/2.3.13/ktor-websocket-serialization-jvm-2.3.13.module",
+      "bytes": 6618,
+      "sha256": "b658b2ccdf2c0eabf91f35e61d4ff5eb2157b584c80593c09e28dc67de0a429e",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-websockets",
+        "2.3.13",
+        "ktor-websockets-2.3.13.module",
+        "b11eb0f4adf317720f53800ceac66c94396154c186b5e2ecf60cbe41d5c6e278"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websockets/2.3.13/ktor-websockets-2.3.13.module",
+      "bytes": 31899,
+      "sha256": "b11eb0f4adf317720f53800ceac66c94396154c186b5e2ecf60cbe41d5c6e278",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-websockets-jvm",
+        "2.3.13",
+        "ktor-websockets-jvm-2.3.13.jar",
+        "7dc3c3087d46a6e9d3a1176650bf56f6ccbd47d1bc615b744777442263579e7b"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websockets-jvm/2.3.13/ktor-websockets-jvm-2.3.13.jar",
+      "bytes": 177905,
+      "sha256": "7dc3c3087d46a6e9d3a1176650bf56f6ccbd47d1bc615b744777442263579e7b",
+      "matched": true
+    },
+    {
+      "identity": [
+        "io.ktor",
+        "ktor-websockets-jvm",
+        "2.3.13",
+        "ktor-websockets-jvm-2.3.13.module",
+        "950c60ab223ed65d1a3493534aaf973ce4cd136dfaab73a5b04defd1b9b299ee"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websockets-jvm/2.3.13/ktor-websockets-jvm-2.3.13.module",
+      "bytes": 6184,
+      "sha256": "950c60ab223ed65d1a3493534aaf973ce4cd136dfaab73a5b04defd1b9b299ee",
+      "matched": true
+    },
+    {
+      "identity": [
+        "jp.co.soramitsu",
+        "xcrypto",
+        "1.2.8-sora.2",
+        "xcrypto-1.2.8-sora.2.aar",
+        "dee65fa2e0aef012a9ac591638da02bf89efc7f77a5969e2e0d2bbb7fdeebdf1"
+      ],
+      "source": "retained-local-source-build",
+      "path": "vendor/soramitsu-maven/jp/co/soramitsu/xcrypto/1.2.8-sora.2/xcrypto-1.2.8-sora.2.aar",
+      "bytes": 1892680,
+      "sha256": "dee65fa2e0aef012a9ac591638da02bf89efc7f77a5969e2e0d2bbb7fdeebdf1",
+      "matched": true,
+      "independentlyReviewed": false
+    },
+    {
+      "identity": [
+        "jp.co.soramitsu",
+        "xcrypto",
+        "1.2.8-sora.2",
+        "xcrypto-1.2.8-sora.2.module",
+        "3ef073836b757958f5ce7097fe4149ab70534c7a5804c9c6c706c07d79de3e6b"
+      ],
+      "source": "retained-local-source-build",
+      "path": "vendor/soramitsu-maven/jp/co/soramitsu/xcrypto/1.2.8-sora.2/xcrypto-1.2.8-sora.2.module",
+      "bytes": 4508,
+      "sha256": "3ef073836b757958f5ce7097fe4149ab70534c7a5804c9c6c706c07d79de3e6b",
+      "matched": true,
+      "independentlyReviewed": false
+    },
+    {
+      "identity": [
+        "net.sf.scuba",
+        "scuba-smartcards",
+        "0.0.21",
+        "scuba-smartcards-0.0.21.jar",
+        "747f3207e92ad890c55598a40c3c695c3865e7a512b5cb40c2d1f961ec1cf245"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/net/sf/scuba/scuba-smartcards/0.0.21/scuba-smartcards-0.0.21.jar",
+      "bytes": 86103,
+      "sha256": "747f3207e92ad890c55598a40c3c695c3865e7a512b5cb40c2d1f961ec1cf245",
+      "matched": true
+    },
+    {
+      "identity": [
+        "net.sf.scuba",
+        "scuba-smartcards",
+        "0.0.21",
+        "scuba-smartcards-0.0.21.pom",
+        "0004f4e2e22a5cf1c9c93f8342d88d405921759418d8aeb367834c3d6446d5fc"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/net/sf/scuba/scuba-smartcards/0.0.21/scuba-smartcards-0.0.21.pom",
+      "bytes": 5046,
+      "sha256": "0004f4e2e22a5cf1c9c93f8342d88d405921759418d8aeb367834c3d6446d5fc",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.apache.httpcomponents",
+        "httpcomponents-core",
+        "4.4.13",
+        "httpcomponents-core-4.4.13.pom",
+        "c554e7008e4517c7ef54e005cc8b74f4c87a54a0ea2c6f57be5d0569df51936b"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/apache/httpcomponents/httpcomponents-core/4.4.13/httpcomponents-core-4.4.13.pom",
+      "bytes": 13167,
+      "sha256": "c554e7008e4517c7ef54e005cc8b74f4c87a54a0ea2c6f57be5d0569df51936b",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.apache.httpcomponents",
+        "httpcore",
+        "4.4.13",
+        "httpcore-4.4.13.pom",
+        "8f812d9fa7b72a3d4aa7f825278932a5df344b42a6d8398905879431a1bf9a97"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.pom",
+      "bytes": 4968,
+      "sha256": "8f812d9fa7b72a3d4aa7f825278932a5df344b42a6d8398905879431a1bf9a97",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.bouncycastle",
+        "bcprov-jdk18on",
+        "1.86",
+        "bcprov-jdk18on-1.86.jar",
+        "2af190b300cbb0b35e248ccf5f4a06b6072030aeb3da7a98ec73abe5b4cb371f"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk18on/1.86/bcprov-jdk18on-1.86.jar",
+      "bytes": 7224011,
+      "sha256": "2af190b300cbb0b35e248ccf5f4a06b6072030aeb3da7a98ec73abe5b4cb371f",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.bouncycastle",
+        "bcprov-jdk18on",
+        "1.86",
+        "bcprov-jdk18on-1.86.pom",
+        "970b70cb75a184639b6fb9ba3c465aca6a4e1a5f3fff4d65ce8574b2fd79ef38"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk18on/1.86/bcprov-jdk18on-1.86.pom",
+      "bytes": 1160,
+      "sha256": "970b70cb75a184639b6fb9ba3c465aca6a4e1a5f3fff4d65ce8574b2fd79ef38",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.bouncycastle",
+        "bcutil-jdk18on",
+        "1.86",
+        "bcutil-jdk18on-1.86.jar",
+        "1c268e15f785aafb1e4670d8d6e5f856f69475e96c162dadcd1ff9b350e9139f"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/bouncycastle/bcutil-jdk18on/1.86/bcutil-jdk18on-1.86.jar",
+      "bytes": 789287,
+      "sha256": "1c268e15f785aafb1e4670d8d6e5f856f69475e96c162dadcd1ff9b350e9139f",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.bouncycastle",
+        "bcutil-jdk18on",
+        "1.86",
+        "bcutil-jdk18on-1.86.pom",
+        "2209b3e5d1eb2bb3c593b824c1b8f142b05dea8e9df7400b0f33f2b91a0741fa"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/bouncycastle/bcutil-jdk18on/1.86/bcutil-jdk18on-1.86.pom",
+      "bytes": 1344,
+      "sha256": "2209b3e5d1eb2bb3c593b824c1b8f142b05dea8e9df7400b0f33f2b91a0741fa",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.jetbrains.kotlinx",
+        "kotlinx-coroutines-bom",
+        "1.7.1",
+        "kotlinx-coroutines-bom-1.7.1.pom",
+        "b925aa988c40a5c7aa0c77b21373feb18c39414926bd51c76ef44434f5bae9c2"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-bom/1.7.1/kotlinx-coroutines-bom-1.7.1.pom",
+      "bytes": 4291,
+      "sha256": "b925aa988c40a5c7aa0c77b21373feb18c39414926bd51c76ef44434f5bae9c2",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.jetbrains.kotlinx",
+        "kotlinx-coroutines-core",
+        "1.7.1",
+        "kotlinx-coroutines-core-1.7.1.module",
+        "a9cc0c2bee3c6fc4ba8d0e753a3f3e70e181da5df3a2589ee54e92807b33accf"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.7.1/kotlinx-coroutines-core-1.7.1.module",
+      "bytes": 44606,
+      "sha256": "a9cc0c2bee3c6fc4ba8d0e753a3f3e70e181da5df3a2589ee54e92807b33accf",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.jetbrains.kotlinx",
+        "kotlinx-coroutines-jdk8",
+        "1.7.1",
+        "kotlinx-coroutines-jdk8-1.7.1.module",
+        "b0957e693cf1c1e7d4ad6246aa6e30795dbf4bfb758c1e4b32fdb9c24409b973"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-jdk8/1.7.1/kotlinx-coroutines-jdk8-1.7.1.module",
+      "bytes": 3548,
+      "sha256": "b0957e693cf1c1e7d4ad6246aa6e30795dbf4bfb758c1e4b32fdb9c24409b973",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.jmrtd",
+        "jmrtd",
+        "0.8.9",
+        "jmrtd-0.8.9.jar",
+        "89959d0c8cb8cf7b93699b18d135675a7b8760489bddd924ee3174c447fa5409"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/jmrtd/jmrtd/0.8.9/jmrtd-0.8.9.jar",
+      "bytes": 516939,
+      "sha256": "89959d0c8cb8cf7b93699b18d135675a7b8760489bddd924ee3174c447fa5409",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.jmrtd",
+        "jmrtd",
+        "0.8.9",
+        "jmrtd-0.8.9.pom",
+        "6ad19bab0ba073dc82fd2c4311e0dc6aaeedb88a324b43b7eb11a50b17328cc9"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/jmrtd/jmrtd/0.8.9/jmrtd-0.8.9.pom",
+      "bytes": 5983,
+      "sha256": "6ad19bab0ba073dc82fd2c4311e0dc6aaeedb88a324b43b7eb11a50b17328cc9",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.jspecify",
+        "jspecify",
+        "1.0.1",
+        "jspecify-1.0.1.jar",
+        "070d75f261fe4c5b8202508366715f7f2d4660f88c8ef7e6d3575e48c9683b66"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/jspecify/jspecify/1.0.1/jspecify-1.0.1.jar",
+      "bytes": 3064,
+      "sha256": "070d75f261fe4c5b8202508366715f7f2d4660f88c8ef7e6d3575e48c9683b66",
+      "matched": true
+    },
+    {
+      "identity": [
+        "org.jspecify",
+        "jspecify",
+        "1.0.1",
+        "jspecify-1.0.1.module",
+        "6835d6ac762a99c85e6c3ba6c942be2c6997aaec98f07dedfe9917dae22bda96"
+      ],
+      "url": "https://repo.maven.apache.org/maven2/org/jspecify/jspecify/1.0.1/jspecify-1.0.1.module",
+      "bytes": 2657,
+      "sha256": "6835d6ac762a99c85e6c3ba6c942be2c6997aaec98f07dedfe9917dae22bda96",
+      "matched": true
+    }
+  ]
+}

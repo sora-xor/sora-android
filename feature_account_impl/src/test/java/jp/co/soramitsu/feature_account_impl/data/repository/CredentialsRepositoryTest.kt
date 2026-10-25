@@ -126,7 +126,7 @@ class CredentialsRepositoryTest {
         )
         every { SubstrateKeypairFactory.generate(any(), any()) } returns keypair
         every { SubstrateKeypairFactory.generate(any(), any(), any()) } returns keypair
-        every { FirebaseWrapper.log("Keys were created") } just runs
+        every { FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.KEYS_CREATED) } just runs
 
         // The stored-secret rules themselves are covered with fakes instead of mocks in
         // CredentialsRepositoryStoredSecretsTest.

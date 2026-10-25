@@ -71,7 +71,6 @@ dependencies {
 
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
-    implementation(libs.coroutineTestDep)
 
     implementation(libs.daggerDep)
     ksp(libs.hiltCompilerDep)

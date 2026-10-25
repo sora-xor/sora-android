@@ -61,7 +61,7 @@ class CredentialsRepositoryStoredSecretsTest {
         // the real ones.
         unmockkAll()
         mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log(any<String>()) } just runs
+        every { FirebaseWrapper.log(any<FirebaseWrapper.Breadcrumb>()) } just runs
     }
 
     @After

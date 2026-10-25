@@ -360,9 +360,9 @@ class CredentialsRepositoryImpl constructor(
         }
         if (absent.isNotEmpty()) {
             credentialsPrefs.writeCredentialsIfAbsent(address, absent)
-            FirebaseWrapper.log("Keys were created")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.KEYS_CREATED)
         } else {
-            FirebaseWrapper.log("Retained keys were adopted")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RETAINED_KEYS_ADOPTED)
         }
         // Read back: whatever is stored now must sign for this address.
         check(scopedVerdict(address, storedValues(address)).canSign) {
@@ -406,7 +406,7 @@ class CredentialsRepositoryImpl constructor(
                     else -> after.seed == BackupMatch.MATCHES
                 }
             ) { "WALLET_KEYS_READBACK_MISMATCH" }
-            FirebaseWrapper.log("A recovery secret was kept as the backup of an account that signs")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RECOVERY_BACKUP_ADDED)
             true
         }
 
@@ -471,7 +471,7 @@ class CredentialsRepositoryImpl constructor(
             check(scopedVerdict(address, storedValues(address)).canSign) {
                 "WALLET_KEYS_READBACK_MISMATCH"
             }
-            FirebaseWrapper.log("Account keys were repaired from its recovery secret")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.ACCOUNT_KEYS_REPAIRED)
             SoraAccount(address, draft.accountName)
         }
 
@@ -757,7 +757,7 @@ class CredentialsRepositoryImpl constructor(
                 claimSignature = signature.toHexString(),
                 publicKey = keys.public.encoded.toHexString()
             )
-            FirebaseWrapper.log("iroha ${data.address.isNotEmpty()} ${data.claimSignature.isNotEmpty()} ${data.publicKey.isNotEmpty()}}")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.LEGACY_CREDENTIALS_READ)
             irohaCash[soraAccount.substrateAddress] = data
             return data
         }
@@ -774,7 +774,7 @@ class CredentialsRepositoryImpl constructor(
                 keyPair?.privateKey?.fill(0)
                 keyPair?.nonce?.fill(0)
             }
-            FirebaseWrapper.log("Address recreated ${address.isNotEmpty()}")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.ADDRESS_RECREATED)
         }
         return address
     }

@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "assessedAtUtc": "2026-10-25T03:02:57.688052+00:00",
+  "sourceBaseCommit": "ccc84cb960f886c47ab62ed71988a6c4ec0d5f34",
+  "retainedSnapshot": "81c1f90997e0be4be460ac3104f61410647ddc7d",
+  "scope": "Current modernize security and release preparation; historical branches retained",
+  "preservedCurrentDecisions": [
+    "Current wallet recovery, portfolio, signing and migration behavior",
+    "Firebase Analytics without advertising collection",
+    "Removed Card/KYC SDKs",
+    "Current DataStore/JNA and 16 KB native replacements",
+    "Local release workflow; retired hosted CI and admission scripts remain retired"
+  ],
+  "snapshotSelections": [
+    "xcrypto 1.2.8-sora.2 source/native security fixes plus new 16 KB JNI repack",
+    "BC 1.86, Jackson 2.22.4, OAuth 1.39.0, Guava 33.7.2-android, Ktor 2.3.13, LZ4 1.12.1 and Firebase compatible upgrades",
+    "Fixed Crashlytics breadcrumb labels and explicit cleartext ban",
+    "Exact vendor test-dependency metadata cleanup",
+    "Public legacy-key/backup fixtures, focused tests, source patches, original crate archives and provenance"
+  ],
+  "notRestored": [
+    "Obsolete Card/KYC compatibility tests and dependency constraints",
+    "Old Analytics deactivation policy",
+    "Old hosted CI and removed release-admission scripts",
+    "Obsolete snapshot lockfiles; current 527 configurations regenerated"
+  ],
+  "resourceCleanup": {
+    "api27SplashStyleQualified": true,
+    "explicitEnglishFallbackValuesAdded": 205,
+    "existingTranslationsPreserved": true,
+    "lintBaselineChanged": false
+  },
+  "validation": {
+    "jvm": {
+      "totals": {
+        "tests": 1951,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 19,
+        "passed": 1932
+      },
+      "modules": {
+        "app": {
+          "tests": 103,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "common": {
+          "tests": 328,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 2
+        },
+        "common_wallet": {
+          "tests": 23,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "feature_account_impl": {
+          "tests": 197,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "feature_assets_impl": {
+          "tests": 106,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "feature_blockexplorer_api": {
+          "tests": 167,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 11
+        },
+        "feature_blockexplorer_impl": {
+          "tests": 104,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "feature_ecosystem_impl": {
+          "tests": 26,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "feature_main_impl": {
+          "tests": 111,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "feature_multiaccount_impl": {
+          "tests": 157,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "feature_polkaswap_impl": {
+          "tests": 165,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "feature_referral_impl": {
+          "tests": 24,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "feature_select_node_impl": {
+          "tests": 55,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "feature_wallet_impl": {
+          "tests": 190,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "sorasubstrate": {
+          "tests": 195,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 6
+        }
+      },
+      "log": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025/final-candidate-v4.log",
+      "rawXmlArchive": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025/jvm-results.zip"
+    },
+    "productionReleaseDependencies": {
+      "configurations": 527,
+      "projects": 28,
+      "verification": "strict",
+      "locks": "matched current graph"
+    },
+    "lint": {
+      "result": "passed",
+      "errors": 0,
+      "warnings": 1010,
+      "hints": 2,
+      "baselineErrors": 179,
+      "log": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025/final-lint-build.log"
+    },
+    "deviceCrypto": {
+      "counts": {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "androidApi": 36,
+      "pageSize": 16384,
+      "device": "isolated read-only SORA-Api36-16k emulator",
+      "shutdownAfterRun": true,
+      "log": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025/device-final.log",
+      "xml": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025/device-results-final.xml"
+    },
+    "apk": {
+      "variant": "productionDebug",
+      "path": "app/build/outputs/apk/production/debug/SORA_Wallet_3.9.1_3090100_production_debug.apk",
+      "sha256": "c07e449416ed75b6a0597957eb7b403c4f77efb43cffc020d414c3ac78c02f56",
+      "native64BitLibrariesAligned": 10,
+      "cryptoAbiLibrariesMatchSourceAar": 4,
+      "legacyEddsaMockkJupiterDexTypes": 0,
+      "jsonExportCheck": "passed"
+    },
+    "nativeRegression": {
+      "u64BackendPassed": 2,
+      "u32BackendPassed": 2,
+      "exactRepackCheck": "passed"
+    },
+    "mavenOsv": {
+      "coordinates": 353,
+      "affected": 0,
+      "report": "docs/security/android-osv-consolidated-20261025.json"
+    },
+    "nativeOsv": {
+      "packages": 51,
+      "rawMatches": 4,
+      "patchedCrates": 2,
+      "suppressed": 0,
+      "report": "docs/security/android-native-cargo-consolidated-20261025.json"
+    },
+    "releaseHelperTests": {
+      "manifest": 23,
+      "native16kb": 11,
+      "signing": 11,
+      "jsonExport": 9,
+      "deviceScripts": 14,
+      "googleIdentity": {
+        "tests": 20,
+        "skipped": 2
+      },
+      "osvAudit": 8
+    },
+    "vendorInventory": {
+      "exactFiles": 59,
+      "allHashesMatch": true
+    },
+    "sourceWhitespace": "Passed excluding exact retained patch context/captured historical evidence bytes"
+  },
+  "releaseQualified": false,
+  "remainingReleaseWork": [
+    "Independent vendor source-to-binary and license review",
+    "Credential incident closure and production signing/Drive identity inputs",
+    "Signed minified APK/AAB and full release device/store qualification",
+    "Protected master review and merge; this task does not push remote master"
+  ],
+  "localArtifacts": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025"
+}

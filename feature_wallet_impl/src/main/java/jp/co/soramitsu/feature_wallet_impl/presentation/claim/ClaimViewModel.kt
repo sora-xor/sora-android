@@ -167,7 +167,7 @@ class ClaimViewModel @Inject constructor(
             } finally {
                 submitting = false
             }
-            FirebaseWrapper.log("SORA migration done ${outcome?.let { it::class.simpleName }}")
+            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.MIGRATION_ATTEMPT_FINISHED)
             when {
                 notSent != null && notSent.isEarlierTransactionUnresolved() -> {
                     // Nothing was sent now. The earlier transaction may be this claim or any

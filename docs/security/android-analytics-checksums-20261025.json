@@ -1,0 +1,132 @@
+{
+  "scope": "Analytics transitive versions selected by Firebase BoM34.19.0 on current modernize",
+  "independentlyReviewed": false,
+  "artifacts": [
+    {
+      "group": "com.google.firebase",
+      "name": "firebase-analytics",
+      "version": "23.2.0",
+      "file": "firebase-analytics-23.2.0.pom",
+      "sha256": "9765a415e711e4282ddb0f865597c9162c9d508423f521b727c5c0a38be84488",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-analytics/23.2.0/firebase-analytics-23.2.0.pom",
+      "cachedCopiesCompared": 1
+    },
+    {
+      "group": "com.google.firebase",
+      "name": "firebase-analytics",
+      "version": "23.2.0",
+      "file": "firebase-analytics-23.2.0.aar",
+      "sha256": "b8575123e5ab8f14d586a414b006faaadb0abe246a6694a3e4eed34b9995ed0a",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-analytics/23.2.0/firebase-analytics-23.2.0.aar",
+      "cachedCopiesCompared": 0
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement",
+      "version": "23.2.0",
+      "file": "play-services-measurement-23.2.0.pom",
+      "sha256": "92d66e4a2116812f559b50af58c011a7f5a00968cda917ccc3ae7bd58e68419b",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement/23.2.0/play-services-measurement-23.2.0.pom",
+      "cachedCopiesCompared": 1
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement",
+      "version": "23.2.0",
+      "file": "play-services-measurement-23.2.0.aar",
+      "sha256": "a1d21aeb685f3b2711008a2b5e55cfe0c4f40f666f51e2667ecd77fe8bf9d1d6",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement/23.2.0/play-services-measurement-23.2.0.aar",
+      "cachedCopiesCompared": 0
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement-api",
+      "version": "23.2.0",
+      "file": "play-services-measurement-api-23.2.0.pom",
+      "sha256": "821528d6f51dcc063759144e3321dc116c31098f6a00db2955d2d424f64e4193",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement-api/23.2.0/play-services-measurement-api-23.2.0.pom",
+      "cachedCopiesCompared": 1
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement-api",
+      "version": "23.2.0",
+      "file": "play-services-measurement-api-23.2.0.aar",
+      "sha256": "5570bf328e4b93e829e5947c0bbc8fc65e01e8650f6dac622f62828524d2ec5d",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement-api/23.2.0/play-services-measurement-api-23.2.0.aar",
+      "cachedCopiesCompared": 0
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement-base",
+      "version": "23.2.0",
+      "file": "play-services-measurement-base-23.2.0.pom",
+      "sha256": "a1a18c8bb742cc770e1dc362df7fd888251abff9a100d7eb8feed98a93758c19",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement-base/23.2.0/play-services-measurement-base-23.2.0.pom",
+      "cachedCopiesCompared": 1
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement-base",
+      "version": "23.2.0",
+      "file": "play-services-measurement-base-23.2.0.aar",
+      "sha256": "9adcc00e29095d913f7b254b91cde15060959132e71217800ac09d308589266c",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement-base/23.2.0/play-services-measurement-base-23.2.0.aar",
+      "cachedCopiesCompared": 0
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement-impl",
+      "version": "23.2.0",
+      "file": "play-services-measurement-impl-23.2.0.pom",
+      "sha256": "da25dd69f9e3fa3056bbec47520dec4608b3e29d997b8e3925cd2bde655d4dc0",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement-impl/23.2.0/play-services-measurement-impl-23.2.0.pom",
+      "cachedCopiesCompared": 1
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement-impl",
+      "version": "23.2.0",
+      "file": "play-services-measurement-impl-23.2.0.aar",
+      "sha256": "216f85c9cefc8d8725854f328cea56c4de3509c8231048a8ad38a70e8f506396",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement-impl/23.2.0/play-services-measurement-impl-23.2.0.aar",
+      "cachedCopiesCompared": 0
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement-sdk",
+      "version": "23.2.0",
+      "file": "play-services-measurement-sdk-23.2.0.pom",
+      "sha256": "96f147fa1869655ffa619e9faa433f4803a55ea74a511857255fa3870aa4569a",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement-sdk/23.2.0/play-services-measurement-sdk-23.2.0.pom",
+      "cachedCopiesCompared": 1
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement-sdk",
+      "version": "23.2.0",
+      "file": "play-services-measurement-sdk-23.2.0.aar",
+      "sha256": "509e99ccc7afb3710042956dc959c3ef8a886f7a523cd2e6c58bab0f4651bd4f",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement-sdk/23.2.0/play-services-measurement-sdk-23.2.0.aar",
+      "cachedCopiesCompared": 0
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement-sdk-api",
+      "version": "23.2.0",
+      "file": "play-services-measurement-sdk-api-23.2.0.pom",
+      "sha256": "ddb50c57f1180db8b8fa9cebb3876806bd36d58c777db79caecf6d350a76d1f7",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement-sdk-api/23.2.0/play-services-measurement-sdk-api-23.2.0.pom",
+      "cachedCopiesCompared": 1
+    },
+    {
+      "group": "com.google.android.gms",
+      "name": "play-services-measurement-sdk-api",
+      "version": "23.2.0",
+      "file": "play-services-measurement-sdk-api-23.2.0.aar",
+      "sha256": "5523ad54f178f55c30124cca77c5c42b142e48170759d23775f738a352f48cd8",
+      "publisherUrl": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-measurement-sdk-api/23.2.0/play-services-measurement-sdk-api-23.2.0.aar",
+      "cachedCopiesCompared": 0
+    }
+  ]
+}

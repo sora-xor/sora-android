@@ -93,6 +93,21 @@ android {
 }
 
 dependencies {
+    api(platform("com.fasterxml.jackson:jackson-bom:2.22.4"))
+    api(platform("io.ktor:ktor-bom:${libs.versions.ktor.get()}"))
+    // Keep transitive backup dependencies on patched, API-compatible lines.
+    // Export constraints so every consumer resolves the same compile/runtime versions.
+    constraints {
+        api("org.bouncycastle:bcprov-jdk18on:1.86") {
+            because("Use current security fixes consistently for signing and backups")
+        }
+        api("com.google.oauth-client:google-oauth-client:1.39.0") {
+            because("Fix OAuth token signature verification (CVE-2021-22573)")
+        }
+        api("com.google.guava:guava:33.7.2-android") {
+            because("Fix insecure temporary-directory handling (CVE-2023-2976)")
+        }
+    }
     api(project(":network"))
 
     implementation(libs.activityKtxDep)
@@ -171,6 +186,8 @@ dependencies {
     implementation(libs.navigationComposeDep)
     debugImplementation(libs.composeToolingDep)
 
+    testImplementation(libs.junitDep)
+    testImplementation(libs.mockkDep)
     testImplementation(libs.mockitoDep)
     testImplementation(libs.archCoreTestDep)
     testImplementation(libs.coroutineTestDep)

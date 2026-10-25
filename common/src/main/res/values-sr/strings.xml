@@ -803,4 +803,14 @@
   <string name="neon_theme_system">System</string>
   <string name="neon_theme_dark">Dark</string>
   <string name="neon_theme_light">Light</string>
+  <!-- English fallback for new Nexus and recovery copy pending translation. -->
+  <string name="nexus_production_name">SORA Nexus Production</string>
+  <string name="nexus_production_address">Production address</string>
+  <string name="nexus_copy_production_address">Copy production address</string>
+  <string name="nexus_production_not_live">Not live yet</string>
+  <string name="nexus_production_address_notice">Your SORA Nexus production address is ready to copy. The production network has not launched yet; balances, history and transfers will be available after launch.</string>
+  <string name="nexus_send_not_available">Sending is currently unavailable for this account. You can view your balance, copy your address and receive testnet XOR.</string>
+  <string name="nexus_history_load_more">Load older transfers</string>
+  <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
+  <string name="account_switching">Switching account…</string>
 </resources>

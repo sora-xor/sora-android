@@ -1,0 +1,8 @@
+{
+  "retainedVectorCount": 16,
+  "seedPrivatePublicSignatureBytesIdentical": true,
+  "oldSdkAcceptsScalarPlusOrder": true,
+  "patchedSdkAcceptsScalarPlusOrder": false,
+  "oldWriterNewReader": "backup-compatible",
+  "newWriterOldReader": "backup-compatible"
+}
