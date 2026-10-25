@@ -1,127 +1,112 @@
-# SORA Wallet Android 3.9.0: release checklist
+# SORA Wallet Android: local release checklist
 
-Human and operations actions for the release. Each task adds its items here.
+Local build and release actions, followed by historical product-release checklists.
 
 Current 12 October 2026 screen/privacy integration and scoped evidence are summarized in
 [NEON-INTEGRATION.md](NEON-INTEGRATION.md). Earlier task sections are historical checklists;
 local validation does not imply store acceptance or physical-device qualification.
 
-## a1: Retired qualification gates, lean CI
+## Local build and release validation
 
-### GitHub secrets and settings
+Run the checks below on the release commit. Repository workflows and Jenkins configuration
+were removed on 25 October 2026. Earlier changelogs and audit reports describe historical
+build infrastructure; they are not current release instructions.
 
-Create a GitHub environment named `production` with required reviewers, and
-store these secrets in it. The values come from the Jenkins credentials that
-signed 3.8.6.3. Never commit them or paste them into an issue or chat.
+### Local inputs
 
-| Secret | Value |
+Use JDK 17, Android SDK platform 36 and build-tools 36.0.0. Supply signing inputs only in the
+local process environment. Their existing `CI_` names are retained so local release setups
+keep working; they do not require a CI service.
+
+| Input | Value |
 |---|---|
-| `CI_KEYSTORE_BASE64` | The upload keystore file (Jenkins credential `android_keystore_sora`) as one line of base64, e.g. `base64 < upload.keystore \| tr -d '\n'`. |
-| `CI_KEYSTORE_PASS` | Keystore password (Jenkins `android_keystore_storepass_sora`). |
-| `CI_KEYSTORE_KEY_ALIAS` | Key alias (Jenkins `android_keyalias_sora`). |
-| `CI_KEYSTORE_KEY_PASS` | Key password (Jenkins `android_keypass_sora`). |
-| `SORA_GOOGLE_TOKEN_PROD` | The Google Drive backup OAuth client ID used by 3.8.6.3. It must be the same client in the same Google Cloud project, or users will not see their existing Drive backups. |
-| `GOOGLE_SERVICES_JSON` | `google-services.json` for `jp.co.soramitsu.sora` as one line of base64. Jenkins decrypts it from `app/google-services.json.gpg`. Without it Crashlytics is off. |
+| `CI_KEYSTORE_PATH` | Absolute canonical path to the upload keystore, a regular non-symlink file with owner-only permissions. |
+| `CI_KEYSTORE_PASS` | Keystore password. |
+| `CI_KEYSTORE_KEY_ALIAS` | Upload-key alias. |
+| `CI_KEYSTORE_KEY_PASS` | Key password. |
+| `SORA_VERSION_CODE` | Explicit code in the current `appVersionName` range, above every code already uploaded to Google Play. A Gradle property `-PSORA_VERSION_CODE=...` also works. |
+| `SORA_GOOGLE_TOKEN_PROD` | The Google Drive backup OAuth client used by 3.8.6.3, in the same Google Cloud project. |
+| `app/google-services.json` | The existing Firebase app configuration for `jp.co.soramitsu.sora`; this local file is ignored by Git. |
 
-Version code: pass it as the `version_code` input when starting the workflow
-(preferred). For tag-triggered runs, set a repository or environment variable
-(or secret) `SORA_VERSION_CODE`.
+Never commit credentials or paste them into issues or chats. `CI_FIREBASE_RELEASENOTES`,
+`CI_FIREBASE_GROUP` and `CI_PLAY_KEY` remain optional inputs to the existing local Firebase
+and Play publishing Gradle tasks. Building and validating artifacts does not publish them.
 
-Version name: pass the expected name (for example `3.9.0`) as the
-`version_name` input. A tag run takes it from the tag (`android/v3.9.0`
-expects `3.9.0`). The run stops before the build if `app/build.gradle.kts`
-has another `appVersionName`, and fails after the build if the APK's
-`versionName` differs.
+- [ ] Confirm the highest versionCode already uploaded across all Play tracks and choose a
+      higher code in the range enforced by `app/build.gradle.kts`. For 3.9.1 that range is
+      `3090100..3090199`; do not reuse a code already uploaded.
+- [ ] Confirm `appVersionName` in `app/build.gradle.kts` is the intended release version.
+- [ ] Confirm the public certificate pins in `config/android-production-signing-identity.json`
+      match the upload certificate currently accepted by Play and the existing app-signing
+      certificate. Keep the latter unchanged for installed apps.
 
-- [ ] Create the `production` environment with required reviewers and add the
-      six secrets above.
-- [ ] Confirm the highest versionCode already uploaded to Google Play for
-      `jp.co.soramitsu.sora`, including internal, closed and open testing
-      tracks. It is believed to be 122 (3.8.6.3). Use a higher code; the
-      recommendation for 3.9.0 is `3090001`.
-- [ ] Merge `.github/workflows/android_release.yml` to the default branch
-      (`modernize`) so "Android Release" can be started from the Actions tab.
-      Until then, push a tag such as `android/v3.9.0` on the release commit:
-      tag runs use the workflow file from that commit, take the version code
-      from `SORA_VERSION_CODE` and the version name from the tag.
-- [ ] Branch protection on `modernize` and `master`: remove the old required
-      checks "Modernization Source and Unit Tests", "Explorer Contracts" and
-      "Block Explorer Connected Test". Require "Unit tests (productionDebug)"
-      (it also checks the release dependency locks) and "Build, lint and 16 KB
-      check" from `Android CI`.
-- [ ] Watch the first `Android CI` run of the release branch. Local final lint now
-      passes (12 October evidence in NEON-INTEGRATION.md), with the existing baseline
-      unchanged. CI execution and branch settings still need their own confirmation.
-- [ ] Optional cleanup: delete the secrets and variables that only the retired
-      qualification workflow read: `ANDROID_DEPENDENCY_SIGNING_REVIEW_*`,
-      `ANDROID_MIGRATION_QUALIFICATION_*`, `ANDROID_MIGRATION_CONTROLLER_*`,
-      `TAIRA_DEPLOYMENT_*`, `PRODUCTION_ROLLOUT_*`, `PRODUCTION_PI_CONTROLLER_ID`,
-      `FUNDED_CANARY_*`, `POLKAMARKT_EXTRINSIC_*`, `POLKAMARKT_IOS_*`,
-      `POLKAMARKT_IOS_READ_TOKEN` and the variable `PRODUCTION_VERSION_CODE`.
+### Validate the source and dependencies
+
+```sh
+./gradlew --dependency-verification=strict \
+  -I scripts/verify-production-release-lock-coverage.gradle \
+  verifyProductionReleaseLockCoverage resolveReleaseDependencyLocks
+./gradlew --dependency-verification=strict testProductionDebugUnitTest :app:lintProductionDebug
+python3 scripts/test-verify-release-manifest.py
+python3 scripts/test-android-native-16kb.py
+APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner" python3 scripts/test-verify-release-signing.py
+python3 scripts/test-verify-release-json-export.py
+python3 scripts/test-device-test-scripts.py
+SORA_TEST_RELEASE_GATE=1 python3 scripts/test-google-identity-pin.py
+node scripts/test-production-release-lock-coverage.mjs
+```
+
+Run the wallet-upgrade device tests on an emulator before building the release:
+
+```sh
+ANDROID_SERIAL=emulator-5554 bash scripts/run-production-connected-device-qualification.sh
+```
+
+The device-test helper refuses physical phones: it installs and uninstalls the production
+package, deleting that test installation's data. See [the helper instructions](../../scripts/README.md)
+for emulator setup, offline checks and the additional 16 KB run.
+
+### Build and check signed artifacts
+
+With the local inputs above set, run:
+
+```sh
+python3 scripts/google-identity-pin.py check --google-services app/google-services.json
+./gradlew --dependency-verification=strict :app:bundleProductionRelease :app:assembleProductionRelease
+python3 scripts/verify-release-manifest.py \
+  --policy config/android-nexus-manifest-policy.json \
+  --expect-version-code "$SORA_VERSION_CODE" --expect-version-name 3.9.1 \
+  app/build/outputs/bundle/productionRelease/app-production-release.aab \
+  app/build/outputs/apk/production/release/app-production-release.apk
+APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner" python3 scripts/verify-release-signing.py \
+  app/build/outputs/bundle/productionRelease/app-production-release.aab \
+  app/build/outputs/apk/production/release/app-production-release.apk
+python3 scripts/verify-android-native-16kb.py app/build/outputs/bundle/productionRelease/app-production-release.aab
+python3 scripts/verify-android-native-16kb.py app/build/outputs/apk/production/release/app-production-release.apk
+python3 scripts/verify-release-json-export.py \
+  app/build/outputs/bundle/productionRelease/app-production-release.aab \
+  app/build/outputs/apk/production/release/app-production-release.apk
+```
+
+The explicit Nexus manifest policy covers the current network features. The separate
+`android-production-manifest-policy.json` remains the historical 3.9.x store contract.
+Neither signing nor local manifest/dependency/identity checks depend on a hosted service.
+
+- [ ] Retain the APK, AAB, SHA-256 checksums and
+      `app/build/outputs/mapping/productionRelease/mapping.txt` with the release record.
+- [ ] Install the signed APK over an existing released wallet on a designated test phone.
+      Verify the same accounts, addresses and balances, and a successful signed transfer.
+- [ ] Upload the validated AAB to the Play Console internal track manually. Confirm that Play
+      accepts the upload certificate and retains the existing app-signing certificate.
+- [ ] Complete the device and product checks below before staged rollout, watching Crashlytics
+      crash and ANR rates between stages.
 
 ### Leaked build credential (open security action)
 
-The retired verifier tracked this as `GRADLE_CREDENTIAL_INCIDENT_NOT_CLOSED`
-(prior token revoked: no; replacement rotated: no). Nothing else tracks it
-now, so it is listed here.
-
-- [ ] Revoke the auth token that was committed in 3.8.6.3 (JitPack). It was
-      the `authToken` entry in `gradle.properties` from the first commit
-      through 3.8.6.3. The modernization commit removed it from the tree, but
-      it is still readable in git history. Rotate its replacement outside
-      the repository (a CI secret or the developer's own
-      `~/.gradle/gradle.properties`, never a tracked file), and record the
-      date and who did it here: `____-__-__`, `________`.
-
-### Jenkins
-
-- [ ] Confirm what the shared `AppPipeline` (`publishType: 'Bundle'`) builds and
-      publishes on each branch. It must not upload a productionRelease bundle
-      to Google Play; signed Play builds now come from "Android Release".
-- [ ] Jenkins now also runs `testProductionDebugUnitTest`. Expect the test stage
-      to take longer.
-
-### Build the release
-
-- [ ] Start "Android Release" on the release commit with `version_code`
-      (e.g. `3090001`) and `version_name` `3.9.0`. Approve the `production`
-      environment.
-- [ ] Check the run: every blocking step is green, "Check package name and
-      version" shows `versionName='3.9.0'` and the requested versionCode (the
-      step fails on any other value), and "Check signing certificate" reports
-      upload certificate `26a76e0d3f736f3614dcec04725c439f7165babc8a1e9cb7203a4cdbd233adb1`
-      for both the AAB and the locally signed APK. Play's app-signing certificate
-      remains `b35dfe16cb3226da4432607288c6287362c5e623532c428f933d552297e9e3e0`;
-      Play-delivered APKs use that certificate. The upload-key reset is pending
-      until Play confirms eligibility (expected 13 October 2026, 10:21 JST).
-- [ ] If the run shows the warning "lintProductionDebug failed", read
-      `lint-results-productionDebug.html` in the artifact and decide whether
-      to fix the findings before uploading.
-- [ ] Download the `sora-android-release-<versionName>-<versionCode>` artifact
-      (e.g. `sora-android-release-3.9.0-3090001`) and check it
-      with `sha256sum -c SHA256SUMS.txt`. Keep `mapping.txt` with the release.
-- [ ] Upload the AAB to the Play Console internal track by hand. In the Play
-      Console, confirm that the replacement upload key is accepted and that
-      the separate app-signing certificate still matches existing installations.
-
-### Device checks before rollout
-
-- [ ] Install the signed release APK on real arm64 phones (and one 32-bit
-      armeabi-v7a phone if available) over an existing 3.8.6.3 install with
-      wallets. Check that every account opens with the same address and
-      balance, and that a transfer signs. CI only builds and checks the
-      artifacts; it does not run the release APK on a device.
-- [ ] Optional, on an emulator (never on a phone with real wallets):
-      `ANDROID_SERIAL=emulator-5554 bash scripts/run-production-connected-device-qualification.sh`
-      runs the wallet-upgrade device tests. The script stops unless the
-      device is an emulator, because the tests install and then uninstall
-      `jp.co.soramitsu.sora`, which deletes that app's data.
-
-### Rollout
-
-- [ ] Staged rollout in the Play Console (for example 1%, 5%, 25%, 100%),
-      watching Crashlytics crash and ANR rates between steps. The retired
-      `verifyProductionRollout` gate no longer does this.
+- [ ] Revoke the JitPack auth token committed in releases through 3.8.6.3. It was removed from
+      the working tree but remains readable in Git history. Store its replacement outside the
+      repository, for example in the release machine's `~/.gradle/gradle.properties`.
+      Record the date and owner: `____-__-__`, `________`.
 
 ## a2: SORA Card, PayWings/KYC and X1 removed
 
@@ -139,8 +124,8 @@ must be treated as public.
       (`SORA_ANDROID_RECAPTCHA_KEY_*`) and the platform id
       (`SORA_ANDROID_PLATFORM_ID_*`), for both TEST and PROD. Record the
       date and who did it here: `____-__-__`, `________`.
-- [ ] Delete the secrets that no build reads any more from Jenkins (and any
-      CI or developer `local.properties`): `SORA_CARD_*`, `X1_ENDPOINT_URL_*`,
+- [ ] Delete the secrets that no build reads any more from local credential stores and
+      developer `local.properties`: `SORA_CARD_*`, `X1_ENDPOINT_URL_*`,
       `X1_WIDGET_ID_*`, `SORA_BACKEND_*`, `SORA_ANDROID_RECAPTCHA_KEY_*`,
       `SORA_ANDROID_PLATFORM_ID_*`. Keep `SORA_GOOGLE_TOKEN_*` (Google Drive
       backup).
@@ -212,16 +197,12 @@ must be treated as public.
 A `productionRelease` build stops before compiling, with a list of what is
 missing, unless all of these are present:
 
-- [ ] `SORA_VERSION_CODE` (the "Android Release" workflow sets it from the
-      `version_code` input or the `SORA_VERSION_CODE` variable). For 3.9.0 it
-      must be within `3090000..3090099` and above 122; use `3090001` for the
-      first upload and `3090002`, `3090003`, … for re-uploads. `CI_BUILD_ID`
-      is no longer used for Play builds.
+- [ ] `SORA_VERSION_CODE`, passed locally as an environment variable or Gradle property.
+      Use the current version range and published-code checks described above.
 - [ ] `SORA_GOOGLE_TOKEN_PROD`: the same Google Drive backup OAuth client that
       3.8.6.3 used (same Google Cloud project). A different client builds
       fine but hides every existing Drive backup from users.
-- [ ] `app/google-services.json` for `jp.co.soramitsu.sora` (the workflow
-      writes it from `GOOGLE_SERVICES_JSON`); without it Crashlytics is off.
+- [ ] Local `app/google-services.json` for `jp.co.soramitsu.sora`; without it Crashlytics is off.
 - [ ] Signing credentials (unchanged).
 
 ### Firebase metrics configuration

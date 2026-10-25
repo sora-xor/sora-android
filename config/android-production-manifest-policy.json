@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "What the merged manifest of the Google Play build (productionRelease) may contain. scripts/verify-release-manifest.py compares the signed APK and AAB with this file in the Android Release workflow. Change it only together with a reviewed manifest or dependency change. Deep links (a <data> element, a VIEW action or a BROWSABLE category) are refused outright and are not configurable here.",
+  "description": "What the merged manifest of the Google Play build (productionRelease) may contain. scripts/verify-release-manifest.py compares the signed APK and AAB with this file during local release verification. Change it only together with a reviewed manifest or dependency change. Deep links (a <data> element, a VIEW action or a BROWSABLE category) are refused outright and are not configurable here.",
   "applicationId": "jp.co.soramitsu.sora",
   "minSdkVersion": 26,
   "targetSdkVersion": 36,

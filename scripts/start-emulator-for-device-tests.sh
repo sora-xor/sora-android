@@ -2,8 +2,7 @@
 set -euo pipefail
 
 # Starts a headless Android emulator for the device-test scripts and waits until Android has
-# booted. The "Android Upgrade Device Tests" workflow uses it; it works the same on a
-# developer or release machine.
+# booted. Run it on a developer or release machine.
 
 usage() {
   cat <<'USAGE'
@@ -24,8 +23,8 @@ usage: start-emulator-for-device-tests.sh --avd NAME [--port PORT] [--read-only]
   --boot-timeout SECONDS how long to wait for Android to boot (default 600)
 
 Refuses to start when emulator-PORT is already attached, so it never takes over an emulator
-somebody else started. Prints ANDROID_SERIAL=emulator-PORT; in GitHub Actions the same line
-is added to the job environment. Stop the emulator with: adb -s emulator-PORT emu kill
+somebody else started. Prints ANDROID_SERIAL=emulator-PORT for the caller to export.
+Stop the emulator with: adb -s emulator-PORT emu kill
 USAGE
 }
 
@@ -210,6 +209,3 @@ echo "Android $("${adb}" -s "${serial}" shell getprop ro.build.version.release |
   "page size $("${adb}" -s "${serial}" shell getconf PAGE_SIZE | tr -d '\r')," \
   "booted after about ${waited} seconds"
 echo "ANDROID_SERIAL=${serial}"
-if [ -n "${GITHUB_ENV:-}" ]; then
-  echo "ANDROID_SERIAL=${serial}" >>"${GITHUB_ENV}"
-fi

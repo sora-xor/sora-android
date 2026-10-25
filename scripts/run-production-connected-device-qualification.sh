@@ -7,9 +7,8 @@ set -euo pipefail
 # wallets included. With more than one device attached, set ANDROID_SERIAL to the emulator
 # first (adb and Gradle both honour it).
 #
-# The "Android Upgrade Device Tests" workflow runs this script, and "Android Release" does not
-# build a signed artifact unless it passed on the same commit. Run it by hand, with --offline,
-# on a machine without network access.
+# Run this on the release commit before building signed artifacts. Use --offline on a
+# machine without network access.
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/device-test-common.sh

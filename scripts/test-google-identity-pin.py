@@ -3,8 +3,8 @@
 
 Three layers, each through the code that runs in a release:
 
-1. scripts/google-identity-pin.py through its command line (the workflow's early check and the
-   helper the person who fills in the pin uses).
+1. scripts/google-identity-pin.py through its command line (the local release preflight and
+   the helper the person who fills in the pin uses).
 2. scripts/verify-production-google-identity.gradle, applied by a real Gradle run to a small
    fixture project (the same file app/build.gradle.kts applies). Skipped when Java is missing.
 3. The real :app:verifyProductionReleaseSigning task of this repository. It needs the Android

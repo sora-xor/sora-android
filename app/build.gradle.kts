@@ -26,6 +26,7 @@ val googleServicesJsonFiles = fileTree(projectDir) {
     include("src/**/google-services.json")
 }
 val hasGoogleServicesJson = !googleServicesJsonFiles.isEmpty
+// These legacy environment-variable names are also used by local release setups.
 val productionKeystorePath = System.getenv("CI_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
 val productionKeystorePassword = System.getenv("CI_KEYSTORE_PASS")?.takeIf { it.isNotBlank() }
 val productionKeyAlias = System.getenv("CI_KEYSTORE_KEY_ALIAS")?.takeIf { it.isNotBlank() }
@@ -37,11 +38,6 @@ val canonicalVersionCode = Regex("[1-9][0-9]{0,8}")
 val explicitVersionCodeRaw = (findProperty("SORA_VERSION_CODE") as String?)?.takeIf { it.isNotBlank() }
     ?: System.getenv("SORA_VERSION_CODE")?.takeIf { it.isNotBlank() }
 val explicitVersionCode = explicitVersionCodeRaw
-    ?.trim()
-    ?.takeIf { it.matches(canonicalVersionCode) }
-    ?.toInt()
-// Jenkins develop and Soralution builds only; never used for a Play production build.
-val ciVersionCode = System.getenv("CI_BUILD_ID")
     ?.trim()
     ?.takeIf { it.matches(canonicalVersionCode) }
     ?.toInt()
@@ -71,7 +67,7 @@ val appVersionCodeBase = appVersionName.split('.').map(String::toInt)
 val playLastPublishedVersionCode = 3090000
 // Local and debug builds default to the version base (3090100 for 3.9.1), above the
 // currently published Play code. Release builds still require an explicit code.
-val appVersionCode = explicitVersionCode ?: ciVersionCode ?: appVersionCodeBase
+val appVersionCode = explicitVersionCode ?: appVersionCodeBase
 
 android {
     namespace = "jp.co.soramitsu.sora"
@@ -291,8 +287,7 @@ val verifyProductionReleaseSigning by tasks.registering {
         val versionCode = explicitVersionCode
         when {
             explicitVersionCodeRaw == null -> problems += "versionCode: set SORA_VERSION_CODE " +
-                "(-PSORA_VERSION_CODE=... or an environment variable); CI_BUILD_ID is not used " +
-                "for Play builds"
+                "(-PSORA_VERSION_CODE=... or an environment variable)"
             versionCode == null -> problems += "versionCode: SORA_VERSION_CODE must be a " +
                 "positive whole number with at most nine digits"
             versionCode <= playLastPublishedVersionCode -> problems += "versionCode: " +
@@ -365,7 +360,7 @@ androidComponents {
         variant.outputs.forEach { output ->
             output.outputFileName.set(
                 if (variant.name == "productionRelease") {
-                    // .github/workflows/android_release.yml checks and uploads this exact APK path.
+                    // Local release verification and device-smoke scripts use this exact APK path.
                     "app-production-release.apk"
                 } else {
                     "SORA_Wallet_${appVersionName}_${appVersionCode}_${variant.flavorName}_${variant.buildType}.apk"
