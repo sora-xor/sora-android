@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assessedAtUtc": "2026-10-25T03:02:57.688052+00:00",
+  "assessedAtUtc": "2026-10-25T03:30:03.822476+00:00",
   "sourceBaseCommit": "ccc84cb960f886c47ab62ed71988a6c4ec0d5f34",
   "retainedSnapshot": "81c1f90997e0be4be460ac3104f61410647ddc7d",
   "scope": "Current modernize security and release preparation; historical branches retained",
@@ -164,12 +164,14 @@
     },
     "apk": {
       "variant": "productionDebug",
-      "path": "app/build/outputs/apk/production/debug/SORA_Wallet_3.9.1_3090100_production_debug.apk",
+      "path": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025/webview-debug-delta/full-suite-base-production-debug.apk",
       "sha256": "c07e449416ed75b6a0597957eb7b403c4f77efb43cffc020d414c3ac78c02f56",
       "native64BitLibrariesAligned": 10,
       "cryptoAbiLibrariesMatchSourceAar": 4,
       "legacyEddsaMockkJupiterDexTypes": 0,
-      "jsonExportCheck": "passed"
+      "jsonExportCheck": "passed",
+      "sourceCommit": "e4e048507c33a5829bb54f6ae79f53299f259406",
+      "originalBuildOutputPath": "app/build/outputs/apk/production/debug/SORA_Wallet_3.9.1_3090100_production_debug.apk"
     },
     "nativeRegression": {
       "u64BackendPassed": 2,
@@ -213,5 +215,68 @@
     "Signed minified APK/AAB and full release device/store qualification",
     "Protected master review and merge; this task does not push remote master"
   ],
-  "localArtifacts": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025"
+  "localArtifacts": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025",
+  "validationSourceCommit": "e4e048507c33a5829bb54f6ae79f53299f259406",
+  "finalQaDelta": {
+    "sourceCommit": "5e284cb6f7fbdefc0ecea9c439fbd40371f8ec16",
+    "pullRequest": "https://github.com/sora-xor/sora-android/pull/460",
+    "originalCommit": "afb39c0d3bb661a6b43dd18639b551e6e466b81d",
+    "change": "Only debug builds enable WebView contents inspection; Release bytecode contains no enable call.",
+    "scope": "Six lines in the shared WebView source; no dependency, wallet, crypto, or release-policy changes",
+    "validation": {
+      "status": "passed",
+      "sourceCommit": "5e284cb6f7fbdefc0ecea9c439fbd40371f8ec16",
+      "sourcePullRequest": "https://github.com/sora-xor/sora-android/pull/460",
+      "originalCommit": "afb39c0d3bb661a6b43dd18639b551e6e466b81d",
+      "fullSuiteBaseCommit": "e4e048507c33a5829bb54f6ae79f53299f259406",
+      "command": [
+        "./gradlew",
+        ":app:assembleProductionDebug",
+        ":common:compileDevelopReleaseKotlin",
+        ":common:compileDevelopReleaseJavaWithJavac",
+        "--offline",
+        "--dependency-verification=strict",
+        "--max-workers=6",
+        "--console=plain"
+      ],
+      "javaHome": "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home",
+      "buildLog": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025/webview-debug-delta/build.log",
+      "startedEpoch": 1792898873.339509,
+      "androidHome": "/Users/takemiyamakoto/Library/Android/sdk",
+      "productionReleaseQualification": "blocked by missing SORA_GOOGLE_TOKEN_PROD; production gate retained and not bypassed",
+      "releaseBranchValidation": "Compile exact common source under DevelopRelease and inspect DEBUG=false bytecode; verify ProductionRelease generated BuildConfig remains DEBUG=false",
+      "exitCode": 0,
+      "elapsedSeconds": 94.25,
+      "bytecode": {
+        "productionDebug": {
+          "classSHA256": "e6e05fbb97c802c2b5a31b000cfb03cb7dbc25372d7bdf6d7b15301d695970df",
+          "debugEnableCallPresent": true,
+          "BuildConfigDebugReadPresent": true
+        },
+        "developRelease": {
+          "classSHA256": "d9c2742fcbcbcc83b12c692a204bea19e9465abc8661e549fdd873702b20ea1d",
+          "debugEnableCallPresent": false,
+          "BuildConfigDebugReadPresent": false
+        }
+      },
+      "generatedBuildConfigDebug": {
+        "productionDebug": "public static final boolean DEBUG = Boolean.parseBoolean(\"true\");",
+        "productionRelease": "public static final boolean DEBUG = false;",
+        "developRelease": "public static final boolean DEBUG = false;"
+      },
+      "finalDebugApk": {
+        "path": "/Users/takemiyamakoto/dev/sora-wallet/sora-android/app/build/outputs/apk/production/debug/SORA_Wallet_3.9.1_3090100_production_debug.apk",
+        "sha256": "44580cddd959ba51f0c4cc0385991d6345eeb151c5d66adc54f52bfbff386830"
+      },
+      "previousValidatedApk": {
+        "path": "/Users/takemiyamakoto/dev/sora-wallet/.derived/android-release-consolidation-20261025/webview-debug-delta/full-suite-base-production-debug.apk",
+        "sha256": "c07e449416ed75b6a0597957eb7b403c4f77efb43cffc020d414c3ac78c02f56"
+      },
+      "nativeLibraryEntriesUnchanged": 24,
+      "fullSuiteRerun": false,
+      "releaseArtifactProduced": false,
+      "sourceRuntimeDelta": "Only debug builds enable WebView contents inspection; Release bytecode contains no enable call."
+    },
+    "priorSuiteNotRerun": "The full JVM/lint/device suite above remains bound to validationSourceCommit. This debug-only delta used focused build, BuildConfig and bytecode checks instead."
+  }
 }

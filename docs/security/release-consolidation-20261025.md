@@ -51,9 +51,10 @@ credential-incident closure, signed release artifacts, and final device/store re
 checks are not asserted by source consolidation. Nothing was published to a package
 registry or to Google Play.
 
-## Final candidate results
+## Security candidate results
 
-The production-debug JVM suite passed 1,932 tests with 19 intentional/live skips and
+At `e4e048507c33a5829bb54f6ae79f53299f259406`, the production-debug JVM suite passed
+1,932 tests with 19 intentional/live skips and
 zero failures. Strict verification and all 527 release configurations passed. The final
 app and test APKs build, lint passes with the existing baseline unchanged, and both
 packaged crypto tests pass on an isolated Android 16 emulator with 16 KB pages.
@@ -65,3 +66,22 @@ is now API-qualified, and 205 explicit English fallback values fill nine missing
 across locales while preserving existing translations. No lint suppression or baseline
 change was added. The emulator was shut down after validation. Exact counts, artifact
 hashes, decisions and evidence paths are in `release-consolidation-20261025.json`.
+
+## Final QA delta
+
+PR [#460](https://github.com/sora-xor/sora-android/pull/460) was cherry-picked with
+its original attribution as `5e284cb6f7fbdefc0ecea9c439fbd40371f8ec16`. Its six-line
+change enables WebView inspection for Appium and Chrome only under `BuildConfig.DEBUG`.
+No wallet, crypto, dependency, or release-policy code changed.
+
+The updated ProductionDebug APK builds with strict dependency verification. The same
+WebView source compiles under DevelopRelease; bytecode inspection finds the enable
+call behind the Debug flag in ProductionDebug and no enable call in Release. Both
+generated ProductionRelease and DevelopRelease `BuildConfig.DEBUG` values are false.
+ProductionRelease compilation remains blocked by the missing production OAuth client;
+that existing gate was not bypassed. This check does not qualify a production release.
+
+The earlier full JVM, lint, and device suites were not repeated for this debug-only
+change. Their exact APK is retained separately with its original hash. The final Debug
+APK hash and focused evidence are recorded in `finalQaDelta` in the JSON manifest.
+All 24 packaged native library entries match the earlier validated APK byte for byte.
