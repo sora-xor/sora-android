@@ -5,14 +5,6 @@
     android:id="@+id/wallet_nav_graph"
     app:startDestination="@id/cardsHubFragment">
 
-    <action
-        android:id="@+id/navAction_to_FullAssetListFragment"
-        app:destination="@id/fullAssetListFragment"
-        app:enterAnim="?android:attr/fragmentOpenEnterAnimation"
-        app:exitAnim="?android:attr/fragmentOpenExitAnimation"
-        app:popEnterAnim="?android:attr/fragmentCloseEnterAnimation"
-        app:popExitAnim="?android:attr/fragmentCloseExitAnimation" />
-
     <fragment
         android:id="@+id/cardsHubFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubFragment" />
@@ -24,10 +16,6 @@
     <fragment
         android:id="@+id/fullPoolListSettingsFragment"
         android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.fullpoolsettings.FullPoolSettingsFragment" />
-
-    <fragment
-        android:id="@+id/fullAssetListFragment"
-        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetlist.FullAssetListFragment" />
 
     <fragment
         android:id="@+id/fullAssetsSettingsFragment"

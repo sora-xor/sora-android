@@ -31,6 +31,7 @@ import io.mockk.mockkClass
 import jp.co.soramitsu.common.nexus.*
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.QrCodeDecoder
+import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.QRCodeScannerActivity
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.QrCodeScannerViewModel
@@ -47,6 +48,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -381,20 +383,34 @@ class WalletUxAcceptanceTest {
             canSend = { it != WalletNetworkId.MINAMOTO },
             directory = directory,
         )
-        val withTaira = mutableStateOf(true)
+        // The home's own decision (networkStart), with the question drawn by its real sheet.
+        val sheet = mutableStateOf<Pair<WalletNetworkAction, List<WalletNetworkChoice>>?>(null)
+        fun start(action: WalletNetworkAction, withTaira: Boolean) {
+            when (val start = networkStart(choices(action, withTaira))) {
+                NetworkStart.Dashboard -> opened += action to WalletNetworkId.SORA2
+                is NetworkStart.Open -> opened += action to start.choice.id
+                is NetworkStart.Ask -> sheet.value = action to start.choices
+            }
+        }
         ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 activity.setContent {
                     SoraAppTheme {
-                        WalletSendReceive(
-                            networkChoices = { choices(it, withTaira.value) },
-                            onOpen = { action, choice -> opened += action to choice.id },
-                        )
+                        sheet.value?.let { (action, list) ->
+                            NetworkPickerSheet(
+                                action = action,
+                                choices = list,
+                                onPick = { choice ->
+                                    sheet.value = null
+                                    opened += action to choice.id
+                                },
+                                onClose = { sheet.value = null },
+                            )
+                        }
                     }
                 }
             }
-            waitUntil { findText("Receive") != null }
-            clickText("Receive")
+            instrumentation.runOnMainSync { start(WalletNetworkAction.RECEIVE, withTaira = true) }
             waitUntil { findText("Receive on") != null }
             assertNotNull(findText("Main"))
             assertNotNull(findText("Coming soon"))
@@ -403,20 +419,49 @@ class WalletUxAcceptanceTest {
             clickText("Taira")
             waitUntil { opened.isNotEmpty() }
             assertEquals(WalletNetworkAction.RECEIVE to WalletNetworkId.TAIRA, opened.last())
-            // The sample Taira address contains "Send": wait until the sheet has closed.
             waitUntil { findText("Receive on") == null }
-            clickText("Send")
+            instrumentation.runOnMainSync { start(WalletNetworkAction.SEND, withTaira = true) }
             waitUntil { findText("Send on") != null }
             assertNotNull(findText("Sending on SORA Nexus starts when the network launches."))
             capture("network-choice-send")
             clickText("Close")
             waitUntil { findText("Send on") == null }
-            // Without Taira only SORA2 is live: Send opens it straight away.
-            withTaira.value = false
+            // Without Taira only SORA2 is live: Send is the dashboard's own, with no question.
+            instrumentation.runOnMainSync { start(WalletNetworkAction.SEND, withTaira = false) }
             instrumentation.waitForIdleSync()
-            clickText("Send")
-            waitUntil { opened.size == 2 }
             assertEquals(WalletNetworkAction.SEND to WalletNetworkId.SORA2, opened.last())
+            assertNull(findText("Send on"))
+        }
+    }
+
+    @Test fun portfolioEditingStaysReachableWithEveryOptionalCardHidden() {
+        val edits = AtomicInteger()
+        ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                activity.setContent {
+                    SoraAppTheme {
+                        PortfolioSecondaryCards(
+                            state = CardsState(accountAddress = "sample-wallet"),
+                            sora2Portfolio = null,
+                            nexusPortfolio = emptyList(),
+                            onPoolClick = {},
+                            onOpenFullCardClick = {},
+                            onReferralClick = {},
+                            onReferralClose = {},
+                            onBackupBannerClick = {},
+                            onEdit = { edits.incrementAndGet() },
+                            onNexusSend = {},
+                            onNexusRefresh = {},
+                            onNexusLoadMore = {},
+                            isNexusBalanceCurrent = { false },
+                        )
+                    }
+                }
+            }
+            val edit = context.getString(jp.co.soramitsu.common.R.string.edit_view)
+            waitUntil { findText(edit) != null }
+            clickText(edit)
+            waitUntil { edits.get() == 1 }
         }
     }
 

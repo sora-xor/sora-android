@@ -246,15 +246,6 @@ class AssetsInteractorImpl constructor(
         }
     }
 
-    override fun subscribeAssetsFavoriteOfAccount(soraAccount: SoraAccount): Flow<List<Asset>> =
-        assetsRepository.subscribeAssetsFavorite(soraAccount.substrateAddress)
-
-    override fun subscribeAssetsVisibleOfCurAccount(): Flow<List<Asset>> {
-        return userRepository.flowCurSoraAccount().flatMapLatest {
-            assetsRepository.subscribeAssetsVisible(it.substrateAddress)
-        }
-    }
-
     override suspend fun toggleVisibilityOfToken(tokenId: String, visibility: Boolean) {
         val curAccount = userRepository.getCurSoraAccount()
         assetsRepository.toggleVisibilityOfToken(tokenId, visibility, curAccount)

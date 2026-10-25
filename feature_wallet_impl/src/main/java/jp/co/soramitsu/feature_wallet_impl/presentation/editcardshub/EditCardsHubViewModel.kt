@@ -53,7 +53,9 @@ class EditCardsHubViewModel @Inject constructor(
     private val cardsHubInteractor: CardsHubInteractorImpl
 ) : BaseViewModel() {
 
-    val state = cardsHubInteractor.subscribeVisibleCardsHubList().map { (_, cardsHubList) ->
+    val state = cardsHubInteractor.subscribeVisibleCardsHubList().map { (_, allCards) ->
+        // The Portfolio view shows the assets: the home has no Assets card to show or hide.
+        val cardsHubList = allCards.filter { it.cardType != CardHubType.ASSETS }
         EditCardsHubScreenState(
             enabledCards = cardsHubList.filter { it.visibility }.map {
                 HubCardState(
@@ -79,10 +81,10 @@ class EditCardsHubViewModel @Inject constructor(
         )
 
     private fun CardHubType.mapToState(isVisible: Boolean) = when (this) {
-        CardHubType.ASSETS -> HubCardVisibility.VISIBLE_AND_DISABLED
+        CardHubType.ASSETS, CardHubType.BACKUP ->
+            if (isVisible) HubCardVisibility.VISIBLE_AND_DISABLED else HubCardVisibility.NOT_VISIBLE_DISABLED
         CardHubType.POOLS -> if (isVisible) HubCardVisibility.VISIBLE_AND_ENABLED else HubCardVisibility.NOT_VISIBLE_ENABLED
         CardHubType.REFERRAL_SYSTEM -> if (isVisible) HubCardVisibility.VISIBLE_AND_ENABLED else HubCardVisibility.NOT_VISIBLE_ENABLED
-        CardHubType.BACKUP -> if (isVisible) HubCardVisibility.VISIBLE_AND_DISABLED else HubCardVisibility.NOT_VISIBLE_DISABLED
     }
 
     init {

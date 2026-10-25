@@ -52,9 +52,9 @@ internal fun rememberPortfolioFormat(model: PortfolioModel?): PortfolioFormat {
 private fun PinnedTilt.toDeflection() = Deflection(x, y)
 
 /**
- * The Wallet tab's home with the Portfolio view on: hero, lens control and list, then the app's
- * existing secondary cards ([secondaryCards]) unchanged below the list. [notices] are the home's
- * read-only notices; they sit right under the hero, before anything can be acted on.
+ * The Wallet tab's home: hero, lens control and list, then the home's secondary cards
+ * ([secondaryCards]) below the list. [notices] are the home's read-only notices; they sit right
+ * under the hero, before anything can be acted on.
  */
 @Composable
 internal fun PortfolioHubScreen(

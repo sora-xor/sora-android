@@ -92,7 +92,6 @@ class CardsHubInteractorImpl @Inject constructor(
                     visible = visible,
                 )
             }
-            CardHubType.ASSETS.hubName,
             CardHubType.POOLS.hubName -> {
                 walletRepository.updateCardVisibilityOnCardsHub(
                     cardId = cardId,

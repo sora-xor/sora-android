@@ -18,7 +18,6 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BasicBannerCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
@@ -28,10 +27,8 @@ import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 /**
- * The home's existing secondary cards under the Portfolio view's list: the same cards, in the same
- * order and with the same actions, as the home draws them with the Portfolio view off (pools, the
- * other networks' XOR, referral, backup, Edit view). Only the Assets card is left out, because the
- * hero and the Tokens lens replace it. With the Portfolio view off, the home is drawn unchanged.
+ * The home's secondary cards under the Portfolio view's list: pools, the other networks' XOR,
+ * referral, backup and Edit view. The hero and the Tokens lens are the home's assets.
  */
 @Composable
 internal fun PortfolioSecondaryCards(
@@ -72,9 +69,7 @@ internal fun PortfolioSecondaryCards(
                 Spacer(modifier = Modifier.size(size = 16.dp))
             }
         }
-        val orderedCards = state.cards
-            .filterNot { it is TitledAmountCardState && it.state is FavoriteAssetsCardState }
-            .sortedBy { if (it is TitledAmountCardState) 0 else 1 }
+        val orderedCards = state.cards.sortedBy { if (it is TitledAmountCardState) 0 else 1 }
         val firstBanner = orderedCards.indexOfFirst { it !is TitledAmountCardState }
         orderedCards.forEachIndexed { index, cardState ->
             if (index == firstBanner) networkSection()
@@ -108,16 +103,15 @@ internal fun PortfolioSecondaryCards(
 
         if (firstBanner == -1) networkSection()
 
-        if (state.cards.isNotEmpty()) {
-            BleachedButton(
-                modifier = Modifier
-                    .padding(bottom = Dimens.x4)
-                    .align(Alignment.CenterHorizontally),
-                size = Size.Small,
-                order = Order.SECONDARY,
-                text = stringResource(id = R.string.edit_view),
-                onClick = onEdit,
-            )
-        }
+        // Keep editing reachable when every optional card is hidden or has no content.
+        BleachedButton(
+            modifier = Modifier
+                .padding(bottom = Dimens.x4)
+                .align(Alignment.CenterHorizontally),
+            size = Size.Small,
+            order = Order.SECONDARY,
+            text = stringResource(id = R.string.edit_view),
+            onClick = onEdit,
+        )
     }
 }

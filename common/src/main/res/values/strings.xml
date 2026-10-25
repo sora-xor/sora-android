@@ -1036,9 +1036,8 @@
   <string name="neon_theme_light">Light</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
-  <!-- Portfolio view (Wallet tab home): non-production builds only while ReleaseSurfacePolicy.PORTFOLIO_VIEW_IN_PRODUCTION
-       is false. English only for now; other locales fall back to English, so each entry says so to lint.
-       Remove tools:ignore when the view ships and its strings go to translation. -->
+  <!-- Portfolio view (Wallet tab home in every build). English only for now; other locales fall
+       back to English, so each entry says so to lint. Remove tools:ignore when translated. -->
   <string name="portfolio_title" tools:ignore="MissingTranslation">Portfolio</string>
   <string name="portfolio_all_wallets" tools:ignore="MissingTranslation">All wallets</string>
   <string name="portfolio_wallets" tools:ignore="MissingTranslation">Wallets</string>

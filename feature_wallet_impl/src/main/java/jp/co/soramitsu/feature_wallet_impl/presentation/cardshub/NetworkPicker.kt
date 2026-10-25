@@ -15,10 +15,6 @@ import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -28,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.nexus.WalletNetworkAction
 import jp.co.soramitsu.common.nexus.WalletNetworkChoice
-import jp.co.soramitsu.common.nexus.WalletNetworkChoices
 import jp.co.soramitsu.common.nexus.WalletNetworkDirectory
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.nexus.WalletNetworkTag
@@ -36,10 +31,7 @@ import jp.co.soramitsu.common.nexus.WalletNetworkUnavailable
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.presentation.compose.components.WalletSheet
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
-import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
-import jp.co.soramitsu.ui_core.component.button.properties.Order
-import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -78,55 +70,6 @@ internal fun NetworkTagChip(tag: WalletNetworkTag, modifier: Modifier = Modifier
             .background(color.copy(alpha = 0.14f), RoundedCornerShape(10.dp))
             .padding(horizontal = 8.dp, vertical = 3.dp),
     )
-}
-
-/**
- * The home's Send and Receive. They ask which network only when there is a real choice (two
- * live networks); otherwise they open the one network straight away, SORA2's flows exactly as
- * before.
- */
-@Composable
-internal fun WalletSendReceive(
-    networkChoices: (WalletNetworkAction) -> List<WalletNetworkChoice>,
-    onOpen: (WalletNetworkAction, WalletNetworkChoice) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var picking by remember { mutableStateOf<Pair<WalletNetworkAction, List<WalletNetworkChoice>>?>(null) }
-    val start: (WalletNetworkAction) -> Unit = { action ->
-        val choices = networkChoices(action)
-        val only = WalletNetworkChoices.onlyChoice(choices)
-        when {
-            only != null -> onOpen(action, only)
-            choices.isNotEmpty() -> picking = action to choices
-        }
-    }
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        FilledButton(
-            modifier = Modifier.weight(1f).testTag("WalletSend"),
-            text = stringResource(R.string.common_send),
-            size = Size.Small,
-            order = Order.PRIMARY,
-            onClick = { start(WalletNetworkAction.SEND) },
-        )
-        FilledButton(
-            modifier = Modifier.weight(1f).testTag("WalletReceive"),
-            text = stringResource(R.string.common_receive),
-            size = Size.Small,
-            order = Order.SECONDARY,
-            onClick = { start(WalletNetworkAction.RECEIVE) },
-        )
-    }
-    picking?.let { (action, choices) ->
-        NetworkPickerSheet(
-            action = action,
-            choices = choices,
-            onPick = { choice ->
-                picking = null
-                onOpen(action, choice)
-            },
-            onClose = { picking = null },
-        )
-    }
 }
 
 /**
