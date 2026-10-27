@@ -63,7 +63,6 @@ import jp.co.soramitsu.xsubstrate.wsrpc.mappers.scale
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.GetStorageRequest
 
-// todo refactor it after migrate to substrate 4
 class SubstrateApiImpl @Inject constructor(
     private val socketService: SocketService,
     private val runtimeManager: RuntimeManager,
