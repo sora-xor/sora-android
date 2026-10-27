@@ -546,11 +546,6 @@ kover {
                         "*ChainConnection\$*",
                         "**.runtime.definitions.TypeDefinitionsTreeV2",
                         "**.runtime.definitions.TypeDefinitionsTreeV2\$*",
-
-                        // TODO: Coverage these modules by tests
-                        "**.core.rpc.*",
-                        "**.core.utils.*",
-                        "**.core.extrinsic.*",
                     )
                 }
             }

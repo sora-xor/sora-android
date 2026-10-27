@@ -763,7 +763,7 @@ class CredentialsRepositoryImpl constructor(
         }
     }
 
-    // TODO: modify for multiaccount variant
+    // Reads the legacy single-account identity; current accounts use their own stored addresses.
     override suspend fun getAddressForMigration(): String {
         var address = credentialsPrefs.getAddress()
         if (address.isEmpty()) {
