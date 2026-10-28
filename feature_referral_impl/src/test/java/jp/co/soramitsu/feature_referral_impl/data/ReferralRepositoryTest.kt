@@ -2,47 +2,38 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_referral_impl.data
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.ReferralsDao
 import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
+import jp.co.soramitsu.feature_referral_api.data.ReferralReward
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -53,9 +44,16 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito.anyBoolean
+import org.mockito.BDDMockito.anyString
+import org.mockito.BDDMockito.given
 import org.mockito.Mock
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
@@ -86,6 +84,12 @@ class ReferralRepositoryTest {
 
     @Mock
     private lateinit var substrateCalls: SubstrateCalls
+
+    @Mock
+    private lateinit var keypair: Sr25519Keypair
+
+    @Mock
+    private lateinit var feeToken: Token
 
     private lateinit var referralRepository: ReferralRepository
 
@@ -136,5 +140,55 @@ class ReferralRepositoryTest {
         whenever(referralsDao.getReferrals()).thenReturn(flow { emit(REFERRER_LOCAL) })
         val result = referralRepository.getReferralRewards()
         assertEquals(REFERRER_REWARDS, result.toList()[0])
+    }
+
+    @Test
+    fun `referral mutation waits for canonical finality`() = runTest {
+        given(
+            extrinsicManager.submitAndWaitExtrinsic(
+                anyString(),
+                any(),
+                anyBoolean(),
+                anyString(),
+                anyOrNull(),
+                any(),
+            )
+        ).willReturn(
+            ExtrinsicSubmitStatus(
+                success = true,
+                txHash = "0x${"11".repeat(32)}",
+                blockHash = "0x${"22".repeat(32)}",
+            )
+        )
+
+        referralRepository.observeSetReferrer(
+            keypair = keypair,
+            from = "from",
+            referrer = "referrer",
+            feeToken = feeToken,
+        )
+        referralRepository.observeBond(
+            keypair = keypair,
+            from = "from",
+            amount = BigDecimal.ONE,
+            token = feeToken,
+            fee = BigDecimal.ZERO,
+        )
+        referralRepository.observeUnbond(
+            keypair = keypair,
+            from = "from",
+            amount = BigDecimal.ONE,
+            token = feeToken,
+            fee = BigDecimal.ZERO,
+        )
+
+        verify(extrinsicManager, times(3)).submitAndWaitExtrinsic(
+            from = eq("from"),
+            keypair = eq(keypair),
+            useBatchAll = eq(false),
+            untilStatus = eq(SubstrateCalls.FINALIZED),
+            activity = anyOrNull(),
+            formExtrinsic = any(),
+        )
     }
 }

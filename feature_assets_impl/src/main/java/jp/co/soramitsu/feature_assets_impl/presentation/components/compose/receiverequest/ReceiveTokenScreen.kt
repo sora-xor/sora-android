@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest
@@ -37,13 +24,13 @@ import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -61,8 +48,8 @@ import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTile
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTileState
 import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCard
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -138,70 +125,67 @@ fun ReceiveTokenByQrScreen(
     onScanQrClick: () -> Unit,
     onTryAgainClick: () -> Unit,
 ) {
-    Box(
+    // Keep both actions in the same scroll flow as the QR and address. A bottom-aligned
+    // overlay can cover Share when the phone is short or accessibility text is larger.
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(Dimens.x4)
+            .navigationBarsPadding()
+            .padding(Dimens.x4),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Dimens.x2)
     ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Dimens.x2)
-        ) {
-            LoadableContentCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f),
-                innerPadding = PaddingValues(
-                    all = Dimens.x1_5
-                ),
-                backgroundColor = Color.White,
-                cornerRadius = Dimens.x4,
-                state = state.screenStatus,
-                contentWhenLoaded = {
-                    Image(
-                        painter = state.qrCodeImage.retrievePainter(),
-                        contentDescription = null,
-                    )
-                },
-                onTryAgainClick = onTryAgainClick
-            )
-            LoadableContentCard(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                innerPadding = PaddingValues(
-                    all = Dimens.x1_5
-                ),
-                cornerRadius = Dimens.x4,
-                state = state.screenStatus,
-                onTryAgainClick = onTryAgainClick
-            ) {
-                ListTile(
-                    state = ListTileState(
-                        titleText = state.userAddressTitle,
-                        image = state.userAddressAvatar,
-                        bodyText = state.userAddressBody
-                    ),
-                    onClick = onUserAddressClick
-                )
-            }
-            FilledButton(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                size = Size.Large,
-                order = Order.SECONDARY,
-                leftIcon = painterResource(id = R.drawable.ic_new_arrow_up_24),
-                enabled = state.isShareQRCodeEnabled,
-                text = stringResource(id = R.string.common_share),
-                onClick = onShareCodeClick
-            )
-        }
-        BleachedButton(
+        LoadableContentCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter),
+                .aspectRatio(1f),
+            innerPadding = PaddingValues(
+                all = Dimens.x1_5
+            ),
+            backgroundColor = Color.White,
+            cornerRadius = Dimens.x4,
+            state = state.screenStatus,
+            contentWhenLoaded = {
+                Image(
+                    painter = state.qrCodeImage.retrievePainter(),
+                    contentDescription = null,
+                )
+            },
+            onTryAgainClick = onTryAgainClick
+        )
+        LoadableContentCard(
+            modifier = Modifier
+                .fillMaxWidth(),
+            innerPadding = PaddingValues(
+                all = Dimens.x1_5
+            ),
+            cornerRadius = Dimens.x4,
+            state = state.screenStatus,
+            onTryAgainClick = onTryAgainClick
+        ) {
+            ListTile(
+                state = ListTileState(
+                    titleText = state.userAddressTitle,
+                    image = state.userAddressAvatar,
+                    bodyText = state.userAddressBody
+                ),
+                onClick = onUserAddressClick
+            )
+        }
+        FilledButton(
+            modifier = Modifier
+                .fillMaxWidth(),
+            size = Size.Large,
+            order = Order.SECONDARY,
+            leftIcon = painterResource(id = R.drawable.ic_new_arrow_up_24),
+            enabled = state.isShareQRCodeEnabled,
+            text = stringResource(id = R.string.common_share),
+            onClick = onShareCodeClick
+        )
+        BleachedButton(
+            modifier = Modifier
+                .fillMaxWidth(),
             size = Size.Large,
             order = Order.SECONDARY,
             text = stringResource(id = R.string.commom_scan_qr),

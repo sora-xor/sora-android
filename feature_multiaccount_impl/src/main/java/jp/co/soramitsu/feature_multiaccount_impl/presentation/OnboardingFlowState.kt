@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation
@@ -41,12 +28,22 @@ data class RecoveryState(
     val recoveryType: RecoveryType,
     val title: Int,
     val recoveryInputState: InputTextState = InputTextState(),
-    val isButtonEnabled: Boolean = false
+    val isButtonEnabled: Boolean = false,
+    /** The password of an encrypted backup file; only used by [RecoveryType.JSON]. */
+    val passwordInputState: InputTextState = InputTextState(),
+    /**
+     * The name of the backup file that was chosen ([RecoveryType.JSON]). The file's text is kept
+     * by the view model and is not put into the text field.
+     */
+    val chosenFileName: String? = null,
 )
 
 enum class RecoveryType {
     PASSPHRASE,
-    SEED
+    SEED,
+
+    /** The encrypted JSON export (Account details, Export JSON), pasted or chosen as a file. */
+    JSON,
 }
 
 data class RecoveryAccountNameState(
@@ -54,7 +51,13 @@ data class RecoveryAccountNameState(
 )
 
 data class TutorialScreenState(
-    val isGoogleSigninLoading: Boolean = false
+    val isGoogleSigninLoading: Boolean = false,
+    val isGoogleBackupAvailable: Boolean = true,
+    /**
+     * Wallets whose keys are on this phone without an account and that the stored PIN still
+     * protects. Above zero, the screen offers "Wallets found on this phone".
+     */
+    val foundWalletsCount: Int = 0,
 )
 
 data class TermsAndPrivacyState(
@@ -65,6 +68,8 @@ data class TermsAndPrivacyState(
 data class CreateAccountState(
     val accountNameInputState: InputTextState = InputTextState(),
     val btnEnabled: Boolean = true,
+    /** The import is running (keys are derived, a backup file is opened). */
+    val loading: Boolean = false,
 )
 
 data class CreateBackupPasswordState(
@@ -90,6 +95,11 @@ data class ImportAccountPasswordState(
 data class BackupAccountMetaWithIcon(
     val backupAccountMeta: BackupAccountMeta,
     val icon: Drawable?,
+    /**
+     * The account of this backup is already listed on this phone but cannot sign here. Restoring
+     * the backup completes or repairs its keys in place; the list says so under the address.
+     */
+    val readOnlyOnThisPhone: Boolean = false,
 )
 
 data class MnemonicConfirmationState(

@@ -2,44 +2,34 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.common.domain
 
 import android.content.Context
 import android.content.res.Configuration
+import java.io.File
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -49,6 +39,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Singleton
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -92,6 +83,7 @@ class DarkThemeManager @Inject constructor(
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                     else
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    mirrorNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
 
                     AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
                 } else {
@@ -100,6 +92,10 @@ class DarkThemeManager @Inject constructor(
                         our application
                      */
                     val currentAppUiMode = AppCompatDelegate.getDefaultNightMode()
+                    mirrorNightMode(
+                        if (isDarkModeEnabled) AppCompatDelegate.MODE_NIGHT_YES
+                        else AppCompatDelegate.MODE_NIGHT_NO
+                    )
 
                     when {
                         currentAppUiMode == AppCompatDelegate.MODE_NIGHT_YES && isDarkModeEnabled -> {
@@ -144,7 +140,19 @@ class DarkThemeManager @Inject constructor(
                 .equals(AppCompatDelegate.MODE_NIGHT_YES)
         )
 
+    /**
+     * The in-app "Reduce effects" switch (SORA Neon). Stored under its own key; the theme keys
+     * above are never touched by it.
+     */
+    val reduceEffectsFlow: StateFlow<Boolean> = NeonEffectsPreference.reduceEffects
+
     fun updateUiModeFromCache() {
+        coroutineManager.applicationScope.launch {
+            runCatching {
+                soraPreferences.getBoolean(field = NeonEffectsPreference.KEY, defaultValue = false)
+            }.onSuccess(NeonEffectsPreference::update)
+                .onFailure { Timber.w(it, "Could not read the reduce effects setting") }
+        }
         coroutineManager.applicationScope.launch {
             mutableDarkThemeSharedFlow.emit(
                 value = DarkModeSettings(
@@ -154,7 +162,8 @@ class DarkThemeManager @Inject constructor(
                     ),
                     isDarkModeEnabled = soraPreferences.getBoolean(
                         field = KEY_DARK_THEME_ENABLED,
-                        defaultValue = false
+                        defaultValue = context.getSharedPreferences(NIGHT_MODE_MIRROR_FILE, Context.MODE_PRIVATE)
+                            .getBoolean(KEY_NEW_INSTALL_DARK, false)
                     )
                 )
             )
@@ -193,8 +202,72 @@ class DarkThemeManager @Inject constructor(
         )
     }
 
-    private companion object {
-        const val KEY_DARK_THEME_ENABLED = "KEY_DARK_THEME_ENABLED"
-        const val KEY_SYSTEM_DRIVEN_UI_ENABLED = "KEY_SYSTEM_DRIVEN_UI_ENABLED"
+    suspend fun setReduceEffects(enabled: Boolean) {
+        soraPreferences.putBoolean(NeonEffectsPreference.KEY, enabled)
+        NeonEffectsPreference.update(
+            soraPreferences.getBoolean(NeonEffectsPreference.KEY, false) // double check, as above
+        )
+    }
+
+    /**
+     * Copies the resolved night mode into a tiny synchronous file, so the next cold start can
+     * apply it before the first Activity (the splash) is drawn. The stored theme settings above
+     * stay the source of truth and are never changed here.
+     */
+    private fun mirrorNightMode(mode: Int) {
+        runCatching {
+            context.getSharedPreferences(NIGHT_MODE_MIRROR_FILE, Context.MODE_PRIVATE).edit {
+                putInt(KEY_NIGHT_MODE_MIRROR, mode)
+            }
+        }.onFailure { Timber.w(it, "Could not mirror the night mode") }
+    }
+
+    companion object {
+        private const val KEY_DARK_THEME_ENABLED = "KEY_DARK_THEME_ENABLED"
+        private const val KEY_SYSTEM_DRIVEN_UI_ENABLED = "KEY_SYSTEM_DRIVEN_UI_ENABLED"
+        private const val NIGHT_MODE_MIRROR_FILE = "sora_night_mode_mirror"
+        private const val KEY_NIGHT_MODE_MIRROR = "night_mode"
+        private const val KEY_NEW_INSTALL_DARK = "new_install_dark_default"
+
+        /** Capture before startup creates wallet/preferences files. Upgrades retain the old light
+         * default and every explicit theme choice still wins. This writes presentation metadata
+         * only, never wallet settings or credentials. Any existing app data means "not new". */
+        fun captureNewInstallDefault(context: Context) {
+            runCatching {
+                val mirror = context.getSharedPreferences(NIGHT_MODE_MIRROR_FILE, Context.MODE_PRIVATE)
+                if (!mirror.contains(KEY_NEW_INSTALL_DARK)) {
+                    val roots = listOf(File(context.applicationInfo.dataDir, "databases"),
+                        File(context.applicationInfo.dataDir, "shared_prefs"), context.filesDir, context.noBackupFilesDir)
+                    val newInstall = roots.all { directory ->
+                        !directory.exists() || directory.listFiles()?.isEmpty() == true
+                    }
+                    check(mirror.edit().putBoolean(KEY_NEW_INSTALL_DARK, newInstall).commit())
+                    if (newInstall) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                }
+            }.onFailure { Timber.w(it, "Could not capture the initial theme default") }
+        }
+
+        /**
+         * Applies the night mode mirrored on the previous run, before any Activity exists, so a
+         * dark-theme user does not see a light splash first. Does nothing on the first run after
+         * install or upgrade (the asynchronous [updateUiModeFromCache] still decides then).
+         */
+        fun applyCachedNightMode(context: Context) {
+            runCatching {
+                val mode = context.getSharedPreferences(NIGHT_MODE_MIRROR_FILE, Context.MODE_PRIVATE)
+                    .let { mirror ->
+                        mirror.getInt(KEY_NIGHT_MODE_MIRROR,
+                            if (mirror.getBoolean(KEY_NEW_INSTALL_DARK, false)) AppCompatDelegate.MODE_NIGHT_YES
+                            else AppCompatDelegate.MODE_NIGHT_UNSPECIFIED)
+                    }
+                if (
+                    mode == AppCompatDelegate.MODE_NIGHT_YES ||
+                    mode == AppCompatDelegate.MODE_NIGHT_NO ||
+                    mode == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                ) {
+                    AppCompatDelegate.setDefaultNightMode(mode)
+                }
+            }.onFailure { Timber.w(it, "Could not apply the mirrored night mode") }
+        }
     }
 }

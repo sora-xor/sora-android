@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.common.presentation.view
@@ -36,7 +23,6 @@ import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -56,8 +42,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.core.view.WindowCompat
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
@@ -65,9 +49,12 @@ import jp.co.soramitsu.common.base.AlertDialogData
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.AlertDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
+import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.ext.attrColor
+import jp.co.soramitsu.common.util.ext.setNavigationBarColorCompat
+import jp.co.soramitsu.common.util.ext.setStatusBarColorCompat
 import jp.co.soramitsu.ui_core.theme.customColors
 
 abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
@@ -123,14 +110,8 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
                 }
 
                 Box(modifier = Modifier.fillMaxSize()) {
-                    if (!isDarkModeOn.value) {
-                        Image(
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.FillBounds,
-                            painter = painterResource(id = R.drawable.bg_image),
-                            contentDescription = ""
-                        )
-                    }
+                    // Static SORA Neon aurora in both themes (replaces the full-screen bitmap).
+                    NeonBackground(safe = useSafeAurora())
                     Scaffold(
                         modifier = Modifier
                             .navigationBarsPadding()
@@ -165,13 +146,17 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        window.statusBarColor = attrColor(backgroundColor())
-        window.navigationBarColor = attrColor(backgroundColor())
+        val background = attrColor(backgroundColor())
+        window.setStatusBarColorCompat(background)
+        window.setNavigationBarColorCompat(background)
     }
 
     abstract fun onToolbarNavigation()
 
     open fun backgroundColor() = R.attr.baseBackground
+
+    @Composable
+    protected open fun useSafeAurora(): Boolean = false
 
     @Composable
     abstract fun Content(padding: PaddingValues, scrollState: ScrollState)

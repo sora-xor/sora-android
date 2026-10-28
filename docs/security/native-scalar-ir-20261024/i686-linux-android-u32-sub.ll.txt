@@ -1,0 +1,164 @@
+; Selected optimized function excerpt; metadata definitions omitted.
+define internal fastcc void @_RNvMs2_NtNtNtNtCslxjoV6LiDCK_16curve25519_dalek7backend6serial3u326scalarNtB5_8Scalar293sub(ptr dead_on_unwind noalias noundef nonnull writable writeonly align 4 captures(none) dereferenceable(36) initializes((0, 36)) %_0, ptr noalias noundef nonnull readonly align 4 captures(none) dereferenceable(36) %a, ptr noalias noundef readonly align 4 captures(none) dereferenceable(36) %b) unnamed_addr #2 {
+start:
+  %_27.sroa.0 = alloca i32, align 4
+  %_7 = load i32, ptr %a, align 4, !noundef !2
+  %_9 = load i32, ptr %b, align 4, !noundef !2
+  %0 = sub i32 %_7, %_9
+  %1 = and i32 %0, 536870911
+  %2 = getelementptr inbounds nuw i8, ptr %a, i32 4
+  %_7.1 = load i32, ptr %2, align 4, !noundef !2
+  %3 = getelementptr inbounds nuw i8, ptr %b, i32 4
+  %_9.1 = load i32, ptr %3, align 4, !noundef !2
+  %_10.neg17.1 = ashr i32 %0, 31
+  %_8.neg.1 = add i32 %_7.1, %_10.neg17.1
+  %4 = sub i32 %_8.neg.1, %_9.1
+  %5 = and i32 %4, 536870911
+  %6 = getelementptr inbounds nuw i8, ptr %a, i32 8
+  %_7.2 = load i32, ptr %6, align 4, !noundef !2
+  %7 = getelementptr inbounds nuw i8, ptr %b, i32 8
+  %_9.2 = load i32, ptr %7, align 4, !noundef !2
+  %_10.neg17.2 = ashr i32 %4, 31
+  %_8.neg.2 = add i32 %_7.2, %_10.neg17.2
+  %8 = sub i32 %_8.neg.2, %_9.2
+  %9 = and i32 %8, 536870911
+  %10 = getelementptr inbounds nuw i8, ptr %a, i32 12
+  %_7.3 = load i32, ptr %10, align 4, !noundef !2
+  %11 = getelementptr inbounds nuw i8, ptr %b, i32 12
+  %_9.3 = load i32, ptr %11, align 4, !noundef !2
+  %_10.neg17.3 = ashr i32 %8, 31
+  %_8.neg.3 = add i32 %_7.3, %_10.neg17.3
+  %12 = sub i32 %_8.neg.3, %_9.3
+  %13 = and i32 %12, 536870911
+  %14 = getelementptr inbounds nuw i8, ptr %a, i32 16
+  %_7.4 = load i32, ptr %14, align 4, !noundef !2
+  %15 = getelementptr inbounds nuw i8, ptr %b, i32 16
+  %_9.4 = load i32, ptr %15, align 4, !noundef !2
+  %_10.neg17.4 = ashr i32 %12, 31
+  %_8.neg.4 = add i32 %_7.4, %_10.neg17.4
+  %16 = sub i32 %_8.neg.4, %_9.4
+  %17 = and i32 %16, 536870911
+  %18 = getelementptr inbounds nuw i8, ptr %a, i32 20
+  %_7.5 = load i32, ptr %18, align 4, !noundef !2
+  %19 = getelementptr inbounds nuw i8, ptr %b, i32 20
+  %_9.5 = load i32, ptr %19, align 4, !noundef !2
+  %_10.neg17.5 = ashr i32 %16, 31
+  %_8.neg.5 = add i32 %_7.5, %_10.neg17.5
+  %20 = sub i32 %_8.neg.5, %_9.5
+  %21 = and i32 %20, 536870911
+  %22 = getelementptr inbounds nuw i8, ptr %a, i32 24
+  %_7.6 = load i32, ptr %22, align 4, !noundef !2
+  %23 = getelementptr inbounds nuw i8, ptr %b, i32 24
+  %_9.6 = load i32, ptr %23, align 4, !noundef !2
+  %_10.neg17.6 = ashr i32 %20, 31
+  %_8.neg.6 = add i32 %_7.6, %_10.neg17.6
+  %24 = sub i32 %_8.neg.6, %_9.6
+  %25 = and i32 %24, 536870911
+  %26 = getelementptr inbounds nuw i8, ptr %a, i32 28
+  %_7.7 = load i32, ptr %26, align 4, !noundef !2
+  %27 = getelementptr inbounds nuw i8, ptr %b, i32 28
+  %_9.7 = load i32, ptr %27, align 4, !noundef !2
+  %_10.neg17.7 = ashr i32 %24, 31
+  %_8.neg.7 = add i32 %_7.7, %_10.neg17.7
+  %28 = sub i32 %_8.neg.7, %_9.7
+  %29 = and i32 %28, 536870911
+  %30 = getelementptr inbounds nuw i8, ptr %a, i32 32
+  %_7.8 = load i32, ptr %30, align 4, !noundef !2
+  %31 = getelementptr inbounds nuw i8, ptr %b, i32 32
+  %_9.8 = load i32, ptr %31, align 4, !noundef !2
+  %_10.neg17.8 = ashr i32 %28, 31
+  %_8.neg.8 = add i32 %_7.8, %_10.neg17.8
+  %32 = sub i32 %_8.neg.8, %_9.8
+  %borrow.sroa.0.0.lobit = ashr i32 %32, 31
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0)
+  store i32 %borrow.sroa.0.0.lobit, ptr %_27.sroa.0, align 4
+  %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0. = load volatile i32, ptr %_27.sroa.0, align 4
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0)
+  %_23 = and i32 %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0., 485872621
+  %33 = add nuw nsw i32 %1, %_23
+  %34 = and i32 %33, 536870911
+  %_20.1 = lshr i32 %33, 29
+  %_19.1 = add nuw nsw i32 %5, %_20.1
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0)
+  store i32 %borrow.sroa.0.0.lobit, ptr %_27.sroa.0, align 4
+  %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..1 = load volatile i32, ptr %_27.sroa.0, align 4
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0)
+  %_23.1 = and i32 %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..1, 9640146
+  %35 = add nuw nsw i32 %_19.1, %_23.1
+  %36 = and i32 %35, 536870911
+  %_20.2 = lshr i32 %35, 29
+  %_19.2 = add nuw nsw i32 %9, %_20.2
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0)
+  store i32 %borrow.sroa.0.0.lobit, ptr %_27.sroa.0, align 4
+  %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..2 = load volatile i32, ptr %_27.sroa.0, align 4
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0)
+  %_23.2 = and i32 %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..2, 501691798
+  %37 = add nuw nsw i32 %_19.2, %_23.2
+  %38 = and i32 %37, 536870911
+  %_20.3 = lshr i32 %37, 29
+  %_19.3 = add nuw nsw i32 %13, %_20.3
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0)
+  store i32 %borrow.sroa.0.0.lobit, ptr %_27.sroa.0, align 4
+  %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..3 = load volatile i32, ptr %_27.sroa.0, align 4
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0)
+  %_23.3 = and i32 %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..3, 502512965
+  %39 = add nuw nsw i32 %_19.3, %_23.3
+  %40 = and i32 %39, 536870911
+  %_20.4 = lshr i32 %39, 29
+  %_19.4 = add nuw nsw i32 %17, %_20.4
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0)
+  store i32 %borrow.sroa.0.0.lobit, ptr %_27.sroa.0, align 4
+  %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..4 = load volatile i32, ptr %_27.sroa.0, align 4
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0)
+  %_23.4 = and i32 %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..4, 333
+  %41 = add nuw nsw i32 %_19.4, %_23.4
+  %42 = and i32 %41, 536870911
+  %_20.5 = lshr i32 %41, 29
+  %_19.5 = add nuw nsw i32 %21, %_20.5
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0)
+  store i32 %borrow.sroa.0.0.lobit, ptr %_27.sroa.0, align 4
+  %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..5 = load volatile i32, ptr %_27.sroa.0, align 4
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0)
+  %43 = and i32 %_19.5, 536870911
+  %_20.6 = lshr i32 %_19.5, 29
+  %_19.6 = add nuw nsw i32 %25, %_20.6
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0)
+  store i32 %borrow.sroa.0.0.lobit, ptr %_27.sroa.0, align 4
+  %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..6 = load volatile i32, ptr %_27.sroa.0, align 4
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0)
+  %44 = and i32 %_19.6, 536870911
+  %_20.7 = lshr i32 %_19.6, 29
+  %_19.7 = add nuw nsw i32 %29, %_20.7
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0)
+  store i32 %borrow.sroa.0.0.lobit, ptr %_27.sroa.0, align 4
+  %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..7 = load volatile i32, ptr %_27.sroa.0, align 4
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0)
+  %45 = and i32 %_19.7, 536870911
+  %_20.8 = lshr i32 %_19.7, 29
+  %_19.8 = add i32 %32, %_20.8
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0)
+  store i32 %borrow.sroa.0.0.lobit, ptr %_27.sroa.0, align 4
+  %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..8 = load volatile i32, ptr %_27.sroa.0, align 4
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0)
+  %_23.8 = and i32 %_27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..8, 1048576
+  %46 = add i32 %_19.8, %_23.8
+  %47 = and i32 %46, 536870911
+  store i32 %34, ptr %_0, align 4
+  %difference.sroa.7.0._0.sroa_idx = getelementptr inbounds nuw i8, ptr %_0, i32 4
+  store i32 %36, ptr %difference.sroa.7.0._0.sroa_idx, align 4
+  %difference.sroa.10.0._0.sroa_idx = getelementptr inbounds nuw i8, ptr %_0, i32 8
+  store i32 %38, ptr %difference.sroa.10.0._0.sroa_idx, align 4
+  %difference.sroa.13.0._0.sroa_idx = getelementptr inbounds nuw i8, ptr %_0, i32 12
+  store i32 %40, ptr %difference.sroa.13.0._0.sroa_idx, align 4
+  %difference.sroa.16.0._0.sroa_idx = getelementptr inbounds nuw i8, ptr %_0, i32 16
+  store i32 %42, ptr %difference.sroa.16.0._0.sroa_idx, align 4
+  %difference.sroa.19.0._0.sroa_idx = getelementptr inbounds nuw i8, ptr %_0, i32 20
+  store i32 %43, ptr %difference.sroa.19.0._0.sroa_idx, align 4
+  %difference.sroa.22.0._0.sroa_idx = getelementptr inbounds nuw i8, ptr %_0, i32 24
+  store i32 %44, ptr %difference.sroa.22.0._0.sroa_idx, align 4
+  %difference.sroa.25.0._0.sroa_idx = getelementptr inbounds nuw i8, ptr %_0, i32 28
+  store i32 %45, ptr %difference.sroa.25.0._0.sroa_idx, align 4
+  %difference.sroa.28.0._0.sroa_idx = getelementptr inbounds nuw i8, ptr %_0, i32 32
+  store i32 %47, ptr %difference.sroa.28.0._0.sroa_idx, align 4
+  ret void
+}

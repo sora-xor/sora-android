@@ -2,37 +2,25 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.sora.substrate.substrate
 
 import java.math.BigInteger
+import jp.co.soramitsu.common.data.network.dto.PolkamarktMarketId
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.sora.substrate.runtime.Method
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
@@ -136,6 +124,119 @@ fun ExtrinsicBuilder.migrate(
             "iroha_signature" to signature.toByteArray(charset("UTF-8"))
         )
     )
+
+fun ExtrinsicBuilder.polkamarktBuy(
+    marketId: Long,
+    outcome: String,
+    collateralIn: BigInteger,
+    minimumSharesOut: BigInteger,
+) = polkamarktCall(
+    PolkamarktRuntimeCallFactory.buy(
+        marketId = marketId,
+        outcome = outcome,
+        collateralIn = collateralIn,
+        minimumSharesOut = minimumSharesOut,
+    )
+)
+
+fun ExtrinsicBuilder.polkamarktSell(
+    marketId: Long,
+    outcome: String,
+    sharesIn: BigInteger,
+    minimumCollateralOut: BigInteger,
+) = polkamarktCall(
+    PolkamarktRuntimeCallFactory.sell(
+        marketId = marketId,
+        outcome = outcome,
+        sharesIn = sharesIn,
+        minimumCollateralOut = minimumCollateralOut,
+    )
+)
+
+fun ExtrinsicBuilder.polkamarktClaimTraderPayout(
+    marketId: Long,
+) = polkamarktCall(PolkamarktRuntimeCallFactory.claimTraderPayout(marketId))
+
+fun ExtrinsicBuilder.polkamarktClaimTraderPayouts(
+    marketIds: List<Long>,
+) = polkamarktCall(PolkamarktRuntimeCallFactory.claimTraderPayouts(marketIds))
+
+fun ExtrinsicBuilder.polkamarktClaimCreatorFees(
+    marketId: Long,
+) = polkamarktCall(PolkamarktRuntimeCallFactory.claimCreatorFees(marketId))
+
+internal data class PolkamarktRuntimeCall(
+    val pallet: String,
+    val method: String,
+    val arguments: Map<String, Any>,
+)
+
+internal object PolkamarktRuntimeCallFactory {
+    fun buy(
+        marketId: Long,
+        outcome: String,
+        collateralIn: BigInteger,
+        minimumSharesOut: BigInteger,
+    ) = PolkamarktRuntimeCall(
+        pallet = POLKAMARKT_PALLET,
+        method = "buy",
+        arguments = mapOf(
+            "market_id" to PolkamarktMarketId.toScale(marketId),
+            "outcome" to polkamarktOutcome(outcome),
+            "collateral_in" to collateralIn,
+            "min_shares_out" to minimumSharesOut,
+        ),
+    )
+
+    fun sell(
+        marketId: Long,
+        outcome: String,
+        sharesIn: BigInteger,
+        minimumCollateralOut: BigInteger,
+    ) = PolkamarktRuntimeCall(
+        pallet = POLKAMARKT_PALLET,
+        method = "sell",
+        arguments = mapOf(
+            "market_id" to PolkamarktMarketId.toScale(marketId),
+            "outcome" to polkamarktOutcome(outcome),
+            "shares_in" to sharesIn,
+            "min_collateral_out" to minimumCollateralOut,
+        ),
+    )
+
+    fun claimTraderPayout(marketId: Long) = PolkamarktRuntimeCall(
+        pallet = POLKAMARKT_PALLET,
+        method = "claim_market",
+        arguments = mapOf("market_id" to PolkamarktMarketId.toScale(marketId)),
+    )
+
+    fun claimTraderPayouts(marketIds: List<Long>) = PolkamarktRuntimeCall(
+        pallet = POLKAMARKT_PALLET,
+        method = "claim_markets",
+        arguments = mapOf(
+            "market_ids" to marketIds.map { PolkamarktMarketId.toScale(it) }
+        ),
+    )
+
+    fun claimCreatorFees(marketId: Long) = PolkamarktRuntimeCall(
+        pallet = POLKAMARKT_PALLET,
+        method = "claim_creator_fees",
+        arguments = mapOf("market_id" to PolkamarktMarketId.toScale(marketId)),
+    )
+}
+
+private fun ExtrinsicBuilder.polkamarktCall(call: PolkamarktRuntimeCall) = this.call(
+    call.pallet,
+    call.method,
+    call.arguments,
+)
+
+private fun polkamarktOutcome(value: String): DictEnum.Entry<Any?> {
+    require(value == "Yes" || value == "No") { "POLKAMARKT_INVALID_OUTCOME" }
+    return DictEnum.Entry<Any?>(value, null)
+}
+
+private const val POLKAMARKT_PALLET = "Polkamarkt"
 
 fun ExtrinsicBuilder.removeLiquidity(
     dexId: Int,

@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.common.resourses
@@ -46,13 +33,12 @@ https://android-developers.googleblog.com/2022/11/per-app-language-preferences-p
  */
 class LanguagesHolder {
 
-    companion object {
-        private const val LANGUAGE_PART_INDEX = 0
-        private const val COUNTRY_PART_INDEX = 1
-    }
-
     private val russian = Language("ru", R.string.common_russian, R.string.common_russian_native)
     private val english = Language("en", R.string.common_english, R.string.common_english_native)
+    private val akkadian =
+        Language("akk", R.string.common_akkadian, R.string.common_akkadian_native)
+    private val egyptian =
+        Language("egy-Egyp", R.string.common_egyptian, R.string.common_egyptian_native)
     private val spanish = Language("es", R.string.common_spanish, R.string.common_spanish_native)
     private val french = Language("fr", R.string.common_french, R.string.common_french_native)
     private val german = Language("de", R.string.common_german, R.string.common_german_native)
@@ -98,8 +84,10 @@ class LanguagesHolder {
     private val availableLanguages =
         mutableListOf(english, russian, spanish, french, german, norwegian, chinese, indonesian, turkish)
 
+    // Old Akkadian and Middle Egyptian stay available for testing only; they are not offered in
+    // the production app (see common/src/production/res/xml/locale_config.xml).
     private val nonProdLanguages =
-        mutableListOf(arab, hebrew, persian, serbian, vietnamese, malay, hindi, finnish, japanese, chinese_taiwan, azerbaijani, dutch, portuguese)
+        mutableListOf(akkadian, egyptian, arab, hebrew, persian, serbian, vietnamese, malay, hindi, finnish, japanese, chinese_taiwan, azerbaijani, dutch, portuguese)
 
     fun getCurrentLocale(): Locale {
         return AppCompatDelegate.getApplicationLocales()[0] ?: Locale.getDefault()
@@ -133,15 +121,6 @@ class LanguagesHolder {
 
     private fun languageTag(l: String) = l.substringBefore("-").substringBefore("_")
 
-    private fun mapLanguageToLocale(language: String): Locale {
-        val codes = language.split("_")
-
-        return if (hasCountryCode(codes)) {
-            Locale(codes[LANGUAGE_PART_INDEX], codes[COUNTRY_PART_INDEX])
-        } else {
-            Locale(language)
-        }
-    }
-
-    private fun hasCountryCode(codes: List<String>) = codes.size != 1
+    private fun mapLanguageToLocale(language: String): Locale =
+        Locale.forLanguageTag(language.replace('_', '-'))
 }

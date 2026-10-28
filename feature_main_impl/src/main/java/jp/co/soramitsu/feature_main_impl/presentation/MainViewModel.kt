@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_main_impl.presentation
@@ -48,7 +35,7 @@ import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscription
 import jp.co.soramitsu.feature_select_node_api.NodeManager
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -66,7 +53,6 @@ class MainViewModel @Inject constructor(
     private val blockExplorerManager: BlockExplorerManager,
     private val coroutineManager: CoroutineManager,
     private val poolsUpdateSubscription: PoolsUpdateSubscription,
-    private val soraCardInteractor: SoraCardInteractor,
 ) : BaseViewModel() {
 
     private val _showInviteErrorTimeIsUpLiveData = SingleLiveEvent<Unit>()
@@ -89,7 +75,8 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             globalSubscriptionManager
                 .start()
-                .catch { onError(it) }
+                // Background work: its failures show in the connection banner, not in a dialog.
+                .catch { onBackgroundError(it) }
                 .flowOn(coroutineManager.io)
                 .collect()
         }
@@ -102,24 +89,34 @@ class MainViewModel @Inject constructor(
             }
         }
         viewModelScope.launch(coroutineManager.io) {
-            soraCardInteractor.initialize()
-        }
-        viewModelScope.launch(coroutineManager.io) {
             assetsInteractor.flowCurSoraAccount()
-                .catch { onError(it) }
+                .catch { onBackgroundError(it) }
                 .collectLatest {
-                    assetsInteractor.updateWhitelistBalances()
-                    poolsUpdateSubscription.updateBasicPools()
-                    assetsInteractor.getTokensList().map { it.id }.also { tokens ->
-                        blockExplorerManager.getTokensLiquidity(tokens)
+                    try {
+                        assetsInteractor.updateWhitelistBalances()
+                        poolsUpdateSubscription.updateBasicPools()
+                        assetsInteractor.getTokensList().map { it.id }.also { tokens ->
+                            blockExplorerManager.getTokensLiquidity(tokens)
+                        }
+                    } catch (error: kotlinx.coroutines.CancellationException) {
+                        throw error
+                    } catch (error: Exception) {
+                        jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                        _badConnectionVisibilityLiveData.postValue(true)
                     }
                 }
         }
         viewModelScope.launch {
             withContext(coroutineManager.io) {
                 RepeatStrategyBuilder.infinite().repeat {
-                    tryCatch {
+                    // A periodic refresh: a failed round is recorded and tried again; it never
+                    // opens a dialog.
+                    try {
                         blockExplorerManager.updateFiat()
+                    } catch (error: kotlinx.coroutines.CancellationException) {
+                        throw error
+                    } catch (error: Throwable) {
+                        onBackgroundError(error)
                     }
                     delay(20000)
                 }
@@ -129,7 +126,17 @@ class MainViewModel @Inject constructor(
 
     fun showPinFragment() {
         viewModelScope.launch {
-            _isPincodeUpdateNeeded.value = pinCodeInteractor.isPincodeUpdateNeeded()
+            // Reading the PIN decrypts it. If the wallet key is busy or missing that fails; the
+            // PIN screen is still shown (it checks again and never replaces the stored PIN) and
+            // the app does not crash.
+            _isPincodeUpdateNeeded.value = try {
+                pinCodeInteractor.isPincodeUpdateNeeded()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                false
+            }
         }
     }
 }

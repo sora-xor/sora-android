@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_account_impl.data.repository.datasource
@@ -36,6 +23,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,6 +31,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -173,19 +162,129 @@ class PrefsCredentialsDatasourceTest {
     }
 
     @Test
-    fun `clear all data for address called`() = runTest {
+    fun `watch only state requires the explicit durable marker`() = runTest {
         val address = "address"
-        val keys = listOf(
+        given(soraPreferences.getBoolean("wallet.watchOnly.$address")).willReturn(true)
+
+        assertTrue(prefsCredentialsDatasource.isExplicitWatchOnly(address))
+
+        prefsCredentialsDatasource.setExplicitWatchOnly(address, false)
+        verify(soraPreferences).putBoolean("wallet.watchOnly.$address", false)
+    }
+
+    @Test
+    fun `wallet preference coverage delegates exact wallet set and selection`() = runTest {
+        val walletIds = setOf("address", "second-address")
+
+        prefsCredentialsDatasource.requireWalletPreferenceCoverage(
+            walletIds = walletIds,
+            selectedAddress = "second-address",
+        )
+
+        verify(soraPreferences).requireWalletPreferenceCoverage(
+            walletIds,
+            "second-address",
+        )
+    }
+
+    @Test
+    fun `wallet deletion preview delegates exact preference key set`() = runTest {
+        val address = "address"
+        val strings = setOf(
             "prefs_address_pureaddress",
             "prefs_priv_keyaddress",
             "prefs_pub_keyaddress",
             "prefs_key_nonceaddress",
             "prefs_mnemonicaddress",
-            "prefs_seedaddress"
+            "prefs_seedaddress",
+        )
+        val booleans = setOf(
+            "wallet.watchOnly.address",
+            "needs_migrationaddress",
+            "is_migration_fetchedaddress",
+        )
+        val hashes = WalletPreferenceIntegrity.Hashes(
+            before = "1".repeat(64),
+            after = "2".repeat(64),
+        )
+        given(
+            soraPreferences.previewWalletDeletion(
+                strings,
+                booleans,
+                "replacement",
+                false,
+            )
+        ).willReturn(hashes)
+
+        assertEquals(
+            hashes,
+            prefsCredentialsDatasource.previewWalletDeletionPreferences(
+                walletIds = setOf(address),
+                selectedAfter = "replacement",
+                removeLegacyUnsuffixed = false,
+                clearAll = false,
+            ),
         )
 
-        prefsCredentialsDatasource.clearAllDataForAddress(address)
+        verify(soraPreferences).previewWalletDeletion(
+            strings,
+            booleans,
+            "replacement",
+            false,
+        )
+    }
 
-        verify(encryptedPreferences).clear(keys)
+    @Test
+    fun `journaled deletion uses one edit and verifies exact result`() = runTest {
+        val address = "address"
+        val strings = setOf(
+            "prefs_address_pureaddress",
+            "prefs_priv_keyaddress",
+            "prefs_pub_keyaddress",
+            "prefs_key_nonceaddress",
+            "prefs_mnemonicaddress",
+            "prefs_seedaddress",
+        )
+        val booleans = setOf(
+            "wallet.watchOnly.address",
+            "needs_migrationaddress",
+            "is_migration_fetchedaddress",
+        )
+        val beforeHash = "1".repeat(64)
+        val afterHash = "2".repeat(64)
+        given(
+            soraPreferences.walletDeletionPreferencesMatch(
+                strings,
+                booleans,
+                "replacement",
+                false,
+                afterHash,
+            )
+        ).willReturn(true)
+
+        prefsCredentialsDatasource.commitWalletDeletionPreferences(
+            walletIds = setOf(address),
+            selectedAfter = "replacement",
+            removeLegacyUnsuffixed = false,
+            clearAll = false,
+            expectedBeforeHash = beforeHash,
+            expectedAfterHash = afterHash,
+        )
+
+        verify(soraPreferences).commitWalletDeletion(
+            strings,
+            booleans,
+            "replacement",
+            false,
+            beforeHash,
+            afterHash,
+        )
+        verify(soraPreferences).walletDeletionPreferencesMatch(
+            strings,
+            booleans,
+            "replacement",
+            false,
+            afterHash,
+        )
     }
 }

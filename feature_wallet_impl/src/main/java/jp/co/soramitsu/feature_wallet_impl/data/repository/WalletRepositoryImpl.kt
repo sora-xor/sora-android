@@ -2,41 +2,27 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_wallet_impl.data.repository
 
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CardHub
-import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
@@ -46,6 +32,8 @@ import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingSubmissionCoordinator
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.migrate
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -53,6 +41,7 @@ import jp.co.soramitsu.xsubstrate.runtime.metadata.module
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -64,11 +53,8 @@ class WalletRepositoryImpl @Inject constructor(
     private val extrinsicManager: ExtrinsicManager,
     private val substrateCalls: SubstrateCalls,
     private val runtimeManager: RuntimeManager,
-    private val soraConfigManager: SoraConfigManager,
+    private val pendingSubmissionCoordinator: Sora2PendingSubmissionCoordinator,
 ) : WalletRepository {
-    private companion object {
-        const val SORA_CARD_ID = "soraCardId"
-    }
 
     override fun observeStorageAccount(address: String): Flow<String> = flow {
         val runtime = runtimeManager.getRuntimeSnapshot()
@@ -101,10 +87,11 @@ class WalletRepositoryImpl @Inject constructor(
         keypair: Sr25519Keypair,
         from: String,
     ): ExtrinsicSubmitStatus {
-        return extrinsicManager.submitAndWaitExtrinsic(
+        return extrinsicManager.submitLegacyMigrationAndWaitExtrinsic(
             from = from,
             keypair = keypair,
             useBatchAll = false,
+            activity = Sora2SubmissionActivity.legacyClaim(),
         ) {
             migrate(
                 irohaAddress = irohaAddress,
@@ -112,6 +99,27 @@ class WalletRepositoryImpl @Inject constructor(
                 signature = signature,
             )
         }
+    }
+
+    override suspend fun checkSubmittedClaim(
+        walletId: String,
+        txHash: String?,
+    ): TransactionOutcome? {
+        val hash = txHash
+            ?: pendingSubmissionCoordinator.latestSubmissionHashOrNull(
+                walletId = walletId,
+                kind = Sora2SubmissionActivity.Kind.LEGACY_CLAIM,
+            )
+            ?: return null
+        try {
+            // Status only: this pass has no signer and cannot submit.
+            pendingSubmissionCoordinator.recoverStatusOnlyFor(walletId, hash)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: Exception) {
+            // Offline or a slow node: the journal row stays as it is and is reported as it is.
+        }
+        return pendingSubmissionCoordinator.currentOutcomeOrNull(walletId, hash)
     }
 
     override fun subscribeCardsHubList(address: String): Flow<List<CardHub>> {
@@ -124,15 +132,7 @@ class WalletRepositoryImpl @Inject constructor(
 
     override fun subscribeVisibleGlobalCardsHubList(): Flow<List<CardHub>> {
         return db.globalCardsHubDao().getGlobalCardsHubVisible().map {
-            val soraCard = soraConfigManager.getSoraCard()
-            it.mapNotNull { cardLocal ->
-                val card = CardsHubMapper.map(cardLocal)
-                when (card?.cardType) {
-                    CardHubType.GET_SORA_CARD -> if (soraCard) card else null
-                    CardHubType.BUY_XOR_TOKEN -> if (soraCard) card else null
-                    else -> card
-                }
-            }
+            it.mapNotNull { cardLocal -> CardsHubMapper.map(cardLocal) }
         }
     }
 

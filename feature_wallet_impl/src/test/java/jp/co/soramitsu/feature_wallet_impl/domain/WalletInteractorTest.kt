@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_wallet_impl.domain
@@ -42,6 +29,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
@@ -69,6 +57,8 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 
 @RunWith(MockitoJUnitRunner::class)
 @ExperimentalCoroutinesApi
@@ -133,9 +123,25 @@ class WalletInteractorTest {
     }
 
     @Test
+    fun `a submitted claim is checked for the current account`() = runTest {
+        val outcome = jp.co.soramitsu.common.domain.TransactionOutcome.Waiting(
+            txHash = "0xhash",
+            acceptedByNode = true,
+        )
+        given(walletRepository.checkSubmittedClaim("address", "0xhash")).willReturn(outcome)
+
+        assertEquals(outcome, interactor.checkSubmittedClaim("0xhash"))
+    }
+
+    @Test
     fun `find other users`() = runTest {
         given(runtimeManager.isAddressOk(anyString())).willReturn(true)
-        given(transactionHistoryRepository.getContacts(anyString())).willReturn(
+        given(
+            transactionHistoryRepository.getContacts(
+                soraAccount.substrateAddress,
+                "use",
+            )
+        ).willReturn(
             setOf(
                 "contact1",
                 "contact2"
@@ -147,7 +153,12 @@ class WalletInteractorTest {
     @Test
     fun `migrate extrinsic`() = runTest {
         given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
-        val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
+        given(walletRepository.needsMigration(irohaData.address)).willReturn(true)
+        val kp = Sr25519Keypair(
+            ByteArray(32) { 1 },
+            ByteArray(32) { 2 },
+            ByteArray(32) { 3 },
+        )
         given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(kp)
         given(
             walletRepository.migrate(
@@ -164,84 +175,37 @@ class WalletInteractorTest {
             "justification",
             BlockEntry("header", listOf("0x112323345", "0x35456472"))
         )
-        assertEquals(true, interactor.migrate())
+        assertEquals(TransactionOutcome.Confirmed("", ""), interactor.migrate())
+        verify(walletRepository).needsMigration(irohaData.address)
+        verify(walletRepository).migrate(
+            irohaData.address,
+            irohaData.publicKey,
+            irohaData.claimSignature,
+            kp,
+            soraAccount.substrateAddress,
+        )
+        assertEquals(true, kp.privateKey.all { it == 0.toByte() })
+        assertEquals(true, kp.nonce.all { it == 0.toByte() })
     }
 
-//    @Ignore
-//    @Test
-//    fun `poll while pending EXPECT polling is continued until status is not changed`() =
-//        runTest {
-//            `when`(walletRepository.getSoraCardInfo())
-//                .thenReturn(
-//                    SoraCardInformation(
-//                        accessToken = "accessToken",
-//                        accessTokenExpirationTime = System.currentTimeMillis() + 1_000,
-//                        kycStatus = "${SoraCardCommonVerification.Pending}"
-//                    )
-//                )
-//                .thenReturn(
-//                    SoraCardInformation(
-//                        accessToken = "accessToken",
-//                        accessTokenExpirationTime = System.currentTimeMillis() + 31_000,
-//                        kycStatus = "${SoraCardCommonVerification.Successful}"
-//                    )
-//                )
-//
-//            given(kycRepository.getKycLastFinalStatus(any()))
-//                .willReturn(
-//                    Result.success(SoraCardCommonVerification.Successful)
-//                )
-//
-//            verify(walletRepository, times(2))
-//                .getSoraCardInfo()
-//            verify(kycRepository, times(1))
-//                .getKycLastFinalStatus(any())
-//            verify(walletRepository, times(1))
-//                .updateSoraCardKycStatus(SoraCardCommonVerification.Successful.toString())
-//        }
-//
-//    @Ignore
-//    @Test
-//    fun `poll with exception EXPECT polling is continued until status is not changed`() =
-//        runTest {
-//            `when`(walletRepository.getSoraCardInfo())
-//                .thenReturn(
-//                    SoraCardInformation(
-//                        accessToken = "accessToken",
-//                        accessTokenExpirationTime = System.currentTimeMillis() + 1_000,
-//                        kycStatus = "${SoraCardCommonVerification.Pending}"
-//                    )
-//                )
-//                .thenReturn(
-//                    SoraCardInformation(
-//                        accessToken = "accessToken",
-//                        accessTokenExpirationTime = System.currentTimeMillis() + 1_500,
-//                        kycStatus = "${SoraCardCommonVerification.Pending}"
-//                    )
-//                )
-//                .thenReturn(
-//                    SoraCardInformation(
-//                        accessToken = "accessToken",
-//                        accessTokenExpirationTime = System.currentTimeMillis() + 31_000,
-//                        kycStatus = "${SoraCardCommonVerification.Successful}"
-//                    )
-//                )
-//
-//            `when`(kycRepository.getKycLastFinalStatus(any()))
-//                .thenReturn(
-//                    Result.failure(RuntimeException())
-//                )
-//                .thenReturn(
-//                    Result.success(SoraCardCommonVerification.Successful)
-//                )
-//
-//            verify(walletRepository, times(3))
-//                .getSoraCardInfo()
-//            verify(kycRepository, times(2))
-//                .getKycLastFinalStatus(any())
-//            verify(walletRepository, times(1))
-//                .updateSoraCardKycStatus(SoraCardCommonVerification.Successful.toString())
-//        }
+    @Test
+    fun `migrate rechecks authoritative account state before loading the signing key`() = runTest {
+        given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
+        given(walletRepository.needsMigration(irohaData.address)).willReturn(false)
+
+        // Nothing to send: the network already has the claim.
+        assertEquals(null, interactor.migrate())
+
+        verify(userRepository).saveNeedsMigration(false, soraAccount)
+        verify(credentialsRepository, never()).retrieveKeyPair(soraAccount)
+        verify(walletRepository, never()).migrate(
+            anyString(),
+            anyString(),
+            anyString(),
+            any(),
+            anyString(),
+        )
+    }
 
     private fun accountList() = listOf(
         "use", "contact1", "contact2",

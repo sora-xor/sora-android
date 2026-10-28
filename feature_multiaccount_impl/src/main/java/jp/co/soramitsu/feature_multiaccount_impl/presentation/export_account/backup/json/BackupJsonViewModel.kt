@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.json
@@ -40,6 +27,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.presentation.compose.components.initMediumTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
@@ -50,9 +39,13 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.mod
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import kotlinx.coroutines.launch
 
+/** Characters kept from each end of an address when an account is named in a message. */
+private const val SHORT_ADDRESS_CHARS = 8
+
 class BackupJsonViewModel @AssistedInject constructor(
     private val interactor: MultiaccountInteractor,
     private val router: MainRouter,
+    private val resourceManager: ResourceManager,
     @Assisted("addresses") private val addresses: List<String>,
 ) : BaseViewModel() {
 
@@ -138,20 +131,54 @@ class BackupJsonViewModel @AssistedInject constructor(
     }
 
     fun downloadJsonClicked() {
+        val current = _backupJsonScreenState.value ?: return
+        if (current.loading) return
+        _backupJsonScreenState.value = current.copy(loading = true)
         viewModelScope.launch {
-            _backupJsonScreenState.value?.let {
+            try {
+                // The interactor encrypts the file off the main thread.
                 _jsonTextLiveData.value =
-                    interactor.getJsonFileUri(addresses, it.confirmationState.value.text)
+                    interactor.getJsonFileUri(addresses, current.confirmationState.value.text)
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: MultiaccountInteractor.AccountsNotExportableException) {
+                // Several accounts were chosen and some cannot be exported: no file is made,
+                // and the message names them, so they need not be found by trial and error.
+                alertDialogLiveData.value = Pair(
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.export_json_keys_unusable_named_title
+                    ),
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.export_json_keys_unusable_named
+                    ).format(error.accounts.joinToString("\n", transform = ::accountLine)),
+                )
+            } catch (error: Throwable) {
+                // For example an account whose stored keys cannot be used: no file is made
+                // and the screen says why and what to do.
+                onError(error)
+            } finally {
+                _backupJsonScreenState.value = _backupJsonScreenState.value?.copy(loading = false)
             }
         }
     }
 
+    /** One account in a message: its name and enough of its address to tell it apart. */
+    private fun accountLine(account: SoraAccount): String {
+        val address = account.substrateAddress
+        val short = if (address.length <= SHORT_ADDRESS_CHARS * 2) {
+            address
+        } else {
+            "${address.take(SHORT_ADDRESS_CHARS)}…${address.takeLast(SHORT_ADDRESS_CHARS)}"
+        }
+        return if (account.accountName.isBlank()) short else "${account.accountName} ($short)"
+    }
+
     override fun onNavIcon() {
-        router.popBackStackToAccountList()
+        router.leaveBackupJson()
     }
 
     override fun onBackPressed() {
-        router.popBackStackToAccountList()
+        router.leaveBackupJson()
     }
 
     private fun getPasswordConfirmationDescriptionAndErrorStatus(

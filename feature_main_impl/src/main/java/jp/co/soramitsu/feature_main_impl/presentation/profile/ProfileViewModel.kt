@@ -2,63 +2,34 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
-import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
-import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardGateHubContract
-import jp.co.soramitsu.feature_sora_card_api.util.readyToStartGatehubOnboarding
-import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.oauth.base.sdk.contract.IbanStatus
-import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,21 +38,18 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val assetsRouter: AssetsRouter,
     interactor: MainInteractor,
     private val polkaswapRouter: PolkaswapRouter,
     private val router: MainRouter,
-    private val walletRouter: WalletRouter,
     private val referralRouter: ReferralRouter,
     private val selectNodeRouter: SelectNodeRouter,
-    private val soraConfigManager: SoraConfigManager,
-    private val soraCardInteractor: SoraCardInteractor,
+    private val productionFeatureManager: ProductionFeatureManager,
     nodeManager: NodeManager,
-    private val darkThemeManager: DarkThemeManager,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(
@@ -89,12 +57,15 @@ class ProfileViewModel @Inject constructor(
     )
     internal val state = _state.asStateFlow()
 
-    private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
-    val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
-
-    private var currentSoraCardContractData: SoraCardContractData? = null
-
     init {
+        viewModelScope.launch {
+            tryCatch {
+                val features = productionFeatureManager.getState()
+                // Await the feature lookup before reading current presentation state. A
+                // delayed result must not replace a newer node name or connection status.
+                _state.update { it.copy(polkamarktVisible = features.polkamarktVisible) }
+            }
+        }
         interactor.flowSelectedNode().combine(nodeManager.connectionState) { node, connection ->
             node to connection
         }
@@ -108,109 +79,14 @@ class ProfileViewModel @Inject constructor(
                 )
             }
             .launchIn(viewModelScope)
-
-        combine(
-            soraCardInteractor.basicStatus,
-            darkThemeManager.darkModeStatusFlow
-        ) { basicStatus, isDarkTheme ->
-            basicStatus to isDarkTheme
-        }
-            .onEach { (basicStatus, isDarkTheme) ->
-                basicStatus.availabilityInfo?.let { info ->
-                    currentSoraCardContractData = createSoraCardContract(
-                        userAvailableXorAmount = info.xorBalance.toDouble(),
-                        isEnoughXorAvailable = info.enoughXor,
-                        clientDark = isDarkTheme
-                    )
-                }
-                val soraCardStatusStringRes =
-                    if (basicStatus.ibanInfo == null)
-                        when (basicStatus.verification) {
-                            SoraCardCommonVerification.Rejected -> R.string.sora_card_verification_rejected
-                            SoraCardCommonVerification.Pending -> R.string.sora_card_verification_in_progress
-                            SoraCardCommonVerification.Successful -> R.string.more_menu_sora_card_subtitle
-                            else -> R.string.sora_card_sign_in_required
-                        } else R.string.more_menu_sora_card_subtitle
-
-                val soraCardStatusIconDrawableRes =
-                    if (basicStatus.ibanInfo == null)
-                        when (basicStatus.verification) {
-                            SoraCardCommonVerification.Rejected -> R.drawable.ic_status_denied
-                            SoraCardCommonVerification.Pending -> R.drawable.ic_status_pending
-                            else -> null
-                        } else null
-
-                _state.value = _state.value.copy(
-                    soraCardStatusStringRes = soraCardStatusStringRes,
-                    soraCardIbanError = if (basicStatus.ibanInfo?.ibanStatus == IbanStatus.OTHER) basicStatus.ibanInfo?.statusDescription else null,
-                    soraCardStatusIconDrawableRes = soraCardStatusIconDrawableRes,
-                    soraCardEnabled = soraConfigManager.getSoraCard(),
-                    soraCardNeedUpdate = basicStatus.needInstallUpdate,
-                    canStartGatehubOnboarding = basicStatus.ibanInfo?.ibanStatus.readyToStartGatehubOnboarding(),
-                )
-            }
-            .launchIn(viewModelScope)
     }
 
     fun showAccountList() {
         router.showAccountList()
     }
 
-    fun showSoraCard() {
-        if (soraCardInteractor.basicStatus.value.initialized) {
-            if (soraCardInteractor.basicStatus.value.ibanInfo != null && soraCardInteractor.basicStatus.value.ibanInfo?.ibanStatus != IbanStatus.OTHER)
-                router.showSoraCardDetails()
-            else when (soraCardInteractor.basicStatus.value.verification) {
-                SoraCardCommonVerification.NotFound -> {
-                    router.showGetSoraCard()
-                }
-
-                SoraCardCommonVerification.Successful -> {
-                    router.showSoraCardDetails()
-                }
-
-                else -> {
-                    currentSoraCardContractData?.let { contractData ->
-                        _launchSoraCardSignIn.value = contractData
-                    }
-                }
-            }
-        }
-    }
-
-    fun handleSoraCardResult(soraCardResult: SoraCardResult) {
-        when (soraCardResult) {
-            is SoraCardResult.NavigateTo -> {
-                when (soraCardResult.screen) {
-                    OutwardsScreen.DEPOSIT -> walletRouter.openQrCodeFlow()
-                    OutwardsScreen.SWAP -> polkaswapRouter.showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
-                    OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
-                }
-            }
-
-            is SoraCardResult.Success -> {
-                viewModelScope.launch {
-                    soraCardInteractor.setStatus(soraCardResult.status)
-                }
-            }
-
-            is SoraCardResult.Failure -> {
-                viewModelScope.launch {
-                    soraCardInteractor.setStatus(soraCardResult.status)
-                }
-            }
-
-            is SoraCardResult.Canceled -> {}
-            is SoraCardResult.Logout -> {
-                viewModelScope.launch {
-                    soraCardInteractor.setLogout()
-                }
-            }
-        }
-    }
-
-    fun showBuyCrypto() {
-        _launchSoraCardSignIn.value = createSoraCardGateHubContract()
+    fun showPolkamarkt() {
+        polkaswapRouter.showPolkamarkt()
     }
 
     fun showSelectNode() {

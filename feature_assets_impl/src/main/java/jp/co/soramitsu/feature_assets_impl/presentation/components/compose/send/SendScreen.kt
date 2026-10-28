@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send
@@ -55,17 +42,23 @@ import androidx.compose.ui.unit.dp
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.presentation.compose.components.AccountWithIcon
 import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
+import jp.co.soramitsu.common.presentation.compose.components.NetworkFeeUnavailableNotice
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyReason
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common.view.WarningTextCard
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -87,6 +80,11 @@ internal fun SendScreen(
     feeLoading: Boolean,
     reviewEnabled: Boolean,
     shouldTransactionReminderInsufficientWarningBeShown: Boolean,
+    feeUnavailable: NetworkFeeUnavailable? = null,
+    onRetryFee: () -> Unit = {},
+    lockedNote: String? = null,
+    readOnly: Boolean = rememberWalletReadOnly(),
+    accountReadOnly: Boolean = LocalSelectedAccountReadOnly.current,
 ) {
     SendScreenAddress(
         address = address,
@@ -105,12 +103,30 @@ internal fun SendScreen(
         onSelectToken = onSelectToken,
         onFocusChange = onFocusChange,
     )
+    if (lockedNote != null) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Dimens.x1, start = Dimens.x1, end = Dimens.x1)
+                .testTagAsId("SendLockedBalanceNote"),
+            text = lockedNote,
+            style = MaterialTheme.customTypography.paragraphS,
+            color = MaterialTheme.customColors.fgSecondary,
+        )
+    }
     Divider(thickness = Dimens.x3, color = Color.Transparent)
     SendScreenNetworkFee(
         amount = feeAmount,
         fiat = feeFiat,
         loading = feeLoading,
     )
+    if (feeUnavailable != null && !feeLoading) {
+        NetworkFeeUnavailableNotice(
+            modifier = Modifier.padding(top = Dimens.x2),
+            reason = feeUnavailable,
+            onRetry = onRetryFee,
+        )
+    }
     if (shouldTransactionReminderInsufficientWarningBeShown) {
         Divider(
             modifier = Modifier.fillMaxWidth(),
@@ -125,11 +141,19 @@ internal fun SendScreen(
         )
     }
     Divider(thickness = Dimens.x3, color = Color.Transparent)
+    if (readOnly) {
+        // U9: sending is off in read-only mode; the reason sits above the disabled button.
+        ReadOnlyReason(modifier = Modifier.padding(bottom = Dimens.x2))
+    } else if (accountReadOnly) {
+        // The selected account cannot sign on this phone. The notice above the form says why
+        // and offers the repair; the button is off instead of failing at the last step.
+        AccountReadOnlyReason(modifier = Modifier.padding(bottom = Dimens.x2))
+    }
     FilledButton(
         modifier = Modifier
             .testTagAsId("ReviewButton")
             .fillMaxWidth(),
-        enabled = reviewEnabled,
+        enabled = reviewEnabled && !readOnly && !accountReadOnly,
         text = stringResource(id = R.string.review),
         size = Size.Large,
         order = Order.PRIMARY,

@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.common.logger
@@ -37,19 +24,118 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 object FirebaseWrapper {
+    enum class Breadcrumb {
+        KEYS_CREATED,
+        RETAINED_KEYS_ADOPTED,
+        RECOVERY_BACKUP_ADDED,
+        ACCOUNT_KEYS_REPAIRED,
+        RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH,
+        LEGACY_CREDENTIALS_READ,
+        ADDRESS_RECREATED,
+        MIGRATION_ATTEMPT_FINISHED,
+        SPLASH_NAVIGATION,
+        RUNTIME_VERSION_REFRESHED,
+        RUNTIME_NETWORK_SELECTED,
+        RUNTIME_SNAPSHOT_BUILT,
+    }
+
+    enum class PrivacySafeErrorClass {
+        PI_TRANSACTION_PEERS,
+        PI_TRANSACTION_HISTORY,
+        PI_TRANSACTION_DETAIL,
+        EXTRINSIC_SUBMISSION,
+        FINALIZED_EVENT_READ,
+        NETWORK_FAILURE,
+        INVALID_INPUT_FAILURE,
+        STATE_FAILURE,
+        SECURITY_FAILURE,
+        UNCLASSIFIED_FAILURE,
+    }
+
+    /** No addresses, key names, exception text, balances, or transaction payloads are accepted. */
+    enum class WalletRecoveryEvent {
+        GATE_STORAGE_FULL, GATE_DATABASE_LOCKED, GATE_DATABASE_IO, GATE_DATABASE_OPEN_FAILED,
+        GATE_DATABASE_PATH_UNREADABLE, GATE_PREFERENCES_INVALID, GATE_KEYSTORE_UNAVAILABLE,
+        GATE_SOURCE_CHANGED, GATE_OTHER,
+        JOURNAL_RECOVERED, READ_ONLY_ENTERED, ACCOUNT_READ_ONLY,
+        PANEL_STORAGE, PANEL_TRANSIENT, PANEL_KEYS_UNAVAILABLE, PANEL_RECOVERY, PANEL_RESTORE_PENDING,
+    }
+
+    private val recoveryEvents = java.util.Collections.synchronizedSet(mutableSetOf<WalletRecoveryEvent>())
+    private val pendingRecoveryEvents = java.util.Collections.synchronizedSet(mutableSetOf<WalletRecoveryEvent>())
+
+    /** One fixed non-fatal per event per process, respecting the existing diagnostics consent. */
+    fun recordWalletRecovery(event: WalletRecoveryEvent) {
+        if (!crashlyticsEnabled) {
+            if (!diagnosticsConfigured) pendingRecoveryEvents.add(event)
+            return
+        }
+        val instance = crashlyticsInstance() ?: return
+        if (!recoveryEvents.add(event)) return
+        instance.recordException(PrivacySafeTelemetryException("WALLET_RECOVERY_${event.name}"))
+    }
+
     private val blackList = listOf(CancellationException::class)
 
-    fun recordException(t: Throwable) {
-        blackList.forEach { kClass ->
-            if (!kClass.isInstance(t)) {
-                Timber.e(t, "ERROR")
-                FirebaseCrashlytics.getInstance().recordException(t)
-            }
+    @Volatile
+    private var crashlyticsEnabled = false
+
+    @Volatile
+    private var diagnosticsConfigured = false
+
+    fun setCrashlyticsEnabled(enabled: Boolean) {
+        diagnosticsConfigured = true
+        crashlyticsEnabled = enabled
+        if (enabled) {
+            val pending = synchronized(pendingRecoveryEvents) { pendingRecoveryEvents.toList().also { pendingRecoveryEvents.clear() } }
+            pending.forEach(::recordWalletRecovery)
+        } else {
+            pendingRecoveryEvents.clear()
         }
     }
 
-    fun log(message: String) {
-        Timber.d(message)
-        FirebaseCrashlytics.getInstance().log(message)
+    fun recordException(t: Throwable) {
+        if (blackList.any { it.isInstance(t) }) {
+            return
+        }
+        recordErrorClass(privacySafeErrorClass(t))
     }
+
+    internal fun privacySafeErrorClass(t: Throwable): PrivacySafeErrorClass = when (t) {
+        is SecurityException -> PrivacySafeErrorClass.SECURITY_FAILURE
+        is IllegalArgumentException -> PrivacySafeErrorClass.INVALID_INPUT_FAILURE
+        is IllegalStateException -> PrivacySafeErrorClass.STATE_FAILURE
+        is java.io.IOException -> PrivacySafeErrorClass.NETWORK_FAILURE
+        else -> PrivacySafeErrorClass.UNCLASSIFIED_FAILURE
+    }
+
+    /**
+     * Records an allowlisted class without retaining an originating exception as a cause. Network
+     * and signing exceptions may contain addresses, request bodies, or signed payload material.
+     */
+    fun recordErrorClass(errorClass: PrivacySafeErrorClass) {
+        val sanitized = PrivacySafeTelemetryException(errorClass.name)
+        Timber.e(sanitized, "ERROR_CLASS")
+        crashlyticsInstance()?.recordException(sanitized)
+    }
+
+    // Only fixed labels may cross the telemetry boundary; wallet data cannot be interpolated.
+    fun log(breadcrumb: Breadcrumb) {
+        Timber.d(breadcrumb.name)
+        crashlyticsInstance()?.log(breadcrumb.name)
+    }
+
+    private fun crashlyticsInstance(): FirebaseCrashlytics? {
+        if (!crashlyticsEnabled) {
+            return null
+        }
+
+        return runCatching { FirebaseCrashlytics.getInstance() }
+            .onFailure { crashlyticsEnabled = false }
+            .getOrNull()
+    }
+
+    private class PrivacySafeTelemetryException(
+        errorClass: String,
+    ) : IllegalStateException(errorClass)
 }

@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_blockexplorer_impl
@@ -39,6 +26,7 @@ import io.mockk.mockkStatic
 import java.math.BigDecimal
 import java.util.Date
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
@@ -47,6 +35,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiM
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatusDetail
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
 import jp.co.soramitsu.feature_blockexplorer_impl.presentation.txhistory.TransactionMappersImpl
 import org.junit.Before
@@ -136,5 +125,67 @@ class TransactionMappersTest {
         }
 
         assertThat(transactionsWithHeaders.size).isEqualTo(result.size)
+    }
+
+    // --- audit A5: an Activity row never calls a refused transaction "submitted" --------------
+
+    private fun genericRow(
+        status: TransactionStatus,
+        detail: TransactionStatusDetail?,
+        ambiguous: Boolean,
+    ): EventUiModel.EventTxUiModel.EventReferralProgramUiModel {
+        given(dateTimeFormatter.formatTimeWithoutSeconds(Date(1000000))).willReturn("12:56")
+        return transactionMappers.mapTransaction(
+            Transaction.Sora2Submission(
+                base = TransactionBase(
+                    txHash = "0x" + "ab".repeat(32),
+                    blockHash = null,
+                    fee = BigDecimal.ZERO,
+                    status = status,
+                    timestamp = 1000000,
+                    statusDetail = detail,
+                ),
+                networkId = "sora2",
+                submissionIsAmbiguous = ambiguous,
+                terminalBlockNumber = null,
+            ),
+            "address",
+        ) as EventUiModel.EventTxUiModel.EventReferralProgramUiModel
+    }
+
+    @Test
+    fun `a refused transaction known only by its hash is listed as not sent and failed`() {
+        // Its journal row is still "submission unknown" until the validity window was scanned.
+        val row = genericRow(
+            status = TransactionStatus.REJECTED,
+            detail = TransactionStatusDetail(TransactionStatusDetail.Kind.REFUSED_CANNOT_PAY_FEE),
+            ambiguous = true,
+        )
+
+        assertThat(row.title).isEqualTo(R.string.tx_outcome_not_sent_title)
+        assertThat(row.status).isEqualTo(TransactionStatus.REJECTED)
+    }
+
+    @Test
+    fun `a waiting transaction known only by its hash is listed as submitted and pending`() {
+        val row = genericRow(
+            status = TransactionStatus.PENDING,
+            detail = TransactionStatusDetail(TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION),
+            ambiguous = false,
+        )
+
+        assertThat(row.title).isEqualTo(R.string.wallet_transaction_submitted)
+        assertThat(row.status).isEqualTo(TransactionStatus.PENDING)
+    }
+
+    @Test
+    fun `an uncertain submission known only by its hash is listed as status unknown`() {
+        val row = genericRow(
+            status = TransactionStatus.PENDING,
+            detail = TransactionStatusDetail(TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN),
+            ambiguous = true,
+        )
+
+        assertThat(row.title).isEqualTo(R.string.wallet_transaction_status_unknown)
     }
 }

@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_blockexplorer_api.presentation.screen
@@ -52,6 +39,9 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -59,12 +49,13 @@ import androidx.compose.ui.text.style.TextAlign
 import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.view.LoadMoreHandler
+import jp.co.soramitsu.feature_blockexplorer_api.data.PiHistoryCoverage
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCardEndless
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCardEndless
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -127,6 +118,13 @@ private fun TxHistoryScreen(
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                ReceivedTransfersNote(
+                    modifier = Modifier.padding(
+                        start = Dimens.x3,
+                        end = Dimens.x3,
+                        bottom = Dimens.x1,
+                    ),
+                )
                 if (historyState.hasErrorLoadingNew) {
                     Text(
                         modifier = Modifier.padding(top = Dimens.x2),
@@ -174,15 +172,37 @@ private fun TxHistoryScreen(
                     .padding(horizontal = Dimens.x6),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    textAlign = TextAlign.Center,
-                    text = stringResource(id = R.string.activity_empty_content_title),
-                    style = MaterialTheme.customTypography.paragraphM,
-                    color = MaterialTheme.customColors.fgSecondary
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        textAlign = TextAlign.Center,
+                        text = stringResource(id = R.string.activity_empty_content_title),
+                        style = MaterialTheme.customTypography.paragraphM,
+                        color = MaterialTheme.customColors.fgSecondary
+                    )
+                    ReceivedTransfersNote(modifier = Modifier.padding(top = Dimens.x2))
+                }
             }
         }
     }
+}
+
+/**
+ * While the PI indexer lists only operations the account signed ([PiHistoryCoverage]), say so
+ * calmly wherever account history is shown, so a missing incoming transfer is not mistaken for a
+ * lost payment. The note goes away by itself as soon as a history read was answered with
+ * received transfers included; no app update is needed for that.
+ */
+@Composable
+fun ReceivedTransfersNote(modifier: Modifier = Modifier) {
+    val listsReceivedTransfers by PiHistoryCoverage.listsReceivedTransfers.collectAsState()
+    if (listsReceivedTransfers) return
+    Text(
+        modifier = modifier,
+        textAlign = TextAlign.Center,
+        text = stringResource(id = R.string.activity_received_transfers_note),
+        style = MaterialTheme.customTypography.paragraphS,
+        color = MaterialTheme.customColors.fgSecondary,
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -193,6 +213,7 @@ private fun TxHistoryList(
     onItemClick: (String) -> Unit,
 ) {
     val listState = rememberLazyListState()
+    val keys = remember(listItems) { historyListKeys(listItems) }
 
     LazyColumn(
         state = listState,
@@ -200,13 +221,13 @@ private fun TxHistoryList(
             .background(color = MaterialTheme.customColors.bgSurface)
             .fillMaxSize(),
     ) {
-        listItems.forEach { event ->
+        listItems.forEachIndexed { index, event ->
             if (event is EventUiModel.EventTimeSeparatorUiModel) {
-                stickyHeader(key = event.title) {
+                stickyHeader(key = keys[index]) {
                     EventUiModelItem(event = event, onItemClick = onItemClick, modifier = Modifier)
                 }
             } else {
-                item(key = if (event is EventUiModel.EventTxUiModel) event.txHash else 0) {
+                item(key = keys[index]) {
                     EventUiModelItem(
                         event = event,
                         onItemClick = onItemClick,

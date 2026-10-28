@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_main_impl.presentation.profile.appsettings
@@ -42,17 +29,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.OptionSwitch
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
-internal fun AppSettingsScreen(
+fun AppSettingsScreen(
     checkedSystem: Boolean,
     checkedDark: Boolean,
+    testNetworksAvailable: Boolean,
+    checkedTestNetworks: Boolean,
     onSystemToggle: (Boolean) -> Unit,
     onDarkToggle: (Boolean) -> Unit,
+    onTestNetworksToggle: (Boolean) -> Unit,
+    checkedReduceEffects: Boolean = false,
+    onReduceEffectsToggle: (Boolean) -> Unit = {},
 ) {
     ContentCard {
         Column(
@@ -64,22 +56,53 @@ internal fun AppSettingsScreen(
                 color = MaterialTheme.customColors.fgSecondary,
                 maxLines = 1,
             )
-            OptionSwitch(
-                icon = null,
-                label = stringResource(id = R.string.system_appearance),
-                bottomDivider = false,
-                available = true,
-                checked = checkedSystem,
-                onClick = onSystemToggle,
+            jp.co.soramitsu.common.presentation.compose.neon.NeonSegments(
+                labels = listOf(stringResource(R.string.neon_theme_system),
+                    stringResource(R.string.neon_theme_dark), stringResource(R.string.neon_theme_light)),
+                selected = if (checkedSystem) 0 else if (checkedDark) 1 else 2,
+                onSelect = { choice ->
+                    when (choice) {
+                        0 -> onSystemToggle(true)
+                        1 -> onDarkToggle(true)
+                        2 -> onDarkToggle(false)
+                    }
+                },
+                modifier = Modifier.padding(vertical = Dimens.x2),
             )
             OptionSwitch(
                 icon = null,
-                label = stringResource(id = R.string.dark_mode),
+                label = stringResource(id = R.string.appearance_reduce_effects),
                 bottomDivider = false,
                 available = true,
-                checked = checkedDark,
-                onClick = onDarkToggle,
+                checked = checkedReduceEffects,
+                onClick = onReduceEffectsToggle,
             )
+            Text(
+                text = stringResource(id = R.string.appearance_reduce_effects_description),
+                style = MaterialTheme.customTypography.paragraphXS,
+                color = MaterialTheme.customColors.fgSecondary,
+            )
+            if (testNetworksAvailable) {
+                Text(
+                    text = stringResource(id = R.string.networks_title).uppercase(),
+                    style = MaterialTheme.customTypography.headline4,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    maxLines = 1,
+                )
+                OptionSwitch(
+                    icon = null,
+                    label = stringResource(id = R.string.test_networks),
+                    bottomDivider = false,
+                    available = true,
+                    checked = checkedTestNetworks,
+                    onClick = onTestNetworksToggle,
+                )
+                Text(
+                    text = stringResource(id = R.string.test_networks_description),
+                    style = MaterialTheme.customTypography.paragraphXS,
+                    color = MaterialTheme.customColors.fgSecondary,
+                )
+            }
         }
     }
 }
@@ -90,7 +113,10 @@ private fun PreviewAppSettingsScreen() {
     AppSettingsScreen(
         checkedSystem = false,
         checkedDark = false,
+        testNetworksAvailable = true,
+        checkedTestNetworks = true,
         onSystemToggle = { },
         onDarkToggle = { },
+        onTestNetworksToggle = { },
     )
 }

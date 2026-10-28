@@ -2,37 +2,25 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_assets_impl.data
 
 import androidx.room.withTransaction
+import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -60,6 +48,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.faucetTransfer
 import jp.co.soramitsu.sora.substrate.substrate.transfer
@@ -74,6 +63,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+
+/**
+ * Longest wait for one balance read of the last check before a transfer leaves the phone. An
+ * answer normally takes well under a second.
+ */
+internal const val FRESH_BALANCE_READ_TIMEOUT_MILLIS = 15_000L
 
 class AssetsRepositoryImpl @Inject constructor(
     private val db: AppDatabase,
@@ -90,7 +86,17 @@ class AssetsRepositoryImpl @Inject constructor(
 
     init {
         coroutineManager.applicationScope.launch {
-            updateTokens()
+            try {
+                updateTokens()
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                tokensDeferred.completeExceptionally(error)
+                throw error
+            } catch (error: Exception) {
+                // Catalog availability must not terminate the wallet host. Consumers still fail
+                // closed; no unverified runtime, token catalog or balance is substituted.
+                tokensDeferred.completeExceptionally(error)
+                jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+            }
         }
     }
 
@@ -132,7 +138,8 @@ class AssetsRepositoryImpl @Inject constructor(
             )
         }
         return fee?.let {
-            mapBalance(it, token.precision)
+            // Transaction payment is always denominated in XOR, independently of the asset sent.
+            mapBalance(it, OptionsProvider.defaultScale)
         }
     }
 
@@ -194,20 +201,97 @@ class AssetsRepositoryImpl @Inject constructor(
         to: String,
         token: Token,
         amount: BigDecimal,
-        fee: BigDecimal
+        fee: BigDecimal,
+        validateSelectedWallet: suspend () -> Unit,
+        confirmedDuplicate: Boolean,
     ): ExtrinsicSubmitStatus {
-        return extrinsicManager.submitAndWatchExtrinsic(
+        val transferAmount = mapBalance(amount, token.precision)
+        val reviewedFee = mapBalance(fee, OptionsProvider.defaultScale)
+        check(transferAmount > BigInteger.ZERO) { "SORA2_TRANSFER_AMOUNT_INVALID" }
+        check(reviewedFee > BigInteger.ZERO) { "SORA2_TRANSFER_REVIEWED_FEE_INVALID" }
+        return extrinsicManager.submitFeeQualifiedAndWatchExtrinsic(
             from = from,
             keypair = keypair,
+            reviewedFee = reviewedFee,
             useBatchAll = false,
+            activity = Sora2SubmissionActivity.transfer(
+                tokenId = token.id,
+                amount = amount,
+                recipient = to,
+                fee = fee,
+            ).copy(duplicateConfirmed = confirmedDuplicate),
+            preSigningValidation = validateSelectedWallet,
+            validateBalances = { exactFee ->
+                validateSelectedWallet()
+                requireExactTransferBalances(
+                    from = from,
+                    token = token,
+                    transferAmount = transferAmount,
+                    exactFee = exactFee,
+                )
+            },
         ) {
             transfer(
                 assetId = token.id,
                 to = to,
-                amount = mapBalance(amount, token.precision)
+                amount = transferAmount
             )
         }
     }
+
+    /**
+     * Runs at ExtrinsicManager's last pre-transport boundary against fresh chain storage.
+     *
+     * This is the one read of a transfer that goes over the selected node's WebSocket, and it
+     * runs while the wallet lock is held. A disconnected socket keeps a request queued without
+     * any time limit, and switching to another node needs the same lock, so an unanswered read
+     * would leave the transfer spinning on a node the app could no longer leave. Each read
+     * therefore gets [FRESH_BALANCE_READ_TIMEOUT_MILLIS]; when it passes, the transfer ends as
+     * "not sent" (nothing was handed to the network yet) and the lock is released.
+     */
+    private suspend fun requireExactTransferBalances(
+        from: String,
+        token: Token,
+        transferAmount: BigInteger,
+        exactFee: BigInteger,
+    ) {
+        val xorBalance = freshBalanceRead { substrateCalls.fetchXORBalances(from) }
+        val xorTransferable = BalanceWrapper.calcTransferable(xorBalance)
+        val xorRequired = exactFee + if (
+            token.id == SubstrateOptionsProvider.feeAssetId
+        ) {
+            transferAmount
+        } else {
+            BigInteger.ZERO
+        }
+        check(xorTransferable >= xorRequired) {
+            "SORA2_TRANSFER_XOR_BALANCE_INSUFFICIENT"
+        }
+        // The node withdraws the fee first and refuses the transaction when that would take the
+        // free balance below the frozen amount, where the reserved balance gives no discount.
+        // An account with reserved and frozen XOR can therefore have enough for the amount and
+        // still be unable to pay the fee.
+        check(BalanceWrapper.calcPayableAsFee(xorBalance) >= exactFee) {
+            "SORA2_TRANSFER_XOR_FEE_LOCKED"
+        }
+        if (token.id != SubstrateOptionsProvider.feeAssetId) {
+            val assetBalances = freshBalanceRead {
+                substrateCalls.fetchTransferableBalances(
+                    from,
+                    listOf(token.id),
+                )
+            }
+            check(assetBalances.size == 1 && assetBalances.single() >= transferAmount) {
+                "SORA2_TRANSFER_ASSET_BALANCE_INSUFFICIENT"
+            }
+        }
+    }
+
+    private suspend fun <T : Any> freshBalanceRead(read: suspend () -> T): T =
+        withTimeoutOrNull(FRESH_BALANCE_READ_TIMEOUT_MILLIS) { read() }
+            // An IOException: screens say that the network could not be reached and that
+            // nothing was sent.
+            ?: throw IOException("SORA2_TRANSFER_BALANCE_READ_TIMED_OUT")
 
     override fun subscribeAsset(address: String, tokenId: String): Flow<Asset?> = flow {
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
@@ -222,22 +306,6 @@ class AssetsRepositoryImpl @Inject constructor(
     override fun subscribeAssetsActive(address: String): Flow<List<Asset>> = flow {
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
         val f = db.assetDao().subscribeAssetsActive(address, selectedCurrency.code).map {
-            it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
-        }
-        emitAll(f)
-    }
-
-    override fun subscribeAssetsFavorite(address: String): Flow<List<Asset>> = flow {
-        val selectedCurrency = soraConfigManager.getSelectedCurrency()
-        val f = db.assetDao().subscribeAssetsFavorite(address, selectedCurrency.code).map {
-            it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
-        }
-        emitAll(f)
-    }
-
-    override fun subscribeAssetsVisible(address: String): Flow<List<Asset>> = flow {
-        val selectedCurrency = soraConfigManager.getSelectedCurrency()
-        val f = db.assetDao().subscribeAssetsVisible(address, selectedCurrency.code).map {
             it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
         }
         emitAll(f)

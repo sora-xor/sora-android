@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup
@@ -40,7 +27,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import jp.co.soramitsu.androidfoundation.format.addHexPrefix
 import jp.co.soramitsu.androidfoundation.fragment.trigger
-import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
+import jp.co.soramitsu.common.util.SensitiveClipboard
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.presentation.compose.components.initMediumTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -55,7 +42,7 @@ class BackupViewModel @AssistedInject constructor(
     private val multiAccountInteractor: MultiaccountInteractor,
     private val resourceManager: ResourceManager,
     private val mainRouter: MainRouter,
-    private val clipboardManager: BasicClipboardManager,
+    private val clipboardManager: SensitiveClipboard,
     @Assisted("type") private val type: ExportProtectionViewModel.Type,
     @Assisted("address") private val address: String
 ) : BaseViewModel() {
@@ -74,18 +61,39 @@ class BackupViewModel @AssistedInject constructor(
     init {
         _toolbarState.value = initMediumTitle2("")
         viewModelScope.launch {
+            // Only a stored phrase or seed that re-derives this account's address is shown.
+            // The stored secrets are judged once for this screen, off the main thread; the
+            // answer carries what is shown.
+            val material = try {
+                when (type) {
+                    // Also caches the seed where none is stored (as before).
+                    ExportProtectionViewModel.Type.SEED ->
+                        multiAccountInteractor.getSeedBackupMaterial(address)
+                    else -> multiAccountInteractor.getBackupMaterial(address)
+                }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                onError(error)
+                return@launch
+            }
             when (type) {
                 ExportProtectionViewModel.Type.SEED -> {
-                    val seed = multiAccountInteractor.getSeed(address)
-                    _backupScreenState.value = BackupScreenState(seedString = seed.addHexPrefix())
                     _toolbarState.value = initMediumTitle2(R.string.common_raw_seed)
+                    _backupScreenState.value = if (material.hasSeed) {
+                        BackupScreenState(seedString = material.seedHex.addHexPrefix())
+                    } else {
+                        BackupScreenState(noMatchingSecret = true, canExportJson = material.canSign)
+                    }
                 }
 
                 ExportProtectionViewModel.Type.PASSPHRASE -> {
-                    val mnemonic = multiAccountInteractor.getMnemonic(address)
-                    _backupScreenState.value =
-                        BackupScreenState(mnemonicWords = mnemonic.split(" "))
                     _toolbarState.value = initMediumTitle2(R.string.common_passphrase_title)
+                    _backupScreenState.value = if (material.hasPhrase) {
+                        BackupScreenState(mnemonicWords = material.phraseWords)
+                    } else {
+                        BackupScreenState(noMatchingSecret = true, canExportJson = material.canSign)
+                    }
                 }
 
                 else -> {}
@@ -93,14 +101,19 @@ class BackupViewModel @AssistedInject constructor(
         }
     }
 
+    /** The backup that always works for an account that can sign: the encrypted JSON export. */
+    fun exportJsonPressed() {
+        if (_backupScreenState.value?.canExportJson != true) return
+        mainRouter.showExportJSONProtection(mutableListOf(address))
+    }
+
     fun backupPressed() {
         _backupScreenState.value?.let {
-            if (it.seedString.isNotEmpty()) {
-                clipboardManager.addToClipboard(it.seedString)
-            } else {
-                clipboardManager.addToClipboard(it.mnemonicWords.joinToString(" "))
-            }
-            copiedToast.trigger()
+            if (it.noMatchingSecret) return
+            runCatching {
+                if (it.seedString.isNotEmpty()) clipboardManager.copy(it.seedString)
+                else clipboardManager.copy(it.mnemonicWords.joinToString(" "))
+            }.onSuccess { copiedToast.trigger() }.onFailure(::onError)
         }
     }
 

@@ -1,0 +1,19 @@
+{
+  "originalAarSha256": "dee65fa2e0aef012a9ac591638da02bf89efc7f77a5969e2e0d2bbb7fdeebdf1",
+  "repackedAarSha256": "021e37c8b6f1b9c49a80a2b81af3094de4519b06f75a2fc82f57161630550f7f",
+  "changedEntries": {
+    "jni/arm64-v8a/libsr25519java_1.so": "ef74ddc0640a676ad3b9b2b96d066b9001f72281a471cbdefd412f79020e9a45",
+    "jni/x86_64/libsr25519java_1.so": "bcc7d06342cd10496492197daa4a47752c161ad92f4cf0b1ffc56e13e2205649"
+  },
+  "elf16KbValidation": "passed for both 64-bit ABIs including PT_LOAD and GNU_RELRO",
+  "sourceRevision": "2346144a127c1121ae3166800b7ab06ed9c5bf20",
+  "rust": "1.97.1",
+  "ndk": "28.0.12674087",
+  "targetApi": 26,
+  "profile": "release",
+  "linkerFlags": [
+    "-Wl,-z,max-page-size=16384",
+    "-Wl,-z,common-page-size=16384"
+  ],
+  "sourceToBinaryReproductionReviewed": false
+}

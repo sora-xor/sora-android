@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_list
@@ -49,6 +36,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountListScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportAccountData
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -67,6 +55,9 @@ class AccountListViewModel @Inject constructor(
     private val _showOnboardingFlowEvent = SingleLiveEvent<Unit>()
     val showOnboardingFlowEvent: LiveData<Unit> = _showOnboardingFlowEvent
 
+    private val _isSwitchingAccount = MutableLiveData(false)
+    val isSwitchingAccount: LiveData<Boolean> = _isSwitchingAccount
+
     private var toolbarActionModeEnabled = false
 
     init {
@@ -74,48 +65,66 @@ class AccountListViewModel @Inject constructor(
             title = R.string.settings_accounts,
         )
         interactor.flowSoraAccountsList()
-            .catch { onError(it) }
-            .onEach {
-                val currentAddress = interactor.getCurrentSoraAccount().substrateAddress
+            // The labels are an addition: when they cannot be read, the list is shown without.
+            .combine(interactor.flowUnavailableWalletIds().catch { emit(emptySet()) }) { accounts, readOnly ->
+                accounts to readOnly
+            }
+            .onEach { (accounts, readOnly) ->
+                // With no account left (the last one was just removed and the app is about to
+                // restart) there is no selected account to ask for.
+                val currentAddress = if (accounts.isEmpty()) {
+                    null
+                } else {
+                    interactor.getCurrentSoraAccount().substrateAddress
+                }
 
-                val accountList = it.map { soraAccount ->
+                val accountList = accounts.map { soraAccount ->
                     ExportAccountData(
                         currentAddress == soraAccount.substrateAddress,
                         false,
                         avatarGenerator.createAvatar(soraAccount.substrateAddress, 40),
                         soraAccount,
+                        readOnly = soraAccount.substrateAddress in readOnly,
                     )
                 }
 
                 _accountListScreenState.value =
                     AccountListScreenState(toolbarActionModeEnabled, accountList)
                 setToolbarState(toolbarActionModeEnabled, 0)
-            }.launchIn(viewModelScope)
+            }
+            // After the work above, so that a failure inside it is reported, not thrown out of
+            // the view model's scope.
+            .catch { onError(it) }
+            .launchIn(viewModelScope)
     }
 
     fun onAccountOptionsClicked(address: String) {
+        if (_isSwitchingAccount.value == true) return
         router.showAccountDetails(address)
     }
 
     fun onAccountClicked(address: String) {
+        if (_isSwitchingAccount.value == true) return
+        val account = _accountListScreenState.value?.accountList
+            ?.find { it.account.substrateAddress == address } ?: return
+        // Set this before launching so a second tap cannot queue another account change.
+        _isSwitchingAccount.value = true
         viewModelScope.launch {
-            tryCatch {
-                val account =
-                    _accountListScreenState.value?.accountList?.find { it.account.substrateAddress == address }
-                if (account != null) {
-                    interactor.setCurSoraAccount(account.account)
-                    router.popBackStack()
-                }
+            tryCatchFinally(finally = { _isSwitchingAccount.value = false }) {
+                interactor.setCurSoraAccount(account.account)
+                router.popBackStack()
             }
         }
     }
 
     fun onAccountLongClicked(address: String) {
+        if (_isSwitchingAccount.value == true) return
         clipboardManager.addToClipboard(address)
         copiedToast.trigger()
     }
 
     fun onAccountSelected(address: String) {
+        if (_isSwitchingAccount.value == true) return
         accountListScreenState.value?.let { state ->
             val newList = state.accountList.map { accounts ->
                 if (accounts.account.substrateAddress == address) {
@@ -135,6 +144,7 @@ class AccountListViewModel @Inject constructor(
     }
 
     fun onAddAccountClicked() {
+        if (_isSwitchingAccount.value == true) return
         _showOnboardingFlowEvent.value = Unit
     }
 
@@ -147,6 +157,7 @@ class AccountListViewModel @Inject constructor(
     }
 
     private fun onToolbarNavigation() {
+        if (_isSwitchingAccount.value == true) return
         _accountListScreenState.value?.let {
             if (toolbarActionModeEnabled) {
                 toolbarActionModeEnabled = false
@@ -187,6 +198,7 @@ class AccountListViewModel @Inject constructor(
     }
 
     override fun onAction() {
+        if (_isSwitchingAccount.value == true) return
         _accountListScreenState.value?.let { state ->
             val addresses = state.accountList
                 .filter { it.isSelectedAction }

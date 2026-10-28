@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails
@@ -58,11 +45,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.testTagAsId
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.extensions.withOpacity
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -74,13 +63,13 @@ internal fun AssetDetailsBalanceCard(
     amountFiat: String,
     frozenAmount: String? = null,
     frozenAmountFiat: String? = null,
+    lockedNote: String? = null,
     isTransferableAmountAvailable: Boolean = false,
-    buyCryptoAvailable: Boolean = false,
     onSendClick: () -> Unit,
     onReceiveClick: () -> Unit,
     onSwapClick: () -> Unit,
     onBalanceClick: () -> Unit,
-    onBuyCryptoClick: (() -> Unit)? = null
+    readOnly: Boolean = rememberWalletReadOnly(),
 ) {
     ContentCard(
         modifier = Modifier
@@ -156,10 +145,24 @@ internal fun AssetDetailsBalanceCard(
                 Text(
                     modifier = Modifier
                         .padding(horizontal = Dimens.x3)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTagAsId("AssetFrozenAmount"),
                     text = frozenAmount,
                     style = MaterialTheme.customTypography.textXSBold,
                     color = MaterialTheme.customColors.fgSecondary
+                )
+            }
+            if (lockedNote != null) {
+                // Says why the liquid balance is smaller than what the account holds. An
+                // account whose XOR is all locked would otherwise only see "0".
+                Text(
+                    modifier = Modifier
+                        .padding(start = Dimens.x3, end = Dimens.x3, top = Dimens.x1)
+                        .fillMaxWidth()
+                        .testTagAsId("AssetLockedNote"),
+                    text = lockedNote,
+                    style = MaterialTheme.customTypography.paragraphXS,
+                    color = MaterialTheme.customColors.fgSecondary,
                 )
             }
             Divider(
@@ -170,7 +173,7 @@ internal fun AssetDetailsBalanceCard(
                     .height(1.dp)
                     .fillMaxWidth()
             )
-            Row(
+            androidx.compose.foundation.layout.FlowRow(
                 modifier = Modifier
                     .wrapContentHeight()
                     .fillMaxWidth()
@@ -182,12 +185,13 @@ internal fun AssetDetailsBalanceCard(
                         end = Dimens.x2,
                     ),
                 horizontalArrangement = Arrangement.SpaceEvenly,
+                maxItemsInEachRow = if (androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f) 2 else 4,
             ) {
                 if (isTransferableAmountAvailable) {
                     AmountCardIcon(
                         res = R.drawable.ic_new_arrow_up_24,
                         text = stringResource(id = R.string.common_send),
-                        enabled = true,
+                        enabled = !readOnly,
                         onClick = onSendClick,
                     )
                 }
@@ -200,55 +204,26 @@ internal fun AssetDetailsBalanceCard(
                 AmountCardIcon(
                     res = R.drawable.ic_refresh_24,
                     text = stringResource(id = R.string.polkaswap_swap_title),
-                    enabled = true,
+                    enabled = !readOnly,
                     onClick = onSwapClick,
                 )
-
-                if (buyCryptoAvailable && onBuyCryptoClick != null) {
-                    AmountCardIcon(
-                        res = R.drawable.ic_buy_crypto,
-                        text = stringResource(id = R.string.common_buy),
-                        enabled = true,
-                        onClick = onBuyCryptoClick,
-                    )
-                }
+            }
+            if (readOnly) {
+                // U9: Send and Swap are off in read-only mode, with the reason.
+                ReadOnlyReason(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(start = Dimens.x3, end = Dimens.x3, bottom = Dimens.x3),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun AmountCardIcon(
-    @DrawableRes res: Int,
-    text: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.wrapContentSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(modifier = Modifier.size(Size.Large)) {
-            BleachedButton(
-                modifier = Modifier.testTagAsId("${text}Button"),
-                shape = CircleShape,
-                size = Size.Large,
-                order = Order.TERTIARY,
-                enabled = enabled,
-                leftIcon = painterResource(res),
-                onClick = onClick,
-            )
-        }
-        Text(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(top = Dimens.x1),
-            text = text,
-            style = MaterialTheme.customTypography.textXSBold,
-            color = MaterialTheme.customColors.fgSecondary.withOpacity(opacity = if (enabled) 1.0f else 0.3f),
-        )
-    }
-}
+private fun AmountCardIcon(@DrawableRes res: Int, text: String, enabled: Boolean, onClick: () -> Unit) =
+    jp.co.soramitsu.common.view.AmountCardIcon(testTagId = "${text}Button", res = res, text = text,
+        isEnabled = enabled, onClick = onClick)
 
 @Preview
 @Composable
@@ -258,12 +233,10 @@ private fun PreviewAssetDetailsBalanceCard() {
         amountFiat = "$4 923.34",
         frozenAmount = "12.3 XOR",
         frozenAmountFiat = "$ 1000.1",
-        buyCryptoAvailable = true,
         isTransferableAmountAvailable = true,
         onSendClick = { },
         onReceiveClick = { },
         onSwapClick = { },
         onBalanceClick = { },
-        onBuyCryptoClick = { }
     )
 }

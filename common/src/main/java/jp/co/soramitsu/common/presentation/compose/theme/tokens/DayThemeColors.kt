@@ -2,88 +2,82 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
 import androidx.compose.ui.graphics.Color
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown10
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown30
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown50
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown90
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Green5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Red5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Yellow30
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Yellow5
 
+/**
+ * SORA Neon light ("Daylight") palette mapped onto the ui-core
+ * [jp.co.soramitsu.ui_core.theme.CustomColors] slots (design spec 2.3). Keep in sync with
+ * `res/values/colors.xml` (neon_*) and
+ * [jp.co.soramitsu.common.presentation.compose.theme.neon.NeonLight].
+ *
+ * fgInverted is white: the label on accent fills in light.
+ */
 object DayThemeColors {
 
-    val AccentPrimary = Color(0xFFEE2233)
+    val AccentPrimary = Color(0xFFC80E34)
 
-    val AccentPrimaryContainer = Red5
+    val AccentPrimaryContainer = Color(0xFFFBE7EB)
 
-    val AccentSecondary = Brown90
+    val AccentSecondary = Color(0xFF0B0C14)
 
-    val AccentSecondaryContainer = Brown10
+    val AccentSecondaryContainer = Color(0xFFE9EBF2)
 
-    val AccentTertiary = Brown50
+    val AccentTertiary = Color(0xFF1F6B7C)
 
-    val AccentTertiaryContainer = Brown10
+    val AccentTertiaryContainer = Color(0xFFE2F3F7)
 
-    val BgPage = Brown5
+    val BgPage = Color(0xFFF2F3F8)
 
-    val BgSurface = Color(0xffffffff)
+    val BgSurface = Color(0xFFFFFFFF)
 
-    val BgSurfaceVariant = Brown10
+    val BgSurfaceVariant = Color(0xFFE9EBF2)
 
-    val BgSurfaceInverted = Brown90
+    val BgSurfaceInverted = Color(0xFF14141F)
 
-    val FgPrimary = Brown90
+    val FgPrimary = Color(0xFF0B0C14)
 
-    val FgSecondary = Brown50
+    val FgSecondary = Color(0xFF454A5E)
 
-    val FgTertiary = Brown30
+    val FgTertiary = Color(0xFF5E6278)
 
-    val FgInverted = Brown5
+    val FgInverted = Color(0xFFFFFFFF)
 
-    val FgOutline = Brown5
+    /**
+     * Dividers and decorative outlines only. Text fields use NeonTokens.borderInput (3:1) through
+     * compose.neon.InputText, which replaces this slot for the field border.
+     */
+    val FgOutline = Color(0xFFDADCE5)
 
-    val StatusSuccess = Color(0xFF169974)
+    val StatusSuccess = Color(0xFF08704D)
 
-    val StatusSuccessContainer = Green5
+    val StatusSuccessContainer = Color(0xFFE3F6F0)
 
-    val StatusWarning = Yellow30
+    /** Amber text. Filled warning badges use NeonTokens.warningFill with an ink label. */
+    val StatusWarning = Color(0xFF8A4F00)
 
-    val StatusWarningContainer = Yellow5
+    val StatusWarningContainer = Color(0xFFFFF0DA)
 
-    val StatusError = Color(0xFFCB0F1F)
+    val StatusError = Color(0xFFBC0E2D)
 
-    val StatusErrorContainer = Red5
+    val StatusErrorContainer = Color(0xFFF9E7EA)
+
+    /** ui-core `elevation` slot: #0B0C14 at 8%. */
+    val Elevation = Color(0x140B0C14)
 }

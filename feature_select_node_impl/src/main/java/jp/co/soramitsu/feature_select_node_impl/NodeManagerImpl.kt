@@ -2,43 +2,34 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_select_node_impl
 
+import java.util.concurrent.atomic.AtomicBoolean
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
+import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.FlavorOptionsProvider
+import jp.co.soramitsu.common.network.SoraNodeEndpointPolicy
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.NodeManagerEvent
@@ -58,8 +49,11 @@ internal class NodeManagerImpl(
     private val selectNodeRepository: SelectNodeRepository,
     private val coroutineManager: CoroutineManager,
     private val autoSwitch: Boolean,
-    appDatabase: AppDatabase,
+    private val appDatabase: AppDatabase,
     private val soraConfigManager: SoraConfigManager,
+    private val walletDatabaseReady: () -> Boolean = {
+        WalletUpgradeBackup.blockingFailure() == null
+    },
 ) : NodeManager {
 
     private companion object {
@@ -83,10 +77,30 @@ internal class NodeManagerImpl(
     private var autoSwitchingStarted: Boolean = false
     private val attemptedNodes = mutableListOf<ChainNode>()
 
+    private val started = AtomicBoolean(false)
+
     init {
+        ensureStarted()
+    }
+
+    /**
+     * The node address is stored in the wallet database, which stays closed while the upgrade
+     * gate blocks startup. Recovery can clear the gate in the same process (Try again, Check
+     * again, Continue read-only), so a blocked start is not final: the next call starts it.
+     */
+    override fun ensureStarted(): Boolean {
+        if (started.get()) return true
+        if (!walletDatabaseReady()) return false
+        if (!started.compareAndSet(false, true)) return true
+        start()
+        return true
+    }
+
+    private fun start() {
         coroutineManager.applicationScope.launch {
             val address =
-                appDatabase.nodeDao().getSelectedNode()?.address ?: FlavorOptionsProvider.wsHostUrl
+                appDatabase.nodeDao().getSelectedNode()?.address?.takeIf(SoraNodeEndpointPolicy::isAllowed)
+                    ?: FlavorOptionsProvider.wsHostUrl
             connectionManager.setAddress(address)
             connectionManager.observeAppState()
 
@@ -108,7 +122,7 @@ internal class NodeManagerImpl(
         selectNodeRepository.getNodes()
             .distinctUntilChanged()
             .onEach {
-                availableNodes = it
+                availableNodes = it.filter { node -> SoraNodeEndpointPolicy.isAllowed(node.address) }
             }
             .launchIn(coroutineManager.applicationScope)
 
@@ -116,12 +130,18 @@ internal class NodeManagerImpl(
             .distinctUntilChanged()
             .filterNotNull()
             .onEach {
-                selectedNode = it
+                selectedNode = it.takeIf { node -> SoraNodeEndpointPolicy.isAllowed(node.address) }
             }
             .launchIn(coroutineManager.applicationScope)
     }
 
     override fun tryToConnect(node: ChainNode) {
+        if (!SoraNodeEndpointPolicy.isAllowed(node.address)) {
+            coroutineManager.applicationScope.launch {
+                _events.emit(NodeManagerEvent.ConnectionFailed(node.address))
+            }
+            return
+        }
         if (!connectionManager.isNetworkAvailable) {
             coroutineManager.applicationScope.launch {
                 _events.emit(NodeManagerEvent.NoConnection)
@@ -130,7 +150,7 @@ internal class NodeManagerImpl(
             previousNode = selectedNode
             newNode = node
             stateObserverEnabled = true
-            connectionManager.switchUrl(node.address)
+            switchUrlAfterWalletMutations(node.address)
         }
     }
 
@@ -151,7 +171,7 @@ internal class NodeManagerImpl(
                 newNode = null
                 previousNode?.address?.let {
                     stateObserverEnabled = false
-                    connectionManager.switchUrl(it)
+                    switchUrlWithWalletMutationBarrier(it)
                 }
             }
 
@@ -160,6 +180,12 @@ internal class NodeManagerImpl(
     }
 
     override fun checkGenesisHash(url: String) {
+        if (!SoraNodeEndpointPolicy.isAllowed(url)) {
+            coroutineManager.applicationScope.launch {
+                _events.emit(NodeManagerEvent.GenesisValidated(result = false))
+            }
+            return
+        }
         if (!connectionManager.isNetworkAvailable) {
             coroutineManager.applicationScope.launch {
                 _events.emit(NodeManagerEvent.NoConnection)
@@ -175,7 +201,7 @@ internal class NodeManagerImpl(
         customNodeUrl = url
 
         blockHashCheckObserverEnabled = true
-        connectionManager.switchUrl(url)
+        switchUrlAfterWalletMutations(url)
     }
 
     private fun isNodeAlreadyExisting(url: String): Boolean {
@@ -216,7 +242,7 @@ internal class NodeManagerImpl(
                     } catch (e: Throwable) {
                         _events.emit(NodeManagerEvent.GenesisValidated(result = false))
                     }
-                    previousNode?.address?.let { connectionManager.switchUrl(it) }
+                    previousNode?.address?.let { switchUrlWithWalletMutationBarrier(it) }
                     customNodeUrl = ""
                 }
             }
@@ -226,7 +252,7 @@ internal class NodeManagerImpl(
                     customNodeUrl = ""
                     blockHashCheckObserverEnabled = false
                     _events.emit(NodeManagerEvent.ConnectionFailed(customNodeUrl))
-                    previousNode?.address?.let { connectionManager.switchUrl(it) }
+                    previousNode?.address?.let { switchUrlWithWalletMutationBarrier(it) }
                 }
             }
 
@@ -269,8 +295,26 @@ internal class NodeManagerImpl(
                 attemptedNodes.add(availableNodes[currentNodeIndex])
             }
 
-            connectionManager.switchUrl(nextNode.address)
+            switchUrlWithWalletMutationBarrier(nextNode.address)
             selectNodeRepository.selectNode(nextNode)
+        }
+    }
+
+    private fun switchUrlAfterWalletMutations(url: String) {
+        coroutineManager.applicationScope.launch {
+            switchUrlWithWalletMutationBarrier(url)
+        }
+    }
+
+    /**
+     * A selected-node change cannot cut across runtime qualification, nonce/header reads, signing,
+     * durable hash journaling, or the final transport handoff guarded by this same process-wide
+     * coordinator.
+     */
+    private suspend fun switchUrlWithWalletMutationBarrier(url: String) {
+        if (!SoraNodeEndpointPolicy.isAllowed(url)) return
+        WalletMutationCoordinator.withLock {
+            connectionManager.switchUrl(url)
         }
     }
 }

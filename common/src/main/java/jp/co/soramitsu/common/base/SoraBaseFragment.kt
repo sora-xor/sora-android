@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.common.base
@@ -41,7 +28,9 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.MaterialTheme
@@ -58,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
@@ -69,12 +59,18 @@ import androidx.navigation.findNavController
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.account.AccountOptionsRouter
+import jp.co.soramitsu.common.account.SelectedAccountSigningSource
 import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.AlertDialogContent
+import jp.co.soramitsu.common.presentation.compose.components.ConfirmDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
+import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.SelectedAccountSigningHost
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.AppStoreListing
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -92,6 +88,19 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     @Inject
     lateinit var darkThemeManager: DarkThemeManager
 
+    @Inject
+    lateinit var selectedAccountSigningSource: SelectedAccountSigningSource
+
+    @Inject
+    lateinit var accountOptionsRouter: AccountOptionsRouter
+
+    /**
+     * True for a screen where the person signs with the selected account (send, swap, liquidity,
+     * referral, staking, claim). When that account cannot sign on this phone, the screen says so
+     * above its form, before anything is filled in, and offers the repair (Account options).
+     */
+    open val explainsReadOnlyAccount: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activity?.onBackPressedDispatcher?.addCallback(this) {
@@ -102,6 +111,14 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     override fun onResume() {
         super.onResume()
         activity?.safeCast<BarsColorHandler>()?.setColor(backgroundColor())
+        // A result the view model held while this screen was not in front is shown now.
+        viewModel.onScreenResumed()
+    }
+
+    override fun onPause() {
+        // From here on the view model opens nothing and closes nothing until the next resume.
+        viewModel.onScreenPaused()
+        super.onPause()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -131,6 +148,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                     val scrollState = rememberScrollState()
                     val coroutineScope = rememberCoroutineScope()
                     val openAlertDialog = remember { mutableStateOf(AlertDialogData()) }
+                    val openConfirmDialog = remember { mutableStateOf<ConfirmDialogData?>(null) }
 
                     val navController = rememberNavController()
                     LaunchedEffect(Unit) {
@@ -189,6 +207,12 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                                 message = message,
                             )
                         }
+                        viewModel.confirmDialogLiveData.observe {
+                            openConfirmDialog.value = it
+                        }
+                        viewModel.openAppStoreLiveData.observe {
+                            AppStoreListing.open(requireContext())
+                        }
 
                         viewModel.snackBarLiveData.observe {
                             coroutineScope.launch {
@@ -210,33 +234,47 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                         }
                     }
 
-                    Scaffold(
-                        scaffoldState = scaffoldState,
-                        backgroundColor = backgroundColorComposable(),
-                        topBar = {
-                            Toolbar(
-                                toolbarState = viewModel.toolbarState.observeAsState().value,
-                                scrollState = scrollState,
-                                backgroundColor = backgroundColorComposable(),
-                                tintColor = MaterialTheme.customColors.fgPrimary,
-                                onNavClick = { debounceClickHandler.debounceClick(::onNavClicked) },
-                                onActionClick = viewModel::onAction,
-                                onMenuItemClick = viewModel::onMenuItem,
-                                onSearch = viewModel::onToolbarSearch,
-                            )
+                    Box(Modifier.fillMaxSize()) {
+                        NeonBackground(safe = useSafeAurora)
+                        Scaffold(
+                            scaffoldState = scaffoldState,
+                            backgroundColor = Color.Transparent,
+                            topBar = {
+                                Toolbar(
+                                    toolbarState = viewModel.toolbarState.observeAsState().value,
+                                    scrollState = scrollState,
+                                    backgroundColor = Color.Transparent,
+                                    tintColor = MaterialTheme.customColors.fgPrimary,
+                                    onNavClick = { debounceClickHandler.debounceClick(::onNavClicked) },
+                                    onActionClick = viewModel::onAction,
+                                    onMenuItemClick = viewModel::onMenuItem,
+                                    onSearch = viewModel::onToolbarSearch,
+                                )
+                            }
+                        ) { padding ->
+                            // Whether the selected account can sign on this phone, for every
+                            // screen this fragment hosts: the notice above a signing form, and the
+                            // state its action button reads.
+                            SelectedAccountSigningHost(
+                                source = selectedAccountSigningSource,
+                                explainsReadOnlyAccount = explainsReadOnlyAccount,
+                                onRepair = accountOptionsRouter::showAccountDetails,
+                                modifier = Modifier.padding(padding),
+                            ) {
+                                NavHost(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
+                                    navController = navController,
+                                    contentAlignment = Alignment.TopCenter,
+                                    startDestination = viewModel.startScreen(),
+                                ) {
+                                    content(scrollState, navController)
+                                }
+                            }
+                            AlertDialogContent(openAlertDialog)
+                            ConfirmDialogContent(openConfirmDialog)
                         }
-                    ) { padding ->
-                        NavHost(
-                            modifier = Modifier
-                                .padding(padding)
-                                .fillMaxSize(),
-                            navController = navController,
-                            contentAlignment = Alignment.TopCenter,
-                            startDestination = viewModel.startScreen(),
-                        ) {
-                            content(scrollState, navController)
-                        }
-                        AlertDialogContent(openAlertDialog)
                     }
                 }
             }
@@ -257,6 +295,8 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     open fun onNavClicked() {
         viewModel.onNavIcon()
     }
+
+    protected open val useSafeAurora: Boolean = false
 
     abstract fun NavGraphBuilder.content(scrollState: ScrollState, navController: NavHostController)
 

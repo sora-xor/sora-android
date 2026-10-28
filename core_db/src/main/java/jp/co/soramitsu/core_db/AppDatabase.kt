@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.core_db
@@ -40,6 +27,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.AutoMigrationSpec
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.core_db.converters.BigDecimalNullableConverter
 import jp.co.soramitsu.core_db.dao.AccountDao
 import jp.co.soramitsu.core_db.dao.AssetDao
@@ -48,6 +36,7 @@ import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.dao.NodeDao
 import jp.co.soramitsu.core_db.dao.PoolDao
 import jp.co.soramitsu.core_db.dao.ReferralsDao
+import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_63_64
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_65_66
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_66_67
@@ -57,6 +46,11 @@ import jp.co.soramitsu.core_db.migrations.migration_addBackupCardHub_72_73
 import jp.co.soramitsu.core_db.migrations.migration_addReferralCardHub_71_72
 import jp.co.soramitsu.core_db.migrations.migration_poolsBaseToken_61_62
 import jp.co.soramitsu.core_db.migrations.migration_reorderBaseToken_62_63
+import jp.co.soramitsu.core_db.migrations.migration_walletIdentity_73_74
+import jp.co.soramitsu.core_db.migrations.migration_walletDeletionJournal_74_75
+import jp.co.soramitsu.core_db.migrations.migration_pendingNetworkTransactionChain_76_77
+import jp.co.soramitsu.core_db.migrations.legacyCacheMigrationsTo58
+import jp.co.soramitsu.core_db.migrations.migration_sora2PendingSubmission_75_76
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.BasicPoolLocal
 import jp.co.soramitsu.core_db.model.CardHubLocal
@@ -68,10 +62,17 @@ import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.core_db.model.UserPoolLocal
+import jp.co.soramitsu.core_db.model.NetworkAccountLocal
+import jp.co.soramitsu.core_db.model.PendingNetworkTransactionLocal
+import jp.co.soramitsu.core_db.model.Sora2PendingSubmissionLocal
+import jp.co.soramitsu.core_db.model.WalletIdentityLocal
+import jp.co.soramitsu.core_db.model.WalletMigrationJournalLocal
+import jp.co.soramitsu.core_db.model.WalletDeletionOperationLocal
+import jp.co.soramitsu.core_db.model.WalletDeletionTargetLocal
 
 @TypeConverters(BigDecimalNullableConverter::class)
 @Database(
-    version = 73,
+    version = 77,
     entities = [
         AssetLocal::class,
         TokenLocal::class,
@@ -84,6 +85,13 @@ import jp.co.soramitsu.core_db.model.UserPoolLocal
         NodeLocal::class,
         CardHubLocal::class,
         GlobalCardHubLocal::class,
+        WalletIdentityLocal::class,
+        NetworkAccountLocal::class,
+        WalletMigrationJournalLocal::class,
+        PendingNetworkTransactionLocal::class,
+        Sora2PendingSubmissionLocal::class,
+        WalletDeletionOperationLocal::class,
+        WalletDeletionTargetLocal::class,
     ],
     exportSchema = true,
     autoMigrations = [
@@ -107,13 +115,28 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Builds a separate production-configured database handle (same file, migrations and
+         * upgrade gate) that is not the process singleton. Device tests use it to model an app
+         * restart; production code uses [get].
+         */
+        fun newInstance(context: Context): AppDatabase = buildDatabase(context)
+
         private fun buildDatabase(context: Context): AppDatabase {
+            if (
+                WalletUpgradeBackup.blockingFailure() == null &&
+                WalletRecoveryCapabilityGate.mode() ==
+                WalletRecoveryCapabilityGate.Mode.NORMAL
+            ) {
+                WalletUpgradeBackup.requirePrepared(context)
+            }
             return Room.databaseBuilder(
                 context.applicationContext,
                 AppDatabase::class.java,
                 "app.db"
             )
-                .fallbackToDestructiveMigrationFrom(*destructiveMigrationFromList)
+                .openHelperFactory(WalletUpgradeBackup.gatedOpenHelperFactory())
+                .addMigrations(*legacyCacheMigrationsTo58)
                 .addMigrations(migration_poolsBaseToken_61_62)
                 .addMigrations(migration_reorderBaseToken_62_63)
                 .addMigrations(migration_CardHub_63_64)
@@ -123,6 +146,10 @@ abstract class AppDatabase : RoomDatabase() {
                 .addMigrations(migration_PoolsTables_69_70)
                 .addMigrations(migration_addReferralCardHub_71_72)
                 .addMigrations(migration_addBackupCardHub_72_73)
+                .addMigrations(migration_walletIdentity_73_74)
+                .addMigrations(migration_walletDeletionJournal_74_75)
+                .addMigrations(migration_sora2PendingSubmission_75_76)
+                .addMigrations(migration_pendingNetworkTransactionChain_76_77)
                 .build()
         }
     }
@@ -141,6 +168,8 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun globalCardsHubDao(): GlobalCardsHubDao
 
+    abstract fun walletIdentityDao(): WalletIdentityDao
+
     @DeleteTable.Entries(
         DeleteTable(tableName = "extrinsics"),
         DeleteTable(tableName = "extrinsic_params")
@@ -157,5 +186,3 @@ abstract class AppDatabase : RoomDatabase() {
     )
     class AutoMigrationSpecTo71 : AutoMigrationSpec
 }
-
-private val destructiveMigrationFromList = IntArray(43) { i -> i + 15 }

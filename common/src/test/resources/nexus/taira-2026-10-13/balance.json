@@ -1,0 +1,48 @@
+{
+  "id": "wallet-public-read",
+  "jsonrpc": "2.0",
+  "result": {
+    "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+        "name": "iroha-torii-mcp",
+        "version": "2.0.0-rc.2.0"
+      }
+    },
+    "content": [
+      {
+        "text": "http 200",
+        "type": "text"
+      }
+    ],
+    "isError": false,
+    "resultType": "complete",
+    "structuredContent": {
+      "body": {
+        "items": [
+          {
+            "account_id": "testu\uff9b1N\uff7cXCe\uff71\uff88\uff81R\uff74U\uff80PW\uff8fV\uff71r\uff8bhESEbp\uff82\uff7e9V\uff975\uff87J\uff75avs\uff7726TMSNN",
+            "asset": "6TEAJqbb8oEPmLncoNiMRbLEK6tw",
+            "asset_alias": "xor#universal",
+            "asset_name": "XOR",
+            "quantity": "23.5",
+            "scope": "global"
+          }
+        ],
+        "next_cursor": null,
+        "total": 1
+      },
+      "content_type": "application/json; charset=utf-8",
+      "headers": {
+        "cache-control": "private, no-store",
+        "content-length": "265",
+        "content-type": "application/json; charset=utf-8",
+        "vary": "Accept",
+        "x-iroha-route-dataspace-id": "0",
+        "x-iroha-route-lane-id": "0",
+        "x-iroha-routed-by": "local",
+        "x-request-id": "47a46d252fbd2fc1bdfeb7a18218ac7f4d02de415ae1e0aac34d66cc0f1286de"
+      },
+      "status": 200
+    }
+  }
+}

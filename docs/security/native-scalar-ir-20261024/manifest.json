@@ -1,0 +1,77 @@
+{
+  "scope": "Rust 1.97.1 release optimization; scalar subtraction functions only; compiler-specific evidence, not a general constant-time proof",
+  "records": [
+    {
+      "target": "armv7-linux-androideabi",
+      "backend": "u64",
+      "completeIrSha256": "c4a2d95006b84c71acabf717d6e23444602a494cf4b60a00e3978a29f5431eeb",
+      "excerpt": "armv7-linux-androideabi-u64-sub.ll.txt",
+      "excerptSha256": "be357951f17cc2621b306fd2c53006d1a3e9341946197c0bc2ee79557664aaf8",
+      "volatileLoadCount": 15,
+      "branchInstructionCount": 0
+    },
+    {
+      "target": "armv7-linux-androideabi",
+      "backend": "u32",
+      "completeIrSha256": "b243e1059e4aef9e6499dae875807cc632ab8026c91fe1a975c1076984090d06",
+      "excerpt": "armv7-linux-androideabi-u32-sub.ll.txt",
+      "excerptSha256": "9db6f1bae7395e209b323723447c8d2bdc387991ec34d626ce6cd50062000af7",
+      "volatileLoadCount": 9,
+      "branchInstructionCount": 0
+    },
+    {
+      "target": "aarch64-linux-android",
+      "backend": "u64",
+      "completeIrSha256": "51154b36d6b9e8c03380e6a8c80d0f692626767234eabace7d5e7b410e1cdd4d",
+      "excerpt": "aarch64-linux-android-u64-sub.ll.txt",
+      "excerptSha256": "f356baa8435bc0a3ba6daba8425db26534f88614be6c7bc08abe21a178a6a4aa",
+      "volatileLoadCount": 15,
+      "branchInstructionCount": 0
+    },
+    {
+      "target": "aarch64-linux-android",
+      "backend": "u32",
+      "completeIrSha256": "44f8252ef8eefe94882ee72423773751e1161b2e18d69e91f8ca482d0e5b7b7a",
+      "excerpt": "aarch64-linux-android-u32-sub.ll.txt",
+      "excerptSha256": "53074070f30f1c716690f699dbc3c7d3567cc3b3b94e703bc18c4dbd2e790811",
+      "volatileLoadCount": 9,
+      "branchInstructionCount": 0
+    },
+    {
+      "target": "i686-linux-android",
+      "backend": "u32",
+      "completeIrSha256": "b52c08f22a0810cb133ff76ba17528cc1e22705a24dea79e35d9aebf3a37f014",
+      "excerpt": "i686-linux-android-u32-sub.ll.txt",
+      "excerptSha256": "332714662ffc0b575c7d165f2c2fe49170ae8cd6721fe40928d1b943eb762b6e",
+      "volatileLoadCount": 9,
+      "branchInstructionCount": 0
+    },
+    {
+      "target": "i686-linux-android",
+      "backend": "u64",
+      "completeIrSha256": "52b3a691941455d1cc81711c4c2cad4e1fc7d25f4dece6271583e421534a0c18",
+      "excerpt": "i686-linux-android-u64-sub.ll.txt",
+      "excerptSha256": "e3e830de9443c758a57864d53693a850df215779a118977443aa2096eb85c6e3",
+      "volatileLoadCount": 15,
+      "branchInstructionCount": 0
+    },
+    {
+      "target": "x86_64-linux-android",
+      "backend": "u64",
+      "completeIrSha256": "3ee02e49160022fdd08ed4d38d21a48b765d618ba6557cf2e25b73d2e950f076",
+      "excerpt": "x86_64-linux-android-u64-sub.ll.txt",
+      "excerptSha256": "60bc55e780399f5aec9f062f45e93262c897df4dc9cee970318b734ff9946781",
+      "volatileLoadCount": 15,
+      "branchInstructionCount": 0
+    },
+    {
+      "target": "x86_64-linux-android",
+      "backend": "u32",
+      "completeIrSha256": "417fde3b5a8308deb03aec6d01b1cacac21e0d9674bc388173453d10a1d2e497",
+      "excerpt": "x86_64-linux-android-u32-sub.ll.txt",
+      "excerptSha256": "6094d28a3ee23c76de2f00ccae2bb1e7c58b07e2371253bdfd40007f0bde9847",
+      "volatileLoadCount": 9,
+      "branchInstructionCount": 0
+    }
+  ]
+}

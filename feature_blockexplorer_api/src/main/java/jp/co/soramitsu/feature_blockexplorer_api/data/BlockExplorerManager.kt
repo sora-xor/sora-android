@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_blockexplorer_api.data
@@ -38,19 +25,13 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.format.toDoubleInfinite
-import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.domain.RetryStrategyBuilder
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.BlockExplorerRepository
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.Apy
-import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
-import jp.co.soramitsu.xnetworking.lib.engines.rest.api.models.RestClientException
-import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -60,14 +41,13 @@ fun String.toDoubleNan(): Double? = this.toDoubleOrNull()?.let {
 
 @Singleton
 class BlockExplorerManager @Inject constructor(
-    private val restClient: RestClient,
-    private val info: BlockExplorerRepository,
+    private val polkaswapIndexerClient: PolkaswapIndexerClient,
     private val db: AppDatabase,
     private val appStateProvider: AppStateProvider,
     private val soraConfigManager: SoraConfigManager,
 ) {
 
-    private val tempApy = mutableListOf<Apy>()
+    private val tempApy = mutableListOf<IndexerPoolApy>()
 
     private var assetsInfo: List<Pair<String, Double>>? = null
 
@@ -96,25 +76,13 @@ class BlockExplorerManager @Inject constructor(
             val resultList = mutableListOf<Pair<String, Double>>()
             val fiats = mutableListOf<FiatTokenPriceLocal>()
 
-            RetryStrategyBuilder.build().retryIf(
-                retries = 3,
-                predicate = { t ->
-                    t is RestClientException
-                },
-                block = {
-                    info.getAssetsInfo(
-                        soraConfigManager.getGenesis(),
-                        tokenIds,
-                        yesterdayHour.toInt(),
-                    )
-                },
-            ).forEach { assetInfo ->
+            polkaswapIndexerClient.getAssetsInfo(tokenIds).forEach { assetInfo ->
                 val dbValue = tokens.find { it.tokenIdFiat == assetInfo.id }
-                val prevPrice = assetInfo.previousPrice
+                val priceChangeDay = assetInfo.priceChangeDay
 
                 if (dbValue != null) {
                     fiats += dbValue.copy(
-                        fiatChange = prevPrice?.div(100.0),
+                        fiatChange = priceChangeDay?.div(100.0),
                         fiatPricePrevHTime = yesterdayHour,
                     )
                 }
@@ -123,7 +91,7 @@ class BlockExplorerManager @Inject constructor(
                     tokenId = dbValue?.tokenIdFiat ?: return@forEach
                 ) ?: return@forEach
 
-                val supply = assetInfo.liquidity.toBigIntegerOrNull()?.let {
+                val supply = assetInfo.liquidity?.toBigIntegerOrNull()?.let {
                     mapBalance(it, precision)
                 } ?: return@forEach
 
@@ -137,6 +105,7 @@ class BlockExplorerManager @Inject constructor(
             db.assetDao().insertFiatPrice(fiats)
             resultList
         }.getOrElse {
+            if (it is CancellationException) throw it
             FirebaseWrapper.recordException(it)
             emptyList()
         }
@@ -150,17 +119,19 @@ class BlockExplorerManager @Inject constructor(
         if (appStateProvider.isForeground) {
             runCatching {
                 updateFiatPrices(
-                    fiatData = info.getFiat(soraConfigManager.getGenesis()).map {
-                        FiatInfo(it.id, it.priceUSD.toDoubleNan())
+                    fiatData = polkaswapIndexerClient.getFiat().map {
+                        FiatInfo(it.id, it.priceUSD?.toDoubleNan())
                     }
                 )
+            }.onFailure {
+                if (it is CancellationException) throw it
             }
         }
     }
 
     suspend fun updateReferrerRewards(address: String) {
         runCatching {
-            val rewards = info.getReferralReward(soraConfigManager.getGenesis(), address).map {
+            val rewards = polkaswapIndexerClient.getReferralRewards(address).map {
                 ReferralLocal(it.referral, it.amount)
             }
 
@@ -169,24 +140,18 @@ class BlockExplorerManager @Inject constructor(
                 db.referralsDao().insertReferrals(rewards)
             }
         }.onFailure {
+            if (it is CancellationException) throw it
             FirebaseWrapper.recordException(it)
         }
     }
 
-    suspend fun getXorPerEurRatio(): Double? = runCatching {
-        restClient.get(
-            request = JsonGetRequest(
-                url = BuildConfigWrapper.soraCardEuroRateUrl,
-                responseDeserializer = SoraCoin.serializer()
-            )
-        ).price.toDoubleNan()
-    }.getOrNull()
-
     private suspend fun updateSbApyInternal() {
         runCatching {
-            val response = info.getApy(soraConfigManager.getGenesis())
+            val response = polkaswapIndexerClient.getPoolApys()
             tempApy.clear()
             tempApy.addAll(response)
+        }.onFailure {
+            if (it is CancellationException) throw it
         }
     }
 

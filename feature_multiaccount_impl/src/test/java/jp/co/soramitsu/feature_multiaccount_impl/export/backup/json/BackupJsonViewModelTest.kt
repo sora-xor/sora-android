@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_multiaccount_impl.export.backup.json
@@ -72,6 +59,9 @@ class BackupJsonViewModelTest {
     private lateinit var interactor: MultiaccountInteractor
 
     @Mock
+    private lateinit var resourceManager: jp.co.soramitsu.androidfoundation.resource.ResourceManager
+
+    @Mock
     private lateinit var uri: Uri
 
     private lateinit var viewModel: BackupJsonViewModel
@@ -90,7 +80,7 @@ class BackupJsonViewModelTest {
 
     @Before
     fun setUp() = runTest {
-        viewModel = BackupJsonViewModel(interactor, router, addresses)
+        viewModel = BackupJsonViewModel(interactor, router, resourceManager, addresses)
     }
 
     @Test
@@ -98,6 +88,61 @@ class BackupJsonViewModelTest {
         viewModel.backupJsonScreenState.value?.let {
             assertEquals(initialState, it)
         }
+    }
+
+    @Test
+    fun `an account that cannot be exported shows why instead of failing`() = runTest {
+        val refused = jp.co.soramitsu.common.domain.SoraException.businessError(
+            jp.co.soramitsu.common.domain.ResponseCode.ACCOUNT_KEYS_NOT_EXPORTABLE
+        )
+        org.mockito.kotlin.whenever(interactor.getJsonFileUri(addresses, "password"))
+            .thenThrow(refused)
+        viewModel.passwordInputChanged(TextFieldValue("password"))
+        viewModel.confirmationInputChanged(TextFieldValue("password"))
+
+        viewModel.downloadJsonClicked()
+        testScheduler.advanceUntilIdle()
+
+        // No file, and the message for an account whose stored keys cannot be used.
+        assertEquals(null, viewModel.jsonTextLiveData.value)
+        assertEquals(
+            R.string.export_json_keys_unusable_title to R.string.export_json_keys_unusable,
+            viewModel.errorFromResourceLiveData.value,
+        )
+    }
+
+    @Test
+    fun `accounts that cannot be exported with the others are named`() = runTest {
+        val longAddress = "cnTon6cV8Ze8ATHT1tZdHregCc3wBc8vfg7P5o2TtwdUoRf4m"
+        org.mockito.kotlin.whenever(interactor.getJsonFileUri(addresses, "password")).thenAnswer {
+            throw MultiaccountInteractor.AccountsNotExportableException(
+                listOf(
+                    jp.co.soramitsu.common.account.SoraAccount(longAddress, "Savings"),
+                    jp.co.soramitsu.common.account.SoraAccount("address2", ""),
+                )
+            )
+        }
+        org.mockito.kotlin.whenever(
+            resourceManager.getString(R.string.export_json_keys_unusable_named_title)
+        ).thenReturn("Some accounts can't be exported")
+        org.mockito.kotlin.whenever(
+            resourceManager.getString(R.string.export_json_keys_unusable_named)
+        ).thenReturn("These accounts can't be exported:\n%1\$s\nNo file was made.")
+        viewModel.passwordInputChanged(TextFieldValue("password"))
+        viewModel.confirmationInputChanged(TextFieldValue("password"))
+
+        viewModel.downloadJsonClicked()
+        testScheduler.advanceUntilIdle()
+
+        // No file. The message names each account that has to be left out: its name and
+        // enough of its address to tell it apart, or the address alone when it has no name.
+        assertEquals(null, viewModel.jsonTextLiveData.value)
+        assertEquals(
+            "Some accounts can't be exported" to
+                "These accounts can't be exported:\nSavings (cnTon6cV…wdUoRf4m)\naddress2\nNo file was made.",
+            viewModel.alertDialogLiveData.value,
+        )
+        assertEquals(false, viewModel.backupJsonScreenState.value?.loading)
     }
 
     @Test

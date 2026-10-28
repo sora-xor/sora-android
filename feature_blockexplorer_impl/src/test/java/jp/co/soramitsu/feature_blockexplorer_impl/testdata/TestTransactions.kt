@@ -2,38 +2,27 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_blockexplorer_impl.testdata
 
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryElement
+import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryItemParam
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
@@ -41,36 +30,37 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItem
-import jp.co.soramitsu.xnetworking.lib.datasources.txhistory.api.models.TxHistoryItemParam
 
 object TestTransactions {
-    val txHistoryItem = TxHistoryItem(
+    val txHistoryItem = IndexerHistoryElement(
         id = "0xb594da199715b4efd01aa59faa23607e68ce51ef5226dcfe2e17d436c58dd0d0",
         blockHash = "0x200335cb5a84a7d85b7d7a5ae8825c1a54b3aaf6c266fb977dcdd32774b5f560",
+        blockHeight = 100,
         module = "poolXYK",
         method = "depositLiquidity",
+        address = TestAccounts.soraAccount.substrateAddress,
         timestamp = "1675442934",
         networkFee = "70000000000000000",
         success = true,
+        executionKnown = true,
         data = listOf(
-            TxHistoryItemParam(
+            IndexerHistoryItemParam(
                 paramName = "baseAssetAmount",
                 paramValue = "0.009693118078249083"
             ),
-            TxHistoryItemParam(
+            IndexerHistoryItemParam(
                 paramName = "baseAssetId",
                 paramValue = "0x0200000000000000000000000000000000000000000000000000000000000000"
             ),
-            TxHistoryItemParam(
+            IndexerHistoryItemParam(
                 paramName = "targetAssetAmount",
                 paramValue = "4.365445441023082229"
             ),
-            TxHistoryItemParam(
+            IndexerHistoryItemParam(
                 paramName = "targetAssetId",
                 paramValue = "0x0200040000000000000000000000000000000000000000000000000000000000"
             ),
-            TxHistoryItemParam(
+            IndexerHistoryItemParam(
                 paramName = "type",
                 paramValue = "Deposit"
             )
@@ -95,7 +85,7 @@ object TestTransactions {
 
     val sendSuccessfulTx = Transaction.Transfer(
         TransactionBase(
-            "txHash",
+            "0x" + "9a".repeat(32),
             "blockHash",
             BigDecimal.ONE,
             TransactionStatus.COMMITTED,

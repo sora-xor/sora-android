@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.common.domain
@@ -116,9 +103,72 @@ enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.str
 
     ACCOUNT_ALREADY_IMPORTED(R.string.account_already_imported_description, R.string.account_already_imported),
 
+    /**
+     * The wallet is already on this phone and signs. No recovery phrase (or seed) was stored for
+     * it, so the one just entered, proven to re-derive it, was kept as its backup (add-only).
+     */
+    ACCOUNT_ALREADY_IMPORTED_BACKUP_SAVED(
+        R.string.account_already_imported_backup_saved,
+        R.string.account_already_imported,
+    ),
+
+    /**
+     * A PIN is stored on this phone but cannot be read, so a repair must be confirmed with the
+     * phone's screen lock. Nothing was changed.
+     */
+    REPAIR_NEEDS_SCREEN_LOCK(
+        R.string.account_repair_screen_lock_needed,
+        R.string.account_repair_copy_failed,
+    ),
+
+    /** Different keys are already stored for the imported address; nothing was written. */
+    ACCOUNT_STORAGE_CONFLICT(R.string.account_storage_conflict_description, R.string.account_storage_conflict),
+
+    /**
+     * The confirmed repair of an account could not keep a copy of the old values first (for
+     * example the phone is out of space), so nothing was changed.
+     */
+    ACCOUNT_REPAIR_COPY_FAILED(
+        R.string.account_repair_copy_failed_description,
+        R.string.account_repair_copy_failed,
+    ),
+
+    /** The text is not an encrypted sr25519 account export this app can read; nothing was written. */
+    JSON_BACKUP_INVALID(R.string.json_backup_invalid, R.string.json_backup_invalid_title),
+
+    /** The password does not open the encrypted JSON export; nothing was written. */
+    JSON_BACKUP_WRONG_PASSWORD(
+        R.string.json_backup_wrong_password,
+        R.string.json_backup_wrong_password_title,
+    ),
+
+    /**
+     * The encrypted JSON export was asked for an account whose stored key pair does not prove
+     * its address. No file is made: it would not be a backup of that account.
+     */
+    ACCOUNT_KEYS_NOT_EXPORTABLE(
+        R.string.export_json_keys_unusable,
+        R.string.export_json_keys_unusable_title,
+    ),
+
+    /** This phone cannot unlock the wallet data stored on it; nothing was written. */
+    WALLET_KEYS_UNAVAILABLE(
+        R.string.wallet_keys_unavailable_description,
+        R.string.wallet_keys_unavailable,
+    ),
+
     GOOGLE_LOGIN_FAILED(R.string.common_google_authorization_error),
 
     GOOGLE_BACKUP_DECRYPTION_FAILED(R.string.common_google_backup_decryption_failed_2),
+
+    /**
+     * A Google backup was opened, but what it holds cannot restore the account it names (for
+     * example its encrypted JSON is damaged or is of another account). Nothing was written.
+     */
+    GOOGLE_BACKUP_UNREADABLE(
+        R.string.google_backup_unreadable,
+        R.string.google_backup_unreadable_title,
+    ),
 
     NOW_BROWSER_FOUND(R.string.common_error_no_browser_error);
 

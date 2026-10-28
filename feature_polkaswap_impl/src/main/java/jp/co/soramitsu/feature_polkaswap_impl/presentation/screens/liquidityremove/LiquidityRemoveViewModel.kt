@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove
@@ -42,12 +29,17 @@ import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.nullZero
 import jp.co.soramitsu.androidfoundation.format.orZero
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
+import jp.co.soramitsu.common.presentation.transaction.badge
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
@@ -58,6 +50,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveConfirmState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveEstimatedState
@@ -70,6 +63,7 @@ import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -109,6 +103,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     private var token2Id = token2IdStart
 
     private companion object {
+        const val RESULT_BADGE_MILLIS = 700L
         const val ASSET_PRECISION = 8
     }
 
@@ -127,6 +122,15 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     private val amount1Flow = MutableStateFlow(BigDecimal.ZERO)
     private val amount2Flow = MutableStateFlow(BigDecimal.ZERO)
     private var percent: Double = 0.0
+
+    /**
+     * True from a tapped Confirm until it is known that nothing reached the network. The pool
+     * and the balances are read again with every block, and each of those updates rebuilds the
+     * buttons; without this the confirm button came back, tappable, in the middle of the wait
+     * for the result. Once a withdrawal has reached the network it stays true: this screen is
+     * then replaced by the transaction's page and sends nothing more.
+     */
+    private var confirmLocked = false
 
     var removeState by mutableStateOf(
         LiquidityRemoveState(
@@ -180,92 +184,103 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
             ),
         )
         viewModelScope.launch {
-            assetsInteractor.subscribeAssetsActiveOfCurAccount()
-                .catch { onError(it) }
-                .distinctUntilChanged()
-                .debounce(500)
-                .collectLatest { assets ->
-                    assetList.clear()
-                    assetList.addAll(assets)
-                    onAssetsActiveCollect()
-                }
+            // A failure while collecting must never leave viewModelScope uncaught.
+            tryCatch {
+                assetsInteractor.subscribeAssetsActiveOfCurAccount()
+                    .catch { onError(it) }
+                    .distinctUntilChanged()
+                    .debounce(500)
+                    .collectLatest { assets ->
+                        assetList.clear()
+                        assetList.addAll(assets)
+                        onAssetsActiveCollect()
+                    }
+            }
         }
         viewModelScope.launch {
-            poolsInteractor.subscribePoolCacheOfCurAccount(token1Id, token2Id)
-                .map {
-                    it?.let {
-                        CommonUserPoolData(
-                            it.basic,
-                            it.user!!,
-                        )
-                    }
-                }
-                .catch { onError(it) }
-                .distinctUntilChanged()
-                .debounce(500)
-                .map { poolDataLocal ->
-                    poolDataReal = poolDataLocal
-                    poolInFarming = false
-                    if (poolDataLocal != null) {
-                        val maxPercent = demeterFarmingInteractor.getFarmedPools()?.filter { pool ->
-                            pool.tokenBase.id == token1Id && pool.tokenTarget.id == token2Id
-                        }?.maxOfOrNull {
-                            PolkaswapFormulas.calculateShareOfPoolFromAmount(
-                                it.amount,
-                                poolDataLocal.user.poolProvidersBalance,
+            // A failure while collecting must never leave viewModelScope uncaught.
+            tryCatch {
+                poolsInteractor.subscribePoolCacheOfCurAccount(token1Id, token2Id)
+                    .map {
+                        it?.let {
+                            CommonUserPoolData(
+                                it.basic,
+                                it.user!!,
                             )
                         }
-                        userPoolDataFixDemeter(poolDataLocal, maxPercent)
-                    } else {
-                        null
                     }
-                }
-                .collectLatest(::onPoolCollect)
+                    .catch { onError(it) }
+                    .distinctUntilChanged()
+                    .debounce(500)
+                    .map { poolDataLocal ->
+                        poolDataReal = poolDataLocal
+                        poolInFarming = false
+                        if (poolDataLocal != null) {
+                            val maxPercent = demeterFarmingInteractor.getFarmedPools()?.filter { pool ->
+                                pool.tokenBase.id == token1Id && pool.tokenTarget.id == token2Id
+                            }?.maxOfOrNull {
+                                PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                                    it.amount,
+                                    poolDataLocal.user.poolProvidersBalance,
+                                )
+                            }
+                            userPoolDataFixDemeter(poolDataLocal, maxPercent)
+                        } else {
+                            null
+                        }
+                    }
+                    .collectLatest(::onPoolCollect)
+            }
         }
         viewModelScope.launch {
             amount1Flow
                 .debounce(ViewHelper.debounce)
                 .onEach { amount ->
-                    val pdu = poolDataUsable
-                    if (pdu != null) {
-                        amount1 = if (amount <= pdu.user.basePooled) amount else pdu.user.basePooled
-                        amount2 = PolkaswapFormulas.calculateOneAmountFromAnother(
-                            amount1,
-                            pdu.user.basePooled,
-                            pdu.user.targetPooled,
-                            removeState.assetState2?.token?.precision,
-                        )
-                        percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
-                            amount1,
-                            pdu.user.basePooled,
-                        )
-                        reCalcDetails()
+                    // A failure while recalculating must never leave viewModelScope uncaught.
+                    guarded {
+                        val pdu = poolDataUsable
+                        if (pdu != null) {
+                            amount1 = if (amount <= pdu.user.basePooled) amount else pdu.user.basePooled
+                            amount2 = PolkaswapFormulas.calculateOneAmountFromAnother(
+                                amount1,
+                                pdu.user.basePooled,
+                                pdu.user.targetPooled,
+                                removeState.assetState2?.token?.precision,
+                            )
+                            percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                                amount1,
+                                pdu.user.basePooled,
+                            )
+                            reCalcDetails()
+                        }
                     }
                 }.filter {
                     removeState.assetState1?.token?.id == SubstrateOptionsProvider.feeAssetId
                 }.onEach {
-                    updateTransactionReminderWarningVisibility()
+                    guarded { updateTransactionReminderWarningVisibility() }
                 }.collect()
         }
         viewModelScope.launch {
             amount2Flow
                 .debounce(ViewHelper.debounce)
                 .collectLatest { amount ->
-                    poolDataUsable?.let {
-                        amount2 =
-                            if (amount <= it.user.targetPooled) amount else it.user.targetPooled
-                        amount1 =
-                            PolkaswapFormulas.calculateOneAmountFromAnother(
-                                amount2,
-                                it.user.targetPooled,
+                    guarded {
+                        poolDataUsable?.let {
+                            amount2 =
+                                if (amount <= it.user.targetPooled) amount else it.user.targetPooled
+                            amount1 =
+                                PolkaswapFormulas.calculateOneAmountFromAnother(
+                                    amount2,
+                                    it.user.targetPooled,
+                                    it.user.basePooled,
+                                    removeState.assetState1?.token?.precision
+                                )
+                            percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                                amount1,
                                 it.user.basePooled,
-                                removeState.assetState1?.token?.precision
                             )
-                        percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
-                            amount1,
-                            it.user.basePooled,
-                        )
-                        reCalcDetails()
+                            reCalcDetails()
+                        }
                     }
                 }
         }
@@ -299,14 +314,32 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
         }
     }
 
+    private fun onFeeUnavailable(error: Throwable) {
+        onError(error)
+        showFeesUnavailable(
+            resourceManager = resourceManager,
+            error = error,
+            onClose = { _navigationPop.trigger() },
+            onRetry = { viewModelScope.launch { tryCatch { onAssetsActiveCollect() } } },
+        )
+    }
+
     private suspend fun onAssetsActiveCollect() {
         val asset1 = assetList.first { it.token.id == token1Id }
         val asset2 = assetList.first { it.token.id == token2Id }
         if (networkFee == null) {
-            networkFee = poolsInteractor.fetchRemoveLiquidityNetworkFee(
-                asset1.token,
-                asset2.token,
-            )
+            // Asked from the SORA network; while it cannot be reached the user is told so.
+            networkFee = try {
+                poolsInteractor.fetchRemoveLiquidityNetworkFee(
+                    asset1.token,
+                    asset2.token,
+                )
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (t: Throwable) {
+                onFeeUnavailable(t)
+                return
+            }
         }
         if (removeState.assetState1 == null) {
             removeState = removeState.copy(
@@ -403,30 +436,31 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
 
     fun onPercentClick(prc: Int) {
         viewModelScope.launch {
-            poolDataUsable?.let { poolData ->
-                removeState.assetState1?.let { asset1 ->
-                    removeState.assetState2?.let { asset2 ->
-                        percent = prc.toDouble()
-                        if (percent == 100.0) {
-                            amount1 = poolData.user.basePooled
-                            amount2 = poolData.user.targetPooled
-                        } else {
-                            amount1 = PolkaswapFormulas.calculateAmountByPercentage(
-                                poolData.user.basePooled,
-                                percent,
-                                asset1.token.precision,
-                            )
-                            amount2 = PolkaswapFormulas.calculateAmountByPercentage(
-                                poolData.user.targetPooled,
-                                percent,
-                                asset2.token.precision,
-                            )
-                        }
-                        reCalcDetails()
-                    }
-                }
-            }
+            guarded { applyPercent(prc) }
         }
+    }
+
+    private suspend fun applyPercent(prc: Int) {
+        val poolData = poolDataUsable ?: return
+        val asset1 = removeState.assetState1 ?: return
+        val asset2 = removeState.assetState2 ?: return
+        percent = prc.toDouble()
+        if (percent == 100.0) {
+            amount1 = poolData.user.basePooled
+            amount2 = poolData.user.targetPooled
+        } else {
+            amount1 = PolkaswapFormulas.calculateAmountByPercentage(
+                poolData.user.basePooled,
+                percent,
+                asset1.token.precision,
+            )
+            amount2 = PolkaswapFormulas.calculateAmountByPercentage(
+                poolData.user.targetPooled,
+                percent,
+                asset2.token.precision,
+            )
+        }
+        reCalcDetails()
     }
 
     fun onSlippageClick() {
@@ -490,6 +524,8 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     }
 
     fun onReviewClick() {
+        // Nothing new is reviewed while a Confirm is on its way or its result waits to be shown.
+        if (confirmLocked || resultHeld) return
         removeState.assetState1?.token?.let {
             removeState.assetState2?.token?.let {
                 removeState = removeState.copy(
@@ -507,72 +543,132 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
         }
     }
 
-    fun onConfirmClick() {
-        viewModelScope.launch {
-            removeState.assetState1?.let { fromToken ->
-                removeState.assetState2?.let { toToken ->
-                    poolDataUsable?.let { poolData ->
-                        val firstAmountMin =
-                            PolkaswapFormulas.calculateMinAmount(
-                                fromToken.amount.orZero(),
-                                removeState.slippage
-                            )
-                        val secondAmountMin =
-                            PolkaswapFormulas.calculateMinAmount(
-                                toToken.amount.orZero(),
-                                removeState.slippage
-                            )
-                        val desired =
-                            if (percent == 100.0) poolData.user.poolProvidersBalance else PolkaswapFormulas.calculateAmountByPercentage(
-                                poolData.user.poolProvidersBalance,
-                                percent,
-                                poolData.basic.baseToken.precision
-                            )
+    fun onConfirmClick() = confirmRemoveLiquidity(confirmedDuplicate = false)
 
-                        removeState = removeState.copy(
-                            confirm = removeState.confirm.copy(
-                                btnState = removeState.confirm.btnState.copy(
-                                    enabled = false,
-                                    loading = true,
-                                )
-                            )
-                        )
-                        var result = ""
-                        try {
-                            result = poolsInteractor.removeLiquidity(
-                                fromToken.token,
-                                toToken.token,
-                                desired,
-                                firstAmountMin,
-                                secondAmountMin,
-                                networkFee.orZero(),
-                            )
-                        } catch (t: Throwable) {
-                            onError(t)
-                        } finally {
-                            removeState = removeState.copy(
-                                confirm = removeState.confirm.copy(
-                                    btnState = removeState.confirm.btnState.copy(
-                                        enabled = false,
-                                        loading = false,
-                                    ),
-                                    confirmResult = result.isNotEmpty()
-                                )
-                            )
-                            delay(500)
-                            removeState = removeState.copy(
-                                confirm = removeState.confirm.copy(
-                                    confirmResult = null
-                                )
-                            )
-                            if (result.isNotEmpty())
-                                assetsRouter.showTxDetails(result, true)
-                            else router.returnToHubFragment()
-                        }
-                    }
+    /**
+     * Sends the reviewed withdrawal and shows exactly what is known afterwards. A transaction
+     * that reached the network (confirmed, failed on chain, or still waiting) opens its
+     * transaction page, which carries the status and follows it. One that did not reach the
+     * network is explained in a dialog and this screen stays with Confirm available again.
+     *
+     * The result arrives after a wait of up to two minutes, so the app can be in the background
+     * or behind the PIN lock by then. The dialogs are delivered when the screen is shown again;
+     * the transaction page opens when it is in front (see [openTransactionPage]). Until then
+     * the result mark stays on the confirm screen and Confirm stays off.
+     */
+    private fun confirmRemoveLiquidity(confirmedDuplicate: Boolean) {
+        // A Confirm is on its way, or a withdrawal of this screen reached the network and its
+        // page has not opened yet.
+        if (confirmLocked || resultHeld) return
+        // Nothing is sent while the button is shown off or busy (a second tap of the same Confirm).
+        val confirmButton = removeState.confirm.btnState
+        if (!confirmButton.enabled || confirmButton.loading) return
+        val fromToken = removeState.assetState1 ?: return
+        val toToken = removeState.assetState2 ?: return
+        val poolData = poolDataUsable ?: return
+        val firstAmountMin =
+            PolkaswapFormulas.calculateMinAmount(
+                fromToken.amount.orZero(),
+                removeState.slippage
+            )
+        val secondAmountMin =
+            PolkaswapFormulas.calculateMinAmount(
+                toToken.amount.orZero(),
+                removeState.slippage
+            )
+        val desired =
+            if (percent == 100.0) poolData.user.poolProvidersBalance else PolkaswapFormulas.calculateAmountByPercentage(
+                poolData.user.poolProvidersBalance,
+                percent,
+                poolData.basic.baseToken.precision
+            )
+
+        // Locked and shown busy before the coroutine starts, so a second tap is ignored
+        // whichever dispatcher runs it.
+        confirmLocked = true
+        setConfirmButton(enabled = false, loading = true)
+        viewModelScope.launch {
+            var outcome: TransactionOutcome? = null
+            var notSent: Throwable? = null
+            try {
+                outcome = poolsInteractor.removeLiquidity(
+                    fromToken.token,
+                    toToken.token,
+                    desired,
+                    firstAmountMin,
+                    secondAmountMin,
+                    networkFee.orZero(),
+                    confirmedDuplicate,
+                )
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: DuplicateWaitingTransactionException) {
+                confirmLocked = false
+                setConfirmButton(enabled = true, loading = false)
+                askBeforeSendingAgain(resourceManager) {
+                    confirmRemoveLiquidity(confirmedDuplicate = true)
+                }
+                return@launch
+            } catch (t: Throwable) {
+                notSent = t
+            }
+            removeState = removeState.copy(
+                confirm = removeState.confirm.copy(
+                    btnState = removeState.confirm.btnState.copy(
+                        enabled = false,
+                        loading = false,
+                    ),
+                    confirmResult = outcome?.badge() ?: TransactionResultBadge.NOT_SENT,
+                )
+            )
+            delay(RESULT_BADGE_MILLIS)
+            when (outcome) {
+                is TransactionOutcome.Confirmed,
+                is TransactionOutcome.Waiting,
+                is TransactionOutcome.FailedOnChain ->
+                    // The result mark stays until the page has taken this screen's place.
+                    openTransactionPage(outcome.txHash)
+                is TransactionOutcome.RefusedByNode -> {
+                    confirmLocked = false
+                    clearResultMark()
+                    setConfirmButton(enabled = true, loading = false)
+                    showTransactionRefused(resourceManager, outcome)
+                }
+                null -> {
+                    confirmLocked = false
+                    clearResultMark()
+                    setConfirmButton(enabled = true, loading = false)
+                    showTransactionNotSent(resourceManager, checkNotNull(notSent))
                 }
             }
         }
+    }
+
+    /**
+     * Opens the withdrawal's transaction page in place of this screen, only while this screen is
+     * in front. A result that arrives while the app is in the background, or while the PIN lock
+     * is on top, is held and the page opens on the next resume; nothing is navigated before
+     * that.
+     */
+    private fun openTransactionPage(txHash: String) = showWhenInFront {
+        assetsRouter.showTxResult(txHash, TransactionScreen.REMOVE_LIQUIDITY)
+    }
+
+    private fun clearResultMark() {
+        removeState = removeState.copy(
+            confirm = removeState.confirm.copy(confirmResult = null)
+        )
+    }
+
+    private fun setConfirmButton(enabled: Boolean, loading: Boolean) {
+        removeState = removeState.copy(
+            confirm = removeState.confirm.copy(
+                btnState = removeState.confirm.btnState.copy(
+                    enabled = enabled,
+                    loading = loading,
+                )
+            )
+        )
     }
 
     private suspend fun reCalcDetails() {
@@ -694,10 +790,18 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                     enabled = enabled,
                 ),
                 confirm = removeState.confirm.copy(
-                    btnState = removeState.btnState.copy(
-                        text = text ?: resourceManager.getString(R.string.common_confirm),
-                        enabled = enabled,
-                    ),
+                    btnState = if (confirmLocked) {
+                        // A pool or balance update must not bring Confirm back while a tapped
+                        // Confirm is on its way or its result waits to be shown.
+                        removeState.confirm.btnState.copy(enabled = false)
+                    } else {
+                        // The confirm button keeps its own state; only its text and whether
+                        // the amounts allow it follow the screen's checks.
+                        removeState.confirm.btnState.copy(
+                            text = text ?: resourceManager.getString(R.string.common_confirm),
+                            enabled = enabled,
+                        )
+                    },
                 )
             )
         }

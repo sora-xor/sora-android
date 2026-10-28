@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details
@@ -59,8 +46,9 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateBackupPasswordState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountDetailsScreenState
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ReadOnlyAccountUi
 import jp.co.soramitsu.ui_core.component.input.InputTextState
-import jp.co.soramitsu.xbackup.BackupService
+import jp.co.soramitsu.common.backup.CloudBackupProvider
 import jp.co.soramitsu.xbackup.domain.exceptions.AuthConsentException
 import jp.co.soramitsu.xbackup.domain.exceptions.FileNotFoundException
 import jp.co.soramitsu.xbackup.domain.exceptions.StorageQuotaExceeded
@@ -70,9 +58,12 @@ import jp.co.soramitsu.xbackup.domain.models.DecryptedBackupAccount
 import jp.co.soramitsu.xbackup.domain.models.Json
 import jp.co.soramitsu.xbackup.domain.models.Seed
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -81,10 +72,18 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val router: MainRouter,
     private val resourceManager: ResourceManager,
     private val clipboardManager: BasicClipboardManager,
-    private val backupService: BackupService,
+    private val cloudBackupProvider: CloudBackupProvider,
     private val coroutineManager: CoroutineManager,
     @Assisted("address") private val address: String,
 ) : BaseViewModel() {
+
+    private val backupService get() = requireNotNull(cloudBackupProvider.serviceOrNull())
+
+    private fun requireCloudBackup(): Boolean {
+        if (cloudBackupProvider.isAvailable) return true
+        onError(jp.co.soramitsu.common.R.string.wallet_cloud_backup_unavailable)
+        return false
+    }
 
     @AssistedFactory
     interface AccountDetailsViewModelFactory {
@@ -100,6 +99,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
             false,
             false,
             "",
+            isCloudBackupAvailable = cloudBackupProvider.isAvailable,
         )
     )
     val accountDetailsScreenState: LiveData<AccountDetailsScreenState> = _accountDetailsScreenState
@@ -113,6 +113,18 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val _consentExceptionHandler = SingleLiveEvent<Intent>()
     val consentExceptionHandler: LiveData<Intent> = _consentExceptionHandler
 
+    /**
+     * How the person chose to restore a read-only account's keys in place. [CHOOSE_SOURCE]
+     * opens Import account at its list of sources, for an account whose backup is a raw seed or
+     * a backup file.
+     */
+    enum class RestoreKeys { WITH_PHRASE, CHOOSE_SOURCE, FROM_GOOGLE }
+
+    private val _restoreKeysEvent = SingleLiveEvent<RestoreKeys>()
+
+    /** Opens Import account at the chosen step; the import repairs this account in place. */
+    val restoreKeysEvent: LiveData<RestoreKeys> = _restoreKeysEvent
+
     private val changeNameFlow = MutableStateFlow("")
     private var account: SoraAccount? = null
     private var isFromAuthorization = false
@@ -123,15 +135,30 @@ class AccountDetailsViewModel @AssistedInject constructor(
         )
         viewModelScope.launch {
             val isAccountBackedUp = try {
-                backupService.isAccountBackedUp(address)
+                cloudBackupProvider.serviceOrNull()?.isAccountBackedUp(address)
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
                 null
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                onError(R.string.wallet_cloud_backup_failed)
+                null
             }
 
-            account = interactor.getSoraAccount(address)
+            // Reading the account and judging its stored phrase goes through the Keystore. A
+            // failure there (a Keystore that stays busy) is reported like any other; the screen
+            // stays, without the Passphrase entry, and opening it again reads again.
+            val isMnemonicAvailable = try {
+                account = interactor.getSoraAccount(address)
+                account?.let { interactor.getMnemonic(it).isNotEmpty() } ?: false
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                onError(e)
+                false
+            }
             account?.let { account ->
-                val isMnemonicAvailable = interactor.getMnemonic(account).isNotEmpty()
                 _accountDetailsScreenState.value = AccountDetailsScreenState(
                     InputTextState(
                         value = TextFieldValue(account.accountName),
@@ -142,14 +169,30 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     false,
                     isBackupAvailable = isAccountBackedUp,
                     address,
+                    isCloudBackupAvailable = cloudBackupProvider.isAvailable,
+                    readOnly = _accountDetailsScreenState.value?.readOnly,
                 )
             }
         }
 
         viewModelScope.launch {
+            // Whether this account can sign is followed, so the panel disappears as soon as its
+            // keys are restored. A failed read shows no panel; nothing depends on it.
+            interactor.flowUnavailableWalletIds()
+                .map { address in it }
+                .distinctUntilChanged()
+                .catch { emit(false) }
+                .collectLatest { readOnly ->
+                    val panel = if (readOnly) readOnlyPanel() else null
+                    _accountDetailsScreenState.value =
+                        _accountDetailsScreenState.value?.copy(readOnly = panel)
+                }
+        }
+
+        viewModelScope.launch {
             changeNameFlow
-                .debounce(500)
                 .drop(1)
+                .debounce(500)
                 .collectLatest {
                     if (it.toByteArray().size <= OptionsProvider.nameByteLimit) {
                         interactor.updateName(address, it)
@@ -159,6 +202,59 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     override fun startScreen(): String = AccountDetailsRoutes.ACCOUNT_DETAILS
+
+    /**
+     * What a read-only account's panel offers, from `UserRepository.unavailableWalletOptions`.
+     * Null when the account signs, or when the options cannot be read right now (the label on
+     * the other screens still says that it cannot send).
+     */
+    private suspend fun readOnlyPanel(): ReadOnlyAccountUi? = try {
+        interactor.unavailableWalletOptions(address)?.let { options ->
+            ReadOnlyAccountUi(
+                reason = options.reason,
+                canRestoreWithPhrase = options.canRepairWithPhrase,
+                canRestoreFromGoogle = options.canRepairWithPhrase && cloudBackupProvider.isAvailable,
+                canShowBackup = options.canShowPhraseAfterPin,
+                canRemove = options.canRemoveAndImport,
+            )
+        }
+    } catch (error: kotlinx.coroutines.CancellationException) {
+        throw error
+    } catch (error: Throwable) {
+        onError(error)
+        null
+    }
+
+    /** "Restore keys with recovery phrase": Import account, where the phrase repairs in place. */
+    fun onRestoreKeysWithPhrase() {
+        if (_accountDetailsScreenState.value?.readOnly?.canRestoreWithPhrase != true) return
+        _restoreKeysEvent.value = RestoreKeys.WITH_PHRASE
+    }
+
+    /**
+     * "Use a raw seed or backup file": Import account with its list of sources. The same
+     * import repairs this account in place, whichever source proves it.
+     */
+    fun onRestoreKeysAnotherWay() {
+        if (_accountDetailsScreenState.value?.readOnly?.canRestoreWithPhrase != true) return
+        _restoreKeysEvent.value = RestoreKeys.CHOOSE_SOURCE
+    }
+
+    /** "Restore from Google Drive": Import account, Google, where its backup repairs in place. */
+    fun onRestoreKeysFromGoogle() {
+        if (_accountDetailsScreenState.value?.readOnly?.canRestoreFromGoogle != true) return
+        _restoreKeysEvent.value = RestoreKeys.FROM_GOOGLE
+    }
+
+    /**
+     * "Show the backup saved on this phone": the Passphrase or Raw seed screen, after the PIN.
+     * Those screens show only material that re-derives this account, or say that none does.
+     */
+    fun onShowSavedBackup() {
+        val state = _accountDetailsScreenState.value ?: return
+        if (state.readOnly?.canShowBackup != true) return
+        if (state.isMnemonicAvailable) onShowPassphrase() else onShowRawSeed()
+    }
 
     fun onNameChange(textValue: TextFieldValue) {
         _accountDetailsScreenState.value?.let {
@@ -271,18 +367,44 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onBackupPasswordClicked() {
+        if (!requireCloudBackup()) return
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
             viewModelScope.launch(coroutineManager.io) {
                 try {
                     _accountDetailsScreenState.value?.let { accountDetailsScreenState ->
                         account?.let { account ->
+                            // Only a phrase or seed that re-derives this account goes into the
+                            // backup, next to the encrypted JSON of the stored key pair. An
+                            // account whose stored key signs but has no matching phrase or seed
+                            // is backed up as that JSON alone; restoring from Google reads it
+                            // back (OnboardingViewModel.backupSecret). An account that cannot
+                            // sign has nothing here that would restore it, so no backup is made
+                            // and the person is told how to get the account working again.
+                            val material = interactor.getBackupMaterial(account)
+                            if (material.onlyJsonExport && !material.canSign) {
+                                withContext(coroutineManager.main) {
+                                    _createBackupPasswordState.value =
+                                        createBackupPasswordState.copy(isLoading = false)
+                                    onError(
+                                        jp.co.soramitsu.common.R.string.backup_no_matching_secret_read_only
+                                    )
+                                }
+                                return@launch
+                            }
                             val passphrase =
                                 interactor.getMnemonic(accountDetailsScreenState.address)
-                            val jsonString = interactor.generateSubstrateJsonString(
-                                listOf(account),
-                                createBackupPasswordState.password.value.text
-                            )
+                            // The JSON form is added when the stored key pair is proven. A
+                            // read-only account with a matching phrase or seed is still backed
+                            // up, from that phrase or seed alone.
+                            val jsonString = if (material.canSign) {
+                                interactor.generateSubstrateJsonString(
+                                    listOf(account),
+                                    createBackupPasswordState.password.value.text
+                                )
+                            } else {
+                                ""
+                            }
 
                             val seed = Seed(
                                 substrateSeed = interactor.getSeed(accountDetailsScreenState.address)
@@ -348,7 +470,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     fun onBackupClicked(
         launcher: ActivityResultLauncher<Intent>?
     ) {
-        if (launcher == null) return
+        if (launcher == null || !requireCloudBackup()) return
 
         startBackup()
         viewModelScope.launch {
@@ -379,11 +501,18 @@ class AccountDetailsViewModel @AssistedInject constructor(
             } catch (e: AuthConsentException) {
                 isFromAuthorization = true
                 _consentExceptionHandler.value = e.intent
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                onError(R.string.wallet_cloud_backup_failed)
+            } finally {
+                _accountDetailsScreenState.value = _accountDetailsScreenState.value?.copy(isBackupLoading = false)
             }
         }
     }
 
     fun deleteGoogleBackup() {
+        if (!requireCloudBackup()) return
         _deleteDialogState.value = false
 
         viewModelScope.launch {
@@ -427,6 +556,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onSuccessfulGoogleSignin() {
+        if (!requireCloudBackup()) return
         viewModelScope.launch {
             try {
                 _accountDetailsScreenState.value?.let {

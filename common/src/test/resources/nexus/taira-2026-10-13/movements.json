@@ -1,0 +1,38 @@
+{
+  "id": "wallet-history-read",
+  "jsonrpc": "2.0",
+  "result": {
+    "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+        "name": "iroha-torii-mcp",
+        "version": "2.0.0-rc.2.0"
+      }
+    },
+    "content": [
+      {
+        "text": "http 200",
+        "type": "text"
+      }
+    ],
+    "isError": false,
+    "resultType": "complete",
+    "structuredContent": {
+      "body": {
+        "items": [],
+        "next_cursor": null
+      },
+      "content_type": "application/json; charset=utf-8",
+      "headers": {
+        "cache-control": "private, no-store",
+        "content-length": "31",
+        "content-type": "application/json; charset=utf-8",
+        "vary": "Accept",
+        "x-iroha-route-dataspace-id": "0",
+        "x-iroha-route-lane-id": "0",
+        "x-iroha-routed-by": "local",
+        "x-request-id": "32ab97c43fff99f6195bdecfc1efaf58ac5aab88f944b6e79997db1c1aec51cb"
+      },
+      "status": 200
+    }
+  }
+}

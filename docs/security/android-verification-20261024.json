@@ -1,0 +1,119 @@
+{
+  "observedAtUtc": "2026-10-23T17:30:03.668896+00:00",
+  "jvmTests": [
+    {
+      "module": "common",
+      "tests": 47,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "lastResultUtc": "2026-10-23T17:17:30.229079+00:00",
+      "results": [
+        {
+          "path": "common/build/test-results/testDevelopDebugUnitTest/TEST-jp.co.soramitsu.common.network.StrictJsonDocumentAdmissionTest.xml",
+          "sha256": "b8041b69e8365060eaba3493a83f636129cb10cadd1df5886d1b1b08da20a0b6"
+        },
+        {
+          "path": "common/build/test-results/testDevelopDebugUnitTest/TEST-jp.co.soramitsu.common.logger.FirebaseWrapperTest.xml",
+          "sha256": "99240cc05dc49c1c47b45831605991dcd53ffc1dd30d102375d972d578f6e1e4"
+        },
+        {
+          "path": "common/build/test-results/testDevelopDebugUnitTest/TEST-jp.co.soramitsu.common.network.BoundedHttpTextClientTest.xml",
+          "sha256": "afc7888536088bb0df08627242cf8c4a448252767d15f0bd282a7b6c7ecde941"
+        },
+        {
+          "path": "common/build/test-results/testDevelopDebugUnitTest/TEST-jp.co.soramitsu.common.util.XcryptoSecurityCompatibilityTest.xml",
+          "sha256": "7e1f44beac982aa74b37a3954be28f72de929ab97624a536d2cc83319e246375"
+        },
+        {
+          "path": "common/build/test-results/testDevelopDebugUnitTest/TEST-jp.co.soramitsu.common.nexus.IrohaKeyDerivationTest.xml",
+          "sha256": "56c6ed49f237168ec51d8005ebc60f77ffd14e5d3031d9ecacef6e54bfcf52ab"
+        },
+        {
+          "path": "common/build/test-results/testDevelopDebugUnitTest/TEST-jp.co.soramitsu.common.util.BouncyCastleKycCompatibilityTest.xml",
+          "sha256": "e4c592d8fc82aaa0cdc112f60350494bf16ba6794fe0ce46ef87d9cb2ded9e8a"
+        },
+        {
+          "path": "common/build/test-results/testDevelopDebugUnitTest/TEST-jp.co.soramitsu.common.backup.CloudBackupProviderTest.xml",
+          "sha256": "97c79d4d2ee01e175924d927756a8d31865f36a88f986c89d0d0fa8815f4feb4"
+        },
+        {
+          "path": "common/build/test-results/testDevelopDebugUnitTest/TEST-jp.co.soramitsu.common.util.XcryptoHashCompatibilityTest.xml",
+          "sha256": "816efbe4ef6fa869bec677617156aebf54efa56dd23f5b7f0a24a9c30e595786"
+        }
+      ]
+    },
+    {
+      "module": "feature_account_impl",
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "lastResultUtc": "2026-10-23T17:29:24.608248+00:00",
+      "results": [
+        {
+          "path": "feature_account_impl/build/test-results/testDevelopDebugUnitTest/TEST-jp.co.soramitsu.feature_account_impl.data.repository.CredentialsRepositoryTest.xml",
+          "sha256": "dbe5d6a98d7b301dfe92fb73b904d506645c6cb4a5a0c7fe9590dc6c9a6fd602"
+        }
+      ]
+    },
+    {
+      "module": "feature_blockexplorer_api",
+      "tests": 76,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "lastResultUtc": "2026-10-23T17:21:19.062123+00:00",
+      "results": [
+        {
+          "path": "feature_blockexplorer_api/build/test-results/testDevelopDebugUnitTest/TEST-jp.co.soramitsu.feature_blockexplorer_api.data.PolkaswapIndexerClientTest.xml",
+          "sha256": "69ccc180e2432ed9654da4c1e48eb48972ddb3e068e04343d7ea1b7088032179"
+        }
+      ]
+    }
+  ],
+  "totalJVMTests": 141,
+  "onlineBuild": {
+    "result": "BUILD SUCCESSFUL",
+    "duration": "16m 52s",
+    "tasks": 747,
+    "executed": 91,
+    "log": "/tmp/android-native-security-app-build-20261024.log",
+    "scope": "Final source fork, write locks/checksums, selected JVM tests, DevelopDebug app compile/main and instrumentation APKs"
+  },
+  "offlineBuild": {
+    "result": "BUILD SUCCESSFUL",
+    "duration": "1m 53s",
+    "tasks": 377,
+    "executed": 2,
+    "resolvedProductionConfigurations": 565,
+    "log": "/tmp/android-native-security-offline-20261024.log",
+    "scope": "Final strict offline resolution, repeated app Kotlin compile and explicit per-task --rerun of credential tests, no lock/checksum writes"
+  },
+  "nativeTests": {
+    "passed": 4,
+    "backends": [
+      "u64",
+      "u32"
+    ],
+    "unpatchedRandControlCallbacks": 7,
+    "patchedRandCallbacks": 0
+  },
+  "deviceTests": {
+    "apiLevel": 34,
+    "abi": "arm64-v8a",
+    "freshEmulator": true,
+    "testClass": "jp.co.soramitsu.sora.ux.CryptoSecurityCompatibilityTest",
+    "testCount": 2,
+    "failures": 0,
+    "result": "OK (2 tests)",
+    "durationSeconds": 0.853,
+    "testApkSha256": "ee3fc6051714a6b6974d3e79981473e790f40140357008fb6133f0e24992dd5b",
+    "output": "docs/security/android-crypto-device-20261024.txt"
+  },
+  "offlineScannerTests": 8,
+  "sourceIntegrity": "STABLE",
+  "releaseBlockers": 6,
+  "emulatorStoppedAndDeleted": true,
+  "limitations": "No signed Release packaging, physical passport or live vendor KYC qualification; independent review remains required"
+}

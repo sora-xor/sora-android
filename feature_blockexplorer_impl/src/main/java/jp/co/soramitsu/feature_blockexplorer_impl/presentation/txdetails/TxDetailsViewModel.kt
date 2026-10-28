@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails
@@ -46,11 +33,16 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.domain.TransactionChainFailure
+import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.presentation.transaction.TransactionOutcomeTexts
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsItem
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsState
@@ -60,15 +52,19 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.emptyTxD
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.DemeterType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatusDetail
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.genericTitle
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -81,6 +77,7 @@ class TxDetailsViewModel @AssistedInject constructor(
     private val resourceManager: ResourceManager,
     private val dateTimeFormatter: DateTimeFormatter,
     private val numbersFormatter: NumbersFormatter,
+    private val soraConfigManager: SoraConfigManager,
     @Assisted private val txHash: String,
 ) : BaseViewModel() {
 
@@ -92,6 +89,14 @@ class TxDetailsViewModel @AssistedInject constructor(
     private val _txDetailsScreenState = MutableStateFlow(emptyTxDetailsState)
     val txDetailsScreenState = _txDetailsScreenState.asStateFlow()
 
+    private var waitingStatusJob: Job? = null
+
+    /** The page shows a transaction of this device that has no final status yet. */
+    private var showsWaitingTransaction = false
+
+    /** The page was left (Home, another screen, the PIN lock) and is redrawn on return. */
+    private var refreshOnReturn = false
+
     init {
         _toolbarState.value = SoramitsuToolbarState(
             type = SoramitsuToolbarType.Small(),
@@ -102,22 +107,122 @@ class TxDetailsViewModel @AssistedInject constructor(
             ),
         )
         viewModelScope.launch {
-            calcState()
+            // A failed read (offline, database busy) keeps the page as it is; the next change of
+            // the local transactions refreshes it. It must never end the app.
+            tryCatch { calcState() }
         }
+        // Every tick redraws the page. The first one must not be skipped: after a restart
+        // nothing is replayed, so the first tick is the journal write that makes a waiting
+        // transaction final, and skipping it left the page on "Pending".
         transactionHistoryHandler.flowLocalTransactions()
-            .drop(1)
             .catch { onError(it) }
             .onEach {
-                calcState()
+                tryCatch { calcState() }
             }
             .launchIn(viewModelScope)
+    }
+
+    /**
+     * The page is in front. After a return it is redrawn once, because what it shows may have
+     * been decided while it was away, and the status is followed again if it is still open.
+     */
+    override fun onScreenResumed() {
+        super.onScreenResumed()
+        if (refreshOnReturn) {
+            refreshOnReturn = false
+            viewModelScope.launch { tryCatch { calcState() } }
+        } else {
+            followWhileWaiting()
+        }
+    }
+
+    /**
+     * The page is no longer in front: the app went to the background, or another screen (the
+     * PIN lock) is on top. Nobody reads the status then, so the network is not asked for it
+     * every few seconds; the background status check goes on resolving the transaction.
+     */
+    override fun onScreenPaused() {
+        super.onScreenPaused()
+        refreshOnReturn = true
+        stopFollowing()
+    }
+
+    private fun statusNote(detail: TransactionStatusDetail): String = when (detail.kind) {
+        TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION ->
+            TransactionOutcomeTexts.waitingNote(resourceManager, acceptedByNode = true)
+        TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN ->
+            TransactionOutcomeTexts.waitingNote(resourceManager, acceptedByNode = false)
+        TransactionStatusDetail.Kind.FAILED_ON_CHAIN ->
+            TransactionOutcomeTexts.failedOnChainNote(
+                resourceManager,
+                TransactionChainFailure.EXECUTION_FAILED,
+                detail.text,
+            )
+        TransactionStatusDetail.Kind.NOT_INCLUDED ->
+            TransactionOutcomeTexts.failedOnChainNote(
+                resourceManager,
+                TransactionChainFailure.NOT_INCLUDED,
+                null,
+            )
+        TransactionStatusDetail.Kind.REFUSED_CANNOT_PAY_FEE ->
+            TransactionOutcomeTexts.refusedNote(
+                resourceManager,
+                TransactionNodeRefusal.CANNOT_PAY_FEE,
+                detail.text,
+            )
+        TransactionStatusDetail.Kind.REFUSED_NETWORK_BUSY ->
+            TransactionOutcomeTexts.refusedNote(
+                resourceManager,
+                TransactionNodeRefusal.NETWORK_BUSY,
+                detail.text,
+            )
+        TransactionStatusDetail.Kind.REFUSED_NOT_VALID ->
+            TransactionOutcomeTexts.refusedNote(
+                resourceManager,
+                TransactionNodeRefusal.NOT_VALID,
+                detail.text,
+            )
+        TransactionStatusDetail.Kind.NOT_REACHED ->
+            TransactionOutcomeTexts.refusedNote(
+                resourceManager,
+                TransactionNodeRefusal.NOT_REACHED,
+                null,
+            )
     }
 
     private suspend fun calcState() {
         val currentAddress = assetsInteractor.getCurSoraAccount().substrateAddress
         val feeToken = walletInteractor.getFeeToken()
         val transaction = transactionHistoryHandler.getTransaction(txHash)
-        _txDetailsScreenState.value = when (transaction) {
+        val explorerUrl = transaction?.base?.txHash?.let {
+            soraConfigManager.getTransactionExplorerUrl(it)
+        }
+        val screenState = when (transaction) {
+            is Transaction.Sora2Submission -> {
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        txHash = transaction.base.txHash,
+                        blockHash = transaction.base.blockHash,
+                        sender = currentAddress,
+                        infos = emptyList(),
+                        txStatus = transaction.base.status,
+                        time = dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM,
+                        ),
+                        networkFee = null,
+                        networkFeeFiat = null,
+                        txTypeIcon = R.drawable.ic_refresh_24,
+                        txTypeTitle = resourceManager.getString(transaction.genericTitle()),
+                        txTypeSubTitle = transaction.networkId.uppercase(),
+                    ),
+                    amount1 = "",
+                    amountFiat = "",
+                    icon1 = DEFAULT_ICON_URI,
+                    txType = TxType.REFERRAL_TRANSFER,
+                )
+            }
+
             is Transaction.EthTransfer -> {
                 TxDetailsScreenState(
                     basicTxDetailsState = BasicTxDetailsState(
@@ -549,10 +654,73 @@ class TxDetailsViewModel @AssistedInject constructor(
 
             null -> emptyTxDetailsState
         }
+        val statusDetail = transaction?.base?.statusDetail
+        val neverOnChain = statusDetail?.neverOnChain == true
+        val basic = screenState.basicTxDetailsState
+        _txDetailsScreenState.value = if (transaction == null) {
+            screenState
+        } else {
+            screenState.copy(
+                basicTxDetailsState = basic.copy(
+                    // A transaction that never reached a block has no explorer page, and no
+                    // fee was charged for it: the note says so, and the fee that was only
+                    // expected is not listed as if it had been paid.
+                    explorerUrl = explorerUrl.takeUnless { neverOnChain },
+                    networkFee = basic.networkFee.takeUnless { neverOnChain },
+                    networkFeeFiat = basic.networkFeeFiat.takeUnless { neverOnChain },
+                    statusNote = statusDetail?.let(::statusNote),
+                )
+            )
+        }
+        showsWaitingTransaction = transaction?.base?.status == TransactionStatus.PENDING &&
+            transaction.base.statusDetail?.kind.let { kind ->
+                kind == TransactionStatusDetail.Kind.WAITING_FOR_CONFIRMATION ||
+                    kind == TransactionStatusDetail.Kind.SUBMISSION_UNCERTAIN
+            }
+        followWhileWaiting()
+    }
+
+    /**
+     * The page says "the status here updates by itself", so while it shows a transaction of
+     * this device that is still waiting it asks for the status at short intervals. Without this
+     * the page changes only when the background status check next runs, which can be minutes
+     * away after a few attempts that found nothing yet. The check is read-only, a failed one
+     * changes nothing, and it stops as soon as the status is final, the page is closed or no
+     * longer in front, or the transaction can no longer be included.
+     */
+    private fun followWhileWaiting() {
+        if (!showsWaitingTransaction || !screenInFront) {
+            stopFollowing()
+            return
+        }
+        if (waitingStatusJob?.isActive == true) return
+        waitingStatusJob = viewModelScope.launch {
+            repeat(WAITING_STATUS_CHECKS) {
+                delay(WAITING_STATUS_CHECK_INTERVAL_MILLIS)
+                // A change of the journal ticks flowLocalTransactions, which redraws the page.
+                // Only this page's transaction is asked about, so no other waiting transaction
+                // can hold its status back.
+                guarded { transactionHistoryHandler.checkWaitingTransaction(txHash) }
+            }
+        }
+    }
+
+    private fun stopFollowing() {
+        waitingStatusJob?.cancel()
+        waitingStatusJob = null
     }
 
     fun onCopyClicked(text: String) {
         clipboardManager.addToClipboard(text)
         copiedToast.trigger()
+    }
+
+    private companion object {
+        /**
+         * Six seconds is one block. Eighty checks cover eight minutes: a transaction can be
+         * included for 64 blocks (about six and a half minutes) after it was signed.
+         */
+        const val WAITING_STATUS_CHECK_INTERVAL_MILLIS = 6_000L
+        const val WAITING_STATUS_CHECKS = 80
     }
 }

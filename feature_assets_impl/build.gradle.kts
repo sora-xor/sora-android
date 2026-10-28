@@ -1,12 +1,11 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
-    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
@@ -15,7 +14,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.feature_assets_impl"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -25,7 +24,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -40,8 +39,8 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
     }
-
     flavorDimensions += listOf("default")
 
     productFlavors {
@@ -81,7 +80,6 @@ dependencies {
     implementation(project(":feature_account_api"))
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_main_api"))
-    implementation(project(":feature_sora_card_api"))
     implementation(project(":feature_blockexplorer_api"))
 
     implementation(libs.xsubstrateDep)
@@ -113,12 +111,11 @@ dependencies {
     implementation(libs.permissionsRuntimeDep)
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
     implementation(libs.hiltWorkManagerDep)
-    kapt(libs.hiltWorkManagerKaptDep)
+    ksp(libs.hiltWorkManagerCompilerDep)
 
     implementation(libs.lifecycleProcessDep)
-    kapt(libs.lifecycleKaptDep)
 
     implementation(libs.roomDep)
     implementation(libs.roomKtxDep)
@@ -145,6 +142,14 @@ dependencies {
             type = "aar"
         }
     }
+
+    // Compose UI tests (read-only mode disables Send and Swap). Test-only; the ui-test manifest
+    // is already in every debug app through feature_blockexplorer_api.
+    debugImplementation(libs.composeUiTestManifestDep)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.composeUiTestJunit4Dep)
+    androidTestImplementation(libs.androidxTestExtJunitDep)
+    androidTestImplementation(libs.androidxTestEspressoCoreDep)
 
     testImplementation(project(":test_data"))
     testImplementation(libs.coroutineTestDep)

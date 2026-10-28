@@ -2,51 +2,45 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_referral_impl.domain
 
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.Date
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
 import jp.co.soramitsu.feature_referral_impl.domain.model.Referral
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
+import jp.co.soramitsu.sora.substrate.substrate.sora2TransactionOutcome
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -108,53 +102,113 @@ class ReferralInteractor @Inject constructor(
         return assetsRepository.getToken(SubstrateOptionsProvider.feeAssetId)!!
     }
 
-    suspend fun observeBond(amount: BigDecimal): String {
+    /**
+     * Bonds XOR for invitations and reports what is known about the transaction. Every outcome
+     * is listed in Activity as a referral bond; its status comes from the durable journal.
+     */
+    suspend fun observeBond(
+        amount: BigDecimal,
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome {
         val soraAccount = userRepository.getCurSoraAccount()
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        val result = referralRepository.observeBond(
-            keypair,
-            soraAccount.substrateAddress,
-            amount,
-            getFeeToken(),
-            calcBondFee(),
-        )
-
-        transactionHistoryRepository.saveTransaction(result)
-
-        return result.base.txHash
+        val feeToken = getFeeToken()
+        val fee = calcBondFee()
+        val outcome = sora2TransactionOutcome {
+            referralRepository.observeBond(
+                keypair,
+                soraAccount.substrateAddress,
+                amount,
+                feeToken,
+                fee,
+                Sora2SubmissionActivity.referralBond(
+                    bond = true,
+                    tokenId = feeToken.id,
+                    amount = amount,
+                    fee = fee,
+                ).copy(duplicateConfirmed = confirmedDuplicate),
+            )
+        }
+        saveToActivityBestEffort(soraAccount.substrateAddress) {
+            Transaction.ReferralBond(activityBase(outcome, fee), amount, feeToken)
+        }
+        return outcome
     }
 
-    suspend fun observeUnbond(amount: BigDecimal): String {
+    suspend fun observeUnbond(
+        amount: BigDecimal,
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome {
         val soraAccount = userRepository.getCurSoraAccount()
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        val result = referralRepository.observeUnbond(
-            keypair,
-            soraAccount.substrateAddress,
-            amount,
-            getFeeToken(),
-            calcBondFee(),
-        )
-
-        transactionHistoryRepository.saveTransaction(result)
-
-        return result.base.txHash
+        val feeToken = getFeeToken()
+        val fee = calcBondFee()
+        val outcome = sora2TransactionOutcome {
+            referralRepository.observeUnbond(
+                keypair,
+                soraAccount.substrateAddress,
+                amount,
+                feeToken,
+                fee,
+                Sora2SubmissionActivity.referralBond(
+                    bond = false,
+                    tokenId = feeToken.id,
+                    amount = amount,
+                    fee = fee,
+                ).copy(duplicateConfirmed = confirmedDuplicate),
+            )
+        }
+        saveToActivityBestEffort(soraAccount.substrateAddress) {
+            Transaction.ReferralUnbond(activityBase(outcome, fee), amount, feeToken)
+        }
+        return outcome
     }
 
-    suspend fun observeSetReferrer(referrer: String): String {
+    suspend fun observeSetReferrer(
+        referrer: String,
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome {
         val soraAccount = userRepository.getCurSoraAccount()
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
         val feeToken =
             requireNotNull(assetsRepository.getToken(SubstrateOptionsProvider.feeAssetId))
-        val result = referralRepository.observeSetReferrer(
-            keypair,
-            soraAccount.substrateAddress,
-            referrer,
-            feeToken
-        )
+        val outcome = sora2TransactionOutcome {
+            referralRepository.observeSetReferrer(
+                keypair,
+                soraAccount.substrateAddress,
+                referrer,
+                feeToken,
+                Sora2SubmissionActivity.referralSetReferrer(
+                    tokenId = feeToken.id,
+                    referrer = referrer,
+                ).copy(duplicateConfirmed = confirmedDuplicate),
+            )
+        }
+        saveToActivityBestEffort(soraAccount.substrateAddress) {
+            Transaction.ReferralSetReferrer(
+                activityBase(outcome, BigDecimal.ZERO),
+                who = referrer,
+                myReferrer = true,
+                token = feeToken,
+            )
+        }
+        return outcome
+    }
 
-        transactionHistoryRepository.saveTransaction(result)
+    private fun activityBase(outcome: TransactionOutcome, fee: BigDecimal) = TransactionBase(
+        txHash = outcome.txHash,
+        blockHash = (outcome as? TransactionOutcome.Confirmed)?.blockHash,
+        fee = fee,
+        status = TransactionStatus.PENDING,
+        timestamp = Date().time,
+    )
 
-        return result.base.txHash
+    private fun saveToActivityBestEffort(walletId: String, build: () -> Transaction) {
+        try {
+            transactionHistoryRepository.saveTransaction(walletId, build())
+        } catch (_: Exception) {
+            // Activity is rebuilt from the durable journal; it never changes a result.
+        }
     }
 
     fun observeReferrerBalance(): Flow<BigDecimal?> = flow {

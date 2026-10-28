@@ -2,38 +2,26 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 
@@ -43,8 +31,9 @@ class PrefsUserDatasource(
 ) : UserDatasource {
 
     companion object {
-        private const val PREFS_PIN_CODE = "user_pin_code"
-        private const val PREFS_REGISTRATION_STATE = "registration_state"
+        private const val PREFS_PIN_CODE = WalletPreferenceKeys.PIN_CODE
+        private const val PREFS_REGISTRATION_STATE =
+            WalletPreferenceKeys.REGISTRATION_STATE
 
         private const val KEY_PIN_TRIES = "key_pin_tries"
         private const val KEY_PIN_START_TIMESTAMP = "key_pin_start_timestamp"
@@ -53,9 +42,11 @@ class PrefsUserDatasource(
         private const val KEY_PARENT_INVITE_CODE = "invite_code"
         private const val KEY_BIOMETRY_AVAILABLE = "biometry_available"
         private const val KEY_BIOMETRY_ENABLED = "biometry_enabled"
-        private const val KEY_NEEDS_MIGRATION = "needs_migration"
-        private const val KEY_IS_MIGRATION_FETCHED = "is_migration_fetched"
-        private const val KEY_CUR_ACCOUNT_ADDRESS = "cur_account_address"
+        private const val KEY_NEEDS_MIGRATION = WalletPreferenceKeys.NEEDS_MIGRATION
+        private const val KEY_IS_MIGRATION_FETCHED =
+            WalletPreferenceKeys.IS_MIGRATION_FETCHED
+        private const val KEY_CUR_ACCOUNT_ADDRESS =
+            WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS
     }
 
     override suspend fun getCurAccountAddress(): String =
@@ -63,6 +54,9 @@ class PrefsUserDatasource(
 
     override suspend fun setCurAccountAddress(accountAddress: String) =
         soraPreferences.putString(KEY_CUR_ACCOUNT_ADDRESS, accountAddress)
+
+    override suspend fun completeLegacyAccountUpgrade(accountAddress: String) =
+        soraPreferences.completeLegacyAccountUpgrade(accountAddress)
 
     override suspend fun savePin(pin: String) {
         encryptedPreferences.putEncryptedString(PREFS_PIN_CODE, pin)
@@ -85,10 +79,6 @@ class PrefsUserDatasource(
                 OnboardingState.INITIAL
             )
         }
-    }
-
-    override suspend fun clearAllData() {
-        soraPreferences.clearAll()
     }
 
     override suspend fun saveParentInviteCode(inviteCode: String) {

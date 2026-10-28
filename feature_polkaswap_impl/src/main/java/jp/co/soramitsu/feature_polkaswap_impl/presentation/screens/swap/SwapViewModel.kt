@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap
@@ -50,14 +37,21 @@ import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.subtractFee
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
+import jp.co.soramitsu.common.presentation.transaction.badge
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
@@ -67,8 +61,8 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
@@ -78,6 +72,7 @@ import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -99,11 +94,9 @@ class SwapViewModel @AssistedInject constructor(
     private val swapInteractor: SwapInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
-    private val mainRouter: MainRouter,
     private val assetsRouter: AssetsRouter,
     @Assisted("idfrom") private val token1Id: String,
     @Assisted("idto") private val token2Id: String,
-    @Assisted("isLaunchedFromSoraCard") private val isLaunchedFromSoraCard: Boolean
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -111,11 +104,11 @@ class SwapViewModel @AssistedInject constructor(
         fun create(
             @Assisted("idfrom") idFrom: String,
             @Assisted("idto") idTo: String,
-            @Assisted("isLaunchedFromSoraCard") isLaunchedFromSoraCard: Boolean
         ): SwapViewModel
     }
 
     private val assetsList = mutableListOf<Asset>()
+    private var assetCatalogUnavailable = false
     private val feeTokenAsync by viewModelScope.lazyAsync { walletInteractor.getFeeToken() }
     private suspend fun feeToken() = feeTokenAsync.await()
 
@@ -143,8 +136,16 @@ class SwapViewModel @AssistedInject constructor(
     private val onChangedProperty = SuspendableProperty<PropertyValue>(1)
 
     private val availableMarkets = mutableListOf<Market>()
+    private var marketsTokenPair: Pair<String, String>? = null
     private var desired: WithDesired = WithDesired.INPUT
     private var swapDetails: SwapDetails? = null
+
+    /**
+     * The last request for a price failed, so there is no quote for the pair and amount now on
+     * screen. Review and Confirm stay off until a quote arrives: the minimum received (or maximum
+     * sold) of an earlier quote must never be signed for a different amount or pair.
+     */
+    private var quoteUnavailable = false
     private var networkFee: BigDecimal? = null
 
     private val _swapMainState = MutableStateFlow(
@@ -276,6 +277,8 @@ class SwapViewModel @AssistedInject constructor(
                 updateDetailsView()
                 onChangedProperty.set(property.newReloadMarkets(false))
             }
+            // After onEach, so a failure while clearing the form is handled here as well.
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         assetsInteractor.subscribeAssetsActiveOfCurAccount()
@@ -284,6 +287,22 @@ class SwapViewModel @AssistedInject constructor(
             .onEach { assets ->
                 assetsList.clear()
                 assetsList.addAll(assets)
+                assetCatalogUnavailable = assets.isEmpty()
+                _swapMainState.value = _swapMainState.value.copy(assetCatalogUnavailable = assetCatalogUnavailable)
+                if (assetCatalogUnavailable) {
+                    _swapMainState.value = _swapMainState.value.copy(
+                        tokenFromState = null,
+                        tokenToState = null,
+                        swapButtonState = _swapMainState.value.swapButtonState.copy(
+                            text = resourceManager.getString(R.string.wallet_assets_unavailable),
+                            enabled = false,
+                            loading = false,
+                        ),
+                        confirmButtonState = _swapMainState.value.confirmButtonState.copy(enabled = false, loading = false),
+                        confirmResult = null,
+                    )
+                    return@onEach
+                }
 
                 if (_swapMainState.value.tokenFromState == null && token1Id.isNotEmpty()) {
                     assetsInteractor.getAssetOrThrow(token1Id).let { assetFrom ->
@@ -334,11 +353,14 @@ class SwapViewModel @AssistedInject constructor(
                 }
 
                 if (networkFee == null) {
-                    networkFee = swapInteractor.fetchSwapNetworkFee(feeToken())
+                    // A failure here must not end this balance subscription; the fee is asked
+                    // again with the next balance update, the next quote or Try again.
+                    refreshNetworkFee()
                 }
 
                 onChangedProperty.set(property.newReloadMarkets(false))
             }
+            .catch { onError(it) }
             .launchIn(viewModelScope)
 
         swapInteractor.observePoolReserves()
@@ -357,14 +379,47 @@ class SwapViewModel @AssistedInject constructor(
                     onError(it)
                 }
                 .collectLatest {
-                    if (it.reloadMarkets) {
-                        getMarkets()
-                        property.reset()
+                    // A failed recalculation must not end this collector (the screen would stop
+                    // reacting), must not leave the button spinning and must never leave
+                    // viewModelScope uncaught.
+                    var quoteSettled = false
+                    try {
+                        if (assetCatalogUnavailable) {
+                            toggleSwapButtonStatus()
+                            resetLoading()
+                            return@collectLatest
+                        }
+                        // Markets belong to one token pair: they are read again after a pool
+                        // sync, for a new pair, and while none were found for this pair.
+                        if (
+                            it.reloadMarkets ||
+                            selectedTokenPair() != marketsTokenPair ||
+                            availableMarkets.isEmpty()
+                        ) {
+                            getMarkets()
+                            property.reset()
+                        }
+                        // A quote is only calculated from the markets of the selected pair.
+                        if (selectedTokenPair() == marketsTokenPair) {
+                            recalcDetails()
+                        }
+                        quoteSettled = true
+                        toggleSwapButtonStatus()
+                        updateTransactionReminderWarningVisibility()
+                        resetLoading()
+                    } catch (cancellation: CancellationException) {
+                        throw cancellation
+                    } catch (t: Throwable) {
+                        onError(t)
+                        if (!quoteSettled) {
+                            // The quote on screen may belong to other input: it is dropped and
+                            // Review and Confirm go off. A failure after the quote was settled
+                            // (the optional XOR reminder) leaves the valid quote alone.
+                            dropQuote()
+                            toggleSwapButtonStatus()
+                        }
+                        resetLoading()
                     }
-                    recalcDetails()
-                    toggleSwapButtonStatus()
-                    updateTransactionReminderWarningVisibility()
-                    resetLoading()
                 }
         }
         viewModelScope.launch {
@@ -397,7 +452,7 @@ class SwapViewModel @AssistedInject constructor(
 
     fun onDisclaimerClose() {
         viewModelScope.launch {
-            swapInteractor.setPolkaswapDisclaimerVisibility(false)
+            guarded { swapInteractor.setPolkaswapDisclaimerVisibility(false) }
         }
     }
 
@@ -548,10 +603,49 @@ class SwapViewModel @AssistedInject constructor(
         onChangedProperty.set(property.newReloadMarkets(true))
     }
 
+    /**
+     * Gets the swap network fee. Returns false, and shows the calm fee notice with Try again,
+     * when it can't be checked (for example while the reviewed SORA endpoint can't be reached).
+     */
+    private suspend fun refreshNetworkFee(): Boolean = try {
+        networkFee = swapInteractor.fetchSwapNetworkFee(feeToken())
+        if (_swapMainState.value.feeUnavailable != null) {
+            _swapMainState.value = _swapMainState.value.copy(feeUnavailable = null)
+        }
+        true
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        FirebaseWrapper.recordException(error)
+        _swapMainState.value = _swapMainState.value.copy(
+            feeUnavailable = NetworkFeeUnavailable.from(error),
+        )
+        false
+    }
+
+    /** Try again on the fee notice. */
+    fun onRetryFee() {
+        viewModelScope.launch {
+            guarded {
+                setSwapButtonLoading(true)
+                if (networkFee != null || refreshNetworkFee()) {
+                    onChangedProperty.set(property.newReloadMarkets(false))
+                } else {
+                    toggleSwapButtonStatus()
+                    resetLoading()
+                }
+            }
+        }
+    }
+
     private fun toggleSwapButtonStatus() {
         val ok = isBalanceOk()
 
         val (text, enabled) = when {
+            // U9: swapping signs a transaction, which is off in read-only mode.
+            WalletRecoveryCapabilityGate.isUserMutationBlocked() ->
+                resourceManager.getString(R.string.safe_mode_read_only_send_off) to false
+            assetCatalogUnavailable -> resourceManager.getString(R.string.wallet_assets_unavailable) to false
             _swapMainState.value.tokenFromState == null || _swapMainState.value.tokenToState == null -> {
                 resourceManager.getString(R.string.choose_tokens) to false
             }
@@ -566,6 +660,14 @@ class SwapViewModel @AssistedInject constructor(
 
             _swapMainState.value.tokenToState != null && amountTo.isZero() && desired == WithDesired.OUTPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
+            }
+
+            _swapMainState.value.feeUnavailable != null -> {
+                resourceManager.getString(R.string.network_fee_unavailable_short) to false
+            }
+
+            quoteUnavailable -> {
+                resourceManager.getString(R.string.tx_outcome_quote_unavailable) to false
             }
 
             ok?.isEmpty() == true -> {
@@ -588,6 +690,13 @@ class SwapViewModel @AssistedInject constructor(
         }
 
         val (text2, enabled2) = when {
+            WalletRecoveryCapabilityGate.isUserMutationBlocked() ->
+                resourceManager.getString(R.string.safe_mode_read_only_send_off) to false
+            assetCatalogUnavailable -> resourceManager.getString(R.string.wallet_assets_unavailable) to false
+            _swapMainState.value.feeUnavailable != null ->
+                resourceManager.getString(R.string.network_fee_unavailable_short) to false
+            quoteUnavailable ->
+                resourceManager.getString(R.string.tx_outcome_quote_unavailable) to false
             ok?.isNotEmpty() == true -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_balance)
                     .format(ok) to false
@@ -615,17 +724,29 @@ class SwapViewModel @AssistedInject constructor(
         )
     }
 
+    private fun selectedTokenPair(): Pair<String, String>? {
+        val tokenFromId = _swapMainState.value.tokenFromState?.token?.id ?: return null
+        val tokenToId = _swapMainState.value.tokenToState?.token?.id ?: return null
+        return tokenFromId to tokenToId
+    }
+
     private suspend fun getMarkets() {
-        _swapMainState.value.tokenFromState?.let { from ->
-            _swapMainState.value.tokenToState?.let { to ->
-                tryCatch {
-                    val m = swapInteractor.fetchAvailableSources(from.token.id, to.token.id)
-                    availableMarkets.clear()
-                    if (!m.isNullOrEmpty()) {
-                        availableMarkets.addAll(m)
-                    }
-                }
+        val tokenPair = selectedTokenPair() ?: return
+        availableMarkets.clear()
+        marketsTokenPair = null
+        swapDetails = null
+        updateDetailsView()
+        try {
+            val markets = swapInteractor.fetchAvailableSources(tokenPair.first, tokenPair.second)
+            // Token selection can change before the debounced collector cancels this lookup.
+            if (selectedTokenPair() == tokenPair) {
+                availableMarkets.addAll(markets.orEmpty())
+                marketsTokenPair = tokenPair
             }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            onError(error)
         }
     }
 
@@ -698,46 +819,71 @@ class SwapViewModel @AssistedInject constructor(
             _swapMainState.value.tokenToState?.let { toAsset ->
                 val amountToCalc = if (desired == WithDesired.INPUT) amountFrom else amountTo
                 if (amountToCalc > BigDecimal.ZERO) {
-                    tryCatchFinally(
-                        finally = {},
-                        block = {
-                            val details = swapInteractor.calcDetails(
-                                fromAsset.token,
-                                toAsset.token,
-                                feeToken(),
-                                amountToCalc,
-                                desired,
-                                _swapMainState.value.slippage,
+                    if (networkFee == null && !refreshNetworkFee()) {
+                        // Without a fee there is no quote to review; the notice explains why.
+                        swapDetails = null
+                        updateDetailsView()
+                        return
+                    }
+                    val details = try {
+                        swapInteractor.calcDetails(
+                            fromAsset.token,
+                            toAsset.token,
+                            feeToken(),
+                            amountToCalc,
+                            desired,
+                            _swapMainState.value.slippage,
+                        )
+                    } catch (cancellation: CancellationException) {
+                        throw cancellation
+                    } catch (t: Throwable) {
+                        // No price for what is on screen now. The earlier quote is dropped, so
+                        // its limit and route cannot be reviewed or signed for this input. The
+                        // price is asked again on the next change of the pools or of the input.
+                        onError(t)
+                        dropQuote()
+                        return
+                    }
+                    quoteUnavailable = false
+                    swapDetails = details
+                    updateDetailsView()
+                    details?.amount?.let {
+                        if (desired == WithDesired.INPUT) {
+                            _swapMainState.value = _swapMainState.value.copy(
+                                tokenToState = _swapMainState.value.tokenToState?.copy(
+                                    amountFiat = toAsset.token.printFiat(
+                                        it,
+                                        numbersFormatter
+                                    ),
+                                    amount = it,
+                                )
                             )
-                            swapDetails = details
-                            updateDetailsView()
-                            details?.amount?.let {
-                                if (desired == WithDesired.INPUT) {
-                                    _swapMainState.value = _swapMainState.value.copy(
-                                        tokenToState = _swapMainState.value.tokenToState?.copy(
-                                            amountFiat = toAsset.token.printFiat(
-                                                it,
-                                                numbersFormatter
-                                            ),
-                                            amount = it,
-                                        )
-                                    )
-                                } else {
-                                    _swapMainState.value = _swapMainState.value.copy(
-                                        tokenFromState = _swapMainState.value.tokenFromState?.copy(
-                                            amountFiat = fromAsset.token.printFiat(
-                                                it,
-                                                numbersFormatter
-                                            ),
-                                            amount = it,
-                                        )
-                                    )
-                                }
-                            }
-                        },
-                    )
+                        } else {
+                            _swapMainState.value = _swapMainState.value.copy(
+                                tokenFromState = _swapMainState.value.tokenFromState?.copy(
+                                    amountFiat = fromAsset.token.printFiat(
+                                        it,
+                                        numbersFormatter
+                                    ),
+                                    amount = it,
+                                )
+                            )
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    private suspend fun dropQuote() {
+        quoteUnavailable = true
+        swapDetails = null
+        try {
+            updateDetailsView()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: Throwable) {
+            // The details rows are only cleared here; the quote itself is already gone.
         }
     }
 
@@ -873,6 +1019,9 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     fun swapClicked() {
+        // Nothing new is reviewed while a Confirm is on its way or its result waits to be
+        // shown: the confirm screen keeps its progress or result mark and Confirm stays off.
+        if (isExtrinsicSubmitted || resultHeld) return
         val token =
             if (desired == WithDesired.INPUT) _swapMainState.value.tokenToState?.token else _swapMainState.value.tokenFromState?.token
         val minmax = swapDetails?.minmax
@@ -906,56 +1055,113 @@ class SwapViewModel @AssistedInject constructor(
         }
     }
 
-    fun onConfirmClicked() {
+    fun onConfirmClicked() = confirmSwap(confirmedDuplicate = false)
+
+    /**
+     * Sends the reviewed swap and shows exactly what is known afterwards. A swap that reached the
+     * network (confirmed, failed on chain, or still waiting) opens its transaction page, which
+     * carries the status and follows it. A swap that did not reach the network (refused by the
+     * node, or not prepared) is explained in a dialog and the screen stays, so nothing here ever
+     * marks a broadcast swap as rejected.
+     *
+     * The result arrives after a wait of up to two minutes, so the app can be in the background
+     * or behind the PIN lock by then. The dialogs are delivered when the screen is shown again;
+     * the transaction page opens when it is in front (see [openTransactionPage]). Until then
+     * the result mark stays on the confirm screen and Confirm stays off.
+     */
+    private fun confirmSwap(confirmedDuplicate: Boolean) {
+        // A Confirm is on its way, or a swap of this screen reached the network and its page
+        // has not opened yet. (The duplicate question clears the mark before it asks.)
+        if (isExtrinsicSubmitted || resultHeld) return
+        // Nothing is sent while the button is shown off or busy (a second tap of the same Confirm).
+        val confirmButton = _swapMainState.value.confirmButtonState
+        if (!confirmButton.enabled || confirmButton.loading) return
+        val details = swapDetails ?: return
+        val fromState = _swapMainState.value.tokenFromState ?: return
+        val toState = _swapMainState.value.tokenToState ?: return
         isExtrinsicSubmitted = true
-        swapDetails?.let { details ->
-            _swapMainState.value.tokenFromState?.let { fromState ->
-                _swapMainState.value.tokenToState?.let { toState ->
-                    viewModelScope.launch {
-                        _swapMainState.value = _swapMainState.value.copy(
-                            confirmButtonState = _swapMainState.value.confirmButtonState.copy(
-                                enabled = false,
-                                loading = true,
-                            )
-                        )
-                        var swapResult = ""
-                        try {
-                            swapResult = swapInteractor.swap(
-                                fromState.token,
-                                toState.token,
-                                desired,
-                                if (desired == WithDesired.INPUT) fromState.amount.orZero() else toState.amount.orZero(),
-                                details.minmax,
-                                details.networkFee,
-                                details.dex.dexId,
-                                if (desired == WithDesired.OUTPUT) fromState.amount.orZero() else toState.amount.orZero(),
-                            )
-                        } catch (t: Throwable) {
-                            onError(t)
-                        } finally {
-                            _swapMainState.value = _swapMainState.value.copy(
-                                confirmButtonState = _swapMainState.value.confirmButtonState.copy(
-                                    enabled = false,
-                                    loading = false,
-                                ),
-                                confirmResult = swapResult.isNotEmpty(),
-                            )
-                            delay(500)
-                            _swapMainState.value = _swapMainState.value.copy(
-                                confirmResult = null
-                            )
-                            if (swapResult.isNotEmpty())
-                                assetsRouter.showTxDetails(swapResult, true)
-                            else if (isLaunchedFromSoraCard)
-                                mainRouter.showGetSoraCard(
-                                    shouldStartSignIn = true
-                                )
-                            else _navigationPop.trigger()
-                        }
-                    }
+        viewModelScope.launch {
+            setConfirmButton(enabled = false, loading = true)
+            var outcome: TransactionOutcome? = null
+            var notSent: Throwable? = null
+            try {
+                outcome = swapInteractor.swap(
+                    fromState.token,
+                    toState.token,
+                    desired,
+                    if (desired == WithDesired.INPUT) fromState.amount.orZero() else toState.amount.orZero(),
+                    details.minmax,
+                    details.networkFee,
+                    details.dex.dexId,
+                    if (desired == WithDesired.OUTPUT) fromState.amount.orZero() else toState.amount.orZero(),
+                    confirmedDuplicate,
+                )
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: DuplicateWaitingTransactionException) {
+                isExtrinsicSubmitted = false
+                setConfirmButton(enabled = true, loading = false)
+                askBeforeSendingAgain(resourceManager) { confirmSwap(confirmedDuplicate = true) }
+                return@launch
+            } catch (t: Throwable) {
+                notSent = t
+            }
+            val reachedNetwork = outcome != null && outcome !is TransactionOutcome.RefusedByNode
+            isExtrinsicSubmitted = reachedNetwork
+            _swapMainState.value = _swapMainState.value.copy(
+                confirmButtonState = _swapMainState.value.confirmButtonState.copy(
+                    enabled = false,
+                    loading = false,
+                ),
+                confirmResult = outcome?.badge() ?: TransactionResultBadge.NOT_SENT,
+            )
+            delay(RESULT_BADGE_MILLIS)
+            when (outcome) {
+                is TransactionOutcome.Confirmed,
+                is TransactionOutcome.Waiting,
+                is TransactionOutcome.FailedOnChain ->
+                    openTransactionPage(outcome.txHash, outcome.badge())
+                is TransactionOutcome.RefusedByNode -> {
+                    _swapMainState.value = _swapMainState.value.copy(confirmResult = null)
+                    setConfirmButton(enabled = true, loading = false)
+                    showTransactionRefused(resourceManager, outcome)
+                }
+                null -> {
+                    _swapMainState.value = _swapMainState.value.copy(confirmResult = null)
+                    setConfirmButton(enabled = true, loading = false)
+                    showTransactionNotSent(resourceManager, checkNotNull(notSent))
                 }
             }
         }
+    }
+
+    /**
+     * Opens the swap's transaction page in place of this screen, only while this screen is in
+     * front. A result that arrives while the app is in the background, or while the PIN lock is
+     * on top, is held and the page opens on the next resume; nothing is navigated before that.
+     * While it is held the confirm screen shows the result mark and Confirm stays off, also
+     * after the form was cleared for the finished swap.
+     */
+    private fun openTransactionPage(txHash: String, badge: TransactionResultBadge) {
+        showWhenInFront { assetsRouter.showTxResult(txHash, TransactionScreen.SWAP) }
+        if (resultHeld) {
+            _swapMainState.value = _swapMainState.value.copy(
+                confirmButtonState = _swapMainState.value.confirmButtonState.copy(
+                    enabled = false,
+                    loading = false,
+                ),
+                confirmResult = badge,
+            )
+        }
+    }
+
+    private fun setConfirmButton(enabled: Boolean, loading: Boolean) {
+        _swapMainState.value = _swapMainState.value.copy(
+            confirmButtonState = _swapMainState.value.confirmButtonState.copy(
+                enabled = enabled,
+                loading = loading,
+            )
+        )
     }
 
     fun slippageChanged(slippageTolerance: Double) {
@@ -1001,4 +1207,8 @@ class SwapViewModel @AssistedInject constructor(
 
     private fun getAssetBalanceText(asset: Asset) =
         AmountFormat.getAssetBalanceText(asset, numbersFormatter, 3)
+
+    private companion object {
+        const val RESULT_BADGE_MILLIS = 700L
+    }
 }

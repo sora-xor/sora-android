@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.sora.navigation
@@ -35,12 +22,10 @@ package jp.co.soramitsu.sora.navigation
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import java.math.BigDecimal
-import jp.co.soramitsu.androidfoundation.intent.ShareUtil.openAppSettings
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
 import jp.co.soramitsu.common.presentation.args.address
 import jp.co.soramitsu.common.presentation.args.addresses
-import jp.co.soramitsu.common.presentation.args.isLaunchedFromSoraCard
 import jp.co.soramitsu.common.presentation.args.tokenFromId
 import jp.co.soramitsu.common.presentation.args.tokenFromNullable
 import jp.co.soramitsu.common.presentation.args.tokenId
@@ -50,16 +35,17 @@ import jp.co.soramitsu.common.presentation.args.txHash
 import jp.co.soramitsu.common.presentation.args.withArgs
 import jp.co.soramitsu.common.presentation.compose.webview.title
 import jp.co.soramitsu.common.presentation.compose.webview.url
-import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.StringTriple
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.ClaimDemeterFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.EditFarmFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.FarmDetailsFragment
+import jp.co.soramitsu.common.account.AccountOptionsRouter
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.util.action
@@ -74,7 +60,6 @@ import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeAddress
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeName
 import jp.co.soramitsu.feature_select_node_impl.presentation.pinCodeChecked
-import jp.co.soramitsu.feature_sora_card_impl.presentation.GetSoraCardFragment
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.R
 
@@ -84,7 +69,8 @@ class Navigator :
     ReferralRouter,
     SelectNodeRouter,
     PolkaswapRouter,
-    AssetsRouter {
+    AssetsRouter,
+    AccountOptionsRouter {
 
     private var navController: NavController? = null
 
@@ -137,7 +123,25 @@ class Navigator :
     }
 
     override fun popBackStackToAccountList() {
-        navController?.popBackStack(R.id.accountListFragment, false)
+        val navController = navController ?: return
+        // Account options is also opened from the home screen (the backup banner, the read-only
+        // notice). The account list is then not on the back stack: return to the home screen
+        // instead of staying on a screen about an account that is gone.
+        if (!navController.popBackStack(R.id.accountListFragment, false)) {
+            navController.popBackStack(R.id.cardsHubFragment, false)
+        }
+    }
+
+    override fun leaveBackupJson() {
+        val navController = navController ?: return
+        // "Export JSON first" on the removal screen: that screen (the PIN destination, already
+        // past its PIN) is directly underneath and keeps its state. Everywhere else the PIN
+        // screen was popped before the export opened.
+        if (navController.previousBackStackEntry?.destination?.id == R.id.pincodeFragment) {
+            navController.popBackStack()
+        } else {
+            popBackStackToAccountList()
+        }
     }
 
     override fun popBackStackToAccountDetails() {
@@ -145,11 +149,7 @@ class Navigator :
     }
 
     override fun showSelectLanguage() {
-        if (BuildUtils.sdkAtLeast(33)) {
-            navController?.context?.openAppSettings()
-        } else {
-            navController?.navigate(R.id.selectLanguageFragment)
-        }
+        navController?.navigate(R.id.selectLanguageFragment)
     }
 
     override fun showPoolDetails(ids: StringPair) {
@@ -174,10 +174,6 @@ class Navigator :
 
     override fun showFullPoolsSettings() {
         navController?.navigate(R.id.fullPoolListSettingsFragment)
-    }
-
-    override fun showAssetSettings() {
-        navController?.navigate(R.id.navAction_to_FullAssetListFragment)
     }
 
     override fun showFullAssetsSettings() {
@@ -264,15 +260,6 @@ class Navigator :
         navController?.navigate(R.id.editCardsHub)
     }
 
-    override fun showBuyCrypto(isLaunchedFromSoraCard: Boolean) {
-        navController?.navigate(
-            R.id.buyCryptoFragment,
-            withArgs {
-                this.isLaunchedFromSoraCard = isLaunchedFromSoraCard
-            }
-        )
-    }
-
     override fun showInformation() {
         navController?.navigate(R.id.informationFragment)
     }
@@ -285,15 +272,18 @@ class Navigator :
         navController?.navigate(R.id.loginSecurityFragment)
     }
 
-    override fun showSwap(tokenFromId: String?, tokenToId: String?, isLaunchedFromSoraCard: Boolean) {
+    override fun showSwap(tokenFromId: String?, tokenToId: String?) {
         navController?.navigate(
             R.id.swapFragment,
             withArgs {
                 this.tokenFromId = tokenFromId ?: ""
                 this.tokenToId = tokenToId ?: ""
-                this.isLaunchedFromSoraCard = isLaunchedFromSoraCard
             },
         )
+    }
+
+    override fun showPolkamarkt() {
+        navController?.navigate(R.id.polkamarktFragment)
     }
 
     override fun showAppSettings() {
@@ -418,20 +408,6 @@ class Navigator :
         )
     }
 
-    override fun showGetSoraCard(shouldStartSignIn: Boolean, shouldStartSignUp: Boolean) {
-        navController?.navigate(
-            R.id.sora_card_nav_graph,
-            GetSoraCardFragment.createBundle(
-                shouldStartSignIn,
-                shouldStartSignUp
-            )
-        )
-    }
-
-    override fun showSoraCardDetails() {
-        navController?.navigate(R.id.soraCardDetailsFragment)
-    }
-
     override fun showSelectNode() {
         navController?.navigate(
             R.id.select_node_nav_graph
@@ -468,13 +444,63 @@ class Navigator :
         navController?.popBackStack()
     }
 
-    override fun showTxDetails(txHash: String, pop: Boolean) {
+    /**
+     * Pops the claim screen only while it is the screen in front. A blind pop from a timer or a
+     * late network answer would remove whatever is on top instead, and after a pause that is the
+     * PIN lock.
+     */
+    override fun closeClaimScreen() {
+        val controller = navController ?: return
+        if (controller.currentDestination?.id == R.id.claimFragment) {
+            controller.popBackStack(R.id.claimFragment, true)
+        }
+    }
+
+    override fun showTxDetails(txHash: String) {
         navController?.navigate(
             R.id.txDetailsFragment,
             withArgs {
                 this.txHash = txHash
             },
-            if (pop) NavOptions.Builder().setPopUpTo(R.id.cardsHubFragment, false).build() else null,
         )
+    }
+
+    /**
+     * Opens the page of a transaction that [from] has just sent, only while [from] is the screen
+     * in front. The result arrives after a wait of up to two minutes. By then the PIN lock can
+     * be on top, and it is only a destination on this stack: navigating with a pop back to the
+     * hub would remove it and open the wallet without the PIN, and navigating without a pop
+     * would cover it. So nothing is popped and nothing is opened unless [from] itself is the
+     * current destination; everything the pop then removes was put there by the user on the way
+     * to [from].
+     *
+     * The answer is what the stack says afterwards, so a navigation that was dropped (the
+     * fragment manager had already saved its state) is reported as not done.
+     */
+    override fun showTxResult(txHash: String, from: TransactionScreen): Boolean {
+        val controller = navController ?: return false
+        if (controller.currentDestination?.id != from.destinationId()) return false
+        controller.navigate(
+            R.id.txDetailsFragment,
+            withArgs {
+                this.txHash = txHash
+            },
+            if (from.replacedByPage) {
+                NavOptions.Builder().setPopUpTo(R.id.cardsHubFragment, false).build()
+            } else {
+                null
+            },
+        )
+        return controller.currentDestination?.id == R.id.txDetailsFragment
+    }
+
+    private fun TransactionScreen.destinationId(): Int = when (this) {
+        TransactionScreen.SEND -> R.id.transferAmountFragment
+        TransactionScreen.SWAP -> R.id.swapFragment
+        TransactionScreen.ADD_LIQUIDITY -> R.id.addLiquidityFragment
+        TransactionScreen.REMOVE_LIQUIDITY -> R.id.liquidityRemoveFragment
+        TransactionScreen.DEMETER_CLAIM -> R.id.claimDemeterFragment
+        TransactionScreen.DEMETER_STAKE -> R.id.editFarmFragment
+        TransactionScreen.REFERRAL -> R.id.referralFragment
     }
 }

@@ -2,58 +2,43 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_referral_impl.data
 
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.util.Date
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
+import jp.co.soramitsu.feature_referral_api.data.ReferralReward
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.referralBond
 import jp.co.soramitsu.sora.substrate.substrate.referralUnbond
 import jp.co.soramitsu.sora.substrate.substrate.setReferrer
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
@@ -81,29 +66,19 @@ class ReferralRepositoryImpl @Inject constructor(
         keypair: Sr25519Keypair,
         from: String,
         referrer: String,
-        feeToken: Token
-    ): Transaction.ReferralSetReferrer {
-        val currentTime = Date().time
-        val result = extrinsicManager.submitAndWaitExtrinsic(
-            from = from,
-            keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
-        ) {
-            setReferrer(referrer)
-        }
-
-        return Transaction.ReferralSetReferrer(
-            TransactionBase(
-                result.txHash,
-                result.blockHash,
-                BigDecimal.ZERO,
-                if (result.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED,
-                currentTime
-            ),
-            who = referrer,
-            myReferrer = true,
-            token = feeToken
-        )
+        feeToken: Token,
+        activity: Sora2SubmissionActivity?,
+    ): ExtrinsicSubmitStatus = extrinsicManager.submitAndWaitExtrinsic(
+        from = from,
+        keypair = keypair,
+        // `inBlock` is not canonical finality and can be reorged. The shared
+        // extrinsic manager resolves execution events from the returned block,
+        // so referral state must wait for the finalized notification just like
+        // every other production SORA2 mutation.
+        untilStatus = SubstrateCalls.FINALIZED,
+        activity = activity,
+    ) {
+        setReferrer(referrer)
     }
 
     override suspend fun calcBondFee(
@@ -126,28 +101,17 @@ class ReferralRepositoryImpl @Inject constructor(
         amount: BigDecimal,
         token: Token,
         fee: BigDecimal,
-    ): Transaction.ReferralUnbond {
+        activity: Sora2SubmissionActivity?,
+    ): ExtrinsicSubmitStatus {
         val mapped = mapBalance(amount, token.precision)
-        val currentTime = Date().time
-        val result = extrinsicManager.submitAndWaitExtrinsic(
+        return extrinsicManager.submitAndWaitExtrinsic(
             from = from,
             keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
+            untilStatus = SubstrateCalls.FINALIZED,
+            activity = activity,
         ) {
             referralUnbond(mapped)
         }
-
-        return Transaction.ReferralUnbond(
-            TransactionBase(
-                result.txHash,
-                result.blockHash,
-                fee,
-                if (result.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED,
-                currentTime
-            ),
-            amount,
-            token
-        )
     }
 
     override suspend fun observeBond(
@@ -156,28 +120,17 @@ class ReferralRepositoryImpl @Inject constructor(
         amount: BigDecimal,
         token: Token,
         fee: BigDecimal,
-    ): Transaction.ReferralBond {
+        activity: Sora2SubmissionActivity?,
+    ): ExtrinsicSubmitStatus {
         val mapped = mapBalance(amount, token.precision)
-        val currentTime = Date().time
-        val result = extrinsicManager.submitAndWaitExtrinsic(
+        return extrinsicManager.submitAndWaitExtrinsic(
             from = from,
             keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
+            untilStatus = SubstrateCalls.FINALIZED,
+            activity = activity,
         ) {
             referralBond(mapped)
         }
-
-        return Transaction.ReferralBond(
-            TransactionBase(
-                result.txHash,
-                result.blockHash,
-                fee,
-                if (result.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED,
-                currentTime
-            ),
-            amount,
-            token
-        )
     }
 
     override fun observerReferrals(from: String): Flow<String> = flow {

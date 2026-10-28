@@ -2,32 +2,19 @@
 This file is part of the SORA network and Polkaswap app.
 
 Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
-SPDX-License-Identifier: BSD-4-Clause
+SPDX-License-Identifier: Apache-2.0
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or other
-materials provided with the distribution.
+    https://www.apache.org/licenses/LICENSE-2.0
 
-All advertising materials mentioning features or use of this software must display
-the following acknowledgement: This product includes software developed by Polka Biome
-Ltd., SORA, and Polkaswap.
-
-Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
-to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
@@ -52,10 +39,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import java.math.BigDecimal
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
+import jp.co.soramitsu.common.presentation.compose.components.NetworkFeeUnavailableNotice
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.util.testTagAsId
@@ -64,7 +53,7 @@ import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddCo
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddEstimatedState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddPricesState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddState
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledPolkaswapButton as FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -83,6 +72,7 @@ internal fun LiquidityAddScreen(
     onReview: () -> Unit,
     onSelect1: () -> Unit,
     onSelect2: () -> Unit,
+    onRetryEstimate: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -156,7 +146,11 @@ internal fun LiquidityAddScreen(
                 error = false,
             )
         }
-        if (state.shouldTransactionReminderInsufficientWarningBeShown) {
+        // The reminder names the fee, so it is shown only while the fee is known.
+        if (
+            state.shouldTransactionReminderInsufficientWarningBeShown &&
+            state.prices.fee.isNotBlank()
+        ) {
             Divider(
                 modifier = Modifier.fillMaxWidth(),
                 thickness = Dimens.x2,
@@ -174,6 +168,17 @@ internal fun LiquidityAddScreen(
             thickness = Dimens.x2,
             color = Color.Transparent
         )
+        state.estimateUnavailable?.let { reason ->
+            NetworkFeeUnavailableNotice(
+                reason = reason,
+                onRetry = onRetryEstimate,
+            )
+            Divider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = Dimens.x2,
+                color = Color.Transparent
+            )
+        }
         LoaderWrapper(
             modifier = Modifier.fillMaxWidth(),
             loading = state.btnState.loading,
@@ -182,7 +187,7 @@ internal fun LiquidityAddScreen(
             FilledButton(
                 modifier = modifier
                     .testTagAsId("PrimaryButton"),
-                enabled = state.btnState.enabled,
+                enabled = state.btnState.enabled && !LocalSelectedAccountReadOnly.current,
                 size = Size.Large,
                 order = Order.PRIMARY,
                 text = state.btnState.text,
@@ -264,7 +269,7 @@ private fun PreviewLiquidityRemoveScreen() {
                 assetState2 = previewAssetAmountInputState,
                 confirm = LiquidityAddConfirmState(
                     text = "",
-                    confirmResult = false,
+                    confirmResult = null,
                     btnState = ButtonState(
                         text = "btn",
                         enabled = true,
