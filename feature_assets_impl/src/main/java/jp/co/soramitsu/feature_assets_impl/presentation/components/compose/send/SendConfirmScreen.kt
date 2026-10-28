@@ -40,6 +40,8 @@ import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmount
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -115,7 +117,8 @@ internal fun SendConfirmScreen(
         FilledButton(
             modifier = modifier
                 .testTagAsId("ConfirmButton"),
-            enabled = reviewEnabled,
+            enabled = reviewEnabled && !inProgress &&
+                !rememberWalletReadOnly() && !LocalSelectedAccountReadOnly.current,
             text = stringResource(id = R.string.common_confirm),
             size = Size.Large,
             order = Order.PRIMARY,

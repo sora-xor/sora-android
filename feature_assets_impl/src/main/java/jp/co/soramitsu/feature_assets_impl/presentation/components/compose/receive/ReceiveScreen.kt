@@ -157,7 +157,7 @@ private fun PreviewReceiveScreen() {
             .padding(16.dp)
     ) {
         ReceiveScreen(
-            Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888),
+            androidx.core.graphics.createBitmap(10, 10, Bitmap.Config.ARGB_8888),
             previewDrawable,
             "name",
             address = "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm",

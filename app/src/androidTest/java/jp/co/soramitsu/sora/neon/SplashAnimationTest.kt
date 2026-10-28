@@ -1,5 +1,7 @@
 package jp.co.soramitsu.sora.neon
 
+import jp.co.soramitsu.sora.testutil.NativeDisplayCapture
+
 import android.content.ComponentName
 import android.content.res.Configuration
 import android.view.ContextThemeWrapper
@@ -70,8 +72,17 @@ class SplashAnimationTest {
         }
     }
 
-    @Test fun fastReadyStartupKeepsTheHistoricalRingIntroduction() {
+    @Test fun readyStartupUsesThePlatformAppropriateIntroduction() {
         runBlocking { app.darkThemeManager.setReduceEffects(false) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            launchAndMeasure("system-splash", pauseRenderer = false) { animation, _ ->
+                instrumentation.runOnMainSync {
+                    assertEquals(android.view.View.GONE, animation.visibility)
+                    assertTrue("System splash must not be followed by a second animation", !animation.isAnimating)
+                }
+            }
+            return
+        }
         val elapsed = launchAndMeasure("normal", pauseRenderer = false) { animation, notNavigated ->
             Thread.sleep(650)
             var first = 0f
@@ -101,7 +112,9 @@ class SplashAnimationTest {
     @Test fun pausedRendererCannotHoldStartupIndefinitely() {
         runBlocking { app.darkThemeManager.setReduceEffects(false) }
         val elapsed = launchAndMeasure("renderer-fallback", pauseRenderer = true)
-        assertTrue("The paused renderer should exercise the bounded fallback", elapsed >= 3500)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            assertTrue("The paused legacy renderer should exercise the bounded fallback", elapsed >= 3500)
+        }
     }
 
     private fun launchAndMeasure(
@@ -141,8 +154,13 @@ class SplashAnimationTest {
     }
 
     private fun capture(name: String) {
-        val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
-        File(output, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
+        val bitmap = NativeDisplayCapture.capture()
+        try {
+            File(output, "$name.png").outputStream().use {
+                check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) { "Native capture PNG could not be written" }
+            }
+        } finally {
+            bitmap.recycle()
+        }
     }
 }

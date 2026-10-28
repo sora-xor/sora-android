@@ -241,7 +241,9 @@ class DarkThemeManager @Inject constructor(
                     val newInstall = roots.all { directory ->
                         !directory.exists() || directory.listFiles()?.isEmpty() == true
                     }
-                    check(mirror.edit().putBoolean(KEY_NEW_INSTALL_DARK, newInstall).commit())
+                    val editor = mirror.edit()
+                    editor.putBoolean(KEY_NEW_INSTALL_DARK, newInstall)
+                    if (!editor.commit()) throw IllegalStateException("Unable to persist the initial theme")
                     if (newInstall) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                 }
             }.onFailure { Timber.w(it, "Could not capture the initial theme default") }

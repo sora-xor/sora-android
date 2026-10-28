@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.common.util
 
+import androidx.core.content.edit
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -65,8 +66,9 @@ class SensitiveClipboard @Inject constructor(
             putString(OWNER_KEY, token)
         }
         val issued = SystemClock.elapsedRealtime()
-        check(pending.edit().putString("token", token).putLong("issued", issued)
-            .putLong("deadline", issued + 45_000).commit())
+        val editor = pending.edit()
+        editor.putString("token", token).putLong("issued", issued).putLong("deadline", issued + 45_000)
+        if (!editor.commit()) throw IllegalStateException("Unable to persist clipboard expiry")
         clipboard.setPrimaryClip(clip)
         resumePendingExpiry()
     }
@@ -98,7 +100,7 @@ class SensitiveClipboard @Inject constructor(
                 else clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
             }
             // A newer visible item is left alone. Denied/null reads retain the pending marker.
-            pending.edit().clear().commit()
+            pending.edit(commit = true) { clear() }
         }
     }
 

@@ -19,7 +19,6 @@ limitations under the License.
 
 package jp.co.soramitsu.common.base
 
-import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -130,7 +129,6 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
         }
     }
 
-    @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

@@ -83,13 +83,7 @@
     <attr name="homeButtonIcon" format="reference|color" />
     <attr name="homeButtonVisible" format="boolean" />
 
-    <dimen name="defaultLineHeight">6dp</dimen>
-    <color name="defaultLeftColor">@color/grey</color>
-    <color name="defaultRightColor">@color/brand_soramitsu_red</color>
-    <color name="defaultDelimiterColor">@color/black</color>
 
-    <dimen name="delimiterExtraSpace">4dp</dimen>
-    <dimen name="delimiterWidth">2dp</dimen>
 
     <!--Pincode-->
     <attr name="uikit_pinCodeButtonTitleColor" format="reference" />

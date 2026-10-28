@@ -174,7 +174,7 @@ internal class DemeterFarmingRepositoryImpl(
     }
 
     private val cachedFarmedPools = ConcurrentHashMap<String, List<DemeterFarmingPool>>()
-    private var cachedFarmedBasicPools: List<DemeterFarmingBasicPool>? = null
+    private val cachedFarmedBasicPools = ConcurrentHashMap<String, List<DemeterFarmingBasicPool>>()
 
     override fun subscribeFarms(address: String): Flow<String> = flow {
         val storage =
@@ -187,8 +187,8 @@ internal class DemeterFarmingRepositoryImpl(
             substrateCalls.observeBulk(storageKey)
                 .debounce(300)
                 .onEach {
-                    cachedFarmedPools.remove(address)
-                    cachedFarmedBasicPools = null
+                    cachedFarmedPools.keys.removeAll { it.endsWith(":$address") }
+                    cachedFarmedBasicPools.clear()
                 }
         )
     }
@@ -353,10 +353,10 @@ internal class DemeterFarmingRepositoryImpl(
     override suspend fun getFarmedPools(
         soraAccountAddress: String,
     ): List<DemeterFarmingPool>? {
-        if (cachedFarmedPools.containsKey(soraAccountAddress)) return cachedFarmedPools[soraAccountAddress]
-        cachedFarmedPools.remove(soraAccountAddress)
-        val baseFarms = getFarmedBasicPools()
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        val cacheKey = "${selectedCurrency.code}:$soraAccountAddress"
+        cachedFarmedPools[cacheKey]?.let { return it }
+        val baseFarms = getFarmedBasicPools()
         val calculated = getDemeter(soraAccountAddress)
             ?.filter { it.farm && it.amount.isZero().not() }
             ?.mapNotNull {
@@ -383,14 +383,14 @@ internal class DemeterFarmingRepositoryImpl(
                     amountReward = mapBalance(it.rewardAmount, rewardTokenMapped.precision),
                 )
             } ?: return null
-        return cachedFarmedPools.getOrPut(soraAccountAddress) { calculated }
+        return cachedFarmedPools.getOrPut(cacheKey) { calculated }
     }
 
     override suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool> {
-        if (cachedFarmedBasicPools == null) {
-            val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        if (!cachedFarmedBasicPools.containsKey(selectedCurrency.code)) {
             val rewardTokens = getRewardTokens()
-            cachedFarmedBasicPools = getAllFarms()
+            cachedFarmedBasicPools[selectedCurrency.code] = getAllFarms()
                 .mapNotNull { basic ->
                     runCatching {
                         val baseTokenMapped = assetLocalToAssetMapper.map(
@@ -404,13 +404,15 @@ internal class DemeterFarmingRepositoryImpl(
                         )
                         val rewardToken = rewardTokens.find { it.token == basic.reward }
                         val emission = getEmission(basic, rewardToken, rewardTokenMapped.precision)
-                        val total = mapBalance(basic.totalTokensInPool, poolTokenMapped.precision)
+                        val total = mapBalance(basic.totalTokensInPool, baseTokenMapped.precision)
                         val poolTokenPrice = BigDecimal(poolTokenMapped.fiatPrice ?: 0.0)
                         val rewardTokenPrice = BigDecimal(rewardTokenMapped.fiatPrice ?: 0.0)
                         val tvl = if (basic.isFarm) {
                             polkaswapRepository.getBasicPool(basic.base, basic.pool)?.let { pool ->
-                                val kf = pool.targetReserves.div(pool.totalIssuance)
-                                kf.times(total).times(2.toBigDecimal()).times(poolTokenPrice)
+                                if (pool.totalIssuance.isZero()) BigDecimal.ZERO else {
+                                    val kf = pool.targetReserves.div(pool.totalIssuance)
+                                    kf.times(total).times(2.toBigDecimal()).times(poolTokenPrice)
+                                }
                             } ?: BigDecimal.ZERO
                         } else {
                             total.times(poolTokenPrice)
@@ -429,11 +431,14 @@ internal class DemeterFarmingRepositoryImpl(
                             fee = mapBalance(basic.depositFee, baseTokenMapped.precision).toDouble()
                                 .times(100.0),
                         )
-                    }.getOrNull()
+                    }.getOrElse { error ->
+                        if (error is kotlinx.coroutines.CancellationException) throw error
+                        null
+                    }
                 }
         }
 
-        return cachedFarmedBasicPools ?: emptyList()
+        return cachedFarmedBasicPools[selectedCurrency.code] ?: emptyList()
     }
 
     private fun getEmission(

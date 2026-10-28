@@ -3,7 +3,7 @@
   "description": "Manifest contract for the current SORA Nexus (modernize) line. Preserves the production permission, backup, analytics and exported-component checks, with only the existing IrohaConnect activity and its two exact connect URI filters added. The separate android-production-manifest-policy.json retains the public 3.9.x store contract.",
   "applicationId": "jp.co.soramitsu.sora",
   "minSdkVersion": 26,
-  "targetSdkVersion": 36,
+  "targetSdkVersion": 37,
   "usesPermissions": [
     "android.permission.ACCESS_NETWORK_STATE",
     "android.permission.CAMERA",
@@ -21,7 +21,8 @@
   "queries": [],
   "exportedComponents": {
     "jp.co.soramitsu.sora.splash.presentation.SplashActivity": {
-      "launcherOnly": true
+      "launcherOnly": true,
+      "targetActivity": "jp.co.soramitsu.sora.splash.presentation.WalletStartupActivity"
     },
     "com.google.android.gms.auth.api.signin.RevocationBoundService": {
       "permission": "com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"

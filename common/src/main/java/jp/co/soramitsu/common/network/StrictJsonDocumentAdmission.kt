@@ -116,7 +116,7 @@ private fun readStrictJsonValue(
                 invalidJson()
             }
         }
-        JsonToken.BOOLEAN -> reader.nextBoolean()
+        JsonToken.BOOLEAN -> reader.skipValue()
         JsonToken.NULL -> reader.nextNull()
         else -> invalidJson()
     }

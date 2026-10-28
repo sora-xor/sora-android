@@ -721,4 +721,86 @@ class ReferralViewModelTest {
             referralViewModel.navToStart.getOrAwaitValue(),
         )
     }
+
+    @Test fun `bond count accepts zero and rejects negative input while stepper has a minimum of one`() = runTest {
+        programLoaded()
+        referralViewModel.openBond()
+        advanceUntilIdle()
+        assertEquals(1, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        referralViewModel.onBondMinus()
+        advanceUntilIdle()
+        assertEquals(1, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        referralViewModel.onBondValueChange(-2)
+        advanceUntilIdle()
+        assertEquals(1, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        referralViewModel.onBondValueChange(0)
+        advanceUntilIdle()
+        assertEquals(0, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        referralViewModel.onBondValueChange(20)
+        advanceUntilIdle()
+        assertEquals(2, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        referralViewModel.onBondPlus()
+        advanceUntilIdle()
+        assertEquals(3, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+    }
+
+    @Test fun `unbond count is capped by invitations funded by the current balance`() = runTest {
+        whenever(resourceManager.getString(R.string.referral_invitaion_link_title)).thenReturn("Invitation link")
+        programLoaded()
+        referrerBalanceFlowEmit(BigDecimal("0.21"))
+        advanceUntilIdle()
+        referralViewModel.openUnbond()
+        advanceUntilIdle()
+        assertEquals(1, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        referralViewModel.onUnbondPlus()
+        advanceUntilIdle()
+        assertEquals(2, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        referralViewModel.onUnbondPlus()
+        advanceUntilIdle()
+        referralViewModel.onUnbondPlus()
+        advanceUntilIdle()
+        assertEquals(3, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        referralViewModel.onUnbondValueChange(4)
+        referralViewModel.onUnbondValueChange(-1)
+        advanceUntilIdle()
+        assertEquals(3, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        referralViewModel.onUnbondMinus()
+        advanceUntilIdle()
+        assertEquals(2, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        referralViewModel.onUnbondValueChange(1)
+        advanceUntilIdle()
+        referralViewModel.onUnbondMinus()
+        advanceUntilIdle()
+        assertEquals(1, referralViewModel.referralScreenState.value.bondState.invitationsCount)
+        verify(assetsInteractor, atLeast(1)).isNotEnoughXorLeftAfterTransaction(networkFeeInXor = any(), xorChange = eq(BigDecimal("-0.21")))
+    }
+
+    @Test fun `sharing emits the displayed invitation and referral details expand reversibly`() = runTest {
+        programLoaded()
+        referralViewModel.onShareLink()
+        assertEquals(referralViewModel.referralScreenState.value.referralInvitationsCardState.wrappedTextState.text, referralViewModel.shareLinkEvent.value)
+        val initial = referralViewModel.referralScreenState.value.referralInvitationsCardState.referrals.isExpanded
+        referralViewModel.toggleReferralsCard()
+        assertEquals(!initial, referralViewModel.referralScreenState.value.referralInvitationsCardState.referrals.isExpanded)
+        referralViewModel.toggleReferralsCard()
+        assertEquals(initial, referralViewModel.referralScreenState.value.referralInvitationsCardState.referrals.isExpanded)
+    }
+
+    @Test fun `each referral subpage presents the correct toolbar title`() = runTest {
+        programLoaded()
+        mapOf(
+            ReferralFeatureRoutes.BOND_XOR to R.string.referral_add_invitations_title,
+            ReferralFeatureRoutes.UNBOND_XOR to R.string.wallet_unbonded,
+            ReferralFeatureRoutes.REFERRER_INPUT to R.string.referral_enter_link_title,
+            ReferralFeatureRoutes.REFERRER_FILLED to R.string.referral_your_referrer,
+            ReferralFeatureRoutes.REFERRAL_PROGRAM to R.string.referral_toolbar_title,
+        ).forEach { (route, expected) ->
+            referralViewModel.onCurrentDestinationChanged(route)
+            assertEquals(expected, referralViewModel.toolbarState.value?.basic?.title)
+        }
+        referralViewModel.setCurDestination(ReferralFeatureRoutes.REFERRAL_PROGRAM)
+        referralViewModel.onBackPressed()
+        verify(router).popBackStack()
+    }
+
 }

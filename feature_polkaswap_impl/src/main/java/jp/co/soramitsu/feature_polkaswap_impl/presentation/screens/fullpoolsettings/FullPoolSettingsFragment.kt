@@ -149,6 +149,8 @@ class FullPoolSettingsFragment : SoraBaseFragment<FullPoolSettingsViewModel>() {
                             itemTouchHelper.attachToRecyclerView(view.list)
                             view.list.adapter = PoolsManagementAdapter(
                                 itemTouchHelper,
+                                { itemTouchHelperCallback.isDraggable },
+                                viewModel::assetPositionChanged,
                                 viewModel::onFavoriteClick,
                             )
                             viewModel.settingsState.observe {

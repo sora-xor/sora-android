@@ -130,6 +130,35 @@ class ProfileViewModelTest {
     }
 
     @Test
+    fun `each settings action routes to its own destination once`() = runTest {
+        every { router.showAccountList() } returns Unit
+        every { router.showAppSettings() } returns Unit
+        every { router.showLoginSecurity() } returns Unit
+        every { router.showInformation() } returns Unit
+        every { router.showDebugMenu() } returns Unit
+        every { polkaswapRouter.showPolkamarkt() } returns Unit
+        every { referralRouter.showReferrals() } returns Unit
+        every { selectNodeRouter.showSelectNode() } returns Unit
+        initViewModel()
+        profileViewModel.showAccountList(); profileViewModel.showAppSettings()
+        profileViewModel.showLogin(); profileViewModel.showAbout(); profileViewModel.showDebugMenu()
+        profileViewModel.showPolkamarkt(); profileViewModel.showReferral(); profileViewModel.showSelectNode()
+        io.mockk.verify(exactly = 1) {
+            router.showAccountList(); router.showAppSettings(); router.showLoginSecurity()
+            router.showInformation(); router.showDebugMenu(); polkaswapRouter.showPolkamarkt()
+            referralRouter.showReferrals(); selectNodeRouter.showSelectNode()
+        }
+    }
+
+    @Test
+    fun `node stream failure is reported while independent feature state remains available`() = runTest {
+        every { interactor.flowSelectedNode() } returns kotlinx.coroutines.flow.flow { throw IllegalStateException("node read failed") }
+        initViewModel(); advanceUntilIdle()
+        org.junit.Assert.assertNotNull(profileViewModel.errorFromResourceLiveData.value)
+        assertEquals(true, profileViewModel.state.value.polkamarktVisible)
+    }
+
+    @Test
     fun `late feature configuration preserves the already connected node`() = runTest {
         coEvery { productionFeatureManager.getState() } coAnswers {
             delay(2000)

@@ -2,13 +2,14 @@
   Toast card (design spec 7.13): bg.toast with its own text colour, so it stays readable in both
   themes (the TextAppearance colour follows the theme, the card is inverted in light).
 -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.AppCompatTextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/text"
     style="@style/TextAppearance.Soramitsu.Neu.Light.15"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/rounded_toast_bg"
-    android:drawableTop="@drawable/ic_green_pin"
+    app:drawableTopCompat="@drawable/ic_green_pin"
     android:drawablePadding="@dimen/x1"
     android:gravity="center"
     android:padding="@dimen/x3"

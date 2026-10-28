@@ -24,7 +24,6 @@ import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
-import jp.co.soramitsu.androidfoundation.format.toDoubleInfinite
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.mapBalance
@@ -36,7 +35,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 fun String.toDoubleNan(): Double? = this.toDoubleOrNull()?.let {
-    if (it.isNaN()) null else it
+    it.takeIf(Double::isFinite)
 }
 
 @Singleton
@@ -49,24 +48,13 @@ class BlockExplorerManager @Inject constructor(
 
     private val tempApy = mutableListOf<IndexerPoolApy>()
 
-    private var assetsInfo: List<Pair<String, Double>>? = null
-
     private val mutexFiat = Mutex()
 
     fun getTempApy(id: String) = tempApy.find { it.id == id }?.value?.toDoubleNan()
-        ?.times(100)
+        ?.times(100)?.takeIf(Double::isFinite)
 
-    suspend fun getTokensLiquidity(tokenIds: List<String>): List<Pair<String, Double>> {
-        if (assetsInfo == null) {
-            mutexFiat.withLock {
-                if (assetsInfo == null) {
-                    assetsInfo = getAssetsInfoInternal(tokenIds)
-                }
-            }
-        }
-
-        return checkNotNull(assetsInfo)
-    }
+    suspend fun getTokensLiquidity(tokenIds: List<String>): List<Pair<String, Double>> =
+        mutexFiat.withLock { getAssetsInfoInternal(tokenIds) }
 
     private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, Double>> {
         return runCatching {
@@ -82,7 +70,7 @@ class BlockExplorerManager @Inject constructor(
 
                 if (dbValue != null) {
                     fiats += dbValue.copy(
-                        fiatChange = priceChangeDay?.div(100.0),
+                        fiatChange = priceChangeDay?.takeIf(Double::isFinite)?.div(100.0),
                         fiatPricePrevHTime = yesterdayHour,
                     )
                 }
@@ -91,15 +79,14 @@ class BlockExplorerManager @Inject constructor(
                     tokenId = dbValue?.tokenIdFiat ?: return@forEach
                 ) ?: return@forEach
 
-                val supply = assetInfo.liquidity?.toBigIntegerOrNull()?.let {
+                val supply = assetInfo.liquidity?.toBigIntegerOrNull()?.takeIf { it.signum() >= 0 }?.let {
                     mapBalance(it, precision)
                 } ?: return@forEach
+                val price = dbValue.fiatPrice.takeIf { it.isFinite() && it >= 0 } ?: return@forEach
+                val liquidity = supply.times(BigDecimal.valueOf(price)).toDouble()
+                    .takeIf(Double::isFinite) ?: return@forEach
 
-                resultList += Pair(
-                    first = assetInfo.id,
-                    second = supply.times(BigDecimal(dbValue.fiatPrice))
-                        .toDoubleInfinite()
-                )
+                resultList += assetInfo.id to liquidity
             }
 
             db.assetDao().insertFiatPrice(fiats)
@@ -156,18 +143,19 @@ class BlockExplorerManager @Inject constructor(
     }
 
     private suspend fun updateFiatPrices(fiatData: List<FiatInfo>) = mutexFiat.withLock {
-        val selected = soraConfigManager.getSelectedCurrency()
-        val tokens = db.assetDao().getTokensWithFiatOfCurrency(selected.code)
+        // The indexer supplies USD prices; a selected display currency does not convert them.
+        val currencyCode = "USD"
+        val tokens = db.assetDao().getTokensWithFiatOfCurrency(currencyCode)
 
         val prices = fiatData.mapNotNull { apy ->
             val dbValue = tokens.find { it.token.id == apy.id }
-            val fiatPrice = apy.priceUsd
+            val fiatPrice = apy.priceUsd?.takeIf { it.isFinite() && it >= 0 }
             if (dbValue != null && fiatPrice != null) {
                 val dbPrice = dbValue.price
                 if (dbPrice != null) {
                     FiatTokenPriceLocal(
                         dbPrice.tokenIdFiat,
-                        selected.code,
+                        currencyCode,
                         fiatPrice,
                         nowInSecond(),
                         dbPrice.fiatPricePrevH,
@@ -179,7 +167,7 @@ class BlockExplorerManager @Inject constructor(
                 } else {
                     FiatTokenPriceLocal(
                         tokenIdFiat = dbValue.token.id,
-                        selected.code,
+                        currencyCode,
                         fiatPrice,
                         nowInSecond(),
                         0.0,

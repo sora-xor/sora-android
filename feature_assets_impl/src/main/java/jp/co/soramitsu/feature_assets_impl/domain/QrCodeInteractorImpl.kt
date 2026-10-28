@@ -65,7 +65,7 @@ class QrCodeInteractorImpl @Inject constructor(
             throw QrException.decodeError()
 
         val address = parsedQrCode.getOrNull(1).run {
-            if (this == null)
+            if (this.isNullOrEmpty())
                 throw QrException.decodeError()
 
             val myAddress = userRepository.getCurSoraAccount()
@@ -84,15 +84,15 @@ class QrCodeInteractorImpl @Inject constructor(
         }
 
         val tokenId = parsedQrCode.getOrNull(4).run {
-            if (this == null)
+            if (this.isNullOrEmpty())
                 throw QrException.decodeError()
 
             val isTokenInWhitelist = assetsRepository.isWhitelistedToken(
                 tokenId = this
             )
 
-            return@run if (isTokenInWhitelist) this else
-                SubstrateOptionsProvider.feeAssetId
+            if (!isTokenInWhitelist) throw QrException.decodeError()
+            return@run this
         }
 
         val amount = parsedQrCode.getOrNull(5)

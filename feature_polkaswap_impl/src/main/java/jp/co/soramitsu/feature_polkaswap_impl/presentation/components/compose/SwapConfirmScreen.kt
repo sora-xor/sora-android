@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -185,7 +186,7 @@ internal fun SwapConfirmScreen(
                 ) { modifier, elevation ->
                     FilledButton(
                         modifier = modifier,
-                        enabled = state.confirmButtonState.enabled,
+                        enabled = state.confirmButtonState.enabled && !LocalSelectedAccountReadOnly.current,
                         size = Size.Large,
                         order = Order.PRIMARY,
                         text = state.confirmButtonState.text,

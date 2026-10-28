@@ -19,7 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.common_wallet.presentation.compose.components
 
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -52,7 +52,7 @@ fun AssetItem(
         modifier = Modifier
             .testTagAsId(testTag)
             .padding(horizontal = Dimens.x3),
-        icon = Uri.parse(assetState.tokenIcon),
+        icon = assetState.tokenIcon.toUri(),
         name = assetState.tokenName,
         balance = assetState.assetAmount,
         symbol = frozenSuffix(assetState),
@@ -98,7 +98,7 @@ fun AssetItemEnumerated(
         Asset(
             modifier = Modifier
                 .testTagAsId(testTag),
-            icon = Uri.parse(assetState.tokenIcon),
+            icon = assetState.tokenIcon.toUri(),
             name = assetState.tokenName,
             balance = assetState.assetAmount,
             symbol = frozenSuffix(assetState),

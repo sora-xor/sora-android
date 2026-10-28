@@ -112,7 +112,8 @@ data class ReceiveTokenByQrScreenState(
 
     val isShareQRCodeEnabled: Boolean =
         screenStatus === ScreenStatus.READY_TO_RENDER &&
-            untransformedUserAddress != null &&
+            untransformedQrBitmap != null &&
+            !untransformedUserAddress.isNullOrBlank() &&
             untransformedAvatarDrawable != null
 }
 

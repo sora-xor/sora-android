@@ -25,6 +25,52 @@ class NexusQuantityContractTest {
         assertFalse(NexusQuantityContract.isWireQuantity("+1"))
     }
 
+    @Test
+    fun `draft amount accepts an unfinished decimal but the wire requires fraction digits`() {
+        listOf("0", "1", "10.0", "0.000000001").forEach {
+            assertTrue(it, NexusQuantityContract.isInputQuantity(it))
+            assertTrue(it, NexusQuantityContract.isWireQuantity(it))
+        }
+        listOf("0.", "1.").forEach {
+            assertTrue(it, NexusQuantityContract.isInputQuantity(it))
+            assertFalse(it, NexusQuantityContract.isWireQuantity(it))
+        }
+    }
+
+    @Test
+    fun `both input and wire reject partial parses and non ASCII quantities`() {
+        listOf(
+            "", ".", ".5", "01", "00.1", "-1", "-0", "1,25", "1.2.3", "1XOR",
+            "1e3", "1e+", "+1", "１", "١", "1\n", "1\r", "1\t", " 1", "1 ", "1\u0000",
+        ).forEach {
+            assertFalse(it, NexusQuantityContract.isInputQuantity(it))
+            assertFalse(it, NexusQuantityContract.isWireQuantity(it))
+        }
+    }
+
+    @Test
+    fun `wire character budget applies before parsing to both input and read quantities`() {
+        val limit = NexusQuantityContract.MAX_WIRE_CHARACTERS
+        listOf("9".repeat(limit), "9".repeat(limit - 2) + ".1").forEach {
+            assertTrue(NexusQuantityContract.isInputQuantity(it))
+            assertTrue(NexusQuantityContract.isWireQuantity(it))
+            assertFalse(NexusQuantityContract.isInputQuantity(it + "1"))
+            assertFalse(NexusQuantityContract.isWireQuantity(it + "1"))
+        }
+    }
+
+    @Test
+    fun `asset scale limits count trailing zeros and never round excess precision`() {
+        assertTrue(NexusQuantityContract.hasScaleAtMost("1", 0))
+        assertFalse(NexusQuantityContract.hasScaleAtMost("1.0", 0))
+        assertTrue(NexusQuantityContract.hasScaleAtMost("1.00", 2))
+        assertFalse(NexusQuantityContract.hasScaleAtMost("1.000", 2))
+        assertFalse(NexusQuantityContract.hasScaleAtMost("1.", 2))
+        assertTrue(NexusQuantityContract.isTairaXorQuantity("0.000000001"))
+        assertFalse(NexusQuantityContract.isTairaXorQuantity("0.0000000001"))
+        assertFalse(NexusQuantityContract.isTairaXorQuantity("1.0000000000"))
+    }
+
     private fun quantityWithScale(scale: Int): String =
         "0." + "0".repeat(scale - 1) + "1"
 }

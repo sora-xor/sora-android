@@ -20,6 +20,7 @@ limitations under the License.
 package jp.co.soramitsu.feature_select_node_impl
 
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
@@ -36,10 +37,10 @@ import jp.co.soramitsu.feature_select_node_api.NodeManagerEvent
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.xsubstrate.wsrpc.state.SocketStateMachine
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -74,8 +75,9 @@ internal class NodeManagerImpl(
 
     private var customNodeUrl: String = ""
 
-    private var autoSwitchingStarted: Boolean = false
-    private val attemptedNodes = mutableListOf<ChainNode>()
+    private val attemptedNodes = mutableSetOf<String>()
+    private var allNodesUnavailableReported = false
+    private val requestGeneration = AtomicLong()
 
     private val started = AtomicBoolean(false)
 
@@ -109,13 +111,14 @@ internal class NodeManagerImpl(
 
         connectionManager.networkState
             .onEach {
+                val handlingRequest = stateObserverEnabled || blockHashCheckObserverEnabled
                 if (stateObserverEnabled) {
                     handleState(it)
                 }
                 if (blockHashCheckObserverEnabled) {
                     handleConnectionStateForBlockHashCheck(it)
                 }
-                autoSwitch(it)
+                if (!handlingRequest) autoSwitch(it)
             }
             .launchIn(coroutineManager.applicationScope)
 
@@ -128,9 +131,8 @@ internal class NodeManagerImpl(
 
         selectNodeRepository.getSelectedNode()
             .distinctUntilChanged()
-            .filterNotNull()
             .onEach {
-                selectedNode = it.takeIf { node -> SoraNodeEndpointPolicy.isAllowed(node.address) }
+                selectedNode = it?.takeIf { node -> SoraNodeEndpointPolicy.isAllowed(node.address) }
             }
             .launchIn(coroutineManager.applicationScope)
     }
@@ -147,6 +149,7 @@ internal class NodeManagerImpl(
                 _events.emit(NodeManagerEvent.NoConnection)
             }
         } else {
+            beginRequest()
             previousNode = selectedNode
             newNode = node
             stateObserverEnabled = true
@@ -157,26 +160,39 @@ internal class NodeManagerImpl(
     override val connectionState: Flow<Boolean> = connectionManager.connectionState
 
     private suspend fun handleState(state: SocketStateMachine.State) {
+        val candidate = newNode ?: return
+        val generation = requestGeneration.get()
         when (state) {
             is SocketStateMachine.State.Connected -> {
-                if (state.url == newNode?.address) {
-                    newNode?.let { _events.emit(NodeManagerEvent.Connected(it.address)) }
-                    newNode?.let { selectNodeRepository.selectNode(it) }
-                    stateObserverEnabled = false
+                if (state.url != candidate.address) return
+                stateObserverEnabled = false
+                try {
+                    selectNodeRepository.selectNode(candidate)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    failManualSelection(candidate, generation)
+                    return
                 }
-            }
-
-            is SocketStateMachine.State.WaitingForReconnect -> {
-                newNode?.let { _events.emit(NodeManagerEvent.ConnectionFailed(it.address)) }
+                if (generation != requestGeneration.get()) return
+                selectedNode = candidate
                 newNode = null
-                previousNode?.address?.let {
-                    stateObserverEnabled = false
-                    switchUrlWithWalletMutationBarrier(it)
-                }
+                _events.emit(NodeManagerEvent.Connected(candidate.address))
             }
-
-            else -> {}
+            is SocketStateMachine.State.WaitingForReconnect -> {
+                if (state.url == candidate.address) failManualSelection(candidate, generation)
+            }
+            else -> Unit
         }
+    }
+
+    private suspend fun failManualSelection(candidate: ChainNode, generation: Long) {
+        if (generation != requestGeneration.get()) return
+        stateObserverEnabled = false
+        newNode = null
+        val restore = previousNode?.address
+        _events.emit(NodeManagerEvent.ConnectionFailed(candidate.address))
+        restore?.let { switchUrlWithWalletMutationBarrier(it, generation) }
     }
 
     override fun checkGenesisHash(url: String) {
@@ -197,6 +213,7 @@ internal class NodeManagerImpl(
             return
         }
 
+        beginRequest()
         previousNode = selectedNode
         customNodeUrl = url
 
@@ -224,85 +241,102 @@ internal class NodeManagerImpl(
     }
 
     private suspend fun handleConnectionStateForBlockHashCheck(state: SocketStateMachine.State) {
+        val url = customNodeUrl
+        val generation = requestGeneration.get()
+        val restore = previousNode?.address
         when (state) {
             is SocketStateMachine.State.Connected -> {
-                if (state.url == customNodeUrl) {
-                    blockHashCheckObserverEnabled = false
-                    try {
-                        val newHash = selectNodeRepository.getBlockHash()
-                        if (BuildUtils.isFlavors(
-                                Flavor.DEVELOP,
-                                Flavor.SORALUTION
-                            )
-                        ) {
-                            _events.emit(NodeManagerEvent.GenesisValidated(result = true))
-                        } else {
-                            _events.emit(NodeManagerEvent.GenesisValidated(result = soraConfigManager.getGenesis().removeHexPrefix() == newHash.removeHexPrefix()))
-                        }
-                    } catch (e: Throwable) {
-                        _events.emit(NodeManagerEvent.GenesisValidated(result = false))
-                    }
-                    previousNode?.address?.let { switchUrlWithWalletMutationBarrier(it) }
-                    customNodeUrl = ""
+                if (state.url != url) return
+                blockHashCheckObserverEnabled = false
+                val valid = try {
+                    val newHash = selectNodeRepository.getBlockHash()
+                    BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.SORALUTION) ||
+                        soraConfigManager.getGenesis().removeHexPrefix() == newHash.removeHexPrefix()
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    false
                 }
+                // A different selection may have arrived while the RPC was in flight.
+                if (generation != requestGeneration.get()) return
+                customNodeUrl = ""
+                _events.emit(NodeManagerEvent.GenesisValidated(result = valid))
+                restore?.let { switchUrlWithWalletMutationBarrier(it, generation) }
             }
-
             is SocketStateMachine.State.WaitingForReconnect -> {
-                if (state.url == customNodeUrl) {
-                    customNodeUrl = ""
-                    blockHashCheckObserverEnabled = false
-                    _events.emit(NodeManagerEvent.ConnectionFailed(customNodeUrl))
-                    previousNode?.address?.let { switchUrlWithWalletMutationBarrier(it) }
-                }
+                if (state.url != url) return
+                customNodeUrl = ""
+                blockHashCheckObserverEnabled = false
+                _events.emit(NodeManagerEvent.ConnectionFailed(url))
+                restore?.let { switchUrlWithWalletMutationBarrier(it, generation) }
             }
-
-            else -> {}
+            else -> Unit
         }
     }
 
     private suspend fun autoSwitch(currentState: SocketStateMachine.State) {
-        if (!autoSwitch || availableNodes.isEmpty()) {
-            return
-        }
-
+        if (!autoSwitch || availableNodes.isEmpty()) return
+        val current = selectedNode ?: return
         if (currentState is SocketStateMachine.State.Connected) {
-            autoSwitchingStarted = false
-            attemptedNodes.clear()
+            if (currentState.url == current.address) resetAutoSwitch()
             return
         }
-
-        if (!autoSwitchingStarted && attemptedNodes.isNotEmpty()) {
+        if (currentState !is SocketStateMachine.State.WaitingForReconnect ||
+            currentState.url != current.address || currentState.attempt % NODE_SWITCHING_FREQUENCY != 0
+        ) return
+        if (allNodesUnavailableReported) return
+        val currentIndex = availableNodes.indexOfFirst { it.address == current.address }
+        if (currentIndex < 0) return
+        val next = availableNodes[(currentIndex + 1) % availableNodes.size]
+        if (next.address in attemptedNodes) {
+            allNodesUnavailableReported = true
             _events.emit(NodeManagerEvent.AllNodesUnavailable)
             return
         }
-
-        if (currentState is SocketStateMachine.State.WaitingForReconnect && (currentState.attempt % NODE_SWITCHING_FREQUENCY) == 0) {
-            if (!autoSwitchingStarted) {
-                autoSwitchingStarted = true
+        val generation = requestGeneration.get()
+        var failed = false
+        WalletMutationCoordinator.withLock {
+            if (generation != requestGeneration.get()) return@withLock
+            try {
+                connectionManager.switchUrl(next.address)
+                selectNodeRepository.selectNode(next)
+                selectedNode = next
+                attemptedNodes += next.address
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                if (generation == requestGeneration.get()) connectionManager.switchUrl(current.address)
+                failed = true
             }
-
-            val currentNodeIndex = availableNodes.indexOfFirst { it.isSelected }
-            // if current selected node is the last, start from first node
-            val nextNodeIndex = (currentNodeIndex + 1) % availableNodes.size
-            val nextNode = availableNodes[nextNodeIndex]
-
-            if (currentNodeIndex > 0) {
-                if (attemptedNodes.firstOrNull { it.address == availableNodes[currentNodeIndex].address } != null) {
-                    autoSwitchingStarted = false
-                    return
-                }
-
-                attemptedNodes.add(availableNodes[currentNodeIndex])
-            }
-
-            switchUrlWithWalletMutationBarrier(nextNode.address)
-            selectNodeRepository.selectNode(nextNode)
+        }
+        if (failed && generation == requestGeneration.get()) {
+            _events.emit(NodeManagerEvent.ConnectionFailed(next.address))
         }
     }
 
+    private fun resetAutoSwitch() {
+        attemptedNodes.clear()
+        allNodesUnavailableReported = false
+    }
+
+    private fun beginRequest() {
+        requestGeneration.incrementAndGet()
+        stateObserverEnabled = false
+        blockHashCheckObserverEnabled = false
+        newNode = null
+        customNodeUrl = ""
+        resetAutoSwitch()
+    }
+
     private fun switchUrlAfterWalletMutations(url: String) {
+        val generation = requestGeneration.get()
         coroutineManager.applicationScope.launch {
-            switchUrlWithWalletMutationBarrier(url)
+            WalletMutationCoordinator.withLock {
+                if (generation != requestGeneration.get()) return@withLock
+                // Another admitted selection may finish while this request waits for the lock.
+                previousNode = selectedNode
+                connectionManager.switchUrl(url)
+            }
         }
     }
 
@@ -311,9 +345,10 @@ internal class NodeManagerImpl(
      * durable hash journaling, or the final transport handoff guarded by this same process-wide
      * coordinator.
      */
-    private suspend fun switchUrlWithWalletMutationBarrier(url: String) {
+    private suspend fun switchUrlWithWalletMutationBarrier(url: String, generation: Long) {
         if (!SoraNodeEndpointPolicy.isAllowed(url)) return
         WalletMutationCoordinator.withLock {
+            if (generation != requestGeneration.get()) return@withLock
             connectionManager.switchUrl(url)
         }
     }

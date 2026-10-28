@@ -188,8 +188,11 @@ class TransferAmountViewModel @AssistedInject constructor(
                                     )
                                 }
                             }
-                        _sendState.value.input?.amount?.let {
-                            checkEnteredAmount(it)
+                        if (feeAsset == null) {
+                            invalidateFeeReview()
+                            _sendState.value = _sendState.value.copy(feeLoading = false, fee = "", feeFiat = "")
+                        } else {
+                            _sendState.value.input?.amount?.let { checkEnteredAmount(it) }
                         }
                     }
                 }
@@ -243,6 +246,12 @@ class TransferAmountViewModel @AssistedInject constructor(
                     lockedNote = lockedNoteOf(asset),
                 )
             }
+        }
+        if (curAsset == null) {
+            invalidateFeeReview()
+            _sendState.value = _sendState.value.copy(
+                input = null, lockedNote = null, feeLoading = false, fee = "", feeFiat = "",
+            )
         }
     }
 
@@ -498,6 +507,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                 // The result was shown. A transfer that reached the network keeps Confirm off
                 // through sentTxHash; in every other case Confirm may be used again.
                 confirmInFlight = false
+                _sendState.value = _sendState.value.copy(inProgress = false)
             }
         }
     }
@@ -639,7 +649,7 @@ class TransferAmountViewModel @AssistedInject constructor(
         val feeAsset = feeAsset ?: return
         val curAsset = curAsset ?: return
         when {
-            amount.isZero() -> {
+            amount.signum() <= 0 -> {
                 _sendState.value = _sendState.value.copy(
                     input = _sendState.value.input?.copy(
                         error = false,

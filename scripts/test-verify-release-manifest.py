@@ -29,6 +29,7 @@ ANDROID_NS = checker.ANDROID_NS
 ATTRIBUTE_ID = {name: number for number, name in checker.ANDROID_ATTRIBUTE_IDS.items()}
 NO_INDEX = 0xFFFFFFFF
 SPLASH = "jp.co.soramitsu.sora.splash.presentation.SplashActivity"
+STARTUP = "jp.co.soramitsu.sora.splash.presentation.WalletStartupActivity"
 IROHA = "jp.co.soramitsu.sora.irohaconnect.IrohaConnectActivity"
 NEXUS_POLICY = CHECKER.parent.parent / "config" / "android-nexus-manifest-policy.json"
 
@@ -70,7 +71,8 @@ def production_manifest():
             "dataExtractionRules": "@0x7f170000",
             "supportsRtl": True,
         },
-        el("activity", {"name": SPLASH, "exported": True}, launcher_filter()),
+        el("activity", {"name": STARTUP, "exported": False}),
+        el("activity-alias", {"name": SPLASH, "targetActivity": STARTUP, "exported": True}, launcher_filter()),
         el("activity", {"name": "jp.co.soramitsu.feature_main_impl.presentation.MainActivity", "exported": False}),
         el(
             "service",
@@ -336,7 +338,7 @@ class ReleaseManifestTest(unittest.TestCase):
             with self.subTest(kind=kind):
                 result = run("--expect-version-code", "3090001", "--expect-version-name", "3.9.0", artifact)
                 self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-                self.assertIn("targetSdk 36", result.stdout)
+                self.assertIn(f"targetSdk {json.loads(checker.DEFAULT_POLICY_FILE.read_text())['targetSdkVersion']}", result.stdout)
                 self.assertIn("merged manifest matches", result.stdout)
 
     def test_packaged_firebase_defaults_keep_metrics_and_deny_advertising(self):
@@ -400,8 +402,9 @@ class ReleaseManifestTest(unittest.TestCase):
 
     def test_sdk_levels_and_package(self):
         manifest = production_manifest()
-        manifest["children"][0]["attributes"]["targetSdkVersion"] = 35
-        self.assert_rejected(manifest, "targetSdkVersion is 35, expected 36")
+        target_sdk = checker.load_policy(checker.DEFAULT_POLICY_FILE)["targetSdkVersion"]
+        manifest["children"][0]["attributes"]["targetSdkVersion"] = target_sdk - 1
+        self.assert_rejected(manifest, f"targetSdkVersion is {target_sdk - 1}, expected {target_sdk}")
 
         manifest = production_manifest()
         manifest["children"][0]["attributes"]["minSdkVersion"] = 24
@@ -446,6 +449,64 @@ class ReleaseManifestTest(unittest.TestCase):
             "deep link: an intent filter has the BROWSABLE category",
             f"exported component is not in the reviewed list: <activity> {IROHA}",
         )
+
+    def test_launcher_alias_must_target_reviewed_startup_activity(self):
+        manifest = production_manifest()
+        component(manifest, SPLASH)["attributes"]["targetActivity"] = "jp.co.soramitsu.feature_main_impl.presentation.MainActivity"
+        self.assert_rejected(manifest, f"must be an activity-alias targeting {STARTUP}")
+
+    def test_launcher_alias_requires_declared_target(self):
+        manifest = production_manifest()
+        application_of(manifest)["children"].remove(component(manifest, STARTUP))
+        self.assert_rejected(manifest, "must resolve to exactly one declared target activity")
+
+    def test_launcher_target_must_precede_alias(self):
+        manifest = production_manifest()
+        target = component(manifest, STARTUP)
+        application_of(manifest)["children"].remove(target)
+        application_of(manifest)["children"].append(target)
+        self.assert_rejected(manifest, "launcher target must be declared before its alias")
+
+    def test_launcher_implementation_must_remain_internal(self):
+        for value in (True, None):
+            with self.subTest(exported=value):
+                manifest = production_manifest()
+                if value is None:
+                    component(manifest, STARTUP)["attributes"].pop("exported")
+                else:
+                    component(manifest, STARTUP)["attributes"]["exported"] = value
+                self.assert_rejected(manifest, "launcher implementation must be explicitly non-exported")
+
+    def test_legacy_component_must_be_an_alias(self):
+        manifest = production_manifest()
+        component(manifest, SPLASH)["name"] = "activity"
+        component(manifest, SPLASH)["attributes"].pop("targetActivity")
+        self.assert_rejected(manifest, f"must be an activity-alias targeting {STARTUP}")
+
+    def test_launcher_alias_and_target_must_be_enabled(self):
+        for name in (SPLASH, STARTUP):
+            with self.subTest(component=name):
+                manifest = production_manifest()
+                component(manifest, name)["attributes"]["enabled"] = False
+                self.assert_rejected(manifest, "launcher alias and target must remain enabled")
+
+    def test_launcher_implementation_cannot_add_permission_or_filter(self):
+        for field in ("permission", "filter"):
+            with self.subTest(field=field):
+                manifest = production_manifest()
+                target = component(manifest, STARTUP)
+                if field == "permission":
+                    target["attributes"]["permission"] = "android.permission.DUMP"
+                else:
+                    target["children"].append(launcher_filter())
+                self.assert_rejected(manifest, "launcher implementation must not add permissions or intent filters")
+
+    def test_launcher_alias_requires_exactly_one_main_launcher_filter(self):
+        for filters in ([], [launcher_filter(), launcher_filter()]):
+            with self.subTest(count=len(filters)):
+                manifest = production_manifest()
+                component(manifest, SPLASH)["children"] = filters
+                self.assert_rejected(manifest, "must have exactly one MAIN/LAUNCHER intent filter")
 
     def test_any_deep_link_is_rejected(self):
         manifest = production_manifest()

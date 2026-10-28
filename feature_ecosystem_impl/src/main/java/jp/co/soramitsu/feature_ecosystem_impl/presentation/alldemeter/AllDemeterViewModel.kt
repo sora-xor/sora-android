@@ -45,23 +45,30 @@ internal class AllDemeterViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _farmsLiveData.value = AllFarmsState(
-                demeterFarmingInteractor.getFarmedBasicPools().mapIndexed { index, farm ->
-                    BasicFarmListItemState(
-                        StringTriple(farm.tokenBase.id, farm.tokenTarget.id, farm.tokenReward.id),
-                        number = (index + 1).toString(),
-                        token1Icon = farm.tokenBase.iconUri(),
-                        token2Icon = farm.tokenTarget.iconUri(),
-                        rewardTokenIcon = farm.tokenReward.iconUri(),
-                        rewardTokenSymbol = farm.tokenReward.symbol,
-                        text1 = "%s-%s".format(farm.tokenBase.symbol, farm.tokenTarget.symbol),
-                        text2 = farm.tokenBase.printFiat(farm.tvl.formatFiatSuffix()).orEmpty(),
-                        text3 = farm.apr.let {
-                            "%s%%".format(numbersFormatter.format(it, 2))
-                        },
-                    )
-                }
-            )
+            guarded {
+                _farmsLiveData.value = AllFarmsState(
+                    demeterFarmingInteractor.getFarmedBasicPools().mapIndexed { index, farm ->
+                        BasicFarmListItemState(
+                            StringTriple(farm.tokenBase.id, farm.tokenTarget.id, farm.tokenReward.id),
+                            number = (index + 1).toString(),
+                            token1Icon = farm.tokenBase.iconUri(),
+                            token2Icon = farm.tokenTarget.iconUri(),
+                            rewardTokenIcon = farm.tokenReward.iconUri(),
+                            rewardTokenSymbol = farm.tokenReward.symbol,
+                            text1 = "%s-%s".format(farm.tokenBase.symbol, farm.tokenTarget.symbol),
+                            text2 = farm.tokenBase.printFiat(farm.tvl.formatFiatSuffix()).orEmpty(),
+                            text3 = farm.apr.let {
+                                "%s%%".format(numbersFormatter.format(it, 2))
+                            },
+                        )
+                    }
+                )
+            }
         }
     }
+
+    override fun onErrorResetProgress() {
+        _farmsLiveData.value = AllFarmsState(emptyList(), loading = false)
+    }
+
 }

@@ -23,4 +23,14 @@ class SoraNodeEndpointPolicyTest {
             assertTrue(it, SoraNodeEndpointPolicy.isAllowed(it))
         }
     }
+    @Test
+    fun `cached and remote nodes must also have usable ports and no fragments`() {
+        listOf(
+            "wss://mof2.sora.org:0", "wss://mof2.sora.org:65536", "wss://mof2.sora.org:",
+            "ws://[::1]:0", "ws://[::1]:65536", "wss://mof2.sora.org/rpc#fragment",
+        ).forEach { assertFalse(it, SoraNodeEndpointPolicy.isAllowed(it)) }
+        listOf(
+            "wss://mof2.sora.org:443/rpc?network=sora", "ws://[::1]:9944/rpc", "WSS://MOF2.SORA.ORG",
+        ).forEach { assertTrue(it, SoraNodeEndpointPolicy.isAllowed(it)) }
+    }
 }

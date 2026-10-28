@@ -19,7 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.sora.splash.domain
 
-import android.util.Log
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
@@ -73,7 +73,7 @@ class PendingRecoveryStartupScheduler @Inject constructor(
             // A WorkManager initialization/enqueue failure must neither crash an upgraded
             // wallet nor suppress the other network's recovery. Keep the durable journal
             // for the next startup/kick and log only a fixed, non-sensitive outcome code.
-            Log.w("WalletRecoveryStartup", diagnostic)
+            Timber.tag("WalletRecoveryStartup").w(diagnostic)
         }
     }
 }

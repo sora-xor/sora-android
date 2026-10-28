@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="disclaimer_item_1" translatable="false">1.</string>
+    <string name="disclaimer_item_2" translatable="false">2.</string>
+    <string name="disclaimer_item_3" translatable="false">3.</string>
+</resources>

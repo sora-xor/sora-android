@@ -17,7 +17,9 @@ usage: run-migration-manager-production-path-qualification.sh [--offline]
 
   --offline   build with Gradle's --offline (local Gradle cache, no network)
 
-Needs a device with 4 KB pages; on a 16 KB device it stops with exit code 3.
+The full suite is qualified on 4 KB devices. MockK 1.14.3 still fails the repository's
+strict 16 KB GNU_RELRO gate; these phases remain unqualified on 16 KB devices and the
+script stops there with exit code 3. This does not assert a device-loader failure.
 
 Environment: SORA_GRADLE_FLAGS (extra Gradle arguments), ANDROID_SERIAL (device to use),
 ANDROID_HOME (to find apkanalyzer or aapt2).

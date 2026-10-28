@@ -24,23 +24,27 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import jp.co.soramitsu.common.view.DragHandleView
 import coil.load
 import jp.co.soramitsu.feature_polkaswap_impl.R
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolSettingsState
 
 class PoolsManagementAdapter(
     private val touchHelper: ItemTouchHelper,
+    private val canReorder: () -> Boolean,
+    private val moveListener: (Int, Int) -> Boolean,
     private val favoriteListener: (PoolSettingsState) -> Unit,
 ) : ListAdapter<PoolSettingsState, PoolViewHolder>(PoolsManagementAdapterDiffCallback) {
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): PoolViewHolder {
         val view = LayoutInflater.from(viewGroup.context)
             .inflate(R.layout.item_pool_in_settings, viewGroup, false)
-        return PoolViewHolder(view, touchHelper, favoriteListener)
+        return PoolViewHolder(view, touchHelper, canReorder, moveListener, favoriteListener)
     }
 
     override fun onBindViewHolder(holder: PoolViewHolder, position: Int) {
@@ -51,10 +55,12 @@ class PoolsManagementAdapter(
 class PoolViewHolder(
     itemView: View,
     touchHelper: ItemTouchHelper,
+    private val canReorder: () -> Boolean,
+    private val moveListener: (Int, Int) -> Boolean,
     private val favoriteListener: (PoolSettingsState) -> Unit,
 ) :
     RecyclerView.ViewHolder(itemView) {
-    private val dragIcon = itemView.findViewById<ImageView>(R.id.ivPoolSettingsItemDrag)
+    private val dragIcon = itemView.findViewById<DragHandleView>(R.id.ivPoolSettingsItemDrag)
     private val assetIcon = itemView.findViewById<ImageView>(R.id.ivPool1SettingsIcon)
     private val asset2Icon = itemView.findViewById<ImageView>(R.id.ivPool2SettingsIcon)
     private val favoriteIcon = itemView.findViewById<ImageView>(R.id.ivPoolSettingsFavorite)
@@ -63,10 +69,15 @@ class PoolViewHolder(
     private val amount = itemView.findViewById<TextView>(R.id.tvPoolSettingsAmount)
 
     init {
-        dragIcon.setOnTouchListener { _, _ ->
-            touchHelper.startDrag(this)
-            true
-        }
+        dragIcon.bindReordering(
+            onStartDrag = { if (canReorder()) touchHelper.startDrag(this) },
+            canMove = { delta ->
+                val position = bindingAdapterPosition
+                canReorder() && position != RecyclerView.NO_POSITION &&
+                    position + delta in 0 until (bindingAdapter?.itemCount ?: 0)
+            },
+            move = { delta -> moveListener(bindingAdapterPosition, bindingAdapterPosition + delta) },
+        )
     }
 
     fun bind(asset: PoolSettingsState) {
@@ -76,8 +87,15 @@ class PoolViewHolder(
         amount.text = asset.assetAmount
 
         favoriteIcon.setImageResource(if (asset.favorite) R.drawable.ic_favorite_enabled else R.drawable.ic_favorite_disabled)
-        favoriteIconClickable.setOnClickListener { v ->
-            if (v.isPressed) favoriteListener.invoke(asset)
+        favoriteIconClickable.contentDescription = itemView.context.getString(
+            if (asset.favorite) R.string.asset_remove_from_favorites else R.string.asset_add_to_favorites,
+            asset.tokenSymbol,
+        )
+        ViewCompat.setStateDescription(favoriteIconClickable, itemView.context.getString(
+            if (asset.favorite) R.string.asset_favorite_state else R.string.asset_not_favorite_state,
+        ))
+        favoriteIconClickable.setOnClickListener {
+            favoriteListener.invoke(asset)
         }
     }
 }

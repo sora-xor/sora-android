@@ -3,6 +3,12 @@ package jp.co.soramitsu.sora.splash.domain
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Base64
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import java.security.KeyPairGenerator
+import java.math.BigInteger
+import java.util.Calendar
+import javax.security.auth.x500.X500Principal
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import kotlinx.coroutines.flow.first
@@ -224,6 +230,7 @@ class MigrationManagerProductionPathQualificationTest {
         // The retained writer layout is SharedPreferences, unsuffixed hex keypair fields,
         // and AES-CBC envelopes with a 16-byte IV. encrypt(key, value) is the retained
         // historical writer helper; production decrypts these exact envelopes after upgrade.
+        createLegacyWrappingAlias()
         val encryption = EncryptionUtil(context)
         val aes = ByteArray(32).also(SecureRandom()::nextBytes)
         val keys = sr25519KeyPair(PINNED_TWELVE_WORD_SEED)
@@ -536,6 +543,8 @@ class MigrationManagerProductionPathQualificationTest {
             WalletPreferenceKeys.CURRENT_ACCOUNT_ADDRESS
         )
         val wrappedAesKeyBefore = wrappedAesKey()
+        val wrappingAliasBefore = loadedKeyStore().containsAlias(KEY_ALIAS)
+        assertEquals(prepared.any { it.signingPublicKey != null }, wrappingAliasBefore)
         val dataStoreBefore = dataStoreFile().readBytes()
         val expectedIntegrityHash = WalletMigrationIntegrity.snapshotHash(
             expectedAccounts,
@@ -599,6 +608,7 @@ class MigrationManagerProductionPathQualificationTest {
                 expectedCiphertext = ciphertextBefore,
                 expectedSelected = selectedBefore,
                 expectedWrappedAesKey = wrappedAesKeyBefore,
+                expectedWrappingAlias = wrappingAliasBefore,
                 expectedDataStore = dataStoreBefore,
             )
         } finally {
@@ -655,6 +665,7 @@ class MigrationManagerProductionPathQualificationTest {
             expectedCiphertext = ciphertextBefore,
             expectedSelected = selectedBefore,
             expectedWrappedAesKey = wrappedAesKeyBefore,
+            expectedWrappingAlias = wrappingAliasBefore,
             expectedDataStore = dataStoreBefore,
         )
         prepared.forEach { wallet ->
@@ -1020,12 +1031,35 @@ class MigrationManagerProductionPathQualificationTest {
         }
     }
 
+    /** Reproduce the retained writer; constructing the production reader must not create keys. */
+    private fun createLegacyWrappingAlias() {
+        val start = Calendar.getInstance()
+        val end = Calendar.getInstance().apply { add(Calendar.YEAR, 25) }
+        val spec = KeyGenParameterSpec.Builder(
+            KEY_ALIAS,
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
+        )
+            .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+            .setCertificateSubject(X500Principal("CN=Sora"))
+            .setCertificateSerialNumber(BigInteger.ONE)
+            .setCertificateNotBefore(start.time)
+            .setCertificateNotAfter(end.time)
+            .build()
+        KeyPairGenerator.getInstance("RSA", "AndroidKeyStore").apply {
+            initialize(spec)
+            generateKeyPair()
+        }
+        assertTrue(loadedKeyStore().containsAlias(KEY_ALIAS))
+    }
+
     private suspend fun assertPreferencesUnchanged(
         soraPreferences: SoraPreferences,
         encryptedFields: List<String>,
         expectedCiphertext: Map<String, String>,
         expectedSelected: String,
         expectedWrappedAesKey: String,
+        expectedWrappingAlias: Boolean,
         expectedDataStore: ByteArray,
     ) {
         assertOpaqueMapEquals(
@@ -1039,7 +1073,7 @@ class MigrationManagerProductionPathQualificationTest {
         if (expectedCiphertext.values.any(String::isNotEmpty)) {
             assertTrue(expectedWrappedAesKey.isNotEmpty())
         }
-        assertTrue(loadedKeyStore().containsAlias(KEY_ALIAS))
+        assertEquals(expectedWrappingAlias, loadedKeyStore().containsAlias(KEY_ALIAS))
         assertOpaqueStringEquals(expectedWrappedAesKey, wrappedAesKey())
         assertOpaqueBytesEqual(expectedDataStore, dataStoreFile().readBytes())
     }

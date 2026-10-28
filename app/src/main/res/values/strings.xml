@@ -1,5 +1,4 @@
 <resources>
-    <string name="splash_from" translatable="false">from</string>
     <string name="recovery_paused_title">We paused to keep your wallet safe</string>
     <!-- recovery_paused_body: verified (a4 invariant): WalletUpgradeBackup and MigrationManager never delete, overwrite, re-encrypt or move key preferences or account rows; only derived identity rows and the journal are written -->
     <string name="recovery_paused_body">SORA found something it couldn\'t check, so it paused. Your keys and accounts were not changed, and they are still on this device.</string>
@@ -67,7 +66,7 @@
     <string name="recovery_auth_screen_lock">Use screen lock</string>
     <string name="recovery_auth_no_screen_lock">To show the phrase here, set a screen lock on this phone first.</string>
     <string name="recovery_pin_delete">Delete</string>
-    <string name="recovery_pin_progress">%1$d of %2$d digits entered</string>
+    <string name="recovery_pin_progress">PIN digits entered: %1$d of %2$d</string>
     <string name="recovery_wallets_title">Choose a wallet</string>
     <string name="recovery_wallets_body">These recovery phrases are saved on this phone.</string>
     <string name="recovery_wallet_unnamed">Wallet</string>

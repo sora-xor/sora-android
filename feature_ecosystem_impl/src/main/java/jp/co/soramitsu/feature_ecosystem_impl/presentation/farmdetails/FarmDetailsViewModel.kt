@@ -98,7 +98,7 @@ class FarmDetailsViewModel @AssistedInject constructor(
 
         viewModelScope.launch {
             // A failed read leaves the card as it is; it must never end the app.
-            tryCatch {
+            tryCatchFinally(finally = { _state.value = _state.value.copy(loading = false) }) {
                 val userPoolData = poolsInteractor.getPoolOfCurAccount(poolIds)
                 val basicPoolData = poolsInteractor.getBasicPool(poolIds)
 
@@ -149,7 +149,7 @@ class FarmDetailsViewModel @AssistedInject constructor(
                                 poolShareStacked = percent,
                                 poolShareStackedText = "${numbersFormatter.format(percent.toDouble())}%",
                                 userRewardsAmount = "${numbersFormatter.formatBigDecimal(farmPool.amountReward)} ${farmPool.tokenReward.symbol}",
-                                hasRewardsAvailable = farmPool.amountReward != BigDecimal.ZERO
+                                hasRewardsAvailable = farmPool.amountReward > BigDecimal.ZERO
                             )
                         }
 

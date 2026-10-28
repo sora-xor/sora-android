@@ -283,7 +283,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
                     }
                 },
                 endReached = true,
-                errorMessage = it.message,
+                errorMessage = it.message?.takeIf(String::isNotBlank) ?: "Transaction history unavailable",
             )
         }
 

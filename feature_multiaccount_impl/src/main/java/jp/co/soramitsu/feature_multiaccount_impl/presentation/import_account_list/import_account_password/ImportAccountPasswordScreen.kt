@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_password
 
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -129,6 +130,7 @@ fun ImportAccountPasswordScreen(
                     size = Size.Large,
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.common_continue),
+                    enabled = importAccountScreenState.isContinueButtonEnabled && !importAccountScreenState.isLoading,
                     onClick = onContinueClicked
                 )
             }
@@ -201,7 +203,7 @@ fun PreviewEnterPassphraseScreen() {
     ImportAccountPasswordScreen(
         ImportAccountPasswordState(
             selectedAccount = BackupAccountMetaWithIcon(
-                BackupAccountMeta("aa", "add"), Drawable.createFromPath("")!!
+                BackupAccountMeta("aa", "add"), ColorDrawable(android.graphics.Color.TRANSPARENT)
             )
         ),
         {},

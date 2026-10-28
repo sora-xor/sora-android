@@ -1,14 +1,14 @@
 [versions]
 agp = "9.2.1"
-kotlin = "2.3.21"
-ksp = "2.3.6"
+kotlin = "2.4.21"
+ksp = "2.3.11"
 appcompat = "1.7.1"
-coroutines = "1.10.2"
+coroutines = "1.11.0"
 coreKtx = "1.17.0"
 constraint = "2.2.1"
 biometric = "1.1.0"
-navigation = "2.9.6"
-navigationCompose = "2.9.6"
+navigation = "2.9.7"
+navigationCompose = "2.9.7"
 lottie = "4.2.0"
 insetter = "0.6.1"
 workManager = "2.11.0"
@@ -16,7 +16,7 @@ coil = "2.7.0"
 svg = "1.4"
 jdenticon = "1.1"
 archFragmentTest = "1.8.9"
-mockk = "1.13.11"
+mockk = "1.14.3"
 truth = "1.4.2"
 mockitoKotlin = "6.1.0"
 mockito = "5.20.0"
@@ -27,8 +27,8 @@ archCoreTest = "2.2.0"
 archComponents = "2.10.0"
 benchmark = "1.5.0-rc02"
 profileInstaller = "1.4.1"
-activityCompose = "1.12.1"
-material = "1.12.0"
+activityCompose = "1.12.4"
+material = "1.13.0"
 fragmentKtx = "1.8.9"
 permission = "1.7.1"
 uiAutomator = "2.4.0"
@@ -49,12 +49,11 @@ dagger = "2.59.2"
 hiltCompose = "1.3.0"
 hiltWorkManager = "1.3.0"
 webSocketLib = "2.14"
-web3j = "4.6.0-android"
-zXing = "3.3.3"
+zXing = "3.5.4"
 zXingEmbedded = "4.3.0"
-activityKtx = "1.12.1"
-xserializationjson = "1.9.0"
-gson = "2.13.2"
+activityKtx = "1.12.4"
+xserializationjson = "1.12.0"
+gson = "2.14.0"
 datastore = "1.2.1"
 room = "2.8.4"
 lazySodium = "5.0.2"
@@ -68,6 +67,9 @@ soramitsuXcrypto = "1.2.8-sora.2"
 soramitsuAndroidFoundation = "0.0.4"
 
 [libraries]
+jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version = "2.22.4" }
+spongycastle-provider = { module = "com.madgag.spongycastle:prov", version = "1.58.0.0" }
+core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.2.0" }
 soramitsu-android-foundation = { module = "jp.co.soramitsu:android-foundation", version.ref = "soramitsuAndroidFoundation" }
 xnetworkingLibDep = { module = "jp.co.soramitsu.xnetworking:lib-android", version.ref = "soramitsuXnetworking" }
 xsubstrateDep = { module = "jp.co.soramitsu:xsubstrate", version.ref = "soramitsuXsubstrate" }
@@ -85,7 +87,6 @@ activityKtxDep = { module = "androidx.activity:activity-ktx", version.ref = "act
 zXingCoreDep = { module = "com.google.zxing:core", version.ref = "zXing" }
 zXingEmbeddedDep = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zXingEmbedded" }
 webSocketLibDep = { module = "com.neovisionaries:nv-websocket-client", version.ref = "webSocketLib" }
-web3jDep = { module = "org.web3j:core", version.ref = "web3j" }
 coroutineDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 coroutineAndroidDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 coroutineTestDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
@@ -150,7 +151,6 @@ composeFoundationDep = { group = "androidx.compose.foundation", name = "foundati
 composeToolingDep = { group = "androidx.compose.ui", name = "ui-tooling" }
 composeToolingPreviewDep = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 composeMaterialDep = { group = "androidx.compose.material", name = "material" }
-composeMaterial3Dep = { group = "androidx.compose.material3", name = "material3" }
 composeAnimationDep = { group = "androidx.compose.animation", name = "animation" }
 composeAnimationGraphicsDep = { group = "androidx.compose.animation", name = "animation-graphics" }
 composeConstraintLayoutDep = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version.ref = "composeConstraintLayout" }

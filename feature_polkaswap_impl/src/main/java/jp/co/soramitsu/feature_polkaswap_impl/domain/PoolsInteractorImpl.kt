@@ -70,12 +70,6 @@ class PoolsInteractorImpl(
     private val transactionBuilder: TransactionBuilder,
 ) : PolkaswapInteractorImpl(polkaswapRepository), PoolsInteractor {
 
-    private var removeLiquidityNetworkFee: BigDecimal? = null
-
-    private var addLiquidityForPresentedPairNetworkFee: BigDecimal? = null
-    private var addLiquidityForEnabledPairNetworkFee: BigDecimal? = null
-    private var addLiquidityForDisabledPairNetworkFee: BigDecimal? = null
-
     override suspend fun poolFavoriteOn(ids: StringPair) {
         val curAccount = userRepository.getCurSoraAccount()
         polkaswapRepository.poolFavoriteOn(ids, curAccount)
@@ -95,20 +89,16 @@ class PoolsInteractorImpl(
         tokenId1: Token,
         tokenId2: Token
     ): BigDecimal {
-        return removeLiquidityNetworkFee ?: (
-            (
-                polkaswapExtrinsicRepository.calcRemoveLiquidityNetworkFee(
-                    tokenId1.id to tokenId1.precision,
-                    tokenId2.id to tokenId2.precision,
-                    userRepository.getCurSoraAccount().substrateAddress,
-                ) ?: BigDecimal.ZERO
-                ).also {
-                removeLiquidityNetworkFee = it
-            }
-            )
+        // Fee estimates belong to the current account and token pair. A missing estimate
+        // must remain retryable, and a previous review must not become the next one's fee.
+        return polkaswapExtrinsicRepository.calcRemoveLiquidityNetworkFee(
+            tokenId1.id to tokenId1.precision,
+            tokenId2.id to tokenId2.precision,
+            userRepository.getCurSoraAccount().substrateAddress,
+        ) ?: BigDecimal.ZERO
     }
 
-    private suspend fun fetchAddLiquidityNetworkFee(
+    private suspend fun getLiquidityNetworkFee(
         tokenFrom: Token,
         tokenTo: Token,
         tokenFromAmount: BigDecimal,
@@ -129,52 +119,6 @@ class PoolsInteractorImpl(
             slippageTolerance,
         )
         return result ?: BigDecimal.ZERO
-    }
-
-    private suspend fun getLiquidityNetworkFee(
-        tokenFrom: Token,
-        tokenTo: Token,
-        tokenFromAmount: BigDecimal,
-        tokenToAmount: BigDecimal,
-        pairEnabled: Boolean,
-        pairPresented: Boolean,
-        slippageTolerance: Double
-    ): BigDecimal {
-        suspend fun getFee(): BigDecimal {
-            return fetchAddLiquidityNetworkFee(
-                tokenFrom = tokenFrom,
-                tokenTo = tokenTo,
-                tokenFromAmount = tokenFromAmount,
-                tokenToAmount = tokenToAmount,
-                pairEnabled = pairEnabled,
-                pairPresented = pairPresented,
-                slippageTolerance = slippageTolerance,
-            )
-        }
-
-        val result = when {
-            !pairPresented && pairEnabled -> {
-                addLiquidityForEnabledPairNetworkFee
-                    ?: getFee().also {
-                        addLiquidityForEnabledPairNetworkFee = it
-                    }
-            }
-
-            !pairPresented && !pairEnabled -> {
-                addLiquidityForDisabledPairNetworkFee
-                    ?: getFee().also {
-                        addLiquidityForDisabledPairNetworkFee = it
-                    }
-            }
-
-            else -> {
-                addLiquidityForPresentedPairNetworkFee
-                    ?: getFee().also {
-                        addLiquidityForPresentedPairNetworkFee = it
-                    }
-            }
-        }
-        return result
     }
 
     @OptIn(FlowPreview::class)

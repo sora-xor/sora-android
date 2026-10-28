@@ -30,6 +30,7 @@
         android:name=".SoraApp"
         android:supportsRtl="true"
         android:localeConfig="@xml/locale_config"
+        tools:targetApi="33"
         android:theme="@style/AppTheme">
 
         <!-- Read by the Analytics SDK before FirebaseInitProvider starts collection. -->
@@ -41,9 +42,14 @@
         <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
 
         <activity
-            android:name=".splash.presentation.SplashActivity"
+            android:name=".splash.presentation.WalletStartupActivity"
             android:theme="@style/SplashTheme"
-            android:screenOrientation="portrait"
+            android:exported="false" />
+
+        <!-- Keep the published launcher component for upgrades and pinned launcher intents. -->
+        <activity-alias
+            android:name=".splash.presentation.SplashActivity"
+            android:targetActivity=".splash.presentation.WalletStartupActivity"
             android:exported="true">
 
             <intent-filter>
@@ -54,14 +60,13 @@
 
             </intent-filter>
 
-        </activity>
+        </activity-alias>
 
         <activity
             android:name=".irohaconnect.IrohaConnectActivity"
             android:excludeFromRecents="true"
             android:exported="true"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"
             android:taskAffinity=""
             android:theme="@style/IrohaConnectTheme">
             <intent-filter>
@@ -88,6 +93,7 @@
 
         <activity
             android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.QRCodeScannerActivity"
+            android:theme="@style/ScannerTheme"
             android:exported="false"/>
 
         <meta-data

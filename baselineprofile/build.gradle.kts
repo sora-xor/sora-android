@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "jp.co.soramitsu.sora.baselineprofile"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         // StartupTimeTrace uses platform async trace sections, which are available from API 29.
         minSdk = 29
-        targetSdk = 36
+        targetSdk = 37
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Generate and measure the production startup graph. The local benchmark build types use
         // the test key, so this remains isolated from release signing and distribution.

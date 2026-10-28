@@ -3811,6 +3811,206 @@ class PolkaswapIndexerClientTest {
         }
     }
 
+    private fun qualifiedHistoryClient(rest: CapturingRestClient = restClient) = PolkaswapIndexerClient(
+        restClient = rest, json = testJson,
+        responseCache = InMemoryResponseCache { HEALTH_NOW * 1_000 },
+        nowEpochMillis = { HEALTH_NOW * 1_000 }, nowMonotonicNanos = { 1_000L },
+    )
+
+    private fun boundedHistoryPage(vararg bytes: String, total: Int = bytes.size, more: Boolean = false,
+                                   cursor: String? = null, owner: String = "cnAccount", role: String = "address") =
+        """{"data":{"historyElements":{"totalCount":$total,"pageInfo":{"hasNextPage":$more,"endCursor":${cursor?.let { "\"$it\"" } ?: "null"}},"edges":[${
+            bytes.joinToString(",") { byte ->
+                """{"node":{"id":"0x${byte.repeat(32)}","timestamp":1,"blockHash":"0x${"cd".repeat(32)}","blockHeight":10,"$role":"$owner","networkFee":"0","execution":{"success":true}}}"""
+            }
+        }]}}}"""
+
+    @Test fun `qualified full history retains cursor order and provenance through completion`() = runTest {
+        val checked = qualifiedHistoryClient()
+        restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true, cursor = "next"))
+        restClient.enqueue(boundedHistoryPage("ef", total = 2))
+        val read = checked.getAllTransactionHistoryQualified("cnAccount", pageSize = 1, maxPages = 2)
+        assertThat(read.value.map { it.id }).containsExactly("0x${"ab".repeat(32)}", "0x${"ef".repeat(32)}").inOrder()
+        assertThat(read.fromCache).isFalse(); assertThat(read.health.chainId).isEqualTo("sora:mainnet")
+        assertThat(restClient.requests.last().variables.toString()).contains("\"after\":\"next\"")
+    }
+    @Test fun `full history convenience method preserves a qualified empty wallet`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage())
+        assertThat(checked.getAllTransactionHistory("cnAccount")).isEmpty()
+    }
+    @Test fun `qualified full history refuses a changed total between pages`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse())
+        restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true, cursor = "next")); restClient.enqueue(boundedHistoryPage("ef", total = 3))
+        val error = runCatching { checked.getAllTransactionHistoryQualified("cnAccount", 1, 2) }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_PAGE")
+    }
+    @Test fun `qualified full history refuses a terminal page that omits announced rows`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage("ab", total = 2))
+        val error = runCatching { checked.getAllTransactionHistoryQualified("cnAccount", 1, 2) }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_PAGE")
+    }
+    @Test fun `qualified full history refuses missing cursors instead of silently truncating`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true))
+        val error = runCatching { checked.getAllTransactionHistoryQualified("cnAccount", 1, 2) }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_PAGE")
+    }
+    @Test fun `qualified full history reports reaching the configured traversal limit`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true, cursor = "next"))
+        val error = runCatching { checked.getAllTransactionHistoryQualified("cnAccount", 1, 1) }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_PAGE_LIMIT_EXCEEDED")
+    }
+    @Test fun `qualified full history rejects an exactly repeated page`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse())
+        repeat(2) { restClient.enqueue(boundedHistoryPage("ab", total = 3, more = true, cursor = "next")) }
+        val error = runCatching { checked.getAllTransactionHistoryQualified("cnAccount", 1, 3) }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_REPEATED_PAGE")
+    }
+    @Test fun `qualified numbered page beyond the end returns an explicit empty terminal page`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage("ab"))
+        val read = checked.getTransactionHistoryQualified("cnAccount", 3, 1)
+        assertThat(read.value.items).isEmpty(); assertThat(read.value.endReached).isTrue()
+        assertThat(read.value.totalCount).isEqualTo(1); assertThat(read.value.endCursor).isNull(); assertThat(read.fromCache).isFalse()
+        assertThat(restClient.requests.count { it.query.contains("historyElements") }).isEqualTo(1)
+    }
+    @Test fun `qualified numbered pages reuse their decided account role filter`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(QUERY_PLAN_REJECTION)
+        restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true, cursor = "next"))
+        checked.getTransactionHistoryQualified("cnAccount", 1, 1)
+        restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true, cursor = "next")); restClient.enqueue(boundedHistoryPage("ef", total = 2))
+        val second = checked.getTransactionHistoryQualified("cnAccount", 2, 1)
+        assertThat(second.value.items.single().id).isEqualTo("0x${"ef".repeat(32)}")
+        restClient.requests.takeLast(2).forEach {
+            assertThat(it.variables.toString()).contains("\"filter\":{\"address\":{\"equalTo\":\"cnAccount\"}}")
+            assertThat(it.variables.toString()).doesNotContain("dataTo")
+        }
+    }
+    @Test fun `qualified numbered history rejects duplicate transactions across its cursor walk`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse())
+        restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true, cursor = "next")); restClient.enqueue(boundedHistoryPage("ab", total = 2))
+        val error = runCatching { checked.getTransactionHistoryQualified("cnAccount", 2, 1) }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_DUPLICATE_TRANSACTION")
+    }
+    @Test fun `qualified numbered history rejects a cursor loop before publishing requested page`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse())
+        restClient.enqueue(boundedHistoryPage("ab", total = 3, more = true, cursor = "next")); restClient.enqueue(boundedHistoryPage("ef", total = 3, more = true, cursor = "next"))
+        val error = runCatching { checked.getTransactionHistoryQualified("cnAccount", 2, 1) }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_REPEATED_PAGE")
+    }
+    @Test fun `qualified history accepts the requested account as sender or recipient`() = runTest {
+        for (role in listOf("address", "dataFrom", "dataTo")) {
+            val rest = CapturingRestClient(); val checked = qualifiedHistoryClient(rest)
+            rest.enqueue(healthResponse()); rest.enqueue(boundedHistoryPage("ab", role = role))
+            assertThat(checked.getLastTransactionsQualified("cnAccount", 1).value.single().id).isEqualTo("0x${"ab".repeat(32)}")
+        }
+    }
+    @Test fun `qualified transaction lookup preserves an exact missing hash as empty`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage())
+        assertThat(checked.getTransactionQualified("ab".repeat(32)).value).isEmpty()
+        assertThat(restClient.requests.last().variables.toString()).contains("0x${"ab".repeat(32)}")
+    }
+    @Test fun `qualified pending lookup accepts only requested hashes and sender or recipient roles`() = runTest {
+        for (role in listOf("dataFrom", "dataTo")) {
+            val rest = CapturingRestClient(); val checked = qualifiedHistoryClient(rest)
+            rest.enqueue(healthResponse()); rest.enqueue(boundedHistoryPage("ab", role = role))
+            val result = checked.getAccountTransactionsByHashesQualified("cnAccount", listOf("AB".repeat(32)))
+            assertThat(result.value.single().id).isEqualTo("0x${"ab".repeat(32)}"); assertThat(result.fromCache).isFalse()
+        }
+    }
+    @Test fun `pending lookup rejects normalized duplicate hash inputs before making requests`() = runTest {
+        val checked = qualifiedHistoryClient()
+        val error = runCatching { checked.getAccountTransactionsByHashesQualified("cnAccount", listOf("AB".repeat(32), "0x${"ab".repeat(32)}")) }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_DUPLICATE_TRANSACTION"); assertThat(restClient.requests).isEmpty()
+    }
+    @Test fun `pending lookup refuses empty and oversized batches before transport`() = runTest {
+        val checked = qualifiedHistoryClient()
+        for (hashes in listOf(emptyList(), List(101) { "ab".repeat(32) })) {
+            val error = runCatching { checked.getAccountTransactionsByHashesQualified("cnAccount", hashes) }.exceptionOrNull()
+            assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_PENDING_LOOKUP_LIMIT_INVALID")
+        }
+        assertThat(restClient.requests).isEmpty()
+    }
+    @Test fun `asset request rejects duplicate identifiers before transport`() = runTest {
+        val checked = qualifiedHistoryClient()
+        val error = runCatching { checked.getAssetsInfo(listOf("asset", "asset")) }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_DUPLICATE_ASSET"); assertThat(restClient.requests).isEmpty()
+    }
+    @Test fun `qualified asset response cannot substitute an unrequested token`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse())
+        restClient.enqueue("""{"data":{"assets":{"totalCount":1,"pageInfo":{"hasNextPage":false},"edges":[{"node":{"id":"wrong","priceUSD":"1"}}]}}}""")
+        val error = runCatching { checked.getAssetsInfo(listOf("expected")) }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_ASSET_IDENTITY_MISMATCH")
+    }
+    @Test fun `qualified referral rewards retain exact amount and checkpoint bound`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse())
+        restClient.enqueue("""{"data":{"referrerRewards":{"totalCount":1,"pageInfo":{"hasNextPage":false},"edges":[{"node":{"id":"reward-1","referrer":"cnAccount","referral":"cnFriend","amount":"123456789012345678901234567890","blockHeight":"10"}}]}}}""")
+        val reward = checked.getReferralRewards("cnAccount").single()
+        assertThat(reward.referral).isEqualTo("cnFriend"); assertThat(reward.amount).isEqualTo("123456789012345678901234567890")
+    }
+    @Test fun `qualified referral rewards reject missing checkpoint height`() = runTest {
+        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse())
+        restClient.enqueue("""{"data":{"referrerRewards":{"totalCount":1,"pageInfo":{"hasNextPage":false},"edges":[{"node":{"id":"reward-1","referrer":"cnAccount","referral":"cnFriend","amount":"1"}}]}}}""")
+        val error = runCatching { checked.getReferralRewards("cnAccount") }.exceptionOrNull()
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_REWARD_BLOCK_HEIGHT_MISSING")
+    }
+
+
+
+    private fun singleMarketResponse(fields: String) =
+        """{"data":{"market":{"id":"7","marketId":7,"status":"Open","updatedAtBlock":10,$fields}}}"""
+
+    @Test fun `market percentage fallback rounds exact decimals and derives opposite probability`() = runTest {
+        for ((raw, expected) in listOf("0" to 0, "33.335" to 3334, "100" to 10000)) {
+            restClient.enqueue(singleMarketResponse("\"probability\":\"$raw\""))
+            val market = client.getMarket("7")!!
+            assertThat(market.displayYesProbabilityBps).isEqualTo(expected)
+            assertThat(market.displayNoProbabilityBps).isEqualTo(10000 - expected)
+            assertThat(market.chartProbability!!).isWithin(1e-12).of(raw.toDouble() / 100)
+        }
+    }
+    @Test fun `market price fallback respects both sides and dynamic parimutuel exact probabilities`() = runTest {
+        for (mechanism in listOf("Dynamic Parimutuel", "")) {
+            restClient.enqueue(singleMarketResponse(""""mechanism":"$mechanism","priceYes":"0.2","priceNo":"0.8","impliedYesProbabilityBps":3333,"impliedNoProbabilityBps":6667"""))
+            val market = client.getMarket("7")!!
+            assertThat(market.displayYesProbabilityBps).isEqualTo(3333)
+            assertThat(market.displayNoProbabilityBps).isEqualTo(6667)
+            assertThat(market.chartPriceYes).isEqualTo(0.2)
+            assertThat(market.chartPriceNo).isEqualTo(0.8)
+        }
+        restClient.enqueue(singleMarketResponse(""""mechanism":"Legacy","priceNo":"0.71235""""))
+        val market = client.getMarket("7")!!
+        assertThat(market.displayNoProbabilityBps).isEqualTo(7124)
+        assertThat(market.displayYesProbabilityBps).isEqualTo(2876)
+    }
+    @Test fun `market rejects numeric negative and out of range probability wire fields`() = runTest {
+        for ((field, raw) in listOf("probability" to "50", "probability" to "\"-1\"", "probability" to "\"101\"",
+            "priceYes" to "0.5", "priceYes" to "\"-0.1\"", "priceYes" to "\"1.01\"",
+            "priceNo" to "0.5", "priceNo" to "\"-0.1\"", "priceNo" to "\"1.01\"")) {
+            restClient.enqueue(singleMarketResponse("\"$field\":$raw"))
+            assertThat(runCatching { client.getMarket("7") }.exceptionOrNull()).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_CHART_PROBABILITY")
+        }
+    }
+    @Test fun `market rejects out of range exact basis points on every probability axis`() = runTest {
+        for (field in listOf("marginalYesPriceBps", "marginalNoPriceBps", "impliedYesProbabilityBps", "impliedNoProbabilityBps")) {
+            for (raw in listOf(-1, 10001)) {
+                restClient.enqueue(singleMarketResponse("\"$field\":$raw"))
+                assertThat(runCatching { client.getMarket("7") }.exceptionOrNull()).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_BASIS_POINTS")
+            }
+        }
+    }
+    @Test fun `market pagination requires stable totals complete final pages and bounded traversal`() = runTest {
+        val cases = listOf(
+            listOf(marketsPage("a", hasNextPage = false, endCursor = null)) to "PI_INDEXER_INVALID_PAGE",
+            listOf(marketsPage("a", hasNextPage = true, endCursor = "next"), marketsPage("b", marketId = 2, hasNextPage = false, endCursor = null).replace("\"totalCount\": 2", "\"totalCount\": 3")) to "PI_INDEXER_INVALID_PAGE",
+            listOf(marketsPage("a", hasNextPage = true, endCursor = "next"), marketsPage("b", marketId = 2, hasNextPage = true, endCursor = "next")) to "PI_INDEXER_REPEATED_PAGE",
+            listOf(marketsPage("a", hasNextPage = true, endCursor = "next")) to "PI_INDEXER_PAGE_LIMIT_EXCEEDED"
+        )
+        for ((pages, code) in cases) {
+            val rest = CapturingRestClient(); val subject = PolkaswapIndexerClient(rest, testJson, disableChainIdentityPreflightForTests = Unit)
+            pages.forEach(rest::enqueue)
+            assertThat(runCatching { subject.getMarkets(pageSize = 1, maxPages = pages.size) }.exceptionOrNull()).hasMessageThat().isEqualTo(code)
+        }
+    }
+
     private companion object {
         const val HEALTH_NOW = 1_800_000_000L
         const val HEALTH_BLOCK = 26_000_001L

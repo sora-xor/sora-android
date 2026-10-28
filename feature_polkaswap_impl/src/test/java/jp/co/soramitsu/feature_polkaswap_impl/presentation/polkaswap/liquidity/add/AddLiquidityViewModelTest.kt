@@ -27,6 +27,8 @@ import jp.co.soramitsu.androidfoundation.format.equalTo
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.PoolDex
+import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd.LiquidityAddRoutes
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.TransactionChainFailure
@@ -1162,5 +1164,63 @@ class AddLiquidityViewModelTest {
         result.complete(TransactionOutcome.Confirmed(txHash, "0xblock"))
         advanceUntilIdle()
         kVerify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
+    }
+
+    @Test fun `toolbar and hints follow the active add liquidity step`() = runTest {
+        setUpViewModel(null); advanceUntilIdle()
+        assertEquals(LiquidityAddRoutes.start, viewModel.startScreen())
+        viewModel.setCurDestination(LiquidityAddRoutes.start)
+        viewModel.onNavIcon(); assertTrue(viewModel.addState.value.hintVisible)
+        viewModel.dismissHint(); assertFalse(viewModel.addState.value.hintVisible)
+        viewModel.onToolbarSearch("val")
+        assertEquals("val", viewModel.searchTokenFilter.value.filter)
+        for ((route, title) in listOf(LiquidityAddRoutes.start to R.string.common_supply_liquidity_title,
+            LiquidityAddRoutes.slippage to R.string.slippage, LiquidityAddRoutes.confirm to R.string.add_liquidity_confirmation_title,
+            LiquidityAddRoutes.selectToken to R.string.common_choose_asset)) {
+            viewModel.setCurDestination(route)
+            assertEquals(title, viewModel.toolbarState.value!!.basic.title)
+            assertEquals(route == LiquidityAddRoutes.selectToken, viewModel.toolbarState.value!!.basic.searchEnabled)
+        }
+        assertEquals("val", viewModel.toolbarState.value!!.basic.searchValue)
+        viewModel.onNavIcon(); org.junit.Assert.assertNotNull(viewModel.navigationPop.value)
+        viewModel.onMenuItem(jp.co.soramitsu.ui_core.component.toolbar.Action.Close())
+    }
+
+    @Test fun `token selectors constrain dex order and exclude the selected counter asset`() = runTest {
+        given(poolsInteractor.getPoolDexList()).willReturn(listOf(PoolDex(0, XOR_ASSET.token.id, "XOR"), PoolDex(1, VAL_ASSET.token.id, "VAL")))
+        setUpViewModel(null); advanceUntilIdle()
+        viewModel.onToken1Click(); advanceUntilIdle()
+        assertEquals(listOf(XOR_ASSET.token.id, VAL_ASSET.token.id), viewModel.searchTokenFilter.value.tokenIds)
+        viewModel.onToken2Click(); advanceUntilIdle()
+        assertFalse(viewModel.searchTokenFilter.value.tokenIds.contains(XOR_ASSET.token.id))
+        assertTrue(viewModel.searchTokenFilter.value.tokenIds.contains(VAL_ASSET.token.id))
+        given(poolsInteractor.isPairEnabled(any(), any())).willReturn(flowOf(true))
+        given(poolsInteractor.isPairPresentedInNetwork(any(), any())).willReturn(flowOf(true))
+        viewModel.onToken2Change(VAL_ASSET.token.id); advanceUntilIdle()
+        viewModel.onToken1Click(); advanceUntilIdle()
+        assertEquals(listOf(XOR_ASSET.token.id), viewModel.searchTokenFilter.value.tokenIds)
+        viewModel.onToken2Change(VAL_ASSET.token.id)
+        assertEquals(VAL_ASSET.token.id, viewModel.addState.value.assetState2!!.token.id)
+    }
+
+    @Test fun `changing the base asset updates its balance and resets the chosen pair`() = runTest {
+        setUpViewModel(null); advanceUntilIdle()
+        viewModel.onToken1Change(XSTXAU_ASSET.token.id); advanceUntilIdle()
+        assertEquals(XSTXAU_ASSET.token.id, viewModel.addState.value.assetState1!!.token.id)
+        assertTrue(viewModel.addState.value.assetState1!!.balance.startsWith("1 ("))
+        viewModel.onToken1Change(XSTXAU_ASSET.token.id)
+        assertEquals("Choose tokens", viewModel.addState.value.btnState.text)
+    }
+
+    @Test fun `percentage shortcuts apply to the focused asset and slippage keeps typed amounts`() = runTest {
+        given(poolsInteractor.isPairEnabled(any(), any())).willReturn(flowOf(true))
+        given(poolsInteractor.isPairPresentedInNetwork(any(), any())).willReturn(flowOf(true))
+        setUpViewModel(VAL_ASSET.token.id); advanceUntilIdle()
+        viewModel.onAmount2Focused(); viewModel.optionSelected(50)
+        assertEquals(0, VAL_ASSET.balance.transferable.divide(BigDecimal("2")).compareTo(viewModel.addState.value.assetState2!!.amount))
+        viewModel.onAmount1Focused(); viewModel.onAmount1Change(BigDecimal("0.25")); advanceUntilIdle()
+        viewModel.onSlippageClick(); viewModel.slippageChanged(1.5); advanceUntilIdle()
+        assertEquals(1.5, viewModel.stateSlippage.value, 0.0)
+        assertEquals(0, BigDecimal("0.25").compareTo(viewModel.addState.value.assetState1!!.amount))
     }
 }

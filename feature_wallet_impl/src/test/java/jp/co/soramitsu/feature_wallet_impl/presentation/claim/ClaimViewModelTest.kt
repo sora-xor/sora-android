@@ -34,6 +34,7 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import kotlinx.coroutines.CompletableDeferred
+import kotlin.coroutines.ContinuationInterceptor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -146,7 +147,7 @@ class ClaimViewModelTest {
 
     /** Network and storage work runs on the test's own dispatcher. */
     private fun TestScope.useTestDispatcher() {
-        Mockito.`when`(cm.io).thenReturn(checkNotNull(coroutineContext[CoroutineDispatcher]))
+        Mockito.`when`(cm.io).thenReturn(coroutineContext[ContinuationInterceptor] as CoroutineDispatcher)
     }
 
     private fun TestScope.claimAnswers(answer: suspend () -> TransactionOutcome?) {

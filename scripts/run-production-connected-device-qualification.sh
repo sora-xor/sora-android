@@ -25,9 +25,11 @@ usage: run-production-connected-device-qualification.sh [--offline] [--report-di
 Runs every group even when one fails, prints a summary with the commit and the device, and
 exits with 1 when any group failed or ran no test.
 
-The release gate is the run on a device with 4 KB pages. On a 16 KB device the tests that
-need MockK's agent library cannot be loaded (WalletUxAcceptanceTest and the MigrationManager
-phases); they are left out and the summary says that it covers the 16 KB subset only.
+The full release gate is qualified on a device with 4 KB pages. MockK 1.14.3 still fails
+this repository's strict 16 KB GNU_RELRO alignment gate, so the full suite is unqualified
+on 16 KB devices. The existing subset excludes WalletUxAcceptanceTest and the MigrationManager
+phases; its summary covers the 16 KB subset only. Static inspection does not prove that a
+device loader rejects the agent.
 
 Environment: SORA_GRADLE_FLAGS (extra Gradle arguments), ANDROID_SERIAL (emulator to use),
 ANDROID_HOME (to find adb, apkanalyzer or aapt2).
@@ -78,7 +80,7 @@ rm -f "${report_dir}"/[0-9][0-9]-*.log "${summary_file}"
 # runs them. Everything else in :feature_account_impl runs in the ordinary connected task.
 readonly phased_storage_class="jp.co.soramitsu.feature_account_impl.data.repository.datasource.EncryptedWalletMigrationStorageTest"
 
-# On a 16 KB device these cannot be loaded; see sora_mockk_agent_note.
+# These agent-dependent groups remain unqualified on 16 KB devices; see sora_mockk_agent_note.
 readonly mockk_agent_app_class="jp.co.soramitsu.sora.ux.WalletUxAcceptanceTest"
 device_page_size="$(sora_device_page_size)"
 readonly device_page_size

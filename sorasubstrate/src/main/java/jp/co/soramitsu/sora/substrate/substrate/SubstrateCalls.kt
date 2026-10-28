@@ -84,6 +84,7 @@ import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.SubscribeStorage
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.storageChange
 import jp.co.soramitsu.xsubstrate.wsrpc.subscriptionFlow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -291,7 +292,7 @@ class SubstrateCalls @Inject constructor(
             request = StateQueryStorageAt(listOf(assetKeys)),
             mapper = pojoList<SubscribeStorageResult>().nonNull(),
         ).let {
-            it[0].changes.mapNotNull { asset ->
+            it.firstOrNull()?.changes.orEmpty().mapNotNull { asset ->
                 val id = asset.getOrNull(0)
                 val raw = asset.getOrNull(1)
                 if (id != null && raw != null) {
@@ -693,6 +694,7 @@ class SubstrateCalls @Inject constructor(
                     } else emptyList()
                 }
         }.getOrElse {
+            if (it is CancellationException) throw it
             FirebaseWrapper.recordErrorClass(
                 FirebaseWrapper.PrivacySafeErrorClass.FINALIZED_EVENT_READ
             )

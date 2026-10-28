@@ -1,0 +1,46 @@
+// Opt-in instrumentation coverage: ./gradlew -I scripts/device-coverage.gradle ...
+// Keep the release configuration and ordinary debug builds unchanged.
+gradle.beforeProject { project ->
+    ['com.android.application', 'com.android.library'].each { pluginId ->
+        project.plugins.withId(pluginId) {
+            project.extensions.getByName('androidComponents').finalizeDsl { android ->
+                android.buildTypes.getByName('debug').enableAndroidTestCoverage = true
+                android.testCoverage.jacocoVersion = '0.8.15'
+            }
+        }
+    }
+}
+
+// An Android module report only analyzes that module's classes. App UI tests also execute
+// library modules, so analyze all application/library class collections against every .ec file.
+gradle.projectsEvaluated {
+    def root = gradle.rootProject
+    root.pluginManager.apply('jacoco')
+    root.extensions.getByName('jacoco').toolVersion = '0.8.15'
+    def moduleReports = root.subprojects.findAll { it.name != 'test_data' }.collectMany { project ->
+        project.tasks.matching { it.name == 'createProductionDebugAndroidTestCoverageReport' }.toList()
+    }
+    root.tasks.register('aggregateProductionDebugDeviceCoverage', org.gradle.testing.jacoco.tasks.JacocoReport) { report ->
+        report.group = 'verification'
+        report.description = 'Reports device hits across all app-owned Android modules, including library code exercised by app tests.'
+        // Allow tests and aggregation in one invocation without reading a producer's outputs early.
+        report.mustRunAfter(root.subprojects.collectMany { project ->
+            project.tasks.matching { it.name == 'connectedProductionDebugAndroidTest' }.toList()
+        })
+        report.classDirectories.from(moduleReports.collect { it.classFileCollection })
+        report.sourceDirectories.from(root.subprojects.collectMany { project ->
+            ['main', 'production', 'debug', 'productionDebug'].collectMany { sourceSet ->
+                [project.file("src/${sourceSet}/java"), project.file("src/${sourceSet}/kotlin")]
+            }
+        })
+        report.executionData.from(root.fileTree(root.rootDir) {
+            include('*/build/outputs/code_coverage/productionDebugAndroidTest/connected/**/*.ec')
+        })
+        report.reports {
+            xml.required = true
+            xml.outputLocation = root.layout.buildDirectory.file('reports/coverage/device-aggregate.xml')
+            html.required = true
+            html.outputLocation = root.layout.buildDirectory.dir('reports/coverage/device-html')
+        }
+    }
+}

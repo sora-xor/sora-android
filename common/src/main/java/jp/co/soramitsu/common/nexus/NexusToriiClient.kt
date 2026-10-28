@@ -936,6 +936,7 @@ internal fun interface NexusToriiReadTransport {
 class NexusToriiClient internal constructor(
     private val json: Json,
     private val readTransport: NexusToriiReadTransport?,
+    private val connectionFactory: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
 ) : NexusToriiReadClient {
     @Inject constructor(json: Json) : this(json, null)
 
@@ -1183,8 +1184,12 @@ class NexusToriiClient internal constructor(
                 submission = submission,
             )
         )
-        check(response.jsonrpc == "2.0" && response.id == request.id) {
-            "NEXUS_MCP_IDENTITY_MISMATCH"
+        if (response.jsonrpc != "2.0" || response.id != request.id) {
+            throw NexusToriiException(
+                safeCode = "NEXUS_MCP_IDENTITY_MISMATCH",
+                submissionMayHaveReachedTorii = submission,
+                category = NexusToriiFailureCategory.PROTOCOL,
+            )
         }
         response.error?.let { error ->
             val message = error.message.takeIf {
@@ -1318,7 +1323,7 @@ class NexusToriiClient internal constructor(
             requestContentType == expectedRequestContentType &&
                 (requestBody != null) == (expectedRequestContentType != null)
         ) { "NEXUS_REQUEST_CONTENT_TYPE_INVALID" }
-        val connection = (URL(url).openConnection() as HttpURLConnection).apply {
+        val connection = connectionFactory(URL(url)).apply {
             requestMethod = method
             connectTimeout = CONNECT_TIMEOUT_MILLIS
             readTimeout = if (submission && url.endsWith("/v1/mcp")) {

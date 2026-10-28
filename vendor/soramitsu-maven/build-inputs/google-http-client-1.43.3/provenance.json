@@ -1,0 +1,12 @@
+{
+  "upstream": "https://repo.maven.apache.org/maven2/com/google/http-client/google-http-client/1.43.3/",
+  "version": "1.43.3-sora.1",
+  "changedBinaryEntries": [
+    "com/google/api/client/util/SslUtils$1.class",
+    "com/google/api/client/util/SslUtils.class",
+    "com/google/api/client/util/SslUtils$2.class"
+  ],
+  "policy": "Both insecure opt-out helpers fail closed. Every other uncompressed jar entry is byte-identical. Normal NetHttpTransport and TLS trust-store APIs are unchanged.",
+  "build": "JDK 17 javac --release 8; rebuild.py verifies upstream input SHA-256 values. Pass error_prone_annotations:2.36.0 as --annotations.",
+  "verification": "GoogleHttpTlsPolicyTest plus existing cloud-backup suites; final run pending."
+}

@@ -20,6 +20,8 @@ limitations under the License.
 package jp.co.soramitsu.common.presentation.compose.theme.neon
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
 import java.io.File
 import jp.co.soramitsu.common.presentation.compose.theme.soraDarkColorsHighContrast
 import jp.co.soramitsu.common.presentation.compose.theme.soraLightColorsHighContrast
@@ -207,7 +209,10 @@ class NeonContrastTest {
             assertContrast("$dir recovery body on the safe panel", col(body), col("neon_surface"), 4.5)
             assertContrast("$dir splash loading text", col(body), col(page), 4.5)
             assertContrast("$dir safe button label", col("neon_on_accent"), col("neon_safe_start"), 4.5)
-            assertContrast("$dir secondary button label", col("neon_text_primary"), col("neon_button_secondary"), 4.5)
+            // Recovery actions use Compose glass, not the removed XML button mirror.
+            val n = if (dir == "values-night") NeonDark else NeonLight
+            assertContrast("$dir secondary button label", n.textPrimary, over(n.glassFill, n.surface), 4.5)
+            assertContrast("$dir pressed secondary label", n.textPrimary, over(n.glassFillPressed, n.surface), 4.5)
             assertContrast("$dir support link", col("neon_link"), col("neon_surface"), 4.5)
             assertContrast("$dir dialog text", col("neon_text_primary"), col("neon_sheet"), 4.5)
             assertContrast("$dir dialog actions", col("neon_link"), col("neon_sheet"), 4.5)
@@ -259,64 +264,59 @@ class NeonContrastTest {
 
     @Test
     fun `recovery callout is readable in both themes`() {
-        for (dir in listOf("values", "values-night")) {
-            val c = xmlColors(dir)
-            fun col(name: String) = requireNotNull(c[name]) { "$dir has no $name" }
-            assertContrast("$dir callout text", col("neon_text_primary"), col("neon_info_container"), 4.5)
-            assertContrast("$dir callout shield", col("neon_cyan"), col("neon_info_container"), 3.0)
+        // ReassuranceCallout uses these Compose tokens directly. Its unused XML
+        // copies were removed; reading those copies would not test the rendered UI.
+        for (n in listOf(NeonDark, NeonLight)) {
+            assertContrast("${n.isDark} callout text", n.textPrimary, n.infoContainer, 4.5)
+            assertContrast("${n.isDark} callout shield", n.cyan, n.infoContainer, 3.0)
         }
-        assertEquals(NeonDark.infoContainer, xmlColors("values-night")["neon_info_container"])
-        assertEquals(NeonLight.infoContainer, xmlColors("values")["neon_info_container"])
     }
 
-    private fun selector(name: String): Map<String, String> {
-        val text = File(res, "color/$name.xml").readText()
-        return Regex("""<item android:color="@(?:android:)?color/([a-z_]+)"(?: android:state_([a-z]+)="([a-z]+)")? />""")
-            .findAll(text)
-            .associate { m ->
-                val state = m.groupValues[2].takeIf { it.isNotEmpty() }?.let { "$it=${m.groupValues[3]}" } ?: "default"
-                state to m.groupValues[1]
-            }
-    }
+    /** Exercise the actual style resolver without exposing a production test API. */
+    private fun buttonStyle(variant: NeonVariant, tokens: NeonTokens, enabled: Boolean): Any =
+        Class.forName("jp.co.soramitsu.common.presentation.compose.neon.NeonButtonKt")
+            .getDeclaredMethod("styleFor", NeonVariant::class.java, NeonTokens::class.java, Boolean::class.javaPrimitiveType)
+            .apply { isAccessible = true }
+            .invoke(null, variant, tokens, enabled)
 
-    private fun styleItem(style: String, item: String): String {
-        val text = File(res, "values/styles.xml").readText()
-        val body = Regex("""<style name="${Regex.escape(style)}"[^>]*>(.*?)</style>""", RegexOption.DOT_MATCHES_ALL)
-            .find(text)?.groupValues?.get(1)
-        requireNotNull(body) { "styles.xml has no $style" }
-        val m = Regex("""<item name="$item">@color/([a-z_]+)</item>""").find(body)
-        return requireNotNull(m) { "$style has no @color $item" }.groupValues[1]
-    }
+    private fun Any.styleField(name: String): Any? = javaClass.getDeclaredField(name)
+        .apply { isAccessible = true }.get(this)
+
+    // Compose Color's JVM backing field is its packed ULong, not an ARGB Int.
+    private fun Any.labelColor(): Color = Color((styleField("label") as Long).toULong())
 
     @Test
-    fun `xml recovery buttons look disabled when disabled and keep their look while running`() {
-        val buttons = listOf(
-            Triple("Widget.Sora.Button.Safe", "neon_safe_start", "neon_on_accent"),
-            Triple("Widget.Sora.Button.Secondary", "neon_button_secondary", "neon_text_primary"),
-        )
-        for ((style, fill, label) in buttons) {
-            val bg = selector(styleItem(style, "backgroundTint"))
-            val fg = selector(styleItem(style, "android:textColor"))
-            assertEquals("$style fill", fill, bg["default"])
-            assertEquals("$style running fill", fill, bg["activated=true"])
-            assertEquals("$style disabled fill", "neon_cta_disabled", bg["enabled=false"])
-            assertEquals("$style label", label, fg["default"])
-            assertEquals("$style running label", label, fg["activated=true"])
-            assertEquals("$style disabled label", "neon_text_disabled", fg["enabled=false"])
-        }
-        val stroke = selector(styleItem("Widget.Sora.Button.Secondary", "strokeColor"))
-        assertEquals("transparent", stroke["enabled=false"])
-        val tertiary = selector(styleItem("Widget.Sora.Button.Tertiary", "android:textColor"))
-        assertEquals("neon_link", tertiary["default"])
-        assertEquals("neon_text_disabled", tertiary["enabled=false"])
-        for (dir in listOf("values", "values-night")) {
-            val c = xmlColors(dir)
-            fun col(name: String) = requireNotNull(c[name]) { "$dir has no $name" }
-            // The disabled fill must differ visibly from both enabled fills.
-            val panel = col("neon_surface")
-            val disabled = over(col("neon_cta_disabled"), panel)
-            assertTrue("$dir disabled vs safe", ratio(disabled, col("neon_safe_start")) > 1.5)
-            assertTrue("$dir disabled label vs secondary label", col("neon_text_disabled") != col("neon_text_primary"))
+    fun `recovery button styles distinguish disabled safe secondary and tertiary actions`() {
+        for (n in listOf(NeonDark, NeonLight)) {
+            val safe = buttonStyle(NeonVariant.Safe, n, true)
+            val disabledSafe = buttonStyle(NeonVariant.Safe, n, false)
+            assertEquals(n.ctaSafe, safe.styleField("fill"))
+            assertEquals(n.onAccent, safe.labelColor())
+            assertEquals(n.glowSafe, safe.styleField("glow"))
+            assertEquals(SolidColor(n.ctaDisabled), disabledSafe.styleField("fill"))
+            assertEquals(n.textDisabled, disabledSafe.labelColor())
+            assertEquals(null, disabledSafe.styleField("edge"))
+            assertEquals(null, disabledSafe.styleField("glow"))
+            assertEquals(null, disabledSafe.styleField("pressedOverlay"))
+            assertTrue("disabled safe fill differs from enabled", disabledSafe.styleField("fill") != safe.styleField("fill"))
+
+            val secondary = buttonStyle(NeonVariant.Secondary, n, true)
+            val disabledSecondary = buttonStyle(NeonVariant.Secondary, n, false)
+            assertEquals(SolidColor(n.glassFill), secondary.styleField("fill"))
+            assertEquals(SolidColor(n.glassFillPressed), secondary.styleField("pressedFill"))
+            assertEquals(n.textPrimary, secondary.labelColor())
+            assertEquals(n.borderGlass, secondary.styleField("edge"))
+            assertEquals(n.textDisabled, disabledSecondary.labelColor())
+            assertEquals(null, disabledSecondary.styleField("edge"))
+            assertTrue("disabled secondary label differs from enabled", disabledSecondary.labelColor() != secondary.labelColor())
+
+            val tertiary = buttonStyle(NeonVariant.Tertiary, n, true)
+            val disabledTertiary = buttonStyle(NeonVariant.Tertiary, n, false)
+            assertEquals(null, tertiary.styleField("fill"))
+            assertEquals(n.link, tertiary.labelColor())
+            assertEquals(n.textDisabled, disabledTertiary.labelColor())
+            assertContrast("${n.isDark} tertiary action", tertiary.labelColor(), n.surface, 4.5)
+            assertContrast("${n.isDark} actual secondary label", secondary.labelColor(), over(n.glassFill, n.surface), 4.5)
         }
     }
 }

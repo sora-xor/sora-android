@@ -119,6 +119,7 @@ class QrCodeFlowViewModelTest {
         val testAssetsListFlow = testAssetsListFlow(testAssetsList)
         val testSoraAccount = testSoraAccount()
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
+        every { coroutineManager.main } returns kotlinx.coroutines.Dispatchers.Main
         every { assetsInteractor.subscribeAssetsActiveOfCurAccount() } returns testAssetsListFlow
         coEvery { assetsInteractor.getCurSoraAccount() } returns testSoraAccount
         coEvery { assetsInteractor.getPublicKeyHex(any()) } returns "this is sor public hex key"
@@ -213,6 +214,8 @@ class QrCodeFlowViewModelTest {
             viewModel.onUserAddressClickInReceiveScreen()
             advanceUntilIdle()
             verify(exactly = 1) { clipboardManager.addToClipboard(any(), any()) }
+            viewModel.onLoadRequestConfirmScreenDataAgainClick()
+            advanceUntilIdle()
             viewModel.onUserAddressClickInRequestConfirmScreen()
             advanceUntilIdle()
             verify(exactly = 2) { clipboardManager.addToClipboard(any(), any()) }

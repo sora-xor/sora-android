@@ -21,7 +21,7 @@ package jp.co.soramitsu.common.util
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.util.ext.safeStartActivity
@@ -29,12 +29,12 @@ import jp.co.soramitsu.common.util.ext.safeStartActivity
 object ShareUtil {
 
     fun shareInBrowser(fragment: Fragment, link: String) {
-        val intent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(link) }
+        val intent = Intent(Intent.ACTION_VIEW).apply { data = link.toUri() }
         fragment.safeStartActivity(intent, ResponseCode.NOW_BROWSER_FOUND)
     }
 
     fun shareInBrowser(context: Context, link: String) {
-        val intent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(link) }
+        val intent = Intent(Intent.ACTION_VIEW).apply { data = link.toUri() }
         context.safeStartActivity(intent, ResponseCode.NOW_BROWSER_FOUND)
     }
 }

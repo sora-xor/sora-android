@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="asset_reorder">Reorder item</string>
+    <string name="asset_move_up">Move up</string>
+    <string name="asset_move_down">Move down</string>
+</resources>

@@ -17,7 +17,6 @@
   <string name="account_already_imported_description">此钱包已导入</string>
   <string name="account_storage_conflict">This wallet can\'t be added here</string>
   <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
-  <string name="account_confirmation_title">确认助记种子短语</string>
   <string name="account_confirmation_title_v2">确认密码</string>
   <string name="account_options">账户选项</string>
   <string name="account_options_backup_google">备份到谷歌</string>
@@ -30,7 +29,6 @@
   <string name="activity_referral_title">被推荐人加入</string>
   <string name="add_liquidity_alert_text">您将从流动性提供中赚取与您在流动池中的份额成比例的费用。</string>
   <string name="add_liquidity_confirmation_title">确认供应</string>
-  <string name="add_liquidity_title">增加流动性</string>
   <string name="add_node_name_already_existing">已添加同名节点</string>
   <string name="address_not_found_1">未找到接收人</string>
   <string name="amount_error_no_funds">很抱歉，您没有足够的资金来转账指定的金额。</string>
@@ -45,27 +43,20 @@
   <string name="asset_details_token_price">代币价格</string>
   <string name="asset_details_your_pools">你的%s池子</string>
   <string name="asset_to_send">待发送的资产</string>
-  <string name="backup_account_already_exist">备份已存在。继续覆盖它。</string>
   <string name="backup_not_enough_space_error">备份失败。您的Google Drive空间不足，请释放一些空间并重试。</string>
   <string name="backup_now">立即备份</string>
   <string name="backup_password_mandatory_reqs_fulfilled">密码的强制要求已满足</string>
   <string name="backup_password_requirments">至少六个字符。为了更好的安全性，可以包含大写字母、数字和非字母字符。</string>
-  <string name="backup_password_title">设置密码将加密您的Google备份。在恢复钱包时，您需要输入此密码。\n最小密码长度为6个字符。</string>
   <string name="backup_password_title_2">设置密码将加密您的Google备份。在恢复钱包时，您需要输入此密码。</string>
   <string name="biometric_dialog_title">身份验证</string>
   <string name="block_id">区块哈希</string>
-  <string name="cant_load_balance">无法加载余额</string>
   <string name="change_language">更改语言</string>
   <string name="change_pin">更改PIN码</string>
   <string name="choose_token">选择代币</string>
   <string name="choose_tokens">选择代币</string>
-  <string name="claim_contact">如果您有任何疑问或疑虑，可以 %%联系我们%%</string>
   <string name="claim_contact_us">如有任何问题或疑虑，请%%联系我们%%</string>
-  <string name="claim_error_title">转移失败</string>
   <string name="claim_error_title_v1">资产转移失败。请稍后再试。</string>
-  <string name="claim_notification_text">转移进行中...</string>
   <string name="claim_rewards">领取奖励</string>
-  <string name="claim_subtitle">我们需要您的同意，才能将您的资金从SORA转移出来以供使用。SORA现在将在Substrate网络上运行，请确认是否进行转移。</string>
   <string name="claim_subtitle_confirmed">谢谢您的确认！</string>
   <string name="claim_subtitle_confirmed_v2">资产转移正在进行中</string>
   <string name="claim_subtitle_v2">• 我们需要同意才能将您的资产从 SORA v1 过渡到 SORA v2 \n\n • SORA v2 网络使用 Substrate 构建，与 Polkadot 和 Kusama 生态系统原生兼容\n\n • 以太坊上的资产不受影响，您仍然可以通过将密码导入任何兼容的钱包来访问它们</string>
@@ -90,7 +81,7 @@
   <string name="tx_details_view_on_explorer">在区块浏览器中查看</string>
   <string name="common_confirm">确认</string>
   <string name="common_connected">已连接</string>
-  <string name="common_connecting">正在连接...</string>
+  <string name="common_connecting">正在连接…</string>
   <string name="common_continue">继续</string>
   <string name="common_copied">复制到剪贴板</string>
   <string name="common_create_qr_request">创建QR请求</string>
@@ -98,7 +89,6 @@
   <string name="common_currencies">货币</string>
   <string name="common_delete">删除</string>
   <string name="common_disabled">禁用</string>
-  <string name="common_discover">发现</string>
   <string name="common_done">已完成</string>
   <string name="common_dutch">荷兰语</string>
   <string name="common_edit">编辑</string>
@@ -151,7 +141,6 @@
   <string name="common_french">法语</string>
   <string name="common_german">德语</string>
   <string name="common_google_authorization_error">Google授权失败</string>
-  <string name="common_google_backup_decryption_failed">备份解密失败。请检查密码并重试。</string>
   <string name="common_google_backup_decryption_failed_2">您输入的密码可能无效。</string>
   <string name="common_hebrew">希伯来语</string>
   <string name="common_hindi">印地语</string>
@@ -186,11 +175,9 @@
   <string name="common_try_again">Try again</string>
   <string name="common_remove">移除</string>
   <string name="common_request">请求</string>
-  <string name="common_rewrite">重写</string>
   <string name="common_russian">俄语</string>
   <string name="common_scan">扫描</string>
   <string name="common_scan_qr">扫描二维码</string>
-  <string name="common_search">搜索</string>
   <string name="common_search_pools">搜索流动池</string>
   <string name="common_sec">秒</string>
   <string name="common_select_asset">选择一个资产</string>
@@ -211,7 +198,6 @@
   <string name="common_swedish">瑞典语</string>
   <string name="common_terms_title">条款和条件</string>
   <string name="common_thai">泰语</string>
-  <string name="common_title_warning">警告！</string>
   <string name="common_today">今天</string>
   <string name="common_turkish">土耳其语</string>
   <string name="common_ukrainian">乌克兰语</string>
@@ -221,20 +207,16 @@
   <string name="common_yesterday">昨天</string>
   <string name="confirm_sending">确认发送</string>
   <string name="confirn_supply_liquidity_first_provider_warning">您是第一个提供流动性的人。您添加代币的比例将决定该池子的价格。</string>
-  <string name="contacts_scan">扫描</string>
   <string name="contacts_search_results">搜索结果</string>
   <string name="copy_to_clipboard">复制到剪贴板</string>
   <string name="create_account_title">注册</string>
   <string name="create_backup_password_button_text">设置备份密码</string>
-  <string name="create_backup_password_is_secure">密码非常安全</string>
   <string name="create_backup_password_matched">密码匹配</string>
   <string name="create_backup_password_not_matched">密码不匹配</string>
   <string name="create_backup_password_title">创建备用密码</string>
   <string name="create_backup_password_warning_text">我知道如果我忘记了密码，就无法找回它。</string>
   <string name="create_backup_set_password">设置密码</string>
-  <string name="create_backup_weak_password">弱密码</string>
   <string name="create_new_account_title">创建新账户</string>
-  <string name="dark_mode">深色模式</string>
   <string name="delete_backup_alert_description">如果您删除了Google备份，您只能通过手动备份助记词来恢复您的钱包。</string>
   <string name="delete_backup_alert_title">你确定吗？</string>
   <string name="demeter_claimed_reward">领取的奖励</string>
@@ -244,15 +226,12 @@
   <string name="details_frozen">已被冻结</string>
   <string name="details_receive_from_pool">已从池中撤回</string>
   <string name="details_sent_to_pool">发送到池中</string>
-  <string name="discover_coming_soon">SORA开发人员目前正在开发一个功能，该功能将显示在Polkaswap上活跃的所有池子的完整列表。\n\n现在，如果您想创建/添加到池中，请使用下面的按钮。</string>
   <string name="discovery_polkaswap_pools">Polkaswap池</string>
   <string name="edit_farm">编辑农场</string>
   <string name="edit_view">编辑视图</string>
-  <string name="empty_recent_recipients">没有最近的接收人。\n已发送的地址将在此处显示。</string>
   <string name="empty_recent_recipients_2">接收人将出现在此处</string>
   <string name="enter_backup_password_title">输入备份密码</string>
   <string name="enter_password_description">输入选定账户的备份密码以进行导入</string>
-  <string name="enter_password_incorect_title">密码错误</string>
   <string name="enter_password_title">输入密码</string>
   <string name="error_transaction_fee_title">网络费用不足</string>
   <string name="eth_tx_address">以太坊账户地址</string>
@@ -289,8 +268,6 @@
   <string name="farm_details_your_rewards">你的奖励</string>
   <string name="farming_details_title">农业细节</string>
   <string name="forget_account">忘记账户</string>
-  <string name="global_results">全局结果</string>
-  <string name="hide_zero_balances">隐藏零余额</string>
   <string name="history_referral">被推荐人</string>
   <string name="history_referrer">推荐人</string>
   <string name="import_account_not_backed_up">未备份！</string>
@@ -298,7 +275,6 @@
   <string name="import_account_not_backed_up_alert_description">如果您的设备丢失或被盗，您将永远失去钱包和所有资金。</string>
   <string name="import_more_title">导入更多</string>
   <string name="imported_account_title">账户已导入</string>
-  <string name="invite_code">邀请代码</string>
   <string name="invite_code_applied_body">邀请码使用成功</string>
   <string name="invite_code_applied_title">恭喜！</string>
   <string name="invite_enter_error_already_applied">您已经应用了另一个邀请码</string>
@@ -308,18 +284,14 @@
   <string name="invoice_scan_error_user_not_found">无法从二维码中找到用户</string>
   <string name="launch_screen_loading_title">这次加载时间稍微长了一点</string>
   <string name="liquid_assets">资产</string>
-  <string name="logout_dialog_body">此操作将导致从该设备删除账户。在继续操作之前，请确保已备份助记词。</string>
-  <string name="logout_remove_nodes_body">\n \n您的所有自定义节点也将被移除</string>
   <string name="mnemonic_confirmation_select_word_2">从你写下的清单中</string>
   <string name="mnemonic_confirmation_select_word_number">选择一个单词编号</string>
-  <string name="mnemonic_invalid">助记词密码无效，请再检查一次单词顺序。</string>
   <string name="mnemonic_invalid_title">无效的助记词口令</string>
   <string name="mnemonic_text">我们建议使用非数字方式进行备份，例如将其写在纸上。</string>
   <string name="network_fee">网络费用</string>
     <string name="network_fee_unavailable">暂时无法查询网络手续费。请稍后重试。您的资金安全地保存在区块链上。</string>
     <string name="network_fee_unavailable_short">无法获取网络手续费</string>
     <string name="network_fee_unreachable">目前无法连接 SORA 网络，因此无法查询网络手续费。请检查互联网连接后重试。您的资金安全地保存在区块链上。</string>
-  <string name="network_finalized_history">活动</string>
   <string name="node_details_address_validation_failed">验证 URL 失败（地址错误）</string>
   <string name="node_details_genesis_validation_failed">您节点的创世哈希与网络的创世哈希不同</string>
   <string name="node_details_node_already_added" formatted="false">此节点已被添加：%s/n与节点%s建立了连接</string>
@@ -328,13 +300,10 @@
   <string name="onboarding_create_account_description">输入您的新账户名称以及它在地址下的显示方式。有了链上身份，它可以被分享给其他人。</string>
   <string name="onboarding_create_account_subtitle">仅对您可见并本地存储</string>
   <string name="onboarding_create_account_title">为您的账户命名</string>
-  <string name="onboarding_description">SORA是一个链上治理系统，生产者可以提出资金申请，所有XOR代币持有人共同决定最佳商品和服务的创建。接受XOR作为支付方式将促进SORA经济的发展。</string>
   <string name="onboarding_enter_passphrase">输入密码短语</string>
   <string name="onboarding_enter_seed">输入原始种子词</string>
   <string name="passphrase_confirmation_error_message">这个过程旨在确保您已经记录下了恢复短语</string>
   <string name="passphrase_confirmation_error_title">不要试图猜测这个词</string>
-  <string name="passphrase_write">请记下您的口令</string>
-  <string name="personal_info_username">账户名（可选）</string>
   <string name="personal_info_username_v1">账户名称</string>
   <string name="phone_verification_too_frequent_message">验证码请求过于频繁。请稍后再试。</string>
   <string name="pin_locked_for_title">- 已锁定%s</string>
@@ -355,7 +324,6 @@
   <string name="polkaswap_farming_pool_in_farming_hint">您的一部分流动池份额已被质押。要访问它，您需要先解除质押。</string>
   <string name="polkaswap_farming_pool_share">您质押的流动池份额</string>
   <string name="polkaswap_farming_pool_share_will_be">您质押的池份额将是</string>
-  <string name="polkaswap_farming_staked_for">质押了%s</string>
   <string name="polkaswap_farming_unstake_to_remove">要撤出流动性，您需要先解除质押</string>
   <string name="polkaswap_info_text_1">Polkaswap 是由 SORA 社区维护。在使用 Polkaswap 功能之前，请查看%% Polkaswap FAQ %% 和文档，其中包括有关 Polkaswap 操作原理%% 的详细说明、 Polkaswap %%备忘录和服务条款以%%及隐私政策。%%这些文档对于安全和积极的用户体验至关重要。通过使用 Polkaswap，您承认您已阅读并理解这些文件。</string>
   <string name="polkaswap_info_text_2">您还承认以下几点：</string>
@@ -368,10 +336,6 @@
   <string name="polkaswap_input_estimated">输入是估计的。您将卖出最大的%s，否则交易将被取消。</string>
   <string name="polkaswap_insufficient_balance">%s余额不足</string>
   <string name="polkaswap_insufficient_liqudity">流动性不足</string>
-  <string name="polkaswap_liquidity_fee">流动性提供者费用</string>
-  <string name="polkaswap_liquidity_fee_info">每笔交易的一部分作为协议激励奖励流动性提供者。</string>
-  <string name="polkaswap_liquidity_total_fee">兑换费用</string>
-  <string name="polkaswap_liquidity_total_fee_desc">你的兑换涉及到合成费用和流动性提供者费用。\n当兑换通过合成资产的XST流动性来源时，会计算合成费用；而当兑换通过流动性池时，则会计算流动性提供者费用。</string>
   <string name="polkaswap_market">市场</string>
   <string name="polkaswap_market_smart_description">智能流动性路由通过从所有可用市场中仅选择最佳价格选项，确保任何交易的最佳价格。如果可用，将使用代币绑定曲线（TBC）提供流动性，只要资产价格比其他来源更实惠，否则将使用XYK池。</string>
   <string name="polkaswap_market_tbc_description">TBC - 仅从代币绑定曲线（一级市场）购买。价格可能会比XYK池（二级市场）不利，但随着时间的推移，从归属奖励中获得的价值可能会更有利。</string>
@@ -397,12 +361,9 @@
   <string name="pool_details">流动池详情</string>
   <string name="pool_details_active_farms">活跃的农场</string>
   <string name="pool_details_reward">奖励</string>
-  <string name="pool_liquidity_placeholder">您还没有任何生效的流动池。\n赶快来增加流动性以赚取奖励哦</string>
-  <string name="pool_share_title">流动池份额</string>
   <string name="pool_share_title_1">您的流动池份额</string>
   <string name="pooled_assets">流动池化资产</string>
   <string name="profile_biometry_title">生物特征认证</string>
-  <string name="profile_logout_title">登出</string>
   <plurals name="project_date_day_plurals">
     <item quantity="other">%s 天剩余</item>
   </plurals>
@@ -468,10 +429,8 @@
   <string name="review">复核</string>
   <string name="route">路径</string>
   <string name="scan_qr_show_my_qr">显示我的二维码</string>
-  <string name="search_assets">搜索资产</string>
   <string name="search_empty_state">没有结果</string>
   <string name="search_token_placeholder">按资产ID、名称或代币符号搜索</string>
-  <string name="select_account_address">搜索账户地址</string>
   <string name="select_account_address_1">搜索或添加新地址</string>
   <string name="select_account_import">选择要导入的账户</string>
   <string name="select_asset_receive">选择要接收的资产</string>
@@ -504,28 +463,21 @@
   <string name="settings_login_title">登录 &amp; 安全</string>
   <string name="settings_nodes">节点</string>
   <string name="show_more">显示更多</string>
-  <string name="show_zero_balances">显示零余额</string>
   <string name="slippage">滑点</string>
   <string name="something_went_wrong">出了点问题</string>
   <string name="start_staking">开始质押</string>
   <string name="status_error">错误</string>
   <string name="status_pending">等待确认</string>
-  <string name="status_success">成功</string>
   <string name="status_successful">成功的</string>
   <string name="status_title">状态</string>
   <string name="succesfully_imported_account_title">您已成功导入一个账户</string>
-  <string name="support_chat">支持聊天</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">确保在此事务之后还剩下 %s。否则，您将无法进行其他交易。</string>
-  <string name="system_appearance">系统外观</string>
-  <string name="tabbar_parliament_title">议会</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
-  <string name="transaction_date">日期/时间</string>
   <string name="transaction_date_1">日期和时间</string>
   <string name="transaction_id">外部哈希</string>
   <string name="tutorial_many_world">万千世界，\n一个经济体！</string>
   <string name="tutorial_many_world_desc">SORA正在努力成为一个去中心化的多元宇宙经济系统，资助新颖有趣应用程序的创造，并在SORA议会民主监督下进行。</string>
   <string name="tutorial_privacy_policy">隐私协议</string>
-  <string name="tutorial_terms_and_conditions">创建账户即表示您同意%%条款和条件%%和%%隐私政策%%</string>
   <string name="tutorial_terms_and_conditions_3">条款及细则</string>
   <string name="tutorial_terms_and_conditions_template_1">继续操作即表示您同意</string>
   <string name="unexpected_error">发生了意外错误。\n\n您可以在SORA社区的@sora_happy Telegram聊天中解决此问题。</string>
@@ -539,7 +491,6 @@
   <string name="wallet_connect_done">已完成</string>
   <string name="wallet_market_refresh">刷新</string>
   <string name="wallet_network_activity">活动</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">我的%s网络地址要接收%s：</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">扫描此 QR 给我发送%s 。我的%s网络账户 ID： \n %s</string>
   <string name="wallet_receive_xor">收到XOR</string>
   <string name="wallet_redeemable">可赎回</string>
@@ -547,7 +498,6 @@
   <string name="wallet_send_existential_warning_message">您的转账将会从区块存储中移除账户，因为这将导致总余额低于现有存款。</string>
   <string name="wallet_status_confirmed">已完成</string>
   <string name="wallet_title">钱包</string>
-  <string name="wallet_transaction_rejected">交易被拒绝</string>
   <string name="wallet_transaction_submitted">交易已提交</string>
   <string name="wallet_transaction_submitted_1">交易\n已提交</string>
   <string name="wallet_unbonded">未绑定的</string>
@@ -795,7 +745,6 @@
   <string name="neon_theme_dark">深色</string>
   <string name="neon_theme_light">浅色</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
-  <string name="nexus_production_name">SORA Nexus Production</string>
   <string name="nexus_production_address">Production address</string>
   <string name="nexus_copy_production_address">Copy production address</string>
   <string name="nexus_production_not_live">Not live yet</string>

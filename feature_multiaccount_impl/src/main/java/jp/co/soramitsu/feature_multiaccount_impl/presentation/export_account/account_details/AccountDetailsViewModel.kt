@@ -65,6 +65,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
 class AccountDetailsViewModel @AssistedInject constructor(
@@ -128,6 +130,19 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val changeNameFlow = MutableStateFlow("")
     private var account: SoraAccount? = null
     private var isFromAuthorization = false
+    private var cloudOperationInFlight = false
+
+    private fun beginCloudOperation(): Boolean {
+        if (cloudOperationInFlight || _createBackupPasswordState.value?.isLoading == true) return false
+        cloudOperationInFlight = true
+        _accountDetailsScreenState.value = _accountDetailsScreenState.value?.copy(isBackupLoading = true)
+        return true
+    }
+
+    private fun finishCloudOperation() {
+        cloudOperationInFlight = false
+        _accountDetailsScreenState.value = _accountDetailsScreenState.value?.copy(isBackupLoading = false)
+    }
 
     init {
         _toolbarState.value = initSmallTitle2(
@@ -195,7 +210,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 .debounce(500)
                 .collectLatest {
                     if (it.toByteArray().size <= OptionsProvider.nameByteLimit) {
-                        interactor.updateName(address, it)
+                        guarded { interactor.updateName(address, it) }
                     }
                 }
         }
@@ -367,8 +382,12 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onBackupPasswordClicked() {
-        if (!requireCloudBackup()) return
+        if (!requireCloudBackup() || cloudOperationInFlight) return
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
+            if (createBackupPasswordState.isLoading || !createBackupPasswordState.warningIsSelected ||
+                !createBackupPasswordState.password.value.text.isPasswordSecure() ||
+                createBackupPasswordState.password.value.text != createBackupPasswordState.passwordConfirmation.value.text
+            ) return
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
             viewModelScope.launch(coroutineManager.io) {
                 try {
@@ -384,8 +403,6 @@ class AccountDetailsViewModel @AssistedInject constructor(
                             val material = interactor.getBackupMaterial(account)
                             if (material.onlyJsonExport && !material.canSign) {
                                 withContext(coroutineManager.main) {
-                                    _createBackupPasswordState.value =
-                                        createBackupPasswordState.copy(isLoading = false)
                                     onError(
                                         jp.co.soramitsu.common.R.string.backup_no_matching_secret_read_only
                                     )
@@ -460,7 +477,17 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 } catch (e: StorageQuotaExceeded) {
                     withContext(coroutineManager.main) {
                         onError(R.string.backup_not_enough_space_error)
-                        _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = false)
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    withContext(coroutineManager.main) {
+                        onError(R.string.wallet_cloud_backup_failed)
+                    }
+                } finally {
+                    withContext(NonCancellable + coroutineManager.main) {
+                        _createBackupPasswordState.value =
+                            _createBackupPasswordState.value?.copy(isLoading = false)
                     }
                 }
             }
@@ -470,7 +497,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     fun onBackupClicked(
         launcher: ActivityResultLauncher<Intent>?
     ) {
-        if (launcher == null || !requireCloudBackup()) return
+        if (launcher == null || !requireCloudBackup() || !beginCloudOperation()) return
 
         startBackup()
         viewModelScope.launch {
@@ -491,7 +518,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                             openCreateBackupScreen()
                         }
                     } else {
-                        _accountDetailsScreenState.value = it.copy(isBackupLoading = false)
+                        _accountDetailsScreenState.value = _accountDetailsScreenState.value?.copy(isBackupLoading = false)
                     }
                 }
             } catch (e: SocketException) {
@@ -506,13 +533,13 @@ class AccountDetailsViewModel @AssistedInject constructor(
             } catch (e: Exception) {
                 onError(R.string.wallet_cloud_backup_failed)
             } finally {
-                _accountDetailsScreenState.value = _accountDetailsScreenState.value?.copy(isBackupLoading = false)
+                finishCloudOperation()
             }
         }
     }
 
     fun deleteGoogleBackup() {
-        if (!requireCloudBackup()) return
+        if (!requireCloudBackup() || !beginCloudOperation()) return
         _deleteDialogState.value = false
 
         viewModelScope.launch {
@@ -534,9 +561,12 @@ class AccountDetailsViewModel @AssistedInject constructor(
             } catch (e: FileNotFoundException) {
                 _accountDetailsScreenState.value =
                     accountDetailsScreenState.value?.copy(isBackupAvailable = false)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                onError(R.string.wallet_cloud_backup_failed)
             } finally {
-                _accountDetailsScreenState.value =
-                    accountDetailsScreenState.value?.copy(isBackupLoading = false)
+                finishCloudOperation()
             }
         }
     }
@@ -556,7 +586,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onSuccessfulGoogleSignin() {
-        if (!requireCloudBackup()) return
+        if (!requireCloudBackup() || !beginCloudOperation()) return
         viewModelScope.launch {
             try {
                 _accountDetailsScreenState.value?.let {
@@ -565,7 +595,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     }
 
                     if (backupService.isAccountBackedUp(address)) {
-                        _accountDetailsScreenState.value = it.copy(isBackupAvailable = true)
+                        _accountDetailsScreenState.value = _accountDetailsScreenState.value?.copy(isBackupAvailable = true)
                     } else {
                         _createBackupPasswordState.value = CreateBackupPasswordState(
                             password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
@@ -587,19 +617,20 @@ class AccountDetailsViewModel @AssistedInject constructor(
             } catch (e: FileNotFoundException) {
                 _accountDetailsScreenState.value =
                     accountDetailsScreenState.value?.copy(isBackupAvailable = false)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                onError(R.string.wallet_cloud_backup_failed)
             } finally {
-                _accountDetailsScreenState.value =
-                    accountDetailsScreenState.value?.copy(isBackupLoading = false)
+                finishCloudOperation()
             }
         }
     }
 
     fun deleteDialogDismiss() {
         _deleteDialogState.value = false
-        _accountDetailsScreenState.value?.let {
-            _accountDetailsScreenState.value = it.copy(
-                isBackupLoading = false
-            )
+        if (!cloudOperationInFlight) {
+            _accountDetailsScreenState.value = _accountDetailsScreenState.value?.copy(isBackupLoading = false)
         }
     }
 

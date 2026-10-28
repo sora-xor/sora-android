@@ -23,6 +23,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import androidx.core.net.toUri
 import android.os.Bundle
 import android.view.KeyEvent
 import android.widget.Toast
@@ -190,7 +191,7 @@ class QRCodeScannerActivity : AppCompatActivity() {
     }
 
     private fun openIrohaConnect(value: String): Boolean {
-        val uri = runCatching { Uri.parse(value) }.getOrNull() ?: return false
+        val uri = runCatching { value.toUri() }.getOrNull() ?: return false
         if (!shouldOpenScannedConnect(recipientOnly, uri.scheme, uri.host)) {
             return false
         }

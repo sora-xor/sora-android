@@ -19,12 +19,13 @@ limitations under the License.
 
 package jp.co.soramitsu.sora.neon
 
+import jp.co.soramitsu.sora.testutil.NativeDisplayCapture
+
 import android.Manifest
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.HardwareRenderer
 import android.os.Build
-import android.os.SystemClock
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
 import androidx.test.core.app.ActivityScenario
@@ -76,13 +77,14 @@ class QrScannerSystemBarsTest {
                     assertFalse("dark status-bar icons over the dark scanner", bars.isAppearanceLightStatusBars)
                     assertFalse("dark navigation-bar icons over the dark scanner", bars.isAppearanceLightNavigationBars)
                 }
-                SystemClock.sleep(1500)
-                instrumentation.uiAutomation.takeScreenshot()?.let { shot ->
-                    context.getExternalFilesDir("neon-review")?.let { dir ->
-                        File(dir, "qr-scanner-light-api${android.os.Build.VERSION.SDK_INT}.png").outputStream().use {
-                            shot.compress(Bitmap.CompressFormat.PNG, 100, it)
-                        }
+                val shot = NativeDisplayCapture.capture()
+                try {
+                    val dir = requireNotNull(context.getExternalFilesDir("neon-review"))
+                    File(dir, "qr-scanner-light-api${android.os.Build.VERSION.SDK_INT}.png").outputStream().use {
+                        check(shot.compress(Bitmap.CompressFormat.PNG, 100, it)) { "Scanner capture PNG could not be written" }
                     }
+                } finally {
+                    shot.recycle()
                 }
                 scenario.onActivity { it.finish() }
             }

@@ -2130,6 +2130,87 @@ class MigrationManagerSafetyTest {
         coVerify(exactly = 0) { walletDao.recordMigrationFailure(any()) }
     }
 
+    @Test fun `activated checkpoint failure closes the gate and records the original verified receipt`() = runTest {
+        assertActivatedRefreshFailure("recorded")
+    }
+    @Test fun `activated checkpoint failure still closes the gate when journal compare and swap loses`() = runTest {
+        assertActivatedRefreshFailure("cas-mismatch")
+    }
+    @Test fun `activated checkpoint failure still closes the gate when recovery rows cannot be marked`() = runTest {
+        assertActivatedRefreshFailure("row-failure")
+    }
+    @Test fun `activated checkpoint cancellation propagates after closing the gate`() = runTest {
+        assertActivatedRefreshFailure("cancel-refresh")
+    }
+    @Test fun `activated recovery journal cancellation propagates after closing the gate`() = runTest {
+        assertActivatedRefreshFailure("cancel-journal")
+    }
+    @Test fun `activated checkpoint transient storage failure avoids durable recovery writes`() = runTest {
+        assertActivatedRefreshFailure("transient")
+    }
+
+    private suspend fun assertActivatedRefreshFailure(mode: String) {
+        val account = SoraAccountLocal(WALLET_ID, "Renamed wallet")
+        val old = account.copy(accountName = "Original wallet")
+        val receipt = verifiedJournal(listOf(old), WALLET_ID)
+        val storage = successfulMigrationStorage(listOf(account), receipt)
+        val credentials = mockk<CredentialsRepository>()
+        val user = mockk<UserRepository>()
+        val codec = mockk<Sora2AddressCodec>()
+        val publicKey = ByteArray(32) { (it + 1).toByte() }
+        stubWalletMutationLock(user, SoraAccount(WALLET_ID, account.accountName), OnboardingState.REGISTRATION_FINISHED)
+        stubWatchOnlyVerification(credentials, codec, mapOf(WALLET_ID to publicKey))
+        storage.wallets[WALLET_ID] = watchOnlyIdentity(account)
+        storage.networkAccounts[WALLET_ID] = listOf(watchOnlyNetworkAccount(account, publicKey))
+        val refreshError = when (mode) {
+            "cancel-refresh" -> CancellationException("refresh cancelled")
+            "transient" -> android.database.sqlite.SQLiteFullException("full")
+            else -> IllegalStateException("CHECKPOINT_BROKEN")
+        }
+        coEvery { storage.walletDao.refreshVerifiedMigrationJournal(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } throws refreshError
+        if (mode == "cas-mismatch") {
+            coEvery { storage.walletDao.markActivatedMigrationRecoveryRequired(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns 0
+        }
+        if (mode == "cancel-journal") {
+            coEvery { storage.walletDao.markActivatedMigrationRecoveryRequired(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } throws CancellationException("journal cancelled")
+        }
+        if (mode == "row-failure") {
+            coEvery { storage.walletDao.markWalletsRecoveryRequired(any()) } throws IllegalStateException("row unavailable")
+        }
+        val manager = MigrationManager(user, credentials, codec, storage.database, testMigrationSr25519Crypto)
+        try {
+            val result = runCatching { manager.startWithOutcome() }
+            if (mode.startsWith("cancel")) {
+                assertTrue(result.exceptionOrNull() is CancellationException)
+            } else if (mode == "transient") {
+                assertEquals(MigrationOutcome.Transient("STORAGE_FULL"), result.getOrThrow())
+            } else {
+                assertEquals(MigrationOutcome.Recovery("CHECKPOINT_BROKEN"), result.getOrThrow())
+                assertEquals("CHECKPOINT_BROKEN", manager.lastFailureCode())
+            }
+            assertEquals(MigrationProgress.Finished, manager.progress.value)
+            if (mode != "transient") assertTrue(WalletRecoveryCapabilityGate.isUserMutationBlocked())
+            coVerify(exactly = if (mode == "cancel-refresh" || mode == "transient") 0 else 1) {
+                storage.walletDao.markActivatedMigrationRecoveryRequired(
+                    migrationId = receipt.migrationId,
+                    legacyAccountCount = 1,
+                    receiptVerifiedAccountCount = 1,
+                    receiptSelectedWalletId = WALLET_ID,
+                    receiptIntegrityHash = receipt.integrityHash,
+                    startedAt = 1,
+                    receiptCompletedAt = 2,
+                    currentAccountCount = 1,
+                    currentSelectedWalletId = WALLET_ID,
+                    currentIntegrityHash = integrityHash(listOf(account), WALLET_ID),
+                    failureCode = "ACTIVATED_MODEL_MISMATCH",
+                    completedAt = any(),
+                )
+            }
+            coVerify(exactly = 0) { credentials.saveKeyPair(any(), any()) }
+            assertEquals(receipt, storage.journal)
+        } finally { WalletUpgradeBackup.noteMigrationVerified() }
+    }
+
     private fun successfulMigrationStorage(
         accounts: List<SoraAccountLocal>,
         journal: WalletMigrationJournalLocal? = null,

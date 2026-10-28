@@ -52,7 +52,7 @@ object Notification {
                 (
                     ContextCompat.getDrawable(
                         context,
-                        R.mipmap.ic_launcher
+                        R.drawable.notification_brand
                     ) as BitmapDrawable
                     ).bitmap
             )

@@ -19,7 +19,6 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.contacts
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.ScrollState
@@ -45,7 +44,6 @@ import jp.co.soramitsu.common.presentation.args.tokenId
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @AndroidEntryPoint
-@SuppressLint("CheckResult")
 class ContactsFragment : SoraBaseFragment<ContactsViewModel>() {
 
     /**

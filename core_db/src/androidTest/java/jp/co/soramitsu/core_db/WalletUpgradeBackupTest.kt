@@ -3764,6 +3764,227 @@ class WalletUpgradeBackupTest {
         )
     }
 
+
+    @Test fun preservedGenerationScreenProtectsContentAcrossRecreationAndCancelsCleanly() {
+        androidx.test.core.app.ActivityScenario.launch<WalletGenerationRecoveryActivity>(android.content.Intent(context, WalletGenerationRecoveryActivity::class.java)).use { scenario ->
+            scenario.onActivity { activity ->
+                assertTrue(activity.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE != 0)
+            }
+            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.withText(jp.co.soramitsu.common.R.string.wallet_preserved_data_body))
+                .check(androidx.test.espresso.assertion.ViewAssertions.matches(androidx.test.espresso.matcher.ViewMatchers.isDisplayed()))
+            scenario.recreate()
+            scenario.onActivity { activity -> assertTrue(activity.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE != 0) }
+            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.withText(android.R.string.cancel))
+                .perform(androidx.test.espresso.action.ViewActions.click())
+            assertEquals(androidx.lifecycle.Lifecycle.State.DESTROYED, scenario.state)
+        }
+        assertTrue(WalletUpgradeBackup.preservedGenerations(context).isEmpty())
+    }
+
+    @Test fun preservedGenerationScreenRequiresDeviceAuthenticationAndLeavesAllBytesIntact() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Retained")))
+        val original = context.getDatabasePath(DATABASE_NAME).readBytes()
+        WalletUpgradeBackup.noteDatabaseCorruption(context)
+        assertTrue(WalletUpgradeBackup.requestSetUpAgain(context).isSuccess)
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val generation = WalletUpgradeBackup.preservedGenerations(context).single()
+        val retained = context.noBackupFilesDir.listFiles().orEmpty().single { it.name.startsWith("wallet-quarantine-") && it.name.endsWith("-set-up-again") }
+        // A malformed sibling must be visible as unavailable without hiding this valid generation.
+        val invalid = File(context.noBackupFilesDir, "wallet-quarantine-${UUID.randomUUID()}-set-up-again")
+        assertTrue(retained.copyRecursively(invalid))
+        File(invalid, "generation.json").writeText("{incomplete")
+        assertFalse(context.getSystemService(android.app.KeyguardManager::class.java).isDeviceSecure)
+        androidx.test.core.app.ActivityScenario.launch<WalletGenerationRecoveryActivity>(android.content.Intent(context, WalletGenerationRecoveryActivity::class.java)).use { scenario ->
+            val label = context.getString(jp.co.soramitsu.common.R.string.wallet_preserved_database_label)
+            val deadline = SystemClock.uptimeMillis() + 5000
+            var ready = false
+            while (!ready && SystemClock.uptimeMillis() < deadline) {
+                scenario.onActivity { activity ->
+                    fun contains(view: android.view.View): Boolean = (view is android.widget.Button && view.text.contains(label)) ||
+                        (view is android.view.ViewGroup && (0 until view.childCount).any { contains(view.getChildAt(it)) })
+                    ready = contains(activity.window.decorView)
+                }
+                if (!ready) SystemClock.sleep(25)
+            }
+            assertTrue(ready)
+            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.withText(jp.co.soramitsu.common.R.string.wallet_preserved_data_partial))
+                .check(androidx.test.espresso.assertion.ViewAssertions.matches(androidx.test.espresso.matcher.ViewMatchers.isDisplayed()))
+            androidx.test.espresso.Espresso.onView(org.hamcrest.Matchers.allOf(androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom(android.widget.Button::class.java), androidx.test.espresso.matcher.ViewMatchers.withText(org.hamcrest.Matchers.containsString(label))))
+                .perform(androidx.test.espresso.action.ViewActions.click())
+            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.withText(jp.co.soramitsu.common.R.string.wallet_preserved_database_confirm))
+                .check(androidx.test.espresso.assertion.ViewAssertions.matches(androidx.test.espresso.matcher.ViewMatchers.isDisplayed()))
+            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.withText(jp.co.soramitsu.common.R.string.wallet_preserved_data_use))
+                .perform(androidx.test.espresso.action.ViewActions.click())
+            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.withText(jp.co.soramitsu.common.R.string.wallet_preserved_data_screen_lock))
+                .check(androidx.test.espresso.assertion.ViewAssertions.matches(androidx.test.espresso.matcher.ViewMatchers.isDisplayed()))
+            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.withText(android.R.string.ok))
+                .perform(androidx.test.espresso.action.ViewActions.click())
+            scenario.recreate()
+        }
+        assertEquals(generation.id, WalletUpgradeBackup.preservedGenerations(context).single().id)
+        assertArrayEquals(original, File(retained, "databases/app.db").readBytes())
+        assertFalse(context.getDatabasePath(DATABASE_NAME).exists())
+    }
+
+    @Test fun unrelatedTypedSharedPreferencesSurviveWalletInventoryAndVerifiedBackup() {
+        createLegacyDatabase(withAccount = true)
+        writeSharedPreferencesBackup("""<map>
+            <string name="prefs_mnemonic$WALLET_ID">encrypted</string>
+            <string name="cur_account_address">$WALLET_ID</string>
+            <int name="launch_count" value="7"/><long name="last_open" value="1234567890123"/>
+            <float name="ui_scale" value="1.25"/><boolean name="analytics" value="false"/>
+            <set name="recent_searches"><string>first</string><string>second</string></set>
+            </map>""")
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val backups = context.noBackupFilesDir.listFiles().orEmpty().filter { it.name.startsWith(BACKUP_PREFIX) && it.isDirectory }
+        assertTrue(backups.isNotEmpty())
+        assertEquals(null, WalletUpgradeBackup.blockingFailure())
+        assertEquals(1, legacyAccountCount())
+    }
+    @Test fun malformedSharedPreferenceTypesAndNestedElementsNeverBecomeRecoveryEvidence() {
+        val invalid = listOf(
+            "<map><int name='count'/></map>", "<map><long name='count' value=' '/></map>",
+            "<map><float name='scale' value='NaN'/></map>", "<map><float name='scale' value='Infinity'/></map>",
+            "<map><boolean name='enabled' value='1'/></map>", "<map><unknown name='fixture'/></map>",
+            "<map><string name=''>x</string></map>", "<map><string name='x'>a</string><string name='x'>b</string></map>",
+            "<map><set name='set'><int name='bad' value='1'/></set></map>",
+            "<map><set name='set'><set name='bad'><string>x</string></set></set></map>",
+            "<map>unexpected text</map>", "<map><string name='${"x".repeat(1025)}'>value</string></map>")
+        invalid.forEach { xml ->
+            clearTestStorage(); assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            writeSharedPreferencesBackup(xml)
+            val file = File(context.applicationInfo.dataDir, "shared_prefs/$PREFERENCES_NAME.xml.bak")
+            val before = file.readBytes()
+            assertTrue(xml, WalletUpgradeBackup.prepare(context).isFailure)
+            assertEquals(xml, "PREFERENCES_INVENTORY_INVALID", WalletUpgradeBackup.blockingFailure()?.code)
+            assertArrayEquals(before, file.readBytes())
+        }
+    }
+    @Test fun everyDataStoreScalarWireTypeIsRetainedBesideWalletSecrets() {
+        val values = listOf(byteArrayOf(8, 1), byteArrayOf(21, 0, 0, -96, 63), byteArrayOf(24, 7), byteArrayOf(32, 9),
+            byteArrayOf(50, 3, 10, 1, 120), byteArrayOf(57, 0, 0, 0, 0, 0, 0, -16, 63), byteArrayOf(66, 2, 1, 2))
+        val entries = values.mapIndexed { index, value -> preferenceMapEntry("fixture-$index".toByteArray(), value) } +
+            preferenceMapEntry("prefs_seed$WALLET_ID".toByteArray(), preferenceStringValue("encrypted"))
+        writeRawDataStore(ByteArrayOutputStream().apply { entries.forEach { write(10); writeVarint(it.size); write(it) } }.toByteArray())
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertEquals(setOf(WALLET_ID), WalletUpgradeBackup.quarantine().unlinkedWalletIds)
+    }
+    @Test fun invalidDataStoreValueTagsLengthsAndBooleansCannotHideWalletState() {
+        val invalidValues = listOf(byteArrayOf(0), byteArrayOf(72, 1), byteArrayOf(8, 2), byteArrayOf(8, -128),
+            byteArrayOf(21, 0), byteArrayOf(57, 0), byteArrayOf(50, 127), byteArrayOf(42, 127),
+            byteArrayOf(10, 1), byteArrayOf(42, 2, -61, 40), byteArrayOf())
+        invalidValues.forEach { value ->
+            clearTestStorage(); assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            writeDataStore(preferenceMapEntry("fixture".toByteArray(), value))
+            assertTrue(value.contentToString(), WalletUpgradeBackup.prepare(context).isFailure)
+            assertEquals("PREFERENCES_INVENTORY_INVALID", WalletUpgradeBackup.blockingFailure()?.code)
+        }
+    }
+    @Test fun malformedDataStoreMapEntriesAndLengthOverflowRemainUntouched() {
+        val key = "fixture".toByteArray(); val value = preferenceStringValue("value")
+        val valid = preferenceMapEntry(key, value)
+        val duplicateKey = byteArrayOf(10, key.size.toByte()) + key + valid
+        val duplicateValue = valid + byteArrayOf(18, value.size.toByte()) + value
+        val cases = listOf(byteArrayOf(0), byteArrayOf(24, 1), duplicateKey, duplicateValue,
+            byteArrayOf(18, value.size.toByte()) + value, preferenceMapEntry(byteArrayOf(32), value),
+            preferenceMapEntry(ByteArray(1025) { 97 }, value))
+        cases.forEach { entry ->
+            clearTestStorage(); assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            writeDataStore(entry)
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+            assertEquals("PREFERENCES_INVENTORY_INVALID", WalletUpgradeBackup.blockingFailure()?.code)
+        }
+        listOf(byteArrayOf(0), byteArrayOf(10, -1, -1, -1, -1, 15), byteArrayOf(10) + ByteArray(10) { -128 }).forEach { raw ->
+            clearTestStorage(); assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            writeRawDataStore(raw)
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+            assertEquals("PREFERENCES_INVENTORY_INVALID", WalletUpgradeBackup.blockingFailure()?.code)
+            assertArrayEquals(raw, File(context.filesDir, "datastore/sora_prefs_datastore.preferences_pb").readBytes())
+        }
+    }
+    @Test fun walletPreferenceNumericAndCollectionValuesAreRejected() {
+        listOf("<int name='prefs_seed$WALLET_ID' value='1'/>", "<set name='cur_account_address'><string>$WALLET_ID</string></set>").forEach { entry ->
+            clearTestStorage(); assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            writeSharedPreferencesBackup("<map>$entry</map>")
+            assertTrue(entry, WalletUpgradeBackup.prepare(context).isFailure)
+            assertEquals("PREFERENCES_INVENTORY_INVALID", WalletUpgradeBackup.blockingFailure()?.code)
+        }
+    }
+
+    @Test fun normalReadOnlyRequestKeepsNormalAccessWithoutInventingARecoveryFailure() {
+        assertEquals(WalletUpgradeBackup.SafeReadOnlyRoute.NORMAL_ACCESS, WalletUpgradeBackup.authorizeSafeReadOnly(context).getOrThrow())
+        assertEquals(WalletRecoveryCapabilityGate.Mode.NORMAL, WalletRecoveryCapabilityGate.mode())
+        assertEquals(null, WalletUpgradeBackup.recoveryOptions())
+        assertFalse(WalletUpgradeBackup.canAuthorizeMigrationRetry())
+    }
+    @Test fun transientReadableWalletEntersReadOnlyFromEveryAdmissibleProcessModeWithoutChangingBytes() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Retained")))
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val original = database.readBytes()
+        for (mode in WalletRecoveryCapabilityGate.Mode.entries) {
+            WalletUpgradeBackup.noteMigrationVerified()
+            WalletUpgradeBackup.noteTransientVerificationFailure("STORAGE_FULL")
+            when (mode) {
+                WalletRecoveryCapabilityGate.Mode.NORMAL -> WalletRecoveryCapabilityGate.enterNormal()
+                WalletRecoveryCapabilityGate.Mode.BLOCKED -> WalletRecoveryCapabilityGate.enterBlocked()
+                WalletRecoveryCapabilityGate.Mode.RECOVERY_INSPECTED -> WalletRecoveryCapabilityGate.enterInspectedRecovery()
+                WalletRecoveryCapabilityGate.Mode.LEGACY_READ_ONLY -> WalletRecoveryCapabilityGate.enterLegacyReadOnly()
+                WalletRecoveryCapabilityGate.Mode.MIGRATION_RETRY_AUTHORIZED -> WalletRecoveryCapabilityGate.authorizeMigrationRetry()
+            }
+            assertFalse(WalletUpgradeBackup.hasValidatedLegacyRecovery())
+            assertFalse(WalletUpgradeBackup.canAuthorizeMigrationRetry())
+            assertEquals(WalletUpgradeBackup.SafeReadOnlyRoute.ROOM_READ_ONLY, WalletUpgradeBackup.authorizeSafeReadOnly(context).getOrThrow())
+            assertTrue(WalletUpgradeBackup.isLegacyReadOnlyRecovery())
+            assertEquals(null, WalletUpgradeBackup.blockingFailure())
+            assertEquals("STORAGE_FULL", WalletUpgradeBackup.transientVerificationFailure())
+            assertTrue(original.contentEquals(database.readBytes()))
+        }
+    }
+    @Test fun deterministicDatabaseOpenFailureKeepsItsFirstCodeAndRefusesMigrationAuthorization() {
+        WalletUpgradeBackup.noteDatabaseOpenFailure()
+        assertEquals("DATABASE_OPEN_FAILED", WalletUpgradeBackup.blockingFailure()?.code)
+        assertEquals(WalletRecoveryCapabilityGate.Mode.BLOCKED, WalletRecoveryCapabilityGate.mode())
+        assertFalse(WalletUpgradeBackup.canAuthorizeMigrationRetry())
+        assertFalse(WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context))
+        WalletUpgradeBackup.noteDatabaseOpenFailure()
+        assertEquals("DATABASE_OPEN_FAILED", WalletUpgradeBackup.blockingFailure()?.code)
+        assertFalse(WalletUpgradeBackup.recoveryFacts().accountsReadableReadOnly)
+    }
+    @Test fun recoveryArchiveWithoutWalletMaterialFailsWithoutPublishingAnEmptyFile() {
+        // Clearing SharedPreferences leaves an empty XML map, which is still archival material.
+        assertTrue(File(context.applicationInfo.dataDir, "shared_prefs/$PREFERENCES_NAME.xml").delete())
+        assertEquals("RECOVERY_MATERIAL_MISSING", WalletUpgradeBackup.createRecoveryArchive(context).exceptionOrNull()?.message)
+        assertFalse(File(context.cacheDir, "wallet-recovery-exports").listFiles().orEmpty().any { it.extension == "zip" })
+    }
+    @Test fun invalidRecoveryArchiveNamesNeverCreateAFileOutsideTheExportDirectory() {
+        createLegacyDatabase(withAccount = true); putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val before = context.getDatabasePath(DATABASE_NAME).readBytes()
+        for (name in listOf("", "../escape.zip", "x.zip", "sora-wallet-recovery-../escape.zip", "sora-wallet-recovery-bad.txt")) {
+            val error = WalletUpgradeBackup.createRecoveryArchiveWithFileNameForTest(context, name).exceptionOrNull()
+            assertEquals("RECOVERY_EXPORT_NAME_INVALID", error?.message)
+        }
+        assertTrue(before.contentEquals(context.getDatabasePath(DATABASE_NAME).readBytes()))
+        assertFalse(File(context.cacheDir, "escape.zip").exists())
+    }
+    @Test fun recoveryArchiveRefusesAFileOrSymlinkAtItsPublicationDirectory() {
+        createLegacyDatabase(withAccount = true); putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val directory = File(context.cacheDir, "wallet-recovery-exports")
+        directory.deleteRecursively(); directory.writeText("retained sentinel")
+        assertEquals("CREATE_EXPORT_DIRECTORY", WalletUpgradeBackup.createRecoveryArchive(context).exceptionOrNull()?.message)
+        assertEquals("retained sentinel", directory.readText()); assertTrue(directory.delete())
+        val elsewhere = File(context.cacheDir, "fixture-export-directory").apply { mkdirs() }
+        val sentinel = File(elsewhere, "sentinel").apply { writeText("untouched") }
+        Os.symlink(elsewhere.path, directory.path)
+        try {
+            assertEquals("CREATE_EXPORT_DIRECTORY", WalletUpgradeBackup.createRecoveryArchive(context).exceptionOrNull()?.message)
+            assertEquals("untouched", sentinel.readText())
+            assertEquals(listOf("sentinel"), elsewhere.listFiles()!!.map(File::getName))
+        } finally { Os.remove(directory.path); elsewhere.deleteRecursively() }
+    }
+
     private fun createLegacyDatabase(withAccount: Boolean) {
         val database = context.getDatabasePath(DATABASE_NAME)
         database.parentFile?.mkdirs()

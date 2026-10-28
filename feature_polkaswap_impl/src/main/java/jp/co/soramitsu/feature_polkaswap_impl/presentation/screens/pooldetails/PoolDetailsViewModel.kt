@@ -132,7 +132,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
                                 0.0f
                             }
 
-                            pools100 = percent == 100.0f
+                            pools100 = pools100 || percent == 100.0f
 
                             BasicUserFarmListItemState(
                                 ids = StringTriple(

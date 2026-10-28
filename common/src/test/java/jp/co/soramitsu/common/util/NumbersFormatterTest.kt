@@ -185,4 +185,26 @@ class NumbersFormatterTest {
         val actual = numbersFormatter.formatInteger(BigDecimal(1000000.27))
         assertEquals(formatAsInteger, actual)
     }
+    @Test
+    fun `small negative doubles retain their first significant fraction digit`() {
+        assertEquals("-0.000008", numbersFormatter.format(-0.000007364243, 2, true))
+        assertEquals("-0.00004", numbersFormatter.format(-0.00003456, 2, true))
+        assertEquals("0.00003", numbersFormatter.format(0.00003456, 2, true))
+        assertEquals("0", numbersFormatter.format(0.0, 2, true))
+    }
+
+    @Test
+    fun `explicit precision still disables fraction expansion for small negative doubles`() {
+        assertEquals("-0", numbersFormatter.format(-0.000007364243, 2, false))
+        assertEquals("-0.000007365", numbersFormatter.format(-0.000007364243, 9, true))
+    }
+
+    @Test
+    fun `fraction expansion preserves exact token base units across all supported scales`() {
+        for (scale in 1..18) {
+            val amount = BigDecimal.ONE.movePointLeft(scale)
+            assertEquals(amount.toPlainString(), numbersFormatter.formatBigDecimal(amount, 2))
+            assertEquals(amount.negate().toPlainString(), numbersFormatter.formatBigDecimal(amount.negate(), 2))
+        }
+    }
 }

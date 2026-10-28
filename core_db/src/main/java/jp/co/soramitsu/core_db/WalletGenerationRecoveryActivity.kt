@@ -48,8 +48,10 @@ class WalletGenerationRecoveryActivity : Activity() {
             }
             inventory.available.forEach { generation ->
                 layout.addView(Button(this@WalletGenerationRecoveryActivity).apply {
-                    text = DateFormat.getDateTimeInstance().format(Date(generation.createdAtMillis)) +
-                        if (generation.scope == SetUpAgainScope.DATABASE_ONLY) " · " + getString(R.string.wallet_preserved_database_label) else ""
+                    val created = DateFormat.getDateTimeInstance().format(Date(generation.createdAtMillis))
+                    text = if (generation.scope == SetUpAgainScope.DATABASE_ONLY) {
+                        getString(R.string.wallet_preserved_entry_label, created, getString(R.string.wallet_preserved_database_label))
+                    } else created
                     setOnClickListener {
                         AlertDialog.Builder(this@WalletGenerationRecoveryActivity)
                             .setTitle(R.string.wallet_preserved_data)

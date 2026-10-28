@@ -17,7 +17,6 @@
   <string name="account_already_imported_description">Ví này đã được nhập</string>
   <string name="account_storage_conflict">This wallet can\'t be added here</string>
   <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
-  <string name="account_confirmation_title">Xác nhận từ khóa khôi phục</string>
   <string name="account_confirmation_title_v2">Xác nhận chuỗi từ khóa khôi phục</string>
   <string name="account_options">Tùy chọn tài khoản</string>
   <string name="account_options_backup_google">Sao lưu vào Google</string>
@@ -30,7 +29,6 @@
   <string name="activity_referral_title">Đã tham gia giới thiệu</string>
   <string name="add_liquidity_alert_text">Bạn sẽ kiếm được tương ứng với tỷ lệ chia sẻ của bạn trong pool từ việc cung cấp thanh khoản.</string>
   <string name="add_liquidity_confirmation_title">Xác nhận cung cấp</string>
-  <string name="add_liquidity_title">Thêm thanh khoản</string>
   <string name="add_node_name_already_existing">Node với tên này đã được thêm vào</string>
   <string name="address_not_found_1">Không tìm thấy người nhận</string>
   <string name="amount_error_no_funds">Xin lỗi, bạn không có đủ tiền để chuyển số tiền đã chỉ định.</string>
@@ -45,27 +43,20 @@
   <string name="asset_details_token_price">Giá token</string>
   <string name="asset_details_your_pools">%s pool của bạn</string>
   <string name="asset_to_send">Tài sản cần gửi</string>
-  <string name="backup_account_already_exist">Sao lưu đã tồn tại. Tiến hành viết lại nó.</string>
   <string name="backup_not_enough_space_error">Sao lưu không thành công. Không đủ dung lượng trên Google Drive của bạn. Hãy giải phóng một số dung lượng và thử lại.</string>
   <string name="backup_now">Sao lưu ngay</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Yêu cầu bắt buộc đối với mật khẩu được đáp ứng</string>
   <string name="backup_password_requirments">Tối thiểu sáu ký tự. Tùy chọn, để bảo mật tốt hơn, hãy bao gồm các chữ cái viết hoa, số và các ký tự không phải bảng chữ cái.</string>
-  <string name="backup_password_title">Đặt mật khẩu sẽ mã hóa bản sao lưu Google của bạn. Bạn sẽ cần nhập thông tin này khi khôi phục ví của mình.\nĐộ dài mật khẩu tối thiểu là 6 ký tự.</string>
   <string name="backup_password_title_2">Đặt mật khẩu mã hóa bản sao lưu bản sao lưu Google. Bạn sẽ cần nhập thông tin này khi khôi phục ví của mình.</string>
   <string name="biometric_dialog_title">Xác thực</string>
   <string name="block_id">Block hash</string>
-  <string name="cant_load_balance">Không thể tải số dư</string>
   <string name="change_language">Thay đổi ngôn ngữ</string>
   <string name="change_pin">Thay đổi mã PIN</string>
   <string name="choose_token">Chọn token</string>
   <string name="choose_tokens">Chọn token</string>
-  <string name="claim_contact">Nếu bạn có bất kỳ câu hỏi hoặc thắc mắc nào, bạn có thể %% liên hệ với chúng tôi.%%</string>
   <string name="claim_contact_us">%%Liên hệ chúng tối%% nếu bạn có bất kỳ câu hỏi hay thắc mắc nào</string>
-  <string name="claim_error_title">Chuyển đổi không thành công</string>
   <string name="claim_error_title_v1">Giao dịch không thành công. Vui lòng thử lại sau.</string>
-  <string name="claim_notification_text">Quá trình chuyển đổi đang diễn ra...</string>
   <string name="claim_rewards">Yêu cầu phần thưởng</string>
-  <string name="claim_subtitle">Chúng tôi cần sự đồng ý của bạn để thực hiện chuyển đổi tiền của bạn từ SORA để bạn có thể sử dụng chúng. SORA bây giờ sẽ hoạt động trên mạng Substrate. Vui lòng xác nhận chuyển đổi.</string>
   <string name="claim_subtitle_confirmed">Cảm ơn bạn đã xác nhận!</string>
   <string name="claim_subtitle_confirmed_v2">Quá trình chuyển tài sản đang được tiến hành</string>
   <string name="claim_subtitle_v2">• Chúng tôi cần sự đồng ý của bạn để chuyển đổi tài sản từ SORA v1 qua SORA v2\n\n• Mạng SORA v2 được xây dựng với Substrate, có khả năng tương thích cao với hệ sinh thái Polkadot và Kusama\n\n• Tài sản trên Ethereum không bị ảnh hưởng, bạn vẫn có thể truy cập chúng bằng cách nhập chuỗi từ khóa khôi phục của mình vào bất kỳ ví tương thích nào</string>
@@ -90,7 +81,7 @@
   <string name="tx_details_view_on_explorer">Xem trong trình khám phá</string>
   <string name="common_confirm">Xác nhận</string>
   <string name="common_connected">Đã kết nối</string>
-  <string name="common_connecting">Đang kết nối...</string>
+  <string name="common_connecting">Đang kết nối…</string>
   <string name="common_continue">Tiếp tục</string>
   <string name="common_copied">Đã sao chép vào bảng tạm</string>
   <string name="common_create_qr_request">Tạo QR yêu cầu</string>
@@ -98,7 +89,6 @@
   <string name="common_currencies">Tiền tệ</string>
   <string name="common_delete">Xóa</string>
   <string name="common_disabled">Đã tắt</string>
-  <string name="common_discover">Khám phá</string>
   <string name="common_done">Hoàn tất</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">Chỉnh sửa</string>
@@ -151,7 +141,6 @@
   <string name="common_french">Tiếng Pháp</string>
   <string name="common_german">Tiếng Đức</string>
   <string name="common_google_authorization_error">Ủy quyền của Google không thành công</string>
-  <string name="common_google_backup_decryption_failed">Giải mã bản sao lưu không thành công. Vui lòng kiểm tra mật khẩu và thử lại</string>
   <string name="common_google_backup_decryption_failed_2">Có thể mật khẩu bạn nhập không hợp lệ.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
@@ -186,11 +175,9 @@
   <string name="common_try_again">Try again</string>
   <string name="common_remove">Gỡ bỏ</string>
   <string name="common_request">Yêu cầu</string>
-  <string name="common_rewrite">Ghi lại</string>
   <string name="common_russian">Tiếng Nga</string>
   <string name="common_scan">Quét</string>
   <string name="common_scan_qr">Quét mã QR</string>
-  <string name="common_search">Tìm kiếm</string>
   <string name="common_search_pools">Tìm kiếm pool</string>
   <string name="common_sec">giây</string>
   <string name="common_select_asset">Chọn tài sản</string>
@@ -211,7 +198,6 @@
   <string name="common_swedish">Tiếng Thụy Điển</string>
   <string name="common_terms_title">Điều khoản và Điều kiện</string>
   <string name="common_thai">Tiếng Thái</string>
-  <string name="common_title_warning">Cảnh báo!</string>
   <string name="common_today">Hôm nay</string>
   <string name="common_turkish">Tiếng Thổ Nhĩ Kỳ</string>
   <string name="common_ukrainian">Tiếng Ukraina</string>
@@ -221,20 +207,16 @@
   <string name="common_yesterday">Hôm qua</string>
   <string name="confirm_sending">Xác nhận gửi</string>
   <string name="confirn_supply_liquidity_first_provider_warning">Bạn là nhà cung cấp thanh khoản đầu tiên. Tỷ lệ  token bạn thêm vào sẽ là giá của pool này.</string>
-  <string name="contacts_scan">Quét</string>
   <string name="contacts_search_results">Kết quả tìm kiếm</string>
   <string name="copy_to_clipboard">Sao chép vào khay nhớ tạm</string>
   <string name="create_account_title">Tạo tài khoản</string>
   <string name="create_backup_password_button_text">Đặt mật khẩu sao lưu</string>
-  <string name="create_backup_password_is_secure">Mật khẩu có tính bảo mật cao</string>
   <string name="create_backup_password_matched">Mật khẩu phù hợp</string>
   <string name="create_backup_password_not_matched">Mật khẩu không khớp</string>
   <string name="create_backup_password_title">Tạo mật khẩu dự phòng</string>
   <string name="create_backup_password_warning_text">Tôi hiểu rằng nếu tôi quên mật khẩu thì không có cách nào lấy lại được.</string>
   <string name="create_backup_set_password">Đặt mật khẩu</string>
-  <string name="create_backup_weak_password">Mật khẩu yếu</string>
   <string name="create_new_account_title">Tạo tài khoản mới</string>
-  <string name="dark_mode">Chế độ tối</string>
   <string name="delete_backup_alert_description">Nếu bạn xóa bản sao lưu Google của mình, bạn sẽ chỉ có thể khôi phục ví của mình bằng tự sao lưu cụm mật khẩu của mình.</string>
   <string name="delete_backup_alert_title">Bạn có chắc không?</string>
   <string name="demeter_claimed_reward">Phần thưởng đã nhận</string>
@@ -244,15 +226,12 @@
   <string name="details_frozen">Đóng băng</string>
   <string name="details_receive_from_pool">Rút tiền từ Pool</string>
   <string name="details_sent_to_pool">Gửi đến pool</string>
-  <string name="discover_coming_soon">Các nhà phát triển SORA hiện đang làm việc để tạo ra tính năng sẽ hiển thị danh sách đầy đủ các nhóm đang hoạt động trên Polkaswap. \n\n Hiện tại, nếu bạn muốn tạo/thêm vào một nhóm, vui lòng sử dụng nút bên dưới.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
   <string name="edit_farm">Chỉnh sửa farm</string>
   <string name="edit_view">Chỉnh sửa dạng xem</string>
-  <string name="empty_recent_recipients">Không có người nhận gần đây.\nĐịa chỉ đã gửi sẽ được hiển thị tại đây.</string>
   <string name="empty_recent_recipients_2">Người nhận sẽ xuất hiện ở đây</string>
   <string name="enter_backup_password_title">Nhập mật khẩu dự phòng</string>
   <string name="enter_password_description">Nhập mật khẩu dự phòng cho tài khoản đã chọn để nhập</string>
-  <string name="enter_password_incorect_title">Mật khẩu không chính xác</string>
   <string name="enter_password_title">Nhập mật khẩu</string>
   <string name="error_transaction_fee_title">Không đủ tiền cho phí giao dịch</string>
   <string name="eth_tx_address">Địa chỉ tài khoản Ethereum</string>
@@ -289,8 +268,6 @@
   <string name="farm_details_your_rewards">Phần thưởng của bạn</string>
   <string name="farming_details_title">Chi tiết farm</string>
   <string name="forget_account">Quên tài khoản</string>
-  <string name="global_results">Kết quả</string>
-  <string name="hide_zero_balances">Ẩn số dư bằng không</string>
   <string name="history_referral">Giới thiệu</string>
   <string name="history_referrer">Giới thiệu</string>
   <string name="import_account_not_backed_up">Chưa sao lưu!</string>
@@ -298,7 +275,6 @@
   <string name="import_account_not_backed_up_alert_description">Nếu thiết bị của bạn bị mất hoặc bị đánh cắp, bạn sẽ mất ví và tất cả số tiền của mình mãi mãi.</string>
   <string name="import_more_title">Nhập thêm</string>
   <string name="imported_account_title">Tài khoản đã nhập</string>
-  <string name="invite_code">Mã mời</string>
   <string name="invite_code_applied_body">Đã áp dụng mã thành công</string>
   <string name="invite_code_applied_title">Xin chúc mừng!</string>
   <string name="invite_enter_error_already_applied">Bạn đã áp dụng một mã mời khác</string>
@@ -308,18 +284,14 @@
   <string name="invoice_scan_error_user_not_found">Không thể tìm thấy người dùng từ mã QR</string>
   <string name="launch_screen_loading_title">Lần này tải lâu hơn một chút</string>
   <string name="liquid_assets">Tài sản lưu động</string>
-  <string name="logout_dialog_body">Hành động này sẽ dẫn đến việc xóa tài khoản khỏi thiết bị này. Đảm bảo rằng bạn đã sao lưu chuỗi từ khóa khôi phục của bạn trước khi tiếp tục.</string>
-  <string name="logout_remove_nodes_body">\n \n Tất cả các node tùy chỉnh của bạn cũng sẽ bị xóa</string>
   <string name="mnemonic_confirmation_select_word_2">từ danh sách bạn đã viết ra</string>
   <string name="mnemonic_confirmation_select_word_number">Chọn một số từ</string>
-  <string name="mnemonic_invalid">Từ khóa khôi phục ghi nhớ không hợp lệ, vui lòng kiểm tra một lần nữa thứ tự các từ.</string>
   <string name="mnemonic_invalid_title">Chuỗi từ khóa khôi phục không hợp lệ</string>
   <string name="mnemonic_text">Chúng tôi khuyên bạn không nên sao lưu bằng phương tiện kỹ thuật số, chẳng hạn như viết nó xuống giấy.</string>
   <string name="network_fee">Phí mạng</string>
   <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
   <string name="network_fee_unavailable_short">Network fee unavailable</string>
   <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
-  <string name="network_finalized_history">Hoạt động</string>
   <string name="node_details_address_validation_failed">Không xác thực được URL (Địa chỉ sai)</string>
   <string name="node_details_genesis_validation_failed">Hàm băm genesis của nút của bạn khác với hàm băm genesis của mạng</string>
   <string name="node_details_node_already_added" formatted="false">Nút này đã được thêm vào: %s \n Kết nối được thiết lập với nút %s</string>
@@ -328,13 +300,10 @@
   <string name="onboarding_create_account_description">Nhập tên cho tài khoản mới của bạn và cách nó sẽ xuất hiện dưới địa chỉ của bạn. Với danh tính trên chuỗi, nó có thể được cung cấp cho những người khác.</string>
   <string name="onboarding_create_account_subtitle">Chỉ hiển thị cho bạn và được lưu trữ cục bộ</string>
   <string name="onboarding_create_account_title">Đặt tên cho tài khoản của bạn</string>
-  <string name="onboarding_description">SORA là một hệ thống quản trị trên chuỗi nơi các nhà sản xuất đưa ra các đề xuất tài trợ và tất cả những người nắm giữ mã thông báo XOR quyết định hàng hóa và dịch vụ tốt nhất sẽ được tạo ra. Chấp nhận XOR dưới dạng thanh toán sau đó xây dựng nền kinh tế SORA.</string>
   <string name="onboarding_enter_passphrase">Nhập chuỗi từ khóa khôi phục</string>
   <string name="onboarding_enter_seed">Cụm mật khẩu ví gốc (Raw seed)</string>
   <string name="passphrase_confirmation_error_message">Quá trình này nhằm đảm bảo bạn đã viết ra cụm từ khôi phục của mình</string>
   <string name="passphrase_confirmation_error_title">Đừng cố đoán từ</string>
-  <string name="passphrase_write">Viết ra cụm mật khẩu của bạn</string>
-  <string name="personal_info_username">Tên tài khoản (tùy chọn)</string>
   <string name="personal_info_username_v1">Tên tài khoản</string>
   <string name="phone_verification_too_frequent_message">Yêu cầu mã xác minh quá thường xuyên. Vui lòng thử lại sau.</string>
   <string name="pin_locked_for_title">Đã bị khóa trong %s</string>
@@ -356,7 +325,6 @@
   <string name="polkaswap_farming_pool_in_farming_hint">Một phần của bạn đã được stake trong pool. Để có quyền truy cập vào nó, trước tiên bạn phải hủy stake.</string>
   <string name="polkaswap_farming_pool_share">Pool của bạn đã được stake</string>
   <string name="polkaswap_farming_pool_share_will_be">Cổ phần chia sẻ nhóm của bạn sẽ là</string>
-  <string name="polkaswap_farming_staked_for">Stake cho %s</string>
   <string name="polkaswap_farming_unstake_to_remove">Để loại bỏ tính thanh khoản, trước tiên bạn cần hủy stake</string>
   <string name="polkaswap_info_text_1">Polkaswap được duy trì bởi cộng đồng SORA. Trước khi tiếp tục sử dụng Polkaswap, vui lòng xem lại %% Câu hỏi thường gặp về Polkaswap %% và tài liệu, trong đó có giải thích chi tiết về cách Polkaswap hoạt động, cũng như %% Bản ghi nhớ Polkaswap và Điều khoản dịch vụ %% và %% Chính sách quyền riêng tư %% . \n\n Những tài liệu này rất quan trọng đối với trải nghiệm người dùng an toàn và tích cực. Bằng cách sử dụng Polkaswap, bạn xác nhận rằng bạn đã đọc và hiểu các tài liệu này.</string>
   <string name="polkaswap_info_text_2">Bạn cũng thừa nhận những điều sau:</string>
@@ -369,10 +337,6 @@
   <string name="polkaswap_input_estimated">Dự tính đầu vào. Bạn sẽ bán tối đa %s hoặc giao dịch sẽ hoàn tác.</string>
   <string name="polkaswap_insufficient_balance">Số dư không đủ %s</string>
   <string name="polkaswap_insufficient_liqudity">Không đủ thanh khoản</string>
-  <string name="polkaswap_liquidity_fee">Phí thanh khoản</string>
-  <string name="polkaswap_liquidity_fee_info">Một phần của mỗi giao dịch được chuyển đến các nhà cung cấp thanh khoản như một biện pháp khuyến khích.</string>
-  <string name="polkaswap_liquidity_total_fee">Phí hoán đổi</string>
-  <string name="polkaswap_liquidity_total_fee_desc">Hoán đổi của bạn bao gồm cả phí Tổng hợp và phí LP.\n Phí tổng hợp được tính khi hoán đổi đi qua nguồn thanh khoản XST cho tài sản tổng hợp và phí LP khi hoán đổi đi qua nhóm thanh khoản.</string>
   <string name="polkaswap_market">Thị trường</string>
   <string name="polkaswap_market_smart_description">SMART liquidity routing đảm bảo giá tốt nhất cho giao dịch bất kỳ bằng cách kết hợp mức giá tốt nhất hiện có trên thị trường. Khi thuận lợi, Token Bonding Curve (TBC) sẽ được dùng để tạo thanh khoản miễn là giá của tài sản hợp lý hơn các nguồn khác như pool (XYK).</string>
   <string name="polkaswap_market_tbc_description">TBC - chỉ mua từ Token Bonding Curve (Primary Market). Giá có thể trở nên bất lợi so với XYK pool (Secondary Market), nhưng về lâu dài giá trị nhận được từ phần thưởng có thể lớn hơn nhiều.</string>
@@ -398,12 +362,9 @@
   <string name="pool_details">Chi tiết Pool</string>
   <string name="pool_details_active_farms">Farm đang hoạt động</string>
   <string name="pool_details_reward">Phần thưởng</string>
-  <string name="pool_liquidity_placeholder">Bạn chưa tham gia bất kỳ pool nào.\nThêm thanh khoản để kiếm phần thưởng</string>
-  <string name="pool_share_title">Cổ phần trong pool</string>
   <string name="pool_share_title_1">Những pool bạn tham gia</string>
   <string name="pooled_assets">Nội dung tổng hợp</string>
   <string name="profile_biometry_title">Xác thực sinh trắc học</string>
-  <string name="profile_logout_title">Đăng xuất</string>
   <plurals name="project_date_day_plurals">
     <item quantity="other">Còn lại %s ngày</item>
   </plurals>
@@ -469,10 +430,8 @@
   <string name="review">Kiểm tra lại</string>
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Hiển thị mã QR của tôi</string>
-  <string name="search_assets">Tìm kiếm tài sản</string>
   <string name="search_empty_state">Không có kết quả tìm kiếm</string>
   <string name="search_token_placeholder">Tìm kiếm theo ID nội dung, tên hoặc mã token</string>
-  <string name="select_account_address">Tìm kiếm địa chỉ tài khoản</string>
   <string name="select_account_address_1">Tìm kiếm hoặc thêm địa chỉ mới</string>
   <string name="select_account_import">Chọn tài khoản để nhập</string>
   <string name="select_asset_receive">Chọn Tài sản để nhận</string>
@@ -505,28 +464,21 @@
   <string name="settings_login_title">Đăng nhập &amp; Bảo mật</string>
   <string name="settings_nodes">Node</string>
   <string name="show_more">Xem thêm</string>
-  <string name="show_zero_balances">Hiển thị số dư bằng không</string>
   <string name="slippage">Trượt giá</string>
   <string name="something_went_wrong">Đã xảy ra sự cố</string>
   <string name="start_staking">Bắt đầu stake</string>
   <string name="status_error">Lỗi</string>
   <string name="status_pending">Đang chờ xử lý</string>
-  <string name="status_success">Thành công</string>
   <string name="status_successful">Thành công</string>
   <string name="status_title">Trạng thái</string>
   <string name="succesfully_imported_account_title">Bạn đã nhập thành công một tài khoản</string>
-  <string name="support_chat">Trò chuyện với hỗ trợ</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Đảm bảo rằng bạn còn %s sau giao dịch này. Nếu không, bạn sẽ không thể thực hiện một giao dịch khác.</string>
-  <string name="system_appearance">Hệ thống hiển thị</string>
-  <string name="tabbar_parliament_title">Nghị viện</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
-  <string name="transaction_date">Ngày / Giờ</string>
   <string name="transaction_date_1">Ngày và giờ</string>
   <string name="transaction_id">Mã giao dịch</string>
   <string name="tutorial_many_world">Nhiều thế giới.\nMột nền kinh tế.</string>
   <string name="tutorial_many_world_desc">SORA đang nỗ lực để trở thành một hệ thống kinh tế đa vũ trụ phi tập trung, cung cấp tài chính cho việc tạo ra các ứng dụng mới và thú vị, dưới sự giám sát dân chủ của Nghị viện SORA.</string>
   <string name="tutorial_privacy_policy">Chính sách bảo mật</string>
-  <string name="tutorial_terms_and_conditions">Tạo tài khoản là bạn đã đồng ý với %% Điều khoản &amp; Điều kiện %% và %% Chính sách quyền riêng tư %%</string>
   <string name="tutorial_terms_and_conditions_3">Điều khoản &amp; Điều kiện</string>
   <string name="tutorial_terms_and_conditions_template_1">Bằng cách tiếp tục, bạn đồng ý với</string>
   <string name="unexpected_error">Đã xảy ra lỗi không mong muốn. \n\n Bạn có thể khắc phục sự cố này trong cộng đồng SORA tại cuộc trò chuyện Telegram @sora_happy.</string>
@@ -540,7 +492,6 @@
   <string name="wallet_connect_done">Hoàn tất</string>
   <string name="wallet_market_refresh">Làm mới</string>
   <string name="wallet_network_activity">Hoạt động</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">Địa chỉ mạng %s của tôi để nhận %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Quét mã QR này để gửi cho tôi %s. ID tài khoản của tôi %s:\n%s</string>
   <string name="wallet_receive_xor">Nhận XOR</string>
   <string name="wallet_redeemable">Có thể hoán đổi</string>
@@ -548,7 +499,6 @@
   <string name="wallet_send_existential_warning_message">Việc chuyển khoản của bạn sẽ xóa tài khoản khỏi lưu trữ khối vì nó sẽ làm cho tổng số dư thấp hơn khoản tiền gửi hiện có.</string>
   <string name="wallet_status_confirmed">Đã hoàn thành</string>
   <string name="wallet_title">Ví</string>
-  <string name="wallet_transaction_rejected">Giao dịch bị từ chối</string>
   <string name="wallet_transaction_submitted">Giao dịch đã được gửi</string>
   <string name="wallet_transaction_submitted_1">Giao dịch\nđã được gửi</string>
   <string name="wallet_unbonded">Unbond</string>
@@ -796,7 +746,6 @@
   <string name="neon_theme_dark">Dark</string>
   <string name="neon_theme_light">Light</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
-  <string name="nexus_production_name">SORA Nexus Production</string>
   <string name="nexus_production_address">Production address</string>
   <string name="nexus_copy_production_address">Copy production address</string>
   <string name="nexus_production_not_live">Not live yet</string>

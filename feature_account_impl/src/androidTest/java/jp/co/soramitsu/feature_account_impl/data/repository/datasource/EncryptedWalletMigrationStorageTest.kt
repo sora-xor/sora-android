@@ -1,10 +1,16 @@
 package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import android.content.Context
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
 import java.security.KeyStore
+import java.security.KeyPairGenerator
+import java.math.BigInteger
+import java.util.Calendar
+import javax.security.auth.x500.X500Principal
 import java.security.MessageDigest
 import java.util.Base64
 import javax.crypto.Cipher
@@ -51,8 +57,9 @@ class EncryptedWalletMigrationStorageTest {
         resetQualificationStorage()
         assertFalse(dataStoreFile().exists())
 
-        // This only creates the test UID's retained RSA alias. The known AES fixture key is
-        // independently wrapped below, matching the release-era key_alias/secret_key format.
+        // Seed the release-era alias independently: constructing today's helper is read-only.
+        // The known AES fixture key is then wrapped in the legacy key_alias/secret_key format.
+        createLegacyWrappingAlias()
         val legacyEncryption = EncryptionUtil(context)
         val wrappedAesKeyCiphertext = wrapKnownAesKeyWithRetainedAlias()
         assertTrue(
@@ -519,6 +526,27 @@ class EncryptedWalletMigrationStorageTest {
             )
             database.execSQL("PRAGMA user_version = $RETAINED_DATABASE_VERSION")
         }
+    }
+
+    private fun createLegacyWrappingAlias() {
+        val start = Calendar.getInstance()
+        val end = Calendar.getInstance().apply { add(Calendar.YEAR, 25) }
+        val spec = KeyGenParameterSpec.Builder(
+            KEY_ALIAS,
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
+        )
+            .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+            .setCertificateSubject(X500Principal("CN=Sora"))
+            .setCertificateSerialNumber(BigInteger.ONE)
+            .setCertificateNotBefore(start.time)
+            .setCertificateNotAfter(end.time)
+            .build()
+        KeyPairGenerator.getInstance("RSA", "AndroidKeyStore").apply {
+            initialize(spec)
+            generateKeyPair()
+        }
+        assertTrue(retainedAliasExists())
     }
 
     private fun wrapKnownAesKeyWithRetainedAlias(): String {

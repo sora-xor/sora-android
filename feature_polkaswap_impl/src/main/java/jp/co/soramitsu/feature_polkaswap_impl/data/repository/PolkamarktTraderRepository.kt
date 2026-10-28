@@ -688,7 +688,12 @@ class PolkamarktTraderRepository @Inject constructor(
                 outcome = outcome,
                 collateralIn = collateralIn,
                 slippageBps = slippageBps,
-            )
+            ).also {
+                PolkamarktMutationAccountValidator.requireExpected(
+                    expectedAccountId,
+                    userRepository.getCurSoraAccount().substrateAddress,
+                )
+            }
         }
     }
 
@@ -796,6 +801,10 @@ class PolkamarktTraderRepository @Inject constructor(
             displayYesProbabilityBps = runtimeState.impliedYesProbabilityBps,
             displayNoProbabilityBps = runtimeState.impliedNoProbabilityBps,
         )
+        PolkamarktMutationAccountValidator.requireExpected(
+            expectedAccountId,
+            userRepository.getCurSoraAccount().substrateAddress,
+        )
         return PolkamarktMarketDetail(
             market = authoritativeMarket,
             claimable = claimable,
@@ -891,6 +900,7 @@ class PolkamarktTraderRepository @Inject constructor(
         val authoritative = checkNotNull(
             authoritativeAt.value
         ) { "POLKAMARKT_MARKET_STATE_MISSING" }
+        check(authoritative.marketId == marketId) { "POLKAMARKT_MARKET_STATE_MISSING" }
         PolkamarktMarketMutationValidator.requireOpen(authoritative.status)
         val runtimeState = calls.polkamarktMarketState(marketId, finalizedAt)
         check(runtimeState.blockHash.canonicalExtrinsicHash() == finalizedAt) {
@@ -986,7 +996,12 @@ class PolkamarktTraderRepository @Inject constructor(
                 outcome = outcome,
                 sharesIn = sharesIn,
                 slippageBps = slippageBps,
-            )
+            ).also {
+                PolkamarktMutationAccountValidator.requireExpected(
+                    expectedAccountId,
+                    userRepository.getCurSoraAccount().substrateAddress,
+                )
+            }
         }
     }
 
@@ -1016,6 +1031,7 @@ class PolkamarktTraderRepository @Inject constructor(
         val authoritative = checkNotNull(
             authoritativeAt.value
         ) { "POLKAMARKT_MARKET_STATE_MISSING" }
+        check(authoritative.marketId == marketId) { "POLKAMARKT_MARKET_STATE_MISSING" }
         PolkamarktMarketMutationValidator.requireOpen(authoritative.status)
         val runtimeState = calls.polkamarktMarketState(marketId, finalizedAt)
         check(runtimeState.blockHash.canonicalExtrinsicHash() == finalizedAt) {

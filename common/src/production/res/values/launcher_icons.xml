@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="ic_prod_launcher_rounded" type="mipmap">@mipmap/ic_prod_launcher</item>
+</resources>

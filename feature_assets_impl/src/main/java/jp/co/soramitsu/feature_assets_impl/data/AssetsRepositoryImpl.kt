@@ -166,9 +166,9 @@ class AssetsRepositoryImpl @Inject constructor(
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
         val assetsLocal =
             db.assetDao().getAssetsWhitelist(address, selectedCurrency.code)
-        insertAssetsInternal(address, assetsLocal, false)
-        return assetsLocal.mapNotNull {
-            assetLocalToAssetMapper.map(it)
+        val balances = insertAssetsInternal(address, assetsLocal, false)
+        return assetsLocal.mapIndexedNotNull { index, local ->
+            assetLocalToAssetMapper.map(local.copy(assetLocal = balances[index]))
         }
     }
 
@@ -441,14 +441,28 @@ class AssetsRepositoryImpl @Inject constructor(
         address: String,
         locals: List<AssetTokenWithFiatLocal>,
         updateBalance: Boolean,
-    ) {
+    ): List<AssetLocal> {
         val balanceWithXor = if (updateBalance) fetchBalances(address, locals.map { it.token.id }) else null
         val balance = balanceWithXor?.first
         val xorBalance = balanceWithXor?.second
-        var withAsset = locals.count { it.assetLocal != null }
+        var lastPosition = locals.mapNotNull { it.assetLocal?.position }.maxOrNull() ?: 0
         val updated = locals.mapIndexed { index, assetTokenLocal ->
+            val local = assetTokenLocal.assetLocal ?: AssetLocal(
+                tokenId = assetTokenLocal.token.id,
+                accountAddress = address,
+                displayAsset = false,
+                position = ++lastPosition,
+                free = BigDecimal.ZERO,
+                reserved = BigDecimal.ZERO,
+                miscFrozen = BigDecimal.ZERO,
+                feeFrozen = BigDecimal.ZERO,
+                bonded = BigDecimal.ZERO,
+                redeemable = BigDecimal.ZERO,
+                unbonding = BigDecimal.ZERO,
+                visibility = false,
+            )
             if (assetTokenLocal.token.id == SubstrateOptionsProvider.feeAssetId && xorBalance != null) {
-                assetTokenLocal.assetLocal!!.copy(
+                local.copy(
                     free = mapBalance(xorBalance.free, assetTokenLocal.token.precision),
                     reserved = mapBalance(xorBalance.reserved, assetTokenLocal.token.precision),
                     miscFrozen = mapBalance(xorBalance.miscFrozen, assetTokenLocal.token.precision),
@@ -458,30 +472,13 @@ class AssetsRepositoryImpl @Inject constructor(
                     unbonding = mapBalance(xorBalance.unbonding, assetTokenLocal.token.precision),
                 )
             } else {
-                assetTokenLocal.assetLocal?.copy(
-                    free = balance?.let { list ->
-                        mapBalance(
-                            list.getOrNull(index) ?: BigInteger.ZERO,
-                            assetTokenLocal.token.precision
-                        )
-                    } ?: assetTokenLocal.assetLocal?.free ?: BigDecimal.ZERO
-                ) ?: AssetLocal(
-                    tokenId = assetTokenLocal.token.id,
-                    accountAddress = address,
-                    displayAsset = false,
-                    position = ++withAsset,
-                    free = BigDecimal.ZERO,
-                    reserved = BigDecimal.ZERO,
-                    miscFrozen = BigDecimal.ZERO,
-                    feeFrozen = BigDecimal.ZERO,
-                    bonded = BigDecimal.ZERO,
-                    redeemable = BigDecimal.ZERO,
-                    unbonding = BigDecimal.ZERO,
-                    visibility = false,
-                )
+                local.copy(free = balance?.let {
+                    mapBalance(it[index], assetTokenLocal.token.precision)
+                } ?: local.free)
             }
         }
         db.assetDao().insertAssets(updated)
+        return updated
     }
 
     private suspend fun fetchBalances(
@@ -492,12 +489,12 @@ class AssetsRepositoryImpl @Inject constructor(
         val transferable = BalanceWrapper.calcTransferable(dto = xorBalance)
         val xorIndex = assetIdList.indexOf(SubstrateOptionsProvider.feeAssetId)
 
-        val balances = substrateCalls.fetchBalances(
-            address,
-            assetIdList.filter { it != SubstrateOptionsProvider.feeAssetId },
-        )
-        (balances as MutableList).add(xorIndex, transferable)
-        return balances to xorBalance
+        val nonXorIds = assetIdList.filter { it != SubstrateOptionsProvider.feeAssetId }
+        val balances = substrateCalls.fetchBalances(address, nonXorIds)
+        check(balances.size == nonXorIds.size) { "SORA2_ASSET_BALANCE_COUNT_MISMATCH" }
+        val orderedBalances = balances.toMutableList()
+        if (xorIndex >= 0) orderedBalances.add(xorIndex, transferable)
+        return orderedBalances to xorBalance
     }
 
     override suspend fun fetchBalance(

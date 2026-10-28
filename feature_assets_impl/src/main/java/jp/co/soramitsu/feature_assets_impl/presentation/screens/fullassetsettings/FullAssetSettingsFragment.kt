@@ -147,6 +147,8 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
                             itemTouchHelper.attachToRecyclerView(view.list)
                             view.list.adapter = AssetsManagementAdapter(
                                 itemTouchHelper,
+                                { itemTouchHelperCallback.isDraggable },
+                                viewModel::assetPositionChanged,
                                 viewModel::onFavoriteClick,
                                 viewModel::onVisibilityClick,
                             )

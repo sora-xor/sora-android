@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- ak1-signing-compat: a stored phrase or seed proven to open a different wallet is never called this wallet's backup -->
+</resources>

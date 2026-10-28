@@ -13,6 +13,9 @@ object SoraNodeEndpointPolicy {
         val uri = URI(address)
         val host = uri.host?.lowercase(Locale.ROOT)?.trimEnd('.') ?: return false
         uri.scheme?.lowercase(Locale.ROOT) in setOf("ws", "wss") &&
-            uri.rawUserInfo == null && host.isNotEmpty() && host !in blockedHosts
+            uri.rawUserInfo == null && uri.rawFragment == null &&
+            (uri.port == -1 || uri.port in 1..65535) &&
+            uri.rawAuthority?.endsWith(':') != true &&
+            host.isNotEmpty() && host !in blockedHosts
     }.getOrDefault(false)
 }

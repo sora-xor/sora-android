@@ -46,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
@@ -69,7 +70,7 @@ internal fun AssetDetailsBalanceCard(
     onReceiveClick: () -> Unit,
     onSwapClick: () -> Unit,
     onBalanceClick: () -> Unit,
-    readOnly: Boolean = rememberWalletReadOnly(),
+    readOnly: Boolean = rememberWalletReadOnly() || LocalSelectedAccountReadOnly.current,
 ) {
     ContentCard(
         modifier = Modifier

@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -189,7 +190,7 @@ internal fun LiquidityRemoveConfirmScreen(
                 ) { modifier, elevation ->
                     FilledButton(
                         modifier = modifier,
-                        enabled = state.confirm.btnState.enabled,
+                        enabled = state.confirm.btnState.enabled && !LocalSelectedAccountReadOnly.current,
                         size = Size.Large,
                         order = Order.PRIMARY,
                         text = state.confirm.btnState.text,

@@ -425,6 +425,13 @@ def load_policy(path: Path) -> dict:
                      "deepLinkFilters" in rule]
             if sum(modes) != 1:
                 problems.append(f"exportedComponents[{name}] needs exactly one of launcherOnly, permission or deepLinkFilters")
+            if "targetActivity" in rule and (
+                rule.get("launcherOnly") is not True
+                or not isinstance(rule["targetActivity"], str)
+                or not rule["targetActivity"].strip()
+                or rule["targetActivity"] == name
+            ):
+                problems.append(f"exportedComponents[{name}] targetActivity requires a distinct exact launcher target")
             if "deepLinkFilters" in rule:
                 links = rule["deepLinkFilters"]
                 if not isinstance(links, list) or not links or any(
@@ -633,7 +640,27 @@ def check_manifest(manifest: Element, policy: dict, version_code=None, version_n
         rule = expected_exported[name]
         component = exported[name]
         if rule.get("launcherOnly") is True:
-            for actions, categories in _filters(component):
+            filters = _filters(component)
+            if len(filters) != 1 or filters[0][0] != LAUNCHER_ACTIONS or "android.intent.category.LAUNCHER" not in filters[0][1]:
+                issues.append(f"{name} must have exactly one MAIN/LAUNCHER intent filter")
+            target_name = rule.get("targetActivity")
+            if target_name is not None:
+                if component.name != "activity-alias" or component.get("targetActivity") != target_name:
+                    issues.append(f"{name} must be an activity-alias targeting {target_name}")
+                targets = [node for node in application.children if node.name == "activity" and node.get("name") == target_name]
+                if len(targets) != 1:
+                    issues.append(f"{name} launcher alias must resolve to exactly one declared target activity")
+                else:
+                    target = targets[0]
+                    if application.children.index(target) >= application.children.index(component):
+                        issues.append(f"{name} launcher target must be declared before its alias")
+                    if as_bool(target.get("exported")) is not False:
+                        issues.append(f"{target_name} launcher implementation must be explicitly non-exported")
+                    if target.get("permission") is not None or target.child_elements("intent-filter"):
+                        issues.append(f"{target_name} launcher implementation must not add permissions or intent filters")
+                    if as_bool(target.get("enabled")) is False or as_bool(component.get("enabled")) is False:
+                        issues.append(f"{name} launcher alias and target must remain enabled")
+            for actions, categories in filters:
                 if not actions <= LAUNCHER_ACTIONS or not categories <= LAUNCHER_CATEGORIES:
                     issues.append(
                         f"{name} must only be the launcher entry, but a filter has actions "

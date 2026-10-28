@@ -354,7 +354,7 @@ class Navigator :
             R.id.exportProtectionFragment,
             withArgs {
                 this.type = ExportProtectionViewModel.Type.JSON
-                this.addresses = addresses as ArrayList<String>
+                this.addresses = addresses
                 this.address = ""
             }
         )

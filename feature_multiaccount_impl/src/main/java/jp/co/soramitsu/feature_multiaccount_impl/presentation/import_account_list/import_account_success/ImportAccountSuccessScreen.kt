@@ -19,7 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_success
 
-import android.graphics.drawable.Drawable
+import android.graphics.drawable.ColorDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -128,7 +128,7 @@ fun PreviewEnterPassphraseScreen() {
     ImportAccountSuccessScreen(
         ImportAccountPasswordState(
             selectedAccount = BackupAccountMetaWithIcon(
-                BackupAccountMeta("aa", "add"), Drawable.createFromPath("")!!
+                BackupAccountMeta("aa", "add"), ColorDrawable(android.graphics.Color.TRANSPARENT)
             )
         ),
         {},

@@ -35,12 +35,7 @@
     <color name="neon_error_container">#2A1119</color>
 
     <color name="neon_safe_start">#2EF2A4</color>
-    <color name="neon_safe_border_start">#992EF2A4</color>
-    <color name="neon_safe_border_end">#732EE6FF</color>
-    <color name="neon_button_secondary">#1C1C28</color>
     <!-- #FFFFFF at 8% -->
-    <color name="neon_cta_disabled">#14FFFFFF</color>
-    <color name="neon_info_container">#0B2128</color>
     <color name="neon_toast">#222233</color>
     <color name="neon_on_toast">#F5F6FB</color>
     <color name="neon_swap_end">#FF3DDC</color>

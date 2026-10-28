@@ -1,0 +1,12 @@
+{
+  "upstream": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-tooling-android/1.11.1/",
+  "version": "1.11.1-sora.1",
+  "scope": "debug-only",
+  "changedBinaryEntries": [
+    "androidx/compose/ui/tooling/ComposableSingletons$PreviewActivity_androidKt.class",
+    "androidx/compose/ui/tooling/PreviewActivity.class"
+  ],
+  "policy": "PreviewActivity uses Material2 controls. All other classes and AAR entries are byte-identical; preview invocation and parameter cycling remain intact.",
+  "build": "See README.md, inputs.json and rebuild.py; reproducible Kotlin 2.3.21/Compose compilation with pinned dependencies.",
+  "verification": "Independent rebuild is byte-identical; real PreviewActivity device tests required by the full Android suite."
+}

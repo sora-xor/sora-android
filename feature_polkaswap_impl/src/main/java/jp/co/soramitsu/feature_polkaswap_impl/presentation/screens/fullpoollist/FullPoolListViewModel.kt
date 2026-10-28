@@ -79,7 +79,10 @@ class FullPoolListViewModel @Inject constructor(
         )
         viewModelScope.launch {
             poolsInteractor.subscribePoolsCacheOfCurAccount()
-                .catch { onError(it) }
+                .catch {
+                    _state.value = _state.value.copy(loading = false)
+                    onError(it)
+                }
                 .collectLatest {
                     allPools.clear()
                     allPools.addAll(it)

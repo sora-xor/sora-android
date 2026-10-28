@@ -71,7 +71,7 @@
     <string name="recovery_phrase_none">Bu telefonda bu cüzdan için kayıtlı bir kurtarma ifadesi veya seed yok.</string>
     <string name="recovery_done">Bitti</string>
     <string name="recovery_back">Geri</string>
-    <string name="recovery_restore_sheet_keys_kept">Bu telefonda kayıtlı anahtarlar oldukları yerde kalır. Aynı cüzdan geri yüklenirken SORA eşleştiklerini denetler ve bunları yeniden kullanır. Anahtarları bu telefonda kayıtlı diğer cüzdanlar daha sonra Giriş ve Güvenlik bölümündeki “Bu telefonda bulunan cüzdanlar” altında listelenir; bunları tek tek geri yükleyebilirsiniz.</string>
+    <string name="recovery_restore_sheet_keys_kept">Bu telefonda kayıtlı anahtarlar oldukları yerde kalır. Aynı cüzdan geri yüklenirken SORA eşleştiklerini denetler ve bunları yeniden kullanır. Anahtarları bu telefonda kayıtlı diğer cüzdanlar daha sonra Giriş ve Güvenlik bölümündeki “Bu telefonda bulunan cüzdanlar” altında listelenir; her birini geri yükleyebilirsiniz.</string>
     <string name="recovery_restore_pending_title">Başlattığınız geri yükleme tamamlanıyor</string>
     <string name="recovery_restore_pending_body">Geri yükleme yapabilmeniz için SORA eski cüzdan verilerini ayrı bir yere kaydediyor. Tamamlamak için yeniden başlaması gerekiyor. Eski veriler bu telefonda kalacak ve hiçbir şey silinmeyecek. Burada durmaya devam ederse telefonunuzda boş alan olup olmadığını denetleyin veya destekle iletişime geçin.</string>
     <string name="recovery_restart_continue">Yeniden başlat ve devam et</string>

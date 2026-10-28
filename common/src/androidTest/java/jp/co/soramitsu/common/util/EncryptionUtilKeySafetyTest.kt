@@ -312,6 +312,50 @@ class EncryptionUtilKeySafetyTest {
         assertFalse(androidKeyStore().containsAlias(KEY_ALIAS))
     }
 
+    @Test
+    fun legacyCallerKeysRoundTripUtf8WithFreshIvsWithoutCreatingWalletKeys() {
+        val util = EncryptionUtil(context)
+        val key = ByteArray(32) { (it + 1).toByte() }
+        val original = key.copyOf()
+        for (clear in listOf("", "ascii", "日本語 🔑 \u0000 retained text")) {
+            val first = util.encrypt(key, clear)
+            val second = util.encrypt(key, clear)
+            assertFalse(first == second)
+            assertEquals(clear, util.decrypt(key, first))
+            assertEquals(clear, util.decrypt(key, second))
+        }
+        assertArrayEquals(original, key)
+        assertEquals(null, wrappedKeyPreferences().getString(SECRET_KEY, null))
+        assertFalse(androidKeyStore().containsAlias(KEY_ALIAS))
+    }
+
+    @Test
+    fun authenticatedEnvelopeRejectsTruncationMalformedEncodingAndTampering() {
+        val util = EncryptionUtil(context)
+        val encrypted = util.encrypt("synthetic fixture secret")
+        val separator = encrypted.lastIndexOf(':')
+        assertTrue(separator >= 0)
+        val prefix = encrypted.substring(0, separator + 1)
+        val raw = org.bouncycastle.util.encoders.Base64.decode(encrypted.substring(separator + 1))
+        for (bad in listOf(prefix, prefix + "!invalid!", prefix + org.bouncycastle.util.encoders.Base64.toBase64String(ByteArray(12)),
+            prefix + org.bouncycastle.util.encoders.Base64.toBase64String(raw.copyOf().apply { this[lastIndex] = (this[lastIndex].toInt() xor 1).toByte() }))) {
+            assertTrue(runCatching { util.decrypt(bad) }.exceptionOrNull() is WalletDecryptionException)
+        }
+        assertEquals("synthetic fixture secret", util.decrypt(encrypted))
+    }
+
+    @Test
+    fun legacyTruncatedAndWrongKeyEnvelopesFailWithoutReplacingCallerKey() {
+        val util = EncryptionUtil(context)
+        val key = ByteArray(32) { 7 }
+        for (raw in listOf(ByteArray(0), ByteArray(16), ByteArray(17))) {
+            assertTrue(runCatching { util.decrypt(key, org.bouncycastle.util.encoders.Base64.toBase64String(raw)) }.exceptionOrNull() is WalletDecryptionException)
+        }
+        val encrypted = util.encrypt(key, "fixture")
+        assertTrue(runCatching { util.decrypt(ByteArray(32) { 8 }, encrypted) }.exceptionOrNull() is WalletDecryptionException)
+        assertArrayEquals(ByteArray(32) { 7 }, key)
+    }
+
     private fun nullReturningStore(returnNull: () -> Boolean): KeyStore {
         val delegate = androidKeyStore()
         val spi = object : java.security.KeyStoreSpi() {

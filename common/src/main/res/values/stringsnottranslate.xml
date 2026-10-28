@@ -35,23 +35,10 @@
     <string name="common_portuguese_native" translatable="false">Portuguese</string>
     <string name="common_hindi_native" translatable="false">हिंदी</string>
     <string name="common_norwegian_native" translatable="false">Norwegian Bokmål</string>
-    <string name="invitation_code_alphabet" translatable="false">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890</string>
-    <string name="transaction_eth_sign" translatable="false">ETH</string>
-    <string name="transaction_fee_gas_hint" translatable="false">GWEI</string>
     <string name="xor" translatable="false">XOR</string>
-    <string name="val_token" translatable="false">VAL</string>
-    <string name="val_erc20" translatable="false">VAL ERC20</string>
-    <string name="project_votes_k_template" translatable="false">%sK</string>
-    <string name="about_open_source_url" translatable="false">https://github.com/sora-xor/Sora-Android</string>
-    <string name="polkaswap_website" translatable="false">Polkaswap.io</string>
-    <string name="brackets_format" translatable="false">(%s)</string>
-    <string name="channel_name" translatable="false">Global channel</string>
-    <string name="channel_description" translatable="false">Notifications sent from the app admin</string>
     <string name="asset_ether_fullname" translatable="false">Ethereum</string>
     <string name="asset_sora_fullname" translatable="false">SORA</string>
     <string name="sora_2" translatable="false">SORA 2</string>
-    <string name="asset_pswap_fullname" translatable="false">PSWAP</string>
-    <string name="common_json" translatable="false">JSON</string>
     <string name="common_google" translatable="false">Google</string>
     <string name="polkaswap_apy" translatable="false">APY</string>
     <string name="polkaswap_apr" translatable="false">APR</string>

@@ -1269,7 +1269,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
             if (!isJsonObject) {
                 throw Sora2RuntimeIdentityException("SORA2_STATUS_BLOCK_INVALID")
             }
-            val root = asJsonObject
+            val root = this as com.google.gson.JsonObject
             if (root.keySet().any { it !in setOf("block", "justifications", "justification") }) {
                 throw Sora2RuntimeIdentityException("SORA2_STATUS_BLOCK_INVALID")
             }
@@ -1323,7 +1323,7 @@ class Sora2BoundedRuntimeRpcClient internal constructor(
             if (!isJsonObject) {
                 throw Sora2RuntimeIdentityException("SORA2_RUNTIME_RPC_VERSION_RESULT_INVALID")
             }
-            val versionObject = asJsonObject
+            val versionObject = this as com.google.gson.JsonObject
             val specVersion = versionObject.get(FIELD_SPEC_VERSION).requireCanonicalJsonInteger(
                 errorCode = "SORA2_RUNTIME_RPC_VERSION_RESULT_INVALID",
                 allowNegative = false,

@@ -1485,6 +1485,52 @@ class UserRepositoryTest {
         }
     }
 
+    @Test fun `locked wallet mutation receives selected identity and current registration state`() = runTest {
+        coEvery { userDatasource.retrieveRegistratrionState() } returns OnboardingState.REGISTRATION_FINISHED
+        val snapshot = userRepository.withWalletMutationLocked { it }
+        assertEquals(SoraAccount("accountAddress", "accountName"), snapshot.selectedAccount)
+        assertEquals(OnboardingState.REGISTRATION_FINISHED, snapshot.onboardingState)
+        coEvery { userDatasource.retrieveRegistratrionState() } returns OnboardingState.INITIAL
+        assertEquals(OnboardingState.INITIAL, userRepository.withWalletMutationLocked { it.onboardingState })
+    }
+    @Test fun `failed and cancelled wallet mutation releases the lock for the next caller`() = runTest {
+        coEvery { userDatasource.retrieveRegistratrionState() } returns OnboardingState.REGISTRATION_FINISHED
+        for (failure in listOf(IllegalStateException("synthetic failure"), kotlinx.coroutines.CancellationException("synthetic cancellation"))) {
+            val error = runCatching { userRepository.withWalletMutationLocked<Unit> { throw failure } }.exceptionOrNull()
+            assertEquals(failure.javaClass, error?.javaClass)
+            assertEquals(failure.message, error?.message)
+            assertEquals("usable", userRepository.withWalletMutationLocked { "usable" })
+        }
+    }
+    @Test fun `parallel mutations serialize their selected wallet snapshots`() = runTest {
+        coEvery { userDatasource.retrieveRegistratrionState() } returns OnboardingState.REGISTRATION_FINISHED
+        val release = kotlinx.coroutines.CompletableDeferred<Unit>()
+        val events = mutableListOf<String>()
+        val first = launch(UnconfinedTestDispatcher(testScheduler)) {
+            userRepository.withWalletMutationLocked { events += "first entered"; release.await(); events += "first exited" }
+        }
+        val second = launch(UnconfinedTestDispatcher(testScheduler)) {
+            userRepository.withWalletMutationLocked { events += "second entered" }
+        }
+        assertEquals(listOf("first entered"), events)
+        release.complete(Unit); first.join(); second.join()
+        assertEquals(listOf("first entered", "first exited", "second entered"), events)
+    }
+    @Test fun `blocked mutations and deletion recovery never enter the callback`() = runTest {
+        WalletRecoveryCapabilityGate.enterBlocked()
+        try {
+            var called = false
+            assertEquals("WALLET_RECOVERY_READ_ONLY", runCatching { userRepository.withWalletMutationLocked { called = true } }.exceptionOrNull()?.message)
+            assertEquals("WALLET_RECOVERY_READ_ONLY", runCatching { userRepository.resumePendingWalletDeletion() }.exceptionOrNull()?.message)
+            assertFalse(called)
+        } finally { WalletRecoveryCapabilityGate.enterNormal() }
+    }
+    @Test fun `deletion status read is passive and no pending operation needs no work`() = runTest {
+        assertEquals(null, userRepository.walletDeletionFailureCode())
+        userRepository.resumePendingWalletDeletion()
+        coVerify(exactly = 0) { walletIdentityDao.upsertWallet(any()) }
+    }
+
     private fun retainedFifteenWordKeyPair(): Sr25519Keypair {
         val parsed = MnemonicCreator.fromWords(RETAINED_FIFTEEN_WORD_MNEMONIC)
         val seed = SubstrateSeedFactory.deriveSeed32(parsed.words, null).seed

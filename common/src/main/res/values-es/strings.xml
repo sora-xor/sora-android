@@ -17,7 +17,6 @@
   <string name="account_already_imported_description">This wallet is already imported</string>
   <string name="account_storage_conflict">This wallet can\'t be added here</string>
   <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
-  <string name="account_confirmation_title">Confirmar frase semilla</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="account_options">Account options</string>
   <string name="account_options_backup_google">Backup to Google</string>
@@ -30,7 +29,6 @@
   <string name="activity_referral_title">Un Referido se ha unido</string>
   <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="add_liquidity_confirmation_title">Confirm supply</string>
-  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="add_node_name_already_existing">Node with this name has been added already</string>
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_error_no_funds">Lo sentimos, no tiene fondos suficientes para transferir la cantidad especificada.</string>
@@ -45,27 +43,20 @@
   <string name="asset_details_token_price">Precio del token</string>
   <string name="asset_details_your_pools">Tus %spares de liquidez</string>
   <string name="asset_to_send">Activo a enviar</string>
-  <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
   <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
   <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
-  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
   <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Autentificar</string>
   <string name="block_id">Hash del bloque</string>
-  <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">Change language</string>
   <string name="change_pin">Change PIN</string>
   <string name="choose_token">Select token</string>
   <string name="choose_tokens">Choose tokens</string>
-  <string name="claim_contact">Si tienes alguna pregunta o inquietud, puedes %% contáctarnos%%.</string>
   <string name="claim_contact_us">%%Contact us%% for any questions or concerns</string>
-  <string name="claim_error_title">Transición fallida</string>
   <string name="claim_error_title_v1">Transition of assets failed. Please try again later.</string>
-  <string name="claim_notification_text">Transición en curso ...</string>
   <string name="claim_rewards">Claim rewards</string>
-  <string name="claim_subtitle">Necesitamos su consentimiento para hacer una transición de sus fondos de SORA para que pueda usarlos. SORA ahora operará en la red Substrate. Confirme la transición.</string>
   <string name="claim_subtitle_confirmed">Thank you for the confirmation!</string>
   <string name="claim_subtitle_confirmed_v2">La transición de los tokens está en curso</string>
   <string name="claim_subtitle_v2">• We need consent to transition your assets from SORA v1 to SORA v2\n\n• The SORA v2 network is built with Substrate, which is natively compatible with the Polkadot and Kusama ecosystem\n\n• Assets on Ethereum are not affected, you can still access them by importing your passphrase to any compatible wallet</string>
@@ -90,7 +81,7 @@
   <string name="tx_details_view_on_explorer">Ver en el explorador</string>
   <string name="common_confirm">Confirmar</string>
   <string name="common_connected">Conectado</string>
-  <string name="common_connecting">Conectando ...</string>
+  <string name="common_connecting">Conectando …</string>
   <string name="common_continue">Seguir</string>
   <string name="common_copied">Copiado al portapapeles</string>
   <string name="common_create_qr_request">Create QR-request</string>
@@ -98,7 +89,6 @@
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
-  <string name="common_discover">Descubrir</string>
   <string name="common_done">Hecho</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">Editar</string>
@@ -151,13 +141,13 @@
   <string name="common_french">Francés</string>
   <string name="common_german">Alemán</string>
   <string name="common_google_authorization_error">Google authorization failed</string>
-  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
     <item quantity="one">hora</item>
     <item quantity="other">horas</item>
+    <item quantity="many">de horas</item>
   </plurals>
   <string name="common_indonesian">Indonesio</string>
   <string name="common_insufficient_balance">Insufficient balance</string>
@@ -187,11 +177,9 @@
   <string name="common_try_again">Try again</string>
   <string name="common_remove">Remove</string>
   <string name="common_request">Request</string>
-  <string name="common_rewrite">Rewrite</string>
   <string name="common_russian">Ruso</string>
   <string name="common_scan">Escanear</string>
   <string name="common_scan_qr">Escanear QR</string>
-  <string name="common_search">Buscar</string>
   <string name="common_search_pools">Buscar Par de liquidez</string>
   <string name="common_sec">segundo</string>
   <string name="common_select_asset">Escoja un activo</string>
@@ -212,7 +200,6 @@
   <string name="common_swedish">Sueco</string>
   <string name="common_terms_title">Términos y condiciones</string>
   <string name="common_thai">Tailandés</string>
-  <string name="common_title_warning">Warning!</string>
   <string name="common_today">Hoy</string>
   <string name="common_turkish">Turkish</string>
   <string name="common_ukrainian">Ucraniano</string>
@@ -222,20 +209,16 @@
   <string name="common_yesterday">Ayer</string>
   <string name="confirm_sending">Confirmar envío</string>
   <string name="confirn_supply_liquidity_first_provider_warning">You are the first liquidity provider. The ratio of tokens you add will set the price of this pool.</string>
-  <string name="contacts_scan">Escanear código QR</string>
   <string name="contacts_search_results">Resultados de búsqueda</string>
   <string name="copy_to_clipboard">Copy to clipboard</string>
   <string name="create_account_title">Crear una cuenta</string>
   <string name="create_backup_password_button_text">Set backup password</string>
-  <string name="create_backup_password_is_secure">Password is highly secure</string>
   <string name="create_backup_password_matched">Password matched</string>
   <string name="create_backup_password_not_matched">Passwords do not match</string>
   <string name="create_backup_password_title">Create backup password</string>
   <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
   <string name="create_backup_set_password">Set password</string>
-  <string name="create_backup_weak_password">Weak password</string>
   <string name="create_new_account_title">Crear nueva cuenta</string>
-  <string name="dark_mode">Dark mode</string>
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
   <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="demeter_claimed_reward">Claimed reward</string>
@@ -245,15 +228,12 @@
   <string name="details_frozen">Congelado</string>
   <string name="details_receive_from_pool">Retirar del par de liquidez</string>
   <string name="details_sent_to_pool">Enviar al par de liquidez</string>
-  <string name="discover_coming_soon">Los desarrolladores de SORA están trabajando actualmente en una función que mostrará una lista completa de los pares de liquidez que están activos en Polkaswap\n\nPor ahora, si desea crear/agregar un par, use el botón a continuación.</string>
   <string name="discovery_polkaswap_pools">Liquidez Polkaswap</string>
   <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Edit view</string>
-  <string name="empty_recent_recipients">No hay destinatarios recientes.\nLas direcciones que se han enviado serán mostradas aquí</string>
   <string name="empty_recent_recipients_2">Recipients will appear here</string>
   <string name="enter_backup_password_title">Enter backup password</string>
   <string name="enter_password_description">Enter backup password for the selected account to import</string>
-  <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">No hay fondos suficientes para la comisión de la transacción</string>
   <string name="eth_tx_address">Ethereum account address</string>
@@ -290,8 +270,6 @@
   <string name="farm_details_your_rewards">Your rewards</string>
   <string name="farming_details_title">Farming details</string>
   <string name="forget_account">Forget account</string>
-  <string name="global_results">Resultados globales</string>
-  <string name="hide_zero_balances">Ocultar balances a cero</string>
   <string name="history_referral">Referral</string>
   <string name="history_referrer">Referrer</string>
   <string name="import_account_not_backed_up">Not backed up!</string>
@@ -299,7 +277,6 @@
   <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
   <string name="import_more_title">Import more</string>
   <string name="imported_account_title">Account imported</string>
-  <string name="invite_code">Código de invitación</string>
   <string name="invite_code_applied_body">Código aplicado con éxito</string>
   <string name="invite_code_applied_title">¡Felicitaciones!</string>
   <string name="invite_enter_error_already_applied">Ya has aplicado otro código de invitación</string>
@@ -309,18 +286,14 @@
   <string name="invoice_scan_error_user_not_found">No se pudo encontrar un usuario desde ese código QR</string>
   <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Activos Líquidos</string>
-  <string name="logout_dialog_body">Esta acción resultará en la eliminación de la cuenta de este dispositivo. Asegúrese de haber realizado una copia de seguridad de su frase semilla antes de continuar.</string>
-  <string name="logout_remove_nodes_body">\n\nAll your custom nodes will be removed as well</string>
   <string name="mnemonic_confirmation_select_word_2">de la lista que has anotado</string>
   <string name="mnemonic_confirmation_select_word_number">Seleccione un número de la palabra</string>
-  <string name="mnemonic_invalid">Frase de contraseña mnemotécnica no válida, verifique una vez más el orden de las palabras.</string>
   <string name="mnemonic_invalid_title">Frase de contraseña mnemotécnica no válida</string>
   <string name="mnemonic_text">Recomendamos usar formas no digitales para hacer copias de seguridad, como escribirlo en una hoja de papel.</string>
   <string name="network_fee">Comisión de red</string>
     <string name="network_fee_unavailable">No se puede consultar la comisión de red ahora. Inténtalo de nuevo en un momento. Tus fondos están seguros en la cadena de bloques.</string>
     <string name="network_fee_unavailable_short">Comisión de red no disponible</string>
     <string name="network_fee_unreachable">No se puede consultar la comisión porque ahora no se puede conectar con la red SORA. Comprueba tu conexión a Internet e inténtalo de nuevo. Tus fondos están seguros en la cadena de bloques.</string>
-  <string name="network_finalized_history">Actividad</string>
   <string name="node_details_address_validation_failed">Failed to validate URL (Wrong address)</string>
   <string name="node_details_genesis_validation_failed">The genesis hash of your node is different than the genesis hash of the network</string>
   <string name="node_details_node_already_added" formatted="false">This node is already added: %s\nConnection established with node %s</string>
@@ -329,13 +302,10 @@
   <string name="onboarding_create_account_description">Ingrese el nombre de su nueva cuenta y cómo aparecerá debajo de su dirección. Con una identidad en cadena, puede estar disponible para otros.</string>
   <string name="onboarding_create_account_subtitle">Visible solo para ti y almacenado localmente</string>
   <string name="onboarding_create_account_title">Ponga nombre a su cuenta</string>
-  <string name="onboarding_description">SORA is an on-chain governance system where producers make proposals for funding, and all XOR token holders decide on the best goods and services to be created. Accepting XOR as payment then builds the SORA economy.</string>
   <string name="onboarding_enter_passphrase">Introduzca su contraseña</string>
   <string name="onboarding_enter_seed">Introducir frase semilla</string>
   <string name="passphrase_confirmation_error_message">Este proceso tiene como objetivo asegurarse de que haya escrito su frase de recuperación</string>
   <string name="passphrase_confirmation_error_title">No intentes adivinar la palabra</string>
-  <string name="passphrase_write">Write down your passphrase</string>
-  <string name="personal_info_username">Nombre de la cuenta (opcional)</string>
   <string name="personal_info_username_v1">Nombre de la cuenta</string>
   <string name="phone_verification_too_frequent_message">Demasiadas solicitudes de códigos de verificación. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="pin_locked_for_title">Locked  for %s</string>
@@ -356,7 +326,6 @@
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
   <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
-  <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap es mantenido por la comunidad SORA. Antes de continuar usando Polkaswap, por favor revise las %%Preguntas frecuentes (FAQ) de Polkaswap%% y la documentación, que incluye una explicación detallada sobre cómo funciona Polkaswap, así como el %%Memorandum de Polkaswap y los Términos de servicio de Polkaswap%%, y la %%Política de privacidad%%.\n\nEstos documentos son cruciales para una experiencia de usuario segura y positiva. Al utilizar Polkaswap, reconoce haber leído y comprendido estos documentos.</string>
   <string name="polkaswap_info_text_2">También reconoce lo siguiente:</string>
@@ -369,10 +338,6 @@
   <string name="polkaswap_input_estimated">Se estima la entrada. Venderás un máximo de %s o la transacción se revertirá.</string>
   <string name="polkaswap_insufficient_balance">Saldo insuficiente de %s</string>
   <string name="polkaswap_insufficient_liqudity">Liquidez insuficiente</string>
-  <string name="polkaswap_liquidity_fee">Tarifa LP</string>
-  <string name="polkaswap_liquidity_fee_info">Una porción de cada trade va a los proveedores de liquidez como incentivo del protocolo</string>
-  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
-  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">Mercado</string>
   <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
   <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
@@ -398,27 +363,28 @@
   <string name="pool_details">Detalles de la Liquidez</string>
   <string name="pool_details_active_farms">Active farms</string>
   <string name="pool_details_reward">Reward</string>
-  <string name="pool_liquidity_placeholder">You don\'t have any active pools yet.\nAdd liquidity to earn rewards</string>
-  <string name="pool_share_title">Share of Pool</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pooled_assets">Activos en Liquidez</string>
   <string name="profile_biometry_title">Autenticación de biometría</string>
-  <string name="profile_logout_title">Cerrar sesión</string>
   <plurals name="project_date_day_plurals">
     <item quantity="one">%s día restante</item>
     <item quantity="other">%s días restantes</item>
+    <item quantity="many">%s de días restantes</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
     <item quantity="one">%s hora restante</item>
     <item quantity="other">%s horas restantes</item>
+    <item quantity="many">%s de horas restantes</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
     <item quantity="one">%s minuto restante</item>
     <item quantity="other">%s minutos restantes</item>
+    <item quantity="many">%s de minutos restantes</item>
   </plurals>
   <plurals name="project_date_second_plurals">
     <item quantity="one">%s segundo restante</item>
     <item quantity="other">%s segundos restantes</item>
+    <item quantity="many">%s de segundos restantes</item>
   </plurals>
   <string name="project_ended_template">Terminado %s</string>
   <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
@@ -446,6 +412,7 @@
   <plurals name="referral_invitations">
     <item quantity="one">invitación</item>
     <item quantity="other">invitaciones</item>
+    <item quantity="many">de invitaciones</item>
   </plurals>
   <string name="referral_no_available_invitations">No hay invitaciones disponibles</string>
   <string name="referral_referral_link">Referrer’s link or address</string>
@@ -474,10 +441,8 @@
   <string name="review">Review</string>
   <string name="route">Ruta</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
-  <string name="search_assets">Buscar activos</string>
   <string name="search_empty_state">No hay resultados de búsqueda</string>
   <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
-  <string name="select_account_address">Buscar dirección de la cuenta</string>
   <string name="select_account_address_1">Search or add a new address</string>
   <string name="select_account_import">Select account to import</string>
   <string name="select_asset_receive">Select Asset to Receive</string>
@@ -510,28 +475,21 @@
   <string name="settings_login_title">Inicio de sesión y seguridad</string>
   <string name="settings_nodes">Nodos</string>
   <string name="show_more">Enseñar más</string>
-  <string name="show_zero_balances">Mostrar balances a cero</string>
   <string name="slippage">Slippage</string>
   <string name="something_went_wrong">Something went wrong</string>
   <string name="start_staking">Start staking</string>
   <string name="status_error">Error</string>
   <string name="status_pending">Pendiente</string>
-  <string name="status_success">Exitoso</string>
   <string name="status_successful">Successful</string>
   <string name="status_title">Estado</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
-  <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
-  <string name="system_appearance">System appearance</string>
-  <string name="tabbar_parliament_title">Parlamento</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
-  <string name="transaction_date">Fecha y hora</string>
   <string name="transaction_date_1">Fecha y hora</string>
   <string name="transaction_id">Hash de la transacción</string>
   <string name="tutorial_many_world">Muchos mundos.\nUna economía.</string>
   <string name="tutorial_many_world_desc">SORA está trabajando para convertirse en un sistema económico multiverso descentralizado, financiando la creación de aplicaciones nuevas y emocionantes, bajo la supervisión democrática del Parlamento de SORA.</string>
   <string name="tutorial_privacy_policy">Política de privacidad</string>
-  <string name="tutorial_terms_and_conditions">Al crear una cuenta, acepta los %%Términos y condiciones%% y la %%Política de privacidad%%.</string>
   <string name="tutorial_terms_and_conditions_3">Términos y condiciones</string>
   <string name="tutorial_terms_and_conditions_template_1">Al continuar usted está de acuerdo con el </string>
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
@@ -545,14 +503,12 @@
   <string name="wallet_connect_done">Hecho</string>
   <string name="wallet_market_refresh">Refrescar</string>
   <string name="wallet_network_activity">Actividad</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">Mi %s dirección de red para recibir %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_xor">Recibir XOR</string>
   <string name="wallet_redeemable">Canjeable</string>
   <string name="wallet_send_existential_warning_message">Su transferencia eliminará la cuenta del blockstore, ya que hará que el saldo total sea menor que el depósito existente</string>
   <string name="wallet_status_confirmed">Completada</string>
   <string name="wallet_title">Cartera</string>
-  <string name="wallet_transaction_rejected">Transacción rechazada</string>
   <string name="wallet_transaction_submitted">Transacción enviada</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
   <string name="wallet_unbonded">Unbonded</string>
@@ -800,7 +756,6 @@
   <string name="neon_theme_dark">Oscuro</string>
   <string name="neon_theme_light">Claro</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
-  <string name="nexus_production_name">SORA Nexus Production</string>
   <string name="nexus_production_address">Production address</string>
   <string name="nexus_copy_production_address">Copy production address</string>
   <string name="nexus_production_not_live">Not live yet</string>

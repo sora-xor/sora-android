@@ -17,7 +17,6 @@
   <string name="account_already_imported_description">Dompet ini sudah diimport</string>
   <string name="account_storage_conflict">This wallet can\'t be added here</string>
   <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
-  <string name="account_confirmation_title">Sahkan mnemonik</string>
   <string name="account_confirmation_title_v2">Sahkan Frasa Laluan</string>
   <string name="account_options">Pilihan akaun</string>
   <string name="account_options_backup_google">Sandaran ke Google</string>
@@ -30,7 +29,6 @@
   <string name="activity_referral_title">Rujukan menyertai</string>
   <string name="add_liquidity_alert_text">Anda akan memperoleh yuran yang berkadar dengan bahagian kumpulan anda daripada peruntukan kecairan.</string>
   <string name="add_liquidity_confirmation_title">Sahkan bekalan</string>
-  <string name="add_liquidity_title">Tambah Kecairan</string>
   <string name="add_node_name_already_existing">Nod dengan nama ini telah ditambah</string>
   <string name="address_not_found_1">Penerima tidak ditemui</string>
   <string name="amount_error_no_funds">Maaf, anda tidak mempunyai dana yang cukup untuk memindahkan jumlah yang ditetapkan.</string>
@@ -45,27 +43,20 @@
   <string name="asset_details_token_price">Harga token</string>
   <string name="asset_details_your_pools">Kolam %s anda</string>
   <string name="asset_to_send">Aset untuk dihantar</string>
-  <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
   <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
   <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
-  <string name="backup_password_title">Menetapkan kata laluan akan menyulitkan sandaran Google anda. Anda perlu memasukkannya semasa memulihkan dompet anda.</string>
   <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Mengesahkan</string>
   <string name="block_id">Sekat hash</string>
-  <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">Tukar bahasa</string>
   <string name="change_pin">Tukar PIN</string>
   <string name="choose_token">Pilih token</string>
   <string name="choose_tokens">Pilih token</string>
-  <string name="claim_contact">Sekiranya anda mempunyai pertanyaan atau kebimbangan, anda boleh %%hubungi kami.%%</string>
   <string name="claim_contact_us">%%Hubungi kami%% untuk sebarang pertanyaan atau masalah</string>
-  <string name="claim_error_title">Peralihan gagal</string>
   <string name="claim_error_title_v1">Peralihan aset gagal. Sila cuba sebentar lagi.</string>
-  <string name="claim_notification_text">Peralihan sedang dijalankan ...</string>
   <string name="claim_rewards">Claim rewards</string>
-  <string name="claim_subtitle">Kami memerlukan persetujuan anda untuk membuat peralihan dana anda dari SORA supaya anda dapat menggunakannya. SORA kini akan beroperasi di rangkaian Substrat. Sila sahkan peralihan.</string>
   <string name="claim_subtitle_confirmed">Terima kasih atas pengesahannya!</string>
   <string name="claim_subtitle_confirmed_v2">Peralihan aset sedang berjalan</string>
   <string name="claim_subtitle_v2">• Kami memerlukan persetujuan untuk memindahkan aset anda dari SORA v1 ke SORA v2\n\n• Rangkaian SORA v2 dibina dengan Substrat, yang secara asli serasi dengan ekosistem Polkadot dan Kusama\n\n• Aset pada Ethereum tidak terjejas, anda masih boleh mengaksesnya dengan mengimport frasa laluan anda ke mana-mana dompet yang serasi</string>
@@ -90,7 +81,7 @@
   <string name="tx_details_view_on_explorer">Lihat di explorer</string>
   <string name="common_confirm">Sahkan</string>
   <string name="common_connected">Disambungkan</string>
-  <string name="common_connecting">Menyambung ...</string>
+  <string name="common_connecting">Menyambung …</string>
   <string name="common_continue">Teruskan</string>
   <string name="common_copied">Disalin ke papan klip</string>
   <string name="common_create_qr_request">Buat permintaan QR</string>
@@ -98,7 +89,6 @@
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Padam</string>
   <string name="common_disabled">Disabled</string>
-  <string name="common_discover">Menemui</string>
   <string name="common_done">Selesai</string>
   <string name="common_dutch">Belanda</string>
   <string name="common_edit">Sunting</string>
@@ -151,7 +141,6 @@
   <string name="common_french">Bahasa Perancis</string>
   <string name="common_german">Jerman</string>
   <string name="common_google_authorization_error">Google authorization failed</string>
-  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Bahasa Ibrani</string>
   <string name="common_hindi">Hindi</string>
@@ -186,11 +175,9 @@
   <string name="common_try_again">Try again</string>
   <string name="common_remove">Mengalih keluar</string>
   <string name="common_request">Permintaan</string>
-  <string name="common_rewrite">Rewrite</string>
   <string name="common_russian">Bahasa Rusia</string>
   <string name="common_scan">Imbas</string>
   <string name="common_scan_qr">Imbas QR</string>
-  <string name="common_search">Cari</string>
   <string name="common_search_pools">Kolam carian</string>
   <string name="common_sec">saat</string>
   <string name="common_select_asset">Pilih aset</string>
@@ -211,7 +198,6 @@
   <string name="common_swedish">Bahasa Sweden</string>
   <string name="common_terms_title">Terma &amp; Syarat</string>
   <string name="common_thai">Orang Thai</string>
-  <string name="common_title_warning">Amaran!</string>
   <string name="common_today">Hari ini</string>
   <string name="common_turkish">Turki</string>
   <string name="common_ukrainian">Bahasa Ukraine</string>
@@ -221,20 +207,16 @@
   <string name="common_yesterday">Semalam</string>
   <string name="confirm_sending">Sahkan penghantaran</string>
   <string name="confirn_supply_liquidity_first_provider_warning">Anda adalah pembekal kecairan pertama. Nisbah token yang anda tambah akan menetapkan harga kolam ini.</string>
-  <string name="contacts_scan">Imbas kod QR</string>
   <string name="contacts_search_results">Keputusan Carian</string>
   <string name="copy_to_clipboard">Salin ke papan keratan</string>
   <string name="create_account_title">Cipta akaun</string>
   <string name="create_backup_password_button_text">Tetapkan kata laluan sandaran</string>
-  <string name="create_backup_password_is_secure">Kata laluan sangat selamat</string>
   <string name="create_backup_password_matched">Kata laluan dipadankan</string>
   <string name="create_backup_password_not_matched">Kata laluan tidak sepadan</string>
   <string name="create_backup_password_title">Tetapkan kata laluan sandaran</string>
   <string name="create_backup_password_warning_text">Saya faham bahawa jika saya terlupa kata laluan saya tidak ada cara untuk mendapatkannya semula.</string>
   <string name="create_backup_set_password">Set kata laluan</string>
-  <string name="create_backup_weak_password">Kata laluan lemah</string>
   <string name="create_new_account_title">Buat akaun baharu</string>
-  <string name="dark_mode">Mod gelap</string>
   <string name="delete_backup_alert_description">Jika anda memadamkan sandaran Google, anda hanya boleh memulihkan dompet anda dengan sandaran manual frasa laluan anda.</string>
   <string name="delete_backup_alert_title">Adakah anda pasti?</string>
   <string name="demeter_claimed_reward">Claimed reward</string>
@@ -244,15 +226,12 @@
   <string name="details_frozen">Dibekukan</string>
   <string name="details_receive_from_pool">Ditarik balik dari Kolam</string>
   <string name="details_sent_to_pool">Dihantar ke kolam</string>
-  <string name="discover_coming_soon">Pembangun SORA sedang mengusahakan ciri yang akan memaparkan senarai penuh kumpulan yang aktif di Polkaswap. \n\n Buat masa ini, jika anda ingin membuat/menambah pada kolam sila gunakan butang di bawah.</string>
   <string name="discovery_polkaswap_pools">Kolam Polkaswap</string>
   <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Edit view</string>
-  <string name="empty_recent_recipients">Tiada penerima terkini.\nAlamat yang dihantar akan ditunjukkan di sini.</string>
   <string name="empty_recent_recipients_2">Penerima akan muncul di sini</string>
   <string name="enter_backup_password_title">Masukkan kata laluan sandaran</string>
   <string name="enter_password_description">Masukkan kata laluan sandaran untuk akaun yang dipilih untuk diimport</string>
-  <string name="enter_password_incorect_title">Kata laluan tidak betul</string>
   <string name="enter_password_title">Masukkan kata laluan</string>
   <string name="error_transaction_fee_title">Tidak cukup dana untuk bayaran transaksi</string>
   <string name="eth_tx_address">Ethereum account address</string>
@@ -289,8 +268,6 @@
   <string name="farm_details_your_rewards">Your rewards</string>
   <string name="farming_details_title">Farming details</string>
   <string name="forget_account">Lupa akaun</string>
-  <string name="global_results">Keputusan global</string>
-  <string name="hide_zero_balances">Sembunyikan baki sifar</string>
   <string name="history_referral">Rujukan</string>
   <string name="history_referrer">Perujuk</string>
   <string name="import_account_not_backed_up">Tidak disandarkan!</string>
@@ -298,7 +275,6 @@
   <string name="import_account_not_backed_up_alert_description">Jika peranti anda hilang atau dicuri, anda akan kehilangan dompet anda dan semua dana anda selama-lamanya.</string>
   <string name="import_more_title">Import lagi</string>
   <string name="imported_account_title">Akaun diimport</string>
-  <string name="invite_code">Kod jemputan</string>
   <string name="invite_code_applied_body">Kod berjaya digunakan</string>
   <string name="invite_code_applied_title">Tahniah!</string>
   <string name="invite_enter_error_already_applied">Anda telah menggunakan kod jemputan yang lain</string>
@@ -308,18 +284,14 @@
   <string name="invoice_scan_error_user_not_found">Tidak dapat mencari pengguna dari QR</string>
   <string name="launch_screen_loading_title">Ia memuatkan sedikit lebih lama kali ini</string>
   <string name="liquid_assets">Aset cair</string>
-  <string name="logout_dialog_body">Tindakan ini akan mengakibatkan penghapusan akaun dari peranti ini. Pastikan anda telah menyandarkan frasa laluan anda sebelum meneruskan.</string>
-  <string name="logout_remove_nodes_body">\n\nSemua nod tersuai anda juga akan dialih keluar</string>
   <string name="mnemonic_confirmation_select_word_2">daripada senarai yang telah anda tulis</string>
   <string name="mnemonic_confirmation_select_word_number">Pilih nombor perkataan</string>
-  <string name="mnemonic_invalid">Frasa laluan mnemonik tidak sah, sila periksa sekali lagi susunan kata.</string>
   <string name="mnemonic_invalid_title">Frasa laluan mnemonik tidak sah</string>
   <string name="mnemonic_text">Kami mengesyorkan untuk menggunakan cara bukan digital untuk membuat sandaran, seperti menulisnya di atas kertas.</string>
   <string name="network_fee">Yuran Rangkaian</string>
   <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
   <string name="network_fee_unavailable_short">Network fee unavailable</string>
   <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
-  <string name="network_finalized_history">Aktiviti</string>
   <string name="node_details_address_validation_failed">Gagal mengesahkan URL (Alamat salah)</string>
   <string name="node_details_genesis_validation_failed">Cincang genesis nod anda berbeza daripada cincang genesis rangkaian</string>
   <string name="node_details_node_already_added" formatted="false">Nod ini telah ditambah: %s \n Sambungan diwujudkan dengan nod %s</string>
@@ -328,13 +300,10 @@
   <string name="onboarding_create_account_description">Masukkan nama untuk akaun baharu anda dan bagaimana ia akan dipaparkan di bawah alamat anda. Dengan identiti dalam rantaian, ia boleh disediakan kepada orang lain.</string>
   <string name="onboarding_create_account_subtitle">Boleh dilihat hanya untuk anda dan disimpan secara setempat</string>
   <string name="onboarding_create_account_title">Namakan akaun anda</string>
-  <string name="onboarding_description">SORA adalah sistem tadbir urus dalam rantaian di mana pengeluar membuat cadangan untuk pembiayaan, dan semua pemegang token XOR memutuskan barangan dan perkhidmatan terbaik yang akan diwujudkan. Menerima XOR sebagai pembayaran kemudian membina ekonomi SORA.</string>
   <string name="onboarding_enter_passphrase">Masukkan frasa laluan</string>
   <string name="onboarding_enter_seed">Masukkan Raw Seed</string>
   <string name="passphrase_confirmation_error_message">Proses ini bertujuan untuk memastikan anda telah menulis frasa pemulihan anda</string>
   <string name="passphrase_confirmation_error_title">Jangan cuba meneka perkataan itu</string>
-  <string name="passphrase_write">Tulis frasa laluan anda</string>
-  <string name="personal_info_username">Nama akaun (pilihan)</string>
   <string name="personal_info_username_v1">Nama akaun</string>
   <string name="phone_verification_too_frequent_message">Permintaan kod pengesahan yang terlalu kerap. Sila cuba sebentar lagi.</string>
   <string name="pin_locked_for_title">Dikunci selama %s</string>
@@ -356,7 +325,6 @@
   <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
   <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
-  <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap diselenggara oleh komuniti SORA. Sebelum menggunakan fungsi Polkaswap, sila semak %% Polkaswap FAQ %% dan dokumentasi, termasuk penjelasan yang terperinci mengenai cara Polkaswap berfungsi, serta Memorandum Polkaswap dan Syarat Perkhidmatan dan Dasar Privasi. Dokumen-dokumen ini sangat penting untuk pengalaman pengguna yang selamat dan positif. Dengan menggunakan Polkaswap, anda mengakui bahawa anda telah membaca dan memahami dokumen-dokumen ini.</string>
   <string name="polkaswap_info_text_2">Anda juga mengakui perkara-perkara berikut:</string>
@@ -369,10 +337,6 @@
   <string name="polkaswap_input_estimated">Input dianggarkan. Anda akan menjual maksimum %s atau transaksi akan kembali.</string>
   <string name="polkaswap_insufficient_balance">Baki %s tidak mencukupi</string>
   <string name="polkaswap_insufficient_liqudity">Kecairan tidak mencukupi</string>
-  <string name="polkaswap_liquidity_fee">Bayaran LP</string>
-  <string name="polkaswap_liquidity_fee_info">Sebahagian daripada setiap dagangan diberikan kepada penyedia kecairan sebagai insentif protokol.</string>
-  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
-  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">Pasaran</string>
   <string name="polkaswap_market_smart_description">Penghalaan kecairan SMART memastikan harga terbaik untuk sebarang transaksi dengan menggabungkan hanya pilihan harga terbaik dari semua pasaran yang ada. Apabila tersedia, Token Bonding Curve (TBC) akan digunakan untuk kecairan selagi harga aset lebih berpatutan daripada sumber lain, di mana kolam XYK digunakan.</string>
   <string name="polkaswap_market_tbc_description">TBC — membeli hanya daripada Lengkung Ikatan Token (Pasaran Utama). Terdapat kemungkinan bahawa harga boleh menjadi tidak menguntungkan berbanding dengan kolam XYK (Pasaran Sekunder), tetapi nilai yang diterima daripada ganjaran terletak hak mungkin berubah menjadi lebih baik dari masa ke masa.</string>
@@ -398,12 +362,9 @@
   <string name="pool_details">Butiran kolam</string>
   <string name="pool_details_active_farms">Active farms</string>
   <string name="pool_details_reward">Reward</string>
-  <string name="pool_liquidity_placeholder">Kecairan anda akan muncul di sini</string>
-  <string name="pool_share_title">Bahagian Tabungan</string>
   <string name="pool_share_title_1">Bahagian kolam anda</string>
   <string name="pooled_assets">Aset terkumpul</string>
   <string name="profile_biometry_title">Pengesahan biometri</string>
-  <string name="profile_logout_title">Log keluar</string>
   <plurals name="project_date_day_plurals">
     <item quantity="other">%s hari lagi</item>
   </plurals>
@@ -469,10 +430,8 @@
   <string name="review">Semakan</string>
   <string name="route">Laluan</string>
   <string name="scan_qr_show_my_qr">Tunjukkan kod QR saya</string>
-  <string name="search_assets">Cari aset</string>
   <string name="search_empty_state">Tiada hasil carian</string>
   <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
-  <string name="select_account_address">Cari alamat akaun</string>
   <string name="select_account_address_1">Cari atau tambah alamat baharu</string>
   <string name="select_account_import">Pilih akaun untuk diimport</string>
   <string name="select_asset_receive">Pilih Aset untuk Diterima</string>
@@ -505,28 +464,21 @@
   <string name="settings_login_title">Log Masuk &amp; Keselamatan</string>
   <string name="settings_nodes">Nod</string>
   <string name="show_more">Tunjukkan lagi</string>
-  <string name="show_zero_balances">Tunjukkan baki sifar</string>
   <string name="slippage">Gelinciran</string>
   <string name="something_went_wrong">Something went wrong</string>
   <string name="start_staking">Start staking</string>
   <string name="status_error">Ralat</string>
   <string name="status_pending">Belum selesai</string>
-  <string name="status_success">Berjaya</string>
   <string name="status_successful">Berjaya</string>
   <string name="status_title">Status</string>
   <string name="succesfully_imported_account_title">Anda telah berjaya mengimport akaun</string>
-  <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Pastikan anda mempunyai %s yang tersisa selepas transaksi ini. Jika tidak, anda tidak akan dapat melakukan transaksi lain.</string>
-  <string name="system_appearance">Penampilan sistem</string>
-  <string name="tabbar_parliament_title">Parlimen</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
-  <string name="transaction_date">Tarikh dan masa</string>
   <string name="transaction_date_1">Tarikh dan masa</string>
   <string name="transaction_id">Transaksi hash</string>
   <string name="tutorial_many_world">Banyak Dunia.\n Satu Ekonomi.</string>
   <string name="tutorial_many_world_desc">SORA berusaha untuk menjadi sistem ekonomi multiverse yang terdesentralisasi, membiayai penciptaan aplikasi baru dan menarik, di bawah pengawasan demokratik Parlimen SORA.</string>
   <string name="tutorial_privacy_policy">Dasar Privasi</string>
-  <string name="tutorial_terms_and_conditions">Dengan mencipta akaun yang anda bersetuju dengan %%Terma &amp; Syarat%% dan %%Dasar Privasi%%</string>
   <string name="tutorial_terms_and_conditions_3">Terma &amp; Syarat</string>
   <string name="tutorial_terms_and_conditions_template_1">Dengan meneruskan anda bersetuju dengan</string>
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
@@ -540,7 +492,6 @@
   <string name="wallet_connect_done">Selesai</string>
   <string name="wallet_market_refresh">Segarkan semula</string>
   <string name="wallet_network_activity">Aktiviti</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">Alamat rangkaian saya %s untuk Menerima %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Imbas QR ini untuk menghantar saya %s. ID Akaun Rangkaian %s saya:\n%s</string>
   <string name="wallet_receive_xor">Terima XOR</string>
   <string name="wallet_redeemable">Boleh ditebus</string>
@@ -548,7 +499,6 @@
   <string name="wallet_send_existential_warning_message">Pemindahan akan memadamkan akaun anda dari blockstore kerana jumlah baki akan lebih rendah daripada simpanan yang wujud.</string>
   <string name="wallet_status_confirmed">Selesai</string>
   <string name="wallet_title">Dompet</string>
-  <string name="wallet_transaction_rejected">Transaksi ditolak</string>
   <string name="wallet_transaction_submitted">Transaksi dihantar</string>
   <string name="wallet_transaction_submitted_1">Transaksi\ndihantar</string>
   <string name="wallet_unbonded">Tidak terikat</string>
@@ -796,7 +746,6 @@
   <string name="neon_theme_dark">Dark</string>
   <string name="neon_theme_light">Light</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
-  <string name="nexus_production_name">SORA Nexus Production</string>
   <string name="nexus_production_address">Production address</string>
   <string name="nexus_copy_production_address">Copy production address</string>
   <string name="nexus_production_not_live">Not live yet</string>

@@ -1083,4 +1083,153 @@ class PinCodeViewModelTest {
             removeLegacyUnsuffixed = false,
             expiresAtElapsedRealtime = Long.MAX_VALUE,
         )
+
+    @Test fun `six digit PIN change authenticates old PIN before confirming and saving the new PIN`() = runTest {
+        given(interactor.isPincodeUpdateNeeded()).willReturn(false)
+        given(interactor.checkPin("123456")).willReturn(true)
+        given(resourceManager.getString(R.string.pincode_enter_current_pin_code)).willReturn("Current PIN")
+        given(resourceManager.getString(R.string.pincode_enter_new_pin_code)).willReturn("New PIN")
+        given(resourceManager.getString(R.string.pincode_confirm_new_pin_code)).willReturn("Confirm new PIN")
+        pinCodeViewModel.startAuth(PinCodeAction.CHANGE_PIN_CODE)
+        advanceUntilIdle()
+        assertEquals("Current PIN", pinCodeViewModel.state.toolbarTitleString)
+        pinCodeViewModel.pinCodeNumberClicked("123456")
+        advanceUntilIdle()
+        assertEquals("New PIN", pinCodeViewModel.state.toolbarTitleString)
+        assertEquals(false, pinCodeViewModel.showFingerPrintEventLiveData.value)
+        pinCodeViewModel.pinCodeNumberClicked("654321")
+        advanceUntilIdle()
+        assertEquals("Confirm new PIN", pinCodeViewModel.state.toolbarTitleString)
+        verify(interactor, never()).savePin(anyString())
+        pinCodeViewModel.pinCodeNumberClicked("654321")
+        advanceUntilIdle()
+        verify(interactor).savePin("654321")
+        verify(mainRouter).popBackStack()
+        assertNotNull(pinCodeViewModel.pincodeChangedEvent.value)
+    }
+
+    @Test fun `legacy PIN change explains the new length and cannot escape forced upgrade`() = runTest {
+        given(interactor.isPincodeUpdateNeeded()).willReturn(true)
+        given(interactor.checkPin("1234")).willReturn(true)
+        given(resourceManager.getString(R.string.pincode_enter_current_pin_code)).willReturn("Current PIN")
+        given(resourceManager.getString(R.string.pincode_enter_new_pin_code)).willReturn("New PIN")
+        pinCodeViewModel.startAuth(PinCodeAction.CHANGE_PIN_CODE)
+        advanceUntilIdle()
+        assertEquals(4, pinCodeViewModel.state.maxDotsCount)
+        pinCodeViewModel.pinCodeNumberClicked("1234")
+        advanceUntilIdle()
+        assertEquals(6, pinCodeViewModel.state.maxDotsCount)
+        assertTrue(pinCodeViewModel.state.isLengthInfoAlertVisible)
+        pinCodeViewModel.setNewLengthPinCodeClicked()
+        assertFalse(pinCodeViewModel.state.isLengthInfoAlertVisible)
+        assertFalse(pinCodeViewModel.state.isBackButtonVisible)
+        pinCodeViewModel.onBackPressed()
+        assertNotNull(pinCodeViewModel.closeAppLiveData.value)
+        verify(mainRouter, never()).popBackStack()
+    }
+
+    @Test fun `optional PIN change can be canceled after authenticating the old PIN`() = runTest {
+        given(interactor.isPincodeUpdateNeeded()).willReturn(false)
+        given(resourceManager.getString(R.string.pincode_enter_current_pin_code)).willReturn("Current PIN")
+        given(resourceManager.getString(R.string.pincode_enter_new_pin_code)).willReturn("New PIN")
+        pinCodeViewModel.startAuth(PinCodeAction.CHANGE_PIN_CODE)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+        pinCodeViewModel.onBackPressed()
+        verify(mainRouter).popBackStack()
+        verify(interactor, never()).savePin(anyString())
+    }
+
+    @Test fun `JSON export receives all authorized addresses after authentication`() = runTest {
+        pinCodeViewModel.addresses = listOf("first", "second")
+        pinCodeViewModel.startAuth(PinCodeAction.OPEN_JSON)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+        verify(mainRouter).showBackupJson(listOf("first", "second"))
+        verify(mainRouter).popBackStack()
+    }
+
+    @Test fun `seed export receives the selected address after authentication`() = runTest {
+        pinCodeViewModel.addresses = listOf("first", "second")
+        pinCodeViewModel.startAuth(PinCodeAction.OPEN_SEED)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+        verify(mainRouter).showBackupSeed("first")
+        verify(mainRouter).popBackStack()
+    }
+
+    @Test fun `an unreadable migration hint does not prevent successful offline unlock`() = runTest {
+        given(interactor.isCodeSet()).willReturn(true)
+        given(interactor.migrationCheckNeedsNetwork()).willThrow(IllegalStateException("hint unavailable"))
+        connected.value = false
+        pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+        verify(mainRouter).popBackStack()
+        assertFalse(pinCodeViewModel.state.migrating)
+    }
+
+    @Test fun `migration check failure leaves optional claim for next unlock and opens wallet`() = runTest {
+        given(interactor.isCodeSet()).willReturn(true)
+        given(interactor.needsMigration()).willThrow(IllegalStateException("claim lookup failed"))
+        pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+        verify(mainRouter).popBackStack()
+        verify(mainRouter, never()).showClaim()
+    }
+
+    @Test fun `an available legacy claim opens claim screen once`() = runTest {
+        given(interactor.isCodeSet()).willReturn(true)
+        given(interactor.needsMigration()).willReturn(true)
+        pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+        verify(mainRouter, times(1)).showClaim()
+        verify(mainRouter, never()).popBackStack()
+    }
+
+    @Test fun `accepting biometric setup persists consent and proceeds`() = runTest {
+        pinCodeViewModel.biometryDialogYesClicked()
+        advanceUntilIdle()
+        verify(interactor).setBiometryEnabled(true)
+        verify(mainRouter).popBackStack()
+    }
+
+    @Test fun `authentication errors and canceled prompts reach their dedicated UI events`() {
+        pinCodeViewModel.onAuthenticationError("Use your PIN")
+        assertEquals("Use your PIN", pinCodeViewModel.fingerPrintErrorLiveData.value)
+        pinCodeViewModel.canceledFromPrompt()
+        assertNotNull(pinCodeViewModel.fingerPrintCanceledFromPromptEvent.value)
+        pinCodeViewModel.changeFingerPrintButtonVisibility(false)
+        assertFalse(pinCodeViewModel.state.isBiometricButtonVisible)
+        pinCodeViewModel.changeFingerPrintButtonVisibility(true)
+        assertTrue(pinCodeViewModel.state.isBiometricButtonVisible)
+        pinCodeViewModel.onSwitchNode()
+        verify(selectNodeRouter).showSelectNode()
+        pinCodeViewModel.popBackToAccountList()
+        verify(mainRouter).popBackStackToAccountList()
+    }
+
+    @Test fun `failed PIN check clears typed digits and shake animation can be acknowledged`() = runTest {
+        pinCodeViewModel.startAuth(PinCodeAction.OPEN_JSON)
+        advanceUntilIdle()
+        given(interactor.checkPin("123456")).willThrow(IllegalStateException("keystore busy"))
+        pinCodeViewModel.pinCodeNumberClicked("123456")
+        advanceUntilIdle()
+        assertEquals(0, pinCodeViewModel.state.checkedDotsCount)
+        assertFalse(pinCodeViewModel.state.isBackButtonVisible)
+        assertNotNull(pinCodeViewModel.errorFromResourceLiveData.value)
+        pinCodeViewModel.onWrongPinAnimationEnd()
+        assertFalse(pinCodeViewModel.state.enableShakeAnimation)
+    }
+
 }
