@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/splashContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -16,18 +15,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:lottie_autoPlay="true"
+        app:lottie_autoPlay="false"
         app:lottie_rawRes="@raw/splash_animation" />
 
+    <!-- Slow start (design spec 8.1): text.secondary on the canvas, then a thin cyan line. -->
     <TextView
         android:id="@+id/loadingDisclaimerTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/x4"
         android:visibility="gone"
-        android:textStyle="bold"
-        android:fontFamily="@font/sora_bold"
-        android:textColor="?attr/secondaryBackground"
+        android:fontFamily="@font/inter_regular"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:textColor="?attr/contentSecondary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,13 +38,29 @@
 
     <ProgressBar
         android:id="@+id/loadingProgressBar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/x4"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="120dp"
+        android:layout_height="4dp"
+        android:layout_marginTop="@dimen/x2"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/neon_cyan"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@+id/loadingDisclaimerTextView"
         app:layout_constraintStart_toStartOf="@+id/loadingDisclaimerTextView"
         app:layout_constraintTop_toBottomOf="@+id/loadingDisclaimerTextView" />
+
+    <!--
+      Safe Mode (design spec 9): the upgrade progress, the storage screen and the recovery
+      options, drawn in Compose by SplashActivity (SORA Neon Safe Mode kit). Hidden until needed.
+    -->
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/walletRecoveryCompose"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,174 @@
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index 18bf675..ed89584 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -1,14 +1,13 @@
+ [versions]
+ agp = "8.7.1"
+-bouncycastle = "1.77"
++bouncycastle = "1.86"
+ junit = "4.13.2"
+-lz4java = "1.8.0"
++lz4java = "1.12.1"
+ kover = "0.8.3"
+ rust = "0.9.4"
+ kotlin = "1.9.24"
+ coreKtx = "1.13.1"
+ material = "1.12.0"
+-eddsa = "0.3.0"
+ web3jCrypto = "4.8.7-android"
+ web3jCore = "4.8.9-android"
+ lifecycle-runtime-ktx = "2.8.6"
+@@ -17,10 +16,9 @@ compose-bom = "2024.10.00"
+ 
+ [libraries]
+ bouncycastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+-eddsa = { module = "net.i2p.crypto:eddsa", version.ref = "eddsa" }
+ web3j-crypto = { module = "org.web3j:crypto", version.ref = "web3jCrypto" }
+ web3j-core = { module = "org.web3j:core", version.ref = "web3jCore" }
+-lz4java = { module = "org.lz4:lz4-java", version.ref = "lz4java" }
++lz4java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4java" }
+ 
+ junit = { module = "junit:junit", version.ref = "junit" }
+ core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+diff --git a/lib/build.gradle.kts b/lib/build.gradle.kts
+index 7a48470..b8febb2 100644
+--- a/lib/build.gradle.kts
++++ b/lib/build.gradle.kts
+@@ -37,7 +37,6 @@ android {
+     publishing {
+         singleVariant("release") {
+             withSourcesJar()
+-            withJavadocJar()
+         }
+     }
+     testOptions {
+@@ -92,7 +91,6 @@ createJar {
+ 
+ dependencies {
+     api(libs.bouncycastle)
+-    api(libs.eddsa)
+     api(libs.web3j.crypto) {
+         exclude(module = "bcprov-jdk15on")
+     }
+@@ -105,7 +103,7 @@ publishing {
+         register<MavenPublication>("release") {
+             groupId = "jp.co.soramitsu"
+             artifactId = "xcrypto"
+-            version = "1.2.7"
++            version = "1.2.8-sora.1"
+ 
+             afterEvaluate {
+                 from(components["release"])
+diff --git a/lib/src/main/java/jp/co/soramitsu/xcrypto/encryption/ed25519/Ed25519.kt b/lib/src/main/java/jp/co/soramitsu/xcrypto/encryption/ed25519/Ed25519.kt
+index 950cec9..04b7819 100644
+--- a/lib/src/main/java/jp/co/soramitsu/xcrypto/encryption/ed25519/Ed25519.kt
++++ b/lib/src/main/java/jp/co/soramitsu/xcrypto/encryption/ed25519/Ed25519.kt
+@@ -1,76 +1,31 @@
+ package jp.co.soramitsu.xcrypto.encryption.ed25519
+ 
+-import java.security.KeyFactory
+-import java.security.Security
+-import java.security.Signature
+ import jp.co.soramitsu.xcrypto.encryption.KeypairWithSeed
+-import net.i2p.crypto.eddsa.EdDSAEngine
+-import net.i2p.crypto.eddsa.EdDSAKey
+-import net.i2p.crypto.eddsa.EdDSAPrivateKey
+-import net.i2p.crypto.eddsa.EdDSAPublicKey
+-import net.i2p.crypto.eddsa.EdDSASecurityProvider
+-import net.i2p.crypto.eddsa.spec.EdDSANamedCurveTable
+-import net.i2p.crypto.eddsa.spec.EdDSAParameterSpec
+-import net.i2p.crypto.eddsa.spec.EdDSAPrivateKeySpec
+-import net.i2p.crypto.eddsa.spec.EdDSAPublicKeySpec
++import org.bouncycastle.math.ec.rfc8032.Ed25519 as BcEd25519
+ 
++/** RFC 8032 Ed25519. Private keys retain the existing 32-byte seed representation. */
+ object Ed25519 {
+-
+-    private const val ED25519_PRIVATE_KEY_PREFIX = "302e020100300506032b657004220420"
+-    private const val ED25519_PUBLIC_KEY_PREFIX = "302a300506032b6570032100"
+-
+-    init {
+-        Security.addProvider(EdDSASecurityProvider())
+-    }
+-
+     fun deriveFromSeed(seed: ByteArray): KeypairWithSeed {
+-        val keyFac = KeyFactory.getInstance(EdDSAKey.KEY_ALGORITHM, "EdDSA")
+-        val spec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
+-        val privKeySpec = EdDSAPrivateKeySpec(seed, spec)
+-        val private = keyFac.generatePrivate(privKeySpec).encoded
+-        val publicKeySpec = EdDSAPublicKeySpec(privKeySpec.a, spec)
+-        val public = keyFac.generatePublic(publicKeySpec).encoded
+-
+-        return KeypairWithSeed(
+-            seed = seed,
+-            private.copyOfRange(
+-                ED25519_PRIVATE_KEY_PREFIX.length / 2,
+-                private.size
+-            ),
+-            public.copyOfRange(ED25519_PUBLIC_KEY_PREFIX.length / 2, public.size)
+-        )
++        require(seed.size == BcEd25519.SECRET_KEY_SIZE) { "Ed25519 seed must be 32 bytes" }
++        val publicKey = ByteArray(BcEd25519.PUBLIC_KEY_SIZE)
++        BcEd25519.generatePublicKey(seed, 0, publicKey, 0)
++        return KeypairWithSeed(seed.copyOf(), seed.copyOf(), publicKey)
+     }
+ 
+     fun sign(message: ByteArray, privateKey: ByteArray): ByteArray {
+-        val spec: EdDSAParameterSpec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
+-        val sgr: Signature = Signature.getInstance(
+-            EdDSAEngine.SIGNATURE_ALGORITHM,
+-            EdDSASecurityProvider.PROVIDER_NAME
+-        )
+-        val privKeySpec = EdDSAPrivateKeySpec(privateKey, spec)
+-        val private = EdDSAPrivateKey(privKeySpec)
+-        sgr.initSign(private)
+-        sgr.update(message)
+-
+-        return sgr.sign()
++        require(privateKey.size == BcEd25519.SECRET_KEY_SIZE) { "Ed25519 private key must be 32 bytes" }
++        val signature = ByteArray(BcEd25519.SIGNATURE_SIZE)
++        // Derive the public key internally; callers cannot inject a mismatched signing key.
++        BcEd25519.sign(privateKey, 0, message, 0, message.size, signature, 0)
++        return signature
+     }
+ 
+-    fun verify(
+-        message: ByteArray,
+-        signature: ByteArray,
+-        publicKey: ByteArray
+-    ): Boolean {
+-        val spec: EdDSAParameterSpec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
+-        val sgr: Signature = Signature.getInstance(
+-            EdDSAEngine.SIGNATURE_ALGORITHM,
+-            EdDSASecurityProvider.PROVIDER_NAME
+-        )
+-
+-        val privKeySpec = EdDSAPublicKeySpec(publicKey, spec)
+-        val public = EdDSAPublicKey(privKeySpec)
+-        sgr.initVerify(public)
+-        sgr.update(message)
+-
+-        return sgr.verify(signature)
++    fun verify(message: ByteArray, signature: ByteArray, publicKey: ByteArray): Boolean {
++        if (signature.size != BcEd25519.SIGNATURE_SIZE || publicKey.size != BcEd25519.PUBLIC_KEY_SIZE) {
++            return false
++        }
++        // Reject noncanonical/small-order public points in addition to BC's S < L check.
++        if (!BcEd25519.validatePublicKeyFull(publicKey, 0)) return false
++        return BcEd25519.verify(signature, 0, publicKey, 0, message, 0, message.size)
+     }
+ }
+diff --git a/sr25519-java/src/lib.rs b/sr25519-java/src/lib.rs
+index dcff6a7..112582d 100644
+--- a/sr25519-java/src/lib.rs
++++ b/sr25519-java/src/lib.rs
+@@ -47,7 +47,7 @@ macro_rules! r#try_or_throw {
+ 
+ macro_rules! r#try_or_throw_null {
+     ($jni_env: ident, $expr:expr) => {
+-        try_or_throw!($jni_env, $expr, ptr::null_mut());
++        try_or_throw!($jni_env, $expr, ptr::null_mut())
+     }
+ }
+ 

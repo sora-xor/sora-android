@@ -34,26 +34,24 @@ package jp.co.soramitsu.feature_referral_impl.data
 
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.util.Date
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
+import jp.co.soramitsu.feature_referral_api.data.ReferralReward
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.referralBond
 import jp.co.soramitsu.sora.substrate.substrate.referralUnbond
 import jp.co.soramitsu.sora.substrate.substrate.setReferrer
-import jp.co.soramitsu.xnetworking.lib.datasources.blockexplorer.api.models.ReferralReward
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
@@ -81,29 +79,19 @@ class ReferralRepositoryImpl @Inject constructor(
         keypair: Sr25519Keypair,
         from: String,
         referrer: String,
-        feeToken: Token
-    ): Transaction.ReferralSetReferrer {
-        val currentTime = Date().time
-        val result = extrinsicManager.submitAndWaitExtrinsic(
-            from = from,
-            keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
-        ) {
-            setReferrer(referrer)
-        }
-
-        return Transaction.ReferralSetReferrer(
-            TransactionBase(
-                result.txHash,
-                result.blockHash,
-                BigDecimal.ZERO,
-                if (result.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED,
-                currentTime
-            ),
-            who = referrer,
-            myReferrer = true,
-            token = feeToken
-        )
+        feeToken: Token,
+        activity: Sora2SubmissionActivity?,
+    ): ExtrinsicSubmitStatus = extrinsicManager.submitAndWaitExtrinsic(
+        from = from,
+        keypair = keypair,
+        // `inBlock` is not canonical finality and can be reorged. The shared
+        // extrinsic manager resolves execution events from the returned block,
+        // so referral state must wait for the finalized notification just like
+        // every other production SORA2 mutation.
+        untilStatus = SubstrateCalls.FINALIZED,
+        activity = activity,
+    ) {
+        setReferrer(referrer)
     }
 
     override suspend fun calcBondFee(
@@ -126,28 +114,17 @@ class ReferralRepositoryImpl @Inject constructor(
         amount: BigDecimal,
         token: Token,
         fee: BigDecimal,
-    ): Transaction.ReferralUnbond {
+        activity: Sora2SubmissionActivity?,
+    ): ExtrinsicSubmitStatus {
         val mapped = mapBalance(amount, token.precision)
-        val currentTime = Date().time
-        val result = extrinsicManager.submitAndWaitExtrinsic(
+        return extrinsicManager.submitAndWaitExtrinsic(
             from = from,
             keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
+            untilStatus = SubstrateCalls.FINALIZED,
+            activity = activity,
         ) {
             referralUnbond(mapped)
         }
-
-        return Transaction.ReferralUnbond(
-            TransactionBase(
-                result.txHash,
-                result.blockHash,
-                fee,
-                if (result.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED,
-                currentTime
-            ),
-            amount,
-            token
-        )
     }
 
     override suspend fun observeBond(
@@ -156,28 +133,17 @@ class ReferralRepositoryImpl @Inject constructor(
         amount: BigDecimal,
         token: Token,
         fee: BigDecimal,
-    ): Transaction.ReferralBond {
+        activity: Sora2SubmissionActivity?,
+    ): ExtrinsicSubmitStatus {
         val mapped = mapBalance(amount, token.precision)
-        val currentTime = Date().time
-        val result = extrinsicManager.submitAndWaitExtrinsic(
+        return extrinsicManager.submitAndWaitExtrinsic(
             from = from,
             keypair = keypair,
-            untilStatus = SubstrateCalls.IN_BLOCK,
+            untilStatus = SubstrateCalls.FINALIZED,
+            activity = activity,
         ) {
             referralBond(mapped)
         }
-
-        return Transaction.ReferralBond(
-            TransactionBase(
-                result.txHash,
-                result.blockHash,
-                fee,
-                if (result.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED,
-                currentTime
-            ),
-            amount,
-            token
-        )
     }
 
     override fun observerReferrals(from: String): Flow<String> = flow {

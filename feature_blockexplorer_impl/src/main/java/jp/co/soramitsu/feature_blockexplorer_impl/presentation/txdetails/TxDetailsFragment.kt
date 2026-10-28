@@ -53,6 +53,7 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.args.txHash
+import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsDemeterStake
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsLiquidity
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsReferralOrTransferScreen
@@ -97,6 +98,7 @@ class TxDetailsFragment : SoraBaseFragment<TxDetailsViewModel>() {
                             icon2 = state.icon2 ?: DEFAULT_ICON_URI,
                             onCloseClick = ::onBack,
                             onCopyClick = viewModel::onCopyClicked,
+                            onOpenExplorerClick = ::onOpenExplorerClicked,
                         )
                     }
                     TxType.DEMETER -> {
@@ -113,6 +115,7 @@ class TxDetailsFragment : SoraBaseFragment<TxDetailsViewModel>() {
                             icon3 = state.icon3 ?: DEFAULT_ICON_URI,
                             onCloseClick = ::onBack,
                             onCopyClick = viewModel::onCopyClicked,
+                            onOpenExplorerClick = ::onOpenExplorerClicked,
                         )
                     }
                     TxType.REFERRAL_TRANSFER -> {
@@ -126,6 +129,7 @@ class TxDetailsFragment : SoraBaseFragment<TxDetailsViewModel>() {
                             isAmountGreen = state.isAmountGreen,
                             onCloseClick = ::onBack,
                             onCopyClick = viewModel::onCopyClicked,
+                            onOpenExplorerClick = ::onOpenExplorerClicked,
                         )
                     }
                     TxType.SWAP -> {
@@ -140,10 +144,15 @@ class TxDetailsFragment : SoraBaseFragment<TxDetailsViewModel>() {
                             icon2 = state.icon2 ?: DEFAULT_ICON_URI,
                             onCloseClick = ::onBack,
                             onCopyClick = viewModel::onCopyClicked,
+                            onOpenExplorerClick = ::onOpenExplorerClicked,
                         )
                     }
                 }
             }
         }
+    }
+
+    private fun onOpenExplorerClicked(url: String) {
+        ShareUtil.shareInBrowser(requireContext(), url)
     }
 }

@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_wallet_impl.domain
 
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
@@ -43,6 +44,7 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.substrate.sora2TransactionOutcome
 import kotlinx.coroutines.flow.Flow
 
 class WalletInteractorImpl(
@@ -70,24 +72,48 @@ class WalletInteractorImpl(
         return needs
     }
 
-    override suspend fun migrate(): Boolean {
+    override suspend fun migrate(): TransactionOutcome? {
         val soraAccount = userRepository.getCurSoraAccount()
         val irohaData = credentialsRepository.getIrohaData(soraAccount)
+        // The claim screen can remain open while another client completes the legacy migration.
+        // Re-read the authoritative account-bound state before touching the SORA2 signing key;
+        // a stale local/fetched flag is never authority to submit a duplicate claim.
+        if (!walletRepository.needsMigration(irohaData.address)) {
+            userRepository.saveNeedsMigration(false, soraAccount)
+            return null
+        }
+        check(
+            userRepository.getCurSoraAccount().substrateAddress ==
+                soraAccount.substrateAddress
+        ) { "MIGRATION_SELECTED_WALLET_CHANGED" }
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        return walletRepository.migrate(
-            irohaData.address,
-            irohaData.publicKey,
-            irohaData.claimSignature,
-            keypair,
-            soraAccount.substrateAddress,
-        ).success
+        return try {
+            sora2TransactionOutcome {
+                walletRepository.migrate(
+                    irohaData.address,
+                    irohaData.publicKey,
+                    irohaData.claimSignature,
+                    keypair,
+                    soraAccount.substrateAddress,
+                )
+            }
+        } finally {
+            keypair.privateKey.fill(0)
+            keypair.nonce.fill(0)
+        }
     }
+
+    override suspend fun checkSubmittedClaim(txHash: String?): TransactionOutcome? =
+        walletRepository.checkSubmittedClaim(
+            walletId = userRepository.getCurSoraAccount().substrateAddress,
+            txHash = txHash,
+        )
 
     override suspend fun getContacts(query: String): List<String>? {
         val curAccount = userRepository.getCurSoraAccount().substrateAddress
         if (curAccount == query) return null
-        val contacts = transactionHistoryRepository.getContacts(query).filter {
-            it != curAccount && it != query
+        val contacts = transactionHistoryRepository.getContacts(curAccount, query).filter {
+            it != curAccount && it != query && runtimeManager.isAddressOk(it)
         }
         return buildList {
             if (runtimeManager.isAddressOk(query) && query != curAccount) {

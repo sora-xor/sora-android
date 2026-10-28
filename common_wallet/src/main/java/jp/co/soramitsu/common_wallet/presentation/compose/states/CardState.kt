@@ -40,17 +40,18 @@ import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
+import jp.co.soramitsu.common.domain.frozenTotal
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.oauth.base.sdk.contract.IbanInfo
 
 data class CardsState(
     val accountAddress: String,
-    val curAccount: String,
-    val loading: Boolean = false,
     val cards: List<CardState> = emptyList(),
+    /** Accounts listed in the app, and how many of them can sign on this phone (0: not read yet). */
+    val accountCount: Int = 0,
+    val signingAccountCount: Int = 0,
 )
 
 sealed class CardState(
@@ -72,10 +73,6 @@ data class TitledAmountCardState(
     override val loading: Boolean,
 ) : CardState(loading)
 
-class FavoriteAssetsCardState(
-    val assets: List<AssetItemCardState>
-) : AssetCardState
-
 data class AssetItemCardState(
     val tokenIcon: String,
     val tokenId: String,
@@ -84,6 +81,13 @@ data class AssetItemCardState(
     val assetAmount: String,
     val assetFiatAmount: String,
     val fiatChange: String,
+    /**
+     * What the account holds of this asset and cannot send now (reserved, bonded and locked),
+     * formatted with its symbol; null when there is nothing. [assetAmount] is the liquid part
+     * only, so an account whose XOR is all locked shows "0 XOR" there, and this says where the
+     * rest is.
+     */
+    val frozenAmount: String? = null,
 )
 
 fun mapTokensToCardState(
@@ -121,19 +125,12 @@ fun mapAssetsToCardState(
             tokenSymbol = it.token.symbol,
             assetFiatAmount = it.printFiat(nf),
             fiatChange = it.token.printFiatChange(nf),
+            frozenAmount = it.balance.frozenTotal
+                .takeIf { frozen -> frozen > BigDecimal.ZERO }
+                ?.let { frozen -> it.token.printBalance(frozen, nf, precision) },
         )
     }
 }
-
-data class SoraCardState(
-    val success: Boolean,
-    val needUpdate: Boolean,
-    val ibanBalance: IbanInfo?,
-    val kycStatus: String?,
-    override val loading: Boolean,
-) : BasicBannerCardState(loading)
-
-data class BuyXorState(val canStartGatehub: Boolean) : BasicBannerCardState(false)
 
 data object ReferralState : BasicBannerCardState(false)
 

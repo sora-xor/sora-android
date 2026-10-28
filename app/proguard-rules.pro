@@ -214,3 +214,18 @@
 -keep class com.google.api.services.drive.** {
 *;
 }
+
+# Optional JNDI/LDAP APIs referenced by crypto and HTTP libraries are not
+# available on Android.
+-dontwarn javax.naming.Binding
+-dontwarn javax.naming.InvalidNameException
+-dontwarn javax.naming.NamingEnumeration
+-dontwarn javax.naming.NamingException
+-dontwarn javax.naming.directory.Attribute
+-dontwarn javax.naming.directory.Attributes
+-dontwarn javax.naming.directory.DirContext
+-dontwarn javax.naming.directory.InitialDirContext
+-dontwarn javax.naming.directory.SearchControls
+-dontwarn javax.naming.directory.SearchResult
+-dontwarn javax.naming.ldap.LdapName
+-dontwarn javax.naming.ldap.Rdn

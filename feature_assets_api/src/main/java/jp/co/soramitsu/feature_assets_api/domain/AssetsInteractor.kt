@@ -37,12 +37,18 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import kotlinx.coroutines.flow.Flow
 
 interface AssetsInteractor {
 
-    suspend fun calcTransactionFee(to: String, token: Token, amount: BigDecimal): BigDecimal?
+    suspend fun calcTransactionFee(
+        to: String,
+        token: Token,
+        amount: BigDecimal,
+        expectedWalletId: String,
+    ): BigDecimal?
 
     suspend fun isNotEnoughXorLeftAfterTransaction(
         networkFeeInXor: BigDecimal,
@@ -71,16 +77,22 @@ interface AssetsInteractor {
         to: String,
         token: Token,
         amount: BigDecimal,
-        fee: BigDecimal
-    ): String
+        fee: BigDecimal,
+        expectedWalletId: String,
+        /** True only after the user confirmed sending the same transfer again while one waits. */
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome
 
     fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset?>
 
+    /**
+     * Observes one asset for an explicitly bound account. Presentation that combines an address
+     * with a balance must use this overload so an account switch cannot transiently pair the old
+     * address with the newly selected account's asset stream.
+     */
+    fun subscribeAssetOfAccount(soraAccount: SoraAccount, tokenId: String): Flow<Asset?>
+
     fun subscribeAssetsActiveOfCurAccount(): Flow<List<Asset>>
-
-    fun subscribeAssetsFavoriteOfAccount(soraAccount: SoraAccount): Flow<List<Asset>>
-
-    fun subscribeAssetsVisibleOfCurAccount(): Flow<List<Asset>>
 
     suspend fun toggleVisibilityOfToken(tokenId: String, visibility: Boolean)
 

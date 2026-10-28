@@ -35,82 +35,108 @@ package jp.co.soramitsu.sora.substrate.substrate
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.format.removeHexPrefix
-import jp.co.soramitsu.common.util.BuildUtils
-import jp.co.soramitsu.common.util.Flavor
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.runtime.QualifiedSora2MutationRuntime
+import jp.co.soramitsu.sora.substrate.runtime.Sora2BoundedRuntimeRpcClient
+import jp.co.soramitsu.sora.substrate.runtime.Sora2MutationRuntimeContext
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xsubstrate.encrypt.EncryptionType
 import jp.co.soramitsu.xsubstrate.encrypt.MultiChainEncryption
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.SubstrateKeypairFactory
-import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.generics.Era
 import jp.co.soramitsu.xsubstrate.runtime.extrinsic.ExtrinsicBuilder
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 
 @Singleton
 class ExtrinsicBuilderFactory @Inject constructor(
-    private val calls: SubstrateCalls,
-    private val runtimeManager: RuntimeManager,
-    private val soraConfigManager: SoraConfigManager,
+    private val runtimeRpcClient: Sora2BoundedRuntimeRpcClient,
 ) {
 
-    suspend fun create(
-        from: String
-    ): ExtrinsicBuilder {
-        return buildExtrinsic(from, generateFakeKeyPair(), runtimeManager.getRuntimeSnapshot())
-    }
+    /**
+     * Couples a signing builder to the exact immutable runtime context used to create it. The
+     * internal type and constructor keep feature modules from supplying an unrelated context when
+     * [ExtrinsicManager] creates its non-forgeable prepared envelope.
+     */
+    internal class ContextBoundExtrinsicBuilder internal constructor(
+        val builder: ExtrinsicBuilder,
+        val runtimeContext: Sora2MutationRuntimeContext,
+    )
 
-    suspend fun create(
+    internal suspend fun createForFee(
+        from: String,
+        runtimeContext: Sora2MutationRuntimeContext,
+    ): ContextBoundExtrinsicBuilder = ContextBoundExtrinsicBuilder(
+        builder = buildExtrinsic(
+            from = from,
+            keypair = generateFakeKeyPair(),
+            runtimeContext = runtimeContext,
+        ),
+        runtimeContext = runtimeContext,
+    )
+
+    /**
+     * Generic signing must make its single context fetch explicit and receive that same context
+     * back with the builder. This prevents a caller from signing with a hidden second fetch and
+     * later attaching a different identity to the prepared bytes.
+     */
+    internal suspend fun createForSigning(
         from: String,
         keypair: Sr25519Keypair,
-    ): ExtrinsicBuilder {
-        return buildExtrinsic(from, keypair, runtimeManager.getRuntimeSnapshot())
-    }
+        runtimeContext: Sora2MutationRuntimeContext,
+    ): ContextBoundExtrinsicBuilder = ContextBoundExtrinsicBuilder(
+        builder = buildExtrinsic(from, keypair, runtimeContext),
+        runtimeContext = runtimeContext,
+    )
+
+    /**
+     * The only builder entry-point family that accepts a previously qualified context. It is
+     * internal so feature code must go through ExtrinsicManager's Polkamarkt fee/preparation
+     * boundaries and cannot replace the context between runtime qualification and signing.
+     */
+    internal suspend fun createForPolkamarkt(
+        from: String,
+        runtime: QualifiedSora2MutationRuntime,
+    ): ContextBoundExtrinsicBuilder = ContextBoundExtrinsicBuilder(
+        builder = buildExtrinsic(from, generateFakeKeyPair(), runtime.context),
+        runtimeContext = runtime.context,
+    )
+
+    internal suspend fun createForPolkamarkt(
+        from: String,
+        keypair: Sr25519Keypair,
+        runtime: QualifiedSora2MutationRuntime,
+    ): ContextBoundExtrinsicBuilder = ContextBoundExtrinsicBuilder(
+        builder = buildExtrinsic(from, keypair, runtime.context),
+        runtimeContext = runtime.context,
+    )
 
     private suspend fun buildExtrinsic(
         from: String,
         keypair: Sr25519Keypair,
-        runtime: RuntimeSnapshot,
+        runtimeContext: Sora2MutationRuntimeContext,
     ): ExtrinsicBuilder {
         val fromAddress = from.toAccountId()
-        val runtimeVersion = calls.getRuntimeVersion()
-        val finalizedHash = calls.getFinalizedHead()
-        val blockHeaderFinalized = calls.getChainHeader(finalizedHash)
-        val blockHeaderLast1 = calls.getChainLastHeader()
-        val blockHeaderLast2 = calls.getChainHeader(blockHeaderLast1.parentHash)
-        val numberFinalized = blockHeaderFinalized.number.removeHexPrefix().toInt(16)
-        val numberLast = blockHeaderLast2.number.removeHexPrefix().toInt(16)
-        val (number, hash) = if (numberFinalized < numberLast &&
-            numberLast - numberFinalized < 5
-        ) numberFinalized to finalizedHash else numberLast to blockHeaderLast1.parentHash
-        val genesis = genesisBytes()
-        val nonce = calls.getNonce(from)
+        val number = runtimeContext.finalizedBlockNumber
+        check(number in 0L..Int.MAX_VALUE.toLong()) {
+            "SORA2_FINALIZED_BLOCK_NUMBER_INVALID"
+        }
+        val nonce = runtimeRpcClient.getAccountNextIndex(from)
         return ExtrinsicBuilder(
-            runtime = runtime,
+            runtime = runtimeContext.snapshot,
             keypair = keypair,
             nonce = nonce,
-            runtimeVersion = runtimeVersion,
-            genesisHash = genesis,
+            runtimeVersion = runtimeContext.runtimeVersion,
+            genesisHash = runtimeContext.genesisHash.removeHexPrefix().fromHex(),
             multiChainEncryption = MultiChainEncryption.Substrate(EncryptionType.SR25519),
             accountIdentifier = fromAddress,
-            blockHash = hash.removeHexPrefix().fromHex(),
+            blockHash = runtimeContext.finalizedHash.removeHexPrefix().fromHex(),
             era = Era.getEraFromBlockPeriod(
-                number,
+                number.toInt(),
                 SubstrateOptionsProvider.mortalEraLength
             )
         )
     }
-
-    private suspend fun genesisBytes(): ByteArray =
-        if (BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.SORALUTION)) {
-            val result = calls.getBlockHash()
-            result.removeHexPrefix().fromHex()
-        } else {
-            soraConfigManager.getGenesis().fromHex()
-        }
 
     private fun generateFakeKeyPair() = SubstrateKeypairFactory.generate(
         EncryptionType.SR25519,

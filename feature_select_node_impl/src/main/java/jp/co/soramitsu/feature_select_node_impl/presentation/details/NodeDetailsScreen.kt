@@ -53,16 +53,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import jp.co.soramitsu.common.base.ProgressDialog
 import jp.co.soramitsu.common.presentation.compose.extension.noRippleClickable
+import jp.co.soramitsu.common.presentation.compose.neon.InputText
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.feature_select_node_impl.R
-import jp.co.soramitsu.ui_core.component.button.FilledButton
-import jp.co.soramitsu.ui_core.component.button.TextButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
+import jp.co.soramitsu.common.presentation.compose.neon.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
-import jp.co.soramitsu.ui_core.component.input.InputText
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -71,7 +72,7 @@ import jp.co.soramitsu.ui_core.theme.customColors
 internal fun NodeDetailsScreen(
     viewModel: NodeDetailsViewModel
 ) {
-    val state = viewModel.state
+    val state = viewModel.state.collectAsStateWithLifecycle().value
 
     Box(
         modifier = Modifier.fillMaxSize()

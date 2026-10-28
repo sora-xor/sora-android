@@ -46,7 +46,10 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasour
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositoryImpl
+import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositorySr25519Crypto
 import jp.co.soramitsu.feature_account_impl.data.repository.datasource.PrefsUserDatasource
+import jp.co.soramitsu.common.account.Sora2AddressCodec
+import jp.co.soramitsu.common.account.SelectedAccountSigningSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -60,8 +63,26 @@ class AccountFeatureModule {
         cd: CredentialsDatasource,
         cm: CoroutineManager,
         lh: LanguagesHolder,
+        sora2AddressCodec: Sora2AddressCodec,
+        userRepositorySr25519Crypto: UserRepositorySr25519Crypto,
     ): UserRepository =
-        UserRepositoryImpl(ud, cd, db, cm, lh)
+        UserRepositoryImpl(
+            ud,
+            cd,
+            db,
+            cm,
+            lh,
+            sora2AddressCodec,
+            userRepositorySr25519Crypto,
+        )
+
+    /** The selected account's ability to sign, for every screen host (`SoraBaseFragment`). */
+    @Provides
+    @Singleton
+    fun provideSelectedAccountSigningSource(
+        userRepository: UserRepository,
+    ): SelectedAccountSigningSource =
+        SelectedAccountSigningSource { userRepository.flowSelectedAccountSigning() }
 
     @Provides
     @Singleton

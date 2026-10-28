@@ -1,0 +1,24 @@
+{
+  "coordinate": "jp.co.soramitsu:xcrypto:1.2.8-sora.2",
+  "moduleFileDigestsMatch": true,
+  "eddsaBytecodeReferences": 0,
+  "nativeLibrarySha256": {
+    "jni/arm64-v8a/libsr25519java_1.so": "ef74ddc0640a676ad3b9b2b96d066b9001f72281a471cbdefd412f79020e9a45",
+    "jni/armeabi-v7a/libsr25519java_1.so": "283adede0399003bddc2faa47786863ccf0eb8ce462c202c783e1307f4ed8ce6",
+    "jni/x86/libsr25519java_1.so": "a0a2cae4b6bc7cf25b5eea00674c96488c1735cd51206b1fbe604cc371969d6e",
+    "jni/x86_64/libsr25519java_1.so": "bcc7d06342cd10496492197daa4a47752c161ad92f4cf0b1ffc56e13e2205649"
+  },
+  "apk": {
+    "path": "app/build/outputs/apk/production/debug/SORA_Wallet_3.9.1_3090100_production_debug.apk",
+    "sha256": "c07e449416ed75b6a0597957eb7b403c4f77efb43cffc020d414c3ac78c02f56",
+    "nativeLibrariesMatchSourceBuiltAar": true,
+    "nativeLibrarySha256": {
+      "lib/arm64-v8a/libsr25519java_1.so": "ef74ddc0640a676ad3b9b2b96d066b9001f72281a471cbdefd412f79020e9a45",
+      "lib/armeabi-v7a/libsr25519java_1.so": "283adede0399003bddc2faa47786863ccf0eb8ce462c202c783e1307f4ed8ce6",
+      "lib/x86/libsr25519java_1.so": "a0a2cae4b6bc7cf25b5eea00674c96488c1735cd51206b1fbe604cc371969d6e",
+      "lib/x86_64/libsr25519java_1.so": "bcc7d06342cd10496492197daa4a47752c161ad92f4cf0b1ffc56e13e2205649"
+    },
+    "dexFileCount": 36,
+    "legacyEddsaMockkAndJupiterTypeReferences": []
+  }
+}

@@ -49,6 +49,7 @@ import java.net.SocketTimeoutException
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -56,6 +57,8 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.presentation.viewmodel.FailureNotice
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -64,6 +67,9 @@ import jp.co.soramitsu.common.util.Const.SORA_TERMS_PAGE
 import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
 import jp.co.soramitsu.common.util.ext.trimAccountNameTo32Bytes
+import jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException
+import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
+import jp.co.soramitsu.feature_account_api.domain.model.WalletRepairAvailableException
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
@@ -71,13 +77,12 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.mod
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionSelectableModel
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.xbackup.BackupService
+import jp.co.soramitsu.common.backup.CloudBackupProvider
 import jp.co.soramitsu.xbackup.domain.exceptions.AuthConsentException
 import jp.co.soramitsu.xbackup.domain.exceptions.DecodingException
 import jp.co.soramitsu.xbackup.domain.exceptions.DecryptionException
 import jp.co.soramitsu.xbackup.domain.exceptions.StorageQuotaExceeded
 import jp.co.soramitsu.xbackup.domain.exceptions.UnauthorizedException
-import jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta
 import jp.co.soramitsu.xbackup.domain.models.BackupAccountType
 import jp.co.soramitsu.xbackup.domain.models.CryptoType
 import jp.co.soramitsu.xbackup.domain.models.DecryptedBackupAccount
@@ -89,21 +94,34 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private const val MINUTE_MILLIS = 60_000L
+
+/** Characters kept from each end of an address in the list of accounts to repair. */
+private const val SHORT_ADDRESS_CHARS = 8
+
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val invitationHandler: InvitationHandler,
     private val multiaccountInteractor: MultiaccountInteractor,
     private val mainStarter: MainStarter,
     private val resourceManager: ResourceManager,
-    private val backupService: BackupService,
+    private val cloudBackupProvider: CloudBackupProvider,
     private val avatarGenerator: AccountAvatarGenerator,
     private val coroutineManager: CoroutineManager,
 ) : BaseViewModel() {
 
+    private val backupService get() = requireNotNull(cloudBackupProvider.serviceOrNull())
+
+    private fun requireCloudBackup(): Boolean {
+        if (cloudBackupProvider.isAvailable) return true
+        onError(jp.co.soramitsu.common.R.string.wallet_cloud_backup_unavailable)
+        return false
+    }
+
     private val _createAccountCardState = MutableLiveData<CreateAccountState>()
     val createAccountCardState: LiveData<CreateAccountState> = _createAccountCardState
 
-    private val _tutorialScreenState = MutableLiveData(TutorialScreenState())
+    private val _tutorialScreenState = MutableLiveData(TutorialScreenState(isGoogleBackupAvailable = cloudBackupProvider.isAvailable))
     val tutorialScreenState: LiveData<TutorialScreenState> = _tutorialScreenState
 
     private val _recoveryDialog = MutableStateFlow(false)
@@ -144,11 +162,375 @@ class OnboardingViewModel @Inject constructor(
     private val _consentExceptionHandler = SingleLiveEvent<Intent>()
     val consentExceptionHandler: LiveData<Intent> = _consentExceptionHandler
 
-    private var tempAccount: SoraAccount? = null
+    /**
+     * "Repair this account with its recovery phrase": shown when an import found keys stored for
+     * the same address that cannot be used. Nothing was written; confirming (with the PIN when
+     * one is set, or the phone's screen lock when the stored PIN cannot be read) keeps a copy of
+     * the old values and writes the ones the phrase derives.
+     */
+    data class RepairPrompt(
+        val accountExists: Boolean,
+        val pinRequired: Boolean,
+        /** What was entered is a recovery phrase (otherwise a raw seed or a backup file). */
+        val fromPhrase: Boolean = true,
+        val wrongPin: Boolean = false,
+        val working: Boolean = false,
+        /**
+         * A PIN is stored on this phone but cannot be read: the repair is confirmed with the
+         * phone's screen lock instead ([onRepairConfirmed] with `screenLockConfirmed`).
+         */
+        val screenLockRequired: Boolean = false,
+        /**
+         * The accounts of a batch backup file that will be repaired, one line each (name and
+         * short address). Empty when one account is repaired.
+         */
+        val batchAccounts: List<String> = emptyList(),
+    )
+
+    /** What the person entered to import: decides which repair call a confirmation makes. */
+    private enum class ImportKind { PHRASE, SEED, JSON }
+
+    /**
+     * Some accounts of a batch backup file were not added. Shown once, then the app continues
+     * to the wallet when at least one account was added.
+     */
+    data class BatchImportNotice(val message: String, val anyImported: Boolean)
+
+    private val _batchImportNotice = MutableStateFlow<BatchImportNotice?>(null)
+    val batchImportNotice = _batchImportNotice.asStateFlow()
+
+    fun onBatchImportNoticeDismissed(context: Context) {
+        val notice = _batchImportNotice.value ?: return
+        _batchImportNotice.value = null
+        if (notice.anyImported) mainStarter.start(context)
+    }
+
+    /** A chosen backup file could not be read as text. Nothing was changed. */
+    fun onRecoveryFileUnreadable() {
+        onError(jp.co.soramitsu.common.R.string.recovery_json_file_unreadable)
+    }
+
+    /**
+     * This phone has no app that can pick a file. Nothing was changed; the text of the backup
+     * file can be pasted into the field.
+     */
+    fun onRecoveryFilePickerUnavailable() {
+        onError(jp.co.soramitsu.common.R.string.recovery_json_no_file_picker)
+    }
+
+    private val _repairPrompt = MutableStateFlow<RepairPrompt?>(null)
+    val repairPrompt = _repairPrompt.asStateFlow()
+
+    /**
+     * "Wallets found on this phone": complete key sets that no account uses and that the PIN
+     * stored on this phone still protects (for example after "Set up this device again", or
+     * when the database was lost). Entering that PIN restores them; nothing is written, moved
+     * or deleted. Null when there is none, when no PIN is stored, or when the key sets were left
+     * by "Remove all accounts" (those need their recovery phrase).
+     */
+    data class FoundWalletsState(
+        val addresses: List<String>,
+        val wrongPin: Boolean = false,
+        val working: Boolean = false,
+    )
+
+    private val _foundWallets = MutableStateFlow<FoundWalletsState?>(null)
+    val foundWallets = _foundWallets.asStateFlow()
+
+    private val _returnToPassphraseEvent = SingleLiveEvent<Unit>()
+
+    /** The new account could not be saved: back to the screen that shows its recovery phrase. */
+    val returnToPassphraseEvent: LiveData<Unit> = _returnToPassphraseEvent
+
+    private val _restartCreateEvent = SingleLiveEvent<Unit>()
+
+    /** The wallet being created is gone (the app was restarted in between): back to the start. */
+    val restartCreateEvent: LiveData<Unit> = _restartCreateEvent
+
+    private suspend fun refreshFoundWallets() {
+        val addresses = try {
+            multiaccountInteractor.walletsRestorableWithPin()
+        } catch (error: kotlinx.coroutines.CancellationException) {
+            throw error
+        } catch (_: Throwable) {
+            // Not known right now: the option is not offered. Create and Import still work, and
+            // importing a wallet's recovery phrase adopts the keys saved for it.
+            emptyList()
+        }
+        _foundWallets.value = addresses.takeIf { it.isNotEmpty() }?.let { FoundWalletsState(it) }
+        _tutorialScreenState.value =
+            _tutorialScreenState.value?.copy(foundWalletsCount = addresses.size)
+    }
+
+    fun onFoundWalletsClicked(navController: NavController) {
+        if (_foundWallets.value == null) return
+        navController.navigate(OnboardingFeatureRoutes.FOUND_WALLETS)
+    }
+
+    /**
+     * "Restore these wallets" with the PIN the person typed. A wrong PIN is counted like on the
+     * PIN screen and changes nothing. Wallets whose stored keys cannot be proven are left as
+     * they are and named in a message.
+     */
+    fun onRestoreFoundWallets(pin: String, context: Context) {
+        val state = _foundWallets.value ?: return
+        if (state.working) return
+        _foundWallets.value = state.copy(working = true, wrongPin = false)
+        viewModelScope.launch {
+            try {
+                val result = multiaccountInteractor.restoreRetainedWallets(
+                    pin = pin,
+                    accountName = resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.safe_mode_restored_wallet_name
+                    ),
+                )
+                when {
+                    result.restored.isEmpty() -> {
+                        _foundWallets.value = state.copy(working = false)
+                        alertDialogLiveData.value = Pair(
+                            resourceManager.getString(
+                                jp.co.soramitsu.common.R.string.safe_mode_retained_title
+                            ),
+                            resourceManager.getString(
+                                jp.co.soramitsu.common.R.string.safe_mode_retained_not_restorable
+                            ),
+                        )
+                    }
+                    result.notRestorable.isNotEmpty() -> {
+                        _foundWallets.value = state.copy(working = false)
+                        // Said once, then the app continues to the wallets that were restored.
+                        _batchImportNotice.value = BatchImportNotice(
+                            message = resourceManager.getString(
+                                jp.co.soramitsu.common.R.string.onboarding_found_wallets_some_restored
+                            ).format(
+                                result.restored.size.toString(),
+                                (result.restored.size + result.notRestorable.size).toString(),
+                            ),
+                            anyImported = true,
+                        )
+                    }
+                    else -> mainStarter.start(context)
+                }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (locked: RepairPinLockedException) {
+                _foundWallets.value = state.copy(working = false)
+                val minutes = ((locked.remainingMillis + MINUTE_MILLIS - 1) / MINUTE_MILLIS)
+                    .coerceAtLeast(1)
+                alertDialogLiveData.value = Pair(
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.account_repair_pin_locked_title
+                    ),
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.onboarding_found_wallets_pin_locked
+                    ).format(minutes.toString()),
+                )
+            } catch (error: SoraException) {
+                if (error.errorResponseCode == ResponseCode.WRONG_PIN_CODE) {
+                    _foundWallets.value = state.copy(working = false, wrongPin = true)
+                } else {
+                    _foundWallets.value = state.copy(working = false)
+                    onError(error)
+                }
+            } catch (error: Throwable) {
+                _foundWallets.value = state.copy(working = false)
+                onError(error)
+            }
+        }
+    }
+
+    /** What the person entered, kept in memory only while the repair prompt is open. */
+    private class PendingRepair(
+        val input: String,
+        val accountName: String,
+        val kind: ImportKind,
+        /** The password of the backup file, for [ImportKind.JSON]. */
+        val password: String,
+        /** The address a Google backup names, when the import came from one. */
+        val expectedAddress: String?,
+        /** The accounts of a batch backup file to repair; empty for one account. */
+        val batchAddresses: List<String>,
+        val onRepaired: suspend () -> Unit,
+        /** Runs when the prompt closes without a repair (cancelled, or PIN entry locked). */
+        val onClosedWithoutRepair: () -> Unit,
+    )
+
+    private var pendingRepair: PendingRepair? = null
+
+    private fun offerRepair(
+        offer: WalletRepairAvailableException,
+        input: String,
+        accountName: String,
+        kind: ImportKind,
+        password: String = "",
+        expectedAddress: String? = null,
+        onRepaired: suspend () -> Unit,
+    ) {
+        pendingRepair = PendingRepair(
+            input = input,
+            accountName = accountName,
+            kind = kind,
+            password = password,
+            expectedAddress = expectedAddress,
+            batchAddresses = emptyList(),
+            onRepaired = onRepaired,
+            onClosedWithoutRepair = {},
+        )
+        _repairPrompt.value = RepairPrompt(
+            accountExists = offer.accountExists,
+            pinRequired = offer.pinRequired,
+            fromPhrase = kind == ImportKind.PHRASE,
+            screenLockRequired = offer.screenLockRequired,
+        )
+    }
+
+    /**
+     * A batch backup file holds accounts whose stored keys on this phone cannot be used. The
+     * same file repairs them after one confirmation that names them. Closing the prompt without
+     * confirming changes nothing for them and says how many accounts were added.
+     */
+    private fun offerBatchRepair(
+        result: MultiaccountInteractor.JsonImportResult,
+        json: String,
+        password: String,
+        accountName: String,
+        context: Context,
+    ) {
+        pendingRepair = PendingRepair(
+            input = json,
+            accountName = accountName,
+            kind = ImportKind.JSON,
+            password = password,
+            expectedAddress = null,
+            batchAddresses = result.needRepair.map { it.address },
+            onRepaired = { mainStarter.start(context) },
+            onClosedWithoutRepair = {
+                _batchImportNotice.value = BatchImportNotice(
+                    message = resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.json_backup_batch_skipped
+                    ).format(
+                        result.imported.size.toString(),
+                        result.needRepair.size.toString(),
+                    ),
+                    anyImported = result.imported.isNotEmpty(),
+                )
+            },
+        )
+        _repairPrompt.value = RepairPrompt(
+            accountExists = result.needRepair.all { it.accountExists },
+            pinRequired = result.repairPinRequired,
+            fromPhrase = false,
+            screenLockRequired = result.repairScreenLockRequired,
+            batchAccounts = result.needRepair.map { candidate ->
+                val address = candidate.address
+                val short = if (address.length <= SHORT_ADDRESS_CHARS * 2) {
+                    address
+                } else {
+                    "${address.take(SHORT_ADDRESS_CHARS)}…${address.takeLast(SHORT_ADDRESS_CHARS)}"
+                }
+                if (candidate.name.isBlank()) short else "${candidate.name} ($short)"
+            },
+        )
+    }
+
+    private fun closeRepairPrompt(): PendingRepair? {
+        val pending = pendingRepair
+        pendingRepair = null
+        _repairPrompt.value = null
+        return pending
+    }
+
+    fun onRepairDismissed() {
+        if (_repairPrompt.value?.working == true) return
+        closeRepairPrompt()?.onClosedWithoutRepair?.invoke()
+    }
+
+    /**
+     * The person confirmed the repair. [pin] is what they typed when a PIN is asked for.
+     * [screenLockConfirmed] is true only when the phone's screen lock was just confirmed (the
+     * way a repair is confirmed when the stored PIN cannot be read).
+     */
+    fun onRepairConfirmed(pin: String, screenLockConfirmed: Boolean = false) {
+        val prompt = _repairPrompt.value ?: return
+        val pending = pendingRepair ?: return
+        if (prompt.working) return
+        _repairPrompt.value = prompt.copy(working = true, wrongPin = false)
+        viewModelScope.launch {
+            try {
+                when {
+                    pending.batchAddresses.isNotEmpty() -> multiaccountInteractor.repairFromJsonBatch(
+                        json = pending.input,
+                        password = pending.password,
+                        accountName = pending.accountName,
+                        pin = pin,
+                        addresses = pending.batchAddresses,
+                        screenLockConfirmed = screenLockConfirmed,
+                    )
+                    pending.kind == ImportKind.PHRASE -> multiaccountInteractor.repairFromMnemonic(
+                        pending.input,
+                        pending.accountName,
+                        pin,
+                        screenLockConfirmed,
+                    )
+                    pending.kind == ImportKind.SEED -> multiaccountInteractor.repairFromRawSeed(
+                        pending.input,
+                        pending.accountName,
+                        pin,
+                        screenLockConfirmed,
+                    )
+                    else -> multiaccountInteractor.repairFromJson(
+                        json = pending.input,
+                        password = pending.password,
+                        accountName = pending.accountName,
+                        pin = pin,
+                        expectedAddress = pending.expectedAddress,
+                        screenLockConfirmed = screenLockConfirmed,
+                    )
+                }
+                closeRepairPrompt()
+                pending.onRepaired()
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (locked: RepairPinLockedException) {
+                // Too many wrong PINs: PIN entry is locked here and on the PIN screen. Nothing
+                // was changed, and the import can be started again once the lock is over.
+                closeRepairPrompt()
+                val minutes = ((locked.remainingMillis + MINUTE_MILLIS - 1) / MINUTE_MILLIS)
+                    .coerceAtLeast(1)
+                alertDialogLiveData.value = Pair(
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.account_repair_pin_locked_title
+                    ),
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.account_repair_pin_locked
+                    ).format(minutes.toString()),
+                )
+                pending.onClosedWithoutRepair()
+            } catch (error: SoraException) {
+                if (error.errorResponseCode == ResponseCode.WRONG_PIN_CODE) {
+                    _repairPrompt.value = prompt.copy(working = false, wrongPin = true)
+                } else {
+                    // The error says what happened. Nothing more is claimed here: the import
+                    // can be started again, and it reports each account as it then is.
+                    closeRepairPrompt()
+                    onError(error)
+                }
+            } catch (error: Throwable) {
+                closeRepairPrompt()
+                onError(SoraException.unexpectedError(error))
+            }
+        }
+    }
+
+    /**
+     * The wallet being created. It lives in memory only until the person finishes the flow, so
+     * backing out at any step leaves no key material on the device.
+     */
+    private var tempDraft: WalletDraft? = null
 
     private var isFromGoogleDrive = false
 
-    private var recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromMnemonic
+    private var recoverSoraAccountMethod = multiaccountInteractor::importFromMnemonic
     private var isValidMethod = multiaccountInteractor::isMnemonicValid
     private var errorMessageCode = ResponseCode.MNEMONIC_IS_NOT_VALID
 
@@ -189,6 +571,8 @@ class OnboardingViewModel @Inject constructor(
                 label = resourceManager.getString(R.string.personal_info_username_v1)
             )
         )
+
+        viewModelScope.launch { refreshFoundWallets() }
     }
 
     fun startedWithInviteAction() {
@@ -298,48 +682,143 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The text of a chosen backup file. It is kept here and not in the text field: a file can be
+     * a hundred kilobytes, which a text field cannot lay out, and it would push the password
+     * field and the button off the screen.
+     */
+    private var chosenFileText: String? = null
+
+    /** Whether the entered text (or the chosen file) is valid input; checked when it changes. */
+    private var recoveryInputValid = false
+    private var recoveryInputGeneration = 0L
+
+    /** What will be imported: the chosen file, or what is typed in the field. */
+    private fun recoveryInput(state: RecoveryState): String =
+        chosenFileText ?: state.recoveryInputState.value.text
+
     fun onRecoveryInputChanged(textFieldValue: TextFieldValue) {
+        val generation = ++recoveryInputGeneration
         viewModelScope.launch {
-            _recoveryState.value?.let {
-                _recoveryState.value = it.copy(
-                    recoveryInputState = it.recoveryInputState.copy(
-                        value = textFieldValue,
-                    ),
-                    isButtonEnabled = isValidMethod(textFieldValue.text)
+            _recoveryState.value?.let { state ->
+                val textChanged = textFieldValue.text != state.recoveryInputState.value.text
+                val valid = if (textChanged || chosenFileText == null) isValidMethod(textFieldValue.text) else recoveryInputValid
+                // An older validation must not put phrase text back into a newly selected source.
+                if (generation != recoveryInputGeneration) return@launch
+                if (textChanged) chosenFileText = null
+                recoveryInputValid = valid
+                val current = _recoveryState.value ?: return@launch
+                _recoveryState.value = current.copy(
+                    recoveryInputState = current.recoveryInputState.copy(value = textFieldValue),
+                    chosenFileName = current.chosenFileName.takeIf { chosenFileText != null },
+                    isButtonEnabled = valid &&
+                        (current.recoveryType != RecoveryType.JSON || current.passwordInputState.value.text.isNotEmpty())
                 )
             }
+        }
+    }
+
+    /** The password of the backup file ([RecoveryType.JSON]). */
+    fun onRecoveryPasswordChanged(textFieldValue: TextFieldValue) {
+        _recoveryState.value?.let {
+            // The file text is not parsed again for every character of the password.
+            _recoveryState.value = it.copy(
+                passwordInputState = it.passwordInputState.copy(value = textFieldValue),
+                isButtonEnabled = textFieldValue.text.isNotEmpty() && recoveryInputValid
+            )
+        }
+    }
+
+    /**
+     * A backup file the person chose. It is accepted only when it has the shape of an encrypted
+     * account backup; anything else (a wrong file) is refused here and never shown or parsed
+     * further. The screen shows the file's name, not its text.
+     */
+    fun onRecoveryFileChosen(text: String, fileName: String = "") {
+        val generation = ++recoveryInputGeneration
+        viewModelScope.launch {
+            val state = _recoveryState.value ?: return@launch
+            if (state.recoveryType != RecoveryType.JSON) return@launch
+            val valid = multiaccountInteractor.isJsonBackupValid(text)
+            if (generation != recoveryInputGeneration) return@launch
+            if (!valid) {
+                onRecoveryFileUnreadable()
+                return@launch
+            }
+            chosenFileText = text
+            recoveryInputValid = true
+            val current = _recoveryState.value ?: return@launch
+            _recoveryState.value = current.copy(
+                recoveryInputState = current.recoveryInputState.copy(value = TextFieldValue("")),
+                chosenFileName = fileName.ifBlank {
+                    resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.recovery_json_file_unnamed
+                    )
+                },
+                isButtonEnabled = current.passwordInputState.value.text.isNotEmpty(),
+            )
         }
     }
 
     fun recoveryNextClicked(navController: NavController, context: Context) {
         _recoveryState.value?.let { recoveryCardState ->
             _recoveryAccountNameCardState.value?.let { recoverAccountNameState ->
+                if (recoverAccountNameState.loading) return
+                val input = recoveryInput(recoveryCardState)
+                val accountName = recoverAccountNameState.accountNameInputState.value.text
+                val password = recoveryCardState.passwordInputState.value.text
                 viewModelScope.launch {
+                    // Deriving keys and opening a backup file take a moment (they run off the
+                    // main thread): the button shows that the app is working.
                     _recoveryAccountNameCardState.value = recoverAccountNameState.copy(
                         btnEnabled = false,
+                        loading = true,
                     )
                     try {
-                        val valid = isValidMethod(recoveryCardState.recoveryInputState.value.text)
+                        val valid = recoveryInputValid || isValidMethod(input)
 
-                        if (valid) {
-                            val soraAccount = recoverSoraAccountMethod(
-                                recoveryCardState.recoveryInputState.value.text,
-                                recoverAccountNameState.accountNameInputState.value.text
-                            )
-                            multiaccountInteractor.continueRecoverFlow(
-                                soraAccount,
-                            )
-                            mainStarter.start(context)
-                        } else {
+                        if (!valid) {
                             throw SoraException.businessError(errorMessageCode)
                         }
+                        if (recoveryCardState.recoveryType == RecoveryType.JSON) {
+                            // Stores the keys of the file's account (or accounts) and adds them.
+                            val result = multiaccountInteractor.importFromJson(
+                                json = input,
+                                password = password,
+                                accountName = accountName,
+                            )
+                            if (result.needRepair.isNotEmpty()) {
+                                offerBatchRepair(result, input, password, accountName, context)
+                            } else {
+                                mainStarter.start(context)
+                            }
+                        } else {
+                            // Stores the keys and adds the account in one step.
+                            recoverSoraAccountMethod(input, accountName)
+                            mainStarter.start(context)
+                        }
+                    } catch (offer: WalletRepairAvailableException) {
+                        offerRepair(
+                            offer = offer,
+                            input = input,
+                            accountName = accountName,
+                            kind = when (recoveryCardState.recoveryType) {
+                                RecoveryType.PASSPHRASE -> ImportKind.PHRASE
+                                RecoveryType.SEED -> ImportKind.SEED
+                                RecoveryType.JSON -> ImportKind.JSON
+                            },
+                            password = password,
+                            onRepaired = { mainStarter.start(context) },
+                        )
                     } catch (t: Throwable) {
                         navController.popBackStack()
                         onError(t)
                     } finally {
-                        _recoveryAccountNameCardState.value = recoverAccountNameState.copy(
-                            btnEnabled = true,
-                        )
+                        _recoveryAccountNameCardState.value =
+                            (_recoveryAccountNameCardState.value ?: recoverAccountNameState).copy(
+                                btnEnabled = true,
+                                loading = false,
+                            )
                     }
                 }
             }
@@ -359,13 +838,14 @@ class OnboardingViewModel @Inject constructor(
         launcher: ActivityResultLauncher<Intent>
     ) {
         _recoveryDialog.value = false
+        if (!requireCloudBackup()) return
         _tutorialScreenState.value?.let {
             _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
             viewModelScope.launch {
                 try {
                     backupService.logout()
                     if (backupService.authorize(launcher)) {
-                        onSuccessfulGoogleSignin(navController)
+                        loadGoogleBackups(navController)
                     } else {
                         _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
                     }
@@ -375,6 +855,14 @@ class OnboardingViewModel @Inject constructor(
                 } catch (e: SocketTimeoutException) {
                     _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
                     onError(SoraException.networkError(resourceManager, e))
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: AuthConsentException) {
+                    _consentExceptionHandler.value = e.intent
+                } catch (e: Exception) {
+                    onError(R.string.wallet_cloud_backup_failed)
+                } finally {
+                    _tutorialScreenState.value = _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
                 }
             }
         }
@@ -398,12 +886,17 @@ class OnboardingViewModel @Inject constructor(
                             OnboardingFeatureRoutes.RECOVERY -> when (_recoveryState.value?.recoveryType) {
                                 RecoveryType.PASSPHRASE -> R.string.onboarding_enter_passphrase
                                 RecoveryType.SEED -> R.string.onboarding_enter_seed
+                                RecoveryType.JSON ->
+                                    jp.co.soramitsu.common.R.string.onboarding_enter_json
                                 else -> R.string.onboarding_enter_passphrase
                             }
 
                             OnboardingFeatureRoutes.TERMS_AND_PRIVACY ->
                                 _termsAndPrivacyState.value?.title
                                     ?: R.string.common_terms_title
+
+                            OnboardingFeatureRoutes.FOUND_WALLETS ->
+                                jp.co.soramitsu.common.R.string.safe_mode_retained_title
 
                             else -> R.string.tutorial_many_world
                         }
@@ -429,21 +922,53 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onCreateAccountContinueClicked(navController: NavController) {
-        navController.navigate(OnboardingFeatureRoutes.DISCLAIMER)
-
+        val state = _createAccountCardState.value ?: return
+        if (state.loading) return
+        _createAccountCardState.value = state.copy(btnEnabled = false, loading = true)
         viewModelScope.launch {
-            _createAccountCardState.value?.let {
-                val accountName = it.accountNameInputState.value.text
-                val soraAccount = multiaccountInteractor.generateUserCredentials(accountName)
-                val mnemonic = multiaccountInteractor.getMnemonic(soraAccount)
-                tempAccount = soraAccount
+            val draft = try {
+                // Nothing is stored yet: the keys are written only when the flow finishes.
+                multiaccountInteractor.createDraft(state.accountNameInputState.value.text)
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                // A new wallet cannot be prepared right now (for example while wallet changes
+                // are off). Nothing was created or stored; the person stays on this screen and
+                // is told, instead of the app closing.
+                reportCreateRefused(error)
+                null
+            } finally {
+                _createAccountCardState.value =
+                    (_createAccountCardState.value ?: state).copy(btnEnabled = true, loading = false)
+            }
+            if (draft != null) {
+                tempDraft?.destroy()
+                tempDraft = draft
                 _passphraseCardState.value = BackupScreenState(
-                    mnemonicWords = mnemonic.split(" "),
+                    mnemonicWords = draft.mnemonicWords,
                     isCreatingFlow = true,
                     isViaGoogleDrive = isFromGoogleDrive
                 )
+                // The warning names the number of words this wallet's phrase really has.
+                _disclaimerCardState.value = _disclaimerCardState.value?.copy(
+                    descriptionText = resourceManager.getString(
+                        jp.co.soramitsu.common.R.string.export_protection_passphrase_description_words
+                    ).format(draft.mnemonicWords.size.toString()),
+                )
+                navController.navigate(OnboardingFeatureRoutes.DISCLAIMER)
             }
         }
+    }
+
+    private fun reportCreateRefused(error: Throwable) {
+        FirebaseWrapper.recordException(error)
+        val message = if (FailureNotice.of(error) == FailureNotice.WALLET_READ_ONLY) {
+            jp.co.soramitsu.common.R.string.create_account_unavailable_read_only
+        } else {
+            jp.co.soramitsu.common.R.string.create_account_unavailable
+        }
+        errorFromResourceLiveData.value =
+            jp.co.soramitsu.common.R.string.create_account_unavailable_title to message
     }
 
     fun onPassphraseContinueClicked(navController: NavController) {
@@ -497,12 +1022,20 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    fun onRecoveryClicked(navController: NavController, index: Int) {
+    /**
+     * Opens the screen where a recovery phrase (1), raw seed (2) or backup file (3) is entered.
+     * With [asFirstScreen] it replaces the welcome screen: Import account was opened to restore
+     * the keys of an account that is already listed, and Back returns to that account.
+     */
+    fun onRecoveryClicked(navController: NavController, index: Int, asFirstScreen: Boolean = false) {
         _recoveryDialog.value = false
+        recoveryInputGeneration++
+        chosenFileText = null
+        recoveryInputValid = false
         _recoveryState.value = when (index) {
             1 -> {
                 isValidMethod = multiaccountInteractor::isMnemonicValid
-                recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromMnemonic
+                recoverSoraAccountMethod = multiaccountInteractor::importFromMnemonic
                 errorMessageCode = ResponseCode.MNEMONIC_IS_NOT_VALID
 
                 RecoveryState(
@@ -516,7 +1049,7 @@ class OnboardingViewModel @Inject constructor(
 
             2 -> {
                 isValidMethod = multiaccountInteractor::isRawSeedValid
-                recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromRawSeed
+                recoverSoraAccountMethod = multiaccountInteractor::importFromRawSeed
                 errorMessageCode = ResponseCode.RAW_SEED_IS_NOT_VALID
 
                 RecoveryState(
@@ -528,69 +1061,136 @@ class OnboardingViewModel @Inject constructor(
                 )
             }
 
+            3 -> {
+                isValidMethod = multiaccountInteractor::isJsonBackupValid
+                errorMessageCode = ResponseCode.JSON_BACKUP_INVALID
+
+                RecoveryState(
+                    title = jp.co.soramitsu.common.R.string.recovery_enter_json_title,
+                    recoveryType = RecoveryType.JSON,
+                    recoveryInputState = InputTextState(
+                        label = resourceManager.getString(
+                            jp.co.soramitsu.common.R.string.recovery_json_input_label
+                        )
+                    ),
+                    passwordInputState = InputTextState(
+                        label = resourceManager.getString(
+                            jp.co.soramitsu.common.R.string.recovery_json_password_label
+                        )
+                    ),
+                )
+            }
+
             else -> null
         }
 
-        navController.navigate(OnboardingFeatureRoutes.RECOVERY)
+        navController.navigate(OnboardingFeatureRoutes.RECOVERY) {
+            launchSingleTop = true
+            if (asFirstScreen) {
+                popUpTo(OnboardingFeatureRoutes.TUTORIAL) { inclusive = true }
+            }
+        }
     }
 
     private fun finishCreateAccountProcess(context: Context) {
         viewModelScope.launch {
-            multiaccountInteractor.createUser(
-                soraAccount = requireNotNull(
-                    tempAccount
-                ),
-            )
-            multiaccountInteractor.saveRegistrationStateFinished()
-
-            mainStarter.start(context)
+            val draft = tempDraft
+            if (draft == null) {
+                // The wallet that was being created is gone (the app was restarted in between).
+                // Nothing was stored for it: say so and start again from the first screen.
+                _createBackupPasswordState.value =
+                    _createBackupPasswordState.value?.copy(isLoading = false)
+                errorFromResourceLiveData.value =
+                    jp.co.soramitsu.common.R.string.create_account_unavailable_title to
+                    jp.co.soramitsu.common.R.string.create_account_interrupted
+                _restartCreateEvent.trigger()
+                return@launch
+            }
+            try {
+                // Stores the keys and adds the account in one step, only now that the person
+                // has finished the flow.
+                multiaccountInteractor.createUserFromDraft(draft)
+                tempDraft?.destroy()
+                tempDraft = null
+                mainStarter.start(context)
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                // The account was not saved (a busy Keystore, a full disk). The wallet is still
+                // held in memory and its phrase is still on the phrase screen: the person is
+                // taken back there, told what happened, and Continue tries again.
+                FirebaseWrapper.recordException(error)
+                _createBackupPasswordState.value =
+                    _createBackupPasswordState.value?.copy(isLoading = false)
+                _passphraseConfirmationState.value =
+                    _passphraseConfirmationState.value?.copy(confirmationStep = 0)
+                _returnToPassphraseEvent.trigger()
+                errorFromResourceLiveData.value =
+                    jp.co.soramitsu.common.R.string.create_account_not_saved_title to
+                    jp.co.soramitsu.common.R.string.create_account_not_saved
+            }
         }
     }
 
     fun onSuccessfulGoogleSignin(navController: NavController) {
-        _tutorialScreenState.value =
-            _tutorialScreenState.value?.copy(isGoogleSigninLoading = true)
+        if (!requireCloudBackup()) return
+        viewModelScope.launch { loadGoogleBackups(navController) }
+    }
 
-        viewModelScope.launch {
-            try {
-                isFromGoogleDrive = true
+    private suspend fun loadGoogleBackups(navController: NavController) {
+        _tutorialScreenState.value = _tutorialScreenState.value?.copy(isGoogleSigninLoading = true)
+        try {
+            isFromGoogleDrive = true
 
-                if (navController.currentDestination?.route == OnboardingFeatureRoutes.PASSPHRASE) {
-                    navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
-                } else {
-                    val result = getBackupedAccountsFiltered()
+            if (navController.currentDestination?.route == OnboardingFeatureRoutes.PASSPHRASE) {
+                navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
+            } else {
+                val backups = googleBackups()
 
-                    _tutorialScreenState.value =
-                        _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
+                _tutorialScreenState.value =
+                    _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
 
-                    if (result.isEmpty()) {
-                        navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
-                    } else {
-                        _importAccountListState.value = ImportAccountListScreenState(
-                            accountList = result.map {
-                                BackupAccountMetaWithIcon(
-                                    it,
-                                    getDrawableFromGoogleBackup(it.address),
-                                )
-                            }
-                        )
+                when {
+                    backups.restorable.isNotEmpty() -> {
+                        _importAccountListState.value =
+                            ImportAccountListScreenState(backups.restorable)
                         navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
                     }
-                }
-            } catch (e: UnauthorizedException) {
-                _tutorialScreenState.value =
-                    _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
 
-                onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
-            } catch (e: SocketException) {
-                onError(SoraException.networkError(resourceManager, e))
-            } catch (e: SocketTimeoutException) {
-                onError(SoraException.networkError(resourceManager, e))
-            } catch (e: AuthConsentException) {
-                _tutorialScreenState.value =
-                    _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
-                _consentExceptionHandler.value = e.intent
+                    backups.allUsableHere -> {
+                        // The Drive holds backups, and each one is of an account that already
+                        // works on this phone. Opening Create account here would look as if no
+                        // backup had been found, so the screen stays and says what was found.
+                        isFromGoogleDrive = false
+                        errorFromResourceLiveData.setValue(
+                            jp.co.soramitsu.common.R.string.google_backups_all_here_title to
+                                jp.co.soramitsu.common.R.string.google_backups_all_here
+                        )
+                    }
+
+                    // No backup in this Google account: a new wallet that is backed up there.
+                    else -> navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
+                }
             }
+        } catch (e: UnauthorizedException) {
+            _tutorialScreenState.value =
+                _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
+
+            onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
+        } catch (e: SocketException) {
+            onError(SoraException.networkError(resourceManager, e))
+        } catch (e: SocketTimeoutException) {
+            onError(SoraException.networkError(resourceManager, e))
+        } catch (e: AuthConsentException) {
+            _tutorialScreenState.value =
+                _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
+            _consentExceptionHandler.value = e.intent
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            onError(R.string.wallet_cloud_backup_failed)
+        } finally {
+            _tutorialScreenState.value = _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
         }
     }
 
@@ -602,14 +1202,15 @@ class OnboardingViewModel @Inject constructor(
     fun onSetBackupPasswordClicked(
         activity: Activity
     ) {
+        if (!requireCloudBackup()) return
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
             viewModelScope.launch(coroutineManager.io) {
                 try {
                     _passphraseCardState.value?.let { passphraseCardState ->
-                        tempAccount?.let {
-                            val jsonString = multiaccountInteractor.generateSubstrateJsonString(
-                                listOf(it),
+                        tempDraft?.let { draft ->
+                            val jsonString = multiaccountInteractor.generateDraftJson(
+                                draft,
                                 createBackupPasswordState.password.value.text
                             )
 
@@ -623,8 +1224,8 @@ class OnboardingViewModel @Inject constructor(
 
                             backupService.saveBackupAccount(
                                 DecryptedBackupAccount(
-                                    name = it.accountName,
-                                    address = it.substrateAddress,
+                                    name = draft.accountName,
+                                    address = draft.address,
                                     mnemonicPhrase = passphrase,
                                     cryptoType = CryptoType.SR25519,
                                     backupAccountType = listOf(
@@ -723,9 +1324,9 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onImportContinueClicked(navController: NavController) {
+        if (!requireCloudBackup()) return
         _importAccountPasswordState.value?.let { state ->
             _importAccountPasswordState.value = state.copy(isLoading = true)
-            var isImportMoreAvailable = false
             viewModelScope.launch {
                 state.selectedAccount?.let {
                     try {
@@ -736,27 +1337,54 @@ class OnboardingViewModel @Inject constructor(
                             )
                         }
 
-                        val soraAccount: SoraAccount =
-                            recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount)
+                        val showImported: suspend () -> Unit = {
+                            // Whether other backups remain is known before the success screen
+                            // opens, also when it opens after a confirmed repair.
+                            val more = try {
+                                getBackupedAccountsFiltered().isNotEmpty()
+                            } catch (error: kotlinx.coroutines.CancellationException) {
+                                throw error
+                            } catch (_: Exception) {
+                                // The list could not be loaded just now; the account itself
+                                // was restored.
+                                false
+                            }
+                            _importAccountPasswordState.value =
+                                (_importAccountPasswordState.value ?: state).copy(
+                                    isImportMoreAvailable = more,
+                                    isLoading = false,
+                                )
+                            navController.navigate(
+                                route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
+                                navOptions = NavOptions.Builder()
+                                    .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
+                                    .build()
+                            )
+                        }
+                        // Stores the keys and adds the account in one step.
+                        val backupPassword = state.passwordInput.value.text
+                        try {
+                            recoverSoraAccountFromDecryptedBackupAccount(
+                                decryptedBackupAccount,
+                                backupPassword,
+                            )
+                        } catch (offer: WalletRepairAvailableException) {
+                            offerRepairFromBackup(
+                                offer,
+                                decryptedBackupAccount,
+                                backupPassword,
+                                showImported,
+                            )
+                            return@let
+                        }
 
-                        multiaccountInteractor.continueRecoverFlow(
-                            soraAccount,
-                        )
-
-                        isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()
-
-                        navController.navigate(
-                            route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
-                            navOptions = NavOptions.Builder()
-                                .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
-                                .build()
-                        )
+                        showImported()
                     } catch (e: DecryptionException) {
                         onError(SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED))
                     } catch (e: DecodingException) {
                         onError(SoraException.businessError(ResponseCode.GENERAL_ERROR))
                     } catch (e: SoraException) {
-                        onError(e)
+                        onError(asGoogleBackupError(e))
                     } catch (e: IllegalArgumentException) {
                         onError(SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED))
                     } catch (e: SocketException) {
@@ -767,40 +1395,107 @@ class OnboardingViewModel @Inject constructor(
                         _consentExceptionHandler.value = e.intent
                     }
                 }
+                // The success screen's state (import more) was set by showImported; only the
+                // loading mark is cleared here.
                 _importAccountPasswordState.value =
-                    state.copy(isImportMoreAvailable = isImportMoreAvailable, isLoading = false)
+                    (_importAccountPasswordState.value ?: state).copy(isLoading = false)
             }
         }
     }
 
-    private suspend fun recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount: DecryptedBackupAccount): SoraAccount {
-        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSPHRASE)) {
-            decryptedBackupAccount.mnemonicPhrase?.let { passphrase ->
-                val isValid = multiaccountInteractor.isMnemonicValid(passphrase)
-
-                if (isValid) {
-                    return multiaccountInteractor.recoverSoraAccountFromMnemonic(
-                        passphrase,
-                        decryptedBackupAccount.name
-                    )
-                }
-            }
+    /**
+     * A Google backup that holds only the encrypted JSON is opened with the backup password by
+     * the JSON import itself, so a wrong password or an unusable backup arrives with the codes
+     * of a backup file. Their texts speak of a file the person chose and exported; on this
+     * screen the person typed the password of a Google backup, and the message says that.
+     */
+    private fun asGoogleBackupError(error: SoraException): SoraException =
+        when (error.errorResponseCode) {
+            ResponseCode.JSON_BACKUP_WRONG_PASSWORD ->
+                SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED)
+            ResponseCode.JSON_BACKUP_INVALID ->
+                SoraException.businessError(ResponseCode.GOOGLE_BACKUP_UNREADABLE)
+            else -> error
         }
 
-        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.SEED)) {
-            decryptedBackupAccount.seed?.substrateSeed?.let { rawSeed ->
-                val isValid = multiaccountInteractor.isRawSeedValid(rawSeed)
+    /**
+     * The form of the wallet in a Google backup that is restored: the one that derives the
+     * account the backup names. A backup holds up to three forms (phrase, raw seed, encrypted
+     * JSON); an old backup can hold a phrase or seed that is not this account's, and a wallet
+     * that is only a key pair is backed up as JSON alone.
+     */
+    private class BackupSecret(val kind: ImportKind, val input: String)
 
-                if (isValid) {
-                    return multiaccountInteractor.recoverSoraAccountFromRawSeed(
-                        rawSeed,
-                        decryptedBackupAccount.name
-                    )
-                }
-            }
+    private suspend fun backupSecret(backup: DecryptedBackupAccount): BackupSecret? {
+        val phrase = backup.mnemonicPhrase
+            ?.takeIf { backup.backupAccountType.contains(BackupAccountType.PASSPHRASE) }
+            ?.takeIf { multiaccountInteractor.isMnemonicValid(it) }
+        val seed = backup.seed?.substrateSeed
+            ?.takeIf { backup.backupAccountType.contains(BackupAccountType.SEED) }
+            ?.takeIf { multiaccountInteractor.isRawSeedValid(it) }
+        val json = backup.json?.substrateJson
+            ?.takeIf { backup.backupAccountType.contains(BackupAccountType.JSON) }
+            ?.takeIf { multiaccountInteractor.isJsonBackupValid(it) }
+        // First choice: the form that restores exactly the account the backup names.
+        if (phrase != null && multiaccountInteractor.addressOfMnemonic(phrase) == backup.address) {
+            return BackupSecret(ImportKind.PHRASE, phrase)
         }
+        if (seed != null && multiaccountInteractor.addressOfRawSeed(seed) == backup.address) {
+            return BackupSecret(ImportKind.SEED, seed)
+        }
+        if (json != null) return BackupSecret(ImportKind.JSON, json)
+        // A backup whose address is written another way: the order every release used.
+        return when {
+            phrase != null -> BackupSecret(ImportKind.PHRASE, phrase)
+            seed != null -> BackupSecret(ImportKind.SEED, seed)
+            else -> null
+        }
+    }
 
-        throw SoraException.businessError(ResponseCode.GENERAL_ERROR)
+    /** The JSON in a backup names its own account; anything else in the file is not imported. */
+    private fun expectedJsonAddress(backup: DecryptedBackupAccount): String? =
+        backup.address.takeIf { multiaccountInteractor.isAddressValid(it) }
+
+    /** The same choice of secret as [recoverSoraAccountFromDecryptedBackupAccount]. */
+    private suspend fun offerRepairFromBackup(
+        offer: WalletRepairAvailableException,
+        decryptedBackupAccount: DecryptedBackupAccount,
+        backupPassword: String,
+        onRepaired: suspend () -> Unit,
+    ) {
+        val secret = backupSecret(decryptedBackupAccount)
+        offerRepair(
+            offer = offer,
+            input = secret?.input.orEmpty(),
+            accountName = decryptedBackupAccount.name,
+            kind = secret?.kind ?: ImportKind.PHRASE,
+            password = backupPassword,
+            expectedAddress = expectedJsonAddress(decryptedBackupAccount),
+            onRepaired = onRepaired,
+        )
+    }
+
+    private suspend fun recoverSoraAccountFromDecryptedBackupAccount(
+        decryptedBackupAccount: DecryptedBackupAccount,
+        backupPassword: String,
+    ): SoraAccount {
+        // A backup that holds no valid phrase, seed or JSON cannot restore anything: said in
+        // Google backup words, with the way forward, not as "Something went wrong".
+        val secret = backupSecret(decryptedBackupAccount)
+            ?: throw SoraException.businessError(ResponseCode.GOOGLE_BACKUP_UNREADABLE)
+        return when (secret.kind) {
+            ImportKind.PHRASE ->
+                multiaccountInteractor.importFromMnemonic(secret.input, decryptedBackupAccount.name)
+            ImportKind.SEED ->
+                multiaccountInteractor.importFromRawSeed(secret.input, decryptedBackupAccount.name)
+            // The JSON of a Google backup is encrypted with the backup password itself.
+            ImportKind.JSON -> multiaccountInteractor.importFromJson(
+                json = secret.input,
+                password = backupPassword,
+                accountName = decryptedBackupAccount.name,
+                expectedAddress = expectedJsonAddress(decryptedBackupAccount),
+            ).imported.single()
+        }
     }
 
     fun onImportFinished(context: Context) {
@@ -812,15 +1507,8 @@ class OnboardingViewModel @Inject constructor(
             try {
                 _importAccountPasswordState.value =
                     _importAccountPasswordState.value?.copy(isLoading = true)
-                _importAccountListState.value = ImportAccountListScreenState(
-                    accountList = getBackupedAccountsFiltered()
-                        .map {
-                            BackupAccountMetaWithIcon(
-                                it,
-                                getDrawableFromGoogleBackup(it.address),
-                            )
-                        }
-                )
+                _importAccountListState.value =
+                    ImportAccountListScreenState(getBackupedAccountsFiltered())
 
                 resetBackupLiveData()
                 navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
@@ -900,17 +1588,54 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getBackupedAccountsFiltered(): List<BackupAccountMeta> {
-        return backupService.getBackupAccounts()
-            .filter {
-                multiaccountInteractor.isAddressValid(it.address) && !multiaccountInteractor.accountExists(
-                    it.address
-                )
-            }
+    /**
+     * The Google backups that still have something to do on this phone: of an account that is
+     * not here yet (restoring adds it), and of an account that is here but read-only (restoring
+     * completes or repairs its keys in place; the entry is marked). Only the backup of an account
+     * that can already sign is left out.
+     *
+     * A read-only account must stay in this list: its Google backup can be the only backup it
+     * has, and hiding it would leave removing the account as the only way to use that backup.
+     */
+    private suspend fun getBackupedAccountsFiltered(): List<BackupAccountMetaWithIcon> =
+        googleBackups().restorable
+
+    /** What the Google account holds for this phone. */
+    private class GoogleBackups(
+        /** The backups that still have something to do here ([getBackupedAccountsFiltered]). */
+        val restorable: List<BackupAccountMetaWithIcon>,
+        /**
+         * The Google account holds backups, and every one is of an account that already works
+         * on this phone, so there is nothing to restore.
+         */
+        val allUsableHere: Boolean,
+    )
+
+    private suspend fun googleBackups(): GoogleBackups {
+        val backups = backupService.getBackupAccounts()
+            .filter { multiaccountInteractor.isAddressValid(it.address) }
+        if (backups.isEmpty()) return GoogleBackups(emptyList(), allUsableHere = false)
+        val restores = multiaccountInteractor.backupRestores(backups.map { it.address })
+        val restorable = backups.mapNotNull { backup ->
+            val restore = restores[backup.address] ?: return@mapNotNull null
+            val readOnly = restore == MultiaccountInteractor.BackupRestore.REPAIRS_READ_ONLY_ACCOUNT
+            BackupAccountMetaWithIcon(
+                backupAccountMeta = backup,
+                icon = getDrawableFromGoogleBackup(backup.address),
+                readOnlyOnThisPhone = readOnly,
+            )
+        }
+        return GoogleBackups(restorable, allUsableHere = restorable.isEmpty())
     }
 
     override fun onAction() {
         _skipDialogState.value = true
+    }
+
+    override fun onCleared() {
+        tempDraft?.destroy()
+        tempDraft = null
+        super.onCleared()
     }
 
     fun skipDialogConfirm(context: Context) {

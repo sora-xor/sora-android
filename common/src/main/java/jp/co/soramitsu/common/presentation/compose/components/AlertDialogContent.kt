@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import jp.co.soramitsu.androidfoundation.compose.toTitle
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.AlertDialogData
+import jp.co.soramitsu.common.base.ConfirmDialogData
 import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
@@ -73,3 +74,38 @@ fun AlertDialogContent(openAlertDialog: MutableState<AlertDialogData>) {
 
 @Composable
 private fun Any?.message() = this?.toTitle()
+
+/** Two-button question. Nothing happens unless the confirm button is tapped. */
+@Composable
+fun ConfirmDialogContent(openConfirmDialog: MutableState<ConfirmDialogData?>) {
+    val data = openConfirmDialog.value ?: return
+    AlertDialog(
+        backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
+        title = { Text(color = MaterialTheme.customColors.fgPrimary, text = data.title) },
+        text = { Text(color = MaterialTheme.customColors.fgPrimary, text = data.message) },
+        onDismissRequest = {
+            openConfirmDialog.value = null
+            data.onDismiss()
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    openConfirmDialog.value = null
+                    data.onDismiss()
+                }
+            ) {
+                Text(text = data.dismissText)
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    openConfirmDialog.value = null
+                    data.onConfirm()
+                }
+            ) {
+                Text(text = data.confirmText)
+            }
+        },
+    )
+}

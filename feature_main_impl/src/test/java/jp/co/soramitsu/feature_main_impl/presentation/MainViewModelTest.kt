@@ -40,13 +40,13 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.domain.RepeatStrategy
 import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
+import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsUpdateSubscription
 import jp.co.soramitsu.feature_select_node_api.NodeManager
-import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.test_data.TestAccounts
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -92,9 +92,6 @@ class MainViewModelTest {
     private lateinit var blockExplorerManager: BlockExplorerManager
 
     @Mock
-    private lateinit var soraCardInteractor: SoraCardInteractor
-
-    @Mock
     private lateinit var coroutineManager: CoroutineManager
 
     @Mock
@@ -133,12 +130,33 @@ class MainViewModelTest {
             blockExplorerManager,
             coroutineManager,
             poolUpdateSubscription,
-            soraCardInteractor,
         )
         advanceTimeBy(42000)
         verify(globalSubscriptionManager).start()
         verify(assetsInteractor).updateWhitelistBalances()
         verify(blockExplorerManager, times(3)).updateFiat()
         assertFalse(mainViewModel.badConnectionVisibilityLiveData.getOrAwaitValue())
+    }
+
+    @Test
+    fun `pin screen opens without crashing when the wallet key cannot be used`() = runTest {
+        // For example the Keystore key did not move with a phone-to-phone transfer: reading the
+        // stored PIN fails. The PIN screen still opens (and checks again there).
+        whenever(pinCodeInteractor.isPincodeUpdateNeeded())
+            .thenThrow(KeyMaterialUnavailableException("alias missing", transient = false))
+        mainViewModel = MainViewModel(
+            assetsInteractor,
+            nodeManager,
+            pinCodeInteractor,
+            globalSubscriptionManager,
+            blockExplorerManager,
+            coroutineManager,
+            poolUpdateSubscription,
+        )
+
+        mainViewModel.showPinFragment()
+        advanceTimeBy(42000)
+
+        assertFalse(mainViewModel.isPincodeUpdateNeeded.getOrAwaitValue())
     }
 }

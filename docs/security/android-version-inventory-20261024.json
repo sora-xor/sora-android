@@ -1,0 +1,565 @@
+{
+  "note": "Initial pre-remediation catalog snapshot and publisher Maven metadata observation on 2026-10-24. Final selected versions are recorded in dependency-analytics-audit-20261024.md and android-osv-after-20261024.json. Date-like versions, AndroidX release channels, repackaged vendors and API compatibility need manual review. Non-runtime entries include build/test or unused aliases.",
+  "libraries": [
+    {
+      "coordinate": "androidx.activity:activity-compose",
+      "declared": "1.12.1",
+      "latestStableObserved": "1.13.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/activity/activity-compose/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.activity:activity-ktx",
+      "declared": "1.12.1",
+      "latestStableObserved": "1.13.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/activity/activity-ktx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.appcompat:appcompat",
+      "declared": "1.7.1",
+      "latestStableObserved": "1.8.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/appcompat/appcompat/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.appcompat:appcompat-resources",
+      "declared": "1.7.1",
+      "latestStableObserved": "1.8.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/appcompat/appcompat-resources/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.arch.core:core-testing",
+      "declared": "2.2.0",
+      "latestStableObserved": "2.2.0",
+      "runtime": false,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/arch/core/core-testing/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.benchmark:benchmark-macro-junit4",
+      "declared": "1.5.0-rc02",
+      "latestStableObserved": "1.5.0",
+      "runtime": false,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/benchmark/benchmark-macro-junit4/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.biometric:biometric",
+      "declared": "1.1.0",
+      "latestStableObserved": "1.1.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/biometric/biometric/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.compose:compose-bom",
+      "declared": "2026.05.00",
+      "latestStableObserved": "2026.09.00",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/compose/compose-bom/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.constraintlayout:constraintlayout",
+      "declared": "2.2.1",
+      "latestStableObserved": "2.2.2",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/constraintlayout/constraintlayout/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.constraintlayout:constraintlayout-compose",
+      "declared": "1.1.1",
+      "latestStableObserved": "1.1.2",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/constraintlayout/constraintlayout-compose/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.core:core-ktx",
+      "declared": "1.17.0",
+      "latestStableObserved": "1.19.1",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/core/core-ktx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.datastore:datastore-preferences",
+      "declared": "1.1.7",
+      "latestStableObserved": "1.3.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/datastore/datastore-preferences/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.fragment:fragment-ktx",
+      "declared": "1.8.9",
+      "latestStableObserved": "1.9.1",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/fragment/fragment-ktx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.fragment:fragment-testing",
+      "declared": "1.8.9",
+      "latestStableObserved": "1.9.1",
+      "runtime": false,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/fragment/fragment-testing/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.hilt:hilt-compiler",
+      "declared": "1.3.0",
+      "latestStableObserved": "1.4.0",
+      "runtime": false,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/hilt/hilt-compiler/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.hilt:hilt-navigation-compose",
+      "declared": "1.3.0",
+      "latestStableObserved": "1.4.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/hilt/hilt-navigation-compose/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.hilt:hilt-work",
+      "declared": "1.3.0",
+      "latestStableObserved": "1.4.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/hilt/hilt-work/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-livedata-ktx",
+      "declared": "2.10.0",
+      "latestStableObserved": "2.11.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-livedata-ktx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-process",
+      "declared": "2.10.0",
+      "latestStableObserved": "2.11.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-process/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-runtime-compose",
+      "declared": "2.10.0",
+      "latestStableObserved": "2.11.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-runtime-compose/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-runtime-ktx",
+      "declared": "2.10.0",
+      "latestStableObserved": "2.11.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-runtime-ktx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-ktx",
+      "declared": "2.10.0",
+      "latestStableObserved": "2.11.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-viewmodel-ktx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.navigation:navigation-compose",
+      "declared": "2.9.6",
+      "latestStableObserved": "2.10.2",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/navigation/navigation-compose/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.navigation:navigation-fragment-ktx",
+      "declared": "2.9.6",
+      "latestStableObserved": "2.10.2",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/navigation/navigation-fragment-ktx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.navigation:navigation-ui-ktx",
+      "declared": "2.9.6",
+      "latestStableObserved": "2.10.2",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/navigation/navigation-ui-ktx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.profileinstaller:profileinstaller",
+      "declared": "1.4.1",
+      "latestStableObserved": "1.4.1",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/profileinstaller/profileinstaller/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.room:room-compiler",
+      "declared": "2.8.4",
+      "latestStableObserved": "2.8.5",
+      "runtime": false,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/room/room-compiler/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.room:room-ktx",
+      "declared": "2.8.4",
+      "latestStableObserved": "2.8.5",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/room/room-ktx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.room:room-runtime",
+      "declared": "2.8.4",
+      "latestStableObserved": "2.8.5",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/room/room-runtime/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.room:room-testing",
+      "declared": "2.8.4",
+      "latestStableObserved": "2.8.5",
+      "runtime": false,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/room/room-testing/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.test.espresso:espresso-core",
+      "declared": "3.7.0",
+      "latestStableObserved": "3.7.0",
+      "runtime": false,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/test/espresso/espresso-core/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.test.espresso:espresso-intents",
+      "declared": "3.7.0",
+      "latestStableObserved": "3.7.0",
+      "runtime": false,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/test/espresso/espresso-intents/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.test.ext:junit",
+      "declared": "1.3.0",
+      "latestStableObserved": "1.3.0",
+      "runtime": false,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/test/ext/junit/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.test.uiautomator:uiautomator",
+      "declared": "2.4.0",
+      "latestStableObserved": "2.4.0",
+      "runtime": false,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/test/uiautomator/uiautomator/maven-metadata.xml"
+    },
+    {
+      "coordinate": "androidx.work:work-runtime-ktx",
+      "declared": "2.11.0",
+      "latestStableObserved": "2.12.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/androidx/work/work-runtime-ktx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.airbnb.android:lottie",
+      "declared": "4.2.0",
+      "latestStableObserved": "6.7.1",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/airbnb/android/lottie/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.caverock:androidsvg-aar",
+      "declared": "1.4",
+      "latestStableObserved": "1.4",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/caverock/androidsvg-aar/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.github.WycliffeAssociates:jdenticon-kotlin",
+      "declared": "1.1",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/github/WycliffeAssociates/jdenticon-kotlin/maven-metadata.xml",
+      "unverified": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "coordinate": "com.github.warchant:ed25519-sha3-java",
+      "declared": "2.0.1",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/github/warchant/ed25519-sha3-java/maven-metadata.xml",
+      "unverified": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "coordinate": "com.google.android.material:material",
+      "declared": "1.12.0",
+      "latestStableObserved": "1.14.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/com/google/android/material/material/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.google.code.gson:gson",
+      "declared": "2.13.2",
+      "latestStableObserved": "2.14.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.google.dagger:hilt-android",
+      "declared": "2.59.2",
+      "latestStableObserved": "2.60.1",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/google/dagger/hilt-android/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.google.dagger:hilt-android-testing",
+      "declared": "2.59.2",
+      "latestStableObserved": "2.60.1",
+      "runtime": false,
+      "source": "https://repo.maven.apache.org/maven2/com/google/dagger/hilt-android-testing/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.google.dagger:hilt-compiler",
+      "declared": "2.59.2",
+      "latestStableObserved": "2.60.1",
+      "runtime": false,
+      "source": "https://repo.maven.apache.org/maven2/com/google/dagger/hilt-compiler/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-bom",
+      "declared": "34.19.0",
+      "latestStableObserved": "35.1.0",
+      "runtime": true,
+      "source": "https://dl.google.com/dl/android/maven2/com/google/firebase/firebase-bom/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.google.truth:truth",
+      "declared": "1.4.2",
+      "latestStableObserved": "1.4.5",
+      "runtime": false,
+      "source": "https://repo.maven.apache.org/maven2/com/google/truth/truth/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.google.zxing:core",
+      "declared": "3.3.3",
+      "latestStableObserved": "3.5.4",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/google/zxing/core/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.goterl:lazysodium-android",
+      "declared": "5.0.2",
+      "latestStableObserved": "5.2.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/goterl/lazysodium-android/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.guolindev.permissionx:permissionx",
+      "declared": "1.7.1",
+      "latestStableObserved": "1.8.1",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/guolindev/permissionx/permissionx/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.jakewharton.timber:timber",
+      "declared": "5.0.1",
+      "latestStableObserved": "5.0.1",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/jakewharton/timber/timber/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.journeyapps:zxing-android-embedded",
+      "declared": "4.3.0",
+      "latestStableObserved": "4.3.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/journeyapps/zxing-android-embedded/maven-metadata.xml"
+    },
+    {
+      "coordinate": "com.neovisionaries:nv-websocket-client",
+      "declared": "2.14",
+      "latestStableObserved": "2.14",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/com/neovisionaries/nv-websocket-client/maven-metadata.xml"
+    },
+    {
+      "coordinate": "dev.chrisbanes.insetter:insetter",
+      "declared": "0.6.1",
+      "latestStableObserved": "0.6.1",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/dev/chrisbanes/insetter/insetter/maven-metadata.xml"
+    },
+    {
+      "coordinate": "io.coil-kt:coil",
+      "declared": "2.7.0",
+      "latestStableObserved": "2.7.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/io/coil-kt/coil/maven-metadata.xml"
+    },
+    {
+      "coordinate": "io.coil-kt:coil-compose",
+      "declared": "2.7.0",
+      "latestStableObserved": "2.7.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/io/coil-kt/coil-compose/maven-metadata.xml"
+    },
+    {
+      "coordinate": "io.coil-kt:coil-svg",
+      "declared": "2.7.0",
+      "latestStableObserved": "2.7.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/io/coil-kt/coil-svg/maven-metadata.xml"
+    },
+    {
+      "coordinate": "io.ktor:ktor-client-content-negotiation",
+      "declared": "2.3.13",
+      "latestStableObserved": "3.6.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-content-negotiation/maven-metadata.xml"
+    },
+    {
+      "coordinate": "io.ktor:ktor-client-logging",
+      "declared": "2.3.13",
+      "latestStableObserved": "3.6.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-logging/maven-metadata.xml"
+    },
+    {
+      "coordinate": "io.ktor:ktor-client-okhttp",
+      "declared": "2.3.13",
+      "latestStableObserved": "3.6.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-okhttp/maven-metadata.xml"
+    },
+    {
+      "coordinate": "io.ktor:ktor-client-websockets",
+      "declared": "2.3.13",
+      "latestStableObserved": "3.6.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-websockets/maven-metadata.xml"
+    },
+    {
+      "coordinate": "io.mockk:mockk",
+      "declared": "1.13.11",
+      "latestStableObserved": "1.14.11",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/io/mockk/mockk/maven-metadata.xml"
+    },
+    {
+      "coordinate": "io.mockk:mockk-android",
+      "declared": "1.13.11",
+      "latestStableObserved": "1.14.11",
+      "runtime": false,
+      "source": "https://repo.maven.apache.org/maven2/io/mockk/mockk-android/maven-metadata.xml"
+    },
+    {
+      "coordinate": "jp.co.soramitsu.xnetworking:lib-android",
+      "declared": "1.0.15-K2",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/jp/co/soramitsu/xnetworking/lib-android/maven-metadata.xml",
+      "unverified": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:android-foundation",
+      "declared": "0.0.4",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/jp/co/soramitsu/android-foundation/maven-metadata.xml",
+      "unverified": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:android-sora-card",
+      "declared": "1.2.1-K2",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/jp/co/soramitsu/android-sora-card/maven-metadata.xml",
+      "unverified": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:ui-core",
+      "declared": "0.2.39",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/jp/co/soramitsu/ui-core/maven-metadata.xml",
+      "unverified": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:xbackup",
+      "declared": "1.2.3",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/jp/co/soramitsu/xbackup/maven-metadata.xml",
+      "unverified": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:xcrypto",
+      "declared": "1.2.7",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/jp/co/soramitsu/xcrypto/maven-metadata.xml",
+      "unverified": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "coordinate": "jp.co.soramitsu:xsubstrate",
+      "declared": "1.2.7",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/jp/co/soramitsu/xsubstrate/maven-metadata.xml",
+      "unverified": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "coordinate": "junit:junit",
+      "declared": "4.13.2",
+      "latestStableObserved": "4.13.2",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/junit/junit/maven-metadata.xml"
+    },
+    {
+      "coordinate": "net.java.dev.jna:jna",
+      "declared": "5.8.0",
+      "latestStableObserved": "5.19.1",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/net/java/dev/jna/jna/maven-metadata.xml"
+    },
+    {
+      "coordinate": "org.bouncycastle:bcprov-jdk18on",
+      "declared": "1.78.1",
+      "latestStableObserved": "1.86",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk18on/maven-metadata.xml"
+    },
+    {
+      "coordinate": "org.eclipse.birt.runtime.3_7_1:org.apache.xerces",
+      "declared": "2.9.0",
+      "latestStableObserved": "2.9.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/org/eclipse/birt/runtime/3_7_1/org.apache.xerces/maven-metadata.xml"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-coroutines-android",
+      "declared": "1.10.2",
+      "latestStableObserved": "1.11.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/maven-metadata.xml"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+      "declared": "1.10.2",
+      "latestStableObserved": "1.11.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-core/maven-metadata.xml"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-coroutines-test",
+      "declared": "1.10.2",
+      "latestStableObserved": "1.11.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-test/maven-metadata.xml"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-json",
+      "declared": "1.9.0",
+      "latestStableObserved": "1.12.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-serialization-json/maven-metadata.xml"
+    },
+    {
+      "coordinate": "org.mockito.kotlin:mockito-kotlin",
+      "declared": "6.1.0",
+      "latestStableObserved": "6.4.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/org/mockito/kotlin/mockito-kotlin/maven-metadata.xml"
+    },
+    {
+      "coordinate": "org.mockito:mockito-core",
+      "declared": "5.20.0",
+      "latestStableObserved": "5.24.0",
+      "runtime": true,
+      "source": "https://repo.maven.apache.org/maven2/org/mockito/mockito-core/maven-metadata.xml"
+    },
+    {
+      "coordinate": "org.web3j:core",
+      "declared": "4.6.0-android",
+      "latestStableObserved": "6.1.0",
+      "runtime": false,
+      "source": "https://repo.maven.apache.org/maven2/org/web3j/core/maven-metadata.xml"
+    }
+  ]
+}

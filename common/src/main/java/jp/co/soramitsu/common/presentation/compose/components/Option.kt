@@ -38,7 +38,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -82,7 +82,7 @@ fun Option(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(if (description == null) Dimens.x7 else Dimens.x8),
+                .heightIn(min = if (description == null) Dimens.x7 else Dimens.x8),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
@@ -94,8 +94,8 @@ fun Option(
             )
             Row(
                 modifier = Modifier
-                    .padding(start = Dimens.x1)
-                    .fillMaxSize(),
+                    .padding(start = Dimens.x1, top = Dimens.x1_5, bottom = Dimens.x1_5)
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(
@@ -106,7 +106,6 @@ fun Option(
                     Text(
                         text = label,
                         style = MaterialTheme.customTypography.textM,
-                        maxLines = 1,
                         color = textColor,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -115,8 +114,7 @@ fun Option(
                             text = description,
                             style = MaterialTheme.customTypography.textXSBold,
                             color = MaterialTheme.customColors.fgSecondary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                                overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }

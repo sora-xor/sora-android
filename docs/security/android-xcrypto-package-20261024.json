@@ -1,0 +1,36 @@
+{
+  "coordinate": "jp.co.soramitsu:xcrypto:1.2.8-sora.2",
+  "moduleFileDigestsMatch": true,
+  "eddsaBytecodeReferences": 0,
+  "nativeLibrarySha256": {
+    "jni/arm64-v8a/libsr25519java_1.so": "cf7cc41fd4dc767bca7666e3ad7a6b92b2aff95d574ba0ae37cc61449d8faf60",
+    "jni/armeabi-v7a/libsr25519java_1.so": "283adede0399003bddc2faa47786863ccf0eb8ce462c202c783e1307f4ed8ce6",
+    "jni/x86/libsr25519java_1.so": "a0a2cae4b6bc7cf25b5eea00674c96488c1735cd51206b1fbe604cc371969d6e",
+    "jni/x86_64/libsr25519java_1.so": "9f529c4ba78f3285f3f14b704ecabb65665fd988eaaccf69a734a725b6f6955b"
+  },
+  "developDebugApk": {
+    "path": "app/build/outputs/apk/develop/debug/SORA_Wallet_3.8.6.3_122_develop_debug.apk",
+    "sha256": "7c012f6af8c5f2ea6e1f9834c67e9b4b4692684f13cea67be79cc42b7cc917a9",
+    "nativeLibrariesMatchSourceBuiltAar": true,
+    "nativeLibrarySha256": {
+      "lib/arm64-v8a/libsr25519java_1.so": "cf7cc41fd4dc767bca7666e3ad7a6b92b2aff95d574ba0ae37cc61449d8faf60",
+      "lib/armeabi-v7a/libsr25519java_1.so": "283adede0399003bddc2faa47786863ccf0eb8ce462c202c783e1307f4ed8ce6",
+      "lib/x86/libsr25519java_1.so": "a0a2cae4b6bc7cf25b5eea00674c96488c1735cd51206b1fbe604cc371969d6e",
+      "lib/x86_64/libsr25519java_1.so": "9f529c4ba78f3285f3f14b704ecabb65665fd988eaaccf69a734a725b6f6955b"
+    },
+    "dexFileCount": 38,
+    "legacyEddsaMockkAndJupiterTypeReferences": []
+  },
+  "deviceVerification": {
+    "apiLevel": 34,
+    "abi": "arm64-v8a",
+    "freshEmulator": true,
+    "testClass": "jp.co.soramitsu.sora.ux.CryptoSecurityCompatibilityTest",
+    "testCount": 2,
+    "failures": 0,
+    "result": "OK (2 tests)",
+    "durationSeconds": 0.853,
+    "testApkSha256": "ee3fc6051714a6b6974d3e79981473e790f40140357008fb6133f0e24992dd5b",
+    "output": "docs/security/android-crypto-device-20261024.txt"
+  }
+}

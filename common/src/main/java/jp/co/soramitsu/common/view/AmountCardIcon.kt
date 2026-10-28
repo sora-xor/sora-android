@@ -42,13 +42,21 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import jp.co.soramitsu.common.util.testTagAsId
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -63,35 +71,26 @@ fun AmountCardIcon(
     isEnabled: Boolean = true,
     onClick: () -> Unit,
 ) {
-    val reusableButtonModifier = remember(testTagId) {
-        Modifier.run {
-            return@run if (testTagId == null)
-                this else testTagAsId(testTagId)
-        }.fillMaxSize()
-    }
-
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val n = MaterialTheme.neon
     Column(
-        modifier = Modifier.wrapContentSize(),
+        modifier = Modifier.widthIn(max = 112.dp)
+            .then(if (testTagId != null) Modifier.testTagAsId(testTagId) else Modifier)
+            .clickable(interactionSource = interaction, indication = null, enabled = isEnabled,
+                role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+            .semantics(mergeDescendants = true) {},
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(modifier = Modifier.size(Size.Large)) {
-            BleachedButton(
-                modifier = reusableButtonModifier,
-                shape = RoundedCornerShape(49),
-                enabled = isEnabled,
-                size = Size.Large,
-                order = Order.TERTIARY,
-                leftIcon = painterResource(res),
-                onClick = onClick,
-            )
+        NeumorphicSurface(shape = androidx.compose.foundation.shape.CircleShape,
+            interactionSource = interaction, modifier = Modifier.size(Size.Large)) {
+            androidx.compose.material.Icon(painterResource(res), contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = if (!isEnabled) n.textDisabled else if (pressed) n.cyan else n.textSecondary)
         }
-        Text(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(top = Dimens.x1),
-            text = text,
-            style = MaterialTheme.customTypography.textXSBold,
-            color = MaterialTheme.customColors.fgSecondary,
-        )
+        Text(text = text, modifier = Modifier.padding(top = Dimens.x1),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            style = MaterialTheme.customTypography.textS,
+            color = if (isEnabled) n.textSecondary else n.textDisabled)
     }
 }

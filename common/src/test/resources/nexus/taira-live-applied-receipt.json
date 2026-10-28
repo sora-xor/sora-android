@@ -1,0 +1,63 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "http 200"
+    }
+  ],
+  "isError": false,
+  "resultType": "complete",
+  "_meta": {
+    "io.modelcontextprotocol/serverInfo": {
+      "name": "iroha-torii-mcp",
+      "version": "2.0.0-rc.2.0"
+    }
+  },
+  "structuredContent": {
+    "attempts": 3,
+    "elapsed_ms": 1489,
+    "hash": "4a48384ad05a8e1669baf4cd0ed83773f006f178e486ad421bcf2abcadd658a1",
+    "status": 200,
+    "terminal_kind": "Applied",
+    "final": {
+      "body": {
+        "hash": "4a48384ad05a8e1669baf4cd0ed83773f006f178e486ad421bcf2abcadd658a1",
+        "resolved_from": "state",
+        "scope": "global",
+        "status": {
+          "block_height": 74,
+          "kind": "Applied"
+        }
+      },
+      "content_type": "application/json; charset=utf-8",
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "vary": "Accept"
+      },
+      "status": 200
+    },
+    "submit": {
+      "body": {
+        "payload": {
+          "entrypoint_hash": "hash:4A48384AD05A8E1669BAF4CD0ED83773F006F178E486AD421BCF2ABCADD658A1#EC45",
+          "signed_transaction_hash": "hash:4A48384AD05A8E1669BAF4CD0ED83773F006F178E486AD421BCF2ABCADD658A1#EC45",
+          "signer": "e7012102B9A460EEDA8A8FE990F963BF58084A9D6E6DAB8C6267454A9DEE9A369BBD3D8B",
+          "submitted_at_height": 73,
+          "submitted_at_ms": 1791874407875
+        },
+        "signature": "67A6412192176609480398C63614A09959B9FA853747FF3EC269519D3E8D6D760C339392AB80DCAA8BE58C263DFA40013DE6531EB19F08B19B37A9419F4526DD"
+      },
+      "content_type": "application/json; charset=utf-8",
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "x-iroha-entrypoint-hash": "4a48384ad05a8e1669baf4cd0ed83773f006f178e486ad421bcf2abcadd658a1",
+        "x-iroha-route-dataspace-id": "0",
+        "x-iroha-route-lane-id": "0",
+        "x-iroha-routed-by": "local",
+        "x-iroha-signed-transaction-hash": "4a48384ad05a8e1669baf4cd0ed83773f006f178e486ad421bcf2abcadd658a1",
+        "vary": "Accept"
+      },
+      "status": 202
+    }
+  }
+}

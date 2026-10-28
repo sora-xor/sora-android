@@ -110,62 +110,65 @@ class FarmDetailsViewModel @AssistedInject constructor(
         )
 
         viewModelScope.launch {
-            val userPoolData = poolsInteractor.getPoolOfCurAccount(poolIds)
-            val basicPoolData = poolsInteractor.getBasicPool(poolIds)
+            // A failed read leaves the card as it is; it must never end the app.
+            tryCatch {
+                val userPoolData = poolsInteractor.getPoolOfCurAccount(poolIds)
+                val basicPoolData = poolsInteractor.getBasicPool(poolIds)
 
-            demeterFarmingInteractor.getFarmedBasicPools()
-                .firstOrNull {
-                    StringTriple(it.tokenBase.id, it.tokenTarget.id, it.tokenReward.id) == farmIds
-                }?.let { basicFarmPool ->
-                    val farmPool = demeterFarmingInteractor.getFarmedPool(ids = farmIds)
-                    var farmDetailsState = FarmDetailsState(
-                        farmIds = farmIds,
-                        title = resourceManager.getString(
-                            R.string.polkaswap_farm_title_template,
-                            "%s-%s".format(basicFarmPool.tokenBase.symbol, basicFarmPool.tokenTarget.symbol)
-                        ),
-                        tvlSubtitle = basicFarmPool.tokenBase.printFiat(basicFarmPool.tvl.formatFiatSuffix()).orEmpty(),
-                        apr = basicFarmPool.apr.let { "%s%%".format(numbersFormatter.format(it, 2)) },
-                        token1Icon = basicFarmPool.tokenBase.iconUri(),
-                        token2Icon = basicFarmPool.tokenTarget.iconUri(),
-                        rewardsTokenIcon = basicFarmPool.tokenReward.iconUri(),
-                        rewardsTokenSymbol = basicFarmPool.tokenReward.symbol,
-                        fee = "${numbersFormatter.format(basicFarmPool.fee)}%",
-                        hasSupplyInPool = userPoolData?.user != null,
-                        poolIds = token1Id to token2Id,
-                        poolTitle = "%s-%s".format(basicFarmPool.tokenBase.symbol, basicFarmPool.tokenTarget.symbol),
-                        apyText = basicPoolData?.sbapy?.let { apy ->
-                            "%s%%".format(
-                                numbersFormatter.format(
-                                    apy,
-                                    2,
+                demeterFarmingInteractor.getFarmedBasicPools()
+                    .firstOrNull {
+                        StringTriple(it.tokenBase.id, it.tokenTarget.id, it.tokenReward.id) == farmIds
+                    }?.let { basicFarmPool ->
+                        val farmPool = demeterFarmingInteractor.getFarmedPool(ids = farmIds)
+                        var farmDetailsState = FarmDetailsState(
+                            farmIds = farmIds,
+                            title = resourceManager.getString(
+                                R.string.polkaswap_farm_title_template,
+                                "%s-%s".format(basicFarmPool.tokenBase.symbol, basicFarmPool.tokenTarget.symbol)
+                            ),
+                            tvlSubtitle = basicFarmPool.tokenBase.printFiat(basicFarmPool.tvl.formatFiatSuffix()).orEmpty(),
+                            apr = basicFarmPool.apr.let { "%s%%".format(numbersFormatter.format(it, 2)) },
+                            token1Icon = basicFarmPool.tokenBase.iconUri(),
+                            token2Icon = basicFarmPool.tokenTarget.iconUri(),
+                            rewardsTokenIcon = basicFarmPool.tokenReward.iconUri(),
+                            rewardsTokenSymbol = basicFarmPool.tokenReward.symbol,
+                            fee = "${numbersFormatter.format(basicFarmPool.fee)}%",
+                            hasSupplyInPool = userPoolData?.user != null,
+                            poolIds = token1Id to token2Id,
+                            poolTitle = "%s-%s".format(basicFarmPool.tokenBase.symbol, basicFarmPool.tokenTarget.symbol),
+                            apyText = basicPoolData?.sbapy?.let { apy ->
+                                "%s%%".format(
+                                    numbersFormatter.format(
+                                        apy,
+                                        2,
+                                    )
                                 )
-                            )
-                        } ?: ""
-                    )
+                            } ?: ""
+                        )
 
-                    farmPool?.let {
-                        val percent = if (userPoolData?.user != null) {
-                            PolkaswapFormulas.calculateShareOfPoolFromAmount(
-                                farmPool.amount,
-                                userPoolData.user.poolProvidersBalance,
-                            ).toFloat()
-                        } else {
-                            0.0f
+                        farmPool?.let {
+                            val percent = if (userPoolData?.user != null) {
+                                PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                                    farmPool.amount,
+                                    userPoolData.user.poolProvidersBalance,
+                                ).toFloat()
+                            } else {
+                                0.0f
+                            }
+
+                            rewardAmount = farmPool.amountReward
+
+                            farmDetailsState = farmDetailsState.copy(
+                                poolShareStacked = percent,
+                                poolShareStackedText = "${numbersFormatter.format(percent.toDouble())}%",
+                                userRewardsAmount = "${numbersFormatter.formatBigDecimal(farmPool.amountReward)} ${farmPool.tokenReward.symbol}",
+                                hasRewardsAvailable = farmPool.amountReward != BigDecimal.ZERO
+                            )
                         }
 
-                        rewardAmount = farmPool.amountReward
-
-                        farmDetailsState = farmDetailsState.copy(
-                            poolShareStacked = percent,
-                            poolShareStackedText = "${numbersFormatter.format(percent.toDouble())}%",
-                            userRewardsAmount = "${numbersFormatter.formatBigDecimal(farmPool.amountReward)} ${farmPool.tokenReward.symbol}",
-                            hasRewardsAvailable = farmPool.amountReward != BigDecimal.ZERO
-                        )
+                        _state.value = farmDetailsState
                     }
-
-                    _state.value = farmDetailsState
-                }
+            }
         }
     }
 

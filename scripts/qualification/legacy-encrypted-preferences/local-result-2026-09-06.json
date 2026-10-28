@@ -1,0 +1,242 @@
+{
+  "kind": "local-isolated-interoperability-not-release-admission",
+  "device": {
+    "ro.build.version.sdk": "34",
+    "ro.build.version.release": "14",
+    "ro.product.cpu.abi": "arm64-v8a",
+    "ro.build.fingerprint": "google/sdk_gslim_arm64/emulator64_arm64:14/UE1A.230829.036.A1/11228894:userdebug/dev-keys"
+  },
+  "execution": {
+    "qualification": "local-isolated-storage-interop-only",
+    "package": "jp.co.soramitsu.interop.pdcfbf7a82c3b4b1a9366617b8b23e2b5",
+    "serial": "emulator-5554",
+    "results": [
+      {
+        "phase": "old-write",
+        "passed": true,
+        "uid": "10123",
+        "installedVersionCode": "1",
+        "installedSignerSha256": "685dde65bcdaecc1f250e23dd694fa89a30bcae237e1475e47d59bb0252b998d"
+      },
+      {
+        "phase": "current-update",
+        "passed": true,
+        "uid": "10123",
+        "installedVersionCode": "2",
+        "installedSignerSha256": "685dde65bcdaecc1f250e23dd694fa89a30bcae237e1475e47d59bb0252b998d"
+      },
+      {
+        "phase": "current-reopen",
+        "passed": true,
+        "uid": "10123",
+        "installedVersionCode": "2",
+        "installedSignerSha256": "685dde65bcdaecc1f250e23dd694fa89a30bcae237e1475e47d59bb0252b998d"
+      },
+      {
+        "phase": "old-rollback-read",
+        "passed": true,
+        "uid": "10123",
+        "installedVersionCode": "3",
+        "installedSignerSha256": "685dde65bcdaecc1f250e23dd694fa89a30bcae237e1475e47d59bb0252b998d"
+      }
+    ]
+  },
+  "executedSourcesSha256": {
+    "run.py": "5cbb6c695ba176b9be8de2b50850d90f5de8407c2dd18c0f9cbb0321d415c388",
+    "StorageProbe.kt": "0fb2ee31a9a8296da14252cdd7ace4f855938fd3ad773c2015c0ed4a3765de9d",
+    "README.md": "ed406127eb6af5f7ab9137ba071f50cf287ebc461be6bc414d80427b3f4dd50a"
+  },
+  "sourceEvidence": {
+    "retainedTag": "release/sora/3.8.6.3",
+    "retainedCommit": "c79ad6c7c64ad92e756023ff51d9e2a7040da375",
+    "retainedVersionCatalogSha256": "dc64b1b00fd727255f62e9f61c1c4609dbe1e97f8e77a969482b1882a267a4e3",
+    "currentAppLockSha256": "43921bc7c4d48880a5c271d71ebd7f5aba2ff82d7a5f4c67ad60d3d7b5d4c2e5",
+    "frozenHeadVerificationMetadataSha256": "90b196d775f064b7f80b9520582eec8fc40f874b6f750a49546141a8b793bfab",
+    "oldGraph": [
+      "io.github.osipxd:security-crypto-datastore-preferences:1.0.0-beta01:aar",
+      "io.github.osipxd:security-crypto-datastore:1.0.0-beta01:aar",
+      "io.github.osipxd:encrypted-datastore-preferences:1.0.0-beta01:jar",
+      "io.github.osipxd:encrypted-datastore:1.0.0-beta01:jar",
+      "androidx.datastore:datastore-preferences:1.0.0:aar",
+      "androidx.datastore:datastore:1.0.0:aar",
+      "androidx.datastore:datastore-preferences-core:1.0.0:jar",
+      "androidx.datastore:datastore-core:1.0.0:jar",
+      "com.google.crypto.tink:tink-android:1.8.0:jar",
+      "org.jetbrains.kotlin:kotlin-stdlib:1.9.24:jar",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24:jar",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24:jar",
+      "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.1:jar",
+      "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1:jar",
+      "com.google.code.gson:gson:2.10.1:jar",
+      "androidx.collection:collection:1.1.0:jar",
+      "androidx.annotation:annotation:1.1.0:jar",
+      "androidx.security:security-crypto:1.1.0-alpha06:aar",
+      "org.jetbrains:annotations:23.0.0:jar",
+      "com.google.code.findbugs:jsr305:3.0.2:jar"
+    ],
+    "currentGraph": [
+      "io.github.osipxd:security-crypto-datastore-preferences:1.1.1-beta03:aar",
+      "io.github.osipxd:security-crypto-datastore:1.1.1-beta03:aar",
+      "io.github.osipxd:encrypted-datastore-preferences:1.1.1-beta03:jar",
+      "io.github.osipxd:encrypted-datastore:1.1.1-beta03:jar",
+      "androidx.datastore:datastore-preferences-android:1.1.7:aar",
+      "androidx.datastore:datastore-android:1.1.7:aar",
+      "androidx.datastore:datastore-preferences-core-android:1.1.7:aar",
+      "androidx.datastore:datastore-core-android:1.1.7:aar",
+      "androidx.datastore:datastore-core-okio-jvm:1.1.7:jar",
+      "androidx.datastore:datastore-preferences-proto:1.1.7:jar",
+      "androidx.datastore:datastore-preferences-external-protobuf:1.1.7:jar",
+      "com.squareup.okio:okio-jvm:3.9.0:jar",
+      "com.google.crypto.tink:tink-android:1.13.0:jar",
+      "org.jetbrains.kotlin:kotlin-stdlib:2.3.21:jar",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10:jar",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10:jar",
+      "org.jetbrains.kotlin:kotlin-parcelize-runtime:2.3.21:jar",
+      "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2:jar",
+      "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2:jar",
+      "com.google.code.gson:gson:2.13.2:jar",
+      "androidx.collection:collection-jvm:1.5.0:jar",
+      "androidx.annotation:annotation-jvm:1.9.1:jar",
+      "com.google.errorprone:error_prone_annotations:2.41.0:jar",
+      "androidx.security:security-crypto:1.1.0-alpha06:aar",
+      "org.jetbrains:annotations:23.0.0:jar",
+      "com.google.code.findbugs:jsr305:3.0.2:jar"
+    ],
+    "scope": "Storage dependency closure with retained catalog overrides; not a reproduction of the entire released APK"
+  },
+  "apks": [
+    {
+      "stage": "old-writer",
+      "sha256": "107a5dacb0d6258a51052073ab0f61be331ab3a2195c341205d386610f8bddc2",
+      "versionCode": 1,
+      "signerSha256": "685dde65bcdaecc1f250e23dd694fa89a30bcae237e1475e47d59bb0252b998d",
+      "runtimeArtifacts": [
+        "io.github.osipxd:security-crypto-datastore-preferences:1.0.0-beta01:aar",
+        "io.github.osipxd:security-crypto-datastore:1.0.0-beta01:aar",
+        "io.github.osipxd:encrypted-datastore-preferences:1.0.0-beta01:jar",
+        "io.github.osipxd:encrypted-datastore:1.0.0-beta01:jar",
+        "androidx.datastore:datastore-preferences:1.0.0:aar",
+        "androidx.datastore:datastore:1.0.0:aar",
+        "androidx.datastore:datastore-preferences-core:1.0.0:jar",
+        "androidx.datastore:datastore-core:1.0.0:jar",
+        "com.google.crypto.tink:tink-android:1.8.0:jar",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.9.24:jar",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24:jar",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24:jar",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.1:jar",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1:jar",
+        "com.google.code.gson:gson:2.10.1:jar",
+        "androidx.collection:collection:1.1.0:jar",
+        "androidx.annotation:annotation:1.1.0:jar",
+        "androidx.security:security-crypto:1.1.0-alpha06:aar",
+        "org.jetbrains:annotations:23.0.0:jar",
+        "com.google.code.findbugs:jsr305:3.0.2:jar"
+      ]
+    },
+    {
+      "stage": "current-reader",
+      "sha256": "6db95d6556d91101ff5bbc6aadcb28ca82db20bf790e19767d4dfe6bdd73edfa",
+      "versionCode": 2,
+      "signerSha256": "685dde65bcdaecc1f250e23dd694fa89a30bcae237e1475e47d59bb0252b998d",
+      "runtimeArtifacts": [
+        "io.github.osipxd:security-crypto-datastore-preferences:1.1.1-beta03:aar",
+        "io.github.osipxd:security-crypto-datastore:1.1.1-beta03:aar",
+        "io.github.osipxd:encrypted-datastore-preferences:1.1.1-beta03:jar",
+        "io.github.osipxd:encrypted-datastore:1.1.1-beta03:jar",
+        "androidx.datastore:datastore-preferences-android:1.1.7:aar",
+        "androidx.datastore:datastore-android:1.1.7:aar",
+        "androidx.datastore:datastore-preferences-core-android:1.1.7:aar",
+        "androidx.datastore:datastore-core-android:1.1.7:aar",
+        "androidx.datastore:datastore-core-okio-jvm:1.1.7:jar",
+        "androidx.datastore:datastore-preferences-proto:1.1.7:jar",
+        "androidx.datastore:datastore-preferences-external-protobuf:1.1.7:jar",
+        "com.squareup.okio:okio-jvm:3.9.0:jar",
+        "com.google.crypto.tink:tink-android:1.13.0:jar",
+        "org.jetbrains.kotlin:kotlin-stdlib:2.3.21:jar",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10:jar",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10:jar",
+        "org.jetbrains.kotlin:kotlin-parcelize-runtime:2.3.21:jar",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2:jar",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2:jar",
+        "com.google.code.gson:gson:2.13.2:jar",
+        "androidx.collection:collection-jvm:1.5.0:jar",
+        "androidx.annotation:annotation-jvm:1.9.1:jar",
+        "com.google.errorprone:error_prone_annotations:2.41.0:jar",
+        "androidx.security:security-crypto:1.1.0-alpha06:aar",
+        "org.jetbrains:annotations:23.0.0:jar",
+        "com.google.code.findbugs:jsr305:3.0.2:jar"
+      ]
+    },
+    {
+      "stage": "old-rollback-reader",
+      "sha256": "9e2d6df3bf093ec5952fda8b21c54acb7d849013198fea5d39236e7d2872fee6",
+      "versionCode": 3,
+      "signerSha256": "685dde65bcdaecc1f250e23dd694fa89a30bcae237e1475e47d59bb0252b998d",
+      "runtimeArtifacts": [
+        "io.github.osipxd:security-crypto-datastore-preferences:1.0.0-beta01:aar",
+        "io.github.osipxd:security-crypto-datastore:1.0.0-beta01:aar",
+        "io.github.osipxd:encrypted-datastore-preferences:1.0.0-beta01:jar",
+        "io.github.osipxd:encrypted-datastore:1.0.0-beta01:jar",
+        "androidx.datastore:datastore-preferences:1.0.0:aar",
+        "androidx.datastore:datastore:1.0.0:aar",
+        "androidx.datastore:datastore-preferences-core:1.0.0:jar",
+        "androidx.datastore:datastore-core:1.0.0:jar",
+        "com.google.crypto.tink:tink-android:1.8.0:jar",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.9.24:jar",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24:jar",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24:jar",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.1:jar",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1:jar",
+        "com.google.code.gson:gson:2.10.1:jar",
+        "androidx.collection:collection:1.1.0:jar",
+        "androidx.annotation:annotation:1.1.0:jar",
+        "androidx.security:security-crypto:1.1.0-alpha06:aar",
+        "org.jetbrains:annotations:23.0.0:jar",
+        "com.google.code.findbugs:jsr305:3.0.2:jar"
+      ]
+    }
+  ],
+  "toolchainFiles": [
+    {
+      "filename": "kotlin-compiler-embeddable-1.9.24.jar",
+      "sha256": "e71ff19e6b141ab85a9328fd010941531a302543026bd4244c95adc208d501f6"
+    },
+    {
+      "filename": "kotlin-stdlib-1.9.24.jar",
+      "sha256": "858b902696da9cf585ab9d98ffc1c2712269828354dfe9107e3711b084a36468"
+    },
+    {
+      "filename": "kotlin-script-runtime-1.9.24.jar",
+      "sha256": "314c7d308fe750654365bac6144780613c9169cf3d9e1dafbab91cf80bdc357c"
+    },
+    {
+      "filename": "kotlin-reflect-1.6.10.jar",
+      "sha256": "3277ac102ae17aad10a55abec75ff5696c8d109790396434b496e75087854203"
+    },
+    {
+      "filename": "kotlinx-coroutines-core-jvm-1.8.0.jar",
+      "sha256": "9860906a1937490bf5f3b06d2f0e10ef451e65b95b269f22daf68a3d1f5065c5"
+    },
+    {
+      "filename": "annotations-13.0.jar",
+      "sha256": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+    },
+    {
+      "filename": "trove4j-1.0.20200330.jar",
+      "sha256": "c5fd725bffab51846bf3c77db1383c60aaaebfe1b7fe2f00d23fe1b7df0a439d"
+    },
+    {
+      "filename": "kotlin-compiler-embeddable-2.3.21.jar",
+      "sha256": "d3e70fb011675e77ef00f1a68918d3cd91eed26058977d1e3ea2a37a293233af"
+    },
+    {
+      "filename": "kotlin-stdlib-2.3.21.jar",
+      "sha256": "6f64eac736db9434dd6925b4a518b9d1d17177652320c37916cf9ba3ce7d7d7a"
+    },
+    {
+      "filename": "kotlin-script-runtime-2.3.21.jar",
+      "sha256": "ec61bf1229c837fa9f4255f34ca69816138b73158e7ae9b8d964cf92ca6dfd2e"
+    }
+  ],
+  "reportingNote": "These JSON evidence fixtures were copied after the successful run. StorageProbe.kt, run.py and README.md are byte-identical to that execution. No private signing key, APK, Dex, wallet values, alias names, challenge data or encrypted keyset bytes are included."
+}

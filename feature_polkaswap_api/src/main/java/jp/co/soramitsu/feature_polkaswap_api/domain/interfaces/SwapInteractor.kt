@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_polkaswap_api.domain.interfaces
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
 import kotlinx.coroutines.flow.Flow
@@ -56,7 +57,9 @@ interface SwapInteractor {
         networkFee: BigDecimal,
         dexId: Int,
         amount2: BigDecimal,
-    ): String
+        /** True only after the user confirmed sending the same swap again while one is waiting. */
+        confirmedDuplicate: Boolean = false,
+    ): TransactionOutcome
 
     fun setSwapMarket(market: Market)
 

@@ -135,7 +135,8 @@ class TransactionHistoryHandlerImpl @Inject constructor(
 
     override suspend fun refreshHistoryEvents(tokenId: String?) {
         withContext(coroutineManager.io) {
-            if (mutex.isLocked) return@withContext
+            // Account changes must wait for the current read, not silently drop the refresh
+            // and leave the previous wallet's cached history on screen.
             mutex.withLock {
                 tokenIdFilter = tokenId
                 if (historyEvents.isEmpty()) {
@@ -160,6 +161,15 @@ class TransactionHistoryHandlerImpl @Inject constructor(
         }
     }
 
+    override suspend fun checkWaitingTransaction(txHash: String) {
+        withContext(coroutineManager.io) {
+            transactionHistoryRepository.checkWaitingTransaction(
+                walletId = userRepository.getCurSoraAccount().substrateAddress,
+                txHash = txHash,
+            )
+        }
+    }
+
     private suspend fun reloadHistoryEvents(): HistoryState =
         try {
             historyPage = 1
@@ -169,22 +179,54 @@ class TransactionHistoryHandlerImpl @Inject constructor(
             HistoryState.Error
         }
 
+    /**
+     * Loads [historyPage] and appends only rows that are not already listed.
+     *
+     * The indexer adapter re-reads pages 1..N on every "load more". When a new row for the
+     * account is indexed between two loads, every older row shifts down by one, so page N starts
+     * with rows the previous page already returned. The local overlay on page 1 can also list a
+     * transaction that later appears in an indexed page. Appending those again would show the same
+     * transaction twice and give the Activity list two items with one key, which crashes Compose.
+     *
+     * If a page brings no new rows (all shifted duplicates, or none matching the token filter),
+     * the next page is read automatically a bounded number of times, so the list never waits on
+     * a load-more that the scroll position cannot trigger again.
+     */
     private suspend fun loadEvents(): HistoryState {
         val curAccount = userRepository.getCurSoraAccount()
-        val transactionsInfo = transactionHistoryRepository.getTransactionHistory(
-            historyPage,
-            assetsRepository.tokensList(),
-            curAccount,
-            tokenIdFilter,
-        )
-
-        historyEndReached = transactionsInfo.endReached
-        val mapped = transactionsInfo.transactions.map {
-            transactionMappers.mapTransaction(it, curAccount.substrateAddress)
+        val tokens = assetsRepository.tokensList()
+        val listed = historyEvents.mapNotNullTo(HashSet()) {
+            it.safeCast<EventUiModel.EventTxUiModel>()?.historyIdentity()
         }
-        historyEvents.addAll(mapped)
-        return buildHistoryList(!transactionsInfo.errorMessage.isNullOrEmpty())
+        var pagesWithoutNewRows = 0
+        while (true) {
+            val transactionsInfo = transactionHistoryRepository.getTransactionHistory(
+                historyPage,
+                tokens,
+                curAccount,
+                tokenIdFilter,
+            )
+            historyEndReached = transactionsInfo.endReached
+            val newRows = transactionsInfo.transactions
+                .map { transactionMappers.mapTransaction(it, curAccount.substrateAddress) }
+                .filter { listed.add(it.historyIdentity()) }
+            historyEvents.addAll(newRows)
+            val hasError = !transactionsInfo.errorMessage.isNullOrEmpty()
+            if (
+                newRows.isNotEmpty() ||
+                historyEndReached ||
+                hasError ||
+                historyPage == 1L ||
+                pagesWithoutNewRows >= MAX_EXTRA_PAGES_WITHOUT_NEW_ROWS
+            ) {
+                return buildHistoryList(hasError)
+            }
+            pagesWithoutNewRows++
+            historyPage++
+        }
     }
+
+    private fun EventUiModel.EventTxUiModel.historyIdentity(): String = txHash.lowercase()
 
     private fun buildHistoryList(hasError: Boolean): HistoryState {
         return if (historyEvents.isEmpty()) {
@@ -235,5 +277,9 @@ class TransactionHistoryHandlerImpl @Inject constructor(
             i--
         }
         return events.toList()
+    }
+
+    private companion object {
+        const val MAX_EXTRA_PAGES_WITHOUT_NEW_ROWS = 2
     }
 }

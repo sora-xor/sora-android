@@ -43,17 +43,16 @@ class EncryptedPreferences(
         soraPreferences.putString(field, encryptionUtil.encrypt(value))
     }
 
+    /** Encrypts [value] for storage without writing it. */
+    fun encrypt(value: String): String = encryptionUtil.encrypt(value)
+
+    /** Proves the stored key material can be unlocked on this device; writes nothing. */
+    fun requireKeyMaterialReadable() = encryptionUtil.requireKeyMaterialReadable()
+
     suspend fun getDecryptedString(field: String): String {
         val encryptedString = soraPreferences.getString(field)
 
         return if (encryptedString.isEmpty()) "" else encryptionUtil.decrypt(encryptedString)
     }
 
-    suspend fun clear(field: String) {
-        soraPreferences.clear(field)
-    }
-
-    suspend fun clear(fields: List<String>) {
-        soraPreferences.clear(fields)
-    }
 }

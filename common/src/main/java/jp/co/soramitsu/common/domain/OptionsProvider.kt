@@ -40,7 +40,8 @@ object OptionsProvider {
     var APPLICATION_ID: String = ""
     const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
     const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
-    const val configXn = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/xn.json"
+    const val polkaswapIndexerEndpoint = "https://pi.soramitsu.io/graphql"
+    const val blockExplorerUrl = "https://sorametrics.org"
     val fileProviderAuthority: String get() = "$APPLICATION_ID.soraFileProvider"
     val header: String by lazy {
         "$APPLICATION_ID/$CURRENT_VERSION_NAME/$CURRENT_VERSION_CODE/${BuildConfig.BUILD_TYPE}/${BuildConfig.FLAVOR}"
@@ -51,10 +52,6 @@ object OptionsProvider {
     const val nameByteLimit = 32
     const val fiatSymbol = "$"
     const val nbspace = Typography.nbsp
-    const val euroSign = '€'
-    const val soracard = "2.2.4"
-    const val soracardFiatPackageTest = "com.soracard.wallet.iban.test"
-    const val soracardFiatPackageProd = "com.soracard.wallet.iban"
 
     const val website = "https://sora.org"
     const val sourceLink = "https://github.com/sora-xor/Sora-Android"
@@ -67,5 +64,4 @@ object OptionsProvider {
     const val instagramLink = "https://instagram.com/sora_xor"
     const val mediumLink = "https://medium.com/sora-xor"
     const val wikiLink = "https://wiki.sora.org"
-    const val soraCardBlackList = "https://soracard.com/blacklist/"
 }

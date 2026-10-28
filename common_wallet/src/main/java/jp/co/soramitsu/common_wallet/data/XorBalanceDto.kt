@@ -34,6 +34,23 @@ package jp.co.soramitsu.common_wallet.data
 
 import java.math.BigInteger
 
+/**
+ * XOR balance of one account, in the smallest unit.
+ *
+ * [miscFrozen] and [feeFrozen] say how much of [free] is held back, each for one purpose:
+ *
+ * - [miscFrozen]: the part that cannot be transferred.
+ * - [feeFrozen]: the part that cannot pay a network fee.
+ *
+ * Under the balances layout mainnet has used since runtime 124 (`free, reserved, frozen, flags`)
+ * they are `min(max(frozen - reserved, 0), free)` and `min(frozen, free)`; see
+ * `BalanceWrapper.lockedFreeBalance` and `BalanceWrapper.feeLockedFreeBalance`. The second is
+ * never the smaller one. Under the older layout they are `max(misc_frozen, fee_frozen)`, the
+ * lock this app has always applied to transfers there, and the chain's `fee_frozen`.
+ *
+ * `BalanceWrapper.calcTransferable` and `BalanceWrapper.calcPayableAsFee` turn them into the
+ * amounts that screens and checks use.
+ */
 data class XorBalanceDto(
     val free: BigInteger,
     val reserved: BigInteger,

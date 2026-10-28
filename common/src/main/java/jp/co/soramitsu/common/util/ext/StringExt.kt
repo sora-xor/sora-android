@@ -70,8 +70,6 @@ fun String.getInitials(): String {
     }
 }
 
-fun String.splitVersions() = split(".").map { it.toInt() }
-
 fun String.isErc20Address(): Boolean {
     return this.split(" ").size == 1 && this.startsWith(HEX_PREFIX)
 }

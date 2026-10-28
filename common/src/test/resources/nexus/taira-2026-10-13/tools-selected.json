@@ -1,0 +1,884 @@
+{
+  "_meta": {
+    "io.modelcontextprotocol/serverInfo": {
+      "name": "iroha-torii-mcp",
+      "version": "2.0.0-rc.2.0"
+    },
+    "iroha": {
+      "listChanged": false,
+      "toolsetVersion": "70e43ee6d824e209e968b79f763feec890963eefdbb9aaa30e5af82a9cce9a36"
+    }
+  },
+  "cacheScope": "private",
+  "resultType": "complete",
+  "tools": [
+    {
+      "_meta": {
+        "iroha/routeAuth": {
+          "admission": "dataspace_visible",
+          "authentication": "optional_canonical_account_signature",
+          "schemaVersion": 1,
+          "stableRouteId": "application.accounts_by_account_id_assets_get"
+        },
+        "iroha/semantics": {
+          "authority": "dataspace_visible",
+          "mutation": "none",
+          "operation": "observe",
+          "requiresExternalSignature": false,
+          "retry": "safe",
+          "schemaVersion": 1,
+          "sensitivity": "sensitive",
+          "world": "iroha_network"
+        }
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "List the asset balances of canonical `path.account_id` (`GET /v1/accounts/{account_id}/assets`). Fields: `asset`, `asset_name`, `asset_alias`, `scope`, `account_id`, `quantity` (all sortable); default order `asset`, `scope`. Example: {\"path\": {\"account_id\": \"sorau\u2026\"}, \"filter\": \"quantity > 0\", \"sort\": \"-quantity\"}. Each page is {items, next_cursor}: pass `next_cursor` as `cursor` until it is null.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "accept": {
+            "type": "string"
+          },
+          "cursor": {
+            "description": "The previous page's `next_cursor`, passed unchanged with the same filter, sort and aggregate to read the next page. Stop when `next_cursor` is null.",
+            "maxLength": 4096,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "filter": {
+            "additionalProperties": false,
+            "description": "Rows to keep, as text or as the JSON form. Text reads like a SQL WHERE clause: `owned_by = \"sorau\u2026\" and quantity >= 10`. Operators: `=`, `!=`, `<`, `<=`, `>`, `>=`, `in [..]`, `not in [..]`, `exists(field)`, `is null`, `is not null`, combined with `and`, `or`, `not` and parentheses; strings are quoted, and decimals are exact (`10.5` or \"10.5\"). JSON form: {\"op\": \"and\", \"args\": [{\"op\": \"eq\", \"args\": [\"owned_by\", \"sorau\u2026\"]}, {\"op\": \"gte\", \"args\": [\"quantity\", 10]}]}.",
+            "properties": {
+              "args": {
+                "type": "array"
+              },
+              "op": {
+                "enum": [
+                  "and",
+                  "or",
+                  "not",
+                  "eq",
+                  "ne",
+                  "lt",
+                  "lte",
+                  "gt",
+                  "gte",
+                  "in",
+                  "nin",
+                  "exists",
+                  "is_null"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "args"
+            ],
+            "type": [
+              "string",
+              "object"
+            ]
+          },
+          "headers": {
+            "additionalProperties": false,
+            "description": "Optional canonical proof signed for the exact target method, path, query, and body. Omit the envelope for the anonymous public-dataspace view.",
+            "oneOf": [
+              {
+                "not": {
+                  "required": [
+                    "X-Iroha-Witness"
+                  ]
+                },
+                "required": [
+                  "X-Iroha-Account",
+                  "X-Iroha-Signature",
+                  "X-Iroha-Timestamp-Ms",
+                  "X-Iroha-Nonce"
+                ]
+              },
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "X-Iroha-Signature"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "X-Iroha-Timestamp-Ms"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "X-Iroha-Nonce"
+                      ]
+                    }
+                  ]
+                },
+                "required": [
+                  "X-Iroha-Witness"
+                ]
+              }
+            ],
+            "properties": {
+              "X-Iroha-Account": {
+                "description": "Exact lowercase canonical 0x account-address hex or exact canonical printable-ASCII account alias; I105 is not an HTTP header encoding. The pattern is a lexical prefilter; Torii performs exact canonical address or alias parsing before dispatch.",
+                "maxLength": 36864,
+                "minLength": 1,
+                "pattern": "^(?:0x(?:[0-9a-f]{2})+|[!-~]+@[!-~]+)$",
+                "type": "string"
+              },
+              "X-Iroha-Nonce": {
+                "maxLength": 256,
+                "minLength": 1,
+                "pattern": "^[!-~]+$",
+                "type": "string"
+              },
+              "X-Iroha-Signature": {
+                "maxLength": 4412,
+                "minLength": 4,
+                "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+                "type": "string"
+              },
+              "X-Iroha-Timestamp-Ms": {
+                "maxLength": 20,
+                "minLength": 1,
+                "pattern": "^(0|[1-9][0-9]*)$",
+                "type": "string"
+              },
+              "X-Iroha-Witness": {
+                "description": "Canonical padded-base64 Norito V1 canonical-request witness.",
+                "maxLength": 1048576,
+                "minLength": 4,
+                "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "include_total": {
+            "description": "Add the exact number of matching rows as `total`. Counting scans every match, so request it only when the count is needed.",
+            "type": "boolean"
+          },
+          "limit": {
+            "description": "Rows per page; the collection's documented default and server maximum apply.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "path": {
+            "additionalProperties": false,
+            "properties": {
+              "account_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "account_id"
+            ],
+            "type": "object"
+          },
+          "select": {
+            "description": "Fields returned per item, as a comma-separated string such as \"id,quantity\" or an array such as [\"id\", \"quantity\"]; nested fields keep their paths (`alias_binding.status`). Full rows are returned when omitted.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 64,
+            "minItems": 1,
+            "type": [
+              "string",
+              "array"
+            ]
+          },
+          "sort": {
+            "description": "Sort keys, most significant first; prefix `-` for descending. A comma-separated string such as \"-quantity,id\" or an array such as [\"-quantity\", \"id\"]. The collection's default order applies when omitted.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "type": [
+              "string",
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "name": "iroha.accounts.assets",
+      "outputSchema": {
+        "additionalProperties": true,
+        "description": "Tool structured output payload. Route-dispatched tools include status/headers/content_type/body.",
+        "properties": {
+          "body": {},
+          "content_type": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "status": {
+            "maximum": 599,
+            "minimum": 100,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    {
+      "_meta": {
+        "iroha/routeAuth": {
+          "admission": "dataspace_visible",
+          "authentication": "optional_canonical_account_signature",
+          "schemaVersion": 1,
+          "stableRouteId": "application.accounts_by_account_id_history_get"
+        },
+        "iroha/semantics": {
+          "authority": "dataspace_visible",
+          "mutation": "none",
+          "operation": "observe",
+          "requiresExternalSignature": false,
+          "retry": "safe",
+          "schemaVersion": 1,
+          "sensitivity": "sensitive",
+          "world": "iroha_network"
+        }
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Query account movements, newest first (descending block_height, block_index, movement_index). Fields: id, source, type, status, result_ok, direction, account_id, counterparty_account_id, asset_id, asset_definition_id, amount, tx_hash, timestamp_ms, block_height, block_index, movement_index, operation_id, expires_at_ms, finalized_at_ms, requesting_fi_id. Use filter, select, limit, cursor; sort, include_total, aggregate are rejected. Example: {\"path\":{\"account_id\":\"<I105 account id>\"},\"filter\":\"direction = 'incoming'\"}. Page: {items, next_cursor}; pass `next_cursor` as `cursor` until null, even after empty pages.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "accept": {
+            "type": "string"
+          },
+          "cursor": {
+            "description": "The previous page's `next_cursor`, passed unchanged with the same filter, sort and aggregate to read the next page. Stop when `next_cursor` is null.",
+            "maxLength": 4096,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "filter": {
+            "additionalProperties": false,
+            "description": "Rows to keep, as text or as the JSON form. Text reads like a SQL WHERE clause: `owned_by = \"sorau\u2026\" and quantity >= 10`. Operators: `=`, `!=`, `<`, `<=`, `>`, `>=`, `in [..]`, `not in [..]`, `exists(field)`, `is null`, `is not null`, combined with `and`, `or`, `not` and parentheses; strings are quoted, and decimals are exact (`10.5` or \"10.5\"). JSON form: {\"op\": \"and\", \"args\": [{\"op\": \"eq\", \"args\": [\"owned_by\", \"sorau\u2026\"]}, {\"op\": \"gte\", \"args\": [\"quantity\", 10]}]}.",
+            "properties": {
+              "args": {
+                "type": "array"
+              },
+              "op": {
+                "enum": [
+                  "and",
+                  "or",
+                  "not",
+                  "eq",
+                  "ne",
+                  "lt",
+                  "lte",
+                  "gt",
+                  "gte",
+                  "in",
+                  "nin",
+                  "exists",
+                  "is_null"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "args"
+            ],
+            "type": [
+              "string",
+              "object"
+            ]
+          },
+          "headers": {
+            "additionalProperties": false,
+            "description": "Optional canonical proof signed for the exact target method, path, query, and body. Omit the envelope for the anonymous public-dataspace view.",
+            "oneOf": [
+              {
+                "not": {
+                  "required": [
+                    "X-Iroha-Witness"
+                  ]
+                },
+                "required": [
+                  "X-Iroha-Account",
+                  "X-Iroha-Signature",
+                  "X-Iroha-Timestamp-Ms",
+                  "X-Iroha-Nonce"
+                ]
+              },
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "X-Iroha-Signature"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "X-Iroha-Timestamp-Ms"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "X-Iroha-Nonce"
+                      ]
+                    }
+                  ]
+                },
+                "required": [
+                  "X-Iroha-Witness"
+                ]
+              }
+            ],
+            "properties": {
+              "X-Iroha-Account": {
+                "description": "Exact lowercase canonical 0x account-address hex or exact canonical printable-ASCII account alias; I105 is not an HTTP header encoding. The pattern is a lexical prefilter; Torii performs exact canonical address or alias parsing before dispatch.",
+                "maxLength": 36864,
+                "minLength": 1,
+                "pattern": "^(?:0x(?:[0-9a-f]{2})+|[!-~]+@[!-~]+)$",
+                "type": "string"
+              },
+              "X-Iroha-Nonce": {
+                "maxLength": 256,
+                "minLength": 1,
+                "pattern": "^[!-~]+$",
+                "type": "string"
+              },
+              "X-Iroha-Signature": {
+                "maxLength": 4412,
+                "minLength": 4,
+                "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+                "type": "string"
+              },
+              "X-Iroha-Timestamp-Ms": {
+                "maxLength": 20,
+                "minLength": 1,
+                "pattern": "^(0|[1-9][0-9]*)$",
+                "type": "string"
+              },
+              "X-Iroha-Witness": {
+                "description": "Canonical padded-base64 Norito V1 canonical-request witness.",
+                "maxLength": 1048576,
+                "minLength": 4,
+                "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "limit": {
+            "description": "Rows per page; the collection's documented default and server maximum apply.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "path": {
+            "additionalProperties": false,
+            "properties": {
+              "account_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "account_id"
+            ],
+            "type": "object"
+          },
+          "select": {
+            "description": "Fields returned per item, as a comma-separated string such as \"id,quantity\" or an array such as [\"id\", \"quantity\"]; nested fields keep their paths (`alias_binding.status`). Full rows are returned when omitted.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 64,
+            "minItems": 1,
+            "type": [
+              "string",
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "name": "iroha.accounts.history",
+      "outputSchema": {
+        "additionalProperties": true,
+        "description": "Tool structured output payload. Route-dispatched tools include status/headers/content_type/body.",
+        "properties": {
+          "body": {},
+          "content_type": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "status": {
+            "maximum": 599,
+            "minimum": 100,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    {
+      "_meta": {
+        "iroha/routeAuth": {
+          "admission": "dataspace_visible",
+          "authentication": "optional_canonical_account_signature",
+          "schemaVersion": 1,
+          "stableRouteId": "application.explorer_asset_definitions_by_definition_id_get"
+        },
+        "iroha/semantics": {
+          "authority": "dataspace_visible",
+          "mutation": "none",
+          "operation": "observe",
+          "requiresExternalSignature": false,
+          "retry": "safe",
+          "schemaVersion": 1,
+          "sensitivity": "sensitive",
+          "world": "iroha_network"
+        }
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Fetch explorer asset definition detail by canonical `path.definition_id`.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "accept": {
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": false,
+            "description": "Optional canonical proof signed for the exact target method, path, query, and body. Omit the envelope for the anonymous public-dataspace view.",
+            "oneOf": [
+              {
+                "not": {
+                  "required": [
+                    "X-Iroha-Witness"
+                  ]
+                },
+                "required": [
+                  "X-Iroha-Account",
+                  "X-Iroha-Signature",
+                  "X-Iroha-Timestamp-Ms",
+                  "X-Iroha-Nonce"
+                ]
+              },
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "X-Iroha-Signature"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "X-Iroha-Timestamp-Ms"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "X-Iroha-Nonce"
+                      ]
+                    }
+                  ]
+                },
+                "required": [
+                  "X-Iroha-Witness"
+                ]
+              }
+            ],
+            "properties": {
+              "X-Iroha-Account": {
+                "description": "Exact lowercase canonical 0x account-address hex or exact canonical printable-ASCII account alias; I105 is not an HTTP header encoding. The pattern is a lexical prefilter; Torii performs exact canonical address or alias parsing before dispatch.",
+                "maxLength": 36864,
+                "minLength": 1,
+                "pattern": "^(?:0x(?:[0-9a-f]{2})+|[!-~]+@[!-~]+)$",
+                "type": "string"
+              },
+              "X-Iroha-Nonce": {
+                "maxLength": 256,
+                "minLength": 1,
+                "pattern": "^[!-~]+$",
+                "type": "string"
+              },
+              "X-Iroha-Signature": {
+                "maxLength": 4412,
+                "minLength": 4,
+                "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+                "type": "string"
+              },
+              "X-Iroha-Timestamp-Ms": {
+                "maxLength": 20,
+                "minLength": 1,
+                "pattern": "^(0|[1-9][0-9]*)$",
+                "type": "string"
+              },
+              "X-Iroha-Witness": {
+                "description": "Canonical padded-base64 Norito V1 canonical-request witness.",
+                "maxLength": 1048576,
+                "minLength": 4,
+                "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "path": {
+            "additionalProperties": false,
+            "properties": {
+              "definition_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "definition_id"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "name": "iroha.assets.definitions.get",
+      "outputSchema": {
+        "additionalProperties": true,
+        "description": "Tool structured output payload. Route-dispatched tools include status/headers/content_type/body.",
+        "properties": {
+          "body": {},
+          "content_type": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "status": {
+            "maximum": 599,
+            "minimum": 100,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    {
+      "_meta": {
+        "iroha/routeAuth": {
+          "admission": "public",
+          "authentication": "unauthenticated",
+          "schemaVersion": 1,
+          "stableRouteId": "protocol.health"
+        },
+        "iroha/semantics": {
+          "authority": "public",
+          "mutation": "none",
+          "operation": "observe",
+          "requiresExternalSignature": false,
+          "retry": "safe",
+          "schemaVersion": 1,
+          "sensitivity": "normal",
+          "world": "torii_local"
+        }
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Get node liveness status (`/health`).",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "accept": {
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": false,
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "name": "iroha.health",
+      "outputSchema": {
+        "additionalProperties": true,
+        "description": "Tool structured output payload. Route-dispatched tools include status/headers/content_type/body.",
+        "properties": {
+          "body": {},
+          "content_type": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "status": {
+            "maximum": 599,
+            "minimum": 100,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    {
+      "_meta": {
+        "iroha/routeAuth": {
+          "admission": "public",
+          "authentication": "torii_default",
+          "schemaVersion": 1,
+          "stableRouteId": "pipeline.transaction_status"
+        },
+        "iroha/semantics": {
+          "authority": "listener_credential",
+          "mutation": "none",
+          "operation": "observe",
+          "requiresExternalSignature": false,
+          "retry": "safe",
+          "schemaVersion": 1,
+          "sensitivity": "normal",
+          "world": "iroha_network"
+        }
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Get the latest typed pipeline status for canonical `query.hash`. Defaults to JSON; set accept=application/x-norito for typed Norito.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "accept": {
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": false,
+            "type": "object"
+          },
+          "query": {
+            "additionalProperties": false,
+            "properties": {
+              "hash": {
+                "maxLength": 64,
+                "minLength": 64,
+                "pattern": "^[0-9a-f]{63}[13579bdf]$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "hash"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "type": "object"
+      },
+      "name": "iroha.transactions.status",
+      "outputSchema": {
+        "additionalProperties": true,
+        "description": "Tool structured output payload. Route-dispatched tools include status/headers/content_type/body.",
+        "properties": {
+          "body": {},
+          "content_type": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "status": {
+            "maximum": 599,
+            "minimum": 100,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    {
+      "_meta": {
+        "iroha/routeAuth": {
+          "admission": "authenticated_account",
+          "authentication": "canonical_signed_body",
+          "schemaVersion": 1,
+          "stableRouteId": "pipeline.transaction.submit"
+        },
+        "iroha/semantics": {
+          "authority": "signed_body",
+          "mutation": "may_reduce_remove_or_overwrite",
+          "operation": "mutate",
+          "requiresExternalSignature": true,
+          "retry": "exact_identity_deduplicated",
+          "schemaVersion": 1,
+          "sensitivity": "sensitive",
+          "world": "iroha_network"
+        }
+      },
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Submit a versioned SignedTransaction from canonical `body_base64` bytes and poll exact global pipeline status until state-resolved Applied; state-resolved Rejected and Expired fail. Status polling decodes only exact HTTP 200 payloads, treats only HTTP 404 as pending, and rejects every other HTTP status. The Applied result has exactly `status`, `hash`, `terminal_kind`, `attempts`, `elapsed_ms`, optional `submit`, and `final`.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "accept": {
+            "type": "string"
+          },
+          "body_base64": {
+            "description": "Base64/base64url encoded versioned SignedTransaction bytes.",
+            "type": "string"
+          },
+          "hash": {
+            "description": "Optional exact canonical Iroha transaction hash; if omitted the tool decodes the exact submission response.",
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[0-9a-f]{63}[13579bdf]$",
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": false,
+            "type": "object"
+          },
+          "poll_interval_ms": {
+            "description": "Polling interval in milliseconds (default 500, minimum 50).",
+            "minimum": 50,
+            "type": "integer"
+          },
+          "status_accept": {
+            "description": "Optional Accept header for status polling calls (defaults to application/json).",
+            "type": "string"
+          },
+          "timeout_ms": {
+            "description": "Polling timeout in milliseconds (default 30000, max 600000).",
+            "maximum": 600000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "body_base64"
+        ],
+        "type": "object"
+      },
+      "name": "iroha.transactions.submit_and_wait",
+      "outputSchema": {
+        "additionalProperties": true,
+        "description": "Tool structured output payload. Route-dispatched tools include status/headers/content_type/body.",
+        "properties": {
+          "body": {},
+          "content_type": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "status": {
+            "maximum": 599,
+            "minimum": 100,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    }
+  ],
+  "ttlMs": 30000
+}

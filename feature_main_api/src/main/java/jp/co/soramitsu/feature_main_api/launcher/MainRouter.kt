@@ -55,6 +55,13 @@ interface MainRouter {
 
     fun popBackStackToAccountList()
 
+    /**
+     * Back from the JSON export. It returns to the screen that opened it when that screen is
+     * still waiting underneath (the removal screen's "Export JSON first"), and to the account
+     * list otherwise, as before.
+     */
+    fun leaveBackupJson() = popBackStackToAccountList()
+
     fun popBackStackToAccountDetails()
 
     fun showSelectLanguage()
@@ -92,8 +99,4 @@ interface MainRouter {
     fun showAccountDetails(address: String)
 
     fun showWebView(title: String, url: String)
-
-    fun showGetSoraCard(shouldStartSignIn: Boolean = false, shouldStartSignUp: Boolean = false)
-
-    fun showSoraCardDetails()
 }

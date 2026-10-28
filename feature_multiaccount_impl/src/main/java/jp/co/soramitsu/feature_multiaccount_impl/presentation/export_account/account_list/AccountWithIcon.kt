@@ -47,9 +47,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.AccountIcon
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyChip
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -64,6 +69,7 @@ internal fun SelectableAccountWithIcon(
     @DrawableRes selectableIcon: Int,
     tint: Color,
     showSelectableIcon: Boolean,
+    readOnly: Boolean = false,
 ) {
     Row(
         modifier = modifier,
@@ -85,15 +91,20 @@ internal fun SelectableAccountWithIcon(
             address = address,
             accountName = accountName,
             accountIcon = accountIcon,
+            readOnly = readOnly,
         )
     }
 }
+
+/** Test tag of the "can't send from this phone" label of a read-only account's row. */
+internal const val ACCOUNT_ROW_READ_ONLY_TAG = "AccountRowReadOnly"
 
 @Composable
 private fun AccountWithIcon(
     address: String,
     accountName: String,
     accountIcon: Drawable,
+    readOnly: Boolean = false,
 ) {
     Row {
         AccountIcon(drawable = accountIcon, size = 40.dp, modifier = Modifier.padding(start = Dimens.x2))
@@ -117,6 +128,26 @@ private fun AccountWithIcon(
                 color = MaterialTheme.customColors.fgSecondary,
                 style = MaterialTheme.customTypography.textXSBold,
             )
+
+            if (readOnly) {
+                // An account whose keys cannot be used here is labelled wherever it is listed
+                // or chosen; its options say why and how to repair it.
+                Row(
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .testTagAsId(ACCOUNT_ROW_READ_ONLY_TAG)
+                        .semantics(mergeDescendants = true) { },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ReadOnlyChip()
+                    Text(
+                        modifier = Modifier.padding(start = Dimens.x1),
+                        text = stringResource(R.string.account_read_only_list_label),
+                        color = MaterialTheme.customColors.fgSecondary,
+                        style = MaterialTheme.customTypography.textXS,
+                    )
+                }
+            }
         }
     }
 }

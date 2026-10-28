@@ -39,6 +39,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -48,6 +49,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionMappers
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.genericTitle
 
 @Singleton
 class TransactionMappersImpl @Inject constructor(
@@ -58,6 +60,22 @@ class TransactionMappersImpl @Inject constructor(
 
     override fun mapTransaction(tx: Transaction, curAddress: String): EventUiModel.EventTxUiModel =
         when (tx) {
+            is Transaction.Sora2Submission -> {
+                EventUiModel.EventTxUiModel.EventReferralProgramUiModel(
+                    hash = tx.base.txHash,
+                    timestamp = tx.base.timestamp,
+                    status = tx.base.status,
+                    tokenIcon = DEFAULT_ICON_URI,
+                    title = tx.genericTitle(),
+                    description = tx.networkId.uppercase(),
+                    plusAmount = false,
+                    dateTime = dateTimeFormatter.formatTimeWithoutSeconds(
+                        Date(tx.base.timestamp)
+                    ),
+                    amountFormatted = "",
+                )
+            }
+
             is Transaction.EthTransfer -> {
                 EventUiModel.EventTxUiModel.EventEthTransfer(
                     hash = tx.base.txHash,

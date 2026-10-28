@@ -1,8 +1,7 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
 }
@@ -13,7 +12,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.network"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -23,7 +22,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {

@@ -53,10 +53,10 @@ import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.feature_select_node_impl.R
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.SelectNodeViewModel
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.model.SelectNodeState
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.component.item.SelectableItem
 import jp.co.soramitsu.ui_core.component.menu.MenuItem
 import jp.co.soramitsu.ui_core.resources.Dimens.x2
@@ -222,21 +222,21 @@ private fun PreviewSelectNode() {
                     ChainNode(
                         "Sora",
                         "SORA based on SORA Parliament Ministry of Finance",
-                        "wss://ws.mof.sora.org",
+                        "wss://mof2.sora.org",
                         isSelected = true,
                         isDefault = true,
                     ),
                     ChainNode(
                         "Sora",
                         "SORA based on SORA Parliament Ministry of Finance",
-                        "wss://ws.mof2.sora.org",
+                        "wss://node-a.example",
                         isSelected = false,
                         isDefault = true,
                     ),
                     ChainNode(
                         "Sora",
                         "SORA based on SORA Parliament Ministry of Finance",
-                        "wss://ws.mof3.sora.org",
+                        "wss://node-b.example",
                         isSelected = false,
                         isDefault = true,
                     )
@@ -245,7 +245,7 @@ private fun PreviewSelectNode() {
                     ChainNode(
                         "Sora",
                         "SORA based on SORA Parliament Ministry of Finance",
-                        "wss://ws.mof.sora.org",
+                        "wss://mof2.sora.org",
                         isSelected = false,
                         isDefault = true,
                     )

@@ -36,7 +36,6 @@ import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import jp.co.soramitsu.common.domain.CardHubType
 
 val migration_CardHub_66_67 = object : Migration(66, 67) {
 
@@ -44,7 +43,7 @@ val migration_CardHub_66_67 = object : Migration(66, 67) {
         database.beginTransaction()
 
         val globalCardValues = ContentValues().apply {
-            put("cardId", CardHubType.BUY_XOR_TOKEN.hubName)
+            put("cardId", "buy xor token")
             put("visibility", 1)
             put("sortOrder", 1)
             put("collapsed", 0)

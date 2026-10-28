@@ -116,9 +116,72 @@ enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.str
 
     ACCOUNT_ALREADY_IMPORTED(R.string.account_already_imported_description, R.string.account_already_imported),
 
+    /**
+     * The wallet is already on this phone and signs. No recovery phrase (or seed) was stored for
+     * it, so the one just entered, proven to re-derive it, was kept as its backup (add-only).
+     */
+    ACCOUNT_ALREADY_IMPORTED_BACKUP_SAVED(
+        R.string.account_already_imported_backup_saved,
+        R.string.account_already_imported,
+    ),
+
+    /**
+     * A PIN is stored on this phone but cannot be read, so a repair must be confirmed with the
+     * phone's screen lock. Nothing was changed.
+     */
+    REPAIR_NEEDS_SCREEN_LOCK(
+        R.string.account_repair_screen_lock_needed,
+        R.string.account_repair_copy_failed,
+    ),
+
+    /** Different keys are already stored for the imported address; nothing was written. */
+    ACCOUNT_STORAGE_CONFLICT(R.string.account_storage_conflict_description, R.string.account_storage_conflict),
+
+    /**
+     * The confirmed repair of an account could not keep a copy of the old values first (for
+     * example the phone is out of space), so nothing was changed.
+     */
+    ACCOUNT_REPAIR_COPY_FAILED(
+        R.string.account_repair_copy_failed_description,
+        R.string.account_repair_copy_failed,
+    ),
+
+    /** The text is not an encrypted sr25519 account export this app can read; nothing was written. */
+    JSON_BACKUP_INVALID(R.string.json_backup_invalid, R.string.json_backup_invalid_title),
+
+    /** The password does not open the encrypted JSON export; nothing was written. */
+    JSON_BACKUP_WRONG_PASSWORD(
+        R.string.json_backup_wrong_password,
+        R.string.json_backup_wrong_password_title,
+    ),
+
+    /**
+     * The encrypted JSON export was asked for an account whose stored key pair does not prove
+     * its address. No file is made: it would not be a backup of that account.
+     */
+    ACCOUNT_KEYS_NOT_EXPORTABLE(
+        R.string.export_json_keys_unusable,
+        R.string.export_json_keys_unusable_title,
+    ),
+
+    /** This phone cannot unlock the wallet data stored on it; nothing was written. */
+    WALLET_KEYS_UNAVAILABLE(
+        R.string.wallet_keys_unavailable_description,
+        R.string.wallet_keys_unavailable,
+    ),
+
     GOOGLE_LOGIN_FAILED(R.string.common_google_authorization_error),
 
     GOOGLE_BACKUP_DECRYPTION_FAILED(R.string.common_google_backup_decryption_failed_2),
+
+    /**
+     * A Google backup was opened, but what it holds cannot restore the account it names (for
+     * example its encrypted JSON is damaged or is of another account). Nothing was written.
+     */
+    GOOGLE_BACKUP_UNREADABLE(
+        R.string.google_backup_unreadable,
+        R.string.google_backup_unreadable_title,
+    ),
 
     NOW_BROWSER_FOUND(R.string.common_error_no_browser_error);
 

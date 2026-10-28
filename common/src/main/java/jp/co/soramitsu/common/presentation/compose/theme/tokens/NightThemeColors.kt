@@ -34,47 +34,58 @@ package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
 import androidx.compose.ui.graphics.Color
 
+/**
+ * SORA Neon dark palette mapped onto the ui-core [jp.co.soramitsu.ui_core.theme.CustomColors]
+ * slots (design spec 2.3). Keep in sync with `res/values-night/colors.xml` (neon_*) and
+ * [jp.co.soramitsu.common.presentation.compose.theme.neon.NeonDark].
+ *
+ * fgInverted is the dark "ink": it is both the label on neon fills (primary button) and the
+ * text on the inverted surface.
+ */
 object NightThemeColors {
 
-    val AccentPrimary = Color(0xfff754a3)
+    val AccentPrimary = Color(0xFFFF3355)
 
-    val AccentPrimaryContainer = Color(0xffffe8eb)
+    val AccentPrimaryContainer = Color(0xFF2A0C15)
 
-    val AccentSecondary = Color(0xfffcfcfc)
+    val AccentSecondary = Color(0xFFF5F6FB)
 
-    val AccentSecondaryContainer = Color(0xff313131)
+    val AccentSecondaryContainer = Color(0xFF1C1C28)
 
-    val AccentTertiary = Color(0xff9b6fa5)
+    val AccentTertiary = Color(0xFF7CCFE0)
 
-    val AccentTertiaryContainer = Color(0xff313131)
+    val AccentTertiaryContainer = Color(0xFF0F1E24)
 
-    val BgPage = Color(0xff45245f)
+    val BgPage = Color(0xFF06060B)
 
-    val BgSurface = Color(0xFF592d71)
+    val BgSurface = Color(0xFF14141F)
 
-    val BgSurfaceVariant = Color(0xff492067)
+    val BgSurfaceVariant = Color(0xFF1C1C28)
 
-    val BgSurfaceInverted = Color(0xfffcfcfc)
+    val BgSurfaceInverted = Color(0xFFF5F6FB)
 
-    val FgPrimary = Color(0xfffcfcfc)
+    val FgPrimary = Color(0xFFF5F6FB)
 
-    val FgSecondary = Color(0xffc29ab7)
+    val FgSecondary = Color(0xFFB3B7CB)
 
-    val FgTertiary = Color(0xff9b6fa5)
+    val FgTertiary = Color(0xFF969BB4)
 
-    val FgInverted = Color(0xff45245f)
+    val FgInverted = Color(0xFF06060B)
 
-    val FgOutline = Color(0xFF744594)
+    val FgOutline = Color(0xFF26263A)
 
-    val StatusSuccess = Color(0xFF44e5b2)
+    val StatusSuccess = Color(0xFF2EF2A4)
 
-    val StatusSuccessContainer = Color(0xFFd3f6ec)
+    val StatusSuccessContainer = Color(0xFF0B221D)
 
-    val StatusWarning = Color(0xFFff9900)
+    val StatusWarning = Color(0xFFFFB547)
 
-    val StatusWarningContainer = Color(0xFFfff1d2)
+    val StatusWarningContainer = Color(0xFF241B12)
 
-    val StatusError = Color(0xFFf24197)
+    val StatusError = Color(0xFFFF6B85)
 
-    val StatusErrorContainer = Color(0xFFffe8eb)
+    val StatusErrorContainer = Color(0xFF2A1119)
+
+    /** ui-core `elevation` slot: no grey shadows on the dark canvas. */
+    val Elevation = Color(0x00000000)
 }

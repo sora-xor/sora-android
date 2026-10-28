@@ -18,6 +18,10 @@
         android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapFragment" />
 
     <fragment
+        android:id="@+id/polkamarktFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.polkamarkt.PolkamarktFragment" />
+
+    <fragment
         android:id="@+id/claimFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimFragment" />
 
@@ -36,10 +40,6 @@
     <fragment
         android:id="@+id/txDetailsFragment"
         android:name="jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails.TxDetailsFragment" />
-
-    <fragment
-        android:id="@+id/buyCryptoFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.buycrypto.BuyCryptoFragment" />
 
     <fragment
         android:id="@+id/contactsFragment"
@@ -72,10 +72,6 @@
     <fragment
         android:id="@+id/editCardsHub"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.editcardshub.EditCardsHubFragment" />
-
-    <fragment
-        android:id="@+id/soraCardDetailsFragment"
-        android:name="jp.co.soramitsu.feature_sora_card_impl.presentation.details.SoraCardDetailsFragment" />
 
     <fragment
         android:id="@+id/accountDetailsFragment"
@@ -122,6 +118,5 @@
     <include app:graph="@navigation/wallet_nav_graph" />
     <include app:graph="@navigation/referral_nav_graph" />
     <include app:graph="@navigation/select_node_nav_graph" />
-    <include app:graph="@navigation/sora_card_nav_graph" />
 
 </navigation>

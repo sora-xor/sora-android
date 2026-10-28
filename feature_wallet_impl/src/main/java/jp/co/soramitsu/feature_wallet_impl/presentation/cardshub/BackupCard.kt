@@ -32,7 +32,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import jp.co.soramitsu.ui_core.theme.customTypography
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.DeviceTransferNotice
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
@@ -42,15 +48,19 @@ import jp.co.soramitsu.common.presentation.compose.components.BasicBannerCard
 fun BackupCard(
     onStartClicked: () -> Unit,
 ) {
-    BasicBannerCard(
-        imageContent = R.drawable.ic_banner_backup,
-        title = stringResource(id = R.string.wallet_backup),
-        description = stringResource(id = R.string.protect_loss_access_funds),
-        button = stringResource(id = R.string.backup_now),
-        closeEnabled = false,
-        onButtonClicked = onStartClicked,
-        onCloseCard = {},
-    )
+    jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeCard {
+        Column {
+            androidx.compose.material.Text(stringResource(R.string.wallet_backup),
+                style = androidx.compose.material.MaterialTheme.customTypography.headline2)
+            androidx.compose.material.Text(stringResource(R.string.protect_loss_access_funds),
+                modifier = Modifier.padding(vertical = 8.dp),
+                style = androidx.compose.material.MaterialTheme.customTypography.textS)
+            jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeAction(
+                stringResource(R.string.backup_now), jp.co.soramitsu.common.presentation.compose.neon.NeonVariant.Safe,
+                onClick = onStartClicked)
+            DeviceTransferNotice(modifier = Modifier.padding(top = 8.dp))
+        }
+    }
 }
 
 @Preview

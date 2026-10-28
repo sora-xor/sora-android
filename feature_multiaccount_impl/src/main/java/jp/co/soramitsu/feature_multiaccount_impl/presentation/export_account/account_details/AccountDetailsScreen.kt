@@ -56,12 +56,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.Option
+import jp.co.soramitsu.common.presentation.compose.neon.InputText
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
-import jp.co.soramitsu.ui_core.component.input.InputText
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -130,6 +130,7 @@ internal fun BackupOptions(
     onShowRawSeed: () -> Unit,
     onExportJson: () -> Unit,
     onBackupGoogle: () -> Unit,
+    isCloudBackupAvailable: Boolean = true,
 ) {
     ContentCard {
         Column(
@@ -171,6 +172,10 @@ internal fun BackupOptions(
                 bottomDivider = isBackupAvailable != null,
             )
 
+            if (!isCloudBackupAvailable) {
+                Text(stringResource(R.string.wallet_cloud_backup_unavailable), style = MaterialTheme.customTypography.paragraphS,
+                    color = MaterialTheme.customColors.fgPrimary, modifier = Modifier.padding(vertical = Dimens.x2))
+            }
             isBackupAvailable?.let {
                 val text = if (isBackupAvailable) {
                     stringResource(id = R.string.account_options_delete_backup)

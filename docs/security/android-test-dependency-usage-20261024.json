@@ -1,0 +1,110 @@
+{
+  "scope": "Exact vendored source and class constant-pool byte search; app main sources inspected separately",
+  "vendorModules": [
+    {
+      "module": "android-foundation/0.0.4",
+      "aarSha256": "a05a3a7b2c465f0b54a283f83d4bb3e771ea2a91ba1834f850e1124fa9cc2c6b",
+      "sourcesSha256": "f93df8060303fe447ceff70f01cdd554bc277b94f802311f4f9bad35806796d0",
+      "classCount": 107,
+      "sourceReferences": [
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/AssertException.kt",
+          "line": "import org.junit.Assert"
+        },
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/Ext.kt",
+          "line": "import org.mockito.ArgumentMatchers.eq"
+        },
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/Ext.kt",
+          "line": "import org.mockito.Mockito"
+        },
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/MainCoroutineRule.kt",
+          "line": "import kotlinx.coroutines.test.StandardTestDispatcher"
+        },
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/MainCoroutineRule.kt",
+          "line": "import kotlinx.coroutines.test.TestDispatcher"
+        },
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/MainCoroutineRule.kt",
+          "line": "import kotlinx.coroutines.test.resetMain"
+        },
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/MainCoroutineRule.kt",
+          "line": "import kotlinx.coroutines.test.setMain"
+        },
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/MainCoroutineRule.kt",
+          "line": "import org.junit.rules.TestWatcher"
+        },
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/MainCoroutineRule.kt",
+          "line": "import org.junit.runner.Description"
+        },
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/TestFlowCollector.kt",
+          "line": "import kotlinx.coroutines.test.TestScope"
+        },
+        {
+          "file": "jp/co/soramitsu/androidfoundation/testing/TestFlowCollector.kt",
+          "line": "import kotlinx.coroutines.test.UnconfinedTestDispatcher"
+        }
+      ],
+      "bytecodeReferences": [
+        {
+          "class": "jp/co/soramitsu/androidfoundation/testing/AssertExceptionKt.class",
+          "packageReference": "org/junit/"
+        },
+        {
+          "class": "jp/co/soramitsu/androidfoundation/testing/ExtKt.class",
+          "packageReference": "org/mockito/"
+        },
+        {
+          "class": "jp/co/soramitsu/androidfoundation/testing/MainCoroutineRule.class",
+          "packageReference": "org/junit/"
+        },
+        {
+          "class": "jp/co/soramitsu/androidfoundation/testing/MainCoroutineRule.class",
+          "packageReference": "kotlinx/coroutines/test/"
+        },
+        {
+          "class": "jp/co/soramitsu/androidfoundation/testing/TestFlowCollector$job$1.class",
+          "packageReference": "kotlinx/coroutines/test/"
+        },
+        {
+          "class": "jp/co/soramitsu/androidfoundation/testing/TestFlowCollector.class",
+          "packageReference": "kotlinx/coroutines/test/"
+        },
+        {
+          "class": "jp/co/soramitsu/androidfoundation/testing/TestFlowCollectorKt$test$1.class",
+          "packageReference": "kotlinx/coroutines/test/"
+        },
+        {
+          "class": "jp/co/soramitsu/androidfoundation/testing/TestFlowCollectorKt$test$2.class",
+          "packageReference": "kotlinx/coroutines/test/"
+        },
+        {
+          "class": "jp/co/soramitsu/androidfoundation/testing/TestFlowCollectorKt.class",
+          "packageReference": "kotlinx/coroutines/test/"
+        }
+      ]
+    },
+    {
+      "module": "xsubstrate/1.2.7",
+      "aarSha256": "dc23dae4c5cd00d45ea10afeb8dbe293952d71ceded6fa6418a92d4f47e56956",
+      "sourcesSha256": "94c3da4052e46127c66c57169413b8f6f5f4a23cd9f0dc2bb747d85b66663ffe",
+      "classCount": 507,
+      "sourceReferences": [],
+      "bytecodeReferences": []
+    }
+  ],
+  "otherRuntimeArtifactCount": 318,
+  "otherRuntimeMockkBytecodeReferences": [],
+  "decision": "Remove xsubstrate 1.2.7 JUnit/Mockito/MockK and foundation 0.0.4 MockK dependency edges only; retain foundation public testing API closure. No vendor binary or metadata republished.",
+  "limitations": [
+    "Does not prove reflective use; exact source/public API inspection supplements bytecode search",
+    "Foundation still bundles testing helpers and their referenced runtime dependencies; removing them requires a separately reviewed SDK packaging change"
+  ]
+}

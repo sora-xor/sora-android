@@ -46,13 +46,12 @@ https://android-developers.googleblog.com/2022/11/per-app-language-preferences-p
  */
 class LanguagesHolder {
 
-    companion object {
-        private const val LANGUAGE_PART_INDEX = 0
-        private const val COUNTRY_PART_INDEX = 1
-    }
-
     private val russian = Language("ru", R.string.common_russian, R.string.common_russian_native)
     private val english = Language("en", R.string.common_english, R.string.common_english_native)
+    private val akkadian =
+        Language("akk", R.string.common_akkadian, R.string.common_akkadian_native)
+    private val egyptian =
+        Language("egy-Egyp", R.string.common_egyptian, R.string.common_egyptian_native)
     private val spanish = Language("es", R.string.common_spanish, R.string.common_spanish_native)
     private val french = Language("fr", R.string.common_french, R.string.common_french_native)
     private val german = Language("de", R.string.common_german, R.string.common_german_native)
@@ -98,8 +97,10 @@ class LanguagesHolder {
     private val availableLanguages =
         mutableListOf(english, russian, spanish, french, german, norwegian, chinese, indonesian, turkish)
 
+    // Old Akkadian and Middle Egyptian stay available for testing only; they are not offered in
+    // the production app (see common/src/production/res/xml/locale_config.xml).
     private val nonProdLanguages =
-        mutableListOf(arab, hebrew, persian, serbian, vietnamese, malay, hindi, finnish, japanese, chinese_taiwan, azerbaijani, dutch, portuguese)
+        mutableListOf(akkadian, egyptian, arab, hebrew, persian, serbian, vietnamese, malay, hindi, finnish, japanese, chinese_taiwan, azerbaijani, dutch, portuguese)
 
     fun getCurrentLocale(): Locale {
         return AppCompatDelegate.getApplicationLocales()[0] ?: Locale.getDefault()
@@ -133,15 +134,6 @@ class LanguagesHolder {
 
     private fun languageTag(l: String) = l.substringBefore("-").substringBefore("_")
 
-    private fun mapLanguageToLocale(language: String): Locale {
-        val codes = language.split("_")
-
-        return if (hasCountryCode(codes)) {
-            Locale(codes[LANGUAGE_PART_INDEX], codes[COUNTRY_PART_INDEX])
-        } else {
-            Locale(language)
-        }
-    }
-
-    private fun hasCountryCode(codes: List<String>) = codes.size != 1
+    private fun mapLanguageToLocale(language: String): Locale =
+        Locale.forLanguageTag(language.replace('_', '-'))
 }

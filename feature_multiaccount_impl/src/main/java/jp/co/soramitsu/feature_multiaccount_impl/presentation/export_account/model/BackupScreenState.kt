@@ -36,5 +36,15 @@ data class BackupScreenState(
     val mnemonicWords: List<String> = emptyList(),
     val seedString: String = "",
     val isCreatingFlow: Boolean = false,
-    val isViaGoogleDrive: Boolean = false
+    val isViaGoogleDrive: Boolean = false,
+    /**
+     * Nothing stored on this phone for this account re-derives its address, so no phrase or
+     * seed is shown; the encrypted JSON export is offered instead.
+     */
+    val noMatchingSecret: Boolean = false,
+    /**
+     * With [noMatchingSecret]: the account's stored key signs, so the encrypted JSON export
+     * works and is offered. A read-only account is pointed to importing its phrase instead.
+     */
+    val canExportJson: Boolean = false,
 )

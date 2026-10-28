@@ -1,14 +1,12 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
 }
-
-val composeCompilerVersion: String by project
 
 kotlin {
     jvmToolchain(17)
@@ -16,7 +14,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.feature_blockexplorer_impl"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -26,7 +24,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -43,11 +41,6 @@ android {
         viewBinding = true
         compose = true
     }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = composeCompilerVersion
-    }
-
     flavorDimensions += listOf("default")
 
     productFlavors {
@@ -78,6 +71,7 @@ android {
 dependencies {
 
     implementation(project(":common"))
+    implementation(project(":core_db"))
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_assets_api"))
     implementation(project(":feature_blockexplorer_api"))
@@ -86,6 +80,7 @@ dependencies {
     implementation(project(":feature_wallet_api"))
     implementation(project(":network"))
 
+    implementation(libs.roomDep)
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)
     implementation(libs.constraintDep)
@@ -117,13 +112,12 @@ dependencies {
     implementation(libs.timberDep)
 
     implementation(libs.lifecycleProcessDep)
-    kapt(libs.lifecycleKaptDep)
 
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
     implementation(libs.daggerDep)
-    kapt(libs.daggerKaptDep)
+    ksp(libs.hiltCompilerDep)
 
     testImplementation(project(":test_data"))
     testImplementation(libs.coroutineTestDep)

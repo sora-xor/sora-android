@@ -1,0 +1,515 @@
+{
+  "assessedAtUtc": "2026-10-23T17:01:54.999580+00:00",
+  "lockSha256": "72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395",
+  "source": "https://api.osv.dev/v1/querybatch",
+  "scope": "Registry packages in retained xcrypto native JNI Cargo.lock; version match is not reachability",
+  "registryPackageCount": 57,
+  "unscannedLocalPackages": [
+    {
+      "name": "sr25519java_1",
+      "version": "0.1.0",
+      "source": "local"
+    }
+  ],
+  "affectedPackageCount": 3,
+  "advisoryMatchCount": 6,
+  "findings": [
+    {
+      "name": "curve25519-dalek",
+      "version": "2.1.3",
+      "advisories": [
+        "GHSA-x4gp-pqpj-f43q",
+        "RUSTSEC-2024-0344"
+      ],
+      "details": [
+        {
+          "id": "GHSA-x4gp-pqpj-f43q",
+          "summary": "curve25519-dalek has timing variability in `curve25519-dalek`'s `Scalar29::sub`/`Scalar52::sub`",
+          "details": "Timing variability of any kind is problematic when working with  potentially secret values such as elliptic curve scalars, and such issues can potentially leak private keys and other secrets. Such a problem was recently discovered in `curve25519-dalek`.\n\nThe `Scalar29::sub` (32-bit) and `Scalar52::sub` (64-bit) functions contained usage of a mask value inside a loop where LLVM saw an opportunity to insert a branch instruction (`jns` on x86) to conditionally bypass this code section when the mask value is set to zero as can be seen in godbolt:\n\n- 32-bit (see L106): https://godbolt.org/z/zvaWxzvqv\n- 64-bit (see L48): https://godbolt.org/z/PczYj7Pda\n\nA similar problem was recently discovered in the Kyber reference implementation:\n\nhttps://groups.google.com/a/list.nist.gov/g/pqc-forum/c/hqbtIGFKIpU/m/cnE3pbueBgAJ\n\nAs discussed on that thread, one portable solution, which is also used in this PR, is to introduce a volatile read as an optimization barrier, which prevents the compiler from optimizing it away.\n\nThe fix can be validated in godbolt here:\n\n- 32-bit: https://godbolt.org/z/jc9j7eb8E\n- 64-bit: https://godbolt.org/z/x8d46Yfah\n\nThe problem was discovered and the solution independently verified by Alexander Wagner <alexander.wagner@aisec.fraunhofer.de> and Lea Themint <lea.thiemt@tum.de> using their DATA tool:\n\nhttps://github.com/Fraunhofer-AISEC/DATA",
+          "aliases": [
+            "CVE-2024-58262",
+            "RUSTSEC-2024-0344"
+          ],
+          "modified": "2026-09-10T03:50:15.886084155Z",
+          "published": "2024-06-18T21:56:24Z",
+          "database_specific": {
+            "nvd_published_at": null,
+            "cwe_ids": [
+              "CWE-203"
+            ],
+            "severity": "LOW",
+            "github_reviewed": true,
+            "github_reviewed_at": "2024-06-18T21:56:24Z"
+          },
+          "references": [
+            {
+              "type": "ADVISORY",
+              "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-58262"
+            },
+            {
+              "type": "WEB",
+              "url": "https://github.com/dalek-cryptography/curve25519-dalek/pull/659"
+            },
+            {
+              "type": "WEB",
+              "url": "https://github.com/dalek-cryptography/curve25519-dalek/commit/415892acf1cdf9161bd6a4c99bc2f4cb8fae5e6a"
+            },
+            {
+              "type": "PACKAGE",
+              "url": "https://github.com/dalek-cryptography/curve25519-dalek"
+            },
+            {
+              "type": "WEB",
+              "url": "https://rustsec.org/advisories/RUSTSEC-2024-0344.html"
+            }
+          ],
+          "affected": [
+            {
+              "package": {
+                "name": "curve25519-dalek",
+                "ecosystem": "crates.io",
+                "purl": "pkg:cargo/curve25519-dalek"
+              },
+              "ranges": [
+                {
+                  "type": "SEMVER",
+                  "events": [
+                    {
+                      "introduced": "0"
+                    },
+                    {
+                      "fixed": "4.1.3"
+                    }
+                  ]
+                }
+              ],
+              "database_specific": {
+                "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/06/GHSA-x4gp-pqpj-f43q/GHSA-x4gp-pqpj-f43q.json"
+              }
+            }
+          ],
+          "schema_version": "1.9.0",
+          "severity": [
+            {
+              "type": "CVSS_V3",
+              "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N"
+            }
+          ]
+        },
+        {
+          "id": "RUSTSEC-2024-0344",
+          "summary": "Timing variability in `curve25519-dalek`'s `Scalar29::sub`/`Scalar52::sub`",
+          "details": "Timing variability of any kind is problematic when working with  potentially secret values such as\nelliptic curve scalars, and such issues can potentially leak private keys and other secrets. Such a\nproblem was recently discovered in `curve25519-dalek`.\n\nThe `Scalar29::sub` (32-bit) and `Scalar52::sub` (64-bit) functions contained usage of a mask value\ninside a loop where LLVM saw an opportunity to insert a branch instruction (`jns` on x86) to\nconditionally bypass this code section when the mask value is set to zero as can be seen in godbolt:\n\n- 32-bit (see L106): <https://godbolt.org/z/zvaWxzvqv>\n- 64-bit (see L48): <https://godbolt.org/z/PczYj7Pda>\n\nA similar problem was recently discovered in the Kyber reference implementation:\n\n<https://groups.google.com/a/list.nist.gov/g/pqc-forum/c/hqbtIGFKIpU/m/cnE3pbueBgAJ>\n\nAs discussed on that thread, one portable solution, which is also used in this PR, is to introduce a\nvolatile read as an optimization barrier, which prevents the compiler from optimizing it away.\n\nThe fix can be validated in godbolt here:\n\n- 32-bit: <https://godbolt.org/z/jc9j7eb8E>\n- 64-bit: <https://godbolt.org/z/x8d46Yfah>\n\nThe problem was discovered and the solution independently verified by \nAlexander Wagner <alexander.wagner@aisec.fraunhofer.de> and Lea Themint <lea.thiemt@tum.de> using\ntheir DATA tool:\n\n<https://github.com/Fraunhofer-AISEC/DATA>",
+          "aliases": [
+            "CVE-2024-58262",
+            "GHSA-x4gp-pqpj-f43q"
+          ],
+          "modified": "2025-10-28T06:29:09.774018Z",
+          "published": "2024-06-18T12:00:00Z",
+          "database_specific": {
+            "license": "CC0-1.0"
+          },
+          "references": [
+            {
+              "type": "PACKAGE",
+              "url": "https://crates.io/crates/curve25519-dalek"
+            },
+            {
+              "type": "ADVISORY",
+              "url": "https://rustsec.org/advisories/RUSTSEC-2024-0344.html"
+            },
+            {
+              "type": "WEB",
+              "url": "https://github.com/dalek-cryptography/curve25519-dalek/pull/659"
+            }
+          ],
+          "affected": [
+            {
+              "package": {
+                "name": "curve25519-dalek",
+                "ecosystem": "crates.io",
+                "purl": "pkg:cargo/curve25519-dalek"
+              },
+              "ranges": [
+                {
+                  "type": "SEMVER",
+                  "events": [
+                    {
+                      "introduced": "0.0.0-0"
+                    },
+                    {
+                      "fixed": "4.1.3"
+                    }
+                  ]
+                }
+              ],
+              "ecosystem_specific": {
+                "affected_functions": null,
+                "affects": {
+                  "arch": [],
+                  "functions": [],
+                  "os": []
+                }
+              },
+              "database_specific": {
+                "cvss": null,
+                "informational": null,
+                "source": "https://github.com/rustsec/advisory-db/blob/osv/crates/RUSTSEC-2024-0344.json",
+                "categories": [
+                  "crypto-failure"
+                ]
+              }
+            }
+          ],
+          "schema_version": "1.7.3"
+        }
+      ]
+    },
+    {
+      "name": "rand",
+      "version": "0.7.3",
+      "advisories": [
+        "GHSA-cq8v-f236-94qc",
+        "RUSTSEC-2026-0097"
+      ],
+      "details": [
+        {
+          "id": "GHSA-cq8v-f236-94qc",
+          "summary": "Rand is unsound with a custom logger using rand::rng()",
+          "details": "It has been reported (by @lopopolo) that the `rand` library is [unsound](https://rust-lang.github.io/unsafe-code-guidelines/glossary.html#soundness-of-code--of-a-library) (i.e. that safe code using the public API can cause Undefined Behaviour) when all the following conditions are met:\n\n- The `log` and `thread_rng` features are enabled\n- A [custom logger](https://docs.rs/log/latest/log/#implementing-a-logger) is defined\n- The custom logger accesses `rand::rng()` (previously `rand::thread_rng()`) and calls any `TryRng` (previously `RngCore`) methods on `ThreadRng`\n- The `ThreadRng` (attempts to) reseed while called from the custom logger (this happens every 64 kB of generated data)\n- Trace-level logging is enabled or warn-level logging is enabled and the random source (the `getrandom` crate) is unable to provide a new seed\n\n`TryRng` (previously `RngCore`) methods for `ThreadRng` use `unsafe` code to cast `*mut BlockRng<ReseedingCore>` to `&mut BlockRng<ReseedingCore>`. When all the above conditions are met this results in an aliased mutable reference, violating the Stacked Borrows rules. Miri is able to detect this violation in sample code. Since construction of [aliased mutable references is Undefined Behaviour](https://doc.rust-lang.org/stable/nomicon/references.html), the behaviour of optimized builds is hard to predict.",
+          "aliases": [
+            "RUSTSEC-2026-0097"
+          ],
+          "modified": "2026-09-10T03:50:43.958966498Z",
+          "published": "2026-04-14T01:03:36Z",
+          "database_specific": {
+            "github_reviewed": true,
+            "github_reviewed_at": "2026-04-14T01:03:36Z",
+            "nvd_published_at": null,
+            "cwe_ids": [
+              "CWE-20"
+            ],
+            "severity": "LOW"
+          },
+          "references": [
+            {
+              "type": "WEB",
+              "url": "https://github.com/rust-random/rand/pull/1763"
+            },
+            {
+              "type": "PACKAGE",
+              "url": "https://github.com/rust-random/rand"
+            },
+            {
+              "type": "WEB",
+              "url": "https://rustsec.org/advisories/RUSTSEC-2026-0097.html"
+            }
+          ],
+          "affected": [
+            {
+              "package": {
+                "name": "rand",
+                "ecosystem": "crates.io",
+                "purl": "pkg:cargo/rand"
+              },
+              "ranges": [
+                {
+                  "type": "SEMVER",
+                  "events": [
+                    {
+                      "introduced": "0.9.0"
+                    },
+                    {
+                      "fixed": "0.9.3"
+                    }
+                  ]
+                }
+              ],
+              "database_specific": {
+                "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/04/GHSA-cq8v-f236-94qc/GHSA-cq8v-f236-94qc.json"
+              }
+            },
+            {
+              "package": {
+                "name": "rand",
+                "ecosystem": "crates.io",
+                "purl": "pkg:cargo/rand"
+              },
+              "ranges": [
+                {
+                  "type": "SEMVER",
+                  "events": [
+                    {
+                      "introduced": "0.10.0"
+                    },
+                    {
+                      "fixed": "0.10.1"
+                    }
+                  ]
+                }
+              ],
+              "versions": [
+                "0.10.0"
+              ],
+              "database_specific": {
+                "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/04/GHSA-cq8v-f236-94qc/GHSA-cq8v-f236-94qc.json"
+              }
+            },
+            {
+              "package": {
+                "name": "rand",
+                "ecosystem": "crates.io",
+                "purl": "pkg:cargo/rand"
+              },
+              "ranges": [
+                {
+                  "type": "SEMVER",
+                  "events": [
+                    {
+                      "introduced": "0.7.0"
+                    },
+                    {
+                      "fixed": "0.8.6"
+                    }
+                  ]
+                }
+              ],
+              "database_specific": {
+                "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/04/GHSA-cq8v-f236-94qc/GHSA-cq8v-f236-94qc.json"
+              }
+            }
+          ],
+          "schema_version": "1.9.0"
+        },
+        {
+          "id": "RUSTSEC-2026-0097",
+          "summary": "Rand is unsound with a custom logger using `rand::rng()`",
+          "details": "It has been reported (by [@lopopolo](https://github.com/lopopolo)) that the `rand` library is [unsound](https://rust-lang.github.io/unsafe-code-guidelines/glossary.html#soundness-of-code--of-a-library) (i.e. that safe code using the public API can cause Undefined Behaviour) when all the following conditions are met:\n\n- The `log` and `thread_rng` features are enabled\n- A [custom logger](https://docs.rs/log/latest/log/#implementing-a-logger) is defined\n- The custom logger accesses `rand::rng()` (previously `rand::thread_rng()`) and calls any `TryRng` (previously `RngCore`) methods on `ThreadRng`\n- The `ThreadRng` (attempts to) reseed while called from the custom logger (this happens every 64 kB of generated data)\n- Trace-level logging is enabled or warn-level logging is enabled and the random source (the `getrandom` crate) is unable to provide a new seed\n\n`TryRng` (previously `RngCore`) methods for `ThreadRng` use `unsafe` code to cast `*mut BlockRng<ReseedingCore>` to `&mut BlockRng<ReseedingCore>`. When all the above conditions are met this results in an aliased mutable reference, violating the Stacked Borrows rules. Miri is able to detect this violation in sample code. Since construction of [aliased mutable references is Undefined Behaviour](https://doc.rust-lang.org/stable/nomicon/references.html), the behaviour of optimized builds is hard to predict.",
+          "aliases": [
+            "GHSA-cq8v-f236-94qc"
+          ],
+          "modified": "2026-07-17T16:00:04.554426493Z",
+          "published": "2026-04-09T12:00:00Z",
+          "database_specific": {
+            "license": "CC0-1.0"
+          },
+          "references": [
+            {
+              "type": "PACKAGE",
+              "url": "https://crates.io/crates/rand"
+            },
+            {
+              "type": "ADVISORY",
+              "url": "https://rustsec.org/advisories/RUSTSEC-2026-0097.html"
+            },
+            {
+              "type": "WEB",
+              "url": "https://github.com/rust-random/rand/pull/1763"
+            }
+          ],
+          "affected": [
+            {
+              "package": {
+                "name": "rand",
+                "ecosystem": "crates.io",
+                "purl": "pkg:cargo/rand"
+              },
+              "ranges": [
+                {
+                  "type": "SEMVER",
+                  "events": [
+                    {
+                      "introduced": "0.7.0"
+                    },
+                    {
+                      "fixed": "0.8.6"
+                    },
+                    {
+                      "introduced": "0.9.0"
+                    },
+                    {
+                      "fixed": "0.9.3"
+                    },
+                    {
+                      "introduced": "0.10.0"
+                    },
+                    {
+                      "fixed": "0.10.1"
+                    }
+                  ]
+                }
+              ],
+              "ecosystem_specific": {
+                "affected_functions": null,
+                "affects": {
+                  "arch": [],
+                  "os": [],
+                  "functions": [
+                    "rand::rng",
+                    "rand::thread_rng"
+                  ]
+                }
+              },
+              "database_specific": {
+                "cvss": null,
+                "informational": "unsound",
+                "source": "https://github.com/rustsec/advisory-db/blob/osv/crates/RUSTSEC-2026-0097.json",
+                "categories": []
+              }
+            }
+          ],
+          "schema_version": "1.7.5"
+        }
+      ]
+    },
+    {
+      "name": "zeroize_derive",
+      "version": "0.7.0",
+      "advisories": [
+        "GHSA-c5hx-w945-j4pq",
+        "RUSTSEC-2021-0115"
+      ],
+      "details": [
+        {
+          "id": "GHSA-c5hx-w945-j4pq",
+          "summary": "Memory flaw in zeroize_derive",
+          "details": "An issue was discovered in the zeroize_derive crate before 1.1.1 for Rust. Dropped memory is not zeroed out for an enum.",
+          "aliases": [
+            "CVE-2021-45706",
+            "RUSTSEC-2021-0115"
+          ],
+          "modified": "2023-11-08T04:07:22.993048Z",
+          "published": "2022-01-06T22:08:33Z",
+          "database_specific": {
+            "nvd_published_at": "2021-12-27T00:15:00Z",
+            "cwe_ids": [
+              "CWE-459"
+            ],
+            "severity": "CRITICAL",
+            "github_reviewed": true,
+            "github_reviewed_at": "2022-01-05T23:01:59Z"
+          },
+          "references": [
+            {
+              "type": "ADVISORY",
+              "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-45706"
+            },
+            {
+              "type": "WEB",
+              "url": "https://github.com/iqlusioninc/crates/issues/876"
+            },
+            {
+              "type": "PACKAGE",
+              "url": "https://github.com/RustCrypto/utils/tree/master/zeroize/derive"
+            },
+            {
+              "type": "WEB",
+              "url": "https://raw.githubusercontent.com/rustsec/advisory-db/main/crates/zeroize_derive/RUSTSEC-2021-0115.md"
+            },
+            {
+              "type": "WEB",
+              "url": "https://rustsec.org/advisories/RUSTSEC-2021-0115.html"
+            }
+          ],
+          "affected": [
+            {
+              "package": {
+                "name": "zeroize_derive",
+                "ecosystem": "crates.io",
+                "purl": "pkg:cargo/zeroize_derive"
+              },
+              "ranges": [
+                {
+                  "type": "SEMVER",
+                  "events": [
+                    {
+                      "introduced": "0"
+                    },
+                    {
+                      "fixed": "1.1.1"
+                    }
+                  ]
+                }
+              ],
+              "database_specific": {
+                "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2022/01/GHSA-c5hx-w945-j4pq/GHSA-c5hx-w945-j4pq.json"
+              }
+            }
+          ],
+          "schema_version": "1.9.0",
+          "severity": [
+            {
+              "type": "CVSS_V3",
+              "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+            }
+          ]
+        },
+        {
+          "id": "RUSTSEC-2021-0115",
+          "summary": "`#[zeroize(drop)]` doesn't implement `Drop` for `enum`s",
+          "details": "Affected versions of this crate did not implement `Drop` when `#[zeroize(drop)]` was used on an `enum`.\n\nThis can result in memory not being zeroed out after dropping it, which is exactly what is intended when adding this attribute.\n\nThe flaw was corrected in version 1.2 and `#[zeroize(drop)]` on `enum`s now properly implements `Drop`.",
+          "aliases": [
+            "CVE-2021-45706",
+            "GHSA-c5hx-w945-j4pq"
+          ],
+          "modified": "2023-11-08T04:07:22.993048Z",
+          "published": "2021-09-24T12:00:00Z",
+          "database_specific": {
+            "license": "CC0-1.0"
+          },
+          "references": [
+            {
+              "type": "PACKAGE",
+              "url": "https://crates.io/crates/zeroize_derive"
+            },
+            {
+              "type": "ADVISORY",
+              "url": "https://rustsec.org/advisories/RUSTSEC-2021-0115.html"
+            },
+            {
+              "type": "REPORT",
+              "url": "https://github.com/iqlusioninc/crates/issues/876"
+            }
+          ],
+          "affected": [
+            {
+              "package": {
+                "name": "zeroize_derive",
+                "ecosystem": "crates.io",
+                "purl": "pkg:cargo/zeroize_derive"
+              },
+              "ranges": [
+                {
+                  "type": "SEMVER",
+                  "events": [
+                    {
+                      "introduced": "0.0.0-0"
+                    },
+                    {
+                      "fixed": "1.1.1"
+                    }
+                  ]
+                }
+              ],
+              "ecosystem_specific": {
+                "affected_functions": null,
+                "affects": {
+                  "arch": [],
+                  "functions": [],
+                  "os": []
+                }
+              },
+              "database_specific": {
+                "informational": null,
+                "source": "https://github.com/rustsec/advisory-db/blob/osv/crates/RUSTSEC-2021-0115.json",
+                "categories": [],
+                "cvss": null
+              }
+            }
+          ],
+          "schema_version": "1.7.3"
+        }
+      ]
+    }
+  ]
+}

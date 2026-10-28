@@ -42,13 +42,22 @@ import jp.co.soramitsu.androidfoundation.coroutine.SuspendableProperty
 import jp.co.soramitsu.androidfoundation.format.isZero
 import jp.co.soramitsu.androidfoundation.format.nullZero
 import jp.co.soramitsu.androidfoundation.format.orZero
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.base.ConfirmDialogData
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.LiquidityDetails
+import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
+import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
+import jp.co.soramitsu.common.presentation.transaction.badge
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
@@ -59,6 +68,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.TransactionScreen
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddConfirmState
@@ -72,6 +82,7 @@ import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -114,6 +125,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     }
 
     private companion object {
+        const val RESULT_BADGE_MILLIS = 700L
         const val PER_FORMAT = "%s/%s"
         const val PERCENT_FORMAT = "%s%%"
         const val NETWORK_FEE_FORMAT = "%s %s"
@@ -149,6 +161,35 @@ class LiquidityAddViewModel @AssistedInject constructor(
 
     private var pairEnabled: Boolean = true
     private var pairPresented: Boolean = true
+
+    /**
+     * The reserves of the chosen pair are known (from the local cache or from the network; zero
+     * reserves read from the network mean a new pool). Until then the second amount cannot be
+     * derived from the first, so nothing is estimated, reviewed or signed: amounts typed at any
+     * other ratio than the pool's fail on chain, and the fee is charged for it. The read can
+     * also simply take long, for example while the connection is being restored.
+     */
+    private var reservesReady = false
+
+    /**
+     * True from a tapped Confirm until it is known that nothing reached the network, so the
+     * same deposit cannot be reviewed and confirmed again in the middle of the wait for its
+     * result. Once a deposit has reached the network it stays true: this screen is then
+     * replaced by the transaction's page and sends nothing more.
+     */
+    private var confirmLocked = false
+
+    /** The last read of the reserves failed; the person is told, with Try again. */
+    private var reservesUnavailable = false
+
+    /**
+     * The two amounts the last successful estimate was made for, or null when there is none or
+     * the last one failed. An estimate checks the amounts against the pool's reserves and reads
+     * the network fee, so it fails while the network cannot be reached. Nothing is reviewed or
+     * signed unless the amounts on screen are these: amounts typed at any other ratio than the
+     * pool's fail on chain, and the fee is charged for it.
+     */
+    private var estimatedAmounts: Pair<BigDecimal, BigDecimal>? = null
 
     private val _searchTokenFilter = MutableStateFlow(emptySearchTokenFilter)
     val searchTokenFilter = _searchTokenFilter.asStateFlow()
@@ -212,8 +253,12 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 onError(it)
             }
             .onEach {
-                recalculateData()
-                updateButtonState()
+                // Every collector on this screen handles a failure of its own work: an exception
+                // that leaves viewModelScope uncaught would end the app.
+                guarded {
+                    recalculateData()
+                    updateButtonState()
+                }
             }
             .launchIn(viewModelScope)
 
@@ -222,21 +267,23 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .collectLatest {
-                    assets.clear()
-                    assets.addAll(it)
-                    if (_addState.value.assetState1 == null) {
-                        val a = assets.first { t -> t.token.id == token1Id }
-                        _addState.value = _addState.value.copy(
-                            assetState1 = buildInitialAssetState(a),
-                        )
+                    guarded {
+                        assets.clear()
+                        assets.addAll(it)
+                        if (_addState.value.assetState1 == null) {
+                            val a = assets.first { t -> t.token.id == token1Id }
+                            _addState.value = _addState.value.copy(
+                                assetState1 = buildInitialAssetState(a),
+                            )
+                        }
+                        if (_addState.value.assetState2 == null && token2Id != null) {
+                            val a = assets.first { t -> t.token.id == token2Id }
+                            _addState.value = _addState.value.copy(
+                                assetState2 = buildInitialAssetState(a),
+                            )
+                        }
+                        setTokensFromArgs()
                     }
-                    if (_addState.value.assetState2 == null && token2Id != null) {
-                        val a = assets.first { t -> t.token.id == token2Id }
-                        _addState.value = _addState.value.copy(
-                            assetState2 = buildInitialAssetState(a),
-                        )
-                    }
-                    setTokensFromArgs()
                 }
         }
         viewModelScope.launch {
@@ -246,13 +293,18 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 .onEach { amount ->
                     amountFrom = amount
                     desired = WithDesired.INPUT
+                    // The earlier estimate was made for another amount: Supply is off until
+                    // the new one is there.
+                    updateButtonState()
                     onChangedProperty.set(false)
                 }.filter {
                     _addState.value.assetState1?.token?.id == SubstrateOptionsProvider.feeAssetId ||
                         !hasXorReminderWarningBeenChecked
                 }.onEach {
-                    updateTransactionReminderWarningVisibility()
-                    hasXorReminderWarningBeenChecked = true
+                    guarded {
+                        updateTransactionReminderWarningVisibility()
+                        hasXorReminderWarningBeenChecked = true
+                    }
                 }.collect()
         }
         viewModelScope.launch {
@@ -262,6 +314,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 .collectLatest { amount ->
                     amountTo = amount
                     desired = WithDesired.OUTPUT
+                    updateButtonState()
                     onChangedProperty.set(false)
                 }
         }
@@ -340,12 +393,31 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 resourceManager.getString(R.string.choose_tokens) to false
             }
 
-            (_addState.value.assetState1?.token != null && amountFrom == BigDecimal.ZERO) -> {
+            reservesUnavailable -> {
+                resourceManager.getString(R.string.tx_outcome_pool_unavailable_title) to false
+            }
+
+            (_addState.value.assetState1?.token != null && amountFrom <= BigDecimal.ZERO) -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
 
-            (_addState.value.assetState2?.token != null && amountTo == BigDecimal.ZERO) -> {
+            (_addState.value.assetState2?.token != null && amountTo <= BigDecimal.ZERO) -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
+            }
+
+            // Still being read: Supply is shown and stays off until the reserves are there.
+            !reservesReady -> {
+                resourceManager.getString(R.string.common_supply) to false
+            }
+
+            // The amounts could not be checked; the notice above the button offers Try again.
+            _addState.value.estimateUnavailable != null -> {
+                resourceManager.getString(R.string.network_fee_unavailable_short) to false
+            }
+
+            // An estimate for the amounts on screen is still on its way.
+            !estimateReady() -> {
+                resourceManager.getString(R.string.common_supply) to false
             }
 
             balanceCheckResult -> {
@@ -375,63 +447,119 @@ class LiquidityAddViewModel @AssistedInject constructor(
         val basedAmount = if (desired == WithDesired.INPUT) amountFrom else amountTo
         val targetAmount = if (desired == WithDesired.INPUT) amountTo else amountFrom
 
-        if (basedAmount.isZero() && targetAmount.isZero()) return
+        if (basedAmount.isZero() && targetAmount.isZero()) {
+            // Nothing to estimate, so there is nothing to try again either.
+            clearEstimateNotice()
+            return
+        }
         if (tokenFrom == null || tokenTo == null || basedAmount < BigDecimal.ZERO || targetAmount < BigDecimal.ZERO) {
             return
         }
+        // Nothing is estimated against reserves that were never read.
+        if (!reservesReady) return
 
         setButtonLoading(true)
+        try {
+            val details = poolsInteractor.calcLiquidityDetails(
+                tokenFrom,
+                tokenTo,
+                liquidityData.firstReserves,
+                liquidityData.secondReserves,
+                liquidityData.secondPooled,
+                basedAmount,
+                targetAmount,
+                desired,
+                _stateSlippage.value,
+                pairEnabled,
+                pairPresented
+            )
 
-        tryCatchFinally(
-            finally = { setButtonLoading(false) },
-            block = {
-                val details = poolsInteractor.calcLiquidityDetails(
-                    tokenFrom,
-                    tokenTo,
-                    liquidityData.firstReserves,
-                    liquidityData.secondReserves,
-                    liquidityData.secondPooled,
-                    basedAmount,
-                    targetAmount,
-                    desired,
-                    _stateSlippage.value,
-                    pairEnabled,
-                    pairPresented
-                )
-
-                networkFee = details.networkFee
-                liquidityDetails = details
-                details.targetAmount.let {
-                    if (desired == WithDesired.INPUT) {
-                        _addState.value = _addState.value.copy(
-                            assetState2 = _addState.value.assetState2?.copy(
-                                amount = it,
-                                amountFiat = _addState.value.assetState2?.token?.printFiat(
-                                    it,
-                                    numbersFormatter
-                                ).orEmpty(),
-                                enabled = true,
-                            ),
-                        )
-                        amountTo = it
-                    } else {
-                        _addState.value = _addState.value.copy(
-                            assetState1 = _addState.value.assetState1?.copy(
-                                amount = it,
-                                amountFiat = _addState.value.assetState1?.token?.printFiat(
-                                    it,
-                                    numbersFormatter
-                                ).orEmpty(),
-                                enabled = true,
-                            ),
-                        )
-                        amountFrom = it
-                    }
+            networkFee = details.networkFee
+            liquidityDetails = details
+            details.targetAmount.let {
+                if (desired == WithDesired.INPUT) {
+                    _addState.value = _addState.value.copy(
+                        assetState2 = _addState.value.assetState2?.copy(
+                            amount = it,
+                            amountFiat = _addState.value.assetState2?.token?.printFiat(
+                                it,
+                                numbersFormatter
+                            ).orEmpty(),
+                            enabled = true,
+                        ),
+                    )
+                    amountTo = it
+                } else {
+                    _addState.value = _addState.value.copy(
+                        assetState1 = _addState.value.assetState1?.copy(
+                            amount = it,
+                            amountFiat = _addState.value.assetState1?.token?.printFiat(
+                                it,
+                                numbersFormatter
+                            ).orEmpty(),
+                            enabled = true,
+                        ),
+                    )
+                    amountFrom = it
                 }
-
-                updateLiquidityDetails(details)
             }
+
+            updateLiquidityDetails(details)
+            estimatedAmounts = amountFrom to amountTo
+            clearEstimateNotice()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (t: Throwable) {
+            onEstimateUnavailable(t)
+        } finally {
+            setButtonLoading(false)
+        }
+    }
+
+    /** True when the amounts on screen are the ones the last successful estimate was made for. */
+    private fun estimateReady(): Boolean = estimatedAmounts?.let { (from, to) ->
+        from.compareTo(amountFrom) == 0 && to.compareTo(amountTo) == 0
+    } == true
+
+    /**
+     * The estimate failed, typically because the network fee could not be read while the SORA
+     * endpoint cannot be reached. Before, the failure was passed over in silence for anything
+     * but a business error: the second amount stayed empty with no explanation, and once both
+     * amounts were typed by hand Supply and Confirm were on, at a ratio never checked against
+     * the pool and with a blank fee. Now the earlier estimate is dropped, Supply stays off and
+     * the screen shows the same notice with Try again as Send and Swap.
+     */
+    private fun onEstimateUnavailable(error: Throwable) {
+        if (error is SoraException && error.kind == SoraException.Kind.BUSINESS) {
+            // A business error names its own reason.
+            onError(error)
+        } else {
+            FirebaseWrapper.recordException(error)
+        }
+        liquidityDetails = null
+        estimatedAmounts = null
+        _addState.value = _addState.value.copy(
+            estimateUnavailable = NetworkFeeUnavailable.from(error),
+            // What an earlier estimate said no longer belongs to the amounts on screen.
+            estimated = _addState.value.estimated.copy(shareOfPool = ""),
+            prices = _addState.value.prices.copy(pair1Value = "", pair2Value = "", fee = ""),
         )
+    }
+
+    private fun clearEstimateNotice() {
+        if (_addState.value.estimateUnavailable != null) {
+            _addState.value = _addState.value.copy(estimateUnavailable = null)
+        }
+    }
+
+    /** Try again on the estimate notice: checks the amounts on screen once more. */
+    fun onRetryEstimate() {
+        viewModelScope.launch {
+            guarded {
+                recalculateData()
+                updateButtonState()
+            }
+        }
     }
 
     private suspend fun updateLiquidityDetails(details: LiquidityDetails) {
@@ -509,19 +637,21 @@ class LiquidityAddViewModel @AssistedInject constructor(
     fun onToken1Click() {
         if (assets.isNotEmpty()) {
             viewModelScope.launch {
-                val bases = poolsInteractor.getPoolDexList().map { it.tokenId }
-                val list = assets.filter { it.token.id in bases && it.token.id != addToken2 }
-                _addState.value = _addState.value.copy(
-                    assetState1 = _addState.value.assetState1?.copy(
-                        amount = _addState.value.assetState1?.amount?.nullZero()
-                    ),
-                    assetState2 = _addState.value.assetState2?.copy(
-                        amount = _addState.value.assetState2?.amount?.nullZero()
-                    ),
-                )
-                _searchTokenFilter.value = _searchTokenFilter.value.copy(
-                    tokenIds = list.map { it.token.id },
-                )
+                guarded {
+                    val bases = poolsInteractor.getPoolDexList().map { it.tokenId }
+                    val list = assets.filter { it.token.id in bases && it.token.id != addToken2 }
+                    _addState.value = _addState.value.copy(
+                        assetState1 = _addState.value.assetState1?.copy(
+                            amount = _addState.value.assetState1?.amount?.nullZero()
+                        ),
+                        assetState2 = _addState.value.assetState2?.copy(
+                            amount = _addState.value.assetState2?.amount?.nullZero()
+                        ),
+                    )
+                    _searchTokenFilter.value = _searchTokenFilter.value.copy(
+                        tokenIds = list.map { it.token.id },
+                    )
+                }
             }
         }
     }
@@ -529,28 +659,30 @@ class LiquidityAddViewModel @AssistedInject constructor(
     fun onToken2Click() {
         if (assets.isNotEmpty()) {
             viewModelScope.launch {
-                val bases = poolsInteractor.getPoolDexList()
-                val curBase = bases.find { it.tokenId == addToken1 }
-                val list = assets
-                    .filter { asset ->
-                        val inBases = bases.find { it.tokenId == asset.token.id }
-                        if (inBases != null && curBase != null) {
-                            inBases.dexId > curBase.dexId
-                        } else {
-                            asset.token.id != addToken1
+                guarded {
+                    val bases = poolsInteractor.getPoolDexList()
+                    val curBase = bases.find { it.tokenId == addToken1 }
+                    val list = assets
+                        .filter { asset ->
+                            val inBases = bases.find { it.tokenId == asset.token.id }
+                            if (inBases != null && curBase != null) {
+                                inBases.dexId > curBase.dexId
+                            } else {
+                                asset.token.id != addToken1
+                            }
                         }
-                    }
-                _addState.value = _addState.value.copy(
-                    assetState1 = _addState.value.assetState1?.copy(
-                        amount = _addState.value.assetState1?.amount?.nullZero()
-                    ),
-                    assetState2 = _addState.value.assetState2?.copy(
-                        amount = _addState.value.assetState2?.amount?.nullZero()
-                    ),
-                )
-                _searchTokenFilter.value = _searchTokenFilter.value.copy(
-                    tokenIds = list.map { it.token.id },
-                )
+                    _addState.value = _addState.value.copy(
+                        assetState1 = _addState.value.assetState1?.copy(
+                            amount = _addState.value.assetState1?.amount?.nullZero()
+                        ),
+                        assetState2 = _addState.value.assetState2?.copy(
+                            amount = _addState.value.assetState2?.amount?.nullZero()
+                        ),
+                    )
+                    _searchTokenFilter.value = _searchTokenFilter.value.copy(
+                        tokenIds = list.map { it.token.id },
+                    )
+                }
             }
         }
     }
@@ -589,7 +721,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private fun setTokensFromArgs() {
         val token1State = _addState.value.assetState1?.token
         val token2State = _addState.value.assetState2?.token
-        if (token1State?.id != addToken1 || token2State?.id != addToken2) {
+        val pairChanged = token1State?.id != addToken1 || token2State?.id != addToken2
+        if (pairChanged) {
             cleanUpSubscriptions()
         }
         addToken1 = token1State?.id
@@ -620,6 +753,9 @@ class LiquidityAddViewModel @AssistedInject constructor(
         if (token1State != null && token2State != null) {
             subscribePoolChanges(token1State.id, token2State.id)
             subscribeReserves(token1State.id, token2State.id)
+            // The reserves of a newly chosen pair can take long to arrive (or not arrive while
+            // offline), and the button must not keep the text of the previous state.
+            if (pairChanged) onChangedProperty.set(false)
         } else {
             onChangedProperty.set(false)
         }
@@ -630,6 +766,12 @@ class LiquidityAddViewModel @AssistedInject constructor(
         pairPresentedJob?.cancel()
         liquidityDataSubscriptionJob?.cancel()
         liquidityData = LiquidityData()
+        reservesReady = false
+        reservesUnavailable = false
+        // An estimate belongs to the pair it was made for.
+        liquidityDetails = null
+        estimatedAmounts = null
+        clearEstimateNotice()
     }
 
     private fun subscribePoolChanges(tokenFromId: String, tokenToId: String) {
@@ -676,13 +818,17 @@ class LiquidityAddViewModel @AssistedInject constructor(
                         onError(it)
                     }
                     .onEach { localData ->
-                        if (localData == null) {
-                            fetchLiquidityData()
-                        } else {
-                            liquidityData = localData
-                            _addState.value = _addState.value.copy(
-                                pairNotExist = false,
-                            )
+                        guarded {
+                            if (localData == null) {
+                                fetchLiquidityData()
+                            } else {
+                                liquidityData = localData
+                                reservesReady = true
+                                reservesUnavailable = false
+                                _addState.value = _addState.value.copy(
+                                    pairNotExist = false,
+                                )
+                            }
                         }
                         onChangedProperty.set(false)
                     }
@@ -690,6 +836,13 @@ class LiquidityAddViewModel @AssistedInject constructor(
         }
     }
 
+    /**
+     * Reads the reserves of a pair that is not cached from the network. The read fails while the
+     * network cannot be reached. The screen then must not go on with reserves of zero, which
+     * would treat an existing pool like a new one: Supply stays off and the person is told, with
+     * Try again. The cache flow does not emit a second time for the same pair, so Try again is
+     * the way the read is repeated.
+     */
     private suspend fun fetchLiquidityData() {
         val tokenFrom = _addState.value.assetState1?.token
         val tokenTo = _addState.value.assetState2?.token
@@ -697,12 +850,57 @@ class LiquidityAddViewModel @AssistedInject constructor(
             return
         }
 
-        liquidityData = withContext(coroutineManager.io) {
-            poolsInteractor.getLiquidityData(tokenFrom, tokenTo, pairEnabled, pairPresented)
+        val fetched = try {
+            withContext(coroutineManager.io) {
+                poolsInteractor.getLiquidityData(tokenFrom, tokenTo, pairEnabled, pairPresented)
+            }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (t: Throwable) {
+            if (tokenFrom.id == addToken1 && tokenTo.id == addToken2) onReservesUnavailable(t)
+            return
         }
+        // The pair may have been changed while the answer was on its way.
+        if (tokenFrom.id != addToken1 || tokenTo.id != addToken2) return
+        liquidityData = fetched
+        reservesReady = true
+        reservesUnavailable = false
         _addState.value = _addState.value.copy(
             pairNotExist = liquidityData.secondReserves.isZero() && liquidityData.firstReserves.isZero(),
         )
+    }
+
+    private fun onReservesUnavailable(error: Throwable) {
+        FirebaseWrapper.recordException(error)
+        reservesReady = false
+        reservesUnavailable = true
+        liquidityDetails = null
+        updateButtonState()
+        confirmDialogLiveData.setValue(
+            ConfirmDialogData(
+                title = resourceManager.getString(R.string.tx_outcome_pool_unavailable_title),
+                message = resourceManager.getString(R.string.tx_outcome_pool_unavailable),
+                confirmText = resourceManager.getString(R.string.common_try_again),
+                dismissText = resourceManager.getString(R.string.common_close),
+                onDismiss = { _navigationPop.trigger() },
+                onConfirm = ::retryReserves,
+            )
+        )
+    }
+
+    /** Try again on the pool notice: reads the reserves of the chosen pair once more. */
+    private fun retryReserves() {
+        viewModelScope.launch {
+            guarded {
+                setButtonLoading(true)
+                try {
+                    fetchLiquidityData()
+                } finally {
+                    setButtonLoading(false)
+                }
+            }
+            onChangedProperty.set(false)
+        }
     }
 
     fun onSlippageClick() {
@@ -764,12 +962,13 @@ class LiquidityAddViewModel @AssistedInject constructor(
         val tokenTo = _addState.value.assetState2?.token
 
         if (desired == WithDesired.INPUT && tokenFrom != null) {
+            val availableBalance = if (tokenFrom.id == SubstrateOptionsProvider.feeAssetId) {
+                (balance1 - networkFee).max(BigDecimal.ZERO)
+            } else {
+                balance1
+            }
             val amount = PolkaswapFormulas.calculateAmountByPercentage(
-                balance1.apply {
-                    if (tokenFrom.id == SubstrateOptionsProvider.feeAssetId) this.subtract(
-                        networkFee
-                    )
-                },
+                availableBalance,
                 percent.toDouble(), tokenFrom.precision
             )
             _addState.value = _addState.value.copy(
@@ -796,57 +995,136 @@ class LiquidityAddViewModel @AssistedInject constructor(
         }
     }
 
-    fun onConfirmClick() {
-        _addState.value.assetState1?.let { state1 ->
-            _addState.value.assetState2?.let { state2 ->
-                viewModelScope.launch {
-                    _addState.value = _addState.value.copy(
-                        confirm = _addState.value.confirm.copy(
-                            btnState = _addState.value.confirm.btnState.copy(
-                                enabled = false,
-                                loading = true,
-                            )
-                        )
-                    )
-                    var result = ""
-                    try {
-                        result = poolsInteractor.observeAddLiquidity(
-                            state1.token,
-                            state2.token,
-                            amountFrom,
-                            amountTo,
-                            pairEnabled,
-                            pairPresented,
-                            _stateSlippage.value,
-                        )
-                    } catch (t: Throwable) {
-                        onError(t)
-                    } finally {
-                        _addState.value = _addState.value.copy(
-                            confirm = _addState.value.confirm.copy(
-                                btnState = _addState.value.confirm.btnState.copy(
-                                    enabled = false,
-                                    loading = false,
-                                ),
-                                confirmResult = result.isNotEmpty()
-                            )
-                        )
-                        delay(700)
-                        _addState.value = _addState.value.copy(
-                            confirm = _addState.value.confirm.copy(
-                                confirmResult = null
-                            )
-                        )
-                        if (result.isNotEmpty())
-                            assetsRouter.showTxDetails(result, true)
-                        else router.returnToHubFragment()
-                    }
+    fun onConfirmClick() = confirmAddLiquidity(confirmedDuplicate = false)
+
+    /**
+     * Sends the reviewed deposit and shows exactly what is known afterwards. A transaction that
+     * reached the network (confirmed, failed on chain, or still waiting) opens its transaction
+     * page, which carries the status and follows it. One that did not reach the network is
+     * explained in a dialog and this screen stays with Confirm available again.
+     *
+     * The result arrives after a wait of up to two minutes, so the app can be in the background
+     * or behind the PIN lock by then. The dialogs are delivered when the screen is shown again;
+     * the transaction page opens when it is in front (see [openTransactionPage]). Until then
+     * the result mark stays on the confirm screen and Confirm stays off.
+     */
+    private fun confirmAddLiquidity(confirmedDuplicate: Boolean) {
+        // A Confirm is on its way, or a deposit of this screen reached the network and its page
+        // has not opened yet.
+        if (confirmLocked || resultHeld) return
+        // Nothing is sent while the button is shown off or busy (a second tap of the same Confirm).
+        val confirmButton = _addState.value.confirm.btnState
+        if (!confirmButton.enabled || confirmButton.loading) return
+        val state1 = _addState.value.assetState1 ?: return
+        val state2 = _addState.value.assetState2 ?: return
+        // Never sign amounts that were not checked against the pool's reserves.
+        if (!reservesReady || !estimateReady()) {
+            showAmountsNotChecked()
+            return
+        }
+        confirmLocked = true
+        viewModelScope.launch {
+            setConfirmButton(enabled = false, loading = true)
+            var outcome: TransactionOutcome? = null
+            var notSent: Throwable? = null
+            try {
+                outcome = poolsInteractor.observeAddLiquidity(
+                    state1.token,
+                    state2.token,
+                    amountFrom,
+                    amountTo,
+                    pairEnabled,
+                    pairPresented,
+                    _stateSlippage.value,
+                    confirmedDuplicate,
+                )
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: DuplicateWaitingTransactionException) {
+                confirmLocked = false
+                setConfirmButton(enabled = true, loading = false)
+                askBeforeSendingAgain(resourceManager) {
+                    confirmAddLiquidity(confirmedDuplicate = true)
+                }
+                return@launch
+            } catch (t: Throwable) {
+                notSent = t
+            }
+            _addState.value = _addState.value.copy(
+                confirm = _addState.value.confirm.copy(
+                    btnState = _addState.value.confirm.btnState.copy(
+                        enabled = false,
+                        loading = false,
+                    ),
+                    confirmResult = outcome?.badge() ?: TransactionResultBadge.NOT_SENT,
+                )
+            )
+            delay(RESULT_BADGE_MILLIS)
+            when (outcome) {
+                is TransactionOutcome.Confirmed,
+                is TransactionOutcome.Waiting,
+                is TransactionOutcome.FailedOnChain ->
+                    // The result mark stays until the page has taken this screen's place.
+                    openTransactionPage(outcome.txHash)
+                is TransactionOutcome.RefusedByNode -> {
+                    confirmLocked = false
+                    clearResultMark()
+                    setConfirmButton(enabled = true, loading = false)
+                    showTransactionRefused(resourceManager, outcome)
+                }
+                null -> {
+                    confirmLocked = false
+                    clearResultMark()
+                    setConfirmButton(enabled = true, loading = false)
+                    showTransactionNotSent(resourceManager, checkNotNull(notSent))
                 }
             }
         }
     }
 
+    /**
+     * Confirm was tapped while the amounts on screen have no successful estimate: the reserves
+     * or the fee could not be read after the review, or an estimate for an edited amount has
+     * not arrived yet. Nothing is signed. The person is told so, and the amounts are checked
+     * once more, so that "try again" can succeed as soon as the network answers.
+     */
+    private fun showAmountsNotChecked() {
+        alertDialogLiveData.setValue(
+            resourceManager.getString(R.string.tx_outcome_not_sent_title) to
+                resourceManager.getString(R.string.tx_outcome_not_sent_estimate)
+        )
+        if (reservesReady) onRetryEstimate()
+    }
+
+    /**
+     * Opens the deposit's transaction page in place of this screen, only while this screen is in
+     * front. A result that arrives while the app is in the background, or while the PIN lock is
+     * on top, is held and the page opens on the next resume; nothing is navigated before that.
+     */
+    private fun openTransactionPage(txHash: String) = showWhenInFront {
+        assetsRouter.showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
+    }
+
+    private fun clearResultMark() {
+        _addState.value = _addState.value.copy(
+            confirm = _addState.value.confirm.copy(confirmResult = null)
+        )
+    }
+
+    private fun setConfirmButton(enabled: Boolean, loading: Boolean) {
+        _addState.value = _addState.value.copy(
+            confirm = _addState.value.confirm.copy(
+                btnState = _addState.value.confirm.btnState.copy(
+                    enabled = enabled,
+                    loading = loading,
+                )
+            )
+        )
+    }
+
     fun onReviewClick() {
+        // Nothing new is reviewed while a Confirm is on its way or its result waits to be shown.
+        if (confirmLocked || resultHeld) return
         val tokenFrom = _addState.value.assetState1?.token
         val tokenTo = _addState.value.assetState2?.token
         if (tokenFrom == null || tokenTo == null) {

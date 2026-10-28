@@ -54,7 +54,6 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.screen.TxHistoryScreenContainer
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -90,12 +89,15 @@ class ActivitiesFragment : SoraBaseFragment<ActivitiesViewModel>() {
                     color = MaterialTheme.customColors.fgPrimary,
                 )
                 val historyState: HistoryState by viewModel.historyState.collectAsStateWithLifecycle()
-                TxHistoryScreenContainer(
+                val networkActivity by viewModel.networkActivity.collectAsStateWithLifecycle()
+                AccountActivityScreen(
                     modifier = Modifier.padding(top = Dimens.x2).fillMaxSize(),
                     historyState = historyState,
+                    networkActivity = networkActivity,
                     onRefreshClick = viewModel::refresh,
                     onHistoryItemClick = viewModel::onTxHistoryItemClick,
                     onMoreHistoryItemRequested = viewModel::onMoreHistoryEventsRequested,
+                    onMoreNetworkHistoryRequested = viewModel::loadMoreNetworkHistory,
                 )
             }
         }

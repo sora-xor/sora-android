@@ -38,6 +38,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.isMatchFilter
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -63,7 +64,8 @@ class SelectSearchTokenViewModel @Inject constructor(
         viewModelScope.launch {
             interactor.subscribeAssetsActiveOfCurAccount()
                 .catch {
-                    // todo add
+                    FirebaseWrapper.recordException(it)
+                    emit(emptyList())
                 }
                 .collectLatest {
                     assets.clear()

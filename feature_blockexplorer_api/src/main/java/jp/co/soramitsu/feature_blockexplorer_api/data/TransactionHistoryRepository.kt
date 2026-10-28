@@ -41,7 +41,11 @@ import kotlinx.coroutines.flow.Flow
 interface TransactionHistoryRepository {
     val state: Flow<Boolean>
     fun onSoraAccountChange()
-    suspend fun getContacts(query: String): Set<String>
+    /**
+     * Past counterparties of [account] whose address contains [query] (all of them, newest
+     * first, for a blank query).
+     */
+    suspend fun getContacts(account: String, query: String): Set<String>
     suspend fun getTransactionHistory(
         page: Long,
         tokens: List<Token>,
@@ -55,7 +59,16 @@ interface TransactionHistoryRepository {
         soraAccount: SoraAccount,
     ): Transaction?
 
-    fun saveTransaction(transfer: Transaction)
+    fun saveTransaction(walletId: String, transfer: Transaction)
+
+    /**
+     * Asks the network once for the final status of one transaction of [walletId] that this
+     * device sent and that is still waiting for confirmation. Only that transaction is looked
+     * at, so another waiting transaction that cannot be checked never holds it back. Read-only:
+     * it never signs or sends anything. A read that fails changes nothing and is not an error;
+     * [state] ticks when the status became final.
+     */
+    suspend fun checkWaitingTransaction(walletId: String, txHash: String)
     suspend fun getLastTransactions(
         soraAccount: SoraAccount,
         tokens: List<Token>,

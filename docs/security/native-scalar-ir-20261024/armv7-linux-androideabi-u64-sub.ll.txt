@@ -1,0 +1,600 @@
+; Selected optimized function excerpt; metadata definitions omitted.
+define void @_RNvXs9_NtCs3j1Lms6aoxt_16curve25519_dalek6scalarRNtB5_6ScalarNtNtNtCs5GRUs7vpIZJ_4core3ops5arith3Sub3sub(ptr dead_on_unwind noalias noundef writable writeonly sret([32 x i8]) align 1 captures(none) dereferenceable(32) initializes((0, 32)) %_0, ptr noalias noundef readonly captures(none) dereferenceable(32) %self, ptr noalias noundef readonly captures(none) dereferenceable(32) %rhs) unnamed_addr #2 {
+start:
+  %_27.sroa.0.i224 = alloca i64, align 8
+  %_27.sroa.0.i188 = alloca i64, align 8
+  %_27.sroa.0.i = alloca i64, align 8
+  %_10 = alloca [40 x i8], align 8
+  %_5 = alloca [40 x i8], align 8
+  call void @llvm.lifetime.start.p0(ptr nonnull %_5)
+; call <curve25519_dalek::scalar::Scalar>::unpack
+  call fastcc void @_RNvMsm_NtCs3j1Lms6aoxt_16curve25519_dalek6scalarNtB5_6Scalar6unpack(ptr noalias noundef align 8 captures(address) dereferenceable(40) %_5, ptr noalias noundef readonly captures(address, read_provenance) dereferenceable(32) %self)
+  %_4.i1 = load i64, ptr %_5, align 8, !alias.scope !1539, !noalias !1542, !noundef !2
+  %_47.i2 = zext i64 %_4.i1 to i128
+  %_3.i3 = mul nuw nsw i128 %_47.i2, 4302102966953709
+  %_6.i4 = mul nuw nsw i128 %_47.i2, 1049714374468698
+  %0 = getelementptr inbounds nuw i8, ptr %_5, i32 8
+  %_9.i5 = load i64, ptr %0, align 8, !alias.scope !1539, !noalias !1542, !noundef !2
+  %_50.i6 = zext i64 %_9.i5 to i128
+  %_8.i7 = mul nuw nsw i128 %_50.i6, 4302102966953709
+  %1 = add nuw nsw i128 %_8.i7, %_6.i4
+  %_11.i8 = mul nuw nsw i128 %_47.i2, 4503599278581019
+  %_13.i9 = mul nuw nsw i128 %_50.i6, 1049714374468698
+  %_10.i10 = add nuw nsw i128 %_13.i9, %_11.i8
+  %2 = getelementptr inbounds nuw i8, ptr %_5, i32 16
+  %_15.i11 = load i64, ptr %2, align 8, !alias.scope !1539, !noalias !1542, !noundef !2
+  %_52.i12 = zext i64 %_15.i11 to i128
+  %_14.i13 = mul nuw nsw i128 %_52.i12, 4302102966953709
+  %3 = add nuw nsw i128 %_10.i10, %_14.i13
+  %_18.i14 = mul nuw nsw i128 %_47.i2, 4503599627370495
+  %_20.i15 = mul nuw nsw i128 %_50.i6, 4503599278581019
+  %_17.i16 = add nuw nsw i128 %_20.i15, %_18.i14
+  %_21.i17 = mul nuw nsw i128 %_52.i12, 1049714374468698
+  %_16.i18 = add nuw nsw i128 %_17.i16, %_21.i17
+  %4 = getelementptr inbounds nuw i8, ptr %_5, i32 24
+  %_23.i19 = load i64, ptr %4, align 8, !alias.scope !1539, !noalias !1542, !noundef !2
+  %_54.i20 = zext i64 %_23.i19 to i128
+  %_22.i21 = mul nuw nsw i128 %_54.i20, 4302102966953709
+  %5 = add nuw nsw i128 %_16.i18, %_22.i21
+  %_27.i22 = mul nuw nsw i128 %_47.i2, 17592186044415
+  %_29.i23 = mul nuw nsw i128 %_50.i6, 4503599627370495
+  %_26.i24 = add nuw nsw i128 %_29.i23, %_27.i22
+  %_30.i25 = mul nuw nsw i128 %_52.i12, 4503599278581019
+  %_25.i26 = add nuw nsw i128 %_26.i24, %_30.i25
+  %_31.i27 = mul nuw nsw i128 %_54.i20, 1049714374468698
+  %_24.i28 = add nuw nsw i128 %_25.i26, %_31.i27
+  %6 = getelementptr inbounds nuw i8, ptr %_5, i32 32
+  %_33.i29 = load i64, ptr %6, align 8, !alias.scope !1539, !noalias !1542, !noundef !2
+  %_56.i30 = zext i64 %_33.i29 to i128
+  %_32.i31 = mul nuw nsw i128 %_56.i30, 4302102966953709
+  %7 = add nuw nsw i128 %_24.i28, %_32.i31
+  %_36.i32 = mul nuw nsw i128 %_50.i6, 17592186044415
+  %_37.i33 = mul nuw nsw i128 %_52.i12, 4503599627370495
+  %_35.i34 = add nuw nsw i128 %_37.i33, %_36.i32
+  %_38.i35 = mul nuw nsw i128 %_54.i20, 4503599278581019
+  %_34.i36 = add nuw nsw i128 %_35.i34, %_38.i35
+  %_39.i37 = mul nuw nsw i128 %_56.i30, 1049714374468698
+  %8 = add nuw nsw i128 %_34.i36, %_39.i37
+  %_41.i38 = mul nuw nsw i128 %_52.i12, 17592186044415
+  %_42.i39 = mul nuw nsw i128 %_54.i20, 4503599627370495
+  %_40.i40 = add nuw nsw i128 %_42.i39, %_41.i38
+  %_43.i41 = mul nuw nsw i128 %_56.i30, 4503599278581019
+  %9 = add nuw nsw i128 %_40.i40, %_43.i41
+  %_44.i42 = mul nuw nsw i128 %_54.i20, 17592186044415
+  %_45.i43 = mul nuw nsw i128 %_56.i30, 4503599627370495
+  %10 = add nuw nsw i128 %_45.i43, %_44.i42
+  %_46.i44 = mul nuw nsw i128 %_56.i30, 17592186044415
+  call void @llvm.lifetime.end.p0(ptr nonnull %_5)
+  %_55.i88 = trunc i128 %_3.i3 to i64
+  %_54.i89 = mul i64 %_55.i88, 1439961107955227
+  %n0.i90 = and i64 %_54.i89, 4503599627370495
+  %_59.i91 = zext nneg i64 %n0.i90 to i128
+  %_58.i92 = mul nuw nsw i128 %_59.i91, 671914833335277
+  %_57.i93 = add nuw nsw i128 %_58.i92, %_3.i3
+  %carry.i94 = lshr i128 %_57.i93, 52
+  %_6.i97 = mul nuw nsw i128 %_59.i91, 3916664325105025
+  %_4.i96 = add nuw nsw i128 %1, %_6.i97
+  %_3.i98 = add nuw nsw i128 %_4.i96, %carry.i94
+  %_62.i99 = trunc i128 %_3.i98 to i64
+  %_61.i100 = mul i64 %_62.i99, 1439961107955227
+  %n1.i101 = and i64 %_61.i100, 4503599627370495
+  %_66.i102 = zext nneg i64 %n1.i101 to i128
+  %_65.i103 = mul nuw nsw i128 %_66.i102, 671914833335277
+  %_64.i104 = add nuw nsw i128 %_65.i103, %_3.i98
+  %carry1.i105 = lshr i128 %_64.i104, 52
+  %_11.i108 = mul nuw nsw i128 %_59.i91, 1367801
+  %_12.i110 = mul nuw nsw i128 %_66.i102, 3916664325105025
+  %_9.i107 = add nuw nsw i128 %3, %_11.i108
+  %_8.i109 = add nuw nsw i128 %_9.i107, %_12.i110
+  %_7.i111 = add nuw nsw i128 %_8.i109, %carry1.i105
+  %_69.i112 = trunc i128 %_7.i111 to i64
+  %_68.i113 = mul i64 %_69.i112, 1439961107955227
+  %n2.i114 = and i64 %_68.i113, 4503599627370495
+  %_73.i115 = zext nneg i64 %n2.i114 to i128
+  %_72.i116 = mul nuw nsw i128 %_73.i115, 671914833335277
+  %_71.i117 = add nuw nsw i128 %_72.i116, %_7.i111
+  %carry2.i118 = lshr i128 %_71.i117, 52
+  %_17.i121 = mul nuw nsw i128 %_66.i102, 1367801
+  %_18.i123 = mul nuw nsw i128 %_73.i115, 3916664325105025
+  %_15.i120 = add nuw nsw i128 %5, %_17.i121
+  %_14.i122 = add nuw nsw i128 %_15.i120, %_18.i123
+  %_13.i124 = add nuw nsw i128 %_14.i122, %carry2.i118
+  %_76.i125 = trunc i128 %_13.i124 to i64
+  %_75.i126 = mul i64 %_76.i125, 1439961107955227
+  %n3.i127 = and i64 %_75.i126, 4503599627370495
+  %_80.i128 = zext nneg i64 %n3.i127 to i128
+  %_79.i129 = mul nuw nsw i128 %_80.i128, 671914833335277
+  %_78.i130 = add nuw nsw i128 %_79.i129, %_13.i124
+  %carry3.i131 = lshr i128 %_78.i130, 52
+  %_24.i134 = shl nuw nsw i128 %_59.i91, 44
+  %_25.i136 = mul nuw nsw i128 %_73.i115, 1367801
+  %_26.i138 = mul nuw nsw i128 %_80.i128, 3916664325105025
+  %_22.i133 = add nuw nsw i128 %7, %_24.i134
+  %_21.i135 = add nuw nsw i128 %_22.i133, %_25.i136
+  %_20.i137 = add nuw nsw i128 %_21.i135, %_26.i138
+  %_19.i139 = add nuw nsw i128 %_20.i137, %carry3.i131
+  %_83.i140 = trunc i128 %_19.i139 to i64
+  %_82.i141 = mul i64 %_83.i140, 1439961107955227
+  %n4.i142 = and i64 %_82.i141, 4503599627370495
+  %_87.i143 = zext nneg i64 %n4.i142 to i128
+  %_86.i144 = mul nuw nsw i128 %_87.i143, 671914833335277
+  %_85.i145 = add nuw nsw i128 %_86.i144, %_19.i139
+  %carry4.i146 = lshr i128 %_85.i145, 52
+  %_32.i149 = shl nuw nsw i128 %_66.i102, 44
+  %_33.i151 = mul nuw nsw i128 %_80.i128, 1367801
+  %_34.i153 = mul nuw nsw i128 %_87.i143, 3916664325105025
+  %_30.i148 = add nuw nsw i128 %8, %_32.i149
+  %_29.i150 = add nuw nsw i128 %_30.i148, %_33.i151
+  %_28.i152 = add nuw nsw i128 %_29.i150, %_34.i153
+  %_27.i154 = add nuw nsw i128 %_28.i152, %carry4.i146
+  %_89.i155 = trunc i128 %_27.i154 to i64
+  %r0.i156 = and i64 %_89.i155, 4503599627370495
+  %carry5.i157 = lshr i128 %_27.i154, 52
+  %_39.i160 = shl nuw nsw i128 %_73.i115, 44
+  %_40.i162 = mul nuw nsw i128 %_87.i143, 1367801
+  %_37.i159 = add nuw nsw i128 %9, %_39.i160
+  %_36.i161 = add nuw nsw i128 %_37.i159, %_40.i162
+  %_35.i163 = add nuw nsw i128 %_36.i161, %carry5.i157
+  %_92.i164 = trunc i128 %_35.i163 to i64
+  %r1.i165 = and i64 %_92.i164, 4503599627370495
+  %carry6.i166 = lshr i128 %_35.i163, 52
+  %_44.i169 = shl nuw nsw i128 %_80.i128, 44
+  %_42.i168 = add nuw nsw i128 %10, %_44.i169
+  %_41.i170 = add nuw nsw i128 %_42.i168, %carry6.i166
+  %_95.i171 = trunc i128 %_41.i170 to i64
+  %r2.i172 = and i64 %_95.i171, 4503599627370495
+  %carry7.i173 = lshr i128 %_41.i170, 52
+  %_48.i176 = shl nuw nsw i128 %_87.i143, 44
+  %_46.i175 = add nuw nsw i128 %_48.i176, %_46.i44
+  %_45.i177 = add nuw nsw i128 %_46.i175, %carry7.i173
+  %_98.i178 = trunc i128 %_45.i177 to i64
+  %r3.i179 = and i64 %_98.i178, 4503599627370495
+  %carry8.i180 = lshr i128 %_45.i177, 52
+  %r4.i181 = trunc nuw nsw i128 %carry8.i180 to i64
+  %11 = add nsw i64 %r0.i156, -671914833335277
+  %12 = and i64 %11, 4503599627370495
+  %_10.neg17.1.i = ashr i64 %11, 63
+  %_8.neg.1.i = add nsw i64 %_10.neg17.1.i, -3916664325105025
+  %13 = add nsw i64 %_8.neg.1.i, %r1.i165
+  %14 = and i64 %13, 4503599627370495
+  %_10.neg17.2.i = ashr i64 %13, 63
+  %_8.neg.2.i = add nsw i64 %_10.neg17.2.i, -1367801
+  %15 = add nsw i64 %_8.neg.2.i, %r2.i172
+  %16 = and i64 %15, 4503599627370495
+  %_10.neg17.3.i = ashr i64 %15, 63
+  %_8.neg.3.i = add nsw i64 %r3.i179, %_10.neg17.3.i
+  %17 = and i64 %_8.neg.3.i, 4503599627370495
+  %_10.neg17.4.i = ashr i64 %_8.neg.3.i, 63
+  %_8.neg.4.i = add nsw i64 %r4.i181, -17592186044416
+  %18 = add nsw i64 %_8.neg.4.i, %_10.neg17.4.i
+  %borrow.sroa.0.0.lobit.i = ashr i64 %18, 63
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i)
+  store i64 %borrow.sroa.0.0.lobit.i, ptr %_27.sroa.0.i, align 8, !noalias !1545
+  %_27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..i = load volatile i64, ptr %_27.sroa.0.i, align 8, !noalias !1545
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i)
+  %_23.i187 = and i64 %_27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..i, 671914833335277
+  %19 = add nuw nsw i64 %12, %_23.i187
+  %20 = and i64 %19, 4503599627370495
+  %_20.1.i = lshr i64 %19, 52
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i)
+  store i64 %borrow.sroa.0.0.lobit.i, ptr %_27.sroa.0.i, align 8, !noalias !1545
+  %_27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..1.i = load volatile i64, ptr %_27.sroa.0.i, align 8, !noalias !1545
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i)
+  %_23.1.i = and i64 %_27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..1.i, 3916664325105025
+  %_19.1.i = add nuw nsw i64 %_20.1.i, %_23.1.i
+  %21 = add nuw nsw i64 %_19.1.i, %14
+  %22 = and i64 %21, 4503599627370495
+  %_20.2.i = lshr i64 %21, 52
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i)
+  store i64 %borrow.sroa.0.0.lobit.i, ptr %_27.sroa.0.i, align 8, !noalias !1545
+  %_27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..2.i = load volatile i64, ptr %_27.sroa.0.i, align 8, !noalias !1545
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i)
+  %_23.2.i = and i64 %_27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..2.i, 1367801
+  %_19.2.i = add nuw nsw i64 %_20.2.i, %_23.2.i
+  %23 = add nuw nsw i64 %_19.2.i, %16
+  %24 = and i64 %23, 4503599627370495
+  %_20.3.i = lshr i64 %23, 52
+  %_19.3.i = add nuw nsw i64 %17, %_20.3.i
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i)
+  store i64 %borrow.sroa.0.0.lobit.i, ptr %_27.sroa.0.i, align 8, !noalias !1545
+  %_27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..3.i = load volatile i64, ptr %_27.sroa.0.i, align 8, !noalias !1545
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i)
+  %25 = and i64 %_19.3.i, 4503599627370495
+  %_20.4.i = lshr i64 %_19.3.i, 52
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i)
+  store i64 %borrow.sroa.0.0.lobit.i, ptr %_27.sroa.0.i, align 8, !noalias !1545
+  %_27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..4.i = load volatile i64, ptr %_27.sroa.0.i, align 8, !noalias !1545
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i)
+  %_23.4.i = and i64 %_27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.i.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..4.i, 17592186044416
+  %_19.4.i = add nsw i64 %18, %_23.4.i
+  %26 = add nsw i64 %_19.4.i, %_20.4.i
+  %27 = and i64 %26, 4503599627370495
+  call void @llvm.lifetime.start.p0(ptr nonnull %_10)
+; call <curve25519_dalek::scalar::Scalar>::unpack
+  call fastcc void @_RNvMsm_NtCs3j1Lms6aoxt_16curve25519_dalek6scalarNtB5_6Scalar6unpack(ptr noalias noundef align 8 captures(address) dereferenceable(40) %_10, ptr noalias noundef readonly captures(address, read_provenance) dereferenceable(32) %rhs)
+  %_4.i = load i64, ptr %_10, align 8, !alias.scope !1552, !noalias !1555, !noundef !2
+  %_47.i = zext i64 %_4.i to i128
+  %_3.i = mul nuw nsw i128 %_47.i, 4302102966953709
+  %_6.i = mul nuw nsw i128 %_47.i, 1049714374468698
+  %28 = getelementptr inbounds nuw i8, ptr %_10, i32 8
+  %_9.i = load i64, ptr %28, align 8, !alias.scope !1552, !noalias !1555, !noundef !2
+  %_50.i = zext i64 %_9.i to i128
+  %_8.i = mul nuw nsw i128 %_50.i, 4302102966953709
+  %29 = add nuw nsw i128 %_8.i, %_6.i
+  %_11.i = mul nuw nsw i128 %_47.i, 4503599278581019
+  %_13.i = mul nuw nsw i128 %_50.i, 1049714374468698
+  %_10.i = add nuw nsw i128 %_13.i, %_11.i
+  %30 = getelementptr inbounds nuw i8, ptr %_10, i32 16
+  %_15.i = load i64, ptr %30, align 8, !alias.scope !1552, !noalias !1555, !noundef !2
+  %_52.i = zext i64 %_15.i to i128
+  %_14.i = mul nuw nsw i128 %_52.i, 4302102966953709
+  %31 = add nuw nsw i128 %_10.i, %_14.i
+  %_18.i = mul nuw nsw i128 %_47.i, 4503599627370495
+  %_20.i = mul nuw nsw i128 %_50.i, 4503599278581019
+  %_17.i = add nuw nsw i128 %_20.i, %_18.i
+  %_21.i = mul nuw nsw i128 %_52.i, 1049714374468698
+  %_16.i = add nuw nsw i128 %_17.i, %_21.i
+  %32 = getelementptr inbounds nuw i8, ptr %_10, i32 24
+  %_23.i = load i64, ptr %32, align 8, !alias.scope !1552, !noalias !1555, !noundef !2
+  %_54.i = zext i64 %_23.i to i128
+  %_22.i = mul nuw nsw i128 %_54.i, 4302102966953709
+  %33 = add nuw nsw i128 %_16.i, %_22.i
+  %_27.i = mul nuw nsw i128 %_47.i, 17592186044415
+  %_29.i = mul nuw nsw i128 %_50.i, 4503599627370495
+  %_26.i = add nuw nsw i128 %_29.i, %_27.i
+  %_30.i = mul nuw nsw i128 %_52.i, 4503599278581019
+  %_25.i = add nuw nsw i128 %_26.i, %_30.i
+  %_31.i = mul nuw nsw i128 %_54.i, 1049714374468698
+  %_24.i = add nuw nsw i128 %_25.i, %_31.i
+  %34 = getelementptr inbounds nuw i8, ptr %_10, i32 32
+  %_33.i = load i64, ptr %34, align 8, !alias.scope !1552, !noalias !1555, !noundef !2
+  %_56.i = zext i64 %_33.i to i128
+  %_32.i = mul nuw nsw i128 %_56.i, 4302102966953709
+  %35 = add nuw nsw i128 %_24.i, %_32.i
+  %_36.i = mul nuw nsw i128 %_50.i, 17592186044415
+  %_37.i = mul nuw nsw i128 %_52.i, 4503599627370495
+  %_35.i = add nuw nsw i128 %_37.i, %_36.i
+  %_38.i = mul nuw nsw i128 %_54.i, 4503599278581019
+  %_34.i = add nuw nsw i128 %_35.i, %_38.i
+  %_39.i = mul nuw nsw i128 %_56.i, 1049714374468698
+  %36 = add nuw nsw i128 %_34.i, %_39.i
+  %_41.i = mul nuw nsw i128 %_52.i, 17592186044415
+  %_42.i = mul nuw nsw i128 %_54.i, 4503599627370495
+  %_40.i = add nuw nsw i128 %_42.i, %_41.i
+  %_43.i = mul nuw nsw i128 %_56.i, 4503599278581019
+  %37 = add nuw nsw i128 %_40.i, %_43.i
+  %_44.i = mul nuw nsw i128 %_54.i, 17592186044415
+  %_45.i = mul nuw nsw i128 %_56.i, 4503599627370495
+  %38 = add nuw nsw i128 %_45.i, %_44.i
+  %_46.i = mul nuw nsw i128 %_56.i, 17592186044415
+  call void @llvm.lifetime.end.p0(ptr nonnull %_10)
+  %_55.i = trunc i128 %_3.i to i64
+  %_54.i45 = mul i64 %_55.i, 1439961107955227
+  %n0.i = and i64 %_54.i45, 4503599627370495
+  %_59.i = zext nneg i64 %n0.i to i128
+  %_58.i = mul nuw nsw i128 %_59.i, 671914833335277
+  %_57.i = add nuw nsw i128 %_58.i, %_3.i
+  %carry.i = lshr i128 %_57.i, 52
+  %_6.i47 = mul nuw nsw i128 %_59.i, 3916664325105025
+  %_4.i46 = add nuw nsw i128 %29, %_6.i47
+  %_3.i48 = add nuw nsw i128 %_4.i46, %carry.i
+  %_62.i = trunc i128 %_3.i48 to i64
+  %_61.i = mul i64 %_62.i, 1439961107955227
+  %n1.i = and i64 %_61.i, 4503599627370495
+  %_66.i = zext nneg i64 %n1.i to i128
+  %_65.i = mul nuw nsw i128 %_66.i, 671914833335277
+  %_64.i = add nuw nsw i128 %_65.i, %_3.i48
+  %carry1.i = lshr i128 %_64.i, 52
+  %_11.i51 = mul nuw nsw i128 %_59.i, 1367801
+  %_12.i = mul nuw nsw i128 %_66.i, 3916664325105025
+  %_9.i50 = add nuw nsw i128 %31, %_11.i51
+  %_8.i52 = add nuw nsw i128 %_9.i50, %_12.i
+  %_7.i = add nuw nsw i128 %_8.i52, %carry1.i
+  %_69.i = trunc i128 %_7.i to i64
+  %_68.i = mul i64 %_69.i, 1439961107955227
+  %n2.i = and i64 %_68.i, 4503599627370495
+  %_73.i = zext nneg i64 %n2.i to i128
+  %_72.i = mul nuw nsw i128 %_73.i, 671914833335277
+  %_71.i = add nuw nsw i128 %_72.i, %_7.i
+  %carry2.i = lshr i128 %_71.i, 52
+  %_17.i55 = mul nuw nsw i128 %_66.i, 1367801
+  %_18.i57 = mul nuw nsw i128 %_73.i, 3916664325105025
+  %_15.i54 = add nuw nsw i128 %33, %_17.i55
+  %_14.i56 = add nuw nsw i128 %_15.i54, %_18.i57
+  %_13.i58 = add nuw nsw i128 %_14.i56, %carry2.i
+  %_76.i = trunc i128 %_13.i58 to i64
+  %_75.i = mul i64 %_76.i, 1439961107955227
+  %n3.i = and i64 %_75.i, 4503599627370495
+  %_80.i = zext nneg i64 %n3.i to i128
+  %_79.i = mul nuw nsw i128 %_80.i, 671914833335277
+  %_78.i = add nuw nsw i128 %_79.i, %_13.i58
+  %carry3.i = lshr i128 %_78.i, 52
+  %_24.i61 = shl nuw nsw i128 %_59.i, 44
+  %_25.i63 = mul nuw nsw i128 %_73.i, 1367801
+  %_26.i65 = mul nuw nsw i128 %_80.i, 3916664325105025
+  %_22.i60 = add nuw nsw i128 %35, %_24.i61
+  %_21.i62 = add nuw nsw i128 %_22.i60, %_25.i63
+  %_20.i64 = add nuw nsw i128 %_21.i62, %_26.i65
+  %_19.i = add nuw nsw i128 %_20.i64, %carry3.i
+  %_83.i = trunc i128 %_19.i to i64
+  %_82.i = mul i64 %_83.i, 1439961107955227
+  %n4.i = and i64 %_82.i, 4503599627370495
+  %_87.i = zext nneg i64 %n4.i to i128
+  %_86.i = mul nuw nsw i128 %_87.i, 671914833335277
+  %_85.i = add nuw nsw i128 %_86.i, %_19.i
+  %carry4.i = lshr i128 %_85.i, 52
+  %_32.i68 = shl nuw nsw i128 %_66.i, 44
+  %_33.i70 = mul nuw nsw i128 %_80.i, 1367801
+  %_34.i71 = mul nuw nsw i128 %_87.i, 3916664325105025
+  %_30.i67 = add nuw nsw i128 %36, %_32.i68
+  %_29.i69 = add nuw nsw i128 %_30.i67, %_33.i70
+  %_28.i = add nuw nsw i128 %_29.i69, %_34.i71
+  %_27.i72 = add nuw nsw i128 %_28.i, %carry4.i
+  %_89.i = trunc i128 %_27.i72 to i64
+  %r0.i = and i64 %_89.i, 4503599627370495
+  %carry5.i = lshr i128 %_27.i72, 52
+  %_39.i75 = shl nuw nsw i128 %_73.i, 44
+  %_40.i77 = mul nuw nsw i128 %_87.i, 1367801
+  %_37.i74 = add nuw nsw i128 %37, %_39.i75
+  %_36.i76 = add nuw nsw i128 %_37.i74, %_40.i77
+  %_35.i78 = add nuw nsw i128 %_36.i76, %carry5.i
+  %_92.i = trunc i128 %_35.i78 to i64
+  %r1.i = and i64 %_92.i, 4503599627370495
+  %carry6.i = lshr i128 %_35.i78, 52
+  %_44.i81 = shl nuw nsw i128 %_80.i, 44
+  %_42.i80 = add nuw nsw i128 %38, %_44.i81
+  %_41.i82 = add nuw nsw i128 %_42.i80, %carry6.i
+  %_95.i = trunc i128 %_41.i82 to i64
+  %r2.i = and i64 %_95.i, 4503599627370495
+  %carry7.i = lshr i128 %_41.i82, 52
+  %_48.i = shl nuw nsw i128 %_87.i, 44
+  %_46.i84 = add nuw nsw i128 %_48.i, %_46.i
+  %_45.i85 = add nuw nsw i128 %_46.i84, %carry7.i
+  %_98.i = trunc i128 %_45.i85 to i64
+  %r3.i = and i64 %_98.i, 4503599627370495
+  %carry8.i = lshr i128 %_45.i85, 52
+  %r4.i = trunc nuw nsw i128 %carry8.i to i64
+  %39 = add nsw i64 %r0.i, -671914833335277
+  %40 = and i64 %39, 4503599627370495
+  %_10.neg17.1.i191 = ashr i64 %39, 63
+  %_8.neg.1.i192 = add nsw i64 %_10.neg17.1.i191, -3916664325105025
+  %41 = add nsw i64 %_8.neg.1.i192, %r1.i
+  %42 = and i64 %41, 4503599627370495
+  %_10.neg17.2.i194 = ashr i64 %41, 63
+  %_8.neg.2.i195 = add nsw i64 %_10.neg17.2.i194, -1367801
+  %43 = add nsw i64 %_8.neg.2.i195, %r2.i
+  %44 = and i64 %43, 4503599627370495
+  %_10.neg17.3.i197 = ashr i64 %43, 63
+  %_8.neg.3.i198 = add nsw i64 %r3.i, %_10.neg17.3.i197
+  %45 = and i64 %_8.neg.3.i198, 4503599627370495
+  %_10.neg17.4.i200 = ashr i64 %_8.neg.3.i198, 63
+  %_8.neg.4.i201 = add nsw i64 %r4.i, -17592186044416
+  %46 = add nsw i64 %_8.neg.4.i201, %_10.neg17.4.i200
+  %borrow.sroa.0.0.lobit.i202 = ashr i64 %46, 63
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i188)
+  store i64 %borrow.sroa.0.0.lobit.i202, ptr %_27.sroa.0.i188, align 8, !noalias !1558
+  %_27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..i203 = load volatile i64, ptr %_27.sroa.0.i188, align 8, !noalias !1558
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i188)
+  %_23.i204 = and i64 %_27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..i203, 671914833335277
+  %47 = add nuw nsw i64 %40, %_23.i204
+  %48 = and i64 %47, 4503599627370495
+  %_20.1.i205 = lshr i64 %47, 52
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i188)
+  store i64 %borrow.sroa.0.0.lobit.i202, ptr %_27.sroa.0.i188, align 8, !noalias !1558
+  %_27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..1.i207 = load volatile i64, ptr %_27.sroa.0.i188, align 8, !noalias !1558
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i188)
+  %_23.1.i208 = and i64 %_27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..1.i207, 3916664325105025
+  %_19.1.i206 = add nuw nsw i64 %_20.1.i205, %_23.1.i208
+  %49 = add nuw nsw i64 %_19.1.i206, %42
+  %50 = and i64 %49, 4503599627370495
+  %_20.2.i209 = lshr i64 %49, 52
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i188)
+  store i64 %borrow.sroa.0.0.lobit.i202, ptr %_27.sroa.0.i188, align 8, !noalias !1558
+  %_27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..2.i211 = load volatile i64, ptr %_27.sroa.0.i188, align 8, !noalias !1558
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i188)
+  %_23.2.i212 = and i64 %_27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..2.i211, 1367801
+  %_19.2.i210 = add nuw nsw i64 %_20.2.i209, %_23.2.i212
+  %51 = add nuw nsw i64 %_19.2.i210, %44
+  %52 = and i64 %51, 4503599627370495
+  %_20.3.i213 = lshr i64 %51, 52
+  %_19.3.i214 = add nuw nsw i64 %45, %_20.3.i213
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i188)
+  store i64 %borrow.sroa.0.0.lobit.i202, ptr %_27.sroa.0.i188, align 8, !noalias !1558
+  %_27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..3.i215 = load volatile i64, ptr %_27.sroa.0.i188, align 8, !noalias !1558
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i188)
+  %53 = and i64 %_19.3.i214, 4503599627370495
+  %_20.4.i216 = lshr i64 %_19.3.i214, 52
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i188)
+  store i64 %borrow.sroa.0.0.lobit.i202, ptr %_27.sroa.0.i188, align 8, !noalias !1558
+  %_27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..4.i218 = load volatile i64, ptr %_27.sroa.0.i188, align 8, !noalias !1558
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i188)
+  %_23.4.i219 = and i64 %_27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.i188.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..4.i218, 17592186044416
+  %_19.4.i217 = add nsw i64 %46, %_23.4.i219
+  %54 = add nsw i64 %_19.4.i217, %_20.4.i216
+  %55 = and i64 %54, 4503599627370495
+  %56 = sub nsw i64 %20, %48
+  %57 = and i64 %56, 4503599627370495
+  %_10.neg17.1.i228 = ashr i64 %56, 63
+  %_8.neg.1.i229 = add nsw i64 %_10.neg17.1.i228, %22
+  %58 = sub nsw i64 %_8.neg.1.i229, %50
+  %59 = and i64 %58, 4503599627370495
+  %_10.neg17.2.i231 = ashr i64 %58, 63
+  %_8.neg.2.i232 = add nsw i64 %_10.neg17.2.i231, %24
+  %60 = sub nsw i64 %_8.neg.2.i232, %52
+  %61 = and i64 %60, 4503599627370495
+  %_10.neg17.3.i234 = ashr i64 %60, 63
+  %_8.neg.3.i235 = add nsw i64 %_10.neg17.3.i234, %25
+  %62 = sub nsw i64 %_8.neg.3.i235, %53
+  %63 = and i64 %62, 4503599627370495
+  %_10.neg17.4.i237 = ashr i64 %62, 63
+  %_8.neg.4.i238 = add nsw i64 %_10.neg17.4.i237, %27
+  %64 = sub nsw i64 %_8.neg.4.i238, %55
+  %borrow.sroa.0.0.lobit.i239 = ashr i64 %64, 63
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i224)
+  store i64 %borrow.sroa.0.0.lobit.i239, ptr %_27.sroa.0.i224, align 8, !noalias !1565
+  %_27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..i240 = load volatile i64, ptr %_27.sroa.0.i224, align 8, !noalias !1565
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i224)
+  %_23.i241 = and i64 %_27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..i240, 671914833335277
+  %65 = add nuw nsw i64 %57, %_23.i241
+  %_20.1.i242 = lshr i64 %65, 52
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i224)
+  store i64 %borrow.sroa.0.0.lobit.i239, ptr %_27.sroa.0.i224, align 8, !noalias !1565
+  %_27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..1.i244 = load volatile i64, ptr %_27.sroa.0.i224, align 8, !noalias !1565
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i224)
+  %_23.1.i245 = and i64 %_27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..1.i244, 3916664325105025
+  %_19.1.i243 = add nuw nsw i64 %_20.1.i242, %_23.1.i245
+  %66 = add nuw nsw i64 %_19.1.i243, %59
+  %_20.2.i246 = lshr i64 %66, 52
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i224)
+  store i64 %borrow.sroa.0.0.lobit.i239, ptr %_27.sroa.0.i224, align 8, !noalias !1565
+  %_27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..2.i248 = load volatile i64, ptr %_27.sroa.0.i224, align 8, !noalias !1565
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i224)
+  %_23.2.i249 = and i64 %_27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..2.i248, 1367801
+  %_19.2.i247 = add nuw nsw i64 %_20.2.i246, %_23.2.i249
+  %67 = add nuw nsw i64 %_19.2.i247, %61
+  %_20.3.i250 = lshr i64 %67, 52
+  %_19.3.i251 = add nuw nsw i64 %63, %_20.3.i250
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i224)
+  store i64 %borrow.sroa.0.0.lobit.i239, ptr %_27.sroa.0.i224, align 8, !noalias !1565
+  %_27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..3.i252 = load volatile i64, ptr %_27.sroa.0.i224, align 8, !noalias !1565
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i224)
+  %_20.4.i253 = lshr i64 %_19.3.i251, 52
+  %_19.4.i254 = add nsw i64 %64, %_20.4.i253
+  call void @llvm.lifetime.start.p0(ptr nonnull %_27.sroa.0.i224)
+  store i64 %borrow.sroa.0.0.lobit.i239, ptr %_27.sroa.0.i224, align 8, !noalias !1565
+  %_27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..4.i255 = load volatile i64, ptr %_27.sroa.0.i224, align 8, !noalias !1565
+  call void @llvm.lifetime.end.p0(ptr nonnull %_27.sroa.0.i224)
+  %_23.4.i256 = and i64 %_27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.i224.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0._27.sroa.0.0..4.i255, 17592186044416
+  %68 = add nsw i64 %_19.4.i254, %_23.4.i256
+  %69 = trunc i64 %65 to i8
+  %_3.i.i = lshr i64 %65, 8
+  %70 = trunc i64 %_3.i.i to i8
+  %_4.i.i = lshr i64 %65, 16
+  %71 = trunc i64 %_4.i.i to i8
+  %_5.i.i = lshr i64 %65, 24
+  %72 = trunc i64 %_5.i.i to i8
+  %_6.i.i = lshr i64 %65, 32
+  %73 = trunc i64 %_6.i.i to i8
+  %_7.i.i = lshr i64 %65, 40
+  %74 = trunc i64 %_7.i.i to i8
+  %75 = lshr i64 %65, 48
+  %_9.i.i = and i64 %75, 15
+  %76 = shl nuw nsw i64 %66, 4
+  %_8.i.i = or disjoint i64 %76, %_9.i.i
+  %77 = trunc i64 %_8.i.i to i8
+  %_12.i.i = lshr i64 %66, 4
+  %78 = trunc i64 %_12.i.i to i8
+  %_13.i.i = lshr i64 %66, 12
+  %79 = trunc i64 %_13.i.i to i8
+  %_14.i.i = lshr i64 %66, 20
+  %80 = trunc i64 %_14.i.i to i8
+  %_15.i.i = lshr i64 %66, 28
+  %81 = trunc i64 %_15.i.i to i8
+  %_16.i.i = lshr i64 %66, 36
+  %82 = trunc i64 %_16.i.i to i8
+  %_17.i.i = lshr i64 %66, 44
+  %83 = trunc i64 %_17.i.i to i8
+  %84 = trunc i64 %67 to i8
+  %_19.i.i = lshr i64 %67, 8
+  %85 = trunc i64 %_19.i.i to i8
+  %_20.i.i = lshr i64 %67, 16
+  %86 = trunc i64 %_20.i.i to i8
+  %_21.i.i = lshr i64 %67, 24
+  %87 = trunc i64 %_21.i.i to i8
+  %_22.i.i = lshr i64 %67, 32
+  %88 = trunc i64 %_22.i.i to i8
+  %_23.i.i = lshr i64 %67, 40
+  %89 = trunc i64 %_23.i.i to i8
+  %90 = lshr i64 %67, 48
+  %_25.i.i = and i64 %90, 15
+  %_26.i.i = shl nuw nsw i64 %_19.3.i251, 4
+  %_24.i.i = or disjoint i64 %_26.i.i, %_25.i.i
+  %91 = trunc i64 %_24.i.i to i8
+  %_28.i.i = lshr i64 %_19.3.i251, 4
+  %92 = trunc i64 %_28.i.i to i8
+  %_29.i.i = lshr i64 %_19.3.i251, 12
+  %93 = trunc i64 %_29.i.i to i8
+  %_30.i.i = lshr i64 %_19.3.i251, 20
+  %94 = trunc i64 %_30.i.i to i8
+  %_31.i.i = lshr i64 %_19.3.i251, 28
+  %95 = trunc i64 %_31.i.i to i8
+  %_32.i.i = lshr i64 %_19.3.i251, 36
+  %96 = trunc i64 %_32.i.i to i8
+  %97 = lshr i64 %_19.3.i251, 44
+  %98 = trunc i64 %97 to i8
+  %99 = trunc i64 %_19.4.i254 to i8
+  %_35.i.i = lshr i64 %_19.4.i254, 8
+  %100 = trunc i64 %_35.i.i to i8
+  %_36.i.i = lshr i64 %_19.4.i254, 16
+  %101 = trunc i64 %_36.i.i to i8
+  %_37.i.i = lshr i64 %_19.4.i254, 24
+  %102 = trunc i64 %_37.i.i to i8
+  %_38.i.i = lshr i64 %_19.4.i254, 32
+  %103 = trunc i64 %_38.i.i to i8
+  %104 = lshr i64 %68, 40
+  %105 = trunc i64 %104 to i8
+  store i8 %69, ptr %_0, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.4.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 1
+  store i8 %70, ptr %_2.sroa.4.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.5.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 2
+  store i8 %71, ptr %_2.sroa.5.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.6.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 3
+  store i8 %72, ptr %_2.sroa.6.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.7.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 4
+  store i8 %73, ptr %_2.sroa.7.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.8.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 5
+  store i8 %74, ptr %_2.sroa.8.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.9.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 6
+  store i8 %77, ptr %_2.sroa.9.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.10.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 7
+  store i8 %78, ptr %_2.sroa.10.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.11.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 8
+  store i8 %79, ptr %_2.sroa.11.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.12.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 9
+  store i8 %80, ptr %_2.sroa.12.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.13.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 10
+  store i8 %81, ptr %_2.sroa.13.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.14.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 11
+  store i8 %82, ptr %_2.sroa.14.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.15.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 12
+  store i8 %83, ptr %_2.sroa.15.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.16.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 13
+  store i8 %84, ptr %_2.sroa.16.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.17.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 14
+  store i8 %85, ptr %_2.sroa.17.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.18.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 15
+  store i8 %86, ptr %_2.sroa.18.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.19.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 16
+  store i8 %87, ptr %_2.sroa.19.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.20.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 17
+  store i8 %88, ptr %_2.sroa.20.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.21.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 18
+  store i8 %89, ptr %_2.sroa.21.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.22.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 19
+  store i8 %91, ptr %_2.sroa.22.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.23.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 20
+  store i8 %92, ptr %_2.sroa.23.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.24.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 21
+  store i8 %93, ptr %_2.sroa.24.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.25.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 22
+  store i8 %94, ptr %_2.sroa.25.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.26.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 23
+  store i8 %95, ptr %_2.sroa.26.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.27.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 24
+  store i8 %96, ptr %_2.sroa.27.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.28.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 25
+  store i8 %98, ptr %_2.sroa.28.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.29.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 26
+  store i8 %99, ptr %_2.sroa.29.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.30.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 27
+  store i8 %100, ptr %_2.sroa.30.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.31.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 28
+  store i8 %101, ptr %_2.sroa.31.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.32.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 29
+  store i8 %102, ptr %_2.sroa.32.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.33.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 30
+  store i8 %103, ptr %_2.sroa.33.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  %_2.sroa.34.0._0.sroa_idx.i = getelementptr inbounds nuw i8, ptr %_0, i32 31
+  store i8 %105, ptr %_2.sroa.34.0._0.sroa_idx.i, align 1, !alias.scope !1570, !noalias !1573
+  ret void
+}

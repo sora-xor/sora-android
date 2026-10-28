@@ -34,9 +34,8 @@ package jp.co.soramitsu.feature_wallet_impl.data.repository
 
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CardHub
-import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
@@ -46,6 +45,8 @@ import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.Sora2PendingSubmissionCoordinator
+import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.migrate
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -53,6 +54,7 @@ import jp.co.soramitsu.xsubstrate.runtime.metadata.module
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -64,11 +66,8 @@ class WalletRepositoryImpl @Inject constructor(
     private val extrinsicManager: ExtrinsicManager,
     private val substrateCalls: SubstrateCalls,
     private val runtimeManager: RuntimeManager,
-    private val soraConfigManager: SoraConfigManager,
+    private val pendingSubmissionCoordinator: Sora2PendingSubmissionCoordinator,
 ) : WalletRepository {
-    private companion object {
-        const val SORA_CARD_ID = "soraCardId"
-    }
 
     override fun observeStorageAccount(address: String): Flow<String> = flow {
         val runtime = runtimeManager.getRuntimeSnapshot()
@@ -101,10 +100,11 @@ class WalletRepositoryImpl @Inject constructor(
         keypair: Sr25519Keypair,
         from: String,
     ): ExtrinsicSubmitStatus {
-        return extrinsicManager.submitAndWaitExtrinsic(
+        return extrinsicManager.submitLegacyMigrationAndWaitExtrinsic(
             from = from,
             keypair = keypair,
             useBatchAll = false,
+            activity = Sora2SubmissionActivity.legacyClaim(),
         ) {
             migrate(
                 irohaAddress = irohaAddress,
@@ -112,6 +112,27 @@ class WalletRepositoryImpl @Inject constructor(
                 signature = signature,
             )
         }
+    }
+
+    override suspend fun checkSubmittedClaim(
+        walletId: String,
+        txHash: String?,
+    ): TransactionOutcome? {
+        val hash = txHash
+            ?: pendingSubmissionCoordinator.latestSubmissionHashOrNull(
+                walletId = walletId,
+                kind = Sora2SubmissionActivity.Kind.LEGACY_CLAIM,
+            )
+            ?: return null
+        try {
+            // Status only: this pass has no signer and cannot submit.
+            pendingSubmissionCoordinator.recoverStatusOnlyFor(walletId, hash)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: Exception) {
+            // Offline or a slow node: the journal row stays as it is and is reported as it is.
+        }
+        return pendingSubmissionCoordinator.currentOutcomeOrNull(walletId, hash)
     }
 
     override fun subscribeCardsHubList(address: String): Flow<List<CardHub>> {
@@ -124,15 +145,7 @@ class WalletRepositoryImpl @Inject constructor(
 
     override fun subscribeVisibleGlobalCardsHubList(): Flow<List<CardHub>> {
         return db.globalCardsHubDao().getGlobalCardsHubVisible().map {
-            val soraCard = soraConfigManager.getSoraCard()
-            it.mapNotNull { cardLocal ->
-                val card = CardsHubMapper.map(cardLocal)
-                when (card?.cardType) {
-                    CardHubType.GET_SORA_CARD -> if (soraCard) card else null
-                    CardHubType.BUY_XOR_TOKEN -> if (soraCard) card else null
-                    else -> card
-                }
-            }
+            it.mapNotNull { cardLocal -> CardsHubMapper.map(cardLocal) }
         }
     }
 

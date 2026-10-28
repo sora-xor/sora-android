@@ -170,10 +170,14 @@ class AssetsRepositoryTest {
     fun `observe transfer`() = runTest {
         val key = Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6))
         BDDMockito.given(
-            extrinsicManager.submitAndWatchExtrinsic(
+            extrinsicManager.submitFeeQualifiedAndWatchExtrinsic(
                 BDDMockito.anyString(),
                 any(),
+                any(),
                 BDDMockito.anyBoolean(),
+                any(),
+                any(),
+                any(),
                 any()
             )
         ).willReturn(
@@ -185,7 +189,8 @@ class AssetsRepositoryTest {
             "to",
             TestTokens.xorToken,
             BigDecimal.ONE,
-            BigDecimal.ZERO
+            BigDecimal.ONE,
+            validateSelectedWallet = {},
         )
         Assert.assertEquals(true, result.success)
     }
@@ -277,9 +282,11 @@ class AssetsRepositoryTest {
         )
     )
 
+    // Stored as "SORA" by earlier versions (oneTokenLocal); the mapper shows native XOR by its
+    // symbol (AssetHolder.displayName, modernize 2e49467a).
     private fun oneToken() = Token(
         "0x0200000000000000000000000000000000000000000000000000000000000000",
-        "SORA",
+        "XOR",
         "XOR",
         18,
         false,

@@ -1,8 +1,7 @@
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.serialization)
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize")
 }
 
@@ -12,7 +11,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.test_data"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -22,7 +21,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 34
+        targetSdk = 36
     }
 
     buildTypes {
@@ -65,5 +64,4 @@ android {
 dependencies {
     implementation(project(":common"))
     implementation(project(":common_wallet"))
-    implementation(project(":feature_sora_card_api"))
 }

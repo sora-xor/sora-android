@@ -33,12 +33,20 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.tutorial
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.remember
+import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
+import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
+import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -67,11 +75,11 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.TutorialScreenState
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
-import jp.co.soramitsu.ui_core.component.button.OutlinedButton
-import jp.co.soramitsu.ui_core.component.button.TextButton
+import jp.co.soramitsu.common.presentation.compose.neon.OutlinedButton
+import jp.co.soramitsu.common.presentation.compose.neon.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -79,12 +87,13 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 
 @ExperimentalUnitApi
 @Composable
-internal fun TutorialScreen(
+fun TutorialScreen(
     state: TutorialScreenState,
     onCreateAccount: () -> Unit,
     onImportAccount: () -> Unit,
     onGoogleSignin: () -> Unit,
-    onTermsAndPrivacyClicked: (TermsAndPrivacyEnum) -> Unit
+    onTermsAndPrivacyClicked: (TermsAndPrivacyEnum) -> Unit,
+    onFoundWallets: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier.fillMaxHeight(),
@@ -111,21 +120,12 @@ internal fun TutorialScreen(
             ) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(id = R.string.tutorial_many_world),
+                    text = stringResource(id = R.string.neon_welcome_headline),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.customTypography.displayL,
                     color = MaterialTheme.customColors.fgPrimary
                 )
 
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = Dimens.x2),
-                    text = stringResource(id = R.string.asset_sora_fullname),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.customTypography.displayL,
-                    color = MaterialTheme.customColors.accentPrimary
-                )
 
                 Text(
                     modifier = Modifier
@@ -141,7 +141,10 @@ internal fun TutorialScreen(
                     onCreateAccount = onCreateAccount,
                     onRecoveryAccount = onImportAccount,
                     onGoogleSignin = onGoogleSignin,
-                    isGoogleSignInLoading = state.isGoogleSigninLoading
+                    isGoogleSignInLoading = state.isGoogleSigninLoading,
+                    isGoogleBackupAvailable = state.isGoogleBackupAvailable,
+                    foundWalletsCount = state.foundWalletsCount,
+                    onFoundWallets = onFoundWallets,
                 )
 
                 val annotatedLinkString: AnnotatedString = buildAnnotatedString {
@@ -161,8 +164,8 @@ internal fun TutorialScreen(
                     val endIndex = startIndex + termsWord.length
                     addStyle(
                         style = SpanStyle(
-                            color = MaterialTheme.customColors.accentPrimary,
-                            textDecoration = TextDecoration.None
+                            color = MaterialTheme.neon.link,
+                            textDecoration = TextDecoration.Underline
                         ),
                         start = startIndex, end = endIndex
                     )
@@ -193,7 +196,7 @@ internal fun TutorialScreen(
                         startingString.length + termsWord.length + andWord.length + privacyWord.length
                     addStyle(
                         style = SpanStyle(
-                            color = MaterialTheme.customColors.accentPrimary,
+                            color = MaterialTheme.neon.link,
                             textDecoration = TextDecoration.None
                         ),
                         start = privacyWordStartIndex, end = privacyWordEndIndex
@@ -212,7 +215,7 @@ internal fun TutorialScreen(
                 ClickableText(
                     modifier = Modifier
                         .align(CenterHorizontally)
-                        .padding(top = Dimens.x4),
+                        .padding(top = Dimens.x4).heightIn(min = 48.dp),
                     style = MaterialTheme.customTypography.textXS.copy(textAlign = TextAlign.Center),
                     text = annotatedLinkString,
                     onClick = {
@@ -224,14 +227,16 @@ internal fun TutorialScreen(
             }
         }
 
-        Image(
-            modifier = Modifier
-                .size(112.dp)
-                .offset(y = (-56).dp),
-            alignment = Alignment.TopCenter,
-            painter = painterResource(id = R.drawable.ic_0x0200000000000000000000000000000000000000000000000000000000000000),
-            contentDescription = null,
-        )
+        NeumorphicSurface(
+            shape = CircleShape,
+            interactionSource = remember { MutableInteractionSource() },
+            modifier = Modifier.size(112.dp).offset(y = (-56).dp)
+                .border(2.dp, MaterialTheme.neon.brandRed, CircleShape),
+        ) {
+            Image(modifier = Modifier.size(80.dp),
+                painter = painterResource(R.drawable.ic_0x0200000000000000000000000000000000000000000000000000000000000000),
+                contentDescription = null)
+        }
     }
 }
 
@@ -242,65 +247,63 @@ private fun TutorialButtons(
     onGoogleSignin: () -> Unit,
     onRecoveryAccount: () -> Unit,
     isGoogleSignInLoading: Boolean = false,
+    isGoogleBackupAvailable: Boolean = true,
+    foundWalletsCount: Int = 0,
+    onFoundWallets: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
-        LoaderWrapper(
-            modifier = Modifier
-                .padding(top = Dimens.x1)
-                .fillMaxWidth(),
-            loading = isGoogleSignInLoading,
-            loaderSize = Size.Large,
-        ) { modifier, elevation ->
-            Button(
-                modifier = modifier
-                    .testTagAsId("GoogleSignin")
-                    .height(Dimens.x7)
+        jp.co.soramitsu.common.presentation.compose.components.PreservedWalletDataButton()
+        if (foundWalletsCount > 0) {
+            // Keys of earlier wallets are still on this phone behind the PIN that was used here.
+            // Offered first: it brings them back as they are, without typing a phrase.
+            OutlinedButton(
+                modifier = Modifier
+                    .testTagAsId("FoundWallets")
+                    .padding(top = Dimens.x1)
                     .fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color(0xFF3579F7),
-                    contentColor = Color.White,
-                ),
-                shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
-                onClick = onGoogleSignin,
-            ) {
-                Image(
-                    modifier = Modifier.padding(end = Dimens.x1),
-                    painter = painterResource(id = R.drawable.ic_google_white),
-                    contentDescription = stringResource(id = R.string.onboarding_continue_with_google)
-                )
-                Text(
-                    style = MaterialTheme.customTypography.buttonM,
-                    text = stringResource(id = R.string.onboarding_continue_with_google)
-                )
-            }
+                text = stringResource(R.string.safe_mode_retained_title),
+                onClick = onFoundWallets,
+                size = Size.Large,
+                order = Order.PRIMARY
+            )
+            ChoiceExplanation(R.string.onboarding_found_wallets_explanation)
         }
 
-        OutlinedButton(
-            modifier = Modifier
-                .testTagAsId("CreateNewAccount")
-                .padding(top = Dimens.x1)
-                .fillMaxWidth(),
+        NeonButton(
+            modifier = Modifier.testTagAsId("CreateNewAccount").padding(top = Dimens.x1).fillMaxWidth(),
             text = stringResource(R.string.create_account_title),
-            onClick = onCreateAccount,
-            size = Size.Large,
-            order = Order.PRIMARY
+            onClick = onCreateAccount, size = Size.Large, variant = NeonVariant.Primary,
+            maxLines = 3, pulse = true,
         )
-
-        TextButton(
-            modifier = Modifier
-                .testTagAsId("ImportAccount")
-                .padding(top = Dimens.x1)
-                .fillMaxWidth(),
+        ChoiceExplanation(R.string.wallet_create_explanation)
+        NeonButton(
+            modifier = Modifier.testTagAsId("ImportAccount").padding(top = Dimens.x1).fillMaxWidth(),
             text = stringResource(R.string.recovery_title),
-            onClick = onRecoveryAccount,
-            size = Size.Large,
-            order = Order.PRIMARY
+            onClick = onRecoveryAccount, size = Size.Large, variant = NeonVariant.Secondary, maxLines = 3,
         )
+        ChoiceExplanation(R.string.wallet_import_explanation)
+        if (isGoogleBackupAvailable) {
+            NeonButton(
+                modifier = Modifier.testTagAsId("GoogleSignin").padding(top = Dimens.x1).fillMaxWidth(),
+                text = stringResource(R.string.neon_restore_google),
+                onClick = onGoogleSignin, size = Size.Large, variant = NeonVariant.Tertiary,
+                maxLines = 3, enabled = !isGoogleSignInLoading, loading = isGoogleSignInLoading,
+            )
+            ChoiceExplanation(R.string.wallet_google_explanation)
+        }
+
     }
+}
+
+@Composable
+private fun ChoiceExplanation(resource: Int) {
+    Text(stringResource(resource), style = MaterialTheme.customTypography.paragraphS,
+        color = MaterialTheme.customColors.fgPrimary, textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(top = Dimens.x1, bottom = Dimens.x2))
 }
 
 @OptIn(ExperimentalUnitApi::class)

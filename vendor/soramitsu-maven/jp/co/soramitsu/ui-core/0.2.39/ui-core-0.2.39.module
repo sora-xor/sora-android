@@ -1,0 +1,167 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "jp.co.soramitsu",
+    "module": "ui-core",
+    "version": "0.2.39",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.9"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "ui-core-0.2.39.aar",
+          "url": "ui-core-0.2.39.aar",
+          "size": 2035609,
+          "sha512": "672f8749186fb4057f641fecbbe85e0330a2fcff26b13f638e6f707ddb5df02dc84b8db2d8195929a285ec887f71fbfb346a701c2c93a878efbff8e0eb8e72df",
+          "sha256": "73a7a718c3945a25dd8c81113bc3982b530e3bec6851f89ce4fd2e06e12da8bc",
+          "sha1": "b9e79e593538b299b0ebbef7e6324f811b607095",
+          "md5": "25dfa91bf640471d1b9e14cd9366882d"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.core",
+          "module": "core-ktx",
+          "version": {
+            "requires": "1.13.1"
+          }
+        },
+        {
+          "group": "androidx.compose",
+          "module": "compose-bom",
+          "version": {
+            "requires": "2024.11.00"
+          },
+          "attributes": {
+            "org.gradle.category": "platform"
+          }
+        },
+        {
+          "group": "androidx.compose.ui",
+          "module": "ui"
+        },
+        {
+          "group": "androidx.compose.runtime",
+          "module": "runtime-livedata"
+        },
+        {
+          "group": "androidx.compose.material",
+          "module": "material"
+        },
+        {
+          "group": "androidx.compose.ui",
+          "module": "ui-graphics"
+        },
+        {
+          "group": "androidx.compose.ui",
+          "module": "ui-tooling-preview"
+        },
+        {
+          "group": "io.coil-kt",
+          "module": "coil",
+          "version": {
+            "requires": "2.7.0"
+          }
+        },
+        {
+          "group": "io.coil-kt",
+          "module": "coil-compose",
+          "version": {
+            "requires": "2.7.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "ui-core-0.2.39.aar",
+          "url": "ui-core-0.2.39.aar",
+          "size": 2035609,
+          "sha512": "672f8749186fb4057f641fecbbe85e0330a2fcff26b13f638e6f707ddb5df02dc84b8db2d8195929a285ec887f71fbfb346a701c2c93a878efbff8e0eb8e72df",
+          "sha256": "73a7a718c3945a25dd8c81113bc3982b530e3bec6851f89ce4fd2e06e12da8bc",
+          "sha1": "b9e79e593538b299b0ebbef7e6324f811b607095",
+          "md5": "25dfa91bf640471d1b9e14cd9366882d"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "ui-core-0.2.39-sources.jar",
+          "url": "ui-core-0.2.39-sources.jar",
+          "size": 66769,
+          "sha512": "ea432d7cf957e680da3cc57c5124f16080fb5f88efa48ed41e00ac4ec0f1526d57de9a1eb1d935b253668c66222b3675b7a8ea1131a716b06e6b81055e82cc01",
+          "sha256": "549e6d1dff86451aec609328cccc7f88334a2355c29e740d6edb513141512cdb",
+          "sha1": "b3124a802e053f836c19895f695060a575fe4d38",
+          "md5": "5bb701863522e6397e128730d45ff43b"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseJavaDocPublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "ui-core-0.2.39-javadoc.jar",
+          "url": "ui-core-0.2.39-javadoc.jar",
+          "size": 539852,
+          "sha512": "0dc1820bad26b65ab960f311c7468aa0fe9e31ba5589eaf6dc537efd8e5408f8e1b6031ec6fdeeedbdfc0424a64d51e18d0bffce768127ff7277b86f6ab33254",
+          "sha256": "2b58ef468fbaadefbec8d6eb74aac8e0125d37c75bcc428b0b3bf8bcb23c8149",
+          "sha1": "5d701eb382bc6dfb17eed417771fe3199bbe781b",
+          "md5": "3e8350858d57fbd5e414374e9d6b4d75"
+        }
+      ]
+    }
+  ]
+}
