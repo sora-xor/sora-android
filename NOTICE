@@ -1,0 +1,14 @@
+SORA Wallet Android
+
+Copyright (c) 2020, 2021, 2022, 2023 Polka Biome Ltd.
+
+First-party SORA Wallet source is licensed under the Apache License,
+Version 2.0. Copyright holders and dates remain in the source files.
+
+This product includes software developed by Polka Biome Ltd., SORA,
+and Polkaswap.
+
+Third-party code, binaries, fonts, and Gradle dependencies retain their
+own licenses and copyright notices. The Apache-2.0 grant for first-party
+source does not replace those third-party terms. Retain the notices
+provided with those components when redistributing them.
