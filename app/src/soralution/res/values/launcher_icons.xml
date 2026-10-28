@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="soralution_launcher_background">#E3232C</color>
+    <item name="ic_soralution_launcher_rounded" type="mipmap">@mipmap/ic_soralution_launcher</item>
+</resources>

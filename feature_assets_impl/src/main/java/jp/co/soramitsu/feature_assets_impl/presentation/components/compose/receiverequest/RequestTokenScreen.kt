@@ -132,7 +132,7 @@ data class RequestTokenScreenState(
 
     val isCreateQRRequestEnabled: Boolean =
         screenStatus === ScreenStatus.READY_TO_RENDER &&
-            untransformedUserAddress != null &&
+            !untransformedUserAddress.isNullOrBlank() &&
             untransformedAvatarDrawable != null
 }
 

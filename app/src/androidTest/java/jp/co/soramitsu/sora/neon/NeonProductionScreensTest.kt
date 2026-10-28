@@ -33,6 +33,19 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.neon
 
 import android.graphics.Bitmap
+import android.graphics.Rect
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.view.PixelCopy
+import android.view.ViewTreeObserver
+import androidx.annotation.RequiresApi
+import androidx.compose.ui.platform.ViewRootForTest
+import androidx.test.platform.graphics.HardwareRendererCompat
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.Box
 import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.enter_passphrase.EnterPassphraseScreen
@@ -289,9 +302,82 @@ class NeonProductionScreensTest {
     }
 
     private fun capture(name: String) {
-        val dir = File(context.getExternalFilesDir(null), "neon-production").apply { mkdirs() }
-        rule.onRoot().captureToImage().asAndroidBitmap().let { bitmap ->
-            File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        rule.waitForIdle()
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        val bitmap = if (Build.VERSION.SDK_INT >= 29) {
+            captureCommittedRoot()
+        } else {
+            // Retain Compose's existing native capture path on older supported APIs.
+            rule.onRoot().captureToImage().asAndroidBitmap()
+        }
+        try {
+            val dir = File(context.getExternalFilesDir(null), "neon-production").apply { mkdirs() }
+            File(dir, "$name.png").outputStream().use {
+                assertTrue("The captured root must be written as PNG", bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
+            }
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
+    @RequiresApi(29)
+    private fun captureCommittedRoot(): Bitmap {
+        val node = rule.onRoot().fetchSemanticsNode()
+        val composeRoot = checkNotNull(node.root as? ViewRootForTest) { "The captured root must belong to the activity window" }
+        val activity = rule.activity
+        val window = activity.window
+        val decor = window.decorView
+        val frameCommitted = CountDownLatch(1)
+        val onFrameCommitted = Runnable { frameCommitted.countDown() }
+        var observer: ViewTreeObserver? = null
+        val bounds = Rect()
+        val drawingWasEnabled = HardwareRendererCompat.isDrawingEnabled()
+        try {
+            // Compose's own capture path temporarily enables native drawing too.
+            // Restore the prior global state even when capture fails.
+            if (!drawingWasEnabled) HardwareRendererCompat.setDrawingEnabled(true)
+            rule.runOnUiThread {
+                assertEquals("Capture requires a resumed activity", Lifecycle.State.RESUMED, activity.lifecycle.currentState)
+                assertTrue("The capture window must be attached", decor.isAttachedToWindow)
+                assertTrue("The capture window must be visible", decor.isShown)
+                assertTrue("The capture window must have focus", decor.hasWindowFocus())
+                assertTrue("Capture must use the hardware renderer", decor.isHardwareAccelerated)
+                assertTrue("The Compose root must still be attached", composeRoot.view.isAttachedToWindow)
+                assertTrue("The Compose root must be visible", composeRoot.view.isShown)
+
+                // Match captureToImage exactly: rounded boundsInRoot plus the
+                // Compose host view's location in its window, not screen insets.
+                val rootBounds = node.boundsInRoot
+                bounds.set(rootBounds.left.roundToInt(), rootBounds.top.roundToInt(),
+                    rootBounds.right.roundToInt(), rootBounds.bottom.roundToInt())
+                val location = IntArray(2)
+                composeRoot.view.getLocationInWindow(location)
+                bounds.offset(location[0], location[1])
+                assertTrue("The captured root must have a nonempty crop", bounds.width() > 0 && bounds.height() > 0)
+                observer = decor.viewTreeObserver
+                observer?.registerFrameCommitCallback(onFrameCommitted)
+                composeRoot.invalidateDescendants()
+                decor.invalidate()
+            }
+            // The framework helper allows only 2s for this native callback.
+            // Wait for the actual GPU frame; do not sleep or redraw in software.
+            assertTrue("The native root frame was not committed within 10s", frameCommitted.await(10, TimeUnit.SECONDS))
+            val bitmap = Bitmap.createBitmap(bounds.width(), bounds.height(), Bitmap.Config.ARGB_8888)
+            val copied = CountDownLatch(1)
+            val result = AtomicInteger(-1)
+            PixelCopy.request(window, bounds, bitmap, { status ->
+                result.set(status)
+                copied.countDown()
+            }, Handler(Looper.getMainLooper()))
+            assertTrue("PixelCopy did not complete within 10s", copied.await(10, TimeUnit.SECONDS))
+            assertEquals("PixelCopy must capture the committed root successfully", PixelCopy.SUCCESS, result.get())
+            return bitmap
+        } finally {
+            try {
+                rule.runOnUiThread { observer?.takeIf { it.isAlive }?.unregisterFrameCommitCallback(onFrameCommitted) }
+            } finally {
+                if (!drawingWasEnabled) HardwareRendererCompat.setDrawingEnabled(false)
+            }
         }
     }
 }

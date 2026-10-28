@@ -40,6 +40,9 @@ subprojects {
                         withDependencies {
                             // Its bundled testing API still references JUnit, Mockito and coroutine-test.
                             removeIf { it.group == "io.mockk" && it.name == "mockk" }
+                            // The only Material3 references are in the unused BottomSheetExt API.
+                            // SORA uses its own Material2 sheets and theme throughout.
+                            removeIf { it.group == "androidx.compose.material3" && it.name == "material3" }
                         }
                     }
                 }
@@ -55,6 +58,18 @@ subprojects {
         val configurationName = name
         resolutionStrategy {
             dependencySubstitution {
+                // Retain device previews with controls matching SORA's Material2 theme.
+                // The pinned, reproducible patch changes only PreviewActivity and its dependency.
+                substitute(module("androidx.compose.ui:ui-tooling"))
+                    .using(module("androidx.compose.ui:ui-tooling-android:1.11.1-sora.1"))
+                    .because("Keep preview parameter controls in the app's Material2 theme")
+                substitute(module("androidx.compose.ui:ui-tooling-android"))
+                    .using(module("androidx.compose.ui:ui-tooling-android:1.11.1-sora.1"))
+                    .because("Keep preview parameter controls in the app's Material2 theme")
+                // Keep Drive's transport/API intact while removing its unused insecure TLS opt-outs.
+                substitute(module("com.google.http-client:google-http-client"))
+                    .using(module("com.google.http-client:google-http-client:1.43.3-sora.1"))
+                    .because("Certificate and hostname verification cannot be disabled")
                 // Source-built local security fork replaces EdDSA with maintained BC Ed25519.
                 substitute(module("jp.co.soramitsu:xcrypto"))
                     .using(module("jp.co.soramitsu:xcrypto:1.2.8-sora.2"))

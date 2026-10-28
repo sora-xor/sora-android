@@ -3,6 +3,7 @@ package jp.co.soramitsu.feature_wallet_impl.data.portfolio.debug
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.core.content.edit
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.EntryPoint
@@ -43,11 +44,11 @@ class PortfolioDebugState @Inject constructor(
     }
 
     fun apply(sampleMode: String?, freshness: String?, tiltValue: String?) {
-        prefs.edit().apply {
+        prefs.edit {
             sampleMode?.let { putString(KEY_SAMPLE, it.lowercase()) }
             freshness?.let { putString(KEY_FRESHNESS, it.lowercase()) }
             tiltValue?.let { putString(KEY_TILT, it) }
-        }.apply()
+        }
         if (sampleMode != null || freshness != null) rebuildSample()
         if (tiltValue != null) tilt.value = parseTilt(tiltValue)
     }

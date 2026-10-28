@@ -293,9 +293,12 @@ object FanAllocation {
 
     fun largestRemainder(values: List<Double>, total: Int = RAYS): List<Int> {
         val positive = values.map { if (it.isFinite() && it > 0.0) it else 0.0 }
-        val sum = positive.sum()
-        if (sum <= 0.0 || total <= 0) return positive.map { 0 }
-        val quotas = positive.map { it / sum * total }
+        val scale = positive.maxOrNull() ?: 0.0
+        if (scale <= 0.0 || total <= 0) return positive.map { 0 }
+        // Normalize before summing: individually finite holdings can overflow their total.
+        val normalized = positive.map { it / scale }
+        val sum = normalized.sum()
+        val quotas = normalized.map { it / sum * total }
         val result = quotas.map { kotlin.math.floor(it).toInt() }.toMutableList()
         var remaining = total - result.sum()
         val order = quotas.indices.sortedWith(
@@ -335,13 +338,20 @@ object PortfolioFreshness {
             !connected -> FreshnessKind.OFFLINE
             unreachable.isNotEmpty() -> FreshnessKind.PARTIAL
             sync?.live == true -> FreshnessKind.LIVE
-            updatedAt != null && nowMillis - updatedAt in -CLOCK_SKEW_MS..LIVE_WINDOW_MS -> FreshnessKind.LIVE
+            updatedAt != null && isRecent(updatedAt, nowMillis) -> FreshnessKind.LIVE
             else -> FreshnessKind.SAVED
         }
         return WalletFreshness(kind, updatedAt, unreachable)
     }
 
+    private fun isRecent(updatedAt: Long, nowMillis: Long): Boolean =
+        if (nowMillis >= updatedAt) {
+            nowMillis - updatedAt in 0..LIVE_WINDOW_MS
+        } else {
+            updatedAt - nowMillis in 0..CLOCK_SKEW_MS
+        }
+
     /** True when a wallet has not been read for [REFRESH_INTERVAL_MS]: the rate limit of re-reads. */
     fun isDue(lastReadMillis: Long?, nowMillis: Long): Boolean =
-        lastReadMillis == null || nowMillis - lastReadMillis >= REFRESH_INTERVAL_MS || nowMillis < lastReadMillis
+        lastReadMillis == null || nowMillis < lastReadMillis || nowMillis - lastReadMillis !in 0 until REFRESH_INTERVAL_MS
 }

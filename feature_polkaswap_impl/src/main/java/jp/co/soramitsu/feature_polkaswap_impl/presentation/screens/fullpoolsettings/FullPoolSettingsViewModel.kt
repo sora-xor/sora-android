@@ -177,9 +177,9 @@ class FullPoolSettingsViewModel @Inject constructor(
     }
 
     fun onFavoriteClick(asset: PoolSettingsState) {
-        val checked = asset.favorite.not()
         val position = curPoolList.indexOfFirst { it.id == asset.id }
         if (position < 0) return
+        val checked = curPoolList[position].favorite.not()
         curPoolList[position] = curPoolList[position].copy(favorite = checked)
         filterAndUpdateAssetsList()
         viewModelScope.launch {
@@ -192,6 +192,8 @@ class FullPoolSettingsViewModel @Inject constructor(
     }
 
     fun assetPositionChanged(from: Int, to: Int): Boolean {
+        if (curFilter.isNotBlank() || from !in curPoolList.indices ||
+            to !in curPoolList.indices || from == to) return false
         moveToken(from, to)
         _assetPositions.value = from to to
         viewModelScope.launch {

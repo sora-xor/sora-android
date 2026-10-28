@@ -33,7 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.domain
 
 import io.ktor.http.decodeURLPart
-import io.ktor.util.decodeBase64Bytes
+import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.io.FileManager
@@ -41,6 +41,9 @@ import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
 import jp.co.soramitsu.xnetworking.lib.engines.utils.fieldOrNull
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -62,23 +65,33 @@ class WhitelistTokensManager @Inject constructor(
 
     companion object {
         private const val WHITELIST_FILE_NAME = "whitelist_tokens.json"
+        private val ASSET_ID = Regex("0x[0-9a-fA-F]{64}")
+        private val ICON_TYPES = setOf("", "svg", "png")
     }
 
     var whitelistIds: List<String> = emptyList()
         private set
 
-    private val curWhitelist = mutableListOf<TokenDto>()
+    private var curWhitelist: List<TokenDto> = emptyList()
 
     private fun updateWhitelist(list: List<TokenDto>) {
-        curWhitelist.clear()
-        curWhitelist.addAll(list)
+        curWhitelist = list.distinctBy { it.id }
         whitelistIds = curWhitelist.map { it.id }
     }
 
     init {
-        fileManager.readInternalFile(WHITELIST_FILE_NAME)?.let {
-            val ids = Json.decodeFromString(ListSerializer(TokenDto.serializer()), it)
-            updateWhitelist(ids)
+        updateWhitelist(AssetHolder.getIds().map { TokenDto(it, "") })
+        try {
+            fileManager.readInternalFile(WHITELIST_FILE_NAME)?.let { cached ->
+                val ids = Json.decodeFromString(ListSerializer(TokenDto.serializer()), cached)
+                require(ids.all { ASSET_ID.matches(it.id) && it.type in ICON_TYPES })
+                updateWhitelist(ids)
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            // This is a rebuildable catalog cache; a damaged entry must not block startup.
+            FirebaseWrapper.recordException(error)
         }
     }
 
@@ -93,62 +106,53 @@ class WhitelistTokensManager @Inject constructor(
     }
 
     suspend fun updateWhitelistStorage() {
-        runCatching {
-            restClient.get(
+        try {
+            currentCoroutineContext().ensureActive()
+            val dtoList = restClient.get(
                 JsonGetRequest(
                     url = "https://whitelist.polkaswap2.io/whitelist.json",
                     responseDeserializer = JsonArray.serializer()
                 )
             )
-        }.onSuccess { dtoList ->
             val ids = mutableListOf<TokenDto>()
-
             dtoList.forEach { dto ->
                 val address = dto.fieldOrNull("address") ?: return@forEach
+                if (!ASSET_ID.matches(address)) return@forEach
                 val iconField = dto.fieldOrNull("icon") ?: return@forEach
-
-                val iconRaw = iconField.substringAfter(
-                    delimiter = ",",
-                    missingDelimiterValue = ""
-                )
-
-                when {
-                    iconField.startsWith("data:image/svg") -> {
-                        fileManager.writeInternalCacheFile(
-                            fileName = "$address.svg",
-                            content = iconRaw.decodeURLPart()
-                        )
-
-                        ids += TokenDto(id = address, type = "svg")
-                    }
-                    iconField.startsWith("data:image/png") -> {
-                        fileManager.writeInternalCacheFile(
-                            fileName = "$address.png",
-                            content = iconRaw.decodeBase64Bytes()
-                        )
-
-                        ids += TokenDto(id = address, type = "png")
-                    }
+                val metadata = iconField.substringBefore(",").split(";")
+                val iconRaw = iconField.substringAfter(",", "")
+                if (iconRaw.isEmpty()) return@forEach
+                if (metadata.drop(1).any { it !in setOf("base64", "utf8", "charset=utf-8") }) return@forEach
+                val base64 = "base64" in metadata
+                val type = when (metadata.first()) {
+                    "data:image/svg+xml" -> "svg"
+                    "data:image/png" -> if (base64) "png" else return@forEach
                     else -> return@forEach
                 }
-            }
-
-            updateWhitelist(ids)
-            fileManager.writeInternalFile(
-                WHITELIST_FILE_NAME,
-                Json.encodeToString(ids)
-            )
-        }.onFailure {
-            FirebaseWrapper.recordException(it)
-
-            if (fileManager.existsInternalFile(WHITELIST_FILE_NAME))
-                return@onFailure
-
-            updateWhitelist(
-                AssetHolder.getIds().map { id ->
-                    TokenDto(id, "")
+                // A bad image is isolated to its row. Storage failures, in contrast,
+                // abort publication so the last usable membership stays in memory.
+                val content = try {
+                    if (base64) Base64.getDecoder().decode(iconRaw) else iconRaw.decodeURLPart().toByteArray()
+                } catch (error: IllegalArgumentException) {
+                    FirebaseWrapper.recordException(error)
+                    return@forEach
                 }
-            )
+                currentCoroutineContext().ensureActive()
+                if (type == "svg") {
+                    fileManager.writeInternalCacheFile("$address.svg", content.toString(Charsets.UTF_8))
+                } else {
+                    fileManager.writeInternalCacheFile("$address.png", content)
+                }
+                ids += TokenDto(address, type)
+            }
+            val unique = ids.distinctBy { it.id }
+            currentCoroutineContext().ensureActive()
+            fileManager.writeInternalFile(WHITELIST_FILE_NAME, Json.encodeToString(unique))
+            updateWhitelist(unique)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            FirebaseWrapper.recordException(error)
         }
     }
 }

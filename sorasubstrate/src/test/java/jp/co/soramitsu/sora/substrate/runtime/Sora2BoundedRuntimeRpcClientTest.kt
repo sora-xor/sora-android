@@ -574,6 +574,63 @@ class Sora2BoundedRuntimeRpcClientTest {
         )
     }
 
+    @Test fun `canonical block rejects malformed structure proof height and encoded extrinsics`() = runTest {
+        val validHash = "0x" + "cd".repeat(32)
+        val cases = listOf(
+            "[]" to "SORA2_STATUS_BLOCK_INVALID",
+            "{\"unexpected\":true}" to "SORA2_STATUS_BLOCK_INVALID",
+            "{}" to "SORA2_STATUS_BLOCK_INVALID",
+            "{\"block\":{\"header\":{\"number\":\"0x7\"}}}" to "SORA2_STATUS_BLOCK_INVALID",
+            "{\"block\":{\"header\":{\"number\":\"0x8\"},\"extrinsics\":[]}}" to "SORA2_STATUS_BLOCK_NUMBER_MISMATCH",
+            "{\"block\":{\"header\":{\"number\":\"0x7\"},\"extrinsics\":{}}}" to "SORA2_STATUS_BLOCK_INVALID",
+            "{\"block\":{\"header\":{\"number\":\"0x7\"},\"extrinsics\":[true]}}" to "SORA2_STATUS_EXTRINSIC_INVALID",
+            "{\"block\":{\"header\":{\"number\":\"0x7\"},\"extrinsics\":[\"0x1\"]}}" to "SORA2_STATUS_EXTRINSIC_INVALID",
+            "{\"block\":{\"header\":{\"number\":\"0x7\"},\"extrinsics\":[\"not-hex\"]}}" to "SORA2_STATUS_EXTRINSIC_INVALID",
+            "{\"block\":{\"header\":{\"number\":\"0x7\"},\"extrinsics\":[${List(2049) { "\"0x00\"" }.joinToString()}]}}" to "SORA2_STATUS_BLOCK_TOO_LARGE",
+        )
+        for ((body, code) in cases) {
+            val transport = ScriptedTransport(result(1, gson.toJson(validHash)), result(2, body))
+            val client = Sora2BoundedRuntimeRpcClient(transport, gson)
+            assertEquals(code, captureFailure { client.getCanonicalBlock(7, 9, setOf("0x00".extrinsicHash())) }.message)
+            assertEquals(2, transport.requests.size)
+        }
+    }
+
+    @Test fun `canonical block header requires unsigned bounded hex height`() = runTest {
+        for (header in listOf("[]", "{}", "{\"number\":7}", "{\"number\":\"-1\"}", "{\"number\":\"0x8000000000000000\"}")) {
+            val transport = ScriptedTransport(result(1, gson.toJson(finalizedHash)), result(2, "{\"block\":{\"header\":$header,\"extrinsics\":[]}}"))
+            assertEquals("SORA2_STATUS_HEADER_INVALID", captureFailure { Sora2BoundedRuntimeRpcClient(transport, gson).getCanonicalBlock(7, 9, setOf("0x00".extrinsicHash())) }.message)
+        }
+    }
+
+    @Test fun `invalid recovery requests account selectors and submissions never reach transport`() = runTest {
+        val transport = ScriptedTransport(); val client = Sora2BoundedRuntimeRpcClient(transport, gson)
+        for ((number, finalized, hashes) in listOf(Triple(-1L, 9L, setOf(finalizedHash)), Triple(10L, 9L, setOf(finalizedHash)), Triple(1L, 9L, emptySet()), Triple(1L, 9L, (1..17).map { "0x"+it.toString(16).padStart(64, '0') }.toSet()))) {
+            assertEquals("SORA2_STATUS_BLOCK_REQUEST_INVALID", captureFailure { client.getCanonicalBlock(number, finalized, hashes) }.message)
+        }
+        assertEquals("SORA2_STATUS_HASH_SET_INVALID", captureFailure { client.getCanonicalBlock(1, 9, setOf(finalizedHash, finalizedHash.uppercase().replace("0X", "0x"))) }.message)
+        for (value in listOf("", "wrong-account")) assertEquals("SORA2_RUNTIME_RPC_ACCOUNT_INVALID", captureFailure { client.getAccountNextIndex(value) }.message)
+        for (value in listOf("", "0x1", "0xzz", "00")) assertEquals("SORA2_SUBMISSION_EXTRINSIC_INVALID", captureFailure { client.submitExtrinsicOnce(value) }.message)
+        for (value in listOf("wrong-key", "0x"+"aa".repeat(5000))) assertEquals("SORA2_STATUS_STORAGE_KEY_INVALID", captureFailure { client.getStorageAt(value, finalizedHash) }.message)
+        assertTrue(transport.requests.isEmpty())
+    }
+
+    @Test fun `malformed storage values cannot become authoritative event proof`() = runTest {
+        for (value in listOf("0xg0", "0x1", "plain-text")) {
+            val client = Sora2BoundedRuntimeRpcClient(ScriptedTransport(result(1, gson.toJson(value))), gson)
+            assertEquals("SORA2_STATUS_STORAGE_INVALID", captureFailure { client.getStorageAt("0x11", finalizedHash) }.message)
+        }
+    }
+
+    @Test fun `runtime version malformed typed fields never qualify a historic snapshot`() = runTest {
+        val base = gson.fromJson(runtimeVersionResult(), JsonObject::class.java)
+        for ((field, value) in listOf("specVersion" to gson.toJsonTree(0), "transactionVersion" to gson.toJsonTree(-1))) {
+            val bad = base.deepCopy().apply { add(field, value) }
+            val client = Sora2BoundedRuntimeRpcClient(ScriptedTransport(result(1, bad.toString())), gson)
+            assertEquals("SORA2_RUNTIME_RPC_VERSION_RESULT_INVALID", captureFailure { client.getHistoricRuntimeVersionForStatus(finalizedHash) }.message)
+        }
+    }
+
     private fun discardedState(id: Int, blockHash: String): String =
         remoteError(
             id,

@@ -1166,4 +1166,72 @@ class SwapViewModelTest {
         advanceUntilIdle()
         kVerify(assetsRouter, times(1)).showTxResult(txHash, TransactionScreen.SWAP)
     }
+
+    @Test fun `token selectors exclude the opposite asset and preserve typed search`() = runTest {
+        initViewModel(firstTokenId = TestTokens.xorToken.id, secondTokenId = TestTokens.valToken.id); advanceUntilIdle()
+        viewModel.fromCardClicked()
+        assertFalse(viewModel.swapTokensFilter.value.tokenIds.contains(TestTokens.valToken.id))
+        assertTrue(viewModel.swapTokensFilter.value.tokenIds.contains(TestTokens.xorToken.id))
+        viewModel.toCardClicked()
+        assertFalse(viewModel.swapTokensFilter.value.tokenIds.contains(TestTokens.xorToken.id))
+        assertTrue(viewModel.swapTokensFilter.value.tokenIds.contains(TestTokens.valToken.id))
+        viewModel.onToolbarSearch("VAL")
+        viewModel.setCurDestination(jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapRoutes.selectToken)
+        assertEquals("VAL", viewModel.swapTokensFilter.value.filter)
+        assertEquals("VAL", viewModel.toolbarState.value!!.basic.searchValue)
+        assertTrue(viewModel.toolbarState.value!!.basic.searchEnabled)
+        viewModel.setCurDestination(jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapRoutes.slippage)
+        assertEquals(R.string.slippage, viewModel.toolbarState.value!!.basic.title)
+        assertFalse(viewModel.toolbarState.value!!.basic.searchEnabled)
+        assertEquals("", viewModel.toolbarState.value!!.basic.searchValue)
+    }
+    @Test fun `market selection delegates persistence and closes the chooser`() = runTest {
+        initViewModel(); advanceUntilIdle()
+        viewModel.onMarketClick()
+        org.junit.Assert.assertNotNull(viewModel.swapMainState.value.selectMarketState)
+        viewModel.onMarketSelected(Market.XYK)
+        kVerify(swapInteractor).setSwapMarket(Market.XYK)
+        assertEquals(null, viewModel.swapMainState.value.selectMarketState)
+        viewModel.onSlippageClick(); viewModel.slippageChanged(2.5); advanceUntilIdle()
+        assertEquals(2.5, viewModel.swapMainState.value.slippage, 0.0)
+    }
+    @Test fun `review displays exact minimum output with emphasis and does not submit`() = runTest {
+        readyToConfirmSwap()
+        given(resourceManager.getString(R.string.polkaswap_output_estimated)).willReturn("Receive at least %s after slippage")
+        viewModel.swapClicked()
+        val review = viewModel.swapMainState.value
+        assertTrue(review.confirmText.text.startsWith("Receive at least "))
+        assertTrue(review.confirmText.text.contains("22.33"))
+        assertTrue(review.confirmText.text.contains(TestTokens.pswapToken.symbol))
+        assertEquals(1, review.confirmText.spanStyles.size)
+        assertTrue(review.confirmButtonState.enabled); assertFalse(review.confirmButtonState.loading)
+        kVerify(swapInteractor, org.mockito.kotlin.never()).swap(any(), any(), any(), any(), any(), any(), any(), any(), any())
+    }
+    @Test fun `output amount focus quotes maximum input and returning focus restores input quoting`() = runTest {
+        readyToConfirmSwap()
+        given(resourceManager.getString(R.string.polkaswap_input_estimated)).willReturn("Pay at most %s")
+        given(resourceManager.getString(R.string.polkaswap_output_estimated)).willReturn("Receive at least %s")
+        viewModel.toAmountFocused(); viewModel.onToAmountChange(BigDecimal("2")); advanceUntilIdle()
+        viewModel.swapClicked()
+        assertTrue(viewModel.swapMainState.value.confirmText.text.startsWith("Pay at most "))
+        assertTrue(viewModel.swapMainState.value.confirmText.text.contains(TestTokens.xorToken.symbol))
+        viewModel.fromAmountFocused(); viewModel.onFromAmountChange(BigDecimal.ONE); advanceUntilIdle()
+        viewModel.swapClicked()
+        assertTrue(viewModel.swapMainState.value.confirmText.text.startsWith("Receive at least "))
+        kVerify(swapInteractor, org.mockito.kotlin.never()).swap(any(), any(), any(), any(), any(), any(), any(), any(), any())
+    }
+    @Test fun `translation without quantity placeholder remains readable and unstyled`() = runTest {
+        readyToConfirmSwap()
+        given(resourceManager.getString(R.string.polkaswap_output_estimated)).willReturn("Review this trade")
+        viewModel.swapClicked()
+        assertEquals("Review this trade", viewModel.swapMainState.value.confirmText.text)
+        assertTrue(viewModel.swapMainState.value.confirmText.spanStyles.isEmpty())
+    }
+    @Test fun `markets destination has its own title without leaking token search`() = runTest {
+        initViewModel(); advanceUntilIdle(); viewModel.onToolbarSearch("XOR")
+        viewModel.setCurDestination(jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapRoutes.markets)
+        assertEquals(R.string.polkaswap_market_title, viewModel.toolbarState.value!!.basic.title)
+        assertFalse(viewModel.toolbarState.value!!.basic.searchEnabled)
+    }
+
 }

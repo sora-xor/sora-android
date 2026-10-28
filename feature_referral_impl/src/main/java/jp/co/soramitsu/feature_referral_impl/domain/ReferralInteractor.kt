@@ -70,8 +70,6 @@ class ReferralInteractor @Inject constructor(
 ) {
 
     private val referralLinkTemplate = "polkaswap.io/#/referral/"
-    private var bondFee: BigDecimal? = null
-
     private var feeToken: Token? = null
     private suspend fun getFeeToken(): Token {
         return feeToken ?: fetchFeeToken().also { feeToken = it }
@@ -103,7 +101,8 @@ class ReferralInteractor @Inject constructor(
     }
 
     suspend fun calcBondFee(): BigDecimal {
-        return bondFee ?: fetchBondFee(getFeeToken()).also { bondFee = it }
+        // A quote belongs to the current account and runtime; an unavailable fee must be retryable.
+        return fetchBondFee(getFeeToken())
     }
 
     private suspend fun fetchBondFee(feeToken: Token): BigDecimal {

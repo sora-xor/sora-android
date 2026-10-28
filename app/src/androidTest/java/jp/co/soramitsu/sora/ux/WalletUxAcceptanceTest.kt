@@ -2,6 +2,8 @@
 
 package jp.co.soramitsu.sora.ux
 
+import jp.co.soramitsu.sora.testutil.NativeDisplayCapture
+
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.ClipData
@@ -54,9 +56,10 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * Test-only acceptance checks. No production activity/manifest, signer or transport changes.
  *
- * Run on SORA-Api34. On the 16 KB page-size emulator (SORA-Api36-16k) the tests in this class fail
- * because mockk-android's JVMTI agent (libmockkjvmtiagent.so in mockk-agent-android 1.13.11) is
- * built with 4 KB segment alignment. That is a limitation of the test tool, not of the app.
+ * The full suite is qualified on the 4 KB SORA-Api34 emulator. MockK 1.14.3's JVMTI agent has
+ * aligned PT_LOAD segments, but its GNU_RELRO end still fails the repository's strict 16 KB
+ * alignment gate. The full suite remains unqualified on 16 KB; this is not a claim that a
+ * device loader has rejected the current agent.
  */
 @RunWith(AndroidJUnit4::class)
 class WalletUxAcceptanceTest {
@@ -669,11 +672,6 @@ class WalletUxAcceptanceTest {
     }
 
     private fun capture(name: String) {
-        instrumentation.runOnMainSync {
-            android.view.inspector.WindowInspector.getGlobalWindowViews().forEach { it.invalidate() }
-        }
-        instrumentation.waitForIdleSync()
-        Thread.sleep(1200)
         val suffix = InstrumentationRegistry.getArguments().getString("captureSuffix", "normal")
         val tree = StringBuilder()
         instrumentation.runOnMainSync {
@@ -691,8 +689,13 @@ class WalletUxAcceptanceTest {
         }
         instrumentation.uiAutomation.rootInActiveWindow?.let { describe(it, 0) }
         File(screenshotDirectory, "$name-$suffix.txt").writeText(tree.toString())
-        val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
-        File(screenshotDirectory, "$name-$suffix.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
+        val bitmap = NativeDisplayCapture.capture()
+        try {
+            File(screenshotDirectory, "$name-$suffix.png").outputStream().use {
+                check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) { "Native capture PNG could not be written" }
+            }
+        } finally {
+            bitmap.recycle()
+        }
     }
 }

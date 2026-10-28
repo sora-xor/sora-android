@@ -207,7 +207,9 @@ class EncryptionUtil @JvmOverloads constructor(
         if (allowCreation && wrappedKeyMetadata()[WRAPPING_ALIAS] == null && !hasWrappedWalletKey() &&
             !hasExistingWalletMaterial() && retainedAliasExists(alias)) {
             alias = "sora_wallet_" + UUID.randomUUID().toString()
-            if (!keyPreferencesForWrite().edit().putString(WRAPPING_ALIAS, alias).commit()) {
+            val aliasEditor = keyPreferencesForWrite().edit()
+            aliasEditor.putString(WRAPPING_ALIAS, alias)
+            if (!aliasEditor.commit()) {
                 throw KeyMaterialUnavailableException("Unable to persist wallet alias", transient = true)
             }
         }
@@ -232,7 +234,9 @@ class EncryptionUtil @JvmOverloads constructor(
             if (keyStore.containsAlias(alias) || retainedAliasExists(alias)) {
                 alias = "sora_wallet_" + UUID.randomUUID().toString()
                 val preferences = keyPreferencesForWrite()
-                if (!preferences.edit().putString(WRAPPING_ALIAS, alias).commit()) {
+                val aliasEditor = preferences.edit()
+                aliasEditor.putString(WRAPPING_ALIAS, alias)
+                if (!aliasEditor.commit()) {
                     throw KeyMaterialUnavailableException("Unable to persist wallet alias", transient = true)
                 }
             }
@@ -419,7 +423,9 @@ class EncryptionUtil @JvmOverloads constructor(
                     transient = true,
                 )
             }
-            if (!preferences.edit().putString(SECRET_KEY, wrappedKey).commit()) {
+            val keyEditor = preferences.edit()
+            keyEditor.putString(SECRET_KEY, wrappedKey)
+            if (!keyEditor.commit()) {
                 unpersistedWrappedKey = wrappedKey
                 throw KeyMaterialUnavailableException(
                     "Unable to persist the wrapped wallet encryption key",
@@ -441,7 +447,9 @@ class EncryptionUtil @JvmOverloads constructor(
         if (unpersistedWrappedKey != wrappedKey) return
         synchronized(wrappedKeyCreationLock) {
             if (unpersistedWrappedKey != wrappedKey) return
-            if (!preferences.edit().putString(SECRET_KEY, wrappedKey).commit()) {
+            val keyEditor = preferences.edit()
+            keyEditor.putString(SECRET_KEY, wrappedKey)
+            if (!keyEditor.commit()) {
                 throw KeyMaterialUnavailableException(
                     "Unable to persist the wrapped wallet encryption key",
                     transient = true,

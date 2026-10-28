@@ -129,8 +129,8 @@ private fun networkMonogram(network: WalletNetworkId): String = when (network) {
 internal enum class Glyph { SEND, RECEIVE, MOVE, CHEVRON_DOWN, CHEVRON_RIGHT, INFO, CHECK, CLOCK, WARNING, OFFLINE, BACK, ARROW_RIGHT }
 
 @Composable
-internal fun PortfolioGlyph(glyph: Glyph, tint: Color, modifier: Modifier = Modifier.size(24.dp)) {
-    Canvas(modifier) {
+internal fun PortfolioGlyph(glyph: Glyph, tint: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier.size(24.dp)) {
         val u = size.minDimension / 24f
         val stroke = Stroke(width = 2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
         fun p(x: Float, y: Float) = Offset(x * u, y * u)

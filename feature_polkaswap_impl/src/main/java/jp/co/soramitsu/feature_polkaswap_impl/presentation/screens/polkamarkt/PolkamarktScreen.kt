@@ -1072,7 +1072,7 @@ private fun <T> ChoiceRow(
             if (value == selected) {
                 Button(onClick = { onSelect(value) }, modifier = Modifier.weight(1f).semantics { this.selected = true; role = Role.RadioButton }) { Text(label(value)) }
             } else {
-                OutlinedButton(onClick = { onSelect(value) }, modifier = Modifier.weight(1f).semantics { this.selected = true; role = Role.RadioButton }) { Text(label(value)) }
+                OutlinedButton(onClick = { onSelect(value) }, modifier = Modifier.weight(1f).semantics { this.selected = false; role = Role.RadioButton }) { Text(label(value)) }
             }
         }
     }

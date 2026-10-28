@@ -99,8 +99,8 @@ private fun isAmountInput(text: String): Boolean =
     text.length <= 40 && text.all { it.isDigit() || it == '.' || it == ',' }
 
 @Composable
-private fun SecondaryAction(text: String, onClick: () -> Unit, modifier: Modifier = Modifier.fillMaxWidth()) {
-    NeonButton(modifier = modifier, size = ButtonSize.Small, variant = NeonVariant.Secondary, text = text, onClick = onClick)
+private fun SecondaryAction(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    NeonButton(modifier = modifier.fillMaxWidth(), size = ButtonSize.Small, variant = NeonVariant.Secondary, text = text, onClick = onClick)
 }
 
 /** All wallets first, then each wallet with its total, 24 h change and freshness. */
@@ -326,7 +326,9 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
         var destination by rememberSaveable(holding.key) { mutableStateOf(targets.firstOrNull()?.id) }
         var amountText by rememberSaveable(holding.key) { mutableStateOf("") }
         val amount = amountText.replace(',', '.').toBigDecimalOrNull()
-        val tooMuch = amount != null && amount > holding.transferable
+        // Blank means enter the amount in Send; nonempty input must be a positive balance.
+        val invalidAmount = amountText.isNotEmpty() &&
+            (amount == null || amount.signum() <= 0 || amount > holding.transferable)
         val symbol = holding.token.symbol
         val network = networkName(holding.network)
         SwitchNote(model, holding.walletId)
@@ -368,7 +370,7 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
             value = amountText,
             symbol = symbol,
             iconUri = holding.token.iconUri,
-            error = tooMuch,
+            error = invalidAmount,
             onValueChange = { text -> if (isAmountInput(text)) amountText = text },
             onMax = { amountText = PortfolioReadiness.maxAmount(holding).stripTrailingZeros().toPlainString() },
         )
@@ -385,7 +387,7 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
             modifier = Modifier.fillMaxWidth(),
             size = ButtonSize.Large,
             variant = NeonVariant.Primary,
-            enabled = !busy && destination != null && !tooMuch,
+            enabled = !busy && destination != null && !invalidAmount,
             loading = busy,
             text = if (wallet != null && !wallet.selected) {
                 stringResource(R.string.portfolio_switch_and_review, wallet.name)

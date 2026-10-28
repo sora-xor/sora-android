@@ -148,7 +148,7 @@ internal fun SwapMainScreen(
                 focusRequester = focus2,
             )
             val interaction = remember { MutableInteractionSource() }
-            var turns by remember { mutableStateOf(0f) }
+            var turns by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
             val rotation by animateFloatAsState(turns, tween(if (LocalFx.current.reduceMotion) 0 else 240), label = "swap direction")
             NeumorphicSurface(
                 shape = CircleShape,

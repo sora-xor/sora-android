@@ -14,7 +14,7 @@ kotlin {
 
 android {
     namespace = "com.example.core_db"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 26
@@ -22,7 +22,7 @@ android {
     }
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 36
+        targetSdk = 37
     }
 
     buildTypes {

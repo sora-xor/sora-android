@@ -17,7 +17,6 @@
   <string name="account_already_imported_description">Этот кошелек уже импортирован</string>
   <string name="account_storage_conflict">This wallet can\'t be added here</string>
   <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
-  <string name="account_confirmation_title">Подтверждение</string>
   <string name="account_confirmation_title_v2">Подтвердить парольную фразу</string>
   <string name="account_options">Свойства аккаунта</string>
   <string name="account_options_backup_google">Сохранить в Google</string>
@@ -30,7 +29,6 @@
   <string name="activity_referral_title">Referral joined</string>
   <string name="add_liquidity_alert_text">Вы будете получать комиссионные, пропорциональные вашей доле в пуле, от предоставления ликвидности.</string>
   <string name="add_liquidity_confirmation_title">Confirm supply</string>
-  <string name="add_liquidity_title">Добавить Ликвидность</string>
   <string name="add_node_name_already_existing">Нода с таким именем уже добавлена</string>
   <string name="address_not_found_1">Получатели не найдены</string>
   <string name="amount_error_no_funds">Извините, у вас недостаточно средств для осуществления перевода.</string>
@@ -45,27 +43,20 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Отправляемый ассет</string>
-  <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
   <string name="backup_now">Сделать сейчас</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Обязательное требование к паролю выполнено</string>
   <string name="backup_password_requirments">Минимум шесть символов. По желанию, для повышения безопасности, можно включить заглавные буквы, цифры и неалфавитные символы.</string>
-  <string name="backup_password_title">Установка пароля зашифрует резервную копию Google. Его нужно будет ввести при восстановлении кошелька.\nМинимальная длина пароля - 6 символов.</string>
   <string name="backup_password_title_2">Установка пароля зашифрует вашу резервную копию Google. Вам нужно будет ввести это при восстановлении кошелька.</string>
   <string name="biometric_dialog_title">Аутентифицировать</string>
   <string name="block_id">Хеш блока</string>
-  <string name="cant_load_balance">Не удается загрузить баланс</string>
   <string name="change_language">Изменить язык</string>
   <string name="change_pin">Изменить пин-код</string>
   <string name="choose_token">Выберите токен</string>
   <string name="choose_tokens">Выберите токены</string>
-  <string name="claim_contact">Если у вас есть вопросы или опасения, вы можете %%связаться с нами.%%</string>
   <string name="claim_contact_us">%%Свяжитесь с нами%% по любым вопросам или проблемам</string>
-  <string name="claim_error_title">Миграция не удалась</string>
   <string name="claim_error_title_v1">Передача активов не удалась. Пожалуйста, попробуйте еще раз позже.</string>
-  <string name="claim_notification_text">Транзакция обрабатывается...</string>
   <string name="claim_rewards">Claim rewards</string>
-  <string name="claim_subtitle">Нам необходимо ваше согласие на перевод ваших средств из SORA, чтобы вы могли их использовать. SORA теперь будет работать в сети Substrate. Подтвердите переход.</string>
   <string name="claim_subtitle_confirmed">Спасибо за подтверждение!</string>
   <string name="claim_subtitle_confirmed_v2">Transition of assets are in progress</string>
   <string name="claim_subtitle_v2">• Нам необходимо согласие на перенос ваших активов с SORA v1 на SORA v2.\n\n• Сеть SORA v2 построена на основе Substrate, изначально совместимого с экосистемами Polkadot и Kusama.\n\n• Активы в Ethereum не затронуты, вы по-прежнему можете получить к ним доступ, импортировав пароль-фразу в любой совместимый кошелек.</string>
@@ -98,7 +89,6 @@
   <string name="common_currencies">Токены</string>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
-  <string name="common_discover">Discover</string>
   <string name="common_done">Выполнено</string>
   <string name="common_dutch">Нидерландский</string>
   <string name="common_edit">Редактировать</string>
@@ -151,12 +141,10 @@
   <string name="common_french">Французский</string>
   <string name="common_german">Немецкий</string>
   <string name="common_google_authorization_error">Ошибка Google авторизации</string>
-  <string name="common_google_backup_decryption_failed">Ошибка расшифровки аккаунта. Проверьте пароль и попробуйте снова.</string>
   <string name="common_google_backup_decryption_failed_2">Возможно, введенный вами пароль неверен.</string>
   <string name="common_hebrew">Иврит</string>
   <string name="common_hindi">Хинди</string>
   <plurals name="common_hour" tools:ignore="ImpliedQuantity">
-    <item quantity="zero">часов</item>
     <item quantity="one">час</item>
     <item quantity="few">часа</item>
     <item quantity="many">часов</item>
@@ -190,11 +178,9 @@
   <string name="common_try_again">Try again</string>
   <string name="common_remove">Удалить</string>
   <string name="common_request">Запрос</string>
-  <string name="common_rewrite">Rewrite</string>
   <string name="common_russian">Русский</string>
   <string name="common_scan">Сканировать</string>
   <string name="common_scan_qr">Сканировать QR-код</string>
-  <string name="common_search">Поиск</string>
   <string name="common_search_pools">Search pools</string>
   <string name="common_sec">сек</string>
   <string name="common_select_asset">Выберите ассет</string>
@@ -215,7 +201,6 @@
   <string name="common_swedish">Шведский</string>
   <string name="common_terms_title">Условия и положения</string>
   <string name="common_thai">Тайский</string>
-  <string name="common_title_warning">Предупреждение!</string>
   <string name="common_today">Сегодня</string>
   <string name="common_turkish">Турецкий</string>
   <string name="common_ukrainian">Украинский</string>
@@ -225,20 +210,16 @@
   <string name="common_yesterday">Вчера</string>
   <string name="confirm_sending">Подтверждение отправки</string>
   <string name="confirn_supply_liquidity_first_provider_warning">Вы - первый поставщик ликвидности. Соотношение токенов, которые вы добавляете, будет определять цену этого пула.</string>
-  <string name="contacts_scan">Сканировать QR-код</string>
   <string name="contacts_search_results">Результаты поиска</string>
   <string name="copy_to_clipboard">Скопировать в буфер</string>
   <string name="create_account_title">Создать аккаунт</string>
   <string name="create_backup_password_button_text">Установка пароля резервной копии</string>
-  <string name="create_backup_password_is_secure">Пароль очень надежен</string>
   <string name="create_backup_password_matched">Пароль совпадает</string>
   <string name="create_backup_password_not_matched">Пароли не совпадают</string>
   <string name="create_backup_password_title">Создать пароль резервной копии</string>
   <string name="create_backup_password_warning_text">Я понимаю, что если я забуду свой пароль, восстановить его будет невозможно.</string>
   <string name="create_backup_set_password">Установить пароль</string>
-  <string name="create_backup_weak_password">Слабый пароль</string>
   <string name="create_new_account_title">Создать новый аккаунт</string>
-  <string name="dark_mode">Ночной режим</string>
   <string name="delete_backup_alert_description">Если вы удалите свою резервную копию Google, вы сможете восстановить свой кошелек только с резервной копией вашей парольной фразы вручную.</string>
   <string name="delete_backup_alert_title">Вы уверены?</string>
   <string name="demeter_claimed_reward">Получена награда</string>
@@ -248,15 +229,12 @@
   <string name="details_frozen">Заморожено</string>
   <string name="details_receive_from_pool">Выведено из пула</string>
   <string name="details_sent_to_pool">Sent to pool</string>
-  <string name="discover_coming_soon">SORA devs are currently working on a feature that will display a full list of pools that are active on Polkaswap.\n\nFor now, if you want to create/add to a pool please use the button below.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
   <string name="edit_farm">Edit farm</string>
   <string name="edit_view">Режим редактирования</string>
-  <string name="empty_recent_recipients">Адрес получателя будет отображен здесь.</string>
   <string name="empty_recent_recipients_2">Получатели появятся здесь</string>
   <string name="enter_backup_password_title">Введите пароль резервной копии</string>
   <string name="enter_password_description">Введите пароль резервной копии для выбранного аккаунта</string>
-  <string name="enter_password_incorect_title">Неверный пароль</string>
   <string name="enter_password_title">Введите пароль</string>
   <string name="error_transaction_fee_title">Недостаточно средств для оплаты комиссии</string>
   <string name="eth_tx_address">Адрес аккаунта Ethereum</string>
@@ -293,8 +271,6 @@
   <string name="farm_details_your_rewards">Ваши награды</string>
   <string name="farming_details_title">Детали фермы</string>
   <string name="forget_account">Забыть аккаунт</string>
-  <string name="global_results">Глобальные результаты</string>
-  <string name="hide_zero_balances">Скрыть нулевые балансы</string>
   <string name="history_referral">Реферал</string>
   <string name="history_referrer">Реферер</string>
   <string name="import_account_not_backed_up">Нет резервной копии</string>
@@ -302,7 +278,6 @@
   <string name="import_account_not_backed_up_alert_description">Если ваше устройство будет потеряно или украдено, вы навсегда потеряете свой кошелек и все свои средства.</string>
   <string name="import_more_title">Импортировать еще</string>
   <string name="imported_account_title">Аккаунт импортирован</string>
-  <string name="invite_code">Код приглашения</string>
   <string name="invite_code_applied_body">Код успешно применен</string>
   <string name="invite_code_applied_title">Поздравляем!</string>
   <string name="invite_enter_error_already_applied">Вы уже применили другой код приглашения</string>
@@ -312,18 +287,14 @@
   <string name="invoice_scan_error_user_not_found">Не удается найти пользователя</string>
   <string name="launch_screen_loading_title">На этот раз загружается немного дольше</string>
   <string name="liquid_assets">Активы</string>
-  <string name="logout_dialog_body">Это действие приведет к удалению учетной записи с этого устройства. Перед продолжением убедитесь, что вы создали резервную копию своей ключевой фразы.</string>
-  <string name="logout_remove_nodes_body">\n\nВсе добавленные ноды также будут удалены</string>
   <string name="mnemonic_confirmation_select_word_2">from the list you have written down</string>
   <string name="mnemonic_confirmation_select_word_number">Select a word number</string>
-  <string name="mnemonic_invalid">Неверная мнемоническая кодовая фраза, пожалуйста, проверьте еще раз порядок слов.</string>
   <string name="mnemonic_invalid_title">Неверная мнемоническая кодовая фраза</string>
   <string name="mnemonic_text">Используйте нецифровой носитель для сохранения, например, выпишите слова на бумагу.</string>
   <string name="network_fee">Комиссия сети</string>
     <string name="network_fee_unavailable">Сейчас не удаётся проверить комиссию сети. Повторите попытку чуть позже. Ваши средства в безопасности в блокчейне.</string>
     <string name="network_fee_unavailable_short">Комиссия сети недоступна</string>
     <string name="network_fee_unreachable">Сейчас нельзя проверить комиссию, потому что сеть SORA недоступна. Проверьте подключение к интернету и повторите попытку. Средства в безопасности в блокчейне.</string>
-  <string name="network_finalized_history">Активность</string>
   <string name="node_details_address_validation_failed">Не удалось проверить URL (неверный адрес)</string>
   <string name="node_details_genesis_validation_failed">Генезис хэш вашей ноды отличается от генезис хэша сети</string>
   <string name="node_details_node_already_added" formatted="false">Эта нода уже добавлена: %s\nСоединение установлено с нодой %s</string>
@@ -332,13 +303,10 @@
   <string name="onboarding_create_account_description">Enter name for your new account and how it will appear under your address. With an on-chain identity, it can be made available to others.</string>
   <string name="onboarding_create_account_subtitle">Visible only for you and stored locally</string>
   <string name="onboarding_create_account_title">Name your account</string>
-  <string name="onboarding_description">SORA is an on-chain governance system where producers make proposals for funding, and all XOR token holders decide on the best goods and services to be created. Accepting XOR as payment then builds the SORA economy.</string>
   <string name="onboarding_enter_passphrase">Enter Passphrase</string>
   <string name="onboarding_enter_seed">Enter Raw Seed</string>
   <string name="passphrase_confirmation_error_message">This process is aimed to ensure you\'ve written down your recovery phrase</string>
   <string name="passphrase_confirmation_error_title">Don\'t try to guess the word</string>
-  <string name="passphrase_write">Запишите парольную фразу</string>
-  <string name="personal_info_username">Название аккаунта (необязательно)</string>
   <string name="personal_info_username_v1">Имя пользователя</string>
   <string name="phone_verification_too_frequent_message">Слишком частые запросы подтверждения. Пожалуйста, попробуйте позже.</string>
   <string name="pin_locked_for_title">Заблокировано для %s</string>
@@ -360,7 +328,6 @@
   <string name="polkaswap_farming_pool_in_farming_hint">Некоторая часть вашей доли в пуле находится в стейкинге. Чтобы получить к ней доступ, вы должны сначала разблокировать ее.</string>
   <string name="polkaswap_farming_pool_share">Застейканая часть пула</string>
   <string name="polkaswap_farming_pool_share_will_be">Ваша доля в пуле будет</string>
-  <string name="polkaswap_farming_staked_for">Застейкано в %s</string>
   <string name="polkaswap_farming_unstake_to_remove">Чтобы забрать ликвидность, необходимо сначала разблокировать ее</string>
   <string name="polkaswap_info_text_1">Polkaswap разрабатывается сообществом SORA. Перед тем, как стать контрибьютером Polkaswap, ознакомьтесь с %%Polkaswap FAQ%% и документацией, которая описывает то, как работает Polkaswap, %%Polkaswap Меморандумом и Условиями и положениями%%, и %%Политикой конфиденциальности%%.\n\nЭти документы важны для безопасной и комфортной работы пользователей. Используя Polkaswap вы соглашаетесь, что вы прочли и поняли суть документов.</string>
   <string name="polkaswap_info_text_2">Вы также осознаете:</string>
@@ -373,10 +340,6 @@
   <string name="polkaswap_input_estimated">Оценочная сумма. Максимально будет продано %s или транзакция будет отменена.</string>
   <string name="polkaswap_insufficient_balance">Недостаточный баланс %s</string>
   <string name="polkaswap_insufficient_liqudity">Недостаточная ликвидность</string>
-  <string name="polkaswap_liquidity_fee">Комиссия LP</string>
-  <string name="polkaswap_liquidity_fee_info">Часть каждой сделки является награждением для поставщиков ликвидности.</string>
-  <string name="polkaswap_liquidity_total_fee">Комиссия обмена</string>
-  <string name="polkaswap_liquidity_total_fee_desc">Ваш своп включает в себя как синтетическую комиссию, так и комиссию LP.\nСинтетическая комиссия учитывается, когда обмен проходит через источник ликвидности XST для синтетических активов, а комиссия LP - когда своп проходит через пулы ликвидности.</string>
   <string name="polkaswap_market">Рынок</string>
   <string name="polkaswap_market_smart_description">Маршрутизация ликвидности SMART обеспечивает лучшую цену для любой транзакции, комбинируя только лучшие варианты цены со всех доступных рынков. При наличии TBC будет использоваться для обеспечения ликвидности до тех пор, пока цена актива будет более доступной, чем из других источников, на которых используется пул XYK.</string>
   <string name="polkaswap_market_tbc_description">TBC(Token Bonding Curve)  — покупка только по кривой связывания токенов (первичный рынок). Есть вероятность того, что цена может стать невыгодной по сравнению с пулом XYK (вторичный рынок), но ценность, полученная от закрепленных вознаграждений, со временем может оказаться гораздо более выгодной.</string>
@@ -402,35 +365,28 @@
   <string name="pool_details">Информация о пуле</string>
   <string name="pool_details_active_farms">Активные фермы</string>
   <string name="pool_details_reward">Награда</string>
-  <string name="pool_liquidity_placeholder">У вас пока нет активных пулов.\nДобавьте ликвидность, чтобы получить вознаграждение</string>
-  <string name="pool_share_title">Доля в пуле</string>
   <string name="pool_share_title_1">Ваша доля в пуле</string>
   <string name="pooled_assets">Активы в пулах</string>
   <string name="profile_biometry_title">Вход по биометрии</string>
-  <string name="profile_logout_title">Выйти</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="zero">осталось %s дней</item>
     <item quantity="one">остался %s день</item>
     <item quantity="few">осталось %s дня</item>
     <item quantity="many">осталось %s дней</item>
     <item quantity="other">осталось %s дней</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="zero">осталось %s часов</item>
     <item quantity="one">остался %s час</item>
     <item quantity="few">осталось %s часа</item>
     <item quantity="many">осталось %s часов</item>
     <item quantity="other">осталось %s часов</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
-    <item quantity="zero">осталось %s минут</item>
     <item quantity="one">осталась %s минута</item>
     <item quantity="few">осталось %s минуты</item>
     <item quantity="many">осталось %s минут</item>
     <item quantity="other">осталось %s минут</item>
   </plurals>
   <plurals name="project_date_second_plurals">
-    <item quantity="zero">осталось %s секунд</item>
     <item quantity="one">осталась %s секунда</item>
     <item quantity="few">осталось %s секунды</item>
     <item quantity="many">осталось %s секунд</item>
@@ -460,7 +416,6 @@
   <string name="referral_invitaion_link_title">Доступные приглашения</string>
   <string name="referral_invitation_link">Invitation link</string>
   <plurals name="referral_invitations" tools:ignore="ImpliedQuantity">
-    <item quantity="zero"></item>
     <item quantity="one">приглашение</item>
     <item quantity="few">приглашения</item>
     <item quantity="many">приглашений</item>
@@ -493,10 +448,8 @@
   <string name="review">Обзор</string>
   <string name="route">Путь</string>
   <string name="scan_qr_show_my_qr">Показать мой QR-код</string>
-  <string name="search_assets">Поиск ассетов</string>
   <string name="search_empty_state">Нет результатов</string>
   <string name="search_token_placeholder">Поиск по идентификатору токена, названию или тикеру</string>
-  <string name="select_account_address">Поиск адреса</string>
   <string name="select_account_address_1">Поиск или добавление нового адреса</string>
   <string name="select_account_import">Выберите аккаунт для импорта</string>
   <string name="select_asset_receive">Выбор ассета для получения</string>
@@ -529,28 +482,21 @@
   <string name="settings_login_title">Вход и безопасность</string>
   <string name="settings_nodes">Ноды</string>
   <string name="show_more">Show more</string>
-  <string name="show_zero_balances">Показать нулевые балансы</string>
   <string name="slippage">Проскальзывание</string>
   <string name="something_went_wrong">Что-то пошло не так</string>
   <string name="start_staking">Начать стейкинг</string>
   <string name="status_error">Ошибка</string>
   <string name="status_pending">В обработке</string>
-  <string name="status_success">Успешно</string>
   <string name="status_successful">Successful</string>
   <string name="status_title">Статус</string>
   <string name="succesfully_imported_account_title">Вы успешно импортировали учетную запись</string>
-  <string name="support_chat">Чат поддержки</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Убедитесь, что у вас останется %s после этой транзакции. Иначе вы не сможете оплатить комиссию сети за другую транзакцию.</string>
-  <string name="system_appearance">Внешний вид системы</string>
-  <string name="tabbar_parliament_title">Парламент</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
-  <string name="transaction_date">Дата / Время</string>
   <string name="transaction_date_1">Date and time</string>
   <string name="transaction_id">Хеш экстринсика</string>
   <string name="tutorial_many_world">Множество миров.\n Единая экономика.</string>
   <string name="tutorial_many_world_desc">SORA работает над тем, чтобы стать децентрализованной мультивселенной экономической системой, финансируя создание новых интересных приложений под демократическим контролем парламента SORA.</string>
   <string name="tutorial_privacy_policy">Политикой конфиденциальности</string>
-  <string name="tutorial_terms_and_conditions">Создавая учетную запись, вы соглашаетесь с %% Условиями и положениями %% и %% Политикой конфиденциальности %%</string>
   <string name="tutorial_terms_and_conditions_3">Условиями использования</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
   <string name="unexpected_error">Произошла непредвиденная ошибка.\n\nВы можете решить эту проблему в сообществе SORA в Telegram чате @sora_happy.</string>
@@ -563,7 +509,6 @@
   <string name="wallet_connect_account">Аккаунт</string>
   <string name="wallet_connect_done">Выполнено</string>
   <string name="wallet_network_activity">Активность</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">Мой адрес в %s для получения %s:</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Отсканируйте этот QR, чтобы отправить мне %s. Мой идентификатор в %s:\n%s</string>
   <string name="wallet_receive_xor">Получить XOR</string>
   <string name="wallet_redeemable">Можно забрать</string>
@@ -571,7 +516,6 @@
   <string name="wallet_send_existential_warning_message">Трансфер приведет к удалению аккаунта, так как баланс станет меньше чем existential deposit.</string>
   <string name="wallet_status_confirmed">Успешно</string>
   <string name="wallet_title">Кошелек</string>
-  <string name="wallet_transaction_rejected">Транзакция отклонена</string>
   <string name="wallet_transaction_submitted">Транзакция отправлена</string>
   <string name="wallet_transaction_submitted_1">Транзакция\nотправлена</string>
   <string name="wallet_unbonded">Unbonded</string>
@@ -819,7 +763,6 @@
   <string name="neon_theme_dark">Тёмная</string>
   <string name="neon_theme_light">Светлая</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
-  <string name="nexus_production_name">SORA Nexus Production</string>
   <string name="nexus_production_address">Production address</string>
   <string name="nexus_copy_production_address">Copy production address</string>
   <string name="nexus_production_not_live">Not live yet</string>

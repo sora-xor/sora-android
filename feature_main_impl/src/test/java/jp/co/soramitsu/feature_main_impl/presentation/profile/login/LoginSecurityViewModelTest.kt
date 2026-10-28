@@ -42,6 +42,31 @@ class LoginSecurityViewModelTest {
     private fun viewModel() = LoginSecurityViewModel(mockk(relaxed = true), interactor, users, resources)
 
     @Test
+    fun `biometric choices persist both enabled and disabled states and pin changes require protection`() = runTest {
+        coEvery { users.retainedWallets() } returns emptyList()
+        coEvery { interactor.isBiometryAvailable() } returns true
+        coEvery { interactor.isBiometryEnabled() } returns false
+        val router = mockk<jp.co.soramitsu.feature_main_api.launcher.MainRouter>(relaxed = true)
+        val vm = LoginSecurityViewModel(router, interactor, users, resources)
+        advanceUntilIdle()
+        vm.toggleBio(true); advanceUntilIdle(); assertEquals(true, vm.state.bioEnabled)
+        vm.toggleBio(false); advanceUntilIdle(); assertEquals(false, vm.state.bioEnabled)
+        coVerify(exactly = 1) { interactor.setBiometryEnabled(true); interactor.setBiometryEnabled(false) }
+        vm.changePin()
+        io.mockk.verify(exactly = 1) { router.showPin(jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction.CHANGE_PIN_CODE) }
+    }
+
+    @Test
+    fun `failed biometric persistence is reported and a later toggle still works`() = runTest {
+        coEvery { users.retainedWallets() } returns emptyList()
+        coEvery { interactor.setBiometryEnabled(true) } throws IllegalStateException("settings unavailable")
+        val vm = viewModel(); advanceUntilIdle()
+        vm.toggleBio(true); advanceUntilIdle(); org.junit.Assert.assertNotNull(vm.errorFromResourceLiveData.value)
+        vm.toggleBio(false); advanceUntilIdle(); assertEquals(false, vm.state.bioEnabled)
+        coVerify(exactly = 1) { interactor.setBiometryEnabled(false) }
+    }
+
+    @Test
     fun `lists the key sets no account uses and restores through the repository`() = runTest {
         coEvery { users.retainedWallets() } returns listOf(
             RetainedWallet("cnA", needsRecoveryPhrase = false),

@@ -36,6 +36,7 @@ import android.app.ActivityOptions
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
+import androidx.core.view.get
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
@@ -213,7 +214,7 @@ class MainActivity :
             .paddingBottom(windowInsetTypesOf(navigationBars = true) or windowInsetTypesOf(ime = true))
             .applyToView(binding.clMainContainer)
 
-        binding.bottomNavigationView.menu.getItem(2).isEnabled = false
+        binding.bottomNavigationView.menu[2].isEnabled = false
 
         ViewCompat.setAccessibilityDelegate(binding.fabMain, object : androidx.core.view.AccessibilityDelegateCompat() {
             override fun onInitializeAccessibilityNodeInfo(host: View, info: androidx.core.view.accessibility.AccessibilityNodeInfoCompat) {

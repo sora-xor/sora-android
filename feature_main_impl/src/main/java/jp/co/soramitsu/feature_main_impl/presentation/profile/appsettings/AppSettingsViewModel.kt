@@ -45,7 +45,6 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -85,16 +84,17 @@ class AppSettingsViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            tryCatch {
-                // Refreshes the PI flags, then shows the switch as the wallet applies it: from
-                // the same snapshot the Nexus portfolio uses. A rejected indexer read (features
-                // off for that read only) then never shows the switch off while Taira is shown.
-                productionFeatureManager.getState()
-                val shown = productionFeatureManager.observeState().first()
-                state = state.copy(
-                    testNetworksAvailable = shown.tairaAvailable,
-                    testNetworksChecked = shown.tairaVisible,
-                )
+            guarded { productionFeatureManager.getState() }
+        }
+        viewModelScope.launch {
+            guarded {
+                // Keep the open screen aligned with the same effective snapshot as the portfolio.
+                productionFeatureManager.observeState().collectLatest { shown ->
+                    state = state.copy(
+                        testNetworksAvailable = shown.tairaAvailable,
+                        testNetworksChecked = shown.tairaVisible,
+                    )
+                }
             }
         }
     }
@@ -105,39 +105,26 @@ class AppSettingsViewModel @Inject constructor(
 
     fun toggleSystemAppearance(checked: Boolean) {
         viewModelScope.launch {
-            tryCatch { darkThemeManager.setSystemDrivenUiEnabled(checked) }
-        }.invokeOnCompletion {
-            state = state.copy(
-                systemAppearanceChecked = checked,
-                darkModeChecked = false,
-            )
+            guarded { darkThemeManager.setSystemDrivenUiEnabled(checked) }
         }
     }
 
     fun toggleDarkMode(checked: Boolean) {
         viewModelScope.launch {
-            tryCatch { darkThemeManager.setDarkThemeEnabled(checked) }
-        }.invokeOnCompletion {
-            state = state.copy(
-                systemAppearanceChecked = false,
-                darkModeChecked = checked,
-            )
+            guarded { darkThemeManager.setDarkThemeEnabled(checked) }
         }
     }
 
     fun toggleReduceEffects(checked: Boolean) {
         viewModelScope.launch {
-            tryCatch { darkThemeManager.setReduceEffects(checked) }
+            guarded { darkThemeManager.setReduceEffects(checked) }
         }
     }
 
     fun toggleTestNetworks(checked: Boolean) {
         if (!state.testNetworksAvailable) return
         viewModelScope.launch {
-            tryCatch {
-                productionFeatureManager.setTairaVisible(checked)
-                state = state.copy(testNetworksChecked = checked)
-            }
+            guarded { productionFeatureManager.setTairaVisible(checked) }
         }
     }
 }

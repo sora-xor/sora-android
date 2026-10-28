@@ -49,15 +49,34 @@ adb -s emulator-5560 emu kill
 - The full device-test gate runs on a device with 4 KB pages, such as the AVD `SORA-Api34`.
 - Repeat on Android 16 with 16 KB pages before a release: locally with the AVD
   `SORA-Api36-16k`, created with an installed 16 KB system image such as
-  `system-images;android-36;google_apis_ps16k;x86_64`. Two things cannot run there and are
-  left out: `WalletUxAcceptanceTest` and the MigrationManager phases. They mock final
-  classes, which loads MockK's agent library from the test APK (mockk-agent-android 1.13.11),
-  and that library is built for 4 KB pages. The summary lists them and ends with "PASS for
-  the 16 KB subset". The app's own native libraries are 16 KB aligned
-  (`verify-android-native-16kb.py`).
+  `system-images;android-36;google_apis_ps16k;x86_64`. The existing subset leaves out
+  `WalletUxAcceptanceTest` and the MigrationManager phases, which mock final classes and
+  load MockK's agent from the test APK. The full suite is qualified on 4 KB devices;
+  mockk-agent-android 1.14.3 remains unqualified for the full 16 KB run. Its `PT_LOAD`
+  segments pass inspection, but the strict repository gate rejects its `GNU_RELRO[5]`
+  end addresses (`0x142000` on arm64 and `0x143000` on x86_64), which are not 16 KB aligned.
+  This static finding does not establish that a device loader rejects the agent. The
+  summary retains "PASS for the 16 KB subset". Production native libraries are checked
+  separately by `verify-android-native-16kb.py`.
 - The MigrationManager script proves that its two APKs use the isolated package before it
   installs them, with `apkanalyzer` or, when the SDK command-line tools are not installed,
   with `aapt2` from build-tools (`SORA_APK_INSPECTOR=aapt2` forces the second).
+
+## Full application code coverage
+
+Run `ANDROID_SERIAL=emulator-5560 bash scripts/run-code-coverage.sh --offline` on a disposable
+4 KB emulator. This runs every productionDebug unit test, lint, the device suites, and the
+ordered storage qualification phases, then enforces **80% line coverage**. The JSON summary is
+`build/reports/coverage/summary.json`; Kover and device HTML reports remain under each module's
+`build/reports/` directory. Generated files, dependencies, and the test-only `test_data`/`baselineprofile` modules are excluded; all checked-in
+productionDebug application sources, including UI and debug support, remain in scope.
+
+Kover measures JVM tests and JaCoCo measures instrumented device tests. The gate combines hits
+across all application and library modules by source file and executable line, so running the same line twice never increases coverage.
+It snapshots production source hashes before the run and refuses results if source files were
+added, deleted, or changed during testing. The ordered multi-process qualification suites are
+also required to pass; their separate executions do not add hits to this conservative report.
+`python3 scripts/test-code-coverage.py` checks the merge, source scope, and threshold behavior.
 
 ## Google identity pins
 

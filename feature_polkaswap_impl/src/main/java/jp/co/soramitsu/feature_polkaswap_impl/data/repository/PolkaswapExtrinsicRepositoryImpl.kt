@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_polkaswap_impl.data.repository
 
 import java.math.BigDecimal
 import javax.inject.Inject
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.TokenPrecision
@@ -86,7 +87,7 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
             )
         }
         return fee?.let {
-            mapBalance(it, tokenId1.precision)
+            mapBalance(it, OptionsProvider.defaultScale)
         }
     }
 
@@ -212,6 +213,7 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
         val dexId = getPoolBaseTokenDexId(tokenFrom.first)
         val fee = extrinsicManager.calcFee(
             from = address,
+            useBatchAll = !pairPresented,
         ) {
             if (!pairPresented) {
                 if (!pairEnabled) {
@@ -237,7 +239,7 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
             )
         }
         return fee?.let {
-            mapBalance(it, tokenFrom.second)
+            mapBalance(it, OptionsProvider.defaultScale)
         }
     }
 
@@ -255,11 +257,11 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
                 outputAssetIdB = tokenId2.first,
                 markerAssetDesired = mapBalance(BigDecimal.ONE, tokenId1.second),
                 outputAMin = mapBalance(BigDecimal.ONE, tokenId1.second),
-                outputBMin = mapBalance(BigDecimal.ONE, tokenId1.second)
+                outputBMin = mapBalance(BigDecimal.ONE, tokenId2.second)
             )
         }
         return fee?.let {
-            mapBalance(it, tokenId1.second)
+            mapBalance(it, OptionsProvider.defaultScale)
         }
     }
 }

@@ -8,6 +8,8 @@
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
     <ImageView
         android:id="@+id/iconFingerprint"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
         android:layout_width="50dp"
         android:layout_height="100dp"
         android:layout_marginTop="@dimen/x3"

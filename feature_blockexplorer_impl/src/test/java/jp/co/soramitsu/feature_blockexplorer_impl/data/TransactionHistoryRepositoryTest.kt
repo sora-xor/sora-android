@@ -73,6 +73,7 @@ import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -709,6 +710,47 @@ class TransactionHistoryRepositoryTest {
                 FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
             )
         }
+    }
+
+    private suspend fun assertHistoryFailureHasMessage(error: Throwable) {
+        coEvery {
+            polkaswapIndexerClient.getTransactionHistoryQualified(any(), any(), any())
+        } throws error
+        val result = transactionHistoryRepository.getTransactionHistory(
+            page = 1,
+            tokens = listOf(TestTokens.xorToken, TestTokens.valToken),
+            soraAccount = TestAccounts.soraAccount,
+            filterTokenId = null,
+        )
+        assertEquals(false, result.errorMessage.isNullOrBlank())
+    }
+
+    @Test
+    fun `history exception without a message remains distinguishable from an empty successful page`() = runTest {
+        assertHistoryFailureHasMessage(IllegalStateException())
+    }
+
+    @Test
+    fun `history exception with a blank message remains distinguishable from an empty successful page`() = runTest {
+        assertHistoryFailureHasMessage(IllegalStateException("  "))
+    }
+
+    @Test
+    fun `history cancellation propagates without becoming an offline response`() = runTest {
+        val cancelled = CancellationException("screen closed")
+        coEvery {
+            polkaswapIndexerClient.getTransactionHistoryQualified(any(), any(), any())
+        } throws cancelled
+        var caught: CancellationException? = null
+        try {
+            transactionHistoryRepository.getTransactionHistory(
+                page = 1,
+                tokens = listOf(TestTokens.xorToken, TestTokens.valToken),
+                soraAccount = TestAccounts.soraAccount,
+                filterTokenId = null,
+            )
+        } catch (error: CancellationException) { caught = error }
+        assertEquals(cancelled.message, caught?.message)
     }
 
     // --- audit A5: a waiting transaction is visible where the user looks -------------------

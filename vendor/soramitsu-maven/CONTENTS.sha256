@@ -1,4 +1,8 @@
-ec52e5e2360c3ab19936c092f4248d3bdc689662131f5ce6025e0fe6e6786126  SOURCE_PROVENANCE.json
+954eb978fb088e650e9c06ddfc6d53c8a74fc408c682f1b8a5b33373aaeb52c0  SOURCE_PROVENANCE.json
+9b17e5cd77b8058bea4fe5e3799220c9c1e2bfcc77139549b54de6342361fa32  androidx/compose/ui/ui-tooling-android/1.11.1-sora.1/ui-tooling-android-1.11.1-sora.1-sources.jar
+ef479e6008b3f456d6931b05beff2d6ed246e89325b248e6165dbaa81a166171  androidx/compose/ui/ui-tooling-android/1.11.1-sora.1/ui-tooling-android-1.11.1-sora.1.aar
+3cb377fe03621d086027ee85d40798de60111f8008e97effe8b7d8be340ec9d5  androidx/compose/ui/ui-tooling-android/1.11.1-sora.1/ui-tooling-android-1.11.1-sora.1.module
+c854b3d14a683b2efb49ac11ca597ca2198dee302200c664c27e8e9b58bf4ebf  androidx/compose/ui/ui-tooling-android/1.11.1-sora.1/ui-tooling-android-1.11.1-sora.1.pom
 9f1b5995b9577a8876525c3411ebb2a49f9ef0e875f6aec3059e807596dc6ca6  androidx/graphics/graphics-path/1.0.1/graphics-path-1.0.1-sources.jar
 6f54e010c759a56cfe1a2eeb1a0edfd494184791e7b5f370b3ce064e293c2ce1  androidx/graphics/graphics-path/1.0.1/graphics-path-1.0.1-versionMetadata.json
 eb4759c27ae0625d9e81fe95d8ce63d0a3846764a3465363ab195109d6785a71  androidx/graphics/graphics-path/1.0.1/graphics-path-1.0.1.aar
@@ -8,6 +12,11 @@ eb4759c27ae0625d9e81fe95d8ce63d0a3846764a3465363ab195109d6785a71  androidx/graph
 a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68  build-inputs/LazysodiumSmoke.java
 850e4e7eb67e24005c01385acd407d3a883994da647147358bd93212ed0434d4  build-inputs/README.md
 4a9b85542f99a2dfa2a1b8e192662741c9859a846b296bef1c92ef9b58b5a216  build-inputs/curve25519-dalek-2.1.3.crate
+4a4d133f8c616748e8496032c046d174047cd41177d3c04b1cfa5c81b017aeb0  build-inputs/google-http-client-1.43.3/provenance.json
+405d9b3bfc1e7cd6c2c021a6c412afdb7d87275bd028645ca48b28464a939cd6  build-inputs/google-http-client-1.43.3/rebuild.py
+3d397d060e9ae0e8a71721ff836ed629ee66c81b9326e4f2a5aa892ae8c3a3f9  build-inputs/google-http-client-1.43.3/upstream-sources.jar
+60aca7428c5a1ff3655b70541a98ff3d70dded48ac1324dae1af39f1b61914af  build-inputs/google-http-client-1.43.3/upstream.jar
+54f7533dbbe7691797c623261ee7e26159a82f24cc205091756b2269f2b52deb  build-inputs/google-http-client-1.43.3/upstream.pom
 6f28886b62b5ec6eee6191694c0c78dd36ac1eee06fdd9e57f4d96635bb0ee8a  build-inputs/graphics-path-1.0.1-16kb-rebuild.md
 d01272ea5c2be37c64eff6c0f031845efb0071f9704f13a606219a0cd3399e2d  build-inputs/graphics-path-1.0.1-build-16kb.sh
 8ca4032b6d79b351f0b59ad4b580eddbb9423e1652f7c958830687f1eee2ec03  build-inputs/graphics-path-1.0.1-original.aar
@@ -18,6 +27,14 @@ d2de5118a37af9d843c9ffc8340f1071d2ecb14fa53d5cb4c144f76b8aff69ac  build-inputs/g
 e38503013e03a3623bd9da01a0fbbf644a87947a35dbeb4df7b35605b71534ad  build-inputs/lazysodium-5.0.2-original.aar
 ac39c9d93eb7870e8929f1f37a16e970b5ec99b67ea782f551125aaa6c405c4c  build-inputs/lazysodium-5.0.2-repack-16kb.py
 6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03  build-inputs/rand-0.7.3.crate
+42c37c0f62a4019333ffaff3ab11c8e1912b4019ca653fe0f04ba3162d347082  build-inputs/ui-tooling-android-1.11.1/README.md
+aabc48d32dc7f5b9539e14f8f5b977bbd0e5c4f550a53d3625ee2ed7fe36213d  build-inputs/ui-tooling-android-1.11.1/inputs.json
+7c50999fc6a5cd5eab2696d53cb770db17772f644439488c4f18952752e1a0a3  build-inputs/ui-tooling-android-1.11.1/provenance.json
+6d0a29a7e10c14ebfb2302e0ebe91906a35b15a301f257f6f818ee0c018a39cd  build-inputs/ui-tooling-android-1.11.1/rebuild.py
+25da5ca6dbb9f5a9e5826f3b3968f335b0a7f6de7248624cd78847f13db25f4a  build-inputs/ui-tooling-android-1.11.1/upstream-sources.jar
+941745e5afef42b0932f04a9b2a1d518e512715c1c7e0a54a79e64d08573eb54  build-inputs/ui-tooling-android-1.11.1/upstream.aar
+f9e19ec73246853197a9968b7d1e56f5ac41e7080828962e68f8eb07df1ddb8a  build-inputs/ui-tooling-android-1.11.1/upstream.module
+3b645471e01d4de142b718d91672cecc9610541ecb8c5042da791eb5cc188da2  build-inputs/ui-tooling-android-1.11.1/upstream.pom
 04ceea236a739b81000b2702a26221f91fb945b8e796d0085623d549fe6e65bb  build-inputs/xcrypto-1.2.7-16kb-rebuild.md
 72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395  build-inputs/xcrypto-1.2.7-Cargo.lock
 a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b  build-inputs/xcrypto-1.2.7-original.aar
@@ -29,6 +46,9 @@ f77bb226a8335f505d5f0e4a7f1dad38404cbbf40e44e8a83f27c98d85b8b1f2  build-inputs/x
 dee65fa2e0aef012a9ac591638da02bf89efc7f77a5969e2e0d2bbb7fdeebdf1  build-inputs/xcrypto-1.2.8-sora.2-original.aar
 a8be142d0fcd6f8b7b14ac300e6a1b4af99d80d35db09e31772ee74da407a3f8  build-inputs/xcrypto-1.2.8-sora.2-repack-16kb.py
 d490eaac87bf29feec7e443098c2b451e7cfc1aea671d285bd9a13541afc98c5  build-inputs/xsubstrate-1.2.7-source-normalization.patch
+a7483e0a979b106b70d8f3e369788048e031f6eab03a720a6a438b86290afd5e  com/google/http-client/google-http-client/1.43.3-sora.1/google-http-client-1.43.3-sora.1-sources.jar
+dd2748416741f44c449a880f00b84ff2962506b4e9d1125a4b8d20693b94b8c8  com/google/http-client/google-http-client/1.43.3-sora.1/google-http-client-1.43.3-sora.1.jar
+5c3abf4759bb2eb0bad3ca241a52be10e731d44a543a3423ead1a1dc9295006d  com/google/http-client/google-http-client/1.43.3-sora.1/google-http-client-1.43.3-sora.1.pom
 02eb05b96f8236b646f7f642c8e424cdb7f6ad6451d6b3c9eaec0e8c8138f989  com/goterl/lazysodium-android/5.0.2/lazysodium-android-5.0.2.aar
 6ae9391bb9f4200e9a104d60bbc00a4c85a726c87d1ba46485fa7fd3679e6a88  com/goterl/lazysodium-android/5.0.2/lazysodium-android-5.0.2.pom
 bea0f3904fef83497b9e5802f36408663a4aba462bf63ded38b89a5f22befa4d  io/emeraldpay/polkaj/polkaj-scale/0.2.3/polkaj-scale-0.2.3.jar

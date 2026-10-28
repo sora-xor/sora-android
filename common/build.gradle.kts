@@ -32,7 +32,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.common"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 26
@@ -43,7 +43,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 36
+        targetSdk = 37
     }
 
     buildTypes {
@@ -81,6 +81,18 @@ android {
         }
     }
 
+    // Ancient-language fixtures stay available in non-production builds only.
+    sourceSets {
+        // Run the same bounded Torii wire/HTTP contracts on the JVM and Android runtime.
+        // Keeping these fixtures shared prevents platform checks from drifting apart.
+        getByName("test").kotlin.directories.add(file("src/contractTest/java").absolutePath)
+        getByName("androidTest").kotlin.directories.add(file("src/contractTest/java").absolutePath)
+        getByName("develop").res.directories.add(file("src/nonProduction/res").absolutePath)
+        getByName("develop").assets.directories.add(file("src/nonProduction/assets").absolutePath)
+        getByName("soralution").res.directories.add(file("src/nonProduction/res").absolutePath)
+        getByName("soralution").assets.directories.add(file("src/nonProduction/assets").absolutePath)
+    }
+
     packaging {
         resources {
             excludes += listOf(
@@ -93,7 +105,7 @@ android {
 }
 
 dependencies {
-    api(platform("com.fasterxml.jackson:jackson-bom:2.22.4"))
+    api(platform(libs.jackson.bom))
     api(platform("io.ktor:ktor-bom:${libs.versions.ktor.get()}"))
     // Keep transitive backup dependencies on patched, API-compatible lines.
     // Export constraints so every consumer resolves the same compile/runtime versions.
@@ -147,8 +159,10 @@ dependencies {
     api(libs.xsubstrateDep)
     implementation(libs.xcryptoDep)
     implementation(libs.ed25519Dep) {
-//        exclude(module = "bcpkix-jdk15on")
+        // Ed25519Sha3 uses only the digest provider, never PKIX/TLS utilities.
+        exclude(group = "com.madgag.spongycastle", module = "bcpkix-jdk15on")
     }
+    implementation(libs.spongycastle.provider)
     implementation(libs.bcprovDep)
     implementation(libs.xercesDep)
 

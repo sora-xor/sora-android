@@ -22,6 +22,8 @@ dependencyResolutionManagement {
             }
             filter {
                 includeModule("androidx.graphics", "graphics-path")
+                includeModule("androidx.compose.ui", "ui-tooling-android")
+                includeModule("com.google.http-client", "google-http-client")
                 includeModule("jp.co.soramitsu", "android-foundation")
                 includeModule("jp.co.soramitsu", "ui-core")
                 includeModule("jp.co.soramitsu", "xbackup")

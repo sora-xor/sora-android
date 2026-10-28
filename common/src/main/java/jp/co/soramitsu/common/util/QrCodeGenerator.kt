@@ -54,7 +54,7 @@ class QrCodeGenerator(
 //        val byteMatrix = qrCode.matrix
 //        val width = byteMatrix.width + PADDING_SIZE
 //        val height = byteMatrix.height + PADDING_SIZE
-//        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+//        val bitmap = androidx.core.graphics.createBitmap(width, height, Bitmap.Config.ARGB_8888)
 //        for (y in 0 until height) {
 //            for (x in 0 until width) {
 //                if (y == 0 || y > byteMatrix.height || x == 0 || x > byteMatrix.width) {
@@ -81,7 +81,7 @@ class QrCodeGenerator(
                 pixels[offset + x] = if (result[x, y]) firstColor else backgroundColor
             }
         }
-        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val bitmap = androidx.core.graphics.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         bitmap.setPixels(pixels, 0, RECEIVE_QR_SCALE_SIZE, 0, 0, w, h)
         return bitmap
     }

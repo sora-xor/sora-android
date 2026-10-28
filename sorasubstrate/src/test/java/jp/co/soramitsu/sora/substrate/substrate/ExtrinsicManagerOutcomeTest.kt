@@ -331,8 +331,106 @@ class ExtrinsicManagerOutcomeTest {
         assertTrue(fixture.submit(SWAP).success)
     }
 
+    @Test
+    fun `result submission returns exact hash without waiting and captures definitive failures`() = runTest {
+        val accepted = fixture(ACCEPTED)
+        val success = accepted.manager.submitExtrinsic(WALLET_ID, accepted.keypair) {}
+        assertEquals(accepted.transactionHash, success.getOrThrow())
+        coVerify(exactly = 0) { accepted.coordinator.awaitTerminalStatus(any(), any()) }
+        val refused = fixture(rpcError(1016, "Immediately Dropped", null))
+        val result = refused.manager.submitExtrinsic(WALLET_ID, refused.keypair) {}
+        assertTrue(result.exceptionOrNull() is ExtrinsicRefusedByNodeException)
+        assertEquals(1, refused.submitRequests())
+    }
+
+    @Test
+    fun `canonical wait wrapper notifies result only after finality`() = runTest {
+        val fixture = fixture(ACCEPTED)
+        val terminal = ExtrinsicSubmitStatus(true, fixture.transactionHash, "0x" + "22".repeat(32))
+        coEvery { fixture.coordinator.awaitTerminalStatus(any(), any()) } returns terminal
+        val result = fixture.manager.submitAndWaitExtrinsic(WALLET_ID, fixture.keypair) {}
+        assertEquals(terminal, result)
+        val error = captureFailure { fixture.manager.submitAndWaitExtrinsic(WALLET_ID, fixture.keypair, untilStatus = "inBlock") {} }
+        assertEquals("SORA2_CANONICAL_FINALITY_REQUIRED", error.message)
+        assertEquals(1, fixture.submitRequests())
+    }
+
+    @Test
+    fun `fee qualified submission validates exact signed bytes then sends once`() = runTest {
+        val rpc = mockk<Sora2BoundedRuntimeRpcClient>()
+        val fixture = fixture(ACCEPTED, rpc)
+        val fee = java.math.BigInteger.TEN
+        coEvery { rpc.queryPartialFee(ENCODED) } returns fee
+        coEvery { rpc.submitExtrinsicOnce(ENCODED) } returns fixture.transactionHash
+        val terminal = ExtrinsicSubmitStatus(true, fixture.transactionHash, "0x" + "22".repeat(32))
+        coEvery { fixture.coordinator.awaitTerminalStatus(any(), any()) } returns terminal
+        val steps = mutableListOf<String>()
+        val result = fixture.manager.submitFeeQualifiedAndWatchExtrinsic(WALLET_ID, fixture.keypair, fee,
+            preSigningValidation = { steps += "signing" }, validateBalances = { steps += "balance:$it" },
+            formExtrinsic = { steps += "form" })
+        assertEquals(terminal, result); assertEquals(listOf("form", "signing", "balance:10"), steps)
+        coVerify(exactly = 1) { rpc.submitExtrinsicOnce(ENCODED) }
+    }
+
+    @Test
+    fun `missing changed or unaffordable exact fee deletes staged witness before transport`() = runTest {
+        for (mode in listOf("missing", "changed", "balance")) {
+            val rpc = mockk<Sora2BoundedRuntimeRpcClient>()
+            val fixture = fixture(ACCEPTED, rpc)
+            if (mode == "missing") coEvery { rpc.queryPartialFee(ENCODED) } throws IllegalStateException("SORA2_TRANSFER_EXACT_FEE_UNAVAILABLE")
+            else coEvery { rpc.queryPartialFee(ENCODED) } returns if (mode == "changed") java.math.BigInteger.valueOf(11) else java.math.BigInteger.TEN
+            val error = captureFailure { fixture.manager.submitFeeQualifiedAndWatchExtrinsic(WALLET_ID, fixture.keypair, java.math.BigInteger.TEN,
+                preSigningValidation = {}, validateBalances = { error("FIXTURE_BALANCE_CHANGED") }, formExtrinsic = {}) }
+            val expected = when(mode) { "missing" -> "SORA2_TRANSFER_EXACT_FEE_UNAVAILABLE"; "changed" -> "SORA2_TRANSFER_FEE_CHANGED"; else -> "FIXTURE_BALANCE_CHANGED" }
+            assertTrue(error.toString() + " cause " + error.cause, generateSequence(error) { it.cause }.any { it.message == expected })
+            coVerify(exactly = 1) { fixture.coordinator.removeDefinitelyBeforeTransport(any()) }
+            coVerify(exactly = 0) { rpc.submitExtrinsicOnce(any()) }
+        }
+    }
+
+    @Test
+    fun `cleanup failure after pretransport rejection keeps recovery uncertainty`() = runTest {
+        val rpc = mockk<Sora2BoundedRuntimeRpcClient>()
+        val fixture = fixture(ACCEPTED, rpc)
+        coEvery { rpc.queryPartialFee(ENCODED) } throws IOException("fixture fee unavailable")
+        coEvery { fixture.coordinator.removeDefinitelyBeforeTransport(any()) } throws IOException("fixture cleanup failed")
+        val error = captureFailure { fixture.manager.submitFeeQualifiedAndWatchExtrinsic(WALLET_ID, fixture.keypair, java.math.BigInteger.TEN,
+            preSigningValidation = {}, validateBalances = {}, formExtrinsic = {}) }
+        assertTrue(error is ExtrinsicSubmissionUnknown)
+        coVerify(exactly = 0) { rpc.submitExtrinsicOnce(any()) }
+    }
+
+    @Test
+    fun `arming persistence failure never sends and kicks recovery`() = runTest {
+        val fixture = fixture(ACCEPTED)
+        coEvery { fixture.coordinator.armForTransport(any()) } throws IOException("fixture persistence failed")
+        val error = captureFailure { fixture.submit() }
+        assertTrue(error is ExtrinsicSubmissionUnknown)
+        assertEquals(0, fixture.submitRequests())
+        io.mockk.verify(exactly = 1) { fixture.coordinator.kickAfterUnknownBestEffort() }
+    }
+
+    @Test
+    fun `polkamarkt exact fee is bound to the qualified context and rejects replacement`() = runTest {
+        val rpc = mockk<Sora2BoundedRuntimeRpcClient>()
+        val fixture = fixture(ACCEPTED, rpc)
+        val context = mutationContext()
+        val qualified = jp.co.soramitsu.sora.substrate.runtime.QualifiedSora2MutationRuntime(context, mockk())
+        coEvery { fixture.factory.createForPolkamarkt(WALLET_ID, qualified) } returns ExtrinsicBuilderFactory.ContextBoundExtrinsicBuilder(fixture.builder, context)
+        coEvery { rpc.queryPartialFee(ENCODED) } returns java.math.BigInteger.valueOf(7)
+        var formed = false
+        assertEquals(java.math.BigInteger.valueOf(7), fixture.manager.calcPolkamarktFee(WALLET_ID, qualified) { formed = true })
+        assertTrue(formed)
+        coEvery { fixture.factory.createForPolkamarkt(WALLET_ID, qualified) } returns ExtrinsicBuilderFactory.ContextBoundExtrinsicBuilder(fixture.builder, mutationContext())
+        val error = captureFailure { fixture.manager.calcPolkamarktFee(WALLET_ID, qualified) { error("must not form") } }
+        assertEquals("SORA2_FEE_RUNTIME_CONTEXT_REPLACED", error.message)
+        coVerify(exactly = 1) { rpc.queryPartialFee(ENCODED) }
+    }
+
     private class Fixture(
         val manager: ExtrinsicManager,
+        val factory: ExtrinsicBuilderFactory,
+        val builder: ExtrinsicBuilder,
         val coordinator: Sora2PendingSubmissionCoordinator,
         val runtimeManager: RuntimeManager,
         val keypair: Sr25519Keypair,
@@ -468,6 +566,8 @@ class ExtrinsicManagerOutcomeTest {
         every { submitted.transactionHash } returns transactionHash
 
         return Fixture(
+            factory = factory,
+            builder = builder,
             manager = ExtrinsicManager(
                 factory = factory,
                 runtimeManager = runtimeManager,

@@ -711,6 +711,80 @@ class RuntimeManagerLiveRuntimeTest {
         assertTrue("CheckNonZeroSender" in context.snapshot.metadata.extrinsic.signedExtensions)
     }
 
+    private fun assertCancellation(expected: kotlinx.coroutines.CancellationException, actual: Throwable?) {
+        assertTrue(actual is kotlinx.coroutines.CancellationException)
+        assertEquals(expected.message, actual?.message)
+    }
+
+    private suspend fun RuntimeManager.recoverIdentity(
+        spec: Int = 133,
+        tx: Int = 131,
+        metadata: String = bundledMetadata.runtimeMetadataSha256(),
+        types: String = bundledTypes.rawSha256(),
+        at: String? = null,
+    ) = getReviewedRecoveryRuntimeSnapshotOrNull(Sora2RuntimeContract.SORA_MAINNET_GENESIS_HASH, spec, tx, metadata, types, at)
+
+    @Test fun `packaged recovery requires its exact recorded version and byte identities`() = runTest {
+        val manager = runtimeManager()
+        assertNotNull(manager.recoverIdentity(Sora2RuntimeContract.SPEC_VERSION, Sora2RuntimeContract.TRANSACTION_VERSION))
+        assertNull(manager.recoverIdentity(Sora2RuntimeContract.SPEC_VERSION, Sora2RuntimeContract.TRANSACTION_VERSION + 1))
+        assertNull(manager.recoverIdentity(Sora2RuntimeContract.SPEC_VERSION, Sora2RuntimeContract.TRANSACTION_VERSION, metadata = "a".repeat(64)))
+        assertNull(manager.recoverIdentity(Sora2RuntimeContract.SPEC_VERSION, Sora2RuntimeContract.TRANSACTION_VERSION, types = "b".repeat(64)))
+        coVerify(exactly = 0) { rpc.getHistoricRuntimeVersionForStatus(any()); http.getUtf8(any(), any()) }
+    }
+    @Test fun `missing corrupt and unreadable retained generations stay unresolved`() = runTest {
+        val identity = Sora2RecoveryRuntimeIdentity(Sora2RuntimeContract.SORA_MAINNET_GENESIS_HASH, 133, bundledMetadata.runtimeMetadataSha256(), bundledTypes.rawSha256())
+        val (metadataFile, typesFile) = checkNotNull(runtimeCacheGenerationFilesOrNull(identity))
+        cache[metadataFile] = bundledMetadata
+        assertNull(runtimeManager().recoverIdentity())
+        cache[typesFile] = "corrupt"
+        assertNull(runtimeManager().recoverIdentity())
+        cache[typesFile] = bundledTypes; cache[metadataFile] = "0x00"
+        assertNull(runtimeManager().recoverIdentity())
+        every { fileManager.readInternalCacheFileAtomically(metadataFile, any()) } throws IOException("unreadable")
+        assertNull(runtimeManager().recoverIdentity())
+        coVerify(exactly = 0) { rpc.getHistoricRuntimeVersionForStatus(any()) }
+    }
+    @Test fun `retained recovery cache cancellation remains cancellation`() = runTest {
+        val cancellation = kotlinx.coroutines.CancellationException("cancel cache read")
+        every { fileManager.readInternalCacheFileAtomically(any(), any()) } throws cancellation
+        assertCancellation(cancellation, runCatching { runtimeManager().recoverIdentity() }.exceptionOrNull())
+    }
+    @Test fun `historic recovery may fetch exact remote aliases but never substitutes another file`() = runTest {
+        val remote = bundledTypes.trimEnd() + "\n\n"
+        coEvery { rpc.getHistoricRuntimeVersionForStatus(FINALIZED_HASH) } returns RuntimeVersion(133, 131)
+        coEvery { rpc.getHistoricMetadataForStatus(FINALIZED_HASH) } returns bundledMetadata
+        coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+        assertNull(runtimeManager().recoverIdentity(types = remote.rawSha256(), at = FINALIZED_HASH))
+        coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns remote
+        val manager = runtimeManager()
+        val first = manager.recoverIdentity(types = remote.rawSha256(), at = FINALIZED_HASH)
+        assertNotNull(first)
+        assertSame(first, manager.recoverIdentity(types = remote.rawSha256()))
+        assertTrue(cache.values.contains(remote))
+    }
+    @Test fun `full disk during historic recovery keeps the admitted snapshot in memory`() = runTest {
+        coEvery { rpc.getHistoricRuntimeVersionForStatus(FINALIZED_HASH) } returns RuntimeVersion(133, 131)
+        coEvery { rpc.getHistoricMetadataForStatus(FINALIZED_HASH) } returns bundledMetadata
+        every { fileManager.writeInternalCacheFileAtomically(any(), any(), any()) } throws IOException("ENOSPC")
+        val manager = runtimeManager(); val recovered = manager.recoverIdentity(at = FINALIZED_HASH)
+        assertNotNull(recovered); assertTrue(cache.isEmpty()); assertSame(recovered, manager.recoverIdentity())
+        coVerify(exactly = 1) { rpc.getHistoricMetadataForStatus(FINALIZED_HASH) }
+    }
+    @Test fun `historic download and cache publication cancellation are never swallowed`() = runTest {
+        val cancellation = kotlinx.coroutines.CancellationException("cancel recovery")
+        coEvery { rpc.getHistoricRuntimeVersionForStatus(FINALIZED_HASH) } throws cancellation
+        assertCancellation(cancellation, runCatching { runtimeManager().recoverIdentity(at = FINALIZED_HASH) }.exceptionOrNull())
+        coEvery { rpc.getHistoricRuntimeVersionForStatus(FINALIZED_HASH) } returns RuntimeVersion(133, 131)
+        coEvery { rpc.getHistoricMetadataForStatus(FINALIZED_HASH) } returns bundledMetadata
+        every { fileManager.writeInternalCacheFileAtomically(any(), any(), any()) } throws cancellation
+        assertCancellation(cancellation, runCatching { runtimeManager().recoverIdentity(at = FINALIZED_HASH) }.exceptionOrNull())
+    }
+    @Test fun `explicit runtime reset clears the stored version`() = runTest {
+        runtimeManager().resetRuntimeVersion()
+        coVerify(exactly = 1) { preferences.putInt(RUNTIME_VERSION_PREF, 0) }
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun v14Metadata(metadataHex: String): EncodableStruct<RuntimeMetadataSchemaV14> =
         RuntimeMetadataReader.read(metadataHex.trim()).metadata

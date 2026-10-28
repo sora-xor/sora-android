@@ -37,6 +37,7 @@ import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.equalTo
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
+import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveRoutes
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
@@ -682,5 +683,37 @@ class RemoveLiquidityViewModelTest {
         confirm()
         runCurrent()
         assertEquals(1, sent)
+    }
+
+    @Test fun `removal hints and toolbar follow the active step`() = runTest {
+        setUpViewModel(); advanceUntilIdle()
+        assertEquals(LiquidityRemoveRoutes.start, viewModel.startScreen())
+        viewModel.setCurDestination(LiquidityRemoveRoutes.start)
+        viewModel.onNavIcon(); assertTrue(viewModel.removeState.hintVisible)
+        viewModel.dismissHint(); assertFalse(viewModel.removeState.hintVisible)
+        for ((route, title) in listOf(LiquidityRemoveRoutes.start to R.string.remove_liquidity_title,
+            LiquidityRemoveRoutes.slippage to R.string.slippage, LiquidityRemoveRoutes.confirm to R.string.remove_pool_confirmation_title)) {
+            viewModel.setCurDestination(route); assertEquals(title, viewModel.toolbarState.value!!.basic.title)
+        }
+        viewModel.onNavIcon(); org.junit.Assert.assertNotNull(viewModel.navigationPop.value)
+        viewModel.onMenuItem(jp.co.soramitsu.ui_core.component.toolbar.Action.Close())
+    }
+    @Test fun `percentage controls remove the selected fraction of both pool assets`() = runTest {
+        setUpViewModel(); advanceUntilIdle()
+        for (percent in listOf(25, 75, 100)) {
+            viewModel.onPercentClick(percent); advanceUntilIdle()
+            val factor = BigDecimal(percent).divide(BigDecimal(100))
+            assertEquals(0, COMMON_POOL_DATA.user!!.basePooled.multiply(factor).compareTo(viewModel.removeState.assetState1!!.amount))
+            assertEquals(0, COMMON_POOL_DATA.user!!.targetPooled.multiply(factor).compareTo(viewModel.removeState.assetState2!!.amount))
+        }
+        viewModel.onSlippageClick(); viewModel.slippageChanged(2.0)
+        assertEquals(2.0, viewModel.removeState.slippage, 0.0)
+        assertTrue(viewModel.removeState.btnState.enabled)
+    }
+    @Test fun `output entry is capped at the owned amount and derives matching input`() = runTest {
+        setUpViewModel(); advanceUntilIdle()
+        viewModel.onAmount2Change(COMMON_POOL_DATA.user!!.targetPooled.multiply(BigDecimal.TEN)); advanceUntilIdle()
+        assertEquals(0, COMMON_POOL_DATA.user!!.targetPooled.compareTo(viewModel.removeState.assetState2!!.amount))
+        assertEquals(0, COMMON_POOL_DATA.user!!.basePooled.compareTo(viewModel.removeState.assetState1!!.amount))
     }
 }

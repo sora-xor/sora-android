@@ -17,7 +17,6 @@
   <string name="account_already_imported_description">הארנק הזה כבר מיובא</string>
   <string name="account_storage_conflict">This wallet can\'t be added here</string>
   <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
-  <string name="account_confirmation_title">אשר סיסמה מנומונית</string>
   <string name="account_confirmation_title_v2">אשר את מילות המפתח</string>
   <string name="account_options">אפשרויות חשבון</string>
   <string name="account_options_backup_google">גיבוי לגוגל</string>
@@ -30,7 +29,6 @@
   <string name="activity_referral_title">הפניה הצטרפה</string>
   <string name="add_liquidity_alert_text">אתה תרוויח עמלות באופן יחסי לחלק שלך במאגר מאספקת נזילות.</string>
   <string name="add_liquidity_confirmation_title">אשר אספקה</string>
-  <string name="add_liquidity_title">הוסף נזילות</string>
   <string name="add_node_name_already_existing">צומת בשם זה כבר נוסף</string>
   <string name="address_not_found_1">לא נמצאו נמענים</string>
   <string name="amount_error_no_funds">אנחנו מצטערים, אין לך מספיק כספים כדי להעביר את הסכום שצויין</string>
@@ -45,27 +43,20 @@
   <string name="asset_details_token_price">מחיר טוקן</string>
   <string name="asset_details_your_pools">%s המאגרים שלך</string>
   <string name="asset_to_send">נכס לשליחה</string>
-  <string name="backup_account_already_exist">גיבוי כבר קיים. המשך לשכתב אותו.</string>
   <string name="backup_not_enough_space_error">הגיבוי נכשל. אין מספיק מקום בגוגל דרייב שלך. פנה קצת מקום ונסה שוב.</string>
   <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">דרישת חובה למילוי הסיסמה</string>
   <string name="backup_password_requirments">מינימום שישה תווים. לחלופין, לאבטחה טובה יותר, כלול אותיות רישיות, מספרים ותווים שאינם אלפביתיים.</string>
-  <string name="backup_password_title">הגדרת סיסמה תצפין את גיבוי הגוגל שלך. יהיה עליך להזין אותה בעת שחזור הארנק שלך.</string>
   <string name="backup_password_title_2">הגדרת סיסמה תצפין את גיבוי הגוגל שלך. יהיה עליך להזין זאת בעת שחזור הארנק.</string>
   <string name="biometric_dialog_title">לאמת</string>
   <string name="block_id">האש בלוק</string>
-  <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">שנה שפה</string>
   <string name="change_pin">שנה PIN</string>
   <string name="choose_token">בחר טוקן</string>
   <string name="choose_tokens">בחר טוקנים</string>
-  <string name="claim_contact">אם יש לך שאלות או חששות, אתה יכול %% ליצור קשר %%</string>
   <string name="claim_contact_us">%%פנה אלינו%% לכל שאלה או חשש</string>
-  <string name="claim_error_title">המעבר נכשל</string>
   <string name="claim_error_title_v1">מעבר הנכסים נכשל. אנא נסה שוב מאוחר יותר.</string>
-  <string name="claim_notification_text">המעבר מתבצע...</string>
   <string name="claim_rewards">Claim rewards</string>
-  <string name="claim_subtitle">אנו זקוקים להסכמתך בכדי לבצע מעבר של כספיך מסורה כדי שתוכל להשתמש בהם. סורה תפעל כעת ברשת Substrate. אנא אשר מעבר.</string>
   <string name="claim_subtitle_confirmed">תודה על האישור!</string>
   <string name="claim_subtitle_confirmed_v2">מעבר הנכסים מתבצע</string>
   <string name="claim_subtitle_v2">• אנו זקוקים להסכמה כדי להעביר את הנכסים שלך מסורה v1 לסורה v2 \n\n • רשת סורה v2 בנויה עם Substrate, התואמת באופן מקורי למערכת האקולוגית של פולקדוט וקוסאמה \n\n • נכסים באיתריום אינם מושפעים, אתה עדיין יכול לגשת אליהם על ידי ייבוא מילות המפתח שלך לכל ארנק תואם</string>
@@ -90,7 +81,7 @@
   <string name="tx_details_view_on_explorer">הצג בסייר</string>
   <string name="common_confirm">אשר</string>
   <string name="common_connected">מחובר</string>
-  <string name="common_connecting">מתחבר...</string>
+  <string name="common_connecting">מתחבר…</string>
   <string name="common_continue">המשך</string>
   <string name="common_copied">הועתק ללוח</string>
   <string name="common_create_qr_request">צור בקשת QR</string>
@@ -98,7 +89,6 @@
   <string name="common_currencies">מטבעות</string>
   <string name="common_delete">מחק</string>
   <string name="common_disabled">מושבת</string>
-  <string name="common_discover">גלה</string>
   <string name="common_done">בוצע</string>
   <string name="common_dutch">הולנדית</string>
   <string name="common_edit">ערוך</string>
@@ -151,14 +141,12 @@
   <string name="common_french">צרפתית</string>
   <string name="common_german">גרמנית</string>
   <string name="common_google_authorization_error">הרשאת גוגל נכשלה</string>
-  <string name="common_google_backup_decryption_failed">פענוח הגיבוי נכשל. אנא בדוק את הסיסמה ונסה שוב</string>
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">עברית</string>
   <string name="common_hindi">הינדי</string>
   <plurals name="common_hour">
     <item quantity="one">שעה</item>
     <item quantity="two">שעתיים</item>
-    <item quantity="many">שעות</item>
     <item quantity="other">שעות</item>
   </plurals>
   <string name="common_indonesian">אינדונזית</string>
@@ -189,11 +177,9 @@
   <string name="common_try_again">Try again</string>
   <string name="common_remove">הסר</string>
   <string name="common_request">בקשה</string>
-  <string name="common_rewrite">כתוב מחדש</string>
   <string name="common_russian">רוסית</string>
   <string name="common_scan">סרוק</string>
   <string name="common_scan_qr">סרוק QR</string>
-  <string name="common_search">חיפוש</string>
   <string name="common_search_pools">חפש מאגרים</string>
   <string name="common_sec">שנ\'</string>
   <string name="common_select_asset">בחר נכס</string>
@@ -214,7 +200,6 @@
   <string name="common_swedish">שוודית</string>
   <string name="common_terms_title">תנאים והגבלות</string>
   <string name="common_thai">תאילנדית</string>
-  <string name="common_title_warning">אזהרה!</string>
   <string name="common_today">היום</string>
   <string name="common_turkish">טורקית</string>
   <string name="common_ukrainian">אוקראינית</string>
@@ -224,20 +209,16 @@
   <string name="common_yesterday">אתמול</string>
   <string name="confirm_sending">אשר את השליחה</string>
   <string name="confirn_supply_liquidity_first_provider_warning">אתה ספק הנזילות הראשון. יחס הטוקנים שתוסיף יקבע את מחיר המאגר הזה.</string>
-  <string name="contacts_scan">סרוק</string>
   <string name="contacts_search_results">תוצאות חיפוש</string>
   <string name="copy_to_clipboard">העתק ללוח</string>
   <string name="create_account_title">צור חשבון</string>
   <string name="create_backup_password_button_text">הגדר סיסמת גיבוי</string>
-  <string name="create_backup_password_is_secure">הסיסמה מאובטחת ביותר</string>
   <string name="create_backup_password_matched">הסיסמה תואמת</string>
   <string name="create_backup_password_not_matched">סיסמאות אינן תואמות</string>
   <string name="create_backup_password_title">צור סיסמת גיבוי</string>
   <string name="create_backup_password_warning_text">אני מבין שאם אשכח את הסיסמה שלי אין דרך לאחזר אותה.</string>
   <string name="create_backup_set_password">הגדר סיסמה</string>
-  <string name="create_backup_weak_password">סיסמה חלשה</string>
   <string name="create_new_account_title">צור חשבון חדש</string>
-  <string name="dark_mode">מצב כהה</string>
   <string name="delete_backup_alert_description">אם תמחק את גיבוי הגוגל שלך, תוכל לשחזר את הארנק שלך רק באמצעות גיבוי ידני של מילות המפתח.</string>
   <string name="delete_backup_alert_title">האם אתה בטוח?</string>
   <string name="demeter_claimed_reward">Claimed reward</string>
@@ -247,15 +228,12 @@
   <string name="details_frozen">קפוא</string>
   <string name="details_receive_from_pool">נמשך מהמאגר</string>
   <string name="details_sent_to_pool">נשלח למאגר</string>
-  <string name="discover_coming_soon">מפתחי סורה עובדים כעת על תכונה שתציג רשימה מלאה של מאגרים שהם פעילים בפולקסוואפ.\n\nלעת עתה, אם ברצונך ליצור/להוסיף למאגר אנא השתמש בכפתור למטה.</string>
   <string name="discovery_polkaswap_pools">מאגרי פולקסוואפ</string>
   <string name="edit_farm">Edit farm</string>
   <string name="edit_view">ערוך תצוגה</string>
-  <string name="empty_recent_recipients">אין נמענים אחרונים.\n כתובות שנשלחו יוצגו כאן.</string>
   <string name="empty_recent_recipients_2">הנמענים יופיעו כאן</string>
   <string name="enter_backup_password_title">הזן סיסמת גיבוי</string>
   <string name="enter_password_description">הזן סיסמת גיבוי עבור החשבון שנבחר לייבוא</string>
-  <string name="enter_password_incorect_title">סיסמה שגויה</string>
   <string name="enter_password_title">הזן סיסמה</string>
   <string name="error_transaction_fee_title">אין מספיק כספים עבור עמלת רשת</string>
   <string name="eth_tx_address">Ethereum account address</string>
@@ -292,8 +270,6 @@
   <string name="farm_details_your_rewards">Your rewards</string>
   <string name="farming_details_title">Farming details</string>
   <string name="forget_account">שכח חשבון</string>
-  <string name="global_results">תוצאות גלובליות</string>
-  <string name="hide_zero_balances">הסתר יתרות אפסיות</string>
   <string name="history_referral">הפניה</string>
   <string name="history_referrer">מפנה</string>
   <string name="import_account_not_backed_up">לא מגובה!</string>
@@ -301,7 +277,6 @@
   <string name="import_account_not_backed_up_alert_description">אם המכשיר שלך יאבד או ייגנב, אתה תאבד את הארנק שלך ואת כל הכספים שלך לנצח.</string>
   <string name="import_more_title">ייבוא נוסף</string>
   <string name="imported_account_title">החשבון יובא</string>
-  <string name="invite_code">קוד הזמנה</string>
   <string name="invite_code_applied_body">הקוד הוזן בהצלחה</string>
   <string name="invite_code_applied_title">מזל טוב!</string>
   <string name="invite_enter_error_already_applied">כבר ביקשת קוד הזמנה חדש</string>
@@ -311,18 +286,14 @@
   <string name="invoice_scan_error_user_not_found">לא מצליח למצוא משתמש מ- QR</string>
   <string name="launch_screen_loading_title">זה נטען לעוד קצת זמן הפעם</string>
   <string name="liquid_assets">נכסים נזילים</string>
-  <string name="logout_dialog_body">פעולה זו תגרום למחיקת חשבון ממכשיר זה. ודא שגיבית את מילות המפתח שלך לפני שתמשיך.</string>
-  <string name="logout_remove_nodes_body">\n\n כל הצמתים המותאמים אישית שלך יוסרו גם כן</string>
   <string name="mnemonic_confirmation_select_word_2">מהרשימה שרשמת</string>
   <string name="mnemonic_confirmation_select_word_number">בחר מספר מילה</string>
-  <string name="mnemonic_invalid">מילות מפתח מנמוניות לא חוקיות, אנא בדוק פעם נוספת את סדר המילים.</string>
   <string name="mnemonic_invalid_title">מילות מפתח מנמוניות לא חוקיות</string>
   <string name="mnemonic_text">אנו ממליצים להשתמש בדרך לא דיגיטלית לגיבוי, כגון כתיבה על נייר ואחסון בטוח.</string>
   <string name="network_fee">עמלת רשת</string>
   <string name="network_fee_unavailable">The network fee can\'t be checked right now. Try again in a moment. Your funds are safe on the blockchain.</string>
   <string name="network_fee_unavailable_short">Network fee unavailable</string>
   <string name="network_fee_unreachable">The network fee can\'t be checked because the SORA network can\'t be reached right now. Check your internet connection and try again. Your funds are safe on the blockchain.</string>
-  <string name="network_finalized_history">פעילות</string>
   <string name="node_details_address_validation_failed">נכשל אימות כתובת האתר (כתובת שגויה)</string>
   <string name="node_details_genesis_validation_failed">ההאש הראשון של הצומת שלך שונה מההאש הראשון של הרשת</string>
   <string name="node_details_node_already_added" formatted="false">הצומת הזה כבר נוסף: %s \n נוצר חיבור עם הצומת %s</string>
@@ -331,13 +302,10 @@
   <string name="onboarding_create_account_description">הזן שם עבור החשבון החדש שלך וכיצד הוא יופיע תחת הכתובת שלך. עם זהות ברשת, ניתן להפוך אותה לזמינה לאחרים.</string>
   <string name="onboarding_create_account_subtitle">גלוי רק עבורך ומאוחסן באופן מקומי</string>
   <string name="onboarding_create_account_title">קבע שם לחשבון שלך</string>
-  <string name="onboarding_description">סורה היא מערכת ממשל ברשת שבה יצרנים מציעים הצעות למימון, וכל מחזיקי טוקן XOR מחליטים על המוצרים והשירותים הטובים ביותר שיש ליצור. קבלת XOR כתשלום בונה את כלכלת סורה.</string>
   <string name="onboarding_enter_passphrase">הזן את מילות המפתח שלך</string>
   <string name="onboarding_enter_seed">הזן קוד סיד</string>
   <string name="passphrase_confirmation_error_message">תהליך זה נועד להבטיח שכתבת את משפט השחזור שלך</string>
   <string name="passphrase_confirmation_error_title">אל תנסו לנחש את המילה</string>
-  <string name="passphrase_write">רשום את מילות המפתח שלך</string>
-  <string name="personal_info_username">שם חשבון (אופציונלי)</string>
   <string name="personal_info_username_v1">שם חשבון</string>
   <string name="phone_verification_too_frequent_message">בקשות קוד אימות תכופות מדי. אנא, נסה שוב מאוחר יותר.</string>
   <string name="pin_locked_for_title">נעול עבור %s</string>
@@ -359,7 +327,6 @@
   <string name="polkaswap_farming_pool_in_farming_hint">חלק מהנתח שלך במאגר מושקע. כדי לקבל גישה אליו, עליך להסיר אותו תחילה מהמאגר.</string>
   <string name="polkaswap_farming_pool_share">נתח המאגר שלך נעול</string>
   <string name="polkaswap_farming_pool_share_will_be">Your pool share staked will be</string>
-  <string name="polkaswap_farming_staked_for">נעול עבור %s</string>
   <string name="polkaswap_farming_unstake_to_remove">כדי להסיר נזילות ראשית עליך להסיר את הנעילה</string>
   <string name="polkaswap_info_text_1">פולקסוואפ מתוחזק על ידי קהילת סורה. לפני שתמשיך להשתמש בפולקסוואפ, אנא עיין  %%בשאלות הנפוצות של פולקסוואפ%%  ובתיעוד, הכולל הסבר מפורט על אופן הפעולה של פולקסוואפ, כמו גם את %%תזכיר המדיניות ותנאי השירותים של פולקסוואפ%%, ו- %%מדיניות הפרטיות%%.\n\nמסמכים אלה חיוניים לחוויית משתמש מאובטחת וחיובית. על ידי שימוש בפולקסוואפ, אתה מכיר בכך שקראת והבנת את המסמכים האלה.</string>
   <string name="polkaswap_info_text_2">אתה גם מאשר את הדברים הבאים:</string>
@@ -372,10 +339,6 @@
   <string name="polkaswap_input_estimated">הקלט מוערך. אתה תמכור לכל היותר %s או שהטרנזקציה תחזור.</string>
   <string name="polkaswap_insufficient_balance">יתרה %s לא מספיקה</string>
   <string name="polkaswap_insufficient_liqudity">אין מספיק נזילות</string>
-  <string name="polkaswap_liquidity_fee">עמלת מאגר נזילות</string>
-  <string name="polkaswap_liquidity_fee_info">חלק מכל עסקה הולך לספקי נזילות כתמריץ פרוטוקול.</string>
-  <string name="polkaswap_liquidity_total_fee">עמלת החלפה</string>
-  <string name="polkaswap_liquidity_total_fee_desc">ההחלפה שלך כוללת גם עמלה סינתטית וגם עמלת אספקת נזילות.\nהעמלה הסינתטית נלקחת בחשבון כאשר ההחלפה עוברת דרך מקור הנזילות XST עבור נכסים סינתטיים, ועמלת אספקת הנזילות כאשר ההחלפה עוברת דרך מאגרי נזילות.</string>
   <string name="polkaswap_market">שוק</string>
   <string name="polkaswap_market_smart_description">ניתוב נזילות SMART מבטיח את המחיר הטוב ביותר לכל טרנזקציה  על ידי שילוב אפשרויות המחיר הטובות ביותר בלבד מכל השווקים הזמינים. כאשר זמין, עקומת צירוף הטוקנים (TBC) תשמש לנזילות כל עוד מחיר הנכס משתלם יותר מאשר ממקורות אחרים, שעליהם מנוצל מאגר XYK.</string>
   <string name="polkaswap_market_tbc_description">TBC - קנייה רק מעקומת צירוף הטוקנים (השוק העיקרי). קיימת אפשרות שהמחיר יכול להפוך לבלתי משתלם בהשוואה למאגר XYK (שוק משני), אך הערך המתקבל מהתגמולים המוענקים לאורך זמן עשוי להתברר כמשתלם הרבה יותר לטווח ארוך.</string>
@@ -401,34 +364,27 @@
   <string name="pool_details">פרטי המאגר</string>
   <string name="pool_details_active_farms">Active farms</string>
   <string name="pool_details_reward">Reward</string>
-  <string name="pool_liquidity_placeholder">עדיין אין לך מאגרים פעילים.\nהוסף נזילות כדי להרוויח תגמולים</string>
-  <string name="pool_share_title">נתח מהמאגר</string>
   <string name="pool_share_title_1">החלק שלך במאגר</string>
   <string name="pooled_assets">נכסים מצורפים למאגר</string>
   <string name="profile_biometry_title">אימות ביומטרי</string>
-  <string name="profile_logout_title">התנתק</string>
   <plurals name="project_date_day_plurals">
     <item quantity="one">%s יום נותר</item>
     <item quantity="two">%s ימים נותרו</item>
-    <item quantity="many">%s ימים נותרו</item>
     <item quantity="other">%s ימים נותרו</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
     <item quantity="one">%s שעה נותרה</item>
     <item quantity="two">%s שעות נותרו</item>
-    <item quantity="many">%s שעות נותרו</item>
     <item quantity="other">%s שעות נותרו</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
     <item quantity="one">%s דקה נותרה</item>
     <item quantity="two">%s דקות נותרו</item>
-    <item quantity="many">%s דקות נותרו</item>
     <item quantity="other">%s דקות נותרו</item>
   </plurals>
   <plurals name="project_date_second_plurals">
     <item quantity="one">%s שנייה נותרה</item>
     <item quantity="two">%s שניות נותרו</item>
-    <item quantity="many">%s שניות נותרו</item>
     <item quantity="other">%s שניות נותרו</item>
   </plurals>
   <string name="project_ended_template">הסתיים %s</string>
@@ -457,7 +413,6 @@
   <plurals name="referral_invitations">
     <item quantity="one">הזמנה</item>
     <item quantity="two">הזמנות</item>
-    <item quantity="many">הזמנות</item>
     <item quantity="other">הזמנות</item>
   </plurals>
   <string name="referral_no_available_invitations">אין הזמנות זמינות</string>
@@ -487,10 +442,8 @@
   <string name="review">סקירה</string>
   <string name="route">מסלול</string>
   <string name="scan_qr_show_my_qr">הצג את קוד ה-QR שלי</string>
-  <string name="search_assets">חפש נכסים</string>
   <string name="search_empty_state">אין תוצאות</string>
   <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
-  <string name="select_account_address">חפש כתובת חשבון</string>
   <string name="select_account_address_1">חפש או הוסף כתובת חדשה</string>
   <string name="select_account_import">בחר חשבון לייבוא</string>
   <string name="select_asset_receive">בחר נכס לקבלה</string>
@@ -523,28 +476,21 @@
   <string name="settings_login_title">כניסה ואבטחה</string>
   <string name="settings_nodes">צמתים</string>
   <string name="show_more">הצג עוד</string>
-  <string name="show_zero_balances">הצג יתרות אפסיות</string>
   <string name="slippage">החלקה</string>
   <string name="something_went_wrong">משהו השתבש</string>
   <string name="start_staking">Start staking</string>
   <string name="status_error">שגיאה</string>
   <string name="status_pending">בהמתנה</string>
-  <string name="status_success">הצלחה</string>
   <string name="status_successful">מוצלח</string>
   <string name="status_title">סטטוס</string>
   <string name="succesfully_imported_account_title">ייבאת חשבון בהצלחה</string>
-  <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">ודא שנותרו לך %s לאחר עסקה זו. אחרת, לא תוכל לבצע עסקה אחרת.</string>
-  <string name="system_appearance">מראה חיצוני של המערכת</string>
-  <string name="tabbar_parliament_title">פרלמנט</string>
   <string name="tabbar_polkaswap_title">פולקסוואפ</string>
-  <string name="transaction_date">תאריך / שעה</string>
   <string name="transaction_date_1">תאריך ושעה</string>
   <string name="transaction_id">האש חיצוני</string>
   <string name="tutorial_many_world">עולמות רבים.\nכלכלה אחת.</string>
   <string name="tutorial_many_world_desc">סורה פועלת להפוך למערכת כלכלית מבוזרת מרובת גוונים, המממנת יצירת אפליקציות חדשות ומרגשות, בפיקוח דמוקרטי של פרלמנט סורה.</string>
   <string name="tutorial_privacy_policy">מדיניות פרטיות</string>
-  <string name="tutorial_terms_and_conditions">על ידי יצירת חשבון אתה מסכים עם %%התנאים וההגבלות%% ו- %%מדיניות הפרטיות%%</string>
   <string name="tutorial_terms_and_conditions_3">תנאים והגבלות</string>
   <string name="tutorial_terms_and_conditions_template_1">כשאתה ממשיך אתה מסכים עם ה-</string>
   <string name="unexpected_error">אירעה שגיאה בלתי צפויה. \n\n אתה יכול לפתור בעיה זו בצ\'אט הטלגרם של קהילת סורה @sora_happy.</string>
@@ -558,7 +504,6 @@
   <string name="wallet_connect_done">בוצע</string>
   <string name="wallet_market_refresh">רענן</string>
   <string name="wallet_network_activity">פעילות</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">כתובת %s הרשת שלי לקבלת %s :</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">סרוק את ה- QR הזה כדי לשלוח לי %s. מספר חשבון הרשת שלי %s:\n%s</string>
   <string name="wallet_receive_xor">קבל XOR</string>
   <string name="wallet_redeemable">ניתן למימוש</string>
@@ -566,7 +511,6 @@
   <string name="wallet_send_existential_warning_message">ההעברה שלך תסיר את החשבון מבלאקסטור מכיוון שהיא תהפוך את היתרה הכוללת לנמוכה מההפקדה הקיומית.</string>
   <string name="wallet_status_confirmed">הושלם</string>
   <string name="wallet_title">ארנק</string>
-  <string name="wallet_transaction_rejected">הטרנזקציה נדחתה</string>
   <string name="wallet_transaction_submitted">הטרנזקציה נשלחה</string>
   <string name="wallet_transaction_submitted_1">הטרנזקציה\nנשלחה</string>
   <string name="wallet_unbonded">הוסר מנעילה</string>
@@ -814,7 +758,6 @@
   <string name="neon_theme_dark">Dark</string>
   <string name="neon_theme_light">Light</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
-  <string name="nexus_production_name">SORA Nexus Production</string>
   <string name="nexus_production_address">Production address</string>
   <string name="nexus_copy_production_address">Copy production address</string>
   <string name="nexus_production_not_live">Not live yet</string>

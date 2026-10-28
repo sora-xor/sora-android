@@ -395,10 +395,11 @@ class SafeModeViewModel @Inject constructor(
         action: RecoveryAction,
         automatic: Boolean = false,
         work: () -> T,
-    ): Job {
+    ) {
+        if (state.value.running != null) return
         autoRetryJob?.cancel()
         mutableState.update { it.copy(running = action, runningLong = false, autoRetrying = automatic) }
-        return viewModelScope.launch {
+        viewModelScope.launch {
             val long = launch {
                 delay(STILL_WORKING_MILLIS)
                 mutableState.update { it.copy(runningLong = true) }
@@ -668,7 +669,10 @@ class SafeModeViewModel @Inject constructor(
 
     // ---- show my recovery phrase -------------------------------------------------------------
 
+    private var revealGeneration = 0L
+
     fun startReveal() {
+        val generation = ++revealGeneration
         autoRetryJob?.cancel()
         enteredPin.clear()
         authenticated = false
@@ -679,6 +683,7 @@ class SafeModeViewModel @Inject constructor(
             val biometryEnabled = withContext(coroutineManager.io) {
                 runCatching { userDatasource.isBiometryEnabled() }.getOrDefault(false)
             }
+            if (generation != revealGeneration) return@launch
             val pin = stored.getOrNull()
             val auth = when {
                 stored.isFailure -> RevealUi.Auth(loading = false, error = AuthError.UNAVAILABLE)
@@ -740,11 +745,13 @@ class SafeModeViewModel @Inject constructor(
     }
 
     private fun submitPin(auth: RevealUi.Auth) {
+        val generation = revealGeneration
         val entered = enteredPin.toString()
         enteredPin.clear()
         mutableState.update { it.copy(reveal = auth.copy(checking = true)) }
         viewModelScope.launch {
             val stored = withContext(coroutineManager.io) { runCatching { userDatasource.retrievePin() } }
+            if (generation != revealGeneration) return@launch
             val pin = stored.getOrNull()
             when {
                 stored.isFailure || pin == null -> mutableState.update {
@@ -752,13 +759,14 @@ class SafeModeViewModel @Inject constructor(
                 }
                 SafeModeVault.pinMatches(pin, entered) -> {
                     withContext(coroutineManager.io) { pinAttempts.reset() }
-                    onAuthenticated()
+                    if (generation == revealGeneration) onAuthenticated()
                 }
                 else -> {
                     val lock = withContext(coroutineManager.io) {
                         pinAttempts.recordFailure()
                         pinAttempts.lockRemainingMillis()
                     }
+                    if (generation != revealGeneration) return@launch
                     mutableState.update {
                         it.copy(
                             reveal = auth.copy(
@@ -779,9 +787,10 @@ class SafeModeViewModel @Inject constructor(
         authenticating = false
         if (state.value.reveal !is RevealUi.Auth) return
         authenticated = true
+        val generation = revealGeneration
         viewModelScope.launch {
             val listing = revealListing()
-            if (state.value.reveal !is RevealUi.Auth) return@launch
+            if (generation != revealGeneration || state.value.reveal !is RevealUi.Auth) return@launch
             // One wallet and nothing left out: straight to it. Otherwise the list, which says
             // when a wallet is not shown and why.
             if (listing.entries.size == 1 && !listing.withheld && !listing.marksUnreadable) {
@@ -813,6 +822,7 @@ class SafeModeViewModel @Inject constructor(
     fun openEntry(entry: PhraseEntry, canGoBack: Boolean = true) {
         // A phrase is read only after the person was confirmed in this flow.
         if (!authenticated) return
+        val generation = revealGeneration
         val current = state.value.reveal
         if (current is RevealUi.Wallets) {
             mutableState.update { it.copy(reveal = current.copy(loading = entry)) }
@@ -827,7 +837,7 @@ class SafeModeViewModel @Inject constructor(
                     addressOf = ::derivedAddress,
                 )
             }
-            if (state.value.reveal == null) return@launch
+            if (generation != revealGeneration || !authenticated || state.value.reveal == null) return@launch
             mutableState.update { it.copy(reveal = RevealUi.Shown(entry, secret, canGoBack = canGoBack)) }
         }
     }
@@ -884,6 +894,7 @@ class SafeModeViewModel @Inject constructor(
     }
 
     fun closeReveal() {
+        revealGeneration++
         enteredPin.clear()
         authenticated = false
         authenticating = false
@@ -891,6 +902,7 @@ class SafeModeViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        revealGeneration++
         enteredPin.clear()
         super.onCleared()
     }

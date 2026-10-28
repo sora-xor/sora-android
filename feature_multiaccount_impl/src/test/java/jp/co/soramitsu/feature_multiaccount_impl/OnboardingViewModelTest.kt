@@ -234,6 +234,34 @@ class OnboardingViewModelTest {
         assertEquals(false, onboardingViewModel.recoveryState.value?.isButtonEnabled)
     }
 
+    @Test
+    fun `pasting a backup password enables continue on the same edit`() = runTest {
+        onboardingViewModel.onImportPasswordChanged(
+            androidx.compose.ui.text.input.TextFieldValue("public test password")
+        )
+        assertEquals("public test password", onboardingViewModel.importAccountPasswordState.value?.passwordInput?.value?.text)
+        assertEquals(true, onboardingViewModel.importAccountPasswordState.value?.isContinueButtonEnabled)
+    }
+
+    @Test
+    fun `clearing a backup password disables continue on the same edit`() = runTest {
+        onboardingViewModel.onImportPasswordChanged(
+            androidx.compose.ui.text.input.TextFieldValue("public test password")
+        )
+        onboardingViewModel.onImportPasswordChanged(androidx.compose.ui.text.input.TextFieldValue(""))
+        assertEquals("", onboardingViewModel.importAccountPasswordState.value?.passwordInput?.value?.text)
+        assertEquals(false, onboardingViewModel.importAccountPasswordState.value?.isContinueButtonEnabled)
+    }
+
+    @Test
+    fun `backup import preserves meaningful leading and trailing password characters`() = runTest {
+        onboardingViewModel.onImportPasswordChanged(
+            androidx.compose.ui.text.input.TextFieldValue(" public test password ")
+        )
+        assertEquals(" public test password ", onboardingViewModel.importAccountPasswordState.value?.passwordInput?.value?.text)
+        assertEquals(true, onboardingViewModel.importAccountPasswordState.value?.isContinueButtonEnabled)
+    }
+
     private fun stubWordCountText() {
         whenever(resourceManager.getString(R.string.export_protection_passphrase_description_words))
             .thenReturn("the %1\$s-word passphrase")

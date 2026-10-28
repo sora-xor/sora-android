@@ -163,9 +163,9 @@ class FullAssetSettingsViewModel @Inject constructor(
     }
 
     fun onFavoriteClick(asset: AssetSettingsState) {
-        val checked = asset.favorite.not()
         val position = curAssetList.indexOfFirst { it.token.id == asset.token.id }
         if (position < 0) return
+        val checked = curAssetList[position].favorite.not()
         curAssetList[position] = curAssetList[position].copy(favorite = checked)
         filterAndUpdateAssetsList()
         val index = tokensToMove.indexOfFirst { it.first == asset.token.id }
@@ -186,6 +186,9 @@ class FullAssetSettingsViewModel @Inject constructor(
     }
 
     fun assetPositionChanged(from: Int, to: Int): Boolean {
+        if (curFilter.isNotBlank() || from !in curAssetList.indices ||
+            to !in curAssetList.indices || from == to
+        ) return false
         if (!curAssetList[from].token.isHidable ||
             !curAssetList[to].token.isHidable ||
             AssetHolder.isKnownAsset(curAssetList[from].token.id) ||
@@ -206,11 +209,13 @@ class FullAssetSettingsViewModel @Inject constructor(
     fun onVisibilityClick(asset: AssetSettingsState) {
         val position = curAssetList.indexOfFirst { it.token.id == asset.token.id }
         if (position < 0) return
+        val visibility = curAssetList[position].visible.not()
         viewModelScope.launch {
             tryCatch {
-                val visibility = asset.visible.not()
                 assetsInteractor.toggleVisibilityOfToken(asset.token.id, visibility)
-                curAssetList[position] = curAssetList[position].copy(visible = visibility)
+                val currentPosition = curAssetList.indexOfFirst { it.token.id == asset.token.id }
+                if (currentPosition < 0) return@tryCatch
+                curAssetList[currentPosition] = curAssetList[currentPosition].copy(visible = visibility)
                 filterAndUpdateAssetsList()
             }
         }
@@ -219,7 +224,7 @@ class FullAssetSettingsViewModel @Inject constructor(
     private fun onCloseClick() {
         val unknownVisibleCount =
             curAssetList.count { it.favorite && !AssetHolder.isKnownAsset(it.token.id) }
-        val position = AssetHolder.knownCount() + unknownVisibleCount
+        val position = curAssetList.count { AssetHolder.isKnownAsset(it.token.id) } + unknownVisibleCount
         val lastUnknownVisibleIndex =
             curAssetList.indexOfLast { it.favorite && !AssetHolder.isKnownAsset(it.token.id) }
         val offTokensId = tokensToMove.filter { !it.second }.map { pair ->

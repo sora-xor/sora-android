@@ -71,12 +71,12 @@ val appVersionCode = explicitVersionCode ?: appVersionCodeBase
 
 android {
     namespace = "jp.co.soramitsu.sora"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "jp.co.soramitsu.sora"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = appVersionCode
         versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -91,7 +91,7 @@ android {
     lint {
         abortOnError = true
         checkDependencies = true
-        baseline = file("lint-baseline.xml")
+        warningsAsErrors = true
     }
 
     signingConfigs {
@@ -202,6 +202,11 @@ android {
     // the current entity model first.
     sourceSets {
         getByName("androidTest").assets.directories.add(file("../core_db/schemas").absolutePath)
+        configureEach {
+            if (name in setOf("develop", "soralution")) {
+                res.directories.add(file("src/nonProduction/res").absolutePath)
+            }
+        }
     }
 
     flavorDimensions += listOf("default")
@@ -444,7 +449,7 @@ dependencies {
     implementation(libs.composeUiDep)
     implementation(libs.composeLifecycleDep)
     implementation(libs.composeFoundationDep)
-    implementation(libs.composeMaterial3Dep)
+    implementation(libs.core.splashscreen)
     implementation(libs.composeMaterialDep)
     implementation(libs.uiCoreDep)
     implementation(libs.composeAnimationDep)
@@ -474,6 +479,7 @@ dependencies {
     // every debug app through feature_blockexplorer_api).
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.composeUiTestJunit4Dep)
+    androidTestImplementation(libs.navigationComposeDep)
     androidTestImplementation(libs.androidxTestEspressoCoreDep)
     androidTestImplementation(libs.coroutineTestDep)
     androidTestImplementation(libs.junitDep)

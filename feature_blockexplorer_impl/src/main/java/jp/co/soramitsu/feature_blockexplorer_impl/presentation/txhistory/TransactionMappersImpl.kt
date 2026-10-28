@@ -111,8 +111,8 @@ class TransactionMappersImpl @Inject constructor(
                     hash = tx.base.txHash,
                     timestamp = tx.base.timestamp,
                     status = tx.base.status,
-                    token = tx.baseToken.iconUri(),
-                    amountFormatted = tx.baseToken.printBalance(tx.amount, numbersFormatter, AssetHolder.ACTIVITY_LIST_ROUNDING),
+                    token = tx.rewardToken.iconUri(),
+                    amountFormatted = tx.rewardToken.printBalance(tx.amount, numbersFormatter, AssetHolder.ACTIVITY_LIST_ROUNDING),
                 ) else EventUiModel.EventTxUiModel.EventDemeterStakeUiModel(
                     hash = tx.base.txHash,
                     timestamp = tx.base.timestamp,

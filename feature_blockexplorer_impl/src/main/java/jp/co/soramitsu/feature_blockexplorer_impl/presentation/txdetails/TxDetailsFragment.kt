@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails
 import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -82,7 +83,7 @@ class TxDetailsFragment : SoraBaseFragment<TxDetailsViewModel>() {
         composable(
             route = theOnlyRoute,
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
                 val state = viewModel.txDetailsScreenState.collectAsStateWithLifecycle().value
                 when (state.txType) {
                     TxType.LIQUIDITY -> {

@@ -200,7 +200,7 @@ object WalletUpgradeBackup {
 
     /** The application context of the last preparation (for support copies made later). */
     @Volatile
-    private var preparedContext: Context? = null
+    private var preparedContext = java.lang.ref.WeakReference<Context>(null)
 
     /**
      * Counts the expensive steps of a preparation: full backup validations, bytes hashed and files
@@ -720,7 +720,7 @@ object WalletUpgradeBackup {
         // that lifecycle method returns, even though the supplied Application is already backed
         // by a valid base context.
         val applicationContext = context.applicationContext ?: context
-        preparedContext = applicationContext
+        preparedContext = java.lang.ref.WeakReference(applicationContext)
         val result = runCatching {
             prepareOrThrow(
                 context = applicationContext,
@@ -1124,7 +1124,7 @@ object WalletUpgradeBackup {
     @Synchronized
     fun preserveWalletPreferencesCopy(reason: String): Result<String> = runCatching {
         require(reason.matches(Regex("^[a-z0-9-]{1,40}$"))) { "COPY_REASON_INVALID" }
-        val context = preparedContext ?: throw WalletUpgradeBackupException("COPY_CONTEXT_MISSING")
+        val context = preparedContext.get() ?: throw WalletUpgradeBackupException("COPY_CONTEXT_MISSING")
         val dataDir = File(context.applicationInfo.dataDir)
         val sources = listOf(
             File(context.filesDir, "datastore/sora_prefs_datastore.preferences_pb"),

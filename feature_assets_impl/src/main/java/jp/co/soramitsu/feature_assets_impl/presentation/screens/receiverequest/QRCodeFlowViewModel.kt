@@ -65,6 +65,8 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,6 +93,8 @@ class QRCodeFlowViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     private var currentTokenId: String? = null
+    private var receiveLoad: Job? = null
+    private var confirmationLoad: Job? = null
 
     private val requestByQrScreenReloadMutableSharedFlow = MutableSharedFlow<Unit>(
         replay = 1,
@@ -140,49 +144,59 @@ class QRCodeFlowViewModel @Inject constructor(
 
     private val loadRequestByQrScreenDataFlowJob = interactor.subscribeAssetsActiveOfCurAccount()
         .combine(requestByQrScreenReloadMutableSharedFlow) { assets, _ ->
-            if (assets.isEmpty()) {
+            try {
+                if (assets.isEmpty()) {
+                    _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
+                        screenStatus = ScreenStatus.ERROR,
+                        assetAmountInputState = null,
+                    )
+                    return@combine
+                }
+
+                val assetInUse = currentTokenId?.let { tokenID ->
+                    assets.find { it.token.id == tokenID }
+                } ?: assets.first()
+
+                val (userName, userAddress) = interactor.getCurSoraAccount().run {
+                    accountName to substrateAddress
+                }
+
+                _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
+                    untransformedUserName = userName,
+                    untransformedAvatarDrawable = avatarGenerator.createAvatar(
+                        address = userAddress,
+                        sizeInDp = AVATAR_SIZE_IN_DP,
+                    ),
+                    untransformedUserAddress = userAddress,
+                    assetAmountInputState = if (_requestTokenScreenState.value.assetAmountInputState == null) AssetAmountInputState(
+                        token = assetInUse.token,
+                        balance = getAssetBalanceText(
+                            asset = assetInUse,
+                            nf = numbersFormatter,
+                            precision = DEFAULT_TOKEN_PRINT_PRECISION,
+                        ),
+                        amount = null,
+                        amountFiat = "",
+                        enabled = true,
+                    ) else _requestTokenScreenState.value.assetAmountInputState!!.copy(
+                        token = assetInUse.token,
+                        balance = getAssetBalanceText(
+                            asset = assetInUse,
+                            nf = numbersFormatter,
+                            precision = DEFAULT_TOKEN_PRINT_PRECISION,
+                        ),
+                    ),
+                    screenStatus = ScreenStatus.READY_TO_RENDER,
+                )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                onError(error)
                 _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
                     screenStatus = ScreenStatus.ERROR,
                     assetAmountInputState = null,
                 )
-                return@combine
             }
-
-            val assetInUse = currentTokenId?.let { tokenID ->
-                assets.find { it.token.id == tokenID }
-            } ?: assets.first()
-
-            val (userName, userAddress) = interactor.getCurSoraAccount().run {
-                accountName to substrateAddress
-            }
-
-            _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
-                untransformedUserName = userName,
-                untransformedAvatarDrawable = avatarGenerator.createAvatar(
-                    address = userAddress,
-                    sizeInDp = AVATAR_SIZE_IN_DP,
-                ),
-                untransformedUserAddress = userAddress,
-                assetAmountInputState = if (_requestTokenScreenState.value.assetAmountInputState == null) AssetAmountInputState(
-                    token = assetInUse.token,
-                    balance = getAssetBalanceText(
-                        asset = assetInUse,
-                        nf = numbersFormatter,
-                        precision = DEFAULT_TOKEN_PRINT_PRECISION,
-                    ),
-                    amount = null,
-                    amountFiat = "",
-                    enabled = true,
-                ) else _requestTokenScreenState.value.assetAmountInputState!!.copy(
-                    token = assetInUse.token,
-                    balance = getAssetBalanceText(
-                        asset = assetInUse,
-                        nf = numbersFormatter,
-                        precision = DEFAULT_TOKEN_PRINT_PRECISION,
-                    ),
-                ),
-                screenStatus = ScreenStatus.READY_TO_RENDER,
-            )
         }.catch {
             onError(it)
             _requestTokenScreenState.value =
@@ -242,14 +256,13 @@ class QRCodeFlowViewModel @Inject constructor(
     }
 
     fun onUserAddressClickInReceiveScreen() {
-        _receiveTokenByQrScreenState.value.untransformedUserAddress?.let {
-            clipboardManager.addToClipboard(it)
-        }
+        _receiveTokenByQrScreenState.value.takeIf { it.screenStatus == ScreenStatus.READY_TO_RENDER }
+            ?.untransformedUserAddress?.let { clipboardManager.addToClipboard(it) }
     }
 
     fun onShareQrCodeInReceiveScreen() =
         with(_receiveTokenByQrScreenState.value) {
-            if (untransformedQrBitmap == null || untransformedUserAddress == null)
+            if (screenStatus != ScreenStatus.READY_TO_RENDER || untransformedQrBitmap == null || untransformedUserAddress == null)
                 return@with
 
             val welcomingMessage = generateMessageForUser(
@@ -311,14 +324,14 @@ class QRCodeFlowViewModel @Inject constructor(
     }
 
     fun onUserAddressClickInRequestConfirmScreen() {
-        _requestTokenScreenState.value.untransformedUserAddress?.let {
-            clipboardManager.addToClipboard(it)
-        }
+        _requestTokenConfirmScreenState.value.takeIf { it.screenStatus == ScreenStatus.READY_TO_RENDER }
+            ?.untransformedUserAddress?.let { clipboardManager.addToClipboard(it) }
     }
 
     fun onShareQrCodeInRequestConfirmScreen() =
         with(_requestTokenConfirmScreenState.value) {
-            if (untransformedQrBitmap == null ||
+            if (screenStatus != ScreenStatus.READY_TO_RENDER ||
+                untransformedQrBitmap == null ||
                 untransformedUserAddress == null ||
                 assetAmountInputState?.token == null
             )
@@ -352,90 +365,86 @@ class QRCodeFlowViewModel @Inject constructor(
         )
 
     private fun loadReceiveByQrCodeScreenData() {
-        viewModelScope.launch(coroutineManager.io) {
+        receiveLoad?.cancel()
+        _receiveTokenByQrScreenState.value = ReceiveTokenByQrScreenState(
+            ScreenStatus.LOADING, null, null, null, null,
+        )
+        receiveLoad = viewModelScope.launch(coroutineManager.io) {
             try {
-                val (userName, userAddress) = interactor.getCurSoraAccount().run {
-                    accountName to substrateAddress
-                }
+                val account = interactor.getCurSoraAccount()
                 val userPublicKey = interactor.getPublicKeyHex(true)
-
                 val qrInput = qrCodeInteractor.createQrInput(
-                    userAddress = userAddress,
+                    userAddress = account.substrateAddress,
                     userPublicKey = userPublicKey,
-                    userName = userName
+                    userName = account.accountName,
                 )
-
-                _receiveTokenByQrScreenState.value = _receiveTokenByQrScreenState.value.copy(
+                val bitmap = qrCodeGenerator.generateQrBitmap(qrInput)
+                val state = ReceiveTokenByQrScreenState(
                     screenStatus = ScreenStatus.READY_TO_RENDER,
-                    untransformedUserName = userName,
-                    untransformedAvatarDrawable = avatarGenerator.createAvatar(userAddress, AVATAR_SIZE_IN_DP),
-                    untransformedUserAddress = userAddress,
-                    untransformedQrBitmap = qrCodeGenerator.generateQrBitmap(qrInput)
+                    untransformedUserName = account.accountName,
+                    untransformedAvatarDrawable = avatarGenerator.createAvatar(account.substrateAddress, AVATAR_SIZE_IN_DP),
+                    untransformedUserAddress = account.substrateAddress,
+                    untransformedQrBitmap = bitmap,
                 )
-            } catch (e: Exception) {
-                onError(e)
-                _receiveTokenByQrScreenState.value = _receiveTokenByQrScreenState.value.copy(
-                    screenStatus = ScreenStatus.ERROR,
-                )
+                withContext(coroutineManager.main) { _receiveTokenByQrScreenState.value = state }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                withContext(coroutineManager.main) {
+                    onError(error)
+                    _receiveTokenByQrScreenState.value = _receiveTokenByQrScreenState.value.copy(
+                        screenStatus = ScreenStatus.ERROR,
+                    )
+                }
             }
         }
     }
 
     private fun loadRequestConfirmScreenData() {
-        viewModelScope.launch(coroutineManager.io) {
+        confirmationLoad?.cancel()
+        val request = _requestTokenScreenState.value
+        _requestTokenConfirmScreenState.value = RequestTokenConfirmScreenState(
+            ScreenStatus.LOADING, null, null, null, null, null,
+        )
+        if (request.screenStatus != ScreenStatus.READY_TO_RENDER ||
+            request.untransformedUserName == null || request.untransformedUserAddress == null ||
+            request.assetAmountInputState == null
+        ) {
+            _requestTokenConfirmScreenState.value = _requestTokenConfirmScreenState.value.copy(
+                screenStatus = ScreenStatus.ERROR,
+            )
+            return
+        }
+        confirmationLoad = viewModelScope.launch(coroutineManager.io) {
             try {
                 val userPublicKey = interactor.getPublicKeyHex(true)
-
-                _requestTokenScreenState.value.assetAmountInputState?.let { assetAmountInputState ->
-                    _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
-                        assetAmountInputState = assetAmountInputState.copy(
-                            amount = assetAmountInputState.amount,
-                        )
+                val bitmap = qrCodeGenerator.generateQrBitmap(
+                    qrCodeInteractor.createQrInput(
+                        userAddress = request.untransformedUserAddress,
+                        userPublicKey = userPublicKey,
+                        userName = request.untransformedUserName,
+                        tokenId = request.assetAmountInputState.token.id,
+                        amount = request.assetAmountInputState.amount?.toPlainString(),
+                    )
+                )
+                val state = RequestTokenConfirmScreenState(
+                    screenStatus = ScreenStatus.READY_TO_RENDER,
+                    untransformedQrBitmap = bitmap,
+                    untransformedUserName = request.untransformedUserName,
+                    untransformedAvatarDrawable = request.untransformedAvatarDrawable,
+                    untransformedUserAddress = request.untransformedUserAddress,
+                    assetAmountInputState = request.assetAmountInputState.copy(enabled = false, readOnly = true),
+                )
+                withContext(coroutineManager.main) { _requestTokenConfirmScreenState.value = state }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                withContext(coroutineManager.main) {
+                    onError(error)
+                    _requestTokenConfirmScreenState.value = _requestTokenConfirmScreenState.value.copy(
+                        screenStatus = ScreenStatus.ERROR,
                     )
                 }
-
-                val untransformedQrBitmap =
-                    _requestTokenScreenState.value.run {
-                        if (untransformedUserName == null || untransformedUserAddress == null)
-                            return@run null
-
-                        untransformedUserName to untransformedUserAddress
-                    }?.let { (untransformedUserName, untransformedUserAddress) ->
-                        qrCodeGenerator.generateQrBitmap(
-                            qrCodeInteractor.createQrInput(
-                                userAddress = untransformedUserAddress,
-                                userPublicKey = userPublicKey,
-                                userName = untransformedUserName,
-                                tokenId = _requestTokenScreenState.value.assetAmountInputState
-                                    ?.token?.id,
-                                amount = _requestTokenScreenState.value.assetAmountInputState
-                                    ?.amount?.toPlainString()
-                            )
-                        )
-                    }
-
-                _requestTokenConfirmScreenState.value = _requestTokenConfirmScreenState.value.copy(
-                    screenStatus = ScreenStatus.READY_TO_RENDER,
-                    untransformedQrBitmap = untransformedQrBitmap,
-                    untransformedUserName = _requestTokenScreenState.value
-                        .untransformedUserName,
-                    untransformedAvatarDrawable = _requestTokenScreenState.value
-                        .untransformedAvatarDrawable,
-                    untransformedUserAddress = _requestTokenScreenState.value
-                        .untransformedUserAddress,
-                    assetAmountInputState = _requestTokenScreenState.value
-                        .assetAmountInputState?.copy(
-                            amount = _requestTokenScreenState.value
-                                .assetAmountInputState?.amount,
-                            enabled = false,
-                            readOnly = true,
-                        )
-                )
-            } catch (e: Exception) {
-                onError(e)
-                _requestTokenConfirmScreenState.value = _requestTokenConfirmScreenState.value.copy(
-                    screenStatus = ScreenStatus.ERROR,
-                )
             }
         }
     }

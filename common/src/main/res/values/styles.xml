@@ -158,91 +158,18 @@
     </style>
 
     <!--  XML buttons (splash recovery panel). Pill, Sora SemiBold 16, no caps.  -->
-    <style name="Widget.Sora.Button" parent="Widget.MaterialComponents.Button">
-        <item name="android:minHeight">56dp</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:fontFamily">@font/sora_semibold</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:letterSpacing">0.0125</item>
-        <item name="cornerRadius">28dp</item>
-        <item name="elevation">0dp</item>
-        <item name="android:stateListAnimator">@null</item>
-    </style>
 
     <!--
       Safe Mode CTA: mint (dark) / green (light), ink or white label. Never red.
       Colours are state lists (res/color/neon_button_*): disabled shows cta.disabled and
       text.disabled; a running action (activated + disabled) keeps the enabled look.
     -->
-    <style name="Widget.Sora.Button.Safe">
-        <item name="backgroundTint">@color/neon_button_safe_bg</item>
-        <item name="android:textColor">@color/neon_button_safe_label</item>
-        <item name="rippleColor">@color/neon_hairline</item>
-    </style>
 
-    <style name="Widget.Sora.Button.Secondary">
-        <item name="backgroundTint">@color/neon_button_secondary_bg</item>
-        <item name="android:textColor">@color/neon_button_secondary_label</item>
-        <item name="strokeColor">@color/neon_button_secondary_stroke</item>
-        <item name="strokeWidth">1dp</item>
-        <item name="rippleColor">@color/neon_hairline</item>
-    </style>
 
-    <style name="Widget.Sora.Button.Tertiary" parent="Widget.MaterialComponents.Button.TextButton">
-        <item name="android:minHeight">48dp</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:fontFamily">@font/sora_semibold</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/neon_button_tertiary_label</item>
-        <item name="android:letterSpacing">0.0125</item>
-        <item name="cornerRadius">28dp</item>
-        <item name="rippleColor">@color/neon_hairline</item>
-    </style>
 
-    <style name="BottomSheetDialog" parent="Theme.MaterialComponents.BottomSheetDialog">
-        <item name="bottomSheetStyle">@style/bottomSheetStyleWrapper</item>
-        <item name="android:windowIsFloating">false</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowSoftInputMode">adjustResize</item>
-    </style>
 
-    <style name="bottomSheetStyleWrapper" parent="Widget.MaterialComponents.BottomSheet.Modal">
-        <item name="behavior_peekHeight">600dp</item>
-        <item name="android:background">@null</item>
-        <item name="shapeAppearanceOverlay">@style/CustomShapeAppearanceBottomSheetDialog</item>
-    </style>
 
-    <style name="CustomShapeAppearanceBottomSheetDialog" parent="">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSizeTopRight">@dimen/x4</item>
-        <item name="cornerSizeTopLeft">@dimen/x4</item>
-        <item name="cornerSizeBottomRight">0dp</item>
-        <item name="cornerSizeBottomLeft">0dp</item>
-    </style>
 
-    <style name="Widget.Soramitsu.Button.PinCodeNumberButton" parent="Widget.AppCompat.Button.Borderless">
-        <item name="android:layout_width">@dimen/pin_code_button_size</item>
-        <item name="android:layout_height">@dimen/pin_code_button_size</item>
-        <item name="android:layout_marginStart">@dimen/x1_2</item>
-        <item name="android:layout_marginEnd">@dimen/x1_2</item>
-        <item name="android:layout_marginBottom">@dimen/x1</item>
-        <item name="elevation">4dp</item>
-        <item name="android:elevation">4dp</item>
-        <item name="android:clipChildren">false</item>
-        <item name="android:clipToPadding">false</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:textColor">@color/neon_text_primary</item>
-        <item name="android:background">@drawable/bg_neon_pin_key</item>
-        <item name="android:backgroundTint">@null</item>
-        <item name="backgroundTint">@null</item>
-        <item name="background">@drawable/bg_neon_pin_key</item>
-        <item name="android:fontFamily">@font/sora_regular</item>
-        <item name="android:textSize">28sp</item>
-    </style>
 
     <style name="Widget.Soramitsu.ProgressBar" parent="Widget.AppCompat.ProgressBar">
         <item name="android:indeterminate">true</item>

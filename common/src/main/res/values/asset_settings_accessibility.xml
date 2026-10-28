@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="asset_add_to_favorites">Add %1$s to favorites</string>
+    <string name="asset_remove_from_favorites">Remove %1$s from favorites</string>
+    <string name="asset_show">Show %1$s</string>
+    <string name="asset_hide">Hide %1$s</string>
+    <string name="asset_favorite_state">Favorite</string>
+    <string name="asset_not_favorite_state">Not a favorite</string>
+    <string name="asset_visible_state">Visible</string>
+    <string name="asset_hidden_state">Hidden</string>
+</resources>

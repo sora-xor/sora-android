@@ -164,13 +164,13 @@ private fun lerp(start: Float, stop: Float, fraction: Float): Float {
 @Composable
 private fun PreviewSlidingPagerIndicator() {
     val ci = remember {
-        mutableStateOf(0)
+        androidx.compose.runtime.mutableIntStateOf(0)
     }
 
     Box(
         modifier = Modifier
             .clickable {
-                ci.value = ci.value
+                ci.intValue = ci.intValue
                     .plus(1)
                     .rem(2)
             }
@@ -185,7 +185,7 @@ private fun PreviewSlidingPagerIndicator() {
                 TextValue.SimpleText("1234512345"),
                 TextValue.SimpleText("3"),
             ),
-            currentPageRetriever = { ci.value },
+            currentPageRetriever = { ci.intValue },
             slideOffsetRetriever = { 0f },
             onIndicatorClick = {}
         )

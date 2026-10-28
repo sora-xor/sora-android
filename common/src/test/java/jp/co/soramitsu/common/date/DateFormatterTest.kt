@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.date
 
 import android.content.Context
+import java.time.Instant
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -41,6 +42,7 @@ import jp.co.soramitsu.androidfoundation.testing.eqNonNull
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import org.junit.Assert.assertEquals
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -54,6 +56,8 @@ class DateTimeFormatterTest {
 
     private lateinit var dateTimeFormatter: DateTimeFormatter
     private val date = Date(0)
+    private val currentDate = Date.from(Instant.parse("2026-06-01T12:00:00Z"))
+    private val originalTimeZone = TimeZone.getDefault()
 
     @Mock
     private lateinit var resourceManager: ResourceManager
@@ -69,7 +73,12 @@ class DateTimeFormatterTest {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
         given(languagesHolder.getCurrentLocale()).willReturn(Locale.ENGLISH)
 
-        dateTimeFormatter = DateTimeFormatter(languagesHolder, resourceManager, context)
+        dateTimeFormatter = DateTimeFormatter(languagesHolder, resourceManager, context) { currentDate }
+    }
+
+    @After
+    fun restoreTimeZone() {
+        TimeZone.setDefault(originalTimeZone)
     }
 
     @Test
@@ -94,7 +103,7 @@ class DateTimeFormatterTest {
     fun `yesterday date to day formatting with year`() {
         val expectedResult = "Today"
         val yesterdayString = "Yesterday"
-        val todayDate = Date()
+        val todayDate = currentDate
 
         val actualResult =
             dateTimeFormatter.dateToDayWithYear(todayDate, expectedResult, yesterdayString)
@@ -106,7 +115,7 @@ class DateTimeFormatterTest {
     fun `today date to day formatting with year`() {
         val todayString = "Today"
         val expectedResult = "Yesterday"
-        val yesterdayDate = Date(Date().time - 24 * 60 * 60 * 1000)
+        val yesterdayDate = Date(currentDate.time - 24 * 60 * 60 * 1000)
 
         val actualResult =
             dateTimeFormatter.dateToDayWithYear(yesterdayDate, todayString, expectedResult)
@@ -129,7 +138,7 @@ class DateTimeFormatterTest {
     fun `yesterday date to day formatting without year`() {
         val expectedResult = "Today"
         val yesterdayString = "Yesterday"
-        val todayDate = Date()
+        val todayDate = currentDate
 
         val actualResult = dateTimeFormatter.dateToDayWithoutCurrentYear(
             todayDate,
@@ -144,7 +153,7 @@ class DateTimeFormatterTest {
     fun `today date to day formatting without year`() {
         val todayString = "Today"
         val expectedResult = "Yesterday"
-        val yesterdayDate = Date(Date().time - 24 * 60 * 60 * 1000)
+        val yesterdayDate = Date(currentDate.time - 24 * 60 * 60 * 1000)
 
         val actualResult = dateTimeFormatter.dateToDayWithoutCurrentYear(
             yesterdayDate,

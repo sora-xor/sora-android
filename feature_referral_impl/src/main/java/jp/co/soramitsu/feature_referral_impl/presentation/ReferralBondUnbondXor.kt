@@ -291,7 +291,7 @@ fun InvitationsEnterField(
                 modifier = Modifier
                     .clickable(onClick = onMinus),
                 painter = painterResource(R.drawable.ic_neu_minus_24),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.common_remove),
                 tint = MaterialTheme.customColors.fgSecondary,
             )
             TextField(
@@ -319,7 +319,7 @@ fun InvitationsEnterField(
                 modifier = Modifier
                     .clickable(onClick = onPlus),
                 painter = painterResource(R.drawable.ic_plus_24_inside),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.referral_add_invitations_title),
                 tint = MaterialTheme.customColors.fgSecondary,
             )
         }

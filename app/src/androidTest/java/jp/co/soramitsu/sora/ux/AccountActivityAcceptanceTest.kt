@@ -2,6 +2,8 @@
 
 package jp.co.soramitsu.sora.ux
 
+import jp.co.soramitsu.sora.testutil.NativeDisplayCapture
+
 import android.graphics.Bitmap
 import android.graphics.HardwareRenderer
 import android.view.accessibility.AccessibilityNodeInfo
@@ -219,13 +221,8 @@ class AccountActivityAcceptanceTest {
     }
 
     private fun capture(name: String) {
-        instrumentation.runOnMainSync {
-            android.view.inspector.WindowInspector.getGlobalWindowViews().forEach { it.invalidate() }
-        }
-        instrumentation.waitForIdleSync()
-        Thread.sleep(1200)
         val directory = File(context.getExternalFilesDir(null), "ux-acceptance").apply { mkdirs() }
-        val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
+        val bitmap = NativeDisplayCapture.capture()
         try {
             File(directory, "$name.png").outputStream().use {
                 check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))

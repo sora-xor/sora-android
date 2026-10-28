@@ -6,7 +6,6 @@
         <activity
             android:name=".debug.SafeModePreviewActivity"
             android:exported="true"
-            android:screenOrientation="portrait"
             android:theme="@style/AppTheme" />
     </application>
 

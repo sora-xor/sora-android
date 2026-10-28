@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -206,7 +207,7 @@ internal fun LiquidityAddConfirmScreen(
                 ) { modifier, elevation ->
                     FilledButton(
                         modifier = modifier,
-                        enabled = state.confirm.btnState.enabled,
+                        enabled = state.confirm.btnState.enabled && !LocalSelectedAccountReadOnly.current,
                         size = Size.Large,
                         order = Order.PRIMARY,
                         text = state.confirm.btnState.text,

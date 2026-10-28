@@ -294,11 +294,13 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
         val list = mutableListOf<BasicPoolLocal>()
         db.poolDao().getPoolBaseTokens().forEach { token ->
             val key = runtimeManager.getRuntimeSnapshot().reservesKeyToken(token.base.tokenId)
-            substrateCalls.getStateKeys(key).forEach { storageKey ->
+            substrateCalls.getStateKeys(key).forEach pool@{ storageKey ->
                 val targetToken = storageKey.assetIdFromKey()
                 val whitelisted =
                     db.assetDao().getWhitelistOfToken(targetToken).isNullOrEmpty().not()
                 if (whitelisted) {
+                    val targetPrecision = db.assetDao().getPrecisionOfToken(targetToken)
+                        ?: return@pool
                     substrateCalls.getStorageHex(storageKey)?.let { storageHex ->
                         storage.type.value
                             ?.fromHex(runtimeManager.getRuntimeSnapshot(), storageHex)
@@ -315,7 +317,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                                         token.base.tokenId,
                                         targetToken,
                                         mapBalance(reserves[0], token.token.precision),
-                                        mapBalance(reserves[1], token.token.precision),
+                                        mapBalance(reserves[1], targetPrecision),
                                         total ?: BigDecimal.ZERO,
                                         reserveAccount?.let { runtimeManager.toSoraAddress(it) } ?: "",
                                     )
@@ -338,7 +340,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 val poolsFlow = it.map { triple ->
                     subscribeToPoolData(triple.first, triple.second.fromHex(), triple.third)
                 }
-                combine(poolsFlow) { "combined" }
+                if (poolsFlow.isEmpty()) flowOf("") else combine(poolsFlow) { "combined" }
             }
         }
         val combined = if (flows.isEmpty())
@@ -365,7 +367,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 null
             }
         }
-        val combined = combine(flows) { it.toList() }
+        val combined = if (flows.isEmpty()) flowOf(emptyList()) else combine(flows) { it.toList() }
         emitAll(combined)
     }
 
@@ -513,6 +515,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                     reserveAccount != null
                 }
                     .getOrElse {
+                        if (it is kotlinx.coroutines.CancellationException) throw it
                         false
                     }
             }

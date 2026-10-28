@@ -66,6 +66,7 @@ import jp.co.soramitsu.test_data.TestTokens
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -417,13 +418,17 @@ class TransactionHistoryHandlerTest {
         assertFalse(finalHistory.pullToRefresh)
     }
 
-    private fun transfer(n: Int) = Transaction.Transfer(
+    private fun transfer(
+        n: Int,
+        status: TransactionStatus = TransactionStatus.COMMITTED,
+        timestamp: Long = 2_679_918_013L - n,
+    ) = Transaction.Transfer(
         TransactionBase(
             "0x" + n.toString(16).padStart(64, '0'),
             "blockHash",
             BigDecimal.ONE,
-            TransactionStatus.COMMITTED,
-            2_679_918_013L - n,
+            status,
+            timestamp,
         ),
         BigDecimal.TEN,
         "cnRuoXdU9t5bv5EQAiXT2gQozAvrVawqZkT2AQS1Msr8T8ZZu",
@@ -475,18 +480,18 @@ class TransactionHistoryHandlerTest {
         advanceUntilIdle()
         val upper = Transaction.Transfer(
             TransactionBase(
-                transfer(3).base.txHash.uppercase().replace("0X", "0x"),
+                transfer(10).base.txHash.uppercase().replace("0X", "0x"),
                 "blockHash",
                 BigDecimal.ONE,
                 TransactionStatus.COMMITTED,
-                transfer(3).base.timestamp,
+                transfer(10).base.timestamp,
             ),
             BigDecimal.TEN,
             "cnRuoXdU9t5bv5EQAiXT2gQozAvrVawqZkT2AQS1Msr8T8ZZu",
             TransactionTransferType.OUTGOING,
             TestTokens.valToken,
         )
-        stubHistoryPage(1L, TransactionsInfo(listOf(transfer(1), transfer(3)), false))
+        stubHistoryPage(1L, TransactionsInfo(listOf(transfer(1), transfer(10)), false))
         stubHistoryPage(2L, TransactionsInfo(listOf(upper, transfer(4)), true))
         transactionHistoryHandler.refreshHistoryEvents()
         advanceUntilIdle()
@@ -494,8 +499,8 @@ class TransactionHistoryHandlerTest {
         advanceUntilIdle()
 
         assertEquals(
-            listOf(transfer(1), transfer(3), transfer(4)).map { it.base.txHash },
-            listedTxHashes(),
+            listOf(transfer(1), transfer(10), transfer(4)).map { it.base.txHash },
+            listedTxHashes().map(String::lowercase),
         )
     }
 
@@ -543,5 +548,214 @@ class TransactionHistoryHandlerTest {
         val state = transactionHistoryHandler.historyState.value.unsafeCast<HistoryState.History>()
         assertEquals(listOf(transfer(1).base.txHash), listedTxHashes())
         assertTrue(!state.endReached)
+    }
+
+    private fun historyHandlerFor(load: suspend (Long) -> TransactionsInfo): TransactionHistoryHandler {
+        val repository = mockk<TransactionHistoryRepository>(relaxed = true)
+        coEvery { repository.getTransactionHistory(any(), any(), any(), any()) } coAnswers {
+            load(firstArg())
+        }
+        return TransactionHistoryHandlerImpl(
+            assetsRepository, txMapper, repository, resourceManager, userRepository,
+            dateTimeFormatter, coroutineManager,
+        )
+    }
+
+    private fun TransactionHistoryHandler.hashes(): List<String> =
+        (historyState.value as HistoryState.History).events
+            .filterIsInstance<EventUiModel.EventTxUiModel>().map { it.txHash }
+
+    @Test
+    fun `thrown load more failure preserves rows and retries the failed page`() = runTest {
+        val pages = mutableListOf<Long>()
+        val handler = historyHandlerFor { page ->
+            pages += page
+            if (pages.size == 2) error("offline")
+            TransactionsInfo(listOf(transfer(page.toInt())), page == 2L)
+        }
+        handler.refreshHistoryEvents()
+        handler.onMoreHistoryEventsRequested()
+        assertEquals(listOf(transfer(1).base.txHash), handler.hashes())
+        assertTrue((handler.historyState.value as HistoryState.History).hasErrorLoadingNew)
+        handler.onMoreHistoryEventsRequested()
+        assertEquals(listOf(1L, 2L, 2L), pages)
+        assertEquals(listOf(transfer(1), transfer(2)).map { it.base.txHash }, handler.hashes())
+        assertFalse((handler.historyState.value as HistoryState.History).hasErrorLoadingNew)
+    }
+
+    @Test
+    fun `error response cannot mark history exhausted or skip the retry page`() = runTest {
+        val pages = mutableListOf<Long>()
+        val handler = historyHandlerFor { page ->
+            pages += page
+            if (pages.size == 2) TransactionsInfo(emptyList(), true, "offline")
+            else TransactionsInfo(listOf(transfer(page.toInt())), page == 2L)
+        }
+        handler.refreshHistoryEvents()
+        handler.onMoreHistoryEventsRequested()
+        val failed = handler.historyState.value as HistoryState.History
+        assertFalse(failed.endReached)
+        assertTrue(failed.hasErrorLoadingNew)
+        handler.onMoreHistoryEventsRequested()
+        assertEquals(listOf(1L, 2L, 2L), pages)
+        assertEquals(listOf(transfer(1), transfer(2)).map { it.base.txHash }, handler.hashes())
+    }
+
+    @Test
+    fun `partial local rows on a failed first page survive retry without duplicates`() = runTest {
+        val pages = mutableListOf<Long>()
+        val handler = historyHandlerFor { page ->
+            pages += page
+            if (pages.size == 1) TransactionsInfo(listOf(transfer(1)), true, "offline")
+            else TransactionsInfo(listOf(transfer(1), transfer(2)), true)
+        }
+        handler.refreshHistoryEvents()
+        assertEquals(listOf(transfer(1).base.txHash), handler.hashes())
+        handler.onMoreHistoryEventsRequested()
+        assertEquals(listOf(1L, 1L), pages)
+        assertEquals(listOf(transfer(1), transfer(2)).map { it.base.txHash }, handler.hashes())
+    }
+
+    @Test
+    fun `retry resumes at failed page after automatically skipping duplicate pages`() = runTest {
+        val pages = mutableListOf<Long>()
+        val handler = historyHandlerFor { page ->
+            pages += page
+            if (pages.size == 3) error("offline")
+            TransactionsInfo(listOf(transfer(if (page < 3) 1 else 3)), page == 3L)
+        }
+        handler.refreshHistoryEvents()
+        handler.onMoreHistoryEventsRequested()
+        handler.onMoreHistoryEventsRequested()
+        assertEquals(listOf(1L, 2L, 3L, 3L), pages)
+        assertEquals(listOf(transfer(1), transfer(3)).map { it.base.txHash }, handler.hashes())
+    }
+
+    @Test
+    fun `load more before initial refresh starts with page one`() = runTest {
+        val pages = mutableListOf<Long>()
+        val handler = historyHandlerFor { page ->
+            pages += page
+            TransactionsInfo(listOf(transfer(1)), true)
+        }
+        handler.onMoreHistoryEventsRequested()
+        assertEquals(listOf(1L), pages)
+        assertEquals(listOf(transfer(1).base.txHash), handler.hashes())
+    }
+
+    @Test
+    fun `load more cancellation propagates and leaves the same page available for retry`() = runTest {
+        val pages = mutableListOf<Long>()
+        val cancellation = CancellationException("screen closed")
+        val handler = historyHandlerFor { page ->
+            pages += page
+            if (pages.size == 2) throw cancellation
+            TransactionsInfo(listOf(transfer(page.toInt())), page == 2L)
+        }
+        handler.refreshHistoryEvents()
+        val before = handler.historyState.value
+        var caught: CancellationException? = null
+        try { handler.onMoreHistoryEventsRequested() } catch (error: CancellationException) { caught = error }
+        assertEquals(cancellation.message, caught?.message)
+        assertEquals(before, handler.historyState.value)
+        handler.onMoreHistoryEventsRequested()
+        assertEquals(listOf(1L, 2L, 2L), pages)
+    }
+
+    @Test
+    fun `cancelled refresh clears stale wallet rows and resets exhausted pagination`() = runTest {
+        val pages = mutableListOf<Long>()
+        val cancellation = CancellationException("wallet changed")
+        val handler = historyHandlerFor { page ->
+            pages += page
+            when (pages.size) {
+                1 -> TransactionsInfo(listOf(transfer(1)), true)
+                2 -> throw cancellation
+                else -> TransactionsInfo(listOf(transfer(2)), true)
+            }
+        }
+        handler.refreshHistoryEvents()
+        var caught: CancellationException? = null
+        try { handler.refreshHistoryEvents("new-asset") } catch (error: CancellationException) { caught = error }
+        assertEquals(cancellation.message, caught?.message)
+        assertEquals(HistoryState.Loading, handler.historyState.value)
+        handler.onMoreHistoryEventsRequested()
+        assertEquals(listOf(1L, 1L, 1L), pages)
+        assertEquals(listOf(transfer(2).base.txHash), handler.hashes())
+    }
+
+    @Test
+    fun `failed refresh can retry first page after the previous history reached its end`() = runTest {
+        val pages = mutableListOf<Long>()
+        val handler = historyHandlerFor { page ->
+            pages += page
+            when (pages.size) {
+                1 -> TransactionsInfo(listOf(transfer(1)), true)
+                2 -> error("offline")
+                else -> TransactionsInfo(listOf(transfer(2)), true)
+            }
+        }
+        handler.refreshHistoryEvents()
+        handler.refreshHistoryEvents("new-asset")
+        assertEquals(HistoryState.Error, handler.historyState.value)
+        handler.onMoreHistoryEventsRequested()
+        assertEquals(listOf(1L, 1L, 1L), pages)
+        assertEquals(listOf(transfer(2).base.txHash), handler.hashes())
+    }
+
+    @Test
+    fun `successful end of history suppresses further page reads`() = runTest {
+        val pages = mutableListOf<Long>()
+        val handler = historyHandlerFor { page ->
+            pages += page
+            TransactionsInfo(listOf(transfer(1)), true)
+        }
+        handler.refreshHistoryEvents()
+        repeat(3) { handler.onMoreHistoryEventsRequested() }
+        assertEquals(listOf(1L), pages)
+    }
+
+    @Test
+    fun `retry updates a local pending row to its indexed status without duplicating it`() = runTest {
+        var calls = 0
+        val handler = historyHandlerFor {
+            if (calls++ == 0) TransactionsInfo(listOf(transfer(10, TransactionStatus.PENDING)), true, "offline")
+            else TransactionsInfo(listOf(transfer(10, TransactionStatus.COMMITTED)), true)
+        }
+        handler.refreshHistoryEvents()
+        val pending = handler.historyState.value as HistoryState.History
+        assertEquals(TransactionStatus.PENDING, pending.events.filterIsInstance<EventUiModel.EventTxUiModel>().single().status)
+        handler.onMoreHistoryEventsRequested()
+        val confirmed = handler.historyState.value as HistoryState.History
+        assertEquals(TransactionStatus.COMMITTED, confirmed.events.filterIsInstance<EventUiModel.EventTxUiModel>().single().status)
+        assertEquals(listOf(transfer(10).base.txHash), handler.hashes())
+        // Published state is a snapshot: later confirmation must not mutate the previous value.
+        assertEquals(TransactionStatus.PENDING, pending.events.filterIsInstance<EventUiModel.EventTxUiModel>().single().status)
+    }
+
+    @Test
+    fun `retry rebuilds day headers when the indexed timestamp replaces a local timestamp`() = runTest {
+        val day = 86_400_000L
+        val firstDay = Calendar.getInstance().apply {
+            clear()
+            set(2026, Calendar.JANUARY, 1, 12, 0, 0)
+        }.timeInMillis
+        var calls = 0
+        val handler = historyHandlerFor {
+            if (calls++ == 0) TransactionsInfo(
+                listOf(transfer(1, TransactionStatus.PENDING, firstDay + day), transfer(2, timestamp = firstDay)),
+                true, "offline",
+            ) else TransactionsInfo(
+                listOf(transfer(1, timestamp = firstDay + 1_000), transfer(2, timestamp = firstDay)), true,
+            )
+        }
+        handler.refreshHistoryEvents()
+        val pending = handler.historyState.value as HistoryState.History
+        assertEquals(2, pending.events.filterIsInstance<EventUiModel.EventTimeSeparatorUiModel>().size)
+        handler.onMoreHistoryEventsRequested()
+        val confirmed = handler.historyState.value as HistoryState.History
+        assertEquals(1, confirmed.events.filterIsInstance<EventUiModel.EventTimeSeparatorUiModel>().size)
+        assertEquals(listOf(firstDay + 1_000, firstDay), confirmed.events.filterIsInstance<EventUiModel.EventTxUiModel>().map { it.timestamp })
+        assertEquals(2, pending.events.filterIsInstance<EventUiModel.EventTimeSeparatorUiModel>().size)
     }
 }

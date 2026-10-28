@@ -158,12 +158,9 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     }
 
     private fun initLogger() {
-        if (BuildUtils.isBuildType(BuildType.FIREBASE, BuildType.DEBUG) || BuildUtils.isFlavors(Flavor.DEVELOP)) {
-            Timber.plant(object : Timber.DebugTree() {
-                override fun createStackElementTag(element: StackTraceElement): String {
-                    return "SORA_LOG: ${Thread.currentThread().name}"
-                }
-            })
+        val verbose = BuildUtils.isBuildType(BuildType.FIREBASE, BuildType.DEBUG) || BuildUtils.isFlavors(Flavor.DEVELOP)
+        installWalletLogTree(verbose)
+        if (verbose) {
             try {
                 Runtime.getRuntime()
                     .exec("logcat -f ${fileManager.logStorageDir} -v threadtime -r ${1024 * 4} -n 5")

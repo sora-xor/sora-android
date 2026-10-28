@@ -46,6 +46,7 @@ class DateTimeFormatter(
     private val languagesHolder: LanguagesHolder,
     private val resourceManager: ResourceManager,
     private val context: Context,
+    private val now: () -> Date = { Date() },
 ) {
 
     companion object {
@@ -54,11 +55,11 @@ class DateTimeFormatter(
         const val DD_MMM_YYYY_HH_MM = "dd MMM. yyyy, HH:mm"
         const val DD_MMM_YYYY_HH_MM_SS = "dd/MM/yy HH:mm:ss"
         const val DD_MMM_YYYY_HH_MM_SS_2 = "dd.MM.yy, HH:mm:ss"
-        const val MMMM_YYYY = "MMMM YYYY"
+        const val MMMM_YYYY = "MMMM yyyy"
         const val HH_mm = "HH:mm"
         const val HH_mm_ss = "HH:mm:ss"
         const val DD_MMMM = "dd MMMM"
-        const val MMMM_DD_YYYY = "MMMM dd, YYYY"
+        const val MMMM_DD_YYYY = "MMMM dd, yyyy"
     }
 
     fun formatDateTime(date: Date): String =
@@ -82,42 +83,28 @@ class DateTimeFormatter(
     }
 
     fun dateToDayWithoutCurrentYear(date: Date, todayStr: String, yesterdayStr: String): String {
-        return if (areInCurrentYear(date)) {
-            dateToDay(date, todayStr, yesterdayStr, DD_MMMM)
-        } else {
-            dateToDayWithYear(date, todayStr, yesterdayStr)
-        }
+        val currentDate = now()
+        val pattern = if (areInCurrentYear(date, currentDate)) DD_MMMM else DD_MMM_YYYY
+        return dateToDay(date, todayStr, yesterdayStr, pattern, currentDate)
     }
 
     fun dateToDayWithYear(date: Date, todayStr: String, yesterdayStr: String): String {
-        return dateToDay(date, todayStr, yesterdayStr, DD_MMM_YYYY)
+        return dateToDay(date, todayStr, yesterdayStr, DD_MMM_YYYY, now())
     }
 
     private fun dateToDay(
         date: Date,
         todayStr: String,
         yesterdayStr: String,
-        pattern: String
+        pattern: String,
+        currentDate: Date,
     ): String {
-        val newTime = Date()
-
-        val cal = Calendar.getInstance().apply { time = newTime }
-        val oldCal = Calendar.getInstance().apply { time = date }
-
-        val oldYear = oldCal.get(Calendar.YEAR)
-        val year = cal.get(Calendar.YEAR)
-        val oldDay = oldCal.get(Calendar.DAY_OF_YEAR)
-        val day = cal.get(Calendar.DAY_OF_YEAR)
-
-        if (oldYear == year) {
-            return when (oldDay - day) {
-                -1 -> yesterdayStr
-                0 -> todayStr
-                else -> this.formatDate(date, pattern)
-            }
-        }
-
-        return this.formatDate(date, pattern)
+        if (areInSameDay(date, currentDate)) return todayStr
+        val yesterday = Calendar.getInstance().apply {
+            time = currentDate
+            add(Calendar.DAY_OF_YEAR, -1)
+        }.time
+        return if (areInSameDay(date, yesterday)) yesterdayStr else formatDate(date, pattern)
     }
 
     fun areInSameDay(date1: Date, date2: Date): Boolean {
@@ -132,8 +119,8 @@ class DateTimeFormatter(
         return oldYear == year && oldDay == day
     }
 
-    private fun areInCurrentYear(date: Date): Boolean {
-        val cal = Calendar.getInstance()
+    private fun areInCurrentYear(date: Date, currentDate: Date): Boolean {
+        val cal = Calendar.getInstance().apply { time = currentDate }
         val cal2 = Calendar.getInstance().apply { time = date }
 
         return cal.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)

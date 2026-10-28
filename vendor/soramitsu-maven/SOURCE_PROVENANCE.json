@@ -24,8 +24,32 @@
       "sha256": "a29835641ce0033678130ad6e281691c7c9939dd6223ffc3880177bab01f1b68"
     },
     {
+      "path": "build-inputs/README.md",
+      "sha256": "850e4e7eb67e24005c01385acd407d3a883994da647147358bd93212ed0434d4"
+    },
+    {
       "path": "build-inputs/curve25519-dalek-2.1.3.crate",
       "sha256": "4a9b85542f99a2dfa2a1b8e192662741c9859a846b296bef1c92ef9b58b5a216"
+    },
+    {
+      "path": "build-inputs/google-http-client-1.43.3/provenance.json",
+      "sha256": "4a4d133f8c616748e8496032c046d174047cd41177d3c04b1cfa5c81b017aeb0"
+    },
+    {
+      "path": "build-inputs/google-http-client-1.43.3/rebuild.py",
+      "sha256": "405d9b3bfc1e7cd6c2c021a6c412afdb7d87275bd028645ca48b28464a939cd6"
+    },
+    {
+      "path": "build-inputs/google-http-client-1.43.3/upstream-sources.jar",
+      "sha256": "3d397d060e9ae0e8a71721ff836ed629ee66c81b9326e4f2a5aa892ae8c3a3f9"
+    },
+    {
+      "path": "build-inputs/google-http-client-1.43.3/upstream.jar",
+      "sha256": "60aca7428c5a1ff3655b70541a98ff3d70dded48ac1324dae1af39f1b61914af"
+    },
+    {
+      "path": "build-inputs/google-http-client-1.43.3/upstream.pom",
+      "sha256": "54f7533dbbe7691797c623261ee7e26159a82f24cc205091756b2269f2b52deb"
     },
     {
       "path": "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
@@ -66,6 +90,38 @@
     {
       "path": "build-inputs/rand-0.7.3.crate",
       "sha256": "6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03"
+    },
+    {
+      "path": "build-inputs/ui-tooling-android-1.11.1/README.md",
+      "sha256": "42c37c0f62a4019333ffaff3ab11c8e1912b4019ca653fe0f04ba3162d347082"
+    },
+    {
+      "path": "build-inputs/ui-tooling-android-1.11.1/inputs.json",
+      "sha256": "aabc48d32dc7f5b9539e14f8f5b977bbd0e5c4f550a53d3625ee2ed7fe36213d"
+    },
+    {
+      "path": "build-inputs/ui-tooling-android-1.11.1/provenance.json",
+      "sha256": "7c50999fc6a5cd5eab2696d53cb770db17772f644439488c4f18952752e1a0a3"
+    },
+    {
+      "path": "build-inputs/ui-tooling-android-1.11.1/rebuild.py",
+      "sha256": "6d0a29a7e10c14ebfb2302e0ebe91906a35b15a301f257f6f818ee0c018a39cd"
+    },
+    {
+      "path": "build-inputs/ui-tooling-android-1.11.1/upstream-sources.jar",
+      "sha256": "25da5ca6dbb9f5a9e5826f3b3968f335b0a7f6de7248624cd78847f13db25f4a"
+    },
+    {
+      "path": "build-inputs/ui-tooling-android-1.11.1/upstream.aar",
+      "sha256": "941745e5afef42b0932f04a9b2a1d518e512715c1c7e0a54a79e64d08573eb54"
+    },
+    {
+      "path": "build-inputs/ui-tooling-android-1.11.1/upstream.module",
+      "sha256": "f9e19ec73246853197a9968b7d1e56f5ac41e7080828962e68f8eb07df1ddb8a"
+    },
+    {
+      "path": "build-inputs/ui-tooling-android-1.11.1/upstream.pom",
+      "sha256": "3b645471e01d4de142b718d91672cecc9610541ecb8c5042da791eb5cc188da2"
     },
     {
       "path": "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
@@ -456,6 +512,79 @@
         {
           "name": "xsubstrate-1.2.7.pom",
           "sha256": "6af9914a83fbe7b3b0d48629771fb278019a9e0292eb55ad72445c1bdc21cf7a"
+        }
+      ]
+    },
+    {
+      "coordinate": "com.google.http-client:google-http-client:1.43.3-sora.1",
+      "modulePath": "com/google/http-client/google-http-client/1.43.3-sora.1",
+      "origin": {
+        "kind": "maven-central-source-patch",
+        "repository": "https://repo.maven.apache.org/maven2/com/google/http-client/google-http-client/1.43.3/",
+        "buildInputs": [
+          "build-inputs/google-http-client-1.43.3/provenance.json",
+          "build-inputs/google-http-client-1.43.3/rebuild.py",
+          "build-inputs/google-http-client-1.43.3/upstream-sources.jar",
+          "build-inputs/google-http-client-1.43.3/upstream.jar",
+          "build-inputs/google-http-client-1.43.3/upstream.pom"
+        ],
+        "semanticTransformations": [
+          "Both insecure opt-out helpers fail closed. Every other uncompressed jar entry is byte-identical. Normal NetHttpTransport and TLS trust-store APIs are unchanged."
+        ],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "google-http-client-1.43.3-sora.1-sources.jar",
+          "sha256": "a7483e0a979b106b70d8f3e369788048e031f6eab03a720a6a438b86290afd5e"
+        },
+        {
+          "name": "google-http-client-1.43.3-sora.1.jar",
+          "sha256": "dd2748416741f44c449a880f00b84ff2962506b4e9d1125a4b8d20693b94b8c8"
+        },
+        {
+          "name": "google-http-client-1.43.3-sora.1.pom",
+          "sha256": "5c3abf4759bb2eb0bad3ca241a52be10e731d44a543a3423ead1a1dc9295006d"
+        }
+      ]
+    },
+    {
+      "coordinate": "androidx.compose.ui:ui-tooling-android:1.11.1-sora.1",
+      "modulePath": "androidx/compose/ui/ui-tooling-android/1.11.1-sora.1",
+      "origin": {
+        "kind": "google-maven-source-patch",
+        "repository": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-tooling-android/1.11.1/",
+        "buildInputs": [
+          "build-inputs/ui-tooling-android-1.11.1/README.md",
+          "build-inputs/ui-tooling-android-1.11.1/inputs.json",
+          "build-inputs/ui-tooling-android-1.11.1/provenance.json",
+          "build-inputs/ui-tooling-android-1.11.1/rebuild.py",
+          "build-inputs/ui-tooling-android-1.11.1/upstream-sources.jar",
+          "build-inputs/ui-tooling-android-1.11.1/upstream.aar",
+          "build-inputs/ui-tooling-android-1.11.1/upstream.module",
+          "build-inputs/ui-tooling-android-1.11.1/upstream.pom"
+        ],
+        "semanticTransformations": [
+          "PreviewActivity uses Material2 controls. All other classes and AAR entries are byte-identical; preview invocation and parameter cycling remain intact."
+        ],
+        "sourceToBinaryReproductionReviewed": false
+      },
+      "materializedFiles": [
+        {
+          "name": "ui-tooling-android-1.11.1-sora.1-sources.jar",
+          "sha256": "9b17e5cd77b8058bea4fe5e3799220c9c1e2bfcc77139549b54de6342361fa32"
+        },
+        {
+          "name": "ui-tooling-android-1.11.1-sora.1.aar",
+          "sha256": "ef479e6008b3f456d6931b05beff2d6ed246e89325b248e6165dbaa81a166171"
+        },
+        {
+          "name": "ui-tooling-android-1.11.1-sora.1.module",
+          "sha256": "3cb377fe03621d086027ee85d40798de60111f8008e97effe8b7d8be340ec9d5"
+        },
+        {
+          "name": "ui-tooling-android-1.11.1-sora.1.pom",
+          "sha256": "c854b3d14a683b2efb49ac11ca597ca2198dee302200c664c27e8e9b58bf4ebf"
         }
       ]
     }

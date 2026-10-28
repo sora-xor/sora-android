@@ -41,6 +41,7 @@ object BuildUtils {
     fun isBuildType(vararg types: BuildType): Boolean =
         BuildConfig.BUILD_TYPE in types.map { it.type }
 
+    @androidx.annotation.ChecksSdkIntAtLeast(parameter = 0)
     fun sdkAtLeast(v: Int): Boolean = Build.VERSION.SDK_INT >= v
 
     fun isPlayMarket(): Boolean = isBuildType(BuildType.RELEASE) && isFlavors(Flavor.PROD, Flavor.SORALUTION)

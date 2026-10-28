@@ -8,6 +8,8 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
+import jp.co.soramitsu.sora.installWalletLogTree
+import timber.log.Timber
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPendingRecoveryScheduler
 import jp.co.soramitsu.feature_wallet_impl.data.recovery.Sora2PendingRecoveryScheduler
 import kotlinx.coroutines.CancellationException
@@ -33,6 +35,13 @@ class PendingRecoveryStartupSchedulerTest {
         val uncaught = mutableListOf<Throwable>()
         val messages = mutableListOf<String>()
         val loggedErrors = mutableListOf<Throwable?>()
+        private val recordingTree = object : Timber.Tree() {
+            override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+                assertEquals(Log.WARN, priority)
+                assertEquals("WalletRecoveryStartup", tag)
+                loggedErrors.add(t)
+            }
+        }
         private val dispatcher = StandardTestDispatcher(testScope.testScheduler)
         private val scope = CoroutineScope(
             SupervisorJob() + dispatcher + CoroutineExceptionHandler { _, error -> uncaught.add(error) }
@@ -42,25 +51,25 @@ class PendingRecoveryStartupSchedulerTest {
             every { io } returns dispatcher
         }
         val scheduler = PendingRecoveryStartupScheduler(manager, nexus, sora2)
+        private lateinit var logTree: Timber.Tree
 
         init {
             coEvery { nexus.hasRecoverableWork() } returns true
             coEvery { sora2.hasRecoverableWork() } returns true
             mockkStatic(Log::class)
-            every { Log.w(any(), any<String>()) } answers {
-                assertEquals("WalletRecoveryStartup", firstArg<String>())
-                messages.add(secondArg())
-                loggedErrors.add(null)
+            every { Log.println(any(), any(), any()) } answers {
+                assertEquals(Log.WARN, firstArg<Int>())
+                assertEquals("WalletRecoveryStartup", secondArg<String>())
+                messages.add(thirdArg())
                 0
             }
-            every { Log.w(any(), any<String>(), any()) } answers {
-                messages.add(secondArg())
-                loggedErrors.add(thirdArg())
-                0
-            }
+            logTree = installWalletLogTree(verbose = false)
+            Timber.plant(recordingTree)
         }
         override fun close() {
             scope.cancel()
+            Timber.uproot(logTree)
+            Timber.uproot(recordingTree)
             unmockkStatic(Log::class)
         }
     }

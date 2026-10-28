@@ -486,6 +486,198 @@ class IrohaConnectProtocolTest {
         }
     }
 
+    @Test
+    fun `pairing rejects invalid metadata and permissions without authorizing`() {
+        val metadata = IrohaConnectAppMetadata("Fixture", "https://example.com", "a".repeat(64))
+        val permissions = IrohaConnectPermissions(listOf("sign_raw"), emptyList(), listOf(URANAI_SIGNING_DOMAIN))
+        val invalidMetadata = listOf(
+            metadata.copy(name = " "), metadata.copy(name = " leading"), metadata.copy(name = "x".repeat(129)),
+            metadata.copy(name = "bad\nname"), metadata.copy(url = "not a uri"), metadata.copy(url = "http://example.com"),
+            metadata.copy(url = "https:///path"), metadata.copy(url = "https://user@example.com"), metadata.copy(iconHash = "g".repeat(64)),
+        )
+        val invalidPermissions = listOf(
+            permissions.copy(methods = List(17) { "sign_raw" }), permissions.copy(events = List(17) { "event$it" }),
+            permissions.copy(resources = List(65) { "resource$it" }), permissions.copy(methods = listOf("sign_raw", "sign_raw")),
+            permissions.copy(events = listOf("changed", "changed")), permissions.copy(resources = listOf("same", "same")),
+            permissions.copy(methods = listOf("admin")), permissions.copy(events = listOf("changed")),
+            permissions.copy(resources = listOf("")), permissions.copy(resources = listOf(" resource")),
+            permissions.copy(resources = listOf("x".repeat(257))), permissions.copy(resources = listOf("bad\nresource")),
+            permissions.copy(resources = null), permissions.copy(resources = emptyList()),
+            permissions.copy(methods = listOf("sign_transaction")),
+        )
+        val fixture = launchFixture("iroha", "https://taira.sora.org")
+        val launch = IrohaConnectUri.parse(fixture.uri)
+        try {
+            (invalidMetadata.map { it to permissions } + invalidPermissions.map { metadata to it }).forEach { (meta, scope) ->
+                IrohaConnectWalletSession(launch, 1_000).use { session ->
+                    val open = IrohaConnectWire.encodeOpen(launch.sid, launch.appPublicKey, launch.networkIdBytes, meta, scope)
+                    assertThrows(IrohaConnectSessionException::class.java) { session.receive(open, 1_100) }
+                    assertEquals(null, session.approvedAccountId)
+                    assertThrows(IrohaConnectSessionException::class.java) { session.rejectPairing() }
+                }
+            }
+            IrohaConnectWalletSession(launch, Long.MAX_VALUE - 1).use { session ->
+                val open = IrohaConnectWire.encodeOpen(launch.sid, launch.appPublicKey, launch.networkIdBytes, null, null)
+                val review = (session.receive(open, Long.MAX_VALUE) as IrohaConnectSessionEvent.PairingRequested).review
+                assertEquals("Unnamed application", review.appName)
+                assertEquals(Long.MAX_VALUE, review.expiresAtMillis)
+                assertThrows(IrohaConnectSessionException::class.java) { session.receive(open, Long.MAX_VALUE) }
+                val rejection = session.rejectPairing(" ")
+                val control = (IrohaConnectWire.decodeFrame(rejection.bytes) as IrohaConnectFrame.Control).control as IrohaConnectControl.Reject
+                assertEquals("IrohaConnect request was declined", control.reason)
+                assertEquals("USER_REJECTED", control.codeId)
+                assertTrue(session.isClosed)
+                assertEquals(null, session.closeWithFrame())
+            }
+        } finally { fixture.appKeys.destroy() }
+    }
+
+    @Test
+    fun `expired launch pairing and failed pairing signatures close the session`() {
+        val fixture = launchFixture("iroha", "https://taira.sora.org")
+        val launch = IrohaConnectUri.parse(fixture.uri)
+        val account = IrohaKeyDerivation.derive(MNEMONIC, NexusNetworks.taira)
+        val open = IrohaConnectWire.encodeOpen(launch.sid, launch.appPublicKey, launch.networkIdBytes, null, null)
+        try {
+            IrohaConnectWalletSession(launch, 1_000).use { session ->
+                assertThrows(IrohaConnectSessionException::class.java) { session.approvePairing(account.address, 1_100) { error("not called") } }
+                assertThrows(IrohaConnectSessionException::class.java) { session.receive(open, 121_001) }
+                assertTrue(session.isClosed)
+            }
+            IrohaConnectWalletSession(launch, 1_000).use { session ->
+                session.receive(open, 1_100)
+                assertThrows(IrohaConnectSessionException::class.java) { session.approvePairing(account.address, 121_101) { error("not called") } }
+                assertTrue(session.isClosed)
+            }
+            listOf(false, true).forEach { throwing ->
+                IrohaConnectWalletSession(launch, 1_000).use { session ->
+                    session.receive(open, 1_100)
+                    assertThrows(IrohaConnectSessionException::class.java) { session.approvePairing("invalid account", 1_200) { error("not called") } }
+                    var input: ByteArray? = null
+                    assertThrows(IrohaConnectSessionException::class.java) { session.approvePairing(account.address, 1_200) {
+                        input = it
+                        if (throwing) error("fixture unavailable key") else ByteArray(64)
+                    } }
+                    assertTrue(requireNotNull(input).all { it == 0.toByte() })
+                    assertTrue(session.isClosed)
+                }
+            }
+        } finally { account.destroy(); fixture.appKeys.destroy() }
+    }
+
+    @Test
+    fun `active session processes server events ping display and peer close independently`() = withActiveSession { peer ->
+        assertEquals(peer.account.address, peer.session.approvedAccountId)
+        assertEquals(IrohaConnectSessionEvent.ServerEvent, peer.session.receive(peer.control(1, 6, byteArrayOf(7)), 1_300))
+        assertThrows(IrohaConnectSessionException::class.java) { peer.session.receive(peer.control(1, 6, byteArrayOf(7)), 1_300) }
+        val pong = peer.session.receive(peer.control(2, 4, IrohaConnectWire.struct(IrohaConnectWire.u64(45))), 1_300) as IrohaConnectSessionEvent.SendFrame
+        assertEquals(IrohaConnectControl.Pong(45), (IrohaConnectWire.decodeFrame(pong.bytes) as IrohaConnectFrame.Control).control)
+        assertEquals(IrohaConnectSessionEvent.DisplayRequested("Fixture", "Public information"), peer.send(3, IrohaConnectEnvelopePayload.Display("Fixture", "Public information")))
+        val close = peer.control(4, 3, IrohaConnectWire.struct(IrohaConnectWire.u32(0), IrohaConnectWire.u16(1000), IrohaConnectWire.string("Peer finished"), byteArrayOf(1)))
+        assertEquals(IrohaConnectSessionEvent.Closed("Peer finished"), peer.session.receive(close, 1_400))
+        assertTrue(peer.session.isClosed)
+        assertEquals(null, peer.session.approvedAccountId)
+        assertThrows(IrohaConnectSessionException::class.java) { peer.session.receive(close, 1_500) }
+    }
+
+    @Test
+    fun `encrypted peer close and rejection terminate active sessions`() {
+        listOf(IrohaConnectEnvelopePayload.Close("Done"), IrohaConnectEnvelopePayload.Reject(9, "REJECTED", "Done")).forEach { payload ->
+            withActiveSession { peer ->
+                assertEquals(IrohaConnectSessionEvent.Closed("Done"), peer.send(2, payload))
+                assertTrue(peer.session.isClosed)
+            }
+        }
+        val close = IrohaConnectWire.decodeFrame(IrohaConnectWire.encodeClose(ByteArray(32), 5, 1000, "Goodbye", true)) as IrohaConnectFrame.Control
+        assertEquals(IrohaConnectControl.Close("wallet", 1000, "Goodbye", true), close.control)
+    }
+
+    @Test
+    fun `signing expiration failure and user rejection clear the pending request`() {
+        listOf("expired", "throws", "wrong-key", "reject", "reject-expired").forEach { outcome ->
+            withActiveSession { peer ->
+                val review = (peer.send(2, IrohaConnectEnvelopePayload.SignRaw(URANAI_SIGNING_DOMAIN, "Public signing fixture".toByteArray())) as IrohaConnectSessionEvent.SigningRequested).review
+                var called = false
+                var input: ByteArray? = null
+                val result = if (outcome.startsWith("reject")) peer.session.rejectRequest(review.requestToken, if (outcome.endsWith("expired")) review.expiresAtMillis + 1 else 1_400)
+                else peer.session.approveRequest(review.requestToken, if (outcome == "expired") review.expiresAtMillis + 1 else 1_400) {
+                    called = true; input = it
+                    if (outcome == "throws") error("fixture signer failed") else ByteArray(64)
+                }
+                val code = when (outcome) { "expired", "reject-expired" -> "REQUEST_EXPIRED"; "reject" -> "USER_REJECTED"; else -> "SIGNING_FAILED" }
+                assertEquals(code, (peer.decode(result) as IrohaConnectEnvelopePayload.SignResultError).code)
+                assertEquals(outcome == "throws" || outcome == "wrong-key", called)
+                input?.let { assertTrue(it.all { byte -> byte == 0.toByte() }) }
+                assertThrows(IrohaConnectSessionException::class.java) { peer.session.rejectRequest(review.requestToken, 1_500) }
+                assertTrue(peer.send(3, IrohaConnectEnvelopePayload.SignRaw(URANAI_SIGNING_DOMAIN, "Next request".toByteArray())) is IrohaConnectSessionEvent.SigningRequested)
+            }
+        }
+    }
+
+    @Test
+    fun `empty requests and ungranted methods produce encrypted errors`() {
+        withActiveSession { peer ->
+            assertEquals("INVALID_REQUEST", (peer.decode(peer.send(2, IrohaConnectEnvelopePayload.SignRaw(URANAI_SIGNING_DOMAIN, byteArrayOf())) as IrohaConnectSessionEvent.SendFrame) as IrohaConnectEnvelopePayload.SignResultError).code)
+            assertEquals("PERMISSION_DENIED", (peer.decode(peer.send(3, IrohaConnectEnvelopePayload.SignTransaction(byteArrayOf(1))) as IrohaConnectSessionEvent.SendFrame) as IrohaConnectEnvelopePayload.SignResultError).code)
+            assertThrows(IrohaConnectSessionException::class.java) { peer.send(4, IrohaConnectEnvelopePayload.SignResultError("FAIL", "Wallet only")) }
+        }
+        withActiveSession(null) { peer ->
+            assertEquals("PERMISSION_DENIED", (peer.decode(peer.send(2, IrohaConnectEnvelopePayload.SignRaw(URANAI_SIGNING_DOMAIN, "Fixture".toByteArray())) as IrohaConnectSessionEvent.SendFrame) as IrohaConnectEnvelopePayload.SignResultError).code)
+        }
+    }
+
+    @Test
+    fun `active session rejects foreign directions and tampered ciphertext`() = withActiveSession { peer ->
+        val encrypted = peer.frame(2, IrohaConnectEnvelopePayload.Display("Title", "Body"))
+        val foreign = encrypted.copyOf().also { it[8] = (it[8].toInt() xor 1).toByte() }
+        assertThrows(IrohaConnectSessionException::class.java) { peer.session.receive(foreign, 1_300) }
+        val wrongDirection = IrohaConnectWire.encodePong(peer.launch.sid, 2, 7)
+        assertThrows(IrohaConnectSessionException::class.java) { peer.session.receive(wrongDirection, 1_300) }
+        encrypted[encrypted.lastIndex] = (encrypted.last().toInt() xor 1).toByte()
+        assertThrows(IrohaConnectSessionException::class.java) { peer.session.receive(encrypted, 1_300) }
+        assertThrows(IrohaConnectSessionException::class.java) { peer.session.receive(peer.control(3, 5, IrohaConnectWire.struct(IrohaConnectWire.u64(7))), 1_400) }
+    }
+
+    @Test
+    fun `envelope rejects every corrupted header field and authenticated sequence mismatch`() {
+        val encoded = IrohaConnectEnvelopeWire.encode(2, IrohaConnectEnvelopePayload.Display("Title", "Body"))
+        listOf(0, 4, 5, 6, 22, 23, 31, 39, encoded.lastIndex).forEach { offset ->
+            val corrupt = encoded.copyOf().also { it[offset] = (it[offset].toInt() xor 1).toByte() }
+            assertThrows(IrohaConnectWireException::class.java) { IrohaConnectEnvelopeWire.decode(corrupt) }
+        }
+        assertThrows(IrohaConnectWireException::class.java) { IrohaConnectEnvelopeWire.decode(encoded.copyOf(39)) }
+        val key = ByteArray(32) { 1 }; val sid = ByteArray(32) { 2 }
+        val cipher = IrohaConnectCrypto.encrypt(key, 3, IrohaConnectWire.associatedData(sid, IrohaConnectDirection.APP_TO_WALLET, 3), encoded)
+        assertThrows(IrohaConnectWireException::class.java) { IrohaConnectEnvelopeWire.decrypt(key, sid, IrohaConnectDirection.APP_TO_WALLET, 3, cipher) }
+    }
+
+    private class ActivePeer(val session: IrohaConnectWalletSession, val launch: IrohaConnectLaunch, val keys: IrohaConnectDirectionKeys, val account: IrohaKeyDerivation.DerivedAccount) {
+        fun control(sequence: Long, tag: Long, body: ByteArray): ByteArray = IrohaConnectWire.struct(launch.sid, IrohaConnectWire.u32(0), IrohaConnectWire.u64(sequence), IrohaConnectWire.tagged(0, IrohaConnectWire.tagged(tag, body)))
+        fun frame(sequence: Long, payload: IrohaConnectEnvelopePayload): ByteArray {
+            val cipher = IrohaConnectCrypto.encrypt(keys.appToWallet, sequence, IrohaConnectWire.associatedData(launch.sid, IrohaConnectDirection.APP_TO_WALLET, sequence), IrohaConnectEnvelopeWire.encode(sequence, payload))
+            return IrohaConnectWire.encodeCiphertext(launch.sid, sequence, cipher, IrohaConnectDirection.APP_TO_WALLET)
+        }
+        fun send(sequence: Long, payload: IrohaConnectEnvelopePayload) = session.receive(frame(sequence, payload), 1_300)
+        fun decode(result: IrohaConnectSessionEvent.SendFrame): IrohaConnectEnvelopePayload {
+            assertFalse(result.signed)
+            val frame = IrohaConnectWire.decodeFrame(result.bytes) as IrohaConnectFrame.Ciphertext
+            return IrohaConnectEnvelopeWire.decrypt(keys.walletToApp, launch.sid, IrohaConnectDirection.WALLET_TO_APP, frame.sequence, frame.aead).payload
+        }
+    }
+
+    private fun withActiveSession(permissions: IrohaConnectPermissions? = IrohaConnectPermissions(listOf("sign_raw"), emptyList(), listOf(URANAI_SIGNING_DOMAIN)), block: (ActivePeer) -> Unit) {
+        val fixture = launchFixture("iroha", "https://taira.sora.org")
+        val launch = IrohaConnectUri.parse(fixture.uri)
+        val session = IrohaConnectWalletSession(launch, 1_000)
+        val account = IrohaKeyDerivation.derive(MNEMONIC, NexusNetworks.taira)
+        try {
+            session.receive(IrohaConnectWire.encodeOpen(launch.sid, launch.appPublicKey, launch.networkIdBytes, null, permissions), 1_100)
+            val approval = IrohaConnectWire.decodeFrame(session.approvePairing(account.address, 1_200) { IrohaConnectCrypto.signEd25519(account.privateKeySeed, it) }.bytes) as IrohaConnectFrame.Control
+            val keys = IrohaConnectCrypto.deriveDirectionKeys(launch.sid, (approval.control as IrohaConnectControl.Approve).walletPublicKey, fixture.appKeys.privateKey)
+            try { block(ActivePeer(session, launch, keys, account)) } finally { keys.destroy() }
+        } finally { session.close(); account.destroy(); fixture.appKeys.destroy() }
+    }
+
     private data class LaunchFixture(
         val uri: String,
         val sid: ByteArray,

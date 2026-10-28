@@ -11,7 +11,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.test_data"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 26
@@ -21,7 +21,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 36
+        targetSdk = 37
     }
 
     buildTypes {

@@ -95,7 +95,7 @@ internal fun PortfolioHomeHost(
     val networkSheets = rememberNetworkSheetsState(sora2Portfolio?.address)
     val latestSheets by rememberUpdatedState(networkSheets)
     val latestModel by rememberUpdatedState(model)
-    var networkPick by remember { mutableStateOf<Pair<WalletNetworkAction, List<WalletNetworkChoice>>?>(null) }
+    var networkPick by remember(sora2Portfolio?.address) { mutableStateOf<Pair<WalletNetworkAction, List<WalletNetworkChoice>>?>(null) }
     val openNetwork: (WalletNetworkAction, WalletNetworkChoice) -> Unit = remember(portfolio, hub) {
         { action, choice ->
             if (choice.id == WalletNetworkId.SORA2) {
@@ -110,7 +110,7 @@ internal fun PortfolioHomeHost(
             }
         }
     }
-    val startNetworkAction: (WalletNetworkAction) -> Boolean = remember(hub, openNetwork) {
+    val startNetworkAction: (WalletNetworkAction) -> Boolean = remember(hub, openNetwork, sora2Portfolio?.address) {
         start@{ action ->
             if (latestModel?.scope == PortfolioScope.ALL) return@start false
             when (val start = networkStart(hub.networkChoices(action))) {

@@ -850,6 +850,17 @@ class WalletUpgradeScenarioTest {
 
         candidate { launch ->
             assertTrue(launch.prepare.isSuccess)
+            // A provider can briefly report a missing alias. Neither repeated verification nor
+            // constructing another EncryptionUtil in this process proves permanent key loss.
+            repeat(2) { attempt ->
+                if (attempt > 0) assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+                assertEquals(MigrationOutcome.Transient("KEYSTORE_UNAVAILABLE"), launch.verify())
+            }
+            assertFalse(requireNotNull(WalletUpgradeBackup.recoveryOptions()).canSetUpAgain)
+        }
+        candidate(newProcess = true) { launch ->
+            // Follow the recovery screen's explicit retry authorization after restarting.
+            assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
             assertEquals(
                 MigrationOutcome.KeysUnavailable("KEYSTORE_KEY_UNAVAILABLE"),
                 launch.verify(),
@@ -894,6 +905,17 @@ class WalletUpgradeScenarioTest {
 
         candidate { launch ->
             assertTrue(launch.prepare.isSuccess)
+            // A provider can briefly report a missing alias. Neither repeated verification nor
+            // constructing another EncryptionUtil in this process proves permanent key loss.
+            repeat(2) { attempt ->
+                if (attempt > 0) assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+                assertEquals(MigrationOutcome.Transient("KEYSTORE_UNAVAILABLE"), launch.verify())
+            }
+            assertFalse(requireNotNull(WalletUpgradeBackup.recoveryOptions()).canSetUpAgain)
+        }
+        candidate(newProcess = true) { launch ->
+            // Follow the recovery screen's explicit retry authorization after restarting.
+            assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
             assertEquals(
                 MigrationOutcome.KeysUnavailable("KEYSTORE_KEY_UNAVAILABLE"),
                 launch.verify(),
@@ -3342,6 +3364,15 @@ class WalletUpgradeScenarioTest {
             // HARNESS: a new OS process has no SharedPreferences cache and runs the first
             // preparation of the process (where a "set up again" request is carried out).
             WalletUpgradeBackup.simulateProcessStartForTest()
+            // EncryptionUtil deliberately keeps one observation identity for the whole OS
+            // process. Model a previously terminated process in its persisted observation, as
+            // EncryptionUtilKeySafetyTest does, without resetting or bypassing production code.
+            val observation = File(context.noBackupFilesDir, "wallet-key-observation")
+            if (observation.isFile) {
+                val lines = observation.readLines()
+                require(lines.size == 2)
+                observation.writeText("${lines[0]}\n00000000-0000-0000-0000-000000000001")
+            }
         }
         val process = CandidateProcess(prepareFirst, keyStoreFactory, rsaDecryptor)
         try {

@@ -38,14 +38,9 @@
 
     <!-- Safe Mode CTA (cta.safe start colour) and card border (border.safe) -->
     <color name="neon_safe_start">#08704D</color>
-    <color name="neon_safe_border_start">#8008704D</color>
-    <color name="neon_safe_border_end">#6600708A</color>
     <!-- Glass button fill and pressed fill on the opaque XML surfaces -->
-    <color name="neon_button_secondary">#F2F3F8</color>
     <!-- cta.disabled: #0B0C14 at 6% (disabled XML buttons) -->
-    <color name="neon_cta_disabled">#0F0B0C14</color>
     <!-- infoContainer: reassurance callouts (design spec 7.17) -->
-    <color name="neon_info_container">#E0F8FC</color>
     <!-- bg.toast (inverted in light, design spec 7.13) and its text -->
     <color name="neon_toast">#14141F</color>
     <color name="neon_on_toast">#FFFFFF</color>

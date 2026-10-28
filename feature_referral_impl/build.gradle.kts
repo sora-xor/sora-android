@@ -14,7 +14,7 @@ kotlin {
 
 android {
     namespace = "jp.co.soramitsu.feature_referral_impl"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 26
@@ -24,7 +24,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
-        targetSdk = 36
+        targetSdk = 37
     }
 
     buildTypes {

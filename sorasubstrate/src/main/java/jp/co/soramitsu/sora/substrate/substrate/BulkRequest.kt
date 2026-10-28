@@ -39,6 +39,7 @@ import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojoList
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
@@ -69,6 +70,9 @@ private const val DEFAULT_PAGE_SIZE = 1000
 class BulkRetriever(
     private val pageSize: Int = DEFAULT_PAGE_SIZE
 ) {
+    init {
+        require(pageSize > 0) { "Page size must be positive" }
+    }
 
     suspend fun retrieveAllKeys(
         socketService: SocketService,
@@ -81,7 +85,7 @@ class BulkRetriever(
         while (true) {
             ensureActive()
 
-            val request = GetKeysPagedRequest(keyPrefix, DEFAULT_PAGE_SIZE, currentOffset)
+            val request = GetKeysPagedRequest(keyPrefix, pageSize, currentOffset)
 
             val page = socketService.executeAsyncMapped(request, mapper = pojoList<String>().nonNull())
 
@@ -108,7 +112,10 @@ class BulkRetriever(
 
             val chunkValues = kotlin.runCatching {
                 socketService.executeAsyncMapped(request, mapper = pojoList<StateQueryResponse>().nonNull())
-            }.getOrNull()?.first()?.changesAsMap().orEmpty()
+            }.getOrElse {
+                if (it is CancellationException) throw it
+                emptyList()
+            }.firstOrNull()?.changesAsMap().orEmpty()
 
             acc.putAll(chunkValues)
 
@@ -122,7 +129,7 @@ class BulkRetriever(
 suspend fun BulkRetriever.queryKey(
     socketService: SocketService,
     key: String,
-): String? = queryKeys(socketService, listOf(key)).values.first()
+): String? = queryKeys(socketService, listOf(key))[key]
 
 suspend fun BulkRetriever.retrieveAllValues(socketService: SocketService, keyPrefix: String): Map<String, String?> {
     val allKeys = retrieveAllKeys(socketService, keyPrefix)

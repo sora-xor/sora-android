@@ -133,7 +133,8 @@ data class RequestTokenConfirmScreenState(
 
     val isShareQRCodeEnabled: Boolean =
         screenStatus === ScreenStatus.READY_TO_RENDER &&
-            untransformedUserAddress != null &&
+            untransformedQrBitmap != null &&
+            !untransformedUserAddress.isNullOrBlank() &&
             untransformedAvatarDrawable != null
 
     val shareQRCodeButtonIcon: ImageValue = ImageValue.ResImage(id = R.drawable.ic_new_arrow_up_24)

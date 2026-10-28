@@ -48,6 +48,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandle
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionMappers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -79,8 +80,9 @@ class TransactionHistoryHandlerImpl @Inject constructor(
             .launchIn(coroutineManager.applicationScope)
     }
 
-    private var historyEvents = mutableListOf<EventUiModel>()
-    private var historyPage: Long = 1
+    private val historyEvents = mutableListOf<EventUiModel.EventTxUiModel>()
+    // Last successfully loaded page. Failed reads must leave their page available for retry.
+    private var historyPage: Long = 0
     private var historyEndReached: Boolean = false
     private var tokenIdFilter: String? = null
     private val _historyState = MutableStateFlow<HistoryState>(HistoryState.Loading)
@@ -109,11 +111,12 @@ class TransactionHistoryHandlerImpl @Inject constructor(
             mutex.withLock {
                 if (historyEndReached) return@withLock
                 try {
-                    historyPage++
                     val events = loadEvents()
                     _historyState.emit(events)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (t: Throwable) {
-                    _historyState.emit(HistoryState.Error)
+                    _historyState.emit(buildHistoryList(hasError = true))
                 }
             }
         }
@@ -172,15 +175,21 @@ class TransactionHistoryHandlerImpl @Inject constructor(
 
     private suspend fun reloadHistoryEvents(): HistoryState =
         try {
-            historyPage = 1
+            historyPage = 0
+            historyEndReached = false
             historyEvents.clear()
             loadEvents()
+        } catch (cancelled: CancellationException) {
+            // A cancelled account/asset refresh must not expose the previous selection's rows
+            // or leave its pull-to-refresh spinner running indefinitely.
+            _historyState.value = HistoryState.Loading
+            throw cancelled
         } catch (t: Throwable) {
             HistoryState.Error
         }
 
     /**
-     * Loads [historyPage] and appends only rows that are not already listed.
+     * Loads the page after [historyPage], updates matching rows, and appends new rows.
      *
      * The indexer adapter re-reads pages 1..N on every "load more". When a new row for the
      * account is indexed between two loads, every older row shifts down by one, so page N starts
@@ -195,34 +204,49 @@ class TransactionHistoryHandlerImpl @Inject constructor(
     private suspend fun loadEvents(): HistoryState {
         val curAccount = userRepository.getCurSoraAccount()
         val tokens = assetsRepository.tokensList()
-        val listed = historyEvents.mapNotNullTo(HashSet()) {
-            it.safeCast<EventUiModel.EventTxUiModel>()?.historyIdentity()
+        val listed = HashMap<String, Int>()
+        historyEvents.forEachIndexed { index, event ->
+            listed[event.historyIdentity()] = index
         }
         var pagesWithoutNewRows = 0
         while (true) {
+            val page = historyPage + 1
             val transactionsInfo = transactionHistoryRepository.getTransactionHistory(
-                historyPage,
+                page,
                 tokens,
                 curAccount,
                 tokenIdFilter,
             )
-            historyEndReached = transactionsInfo.endReached
-            val newRows = transactionsInfo.transactions
+            val mappedRows = transactionsInfo.transactions
                 .map { transactionMappers.mapTransaction(it, curAccount.substrateAddress) }
-                .filter { listed.add(it.historyIdentity()) }
-            historyEvents.addAll(newRows)
+            var newRowCount = 0
+            mappedRows.forEach { row ->
+                val identity = row.historyIdentity()
+                val existingIndex = listed[identity]
+                if (existingIndex == null) {
+                    listed[identity] = historyEvents.size
+                    historyEvents.add(row)
+                    newRowCount++
+                } else {
+                    // A retried/overlapping page may confirm a previously pending local row.
+                    historyEvents[existingIndex] = row
+                }
+            }
             val hasError = !transactionsInfo.errorMessage.isNullOrEmpty()
+            // An offline response may contain local rows and endReached=true. Keep those rows,
+            // but retry the indexed page before advancing or declaring history exhausted.
+            historyEndReached = !hasError && transactionsInfo.endReached
+            if (!hasError) historyPage = page
             if (
-                newRows.isNotEmpty() ||
+                newRowCount > 0 ||
                 historyEndReached ||
                 hasError ||
-                historyPage == 1L ||
+                page == 1L ||
                 pagesWithoutNewRows >= MAX_EXTRA_PAGES_WITHOUT_NEW_ROWS
             ) {
                 return buildHistoryList(hasError)
             }
             pagesWithoutNewRows++
-            historyPage++
         }
     }
 
@@ -245,7 +269,9 @@ class TransactionHistoryHandlerImpl @Inject constructor(
         }
     }
 
-    private fun insertHistoryTimeSeparators(events: MutableList<EventUiModel>): List<EventUiModel> {
+    private fun insertHistoryTimeSeparators(rows: List<EventUiModel>): List<EventUiModel> {
+        // Rebuild headers from current timestamps without retaining them in the transaction cache.
+        val events = rows.toMutableList()
         var i = events.lastIndex
         while (i >= 0) {
             val before = events[i]

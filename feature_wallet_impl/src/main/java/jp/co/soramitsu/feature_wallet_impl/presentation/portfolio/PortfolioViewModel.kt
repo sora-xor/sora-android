@@ -481,6 +481,7 @@ class PortfolioViewModel @Inject constructor(
             val current = model.value ?: return@launch
             val holding = current.holding(holdingKey) ?: return@launch
             if (PortfolioReadiness.moveBlock(current.snapshot, holding) != null) return@launch
+            if (amount != null && (amount.signum() <= 0 || amount > holding.transferable)) return@launch
             val recipient = current.snapshot.addresses[destinationWalletId]?.get(holding.network)
             if (recipient.isNullOrBlank() || destinationWalletId == holding.walletId) return@launch
             if (current.sample) {

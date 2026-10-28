@@ -32,76 +32,66 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_select_node_impl.presentation.domain
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
-import jp.co.soramitsu.feature_select_node_impl.domain.InetAddressesWrapper
 import jp.co.soramitsu.feature_select_node_impl.domain.NodeValidator
 import jp.co.soramitsu.feature_select_node_impl.domain.ValidationEvent
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.given
 
-@ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
 class NodeValidatorTest {
+    // Exercise real parsing: stubbing IP validation with each expected answer hid DNS/port bugs.
+    private val validator = NodeValidator()
 
-    @Rule
-    @JvmField
-    val rule: TestRule = InstantTaskExecutorRule()
-
-    @get:Rule
-    var mainCoroutineRule = MainCoroutineRule()
-
-    private lateinit var nodeValidator: NodeValidator
-
-    @Mock
-    private lateinit var inetAddressesWrapper: InetAddressesWrapper
-
-    @Before
-    fun setUp() = runTest {
-        nodeValidator = NodeValidator(inetAddressesWrapper)
+    @Test
+    fun `valid websocket endpoints support ports paths queries and IPv6`() {
+        listOf(
+            "ws://192.168.1.1",
+            "ws://192.168.1.1:1",
+            "ws://192.168.1.1:65535",
+            "wss://test.polkaswap.io:443/rpc",
+            "wss://test.polkaswap.io:9944/rpc/v1?network=sora",
+            "wss://test.polkaswap.io/RPC-v1_2/",
+            "WSS://TEST.POLKASWAP.IO/rpc",
+            "ws://localhost:9944",
+            "ws://x:9944",
+            "ws://[::1]",
+            "ws://[::1]:9944/rpc",
+            "wss://[2606:2800:220:1:248:1893:25c8:1946]:65535/rpc",
+        ).forEach { address ->
+            assertEquals(address, ValidationEvent.Succeed, validator.validate(address))
+        }
     }
 
     @Test
-    fun `validate called`() {
-        val testVector = mutableMapOf<String, Boolean>()
-        testVector["ws://192.168.1.1"] = true
-        testVector["192.168.123.13"] = false
-        testVector["ws://192.168.1.1:1"] = true
-        testVector["http://192.168.1.1:1"] = false
-        testVector["ws://192.168.1.1:0"] = false
-        testVector["ws://192.168.1.1:65535"] = true
-        testVector["ws://192.168.1.1:65536"] = false
-        testVector["ws://192.168.1.1:6553)"] = false
-        testVector["ws://192.168..1:6553)"] = false
-        testVector["ws://192.168.257.1:6553)"] = false
-        testVector["ws://2001:4860:4860::8888"] = true
-        testVector["ws://2606:2800:220:1:248:1893:25c8:1946"] = true
-        testVector["ws://[2606:2800:220:1:248:1893:25c8:1946]:1"] = true
-        testVector["ws://[2606:2800:220:1:248:1893:25c8:1946]:0"] = false
-        testVector["ws://[2606:2800:220:1:248:1893:25c8:1946]:65535"] = true
-        testVector["ws://[2606:2800:220:1:248:1893:25c8:1946]:65536"] = false
-        testVector["ws://2606:2800:220:::"] = false
-        testVector["ws://2606:2800:220::cdfea:"] = false
-        testVector["ws://polaswap.io"] = true
-        testVector["ws://test.polkaswap.io"] = true
-        testVector["ws://test.polkaswap.io:0"] = false
-        testVector["ws://test.polkaswap.io:1"] = true
-        testVector["ws://test.polkaswap.io:1)"] = false
-        testVector["ws://test.polkaswap.io:65535"] = true
-        testVector["ws://test.polkaswap.io:65536"] = false
+    fun `missing and non websocket protocols report a protocol error`() {
+        listOf("192.168.1.1", "http://example.org", "https://example.org", "ftp://example.org", "wss:example.org")
+            .forEach { address ->
+                assertEquals(address, ValidationEvent.ProtocolValidationFailed, validator.validate(address))
+            }
+    }
 
-        testVector.forEach { (address, result) ->
-            given(inetAddressesWrapper.isIpAddressValid(address.removePrefix("ws://"))).willReturn(result)
-            assertEquals(result, nodeValidator.validate(address) == ValidationEvent.Succeed)
+    @Test
+    fun `malformed authorities and unsupported websocket components report an address error`() {
+        listOf(
+            "ws://", "ws:///rpc", "ws://:9944", "ws://example.org:",
+            "ws://example.org:0", "ws://example.org:65536", "ws://example.org:-1",
+            "ws://example.org:abc", "ws://example.org:999999999999999999",
+            "ws://192.168..1", "ws://192.168.257.1", "ws://256.256.256.256",
+            "ws://2001:4860:4860::8888", "ws://[::1", "ws://[::1]:0",
+            "ws://[::1]:65536", "ws://[example.org]:9944", "ws://example.org/rpc#fragment",
+            "ws://user:password@example.org", "ws://example.org/path with spaces",
+            "ws://example.org\n", "ws://example.org/%zz",
+        ).forEach { address ->
+            assertEquals(address, ValidationEvent.AddressValidationFailed, validator.validate(address))
         }
+    }
+
+    @Test
+    fun `blocked nodes are rejected before the repository saves them`() {
+        listOf("ws.mof.sora.org", "mof.sora.org", "mof3.sora.org", "207.254.29.218")
+            .forEach { host ->
+                listOf("wss://$host", "wss://${host.uppercase()}.:443/rpc").forEach { address ->
+                    assertEquals(address, ValidationEvent.AddressValidationFailed, validator.validate(address))
+                }
+            }
     }
 }

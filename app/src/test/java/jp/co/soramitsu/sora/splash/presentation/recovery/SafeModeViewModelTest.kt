@@ -24,6 +24,7 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsReposito
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_impl.domain.migration.MigrationProgress
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
+import kotlin.coroutines.ContinuationInterceptor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,7 +77,7 @@ class SafeModeViewModelTest {
         // No restore waits for a restart (android.system.Os is a stub on the JVM).
         every { WalletUpgradeBackup.pendingSetUpAgainScope(any()) } returns null
         val coroutineManager = mockk<CoroutineManager>()
-        every { coroutineManager.io } returns coroutineContext[CoroutineDispatcher]!!
+        every { coroutineManager.io } returns (coroutineContext[ContinuationInterceptor] as CoroutineDispatcher)
         return SafeModeViewModel(
             context = context,
             interactor = interactor,

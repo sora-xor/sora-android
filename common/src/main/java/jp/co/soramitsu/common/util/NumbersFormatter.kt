@@ -97,7 +97,7 @@ class NumbersFormatter {
     ): String {
         val newPrecision = if (checkFraction) {
             var nubs = num.absoluteValue
-            if (num > 0 && nubs < 10.0.pow(-precision)) {
+            if (nubs > 0 && nubs < 10.0.pow(-precision)) {
                 var p = 1
                 val scale = OptionsProvider.defaultScale
                 while (p < scale) {

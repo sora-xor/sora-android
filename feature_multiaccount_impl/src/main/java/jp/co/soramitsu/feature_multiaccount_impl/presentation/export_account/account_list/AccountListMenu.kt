@@ -62,7 +62,10 @@ internal fun AccountMenu(
     ) {
         DropdownMenuItem(
             modifier = Modifier.testTagAsId("SelectAccountForBatchExport"),
-            onClick = { onSelectOptionsClicked(address) }
+            onClick = {
+                onDismissMenu()
+                onSelectOptionsClicked(address)
+            }
         ) {
             Text(
                 modifier = Modifier.wrapContentHeight(),
@@ -76,7 +79,10 @@ internal fun AccountMenu(
 
         DropdownMenuItem(
             modifier = Modifier.testTagAsId("OpenAccountOptions"),
-            onClick = { onAccountOptionsClicked(address) }
+            onClick = {
+                onDismissMenu()
+                onAccountOptionsClicked(address)
+            }
         ) {
             Text(
                 modifier = Modifier.wrapContentHeight(),

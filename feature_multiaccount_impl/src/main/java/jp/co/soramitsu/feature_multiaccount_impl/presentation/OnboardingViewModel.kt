@@ -88,7 +88,6 @@ import jp.co.soramitsu.xbackup.domain.models.CryptoType
 import jp.co.soramitsu.xbackup.domain.models.DecryptedBackupAccount
 import jp.co.soramitsu.xbackup.domain.models.Json
 import jp.co.soramitsu.xbackup.domain.models.Seed
-import kotlin.random.Random
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -600,6 +599,7 @@ class OnboardingViewModel @Inject constructor(
     fun onConfirmationButtonPressed(context: Context, buttonString: String) {
         _passphraseCardState.value?.let { passphraseCardState ->
             _passphraseConfirmationState.value?.let { passphraseConfirmationState ->
+                if (passphraseConfirmationState.confirmationStep !in 1..3) return
                 if (buttonString == passphraseCardState.mnemonicWords[passphraseConfirmationState.currentWordIndex - 1]) {
                     if (passphraseConfirmationState.confirmationStep == 3) {
                         _passphraseConfirmationState.value = passphraseConfirmationState.copy(
@@ -972,6 +972,10 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onPassphraseContinueClicked(navController: NavController) {
+        if (tempDraft == null || _passphraseCardState.value?.mnemonicWords.orEmpty().size < 3) {
+            reportInterruptedCreation()
+            return
+        }
         if (isFromGoogleDrive) {
             navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
         } else {
@@ -986,14 +990,13 @@ class OnboardingViewModel @Inject constructor(
                 _passphraseConfirmationState.value?.confirmedWordIndexes?.clear()
             }
 
-            var wordIndex = Random.nextInt(0, it.mnemonicWords.size - 1)
-            var wordIndex2 = wordIndex
-            var wordIndex3 = wordIndex
-            while (_passphraseConfirmationState.value?.confirmedWordIndexes?.contains(wordIndex) == true || wordIndex2 == wordIndex || wordIndex3 == wordIndex2 || wordIndex == wordIndex3) {
-                wordIndex = Random.nextInt(0, it.mnemonicWords.size - 1)
-                wordIndex2 = Random.nextInt(0, it.mnemonicWords.size - 1)
-                wordIndex3 = Random.nextInt(0, it.mnemonicWords.size - 1)
-            }
+            if (it.mnemonicWords.size < 3) return
+            val wordIndex = it.mnemonicWords.indices
+                .filterNot { index -> _passphraseConfirmationState.value?.confirmedWordIndexes?.contains(index) == true }
+                .randomOrNull() ?: return
+            val alternatives = it.mnemonicWords.indices.filter { index -> index != wordIndex }.shuffled().take(2)
+            val wordIndex2 = alternatives[0]
+            val wordIndex3 = alternatives[1]
 
             val newList =
                 _passphraseConfirmationState.value?.confirmedWordIndexes ?: mutableListOf()
@@ -1092,42 +1095,41 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    private var commitInProgress = false
+
+    private fun reportInterruptedCreation() {
+        _createBackupPasswordState.value = _createBackupPasswordState.value?.copy(isLoading = false)
+        errorFromResourceLiveData.value =
+            R.string.create_account_unavailable_title to R.string.create_account_interrupted
+        _restartCreateEvent.trigger()
+    }
+
     private fun finishCreateAccountProcess(context: Context) {
+        if (commitInProgress) return
+        val draft = tempDraft ?: run {
+            reportInterruptedCreation()
+            return
+        }
+        commitInProgress = true
         viewModelScope.launch {
-            val draft = tempDraft
-            if (draft == null) {
-                // The wallet that was being created is gone (the app was restarted in between).
-                // Nothing was stored for it: say so and start again from the first screen.
-                _createBackupPasswordState.value =
-                    _createBackupPasswordState.value?.copy(isLoading = false)
-                errorFromResourceLiveData.value =
-                    jp.co.soramitsu.common.R.string.create_account_unavailable_title to
-                    jp.co.soramitsu.common.R.string.create_account_interrupted
-                _restartCreateEvent.trigger()
-                return@launch
-            }
             try {
-                // Stores the keys and adds the account in one step, only now that the person
-                // has finished the flow.
                 multiaccountInteractor.createUserFromDraft(draft)
-                tempDraft?.destroy()
-                tempDraft = null
+                draft.destroy()
+                if (tempDraft === draft) tempDraft = null
                 mainStarter.start(context)
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error
             } catch (error: Throwable) {
-                // The account was not saved (a busy Keystore, a full disk). The wallet is still
-                // held in memory and its phrase is still on the phrase screen: the person is
-                // taken back there, told what happened, and Continue tries again.
+                // Keep the draft for another attempt when persistence did not complete.
                 FirebaseWrapper.recordException(error)
-                _createBackupPasswordState.value =
-                    _createBackupPasswordState.value?.copy(isLoading = false)
                 _passphraseConfirmationState.value =
                     _passphraseConfirmationState.value?.copy(confirmationStep = 0)
                 _returnToPassphraseEvent.trigger()
                 errorFromResourceLiveData.value =
-                    jp.co.soramitsu.common.R.string.create_account_not_saved_title to
-                    jp.co.soramitsu.common.R.string.create_account_not_saved
+                    R.string.create_account_not_saved_title to R.string.create_account_not_saved
+            } finally {
+                commitInProgress = false
+                _createBackupPasswordState.value = _createBackupPasswordState.value?.copy(isLoading = false)
             }
         }
     }
@@ -1199,71 +1201,54 @@ class OnboardingViewModel @Inject constructor(
         navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
     }
 
-    fun onSetBackupPasswordClicked(
-        activity: Activity
-    ) {
+    fun onSetBackupPasswordClicked(activity: Activity) {
         if (!requireCloudBackup()) return
-        _createBackupPasswordState.value?.let { createBackupPasswordState ->
-            _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
-            viewModelScope.launch(coroutineManager.io) {
-                try {
-                    _passphraseCardState.value?.let { passphraseCardState ->
-                        tempDraft?.let { draft ->
-                            val jsonString = multiaccountInteractor.generateDraftJson(
-                                draft,
-                                createBackupPasswordState.password.value.text
-                            )
-
-                            val passphrase = passphraseCardState.mnemonicWords.joinToString(" ")
-
-                            val seed = Seed(
-                                substrateSeed = multiaccountInteractor.convertPassphraseToSeed(
-                                    passphrase
-                                )
-                            )
-
-                            backupService.saveBackupAccount(
-                                DecryptedBackupAccount(
-                                    name = draft.accountName,
-                                    address = draft.address,
-                                    mnemonicPhrase = passphrase,
-                                    cryptoType = CryptoType.SR25519,
-                                    backupAccountType = listOf(
-                                        BackupAccountType.JSON,
-                                        BackupAccountType.PASSPHRASE,
-                                        BackupAccountType.SEED
-                                    ),
-                                    seed = seed,
-                                    json = Json(substrateJson = jsonString)
-                                ),
-                                createBackupPasswordState.password.value.text
-                            )
-
-                            finishCreateAccountProcess(activity)
-                        }
-                    }
-                } catch (e: SocketException) {
-                    withContext(coroutineManager.main) {
-                        _createBackupPasswordState.value =
-                            createBackupPasswordState.copy(isLoading = false)
-                    }
-                } catch (e: SocketTimeoutException) {
-                    withContext(coroutineManager.main) {
-                        _createBackupPasswordState.value =
-                            createBackupPasswordState.copy(isLoading = false)
-                    }
-                } catch (e: AuthConsentException) {
-                    withContext(coroutineManager.main) {
-                        _createBackupPasswordState.value =
-                            createBackupPasswordState.copy(isLoading = false)
-                        _consentExceptionHandler.value = e.intent
-                    }
-                } catch (e: StorageQuotaExceeded) {
-                    withContext(coroutineManager.main) {
-                        _createBackupPasswordState.value =
-                            createBackupPasswordState.copy(isLoading = false)
-                        onError(R.string.backup_not_enough_space_error)
-                    }
+        val state = _createBackupPasswordState.value ?: return
+        if (state.isLoading || commitInProgress || !state.setPasswordButtonIsEnabled ||
+            !state.warningIsSelected || !state.password.value.text.isPasswordSecure() ||
+            state.password.value.text != state.passwordConfirmation.value.text
+        ) return
+        val draft = tempDraft
+        val phrase = _passphraseCardState.value?.mnemonicWords?.joinToString(" ")
+        if (draft == null || phrase.isNullOrEmpty()) {
+            reportInterruptedCreation()
+            return
+        }
+        _createBackupPasswordState.value = state.copy(isLoading = true)
+        viewModelScope.launch(coroutineManager.io) {
+            try {
+                val jsonString = multiaccountInteractor.generateDraftJson(draft, state.password.value.text)
+                val seed = Seed(substrateSeed = multiaccountInteractor.convertPassphraseToSeed(phrase))
+                backupService.saveBackupAccount(
+                    DecryptedBackupAccount(
+                        name = draft.accountName,
+                        address = draft.address,
+                        mnemonicPhrase = phrase,
+                        cryptoType = CryptoType.SR25519,
+                        backupAccountType = listOf(BackupAccountType.JSON, BackupAccountType.PASSPHRASE, BackupAccountType.SEED),
+                        seed = seed,
+                        json = Json(substrateJson = jsonString),
+                    ),
+                    state.password.value.text,
+                )
+                withContext(coroutineManager.main) {
+                    if (tempDraft === draft) finishCreateAccountProcess(activity)
+                }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: AuthConsentException) {
+                withContext(coroutineManager.main) { _consentExceptionHandler.value = error.intent }
+            } catch (error: StorageQuotaExceeded) {
+                withContext(coroutineManager.main) { onError(R.string.backup_not_enough_space_error) }
+            } catch (error: SocketException) {
+                withContext(coroutineManager.main) { onError(SoraException.networkError(resourceManager, error)) }
+            } catch (error: SocketTimeoutException) {
+                withContext(coroutineManager.main) { onError(SoraException.networkError(resourceManager, error)) }
+            } catch (error: Exception) {
+                withContext(coroutineManager.main) { onError(R.string.wallet_cloud_backup_failed) }
+            } finally {
+                withContext(kotlinx.coroutines.NonCancellable + coroutineManager.main) {
+                    _createBackupPasswordState.value = _createBackupPasswordState.value?.copy(isLoading = false)
                 }
             }
         }
@@ -1304,8 +1289,11 @@ class OnboardingViewModel @Inject constructor(
 
     fun onImportAccountSelected(navController: NavController, account: BackupAccountMetaWithIcon) {
         _importAccountPasswordState.value?.let {
+            if (it.isLoading) return
             _importAccountPasswordState.value = it.copy(
-                selectedAccount = account
+                selectedAccount = account,
+                passwordInput = it.passwordInput.copy(value = TextFieldValue("")),
+                isContinueButtonEnabled = false,
             )
 
             navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_PASSWORD)
@@ -1318,7 +1306,7 @@ class OnboardingViewModel @Inject constructor(
                 passwordInput = it.passwordInput.copy(
                     value = textFieldValue,
                 ),
-                isContinueButtonEnabled = it.passwordInput.value.text.isNotEmpty()
+                isContinueButtonEnabled = textFieldValue.text.isNotEmpty()
             )
         }
     }
@@ -1326,6 +1314,7 @@ class OnboardingViewModel @Inject constructor(
     fun onImportContinueClicked(navController: NavController) {
         if (!requireCloudBackup()) return
         _importAccountPasswordState.value?.let { state ->
+            if (state.isLoading || state.selectedAccount == null || state.passwordInput.value.text.isEmpty()) return
             _importAccountPasswordState.value = state.copy(isLoading = true)
             viewModelScope.launch {
                 state.selectedAccount?.let {
@@ -1393,12 +1382,15 @@ class OnboardingViewModel @Inject constructor(
                         onError(SoraException.networkError(resourceManager, e))
                     } catch (e: AuthConsentException) {
                         _consentExceptionHandler.value = e.intent
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        onError(R.string.wallet_cloud_backup_failed)
+                    } finally {
+                        _importAccountPasswordState.value =
+                            _importAccountPasswordState.value?.copy(isLoading = false)
                     }
                 }
-                // The success screen's state (import more) was set by showImported; only the
-                // loading mark is cleared here.
-                _importAccountPasswordState.value =
-                    (_importAccountPasswordState.value ?: state).copy(isLoading = false)
             }
         }
     }
@@ -1503,19 +1495,25 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onImportMoreClicked(navController: NavController) {
+        if (!requireCloudBackup() || _importAccountPasswordState.value?.isLoading == true) return
+        _importAccountPasswordState.value = _importAccountPasswordState.value?.copy(isLoading = true)
         viewModelScope.launch {
             try {
-                _importAccountPasswordState.value =
-                    _importAccountPasswordState.value?.copy(isLoading = true)
-                _importAccountListState.value =
-                    ImportAccountListScreenState(getBackupedAccountsFiltered())
-
+                _importAccountListState.value = ImportAccountListScreenState(getBackupedAccountsFiltered())
                 resetBackupLiveData()
                 navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
             } catch (e: SocketTimeoutException) {
                 onError(SoraException.networkError(resourceManager, e))
+            } catch (e: AuthConsentException) {
+                _consentExceptionHandler.value = e.intent
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                onError(R.string.wallet_cloud_backup_failed)
+            } finally {
+                _importAccountPasswordState.value = _importAccountPasswordState.value?.copy(isLoading = false)
             }
         }
     }

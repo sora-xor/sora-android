@@ -341,4 +341,121 @@ class NexusTransferHistoryParserTest {
     private companion object {
         const val HASH = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     }
+
+    private fun parseHistory(report: JsonObject, account: String = sender) = NexusTransferHistoryParser.page(
+        report, NexusNetworks.taira, account, TairaTestnetContract.XOR_ASSET_DEFINITION_ID,
+    )
+
+    private fun mutateItem(change: (JsonObject) -> JsonObject): JsonObject {
+        val report = routedHistory("1")
+        val body = report.getValue("body") as JsonObject
+        val item = (body.getValue("items") as JsonArray).single() as JsonObject
+        return JsonObject(report + ("body" to JsonObject(body + ("items" to JsonArray(listOf(change(item)))))))
+    }
+
+    private fun mutatePayload(change: (JsonObject) -> JsonObject): JsonObject = mutateItem { item ->
+        val box = item.getValue("box") as JsonObject
+        val projection = box.getValue("json") as JsonObject
+        val payload = projection.getValue("payload") as JsonObject
+        JsonObject(item + ("box" to JsonObject(box + ("json" to JsonObject(projection + ("payload" to change(payload)))))))
+    }
+
+    private fun mutateTransfer(change: (JsonObject) -> JsonObject): JsonObject = mutatePayload { payload ->
+        JsonObject(payload + ("value" to change(payload.getValue("value") as JsonObject)))
+    }
+
+    private fun assertRejected(code: String, report: JsonObject) {
+        assertEquals(code, assertThrows(NexusToriiException::class.java) { parseHistory(report) }.safeCode)
+    }
+
+    @Test fun `history page rejects missing containers and nonobject instructions`() {
+        val valid = routedHistory("1")
+        val body = valid.getValue("body") as JsonObject
+        listOf("body", "items", "pagination").forEach { field ->
+            val report = if (field == "body") JsonObject(valid - field)
+                else JsonObject(valid + ("body" to JsonObject(body - field)))
+            assertRejected("NEXUS_HISTORY_INVALID_RESPONSE", report)
+        }
+        assertRejected("NEXUS_HISTORY_INVALID_ITEM", JsonObject(valid + ("body" to JsonObject(body + ("items" to JsonArray(listOf(JsonPrimitive("bad"))))))))
+    }
+
+    @Test fun `each pagination field must be an integer before a page can be admitted`() {
+        val valid = routedHistory("1")
+        val body = valid.getValue("body") as JsonObject
+        val pagination = body.getValue("pagination") as JsonObject
+        for (field in listOf("page", "per_page", "total_pages", "total_items")) {
+            assertRejected("NEXUS_HISTORY_PAGINATION_INVALID", JsonObject(valid + ("body" to JsonObject(body + ("pagination" to JsonObject(pagination - field))))))
+        }
+    }
+
+    @Test fun `instruction identity requires explicit status hash index and timestamp`() {
+        mapOf(
+            "transaction_status" to "NEXUS_HISTORY_STATUS_MISSING",
+            "transaction_hash" to "NEXUS_HISTORY_INVALID_HASH",
+            "index" to "NEXUS_HISTORY_INVALID_INDEX",
+            "created_at" to "NEXUS_HISTORY_INVALID_TIMESTAMP",
+            "box" to "NEXUS_HISTORY_INVALID_PAYLOAD",
+        ).forEach { (field, code) -> assertRejected(code, mutateItem { JsonObject(it - field) }) }
+        assertRejected("NEXUS_HISTORY_IDENTITY_MISMATCH", mutateItem { JsonObject(it + ("kind" to JsonPrimitive("Mint"))) })
+        for (timestamp in listOf("bad", "0", "9".repeat(65), "9223372036854775808")) {
+            assertRejected("NEXUS_HISTORY_INVALID_TIMESTAMP", mutateItem { JsonObject(it + ("created_at" to JsonPrimitive(timestamp))) })
+        }
+    }
+
+    @Test fun `second and millisecond timestamps resolve to the same instant`() {
+        val seconds = parseHistory(mutateItem { JsonObject(it + ("created_at" to JsonPrimitive("1775260800"))) })
+        val millis = parseHistory(mutateItem { JsonObject(it + ("created_at" to JsonPrimitive("1775260800000"))) })
+        assertEquals(1775260800000L, seconds.items.single().timestampMillis)
+        assertEquals(seconds.items, millis.items)
+    }
+
+    @Test fun `history transfer requires destination amount and consistent explicit source identity`() {
+        assertRejected("NEXUS_HISTORY_DESTINATION_MISSING", mutateTransfer { JsonObject(it - "destination") })
+        assertRejected("NEXUS_HISTORY_INVALID_AMOUNT", mutateTransfer { JsonObject(it - "object") })
+        assertRejected("NEXUS_HISTORY_SOURCE_MISMATCH", mutateTransfer { JsonObject(it + ("source_account" to JsonPrimitive(receiver))) })
+        assertRejected("NEXUS_HISTORY_INVALID_SOURCE_ASSET", mutateTransfer { JsonObject(it + ("source" to JsonPrimitive(TairaTestnetContract.XOR_ASSET_DEFINITION_ID + "#"))) })
+        assertRejected("NEXUS_HISTORY_INVALID_DESTINATION", mutateTransfer { JsonObject(it + ("destination" to JsonPrimitive("invalid"))) })
+        assertRejected("NEXUS_HISTORY_IDENTITY_MISMATCH", mutateTransfer { JsonObject(it + ("source" to JsonPrimitive("unrelated-asset"))) })
+        val incoming = mutateTransfer { JsonObject((it - "source") + ("source_account" to JsonPrimitive(sender))) }
+        assertEquals(sender, parseHistory(incoming, receiver).items.single().sender)
+        assertRejected("NEXUS_HISTORY_INVALID_SOURCE", mutateTransfer { JsonObject((it - "source") + ("destination" to JsonPrimitive(sender))) })
+    }
+
+    @Test fun `scaled mantissa and nested quantity forms retain exact decimal amounts`() {
+        for (quantity in listOf(
+            JsonObject(mapOf("scale" to JsonPrimitive("9"), "mantissa" to JsonPrimitive("1234567890"))),
+            JsonObject(mapOf("amount" to JsonPrimitive("1.234567890"))),
+            JsonObject(mapOf("value" to JsonObject(mapOf("value" to JsonPrimitive("1.234567890"))))),
+        )) {
+            assertEquals("1.23456789", parseHistory(mutateTransfer { JsonObject(it + ("object" to quantity)) }).items.single().amount)
+        }
+        for (quantity in listOf(
+            JsonArray(emptyList()),
+            JsonObject(mapOf("scale" to JsonPrimitive("-1"), "value" to JsonPrimitive("1"))),
+            JsonObject(mapOf("scale" to JsonPrimitive("9"), "value" to JsonPrimitive("-1"))),
+            JsonObject(mapOf("scale" to JsonPrimitive("9"), "value" to JsonPrimitive("9".repeat(5000)))),
+        )) assertRejected("NEXUS_HISTORY_INVALID_AMOUNT", mutateTransfer { JsonObject(it + ("object" to quantity)) })
+    }
+
+    @Test fun `batch transfer accepts supported entry containers and filters different asset definitions`() {
+        val definition = TairaTestnetContract.XOR_ASSET_DEFINITION_ID
+        val entry = JsonObject(mapOf("asset_definition" to JsonPrimitive(definition), "source_account" to JsonPrimitive(sender), "destination" to JsonPrimitive(receiver), "amount" to JsonPrimitive("2.5")))
+        for (key in listOf("entries", "transfers", "items")) {
+            val batch = mutatePayload { JsonObject(mapOf("variant" to JsonPrimitive("AssetBatch"), "value" to JsonObject(mapOf(key to JsonArray(listOf(JsonObject(entry + ("asset_definition" to JsonPrimitive("other"))), entry)))))) }
+            assertEquals(listOf("2.5"), parseHistory(batch).items.map { it.amount })
+        }
+        val missingDefinition = JsonArray(listOf(JsonObject(entry - "asset_definition")))
+        val invalidBatch = mutatePayload {
+            JsonObject(mapOf("variant" to JsonPrimitive("AssetBatch"), "value" to JsonObject(mapOf("entries" to missingDefinition))))
+        }
+        assertRejected("NEXUS_HISTORY_INVALID_BATCH_ASSET", invalidBatch)
+    }
+
+    @Test fun `malformed batch payloads and unknown variants are rejected`() {
+        for (value in listOf(JsonPrimitive("bad"), JsonObject(emptyMap()), JsonObject(mapOf("entries" to JsonArray(listOf(JsonPrimitive("bad"))))))) {
+            assertRejected("NEXUS_HISTORY_INVALID_PAYLOAD", mutatePayload { JsonObject(mapOf("variant" to JsonPrimitive("AssetBatch"), "value" to value)) })
+        }
+        assertRejected("NEXUS_HISTORY_IDENTITY_MISMATCH", mutatePayload { JsonObject(it + ("variant" to JsonPrimitive("Unexpected"))) })
+    }
+
 }

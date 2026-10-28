@@ -96,14 +96,14 @@ internal fun SwapMarketSlippageSelector(
 
 @Composable
 internal fun MarketSelector(
-    modifier: Modifier = Modifier.wrapContentSize(),
+    modifier: Modifier = Modifier,
     value: String,
     enabled: Boolean = true,
     description: String,
     onClick: () -> Unit,
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier.wrapContentSize(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {

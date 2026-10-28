@@ -147,7 +147,7 @@ private fun AllPoolsInternal(
                         painter = painterResource(
                             id = jp.co.soramitsu.common.R.drawable.ic_plus,
                         ),
-                        contentDescription = "",
+                        contentDescription = stringResource(R.string.explore_create_pool),
                         tint = MaterialTheme.customColors.fgSecondary,
                     )
                 }

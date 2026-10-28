@@ -91,12 +91,14 @@ sora_device_page_size() {
   adb shell getconf PAGE_SIZE | tr -d '\r\n'
 }
 
-# Tests that mock a final class load MockK's Android agent, a native library of the test APK
-# (mockk-agent-android 1.13.11). It is built for 4 KB pages and a 16 KB device refuses to load
-# it. That is a limit of the test tool; the app's own libraries are 16 KB aligned and checked
-# by scripts/verify-android-native-16kb.py.
+# Tests that mock a final class load MockK's Android agent from the test APK
+# (mockk-agent-android 1.14.3). The full suite is qualified on 4 KB devices. This agent's
+# PT_LOAD segments pass the repository's 16 KB checks, but its arm64/x86_64 GNU_RELRO ends
+# fail the strict alignment gate. The full suite remains unqualified on 16 KB devices;
+# this static result alone does not establish whether a device loader rejects the agent.
+# The app's own native libraries are checked by scripts/verify-android-native-16kb.py.
 # shellcheck disable=SC2034  # used by the scripts that source this file
-readonly sora_mockk_agent_note="needs 4 KB pages: the MockK agent library of the test APK is not 16 KB aligned"
+readonly sora_mockk_agent_note="full suite qualified on 4 KB pages; MockK 1.14.3 fails the strict 16 KB GNU_RELRO gate"
 
 # Stops unless the selected device is an emulator.
 sora_require_emulator() {

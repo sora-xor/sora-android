@@ -497,6 +497,7 @@ class AccountDetailsViewModelTest {
                 json = Json()
             )
 
+        accountDetailsViewModel.onWarningToggle()
         accountDetailsViewModel.onBackupPasswordClicked()
         advanceUntilIdle()
 

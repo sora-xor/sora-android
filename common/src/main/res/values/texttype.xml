@@ -49,28 +49,14 @@
         <item name="android:fontFamily">@font/sora_regular</item>
     </style>
 
-    <style name="TextAppearance.Soramitsu.Neu.Semibold">
-        <item name="fontFamily">@font/sora_semibold</item>
-        <item name="android:fontFamily">@font/sora_semibold</item>
-    </style>
 
     <style name="TextAppearance.Soramitsu.Neu.Bold">
         <item name="fontFamily">@font/sora_bold</item>
         <item name="android:fontFamily">@font/sora_bold</item>
     </style>
 
-    <style name="TextAppearance.Soramitsu.Neu.ExtraBold">
-        <item name="fontFamily">@font/sora_extrabold</item>
-        <item name="android:fontFamily">@font/sora_extrabold</item>
-    </style>
 
-    <style name="TextAppearance.Soramitsu.Neu.Light.11">
-        <item name="android:textSize">11sp</item>
-    </style>
 
-    <style name="TextAppearance.Soramitsu.Neu.Light.13">
-        <item name="android:textSize">13sp</item>
-    </style>
 
     <style name="TextAppearance.Soramitsu.Neu.Light.15">
         <item name="android:textSize">15sp</item>
@@ -80,40 +66,15 @@
         <item name="android:textSize">15sp</item>
     </style>
 
-    <style name="TextAppearance.Soramitsu.Neu.Semibold.12">
-        <item name="android:textSize">12sp</item>
-    </style>
 
-    <style name="TextAppearance.Soramitsu.Neu.Semibold.15">
-        <item name="android:textSize">15sp</item>
-    </style>
 
-    <style name="TextAppearance.Soramitsu.Neu.Semibold.34">
-        <item name="android:textSize">34sp</item>
-    </style>
 
     <style name="TextAppearance.Soramitsu.Neu.Bold.11">
         <item name="android:textSize">11sp</item>
     </style>
 
-    <style name="TextAppearance.Soramitsu.Neu.Bold.24">
-        <item name="android:textSize">24sp</item>
-    </style>
 
-    <style name="TextAppearance.Soramitsu.Neu.Bold.34">
-        <item name="android:textSize">34sp</item>
-    </style>
 
-    <style name="TextAppearance.Soramitsu.Neu.18.Bold.Uppercase" parent="TextAppearance.MaterialComponents.Body1">
-        <item name="android:textSize">18sp</item>
-        <item name="android:lineSpacingExtra">0sp</item>
-        <item name="fontFamily">@font/sora_bold</item>
-        <item name="android:fontFamily">@font/sora_bold</item>
-        <item name="android:textStyle">normal</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:letterSpacing">-0.02</item>
-        <item name="android:textColor">?attr/balanceColorDefault</item>
-    </style>
 
     <style name="TextAppearance.Soramitsu.Neu.BottomNavigation" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textSize">11sp</item>
