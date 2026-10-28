@@ -77,3 +77,6 @@ fastlane/readme.md
 # ignore jacoco coverage reports
 /coverage
 */coverage
+
+# Generated local emulator state used by coverage runs.
+/.local/coverage90-avd/
