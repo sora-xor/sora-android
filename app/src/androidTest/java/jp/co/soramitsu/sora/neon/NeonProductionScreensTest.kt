@@ -24,6 +24,7 @@ import android.graphics.Rect
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.PixelCopy
 import android.view.ViewTreeObserver
 import androidx.annotation.RequiresApi
@@ -307,8 +308,27 @@ class NeonProductionScreensTest {
         }
     }
 
+    private class TransientPixelCopyFailure(val status: Int) : RuntimeException()
+
     @RequiresApi(29)
     private fun captureCommittedRoot(): Bitmap {
+        val deadline = SystemClock.uptimeMillis() + 60_000L
+        repeat(3) { attempt ->
+            try {
+                return captureCommittedRootAttempt(deadline)
+            } catch (failure: TransientPixelCopyFailure) {
+                // PixelCopy can time out acquiring a GPU buffer even after frame
+                // commitment. Retry acquisition only, with a newly committed frame;
+                // layout, lifecycle and pixel assertions are never retried.
+                assertTrue("PixelCopy acquisition failed after ${attempt + 1} attempts: ${failure.status}",
+                    attempt < 2 && SystemClock.uptimeMillis() < deadline)
+            }
+        }
+        error("PixelCopy acquisition did not return a bitmap")
+    }
+
+    @RequiresApi(29)
+    private fun captureCommittedRootAttempt(deadline: Long): Bitmap {
         val node = rule.onRoot().fetchSemanticsNode()
         val composeRoot = checkNotNull(node.root as? ViewRootForTest) { "The captured root must belong to the activity window" }
         val activity = rule.activity
@@ -348,7 +368,9 @@ class NeonProductionScreensTest {
             }
             // The framework helper allows only 2s for this native callback.
             // Wait for the actual GPU frame; do not sleep or redraw in software.
-            assertTrue("The native root frame was not committed within 10s", frameCommitted.await(10, TimeUnit.SECONDS))
+            val frameWait = deadline - SystemClock.uptimeMillis()
+            assertTrue("The native root frame was not committed before the capture deadline",
+                frameWait > 0 && frameCommitted.await(frameWait, TimeUnit.MILLISECONDS))
             val bitmap = Bitmap.createBitmap(bounds.width(), bounds.height(), Bitmap.Config.ARGB_8888)
             val copied = CountDownLatch(1)
             val result = AtomicInteger(-1)
@@ -356,8 +378,16 @@ class NeonProductionScreensTest {
                 result.set(status)
                 copied.countDown()
             }, Handler(Looper.getMainLooper()))
-            assertTrue("PixelCopy did not complete within 10s", copied.await(10, TimeUnit.SECONDS))
-            assertEquals("PixelCopy must capture the committed root successfully", PixelCopy.SUCCESS, result.get())
+            val copyWait = deadline - SystemClock.uptimeMillis()
+            assertTrue("PixelCopy did not complete before the capture deadline",
+                copyWait > 0 && copied.await(copyWait, TimeUnit.MILLISECONDS))
+            val status = result.get()
+            if (status == PixelCopy.ERROR_TIMEOUT || status == PixelCopy.ERROR_SOURCE_NO_DATA) {
+                bitmap.recycle()
+                throw TransientPixelCopyFailure(status)
+            }
+            if (status != PixelCopy.SUCCESS) bitmap.recycle()
+            assertEquals("PixelCopy must capture the committed root successfully", PixelCopy.SUCCESS, status)
             return bitmap
         } finally {
             try {

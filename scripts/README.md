@@ -66,7 +66,7 @@ adb -s emulator-5560 emu kill
 
 Run `ANDROID_SERIAL=emulator-5560 bash scripts/run-code-coverage.sh --offline` on a disposable
 4 KB emulator. This runs every productionDebug unit test, lint, the device suites, and the
-ordered storage qualification phases, then enforces **80% line coverage**. The JSON summary is
+ordered storage qualification phases, then enforces **90.01% line coverage**. The JSON summary is
 `build/reports/coverage/summary.json`; Kover and device HTML reports remain under each module's
 `build/reports/` directory. Generated files, dependencies, and the test-only `test_data`/`baselineprofile` modules are excluded; all checked-in
 productionDebug application sources, including UI and debug support, remain in scope.
