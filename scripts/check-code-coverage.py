@@ -97,7 +97,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("reports", type=Path, nargs="*", help="Kover/JaCoCo XML reports from the same source revision")
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument("--minimum", type=float, default=80)
+    parser.add_argument("--minimum", type=float, default=90.01)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--write-source-manifest", type=Path, help="Snapshot source hashes before starting the full test run")
     parser.add_argument("--source-manifest", type=Path, help="Reject results if any production source changed during the run")

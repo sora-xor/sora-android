@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.system.Os
+import androidx.core.content.FileProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import jp.co.soramitsu.common.io.FileManagerImpl
@@ -24,6 +25,11 @@ class FileManagerPlatformContractTest {
         override fun getFilesDir() = File(root, "files").apply { mkdirs() }
         override fun getExternalCacheDir(): File? = if (external) File(cacheDir, "external").apply { mkdirs() } else null
         override fun getExternalMediaDirs(): Array<File> = if (media) arrayOf(File(root, "media").apply { mkdirs() }) else emptyArray()
+    }
+    @Before fun initializeProviderWithTheApplicationStorageRoots() {
+        // FileProvider caches roots by authority for the entire instrumentation process.
+        // Seed that cache from the actual app context before exercising redirected storage.
+        FileProvider.getUriForFile(context, context.packageName + ".soraFileProvider", root)
     }
     @After fun cleanFixture() { root.deleteRecursively() }
     @Test fun cacheAndPrivateFilesPreserveBytesAndDistinguishEmptyFromMissing() {

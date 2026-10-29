@@ -65,23 +65,43 @@ class CoverageGateTest(unittest.TestCase):
         source.write_text("package wallet\nfun fixture() = 1\n")
         self.assertNotIn("wallet/Fixture.kt", gate.source_files(self.root))
 
-    def test_cli_fails_below_eighty_percent(self):
+    def test_cli_fails_below_ninety_percent(self):
         report = self.report("unit.xml", 1, 0)
         result = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root), str(report)], capture_output=True, text=True)
         self.assertEqual(1, result.returncode)
         self.assertIn("50.0000%", result.stdout)
 
-    def test_below_threshold_percentage_does_not_display_as_eighty(self):
-        # 16000/20001 rounds to 80.00% at two decimals, but must still fail.
+    def test_below_threshold_percentage_does_not_round_up_to_a_pass(self):
+        # 18002/20001 rounds to 90.01% at two decimals, but must still fail.
         report = self.root / "near-threshold.xml"
-        lines = ''.join(f'<line nr="{number}" ci="{int(number <= 16000)}" mi="1"/>'
+        lines = ''.join(f'<line nr="{number}" ci="{int(number <= 18002)}" mi="1"/>'
                         for number in range(1, 20002))
         report.write_text('<report><package name="wallet"><sourcefile name="Flow.kt">' +
                           lines + '</sourcefile></package></report>')
         result = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root), str(report)], capture_output=True, text=True)
         self.assertEqual(1, result.returncode)
-        self.assertIn("79.9960%", result.stdout)
-        self.assertNotIn("coverage: 80", result.stdout)
+        self.assertIn("90.0055%", result.stdout)
+        self.assertNotIn("coverage: 90.01", result.stdout)
+
+    def test_exactly_ninety_percent_does_not_satisfy_above_ninety_goal(self):
+        report = self.root / "exact-ninety.xml"
+        lines = ''.join(f'<line nr="{number}" ci="{int(number <= 9)}" mi="1"/>'
+                        for number in range(1, 11))
+        report.write_text('<report><package name="wallet"><sourcefile name="Flow.kt">' +
+                          lines + '</sourcefile></package></report>')
+        result = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root), str(report)], capture_output=True, text=True)
+        self.assertEqual(1, result.returncode)
+        self.assertIn("90.0000%", result.stdout)
+
+    def test_current_goal_threshold_accepts_coverage_above_ninety_point_zero_one(self):
+        report = self.root / "above-goal.xml"
+        lines = ''.join(f'<line nr="{number}" ci="{int(number <= 9002)}" mi="1"/>'
+                        for number in range(1, 10001))
+        report.write_text('<report><package name="wallet"><sourcefile name="Flow.kt">' +
+                          lines + '</sourcefile></package></report>')
+        result = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root), str(report)], capture_output=True, text=True)
+        self.assertEqual(0, result.returncode)
+        self.assertIn("90.0200%", result.stdout)
 
     def test_source_manifest_rejects_edited_production_source(self):
         manifest = self.root / "manifest.json"

@@ -7,7 +7,7 @@ usage() {
   cat <<'USAGE'
 usage: run-code-coverage.sh [--offline]
 Runs every productionDebug unit test and all single-process device suites, merges
-unique executable source-line hits, and fails below 80%. Use a disposable 4 KB
+unique executable source-line hits, and fails below 90.01%. Use a disposable 4 KB
 Android emulator; ANDROID_SERIAL selects it when multiple devices are attached.
 Reports: build/reports/coverage/summary.json and each module's HTML report.
 SORA_GRADLE_FLAGS accepts additional Gradle flags (see device-test-common.sh).
