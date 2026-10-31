@@ -33,8 +33,9 @@ Never commit credentials or paste them into issues or chats. `CI_FIREBASE_RELEAS
 and Play publishing Gradle tasks. Building and validating artifacts does not publish them.
 
 - [ ] Confirm the highest versionCode already uploaded across all Play tracks and choose a
-      higher code in the range enforced by `app/build.gradle.kts`. For 3.9.1 that range is
-      `3090100..3090199`; do not reuse a code already uploaded.
+      higher code in the range enforced by `app/build.gradle.kts`. For 3.9.2 that range is
+      `3090200..3090299`; do not reuse a code already uploaded (3090101 was the highest on
+      29 October 2026).
 - [ ] Confirm `appVersionName` in `app/build.gradle.kts` is the intended release version.
 - [ ] Confirm the public certificate pins in `config/android-production-signing-identity.json`
       match the upload certificate currently accepted by Play and the existing app-signing
@@ -75,7 +76,7 @@ python3 scripts/google-identity-pin.py check --google-services app/google-servic
 ./gradlew --dependency-verification=strict :app:bundleProductionRelease :app:assembleProductionRelease
 python3 scripts/verify-release-manifest.py \
   --policy config/android-nexus-manifest-policy.json \
-  --expect-version-code "$SORA_VERSION_CODE" --expect-version-name 3.9.1 \
+  --expect-version-code "$SORA_VERSION_CODE" --expect-version-name 3.9.2 \
   app/build/outputs/bundle/productionRelease/app-production-release.aab \
   app/build/outputs/apk/production/release/app-production-release.apk
 APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner" python3 scripts/verify-release-signing.py \
