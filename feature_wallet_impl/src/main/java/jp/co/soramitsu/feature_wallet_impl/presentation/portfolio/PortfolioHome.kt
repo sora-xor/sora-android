@@ -2,11 +2,13 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.portfolio
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,8 +36,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -65,7 +75,6 @@ import jp.co.soramitsu.common.presentation.compose.neon.HeroCard
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
 import jp.co.soramitsu.common.presentation.compose.neon.NeonSegments
 import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
-import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
 import jp.co.soramitsu.common.presentation.compose.neon.neonGlass
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyTags
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
@@ -115,7 +124,10 @@ internal fun PortfolioModel.colorOfWallet(walletId: String): Color = PortfolioPa
 internal fun PortfolioModel.colorOfGroup(key: String?): Color =
     if (key == null || key == OTHER_KEY) PortfolioPalette.other else PortfolioPalette.slot(slots[key])
 
-/** The hero: the sky with the scope chip, and the hero card overlapping its bottom by 22 dp. */
+/**
+ * The hero: the sky with the scope chip, and the hero card overlapping its bottom by 22 dp.
+ * [skyActive] is whether the sky is on screen; its looping light runs only then.
+ */
 @Composable
 internal fun PortfolioHero(
     model: PortfolioModel,
@@ -123,6 +135,7 @@ internal fun PortfolioHero(
     tilt: TiltState,
     actions: PortfolioHomeActions,
     modifier: Modifier = Modifier,
+    skyActive: Boolean = true,
 ) {
     Box(modifier.fillMaxWidth()) {
         PortfolioSky(
@@ -131,6 +144,7 @@ internal fun PortfolioHero(
             highlighted = model.highlighted,
             tilt = tilt,
             onSliceTap = actions::onLegend,
+            active = skyActive,
         ) {
             ScopeChip(
                 model = model,
@@ -217,10 +231,12 @@ private fun ScopeChip(model: PortfolioModel, onClick: () -> Unit, modifier: Modi
 @Composable
 private fun EmptyCard(model: PortfolioModel, actions: PortfolioHomeActions) {
     val n = MaterialTheme.neon
+    val glows = LocalFx.current.glows
     HeroCard(Modifier.fillMaxWidth()) {
         Column(
             Modifier
                 .fillMaxWidth()
+                .drawBehind { drawPlanetLight(n.isDark, glows) }
                 .padding(horizontal = 22.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -261,8 +277,14 @@ private fun EmptyCard(model: PortfolioModel, actions: PortfolioHomeActions) {
 @Composable
 private fun PortfolioHeroCard(model: PortfolioModel, format: PortfolioFormat, actions: PortfolioHomeActions) {
     val largeText = LocalDensity.current.fontScale >= 1.3f
+    val dark = MaterialTheme.neon.isDark
+    val glows = LocalFx.current.glows
     HeroCard(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 16.dp)) {
+        Column(
+            Modifier
+                .drawBehind { drawPlanetLight(dark, glows) }
+                .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 16.dp)
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Overline(stringResource(R.string.portfolio_total_balance), Modifier.weight(1f))
                 model.freshness?.let {
@@ -355,12 +377,16 @@ private fun TotalBlock(totals: PortfolioTotals, format: PortfolioFormat, stale: 
     }
 }
 
-/** ▲ +$148.20 · +1.2% · 24h: arrow and sign always, the app's up and down colours. */
+/**
+ * ▲ +$148.20 · +1.2% · 24h: arrow and sign always, the app's up and down colours, in a capsule
+ * tinted with the direction's colour.
+ */
 @Composable
 private fun ChangeLine(change: Double, fraction: Double, format: PortfolioFormat) {
     val n = MaterialTheme.neon
     val up = change >= 0
     val color = if (up) n.success else n.error
+    val shape = RoundedCornerShape(50)
     Text(
         text = buildAnnotatedString {
             withStyle(SpanStyle(color = color)) {
@@ -375,6 +401,12 @@ private fun ChangeLine(change: Double, fraction: Double, format: PortfolioFormat
         },
         style = NeonType.amountM,
         maxLines = 1,
+        modifier = Modifier
+            .padding(top = 4.dp)
+            .clip(shape)
+            .background(color.copy(alpha = if (n.isDark) 0.13f else 0.09f))
+            .border(1.dp, color.copy(alpha = 0.32f), shape)
+            .padding(horizontal = 10.dp, vertical = 3.dp),
     )
 }
 
@@ -536,22 +568,22 @@ private fun LegendChip(
     }
 }
 
+/** Send · Receive · Move · Swap, each a glossy disc in one of the hero's colours. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun QuickActions(actions: PortfolioHomeActions, largeText: Boolean) {
-    val n = MaterialTheme.neon
     val items: @Composable () -> Unit = {
-        QuickAction(stringResource(R.string.common_send), onClick = actions::onSend) {
-            PortfolioGlyph(Glyph.SEND, n.textPrimary, Modifier.size(24.dp))
+        QuickAction(stringResource(R.string.common_send), PortfolioPalette.actionSend, onClick = actions::onSend) {
+            PortfolioGlyph(Glyph.SEND, Color.White, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.common_receive), onClick = actions::onReceive) {
-            PortfolioGlyph(Glyph.RECEIVE, n.textPrimary, Modifier.size(24.dp))
+        QuickAction(stringResource(R.string.common_receive), PortfolioPalette.actionReceive, onClick = actions::onReceive) {
+            PortfolioGlyph(Glyph.RECEIVE, Color.White, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.portfolio_move), onClick = actions::onMove) {
-            PortfolioGlyph(Glyph.MOVE, n.textPrimary, Modifier.size(24.dp))
+        QuickAction(stringResource(R.string.portfolio_move), PortfolioPalette.actionMove, onClick = actions::onMove) {
+            PortfolioGlyph(Glyph.MOVE, Color.White, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.portfolio_swap), onClick = actions::onSwap) {
-            PolkaswapFlower(Modifier.size(26.dp), tint = n.polkaswapBrand)
+        QuickAction(stringResource(R.string.portfolio_swap), PortfolioPalette.actionSwap, onClick = actions::onSwap) {
+            PolkaswapFlower(Modifier.size(26.dp), tint = Color.White)
         }
     }
     if (largeText) {
@@ -562,8 +594,12 @@ private fun QuickActions(actions: PortfolioHomeActions, largeText: Boolean) {
 }
 
 @Composable
-private fun QuickAction(label: String, onClick: () -> Unit, icon: @Composable () -> Unit) {
+private fun QuickAction(label: String, colors: Pair<Color, Color>, onClick: () -> Unit, icon: @Composable () -> Unit) {
+    val n = MaterialTheme.neon
+    val fx = LocalFx.current
     val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val press by animateFloatAsState(if (pressed) 1f else 0f, tween(120), label = "actionPress")
     Column(
         modifier = Modifier
             .widthIn(min = 72.dp)
@@ -571,11 +607,84 @@ private fun QuickAction(label: String, onClick: () -> Unit, icon: @Composable ()
             .padding(vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        NeumorphicSurface(shape = CircleShape, interactionSource = interaction, modifier = Modifier.size(56.dp)) {
+        // Lit from the top left like the planet, with a glow of its own colour below it. Pressing
+        // sinks it a little (Reduce Motion: it only dims).
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .graphicsLayer {
+                    val scale = if (fx.reduceMotion) 1f else 1f - 0.06f * press
+                    scaleX = scale
+                    scaleY = scale
+                    alpha = 1f - 0.15f * press
+                }
+                .drawBehind {
+                    if (fx.glows) {
+                        val center = Offset(size.width / 2f, size.height / 2f + 5.dp.toPx())
+                        val radius = size.minDimension * 0.85f
+                        drawCircle(
+                            Brush.radialGradient(
+                                0f to colors.second.copy(alpha = if (n.isDark) 0.55f else 0.32f),
+                                1f to Color.Transparent,
+                                center = center,
+                                radius = radius,
+                            ),
+                            radius = radius,
+                            center = center,
+                        )
+                    }
+                }
+                .clip(CircleShape)
+                .background(Brush.linearGradient(listOf(colors.first, colors.second)))
+                .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .background(Brush.verticalGradient(0f to Color.White.copy(alpha = 0.28f), 0.5f to Color.Transparent))
+            )
             icon()
         }
         Spacer(Modifier.height(8.dp))
-        Text(label, style = MaterialTheme.customTypography.textSBold, color = MaterialTheme.neon.textPrimary, maxLines = 1)
+        Text(label, style = MaterialTheme.customTypography.textSBold, color = n.textPrimary, maxLines = 1)
+    }
+}
+
+/**
+ * The planet's light falling on the top of the hero card: a soft red glow from its top edge and a
+ * rim of light along the edge's middle.
+ */
+private fun DrawScope.drawPlanetLight(dark: Boolean, glows: Boolean) {
+    val top = Offset(size.width / 2f, 0f)
+    clipRect {
+        if (glows) {
+            val radius = size.width * 0.55f
+            scale(1f, 0.45f, top) {
+                drawCircle(
+                    Brush.radialGradient(
+                        0f to PortfolioPalette.soraGlow.copy(alpha = if (dark) 0.22f else 0.12f),
+                        1f to Color.Transparent,
+                        center = top,
+                        radius = radius,
+                    ),
+                    radius = radius,
+                    center = top,
+                )
+            }
+        }
+        val rim = size.width * 0.64f
+        drawRect(
+            Brush.horizontalGradient(
+                0f to Color.Transparent,
+                0.5f to PortfolioPalette.soraGlow.copy(alpha = if (dark) 0.85f else 0.55f),
+                1f to Color.Transparent,
+                startX = top.x - rim / 2f,
+                endX = top.x + rim / 2f,
+            ),
+            topLeft = Offset(top.x - rim / 2f, 0f),
+            size = Size(rim, 1.5.dp.toPx()),
+        )
     }
 }
 

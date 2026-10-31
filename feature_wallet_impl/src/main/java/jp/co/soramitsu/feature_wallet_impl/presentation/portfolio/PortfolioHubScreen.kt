@@ -84,9 +84,9 @@ internal fun PortfolioHubScreen(
             .semantics { paneTitle = title }
     ) {
         if (model == null) {
-            LoadingHero(tilt)
+            LoadingHero(tilt, heroVisible)
         } else {
-            PortfolioHero(model, format, tilt, homeActions)
+            PortfolioHero(model, format, tilt, homeActions, skyActive = heroVisible)
         }
         Spacer(Modifier.height(16.dp))
         Column(Modifier.padding(horizontal = 16.dp)) { notices() }
@@ -104,13 +104,14 @@ internal fun PortfolioHubScreen(
 }
 
 @Composable
-private fun LoadingHero(tilt: TiltState) {
+private fun LoadingHero(tilt: TiltState, skyActive: Boolean) {
     Box(Modifier.fillMaxWidth()) {
         PortfolioSky(
             fan = emptyList(),
             colorOf = { PortfolioPalette.other },
             highlighted = null,
             tilt = tilt,
+            active = skyActive,
             onSliceTap = {},
         ) {}
         Box(Modifier.padding(top = SkyGeometry.HEIGHT - 22.dp, start = 16.dp, end = 16.dp)) {
