@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -98,12 +99,29 @@ internal object PortfolioPalette {
     fun slot(index: Int?): Color = index?.let { slots.getOrNull(it) } ?: other
 
     val polkaswap = Color(0xFFFF0066)
-    val polkaswapDeep = Color(0xFFED145B)
 
-    val nightTop = Color(0xFF0B0A14)
-    val nightBottom = Color(0xFF1B0C24)
-    val dawnTop = Color(0xFFFFF6FA)
-    val dawnBottom = Color(0xFFFFE3EE)
+    /** SORA's red (the logo and the XOR icon) and the shading of the hero's planet. */
+    val soraRed = Color(0xFFE3232C)
+    val soraLight = Color(0xFFFF6B6E)
+    val soraDeep = Color(0xFFA8101F)
+    val soraEdge = Color(0xFF6E0712)
+    val soraGlow = Color(0xFFFF2D3D)
+    val rimNight = Color(0xFF8AF3FF)
+
+    val nightTop = Color(0xFF08070F)
+    val nightBottom = Color(0xFF1A0A14)
+    val dawnTop = Color(0xFFFFF9F7)
+    val dawnBottom = Color(0xFFFFE8E5)
+    val dawnInk = Color(0xFF3A0B14)
+    val hazeViolet = Color(0xFF6C3BFF)
+    val hazeCyan = Color(0xFF22D3EE)
+    val starlight = Color(0xFFFFE9E4)
+
+    /** The quick actions' discs, lit (first) to deep (second), in the hero's colours. */
+    val actionSend = Color(0xFFFF5A63) to Color(0xFFC8102E)
+    val actionReceive = Color(0xFF5AA8FF) to Color(0xFF1F5FD6)
+    val actionMove = Color(0xFFA57BFF) to Color(0xFF5B2FD1)
+    val actionSwap = Color(0xFFFF4F96) to Color(0xFFD6005A)
 
     fun network(network: WalletNetworkId): Color = when (network) {
         WalletNetworkId.SORA2 -> Color(0xFFE2242F)
@@ -243,23 +261,24 @@ internal fun WalletAvatar(name: String, color: Color, size: Dp, modifier: Modifi
     }
 }
 
-/** "All wallets": the Polkaswap flower on a pink badge with faint rings. */
+/** "All wallets": the SORA mark, the red disc with 天, as the hero's planet wears it. */
 @Composable
 internal fun AllWalletsAvatar(size: Dp, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(size)
-            .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(Color(0xFFFF2D84), Color(0xFF8C0040)))),
-        contentAlignment = Alignment.Center,
-    ) {
-        Canvas(Modifier.size(size)) {
-            val r = this.size.minDimension / 2f
-            listOf(0.56f to 0.20f, 0.74f to 0.12f, 0.90f to 0.07f).forEach { (k, a) ->
-                drawCircle(Color.White.copy(alpha = a), radius = r * k, style = Stroke(width = 1.dp.toPx()))
-            }
+    val glyph = remember { soraGlyphPath() }
+    Canvas(modifier.size(size)) {
+        val r = this.size.minDimension / 2f
+        drawCircle(
+            Brush.linearGradient(
+                listOf(lerp(PortfolioPalette.soraRed, Color.White, 0.14f), lerp(PortfolioPalette.soraRed, Color.Black, 0.24f)),
+                start = Offset.Zero,
+                end = Offset(this.size.width, this.size.height),
+            ),
+            radius = r,
+        )
+        scale(2f * r / SORA_GLYPH_VIEWPORT, 2f * r / SORA_GLYPH_VIEWPORT, Offset.Zero) {
+            drawPath(glyph, Color.White)
         }
-        PolkaswapFlower(Modifier.size(size * 0.56f), tint = Color.White)
+        drawCircle(Color.White.copy(alpha = 0.22f), radius = r - 0.5.dp.toPx(), style = Stroke(width = 1.dp.toPx()))
     }
 }
 

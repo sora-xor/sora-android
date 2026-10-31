@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -91,6 +92,23 @@ class PortfolioInteractionCoverageTest {
         click(R.string.portfolio_move)
         click(R.string.portfolio_swap)
         compose.runOnIdle { assertEquals(listOf("send", "receive", "move", "swap"), actions.events) }
+    }
+
+    @Test fun ringTapsPickTheirSliceWhileThePlanetTakesNone() {
+        val model = model()
+        show { Column(Modifier.verticalScroll(rememberScrollState())) {
+            PortfolioHero(model, PortfolioFormat(NumbersFormatter(), "$"), TiltState(), actions)
+        } }
+        compose.onRoot().performTouchInput {
+            val planet = Offset(width / 2f, SkyGeometry.CENTER_Y.toPx())
+            val pose = RingPose.at(planet, SkyGeometry.RING_RADIUS.toPx(), 0f, 0f)
+            click(planet)
+            // XOR, the largest slice, wraps round behind the planet; VAL comes round to the front.
+            click(pose.point(90f))
+            click(pose.point(0f))
+        }
+        val (xor, valSlice) = model.fan.map { it.key ?: OTHER_KEY }
+        compose.runOnIdle { assertEquals(listOf("legend:$valSlice", "legend:$xor"), actions.events) }
     }
 
     @Test fun lensesExposeTokenNetworkAndWalletRowsAndKeepHiddenAssetsOut() {
