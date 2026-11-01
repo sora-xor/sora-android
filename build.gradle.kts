@@ -54,6 +54,17 @@ subprojects {
         lockMode.set(LockMode.STRICT)
     }
 
+    // Update-availability advisories report what was published upstream after the dependency
+    // graph was pinned and verified, so with warningsAsErrors they fail lint on unchanged source.
+    // Dependency upgrades are reviewed on their own; every other lint check stays an error.
+    listOf("com.android.application", "com.android.library", "com.android.test").forEach { pluginId ->
+        pluginManager.withPlugin(pluginId) {
+            extensions.configure<com.android.build.api.dsl.CommonExtension>("android") {
+                lint.disable += setOf("AndroidGradlePluginVersion", "GradleDependency", "NewerVersionAvailable")
+            }
+        }
+    }
+
     configurations.configureEach {
         val configurationName = name
         resolutionStrategy {

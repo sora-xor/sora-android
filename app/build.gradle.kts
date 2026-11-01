@@ -58,15 +58,16 @@ kotlin {
     jvmToolchain(17)
 }
 
-// Google Play: 3.9.0 is versionCode 3090000; the next release is 3.9.1.
+// Google Play: 3.9.1 is versionCode 3090100 (production) and 3090101 (open testing, the highest
+// code uploaded); the next release is 3.9.2.
 // From 3.9.0: versionCode = MAJOR * 1_000_000 + MINOR * 10_000 + PATCH * 100 + BUILD (00..99),
 // so 3.9.0 build 1 is 3090001.
-val appVersionName = "3.9.1"
+val appVersionName = "3.9.2"
 val appVersionCodeBase = appVersionName.split('.').map(String::toInt)
     .let { (major, minor, patch) -> major * 1_000_000 + minor * 10_000 + patch * 100 }
-val playLastPublishedVersionCode = 3090000
-// Local and debug builds default to the version base (3090100 for 3.9.1), above the
-// currently published Play code. Release builds still require an explicit code.
+val playLastPublishedVersionCode = 3090101
+// Local and debug builds default to the version base (3090200 for 3.9.2), above every code
+// uploaded to Play. Release builds still require an explicit code.
 val appVersionCode = explicitVersionCode ?: appVersionCodeBase
 
 android {
