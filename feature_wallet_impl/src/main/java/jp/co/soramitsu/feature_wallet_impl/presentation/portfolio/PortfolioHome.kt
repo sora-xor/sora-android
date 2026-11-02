@@ -708,11 +708,20 @@ internal fun LensControl(lenses: List<PortfolioLens>, selected: PortfolioLens, o
     )
 }
 
-/** The list for the active lens, in one glass card. Rows add up to the header. */
+/** The list for the active lens, in one glass card titled Assets. Rows add up to the header. */
 @Composable
 internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actions: PortfolioHomeActions, modifier: Modifier = Modifier) {
     val groups = model.groups.filter { it.holdings.isNotEmpty() || model.lens == PortfolioLens.WALLETS }
     PortfolioCard(modifier) {
+        Text(
+            text = stringResource(R.string.liquid_assets),
+            style = MaterialTheme.customTypography.headline2,
+            color = MaterialTheme.neon.textPrimary,
+            maxLines = 1,
+            modifier = Modifier
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)
+                .semantics { heading() },
+        )
         if (groups.isEmpty()) {
             Text(
                 text = stringResource(R.string.portfolio_nothing_listed),
@@ -780,7 +789,10 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
     val token = (mainnet ?: group.holdings.first()).token
     val expandable = group.holdings.size >= 2
     val expanded = expandable && group.key in model.expanded
+    // The token's name, as every asset list names it ("XOR" over "SORA"); where it lives is in
+    // the row's expansion.
     val subtitle = when {
+        token.name.isNotBlank() && token.name != token.symbol -> token.name
         group.networks.size >= 2 -> pluralStringResource(R.plurals.portfolio_networks, group.networks.size, group.networks.size)
         model.scope == PortfolioScope.ALL && group.walletIds.size >= 2 ->
             pluralStringResource(R.plurals.portfolio_wallets, group.walletIds.size, group.walletIds.size)

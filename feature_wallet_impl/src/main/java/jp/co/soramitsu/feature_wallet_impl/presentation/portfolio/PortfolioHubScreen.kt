@@ -91,8 +91,7 @@ internal fun PortfolioHubScreen(
         Spacer(Modifier.height(16.dp))
         Column(Modifier.padding(horizontal = 16.dp)) { notices() }
         if (model != null && !model.empty) {
-            LensControl(model.lenses, model.lens, homeActions::onLens, Modifier.padding(horizontal = 16.dp))
-            Spacer(Modifier.height(12.dp))
+            // The home always lists tokens: no Tokens / Networks / Wallets switch.
             PortfolioList(model, format, homeActions, Modifier.padding(horizontal = 16.dp))
             Spacer(Modifier.height(16.dp))
         }
