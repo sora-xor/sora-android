@@ -54,4 +54,20 @@ object ReleaseSurfacePolicy {
         productionFlavor: Boolean,
         productionHidesSurfaces: Boolean = PRODUCTION_HIDES_SURFACES,
     ): Boolean = surfaces(productionFlavor, productionHidesSurfaces).irohaConnect
+
+    /**
+     * The 3.9 Portfolio view on the Wallet tab (`portfolioView`): hero, lenses and "Where it
+     * lives" in place of the header balance and the Assets card. Off in every flavor: the Wallet
+     * home is the classic one again (account header, Assets and Pools cards), as in 3.8.6.
+     */
+    const val PORTFOLIO_VIEW_IN_PRODUCTION = false
+
+    @Suppress("UNUSED_PARAMETER")
+    fun portfolioView(
+        productionFlavor: Boolean,
+        inProduction: Boolean = PORTFOLIO_VIEW_IN_PRODUCTION,
+    ): Boolean = inProduction
+
+    val portfolioView: Boolean
+        get() = portfolioView(BuildUtils.isFlavors(Flavor.PROD))
 }

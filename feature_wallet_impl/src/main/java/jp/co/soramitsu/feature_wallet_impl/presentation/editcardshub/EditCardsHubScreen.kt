@@ -191,7 +191,7 @@ private fun PreviewEditCardsHubScreen() {
                 HubCardState(
                     "b",
                     HubCardVisibility.NOT_VISIBLE_ENABLED,
-                    CardHubType.POOLS.userName,
+                    CardHubType.ASSETS.userName,
                 )
             ),
         ),

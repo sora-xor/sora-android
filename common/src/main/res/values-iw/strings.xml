@@ -33,8 +33,6 @@
   <string name="address_not_found_1">לא נמצאו נמענים</string>
   <string name="amount_error_no_funds">אנחנו מצטערים, אין לך מספיק כספים כדי להעביר את הסכום שצויין</string>
   <string name="appearance_title">מראה חיצוני</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">האם ברצונך להשתמש בביומטריה לאימות?</string>
   <string name="asset_details_asset_id">כתובת הנכס</string>
@@ -766,4 +764,7 @@
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">הסתר יתרות אפסיות</string>
+  <string name="show_zero_balances">הצג יתרות אפסיות</string>
+  <string name="global_results">תוצאות גלובליות</string>
 </resources>

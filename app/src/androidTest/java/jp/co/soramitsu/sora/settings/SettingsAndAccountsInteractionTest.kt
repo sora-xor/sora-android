@@ -105,11 +105,10 @@ class SettingsAndAccountsInteractionTest {
         node(R.string.test_networks).assertDoesNotExist()
         compose.runOnIdle { assertEquals(listOf("dark:true", "dark:false", "system:true"), events) }
     }
-    @Test fun appearanceTogglesReducedEffectsAndTestNetworks() {
-        show { AppSettingsScreen(false, true, true, false, {}, {}, { events += "test:$it" }, false, { events += "effects:$it" }) }
-        compose.onNodeWithContentDescription(compose.activity.getString(R.string.appearance_reduce_effects)).assertIsOff().performClick()
+    @Test fun appearanceTogglesTestNetworks() {
+        show { AppSettingsScreen(false, true, true, false, {}, {}, { events += "test:$it" }) }
         compose.onNodeWithContentDescription(compose.activity.getString(R.string.test_networks)).assertIsOff().performClick()
-        compose.runOnIdle { assertEquals(listOf("effects:true", "test:true"), events) }
+        compose.runOnIdle { assertEquals(listOf("test:true"), events) }
     }
     @Test fun loginSettingsRoutePinAndBiometryWithoutAuthenticating() {
         show { LoginSecurityScreen(true, false, { events += "pin" }, { events += "bio:$it" }) }

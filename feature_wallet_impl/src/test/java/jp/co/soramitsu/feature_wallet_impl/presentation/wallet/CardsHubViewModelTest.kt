@@ -42,10 +42,10 @@ import jp.co.soramitsu.common.nexus.WalletNetworkAction
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
@@ -107,6 +107,9 @@ class CardsHubViewModelTest {
     private lateinit var progress: WithProgress
 
     @MockK
+    private lateinit var assetsRouter: AssetsRouter
+
+    @MockK
     private lateinit var referralRouter: ReferralRouter
 
     @MockK
@@ -131,7 +134,7 @@ class CardsHubViewModelTest {
     private lateinit var nexusTransactionCoordinator: NexusTransactionCoordinator
 
     private lateinit var cardsHubViewModel: CardsHubViewModel
-    private lateinit var poolsReadFailure: MutableStateFlow<Throwable?>
+    private lateinit var favoriteReadFailure: MutableStateFlow<Throwable?>
 
     private val account = SoraAccount("address", "name")
     private val secondAccount = SoraAccount("second-address", "second-name")
@@ -139,7 +142,6 @@ class CardsHubViewModelTest {
     private lateinit var firstXorFlow: MutableStateFlow<Asset?>
     private lateinit var secondXorFlow: MutableStateFlow<Asset?>
     private lateinit var nexusPortfolioFlow: MutableStateFlow<List<NexusPortfolioBalance>>
-    private lateinit var cardsHubFlow: MutableStateFlow<Pair<SoraAccount, List<CardHub>>>
 
     @OptIn(ExperimentalStdlibApi::class)
     @Before
@@ -166,26 +168,51 @@ class CardsHubViewModelTest {
                 SubstrateOptionsProvider.feeAssetId,
             )
         } returns secondXorFlow
-        poolsReadFailure = MutableStateFlow(null)
-        every { poolsInteractor.subscribePoolsCacheOfAccount(account) } returns
-            poolsReadFailure.map { failure ->
+        favoriteReadFailure = MutableStateFlow(null)
+        every { assetsInteractor.subscribeAssetsFavoriteOfAccount(account) } returns
+            favoriteReadFailure.map { failure ->
                 failure?.let { throw it }
-                listOf(POOL_DATA)
+                // XOR remains deliberately not favorite.
+                listOf(TestAssets.valAsset())
+            }
+        every { poolsInteractor.subscribePoolsCacheOfAccount(account) } returns
+            flow {
+                emit(listOf(POOL_DATA))
             }
         coEvery { cardsHubInteractorImpl.updateCardVisibilityOnCardHub(any(), any()) } returns Unit
         // Three accounts on this phone, one of them read-only.
         coEvery { cardsHubInteractorImpl.accountSigningCounts() } returns (3 to 2)
         coEvery { demeterFarmingInteractor.getFarmedPools() } returns emptyList()
         every { demeterFarmingInteractor.subscribeFarms(any()) } returns flow { emit("") }
-        cardsHubFlow = MutableStateFlow(
-            account to listOf(
-                CardHub(CardHubType.ASSETS, visibility = true, sortOrder = 0, collapsed = false),
-                CardHub(CardHubType.POOLS, visibility = true, sortOrder = 1, collapsed = false),
-                CardHub(CardHubType.REFERRAL_SYSTEM, visibility = true, sortOrder = 2, collapsed = false),
-            ),
-        )
-        every { cardsHubInteractorImpl.subscribeVisibleCardsHubList() } returns cardsHubFlow
+        every { cardsHubInteractorImpl.subscribeVisibleCardsHubList() } returns
+            flow {
+                emit(
+                    account to listOf(
+                        CardHub(
+                            CardHubType.ASSETS,
+                            true,
+                            0,
+                            false
+                        ),
+                        CardHub(
+                            CardHubType.POOLS,
+                            true,
+                            1,
+                            false
+                        ),
+                        CardHub(
+                            CardHubType.REFERRAL_SYSTEM,
+                            visibility = true,
+                            sortOrder = 2,
+                            collapsed = false
+                        )
+                    )
+                )
+            }
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
+        every { assetsRouter.showAssetDetails(any()) } returns Unit
+        every { assetsRouter.showContacts(any()) } returns Unit
+        every { router.openQrCodeFlow() } returns Unit
         cardsHubViewModel = CardsHubViewModel(
             assetsInteractor,
             poolsInteractor,
@@ -194,6 +221,7 @@ class CardsHubViewModelTest {
             numbersFormatter,
             router,
             mainRouter,
+            assetsRouter,
             referralRouter,
             polkaswapRouter,
             coroutineManager,
@@ -210,38 +238,16 @@ class CardsHubViewModelTest {
     }
 
     @Test
-    fun `the home builds no Assets card, only the cards around the portfolio`() = runTest {
-        advanceUntilIdle()
-        val cards = cardsHubViewModel.state.value.cards
-        assertEquals(2, cards.size)
-        assertTrue((cards[0] as TitledAmountCardState).state is FavoritePoolsCardState)
-        assertEquals(ReferralState, cards[1])
-    }
-
-    @Test
-    fun `hiding every optional card clears the old cards even with a saved Assets preference`() = runTest {
-        advanceUntilIdle()
-        assertTrue(cardsHubViewModel.state.value.cards.isNotEmpty())
-
-        cardsHubFlow.value = account to cardsHubFlow.value.second.map {
-            it.copy(visibility = it.cardType == CardHubType.ASSETS)
-        }
-        advanceUntilIdle()
-
-        assertTrue(cardsHubViewModel.state.value.cards.isEmpty())
-        assertEquals(account.substrateAddress, cardsHubViewModel.state.value.accountAddress)
-    }
-
-    @Test
     fun `failed downstream holdings read clears previous cards without crashing`() = runTest {
         advanceUntilIdle()
         assertTrue(cardsHubViewModel.state.value.cards.isNotEmpty())
         io.mockk.mockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper)
         every { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) } just Runs
         try {
-            poolsReadFailure.value = IllegalStateException("PI_INDEXER_GRAPHQL_ERROR")
+            favoriteReadFailure.value = IllegalStateException("PI_INDEXER_GRAPHQL_ERROR")
             advanceUntilIdle()
             assertTrue(cardsHubViewModel.state.value.cards.isEmpty())
+            assertFalse(cardsHubViewModel.state.value.loading)
         } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper) }
     }
 
@@ -252,7 +258,7 @@ class CardsHubViewModelTest {
         io.mockk.mockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper)
         every { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) } just Runs
         try {
-            poolsReadFailure.value = kotlinx.coroutines.CancellationException("stop display subscription")
+            favoriteReadFailure.value = kotlinx.coroutines.CancellationException("stop display subscription")
             advanceUntilIdle()
             assertEquals(before, cardsHubViewModel.state.value)
             io.mockk.verify(exactly = 0) { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) }
@@ -453,6 +459,28 @@ class CardsHubViewModelTest {
     }
 
     @Test
+    fun `SORA2 actions reject a stale wallet row at tap time`() = runTest {
+        advanceUntilIdle()
+        selectedAccountFlow.value = secondAccount
+        advanceUntilIdle()
+
+        assertFalse(cardsHubViewModel.isCurrentSora2Wallet(account.substrateAddress))
+        cardsHubViewModel.openSora2Receive(account.substrateAddress)
+        cardsHubViewModel.openSora2Xor(account.substrateAddress)
+        verify(exactly = 0) { router.openQrCodeFlow() }
+        verify(exactly = 0) {
+            assetsRouter.showAssetDetails(SubstrateOptionsProvider.feeAssetId)
+        }
+
+        cardsHubViewModel.openSora2Receive(secondAccount.substrateAddress)
+        cardsHubViewModel.openSora2Xor(secondAccount.substrateAddress)
+        verify(exactly = 1) { router.openQrCodeFlow() }
+        verify(exactly = 1) {
+            assetsRouter.showAssetDetails(SubstrateOptionsProvider.feeAssetId)
+        }
+    }
+
+    @Test
     fun `network choices list only the selected wallet main network first`() = runTest {
         advanceUntilIdle()
         val taira = nexusBalance(account.substrateAddress, WalletNetworkId.TAIRA)
@@ -478,6 +506,15 @@ class CardsHubViewModelTest {
         selectedAccountFlow.value = secondAccount
         advanceUntilIdle()
         assertTrue(cardsHubViewModel.networkChoices(WalletNetworkAction.RECEIVE).none { it.address == taira.address })
+    }
+
+    @Test
+    fun `SORA2 send opens the existing send flow only for the selected wallet`() = runTest {
+        advanceUntilIdle()
+        cardsHubViewModel.openSora2Send(secondAccount.substrateAddress)
+        verify(exactly = 0) { assetsRouter.showContacts(SubstrateOptionsProvider.feeAssetId) }
+        cardsHubViewModel.openSora2Send(account.substrateAddress)
+        verify(exactly = 1) { assetsRouter.showContacts(SubstrateOptionsProvider.feeAssetId) }
     }
 
     @Test
@@ -535,7 +572,8 @@ class CardsHubViewModelTest {
     @Test fun `collapsing the pool card persists the requested collapsed state`() = runTest {
         coEvery { cardsHubInteractorImpl.updateCardCollapsedStateOnCardHub(any(), any()) } returns Unit
         advanceUntilIdle()
-        val card = cardsHubViewModel.state.value.cards.filterIsInstance<TitledAmountCardState>().first()
+        val card = cardsHubViewModel.state.value.cards.filterIsInstance<TitledAmountCardState>()
+            .first { it.state is FavoritePoolsCardState }
         card.onCollapseClick(); advanceUntilIdle()
         coVerify(exactly = 1) { cardsHubInteractorImpl.updateCardCollapsedStateOnCardHub(CardHubType.POOLS.hubName, true) }
     }

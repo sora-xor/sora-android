@@ -33,8 +33,6 @@
   <string name="address_not_found_1">Alıcılar bulunamadı</string>
   <string name="amount_error_no_funds">Üzgünüz, belirtilen tutarı transfer etmek için yeterli bakiyeniz yok.</string>
   <string name="appearance_title">Appearance</string>
-  <string name="appearance_reduce_effects">Efektleri azalt</string>
-  <string name="appearance_reduce_effects_description">Parıltı, cam ve hareket efektlerini kapatır. Eski telefonlarda veya pil tasarrufu için yararlıdır.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Doğrulama için biyometri kullanmak ister misiniz?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -756,4 +754,7 @@
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">Hide zero balances</string>
+  <string name="show_zero_balances">Show zero balances</string>
+  <string name="global_results">Global results</string>
 </resources>

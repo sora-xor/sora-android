@@ -81,6 +81,14 @@ interface AssetsRepository {
         address: String
     ): Flow<List<Asset>>
 
+    fun subscribeAssetsFavorite(
+        address: String
+    ): Flow<List<Asset>>
+
+    fun subscribeAssetsVisible(
+        address: String
+    ): Flow<List<Asset>>
+
     suspend fun toggleVisibilityOfToken(
         tokenId: String,
         visibility: Boolean,

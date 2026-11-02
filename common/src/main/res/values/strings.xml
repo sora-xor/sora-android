@@ -33,8 +33,6 @@
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_error_no_funds">Sorry, you don\' t have enough funds to transfer specified amount.</string>
   <string name="appearance_title">Appearance</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Would you like to use biometry for authentication?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -1106,4 +1104,7 @@
   <string name="portfolio_receive_to">Receive to</string>
   <string name="portfolio_sample_handoff_off">Sample portfolio: addresses are invented, so this does not open Send.</string>
   <string name="portfolio_nexus_send_unavailable">Sending on this network is not available for this wallet right now.</string>
+  <string name="hide_zero_balances">Hide zero balances</string>
+  <string name="show_zero_balances">Show zero balances</string>
+  <string name="global_results">Global results</string>
 </resources>

@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.theme.borderRadius
+import jp.co.soramitsu.ui_core.theme.customColors
 
 /**
  * A calm "fake glass" card (design spec 4.3.1, 7.3): translucent fill, top sheen and a gradient
@@ -94,65 +96,55 @@ fun SafeContentCard(
 
 /**
  * Drop-in replacement for `jp.co.soramitsu.ui_core.component.card.ContentCard` with the same
- * parameter names and order: migrate by swapping the import. It removes ui-core's grey 10 dp
- * shadow that depends on the system (not the in-app) dark mode. The default radius is 24 (it was
- * 28); that change is intended by the design.
+ * parameter names and order: migrate by swapping the import. The classic SORA design draws it as
+ * the ui-core card itself (28 dp radius, the grey shadow in light). [Color.Unspecified] is the
+ * surface colour.
  */
 @Composable
 fun ContentCard(
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 24.dp,
+    cornerRadius: Dp = MaterialTheme.borderRadius.ml,
     innerPadding: PaddingValues = PaddingValues(0.dp),
     backgroundColor: Color = Color.Unspecified,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = GlassCard(
+) = jp.co.soramitsu.ui_core.component.card.ContentCard(
     modifier = modifier,
     cornerRadius = cornerRadius,
     innerPadding = innerPadding,
-    backgroundColor = backgroundColor,
+    backgroundColor = backgroundColor.takeOrElse { MaterialTheme.customColors.bgSurface },
     onClick = onClick,
     content = content,
 )
 
 /**
- * Drop-in replacement for `jp.co.soramitsu.ui_core.component.card.ContentCardEndless`: a glass
- * sheet with rounded top corners only (28, like sheets).
+ * Drop-in replacement for `jp.co.soramitsu.ui_core.component.card.ContentCardEndless`, drawn as
+ * the ui-core sheet itself.
  */
 @Composable
 fun ContentCardEndless(
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 28.dp,
+    cornerRadius: Dp = MaterialTheme.borderRadius.xl,
     innerPadding: PaddingValues = PaddingValues(0.dp),
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = NeonCardSurface(
+) = jp.co.soramitsu.ui_core.component.card.ContentCardEndless(
     modifier = modifier,
-    shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
+    cornerRadius = cornerRadius,
     innerPadding = innerPadding,
-    backgroundColor = Color.Unspecified,
-    border = MaterialTheme.neon.borderGlass,
     onClick = onClick,
     content = content,
 )
 
-/** Balance/receive hero: one spectrum frame, no card glow. */
+/** Balance/receive hero. The classic design has none: it is a plain card. */
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun HeroCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     grid: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
-) = NeonCardSurface(
-    modifier = modifier,
-    shape = ChamferShape(),
-    innerPadding = PaddingValues(0.dp),
-    backgroundColor = Color.Unspecified,
-    border = MaterialTheme.neon.borderSpectrum,
-    onClick = onClick,
-) {
-    Box(Modifier.neonGrid(MaterialTheme.neon, grid && LocalFx.current.ambientDetail), content = content)
-}
+) = ContentCard(modifier = modifier, onClick = onClick, content = content)
 
 @Composable
 private fun NeonCardSurface(
