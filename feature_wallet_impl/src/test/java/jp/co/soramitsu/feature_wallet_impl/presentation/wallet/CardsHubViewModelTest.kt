@@ -41,6 +41,7 @@ import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.nexus.WalletNetworkAction
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
@@ -568,6 +569,20 @@ class CardsHubViewModelTest {
             router.openQrCodeFlow(); router.openEditCardsHub(); polkaswapRouter.showPoolDetails("xor" to "val")
             polkaswapRouter.showPoolSettings(); referralRouter.showReferrals(); mainRouter.showAccountDetails(account.substrateAddress)
         }
+    }
+    @Test fun `the home shows its cards while the farm rewards are still loading`() = runTest {
+        // A slow or unreachable node never answers the farm read; the home must not wait for it.
+        coEvery { demeterFarmingInteractor.getFarmedPools() } coAnswers { awaitCancellation() }
+        val viewModel = CardsHubViewModel(
+            assetsInteractor, poolsInteractor, cardsHubInteractorImpl, demeterFarmingInteractor, numbersFormatter,
+            router, mainRouter, assetsRouter, referralRouter, polkaswapRouter, coroutineManager,
+            nexusPortfolioRepository, nexusTransactionCoordinator,
+        )
+        advanceUntilIdle()
+        assertFalse(viewModel.state.value.loading)
+        val cards = viewModel.state.value.cards.filterIsInstance<TitledAmountCardState>()
+        assertTrue(cards.any { it.state is FavoriteAssetsCardState })
+        assertTrue(cards.any { it.state is FavoritePoolsCardState })
     }
     @Test fun `collapsing the pool card persists the requested collapsed state`() = runTest {
         coEvery { cardsHubInteractorImpl.updateCardCollapsedStateOnCardHub(any(), any()) } returns Unit

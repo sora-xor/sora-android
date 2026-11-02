@@ -80,6 +80,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
 
@@ -282,10 +283,16 @@ class CardsHubViewModel @Inject constructor(
                                             this.emit("")
                                         }
                                 poolsFlow.combine(demeterFlow) { f1, _ -> f1 }
-                                    .map { list ->
+                                    .transformLatest<List<CommonUserPoolData>, Pair<CardHub, Any>> { list ->
+                                        val favorites = list.filter { it.user.favorite }
+                                        // Farm rewards are read from the chain. The cached pools
+                                        // show at once and get their reward icons when the node
+                                        // answers, so a slow or unreachable node cannot hold back
+                                        // every card on the home.
+                                        emit(cardHub to (favorites to emptyList<DemeterFarmingPool>()))
                                         val farms =
                                             demeterFarmingInteractor.getFarmedPools() ?: emptyList()
-                                        cardHub to ((list.filter { it.user.favorite }) to farms)
+                                        emit(cardHub to (favorites to farms))
                                     }
                             }
 
