@@ -215,7 +215,9 @@ class PortfolioViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             scopeRequest.value = preferences.scope()
-            lensRequest.value = preferences.lens()
+            // Tokens, whatever an earlier build stored: the home has no lens switch to leave
+            // Networks or Wallets again.
+            lensRequest.value = PortfolioLens.TOKENS
             slotMaps.value = preferences.slotMaps()
         }
         viewModelScope.launch {
