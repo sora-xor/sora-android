@@ -105,6 +105,23 @@ class WhitelistTokensManagerTest {
     }
 
     @Test
+    fun `SVGs with a charset parameter load, as the live list sends XOR and PSWAP`() = runTest {
+        val manager = manager()
+        response(row(xor, "data:image/svg+xml;charset=utf8,%3Csvg%2F%3E"), row(other, "data:image/svg+xml;Charset=UTF-8,%3Csvg%2F%3E"))
+        manager.updateWhitelistStorage()
+        assertEquals(listOf(xor, other), manager.whitelistIds)
+        verify { files.writeInternalCacheFile("$xor.svg", "<svg/>") }
+    }
+
+    @Test
+    fun `other media type parameters are still rejected`() = runTest {
+        val manager = manager()
+        response(row(other, "data:image/svg+xml;charset=latin1,%3Csvg%2F%3E"))
+        manager.updateWhitelistStorage()
+        assertTrue(manager.whitelistIds.isEmpty())
+    }
+
+    @Test
     fun `malformed icon does not prevent later valid tokens from loading`() = runTest {
         val manager = manager(stored())
         response(row(xor, "data:image/png;base64,!"), row(third, "data:image/svg+xml,%3Csvg%2F%3E"))
