@@ -10,6 +10,7 @@ import androidx.navigation.compose.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.*
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.base.*
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
@@ -122,6 +123,25 @@ class ClassicWalletHomeDestinationTest {
                 vm.onPoolClick("0x0200000000" to "0x0200040000"); vm.onEditViewClick()
             }
         }
+    }
+
+    @After fun leaveReadOnlyBrowsing() { WalletRecoveryCapabilityGate.enterNormal() }
+
+    @Test fun readOnlyBrowsingShowsItsBannerAndExplainsItWithoutRetrying() {
+        compose.runOnIdle { WalletRecoveryCapabilityGate.enterBlocked(); WalletRecoveryCapabilityGate.enterLegacyReadOnly() }
+        val wallet = "cnClassicWallet"
+        val vm = mockk<CardsHubViewModel>(relaxed = true) {
+            every { state } returns MutableStateFlow(CardsState(accountAddress = wallet, curAccount = "Upgrade pending", cards = emptyList()))
+            every { nexusPortfolio } returns MutableStateFlow(emptyList())
+            every { sora2Portfolio } returns MutableStateFlow(Sora2PortfolioBalance(wallet, "10"))
+            every { nexusSend } returns MutableStateFlow(NexusSendUiState())
+        }
+        show(CardsHubFragment(), vm)
+
+        compose.onAllNodesWithText(text(R.string.safe_mode_read_only_title)).onFirst().assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.safe_mode_learn_more)).performScrollTo().performClick()
+        compose.onNodeWithText(text(R.string.safe_mode_read_only_details), substring = true).assertExists()
+        compose.onNodeWithText(text(R.string.safe_mode_keep_installed), substring = true).assertExists()
     }
 
     @Test fun aReadOnlyAccountGetsItsNoticeAndATairaRowOpensItsOwnSendAndReceive() {
