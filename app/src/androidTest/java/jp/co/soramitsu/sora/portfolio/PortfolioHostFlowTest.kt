@@ -117,7 +117,7 @@ class PortfolioHostFlowTest {
                     NavHost(nav, startDestination = theOnlyRoute) {
                         composable(theOnlyRoute) {
                             PortfolioHomeHost(rememberScrollState(), nav, portfolio, hub,
-                                CardsState("main"), soraValue, nexus)
+                                CardsState("main", curAccount = "main"), soraValue, nexus)
                         }
                         composable(PortfolioRoutes.TOKEN) { entry ->
                             PortfolioWhereItLivesHost(entry.arguments?.getString(PortfolioRoutes.TOKEN_ARG).orEmpty(),
