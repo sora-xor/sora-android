@@ -2,8 +2,8 @@
 
 Local build and release actions, followed by historical product-release checklists.
 
-Current 12 October 2026 screen/privacy integration and scoped evidence are summarized in
-[NEON-INTEGRATION.md](NEON-INTEGRATION.md). Earlier task sections are historical checklists;
+The 12 October 2026 screen/privacy integration and scoped evidence are summarized in
+[NEON-INTEGRATION.md](NEON-INTEGRATION.md). That report and the earlier task sections are historical;
 local validation does not imply store acceptance or physical-device qualification.
 
 ## Local build and release validation
@@ -14,7 +14,7 @@ build infrastructure; they are not current release instructions.
 
 ### Local inputs
 
-Use JDK 17, Android SDK platform 36 and build-tools 36.0.0. Supply signing inputs only in the
+Use JDK 17, Android SDK platform 37 and build-tools 36.0.0. Supply signing inputs only in the
 local process environment. Their existing `CI_` names are retained so local release setups
 keep working; they do not require a CI service.
 
@@ -34,8 +34,9 @@ and Play publishing Gradle tasks. Building and validating artifacts does not pub
 
 - [ ] Confirm the highest versionCode already uploaded across all Play tracks and choose a
       higher code in the range enforced by `app/build.gradle.kts`. For 3.9.2 that range is
-      `3090200..3090299`; do not reuse a code already uploaded (3090200 was the highest on
-      1 November 2026).
+      `3090200..3090299`; do not reuse a code already uploaded. The build script's
+      `playLastPublishedVersionCode` is a recorded floor, not a live Play inventory. Check
+      Play before choosing a code and update that floor after Play accepts the upload.
 - [ ] Confirm `appVersionName` in `app/build.gradle.kts` is the intended release version.
 - [ ] Confirm the public certificate pins in `config/android-production-signing-identity.json`
       match the upload certificate currently accepted by Play and the existing app-signing
