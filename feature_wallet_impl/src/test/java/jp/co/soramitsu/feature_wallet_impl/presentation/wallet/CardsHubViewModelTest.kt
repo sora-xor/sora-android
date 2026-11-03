@@ -584,6 +584,28 @@ class CardsHubViewModelTest {
         assertTrue(cards.any { it.state is FavoriteAssetsCardState })
         assertTrue(cards.any { it.state is FavoritePoolsCardState })
     }
+    @Test fun `classic home asset, account and full card taps open their screens`() = runTest {
+        advanceUntilIdle()
+        every { mainRouter.showAccountList() } returns Unit
+        every { router.showAssetSettings() } returns Unit
+        cardsHubViewModel.onAssetClick("token-id"); cardsHubViewModel.onAccountClick()
+        cardsHubViewModel.onOpenFullCard(FavoriteAssetsCardState(emptyList()))
+        io.mockk.verify(exactly = 1) {
+            assetsRouter.showAssetDetails("token-id"); mainRouter.showAccountList(); router.showAssetSettings()
+        }
+    }
+    @Test fun `a failing XOR balance read leaves the SORA2 row without a balance, not another wallet's`() = runTest {
+        every { assetsInteractor.subscribeAssetOfAccount(account, SubstrateOptionsProvider.feeAssetId) } returns
+            flow { throw java.io.IOException("node unreachable") }
+        val viewModel = CardsHubViewModel(
+            assetsInteractor, poolsInteractor, cardsHubInteractorImpl, demeterFarmingInteractor, numbersFormatter,
+            router, mainRouter, assetsRouter, referralRouter, polkaswapRouter, coroutineManager,
+            nexusPortfolioRepository, nexusTransactionCoordinator,
+        )
+        advanceUntilIdle()
+        assertEquals(account.substrateAddress, viewModel.sora2Portfolio.value?.address)
+        assertNull(viewModel.sora2Portfolio.value?.xorQuantity)
+    }
     @Test fun `collapsing the pool card persists the requested collapsed state`() = runTest {
         coEvery { cardsHubInteractorImpl.updateCardCollapsedStateOnCardHub(any(), any()) } returns Unit
         advanceUntilIdle()

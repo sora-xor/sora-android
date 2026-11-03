@@ -103,6 +103,11 @@ class WalletDesignPreviewContractTest(private val preview: Fixture) {
             arrayOf(Fixture("jp.co.soramitsu.feature_referral_impl.presentation.ReferrerInputKt.PreviewReferrerInput", listOf("Activate"))),
             arrayOf(Fixture("jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsReferralAndTransferKt.PreviewReferrerTxCard", listOf("123.123 XOR"))),
             arrayOf(Fixture("jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubScreenKt.PreviewCommonHubCard", listOf("text1", "text2"))),
+            // The classic Wallet home (3.8.6 design): account header, the invite and backup cards, Edit view.
+            arrayOf(Fixture("jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubFragmentKt.PreviewCardsMainScreen", listOf("cnVko", "@string/referral_title", "@string/wallet_backup", "@string/backup_now", "@string/edit_view"))),
+            arrayOf(Fixture("jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubScreenKt.PreviewTopBar", listOf("cnJkhsdlf"))),
+            arrayOf(Fixture("jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.AssetsCardKt.PreviewAssetsCard", listOf("some qwe", "13.3 XOR", "1238.3 VAL"))),
+            arrayOf(Fixture("jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetslist.CommonAssetsListKt.PreviewCommonAssetsList", listOf("some qwe", "13.3 XOR", "1238.3 VAL"))),
             arrayOf(Fixture("jp.co.soramitsu.feature_referral_impl.presentation.YourReferrerCardKt.PreviewYourReferrerCard", listOf("Available invitations"))),
             arrayOf(Fixture("jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsBalanceCardKt.PreviewAssetDetailsBalanceCard", listOf("54.2353434 XOR", "12.3 XOR"))),
             arrayOf(Fixture("jp.co.soramitsu.feature_referral_impl.presentation.YourReferralsCardKt.PreviewYourReferralsCard", listOf("1.212 XOR", "7.465 XOR"))),
