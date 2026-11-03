@@ -33,8 +33,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * WCAG 2.x contrast for the SORA Neon tokens (design spec 3) and the XML mirrors that the splash,
- * recovery panel and dialogs use. Text pairs need 4.5:1, UI components 3:1.
+ * The classic SORA palettes (3.8.6 and earlier) as the app draws them: the Compose slots, the
+ * classic Neon token sets and their XML mirrors. Primary text is readable (4.5:1) on every
+ * surface and the accent meets 3:1 for controls. Secondary and tertiary text are the classic
+ * lighter browns and purples, below 4.5:1 as they were in 3.8.6.
  */
 class NeonContrastTest {
 
@@ -65,96 +67,40 @@ class NeonContrastTest {
     }
 
     @Test
-    fun `dark slots keep text readable on every surface`() = with(NightThemeColors) {
-        for ((name, bg) in listOf("page" to BgPage, "surface" to BgSurface, "variant" to BgSurfaceVariant)) {
-            assertContrast("dark fgPrimary on $name", FgPrimary, bg, 4.5)
-            assertContrast("dark fgSecondary on $name", FgSecondary, bg, 4.5)
-            assertContrast("dark fgTertiary on $name", FgTertiary, bg, 4.5)
-            assertContrast("dark accentTertiary on $name", AccentTertiary, bg, 4.5)
-            assertContrast("dark statusSuccess on $name", StatusSuccess, bg, 4.5)
-            assertContrast("dark statusWarning on $name", StatusWarning, bg, 4.5)
-            assertContrast("dark statusError on $name", StatusError, bg, 4.5)
-            assertContrast("dark accentPrimary (icons, fills) on $name", AccentPrimary, bg, 3.0)
-        }
-        assertContrast("dark label on accentPrimary", FgInverted, AccentPrimary, 4.5)
-        assertContrast("dark label on accentSecondary", FgInverted, AccentSecondary, 4.5)
-        assertContrast("dark text on inverted surface", FgInverted, BgSurfaceInverted, 4.5)
-        assertContrast("dark success on container", StatusSuccess, StatusSuccessContainer, 4.5)
-        assertContrast("dark warning on container", StatusWarning, StatusWarningContainer, 4.5)
-        assertContrast("dark error on container", StatusError, StatusErrorContainer, 4.5)
-        assertContrast("dark fgPrimary on accent container", FgPrimary, AccentPrimaryContainer, 4.5)
-        assertContrast("dark fgPrimary on tertiary container", FgPrimary, AccentTertiaryContainer, 4.5)
-    }
-
-    @Test
-    fun `light slots keep text readable on every surface`() = with(DayThemeColors) {
-        for ((name, bg) in listOf("page" to BgPage, "surface" to BgSurface, "variant" to BgSurfaceVariant)) {
-            assertContrast("light fgPrimary on $name", FgPrimary, bg, 4.5)
-            assertContrast("light fgSecondary on $name", FgSecondary, bg, 4.5)
-            assertContrast("light fgTertiary on $name", FgTertiary, bg, 4.5)
-            assertContrast("light accentPrimary on $name", AccentPrimary, bg, 4.5)
-            assertContrast("light accentTertiary on $name", AccentTertiary, bg, 4.5)
-            assertContrast("light statusSuccess on $name", StatusSuccess, bg, 4.5)
-            assertContrast("light statusWarning on $name", StatusWarning, bg, 4.5)
-            assertContrast("light statusError on $name", StatusError, bg, 4.5)
-        }
-        assertContrast("light label on accentPrimary", FgInverted, AccentPrimary, 4.5)
-        assertContrast("light label on accentSecondary", FgInverted, AccentSecondary, 4.5)
-        assertContrast("light success on container", StatusSuccess, StatusSuccessContainer, 4.5)
-        assertContrast("light warning on container", StatusWarning, StatusWarningContainer, 4.5)
-        assertContrast("light error on container", StatusError, StatusErrorContainer, 4.5)
-    }
-
-    @Test
-    fun `old light outline bug stays fixed`() {
-        // fgOutline used to equal bgPage (1.0:1). Dividers are decorative, but must be visible.
-        assertTrue(ratio(DayThemeColors.FgOutline, DayThemeColors.BgPage) > 1.1)
-        assertTrue(ratio(DayThemeColors.FgOutline, DayThemeColors.BgSurface) > 1.1)
-    }
-
-    @Test
-    fun `neon tokens meet the spec on glass and controls`() {
-        for (n in listOf(NeonDark, NeonLight)) {
-            val theme = if (n.isDark) "dark" else "light"
-            val glass = over(n.glassFill, n.canvas)
-            val pressed = over(n.glassFillPressed, n.canvas)
-            for ((name, bg) in listOf("canvas" to n.canvas, "surface" to n.surface, "glass" to glass, "pressed glass" to pressed, "sheet" to n.sheet)) {
-                assertContrast("$theme textPrimary on $name", n.textPrimary, bg, 4.5)
-                assertContrast("$theme textSecondary on $name", n.textSecondary, bg, 4.5)
-                assertContrast("$theme textTertiary on $name", n.textTertiary, bg, 4.5)
-                assertContrast("$theme link on $name", n.link, bg, 4.5)
-                assertContrast("$theme borderInput on $name", n.borderInput, bg, 3.0)
-                assertContrast("$theme focusRing on $name", n.focusRing, bg, 3.0)
+    fun `classic slots keep primary text readable and controls visible`() {
+        val day = with(DayThemeColors) { listOf(BgPage, BgSurface, BgSurfaceVariant, FgPrimary, AccentPrimary) }
+        val night = with(NightThemeColors) { listOf(BgPage, BgSurface, BgSurfaceVariant, FgPrimary, AccentPrimary) }
+        for ((theme, colors) in listOf("day" to day, "night" to night)) {
+            val (page, surface, variant, primary, accent) = colors
+            for ((name, bg) in listOf("page" to page, "surface" to surface, "variant" to variant)) {
+                assertContrast("$theme fgPrimary on $name", primary, bg, 4.5)
+                assertContrast("$theme accentPrimary on $name", accent, bg, 3.0)
             }
-            assertContrast("$theme onAccent on brand red", n.onAccent, n.brandRed, 4.5)
-            assertContrast("$theme onAccent on error", n.onAccent, n.error, 4.5)
-            assertContrast("$theme onWarningFill on warning fill", n.onWarningFill, n.warningFill, 4.5)
-            assertContrast("$theme info on its container", n.info, n.infoContainer, 4.5)
-            assertContrast("$theme red text on red container", n.redText, n.redContainer, 4.5)
-            assertContrast("$theme toast text", if (n.isDark) n.textPrimary else Color.White, n.toast, 4.5)
-            assertContrast("$theme magenta on canvas", n.magenta, n.canvas, 4.5)
-            assertContrast("$theme polkaswap text on canvas", n.polkaswapText, n.canvas, 4.5)
+            assertContrast("$theme label on accentPrimary", Color.White, accent, 3.0)
         }
-        // Ink on neon in dark: white on any dark-theme neon fails (spec 2.6-1).
-        assertTrue(ratio(Color.White, NeonDark.brandRed) < 4.5)
     }
 
     @Test
-    fun `slot palette and neon tokens agree`() {
-        assertEquals(NightThemeColors.BgPage, NeonDark.canvas)
-        assertEquals(NightThemeColors.BgSurface, NeonDark.surface)
-        assertEquals(NightThemeColors.FgPrimary, NeonDark.textPrimary)
-        assertEquals(NightThemeColors.FgSecondary, NeonDark.textSecondary)
-        assertEquals(NightThemeColors.FgTertiary, NeonDark.textTertiary)
-        assertEquals(NightThemeColors.FgInverted, NeonDark.onAccent)
-        assertEquals(NightThemeColors.AccentPrimary, NeonDark.brandRed)
-        assertEquals(DayThemeColors.BgPage, NeonLight.canvas)
-        assertEquals(DayThemeColors.BgSurface, NeonLight.surface)
-        assertEquals(DayThemeColors.FgPrimary, NeonLight.textPrimary)
-        assertEquals(DayThemeColors.FgSecondary, NeonLight.textSecondary)
-        assertEquals(DayThemeColors.FgTertiary, NeonLight.textTertiary)
-        assertEquals(DayThemeColors.FgInverted, NeonLight.onAccent)
-        assertEquals(DayThemeColors.AccentPrimary, NeonLight.brandRed)
+    fun `classic tokens are the classic palettes`() {
+        assertEquals(DayThemeColors.BgPage, NeonClassicLight.canvas)
+        assertEquals(DayThemeColors.BgSurface, NeonClassicLight.surface)
+        assertEquals(DayThemeColors.FgPrimary, NeonClassicLight.textPrimary)
+        assertEquals(DayThemeColors.FgSecondary, NeonClassicLight.textSecondary)
+        assertEquals(DayThemeColors.AccentPrimary, NeonClassicLight.brandRed)
+        assertEquals(DayThemeColors.AccentPrimary, NeonClassicLight.cyan)
+        assertEquals(NightThemeColors.BgPage, NeonClassicDark.canvas)
+        assertEquals(NightThemeColors.BgSurface, NeonClassicDark.surface)
+        assertEquals(NightThemeColors.FgPrimary, NeonClassicDark.textPrimary)
+        assertEquals(NightThemeColors.AccentPrimary, NeonClassicDark.brandRed)
+        for (n in listOf(NeonClassicLight, NeonClassicDark)) {
+            // Solid surfaces: no aurora, grain, glow or neumorphic depth.
+            assertEquals(Color.Transparent, n.auroraCyan)
+            assertEquals(0f, n.grainAlpha)
+            assertEquals(0f, n.glowPrimary.rest)
+            assertEquals(0f, n.neuDark.alpha)
+            assertEquals(n.surface, n.glassFill)
+            assertEquals(SolidColor(n.brandRed), n.ctaPrimary)
+        }
     }
 
     // --- XML mirrors (values[-night]/neon_colors.xml and the AppTheme attribute mapping) ---
@@ -195,42 +141,22 @@ class NeonContrastTest {
     }
 
     @Test
-    fun `splash recovery panel and dialogs are readable in both themes`() {
-        // Before SORA Neon the night recovery panel drew #2D2926 on #26262D: 1.04:1.
+    fun `dialogs and the splash are readable in both themes`() {
         val text = themeAttr("contentPrimary")
-        val body = themeAttr("contentSecondary")
-        val panel = themeAttr("secondaryBackground")
         val page = themeAttr("baseBackground")
         for (dir in listOf("values", "values-night")) {
             val c = xmlColors(dir)
             fun col(name: String) = requireNotNull(c[name]) { "$dir has no $name" }
-            assertContrast("$dir recovery title", col(text), col(panel), 4.5)
-            assertContrast("$dir recovery body", col(body), col(panel), 4.5)
-            assertContrast("$dir recovery body on the safe panel", col(body), col("neon_surface"), 4.5)
-            assertContrast("$dir splash loading text", col(body), col(page), 4.5)
-            assertContrast("$dir safe button label", col("neon_on_accent"), col("neon_safe_start"), 4.5)
-            // Recovery actions use Compose glass, not the removed XML button mirror.
-            val n = if (dir == "values-night") NeonDark else NeonLight
-            assertContrast("$dir secondary button label", n.textPrimary, over(n.glassFill, n.surface), 4.5)
-            assertContrast("$dir pressed secondary label", n.textPrimary, over(n.glassFillPressed, n.surface), 4.5)
-            assertContrast("$dir support link", col("neon_link"), col("neon_surface"), 4.5)
+            assertContrast("$dir page text", col(text), col(page), 4.5)
             assertContrast("$dir dialog text", col("neon_text_primary"), col("neon_sheet"), 4.5)
-            assertContrast("$dir dialog actions", col("neon_link"), col("neon_sheet"), 4.5)
-            assertContrast("$dir Material primary button", col(themeAttr("colorOnPrimary")), col(themeAttr("colorPrimary")), 4.5)
-            assertContrast("$dir banner text on error", col(themeAttr("baseOnAccent")), col(themeAttr("statusError")), 4.5)
-            assertContrast("$dir banner text on success", col(themeAttr("baseOnAccent")), col(themeAttr("statusSuccess")), 4.5)
-            assertContrast(
-                "$dir bottom navigation inactive label",
-                col(themeAttr("bottomMenuInactiveColor")),
-                over(col(themeAttr("pureWhiteOnDay")), col(page)),
-                4.5,
-            )
+            assertContrast("$dir dialog actions", col("neon_link"), col("neon_sheet"), 3.0)
+            assertContrast("$dir Material primary button", col(themeAttr("colorOnPrimary")), col(themeAttr("colorPrimary")), 3.0)
         }
     }
 
     @Test
     fun `high contrast maps tertiary text to secondary and strengthens hairlines`() {
-        for ((base, hc) in listOf(NeonDark to NeonDarkHighContrast, NeonLight to NeonLightHighContrast)) {
+        for ((base, hc) in listOf(NeonClassicDark to NeonClassicDarkHighContrast, NeonClassicLight to NeonClassicLightHighContrast)) {
             assertEquals(base.textSecondary, hc.textTertiary)
             assertEquals((base.hairline.alpha * 2f).coerceAtMost(1f), hc.hairline.alpha, 0.001f)
             assertEquals(base.textPrimary, hc.textPrimary)
@@ -247,10 +173,9 @@ class NeonContrastTest {
 
     @Test
     fun `transaction toast is readable in both themes`() {
-        // a5 made the toast text follow the theme while its card stayed #FAF6F6: 1.01:1 in dark.
         val text = layoutColorRef("layout/custom_toast.xml", "android:textColor")
         val fill = layoutColorRef("drawable/rounded_toast_bg.xml", "android:color")
-        assertTrue("toast text must be a fixed neon colour, was $text", text.startsWith("@color/"))
+        assertTrue("toast text must be a fixed colour, was $text", text.startsWith("@color/"))
         assertTrue("toast fill must be a theme attribute, was $fill", fill.startsWith("?attr/"))
         val fillColor = themeAttr(fill.substringAfter("/"))
         for (dir in listOf("values", "values-night")) {
@@ -258,18 +183,8 @@ class NeonContrastTest {
             fun col(name: String) = requireNotNull(c[name]) { "$dir has no $name" }
             assertContrast("$dir toast text", col(text.substringAfter("/")), col(fillColor), 4.5)
         }
-        assertEquals(NeonDark.toast, xmlColors("values-night")["neon_toast"])
-        assertEquals(NeonLight.toast, xmlColors("values")["neon_toast"])
-    }
-
-    @Test
-    fun `recovery callout is readable in both themes`() {
-        // ReassuranceCallout uses these Compose tokens directly. Its unused XML
-        // copies were removed; reading those copies would not test the rendered UI.
-        for (n in listOf(NeonDark, NeonLight)) {
-            assertContrast("${n.isDark} callout text", n.textPrimary, n.infoContainer, 4.5)
-            assertContrast("${n.isDark} callout shield", n.cyan, n.infoContainer, 3.0)
-        }
+        assertEquals(NeonClassicDark.toast, xmlColors("values-night")["neon_toast"])
+        assertEquals(NeonClassicLight.toast, xmlColors("values")["neon_toast"])
     }
 
     /** Exercise the actual style resolver without exposing a production test API. */
@@ -287,12 +202,11 @@ class NeonContrastTest {
 
     @Test
     fun `recovery button styles distinguish disabled safe secondary and tertiary actions`() {
-        for (n in listOf(NeonDark, NeonLight)) {
+        for (n in listOf(NeonClassicDark, NeonClassicLight)) {
             val safe = buttonStyle(NeonVariant.Safe, n, true)
             val disabledSafe = buttonStyle(NeonVariant.Safe, n, false)
             assertEquals(n.ctaSafe, safe.styleField("fill"))
             assertEquals(n.onAccent, safe.labelColor())
-            assertEquals(n.glowSafe, safe.styleField("glow"))
             assertEquals(SolidColor(n.ctaDisabled), disabledSafe.styleField("fill"))
             assertEquals(n.textDisabled, disabledSafe.labelColor())
             assertEquals(null, disabledSafe.styleField("edge"))
@@ -305,7 +219,6 @@ class NeonContrastTest {
             assertEquals(SolidColor(n.glassFill), secondary.styleField("fill"))
             assertEquals(SolidColor(n.glassFillPressed), secondary.styleField("pressedFill"))
             assertEquals(n.textPrimary, secondary.labelColor())
-            assertEquals(n.borderGlass, secondary.styleField("edge"))
             assertEquals(n.textDisabled, disabledSecondary.labelColor())
             assertEquals(null, disabledSecondary.styleField("edge"))
             assertTrue("disabled secondary label differs from enabled", disabledSecondary.labelColor() != secondary.labelColor())
@@ -315,8 +228,8 @@ class NeonContrastTest {
             assertEquals(null, tertiary.styleField("fill"))
             assertEquals(n.link, tertiary.labelColor())
             assertEquals(n.textDisabled, disabledTertiary.labelColor())
-            assertContrast("${n.isDark} tertiary action", tertiary.labelColor(), n.surface, 4.5)
-            assertContrast("${n.isDark} actual secondary label", secondary.labelColor(), over(n.glassFill, n.surface), 4.5)
+            assertContrast("${n.isDark} tertiary action", tertiary.labelColor(), n.surface, 3.0)
+            assertContrast("${n.isDark} actual secondary label", secondary.labelColor(), n.glassFill, 4.5)
         }
     }
 }

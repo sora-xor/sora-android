@@ -92,8 +92,6 @@
     <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
     <string name="account_switching">Switching account…</string>
     <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is not affected.</string>
-    <string name="appearance_reduce_effects">Reduce effects</string>
-    <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
     <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
     <string name="asset_move_down">Move down</string>
     <string name="asset_move_up">Move up</string>
@@ -548,4 +546,7 @@
     <string name="asset_not_favorite_state">Not a favorite</string>
     <string name="asset_visible_state">Visible</string>
     <string name="asset_hidden_state">Hidden</string>
+    <string name="hide_zero_balances">Hide zero balances</string>
+    <string name="show_zero_balances">Show zero balances</string>
+    <string name="global_results">Global results</string>
 </resources>

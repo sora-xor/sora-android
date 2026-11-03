@@ -19,117 +19,108 @@ limitations under the License.
 
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import jp.co.soramitsu.common.presentation.compose.theme.Inter
 import jp.co.soramitsu.common.presentation.compose.theme.Sora
 
 /*
- * SORA Neon type scale (design spec 5.3). Sora for display, headlines and buttons; Inter for
- * body and amounts; the platform monospace for addresses, hashes and codes. Every line height is
- * at least 1.25x the size so fallback scripts (ar, fa, iw, ja, zh, hi) are not clipped.
+ * The classic SORA type scale (3.8.6 and earlier): Sora Bold for display, headlines and buttons,
+ * Inter Regular for body text, with the platform line heights. The bold body styles are the
+ * ui-core defaults that 3.8.6 used.
  */
 
-private val Centered = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None)
+private fun style(family: FontFamily, weight: FontWeight, size: Int) =
+    TextStyle(fontFamily = family, fontWeight = weight, fontSize = size.sp)
 
-private fun style(
-    family: FontFamily,
-    weight: FontWeight,
-    size: Int,
-    line: Int,
-    tracking: TextUnit = 0.sp,
-    features: String? = null,
-) = TextStyle(
-    fontFamily = family,
-    fontWeight = weight,
+private fun bold(size: Int, line: Int) = TextStyle(
+    fontFamily = Inter,
+    fontWeight = FontWeight.Bold,
     fontSize = size.sp,
     lineHeight = line.sp,
-    letterSpacing = tracking,
-    fontFeatureSettings = features,
-    lineHeightStyle = Centered,
+    platformStyle = PlatformTextStyle(includeFontPadding = false),
 )
 
-val displayL: TextStyle = style(Sora, FontWeight.Bold, 34, 40, (-0.4).sp)
+val displayL: TextStyle = style(Sora, FontWeight.Bold, 34)
 
-val displayM: TextStyle = style(Sora, FontWeight.Bold, 24, 32, (-0.2).sp)
+val displayM: TextStyle = style(Sora, FontWeight.Bold, 24)
 
-val displayS: TextStyle = style(Sora, FontWeight.SemiBold, 18, 24)
+val displayS: TextStyle = style(Sora, FontWeight.Bold, 18)
 
-val headline1: TextStyle = style(Sora, FontWeight.Bold, 24, 32, (-0.2).sp)
+val headline1: TextStyle = style(Sora, FontWeight.Bold, 24)
 
-val headline2: TextStyle = style(Sora, FontWeight.SemiBold, 18, 24)
+val headline2: TextStyle = style(Sora, FontWeight.Bold, 18)
 
-val headline3: TextStyle = style(Sora, FontWeight.SemiBold, 15, 20)
+val headline3: TextStyle = style(Sora, FontWeight.Bold, 15)
 
-val headline4: TextStyle = style(Sora, FontWeight.SemiBold, 13, 18, 0.1.sp)
+val headline4: TextStyle = style(Sora, FontWeight.Bold, 13)
 
-val textL: TextStyle = style(Inter, FontWeight.Normal, 18, 24)
+val textL: TextStyle = style(Inter, FontWeight.Normal, 18)
 
-val textM: TextStyle = style(Inter, FontWeight.Normal, 16, 22)
+val textM: TextStyle = style(Inter, FontWeight.Normal, 15)
 
-val textS: TextStyle = style(Inter, FontWeight.Normal, 14, 18)
+val textS: TextStyle = style(Inter, FontWeight.Normal, 13)
 
-val textXS: TextStyle = style(Inter, FontWeight.Normal, 12, 16, 0.1.sp)
+val textXS: TextStyle = style(Inter, FontWeight.Normal, 11)
 
-val textLBold: TextStyle = textL.copy(fontWeight = FontWeight.SemiBold)
+val textLBold: TextStyle = bold(18, 20)
 
-val textMBold: TextStyle = textM.copy(fontWeight = FontWeight.SemiBold)
+val textMBold: TextStyle = bold(15, 16)
 
-val textSBold: TextStyle = textS.copy(fontWeight = FontWeight.SemiBold)
+val textSBold: TextStyle = bold(13, 16)
 
-val textXSBold: TextStyle = textXS.copy(fontWeight = FontWeight.SemiBold)
+val textXSBold: TextStyle = bold(11, 12)
 
-val paragraphL: TextStyle = style(Inter, FontWeight.Normal, 18, 28)
+val paragraphL: TextStyle = style(Inter, FontWeight.Normal, 18)
 
-val paragraphM: TextStyle = style(Inter, FontWeight.Normal, 16, 24)
+val paragraphM: TextStyle = style(Inter, FontWeight.Normal, 15)
 
-val paragraphS: TextStyle = style(Inter, FontWeight.Normal, 14, 20)
+val paragraphS: TextStyle = style(Inter, FontWeight.Normal, 13)
 
-val paragraphXS: TextStyle = style(Inter, FontWeight.Normal, 12, 16)
+val paragraphXS: TextStyle = style(Inter, FontWeight.Normal, 11)
 
-val paragraphLBold: TextStyle = paragraphL.copy(fontWeight = FontWeight.SemiBold)
+val paragraphLBold: TextStyle = bold(18, 28)
 
-val paragraphMBold: TextStyle = paragraphM.copy(fontWeight = FontWeight.SemiBold)
+val paragraphMBold: TextStyle = bold(15, 24)
 
-val paragraphSBold: TextStyle = paragraphS.copy(fontWeight = FontWeight.SemiBold)
+val paragraphSBold: TextStyle = bold(13, 20)
 
-val paragraphXSBold: TextStyle = paragraphXS.copy(fontWeight = FontWeight.SemiBold)
+val paragraphXSBold: TextStyle = bold(11, 16)
 
-val buttonM: TextStyle = style(Sora, FontWeight.SemiBold, 16, 20, 0.2.sp)
+val buttonM: TextStyle = style(Sora, FontWeight.Bold, 15)
 
 /**
- * Styles that have no ui-core [jp.co.soramitsu.ui_core.theme.CustomTypography] slot.
- * Colour is never part of a style; pass `NeonTokens` colours at the call site.
+ * Styles that have no ui-core [jp.co.soramitsu.ui_core.theme.CustomTypography] slot, in the
+ * classic weights. Colour is never part of a style; pass `NeonTokens` colours at the call site.
  */
 object NeonType {
 
     /** Balance hero and send/swap amount. Auto-shrink to 28 sp with `TextAutoSize`. */
-    val displayHero: TextStyle = style(Sora, FontWeight.SemiBold, 40, 48, (-0.5).sp, "tnum")
+    val displayHero: TextStyle = style(Sora, FontWeight.Bold, 40).copy(fontFeatureSettings = "tnum")
 
     /**
      * Small upper-case section labels ("TOTAL BALANCE"). Upper-case with
      * `uppercase(locale)`; use [eyebrowNoTracking] for Arabic and Persian.
      */
-    val eyebrow: TextStyle = style(Sora, FontWeight.SemiBold, 11, 14, 1.2.sp)
+    val eyebrow: TextStyle = style(Sora, FontWeight.Bold, 11).copy(letterSpacing = 1.2.sp)
 
     val eyebrowNoTracking: TextStyle = eyebrow.copy(letterSpacing = 0.sp)
 
     /** Asset and transaction amounts (tabular figures). */
-    val amountM: TextStyle = style(Inter, FontWeight.SemiBold, 16, 22, features = "tnum")
+    val amountM: TextStyle = style(Inter, FontWeight.Bold, 15).copy(fontFeatureSettings = "tnum")
 
     /** Fiat values, rates and fees (tabular figures). */
-    val amountS: TextStyle = style(Inter, FontWeight.Normal, 14, 18, features = "tnum")
+    val amountS: TextStyle = style(Inter, FontWeight.Normal, 13).copy(fontFeatureSettings = "tnum")
 
     /** Addresses, hashes, raw seed and recovery codes: distinct 0/O and 1/l/I. */
-    val mono: TextStyle = style(FontFamily.Monospace, FontWeight.Normal, 13, 20)
+    val mono: TextStyle = style(FontFamily.Monospace, FontWeight.Normal, 13)
 
     /** Recovery phrase words. Indexes use [mono] at 12 sp. */
-    val phraseWord: TextStyle = style(Inter, FontWeight.SemiBold, 16, 22)
+    val phraseWord: TextStyle = style(Inter, FontWeight.Bold, 15)
 
     /** PIN keypad digits. Cap the font scale at 1.3x at the call site. */
-    val pinDigit: TextStyle = style(Sora, FontWeight.Normal, 28, 32, features = "tnum")
+    val pinDigit: TextStyle = style(Sora, FontWeight.Bold, 34).copy(fontFeatureSettings = "tnum")
 }

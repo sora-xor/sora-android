@@ -76,6 +76,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonTokens
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 /** Button roles (design spec 7.1). One Primary, Swap or Safe button per screen. */
@@ -314,22 +315,17 @@ private fun SignalLoader(color: Color) {
     }
 }
 
-private fun Order.toNeon(): NeonVariant = when (this) {
-    Order.PRIMARY -> NeonVariant.Primary
-    Order.SECONDARY, Order.TERTIARY -> NeonVariant.Secondary
-}
-
 /*
  * Drop-ins with the ui-core signatures (jp.co.soramitsu.ui_core.component.button.*): migrate a
- * file by swapping its imports; call sites stay unchanged. Mapping (design spec 7.1):
- * FilledButton PRIMARY -> Primary, SECONDARY/TERTIARY -> Secondary; FilledPolkaswapButton ->
- * Swap; TonalButton, BleachedButton, OutlinedButton -> Secondary; TextButton -> Tertiary.
+ * file by swapping its imports; call sites stay unchanged. The classic SORA design draws them as
+ * the ui-core buttons themselves, with ui-core's default shape. SafeFilledButton is the filled
+ * button.
  */
 
 @Composable
 fun FilledButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -338,15 +334,15 @@ fun FilledButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = order.toNeon(), enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.FilledButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun SafeFilledButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -355,15 +351,15 @@ fun SafeFilledButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = if (order == Order.PRIMARY) NeonVariant.Safe else NeonVariant.Secondary, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.FilledButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun FilledPolkaswapButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -372,15 +368,15 @@ fun FilledPolkaswapButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = NeonVariant.Swap, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.FilledPolkaswapButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun TonalButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
     size: Dp,
     order: Order,
     text: String? = null,
@@ -389,15 +385,15 @@ fun TonalButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = NeonVariant.Secondary, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.TonalButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun BleachedButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -406,15 +402,15 @@ fun BleachedButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = NeonVariant.Secondary, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.BleachedButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun OutlinedButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -423,15 +419,15 @@ fun OutlinedButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = NeonVariant.Secondary, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.OutlinedButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun TextButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
     size: Dp,
     order: Order,
     text: String? = null,
@@ -440,7 +436,7 @@ fun TextButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = NeonVariant.Tertiary, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.TextButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )

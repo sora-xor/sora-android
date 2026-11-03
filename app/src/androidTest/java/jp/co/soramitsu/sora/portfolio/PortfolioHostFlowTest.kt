@@ -107,7 +107,7 @@ class PortfolioHostFlowTest {
             ids.associateWith { if (it == WalletNetworkId.SORA2) "main-sora2" else "main-${it.wireId}" },
             emptyMap(), { true }, directory = WalletNetworkDirectory { true })
     }
-    private fun show(startToken: String? = null) {
+    private fun show(startToken: String? = null, cards: CardsState = CardsState("main", curAccount = "main")) {
         compose.setContent {
             val soraValue by sora.collectAsState()
             val nexus by balances.collectAsState()
@@ -117,7 +117,7 @@ class PortfolioHostFlowTest {
                     NavHost(nav, startDestination = theOnlyRoute) {
                         composable(theOnlyRoute) {
                             PortfolioHomeHost(rememberScrollState(), nav, portfolio, hub,
-                                CardsState("main"), soraValue, nexus)
+                                cards, soraValue, nexus)
                         }
                         composable(PortfolioRoutes.TOKEN) { entry ->
                             PortfolioWhereItLivesHost(entry.arguments?.getString(PortfolioRoutes.TOKEN_ARG).orEmpty(),
@@ -140,6 +140,31 @@ class PortfolioHostFlowTest {
                         address: String = "main-minamoto", recipient: String? = "destination", amount: String? = "1.25") =
         PortfolioEffect.OpenNexusSend(wallet, network, address, recipient, amount)
 
+    @Test fun beforeTheFirstModelTheHeroShowsItIsLoading() {
+        current.value = null
+        show()
+        compose.onAllNodes(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.ProgressBarRangeInfo))
+            .onFirst().assertExists()
+    }
+    @Test fun hubCardsListPoolsBeforeBannersAndRouteTheirTaps() {
+        val pool = jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemState(
+            "", "", "XOR", "VAL", "2 XOR - 5 VAL", "$14.00", "+1%", "xor" to "val", emptyList())
+        val cards = listOf(
+            jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState,
+            jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState,
+            jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState(
+                "$14.00", jp.co.soramitsu.common.domain.CardHubType.POOLS.userName,
+                jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState(
+                    jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState(listOf(pool))),
+                onCollapseClick = {}, loading = false),
+        )
+        show(cards = CardsState("main", curAccount = "main", cards = cards))
+        compose.onNodeWithText("2 XOR - 5 VAL").performScrollTo().performClick()
+        click(R.string.referral_start_inviting); click(R.string.backup_now); click(R.string.edit_view)
+        compose.runOnIdle {
+            verify(exactly = 1) { hub.onPoolClick("xor" to "val"); hub.onStartReferral(); hub.onBackupBannerClick(); hub.onEditViewClick() }
+        }
+    }
     @Test fun soraOnlySendUsesExistingPortfolioFlow() {
         choose(WalletNetworkId.SORA2); show(); click(R.string.common_send)
         compose.runOnIdle { verify(exactly = 1) { portfolio.onQuickSend() }; verify(exactly = 0) { hub.openNexusSend(any()) } }

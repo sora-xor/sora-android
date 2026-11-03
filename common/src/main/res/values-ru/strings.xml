@@ -33,8 +33,6 @@
   <string name="address_not_found_1">Получатели не найдены</string>
   <string name="amount_error_no_funds">Извините, у вас недостаточно средств для осуществления перевода.</string>
   <string name="appearance_title">Внешний вид</string>
-  <string name="appearance_reduce_effects">Уменьшить эффекты</string>
-  <string name="appearance_reduce_effects_description">Отключает свечение, эффекты стекла и движения. Полезно на старых телефонах и для экономии заряда батареи.</string>
   <string name="apr_description">APR в фарминге обозначает годовую доходность инвестиций за участие в предоставлении ликвидности DeFi или стейкинге.</string>
   <string name="ask_biometry_message">Хотите ли Вы использовать биометрию для входа в приложение?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -771,4 +769,7 @@
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">Скрыть нулевые балансы</string>
+  <string name="show_zero_balances">Показать нулевые балансы</string>
+  <string name="global_results">Глобальные результаты</string>
 </resources>

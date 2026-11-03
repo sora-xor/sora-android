@@ -34,8 +34,8 @@ and Play publishing Gradle tasks. Building and validating artifacts does not pub
 
 - [ ] Confirm the highest versionCode already uploaded across all Play tracks and choose a
       higher code in the range enforced by `app/build.gradle.kts`. For 3.9.2 that range is
-      `3090200..3090299`; do not reuse a code already uploaded (3090101 was the highest on
-      29 October 2026).
+      `3090200..3090299`; do not reuse a code already uploaded (3090200 was the highest on
+      1 November 2026).
 - [ ] Confirm `appVersionName` in `app/build.gradle.kts` is the intended release version.
 - [ ] Confirm the public certificate pins in `config/android-production-signing-identity.json`
       match the upload certificate currently accepted by Play and the existing app-signing

@@ -68,6 +68,13 @@ interface AssetDao {
     suspend fun clearTable()
 
     @Query(QUERY_ASSET_TOKEN_FAVORITE)
+    fun subscribeAssetsFavorite(
+        address: String,
+        isoCode: String,
+        whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME
+    ): Flow<List<AssetTokenWithFiatLocal>>
+
+    @Query(QUERY_ASSET_TOKEN_FAVORITE)
     suspend fun getAssetsFavorite(
         address: String,
         isoCode: String,
@@ -87,6 +94,13 @@ interface AssetDao {
         isoCode: String,
         whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME
     ): List<AssetTokenWithFiatLocal>
+
+    @Query(QUERY_ASSET_TOKEN_VISIBLE)
+    fun subscribeAssetsVisible(
+        address: String,
+        isoCode: String,
+        whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME
+    ): Flow<List<AssetTokenWithFiatLocal>>
 
     @Query(QUERY_ASSET_TOKEN_ACTIVE)
     fun subscribeAssetsActive(

@@ -66,7 +66,7 @@ class FxPolicyTest {
     }
 
     @Test
-    fun `policy flags follow the tier and system settings`() {
+    fun `the classic design draws no glow, blur, pulse or texture on any tier`() {
         val signals = DeviceFxSignals(
             sdkInt = 35,
             isLowRamDevice = false,
@@ -77,10 +77,13 @@ class FxPolicyTest {
         )
         val full = FxPolicy.from(signals, reduceEffects = false)
         assertEquals(FxTier.FULL, full.tier)
-        assertTrue(full.pulses)
-        assertTrue(full.realBlur)
-        assertTrue(full.glows)
-        assertFalse(full.opaqueGlass)
+        assertFalse(full.pulses)
+        assertFalse(full.realBlur)
+        assertFalse(full.glows)
+        assertFalse(full.ambientDetail)
+        assertTrue(full.opaqueGlass)
+        assertTrue(full.shadows)
+        assertTrue(full.loops)
 
         val noMotion = FxPolicy.from(signals.copy(animatorsEnabled = false), reduceEffects = false)
         assertTrue(noMotion.reduceMotion)

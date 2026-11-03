@@ -31,11 +31,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalNeon
-import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonDark
-import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonDarkHighContrast
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicDark
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicDarkHighContrast
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicLight
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicLightHighContrast
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
-import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonLight
-import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonLightHighContrast
 import jp.co.soramitsu.common.presentation.compose.theme.neon.rememberFxPolicy
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
@@ -76,12 +76,12 @@ import jp.co.soramitsu.ui_core.theme.lightColors
 import jp.co.soramitsu.ui_core.theme.opacities
 
 /**
- * The one theme for every Compose host (SORA Neon, design spec 2-7).
+ * The one theme for every Compose host: the classic SORA design (3.8.6 and earlier).
  *
- * - ui-core slots ([MaterialTheme.customColors], typography, radii) carry the remapped palette,
- *   so existing screens recolour without call-site changes.
- * - `MaterialTheme.neon` ([LocalNeon]) carries the tokens that have no slot (glass, glow,
- *   aurora, neumorphic shadows).
+ * - ui-core slots ([MaterialTheme.customColors], typography, radii) carry the classic day and
+ *   night palettes.
+ * - `MaterialTheme.neon` ([LocalNeon]) carries the tokens that have no slot. The classic set
+ *   fills them with the same palette: solid surfaces, no glass, glow, aurora or neumorphic depth.
  * - [LocalFx] carries the effect tier for this device and the "Reduce effects" setting.
  * - Under the system high-contrast setting (API 34+), tertiary text uses the secondary colour
  *   and hairlines are twice as strong, in the ui-core slots and the neon tokens alike.
@@ -119,10 +119,10 @@ fun SoraAppTheme(
             ) {
                 CompositionLocalProvider(
                     LocalNeon provides when {
-                        darkTheme && highContrast -> NeonDarkHighContrast
-                        darkTheme -> NeonDark
-                        highContrast -> NeonLightHighContrast
-                        else -> NeonLight
+                        darkTheme && highContrast -> NeonClassicDarkHighContrast
+                        darkTheme -> NeonClassicDark
+                        highContrast -> NeonClassicLightHighContrast
+                        else -> NeonClassicLight
                     },
                     LocalFx provides fx,
                     LocalContentColor provides palette.fgPrimary,
@@ -155,7 +155,6 @@ private val soraLightColors = lightColors(
     statusWarningContainer = DayThemeColors.StatusWarningContainer,
     statusError = DayThemeColors.StatusError,
     statusErrorContainer = DayThemeColors.StatusErrorContainer,
-    elevation = DayThemeColors.Elevation,
 )
 
 private val soraDarkColors = darkColors(
@@ -180,7 +179,6 @@ private val soraDarkColors = darkColors(
     statusWarningContainer = NightThemeColors.StatusWarningContainer,
     statusError = NightThemeColors.StatusError,
     statusErrorContainer = NightThemeColors.StatusErrorContainer,
-    elevation = NightThemeColors.Elevation,
 )
 
 /** Design spec 4.0 `highContrast`: `text.tertiary` → `text.secondary`. */

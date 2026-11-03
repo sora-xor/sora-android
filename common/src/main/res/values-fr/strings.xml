@@ -33,8 +33,6 @@
   <string name="address_not_found_1">Destinataire non trouvé</string>
   <string name="amount_error_no_funds">Désolé, vous n\'avez pas les fonds suffisants pour transférer le montant spécifié.</string>
   <string name="appearance_title">Apparence</string>
-  <string name="appearance_reduce_effects">Réduire les effets</string>
-  <string name="appearance_reduce_effects_description">Désactive les effets de lueur, de verre et de mouvement. Utile sur les anciens téléphones ou pour économiser la batterie.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Souhaitez-vous utiliser l\'authentification biométrique ?</string>
   <string name="asset_details_asset_id">ID de l\'actif</string>
@@ -766,4 +764,7 @@
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">Cacher les soldes nuls</string>
+  <string name="show_zero_balances">Montrer les soldes nuls</string>
+  <string name="global_results">Résultats globaux</string>
 </resources>

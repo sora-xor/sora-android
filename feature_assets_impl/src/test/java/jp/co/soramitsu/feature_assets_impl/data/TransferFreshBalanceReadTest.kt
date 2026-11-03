@@ -10,6 +10,7 @@ import java.math.BigInteger
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.WhitelistTokensManager
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.common_wallet.data.XorBalanceDto
@@ -90,13 +91,15 @@ class TransferFreshBalanceReadTest {
         )
     }
 
-    /** Starts a 1 XOR transfer and returns the balance check the signing manager was given. */
-    private suspend fun TestScope.balanceCheckOfTransfer(): suspend (BigInteger) -> Unit {
+    /** Starts a transfer of 1 [token] and returns the balance check the signing manager was given. */
+    private suspend fun TestScope.balanceCheckOfTransfer(
+        token: Token = TestTokens.xorToken,
+    ): suspend (BigInteger) -> Unit {
         repository().observeTransfer(
             keypair = Sr25519Keypair(byteArrayOf(1), byteArrayOf(2), byteArrayOf(3)),
             from = "cnFrom",
             to = "cnTo",
-            token = TestTokens.xorToken,
+            token = token,
             amount = BigDecimal.ONE,
             fee = BigDecimal("0.0007"),
             validateSelectedWallet = {},
@@ -202,4 +205,32 @@ class TransferFreshBalanceReadTest {
             // With the fee inside what is above the frozen amount the transfer goes ahead.
             check(fee / BigInteger.TWO)
         }
+
+    @Test
+    fun `a token transfer also needs that token's own balance, read fresh`() = runTest {
+        val xor = BigInteger.TEN.pow(18)
+        // Enough XOR for the fee; the amount itself is VAL.
+        coEvery { substrateCalls.fetchXORBalances("cnFrom") } returns XorBalanceDto(
+            free = xor,
+            reserved = BigInteger.ZERO,
+            miscFrozen = BigInteger.ZERO,
+            feeFrozen = BigInteger.ZERO,
+            bonded = BigInteger.ZERO,
+            redeemable = BigInteger.ZERO,
+            unbonding = BigInteger.ZERO,
+        )
+        val oneVal = BigInteger.TEN.pow(TestTokens.valToken.precision)
+        coEvery {
+            substrateCalls.fetchTransferableBalances("cnFrom", listOf(TestTokens.valToken.id))
+        } returns listOf(oneVal - BigInteger.ONE)
+
+        val check = balanceCheckOfTransfer(TestTokens.valToken)
+        val failure = runCatching { check(BigInteger.TEN.pow(15)) }.exceptionOrNull()
+        assertEquals("SORA2_TRANSFER_ASSET_BALANCE_INSUFFICIENT", failure?.message)
+
+        coEvery {
+            substrateCalls.fetchTransferableBalances("cnFrom", listOf(TestTokens.valToken.id))
+        } returns listOf(oneVal)
+        check(BigInteger.TEN.pow(15))
+    }
 }

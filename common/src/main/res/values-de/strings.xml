@@ -33,8 +33,6 @@
   <string name="address_not_found_1">Empfänger nicht gefunden</string>
   <string name="amount_error_no_funds">Es tut uns leid, dein Guthaben reicht nicht aus, um den angegebenen Betrag zu transferieren.</string>
   <string name="appearance_title">Appearance</string>
-  <string name="appearance_reduce_effects">Effekte reduzieren</string>
-  <string name="appearance_reduce_effects_description">Deaktiviert Leucht-, Glas- und Bewegungseffekte. Hilfreich auf älteren Smartphones oder zum Sparen von Akku.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Möchtest du biometrische Authentifizierung nutzen?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -754,4 +752,7 @@
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">Hide zero balances</string>
+  <string name="show_zero_balances">Show zero balances</string>
+  <string name="global_results">Global results</string>
 </resources>

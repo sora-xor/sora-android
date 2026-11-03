@@ -33,8 +33,6 @@
   <string name="address_not_found_1">未找到接收人</string>
   <string name="amount_error_no_funds">很抱歉，您没有足够的资金来转账指定的金额。</string>
   <string name="appearance_title">外观</string>
-  <string name="appearance_reduce_effects">减少效果</string>
-  <string name="appearance_reduce_effects_description">关闭发光、玻璃和动态效果。适用于旧款手机，也可节省电量。</string>
   <string name="apr_description">在农业中，APR代表参与DeFi流动性提供或质押活动的年化投资回报率。</string>
   <string name="ask_biometry_message">您想使用生物特征识别进行认证吗？</string>
   <string name="asset_details_asset_id">资产ID</string>
@@ -753,4 +751,7 @@
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">隐藏零余额</string>
+  <string name="show_zero_balances">显示零余额</string>
+  <string name="global_results">全局结果</string>
 </resources>
