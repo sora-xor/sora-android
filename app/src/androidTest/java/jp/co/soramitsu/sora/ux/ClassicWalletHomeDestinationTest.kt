@@ -3,6 +3,7 @@ package jp.co.soramitsu.sora.ux
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.navigation.compose.*
@@ -13,10 +14,12 @@ import jp.co.soramitsu.common.base.*
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.nexus.*
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common_wallet.presentation.compose.states.*
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetlist.*
 import jp.co.soramitsu.feature_assets_impl.presentation.states.FullAssetListState
+import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.*
@@ -29,11 +32,13 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ClassicWalletHomeDestinationTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
-    private fun show(fragment: SoraBaseFragment<*>, vm: Any) {
+    private fun show(fragment: SoraBaseFragment<*>, vm: Any, readOnly: Boolean = false) {
         fragment.javaClass.getDeclaredField("viewModel\$delegate").apply { isAccessible = true }.set(fragment, lazyOf(vm))
         compose.setContent { SoraAppTheme {
-            val nav = rememberNavController(); val scroll = rememberScrollState()
-            NavHost(nav, startDestination = theOnlyRoute) { with(fragment) { content(scroll, nav) } }
+            CompositionLocalProvider(LocalSelectedAccountReadOnly provides readOnly) {
+                val nav = rememberNavController(); val scroll = rememberScrollState()
+                NavHost(nav, startDestination = theOnlyRoute) { with(fragment) { content(scroll, nav) } }
+            }
         } }
     }
     private fun text(id: Int) = compose.activity.getString(id)
@@ -62,6 +67,20 @@ class ClassicWalletHomeDestinationTest {
         compose.runOnIdle {
             verify(exactly = 1) { vm.onAssetClick(xor.tokenId); vm.onAssetClick(valToken.tokenId); vm.onAssetClick(pswap.tokenId) }
         }
+    }
+
+    @Test fun fullAssetListKeepsZeroBalancesFoldedUntilAsked() {
+        val state = MutableStateFlow(FullAssetListState(false, "$20", listOf(xor), listOf(valToken)))
+        val vm = mockk<FullAssetListViewModel>(relaxed = true) { every { this@mockk.state } returns state }
+        show(FullAssetListFragment(), vm)
+        compose.onNodeWithText("Validator classic").assertDoesNotExist()
+
+        compose.onNodeWithText(text(R.string.show_zero_balances)).performClick()
+        compose.onNodeWithText("Validator classic").performScrollTo().performClick()
+        compose.onNodeWithText(text(R.string.hide_zero_balances)).performScrollTo().performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Validator classic").assertDoesNotExist()
+        compose.runOnIdle { verify(exactly = 1) { vm.onAssetClick(valToken.tokenId) } }
     }
 
     @Test fun classicHomeShowsItsCardsAndRoutesEveryTap() {
@@ -103,5 +122,33 @@ class ClassicWalletHomeDestinationTest {
                 vm.onPoolClick("0x0200000000" to "0x0200040000"); vm.onEditViewClick()
             }
         }
+    }
+
+    @Test fun aReadOnlyAccountGetsItsNoticeAndATairaRowOpensItsOwnSendAndReceive() {
+        val wallet = "cnClassicWallet"
+        val taira = NexusPortfolioBalance(
+            walletId = wallet, networkId = WalletNetworkId.TAIRA, networkName = "Taira Testnet", isTestnet = true,
+            address = "taira-classic-address", xorQuantity = "1", assetDefinitionId = "xor#taira",
+            explorerBaseUrl = "https://example.invalid", sendAvailable = true, pendingTransactions = emptyList(),
+            confirmedTransfers = emptyList(), historyErrorCode = null, errorCode = null,
+        )
+        val vm = mockk<CardsHubViewModel>(relaxed = true) {
+            every { state } returns MutableStateFlow(CardsState(accountAddress = wallet, curAccount = "Watch account", cards = emptyList()))
+            every { nexusPortfolio } returns MutableStateFlow(listOf(taira))
+            every { sora2Portfolio } returns MutableStateFlow(Sora2PortfolioBalance(wallet, "10"))
+            every { nexusSend } returns MutableStateFlow(NexusSendUiState())
+            every { isCurrentNexusBalance(any()) } returns true
+            every { networkChoices(any()) } answers {
+                WalletNetworkChoices.make(firstArg(), mapOf(WalletNetworkId.TAIRA to taira.address), emptyMap(), { true },
+                    directory = WalletNetworkDirectory { true })
+            }
+        }
+        show(CardsHubFragment(), vm, readOnly = true)
+
+        compose.onNodeWithText(text(R.string.account_read_only_title)).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.common_send)).performClick()
+        compose.runOnIdle { verify(exactly = 1) { vm.openNexusSend(taira) } }
+        compose.onNodeWithText(text(R.string.common_receive)).performClick()
+        compose.onAllNodesWithText(taira.address, substring = true).onFirst().assertExists()
     }
 }

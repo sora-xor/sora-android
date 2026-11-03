@@ -160,6 +160,20 @@ class AssetsInteractorWalletHomeTest {
     }
 
     @Test
+    fun `defaults give an unprefixed key, the default scale and no XOR change`() = runTest {
+        coEvery { assetsRepository.fetchBalance(address, listOf(xorId)) } returns
+            listOf(BigInteger("1500000000000000000"))
+        coEvery { assetsRepository.getAsset(xorId, address) } returns TestAssets.xorAsset(BigDecimal.ONE)
+
+        val publicKey = interactor.getPublicKeyHex()
+        assertTrue(publicKey, !publicKey.startsWith("0x") && publicKey.length == 64)
+        assertEquals(listOf(BigDecimal("1.5")), interactor.fetchBalance(address, listOf(xorId)))
+        // 1 XOR: after a 0.1 fee there is more than one more fee left, after a 0.6 fee there is not.
+        assertEquals(false, interactor.isNotEnoughXorLeftAfterTransaction(BigDecimal("0.1")))
+        assertEquals(true, interactor.isNotEnoughXorLeftAfterTransaction(BigDecimal("0.6")))
+    }
+
+    @Test
     fun `a missing asset is reported, not invented`() = runTest {
         coEvery { assetsRepository.getAsset("missing", address) } returns null
 
