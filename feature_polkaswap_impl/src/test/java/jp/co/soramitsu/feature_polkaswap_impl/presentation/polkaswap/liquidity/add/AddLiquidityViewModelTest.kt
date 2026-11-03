@@ -1207,7 +1207,8 @@ class AddLiquidityViewModelTest {
         setUpViewModel(null); advanceUntilIdle()
         viewModel.onToken1Change(XSTXAU_ASSET.token.id); advanceUntilIdle()
         assertEquals(XSTXAU_ASSET.token.id, viewModel.addState.value.assetState1!!.token.id)
-        assertTrue(viewModel.addState.value.assetState1!!.balance.startsWith("1 ("))
+        // XSTXAU has no fiat price here, so no empty "()" follows the balance.
+        assertEquals("1", viewModel.addState.value.assetState1!!.balance)
         viewModel.onToken1Change(XSTXAU_ASSET.token.id)
         assertEquals("Choose tokens", viewModel.addState.value.btnState.text)
     }

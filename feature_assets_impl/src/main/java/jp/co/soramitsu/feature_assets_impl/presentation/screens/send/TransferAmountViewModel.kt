@@ -54,6 +54,7 @@ import jp.co.soramitsu.common.presentation.transaction.badge
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.view.ViewHelper
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -360,14 +361,8 @@ class TransferAmountViewModel @AssistedInject constructor(
         )
     }
 
-    private fun getAssetBalanceText(asset: Asset) = "%s (%s)".format(
-        asset.printBalance(
-            numbersFormatter,
-            withSymbol = false,
-            precision = AssetHolder.ROUNDING
-        ),
-        asset.printFiat(numbersFormatter)
-    )
+    private fun getAssetBalanceText(asset: Asset) =
+        AmountFormat.getAssetBalanceText(asset, numbersFormatter, AssetHolder.ROUNDING)
 
     private suspend fun calcTransactionFee(feeAsset: Asset, amount: BigDecimal) {
         val token = curAsset?.token ?: return

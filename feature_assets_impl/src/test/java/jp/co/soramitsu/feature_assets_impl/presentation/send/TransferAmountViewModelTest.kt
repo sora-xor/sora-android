@@ -167,6 +167,26 @@ class TransferAmountViewModelTest {
     }
 
     @Test
+    fun `a token without a fiat price shows its balance without empty parentheses`() = runTest {
+        // The test tokens have no fiat price, as every token has while the price feed is down.
+        initViewModel(BigDecimal("12"))
+        advanceUntilIdle()
+
+        assertEquals("12", transferAmountViewModel.sendState.value.input?.balance)
+    }
+
+    @Test
+    fun `a token with a fiat price shows its balance and fiat value`() = runTest {
+        val priced = TestAssets.xorAsset(BigDecimal("12")).let {
+            it.copy(token = it.token.copy(fiatPrice = 2.0, fiatSymbol = "$"))
+        }
+        initViewModel(BigDecimal.ZERO, assets = flowOf(listOf(priced)))
+        advanceUntilIdle()
+
+        assertEquals("12 ($24)", transferAmountViewModel.sendState.value.input?.balance)
+    }
+
+    @Test
     fun `XOR that no fee can be paid from is all named as locked`() = runTest {
         // free 100 with 30 reserved and 110 frozen: a transfer alone could move 20, but no
         // fee can be paid, so nothing can be sent and the whole free balance is locked.
