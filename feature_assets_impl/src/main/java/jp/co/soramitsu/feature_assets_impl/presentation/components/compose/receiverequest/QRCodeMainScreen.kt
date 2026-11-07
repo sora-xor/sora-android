@@ -40,6 +40,8 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.uikit.organisms.PagerTextIndicator
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
+import jp.co.soramitsu.common_wallet.presentation.compose.receive.ReceiveTokenByQrScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.receive.ReceiveTokenByQrScreenState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import kotlinx.coroutines.launch
 

@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails
+package jp.co.soramitsu.common_wallet.presentation.compose.assetdetails
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,7 +48,7 @@ import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
-internal fun AssetDetailsTokenPriceCard(
+fun AssetDetailsTokenPriceCard(
     tokenName: String,
     tokenSymbol: String,
     tokenPrice: String,

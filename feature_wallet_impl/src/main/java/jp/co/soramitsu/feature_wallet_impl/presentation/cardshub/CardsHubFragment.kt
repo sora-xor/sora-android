@@ -76,6 +76,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.androidfoundation.intent.ShareUtil
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
@@ -148,6 +149,17 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).showBottomBar()
+        // Receive's Share, as on SORA2: the QR code as an image, with the address in the text.
+        viewModel.nexusShare.observe { (qrCodeFile, message) ->
+            context?.let { context ->
+                ShareUtil.shareImageFile(
+                    context = context,
+                    title = getString(R.string.common_share),
+                    file = qrCodeFile,
+                    description = message,
+                )
+            }
+        }
     }
 
     override fun onResume() {
@@ -167,10 +179,12 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     }
 
     override fun onDestinationChanged(destination: String) {
-        if (!portfolioView) return
-        // "Where it lives" is a pushed screen: like other detail screens, without the bottom bar.
+        // A network's XOR pages and "Where it lives" are pushed screens: like the SORA2 detail
+        // screens, without the bottom bar.
         val bar = activity as? BottomBarController ?: return
-        if (destination == PortfolioRoutes.TOKEN) bar.hideBottomBar() else bar.showBottomBar()
+        val pushed = destination in NexusRoutes.pushed ||
+            (portfolioView && destination == PortfolioRoutes.TOKEN)
+        if (pushed) bar.hideBottomBar() else bar.showBottomBar()
     }
 
     override fun NavGraphBuilder.content(
@@ -179,8 +193,12 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     ) {
         composable(
             route = theOnlyRoute,
-        ) {
+        ) { entry ->
             val onQrClick: () -> Unit = viewModel::openQrCodeFlow
+            // The home keeps its own scroll position under the pages pushed over it; those pages
+            // scroll with the toolbar's state, as the SORA2 screens do.
+            val homeScrollState = rememberScrollState()
+            FollowNexusSend(viewModel, entry, navController)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -190,22 +208,10 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     viewModel.nexusPortfolio.collectAsStateWithLifecycle().value
                 val sora2Portfolio =
                     viewModel.sora2Portfolio.collectAsStateWithLifecycle().value
-                val nexusSend = viewModel.nexusSend.collectAsStateWithLifecycle().value
-                NexusSendDialog(
-                    state = nexusSend,
-                    onDismiss = viewModel::closeNexusSend,
-                    onRecipient = viewModel::setNexusRecipient,
-                    onAmount = viewModel::setNexusAmount,
-                    onPrepare = viewModel::prepareNexusSend,
-                    onConfirm = viewModel::confirmNexusSend,
-                    onEdit = viewModel::editNexusSend,
-                    onRecovery = viewModel::onBackupBannerClick,
-                    onScan = ::scanNexusRecipient,
-                )
                 UpgradeSheets(state = state, onBackUpNow = viewModel::onBackupBannerClick)
                 if (portfolioView) {
                     PortfolioHomeHost(
-                        scrollState = scrollState,
+                        scrollState = homeScrollState,
                         navController = navController,
                         portfolio = portfolioViewModel,
                         hub = viewModel,
@@ -215,7 +221,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     )
                 } else {
                     CardsMainScreen(
-                        scrollState = scrollState,
+                        scrollState = homeScrollState,
                         state = state,
                         sora2Portfolio = sora2Portfolio,
                         nexusPortfolio = nexusPortfolio,
@@ -231,25 +237,31 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                         onSora2Receive = viewModel::openSora2Receive,
                         onSora2Send = viewModel::openSora2Send,
                         networkChoices = viewModel::networkChoices,
+                        onNexusOpen = navController::openNexusAsset,
+                        onNexusReceive = navController::openNexusReceive,
                         onNexusSend = viewModel::openNexusSend,
-                        onNexusRefresh = viewModel::refreshNexusPortfolio,
-                        onNexusLoadMore = viewModel::loadMoreNexusHistory,
                         isNexusBalanceCurrent = viewModel::isCurrentNexusBalance,
                     )
                 }
             }
         }
+        nexusPages(
+            hub = viewModel,
+            navController = navController,
+            scrollState = scrollState,
+            onScanRecipient = ::scanNexusRecipient,
+        )
         if (portfolioView) {
             composable(
                 route = PortfolioRoutes.TOKEN,
                 arguments = listOf(navArgument(PortfolioRoutes.TOKEN_ARG) { type = NavType.StringType }),
             ) { entry ->
+                FollowNexusSend(viewModel, entry, navController)
                 PortfolioWhereItLivesHost(
                     tokenId = entry.arguments?.getString(PortfolioRoutes.TOKEN_ARG).orEmpty(),
                     navController = navController,
                     portfolio = portfolioViewModel,
                     hub = viewModel,
-                    onScanNexusRecipient = ::scanNexusRecipient,
                 )
             }
         }
@@ -274,24 +286,15 @@ private fun CardsMainScreen(
     onSora2Receive: (String) -> Unit,
     onSora2Send: (String) -> Unit,
     networkChoices: (WalletNetworkAction) -> List<WalletNetworkChoice>,
+    onNexusOpen: (NexusPortfolioBalance) -> Unit,
+    onNexusReceive: (NexusPortfolioBalance) -> Unit,
     onNexusSend: (NexusPortfolioBalance) -> Unit,
-    onNexusRefresh: () -> Unit = {},
-    onNexusLoadMore: (NexusPortfolioBalance) -> Unit = {},
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
 ) {
     // One wallet: other networks' XOR are rows of the asset list, and Send and Receive ask which
-    // network only when there is a choice. There is no network mode to switch.
+    // network only when there is a choice. There is no network mode to switch. A row opens that
+    // network's XOR page, drawn as the SORA2 asset page.
     val walletNetworks = nexusPortfolio.filter { it.walletId == sora2Portfolio?.address }
-    val networkSheets = rememberNetworkSheetsState(sora2Portfolio?.address)
-    NetworkSheets(
-        state = networkSheets,
-        balances = walletNetworks,
-        isNexusBalanceCurrent = isNexusBalanceCurrent,
-        onSend = onNexusSend,
-        onRecovery = onBackupBannerClick,
-        onRefresh = onNexusRefresh,
-        onLoadMore = onNexusLoadMore,
-    )
     // The selected account cannot sign on this phone: its name carries the Read-only chip, and
     // the notice below says why and offers the repair (Account options).
     val accountReadOnly = LocalSelectedAccountReadOnly.current
@@ -318,6 +321,7 @@ private fun CardsMainScreen(
         }
         WalletSendReceive(
             modifier = Modifier.padding(bottom = 16.dp),
+            xorIcon = sora2Portfolio?.xorIcon,
             networkChoices = networkChoices,
             onOpen = { action, choice ->
                 if (choice.id == WalletNetworkId.SORA2) {
@@ -328,7 +332,7 @@ private fun CardsMainScreen(
                         it.networkId == choice.id && it.address == choice.address && isNexusBalanceCurrent(it)
                     }?.let { balance ->
                         if (action == WalletNetworkAction.SEND) onNexusSend(balance)
-                        else networkSheets.openReceive(balance)
+                        else onNexusReceive(balance)
                     }
                 }
             },
@@ -359,7 +363,7 @@ private fun CardsMainScreen(
                                     balances = walletNetworks.filter(isNexusBalanceCurrent),
                                     xorIcon = sora2Portfolio?.xorIcon,
                                     xorName = sora2Portfolio?.xorName,
-                                    onOpen = networkSheets::openActivity,
+                                    onOpen = onNexusOpen,
                                 )
                             }
                             is FavoritePoolsCardState -> PoolsList(
@@ -493,6 +497,8 @@ private fun PreviewCardsMainScreen() {
             onSora2Receive = {},
             onSora2Send = {},
             networkChoices = { emptyList() },
+            onNexusOpen = {},
+            onNexusReceive = {},
             onNexusSend = {},
             isNexusBalanceCurrent = { true },
         )

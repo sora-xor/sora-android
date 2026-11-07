@@ -72,11 +72,9 @@ internal fun PortfolioHomeHost(
     val inFront = navController.isCurrent(theOnlyRoute)
     // Send and Receive ask which network only when the wallet has a real choice, as on the
     // classic home. All wallets keeps the dashboard's own order: first which wallet, then SORA2.
-    val networkSheets = rememberNetworkSheetsState(sora2Portfolio?.address)
-    val latestSheets by rememberUpdatedState(networkSheets)
     val latestModel by rememberUpdatedState(model)
     var networkPick by remember(sora2Portfolio?.address) { mutableStateOf<Pair<WalletNetworkAction, List<WalletNetworkChoice>>?>(null) }
-    val openNetwork: (WalletNetworkAction, WalletNetworkChoice) -> Unit = remember(portfolio, hub) {
+    val openNetwork: (WalletNetworkAction, WalletNetworkChoice) -> Unit = remember(portfolio, hub, navController) {
         { action, choice ->
             if (choice.id == WalletNetworkId.SORA2) {
                 if (action == WalletNetworkAction.SEND) portfolio.onQuickSend() else portfolio.onQuickReceive()
@@ -85,7 +83,7 @@ internal fun PortfolioHomeHost(
                     it.networkId == choice.id && it.address == choice.address && hub.isCurrentNexusBalance(it)
                 }?.let { balance ->
                     if (action == WalletNetworkAction.SEND) hub.openNexusSend(balance)
-                    else latestSheets.openReceive(balance)
+                    else navController.openNexusReceive(balance)
                 }
             }
         }
@@ -109,15 +107,6 @@ internal fun PortfolioHomeHost(
         }
     }
     if (inFront) {
-        NetworkSheets(
-            state = networkSheets,
-            balances = nexusPortfolio.filter { it.walletId == sora2Portfolio?.address },
-            isNexusBalanceCurrent = hub::isCurrentNexusBalance,
-            onSend = hub::openNexusSend,
-            onRecovery = hub::onBackupBannerClick,
-            onRefresh = hub::refreshNexusPortfolio,
-            onLoadMore = hub::loadMoreNexusHistory,
-        )
         networkPick?.let { (action, choices) ->
             NetworkPickerSheet(
                 action = action,
@@ -127,6 +116,7 @@ internal fun PortfolioHomeHost(
                     openNetwork(action, choice)
                 },
                 onClose = { networkPick = null },
+                xorIcon = sora2Portfolio?.xorIcon,
             )
         }
     }
@@ -163,23 +153,23 @@ internal fun PortfolioHomeHost(
                 onReferralClose = hub::onRemoveReferralCard,
                 onBackupBannerClick = hub::onBackupBannerClick,
                 onEdit = hub::onEditViewClick,
-                onNexusSend = hub::openNexusSend,
-                onNexusRefresh = hub::refreshNexusPortfolio,
-                onNexusLoadMore = hub::loadMoreNexusHistory,
+                onNexusOpen = navController::openNexusAsset,
                 isNexusBalanceCurrent = hub::isCurrentNexusBalance,
             )
         },
     )
 }
 
-/** "Where it lives" for [tokenId], pushed inside the Wallet tab (portfolio-view SPEC §5). */
+/**
+ * "Where it lives" for [tokenId], pushed inside the Wallet tab (portfolio-view SPEC §5). A Move
+ * or Send on SORA Nexus or Taira opens the home's Send page ([FollowNexusSend]).
+ */
 @Composable
 internal fun PortfolioWhereItLivesHost(
     tokenId: String,
     navController: NavHostController,
     portfolio: PortfolioViewModel,
     hub: CardsHubViewModel,
-    onScanNexusRecipient: () -> Unit,
 ) {
     PortfolioEffects(portfolio, hub, navController)
     val model by portfolio.model.collectAsStateWithLifecycle()
@@ -189,21 +179,6 @@ internal fun PortfolioWhereItLivesHost(
     val inFront = navController.isCurrent(PortfolioRoutes.TOKEN)
     val actions = remember(portfolio, navController) { WhereActions(portfolio, navController) }
     val sheetActions = remember(portfolio) { SheetActions(portfolio) }
-    // A Move or Send on Minamoto or Taira hands off to the home's existing Nexus send.
-    val nexusSend by hub.nexusSend.collectAsStateWithLifecycle()
-    if (inFront) {
-        NexusSendDialog(
-            state = nexusSend,
-            onDismiss = hub::closeNexusSend,
-            onRecipient = hub::setNexusRecipient,
-            onAmount = hub::setNexusAmount,
-            onPrepare = hub::prepareNexusSend,
-            onConfirm = hub::confirmNexusSend,
-            onEdit = hub::editNexusSend,
-            onRecovery = hub::onBackupBannerClick,
-            onScan = onScanNexusRecipient,
-        )
-    }
     PortfolioWhereItLivesRoute(
         model = model,
         tokenId = tokenId,

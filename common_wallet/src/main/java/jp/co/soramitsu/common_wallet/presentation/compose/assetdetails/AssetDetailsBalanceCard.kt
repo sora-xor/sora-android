@@ -17,12 +17,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails
+package jp.co.soramitsu.common_wallet.presentation.compose.assetdetails
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,6 +41,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,8 +60,18 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * An asset's balance card: the liquid amount, the frozen amount and why, and the round Send,
+ * Receive and Swap actions. SORA2 assets and the XOR of the other networks (SORA Nexus, Taira)
+ * are drawn by this one card. The parameters after [readOnly] default to the SORA2 asset page.
+ *
+ * @param swapAvailable false leaves out Swap, for a network where Polkaswap does not run.
+ * @param receiveText the Receive action's label.
+ * @param onBalanceClick null when tapping the card does nothing.
+ * @param notes more lines where the locked note is, in its style ([AssetDetailsBalanceNote]).
+ */
 @Composable
-internal fun AssetDetailsBalanceCard(
+fun AssetDetailsBalanceCard(
     amount: String,
     amountFiat: String,
     frozenAmount: String? = null,
@@ -69,8 +81,11 @@ internal fun AssetDetailsBalanceCard(
     onSendClick: () -> Unit,
     onReceiveClick: () -> Unit,
     onSwapClick: () -> Unit,
-    onBalanceClick: () -> Unit,
+    onBalanceClick: (() -> Unit)?,
     readOnly: Boolean = rememberWalletReadOnly() || LocalSelectedAccountReadOnly.current,
+    swapAvailable: Boolean = true,
+    receiveText: String = stringResource(id = R.string.common_receive),
+    notes: @Composable ColumnScope.() -> Unit = {},
 ) {
     ContentCard(
         modifier = Modifier
@@ -156,16 +171,9 @@ internal fun AssetDetailsBalanceCard(
             if (lockedNote != null) {
                 // Says why the liquid balance is smaller than what the account holds. An
                 // account whose XOR is all locked would otherwise only see "0".
-                Text(
-                    modifier = Modifier
-                        .padding(start = Dimens.x3, end = Dimens.x3, top = Dimens.x1)
-                        .fillMaxWidth()
-                        .testTagAsId("AssetLockedNote"),
-                    text = lockedNote,
-                    style = MaterialTheme.customTypography.paragraphXS,
-                    color = MaterialTheme.customColors.fgSecondary,
-                )
+                AssetDetailsBalanceNote(text = lockedNote, testTag = "AssetLockedNote")
             }
+            notes()
             Divider(
                 color = MaterialTheme.customColors.fgOutline,
                 thickness = 1.dp,
@@ -198,16 +206,18 @@ internal fun AssetDetailsBalanceCard(
                 }
                 AmountCardIcon(
                     res = R.drawable.ic_new_arrow_down_24,
-                    text = stringResource(id = R.string.common_receive),
+                    text = receiveText,
                     enabled = true,
                     onClick = onReceiveClick,
                 )
-                AmountCardIcon(
-                    res = R.drawable.ic_refresh_24,
-                    text = stringResource(id = R.string.polkaswap_swap_title),
-                    enabled = !readOnly,
-                    onClick = onSwapClick,
-                )
+                if (swapAvailable) {
+                    AmountCardIcon(
+                        res = R.drawable.ic_refresh_24,
+                        text = stringResource(id = R.string.polkaswap_swap_title),
+                        enabled = !readOnly,
+                        onClick = onSwapClick,
+                    )
+                }
             }
             if (readOnly) {
                 // U9: Send and Swap are off in read-only mode, with the reason.
@@ -225,6 +235,27 @@ internal fun AssetDetailsBalanceCard(
 private fun AmountCardIcon(@DrawableRes res: Int, text: String, enabled: Boolean, onClick: () -> Unit) =
     jp.co.soramitsu.common.view.AmountCardIcon(testTagId = "${text}Button", res = res, text = text,
         isEnabled = enabled, onClick = onClick)
+
+/**
+ * One line under the balance, in the style of the locked note: why the balance is smaller than
+ * what the account holds, why an action is not available, or what is still being checked.
+ */
+@Composable
+fun AssetDetailsBalanceNote(
+    text: String,
+    testTag: String? = null,
+    color: Color = MaterialTheme.customColors.fgSecondary,
+) {
+    Text(
+        modifier = Modifier
+            .padding(start = Dimens.x3, end = Dimens.x3, top = Dimens.x1)
+            .fillMaxWidth()
+            .then(if (testTag != null) Modifier.testTagAsId(testTag) else Modifier),
+        text = text,
+        style = MaterialTheme.customTypography.paragraphXS,
+        color = color,
+    )
+}
 
 @Preview
 @Composable

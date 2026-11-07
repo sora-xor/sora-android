@@ -110,7 +110,7 @@ class NeonProductionScreensTest {
         var scanned = 0
         val address = "cnT65V7vJnPkR2Y2AxXwV1Bpcbab7vNaHGd3ZxXjrTpPuxvj2"
         val qr = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
-        val state = jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.ReceiveTokenByQrScreenState(
+        val state = jp.co.soramitsu.common_wallet.presentation.compose.receive.ReceiveTokenByQrScreenState(
             jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus.READY_TO_RENDER,
             qr, "My Wallet", android.graphics.drawable.BitmapDrawable(context.resources, qr), address,
         )
@@ -120,7 +120,7 @@ class NeonProductionScreensTest {
                 CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale), LocalFx provides minimal) {
                     Box(Modifier.size(width = 320.dp, height = 520.dp)) {
                         NeonBackground()
-                        jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.ReceiveTokenByQrScreen(
+                        jp.co.soramitsu.common_wallet.presentation.compose.receive.ReceiveTokenByQrScreen(
                             rememberScrollState(), state, {}, { shared++ }, { scanned++ }, {},
                         )
                     }

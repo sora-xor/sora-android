@@ -485,7 +485,6 @@
   <string name="wallet_bonded">已綁定</string>
   <string name="wallet_connect_account">賬戶</string>
   <string name="wallet_connect_done">完成</string>
-  <string name="wallet_network_activity">活動</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">掃描此 QR 給我發送%s 。我的%s網絡帳戶 ID： \n %s</string>
   <string name="wallet_receive_xor">收到XOR</string>
   <string name="wallet_redeemable">可贖回</string>
@@ -740,8 +739,6 @@
   <string name="neon_theme_light">Light</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
   <string name="nexus_production_address">Production address</string>
-  <string name="nexus_copy_production_address">Copy production address</string>
-  <string name="nexus_production_not_live">Not live yet</string>
   <string name="nexus_production_address_notice">Your SORA Nexus production address is ready to copy. The production network has not launched yet; balances, history and transfers will be available after launch.</string>
   <string name="nexus_send_not_available">Sending is currently unavailable for this account. You can view your balance, copy your address and receive testnet XOR.</string>
   <string name="nexus_history_load_more">Load older transfers</string>

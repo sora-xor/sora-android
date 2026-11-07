@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -90,6 +89,7 @@ internal fun WalletSendReceive(
     networkChoices: (WalletNetworkAction) -> List<WalletNetworkChoice>,
     onOpen: (WalletNetworkAction, WalletNetworkChoice) -> Unit,
     modifier: Modifier = Modifier,
+    xorIcon: String? = null,
 ) {
     var picking by remember { mutableStateOf<Pair<WalletNetworkAction, List<WalletNetworkChoice>>?>(null) }
     val start: (WalletNetworkAction) -> Unit = { action ->
@@ -125,13 +125,15 @@ internal fun WalletSendReceive(
                 onOpen(action, choice)
             },
             onClose = { picking = null },
+            xorIcon = xorIcon,
         )
     }
 }
 
 /**
  * The one question the wallet asks about networks: which network to receive or send on. The
- * main network is first; each row shows its tag, XOR balance and address.
+ * main network is first. The networks are listed as the SORA2 asset list lists tokens: in a card,
+ * each with XOR's icon, its balance and address, and its tag.
  */
 @Composable
 internal fun NetworkPickerSheet(
@@ -139,6 +141,7 @@ internal fun NetworkPickerSheet(
     choices: List<WalletNetworkChoice>,
     onPick: (WalletNetworkChoice) -> Unit,
     onClose: () -> Unit,
+    xorIcon: String? = null,
 ) {
     WalletSheet(
         title = stringResource(
@@ -146,10 +149,12 @@ internal fun NetworkPickerSheet(
         ),
         onClose = onClose,
     ) {
-        Column(Modifier.fillMaxWidth()) {
-            choices.forEachIndexed { index, choice ->
-                NetworkChoiceRow(choice, onClick = { onPick(choice) })
-                if (index < choices.lastIndex) Divider(color = MaterialTheme.customColors.fgOutline)
+        ContentCard(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(vertical = Dimens.x3)) {
+                choices.forEachIndexed { index, choice ->
+                    NetworkChoiceRow(choice, icon = xorIcon, onClick = { onPick(choice) })
+                    if (index < choices.lastIndex) Spacer(Modifier.size(Dimens.x2))
+                }
             }
         }
         Text(
@@ -163,8 +168,9 @@ internal fun NetworkPickerSheet(
     }
 }
 
+/** A network as a row of the SORA2 asset list: icon, name, balance, then address and tag. */
 @Composable
-private fun NetworkChoiceRow(choice: WalletNetworkChoice, onClick: () -> Unit) {
+private fun NetworkChoiceRow(choice: WalletNetworkChoice, icon: String?, onClick: () -> Unit) {
     val name = choice.network.name
     val amount = if (!choice.network.isLive) stringResource(R.string.network_address_ready)
     else choice.balance?.let { "$it XOR" }
@@ -177,15 +183,23 @@ private fun NetworkChoiceRow(choice: WalletNetworkChoice, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = choice.isAvailable, role = Role.Button, onClick = onClick)
-            .padding(vertical = 14.dp)
+            .padding(horizontal = Dimens.x3)
             .testTag("NetworkChoice${choice.id.wireId}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        TokenIcon(uri = icon, size = 40.dp)
+        Column(
+            Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             val content = if (choice.isAvailable) MaterialTheme.customColors.fgPrimary
             else MaterialTheme.customColors.fgSecondary
-            Text(name, style = MaterialTheme.customTypography.headline3, color = content)
-            amount?.let { Text(it, style = MaterialTheme.customTypography.textS, color = content) }
+            Text(name, style = MaterialTheme.customTypography.textM, color = content)
+            amount?.let {
+                Text(it, style = MaterialTheme.customTypography.textXSBold, color = MaterialTheme.customColors.fgSecondary)
+            }
             Text(
                 shortAddress(choice.address),
                 style = MaterialTheme.customTypography.textXS,
@@ -195,7 +209,7 @@ private fun NetworkChoiceRow(choice: WalletNetworkChoice, onClick: () -> Unit) {
                 Text(it, style = MaterialTheme.customTypography.textXS, color = MaterialTheme.customColors.fgSecondary)
             }
         }
-        choice.tag?.let { NetworkTagChip(it, Modifier.padding(start = 12.dp)) }
+        choice.tag?.let { NetworkTagChip(it) }
     }
 }
 
@@ -274,22 +288,8 @@ internal fun OtherNetworksCard(
     xorIcon: String?,
     xorName: String?,
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
-    onSend: (NexusPortfolioBalance) -> Unit,
-    onRecovery: () -> Unit,
-    onRefresh: () -> Unit,
-    onLoadMore: (NexusPortfolioBalance) -> Unit,
-    walletId: String?,
+    onOpen: (NexusPortfolioBalance) -> Unit,
 ) {
-    val sheets = rememberNetworkSheetsState(walletId)
-    NetworkSheets(
-        state = sheets,
-        balances = balances,
-        isNexusBalanceCurrent = isNexusBalanceCurrent,
-        onSend = onSend,
-        onRecovery = onRecovery,
-        onRefresh = onRefresh,
-        onLoadMore = onLoadMore,
-    )
     ContentCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(top = Dimens.x3, bottom = Dimens.x3)) {
             Text(
@@ -302,7 +302,7 @@ internal fun OtherNetworksCard(
                 balances = balances.filter(isNexusBalanceCurrent),
                 xorIcon = xorIcon,
                 xorName = xorName,
-                onOpen = sheets::openActivity,
+                onOpen = onOpen,
             )
         }
     }

@@ -5,7 +5,9 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.WalletIssue
 import jp.co.soramitsu.common.presentation.WalletTransactionStatus
@@ -25,17 +27,28 @@ fun walletStatusLabel(state: String, ambiguous: Boolean = false): String = strin
     }
 )
 
+/**
+ * What went wrong, in plain words, with Check again and the technical code on request.
+ *
+ * @param textStyle the message's style; a screen with notes in another style passes its own.
+ */
 @Composable
-fun WalletErrorMessage(code: String, onRetry: (() -> Unit)? = null, onRecovery: (() -> Unit)? = null) {
+fun WalletErrorMessage(
+    code: String,
+    modifier: Modifier = Modifier,
+    onRetry: (() -> Unit)? = null,
+    onRecovery: (() -> Unit)? = null,
+    textStyle: TextStyle = MaterialTheme.customTypography.paragraphS,
+) {
     val issue = walletIssue(code)
     if (issue == WalletIssue.RECOVERY) {
         // U13 (design spec 9.2): an earlier transaction is still being checked. Information,
         // not an error: sending is paused so nothing is sent twice.
-        PendingCheckCard(onOptions = onRecovery)
+        PendingCheckCard(modifier = modifier, onOptions = onRecovery)
         return
     }
     var details by remember(code) { mutableStateOf(false) }
-    Column {
+    Column(modifier = modifier) {
         Text(stringResource(when (issue) {
             WalletIssue.RECOVERY -> R.string.safe_mode_pending_check
             WalletIssue.ADDRESS -> R.string.wallet_issue_address
@@ -44,7 +57,7 @@ fun WalletErrorMessage(code: String, onRetry: (() -> Unit)? = null, onRecovery: 
             WalletIssue.QUOTE -> R.string.wallet_issue_quote
             WalletIssue.UNAVAILABLE -> R.string.wallet_issue_unavailable
             WalletIssue.CONNECTION -> R.string.wallet_issue_connection
-        }), color = MaterialTheme.customColors.statusError, style = MaterialTheme.customTypography.paragraphS)
+        }), color = MaterialTheme.customColors.statusError, style = textStyle)
         if (onRetry != null) {
             TextButton(onClick = onRetry) { Text(stringResource(R.string.wallet_check_again)) }
         }

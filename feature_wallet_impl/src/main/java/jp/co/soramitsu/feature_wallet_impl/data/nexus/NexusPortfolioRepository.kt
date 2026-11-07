@@ -60,6 +60,8 @@ data class NexusPendingTransaction(
     val recipient: String,
     val state: String,
     val submissionIsAmbiguous: Boolean,
+    /** When this phone recorded the transfer, for its transaction page; 0 when not known. */
+    val createdAtMillis: Long = 0L,
 )
 
 @Singleton

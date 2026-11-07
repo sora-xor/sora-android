@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest
+package jp.co.soramitsu.common_wallet.presentation.compose.receive
 
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -53,6 +55,8 @@ import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
+import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class ReceiveTokenByQrScreenState(
     val screenStatus: ScreenStatus,
@@ -117,6 +121,14 @@ data class ReceiveTokenByQrScreenState(
             untransformedAvatarDrawable != null
 }
 
+/**
+ * Receive: the QR code of the address, the address to copy, Share, and Scan QR code. SORA2 and
+ * the other networks receive on this one screen. The parameters after [onTryAgainClick] default
+ * to the SORA2 Receive screen.
+ *
+ * @param notice what the sender must know, under the address (for example the network to use).
+ * @param scanQrAvailable false leaves out Scan QR code, which pays a SORA2 request.
+ */
 @Composable
 fun ReceiveTokenByQrScreen(
     scrollState: ScrollState,
@@ -125,6 +137,8 @@ fun ReceiveTokenByQrScreen(
     onShareCodeClick: () -> Unit,
     onScanQrClick: () -> Unit,
     onTryAgainClick: () -> Unit,
+    notice: String? = null,
+    scanQrAvailable: Boolean = true,
 ) {
     // Keep both actions in the same scroll flow as the QR and address. A bottom-aligned
     // overlay can cover Share when the phone is short or accessibility text is larger.
@@ -174,6 +188,16 @@ fun ReceiveTokenByQrScreen(
                 onClick = onUserAddressClick
             )
         }
+        if (notice != null) {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.x1),
+                text = notice,
+                style = MaterialTheme.customTypography.paragraphS,
+                color = MaterialTheme.customColors.fgSecondary,
+            )
+        }
         FilledButton(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -184,14 +208,16 @@ fun ReceiveTokenByQrScreen(
             text = stringResource(id = R.string.common_share),
             onClick = onShareCodeClick
         )
-        BleachedButton(
-            modifier = Modifier
-                .fillMaxWidth(),
-            size = Size.Large,
-            order = Order.SECONDARY,
-            text = stringResource(id = R.string.commom_scan_qr),
-            onClick = onScanQrClick
-        )
+        if (scanQrAvailable) {
+            BleachedButton(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                size = Size.Large,
+                order = Order.SECONDARY,
+                text = stringResource(id = R.string.commom_scan_qr),
+                onClick = onScanQrClick
+            )
+        }
     }
 }
 

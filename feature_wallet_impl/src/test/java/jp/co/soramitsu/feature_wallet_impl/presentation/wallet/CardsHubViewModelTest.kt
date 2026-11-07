@@ -57,6 +57,9 @@ import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioRepository
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusTransactionCoordinator
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusAssetPresentation
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusRoutes
+import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
 import jp.co.soramitsu.test_data.TestAssets
@@ -133,6 +136,9 @@ class CardsHubViewModelTest {
 
     @MockK
     private lateinit var nexusTransactionCoordinator: NexusTransactionCoordinator
+
+    @MockK(relaxed = true)
+    private lateinit var nexusPresentation: NexusAssetPresentation
 
     private lateinit var cardsHubViewModel: CardsHubViewModel
     private lateinit var favoriteReadFailure: MutableStateFlow<Throwable?>
@@ -228,6 +234,7 @@ class CardsHubViewModelTest {
             coroutineManager,
             nexusPortfolioRepository,
             nexusTransactionCoordinator,
+            nexusPresentation,
         )
     }
 
@@ -576,7 +583,7 @@ class CardsHubViewModelTest {
         val viewModel = CardsHubViewModel(
             assetsInteractor, poolsInteractor, cardsHubInteractorImpl, demeterFarmingInteractor, numbersFormatter,
             router, mainRouter, assetsRouter, referralRouter, polkaswapRouter, coroutineManager,
-            nexusPortfolioRepository, nexusTransactionCoordinator,
+            nexusPortfolioRepository, nexusTransactionCoordinator, nexusPresentation,
         )
         advanceUntilIdle()
         assertFalse(viewModel.state.value.loading)
@@ -600,7 +607,7 @@ class CardsHubViewModelTest {
         val viewModel = CardsHubViewModel(
             assetsInteractor, poolsInteractor, cardsHubInteractorImpl, demeterFarmingInteractor, numbersFormatter,
             router, mainRouter, assetsRouter, referralRouter, polkaswapRouter, coroutineManager,
-            nexusPortfolioRepository, nexusTransactionCoordinator,
+            nexusPortfolioRepository, nexusTransactionCoordinator, nexusPresentation,
         )
         advanceUntilIdle()
         assertEquals(account.substrateAddress, viewModel.sora2Portfolio.value?.address)
@@ -710,4 +717,154 @@ class CardsHubViewModelTest {
         verify(exactly = 1) { nexusPortfolioRepository.loadMoreHistory(account.substrateAddress, WalletNetworkId.TAIRA) }
     }
 
+
+    private fun toolbarTitle(): Any? = cardsHubViewModel.toolbarState.value?.basic?.title
+    private fun toolbarShown(): Boolean = cardsHubViewModel.toolbarState.value?.basic?.visibility == true
+
+    @Test fun `each Nexus page gets the toolbar of the SORA2 page it matches and the home none`() = runTest {
+        advanceUntilIdle()
+        cardsHubViewModel.setCurDestination(theOnlyRoute)
+        assertFalse(toolbarShown())
+        cardsHubViewModel.setCurDestination(NexusRoutes.ASSET)
+        assertTrue(toolbarShown()); assertEquals("", toolbarTitle())
+        cardsHubViewModel.setCurDestination(NexusRoutes.RECEIVE)
+        assertTrue(toolbarShown()); assertEquals(jp.co.soramitsu.common.R.string.wallet_receive_xor, toolbarTitle())
+        cardsHubViewModel.setCurDestination(NexusRoutes.TRANSFER)
+        assertFalse(toolbarShown())
+        cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
+        assertEquals(jp.co.soramitsu.common.R.string.wallet_send_xor, toolbarTitle())
+    }
+
+    @Test fun `the receive page of a network that is not live is titled as its address`() = runTest {
+        advanceUntilIdle()
+        val production = nexusBalance(account.substrateAddress, WalletNetworkId.MINAMOTO)
+            .copy(networkLive = false, sendAvailable = false, xorQuantity = null)
+        nexusPortfolioFlow.value = listOf(production); advanceUntilIdle()
+        every { coroutineManager.io } returns kotlinx.coroutines.Dispatchers.Main
+        cardsHubViewModel.setCurDestination(NexusRoutes.RECEIVE)
+        cardsHubViewModel.loadNexusReceive(production); advanceUntilIdle()
+        assertEquals(jp.co.soramitsu.common.R.string.nexus_production_address, toolbarTitle())
+    }
+
+    @Test fun `Send's toolbar follows its form, its review and the transfer's page`() = runTest {
+        val prepared = reviewNexusSend()
+        cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
+        assertEquals(jp.co.soramitsu.common.R.string.confirm_sending, toolbarTitle())
+        cardsHubViewModel.editNexusSend(); runCurrent()
+        assertEquals(jp.co.soramitsu.common.R.string.wallet_send_xor, toolbarTitle())
+        cardsHubViewModel.prepareNexusSend(); advanceUntilIdle()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } returns
+            jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("local", "ab".repeat(32), "PENDING")
+        cardsHubViewModel.confirmNexusSend(); advanceUntilIdle()
+        assertFalse(toolbarShown())
+    }
+
+    @Test fun `back on Send goes from the review to its form, then closes Send`() = runTest {
+        reviewNexusSend()
+        cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
+        cardsHubViewModel.onBackPressed()
+        assertTrue(cardsHubViewModel.nexusSend.value.visible)
+        assertNull(cardsHubViewModel.nexusSend.value.prepared)
+        assertEquals("recipient", cardsHubViewModel.nexusSend.value.recipient)
+        cardsHubViewModel.onNavIcon()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        // Send closed: back is the page's own again.
+        cardsHubViewModel.onNavIcon()
+        assertNotNull(cardsHubViewModel.navigationPop.value)
+    }
+
+    @Test fun `back on Send does nothing while the transfer is sent, and closes its outcome`() = runTest {
+        val prepared = reviewNexusSend()
+        val completion = CompletableDeferred<jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult>()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } coAnswers { completion.await() }
+        cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
+        cardsHubViewModel.confirmNexusSend(); runCurrent()
+        cardsHubViewModel.nexusSendBack(); cardsHubViewModel.onBackPressed()
+        assertTrue(cardsHubViewModel.nexusSend.value.submitting)
+        assertEquals(prepared, cardsHubViewModel.nexusSend.value.prepared)
+        completion.complete(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "CONFIRMED")); advanceUntilIdle()
+        cardsHubViewModel.nexusSendBack()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        cardsHubViewModel.nexusSendBack()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+    }
+
+    @Test fun `the receive page is built for the selected wallet's address and shared from it`() = runTest {
+        advanceUntilIdle()
+        every { coroutineManager.io } returns kotlinx.coroutines.Dispatchers.Main
+        val balance = nexusBalance(account.substrateAddress, WalletNetworkId.TAIRA)
+        nexusPortfolioFlow.value = listOf(balance); advanceUntilIdle()
+        val qrCode = io.mockk.mockk<android.graphics.Bitmap>()
+        val avatar = io.mockk.mockk<android.graphics.drawable.Drawable>()
+        val file = io.mockk.mockk<android.net.Uri>()
+        every { nexusPresentation.qrCode(balance.address) } returns qrCode
+        every { nexusPresentation.avatar(WalletNetworkId.TAIRA, balance.address) } returns avatar
+        every { nexusPresentation.shareFile(qrCode) } returns file
+        every { nexusPresentation.shareMessage("Taira Testnet", balance.address) } returns "share message"
+
+        // Nothing is shared before the page is built, and another wallet's row builds nothing.
+        cardsHubViewModel.shareNexusAddress(balance)
+        cardsHubViewModel.loadNexusReceive(balance.copy(walletId = "other-wallet")); advanceUntilIdle()
+        assertNull(cardsHubViewModel.nexusShare.value)
+        assertFalse(cardsHubViewModel.nexusReceive.value.isFor(balance))
+
+        cardsHubViewModel.loadNexusReceive(balance); advanceUntilIdle()
+        val receive = cardsHubViewModel.nexusReceive.value
+        assertTrue(receive.isFor(balance))
+        assertEquals(jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus.READY_TO_RENDER, receive.screen.screenStatus)
+        assertEquals(qrCode, receive.screen.untransformedQrBitmap)
+        assertEquals(avatar, receive.screen.untransformedAvatarDrawable)
+        assertEquals(balance.address, receive.screen.untransformedUserAddress)
+        assertTrue(receive.screen.isShareQRCodeEnabled)
+        // A built page is not built again.
+        cardsHubViewModel.loadNexusReceive(balance); advanceUntilIdle()
+        verify(exactly = 1) { nexusPresentation.qrCode(balance.address) }
+
+        cardsHubViewModel.shareNexusAddress(balance)
+        assertEquals(file to "share message", cardsHubViewModel.nexusShare.value)
+
+        // Account selection is a privacy boundary: the page is dropped with the wallet.
+        selectedAccountFlow.value = secondAccount; advanceUntilIdle()
+        assertEquals(jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusReceiveUiState(), cardsHubViewModel.nexusReceive.value)
+    }
+
+    @Test fun `a receive page that cannot be built says so and can be built again`() = runTest {
+        advanceUntilIdle()
+        every { coroutineManager.io } returns kotlinx.coroutines.Dispatchers.Main
+        io.mockk.mockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics)
+        every { jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(any()) } just Runs
+        try {
+            val balance = nexusBalance(account.substrateAddress, WalletNetworkId.TAIRA)
+            nexusPortfolioFlow.value = listOf(balance); advanceUntilIdle()
+            every { nexusPresentation.qrCode(any()) } throws IllegalStateException("QR_ENCODER_FAILED")
+            cardsHubViewModel.loadNexusReceive(balance); advanceUntilIdle()
+            assertEquals(jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus.ERROR,
+                cardsHubViewModel.nexusReceive.value.screen.screenStatus)
+            every { nexusPresentation.qrCode(any()) } returns io.mockk.mockk()
+            cardsHubViewModel.loadNexusReceive(balance); advanceUntilIdle()
+            assertEquals(jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus.READY_TO_RENDER,
+                cardsHubViewModel.nexusReceive.value.screen.screenStatus)
+        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics) }
+    }
+
+    @Test fun `copying an address or a value announces it, and only for the selected wallet`() = runTest {
+        advanceUntilIdle()
+        val balance = nexusBalance(account.substrateAddress, WalletNetworkId.TAIRA)
+        nexusPortfolioFlow.value = listOf(balance); advanceUntilIdle()
+        cardsHubViewModel.copyNexusAddress(balance.copy(walletId = "other-wallet"))
+        cardsHubViewModel.copyNexusValue(" ")
+        verify(exactly = 0) { nexusPresentation.copy(any()) }
+        assertNull(cardsHubViewModel.copiedToast.value)
+        cardsHubViewModel.copyNexusAddress(balance, announce = false)
+        assertNull(cardsHubViewModel.copiedToast.value)
+        cardsHubViewModel.copyNexusAddress(balance)
+        cardsHubViewModel.copyNexusValue("hash")
+        verify(exactly = 2) { nexusPresentation.copy(balance.address) }
+        verify(exactly = 1) { nexusPresentation.copy("hash") }
+        assertNotNull(cardsHubViewModel.copiedToast.value)
+        every { nexusPresentation.dateTime(1L) } returns "01 Jan. 1970, 00:00"
+        assertEquals("01 Jan. 1970, 00:00", cardsHubViewModel.nexusDateTime(1L))
+        cardsHubViewModel.nexusAvatar(WalletNetworkId.TAIRA, "recipient")
+        verify(exactly = 1) { nexusPresentation.avatar(WalletNetworkId.TAIRA, "recipient") }
+    }
 }

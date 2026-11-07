@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails
+package jp.co.soramitsu.common_wallet.presentation.compose.assetdetails
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -39,11 +39,25 @@ import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 
+/**
+ * The last transactions of an asset, with Show more. SORA2 assets and the XOR of the other
+ * networks are drawn by this one card. The parameters after [onHistoryItemClick] default to the
+ * SORA2 asset page.
+ *
+ * @param showMore false leaves out Show more, when there is nothing more to show.
+ * @param note what is said under the rows: on SORA2, whether received transfers are listed.
+ */
 @Composable
-internal fun AssetDetailsRecentActivityCard(
+fun AssetDetailsRecentActivityCard(
     events: List<EventUiModel>,
     onShowMoreActivity: () -> Unit,
-    onHistoryItemClick: (String) -> Unit
+    onHistoryItemClick: (String) -> Unit,
+    showMore: Boolean = true,
+    note: @Composable () -> Unit = {
+        ReceivedTransfersNote(
+            modifier = Modifier.padding(start = Dimens.x3, end = Dimens.x3, top = Dimens.x2),
+        )
+    },
 ) {
     AssetDetailsCard(
         title = stringResource(id = R.string.asset_details_recent_activity),
@@ -58,19 +72,19 @@ internal fun AssetDetailsRecentActivityCard(
                     onTxHistoryItemClick = onHistoryItemClick
                 )
             }
-            ReceivedTransfersNote(
-                modifier = Modifier.padding(start = Dimens.x3, end = Dimens.x3, top = Dimens.x2),
-            )
+            note()
             Spacer(modifier = Modifier.size(Dimens.x2))
-            TextButton(
-                modifier = Modifier
-                    .padding(start = Dimens.x1, top = Dimens.x1)
-                    .wrapContentSize(),
-                text = stringResource(id = R.string.show_more),
-                size = Size.ExtraSmall,
-                order = Order.PRIMARY,
-                onClick = onShowMoreActivity,
-            )
+            if (showMore) {
+                TextButton(
+                    modifier = Modifier
+                        .padding(start = Dimens.x1, top = Dimens.x1)
+                        .wrapContentSize(),
+                    text = stringResource(id = R.string.show_more),
+                    size = Size.ExtraSmall,
+                    order = Order.PRIMARY,
+                    onClick = onShowMoreActivity,
+                )
+            }
         }
     }
 }

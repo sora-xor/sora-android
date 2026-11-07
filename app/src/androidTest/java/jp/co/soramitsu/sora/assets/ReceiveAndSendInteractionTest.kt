@@ -24,7 +24,8 @@ import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receive.ReceiveScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.*
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendConfirmScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.receive.*
+import jp.co.soramitsu.common_wallet.presentation.compose.send.SendConfirmScreen
 import org.junit.*
 import org.junit.Assert.*
 import org.junit.runner.RunWith

@@ -90,29 +90,34 @@ class WalletUxAcceptanceTest {
         photo.delete(); invalid.delete()
     }
 
-    @Test fun narrowSendPasteKeyboardAndExactReview() {
+    @Test fun narrowSendKeyboardAndExactReview() {
         ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
             val state = mutableStateOf(NexusSendUiState(visible = true, network = sampleNetwork()))
             var confirmed = false
             scenario.onActivity { activity ->
-                (activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
-                    .setPrimaryClip(ClipData.newPlainText("sample recipient", sampleRecipient))
                 activity.setContent {
                     SoraAppTheme {
-                        NexusSendDialog(state.value, { state.value = state.value.copy(visible = false) },
-                            { state.value = state.value.copy(recipient = it) },
-                            { state.value = state.value.copy(amount = it) },
-                            { state.value = state.value.copy(prepared = prepared(state.value.recipient, state.value.amount)) },
-                            { confirmed = true }, { state.value = state.value.copy(prepared = null) }, {}, {})
+                        NexusSendScreen(
+                            state = state.value, xorIcon = null, xorName = "SORA",
+                            scrollState = androidx.compose.foundation.rememberScrollState(),
+                            recipientAvatar = { null }, dateTime = { "" },
+                            onRecipient = { state.value = state.value.copy(recipient = it.trim()) },
+                            onAmount = { state.value = state.value.copy(amount = it) },
+                            onScan = {},
+                            onReview = { state.value = state.value.copy(prepared = prepared(state.value.recipient, state.value.amount)) },
+                            onConfirm = { confirmed = true }, onClose = {}, onCopy = {}, onOpenExplorer = {}, onRecovery = {},
+                        )
                     }
                 }
             }
-            waitUntil { findText("Paste address") != null }
-            clickText("Paste address")
+            waitUntil { editableNodes().size >= 2 }
+            // The recipient field of SORA2's recipient screen takes a pasted or typed address.
+            assertTrue("Recipient input rejected ACTION_SET_TEXT", editableNodes().first().performAction(
+                AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
+                    putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, sampleRecipient)
+                }))
             waitUntil { state.value.recipient == sampleRecipient }
-            revealText("Amount in XOR")
-            val input = findText("Amount in XOR") ?: error("Amount input missing")
-            val editable = findEditable(input) ?: editableNodes().lastOrNull() ?: error("Amount input not editable")
+            val editable = editableNodes().last()
             editable.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             assertTrue("Amount input rejected ACTION_SET_TEXT", editable.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
                 putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "12.5")
@@ -131,9 +136,10 @@ class WalletUxAcceptanceTest {
                 }
                 visible.get()
             } else android.util.Log.w("WalletUxAcceptanceTest", "No input method on this device; keyboard overlap not checked")
-            val titleBounds = Rect().also { requireNotNull(findText("Send XOR")).getBoundsInScreen(it) }
-            assertTrue("Keyboard must keep send header on screen", titleBounds.top >= 0 && titleBounds.bottom > 0)
-            capture("send-paste-keyboard")
+            val recipientBounds = Rect().also { requireNotNull(findText(sampleRecipient)).getBoundsInScreen(it) }
+            assertTrue("Keyboard must keep the recipient on screen", recipientBounds.top >= 0 && recipientBounds.bottom > 0)
+            capture("send-keyboard")
+            revealText("Review")
             clickText("Review")
             waitUntil { state.value.prepared != null }
             capture("send-review-top")
@@ -142,8 +148,9 @@ class WalletUxAcceptanceTest {
             assertEquals(sampleRecipient, state.value.recipient)
             capture("send-exact-review")
             assertFalse(confirmed)
-            clickText("Edit transfer")
-            waitUntil { state.value.prepared == null }
+            // Back from the review is the view model's edit; the draft stays.
+            instrumentation.runOnMainSync { state.value = state.value.copy(prepared = null) }
+            waitUntil { findText("Total: 12.51 XOR") == null }
             assertEquals(sampleRecipient, state.value.recipient)
             assertEquals("12.5", state.value.amount)
         }
@@ -313,13 +320,18 @@ class WalletUxAcceptanceTest {
                     activity.setContent {
                         val state by vm.nexusSend.collectAsState()
                         SoraAppTheme {
-                            NexusSendDialog(state, {}, vm::setNexusRecipient, vm::setNexusAmount,
-                                {}, {}, {}, {}, {})
+                            NexusSendScreen(
+                                state = state, xorIcon = null, xorName = null,
+                                scrollState = androidx.compose.foundation.rememberScrollState(),
+                                recipientAvatar = { null }, dateTime = { "" },
+                                onRecipient = vm::setNexusRecipient, onAmount = vm::setNexusAmount,
+                                onScan = {}, onReview = {}, onConfirm = {}, onClose = {}, onCopy = {}, onOpenExplorer = {}, onRecovery = {},
+                            )
                         }
                     }
                 }
                 waitUntil { findText("Camera access is unavailable") != null }
-                assertNotNull(findText("Paste address"))
+                assertNotNull(findText(sampleRecipient))
                 capture("send-denied-preserved-draft")
                 // Changing wallet while a result is queued must not apply the previous wallet's scan.
                 scenario.onActivity {
@@ -339,37 +351,44 @@ class WalletUxAcceptanceTest {
         }
     }
 
-    @Test fun networkPortfolioRoutesActivityReceiveAndSendForSelectedWallet() {
+    @Test fun networkPortfolioCardOpensTheSelectedWalletsXorPage() {
         val network = sampleNetwork()
-        val send = mutableStateOf(NexusSendUiState())
+        val opened = mutableListOf<NexusPortfolioBalance>()
+        val page = mutableStateOf<NexusPortfolioBalance?>(null)
+        val actions = mutableListOf<String>()
         ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 activity.setContent {
                     SoraAppTheme {
-                        OtherNetworksCard(
-                            balances = listOf(network), xorIcon = null, xorName = null,
-                            isNexusBalanceCurrent = { it.walletId == network.walletId },
-                            onSend = { selected -> send.value = NexusSendUiState(visible = true, network = selected) },
-                            onRecovery = {}, onRefresh = {}, onLoadMore = {}, walletId = network.walletId,
-                        )
-                        NexusSendDialog(send.value, { send.value = NexusSendUiState() }, {}, {}, {}, {}, {}, {}, {})
+                        val shown = page.value
+                        if (shown == null) {
+                            OtherNetworksCard(
+                                balances = listOf(network, network.copy(walletId = "other-wallet", address = "OtherWalletAddressForLayoutOnly")),
+                                xorIcon = null, xorName = null,
+                                isNexusBalanceCurrent = { it.walletId == network.walletId },
+                                onOpen = { selected -> opened += selected; page.value = selected },
+                            )
+                        } else {
+                            NexusAssetScreen(
+                                balance = shown, xorIcon = null, xorName = "SORA",
+                                scrollState = androidx.compose.foundation.rememberScrollState(),
+                                onRefresh = {}, onSend = { actions += "send" }, onReceive = { actions += "receive" },
+                                onLoadMore = {}, onTransferClick = {}, onAddressClick = {}, onOpenExplorer = {}, onRecovery = {},
+                            )
+                        }
                     }
                 }
             }
             waitUntil { findText("Taira") != null }
+            assertNull(findText("OtherWalletAddressForLayoutOnly"))
             clickText("Taira")
-            waitUntil { findText(context.getString(jp.co.soramitsu.common.R.string.wallet_no_activity)) != null }
-            capture("network-empty-activity")
+            waitUntil { findText("Liquid balance") != null }
+            assertEquals(listOf(network), opened)
+            capture("network-xor-page")
             clickText("Receive")
-            waitUntil { findText("Receive XOR") != null }
-            assertNotNull(findText(network.address))
-            capture("network-receive")
-            clickText("Close")
-            waitUntil { findText(context.getString(jp.co.soramitsu.common.R.string.wallet_no_activity)) != null }
             clickText("Send")
-            waitUntil { findText("Send XOR") != null }
-            assertEquals(network, send.value.network)
-            capture("network-to-send")
+            instrumentation.waitForIdleSync()
+            assertEquals(listOf("receive", "send"), actions)
         }
     }
 

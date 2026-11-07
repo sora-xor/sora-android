@@ -17,11 +17,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send
+package jp.co.soramitsu.common_wallet.presentation.compose.send
 
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -56,6 +57,7 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletR
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
+import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
@@ -63,8 +65,19 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * The Send form: recipient, amount, network fee and Review. SORA2 tokens and the XOR of the
+ * other networks are sent from this one form. The parameters after [accountReadOnly] default to
+ * the SORA2 Send screen.
+ *
+ * @param recipient the recipient card; SORA2 shows the address chosen on the previous screen.
+ * @param tokenSelectable false when the amount can only be of the token shown.
+ * @param busy null for a review that opens at once (SORA2); otherwise Review is prepared on this
+ * screen, and while [busy] the button gives way to its loader, as Confirm does.
+ * @param notes more lines under the network fee, in the locked note's style ([SendScreenNote]).
+ */
 @Composable
-internal fun SendScreen(
+fun SendScreen(
     address: String,
     icon: Drawable?,
     onAddressClick: () -> Unit,
@@ -85,13 +98,19 @@ internal fun SendScreen(
     lockedNote: String? = null,
     readOnly: Boolean = rememberWalletReadOnly(),
     accountReadOnly: Boolean = LocalSelectedAccountReadOnly.current,
+    recipient: @Composable () -> Unit = {
+        SendScreenAddress(
+            address = address,
+            startIcon = icon,
+            onAddressClick = onAddressClick,
+            onAddressLongClick = onAddressLongClick
+        )
+    },
+    tokenSelectable: Boolean = true,
+    busy: Boolean? = null,
+    notes: @Composable ColumnScope.() -> Unit = {},
 ) {
-    SendScreenAddress(
-        address = address,
-        startIcon = icon,
-        onAddressClick = onAddressClick,
-        onAddressLongClick = onAddressLongClick
-    )
+    recipient()
     Divider(thickness = Dimens.x3, color = Color.Transparent)
     AssetAmountInput(
         modifier = Modifier
@@ -102,6 +121,7 @@ internal fun SendScreen(
         onAmountChange = onAmountChange,
         onSelectToken = onSelectToken,
         onFocusChange = onFocusChange,
+        tokenSelectable = tokenSelectable,
     )
     if (lockedNote != null) {
         Text(
@@ -140,6 +160,7 @@ internal fun SendScreen(
             )
         )
     }
+    Column(modifier = Modifier.fillMaxWidth(), content = notes)
     Divider(thickness = Dimens.x3, color = Color.Transparent)
     if (readOnly) {
         // U9: sending is off in read-only mode; the reason sits above the disabled button.
@@ -149,20 +170,47 @@ internal fun SendScreen(
         // and offers the repair; the button is off instead of failing at the last step.
         AccountReadOnlyReason(modifier = Modifier.padding(bottom = Dimens.x2))
     }
-    FilledButton(
+    val review: @Composable (Modifier) -> Unit = { modifier ->
+        FilledButton(
+            modifier = modifier
+                .testTagAsId("ReviewButton")
+                .fillMaxWidth(),
+            enabled = reviewEnabled && busy != true && !readOnly && !accountReadOnly,
+            text = stringResource(id = R.string.review),
+            size = Size.Large,
+            order = Order.PRIMARY,
+            onClick = onReviewClick,
+        )
+    }
+    if (busy == null) {
+        review(Modifier)
+    } else {
+        LoaderWrapper(
+            modifier = Modifier.fillMaxWidth(),
+            loading = busy,
+            loaderSize = Size.Large,
+        ) { modifier, _ -> review(modifier) }
+    }
+}
+
+/** A note of the Send form, in the style of the locked balance note. */
+@Composable
+fun SendScreenNote(
+    text: String,
+    color: Color = MaterialTheme.customColors.fgSecondary,
+) {
+    Text(
         modifier = Modifier
-            .testTagAsId("ReviewButton")
-            .fillMaxWidth(),
-        enabled = reviewEnabled && !readOnly && !accountReadOnly,
-        text = stringResource(id = R.string.review),
-        size = Size.Large,
-        order = Order.PRIMARY,
-        onClick = onReviewClick,
+            .fillMaxWidth()
+            .padding(top = Dimens.x1, start = Dimens.x1, end = Dimens.x1),
+        text = text,
+        style = MaterialTheme.customTypography.paragraphS,
+        color = color,
     )
 }
 
 @Composable
-internal fun SendScreenNetworkFee(
+fun SendScreenNetworkFee(
     amount: String,
     fiat: String,
     loading: Boolean,
@@ -196,7 +244,7 @@ internal fun SendScreenNetworkFee(
 }
 
 @Composable
-internal fun SendScreenAddress(
+fun SendScreenAddress(
     address: String,
     startIcon: Drawable?,
     endIcon: Int? = null,

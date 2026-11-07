@@ -45,7 +45,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat.getA
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.ReceiveTokenByQrScreenState
+import jp.co.soramitsu.common_wallet.presentation.compose.receive.ReceiveTokenByQrScreenState
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenConfirmScreenState
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenScreenState
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -249,15 +249,18 @@ class QRCodeFlowViewModel @Inject constructor(
 
     fun onShareQrCodeInReceiveScreen() =
         with(_receiveTokenByQrScreenState.value) {
-            if (screenStatus != ScreenStatus.READY_TO_RENDER || untransformedQrBitmap == null || untransformedUserAddress == null)
+            // The state now lives in common_wallet: read its values once, so they are checked.
+            val qrBitmap = untransformedQrBitmap
+            val userAddress = untransformedUserAddress
+            if (screenStatus != ScreenStatus.READY_TO_RENDER || qrBitmap == null || userAddress == null)
                 return@with
 
             val welcomingMessage = generateMessageForUser(
                 tokenSymbol = resourceManager.getString(R.string.xor),
-                userAddress = untransformedUserAddress
+                userAddress = userAddress
             )
             val savedQrCodeFileUri = fileManager.writeExternalCacheBitmap(
-                bitmap = untransformedQrBitmap,
+                bitmap = qrBitmap,
                 fileName = QR_CODE_FILE_NAME,
                 format = Bitmap.CompressFormat.PNG,
                 quality = 100

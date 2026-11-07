@@ -121,7 +121,13 @@ class PortfolioHostFlowTest {
                         }
                         composable(PortfolioRoutes.TOKEN) { entry ->
                             PortfolioWhereItLivesHost(entry.arguments?.getString(PortfolioRoutes.TOKEN_ARG).orEmpty(),
-                                nav, portfolio, hub, {})
+                                nav, portfolio, hub)
+                        }
+                        // The network pages themselves are NexusXorPagesTest's; here only which one opens.
+                        for (route in listOf(NexusRoutes.ASSET, NexusRoutes.RECEIVE)) {
+                            composable(route) { entry ->
+                                androidx.compose.material.Text("$route:${entry.arguments?.getString(NexusRoutes.NETWORK_ARG)}")
+                            }
                         }
                     }
                 }
@@ -177,9 +183,9 @@ class PortfolioHostFlowTest {
         choose(WalletNetworkId.MINAMOTO); show(); click(R.string.common_send)
         compose.runOnIdle { verify(exactly = 1) { hub.openNexusSend(balances.value.single()) }; verify(exactly = 0) { portfolio.onQuickSend() } }
     }
-    @Test fun singleNexusReceiveShowsCurrentAddress() {
+    @Test fun singleNexusReceiveOpensThatNetworksReceivePage() {
         choose(WalletNetworkId.MINAMOTO); show(); click(R.string.common_receive)
-        compose.onNodeWithText("main-minamoto").assertIsDisplayed()
+        compose.onNodeWithText("${NexusRoutes.RECEIVE}:minamoto").assertIsDisplayed()
         compose.runOnIdle { verify(exactly = 0) { hub.openNexusSend(any()) } }
     }
     @Test fun multiNetworkPickerSoraChoiceReturnsToDashboard() {

@@ -24,6 +24,7 @@ import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.*
+import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
 
 /**
@@ -33,16 +34,17 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ClassicWalletHomeDestinationTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+    private lateinit var nav: androidx.navigation.NavHostController
     private fun show(fragment: SoraBaseFragment<*>, vm: Any, readOnly: Boolean = false) {
         fragment.javaClass.getDeclaredField("viewModel\$delegate").apply { isAccessible = true }.set(fragment, lazyOf(vm))
         compose.setContent { SoraAppTheme {
             CompositionLocalProvider(LocalSelectedAccountReadOnly provides readOnly) {
-                val nav = rememberNavController(); val scroll = rememberScrollState()
+                nav = rememberNavController(); val scroll = rememberScrollState()
                 NavHost(nav, startDestination = theOnlyRoute) { with(fragment) { content(scroll, nav) } }
             }
         } }
     }
-    private fun text(id: Int) = compose.activity.getString(id)
+    private fun text(id: Int, vararg args: Any) = compose.activity.getString(id, *args)
     private fun asset(id: String, name: String, amount: String) =
         AssetItemCardState(DEFAULT_ICON_URI, id, name, amount.substringAfter(' '), amount, "$1", "+1%")
 
@@ -144,31 +146,99 @@ class ClassicWalletHomeDestinationTest {
         compose.onNodeWithText(text(R.string.safe_mode_keep_installed), substring = true).assertExists()
     }
 
-    @Test fun aReadOnlyAccountGetsItsNoticeAndATairaRowOpensItsOwnSendAndReceive() {
-        val wallet = "cnClassicWallet"
-        val taira = NexusPortfolioBalance(
-            walletId = wallet, networkId = WalletNetworkId.TAIRA, networkName = "Taira Testnet", isTestnet = true,
-            address = "taira-classic-address", xorQuantity = "1", assetDefinitionId = "xor#taira",
-            explorerBaseUrl = "https://example.invalid", sendAvailable = true, pendingTransactions = emptyList(),
-            confirmedTransfers = emptyList(), historyErrorCode = null, errorCode = null,
-        )
-        val vm = mockk<CardsHubViewModel>(relaxed = true) {
-            every { state } returns MutableStateFlow(CardsState(accountAddress = wallet, curAccount = "Watch account", cards = emptyList()))
-            every { nexusPortfolio } returns MutableStateFlow(listOf(taira))
-            every { sora2Portfolio } returns MutableStateFlow(Sora2PortfolioBalance(wallet, "10"))
-            every { nexusSend } returns MutableStateFlow(NexusSendUiState())
-            every { isCurrentNexusBalance(any()) } returns true
-            every { networkChoices(any()) } answers {
-                WalletNetworkChoices.make(firstArg(), mapOf(WalletNetworkId.TAIRA to taira.address), emptyMap(), { true },
-                    directory = WalletNetworkDirectory { true })
-            }
+    private val wallet = "cnClassicWallet"
+    private val taira = NexusPortfolioBalance(
+        walletId = wallet, networkId = WalletNetworkId.TAIRA, networkName = "Taira Testnet", isTestnet = true,
+        address = "taira-classic-address", xorQuantity = "1", assetDefinitionId = "xor#taira",
+        explorerBaseUrl = "https://example.invalid", sendAvailable = true, pendingTransactions = emptyList(),
+        confirmedTransfers = emptyList(), historyErrorCode = null, errorCode = null,
+    )
+    private val receiveBitmap = android.graphics.Bitmap.createBitmap(8, 8, android.graphics.Bitmap.Config.ARGB_8888)
+    private fun readyReceive(balance: NexusPortfolioBalance) = NexusReceiveUiState(
+        balance.walletId, balance.networkId, balance.address,
+        jp.co.soramitsu.common_wallet.presentation.compose.receive.ReceiveTokenByQrScreenState(
+            jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus.READY_TO_RENDER, receiveBitmap,
+            "Watch account", android.graphics.drawable.BitmapDrawable(compose.activity.resources, receiveBitmap), balance.address,
+        ),
+    )
+    private fun tairaHome(
+        balances: MutableStateFlow<List<NexusPortfolioBalance>> = MutableStateFlow(listOf(taira)),
+        send: MutableStateFlow<NexusSendUiState> = MutableStateFlow(NexusSendUiState()),
+    ) = mockk<CardsHubViewModel>(relaxed = true) {
+        // The other networks' XOR rows are in the assets card, under SORA2's assets.
+        val assets = TitledAmountCardState("$20", CardHubType.ASSETS.userName, FavoriteAssetsCardState(listOf(xor)),
+            onCollapseClick = {}, loading = false)
+        every { state } returns MutableStateFlow(CardsState(accountAddress = wallet, curAccount = "Watch account", cards = listOf(assets)))
+        every { nexusPortfolio } returns balances
+        every { sora2Portfolio } returns MutableStateFlow(Sora2PortfolioBalance(wallet, "10"))
+        every { nexusSend } returns send
+        every { nexusReceive } returns MutableStateFlow(readyReceive(taira))
+        every { isCurrentNexusBalance(any()) } answers { firstArg<NexusPortfolioBalance>() in balances.value }
+        every { networkChoices(any()) } answers {
+            WalletNetworkChoices.make(firstArg(), mapOf(WalletNetworkId.TAIRA to taira.address), emptyMap(), { true },
+                directory = WalletNetworkDirectory { true })
         }
+    }
+    private fun route() = compose.runOnIdle { nav.currentDestination?.route }
+
+    @Test fun aReadOnlyAccountGetsItsNoticeAndATairaRowOpensItsOwnSendAndReceive() {
+        val vm = tairaHome()
         show(CardsHubFragment(), vm, readOnly = true)
 
         compose.onNodeWithText(text(R.string.account_read_only_title)).assertIsDisplayed()
         compose.onNodeWithText(text(R.string.common_send)).performClick()
         compose.runOnIdle { verify(exactly = 1) { vm.openNexusSend(taira) } }
         compose.onNodeWithText(text(R.string.common_receive)).performClick()
+        // Receive is the SORA2 Receive page, with the network's address.
         compose.onAllNodesWithText(taira.address, substring = true).onFirst().assertExists()
+        compose.onNodeWithText(text(R.string.wallet_receive_notice, "Taira Testnet")).assertExists()
+        compose.runOnIdle { assertEquals(NexusRoutes.RECEIVE, nav.currentDestination?.route) }
+        compose.runOnIdle { verify { vm.loadNexusReceive(taira) } }
+        compose.onNodeWithText(taira.address).performClick()
+        compose.onNodeWithText(text(R.string.common_share)).performScrollTo().performClick()
+        compose.runOnIdle { verify(exactly = 1) { vm.copyNexusAddress(taira); vm.shareNexusAddress(taira) } }
+    }
+
+    @Test fun aTairaRowOpensItsXorPageWhosePagesCloseWithTheWallet() {
+        val received = jp.co.soramitsu.common.nexus.NexusTransferHistoryItem("cd".repeat(32), 1_800_000_000_000, "3.75", "peer", taira.address)
+        val balances = MutableStateFlow(listOf(taira.copy(confirmedTransfers = listOf(received))))
+        val vm = tairaHome(balances)
+        show(CardsHubFragment(), vm)
+
+        compose.onNodeWithText("XOR · Taira").performScrollTo().performClick()
+        compose.onNodeWithText(text(R.string.asset_details_liquid_balance)).assertIsDisplayed()
+        compose.onNodeWithText("Taira · ${text(R.string.network_tag_testnet)}").assertExists()
+        assertEquals(NexusRoutes.ASSET, route())
+        // Its transfer opens the SORA2 transaction page; Close returns to the XOR page.
+        compose.onNodeWithText("+3.75 XOR").performScrollTo().performClick()
+        assertEquals(NexusRoutes.TRANSFER, route())
+        compose.onNodeWithText(received.transactionHash).assertExists()
+        compose.onNodeWithText(text(R.string.common_close)).performScrollTo().performClick()
+        assertEquals(NexusRoutes.ASSET, route())
+        compose.onNodeWithText(taira.address, useUnmergedTree = true).performScrollTo().performClick()
+        compose.onNodeWithText(text(R.string.wallet_open_block_explorer)).performScrollTo()
+        compose.onNodeWithText(text(R.string.common_send)).performScrollTo().performClick()
+        compose.runOnIdle { verify(exactly = 1) { vm.copyNexusAddress(balances.value.single()); vm.openNexusSend(balances.value.single()) } }
+        compose.onNodeWithText(text(R.string.common_receive)).performScrollTo().performClick()
+        assertEquals(NexusRoutes.RECEIVE, route())
+        // Another wallet is selected: its pages close, and the home is back.
+        compose.runOnIdle { balances.value = emptyList() }
+        compose.waitUntil(10_000) { compose.runOnUiThread { nav.currentDestination?.route } == theOnlyRoute }
+    }
+
+    @Test fun sendOpensItsPageOverTheHomeAndClosesWithIt() {
+        val send = MutableStateFlow(NexusSendUiState())
+        val vm = tairaHome(send = send)
+        show(CardsHubFragment(), vm)
+
+        compose.runOnIdle { send.value = NexusSendUiState(visible = true, network = taira) }
+        compose.waitUntil(10_000) { compose.runOnUiThread { nav.currentDestination?.route } == NexusRoutes.SEND }
+        compose.onAllNodesWithText(text(R.string.recipient_address)).onFirst().assertExists()
+        compose.onNodeWithText(text(R.string.wallet_send_network_notice, "Taira Testnet")).assertExists()
+        // Back is the view model's: from the form it closes Send.
+        compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.runOnIdle { verify(exactly = 1) { vm.nexusSendBack() } }
+        compose.runOnIdle { send.value = NexusSendUiState() }
+        compose.waitUntil(10_000) { compose.runOnUiThread { nav.currentDestination?.route } == theOnlyRoute }
     }
 }

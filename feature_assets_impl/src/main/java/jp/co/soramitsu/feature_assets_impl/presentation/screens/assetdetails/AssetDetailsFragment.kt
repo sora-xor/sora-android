@@ -22,15 +22,6 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails
 import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -41,7 +32,7 @@ import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsPage
 
 @AndroidEntryPoint
 class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
@@ -67,7 +58,6 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
         }
     }
 
-    @OptIn(ExperimentalMaterialApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -77,15 +67,9 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
         ) {
             val assetState = viewModel.state
             val stateData = assetState.state
-            val pullRefresh = rememberPullRefreshState(
+            AssetDetailsPage(
                 refreshing = assetState.loading,
-                onRefresh = viewModel::onPullToRefresh
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = Dimens.x2)
-                    .pullRefresh(pullRefresh, true)
+                onRefresh = viewModel::onPullToRefresh,
             ) {
                 AssetDetailsScreen(
                     stateData = stateData,
@@ -98,11 +82,6 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
                     onRecentClick = viewModel::onRecentClick,
                     onHistoryItemClick = viewModel::onHistoryItemClick,
                     onAssetIdClick = viewModel::onAssetIdClick,
-                )
-                PullRefreshIndicator(
-                    assetState.loading,
-                    pullRefresh,
-                    Modifier.align(Alignment.TopCenter)
                 )
             }
         }

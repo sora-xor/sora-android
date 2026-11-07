@@ -17,12 +17,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails
+package jp.co.soramitsu.common_wallet.presentation.compose.assetdetails
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -31,14 +33,28 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.TextButton
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * An identifier to copy: the asset ID of a SORA2 asset, or the account address of another
+ * network's XOR. Tapping the card copies it. The parameters after [onClick] default to the SORA2
+ * asset page.
+ *
+ * @param title what the identifier is.
+ * @param actionText a link under the identifier (for example the block explorer), when not null.
+ */
 @Composable
-internal fun AssetIdCard(
+fun AssetIdCard(
     id: String,
     onClick: () -> Unit,
+    title: String = stringResource(id = R.string.asset_details_asset_id),
+    actionText: String? = null,
+    onActionClick: () -> Unit = {},
 ) {
     ContentCard(
         modifier = Modifier
@@ -53,7 +69,7 @@ internal fun AssetIdCard(
                 .wrapContentHeight()
         ) {
             Text(
-                text = stringResource(id = R.string.asset_details_asset_id),
+                text = title,
                 style = MaterialTheme.customTypography.textXSBold,
                 color = MaterialTheme.customColors.fgSecondary
             )
@@ -62,6 +78,17 @@ internal fun AssetIdCard(
                 color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphXS
             )
+            if (actionText != null) {
+                TextButton(
+                    modifier = Modifier
+                        .padding(top = Dimens.x1)
+                        .wrapContentSize(),
+                    text = actionText,
+                    size = Size.ExtraSmall,
+                    order = Order.PRIMARY,
+                    onClick = onActionClick,
+                )
+            }
         }
     }
 }

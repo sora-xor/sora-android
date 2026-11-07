@@ -105,6 +105,7 @@ internal object NexusPendingOverlayValidator {
                     recipient = transaction.recipient,
                     state = transaction.state,
                     submissionIsAmbiguous = transaction.submissionIsAmbiguous,
+                    createdAtMillis = transaction.createdAt,
                 )
             }
         )

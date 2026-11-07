@@ -44,9 +44,7 @@ internal fun PortfolioSecondaryCards(
     onReferralClose: () -> Unit,
     onBackupBannerClick: () -> Unit,
     onEdit: () -> Unit,
-    onNexusSend: (NexusPortfolioBalance) -> Unit,
-    onNexusRefresh: () -> Unit,
-    onNexusLoadMore: (NexusPortfolioBalance) -> Unit,
+    onNexusOpen: (NexusPortfolioBalance) -> Unit,
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
 ) {
     Column(
@@ -63,11 +61,7 @@ internal fun PortfolioSecondaryCards(
                     xorIcon = sora2Portfolio?.xorIcon,
                     xorName = sora2Portfolio?.xorName,
                     isNexusBalanceCurrent = isNexusBalanceCurrent,
-                    onSend = onNexusSend,
-                    onRecovery = onBackupBannerClick,
-                    onRefresh = onNexusRefresh,
-                    onLoadMore = onNexusLoadMore,
-                    walletId = sora2Portfolio?.address,
+                    onOpen = onNexusOpen,
                 )
                 Spacer(modifier = Modifier.size(size = 16.dp))
             }

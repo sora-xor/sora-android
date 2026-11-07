@@ -17,10 +17,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send
+package jp.co.soramitsu.common_wallet.presentation.compose.send
 
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -50,8 +51,16 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * The review of a transfer before it is sent: recipient, amount, network fee and Confirm. SORA2
+ * tokens and the XOR of the other networks are reviewed on this one screen. The parameters after
+ * [reviewEnabled] default to the SORA2 review.
+ *
+ * @param notes more lines under the network fee, in the Send form's note style
+ * ([SendScreenNote]).
+ */
 @Composable
-internal fun SendConfirmScreen(
+fun SendConfirmScreen(
     address: String,
     icon: Drawable?,
     onAddressClick: () -> Unit,
@@ -62,6 +71,7 @@ internal fun SendConfirmScreen(
     feeAmount: String,
     feeFiat: String,
     reviewEnabled: Boolean,
+    notes: @Composable ColumnScope.() -> Unit = {},
 ) {
     SendScreenAddress(
         address = address,
@@ -108,6 +118,7 @@ internal fun SendConfirmScreen(
         fiat = feeFiat,
         loading = false,
     )
+    Column(modifier = Modifier.fillMaxWidth(), content = notes)
     Divider(thickness = Dimens.x2, color = Color.Transparent)
     LoaderWrapper(
         modifier = Modifier.fillMaxWidth(),
