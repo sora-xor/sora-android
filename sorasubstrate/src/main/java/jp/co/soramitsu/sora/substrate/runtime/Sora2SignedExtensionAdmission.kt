@@ -37,9 +37,10 @@ import jp.co.soramitsu.xsubstrate.scale.EncodableStruct
  * The live runtime lists a signed extension that carries data this app version cannot encode
  * ([signedExtensions]). A transaction built anyway would be malformed and rejected by every node,
  * so signing and fee quotes are refused until the app is updated. Balances and history are not
- * affected: they need no signed extensions.
+ * affected: they need no signed extensions. [Sora2CallTableMismatchException] is the same refusal
+ * for a call whose encoding differs from the reviewed one.
  */
-internal class Sora2AppUpdateRequiredException(
+internal open class Sora2AppUpdateRequiredException(
     val signedExtensions: List<String>,
 ) : Sora2RuntimeIdentityException(NetworkFeeUnavailable.APP_UPDATE_REQUIRED_CODE)
 

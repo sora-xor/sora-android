@@ -149,6 +149,8 @@ private data class RuntimeCandidate(
     val sora2TypesToCache: String? = null,
     /** See [Sora2SignedExtensionAdmission]; not empty means this runtime cannot be signed for. */
     val unsupportedSignedExtensions: List<String> = emptyList(),
+    /** See [Sora2CallTable]; not empty means this runtime cannot be signed for. */
+    val callTableMismatches: List<String> = emptyList(),
     /** Set when the metadata was just read from the chain together with its runtime code hash. */
     val codeBinding: RuntimeCodeBinding? = null,
 )
@@ -573,6 +575,8 @@ class RuntimeManager @Inject constructor(
     private var runtimeGenesisHash: String? = null
     @Volatile
     private var runtimeUnsupportedSignedExtensions: List<String> = emptyList()
+    @Volatile
+    private var runtimeCallTableMismatches: List<String> = emptyList()
     private var prefix: Short = SORA2_SS58_PREFIX
 
     /** What is known about the active snapshot's runtime code. Guarded by [mutex]. */
@@ -887,6 +891,7 @@ class RuntimeManager @Inject constructor(
         runtimeSpecVersion = candidate.runtimeVersion
         runtimeGenesisHash = candidate.genesisHash
         runtimeUnsupportedSignedExtensions = candidate.unsupportedSignedExtensions
+        runtimeCallTableMismatches = candidate.callTableMismatches
         // A binding belongs to one snapshot. The saved one is looked at again for this one.
         runtimeCodeBinding = null
         runtimeCodeBindingFileRead = false
@@ -1002,6 +1007,7 @@ class RuntimeManager @Inject constructor(
             runtimeGenesisHash == liveGenesisHash
         ) {
             requireSignedExtensionsSupported(runtimeUnsupportedSignedExtensions)
+            requireReviewedCallTable(runtimeCallTableMismatches)
             return Sora2MutationRuntimeContext(
                 snapshot = activeSnapshot,
                 runtimeVersion = liveRuntimeVersion,
@@ -1038,6 +1044,7 @@ class RuntimeManager @Inject constructor(
                 typesSha256 = checkNotNull(runtimeTypesSha256),
                 runtimeVersion = liveRuntimeVersion.specVersion,
                 unsupportedSignedExtensions = runtimeUnsupportedSignedExtensions,
+                callTableMismatches = runtimeCallTableMismatches,
             )
         } else {
             buildLiveRuntimeCandidate(
@@ -1096,6 +1103,7 @@ class RuntimeManager @Inject constructor(
 
         // Reads keep working with this runtime; only signing is refused.
         requireSignedExtensionsSupported(candidate.unsupportedSignedExtensions)
+        requireReviewedCallTable(candidate.callTableMismatches)
 
         return Sora2MutationRuntimeContext(
             snapshot = candidate.snapshot,
@@ -1112,6 +1120,27 @@ class RuntimeManager @Inject constructor(
         if (unsupported.isNotEmpty()) {
             throw Sora2AppUpdateRequiredException(unsupported)
         }
+    }
+
+    /**
+     * The table is enforced where real funds are signed for: production builds, which sign only
+     * for canonical mainnet. Develop and soralution builds sign on test networks whose runtimes
+     * may differ; there a mismatch is only recorded.
+     */
+    private val enforceReviewedCallTable: Boolean
+        get() = !BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.SORALUTION)
+
+    /**
+     * Refuses signing and fee quotes when the runtime would encode one of the app's calls
+     * differently from the reviewed table ([Sora2CallTable]). Whatever the node or the remote
+     * type file says, the app never signs mainnet bytes whose pallet, call or argument layout it
+     * has not reviewed.
+     */
+    private fun requireReviewedCallTable(mismatches: List<String>) {
+        if (mismatches.isEmpty()) return
+        val mismatch = Sora2CallTableMismatchException(mismatches)
+        if (enforceReviewedCallTable) throw mismatch
+        WalletDiagnostics.recordException(mismatch)
     }
 
     private suspend fun initFromCache(): RuntimeCandidate {
@@ -1570,12 +1599,21 @@ class RuntimeManager @Inject constructor(
         val remoteTypes = loadRemoteSora2TypesOrNull()
         if (remoteTypes != null) {
             try {
-                return buildRuntimeCandidate(
+                val candidate = buildRuntimeCandidate(
                     metadata = metadata,
                     metadataSource = MetadataSource.SoraNet(remoteTypes),
                     runtimeVersion = runtimeVersion,
                     genesisHash = genesisHash,
                     requireReviewedIdentityBeforeParsing = requireReviewedIdentityBeforeParsing,
+                )
+                // Remote aliases that change how one of the app's calls is encoded are not
+                // used: the packaged aliases are tried instead, and if the call table still
+                // differs, signing is refused for this runtime.
+                if (candidate.callTableMismatches.isEmpty() || !enforceReviewedCallTable) {
+                    return candidate
+                }
+                WalletDiagnostics.recordException(
+                    Sora2CallTableMismatchException(candidate.callTableMismatches)
                 )
             } catch (error: CancellationException) {
                 throw error
@@ -1684,6 +1722,7 @@ class RuntimeManager @Inject constructor(
                 runtimeMetadataReader.metadata as EncodableStruct<RuntimeMetadataSchemaV14>
             )
         }
+        val callTableMismatches = Sora2CallTable.mismatches(snapshot)
         val valueConstant =
             snapshot.metadata.module(Pallete.SYSTEM.palletName).constants[Constants.SS58Prefix.constantName]
         val observedPrefix = valueConstant?.type?.fromByteArrayOrNull(
@@ -1703,6 +1742,7 @@ class RuntimeManager @Inject constructor(
             runtimeVersion = runtimeVersion,
             sora2TypesToCache = sora2TypesToCache,
             unsupportedSignedExtensions = unsupportedSignedExtensions,
+            callTableMismatches = callTableMismatches,
         )
     }
 
