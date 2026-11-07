@@ -6,7 +6,7 @@ import io.mockk.*
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DarkThemeManager
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.feature_blockexplorer_api.data.*
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import kotlinx.coroutines.*
@@ -30,7 +30,7 @@ class AppSettingsStateFlowTest {
     private val featureManager = mockk<ProductionFeatureManager>()
     private val store = ViewModelStore()
     @Before fun setup() {
-        mockkObject(FirebaseWrapper); every { FirebaseWrapper.recordException(any()) } just Runs
+        mockkObject(WalletDiagnostics); every { WalletDiagnostics.recordException(any()) } just Runs
         every { darkManager.mutableDarkThemeSharedFlow } returns theme
         every { darkManager.reduceEffectsFlow } returns effects
         coEvery { darkManager.setDarkThemeEnabled(any()) } coAnswers { theme.emit(DarkThemeManager.DarkModeSettings(false, firstArg())) }
@@ -40,7 +40,7 @@ class AppSettingsStateFlowTest {
         coEvery { featureManager.getState() } answers { features.value }
         coEvery { featureManager.setTairaVisible(any()) } answers { features.value = features.value.copy(tairaVisible = firstArg()) }
     }
-    @After fun cleanup() { store.clear(); unmockkObject(FirebaseWrapper) }
+    @After fun cleanup() { store.clear(); unmockkObject(WalletDiagnostics) }
     private fun vm() = AppSettingsViewModel(router, darkManager, featureManager).also { store.put("vm", it) }
     @Test fun initialStateUsesSavedThemeAndFeatureSnapshot() = runTest {
         val vm = vm(); runCurrent(); assertTrue(vm.state.darkModeChecked); assertFalse(vm.state.systemAppearanceChecked)
@@ -77,7 +77,7 @@ class AppSettingsStateFlowTest {
     @Test fun cancelledPreferenceWriteDoesNotReportSuccess() = runTest {
         coEvery { darkManager.setDarkThemeEnabled(any()) } throws CancellationException("fixture")
         val vm = vm(); runCurrent(); val previous = vm.state; vm.toggleDarkMode(false); runCurrent(); assertEquals(previous, vm.state)
-        verify(exactly = 0) { FirebaseWrapper.recordException(any()) }
+        verify(exactly = 0) { WalletDiagnostics.recordException(any()) }
     }
     @Test fun reducedEffectsChoiceFollowsSavedFlow() = runTest {
         val vm = vm(); runCurrent(); vm.toggleReduceEffects(true); runCurrent(); assertTrue(vm.state.reduceEffectsChecked)

@@ -33,8 +33,8 @@ import java.io.File
 import java.text.DateFormat
 import java.util.Date
 import javax.inject.Inject
-import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.logger.FirebaseWrapper.WalletRecoveryEvent
+import jp.co.soramitsu.common.logger.WalletDiagnostics
+import jp.co.soramitsu.common.logger.WalletDiagnostics.WalletRecoveryEvent
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.backup.CloudBackupProvider
@@ -225,7 +225,7 @@ class SafeModeViewModel @Inject constructor(
             driveAvailable = cloudBackupProvider.isAvailable,
             restorePending = isRestorePending(code) || isRestorePending(resolved.code),
         )
-        FirebaseWrapper.recordWalletRecovery(when (model.kind) {
+        WalletDiagnostics.recordWalletRecovery(when (model.kind) {
             RecoveryPanelKind.STORAGE -> WalletRecoveryEvent.PANEL_STORAGE
             RecoveryPanelKind.TRANSIENT -> WalletRecoveryEvent.PANEL_TRANSIENT
             RecoveryPanelKind.KEYS_UNAVAILABLE -> WalletRecoveryEvent.PANEL_KEYS_UNAVAILABLE

@@ -10,7 +10,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
@@ -37,10 +37,10 @@ class CredentialsLegacyCompatibilityTest {
 
     @Before fun normalMode() {
         WalletRecoveryCapabilityGate.enterNormal()
-        mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log(any<FirebaseWrapper.Breadcrumb>()) } just runs
+        mockkObject(WalletDiagnostics)
+        every { WalletDiagnostics.log(any<WalletDiagnostics.Breadcrumb>()) } just runs
     }
-    @After fun release() { WalletRecoveryCapabilityGate.enterNormal(); unmockkObject(FirebaseWrapper) }
+    @After fun release() { WalletRecoveryCapabilityGate.enterNormal(); unmockkObject(WalletDiagnostics) }
 
     @Test fun `legacy Iroha derivation preserves stored punctuation and reuses the same identity`() = runTest {
         val storedText = phrase.replace(" ", ", ")

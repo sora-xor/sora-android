@@ -14,7 +14,7 @@ import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.network.BoundedHttpTextClient
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.testing.TestRuntimeSnapshots
@@ -89,13 +89,13 @@ class RuntimeManagerLiveRuntimeTest {
     @Before
     fun setUp() {
         // Spy only: calls still pass through, so tests can check what was recorded.
-        mockkObject(FirebaseWrapper)
+        mockkObject(WalletDiagnostics)
     }
 
     @After
     fun tearDown() {
         scope.cancel()
-        unmockkObject(FirebaseWrapper)
+        unmockkObject(WalletDiagnostics)
     }
 
     private fun TestScope.runtimeManager(): RuntimeManager {
@@ -375,7 +375,7 @@ class RuntimeManagerLiveRuntimeTest {
 
     private fun verifyLegacyMismatchRecorded(times: Int) {
         verify(exactly = times) {
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH)
         }
     }
 

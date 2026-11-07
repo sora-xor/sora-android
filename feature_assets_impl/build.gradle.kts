@@ -83,7 +83,7 @@ dependencies {
     implementation(project(":feature_blockexplorer_api"))
 
     implementation(libs.xsubstrateDep)
-    implementation(libs.xcryptoDep)
+    implementation(project(":xcrypto"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.appcompatDep)

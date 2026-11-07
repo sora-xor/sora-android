@@ -24,7 +24,7 @@ import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
 import jp.co.soramitsu.xnetworking.lib.engines.utils.fieldOrNull
@@ -82,7 +82,7 @@ class WhitelistTokensManager @Inject constructor(
             throw cancelled
         } catch (error: Exception) {
             // This is a rebuildable catalog cache; a damaged entry must not block startup.
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
         }
     }
 
@@ -125,7 +125,7 @@ class WhitelistTokensManager @Inject constructor(
                 val content = try {
                     if (base64) Base64.getDecoder().decode(iconRaw) else iconRaw.decodeURLPart().toByteArray()
                 } catch (error: IllegalArgumentException) {
-                    FirebaseWrapper.recordException(error)
+                    WalletDiagnostics.recordException(error)
                     return@forEach
                 }
                 currentCoroutineContext().ensureActive()
@@ -143,7 +143,7 @@ class WhitelistTokensManager @Inject constructor(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
         }
     }
 }

@@ -44,7 +44,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.viewmodel.FailureNotice
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
@@ -948,7 +948,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     private fun reportCreateRefused(error: Throwable) {
-        FirebaseWrapper.recordException(error)
+        WalletDiagnostics.recordException(error)
         val message = if (FailureNotice.of(error) == FailureNotice.WALLET_READ_ONLY) {
             jp.co.soramitsu.common.R.string.create_account_unavailable_read_only
         } else {
@@ -1108,7 +1108,7 @@ class OnboardingViewModel @Inject constructor(
                 throw error
             } catch (error: Throwable) {
                 // Keep the draft for another attempt when persistence did not complete.
-                FirebaseWrapper.recordException(error)
+                WalletDiagnostics.recordException(error)
                 _passphraseConfirmationState.value =
                     _passphraseConfirmationState.value?.copy(confirmationStep = 0)
                 _returnToPassphraseEvent.trigger()

@@ -6,7 +6,7 @@ import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.domain.RepeatStrategy
 import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
@@ -35,8 +35,8 @@ class MainRefreshFailureTest {
         every { manager.io } returns StandardTestDispatcher(testScheduler)
         val pin = mockk<PinCodeInteractor>(relaxed = true)
         val pools = mockk<PoolsUpdateSubscription>(relaxed = true)
-        mockkObject(FirebaseWrapper, RepeatStrategyBuilder)
-        every { FirebaseWrapper.recordException(any()) } just Runs
+        mockkObject(WalletDiagnostics, RepeatStrategyBuilder)
+        every { WalletDiagnostics.recordException(any()) } just Runs
         every { RepeatStrategyBuilder.infinite() } returns object : RepeatStrategy {
             override suspend fun repeat(block: suspend () -> Unit) = Unit
         }
@@ -48,6 +48,6 @@ class MainRefreshFailureTest {
             advanceUntilIdle()
             coVerify(exactly = 1) { pin.isPincodeUpdateNeeded() }
             coVerify(exactly = 0) { pools.updateBasicPools() }
-        } finally { unmockkObject(FirebaseWrapper, RepeatStrategyBuilder) }
+        } finally { unmockkObject(WalletDiagnostics, RepeatStrategyBuilder) }
     }
 }

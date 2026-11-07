@@ -85,7 +85,7 @@ dependencies {
 
     implementation(libs.timberDep)
 
-    implementation(libs.xcryptoDep)
+    implementation(project(":xcrypto"))
     implementation(libs.xsubstrateDep)
 
     implementation(libs.appcompatDep)
@@ -121,7 +121,7 @@ dependencies {
     implementation(libs.composeLiveDataDep)
     implementation(libs.navigationComposeDep)
 
-    implementation(libs.xbackupDep)
+    implementation(project(":xbackup"))
     // The phone's screen lock confirms a repair when the stored PIN cannot be read (already
     // used by :app and :feature_main_impl).
     implementation(libs.biometricDep)

@@ -46,7 +46,7 @@ import jp.co.soramitsu.common.domain.lockedFree
 import jp.co.soramitsu.common.domain.payableAsFee
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.subtractFee
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.transaction.TransactionOutcomeTexts
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
@@ -439,7 +439,7 @@ class TransferAmountViewModel @AssistedInject constructor(
         if (error is SoraException && error.kind == SoraException.Kind.BUSINESS) {
             onError(error)
         } else {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
         }
     }
 
@@ -616,7 +616,7 @@ class TransferAmountViewModel @AssistedInject constructor(
             } catch (error: Throwable) {
                 // The dialog was shown. A balance that cannot be read now is read again by the
                 // app's own refresh; Confirm keeps checking against the network either way.
-                FirebaseWrapper.recordException(error)
+                WalletDiagnostics.recordException(error)
             }
         }
     }

@@ -79,7 +79,7 @@ dependencies {
     implementation(project(":core_db"))
     implementation(project(":sorasubstrate"))
 
-    implementation(libs.xcryptoDep)
+    implementation(project(":xcrypto"))
     implementation(libs.xsubstrateDep)
     implementation(libs.soramitsu.android.foundation)
 

@@ -109,8 +109,6 @@ dependencies {
 
     implementation(libs.datastoreDep)
 
-    implementation(platform(libs.googleFirebaseBomDep))
-    implementation(libs.googleCrashlyticsDep)
 
     implementation(libs.coilDep)
     implementation(libs.coilComposeDep)

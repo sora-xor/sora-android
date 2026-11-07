@@ -34,7 +34,7 @@ import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.TransactionOutcome
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
@@ -140,7 +140,7 @@ class AddLiquidityViewModelTest {
     @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
-        mockkObject(FirebaseWrapper)
+        mockkObject(WalletDiagnostics)
         given(
             assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 networkFeeInXor = any(),
@@ -192,7 +192,7 @@ class AddLiquidityViewModelTest {
     @After
     fun tearDown() {
         io.mockk.verify(exactly = expectedReportedErrors) {
-            FirebaseWrapper.recordException(any())
+            WalletDiagnostics.recordException(any())
         }
     }
 

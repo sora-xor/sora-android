@@ -25,31 +25,7 @@
     },
     {
       "path": "build-inputs/README.md",
-      "sha256": "850e4e7eb67e24005c01385acd407d3a883994da647147358bd93212ed0434d4"
-    },
-    {
-      "path": "build-inputs/curve25519-dalek-2.1.3.crate",
-      "sha256": "4a9b85542f99a2dfa2a1b8e192662741c9859a846b296bef1c92ef9b58b5a216"
-    },
-    {
-      "path": "build-inputs/google-http-client-1.43.3/provenance.json",
-      "sha256": "4a4d133f8c616748e8496032c046d174047cd41177d3c04b1cfa5c81b017aeb0"
-    },
-    {
-      "path": "build-inputs/google-http-client-1.43.3/rebuild.py",
-      "sha256": "405d9b3bfc1e7cd6c2c021a6c412afdb7d87275bd028645ca48b28464a939cd6"
-    },
-    {
-      "path": "build-inputs/google-http-client-1.43.3/upstream-sources.jar",
-      "sha256": "3d397d060e9ae0e8a71721ff836ed629ee66c81b9326e4f2a5aa892ae8c3a3f9"
-    },
-    {
-      "path": "build-inputs/google-http-client-1.43.3/upstream.jar",
-      "sha256": "60aca7428c5a1ff3655b70541a98ff3d70dded48ac1324dae1af39f1b61914af"
-    },
-    {
-      "path": "build-inputs/google-http-client-1.43.3/upstream.pom",
-      "sha256": "54f7533dbbe7691797c623261ee7e26159a82f24cc205091756b2269f2b52deb"
+      "sha256": "9190e1ae40ad46101b39c0d3cc3e198a0bde5cc409bf49c6157d525896ff765c"
     },
     {
       "path": "build-inputs/graphics-path-1.0.1-16kb-rebuild.md",
@@ -88,10 +64,6 @@
       "sha256": "ac39c9d93eb7870e8929f1f37a16e970b5ec99b67ea782f551125aaa6c405c4c"
     },
     {
-      "path": "build-inputs/rand-0.7.3.crate",
-      "sha256": "6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03"
-    },
-    {
       "path": "build-inputs/ui-tooling-android-1.11.1/README.md",
       "sha256": "42c37c0f62a4019333ffaff3ab11c8e1912b4019ca653fe0f04ba3162d347082"
     },
@@ -122,46 +94,6 @@
     {
       "path": "build-inputs/ui-tooling-android-1.11.1/upstream.pom",
       "sha256": "3b645471e01d4de142b718d91672cecc9610541ecb8c5042da791eb5cc188da2"
-    },
-    {
-      "path": "build-inputs/xcrypto-1.2.7-16kb-rebuild.md",
-      "sha256": "04ceea236a739b81000b2702a26221f91fb945b8e796d0085623d549fe6e65bb"
-    },
-    {
-      "path": "build-inputs/xcrypto-1.2.7-Cargo.lock",
-      "sha256": "72e4aa8f2365dbdff249820abe7cf07593d63a371b220c34bad1733a5694d395"
-    },
-    {
-      "path": "build-inputs/xcrypto-1.2.7-original.aar",
-      "sha256": "a701705120918cc3c66d7217590035c9d385466e1b00836191c917845e9ff56b"
-    },
-    {
-      "path": "build-inputs/xcrypto-1.2.7-repack-16kb.py",
-      "sha256": "595d7aa1b4eed24f553e7201ad6510b1ccb0bb1cc9e20a113d8b967e046f317d"
-    },
-    {
-      "path": "build-inputs/xcrypto-1.2.8-sora.1-security.patch",
-      "sha256": "f5e99189fdd5e8550a317069f60f3332c2bdc6cfe8c6f6c433b3b6c50136498a"
-    },
-    {
-      "path": "build-inputs/xcrypto-1.2.8-sora.2-16kb-rebuild.md",
-      "sha256": "7c20036aaee4bfa44caabbf6bb37641bf7e5544c0d1b8b8324fe74c93ee5d5d9"
-    },
-    {
-      "path": "build-inputs/xcrypto-1.2.8-sora.2-Cargo.lock",
-      "sha256": "f77bb226a8335f505d5f0e4a7f1dad38404cbbf40e44e8a83f27c98d85b8b1f2"
-    },
-    {
-      "path": "build-inputs/xcrypto-1.2.8-sora.2-native-security.patch",
-      "sha256": "9f17ab44fdb134b8989659de9b4aeda862f949861cde6cbbd354b37091e5d3dc"
-    },
-    {
-      "path": "build-inputs/xcrypto-1.2.8-sora.2-original.aar",
-      "sha256": "dee65fa2e0aef012a9ac591638da02bf89efc7f77a5969e2e0d2bbb7fdeebdf1"
-    },
-    {
-      "path": "build-inputs/xcrypto-1.2.8-sora.2-repack-16kb.py",
-      "sha256": "a8be142d0fcd6f8b7b14ac300e6a1b4af99d80d35db09e31772ee74da407a3f8"
     },
     {
       "path": "build-inputs/xsubstrate-1.2.7-source-normalization.patch",
@@ -249,35 +181,6 @@
         {
           "name": "lazysodium-android-5.0.2.pom",
           "sha256": "6ae9391bb9f4200e9a104d60bbc00a4c85a726c87d1ba46485fa7fd3679e6a88"
-        }
-      ]
-    },
-    {
-      "coordinate": "io.emeraldpay.polkaj:polkaj-scale:0.2.3",
-      "modulePath": "io/emeraldpay/polkaj/polkaj-scale/0.2.3",
-      "origin": {
-        "kind": "git-tracked-binary",
-        "repository": "https://github.com/soramitsu/sora2-load-library-java.git",
-        "revision": "4deeca68a5560462c13aec704a50e7ba02ece70e",
-        "tree": "997c38188870b9d9a21af5acacee845dc0e62bff",
-        "sourcePath": "libs/io/emeraldpay/polkaj/polkaj-scale/0.2.3",
-        "commitVerification": {
-          "provider": "github",
-          "status": "valid",
-          "observedAt": "2026-08-09",
-          "independentlyReviewed": false
-        },
-        "independentBinaryReviewCompleted": false,
-        "sourceToBinaryReproductionReviewed": false
-      },
-      "materializedFiles": [
-        {
-          "name": "polkaj-scale-0.2.3.jar",
-          "sha256": "bea0f3904fef83497b9e5802f36408663a4aba462bf63ded38b89a5f22befa4d"
-        },
-        {
-          "name": "polkaj-scale-0.2.3.pom",
-          "sha256": "df2700261fe4ba871334746cf840f8b215334b4f4681fca43967116e5eb773c6"
         }
       ]
     },
@@ -393,90 +296,6 @@
       ]
     },
     {
-      "coordinate": "jp.co.soramitsu:xbackup:1.2.3",
-      "modulePath": "jp/co/soramitsu/xbackup/1.2.3",
-      "origin": {
-        "kind": "git-source-build",
-        "repository": "https://github.com/soramitsu/x-backup.git",
-        "revision": "851999f4fb3d8610c500c4879cb4bcc7082aae55",
-        "tree": "60eb9c401e2814b090eb6340d3e2d3abdef84868",
-        "commitVerification": {
-          "provider": "github",
-          "status": "valid",
-          "observedAt": "2026-08-09",
-          "independentlyReviewed": false
-        },
-        "buildInputs": [],
-        "semanticTransformations": [],
-        "sourceToBinaryReproductionReviewed": false
-      },
-      "materializedFiles": [
-        {
-          "name": "xbackup-1.2.3-sources.jar",
-          "sha256": "486650eebe0c838d05a19da5b63db5b3d9df650167320c9dc53fde2880dd8c81"
-        },
-        {
-          "name": "xbackup-1.2.3.aar",
-          "sha256": "a19eece94d2c3d7b562d40e7d855c8797c796087c3a0458c938765261142fbe8"
-        },
-        {
-          "name": "xbackup-1.2.3.module",
-          "sha256": "1a30f62ca0383b791a19e329d9d872d03248ba0f77ae9acee015b977cef46185"
-        },
-        {
-          "name": "xbackup-1.2.3.pom",
-          "sha256": "f6b90f261e485f8f5512c5c05708bfe2923b97ab034788d661f9ff349aa5073b"
-        }
-      ]
-    },
-    {
-      "coordinate": "jp.co.soramitsu:xcrypto:1.2.8-sora.2",
-      "modulePath": "jp/co/soramitsu/xcrypto/1.2.8-sora.2",
-      "origin": {
-        "kind": "git-source-build",
-        "repository": "https://github.com/soramitsu/x-crypto.git",
-        "revision": "2346144a127c1121ae3166800b7ab06ed9c5bf20",
-        "tree": "c0dab19ed314bbe9bf939dc0c33fe0c4d13fbb11",
-        "commitVerification": {
-          "provider": "github",
-          "status": "valid",
-          "observedAt": "2026-08-09",
-          "independentlyReviewed": false
-        },
-        "buildInputs": [
-          "build-inputs/xcrypto-1.2.8-sora.2-Cargo.lock",
-          "build-inputs/curve25519-dalek-2.1.3.crate",
-          "build-inputs/rand-0.7.3.crate",
-          "build-inputs/xcrypto-1.2.8-sora.2-original.aar",
-          "build-inputs/xcrypto-1.2.8-sora.2-repack-16kb.py",
-          "build-inputs/xcrypto-1.2.8-sora.2-16kb-rebuild.md"
-        ],
-        "semanticTransformations": [
-          "build-inputs/xcrypto-1.2.8-sora.1-security.patch",
-          "build-inputs/xcrypto-1.2.8-sora.2-native-security.patch"
-        ],
-        "sourceToBinaryReproductionReviewed": false
-      },
-      "materializedFiles": [
-        {
-          "name": "xcrypto-1.2.8-sora.2-sources.jar",
-          "sha256": "0e1a2d4d8de012e263e7f8094357161891c6c62255e0e004284cce025fa09c21"
-        },
-        {
-          "name": "xcrypto-1.2.8-sora.2.aar",
-          "sha256": "021e37c8b6f1b9c49a80a2b81af3094de4519b06f75a2fc82f57161630550f7f"
-        },
-        {
-          "name": "xcrypto-1.2.8-sora.2.module",
-          "sha256": "7f048032a8876a612eaf723f37b4934656dd2e421f16243aae05d29ea0dc3945"
-        },
-        {
-          "name": "xcrypto-1.2.8-sora.2.pom",
-          "sha256": "7480b75c8feb24d559fbf126a3c86afc88e928a12a17ceeaf4c0ccb372483336"
-        }
-      ]
-    },
-    {
       "coordinate": "jp.co.soramitsu:xsubstrate:1.2.7",
       "modulePath": "jp/co/soramitsu/xsubstrate/1.2.7",
       "origin": {
@@ -512,39 +331,6 @@
         {
           "name": "xsubstrate-1.2.7.pom",
           "sha256": "6af9914a83fbe7b3b0d48629771fb278019a9e0292eb55ad72445c1bdc21cf7a"
-        }
-      ]
-    },
-    {
-      "coordinate": "com.google.http-client:google-http-client:1.43.3-sora.1",
-      "modulePath": "com/google/http-client/google-http-client/1.43.3-sora.1",
-      "origin": {
-        "kind": "maven-central-source-patch",
-        "repository": "https://repo.maven.apache.org/maven2/com/google/http-client/google-http-client/1.43.3/",
-        "buildInputs": [
-          "build-inputs/google-http-client-1.43.3/provenance.json",
-          "build-inputs/google-http-client-1.43.3/rebuild.py",
-          "build-inputs/google-http-client-1.43.3/upstream-sources.jar",
-          "build-inputs/google-http-client-1.43.3/upstream.jar",
-          "build-inputs/google-http-client-1.43.3/upstream.pom"
-        ],
-        "semanticTransformations": [
-          "Both insecure opt-out helpers fail closed. Every other uncompressed jar entry is byte-identical. Normal NetHttpTransport and TLS trust-store APIs are unchanged."
-        ],
-        "sourceToBinaryReproductionReviewed": false
-      },
-      "materializedFiles": [
-        {
-          "name": "google-http-client-1.43.3-sora.1-sources.jar",
-          "sha256": "a7483e0a979b106b70d8f3e369788048e031f6eab03a720a6a438b86290afd5e"
-        },
-        {
-          "name": "google-http-client-1.43.3-sora.1.jar",
-          "sha256": "dd2748416741f44c449a880f00b84ff2962506b4e9d1125a4b8d20693b94b8c8"
-        },
-        {
-          "name": "google-http-client-1.43.3-sora.1.pom",
-          "sha256": "5c3abf4759bb2eb0bad3ca241a52be10e731d44a543a3423ead1a1dc9295006d"
         }
       ]
     },

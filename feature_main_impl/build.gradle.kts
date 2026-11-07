@@ -99,7 +99,7 @@ dependencies {
     implementation(libs.navigationUiDep)
     implementation(libs.insetterDep)
 
-    implementation(libs.xbackupDep)
+    implementation(project(":xbackup"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)

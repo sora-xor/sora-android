@@ -44,6 +44,7 @@ sora_gradle --dependency-verification=strict --max-workers=4 --continue \
   :feature_assets_impl:createProductionDebugAndroidTestCoverageReport \
   :feature_blockexplorer_api:createProductionDebugAndroidTestCoverageReport \
   :app:createProductionDebugAndroidTestCoverageReport \
+  :xbackup:createProductionDebugAndroidTestCoverageReport \
   -Pandroid.testInstrumentationRunnerArguments.notClass=jp.co.soramitsu.feature_account_impl.data.repository.datasource.EncryptedWalletMigrationStorageTest
 sora_gradle --dependency-verification=strict --max-workers=4 \
   -I scripts/device-coverage.gradle aggregateProductionDebugDeviceCoverage

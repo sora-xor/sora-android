@@ -5,7 +5,7 @@ import java.math.BigDecimal
 import java.net.UnknownHostException
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.domain.Market
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.model.Sora2PendingSubmissionLocal
@@ -43,8 +43,8 @@ class HistoryReadAndActivityFlowTest {
     private var descriptions = emptyList<Sora2SubmissionDetails>()
     private val localHash = "0x" + "a1".repeat(32)
     @Before fun setup() {
-        mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.recordErrorClass(any()) } just Runs
+        mockkObject(WalletDiagnostics)
+        every { WalletDiagnostics.recordErrorClass(any()) } just Runs
         every { health.latestIndexedBlock } returns null
         every { health.latestIndexedBlockHash } returns null
         every { health.workerLatestIndexedBlock } returns "100"
@@ -59,7 +59,7 @@ class HistoryReadAndActivityFlowTest {
         qualified()
         repository = TransactionHistoryRepositoryImpl(client, extrinsics, rpc, cache, database, details, coordinator)
     }
-    @After fun cleanup() { unmockkObject(FirebaseWrapper) }
+    @After fun cleanup() { unmockkObject(WalletDiagnostics) }
     private fun qualified(items: List<IndexerHistoryElement> = listOf(item), cached: Boolean = false, end: Boolean = true) {
         coEvery { client.getLastTransactionsQualified(address, 10) } returns PiQualifiedRead(items, health, cached)
         coEvery { client.getTransactionQualified(item.id) } returns PiQualifiedRead(items, health, cached)

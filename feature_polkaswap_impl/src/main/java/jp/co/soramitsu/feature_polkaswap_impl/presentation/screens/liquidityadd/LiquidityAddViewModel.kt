@@ -41,7 +41,7 @@ import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.presentation.transaction.badge
@@ -521,7 +521,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
             // A business error names its own reason.
             onError(error)
         } else {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
         }
         liquidityDetails = null
         estimatedAmounts = null
@@ -858,7 +858,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     }
 
     private fun onReservesUnavailable(error: Throwable) {
-        FirebaseWrapper.recordException(error)
+        WalletDiagnostics.recordException(error)
         reservesReady = false
         reservesUnavailable = true
         liquidityDetails = null

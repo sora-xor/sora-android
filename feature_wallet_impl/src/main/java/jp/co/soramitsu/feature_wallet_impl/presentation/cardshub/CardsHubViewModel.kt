@@ -313,7 +313,7 @@ class CardsHubViewModel @Inject constructor(
                     if (error is CancellationException) throw error
                     // A failed balance/pool read must not crash the host or leave another
                     // wallet's holdings visible. Network rows independently show availability.
-                    jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                    jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
                     _state.value = _state.value.copy(loading = false, cards = emptyList())
                 }
                 .distinctUntilChanged()

@@ -33,14 +33,6 @@
         tools:targetApi="33"
         android:theme="@style/AppTheme">
 
-        <!-- Read by the Analytics SDK before FirebaseInitProvider starts collection. -->
-        <meta-data android:name="firebase_analytics_collection_enabled" android:value="true" />
-        <meta-data android:name="google_analytics_default_allow_analytics_storage" android:value="true" />
-        <meta-data android:name="google_analytics_default_allow_ad_storage" android:value="false" />
-        <meta-data android:name="google_analytics_default_allow_ad_user_data" android:value="false" />
-        <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
-        <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
-
         <activity
             android:name=".splash.presentation.WalletStartupActivity"
             android:theme="@style/SplashTheme"
@@ -99,10 +91,6 @@
         <meta-data
             android:name="com.onesignal.NotificationAccentColor.DEFAULT"
             android:value="FF00FF00"/>
-
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/icon_small_notification"/>
 
         <provider
             android:name="androidx.core.content.FileProvider"

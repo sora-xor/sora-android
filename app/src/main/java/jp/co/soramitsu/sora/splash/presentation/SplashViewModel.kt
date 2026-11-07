@@ -27,7 +27,7 @@ import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
@@ -95,7 +95,7 @@ class SplashViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val migrationDone = interactor.getMigrationDoneAsync().await()
-                FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.SPLASH_NAVIGATION)
+                WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.SPLASH_NAVIGATION)
                 if (!migrationDone) {
                     showMigrationRecovery.value = recoveryState(
                         code = failureCode("WALLET_VERIFICATION_FAILED"),
