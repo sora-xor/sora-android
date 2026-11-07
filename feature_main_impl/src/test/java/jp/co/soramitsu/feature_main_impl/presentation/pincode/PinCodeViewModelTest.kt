@@ -491,6 +491,41 @@ class PinCodeViewModelTest {
     }
 
     @Test
+    fun `the PIN for a Google backup returns the confirmation to Account options`() = runTest {
+        pinCodeViewModel.startAuth(PinCodeAction.GOOGLE_BACKUP)
+        advanceUntilIdle()
+        assertEquals(true, pinCodeViewModel.state.isBiometricButtonVisible)
+
+        given(interactor.checkPin(anyString())).willReturn(true)
+        listOf("1", "2", "3", "4", "5", "6").forEach(pinCodeViewModel::pinCodeNumberClicked)
+        advanceUntilIdle()
+
+        verify(interactor).checkPin(anyString())
+        verify(mainRouter).returnFromPinConfirmation(PinCodeAction.GOOGLE_BACKUP)
+        verify(mainRouter, never()).popBackStack()
+    }
+
+    @Test
+    fun `a wrong PIN for a Google backup confirms nothing`() = runTest {
+        pinCodeViewModel.startAuth(PinCodeAction.GOOGLE_BACKUP)
+        given(interactor.checkPin(anyString())).willReturn(false)
+        listOf("1", "2", "3", "4", "5", "6").forEach(pinCodeViewModel::pinCodeNumberClicked)
+        advanceUntilIdle()
+
+        verify(mainRouter, never()).returnFromPinConfirmation(PinCodeAction.GOOGLE_BACKUP)
+    }
+
+    @Test
+    fun `biometrics for a Google backup return the confirmation as well`() = runTest {
+        pinCodeViewModel.startAuth(PinCodeAction.GOOGLE_BACKUP)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+
+        verify(mainRouter).returnFromPinConfirmation(PinCodeAction.GOOGLE_BACKUP)
+    }
+
+    @Test
     fun `pin code entered correct with SELECT_NODE action`() = runTest {
         pinCodeViewModel.addresses = listOf("address")
         pinCodeViewModel.startAuth(PinCodeAction.SELECT_NODE)

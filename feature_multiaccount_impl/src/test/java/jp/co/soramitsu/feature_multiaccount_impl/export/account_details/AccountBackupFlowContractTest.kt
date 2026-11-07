@@ -16,6 +16,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.backup.CloudBackupProvider
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
+import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details.AccountDetailsViewModel
@@ -50,6 +51,8 @@ class AccountBackupFlowContractTest {
     private val password = "test-password"
     private val saved = mutableListOf<DecryptedBackupAccount>()
     private val savedPasswords = mutableListOf<String>()
+    /** Milliseconds since boot as the view model sees them. */
+    private var now = 1_000L
     @Before fun setup() {
         every { dispatcher.io } returns Dispatchers.Main
         every { dispatcher.main } returns Dispatchers.Main
@@ -74,13 +77,20 @@ class AccountBackupFlowContractTest {
     @After fun cleanup() { store.clear() }
     private fun viewModel(cloud: Boolean = true): AccountDetailsViewModel {
         val vm = AccountDetailsViewModel(interactor, router, resources, clipboard, CloudBackupProvider(cloud) { backup }, dispatcher, account.substrateAddress)
+        vm.elapsedRealtime = { now }
         store.put("vm-${System.identityHashCode(vm)}", vm)
         return vm
+    }
+    /** The PIN screen confirmed the Google backup step that asked for it. */
+    private fun TestScope.confirmPin(vm: AccountDetailsViewModel) {
+        verify(atLeast = 1) { router.showPinForBackup(PinCodeAction.GOOGLE_BACKUP, listOf(account.substrateAddress)) }
+        vm.onPinConfirmed(launcher); runCurrent()
     }
     private fun TestScope.openForm(vm: AccountDetailsViewModel) {
         runCurrent()
         coEvery { backup.isAccountBackedUp(account.substrateAddress) } returns false
         vm.onBackupClicked(launcher); runCurrent()
+        confirmPin(vm)
         assertNotNull(vm.createBackupPasswordState.value)
     }
     private fun ready(vm: AccountDetailsViewModel) {
@@ -204,32 +214,36 @@ class AccountBackupFlowContractTest {
         val vm = viewModel(false); runCurrent()
         vm.onBackupClicked(launcher); vm.onBackupPasswordClicked(); vm.deleteGoogleBackup(); vm.onSuccessfulGoogleSignin(); runCurrent()
         coVerify(exactly = 0) { backup.authorize(any()); backup.isAccountBackedUp(any()); backup.deleteBackupAccount(any()) }
+        verify(exactly = 0) { router.showPinForBackup(any(), any()) }
         assertEquals(R.string.wallet_cloud_backup_unavailable, vm.errorFromResourceLiveData.value!!.second)
         assertFalse(vm.accountDetailsScreenState.value!!.isCloudBackupAvailable)
     }
     @Test fun `missing activity launcher does not start backup`() = runTest {
         val vm = viewModel(); runCurrent(); vm.onBackupClicked(null); runCurrent()
         coVerify(exactly = 0) { interactor.anyBackupStarted(); backup.authorize(any()) }
+        verify(exactly = 0) { router.showPinForBackup(any(), any()) }
     }
     @Test fun `failed authorization clears progress and does not open a form`() = runTest {
         val vm = viewModel(); runCurrent(); coEvery { backup.authorize(launcher) } returns false
-        vm.onBackupClicked(launcher); runCurrent()
+        vm.onBackupClicked(launcher); runCurrent(); confirmPin(vm)
         assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading); assertNull(vm.createBackupPasswordState.value)
     }
     @Test fun `authorization exception clears progress and reports failure`() = runTest {
         val vm = viewModel(); runCurrent(); coEvery { backup.authorize(launcher) } throws IllegalStateException("unavailable")
-        vm.onBackupClicked(launcher); runCurrent()
+        vm.onBackupClicked(launcher); runCurrent(); confirmPin(vm)
         assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
         assertEquals(R.string.wallet_cloud_backup_failed, vm.errorFromResourceLiveData.value!!.second)
     }
     @Test fun `existing cloud backup requires an explicit delete choice`() = runTest {
-        val vm = viewModel(); runCurrent(); vm.onBackupClicked(launcher); runCurrent()
+        val vm = viewModel(); runCurrent(); vm.onBackupClicked(launcher); runCurrent(); confirmPin(vm)
         assertEquals(true, vm.deleteDialogState.value); coVerify(exactly = 0) { backup.deleteBackupAccount(any()) }
         vm.deleteDialogDismiss(); assertEquals(false, vm.deleteDialogState.value)
         assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
     }
     @Test fun `delete cloud backup updates availability and preserves local account`() = runTest {
         val vm = viewModel(); runCurrent(); vm.deleteGoogleBackup(); runCurrent()
+        coVerify(exactly = 0) { backup.deleteBackupAccount(any()) }
+        confirmPin(vm)
         coVerify(exactly = 1) { backup.deleteBackupAccount(account.substrateAddress) }
         assertEquals(false, vm.accountDetailsScreenState.value!!.isBackupAvailable)
         assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
@@ -237,17 +251,19 @@ class AccountBackupFlowContractTest {
     }
     @Test fun `failed delete leaves backup availability intact and ends progress`() = runTest {
         val vm = viewModel(); runCurrent(); coEvery { backup.deleteBackupAccount(any()) } throws SocketException("offline")
-        vm.deleteGoogleBackup(); runCurrent()
+        vm.deleteGoogleBackup(); runCurrent(); confirmPin(vm)
         assertEquals(true, vm.accountDetailsScreenState.value!!.isBackupAvailable)
         assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
     }
     @Test fun `sign in result refreshes existing backup status`() = runTest {
-        val vm = viewModel(); runCurrent(); vm.onSuccessfulGoogleSignin(); runCurrent()
+        val vm = viewModel(); runCurrent(); vm.onSuccessfulGoogleSignin(); runCurrent(); confirmPin(vm)
         assertEquals(true, vm.accountDetailsScreenState.value!!.isBackupAvailable); assertNull(vm.createBackupPasswordState.value)
     }
     @Test fun `sign in without a backup opens a clean password form`() = runTest {
         val vm = viewModel(); runCurrent(); coEvery { backup.isAccountBackedUp(any()) } returns false
         vm.onSuccessfulGoogleSignin(); runCurrent()
+        assertNull(vm.createBackupPasswordState.value)
+        confirmPin(vm)
         val state = vm.createBackupPasswordState.value!!
         assertEquals("", state.password.value.text); assertEquals("", state.passwordConfirmation.value.text)
         assertFalse(state.setPasswordButtonIsEnabled); assertFalse(state.warningIsSelected)

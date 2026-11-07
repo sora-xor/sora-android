@@ -28,5 +28,20 @@ enum class PinCodeAction {
     TIMEOUT_CHECK,
     LOGOUT,
     CUSTOM_NODE,
-    SELECT_NODE
+    SELECT_NODE,
+
+    /**
+     * Account options' "Backup to Google" and "Delete Google backup". The backup carries the
+     * recovery phrase, raw seed and key-pair JSON, so it asks for the PIN like showing them does.
+     * On success the PIN screen closes and hands [PIN_CONFIRMED_ACTION_KEY] back to the screen
+     * that asked (MainRouter.returnFromPinConfirmation).
+     */
+    GOOGLE_BACKUP,
 }
+
+/**
+ * Saved-state key under which the PIN screen hands the confirmed [PinCodeAction] name back to the
+ * screen below it. The receiver removes it once handled, so a recreated screen never acts on the
+ * same confirmation twice.
+ */
+const val PIN_CONFIRMED_ACTION_KEY = "PIN_CONFIRMED_ACTION"

@@ -41,6 +41,8 @@ class AccountManagementFlowTest {
     private val launcher = mockk<ActivityResultLauncher<Intent>>()
     private val store = ViewModelStore()
     private val account = SoraAccount("fixture-account", "My wallet")
+    /** Milliseconds since boot as the view model sees them. */
+    private var now = 1_000L
     @Before fun setup() {
         every { dispatcher.io } returns Dispatchers.Main; every { dispatcher.main } returns Dispatchers.Main
         every { interactor.flowUnavailableWalletIds() } returns MutableStateFlow(emptySet())
@@ -58,98 +60,103 @@ class AccountManagementFlowTest {
     private fun TestScope.vm(): AccountDetailsViewModel {
         val value = AccountDetailsViewModel(interactor, mockk<MainRouter>(relaxed = true), resources,
             mockk<BasicClipboardManager>(relaxed = true), CloudBackupProvider(true) { backup }, dispatcher, account.substrateAddress)
+        value.elapsedRealtime = { now }
         store.put("vm", value); runCurrent(); return value
     }
+    // Google backup steps wait for the PIN screen; these are the step plus its confirmation.
+    private fun AccountDetailsViewModel.backupThroughPin() { onBackupClicked(launcher); onPinConfirmed(launcher) }
+    private fun AccountDetailsViewModel.deleteThroughPin() { deleteGoogleBackup(); onPinConfirmed(launcher) }
+    private fun AccountDetailsViewModel.signInThroughPin() { onSuccessfulGoogleSignin(); onPinConfirmed(launcher) }
     @Test fun duplicateAuthorizationTapsStartOneRequest() = runTest {
         val vm = vm(); val pending = CompletableDeferred<Boolean>()
         coEvery { backup.authorize(any()) } coAnswers { pending.await() }
-        vm.onBackupClicked(launcher); vm.onBackupClicked(launcher); runCurrent()
+        vm.backupThroughPin(); vm.backupThroughPin(); runCurrent()
         coVerify(exactly = 1) { backup.authorize(launcher) }; coVerify(exactly = 1) { interactor.anyBackupStarted() }
         pending.complete(false); runCurrent(); assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
     }
     @Test fun declinedAuthorizationDoesNotRevertANameEditedWhileWaiting() = runTest {
         val vm = vm(); val pending = CompletableDeferred<Boolean>()
         coEvery { backup.authorize(any()) } coAnswers { pending.await() }
-        vm.onBackupClicked(launcher); runCurrent(); vm.onNameChange(TextFieldValue("Edited while signing in"))
+        vm.backupThroughPin(); runCurrent(); vm.onNameChange(TextFieldValue("Edited while signing in"))
         pending.complete(false); runCurrent(); assertEquals("Edited while signing in", vm.accountDetailsScreenState.value!!.accountNameState.value.text)
     }
     @Test fun authorizationCanRetryAfterCancellation() = runTest {
         val vm = vm(); coEvery { backup.authorize(any()) } throws CancellationException("closed")
-        vm.onBackupClicked(launcher); runCurrent(); assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
+        vm.backupThroughPin(); runCurrent(); assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
         assertNull(vm.errorFromResourceLiveData.value)
         coEvery { backup.authorize(any()) } returns true
-        vm.onBackupClicked(launcher); runCurrent(); assertEquals(true, vm.deleteDialogState.value)
+        vm.backupThroughPin(); runCurrent(); assertEquals(true, vm.deleteDialogState.value)
     }
     @Test fun deletingWhileAuthorizationIsPendingDoesNotStartAnotherCloudOperation() = runTest {
         val vm = vm(); val pending = CompletableDeferred<Boolean>(); coEvery { backup.authorize(any()) } coAnswers { pending.await() }
-        vm.onBackupClicked(launcher); runCurrent(); vm.deleteGoogleBackup(); runCurrent()
+        vm.backupThroughPin(); runCurrent(); vm.deleteThroughPin(); runCurrent()
         coVerify(exactly = 0) { backup.deleteBackupAccount(any()) }; pending.complete(false); runCurrent()
     }
     @Test fun duplicateDeleteTapsStartOneDeletion() = runTest {
         val vm = vm(); val pending = CompletableDeferred<Unit>(); coEvery { backup.deleteBackupAccount(any()) } coAnswers { pending.await() }
-        vm.deleteGoogleBackup(); vm.deleteGoogleBackup(); runCurrent()
+        vm.deleteThroughPin(); vm.deleteThroughPin(); runCurrent()
         coVerify(exactly = 1) { backup.deleteBackupAccount(account.substrateAddress) }
         pending.complete(Unit); runCurrent(); assertEquals(false, vm.accountDetailsScreenState.value!!.isBackupAvailable)
     }
     @Test fun unexpectedDeleteFailureIsReportedAndLeavesBackupAvailable() = runTest {
         val vm = vm(); coEvery { backup.deleteBackupAccount(any()) } throws IllegalStateException("service unavailable")
-        vm.deleteGoogleBackup(); runCurrent(); assertEquals(true, vm.accountDetailsScreenState.value!!.isBackupAvailable)
+        vm.deleteThroughPin(); runCurrent(); assertEquals(true, vm.accountDetailsScreenState.value!!.isBackupAvailable)
         assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
         assertEquals(R.string.wallet_cloud_backup_failed, vm.errorFromResourceLiveData.value!!.second)
     }
     @Test fun cancelledDeleteNeverClaimsBackupWasRemoved() = runTest {
         val vm = vm(); coEvery { backup.deleteBackupAccount(any()) } throws CancellationException("closed")
-        vm.deleteGoogleBackup(); runCurrent(); assertEquals(true, vm.accountDetailsScreenState.value!!.isBackupAvailable)
+        vm.deleteThroughPin(); runCurrent(); assertEquals(true, vm.accountDetailsScreenState.value!!.isBackupAvailable)
         assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading); assertNull(vm.errorFromResourceLiveData.value)
     }
     @Test fun timedOutDeleteCanBeRetried() = runTest {
         val vm = vm(); coEvery { backup.deleteBackupAccount(any()) } throws SocketTimeoutException("timeout")
-        vm.deleteGoogleBackup(); runCurrent(); assertEquals(true, vm.accountDetailsScreenState.value!!.isBackupAvailable)
+        vm.deleteThroughPin(); runCurrent(); assertEquals(true, vm.accountDetailsScreenState.value!!.isBackupAvailable)
         coEvery { backup.deleteBackupAccount(any()) } just Runs
-        vm.deleteGoogleBackup(); runCurrent(); assertEquals(false, vm.accountDetailsScreenState.value!!.isBackupAvailable)
+        vm.deleteThroughPin(); runCurrent(); assertEquals(false, vm.accountDetailsScreenState.value!!.isBackupAvailable)
     }
     @Test fun successfulDeletePreservesConcurrentNameEdit() = runTest {
         val vm = vm(); val pending = CompletableDeferred<Unit>(); coEvery { backup.deleteBackupAccount(any()) } coAnswers { pending.await() }
-        vm.deleteGoogleBackup(); runCurrent(); vm.onNameChange(TextFieldValue("New name")); pending.complete(Unit); runCurrent()
+        vm.deleteThroughPin(); runCurrent(); vm.onNameChange(TextFieldValue("New name")); pending.complete(Unit); runCurrent()
         assertEquals("New name", vm.accountDetailsScreenState.value!!.accountNameState.value.text)
     }
     @Test fun dismissingDialogDoesNotReleaseAnInFlightDeleteGuard() = runTest {
         val vm = vm(); val pending = CompletableDeferred<Unit>(); coEvery { backup.deleteBackupAccount(any()) } coAnswers { pending.await() }
-        vm.deleteGoogleBackup(); runCurrent(); vm.deleteDialogDismiss(); vm.deleteGoogleBackup(); runCurrent()
+        vm.deleteThroughPin(); runCurrent(); vm.deleteDialogDismiss(); vm.deleteThroughPin(); runCurrent()
         coVerify(exactly = 1) { backup.deleteBackupAccount(any()) }; pending.complete(Unit); runCurrent()
     }
     @Test fun signInRefreshShowsProgressAndBlocksDuplicateCallbacks() = runTest {
         val vm = vm(); clearMocks(backup, answers = false); val pending = CompletableDeferred<Boolean>()
         coEvery { backup.isAccountBackedUp(any()) } coAnswers { pending.await() }
-        vm.onSuccessfulGoogleSignin(); vm.onSuccessfulGoogleSignin(); runCurrent()
+        vm.signInThroughPin(); vm.signInThroughPin(); runCurrent()
         assertTrue(vm.accountDetailsScreenState.value!!.isBackupLoading)
         coVerify(exactly = 1) { backup.isAccountBackedUp(account.substrateAddress) }
         pending.complete(true); runCurrent(); assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
     }
     @Test fun signInRefreshPreservesANameEditedWhileWaiting() = runTest {
         val vm = vm(); val pending = CompletableDeferred<Boolean>(); coEvery { backup.isAccountBackedUp(any()) } coAnswers { pending.await() }
-        vm.onSuccessfulGoogleSignin(); runCurrent(); vm.onNameChange(TextFieldValue("Edited")); pending.complete(true); runCurrent()
+        vm.signInThroughPin(); runCurrent(); vm.onNameChange(TextFieldValue("Edited")); pending.complete(true); runCurrent()
         assertEquals("Edited", vm.accountDetailsScreenState.value!!.accountNameState.value.text)
     }
     @Test fun unexpectedSignInRefreshFailureIsReportedWithoutCrashing() = runTest {
         val vm = vm(); coEvery { backup.isAccountBackedUp(any()) } throws IllegalStateException("metadata unavailable")
-        vm.onSuccessfulGoogleSignin(); runCurrent(); assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
+        vm.signInThroughPin(); runCurrent(); assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
         assertEquals(R.string.wallet_cloud_backup_failed, vm.errorFromResourceLiveData.value!!.second)
         assertNull(vm.createBackupPasswordState.value)
     }
     @Test fun cancelledSignInRefreshRetainsExistingAvailability() = runTest {
         val vm = vm(); coEvery { backup.isAccountBackedUp(any()) } throws CancellationException("closed")
-        vm.onSuccessfulGoogleSignin(); runCurrent(); assertEquals(true, vm.accountDetailsScreenState.value!!.isBackupAvailable)
+        vm.signInThroughPin(); runCurrent(); assertEquals(true, vm.accountDetailsScreenState.value!!.isBackupAvailable)
         assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading); assertNull(vm.errorFromResourceLiveData.value)
     }
     @Test fun signInNetworkFailureDoesNotOpenPasswordForm() = runTest {
         val vm = vm(); coEvery { backup.isAccountBackedUp(any()) } throws SocketException("offline")
-        vm.onSuccessfulGoogleSignin(); runCurrent(); assertNull(vm.createBackupPasswordState.value)
+        vm.signInThroughPin(); runCurrent(); assertNull(vm.createBackupPasswordState.value)
         assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading)
     }
     @Test fun signInTimeoutCanBeRetried() = runTest {
         val vm = vm(); coEvery { backup.isAccountBackedUp(any()) } throws SocketTimeoutException("timeout")
-        vm.onSuccessfulGoogleSignin(); runCurrent()
+        vm.signInThroughPin(); runCurrent()
         coEvery { backup.isAccountBackedUp(any()) } returns false
         vm.onSuccessfulGoogleSignin(); runCurrent(); assertNotNull(vm.createBackupPasswordState.value)
     }
@@ -171,7 +178,7 @@ class AccountManagementFlowTest {
     }
     @Test fun clearingScreenCancelsPendingCloudAuthorization() = runTest {
         val vm = vm(); val pending = CompletableDeferred<Boolean>(); coEvery { backup.authorize(any()) } coAnswers { pending.await() }
-        vm.onBackupClicked(launcher); runCurrent(); store.clear(); pending.complete(true); runCurrent()
+        vm.backupThroughPin(); runCurrent(); store.clear(); pending.complete(true); runCurrent()
         assertNull(vm.createBackupPasswordState.value); assertEquals(false, vm.deleteDialogState.value)
     }
 
@@ -184,7 +191,7 @@ class AccountManagementFlowTest {
         coEvery { interactor.generateSubstrateJsonString(any(), any()) } returns "encrypted fixture"
         coEvery { backup.saveBackupAccount(any(), any()) } just Runs
         val value = vm()
-        value.onSuccessfulGoogleSignin(); runCurrent()
+        value.signInThroughPin(); runCurrent()
         value.onBackupPasswordChanged(TextFieldValue("ValidPublicPassword1!"))
         value.onBackupPasswordConfirmationChanged(TextFieldValue("ValidPublicPassword1!"))
         value.onWarningToggle()
@@ -195,19 +202,19 @@ class AccountManagementFlowTest {
         val value = vm()
         for (failure in listOf(SocketException("offline"), SocketTimeoutException("timeout"), IllegalStateException("failed"))) {
             coEvery { backup.authorize(any()) } throws failure
-            value.onBackupClicked(launcher); runCurrent()
+            value.backupThroughPin(); runCurrent()
             assertFalse(value.accountDetailsScreenState.value!!.isBackupLoading)
             assertFalse(value.deleteDialogState.value!!)
         }
         assertEquals(R.string.wallet_cloud_backup_failed, value.errorFromResourceLiveData.value!!.second)
         coEvery { backup.authorize(any()) } returns true
-        value.onBackupClicked(launcher); runCurrent()
+        value.backupThroughPin(); runCurrent()
         assertTrue(value.deleteDialogState.value!!)
     }
     @Test fun authorizationConsentRefreshesMetadataOnlyOnceAfterSuccessfulConsent() = runTest {
         val value = vm(); val failure = consentFailure()
         coEvery { backup.authorize(any()) } throws failure
-        value.onBackupClicked(launcher); runCurrent()
+        value.backupThroughPin(); runCurrent()
         assertSame(failure.intent, value.consentExceptionHandler.value)
         assertFalse(value.accountDetailsScreenState.value!!.isBackupLoading)
         clearMocks(backup, answers = false)
@@ -219,7 +226,7 @@ class AccountManagementFlowTest {
     @Test fun failedCloudDeletionForwardsConsentWithoutClaimingRemoval() = runTest {
         val value = vm(); val failure = consentFailure()
         coEvery { backup.deleteBackupAccount(any()) } throws failure
-        value.deleteGoogleBackup(); runCurrent()
+        value.deleteThroughPin(); runCurrent()
         assertSame(failure.intent, value.consentExceptionHandler.value)
         assertTrue(value.accountDetailsScreenState.value!!.isBackupAvailable!!)
         assertFalse(value.accountDetailsScreenState.value!!.isBackupLoading)
@@ -230,7 +237,7 @@ class AccountManagementFlowTest {
     @Test fun alreadyDeletedCloudFileIsTreatedAsAbsent() = runTest {
         val value = vm()
         coEvery { backup.deleteBackupAccount(any()) } throws FileNotFoundException(Exception("gone"))
-        value.deleteGoogleBackup(); runCurrent()
+        value.deleteThroughPin(); runCurrent()
         assertFalse(value.accountDetailsScreenState.value!!.isBackupAvailable!!)
         assertFalse(value.accountDetailsScreenState.value!!.isBackupLoading)
         assertNull(value.errorFromResourceLiveData.value)
@@ -238,14 +245,14 @@ class AccountManagementFlowTest {
     @Test fun offlineDeletionLeavesTheBackupAvailableForRetry() = runTest {
         val value = vm()
         coEvery { backup.deleteBackupAccount(any()) } throws SocketException("offline")
-        value.deleteGoogleBackup(); runCurrent()
+        value.deleteThroughPin(); runCurrent()
         assertTrue(value.accountDetailsScreenState.value!!.isBackupAvailable!!)
         assertFalse(value.accountDetailsScreenState.value!!.isBackupLoading)
     }
     @Test fun signInConsentIsForwardedAndAbsentFileClearsAvailability() = runTest {
         val value = vm(); val failure = consentFailure()
         coEvery { backup.isAccountBackedUp(any()) } throws failure
-        value.onSuccessfulGoogleSignin(); runCurrent()
+        value.signInThroughPin(); runCurrent()
         assertSame(failure.intent, value.consentExceptionHandler.value)
         assertTrue(value.accountDetailsScreenState.value!!.isBackupAvailable!!)
         coEvery { backup.isAccountBackedUp(any()) } throws FileNotFoundException(Exception("gone"))
