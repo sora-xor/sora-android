@@ -86,7 +86,7 @@ dependencies {
     implementation(libs.timberDep)
 
     implementation(project(":xcrypto"))
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)
@@ -96,7 +96,7 @@ dependencies {
     implementation(libs.coroutineDep)
     implementation(libs.viewmodelKtxDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.coilDep)
@@ -107,7 +107,7 @@ dependencies {
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)

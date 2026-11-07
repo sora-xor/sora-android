@@ -89,7 +89,7 @@ dependencies {
     implementation(libs.constraintDep)
     implementation(libs.biometricDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.coreKtxDep)

@@ -133,7 +133,7 @@ dependencies {
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     api(libs.soramitsu.android.foundation)
 
     api(libs.kotlinxSerializationJsonDep)
@@ -141,7 +141,7 @@ dependencies {
     api(libs.coilSvgDep)
 
     implementation(libs.webSocketLibDep)
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
 
     implementation(libs.lifecycleProcessDep)
 
@@ -157,7 +157,7 @@ dependencies {
     implementation(libs.navigationUiDep)
 
     api(project(":xbackup"))
-    api(libs.xsubstrateDep)
+    api(project(":xsubstrate"))
     implementation(project(":xcrypto"))
     implementation(libs.ed25519Dep) {
         // Ed25519Sha3 uses only the digest provider, never PKIX/TLS utilities.

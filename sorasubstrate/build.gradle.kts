@@ -70,7 +70,7 @@ dependencies {
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":network"))
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
     implementation(project(":xcrypto"))
     implementation(libs.soramitsu.android.foundation)
     implementation(libs.roomDep)

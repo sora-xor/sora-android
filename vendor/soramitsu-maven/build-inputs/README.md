@@ -14,11 +14,6 @@ required to materialize the checked-in Maven modules.
   `graphics-path-1.0.1-16kb-rebuild.md` pin the AndroidX release source, NDK toolchain,
   64-bit JNI build digests, two-member AAR replacement, and Gradle module descriptors.
   `GraphicsPathSmoke.java` preserves the Java/JNI path-iterator smoke source.
-- `xsubstrate-1.2.7-source-normalization.patch` is the complete semantic source delta applied to
-  the pinned xsubstrate commit: consume the xcrypto 1.2.7 module (now the in-repo `:xcrypto`) and use polkaj's
-  authoritative `io.emeraldpay.polkaj` coordinate (now the in-repo `:polkaj-scale`). Temporary repository-path edits used only to
-  resolve the isolated staging repository are intentionally excluded because they are not source
-  or dependency-semantic build inputs.
 
 The RootBeer, TensorFlow Lite and CameraX rebuild inputs were removed in 3.9.0 together with the
 SORA Card KYC SDK, their only consumer; they remain in git history.
@@ -30,3 +25,7 @@ wallet runtime test, SBOM, license review, or production approval.
 xcrypto is no longer vendored: it is the in-repo `:xcrypto` module, and its sr25519 JNI library
 is built from C source with ndk-build (see `xcrypto/README.md`). Its former Rust build inputs, security
 patches and 16 KB repack scripts are in git history.
+
+xsubstrate and ui-core are no longer vendored either: they are the in-repo `:xsubstrate` and
+`:ui-core` modules, built from those releases' unchanged sources (see their README files). The
+xsubstrate source-normalization patch only changed dependency coordinates; it is in git history.

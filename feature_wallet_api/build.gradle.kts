@@ -69,7 +69,7 @@ dependencies {
     implementation(project(":sorasubstrate"))
     implementation(project(":network"))
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
 
     implementation(libs.kotlinxSerializationJsonDep)
 

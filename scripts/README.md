@@ -68,8 +68,9 @@ ordered storage qualification phases, then enforces **90.01% line coverage**. Th
 `build/reports/coverage/summary.json`; Kover and device HTML reports remain under each module's
 `build/reports/` directory. Generated files, dependencies, and the test-only `test_data`/`baselineprofile` modules are excluded; all checked-in
 productionDebug application sources, including UI and debug support, remain in scope.
-`xcrypto` and `polkaj-scale` are upstream libraries built from vendored source in place of
-prebuilt binaries, so they count as dependencies here; `xbackup` is app code and is measured.
+`xcrypto`, `polkaj-scale`, `xsubstrate` and `ui-core` are upstream libraries built from vendored
+source in place of prebuilt binaries, so they count as dependencies here; `xbackup` is app code
+and is measured.
 
 Kover measures JVM tests and JaCoCo measures instrumented device tests. The gate combines hits
 across all application and library modules by source file and executable line, so running the same line twice never increases coverage.

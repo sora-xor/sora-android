@@ -66,8 +66,9 @@ class CoverageGateTest(unittest.TestCase):
         self.assertNotIn("wallet/Fixture.kt", gate.source_files(self.root))
 
     def test_vendored_upstream_libraries_are_not_application_code(self):
-        self.assertEqual({"xcrypto", "polkaj-scale"}, gate.VENDORED_LIBRARY_MODULES)
-        for module, name in (("xcrypto", "Bip39.kt"), ("polkaj-scale", "ScaleCodec.java")):
+        self.assertEqual({"xcrypto", "polkaj-scale", "xsubstrate", "ui-core"}, gate.VENDORED_LIBRARY_MODULES)
+        for module, name in (("xcrypto", "Bip39.kt"), ("polkaj-scale", "ScaleCodec.java"),
+                             ("xsubstrate", "Extrinsic.kt"), ("ui-core", "Button.kt")):
             source = self.root / f"{module}/src/main/java/vendor/{name}"
             source.parent.mkdir(parents=True)
             source.write_text("package vendor\nfun upstream() = 1\n")

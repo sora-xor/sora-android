@@ -94,10 +94,6 @@
     {
       "path": "build-inputs/ui-tooling-android-1.11.1/upstream.pom",
       "sha256": "3b645471e01d4de142b718d91672cecc9610541ecb8c5042da791eb5cc188da2"
-    },
-    {
-      "path": "build-inputs/xsubstrate-1.2.7-source-normalization.patch",
-      "sha256": "d490eaac87bf29feec7e443098c2b451e7cfc1aea671d285bd9a13541afc98c5"
     }
   ],
   "modules": [
@@ -255,82 +251,6 @@
         {
           "name": "android-foundation-0.0.4.pom",
           "sha256": "1ef705cff32cb537f4d297a14e514406fb343bb0a537189de018bc286d59acd7"
-        }
-      ]
-    },
-    {
-      "coordinate": "jp.co.soramitsu:ui-core:0.2.39",
-      "modulePath": "jp/co/soramitsu/ui-core/0.2.39",
-      "origin": {
-        "kind": "git-source-build",
-        "repository": "https://github.com/soramitsu/android-ui-libraries.git",
-        "revision": "f2b6f27adef101fa997432e46886dcbf3625ac77",
-        "tree": "a7fdacc63ebce6dd473e304c072b830f9d95e2a8",
-        "commitVerification": {
-          "provider": "github",
-          "status": "valid",
-          "observedAt": "2026-08-09",
-          "independentlyReviewed": false
-        },
-        "buildInputs": [],
-        "semanticTransformations": [],
-        "sourceToBinaryReproductionReviewed": false
-      },
-      "materializedFiles": [
-        {
-          "name": "ui-core-0.2.39-sources.jar",
-          "sha256": "549e6d1dff86451aec609328cccc7f88334a2355c29e740d6edb513141512cdb"
-        },
-        {
-          "name": "ui-core-0.2.39.aar",
-          "sha256": "73a7a718c3945a25dd8c81113bc3982b530e3bec6851f89ce4fd2e06e12da8bc"
-        },
-        {
-          "name": "ui-core-0.2.39.module",
-          "sha256": "8610fe16fd9ce8cf81e7b92d4e26e69c3fe38fe1e762f0b594fae4a9ee7189a9"
-        },
-        {
-          "name": "ui-core-0.2.39.pom",
-          "sha256": "d81277eb05fc7d0fd06a7f840f414bd2188f92044ba2920f867da8d46ede4559"
-        }
-      ]
-    },
-    {
-      "coordinate": "jp.co.soramitsu:xsubstrate:1.2.7",
-      "modulePath": "jp/co/soramitsu/xsubstrate/1.2.7",
-      "origin": {
-        "kind": "git-source-build",
-        "repository": "https://github.com/soramitsu/x-substrate.git",
-        "revision": "f020817a10590f94d6e7c75d040557e1b9afad56",
-        "tree": "744c7b4923fdd8f7db58dbe9c3d60b04091a12d7",
-        "commitVerification": {
-          "provider": "github",
-          "status": "valid",
-          "observedAt": "2026-08-09",
-          "independentlyReviewed": false
-        },
-        "buildInputs": [],
-        "semanticTransformations": [
-          "build-inputs/xsubstrate-1.2.7-source-normalization.patch"
-        ],
-        "sourceToBinaryReproductionReviewed": false
-      },
-      "materializedFiles": [
-        {
-          "name": "xsubstrate-1.2.7-sources.jar",
-          "sha256": "94c3da4052e46127c66c57169413b8f6f5f4a23cd9f0dc2bb747d85b66663ffe"
-        },
-        {
-          "name": "xsubstrate-1.2.7.aar",
-          "sha256": "dc23dae4c5cd00d45ea10afeb8dbe293952d71ceded6fa6418a92d4f47e56956"
-        },
-        {
-          "name": "xsubstrate-1.2.7.module",
-          "sha256": "db5210c397138b57168eac03540d15ff1303d2b5dd40abede01e16b0731717fe"
-        },
-        {
-          "name": "xsubstrate-1.2.7.pom",
-          "sha256": "6af9914a83fbe7b3b0d48629771fb278019a9e0292eb55ad72445c1bdc21cf7a"
         }
       ]
     },
