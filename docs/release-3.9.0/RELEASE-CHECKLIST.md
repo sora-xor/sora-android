@@ -14,22 +14,25 @@ build infrastructure; they are not current release instructions.
 
 ### Local inputs
 
-Use JDK 17, Android SDK platform 37 and build-tools 36.0.0. Supply signing inputs only in the
-local process environment. Their existing `CI_` names are retained so local release setups
-keep working; they do not require a CI service.
+Use JDK 17, Android SDK platform 37 and build-tools 36.0.0. Release artifacts are built and
+signed with `scripts/build-signed-production-release.sh` (below), which keeps the upload key
+away from Gradle. It reads:
 
 | Input | Value |
 |---|---|
-| `CI_KEYSTORE_PATH` | Absolute canonical path to the upload keystore, a regular non-symlink file with owner-only permissions. |
-| `CI_KEYSTORE_PASS` | Keystore password. |
-| `CI_KEYSTORE_KEY_ALIAS` | Upload-key alias. |
-| `CI_KEYSTORE_KEY_PASS` | Key password. |
-| `SORA_VERSION_CODE` | Explicit code in the current `appVersionName` range, above every code already uploaded to Google Play. A Gradle property `-PSORA_VERSION_CODE=...` also works. |
-Never commit credentials or paste them into issues or chats. `CI_PLAY_KEY` remains an
-optional input to the Play publishing Gradle task. Building and validating artifacts does not
-publish them. No Google client ID or `google-services.json` is needed: the app links no
-Firebase or Google Play services code, and Drive backup is matched to the app by package
-name and signing certificate (see `scripts/README.md`).
+| `SORA_VERSION_CODE` | Explicit code in the current `appVersionName` range, above every code already uploaded to Google Play. |
+| `SORA_UPLOAD_KEYSTORE` | The upload keystore (PKCS12). Default `~/.sora-release/sora-upload.jks`. |
+| `SORA_UPLOAD_KEY_ALIAS` | Upload-key alias. Default `sora-upload`. |
+| `SORA_UPLOAD_STOREPASS_FILE` | File holding the keystore password. Default: `.storepass` next to the keystore. |
+| `SORA_UPLOAD_KEYPASS_FILE` | File holding the key password, if it differs. Default: the storepass file. |
+
+Never commit credentials or paste them into issues or chats, and never pass the upload key or
+its password to Gradle: Gradle runs every build plugin and annotation processor in the same
+process, and anything that can read its environment could take the key. The `CI_KEYSTORE_*`
+inputs of `app/build.gradle.kts` remain only for that script's throwaway build key. Building and
+validating artifacts does not publish them. No Google client ID or `google-services.json` is
+needed: the app links no Firebase or Google Play services code, and Drive backup is matched to
+the app by package name and signing certificate (see `scripts/README.md`).
 
 - [ ] Confirm the highest versionCode already uploaded across all Play tracks and choose a
       higher code in the range enforced by `app/build.gradle.kts`. For 3.9.2 that range is
@@ -68,24 +71,37 @@ for emulator setup, offline checks and the additional 16 KB run.
 
 ### Build and check signed artifacts
 
-With the local inputs above set, run:
+Commit the release first; the script builds only committed files. Then run:
 
 ```sh
-./gradlew --dependency-verification=strict :app:bundleProductionRelease :app:assembleProductionRelease
-python3 scripts/verify-release-manifest.py \
-  --policy config/android-nexus-manifest-policy.json \
-  --expect-version-code "$SORA_VERSION_CODE" --expect-version-name 3.9.2 \
-  app/build/outputs/bundle/productionRelease/app-production-release.aab \
-  app/build/outputs/apk/production/release/app-production-release.apk
-APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner" python3 scripts/verify-release-signing.py \
-  app/build/outputs/bundle/productionRelease/app-production-release.aab \
-  app/build/outputs/apk/production/release/app-production-release.apk
-python3 scripts/verify-android-native-16kb.py app/build/outputs/bundle/productionRelease/app-production-release.aab
-python3 scripts/verify-android-native-16kb.py app/build/outputs/apk/production/release/app-production-release.apk
-python3 scripts/verify-release-json-export.py \
-  app/build/outputs/bundle/productionRelease/app-production-release.aab \
-  app/build/outputs/apk/production/release/app-production-release.apk
+SORA_VERSION_CODE=3090202 scripts/build-signed-production-release.sh --reproduce
 ```
+
+It writes the signed `app-production-release.aab` and `.apk`, the unsigned bundle,
+`mapping.txt`, the Gradle logs and `receipt.json` (commit, checksums, signing certificate) to
+`build/release/<versionCode>-<commit>/`. What it does:
+
+- Exports the commit with `git archive` into a new directory: no uncommitted or untracked file
+  and no earlier build output can reach the release.
+- Runs Gradle with an empty Gradle home of its own, `--no-build-cache`, `--no-daemon`,
+  `--no-configuration-cache`, strict dependency verification and a cleared environment. No
+  cached task output, artifact transform or daemon from another build is reused (audit
+  2026-11-07, H3).
+- Gives Gradle only a throwaway signing key made for this build, and on macOS runs it under
+  `sandbox-exec`, unable to read or write files in the home directory apart from the build
+  directory, the Android SDK and the JDK (only file metadata stays visible). A build plugin
+  cannot read the upload key, SSH keys or tokens.
+- Removes the throwaway signature, then signs the bundle with `jarsigner` and the APK with
+  `apksigner` and the upload key, after Gradle has exited. Passwords are read from files.
+- Runs `verify-release-signing.py` (upload-certificate pin), `verify-release-manifest.py`
+  (Nexus policy, version code and name), `verify-android-native-16kb.py` and
+  `verify-release-json-export.py` on both signed files.
+- With `--reproduce`, builds a second time in another fresh directory and Gradle home and
+  fails unless the bundle, the APK contents and the R8 mapping are identical. This catches a
+  build input that differs between runs; it is no substitute for a rebuild on a second machine.
+
+The upload key still lives on this Mac. Moving it to a hardware token or a separate account,
+and requiring a second Play Console user to publish, remain open (audit 2026-11-07, H3).
 
 The explicit Nexus manifest policy covers the current network features. The separate
 `android-production-manifest-policy.json` remains the historical 3.9.x store contract.
